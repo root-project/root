@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.3 2000/06/13 13:59:21 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.4 2000/09/14 06:28:00 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -485,7 +485,7 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
     Int_t pass = 0;
     if (option && strchr(option,'P')) { pass++;}
     if (option && strchr(option,'L')) { mode = GL_LINE_STRIP; pass++;}
-    do {
+    while (pass >= 0) {
       pass--;
       glBegin(mode);
          for (int i=0; i < n; i++)
@@ -494,7 +494,7 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
                        ,GLfloat(points->GetZ(i)));
       glEnd();
       mode=GL_POINTS;
-    } while (pass>0);
+    }
 }
 
 //______________________________________________________________________________
@@ -640,7 +640,7 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
    // care of ordering the points in counterclockwise, increasing z order.
  
    Int_t cindex[] = { -1, 1, 2, -1};
-   Int_t ncol = (nxy&1 == 1) ? 3 : 2;
+   Int_t ncol = ((nxy&1) == 1) ? 3 : 2;
  
    Float_t *key = vertex;
    for (Int_t iz=0; iz<nz-1; iz++) {

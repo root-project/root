@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.1.1.1 2000/09/06 15:00:00 rwh Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.1 2000/09/14 06:30:19 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -581,7 +581,7 @@ void TXTRU::PaintGLPoints(Float_t *vertex)
 }
  
 //______________________________________________________________________________
-void TXTRU::Print(Option_t *option) const
+void TXTRU::Print(Option_t *option)
 {
    // Dump the info of this TXTRU shape
    // Option: "xy" to get x-y information
