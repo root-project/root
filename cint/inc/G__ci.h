@@ -1740,7 +1740,7 @@ typedef struct {
  * It turned out it is quite difficult if not impossible to support PowerPC.
  * PPC uses registers (general purpose 3-10, floating 1
  **********************************************/
-#define G__VAARG_NOSUPPORT
+//#define G__VAARG_NOSUPPORT
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
 
