@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.14 2000/07/18 16:35:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.15 2000/07/19 06:55:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1059,9 +1059,9 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //    -GetSelectedRows()    // return the number of entries accepted by the
 //                          //selection expression. In case where no selection
 //                          //was specified, returns the number of entries processed.
-//    -GetV1()              //returns a pointer to the float array of V1
-//    -GetV2()              //returns a pointer to the float array of V2
-//    -GetV3()              //returns a pointer to the float array of V3
+//    -GetV1()              //returns a pointer to the double array of V1
+//    -GetV2()              //returns a pointer to the double array of V2
+//    -GetV3()              //returns a pointer to the double array of V3
 //    -GetW()               //returns a pointer to the double array of Weights
 //                          //where weight equal the result of the selection expression.
 //   where V1,V2,V3 correspond to the expressions in
