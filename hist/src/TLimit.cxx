@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.7 2004/03/12 16:02:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.8 2004/03/12 17:01:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -11,6 +11,17 @@
 // see http://root.cern.ch/root/doc/TomJunk.pdf
 // see http://cern.ch/thomasj/searchlimits/ecl.html
 // see: Tom Junk,NIM A434, p. 435-443, 1999
+//
+// see also the following interesting references:
+//  Alex Read, "Presentation of search results: the CLs technique"
+//  Journal of Physics G: Nucl. Part. Phys. 28 2693-2704 (2002).
+//  http://www.iop.org/EJ/abstract/0954-3899/28/10/313/
+//
+// A nice article is also available in the CERN yellow report with the proceeding
+// of the 2000 CERN workshop on confidence intervals.
+//
+//  Alex Read, "Modified Frequentist Analysis of Search Results (The CLs Method)"
+//  CERN 2000-005 (30 May 2000)
 //
 //
 ///////////////////////////////////////////////////////////////////////////
