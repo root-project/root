@@ -107,11 +107,18 @@ else
 		if [ "$(ASTIFFINCDIR)" != "" ]; then \
 			TIFFINCDIR="--with-tiff-includes=$(ASTIFFINCDIR)"; \
 		fi; \
+		if [ "$(ASGIFINCDIR)" != "" ]; then \
+			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
+			NOUNGIF="--with-ungif --with-builtin-ungif=no"; \
+		else \
+			NOUNGIF="--with-ungif --with-builtin-ungif"; \
+		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
 		--with-ttf --with-ttf-includes=../../../$(FREETYPEDIRI) \
-		--with-afterbase=no --with-builtin-ungif=yes\
+		--with-afterbase=no \
 		$$MMX \
+		$$NOUNGIF \
 		$$JPEGINCDIR \
 		$$PNGINCDIR \
 		$$TIFFINCDIR \
