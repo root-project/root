@@ -580,6 +580,62 @@ gint gdk_pointer_is_grabbed(void)
 }
 
 
+//vo
+gint gdk_button_grab(gint button, gint mod, GdkWindow * window,
+                     gboolean owner_events,
+                     GdkEventMask event_mask,
+                     GdkWindow * confine_to,
+                     GdkCursor * cursor)
+{
+   //vo
+
+   HWND xwindow;
+   HWND xconfine_to;
+   HCURSOR xcursor;
+   GdkCursorPrivate *cursor_private;
+   gint return_val;
+
+   g_return_val_if_fail(window != NULL, 0);
+   g_return_val_if_fail(GDK_IS_WINDOW(window), 0);
+   g_return_val_if_fail(confine_to == NULL
+                        || GDK_IS_WINDOW(confine_to), 0);
+
+   cursor_private = (GdkCursorPrivate *) cursor;
+
+   xwindow = GDK_DRAWABLE_XID(window);
+
+   if (!confine_to || GDK_DRAWABLE_DESTROYED(confine_to))
+      xconfine_to = NULL;
+   else
+      xconfine_to = GDK_DRAWABLE_XID(confine_to);
+
+   if (!cursor)
+      xcursor = NULL;
+   else
+      xcursor = cursor_private->xcursor;
+
+   return_val = Success;
+
+   GDK_WINDOW_WIN32DATA(window)->grab_event_mask = event_mask;
+   GDK_WINDOW_WIN32DATA(window)->grab_button = button < 0 ? 0 : button;
+   GDK_WINDOW_WIN32DATA(window)->grab_owner_events = owner_events;
+   GDK_WINDOW_WIN32DATA(window)->grab_modifiers = mod;
+
+   return return_val;
+}
+
+//vo
+void gdk_button_ungrab(gint button, gint mod, GdkWindow * window)
+{
+  
+   if (window == NULL) return;
+   if (!GDK_IS_WINDOW(window)) return;
+
+   GDK_WINDOW_WIN32DATA(window)->grab_button = -1; // negative
+   GDK_WINDOW_WIN32DATA(window)->grab_event_mask = 0;
+}
+
+
 /*
  *--------------------------------------------------------------
  * find_window_for_pointer_event
@@ -605,19 +661,18 @@ static GdkWindow*
 find_window_for_pointer_event (GdkWindow*  reported_window,
                                MSG*        msg)
 {
-	HWND hwnd;
-  	POINTS points;
- 	POINT pt;
-  	GdkWindow* other_window;
+   HWND hwnd;
+   POINTS points;
+   POINT pt;
+   GdkWindow* other_window;
 
-  	if (p_grab_window == NULL || !p_grab_owner_events)
-  		return reported_window;
+   if (p_grab_window == NULL || !p_grab_owner_events)
+      return reported_window;
 
-  	points = MAKEPOINTS (msg->lParam);
-   //vo: ++ coordinates - dirty trick for TRootContextMenu
-  	pt.x = points.x+1;
-  	pt.y = points.y+1;
-  	ClientToScreen (msg->hwnd, &pt);
+   points = MAKEPOINTS (msg->lParam);
+   pt.x = points.x;
+   pt.y = points.y;
+   ClientToScreen (msg->hwnd, &pt);
 
   	GDK_NOTE (EVENTS, g_print ("Finding window for grabbed pointer event at (%ld, %ld)\n",
                              pt.x, pt.y));
@@ -4385,14 +4440,41 @@ translate_mouse_coords(GdkWindow * window1,
 }
 
 static gboolean
+is_grabbed_button(GdkWindow **window, gint button, gint mod, guint32 time)
+{
+   GdkWindow *found = NULL;
+   GdkWindow *sav = *window;
+
+   while (((GdkWindowPrivate *) *window)->parent != gdk_parent_root) {
+      if (((GDK_WINDOW_WIN32DATA(*window)->grab_button == 0) ||
+           (GDK_WINDOW_WIN32DATA(*window)->grab_button == button)) &&
+          ((GDK_WINDOW_WIN32DATA(*window)->grab_event_mask & GDK_BUTTON_PRESS_MASK))) {
+//         && ((GDK_WINDOW_WIN32DATA(*window)->grab_modifiers == 0) ||
+//           (GDK_WINDOW_WIN32DATA(*window)->grab_modifiers & mod))) {
+         found = *window;
+      }
+      *window = ((GdkWindowPrivate *) *window)->parent;
+   }
+
+   if (found) {
+      *window = found;
+      gdk_window_ref(*window);
+      return TRUE;
+   } else {
+      *window = sav;
+      return FALSE;  
+   }
+}
+
+static gboolean
 propagate(GdkWindow ** window,
           MSG * xevent,
           GdkWindow * grab_window,
           gboolean grab_owner_events,
           gint grab_mask,
           gboolean(*doesnt_want_it) (gint mask, MSG * xevent))
-{
-	gboolean in_propagation = FALSE;
+{  
+   gboolean in_propagation = FALSE;
 
    if (grab_window != NULL && !grab_owner_events) {
       /* Event source is grabbed with owner_events FALSE */
@@ -4409,10 +4491,10 @@ propagate(GdkWindow ** window,
          return TRUE;
       }
    }
+
    while (TRUE) {
       if ((*doesnt_want_it)
-          (GDK_WINDOW_WIN32DATA(*window)->event_mask, xevent)) {
-
+          (GDK_WINDOW_WIN32DATA(*window)->event_mask, xevent) ) {
          /* Owner doesn't want it, propagate to parent. */
          if (((GdkWindowPrivate *) * window)->parent == gdk_parent_root) {
             /* No parent; check if grabbed */
@@ -4444,7 +4526,7 @@ propagate(GdkWindow ** window,
             GDK_NOTE(EVENTS, g_print("...propagating to %#x\n",
                                      GDK_DRAWABLE_XID(*window)));
             /* The only branch where we actually continue the loop */
-				in_propagation = TRUE;
+	        in_propagation = TRUE;
          }
       } else {
          return TRUE;
@@ -4547,7 +4629,6 @@ gdk_event_translate(GdkEvent * event,
    gchar *msgname;
    gboolean return_val;
    gboolean flag;
-
 
    return_val = FALSE;
 
@@ -5186,11 +5267,18 @@ gdk_event_translate(GdkEvent * event,
 
       event->type = GDK_BUTTON_PRESS;
       event->button.type = GDK_BUTTON_PRESS;
-      if (!propagate(&window, xevent,
-                     p_grab_window, p_grab_owner_events, p_grab_mask,
-                     doesnt_want_button_press))
-         break;
 
+      //vo check if button is grabbed 
+      if (!p_grab_window &&
+          is_grabbed_button(&window, button, build_pointer_event_state(xevent), xevent->time)) {
+         gdk_pointer_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_owner_events,
+                          GDK_WINDOW_WIN32DATA(window)->grab_event_mask,
+                          NULL, NULL, 0);
+         p_grab_automatic = TRUE;
+      } else if (!propagate(&window, xevent, p_grab_window, p_grab_owner_events,  p_grab_mask,
+                     doesnt_want_button_press)) {
+         break;
+      }
 		event->button.window = window;
 
      /* Emulate X11's automatic active grab */
@@ -5414,10 +5502,18 @@ gdk_event_translate(GdkEvent * event,
          break;
       }
 
-      if (!propagate(&window, xevent,
+      //vo check if button is grabbed 
+      if (!p_grab_window && 
+          is_grabbed_button(&window, 0, 0, xevent->time)) {
+         gdk_pointer_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_owner_events,
+                          GDK_WINDOW_WIN32DATA(window)->grab_event_mask,
+                          NULL, NULL, 0);
+         p_grab_automatic = TRUE;
+      } else if (!propagate(&window, xevent,
                      p_grab_window, p_grab_owner_events, p_grab_mask,
-                     doesnt_want_scroll))
+                     doesnt_want_scroll)) {
          break;
+      }
 
       ScreenToClient(xevent->hwnd, &pt);
       event->button.window = window;

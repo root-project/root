@@ -92,6 +92,13 @@ extern "C" {
                           gboolean owner_events, guint32 time);
    void gdk_keyboard_ungrab(guint32 time);
    gboolean gdk_pointer_is_grabbed(void);
+   gint gdk_button_grab(gint button, gint mod, GdkWindow * window,
+                        gboolean owner_events,
+                        GdkEventMask event_mask,
+                        GdkWindow * confine_to,
+                        GdkCursor * cursor);
+   void gdk_button_ungrab(gint button, gint mod, GdkWindow * window);
+
 
    gint gdk_screen_width(void);
    gint gdk_screen_height(void);

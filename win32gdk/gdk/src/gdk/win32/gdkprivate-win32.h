@@ -332,6 +332,12 @@ extern "C" {
 
       HKL input_locale;
       CHARSETINFO charset_info;
+
+      gint grab_button;          //vo
+      gint grab_event_mask;      //vo
+      gint grab_owner_events;    //vo
+      gint grab_modifiers;       //vo
+      guint32 grab_time;         //vo
    };
 
    struct _GdkCursorPrivate {

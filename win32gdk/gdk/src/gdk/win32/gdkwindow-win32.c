@@ -105,6 +105,11 @@ static GdkWindow *gdk_win32_window_alloc(void)
    private->drawable.klass_data = g_new(GdkWindowWin32Data, 1);
 
    GDK_WINDOW_WIN32DATA(window)->event_mask = 0;
+   GDK_WINDOW_WIN32DATA(window)->grab_event_mask = 0;    //vo
+   GDK_WINDOW_WIN32DATA(window)->grab_button = -1;       //vo
+   GDK_WINDOW_WIN32DATA(window)->grab_owner_events = 0;  //vo
+   GDK_WINDOW_WIN32DATA(window)->grab_modifiers = 0;     //vo
+   GDK_WINDOW_WIN32DATA(window)->grab_time = 0;          //vo
    GDK_WINDOW_WIN32DATA(window)->bg_type = GDK_WIN32_BG_NORMAL;
    GDK_WINDOW_WIN32DATA(window)->xcursor = NULL;
    GDK_WINDOW_WIN32DATA(window)->hint_flags = 0;

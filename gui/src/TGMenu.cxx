@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.28 2004/01/22 14:36:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.29 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -300,7 +300,7 @@ Bool_t TGMenuBar::HandleMotion(Event_t *event)
                                    dummy, dummy, wtarget);
    if (wtarget) target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
 
-   if (target != 0 && target != fCurrent) {
+   if (fCurrent != 0 && target != 0 && target != fCurrent) {
       // deactivate all others
       TGFrameElement *el;
       TIter next(fList);

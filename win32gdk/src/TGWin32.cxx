@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.52 2004/03/10 14:43:10 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.53 2004/03/17 12:37:40 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -720,6 +720,34 @@ static void CollectImageColors(ULong_t pixel, ULong_t * &orgcolors,
       maxcolors *= 2;
    }
    orgcolors[ncolors++] = pixel;
+}
+
+//______________________________________________________________________________
+static char *EventMask2String(UInt_t evmask)
+{
+   // debug function for printing event mask
+
+   static char bfr[500];
+   char *p = bfr;
+
+   *p = '\0';
+#define BITmask(x) \
+  if (evmask & k##x##Mask) \
+    p += sprintf (p, "%s" #x, (p > bfr ? " " : ""))
+   BITmask(Exposure);
+   BITmask(PointerMotion);
+   BITmask(ButtonMotion);
+   BITmask(ButtonPress);
+   BITmask(ButtonRelease);
+   BITmask(KeyPress);
+   BITmask(KeyRelease);
+   BITmask(EnterWindow);
+   BITmask(LeaveWindow);
+   BITmask(FocusChange);
+   BITmask(StructureNotify);
+#undef BITmask
+
+   return bfr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4564,34 +4592,6 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
 }
 
 //______________________________________________________________________________
-static char *EventMask2String(UInt_t evmask)
-{
-   // debug function for printing event mask
-
-   static char bfr[500];
-   char *p = bfr;
-
-   *p = '\0';
-#define BITmask(x) \
-  if (evmask & k##x##Mask) \
-    p += sprintf (p, "%s" #x, (p > bfr ? " " : ""))
-   BITmask(Exposure);
-   BITmask(PointerMotion);
-   BITmask(ButtonMotion);
-   BITmask(ButtonPress);
-   BITmask(ButtonRelease);
-   BITmask(KeyPress);
-   BITmask(KeyRelease);
-   BITmask(EnterWindow);
-   BITmask(LeaveWindow);
-   BITmask(FocusChange);
-   BITmask(StructureNotify);
-#undef BITmask
-
-   return bfr;
-}
-
-//______________________________________________________________________________
 void TGWin32::MapEventMask(UInt_t & emask, UInt_t & xemask, Bool_t tox)
 {
    // Map event mask to or from gdk.
@@ -6149,20 +6149,16 @@ void TGWin32::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
    // When grab is false, ungrab the mouse button for this button and modifier.
 
    UInt_t xevmask;
-   GdkEventMask masque;
    UInt_t xmod;
 
    MapModifierState(modifier, xmod);
-   MapEventMask(evmask, xevmask);
 
    if (grab) {
-      masque = gdk_window_get_events((GdkWindow *) id);
-      masque = (GdkEventMask) (masque | (GdkEventMask) xevmask);
-      gdk_window_set_events((GdkWindow *) id, masque);
+      MapEventMask(evmask, xevmask);
+      gdk_button_grab(button, xmod, ( GdkWindow *)id, 1,  (GdkEventMask)xevmask,
+                      (GdkWindow*)confine,  (GdkCursor*)cursor);
    } else {
-      masque = gdk_window_get_events((GdkWindow *) id);
-      masque = (GdkEventMask) (masque & (GdkEventMask) xevmask);
-      gdk_window_set_events((GdkWindow *) id, masque);
+      gdk_button_ungrab(button, xmod, ( GdkWindow *)id);
    }
 }
 
@@ -6445,14 +6441,8 @@ void TGWin32::SelectInput(Window_t id, UInt_t evmask)
    // attribute.
 
    UInt_t xevmask;
-   GdkEventMask masque;
-   GdkEventMask tmp_masque;
-
    MapEventMask(evmask, xevmask, kTRUE);
-
-   tmp_masque = gdk_window_get_events((GdkWindow *) id);
-   masque = (GdkEventMask) (tmp_masque | (GdkEventMask) xevmask);
-   gdk_window_set_events((GdkWindow *) id, masque);
+   gdk_window_set_events((GdkWindow *) id, (GdkEventMask)xevmask);
 }
 
 //______________________________________________________________________________
