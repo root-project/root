@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.3 2002/12/03 16:01:39 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.4 2003/08/28 12:45:10 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -707,7 +707,7 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    Double_t local[3], master[3], ldir[3], rdir[3];
    memcpy(&master[0], point, 3*sizeof(Double_t));
    Int_t i;
-   Double_t d1, d2, safety, snxt=0.;
+   Double_t d1, d2, safety=0, snxt=0.;
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
