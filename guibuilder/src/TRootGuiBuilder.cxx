@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.7 2004/10/21 14:25:30 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.8 2004/10/25 12:06:50 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -318,6 +318,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
       cf->AddFrame(fEditor, new TGLayoutHints(kLHintsNormal | kLHintsExpandY));
       fManager->SetPropertyEditor(fEditor);
       fEditor->SetEmbedded();
+      fMain->Connect("SetCurrent(TGMdiFrame*)", "TGuiBldEditor", fEditor, "ChangeSelected(TGFrame*)");
 //      ed->ChangeOptions(ed->GetOptions() | kFixedWidth);
 //      splitter = new TGVSplitter(cf);
 //      splitter->SetFrame(ed, kFALSE);
@@ -473,6 +474,9 @@ TRootGuiBuilder::~TRootGuiBuilder()
 {
    // destructor
 
+   delete fMenuFile;
+   delete fMenuWindow;
+   delete fMenuHelp;
 }
 
 //______________________________________________________________________________
@@ -566,15 +570,19 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
 //______________________________________________________________________________
 void TRootGuiBuilder::InitMenu()
 {
-   //
+   // inititiate Gui Builder menu
+
+   fMenuBar->SetEditDisabled(kTRUE);
 
    fMenuFile = new TGPopupMenu(fClient->GetDefaultRoot());
+   fMenuFile->SetEditDisabled(kTRUE);
    fMenuFile->AddEntry(new TGHotString("&New Window"), M_FILE_NEW);
    fMenuFile->AddEntry(new TGHotString("&Close Window"), M_FILE_CLOSE);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry(new TGHotString("E&xit"), M_FILE_EXIT);
 
    fMenuWindow = new TGPopupMenu(fClient->GetDefaultRoot());
+   fMenuWindow->SetEditDisabled(kTRUE);
    fMenuWindow->AddEntry(new TGHotString("Tile &Horizontally"), M_WINDOW_HOR);
    fMenuWindow->AddEntry(new TGHotString("Tile &Vertically"), M_WINDOW_VERT);
    fMenuWindow->AddEntry(new TGHotString("&Cascade"), M_WINDOW_CASCADE);
@@ -588,11 +596,12 @@ void TRootGuiBuilder::InitMenu()
    fMenuWindow->CheckEntry(M_WINDOW_OPAQUE);
 
    fMenuHelp = new TGPopupMenu(fClient->GetDefaultRoot());
+   fMenuHelp->SetEditDisabled(kTRUE);
    fMenuHelp->AddEntry(new TGHotString("&Contents"), M_HELP_CONTENTS);
    fMenuHelp->AddSeparator();
    fMenuHelp->AddEntry(new TGHotString("&About"), M_HELP_ABOUT);
-   fMenuHelp->AddSeparator();
-   fMenuHelp->AddEntry(new TGHotString("&Send Bug Report"), M_HELP_BUG);
+   //fMenuHelp->AddSeparator();
+   //fMenuHelp->AddEntry(new TGHotString("&Send Bug Report"), M_HELP_BUG);
 
    fMenuBar->AddPopup(new TGHotString("&File"), fMenuFile,
                       new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
@@ -770,6 +779,7 @@ Bool_t TRootGuiBuilder::IsGrabButtonDown() const
    return btn->IsDown();
 }
 
+////////////////////////////////////////////////////////////////////////////////
 class TGuiBldSaveFrame : public TGMainFrame {
 
 public:
@@ -793,7 +803,11 @@ Bool_t TRootGuiBuilder::HandleKey(Event_t *event)
 
       if (event->fState & kKeyControlMask) {
          if (str[0] == 19) {  // ctrl-s
-            return SaveProject(event);
+            if (fMain->GetCurrent()) {
+               return SaveProject(event);
+            } else {
+               return kFALSE; //TGMainFrame::HandleKey(event);
+            }
          } else if (str[0] == 14) { //ctrl-n
             return NewProject(event);
          } else if (str[0] == 15) { // ctrl-o
@@ -801,6 +815,7 @@ Bool_t TRootGuiBuilder::HandleKey(Event_t *event)
          }
       }
       fManager->HandleKey(event);
+      return TGMainFrame::HandleKey(event);
    }
    return kTRUE;
 }
@@ -825,17 +840,6 @@ Bool_t TRootGuiBuilder::NewProject(Event_t *)
    return kTRUE;
 }
 
-class TGuiBldFileDialog : public TGFileDialog
-{
-public:
-   TGuiBldFileDialog(const TGWindow *p = 0, const TGWindow *main = 0,
-                        EFileDialogMode dlg_type = kFDOpen, TGFileInfo *file_info = 0) :
-                        TGFileDialog(p, main, dlg_type, file_info)
-   {
-      fEditDisabled = kTRUE;
-   }
-};
-
 //______________________________________________________________________________
 Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 {
@@ -849,11 +853,13 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    fi.fIniDir    = StrDup(dir);
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    root->SetEditable(kFALSE);
+   SetEditable(kFALSE);
 
-   new TGuiBldFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
+   new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen, &fi);
 
    if (!fi.fFilename) {
       root->SetEditable(kTRUE);
+      SetEditable(kTRUE);
       return kFALSE;
   }
 
@@ -874,6 +880,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
       }
    }
    root->SetEditable(kTRUE);
+   SetEditable(kTRUE);
    return kTRUE;
 }
 
@@ -882,26 +889,25 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 {
    //
 
-   TGWindow *root = (TGWindow*)fClient->GetRoot();
-   fEditable = FindEditableMdiFrame(root);
+   TGMdiFrame *savfr = fMain->GetCurrent();
+   if (!savfr) return kFALSE;
 
-   if (!fEditable) {
-      if (fClient->IsEditable()) return kFALSE;
-      fEditable = fMain->GetCurrent();
-   }
+   TGWindow *root = (TGWindow*)fClient->GetRoot();
 
    TGFileInfo fi;
    static TString dir(".");
    const char *fname;
    root->SetEditable(kFALSE);
+   SetEditable(kFALSE);
 
    fi.fFileTypes = gSaveMacroTypes;
    fi.fIniDir    = StrDup(dir);
 
-   new TGuiBldFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
+   new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
 
    if (!fi.fFilename) {
       root->SetEditable(kTRUE);
+      SetEditable(kTRUE);
       return kFALSE;
   }
 
@@ -910,18 +916,18 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 
    if (strstr(fname, ".C")) {
       TGuiBldSaveFrame *main = new TGuiBldSaveFrame(fClient->GetDefaultRoot(),
-                                                    fEditable->GetWidth(),
-                                                    fEditable->GetHeight());
+                                                    savfr->GetWidth(),
+                                                    savfr->GetHeight());
       TList *list = main->GetList();
-      TString name = fEditable->GetName();
-      fEditable->SetName(main->GetName());
-      main->SetList(fEditable->GetList());
+      TString name = savfr->GetName();
+      savfr->SetName(main->GetName());
+      main->SetList(savfr->GetList());
 
-      main->SetLayoutBroken(fEditable->IsLayoutBroken());
+      main->SetLayoutBroken(savfr->IsLayoutBroken());
       main->SaveSource(fname, "");
 
       main->SetList(list);
-      fEditable->SetName(name.Data());
+      savfr->SetName(name.Data());
       delete main;
    } else {
       Int_t retval;
@@ -933,6 +939,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
       }
    }
    root->SetEditable(kTRUE);
+   SetEditable(kTRUE);
    return kTRUE;
 }
 
@@ -1026,17 +1033,15 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
 }
 
 //______________________________________________________________________________
-void TRootGuiBuilder::HandleWindowClosed(Int_t id)
+void TRootGuiBuilder::HandleWindowClosed(Int_t )
 {
    //
 
-   if (!fClient->IsEditable()) return;
+   fEditable = 0;
 
-   TGWindow *root = (TGWindow*)fClient->GetRoot();
-   fEditable = FindEditableMdiFrame(root);
-
-   if (id == (Int_t)fEditable->GetId()) {
-      fEditable = 0;
+   if (fClient->IsEditable()) {
+      TGWindow *root = (TGWindow*)fClient->GetRoot();
+      fEditable = FindEditableMdiFrame(root);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.11 2004/09/21 16:23:36 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.12 2004/10/25 12:06:50 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -264,6 +264,7 @@ Bool_t TGMdiMainFrame::SetCurrent(UInt_t id)
 {
    if (fCurrent && (fCurrent->GetDecorFrame()->GetId() == id)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
+      Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
 
@@ -279,6 +280,7 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrame *f)
 {
    if (fCurrent && (fCurrent->GetDecorFrame()->GetMdiFrame() == f)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
+      Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
 
@@ -294,6 +296,7 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
 {
    if (fCurrent && (fCurrent == newcurrent)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
+      Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
 
@@ -339,6 +342,7 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
    }
 
    fCurrent->GetDecorFrame()->RaiseWindow();
+   Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
 
    fWinListMenu->RCheckEntry(fCurrent->GetDecorFrame()->GetId(), 0, kMaxInt);
 
@@ -1131,3 +1135,5 @@ void TGMdiMainFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "   " << GetName() << "->SetCurrent(" << GetCurrent()->GetName() 
           << ");" << endl;
 }
+
+

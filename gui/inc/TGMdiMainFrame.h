@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.3 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.4 2004/09/10 14:00:40 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -205,7 +205,7 @@ public:
    TGMdiFrame      *GetCurrent() const;
    TGMdiFrame      *GetMdiFrame(UInt_t id) const;
    Bool_t           SetCurrent(UInt_t newcurrent);
-   Bool_t           SetCurrent(TGMdiFrame *f);
+   Bool_t           SetCurrent(TGMdiFrame *f);  //*SIGNAL*
 
    TGPopupMenu     *GetWinListMenu() const { return fWinListMenu; }
    TGMdiMenuBar    *GetMenu() const { return fMenuBar; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.13 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.14 2004/10/25 12:06:50 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -293,18 +293,17 @@ void TRootEmbeddedCanvas::SavePrimitive(ofstream &out, Option_t *option)
    out << "   Int_t w" << GetName() << " = " << GetName()
        << "->GetCanvasWindowId();" << endl;
 
-   TString cname = GetCanvas()->GetName();
-   cname.Strip();
+   static int n = 123;
+   TString cname = Form("c%d", n);
 
-   if (cname == GetName()) cname = Form("%s_canvas", GetName());
- 
    out << "   TCanvas *";
    out <<  cname << " = new TCanvas(";
-   out << quote << GetCanvas()->GetName() << quote << ", 10, 10, w"
+   out << quote << cname.Data() << quote << ", 10, 10, w"
        << GetName() << ");" << endl;
    out << "   " << GetName() << "->AdoptCanvas(" << cname
        << ");" << endl;
 
+   n++;
    //Next line is a connection to TCanvas::SavePrimitives()
    //GetCanvas()->SavePrimitive(out,option);
 }
