@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.78 2002/06/13 16:24:04 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.79 2002/06/14 17:08:15 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -256,26 +256,46 @@ bool CheckInputOperator(G__ClassInfo &cl)
    // this class.
    G__ClassInfo gcl;
    long offset;
-   if(!cl.IsTmplt()) {
-      char *proto = new char[strlen(cl.Fullname())+13];
-      sprintf(proto,"TBuffer&,%s*&",cl.Fullname());
 
-      G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
-      delete proto;
+   char *proto = new char[strlen(cl.Fullname())+13];
+   sprintf(proto,"TBuffer&,%s*&",cl.Fullname());
 
-      fprintf(stderr, "Class %s: Do not generate operator>>()\n",
-             cl.Fullname());
-      if (!methodinfo.IsValid() ||
-           methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
-           strstr(methodinfo.FileName(),"Rtypes.h")!=0 ) {
-         fprintf(stderr, "ERROR: This version of ROOT requires the presence of an actual declaration of:\n");
-         fprintf(stderr, "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
-         has_input_error = true;
-      } else {
-       // fprintf(stderr, "WARNING: TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
-      }
-    }
-    return has_input_error;
+   G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
+
+   fprintf(stderr, "Class %s: Do not generate operator>>()\n",
+           cl.Fullname());
+   if (!methodinfo.IsValid() ||
+        methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
+        strstr(methodinfo.FileName(),"TBuffer.h")!=0 ) {
+
+      fprintf(stderr, "ERROR: In this version of ROOT, the option '!' used in a linkdef file\n");
+      fprintf(stderr, "       implies the actual existence of customized operators.\n");
+      fprintf(stderr, "       The following declaration is now required:\n");
+      fprintf(stderr, "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
+
+      has_input_error = true;
+   } else {
+    // fprintf(stderr, "WARNING: TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
+   }
+   //fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
+
+   methodinfo = gcl.GetMethod("operator<<",proto,&offset);
+   if (!methodinfo.IsValid() ||
+        methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
+        strstr(methodinfo.FileName(),"TBuffer.h")!=0 ) {
+
+      fprintf(stderr, "ERROR: In this version of ROOT, the option '!' used in a linkdef file\n");
+      fprintf(stderr, "       implies the actual existence of customized operator.\n");
+      fprintf(stderr, "       The following declaration is now required:\n");
+      fprintf(stderr, "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
+
+      has_input_error = true;
+   } else {
+      //fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
+   }
+  
+   delete proto;
+   return has_input_error;
 }
 
 

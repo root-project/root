@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.9 2002/05/16 15:14:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.10 2002/06/10 20:02:07 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -64,6 +64,15 @@ inline TBuffer &operator>>(TBuffer &buf, TArrayC *&obj)
 
    obj = (TArrayC *) TArray::ReadArray(buf, TArrayC::Class());
    return buf;
+}
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator<<(TBuffer &buf, const TArrayC *obj) 
+{
+   // Write a TArrayC object into buffer
+   return buf << (TArray*)obj;
 }
 
 inline Char_t TArrayC::At(Int_t i) const
