@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name$:$Id$
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -33,8 +33,8 @@ private:
 public:
    TMySQLServer(const char *db, const char *uid, const char *pw);
    ~TMySQLServer();
-    
-   void Close(Option_t *opt="");
+
+   void        Close(Option_t *opt="");
    TSQLResult *Query(const char *sql);
    Int_t       SelectDataBase(const char *dbname);
    TSQLResult *GetDataBases(const char *wild = 0);

@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:$:$Id:$
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.1 2001/06/14 23:19:15 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -107,12 +107,18 @@ TSQLResult *TPgSQLServer::Query(const char *sql)
 Int_t TPgSQLServer::SelectDataBase(const char *dbname)
 {
    // Select a database. Returns 0 if successful, non-zero otherwise.
+   // For PgSQL: only to be used to check the dbname.
 
    if (!IsConnected()) {
       Error("SelectDataBase", "not connected");
-      return 0;
+      return -1;
    }
-   Error("SelectDataBase", "not implemented");
+
+   if (fDB != dbname) {
+      Error("SelectDataBase", "no such database");
+      return -1;
+   }
+
    return 0;
 }
 
@@ -129,8 +135,11 @@ TSQLResult *TPgSQLServer::GetDataBases(const char *wild)
       return 0;
    }
 
-   PGresult *res = PQexec(fPgSQL, "SELECT pg_database.datname FROM pg_database");
-   return new TPgSQLResult(res);
+   TString sql = "SELECT pg_database.datname FROM pg_database";
+   if (wild)
+      sql += Form(" WHERE pg_database.datname LIKE '%s'", wild);
+
+   return Query(sql);
 }
 
 //______________________________________________________________________________
@@ -151,8 +160,11 @@ TSQLResult *TPgSQLServer::GetTables(const char *dbname, const char *wild)
       return 0;
    }
 
-   PGresult *res = PQexec(fPgSQL, "SELECT relname FROM pg_class");
-   return new TPgSQLResult(res);
+   TString sql = "SELECT relname FROM pg_class";
+   if (wild)
+      sql += Form(" WHERE relname LIKE '%s'", wild);
+
+   return Query(sql);
 }
 
 //______________________________________________________________________________
@@ -226,8 +238,9 @@ Int_t TPgSQLServer::Reload()
 
    if (!IsConnected()) {
       Error("Reload", "not connected");
-      return 0;
+      return -1;
    }
+
    Error("Reload", "not implemented");
    return 0;
 }
@@ -240,8 +253,9 @@ Int_t TPgSQLServer::Shutdown()
 
    if (!IsConnected()) {
       Error("Shutdown", "not connected");
-      return 0;
+      return -1;
    }
+
    Error("Shutdown", "not implemented");
    return 0;
 }
@@ -255,6 +269,7 @@ const char *TPgSQLServer::ServerInfo()
       Error("ServerInfo", "not connected");
       return 0;
    }
+
    Error("ServerInfo", "not implemented");
    return 0;
 }

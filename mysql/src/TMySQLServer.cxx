@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name$:$Id$
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -27,27 +27,27 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    fMySQL = 0;
 
    TUrl url(db);
-   
+
    if (!url.IsValid()) {
       Error("TMySQLServer", "malformed db argument %s", db);
       MakeZombie();
       return;
    }
-   
+
    if (strncmp(url.GetProtocol(), "mysql", 5)) {
       Error("TMySQLServer", "protocol in db argument should be mysql it is %s",
             url.GetProtocol());
       MakeZombie();
       return;
    }
-   
+
    const char *dbase = 0;
    if (strcmp(url.GetFile(), "/"))
       dbase = url.GetFile()+1;   //skip leading /
 
    fMySQL = new MYSQL;
    mysql_init(fMySQL);
-   
+
    if (mysql_real_connect(fMySQL, url.GetHost(), uid, pw, dbase,
                           url.GetPort(), 0, 0)) {
       fType = "MySQL";
@@ -64,7 +64,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
 TMySQLServer::~TMySQLServer()
 {
    // Close connection to MySQL DB server.
-   
+
    if (IsConnected())
       Close();
    delete fMySQL;
@@ -88,7 +88,7 @@ TSQLResult *TMySQLServer::Query(const char *sql)
    // Execute SQL command. Result object must be deleted by the user.
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
-   
+
    if (!IsConnected()) {
       Error("Query", "not connected");
       return 0;
@@ -107,10 +107,10 @@ TSQLResult *TMySQLServer::Query(const char *sql)
 Int_t TMySQLServer::SelectDataBase(const char *dbname)
 {
    // Select a database. Returns 0 if successful, non-zero otherwise.
-   
+
    if (!IsConnected()) {
       Error("SelectDataBase", "not connected");
-      return 0;
+      return -1;
    }
 
    Int_t res;
@@ -128,7 +128,7 @@ TSQLResult *TMySQLServer::GetDataBases(const char *wild)
    // databases starting with "t".
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
-   
+
    if (!IsConnected()) {
       Error("GetDataBases", "not connected");
       return 0;
@@ -141,7 +141,7 @@ TSQLResult *TMySQLServer::GetDataBases(const char *wild)
 //______________________________________________________________________________
 TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
 {
-   // List all tables in the specified database. Wild is for wildcarding 
+   // List all tables in the specified database. Wild is for wildcarding
    // "t%" list all tables starting with "t".
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
@@ -150,7 +150,7 @@ TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
       Error("GetTables", "not connected");
       return 0;
    }
-   
+
    if (SelectDataBase(dbname) != 0) {
       Error("GetTables", "no such database %s", dbname);
       return 0;
@@ -178,10 +178,10 @@ TSQLResult *TMySQLServer::GetColumns(const char *dbname, const char *table,
       Error("GetColumns", "no such database %s", dbname);
       return 0;
    }
-   
+
    char *sql;
    if (wild)
-      sql = Form("SHOW COLUMNS FROM %s LIKE %s", table, wild);
+      sql = Form("SHOW COLUMNS FROM %s LIKE '%s'", table, wild);
    else
       sql = Form("SHOW COLUMNS FROM %s", table);
 
@@ -192,10 +192,10 @@ TSQLResult *TMySQLServer::GetColumns(const char *dbname, const char *table,
 Int_t TMySQLServer::CreateDataBase(const char *dbname)
 {
    // Create a database. Returns 0 if successful, non-zero otherwise.
-   
+
    if (!IsConnected()) {
       Error("CreateDataBase", "not connected");
-      return 0;
+      return -1;
    }
    return mysql_create_db(fMySQL, dbname);
 }
@@ -205,10 +205,10 @@ Int_t TMySQLServer::DropDataBase(const char *dbname)
 {
    // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
    // otherwise.
-   
+
    if (!IsConnected()) {
       Error("DropDataBase", "not connected");
-      return 0;
+      return -1;
    }
    return mysql_drop_db(fMySQL, dbname);
 }
@@ -218,10 +218,10 @@ Int_t TMySQLServer::Reload()
 {
    // Reload permission tables. Returns 0 if successful, non-zero
    // otherwise. User must have reload permissions.
-   
+
    if (!IsConnected()) {
       Error("Reload", "not connected");
-      return 0;
+      return -1;
    }
    return mysql_reload(fMySQL);
 }
@@ -234,7 +234,7 @@ Int_t TMySQLServer::Shutdown()
 
    if (!IsConnected()) {
       Error("Shutdown", "not connected");
-      return 0;
+      return -1;
    }
    return mysql_shutdown(fMySQL);
 }

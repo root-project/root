@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.2 2001/06/22 16:12:39 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -36,8 +36,8 @@ ClassImp(TSQLServer)
 TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 {
    // The db should be of the form:  <dbms>://<host>[:<port>][/<database>],
-   // e.g.:  mysql://pcroot.cern.ch:3456/test, oracle://srv1.cern.ch/main or
-   // pgsql://...
+   // e.g.:  mysql://pcroot.cern.ch:3456/test, oracle://srv1.cern.ch/main,
+   // pgsql://... or sapdb://...
    // The uid is the username and pw the password that should be used for
    // the connection. Depending on the <dbms> the shared library (plugin)
    // for the selected system will be loaded. When the connection could not
@@ -55,6 +55,11 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
          return 0;
       serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
              "new TPgSQLServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
+   } else if (!strncmp(db, "sapdb", 5)) {
+      if (gROOT->LoadClass("TSapDBServer", "SapDB"))
+         return 0;
+      serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
+             "new TSapDBServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
    } else if (!strncmp(db, "oracle", 6)) {
       if (gROOT->LoadClass("TOracleServer", "Oracle"))
          return 0;
