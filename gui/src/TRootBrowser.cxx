@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.29 2002/11/20 09:31:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.30 2002/11/20 15:17:18 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1627,6 +1627,13 @@ void TRootBrowser::Refresh(Bool_t force)
 
       TGListTreeItem *sav;
 
+      sav = fListLevel;
+
+      // Refresh gROOT
+      fListLevel = 0;
+      BrowseObj(gROOT);
+      fListLevel = sav;
+
       // Refresh the IconBox
       if (fListLevel) {
          fIconBox->RemoveAll();
@@ -1638,13 +1645,8 @@ void TRootBrowser::Refresh(Bool_t force)
             BrowseObj(obj);
             fTreeLock = kFALSE;
          }
-      }
-
-      sav = fListLevel;
-      fListLevel = 0;
-      BrowseObj(gROOT);
+      }    
       fClient->NeedRedraw(fLt);
-      fListLevel = sav;
    }
 }
 
