@@ -899,21 +899,22 @@ fi
 # Check for posix thread library
 #
 case $platform in
-linux|macosx)
+macosx)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
     fi
     ;;
-fbsd)
-    if test "x$enable_thread" = "xyes"; then
-       threadlib="-pthread"
-       threadlibdir=
+linux|fbsd)
+    if test "x$enable_thread" = "x"; then
+        enable_thread="yes"
+        threadlib="-pthread"
+        threadlibdir=
     fi
     ;;
 esac
 if test "x$enable_thread" = "xyes" && \
    test ! "$platform" = "win32"    && \
-   test ! "$platform" = "fbsd" ; then
+   test "x$threadlib" = "x" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
 	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.123 2004/05/15 00:34:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.124 2004/05/15 07:31:18 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1370,7 +1370,6 @@ void TROOT::InitThreads()
       }
    }
 }
-
 
 //______________________________________________________________________________
 TClass *TROOT::LoadClass(const char *classname) const
