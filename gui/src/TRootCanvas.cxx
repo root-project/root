@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.18 2003/10/16 16:39:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.19 2003/11/24 10:51:55 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TApplication.h"
 #include "TFile.h"
 #include "TInterpreter.h"
+#include "Riostream.h"
 
 #include "HelpText.h"
 
@@ -146,6 +147,7 @@ public:
                 { return fCanvas->HandleContainerExpose(ev); }
    Bool_t  HandleCrossing(Event_t *ev)
                 { return fCanvas->HandleContainerCrossing(ev); }
+   void    SavePrimitive(ofstream &out, Option_t *);
 };
 
 //______________________________________________________________________________
@@ -1042,4 +1044,18 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
       fCanvas->HandleInput(kMouseLeave, x, y);
 
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TRootContainer::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save a canvas container as a C++ statement(s) on output stream out.
+
+   out << endl << "   // canvas container" << endl;
+   out << "   Int_t canvasID = gVirtualX->InitWindow((ULong_t)"
+       << GetParent()->GetParent()->GetName() << "->GetId());" << endl;
+   out << "   Window_t winC = gVirtualX->GetWindowID(canvasID);" << endl;
+   out << "   TGCompositeFrame *";
+   out << GetName() << " = new TGCompositeFrame(gClient,winC"
+       << "," << GetParent()->GetName() << ");" << endl;
 }

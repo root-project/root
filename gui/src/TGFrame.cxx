@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.34 2003/11/12 19:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.35 2003/11/25 11:34:22 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1673,11 +1673,18 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
       el->fLayout->SavePrimitive(out, option);
       out << ");"<< endl;
    }
-   if (fLayoutManager != 0) {
+
+   TGLayoutManager *lm = GetLayoutManager();
+   if (GetOptions() & kHorizontalFrame) {
+      if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
+   } else if (GetOptions() & kVerticalFrame) {
+      if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
+   } else {
       out << "   " << GetName() <<"->SetLayoutManager(";
-      fLayoutManager->SavePrimitive(out, option);
+      GetLayoutManager()->SavePrimitive(out, option);
       out << ");" << endl;
    }
+   
 }
 
 //______________________________________________________________________________
@@ -2098,16 +2105,16 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "TGGroupFrame::kRight);" << endl;
 
    // setting layout manager if different from frame type
-   //TGLayoutManager * lm = GetLayoutManager();
-   //if (GetOptions() & kHorizontalFrame) {
-   //   if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
-   //} else if (GetOptions() & kVerticalFrame) {
-   //   if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
-   //} else {
+   TGLayoutManager * lm = GetLayoutManager();
+   if (GetOptions() & kHorizontalFrame) {
+      if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
+   } else if (GetOptions() & kVerticalFrame) {
+      if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
+   } else {
       out << "   " << GetName() <<"->SetLayoutManager(";
       GetLayoutManager()->SavePrimitive(out, option);
       out << ");"<< endl;
-   //}
+   }
 
    out << "   " << GetName() <<"->Resize();" << endl;
 }

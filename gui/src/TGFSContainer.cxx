@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.12 2003/07/08 19:42:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.13 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -760,7 +760,7 @@ void TGFileContainer::SavePrimitive(ofstream &out, Option_t *option)
          out << "," << GetOptionString() <<");" << endl;
       }
    } else {
-      out << "," << GetOptionString() << "," << GetBackground() << ");" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
    out << "   " << GetCanvas()->GetName() << "->SetContainer("
                 << GetName() << ");" << endl;
