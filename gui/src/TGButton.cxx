@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.33 2004/05/03 13:37:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.34 2004/06/10 14:25:39 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -377,6 +377,7 @@ TGTextButton::~TGTextButton()
       main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
    }
    if (fLabel) delete fLabel;
+   if (fHasOwnFont) delete fClient->GetGCPool()->FindGC(fNormGC);
 }
 
 //______________________________________________________________________________

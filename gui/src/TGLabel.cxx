@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.9 2004/04/06 21:19:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.10 2004/08/20 22:15:30 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -92,6 +92,7 @@ TGLabel::~TGLabel()
    // Delete label.
 
    if (fText) delete fText;
+   if (fHasOwnFont) delete fClient->GetGCPool()->FindGC(fNormGC);
 }
 
 //______________________________________________________________________________
