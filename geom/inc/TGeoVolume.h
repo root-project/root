@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.3 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.4 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -141,8 +141,8 @@ public:
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
    TGeoVolume     *MakeCopyVolume();
    void            MakeCopyNodes(TGeoVolume *other);
-   void            RandomPoints(Int_t npoints=10000, Option_t *option=""); // *MENU*
-   void            RandomRays(Int_t nrays=10000); // *MENU*
+   void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
+   void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
    void            RenameCopy(Int_t copy_no);
    void            SetAsTopVolume(); // *MENU*
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);// *MENU*
@@ -151,7 +151,7 @@ public:
    void            SetShape(TGeoShape *shape);
    void            SetField(TObject *field)          {fField = field;}
    void            SetOption(const char *option);
-   virtual void    SetVisibility(Bool_t vis=kTRUE) {TGeoAtt::SetVisibility(vis);} // *MENU*
+   virtual void    SetVisibility(Bool_t vis=kTRUE); // *MENU*
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);

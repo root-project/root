@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.4 2002/07/16 17:11:25 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -88,7 +88,7 @@ public:
    virtual void       PaintPcon(TGeoVolume *vol, Option_t *option="") = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
    virtual void       RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
-   virtual void       RandomRays(Int_t nrays) = 0;
+   virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) = 0;
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path) = 0;
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,
                                      Double_t bombr=1.3) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.5 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.6 2002/07/15 15:42:17 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -70,6 +70,7 @@ TGeoNodeCache::TGeoNodeCache()
 TGeoNodeCache::TGeoNodeCache(Int_t size)
 {
 // constructor
+   fGeoCacheMaxDaughters = 128;
    fGeoCacheMaxSize      = 1000000;
    fGeoCacheStackSize    = 1000;
    fGeoCacheDefaultLevel = 4;

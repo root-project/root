@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.4 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -428,13 +428,13 @@ void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
    gGeoManager->RandomPoints(this, npoints, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::RandomRays(Int_t nrays)
+void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
 // Random raytracing method.
    TGeoVolume *old_vol = gGeoManager->GetTopVolume();
    if (old_vol!=this) gGeoManager->SetTopVolume(this);
    else old_vol=0;
-   gGeoManager->RandomRays(nrays);
+   gGeoManager->RandomRays(nrays, startx, starty, startz);
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::RenameCopy(Int_t copy_no)
@@ -715,6 +715,13 @@ void TGeoVolume::FindOverlaps() const
       inode++;
    }
 }
+//-----------------------------------------------------------------------------
+void TGeoVolume::SetVisibility(Bool_t vis)
+{
+// set visibility of this volume
+   TGeoAtt::SetVisibility(vis);
+   gGeoManager->ModifiedPad();
+}   
 //-----------------------------------------------------------------------------
 Bool_t TGeoVolume::Valid() const
 {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -71,6 +71,8 @@ private :
    Bool_t                fIsStepEntering;   // flag that next geometric step will enter new volume
    Bool_t                fIsStepExiting;    // flaag that next geometric step will exit current volume
    Bool_t                fIsOutside;        // flag that current point is outside geometry
+   Bool_t                fIsOnBoundary;     // flag that current point is on some boundary
+   Bool_t                fIsNullStep;       // flag that last geometric step was null
    TGeoNodeCache        *fCache;            // cache for physical nodes
    TVirtualGeoPainter   *fPainter;          // current painter
    TGeoVolume           *fCurrentVolume;    // current volume
@@ -86,7 +88,6 @@ private :
    TList                *fGShapes;           // list of runtime shapes
    TList                *fGVolumes;          // list of runtime volumes
    TList                *fMaterials;        // list of materials
-   TObjArray            *fGlobalMatrices;   // global transformations for current branch
    TObjArray            *fNodes;            // current branch of nodes
    UChar_t              *fBits;             // bits used for voxelization
 
@@ -121,7 +122,6 @@ public:
    void                   BombTranslation(const Double_t *tr, Double_t *bombtr);
    void                   UnbombTranslation(const Double_t *tr, Double_t *bombtr);
    void                   ClearAttributes(); // *MENU*
-   void                   ClearPad();
    void                   DefaultAngles();   // *MENU*
    void                   DefaultColors();   // *MENU*
    Int_t                  GetNsegments() const;
@@ -145,7 +145,7 @@ public:
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
    void                   DrawPath(const char *path) {GetGeomPainter()->DrawPath(path);} // *MENU*
    void                   RandomPoints(TGeoVolume *vol, Int_t npoints=10000, Option_t *option="");
-   void                   RandomRays(Int_t nrays=1000);
+   void                   RandomRays(Int_t nrays=1000, Double_t startx=0, Double_t starty=0, Double_t startz=0);
    TGeoNode              *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil=1E-5,
                                        const char *g3path="");
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
@@ -224,6 +224,8 @@ public:
    Bool_t                 IsStepEntering() const       {return fIsStepEntering;}
    Bool_t                 IsStepExiting() const        {return fIsStepExiting;}
    Bool_t                 IsOutside() const            {return fIsOutside;} 
+   Bool_t                 IsOnBoundary() const         {return fIsOnBoundary;}
+   Bool_t                 IsNullStep() const           {return fIsNullStep;}
    void                   UpdateCurrentPosition(Double_t *nextpoint);
    
 
@@ -235,7 +237,6 @@ public:
 
    //--- utilities
    Int_t                  CountNodes(TGeoVolume *vol=0, Int_t nlevels=1000);
-   void                   ComputeGlobalMatrices(Option_t *option = 0);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
 
@@ -252,7 +253,6 @@ public:
    TGeoNode              *GetCurrentNode() const      {return fCurrentNode;}
    Double_t              *GetCurrentPoint() const     {return fPoint;}
    TGeoVolume            *GetCurrentVolume() const {return fCurrentNode->GetVolume();}
-   TGeoHMatrix           *GetCurrentMatrix() const {return (TGeoHMatrix*)fGlobalMatrices->At(fLevel);}
    Double_t              *GetCldirChecked() const  {return fCldirChecked;}
    Double_t              *GetCldir() const         {return fCldir;}
    Double_t              *GetNormalChecked() const {return fNormalChecked;}

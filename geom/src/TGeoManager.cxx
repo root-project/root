@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.6 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.7 2002/07/15 15:56:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -10,158 +10,382 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-// The geometry package
+// General architecture
 // --------------------
 //
 //   The new ROOT geometry package is a tool designed for building, browsing,
 // tracking and visualizing a detector geometry. The code is independent from
-// other external MC for simulation, therefore it does not contain any
-// constraints related to physics. However, the package defines a number of
-// hooks for physics, such as materials or magnetic field, in order to allow
-// interfaces to tracking MC's. The final purpose is to be able to use the same
-// geometry for several purposes, such as tracking, reconstruction or visualization,
-// taking advantage of the ROOT features related to bookkeeping, I/O,
-// histograming, browsing and GUI's.
-//
+// other external MC for simulation, therefore it does not contain any 
+// constraints related to physics. However, the package defines a number of 
+// hooks for tracking, such as materials, magnetic field or track state flags, 
+// in order to allow interfacing to tracking MC's. The final purpose is to be 
+// able to use the same geometry for several purposes, such as tracking, 
+// reconstruction or visualization, taking advantage of the ROOT features 
+// related to bookkeeping, I/O, histograming, browsing and GUI's.  
+//    
 //   The geometrical modeler is the most important component of the package and
-// it provides answers to the basic questions like "where am I" or "how far
-// from the next boundary", but also to more complex ones like "how far from
-// the closest surface" or "which is the next crossing along a parametric curve".
-// It can provide the current material and allows an user-defined stack of the
-// last classified points in order to fasten tracking.
+// it provides answers to the basic questions like "Where am I ?" or "How far
+// from the next boundary ?", but also to more complex ones like "How far from
+// the closest surface ?" or "Which is the next crossing along a helix ?".
 //
 //   The architecture of the modeler is a combination between a GEANT-like
-// containment scheme - for speeding up tracking - and a normal CSG binary tree
-// at the level of shapes - for allowing building of more complex shapes from a
-// set of primitives via bolean operations. The base classes used for building
-// the GEANT-like tree are TGeoVolume and TGeoNode. These allow replicating a
-// given volume several times in the geometry. A volume contains no information
-// of his position in the geometry nor of his container, but only about its
-// daughter nodes. On the other hand, nodes are unique non-overlapping volumes
-// that are holding a transformation in the local reference system and know
-// the volume in which they are contained. A geometry tree made of volumes and
-// nodes is browsed starting with the top level in order to answer a geometrical
-// query.
+// containment scheme and a normal CSG binary tree at the level of shapes. An
+// important common feature of all detector geometry descriptions is the 
+// mother-daughter concept. This is the most natural approach when tracking
+// is concerned and imposes a set of constrains to the way geometry is defined. 
+// Constructive solid geometry composition is used only in order to create more
+// complex shapes from an existing set of primitives through bolean operations. 
+// This feature is not implemented yet but in future full definition of boolean
+// expressions will be supported. 
 //
-//   A volume can be divided according default or user-defined patterns, creating
-// automatically the list of division nodes inside. The elementary volumes
-// created during the dividing process follow the same scheme as usual volumes,
-// therefore it is possible to position further geometrical structures inside or
-// to divide them further more - see TGeoVolume::Divide().
+//   Practically every geometry defined in GEANT style can be mapped by the modeler.
+// The basic components used for building the logical hierarchy of the geometry 
+// are called "volumes" and "nodes". Volumes (sometimes called "solids") are fully 
+// defined geometrical objects having a given shape and material and possibly 
+// containing a list of nodes. Nodes represent just positioned instances of volumes 
+// inside a container volume and they are not directly defined by user. They are 
+// automatically created as a result of adding one volume inside other or dividing 
+// a volume. The geometrical transformation hold by nodes is always defined with 
+// respect to their mother (relative positioning). Reflection matrices are allowed.
+// All volumes have to be fully aware of their containees when the geometry is
+// closed. They will build aditional structures (voxels) in order to fasten-up
+// the search algorithms. Finally, nodes can be regarded as bidirectional links 
+// between containers and containees objects. 
+//
+//   The structure defined in this way is a graf structure since volumes are 
+// replicable (same volume can become daughter node of several other volumes), 
+// every volume becoming a branch in this graf. Any volume in the logical graf
+// can become the actual top volume at run time (see TGeoManager::SetTopVolume()).
+// All functionalities of the modeler will behave in this case as if only the
+// corresponding branch starting from this volume is the registered geometry.
+
+//Begin_Html
+/*
+<img src="gif/t_graf.jpg">
+*/
+//End_Html
+//
+//   A given volume can be positioned several times in the geometry. A volume 
+// can be divided according default or user-defined patterns, creating automatically 
+// the list of division nodes inside. The elementary volumes created during the 
+// dividing process follow the same scheme as usual volumes, therefore it is possible 
+// to position further geometrical structures inside or to divide them further more 
+// (see TGeoVolume::Divide()).
 //
 //   The primitive shapes supported by the package are basically the GEANT3
-// shapes (see class TGeoShape), extruded shapes and arbitrary wedges with eight
-// vertices on two paralel planes. In order to build a TGeoCompositeShape, one has
-// to define first the primitive components. The object that handle boolean
-// operations among components is called TGeoBoolFinder and it has to be
+// shapes (see class TGeoShape), arbitrary wedges with eight vertices on two paralel 
+// planes. All basic primitives inherits from class TGeoBBox since the bounding box
+// of a solid is essential for the tracking algorithms. They also implement the
+// virtual methods defined in the virtual class TGeoShape (point and segment
+// classification). User-defined primitives can be direcly plugged into the modeler
+// provided that they override these methods. Composite shapes will be soon supported
+// by the modeler. In order to build a TGeoCompositeShape, one will have to define 
+// first the primitive components. The object that handle boolean 
+// operations among components is called TGeoBoolCombinator and it has to be 
 // constructed providing a string boolean expression between the components names.
+// 
 //
-//  Example for building a simple geometry :
+// Example for building a simple geometry :
+//-----------------------------------------
+//
 //______________________________________________________________________________
-//   TGeometry *geom = new TGeometry("Geometry", "Simple geometry");
-//   //--------------- build the materials ----------------
-//   TGeoMaterial *mat, *mix;
-//   // materials can be retreived by name
-//   mat = new TGeoMaterial("mat1","HYDROGEN",1.01,1,0.7080000E-01);
-//   mat = new TGeoMaterial("mat2","DEUTERIUM",2.01,1,0.162);
-//   mat = new TGeoMaterial("mat3","ALUMINIUM",26.98,13,2.7);
-//   mat = new TGeoMaterial("mat4","LEAD",207.19,82,11.35);
-//   mix = new TGeoMixture("mix1","SCINT",2);
-//      mix->DefineElement(0,12.01,6,0.922427);
-//      mix->DefineElement(1,1.01,1,0.7757296E-01);
-//   // ---materials can be retreived also by pointer
-//   TGeoMaterial *mat_ptr = new TGeoMaterial("mat5","VACUUM",0,0,0);
-//   //--------------- build the rotations ----------------
-//   TGeoRotation *rot1 = new TGeoRotation("rot1",90,0,90,90,0,0);
-//   TGeoRotation *rot2 = new TGeoRotation("rot2",90,180,90,90,180,0);
-//   TGeoRotation *rot3 = new TGeoRotation("rot3",90,180,90,270,0,0);
-//   TGeoRotation *rot4 = new TGeoRotation("rot4",90,90,90,180,0,0);
-//   TGeoRotation *rot5 = new TGeoRotation("rot5",90,198,90,90,0,0);
-//   //--------------- build the shapes ----------------
-//   TGeoBBox *box = new TGeoBBox("HALL_out", 700, 700, 1500);
-//   TGeoTube *tube = new TGeoTube("HALL_in", 0, 20, 2000);
-//   TGeoTrd1 *trd = new TGeoTrd1("abso", 100, 100, 50 ,300);
-//   //--- a composite shape
-//   TGeoCompositeShape *hall = new TGeoCompositeShape("HALL");
-//   hall->AddShape(box, gIdentity, "A");
-//   hall->AddShape(tube,gIdentity, "B");
-//   hall->MakeCombination("A\B");
-//   //--------------- build some volumes ----------------
-//   TGeoVolume *vol, *abso;
-//   vol = new TGeoVolume("Hall", hall, mat_ptr);
-//   abso = new TGeoVolume("absorber", box, "mat4");
-//   //--- volumes having a primitive shape can be built in one step
-//   TGeoVolume *pipe = gGeoManager->MakeTube("beam_pipe", "mat4", 17, 20, 1500);
-//   TGeoVolume *target = gGeoManager->MakeBox("target_box", "mat3", 10, 10, 0.5);
-//   TGeoVolume *detector = gGeoManager->MakeBox("detector", "mat1", 15, 15, 50.);
-//   //---detector has 50 layers a layer has 15x15 cells
-//   TGeoVolume *layer = gGeoManager->MakeBox("layer", "mix1", 15, 15, 1.);
-//   //--------------- build the nodes ----------------
-//   TGeoVolume *HALL = gGeoManager->GetVolume("Hall")
-//   gGeoManager->SetTopVolume(HALL);
-//   HALL->AddNode(pipe, gGeoIdentity);
-//   HALL->AddNode(target, new TGeoTranslation(0,0,100));
-//   HALL->AddNode(abso, new TGeoTranslation(0,0,-600));
-//   detector->Divide(50, "Z");
-//      vol = target->GetBasicCell();
-//      vol->Divide(15, "X");
-//      vol = vol->GetBasicCell();
-//      vol->Divide(15, "Y");
-//   HALL->AddNode(detector, new TGeoCombiTrans(0,0, -400, rot1));
-//   HALL->AddNode(detector, new TGeoCombiTrans(0,0, 400, rot1));
+//void rootgeom()
+//{
+////--- Definition of a simple geometry
+//   gSystem->Load("libGeom");
+//   TGeoManager *geom = new TGeoManager("simple1", "Simple geometry");
+//   
+//   //--- define some materials
+//   TGeoMaterial *mat;
+//   mat = new TGeoMaterial("mat1", "Vacuum", 0,0,0);
+//   mat = new TGeoMaterial("mat2", "Al", 26.98,13,2.7);
+//
+//   //--- define the transformations
+//   TGeoTranslation *tr1 = new TGeoTranslation(20., 0, 0.);
+//   TGeoTranslation *tr2 = new TGeoTranslation(10., 0., 0.);
+//   TGeoTranslation *tr3 = new TGeoTranslation(10., 20., 0.);
+//   TGeoTranslation *tr4 = new TGeoTranslation(5., 10., 0.);
+//   TGeoTranslation *tr5 = new TGeoTranslation(20., 0., 0.);
+//   TGeoTranslation *tr6 = new TGeoTranslation(-5., 0., 0.);
+//   TGeoTranslation *tr7 = new TGeoTranslation(7.5, 7.5, 0.);
+//   TGeoRotation   *rot1 = new TGeoRotation("rot1", 90., 0., 90., 270., 0., 0.);
+//   TGeoCombiTrans *combi1 = new TGeoCombiTrans(7.5, -7.5, 0., rot1);
+//   TGeoTranslation *tr8 = new TGeoTranslation(7.5, -5., 0.);
+//   TGeoTranslation *tr9 = new TGeoTranslation(7.5, 20., 0.);
+//   TGeoTranslation *tr10 = new TGeoTranslation(85., 0., 0.);
+//   TGeoTranslation *tr11 = new TGeoTranslation(35., 0., 0.);
+//   TGeoTranslation *tr12 = new TGeoTranslation(-15., 0., 0.);
+//   TGeoTranslation *tr13 = new TGeoTranslation(-65., 0., 0.);
+//   
+//   TGeoTranslation  *tr14 = new TGeoTranslation(0,0,-100);
+//   TGeoCombiTrans *combi2 = new TGeoCombiTrans(0,0,100, 
+//                                   new TGeoRotation("rot2",90,180,90,90,180,0));
+//   TGeoCombiTrans *combi3 = new TGeoCombiTrans(100,0,0, 
+//                                   new TGeoRotation("rot3",90,270,0,0,90,180));
+//   TGeoCombiTrans *combi4 = new TGeoCombiTrans(-100,0,0, 
+//                                   new TGeoRotation("rot4",90,90,0,0,90,0));
+//   TGeoCombiTrans *combi5 = new TGeoCombiTrans(0,100,0, 
+//                                   new TGeoRotation("rot5",0,0,90,180,90,270));
+//   TGeoCombiTrans *combi6 = new TGeoCombiTrans(0,-100,0, 
+//                                   new TGeoRotation("rot6",180,0,90,180,90,90));
+//   
+//   //--- make the top container volume
+//   Double_t worldx = 110.;
+//   Double_t worldy = 50.;
+//   Double_t worldz = 5.;
+//   TGeoVolume *top = geom->MakeBox("TOP", "mat1", 270., 270., 120.);
+//   geom->SetTopVolume(top); // mandatory !
+//   //--- build other container volumes
+//   TGeoVolume *replica = geom->MakeBox("REPLICA", "mat1",120,120,120);
+//   replica->SetVisibility(kFALSE);
+//   TGeoVolume *rootbox = geom->MakeBox("ROOT", "mat1", 110., 50., 5.);
+//   rootbox->SetVisibility(kFALSE); // this will hold word 'ROOT'
+   
+//   //--- make letter 'R'
+//   TGeoVolume *R = geom->MakeBox("R", "mat1", 25., 25., 5.);
+//   R->SetVisibility(kFALSE);
+//   TGeoVolume *bar1 = geom->MakeBox("bar1", "mat2", 5., 25, 5.);
+//   bar1->SetLineColor(kRed);
+//   R->AddNode(bar1, 1, tr1);
+//   TGeoVolume *bar2 = geom->MakeBox("bar2", "mat2", 5., 5., 5.);
+//   bar2->SetLineColor(kRed);
+//   R->AddNode(bar2, 1, tr2);
+//   R->AddNode(bar2, 2, tr3);
+//   TGeoVolume *tub1 = geom->MakeTubs("tub1", "mat2", 5., 15., 5., 90., 270.);
+//   tub1->SetLineColor(kRed);
+//   R->AddNode(tub1, 1, tr4);
+//   TGeoVolume *bar3 = geom->MakeArb8("bar3", "mat2", 5.);
+//   bar3->SetLineColor(kRed);
+//   TGeoArb8 *arb = (TGeoArb8*)bar3->GetShape();
+//   arb->SetVertex(0, 15., -5.);
+//   arb->SetVertex(1, 5., -5.);
+//   arb->SetVertex(2, -10., -25.);
+//   arb->SetVertex(3, 0., -25.);
+//   arb->SetVertex(4, 15., -5.);
+//   arb->SetVertex(5, 5., -5.);
+//   arb->SetVertex(6, -10., -25.);
+//   arb->SetVertex(7, 0., -25.);
+//   R->AddNode(bar3, 1, gGeoIdentity);
+//   
+//   //--- make letter 'O'
+//   TGeoVolume *O = geom->MakeBox("O", "mat1", 25., 25., 5.);
+//   O->SetVisibility(kFALSE);
+//   TGeoVolume *bar4 = geom->MakeBox("bar4", "mat2", 5., 7.5, 5.);
+//   bar4->SetLineColor(kYellow);
+//   O->AddNode(bar4, 1, tr5);
+//   O->AddNode(bar4, 2, tr6);
+//   TGeoVolume *tub2 = geom->MakeTubs("tub1", "mat2", 7.5, 17.5, 5., 0., 180.);
+//   tub2->SetLineColor(kYellow);
+//   O->AddNode(tub2, 1, tr7);
+//   O->AddNode(tub2, 2, combi1);
+//   
+//   //--- make letter 'T'
+//   TGeoVolume *T = geom->MakeBox("T", "mat1", 25., 25., 5.);
+//   T->SetVisibility(kFALSE);
+//   TGeoVolume *bar5 = geom->MakeBox("bar5", "mat2", 5., 20., 5.);
+//   bar5->SetLineColor(kBlue);
+//   T->AddNode(bar5, 1, tr8);
+//   TGeoVolume *bar6 = geom->MakeBox("bar6", "mat2", 17.5, 5., 5.);
+//   bar6->SetLineColor(kBlue);
+//   T->AddNode(bar6, 1, tr9);
+//
+//   //--- add letters to 'ROOT' container         
+//   rootbox->AddNode(R, 1, tr10);
+//   rootbox->AddNode(O, 1, tr11);
+//   rootbox->AddNode(O, 2, tr12);
+//   rootbox->AddNode(T, 1, tr13);
+//
+//   //--- add word 'ROOT' on each face of a cube
+//   replica->AddNode(rootbox, 1, tr14);
+//   replica->AddNode(rootbox, 2, combi2);
+//   replica->AddNode(rootbox, 3, combi3);
+//   replica->AddNode(rootbox, 4, combi4);
+//   replica->AddNode(rootbox, 5, combi5);
+//   replica->AddNode(rootbox, 6, combi6);
+//
+//   //--- add four replicas of this cube to top volume
+//   top->AddNode(replica, 1, new TGeoTranslation(-150, -150, 0));
+//   top->AddNode(replica, 2, new TGeoTranslation(150, -150, 0));
+//   top->AddNode(replica, 3, new TGeoTranslation(150, 150, 0));
+//   top->AddNode(replica, 4, new TGeoTranslation(-150, 150, 0));
+//
+//   //--- close the geometry
+//   geom->CloseGeometry();
+//   
+//   //--- draw the ROOT box
+//   geom->SetVisLevel(4); 
+//   top->Draw();
+//   if (gPad) gPad->x3d();
+//}   
 //______________________________________________________________________________
+//
+//
+/*
+<img src="gif/t_root.jpg">
+*/
 //
 //
 // TGeoManager - the manager class for the geometry package.
 // ---------------------------------------------------------
-//   Contains the lists (arrays) of all user defined or default objects used
-// in building the geometry : materials, geometrical transformations, shapes,
-// volumes. The user can navigate downwords through the tree of nodes
-// starting from any point. In order to navigate upwords, the current branch
-// is stored in a TObjArray .
-//   Materials, shapes and volumes can be retreived by name :
-//      TGeoManager::GetMaterial(const char *name);
-//      TGeoManager::GetShape(const char *name);
-//      TGeoManager::GetVolume(const char *name);
-//   The top level volume must be specified with TGeoManager::SetTopVolume();
-// All objects like transformations, materials, shapes or volumes can be created
-// with new operator and they will register themselves to TGeoManager class.
-// The user does not have to take care of their deletion.
 //
+//   TGeoManager class is embeeding all the API needed for building and tracking
+// a geometry. It defines a global pointer (gGeoManager) in order to be fully
+// accessible from external code. The mechanism of handling multiple geometries
+// at the same time will be soon implemented. 
 //
-//  Drawing the geometry
-// ----------------------
-//   Any logical volume can be drawn via TGeoVolume::Draw() member function.
-// This can be direcly accessed from the context menu of the volume object
-// directly from the browser.
-//   There are several drawing options that can be set with
-// TGeoManager::SetVisOption(Int_t opt) method :
-// opt=1 - only the content of the volume is drawn, N levels down (default N=3).
-//    This is the default behavior. The number of levels to be drawn can be changed
-//    via TGeoManager::SetVisLevel(Int_t level) method.
-// opt=2 - the final leaves (e.g. daughters with no containment) of the branch
-//    starting from volume are drawn. WARNING : This mode is memory consuming
-//    depending of the size of geometry, so drawing from top level within this mode
-//    should be handled with care. In future there will be a limitation on the
-//    maximum number of nodes to be visualized.
-// opt=3 - only a given path is visualized. This is automatically set by
-//    TGeoVolume::DrawPath(const char *path) method
+//   TGeoManager is the owner of all geometry objects defined in a session, 
+// therefore users must not try to controll their deletion. It contains lists of 
+// materials, transformations, shapes and volumes. Logical nodes (positioned 
+// volumes) are created and destroyed by the TGeoVolume class. Physical
+// nodes and their global transformations are subjected to a caching mechanism
+// due to the sometimes very large memory requirements of logical graf expansion.
+// The caching mechanism is triggered by the total number of physical instances 
+// of volumes and the cache manager is a client of TGeoManager. The manager class
+// also controlls the painter client. This is linked with ROOT graphical libraries 
+// is loaded on demand in order to control visualization actions.
 //
-//    The current view can be exploded in cartesian, cylindrical or spherical
-// coordinates :
-//   TGeoManager::SetExplodedView(Option_t *option). Options may be :
-// - "NONE" - default
-// - "XYZ"  - cartesian coordinates. The bomb factor on each axis can be set with
-//   TGeoManager::SetBombX(Double_t bomb) and corresponding Y and Z.
-// - "CYL"  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
-//   are considered
-// - "SPH"  - bomb in radial spherical coordinate : TGeoManager::SetBombR()+5
+// Rules for building a valid geometry
+// -----------------------------------
+//
+//   A given geometry can be built in various ways, but there are mandatory steps
+// that has to be followed in order to be validated by the modeler. There are
+// general rules : volumes needs materials and shapes in order to be created,
+// both container an containee volumes must be created before linking them togeather,
+// and the relative transformation matrix must be provided. All branches must
+// have an upper link point otherwise they will not be considered as part of the 
+// geometry. Visibility or tracking properties of volumes can be provided both
+// at build time or after geometry is closed, but global visualization settings
+// (see TGeoPainter class) should not be provided at build time, otherwise the
+// drawing package will be loaded. There is also a list of specific rules : 
+// positioned daughters should not extrude their mother or intersect with sisters
+// unless this is specified (see TGeoVolume::AddNodeOverlap()), the top volume
+// (containing all geometry tree) must be specified before closing the geometry
+// and must not be positioned - it represents the global reference frame. After
+// building the full geometry tree, the geometry must be closed 
+// (see TGeoManager::CloseGeometry()). Voxelization can be redone per volume after
+// this process.
+// 
+//
+//   Below is the general scheme of the manager class.
 //
 //Begin_Html
 /*
 <img src="gif/t_mgr.jpg">
 */
 //End_Html
+//
+//  An interactive session
+// ------------------------
+//
+//   Provided that a geometry was successfully built and closed (for instance the 
+// previous example $ROOTSYS/tutorials/rootgeom.C ), the manager class will register 
+// itself to ROOT and the logical/physical structures will become immediately browsable. 
+// The ROOT browser will display starting from the geometry folder : the list of 
+// transformations and materials, the top volume and the top logical node. These last 
+// two can be fully expanded, any intermediate volume/node in the browser being subject 
+// of direct access context menu operations (right mouse button click). All user
+// utilities of classes TGeoManager, TGeoVolume and TGeoNode can be called via the
+// context menu.
+//
+//Begin_Html
+/*
+<img src="gif/t_browser.jpg">
+*/
+//End_Html
+//
+//  --- Drawing the geometry
+//
+//   Any logical volume can be drawn via TGeoVolume::Draw() member function.
+// This can be direcly accessed from the context menu of the volume object
+// directly from the browser. 
+//   There are several drawing options that can be set with
+// TGeoManager::SetVisOption(Int_t opt) method :
+// opt=0 - only the content of the volume is drawn, N levels down (default N=3).
+//    This is the default behavior. The number of levels to be drawn can be changed
+//    via TGeoManager::SetVisLevel(Int_t level) method.
+//
+//Begin_Html
+/*
+<img src="gif/t_frame0.jpg">
+*/
+//End_Html
+//
+// opt=1 - the final leaves (e.g. daughters with no containment) of the branch
+//    starting from volume are drawn down to the current number of levels. 
+//                                     WARNING : This mode is memory consuming
+//    depending of the size of geometry, so drawing from top level within this mode
+//    should be handled with care for expensive geometries. In future there will be 
+//    a limitation on the maximum number of nodes to be visualized.
+//
+/*
+<img src="gif/t_frame1.jpg">
+*/
+//
+// opt=2 - only the clicked volume is visualized. This is automatically set by
+//    TGeoVolume::DrawOnly() method
+// opt=3 - only a given path is visualized. This is automatically set by
+//    TGeoVolume::DrawPath(const char *path) method
+//
+//    The current view can be exploded in cartesian, cylindrical or spherical
+// coordinates :
+//   TGeoManager::SetExplodedView(Int_t opt). Options may be :
+// - 0  - default (no bombing)
+// - 1  - cartesian coordinates. The bomb factor on each axis can be set with
+//        TGeoManager::SetBombX(Double_t bomb) and corresponding Y and Z.
+// - 2  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
+//        are considered
+//
+/*
+<img src="gif/t_frameexp.jpg">
+*/
+//
+// - 3  - bomb in radial spherical coordinate : TGeoManager::SetBombR()
+//
+// Volumes themselves support different visualization settings :
+//    - TGeoVolume::SetVisibility() : set volume visibility.
+//    - TGeoVolume::VisibleDaughters() : set daughters visibility.
+// All these actions automatically updates the current view if any.
+//
+//  --- Checking the geometry
+//
+//  Several checking methods are accesible from the volume context menu. They
+// generally apply only to the visible parts of the drawn geometry in order to
+// ease geometry checking, and their implementation is in the TGeoChecker class
+// from the painting package.
+//
+// 1. Checking a given point.
+//   Can be called from TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z).
+// This method is drawing the daughters of the volume containing the point one
+// level down, printing the path to the deepest physical node holding this point.
+// It also computes the closest distance to any boundary. The point will be drawn
+// in red.
+//
+/*
+<img src="gif/t_checkpoint.jpg">
+*/
+//
+//  2. Shooting random points.
+//   Can be called from TGeoVolume::RandomPoints() (context menu function) and 
+// it will draw this volume with current visualization settings. Random points
+// are generated in the bounding box of the top drawn volume. The points are 
+// classified and drawn with the color of their deepest container. Only points
+// in visible nodes will be drawn.
+//
+/*
+<img src="gif/t_random1.jpg">
+*/
+//
+//
+//  3. Raytracing.
+//   Can be called from TGeoVolume::RandomRays() (context menu of volumes) and
+// will shoot rays from a given point in the local reference frame with random
+// directions. The intersections with displayed nodes will appear as segments
+// having the color of the touched node. Drawn geometry will be then made invisible
+// in order to enhance rays.
+//
+/*
+<img src="gif/t_random2.jpg">
+*/
 
 #include "Riostream.h"
 
@@ -170,6 +394,7 @@
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"
+
 #include "TGeoMaterial.h"
 #include "TGeoMatrix.h"
 #include "TGeoManager.h"
@@ -192,7 +417,6 @@
 
 TGeoManager *gGeoManager = 0;
 
-//Int_t TGeoManager::kGeoVisLevel = 3;
 const char *kGeoOutsidePath = " ";
 
 ClassImp(TGeoManager)
@@ -200,7 +424,7 @@ ClassImp(TGeoManager)
 //-----------------------------------------------------------------------------
 TGeoManager::TGeoManager()
 {
-// dummy constructor
+// Default constructor.
    fBits = 0;
    fMaterials = 0;
    fMatrices = 0;
@@ -210,7 +434,6 @@ TGeoManager::TGeoManager()
    fCldirChecked = 0;
    fNormal = 0;
    fCldir = 0;
-   fGlobalMatrices = 0;
    fNodes = 0;
    fNNodes = 0;
    fVolumes = 0;
@@ -238,13 +461,15 @@ TGeoManager::TGeoManager()
    fIsStepEntering = kFALSE;
    fIsStepExiting  = kFALSE;
    fIsOutside  = kFALSE;
+   fIsOnBoundary = kFALSE;
+   fIsNullStep = kFALSE;
    gGeoIdentity = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoManager::TGeoManager(const char *name, const char *title)
             :TNamed(name, title)
 {
-// constructor
+// Constructor.
    gGeoManager = this;
    fSearchOverlaps = kFALSE;
    fLoopVolumes = kFALSE;
@@ -256,13 +481,6 @@ TGeoManager::TGeoManager(const char *name, const char *title)
    fMatrices = new TList();
    fNodes = new TObjArray(30);
    fNNodes = 0;
-   fGlobalMatrices = new TObjArray(30);
-   for (Int_t level=0; level<30; level++) {
-      char *name = new char[20];
-      name[0] = '\0';
-      sprintf(name, "global%i", level);
-      fGlobalMatrices->AddAt(new TGeoHMatrix(name), level);
-   }
    fLevel = 0;
    fPoint = new Double_t[3];
    fDirection = new Double_t[3];
@@ -289,6 +507,8 @@ TGeoManager::TGeoManager(const char *name, const char *title)
    fIsStepEntering = kFALSE;
    fIsStepExiting = kFALSE;
    fIsOutside = kFALSE;
+   fIsOnBoundary = kFALSE;
+   fIsNullStep = kFALSE;
 
    gGeoIdentity = new TGeoIdentity("Identity");
    BuildDefaultMaterials();
@@ -301,12 +521,8 @@ TGeoManager::~TGeoManager()
    delete [] fBits;
    printf("deleting cache...\n");
    if (fCache) delete fCache;
-//   printf("deleting top node...\n");
-//   if (fTopNode) delete fTopNode;
    printf("deleting matrices...\n");
    if (fMatrices) {fMatrices->Delete(); delete fMatrices;}
-//   printf("deleting global matrices...\n");
-   if (fGlobalMatrices) {fGlobalMatrices->Delete(); delete fGlobalMatrices;}
    if (fNodes) delete fNodes;
    printf("deleting materials...\n");
    if (fMaterials) {fMaterials->Delete(); delete fMaterials;}
@@ -330,12 +546,11 @@ TGeoManager::~TGeoManager()
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::AddMaterial(TGeoMaterial *material)
 {
-// Add a material to the list. Returns index of the material in list
+// Add a material to the list. Returns index of the material in list.
    if (!material) {
       Error("AddMaterial", "invalid material");
       return -1;
    }
-//   printf("adding material %s\n", material->GetTitle());
    Int_t index = GetMaterialIndex(material->GetName());
    if (index >= 0) return index;
    index = fMaterials->GetSize();
@@ -345,12 +560,11 @@ Int_t TGeoManager::AddMaterial(TGeoMaterial *material)
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::AddTransformation(TGeoMatrix *matrix)
 {
-// Add a matrix to the list. Returns index of the matrix in list
+// Add a matrix to the list. Returns index of the matrix in list.
    if (!matrix) {
       Error("AddMatrix", "invalid matrix");
       return -1;
    }
-//   printf("adding matrix %s\n", matrix->GetName());
    Int_t index = fMatrices->GetSize();
    fMatrices->Add(matrix);
    return index;
@@ -358,31 +572,25 @@ Int_t TGeoManager::AddTransformation(TGeoMatrix *matrix)
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::AddShape(TGeoShape *shape)
 {
-// Add a shape to the list. Returns index of the shape in list
+// Add a shape to the list. Returns index of the shape in list.
    if (!shape) {
       Error("AddShape", "invalid shape");
       return -1;
    }
-//   if (fShapes->FindObject(shape->GetName())) {
-//      Error("AddShape", "a shape with this name already defined");
-//      return -1;
-//   }
    TList *list = fShapes;
    if (shape->IsRunTimeShape()) list = fGShapes;;
    Int_t index = list->GetSize();
-//   printf("adding shape %i\n", index);
    list->Add(shape);
    return index;
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::AddVolume(TGeoVolume *volume)
 {
-// Add a volume to the list. Returns index of the volume in list
+// Add a volume to the list. Returns index of the volume in list.
    if (!volume) {
       Error("AddVolume", "invalid volume");
       return -1;
    }
-//      Warning("AddVolume", "a volume with this name already defined");
    TList *list = fVolumes;
    if (volume->IsRunTime()) list = fGVolumes;
    Int_t index = list->GetSize();
@@ -392,6 +600,7 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
 //-----------------------------------------------------------------------------
 void TGeoManager::Browse(TBrowser *b)
 {
+// Describe how to browse this object.
    if (!b) return;
    if (fMaterials) b->Add(fMaterials, "Materials");
    if (fMatrices)  b->Add(fMatrices, "Local transformations");
@@ -401,41 +610,37 @@ void TGeoManager::Browse(TBrowser *b)
 //-----------------------------------------------------------------------------
 void TGeoManager::BombTranslation(const Double_t *tr, Double_t *bombtr)
 {
-// get the new 'bombed' translation vector according current exploded view mode
+// Get the new 'bombed' translation vector according current exploded view mode.
    if (fPainter) fPainter->BombTranslation(tr, bombtr);
    return;
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 {
-// get the new 'unbombed' translation vector according current exploded view mode
+// Get the new 'unbombed' translation vector according current exploded view mode.
    if (fPainter) fPainter->UnbombTranslation(tr, bombtr);
    return;
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::BuildCache()
 {
-// builds the cache memory and the default number of physical nodes
-// within
+// Builds the cache for physical nodes and global matrices.
    if (!fCache) {
-      if (fNNodes>5000000)
+      if (fNNodes>5000000)  // temporary - works without
+         // build dummy cache 
          fCache = new TGeoCacheDummy(fTopNode);
       else
+         // build real cache
          fCache = new TGeoNodeCache(0);
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoManager::ClearPad()
-{
-// clear pad if any
-   if (gPad) delete gPad;
-   gPad = 0;
-}
-//-----------------------------------------------------------------------------
 void TGeoManager::ClearAttributes()
 {
-// reset all attributes to default ones
-   ClearPad();
+// Reset all attributes to default ones. Default attributes for visualization
+// are those defined before closing the geometry. 
+   if (gPad) delete gPad;
+   gPad = 0;
    SetVisOption(0);
    SetVisLevel(3);
    SetExplodedView(0);
@@ -447,7 +652,6 @@ void TGeoManager::ClearAttributes()
       if (!vol->IsVisTouched()) continue;
       vol->SetVisibility(kTRUE);
       vol->SetVisDaughters(kTRUE);
-//      vol->SetLineColor(gStyle->GetLineColor());
       vol->SetLineStyle(gStyle->GetLineStyle());
       vol->SetLineWidth(gStyle->GetLineWidth());
       vol->SetVisTouched(kFALSE);
@@ -456,12 +660,13 @@ void TGeoManager::ClearAttributes()
 //-----------------------------------------------------------------------------
 void TGeoManager::CloseGeometry()
 {
-// closing geometry implies building the physical nodes and voxels
+// Closing geometry implies checking the geometry validity, fixing shapes 
+// with negative parameters (run-time shapes)building the cache manager, 
+// voxelizing all volumes, counting the total number of physical nodes and
+// registring the manager class to the browser.
    SelectTrackingMedia();
    printf("Fixing runtime shapes...\n");
    CheckGeometry();
-//   printf("Fixing runtime shapes...\n");
-//   CheckGeometry();
    printf("Counting nodes...\n");
    fNNodes = gGeoManager->CountNodes();
    Voxelize("ALL");
@@ -474,13 +679,14 @@ void TGeoManager::CloseGeometry()
 //-----------------------------------------------------------------------------
 void TGeoManager::ClearShape(TGeoShape *shape)
 {
+// Remove a shape from the list of shapes.
    if (fShapes->FindObject(shape)) fShapes->Remove(shape);
    delete shape;
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::CleanGarbage()
 {
-// clean volumes and shapes from garbage collection
+// Clean temporary volumes and shapes from garbage collection.
    TIter nextv(fGVolumes);
    TGeoVolume *vol = 0;
    while ((vol=(TGeoVolume*)nextv()))
@@ -491,11 +697,8 @@ void TGeoManager::CleanGarbage()
 //-----------------------------------------------------------------------------
 void TGeoManager::CdTop()
 {
-// make top level node current
-//----this is for no cache
-//   Top();
-//   return;
-//-----------------------
+// Make top level node the current node. Updates the cache accordingly.
+// Determine the overlapping state of current node.
    fLevel = 0;
    if (fCurrentOverlapping) fLastNode = fCurrentNode;
    fCurrentNode = fTopNode;
@@ -505,11 +708,8 @@ void TGeoManager::CdTop()
 //-----------------------------------------------------------------------------
 void TGeoManager::CdUp()
 {
-// go one level up in geometry
-//----this is for no cache
-//   Up();
-//   return;
-//-----------------------
+// Go one level up in geometry. Updates cache accordingly.
+// Determine the overlapping state of current node.
    if (!fLevel) return;
    fLevel--;
    if (!fLevel) {
@@ -524,11 +724,8 @@ void TGeoManager::CdUp()
 //-----------------------------------------------------------------------------
 void TGeoManager::CdDown(Int_t index)
 {
-// cd to daughter. Can be called only with a valid daughter
-//----this is for no cache
-//   Down(index);
-//   return;
-//-----------------------
+// Make a daughter of current node current. Can be called only with a valid 
+// daughter index (no check). Updates cache accordingly.
    TGeoNode *node = fCurrentNode->GetDaughter(index);
    Bool_t is_offset = node->IsOffset();
    if (is_offset)
@@ -581,7 +778,7 @@ Bool_t TGeoManager::cd(const char *path)
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::CountNodes(TGeoVolume *vol, Int_t nlevels)
 {
-// Count the total number of nodes starting from a volume, nlevels down
+// Count the total number of nodes starting from a volume, nlevels down.
    TGeoVolume *top;
    if (!vol) {
       top = fTopVolume;
@@ -618,7 +815,7 @@ void TGeoManager::Test(Int_t npoints, Option_t *option)
 //-----------------------------------------------------------------------------
 void TGeoManager::TestOverlaps(const char* path)
 {
-//--- Geometry overlap checker based on sampling. 
+// Geometry overlap checker based on sampling. 
    GetGeomPainter()->TestOverlaps(path);
 }
 //-----------------------------------------------------------------------------
@@ -679,7 +876,7 @@ Bool_t TGeoManager::GotoSafeLevel()
 TGeoNode *TGeoManager::FindInCluster(Int_t *cluster, Int_t nc)
 {
 // Find a node inside a cluster of overlapping nodes. Current node must
-// be on top of all the nodes in cluster. Always nc>1
+// be on top of all the nodes in cluster. Always nc>1.
    TGeoNode *clnode = 0;
    TGeoNode *priority = fLastNode;
    // save current node
@@ -996,7 +1193,9 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
 // Find distance to target node given by path boundary on current direction. If no target
 // is specified, find distance to next boundary from current point to current direction
 // and store this in fStep. Returns node having this boundary. Find also
-// distance to closest boundary and store it in fSafety.
+// distance to closest boundary and store it in fSafety. Set flags 
+// fIsStepEntering/fIsStepExiting according to the fact that current ray will enter
+// or exit next node.
 
    // convert current point and direction to local reference
    fStep = TGeoShape::kBig;
@@ -1012,10 +1211,15 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
       TGeoVolume *tvol=fCurrentNode->GetVolume();
       MasterToLocal(fPoint, &point[0]);
       MasterToLocalVect(fDirection, &dir[0]);
-      if (tvol->Contains(&point[0]))
+      if (tvol->Contains(&point[0])) {
          fStep=tvol->GetShape()->DistToOut(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
-      else
+         fIsStepEntering=kFALSE;
+         fIsStepExiting=kTRUE;
+      } else {
          fStep=tvol->GetShape()->DistToIn(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
+         fIsStepEntering=kTRUE;
+         fIsStepExiting=kFALSE;
+      }   
       PopPath();
       return target;
    }
@@ -1026,11 +1230,16 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    TGeoVolume *vol = fCurrentNode->GetVolume();
    // if point is outside, just check the top node
    if (fIsOutside) {
-      fStep = vol->GetShape()->DistToIn(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
+      fStep = fTopVolume->GetShape()->DistToIn(fPoint, fDirection, 3, TGeoShape::kBig, &fSafety);
+      fIsStepEntering=kTRUE;
+      fIsStepExiting=kFALSE;
       return fTopNode;
    }
-   if (fIsEntering || fIsExiting) {
-      fStep = vol->GetShape()->DistToOut(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
+   // find distance to exiting current node
+   fIsStepEntering=kFALSE;
+   fIsStepExiting=kTRUE;
+   if (fIsOnBoundary) {
+      fStep = vol->GetShape()->DistToOut(&point[0], &dir[0], 2, TGeoShape::kBig, &fSafety);
       if (fIsExiting) return fCurrentNode;
    } else {
       fStep = vol->GetShape()->DistToOut(&point[0], &dir[0], 2, TGeoShape::kBig, &fSafety);
@@ -1056,10 +1265,12 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
          fSafety = TMath::Min(fSafety, safety);
          if (snext<fStep) {
             fStep=snext;
+            fIsStepEntering=kTRUE;
+            fIsStepExiting=kFALSE;
             clnode = current;
          }
       }
-   return clnode;
+      return clnode;
    }
    // if current volume is divided, we are in the non-divided region. We
    // check only the first and the last cell
@@ -1074,6 +1285,8 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
       fSafety = TMath::Min(fSafety, safety);
       if (snext<fStep) {
          fStep=snext;
+         fIsStepEntering=kTRUE;
+         fIsStepExiting=kFALSE;
          clnode = current;
       }
       Int_t ilast = ifirst+finder->GetNdiv()-1;
@@ -1086,17 +1299,21 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
       fSafety = TMath::Min(fSafety, safety);
       if (snext<fStep) {
          fStep=snext;
+         fIsStepEntering=kTRUE;
+         fIsStepExiting=kFALSE;
          return current;
       }
    }
    // if current volume is voxelized, first get current voxel
    TGeoVoxelFinder *voxels = vol->GetVoxels();
+//   printf("---check voxels\n");
    if (voxels) {
       Int_t ncheck = 0;
       Int_t *vlist = 0;
       voxels->SortCrossedVoxels(&point[0], &dir[0]);
       Bool_t first = kTRUE;
       while ((vlist=voxels->GetNextVoxel(&point[0], &dir[0], ncheck))) {
+//         printf("---ncheck : %i\n", ncheck);
          for (i=0; i<ncheck; i++) {
             current = vol->GetNode(vlist[i]);
             current->cd();
@@ -1106,11 +1323,13 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
             // compute also safety if we are in the starting voxel
                snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 2, TGeoShape::kBig, &safety);
                if (safety<fSafety) fSafety=safety;
-            }
-            else
+            } else {
                snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 3, TGeoShape::kBig, &safety);
+            } 
             if (snext<fStep) {
                fStep=snext;
+               fIsStepEntering=kTRUE;
+               fIsStepExiting=kFALSE;
                clnode = current;
             }
          }
@@ -1122,8 +1341,8 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
 //-----------------------------------------------------------------------------
 void TGeoManager::InitTrack(Double_t *point, Double_t *dir)
 {
-// initialize current point and current direction vector (normalized)
-// in MARS
+// Initialize current point and current direction vector (normalized)
+// in MARS.
    SetCurrentPoint(point);
    SetCurrentDirection(dir);
    FindNode();
@@ -1131,8 +1350,8 @@ void TGeoManager::InitTrack(Double_t *point, Double_t *dir)
 //-----------------------------------------------------------------------------
 void TGeoManager::InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz)
 {
-// initialize current point and current direction vector (normalized)
-// in MARS
+// Initialize current point and current direction vector (normalized)
+// in MARS.
    SetCurrentPoint(x,y,z);
    SetCurrentDirection(nx,ny,nz);
    FindNode();
@@ -1140,13 +1359,14 @@ void TGeoManager::InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Dou
 //-----------------------------------------------------------------------------
 const char *TGeoManager::GetPath() const
 {
+// Get path to the current node in the form /node0/node1/...
    if (fIsOutside) return kGeoOutsidePath;
    return fCache->GetPath();
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::GetByteCount(Option_t *option)
 {
-// Get total size of geometry in bytes
+// Get total size of geometry in bytes.
    Int_t count = 0;
    TIter next(fVolumes);
    TGeoVolume *vol;
@@ -1163,21 +1383,21 @@ Int_t TGeoManager::GetByteCount(Option_t *option)
 //-----------------------------------------------------------------------------
 TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
-// make a default painter if none present
+// Make a default painter if none present. Returns pointer to it.
     if (!fPainter) fPainter=TVirtualGeoPainter::GeoPainter();
     return fPainter;
 }
 //-----------------------------------------------------------------------------
 TGeoMaterial *TGeoManager::GetMaterial(const char *matname) const
 {
-// search for given material
+// Search for a named material.
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->FindObject(matname);
    return mat;
 }
 //-----------------------------------------------------------------------------
 TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 {
-// return material at position id
+// Return material at position id.
    if (id >= fMaterials->GetSize()) return 0;
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->At(id);
    return mat;
@@ -1185,7 +1405,7 @@ TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::GetMaterialIndex(const char *matname) const
 {
-// return index of given material
+// Return index of named material.
    TIter next(fMaterials);
    TGeoMaterial *mat;
    Int_t id = 0;
@@ -1197,35 +1417,36 @@ Int_t TGeoManager::GetMaterialIndex(const char *matname) const
    return -1;  // fail
 }
 //-----------------------------------------------------------------------------
-void TGeoManager::RandomRays(Int_t nrays)
+void TGeoManager::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
-// randomly shoot nrays and plot intersections with surfaces for current
-// top node
-   GetGeomPainter()->RandomRays(nrays);
+// Randomly shoot nrays and plot intersections with surfaces for current
+// top node.
+   GetGeomPainter()->RandomRays(nrays, startx, starty, startz);
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::RemoveMaterial(Int_t index)
 {
-// remove material at given index
+// Remove material at given index.
    TObject *obj = fMaterials->At(index);
    if (obj) fMaterials->Remove(obj);
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::RestoreMasterVolume()
 {
+// Restore the master volume of the geometry.
    if (fTopVolume == fMasterVolume) return;
    if (fMasterVolume) SetTopVolume(fMasterVolume);
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::GetVolume(const char *name) const
 {
-// retrieves a named volume
+// Retrieves a named volume.
    return ((TGeoVolume*)fVolumes->FindObject(name));
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::Voxelize(Option_t *option)
 {
-   // voxelize all non-divided volumes
+// Voxelize all non-divided volumes.
    TGeoVolume *vol;
    printf("Voxelizing...\n");
    Int_t nentries = fVolumes->GetSize();
@@ -1247,7 +1468,7 @@ void TGeoManager::ModifiedPad() const
 TGeoVolume *TGeoManager::MakeArb8(const char *name, const char *material,
                                   Double_t dz, Double_t *vertices)
 {
-   // Make an arb8 shape
+// Make an TGeoArb8 volume.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1265,7 +1486,7 @@ TGeoVolume *TGeoManager::MakeArb8(const char *name, const char *material,
 TGeoVolume *TGeoManager::MakeBox(const char *name, const char *material,
                                     Double_t dx, Double_t dy, Double_t dz)
 {
-// Make in one step a volume pointing to a box shape with given material
+// Make in one step a volume pointing to a box shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1284,7 +1505,7 @@ TGeoVolume *TGeoManager::MakePara(const char *name, const char *material,
                                     Double_t dx, Double_t dy, Double_t dz,
                                     Double_t alpha, Double_t theta, Double_t phi)
 {
-// Make in one step a volume pointing to a box shape with given material
+// Make in one step a volume pointing to a paralelipiped shape with given material.
    if ((alpha==0) && (theta==0)) {
       printf("Warning : para %s with alpha=0, theta=0 -> making box instead\n", name);
       return MakeBox(name, material, dx, dy, dz);
@@ -1326,7 +1547,7 @@ TGeoVolume *TGeoManager::MakeSphere(const char *name, const char *material,
 TGeoVolume *TGeoManager::MakeTube(const char *name, const char *material,
                                      Double_t rmin, Double_t rmax, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given material
+// Make in one step a volume pointing to a tube shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1345,7 +1566,7 @@ TGeoVolume *TGeoManager::MakeTubs(const char *name, const char *material,
                                      Double_t rmin, Double_t rmax, Double_t dz,
                                      Double_t phi1, Double_t phi2)
 {
-// Make in one step a volume pointing to a tube segment shape with given material
+// Make in one step a volume pointing to a tube segment shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1401,7 +1622,7 @@ TGeoVolume *TGeoManager::MakeCone(const char *name, const char *material,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2)
 {
-// Make in one step a volume pointing to a cone shape with given material
+// Make in one step a volume pointing to a cone shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1439,7 +1660,7 @@ TGeoVolume *TGeoManager::MakeCons(const char *name, const char *material,
 TGeoVolume *TGeoManager::MakePcon(const char *name, const char *material,
                                      Double_t phi, Double_t dphi, Int_t nz)
 {
-// Make in one step a volume pointing to a pcon shape with given material
+// Make in one step a volume pointing to a polycone shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1457,7 +1678,7 @@ TGeoVolume *TGeoManager::MakePcon(const char *name, const char *material,
 TGeoVolume *TGeoManager::MakePgon(const char *name, const char *material,
                                      Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
-// Make in one step a volume pointing to a pgon shape with given material
+// Make in one step a volume pointing to a polygone shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1475,7 +1696,7 @@ TGeoVolume *TGeoManager::MakePgon(const char *name, const char *material,
 TGeoVolume *TGeoManager::MakeTrd1(const char *name, const char *material,
                                   Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
-// Make in one step a volume pointing to a trd1 shape with given material
+// Make in one step a volume pointing to a TGeoTrd1 shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1494,7 +1715,7 @@ TGeoVolume *TGeoManager::MakeTrd2(const char *name, const char *material,
                                   Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2,
                                   Double_t dz)
 {
-// Make in one step a volume pointing to a trd2 shape with given material
+// Make in one step a volume pointing to a TGeoTrd2 shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1514,7 +1735,7 @@ TGeoVolume *TGeoManager::MakeTrap(const char *name, const char *material,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-// Make in one step a volume pointing to a trd2 shape with given material
+// Make in one step a volume pointing to a trapezoid shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1535,7 +1756,7 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, const char *material,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-// Make in one step a volume pointing to a trd2 shape with given material
+// Make in one step a volume pointing to a twisted trapezoid shape with given material.
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -1550,9 +1771,11 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, const char *material,
    if (old) vol->MakeCopyNodes(old);
    return vol;
 }
+
 //-----------------------------------------------------------------------------
 TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, const char *material)
 {
+// Make a TGeoVolumeMulti handling a list of volumes.
    TGeoMaterial *mat = GetMaterial(material);
    if (!mat) {
       printf("%s\n", material);
@@ -1565,7 +1788,7 @@ TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, const char *mate
 //-----------------------------------------------------------------------------
 void TGeoManager::SetExplodedView(UInt_t ibomb)
 {
-   // set type of exploding view
+// Set type of exploding view (see TGeoPainter::SetExplodedView())
    GetGeomPainter();
    fPainter->SetExplodedView(ibomb);
 }
@@ -1573,7 +1796,7 @@ void TGeoManager::SetExplodedView(UInt_t ibomb)
 //-----------------------------------------------------------------------------
 void TGeoManager::SetNsegments(Int_t nseg)
 {
-// Set number of segments for approximating circles
+// Set number of segments for approximating circles in drawing.
    if (nseg < 3) return;
    TVirtualGeoPainter *painter = GetGeomPainter();
    if (painter) painter->SetNsegments(nseg);
@@ -1587,36 +1810,39 @@ Int_t TGeoManager::GetNsegments() const
    if (painter) return painter->GetNsegments();
    return 0;
 }
-//-----------------------------------------------------------------------------
-void TGeoManager::ComputeGlobalMatrices(Option_t *option)
-{   
-// compute global matrices according to option
-}
 
 //-----------------------------------------------------------------------------
 void TGeoManager::BuildDefaultMaterials()
 {
-// build the default materials. A list of those can be found in ...
+// Build the default materials. A list of those can be found in ...
    new TGeoMaterial("default", "Air", 14.61, 7.3, 0.001205);
 }
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
 {
-// make a rectiliniar step of length fStep from current point (fPoint) on current
+// Make a rectiliniar step of length fStep from current point (fPoint) on current
 // direction (fDirection). If the step is imposed by geometry, is_geom flag
 // must be true (default). The cross flag specifies if the boundary should be
 // crossed in case of a geometry step (default true). Returns new node after step.
+// Set also on boundary condition.
    Double_t epsil = 0;
+   if (fStep<1E-9) fIsNullStep=kTRUE;
+   else fIsNullStep=kFALSE; 
+   if (is_geom) epsil=(cross)?1E-9:-1E-9;
+   TGeoNode *old = fCurrentNode;
+   if (fIsOutside) old = 0;
+   for (Int_t i=0; i<3; i++) fPoint[i]+=(fStep+epsil)*fDirection[i];
+   TGeoNode *current = FindNode();
+   if (fIsOutside) current=0;
    if (is_geom) {
-      epsil=(cross)?1E-9:-1E-9;
-      fIsEntering = cross;
-      fIsExiting  = !cross;
+      fIsEntering = (current==old)?kFALSE:kTRUE;
+      fIsExiting  = !fIsEntering;
+      fIsOnBoundary = kTRUE;
    } else {
       fIsEntering = fIsExiting = kFALSE;
+      fIsOnBoundary = kFALSE;
    }
-   for (Int_t i=0; i<3; i++)
-      fPoint[i]+=(fStep+epsil)*fDirection[i];
-   return FindNode();
+   return current;
 }
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
@@ -1629,7 +1855,8 @@ TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
 //-----------------------------------------------------------------------------
 void TGeoManager::SetTopVolume(TGeoVolume *vol)
 {
-// set the top volume and corresponding node
+// Set the top volume and corresponding node as starting point of the geometry.
+   if (fTopVolume==vol) return;
    if (fTopVolume) fTopVolume->SetTitle("");
    fTopVolume = vol;
    vol->SetTitle("Top volume");
@@ -1643,7 +1870,6 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    fCurrentNode = fTopNode;
    fNodes->AddAt(fTopNode, 0);
    fLevel = 0;
-   *((TGeoHMatrix*)fGlobalMatrices->At(0)) = gGeoIdentity;
    if (fCache) {
       delete fCache;
       fCache = 0;
@@ -1655,7 +1881,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
 //-----------------------------------------------------------------------------
 void TGeoManager::SelectTrackingMedia()
 {
-// define different tracking media
+// Define different tracking media.
    printf("List of materials :\n");
    Int_t nmat = fMaterials->GetSize();
    if (!nmat) {printf(" No materials !\n"); return;}
@@ -1684,24 +1910,30 @@ void TGeoManager::SelectTrackingMedia()
       }
    }
 }
+
 //-----------------------------------------------------------------------------
 void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
 {
+// Classify a given point. See TGeoChecker::CheckPoint().
    GetGeomPainter()->CheckPoint(x,y,z,option);
 }
+
 //-----------------------------------------------------------------------------
 void TGeoManager::CheckGeometry(Option_t *option)
 {
-// instances a TGeoChecker object and investigates the geometry according to
-// option
+// Instanciate a TGeoChecker object and investigates the geometry according to
+// option. Not implemented yet.
    // check shapes first
    fTopNode->CheckShapes();
 }
+
 //-----------------------------------------------------------------------------
 void TGeoManager::UpdateCurrentPosition(Double_t *nextpoint)
 {
-// computes and changes the current node according to the new position
+// Computes and changes the current node according to the new position.
+// Not implemented.
 }
+
 //-----------------------------------------------------------------------------
 ULong_t TGeoManager::SizeOf(TGeoNode *node, Option_t *option)
 {

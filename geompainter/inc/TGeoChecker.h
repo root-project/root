@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.1 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    void             Generate(UInt_t npoints=1000000);      // compute safety and fill the tree
    void             Raytrace(Double_t *startpoint, UInt_t npoints=1000000);
    void             RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
-   void             RandomRays(Int_t nrays);
+   void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShowPoints(Option_t *option="");
    void             Test(Int_t npoints, Option_t *option);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.1 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TNtuple.h"
 #include "TRandom3.h"
 #include "TPolyMarker3D.h"
+#include "TPolyLine3D.h"
 #include "TStopwatch.h"
 
 #include "TGeoBBox.h"
@@ -120,6 +121,7 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
 // Draw random points in the bounding box of a volume.
    if (!vol) return;
    gRandom = new TRandom3();
+   vol->VisibleDaughters(kTRUE);
    vol->Draw();
    TString opt = option;
    opt.ToLower();
@@ -135,22 +137,22 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
    Double_t oz = (box->GetOrigin())[2];
    Double_t *xyz = new Double_t[3];
    printf("Random box : %f, %f, %f\n", dx, dy, dz);
-   TGeoNode *node = 0;;
+   TGeoNode *node = 0;
    printf("Start... %i points\n", npoints);
    Int_t i=0;
    Int_t igen=0;
    Int_t ic = 0;
+   Int_t n10 = npoints/10;
    Double_t ratio=0;
-   while (i<npoints) {
+   while (igen<npoints) {
       xyz[0] = ox-dx+2*dx*gRandom->Rndm();
       xyz[1] = oy-dy+2*dy*gRandom->Rndm();
       xyz[2] = oz-dz+2*dz*gRandom->Rndm();
       fGeom->SetCurrentPoint(xyz);
       igen++;
-      if ((igen%1000)==0) {
-         ratio = (Double_t)i/(Double_t)igen;
-         if (ratio<0.00001) break;
-      }
+      if (n10) {
+         if ((igen%n10) == 0) printf("%i percent\n", Int_t(100*igen/npoints));
+      }  
       node = fGeom->FindNode();
       if (!node) continue;
       if (!node->IsOnScreen()) continue;
@@ -163,119 +165,128 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
       if (!marker) {
          marker = new TPolyMarker3D();
          marker->SetMarkerColor(ic);
+         marker->SetMarkerStyle(8);
+         marker->SetMarkerSize(0.4);
          pm->AddAt(marker, ic);
       }
       marker->SetNextPoint(xyz[0], xyz[1], xyz[2]);
-      if ((i%1000) == 0) printf("%i\n", i);
       i++;
-      ratio = (Double_t)i/(Double_t)igen;
    }
+   printf("Number of visible points : %i\n", i);
+   ratio = (Double_t)i/(Double_t)igen;
    printf("efficiency : %g\n", ratio);
    for (Int_t m=0; m<128; m++) {
       marker = (TPolyMarker3D*)pm->At(m);
       if (marker) marker->Draw("SAME");
    }
-   gPad->Modified();
-   gPad->Update();
+   fGeom->GetTopVolume()->VisibleDaughters(kFALSE);
+   printf("---Daughters of %s made invisible.\n", fGeom->GetTopVolume()->GetName());
+   printf("---Make them visible with : gGeoManager->GetTopVolume()->VisibleDaughters();\n");
    delete pm;
    delete xyz;
 }   
 //-----------------------------------------------------------------------------
-void TGeoChecker::RandomRays(Int_t nrays)
+void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
-// Randomly shoot nrays and plot intersections with surfaces for current top node.
+// Randomly shoot nrays from point (startx,starty,startz) and plot intersections 
+// with surfaces for current top node.
    TObjArray *pm = new TObjArray(128);
-   TPolyMarker3D *marker = 0;
-   Int_t ic=0;
+   TPolyLine3D *line = 0;
    gRandom = new TRandom3();
    TGeoVolume *vol=fGeom->GetTopVolume();
-   TGeoBBox *box = (TGeoBBox*)vol->GetShape();
-   Double_t dx = box->GetDX();
-   Double_t dy = box->GetDY();
-   Double_t dz = box->GetDZ();
-   Double_t ox = (box->GetOrigin())[0];
-   Double_t oy = (box->GetOrigin())[1];
-   Double_t oz = (box->GetOrigin())[2];
+   vol->VisibleDaughters(kTRUE);
 
    Double_t start[3];
    Double_t dir[3];
    Double_t *point = fGeom->GetCurrentPoint();
    vol->Draw();
-   printf("Random box : %f, %f, %f\n", dx, dy, dz);
+   printf("Start... %i rays\n", nrays);
    TGeoNode *node, *startnode, *endnode;
+   Bool_t vis1,vis2, is_sentering, is_entering, is_null;
    Int_t i=0;
-   Double_t theta,phi;
-   while (i<nrays) {
-      start[0] = ox-dx+2*dx*gRandom->Rndm();
-      start[1] = oy-dy+2*dy*gRandom->Rndm();
-      start[2] = oz-dz+2*dz*gRandom->Rndm();
+   Int_t ipoint;
+   Int_t itot=0;
+   Int_t n10=nrays/10;
+   Double_t theta,phi, step;
+   while (itot<nrays) {
+      itot++;
+      ipoint = 0;
+      if (n10) {
+         if ((itot%n10) == 0) printf("%i percent\n", Int_t(100*itot/nrays));
+      }
+      start[0] = startx;
+      start[1] = starty;
+      start[2] = startz;
       phi = 2*TMath::Pi()*gRandom->Rndm();
       theta= TMath::ACos(1.-2.*gRandom->Rndm());
+//      theta = 0.5*TMath::Pi();
       dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
       dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
       dir[2]=TMath::Cos(theta);
       fGeom->InitTrack(&start[0], &dir[0]);
+      line = 0;
       startnode = fGeom->GetCurrentNode();
-      Bool_t vis1,vis2, draw;
+      if (fGeom->IsOutside()) startnode=0;
+//      if (startnode) printf("start %s\n", startnode->GetName());
       vis1 = (startnode)?(startnode->IsOnScreen()):kFALSE;
-      node = fGeom->FindNextBoundary();
-      if (fGeom->GetStep()<1E10) {
-         endnode = fGeom->Step();
-         vis2=(endnode)?(endnode->IsOnScreen()):kFALSE;
-         // if we did not cross the boundary, skip this
-         if (endnode==startnode) continue;
-         // if exiting top volume, ignore point
-         if (endnode==0) continue;
+      if (vis1) {
+         line = new TPolyLine3D(2);
+         line->SetLineColor(startnode->GetVolume()->GetLineColor());
+         line->SetPoint(ipoint++, startx, starty, startz);
          i++;
-         // current path is to end node
-         while ((fGeom->GetStep()<1E10) && (startnode!=endnode) && (endnode!=0)) {
-            if (node) {
-               // case endnode=node -> entering node
-               if (node==endnode) {
-                  if (vis2) {
-                     draw=kTRUE;
-                     ic=node->GetColour();
-                  } else {
-                     draw=kFALSE;
-                  }
-               } else {
-                  // case exiting node
-                  if (vis1) {
-                     draw=kTRUE;
-                     ic=node->GetColour();
-                  } else {
-                     draw=kFALSE;
-                  }
-               }
-
-               if (draw) {
-                  if (ic >= 128) ic = 0;
-                  marker = (TPolyMarker3D*)pm->At(ic);
-                  if (!marker) {
-                     marker = new TPolyMarker3D();
-                     marker->SetMarkerColor(ic);
-                     marker->SetMarkerStyle(8);
-                     marker->SetMarkerSize(0.2);
-                     pm->AddAt(marker, ic);
-                  }
-                  marker->SetNextPoint(point[0], point[1], point[2]);
-               }
-            }
-            startnode=endnode;
-            vis1=vis2;
-            node = fGeom->FindNextBoundary();
-//            if (fStep<1E-9) break;
-            endnode = fGeom->Step();
-            vis2=(endnode)?(endnode->IsOnScreen()):kFALSE;
-         }
+         pm->Add(line);
       }
+      // find the node that will be crossed first      
+      node = fGeom->FindNextBoundary();
+      is_sentering = fGeom->IsStepEntering();
+      // find where we end-up
+      endnode = fGeom->Step();
+      if (fGeom->IsOutside()) endnode=0;
+//      if (endnode) printf("endnode %s\n", endnode->GetName());
+      step = fGeom->GetStep();
+      vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
+      is_entering = fGeom->IsEntering();
+//      if (is_entering) printf("entering\n");
+      is_null = fGeom->IsNullStep();
+      while (step<1E10) {
+         if (ipoint>0) {
+         // old visible node had an entry point -> finish segment
+            line->SetPoint(ipoint, point[0], point[1], point[2]);
+            ipoint = 0;
+            line   = 0;
+         }
+         if (is_entering && vis2 && (startnode!=endnode)) {
+            // create new segment
+            line = new TPolyLine3D(2);   
+            line->SetLineColor(endnode->GetVolume()->GetLineColor());
+            line->SetPoint(ipoint++, point[0], point[1], point[2]);
+            i++;
+            pm->Add(line);
+         }
+         // now see if we can make an other step
+         if (endnode==0) break;
+         if (is_null) break;
+         startnode = endnode;    
+         node = fGeom->FindNextBoundary();
+         is_sentering = fGeom->IsStepEntering();
+         endnode = fGeom->Step();
+         if (fGeom->IsOutside()) endnode=0;
+//         if (endnode) printf("%s\n", endnode->GetName());
+         step = fGeom->GetStep();
+         vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
+         is_entering = fGeom->IsEntering();
+         is_null = fGeom->IsNullStep();
+      }      
+   }   
+   // draw all segments
+   for (Int_t m=0; m<pm->GetEntriesFast(); m++) {
+      line = (TPolyLine3D*)pm->At(m);
+      if (line) line->Draw("SAME");
    }
-   for (Int_t m=0; m<128; m++) {
-      marker = (TPolyMarker3D*)pm->At(m);
-      if (marker) marker->Draw("SAME");
-   }
-   gPad->Modified();
-   gPad->Update();
+   printf("number of segments : %i\n", i);
+   fGeom->GetTopVolume()->VisibleDaughters(kFALSE);
+   printf("---Daughters of %s made invisible.\n", fGeom->GetTopVolume()->GetName());
+   printf("---Make them visible with : gGeoManager->GetTopVolume()->VisibleDaughters();\n");
    delete pm;
 }
 //-----------------------------------------------------------------------------

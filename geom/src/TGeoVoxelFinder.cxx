@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.5 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -306,7 +306,7 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
          isXlimit = (dmin[0]>dmstep)?kTRUE:kFALSE;
       } else {
       // if no slicing on this axis, get distance to mother limit
-         limit = (box->GetOrigin())[0] + box->GetDX()*((dind[0]<0)?-1:1);
+         limit = (box->GetOrigin())[0] + box->GetDX()*((dir[0]<0)?-1:1);
          dmin[0] = (limit-point[0])/dir[0];
          isXlimit = kTRUE;
       }
@@ -323,7 +323,7 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
          isYlimit = (dmin[1]>dmstep)?kTRUE:kFALSE;
       } else {
       // if no slicing on this axis, get distance to mother limit
-         limit = (box->GetOrigin())[1] + box->GetDY()*((dind[1]<0)?-1:1);
+         limit = (box->GetOrigin())[1] + box->GetDY()*((dir[1]<0)?-1:1);
          dmin[1] = (limit-point[1])/dir[1];
          isYlimit = kTRUE;
       }
@@ -340,7 +340,7 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
          isZlimit = (dmin[2]>dmstep)?kTRUE:kFALSE;
       } else {
       // if no slicing on this axis, get distance to mother limit
-         limit = (box->GetOrigin())[2] + box->GetDZ()*((dind[2]<0)?-1:1);
+         limit = (box->GetOrigin())[2] + box->GetDZ()*((dir[2]<0)?-1:1);
          dmin[2] = (limit-point[2])/dir[2];
          isZlimit = kTRUE;
       }
@@ -355,10 +355,14 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
          if (dind[0]<0) return kFALSE;
          if (dind[0]>fIb[0]-2) return kFALSE;
          fSlices[0] = dind[0];
-         if (fSlices[1]<0) return GetNextIndices(point, dir);
-         if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
-         if (fSlices[2]<0) return GetNextIndices(point, dir);
-         if (fSlices[2]>fIb[2]-2) return GetNextIndices(point, dir);
+         if (fSlices[1]!=-2) {
+            if (fSlices[1]<0) return GetNextIndices(point, dir);
+            if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
+         }   
+         if (fSlices[2]!=-2) {
+            if (fSlices[2]<0) return GetNextIndices(point, dir);
+            if (fSlices[2]>fIb[2]-2) return GetNextIndices(point, dir);
+         }   
          if (fIndX[fOBx[fSlices[0]]]>0) return kTRUE;
          return GetNextIndices(point, dir);
       } else {
@@ -368,10 +372,14 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
          if (dind[2]<0) return kFALSE;
          if (dind[2]>fIb[2]-2) return kFALSE;
          fSlices[2] = dind[2];
-         if (fSlices[0]<0) return GetNextIndices(point, dir);
-         if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
-         if (fSlices[1]<0) return GetNextIndices(point, dir);
-         if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
+         if (fSlices[0]!=-2) {
+            if (fSlices[0]<0) return GetNextIndices(point, dir);
+            if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
+         }   
+         if (fSlices[1]!=-2) {
+            if (fSlices[1]<0) return GetNextIndices(point, dir);
+            if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
+         }   
          if (fIndZ[fOBz[fSlices[2]]]>0) return kTRUE;
          return GetNextIndices(point, dir);
       }
@@ -383,10 +391,14 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
          if (dind[1]<0) return kFALSE;
          if (dind[1]>fIb[1]-2) return kFALSE;
          fSlices[1] = dind[1];
-         if (fSlices[0]<0) return GetNextIndices(point, dir);
-         if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
-         if (fSlices[2]<0) return GetNextIndices(point, dir);
-         if (fSlices[2]>fIb[2]-2) return GetNextIndices(point, dir);
+         if (fSlices[0]!=-2) {
+            if (fSlices[0]<0) return GetNextIndices(point, dir);
+            if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
+         }   
+         if (fSlices[2]!=-2) {
+            if (fSlices[2]<0) return GetNextIndices(point, dir);
+            if (fSlices[2]>fIb[2]-2) return GetNextIndices(point, dir);
+         }   
          if (fIndY[fOBy[fSlices[1]]]>0) return kTRUE;
          return GetNextIndices(point, dir);
       } else {
@@ -396,10 +408,14 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
          if (dind[2]<0) return kFALSE;
          if (dind[2]>fIb[2]-2) return kFALSE;
          fSlices[2] = dind[2];
-         if (fSlices[0]<0) return GetNextIndices(point, dir);
-         if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
-         if (fSlices[1]<0) return GetNextIndices(point, dir);
-         if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
+         if (fSlices[0]!=-2) {
+            if (fSlices[0]<0) return GetNextIndices(point, dir);
+            if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
+         }   
+         if (fSlices[1]!=-2) {
+            if (fSlices[1]<0) return GetNextIndices(point, dir);
+            if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
+         }   
          if (fIndZ[fOBz[fSlices[2]]]>0) return kTRUE;
          return GetNextIndices(point, dir);
       }
@@ -510,12 +526,13 @@ Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t *dir, Int_t &nche
    }
    fCurrentVoxel++;
    // Get slices for next voxel
+//   printf("before - fSices : %i %i %i\n", fSlices[0], fSlices[1], fSlices[2]);
    if (!GetNextIndices(point, dir)) {
 //      printf("exit\n");
       ncheck = 0;
       return 0;
    }   
-//   printf("   next slices : %i   %i  %i\n", fSlices[0], fSlices[1], fSlices[2]);
+//   printf("next slices : %i   %i  %i\n", fSlices[0], fSlices[1], fSlices[2]);
    Int_t nd[3];
    memset(&nd[0], 0, 3*sizeof(Int_t));
    Int_t *slicex = 0;

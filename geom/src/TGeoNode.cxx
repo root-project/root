@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.4 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.5 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -129,11 +129,7 @@ Bool_t TGeoNode::IsOnScreen() const
 // check if this node is drawn. Assumes that this node is current
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return kFALSE;
-   Bool_t on_screen;
-   on_screen = painter->IsOnScreen(this);
-   if (on_screen) printf("kTRUE\n");
-   else printf("kFALSE\n");
-   return on_screen;
+   return painter->IsOnScreen(this);
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::InspectNode() const

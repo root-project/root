@@ -40,6 +40,8 @@ TGeoPainter::TGeoPainter()
    fVisOption = kGeoVisDefault;
    fExplodedView = 0;
    fVisBranch = "";
+   fVisLock = kFALSE;
+   fVisVolumes = new TObjArray();
    
    if (gGeoManager) fGeom = gGeoManager;
    else Error("ctor", "No geometry loaded");
@@ -51,6 +53,7 @@ TGeoPainter::~TGeoPainter()
 //*-*-*-*-*-*-*-*-*-*-*Geometry painter default destructor*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
    if (fChecker) delete fChecker;
+   delete fVisVolumes;
 }
 //______________________________________________________________________________
 void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
@@ -221,6 +224,10 @@ void TGeoPainter::Draw(Option_t *option)
 {
    TString opt = option;
    opt.ToLower();
+   if (fVisLock) {
+      fVisVolumes->Clear();
+      fVisLock = kFALSE;
+   }   
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
@@ -240,13 +247,18 @@ void TGeoPainter::Draw(Option_t *option)
       view->SetAutoRange(kFALSE);
       if (has_pad) gPad->Update();
    }
-
+   fVisLock = kTRUE;
+   printf("--- number of nodes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
 //______________________________________________________________________________
 void TGeoPainter::DrawOnly(Option_t *option)
 {
    TString opt = option;
    opt.ToLower();
+   if (fVisLock) {
+      fVisVolumes->Clear();
+      fVisLock = kFALSE;
+   }   
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
@@ -267,6 +279,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
       view->SetAutoRange(kFALSE);
       if (has_pad) gPad->Update();
    }
+   fVisLock = kTRUE;
 }
 //-----------------------------------------------------------------------------
 void TGeoPainter::DrawCurrentPoint(Int_t color)
@@ -339,93 +352,12 @@ TGeoChecker *TGeoPainter::GetChecker()
 Bool_t TGeoPainter::IsOnScreen(const TGeoNode *node) const
 {
 // check if this node is drawn. Assumes that this node is current
-   printf("node : %s\n", node->GetName());
-   if (!node->IsVisible()) return kFALSE;
-   TGeoNode *top = fGeom->GetTopNode();
-   if (fVisOption==kGeoVisOnly) {
-      if (node==top) return kTRUE;
-      return kFALSE;
+   TObject *obj = (TObject*)node->GetVolume();
+   for (Int_t i=0; i<fVisVolumes->GetEntriesFast(); i++) {
+      if (fVisVolumes->At(i)==obj) return kTRUE;
    }
-   
-   if (fVisOption==kGeoVisBranch) {
-      if (strstr(fVisBranch, node->GetName())) return kTRUE;
-      return kFALSE;
-   }         
-
-   if (node==top) return kFALSE;
-
-   if (!top->GetVolume()->IsVisDaughters()) return kFALSE;
-
-   if (node == fGeom->GetCurrentNode()) {
-      if (fGeom->GetLevel() > fVisLevel) return kFALSE;
-      // check if branch is visible
-      Int_t i=1;
-      TGeoNode *mother;
-      while ((mother=fGeom->GetMother(i))) {
-         if (!mother->GetVolume()->IsVisDaughters()) return kFALSE;
-         if (mother == top) break;
-         i++;
-      }
-      if (!mother) return kFALSE;
-      
-      switch (fVisOption) {
-         case kGeoVisDefault:
-            return kTRUE;
-         case kGeoVisLeaves:
-            if (fGeom->GetLevel() == fVisLevel) return kTRUE;
-            if (!node->GetNdaughters()) return kTRUE;
-            return kFALSE;
-         default:
-            return kFALSE;      
-      }
-   }   
-   Int_t level = 0;
-   return IsOnScreenLoop(node, top, level);
+   return kFALSE;      
 }   
-//______________________________________________________________________________
-Bool_t TGeoPainter::IsOnScreenLoop(const TGeoNode *node, TGeoNode *current, Int_t &level) const
-{
-// Check iteratively if current node is the same as searched node. Returns true if on screen.
-   printf("current : %s\n", current->GetName());
-   Int_t nd = current->GetNdaughters();
-   TGeoNode *daughter;
-   if (node==current) {
-      printf("EQUAL\n");
-      switch (fVisOption) {
-         case kGeoVisDefault:
-            if (level<=fVisLevel) return kTRUE;
-            return kFALSE;
-         case kGeoVisLeaves:
-            if (nd==0) return kTRUE;
-            if (level==fVisLevel) return kTRUE;
-            return kFALSE;
-         default:
-            return kFALSE;
-      }
-   }                
-   // check recursively daughters
-   level++;
-   Int_t slevel = level;
-   if (level>fVisLevel) return kFALSE;
-   if (nd==0) return kFALSE;
-   if (!current->GetVolume()->IsVisDaughters()) return kFALSE;
-   Int_t id;
-   Bool_t on_screen;
-   for (id=0; id<nd; id++) {
-      daughter = current->GetDaughter(id);
-      if (!daughter->IsVisible()) {
-         if (daughter==node) return kFALSE;
-         if (daughter->GetVolume() == node->GetVolume()) return kFALSE;
-         continue;
-      }   
-      level = slevel;
-      on_screen = IsOnScreenLoop(node, daughter, level);
-      if (on_screen) return kTRUE;
-      if (daughter==node) return kFALSE;
-      if (daughter->GetVolume() == node->GetVolume()) return kFALSE;
-   }
-   return kFALSE;
-}      
 //______________________________________________________________________________
 void TGeoPainter::ModifiedPad() const
 {
@@ -448,6 +380,7 @@ void TGeoPainter::Paint(Option_t *option)
    fGeom->CdTop();
    TGeoNode *top = fGeom->GetTopNode();
    top->Paint(option);
+   fVisLock = kTRUE;
 }
 //______________________________________________________________________________
 void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView)
@@ -1256,8 +1189,10 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
    Int_t id;
    switch (fVisOption) {
       case kGeoVisDefault:
-         if (vis && (level<=fVisLevel))
+         if (vis && (level<=fVisLevel)) {
             vol->GetShape()->Paint(option);
+            if (!fVisLock) fVisVolumes->Add(vol);
+         }   
             // draw daughters
          if (level<fVisLevel) {
             if ((!nd) || (!vol->IsVisDaughters())) return;
@@ -1272,8 +1207,10 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
       case kGeoVisLeaves:
          if (level>fVisLevel) return;
          last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
-         if (vis && last)
+         if (vis && last) {
             vol->GetShape()->Paint(option);
+            if (!fVisLock) fVisVolumes->Add(vol);
+         }            
          if (last || (!vol->IsVisDaughters())) return;
          for (id=0; id<nd; id++) {
             daughter = node->GetDaughter(id);
@@ -1284,12 +1221,15 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          break;
       case kGeoVisOnly:
          vol->GetShape()->Paint(option);
+         if (!fVisLock) fVisVolumes->Add(vol);
          break;
       case kGeoVisBranch:
          fGeom->cd(fVisBranch);
          while (fGeom->GetLevel()) {
-            if (fGeom->GetCurrentVolume()->IsVisible())
+            if (fGeom->GetCurrentVolume()->IsVisible()) {
                fGeom->GetCurrentVolume()->GetShape()->Paint(option);
+               if (!fVisLock) fVisVolumes->Add(fGeom->GetCurrentVolume());
+            }   
             fGeom->CdUp();
          }
          break;
@@ -1304,10 +1244,10 @@ void TGeoPainter::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
    fChecker->RandomPoints(vol, npoints, option);
 }   
 //______________________________________________________________________________
-void TGeoPainter::RandomRays(Int_t nrays)
+void TGeoPainter::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
 // Raytrace nrays in the current drawn geometry
-   fChecker->RandomRays(nrays);
+   fChecker->RandomRays(nrays, startx, starty, startz);
 }   
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoPainter::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
@@ -1414,6 +1354,10 @@ void TGeoPainter::SetExplodedView(UInt_t ibomb)
 void TGeoPainter::SetVisLevel(Int_t level) {
 // set default level down to which visualization is performed
    fVisLevel=level;
+   if (fVisLock) {
+      fVisVolumes->Clear();
+      fVisLock = kFALSE;
+   }   
    if (!gPad) return;
    if (gPad->GetView()) {
       gPad->Modified();
@@ -1427,6 +1371,10 @@ void TGeoPainter::SetVisOption(Int_t option) {
 // option=1           leaves and nodes at vislevel drawn
 // option=2           path is drawn
    fVisOption=option;
+   if (fVisLock) {
+      fVisVolumes->Clear();
+      fVisLock = kFALSE;
+   }   
    if (!gPad) return;
    if (gPad->GetView()) {
       gPad->Modified();

@@ -41,9 +41,11 @@ private:
    Int_t              fVisLevel;         // depth for drawing
    Int_t              fVisOption;        // global visualization option
    Int_t              fExplodedView;     // type of exploding current view
+   Bool_t             fVisLock;          // lock for adding visible volumes
    const char        *fVisBranch;        // drawn branch
    TGeoManager       *fGeom;             // geometry to which applies
    TGeoChecker       *fChecker;          // geometry checker
+   TObjArray         *fVisVolumes;       // list of visible volumes
    
 public:
    TGeoPainter();
@@ -71,7 +73,6 @@ public:
    Int_t              GetNsegments() const     {return fNsegments;}
    virtual Bool_t     IsExplodedView() const {return ((fExplodedView==kGeoVisDefault)?kFALSE:kTRUE);}
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const;
-   Bool_t             IsOnScreenLoop(const TGeoNode *node, TGeoNode *current, Int_t &level) const;
    virtual void       ModifiedPad() const;
    virtual void       Paint(Option_t *option="");
    void               PaintShape(X3DBuffer *buff, Bool_t rangeView);
@@ -82,7 +83,7 @@ public:
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
    void               PaintPcon(TGeoVolume *vol, Option_t *option="");
    virtual void       RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option="");
-   virtual void       RandomRays(Int_t nrays);
+   virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3, Double_t bombr=1.3);
    virtual void       SetExplodedView(UInt_t iopt=0);
