@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.4 2000/12/02 15:49:45 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.5 2000/12/19 14:32:44 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -201,8 +201,11 @@ again:
 #endif
          if (first) {
             TInetAddress addr = gSystem->GetHostByName(fRemote);
-            if (addr.IsValid())
+            if (addr.IsValid()) {
                remote = addr.GetHostName();
+               if (remote == "UnNamedHost")
+                  remote = addr.GetHostAddress();
+            }
          }
          FILE *fd = fopen(net, "r");
          char line[256];
