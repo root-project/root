@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.168 2004/06/17 17:32:33 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.169 2004/06/22 18:47:16 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2034,7 +2034,7 @@ void WriteClassInit(G__ClassInfo &cl)
       fprintf(fp, "%s::Class_Version(), ",classname.c_str());
    } else if (stl) {
 
-      fprintf(fp, "GetROOT()->GetClass(\"TStreamerInfo\")->GetClassVersion(), ");
+      fprintf(fp, "TStreamerInfo::Class_Version(), ");
 
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
