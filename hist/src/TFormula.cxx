@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.53 2003/08/29 07:03:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.54 2003/09/09 16:48:19 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -313,7 +313,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    for(j=0; j<nargs; j++) {
       proto += "0.0,";
    }
-   proto.Remove(proto.Length()-1);
+   if (nargs) proto.Remove(proto.Length()-1);
 
 
    TClass *ns = (spaceName.Length()) ? gROOT->GetClass(spaceName) : 0;
