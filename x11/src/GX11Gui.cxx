@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.29 2003/05/01 17:16:57 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.30 2003/05/28 11:26:51 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TGX11.h"
 #include "TROOT.h"
 #include "TError.h"
+#include "TSystem.h"
 #include "TException.h"
 #include "TClassTable.h"
 #include "KeySymbols.h"
