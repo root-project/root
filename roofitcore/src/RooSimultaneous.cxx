@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.31 2002/02/23 02:14:55 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.33 2002/03/29 03:19:01 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -322,7 +322,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
   if (!_indexCat.arg().isDerived()) {
     // *** Error checking for a fundamental index category ***
-    cout << "RooSim::plotOn: index is fundamental" << endl ;
+    //cout << "RooSim::plotOn: index is fundamental" << endl ;
       
     // Check that the provided projection dataset contains our index variable
     if (!projData->get()->find(_indexCat.arg().GetName())) {
