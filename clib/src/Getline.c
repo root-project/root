@@ -1172,6 +1172,24 @@ gl_redraw()
     }
 }
 
+static void setCursorPosition(int x)
+{
+   // Set console cursor position.
+   // Restore console parameters in case of console corruption
+
+#ifdef WIN32
+   CONSOLE_SCREEN_BUFFER_INFO ci;
+   HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+   if (out == INVALID_HANDLE_VALUE) return;
+
+   if (!GetConsoleScreenBufferInfo(out, &ci)) return;
+
+   ci.dwCursorPosition.X = x;
+   SetConsoleCursorPosition(out, ci.dwCursorPosition);
+#endif
+}
+
+
 static void
 gl_fixup(const char *prompt, int change, int cursor)
 /*
@@ -1199,10 +1217,6 @@ gl_fixup(const char *prompt, int change, int cursor)
     int          new_right = -1; /* alternate right bound, using gl_extent */
     int          l1, l2;
 
-#ifdef WIN32 // bb & vo
-    CONSOLE_SCREEN_BUFFER_INFO ci; 
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &ci);
-#endif
     if (change == -2) {   /* reset */
         gl_pos = gl_cnt = gl_shift = off_right = off_left = 0;
         gl_passwd = 0;
@@ -1310,10 +1324,7 @@ gl_fixup(const char *prompt, int change, int cursor)
         }
     }
     gl_pos = cursor;
-#ifdef WIN32 // bb & vo
-    ci.dwCursorPosition.X = gl_pos + strlen(prompt) - gl_shift;
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), ci.dwCursorPosition );
-#endif
+    setCursorPosition(gl_pos + strlen(prompt) - gl_shift); // bb&vo
 }
 
 static int
