@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.141 2004/08/20 21:02:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.142 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1520,8 +1520,9 @@ void TBranchElement::ReadLeaves(TBuffer &b)
                 case 12:  {length = ((UShort_t*) len_where)[k]; break;}
                 case 13:  {length = ((UInt_t*)   len_where)[k]; break;}
                 case 14:  {length = ((ULong_t*)  len_where)[k]; break;}
-                case 15:  {length = ((Long64_t*) len_where)[k]; break;}
-                case 16:  {length = ((ULong64_t*)len_where)[k]; break;}
+                case 15:  {length = ((UInt_t*)   len_where)[k]; break;}
+                case 16:  {length = ((Long64_t*) len_where)[k]; break;}
+                case 17:  {length = ((ULong64_t*)len_where)[k]; break;}
                 default: continue;
              }
              b >> isArray;
@@ -1539,8 +1540,9 @@ void TBranchElement::ReadLeaves(TBuffer &b)
                 case 12:  {*where=new char[sizeof(UShort_t)*length]; b.ReadFastArray((UShort_t*)*where, length); break;}
                 case 13:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
                 case 14:  {*where=new char[sizeof(ULong_t)*length]; b.ReadFastArray((ULong_t*) *where, length); break;}
-                case 15:  {*where=new char[sizeof(Long64_t)*length]; b.ReadFastArray((Long64_t*)  *where, length); break;}
-                case 16:  {*where=new char[sizeof(ULong64_t)*length]; b.ReadFastArray((ULong64_t*)*where, length); break;}
+                case 15:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
+                case 16:  {*where=new char[sizeof(Long64_t)*length]; b.ReadFastArray((Long64_t*)  *where, length); break;}
+                case 17:  {*where=new char[sizeof(ULong64_t)*length]; b.ReadFastArray((ULong64_t*)*where, length); break;}
              }
           }
           return;
@@ -1562,13 +1564,14 @@ void TBranchElement::ReadLeaves(TBuffer &b)
           case 12:  {b.ReadFastArray((UShort_t*)fAddress, n); break;}
           case 13:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
           case 14:  {b.ReadFastArray((ULong_t*) fAddress, n); break;}
-          case 15:  {b.ReadFastArray((Long64_t*)fAddress, n); break;}
-          case 16:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
-		  case  9:  {Double_t *xx = (Double_t*)fAddress;
+          case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
+          case 16:  {b.ReadFastArray((Long64_t*)fAddress, n); break;}
+          case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
+          case  9:  {Double_t *xx = (Double_t*)fAddress;
 			            Float_t afloat;
-						for (Int_t ii=0;ii<n;ii++) {
+                     for (Int_t ii=0;ii<n;ii++) {
 				            b>> afloat; xx[ii] = Double_t(afloat);
-						} break;}
+                     } break;}
        }
        return;
      } else if (fType <= 2) {     // branch in split mode
@@ -1590,13 +1593,14 @@ void TBranchElement::ReadLeaves(TBuffer &b)
              case 12:  {b.ReadFastArray((UShort_t*)fAddress, n); break;}
              case 13:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
              case 14:  {b.ReadFastArray((ULong_t*) fAddress, n); break;}
-             case 15:  {b.ReadFastArray((Long64_t*) fAddress, n); break;}
-             case 16:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
-			 case  9:  {Double_t *xx = (Double_t*)fAddress;
-			            Float_t afloat;
-						for (Int_t ii=0;ii<n;ii++) {
-				            b>> afloat; xx[ii] = Double_t(afloat);
-						} break;}
+             case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
+             case 16:  {b.ReadFastArray((Long64_t*) fAddress, n); break;}
+             case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
+             case  9:  {Double_t *xx = (Double_t*)fAddress;
+                        Float_t afloat;
+                        for (Int_t ii=0;ii<n;ii++) {
+                           b>> afloat; xx[ii] = Double_t(afloat);
+                        } break;}
           }
        } else {
           fNdata = 1;
