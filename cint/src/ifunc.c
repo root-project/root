@@ -1353,7 +1353,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
       ||((strncmp(paraname,"throw",5)==0
 	 ||strncmp(paraname,"const throw",11)==0)&&0==strchr(paraname,'='))
 #endif
-      ) &&((cin==',')||(cin==';'))) {
+      ) &&((cin==',')||(cin==';'))
+     && strncmp(funcheader,"ClassDef",8)!=0
+     ) {
     /* this is ANSI style func proto without param name */
     if(isparam) {
       fsetpos(G__ifile.fp,&temppos);
@@ -1372,15 +1374,15 @@ char *funcheader;   /* funcheader = 'funcname(' */
     G__p_ifunc->entry[func_now].line_number = -1;
     G__p_ifunc->ispurevirtual[func_now]=0;
 #ifndef G__PHILIPPE0
-    /* Key the class comment off of ImplFileLine rather than ClassDef
+    /* Key the class comment off of DeclFileLine rather than ClassDef
      * because ClassDef is removed by a preprocessor */
 #ifndef G__OLDIMPLEMENTATION1360
     if(G__fons_comment && G__def_struct_member &&
-       (strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
-	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
+       (strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine",12)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine(",13)==0
 #ifndef G__OLDIMPLEMENTATION1298
-	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
-	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
+	|| strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine",12)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine(",13)==0
 #endif
        )) {
       G__fsetcomment(&G__struct.comment[G__tagdefining]);
@@ -1494,7 +1496,8 @@ char *funcheader;   /* funcheader = 'funcname(' */
 			&& ':'!=paraname[0]
 #endif
 			)
-	   )) {
+	   || (';'==cin && strncmp(funcheader,"ClassDef",8)==0)
+           )) {
     /* Function macro as member declaration */
     /* restore file position
      *   func(   int   a   ,  double   b )
@@ -1849,8 +1852,22 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
 #ifdef G__FONS_COMMENT
   if(G__fons_comment && G__def_struct_member) {
-    if(ifunc) G__fsetcomment(&ifunc->comment[iexist]);
-    else      G__fsetcomment(&G__p_ifunc->comment[func_now]);
+
+    if((ifunc && (strncmp(ifunc->funcname[iexist],"ClassDef",8)==0 ||
+                  strncmp(ifunc->funcname[iexist],"ClassDef(",9)==0 ||
+                  strncmp(ifunc->funcname[iexist],"ClassDefT(",10)==0||
+                  strncmp(ifunc->funcname[iexist],"DeclFileLine",12)==0 ||
+                  strncmp(ifunc->funcname[iexist],"DeclFileLine(",13)==0) ) ||
+      (!ifunc && (strncmp(G__p_ifunc->funcname[func_now],"ClassDef",8)==0 ||
+                  strncmp(G__p_ifunc->funcname[func_now],"ClassDef(",9)==0 ||
+                  strncmp(G__p_ifunc->funcname[func_now],"ClassDefT(",10)==0||
+                  strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine",12)==0 ||
+                  strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine(",13)==0) ) ) {
+      G__fsetcomment(&G__struct.comment[G__tagdefining]);
+    } else {
+      if(ifunc) G__fsetcomment(&ifunc->comment[iexist]);
+      else      G__fsetcomment(&G__p_ifunc->comment[func_now]);
+    }
   }
 #endif
 

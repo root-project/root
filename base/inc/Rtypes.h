@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.29 2002/06/17 18:14:23 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.30 2002/07/19 11:41:01 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -207,7 +207,7 @@ public: \
    virtual void Streamer(TBuffer &b); \
    void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
    static const char *DeclFileName() { return __FILE__; } \
-   static int DeclFileLine() { return __LINE__; } \
+   static int ImplFileLine(); \
    static const char *ImplFileName();
 
 
@@ -216,7 +216,7 @@ public: \
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \
-   static int ImplFileLine();
+   static int DeclFileLine() { return __LINE__; } 
 
 #else
 
@@ -224,7 +224,7 @@ public: \
    _ClassDef_(name,id) \
    friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
                                      char *R__parent); \
-   static int ImplFileLine();
+   static int DeclFileLine() { return __LINE__; } 
 
 #endif
 
@@ -234,10 +234,9 @@ public: \
    _ClassDef_(name,id) \
    friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
    friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
-   static int ImplFileLine();
+   static int DeclFileLine() { return __LINE__; } 
 
 #endif
-
 
 #define ClassImpUnique(name,key) \
 namespace ROOT { \
@@ -267,7 +266,7 @@ namespace ROOT { \
 
 #define ClassDefT(name,id) \
    _ClassDef_(name,id) \
-   static int ImplFileLine();
+   static int DeclFileLine() { return __LINE__; } 
 
 #else
 
@@ -275,7 +274,7 @@ namespace ROOT { \
    _ClassDef_(name,id) \
    friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
                                      char *R__parent); \
-   static int ImplFileLine();
+   static int DeclFileLine() { return __LINE__; } 
 
 #endif
 
