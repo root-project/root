@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.84 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.85 2005/03/10 17:57:04 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1176,11 +1176,11 @@ void TProofServ::HandleSocketInput()
             dset->Reset();
             TDSetElement *e = dset->Next();
             Long64_t entries = 0;
-            TFile *f;
-            TTree *t;
+            TFile *f = 0;
+            TTree *t = 0;
             if (!e) {
                PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER",
-                                    "Empty TDSet");
+                                    "empty TDSet");
             } else {
                f = TFile::Open(e->GetFileName());
                t = 0;
@@ -1217,7 +1217,6 @@ void TProofServ::HandleSocketInput()
                answ << TString("Success") << t;
             else
                answ << TString("Failed") << t;
-
 
             fSocket->Send(answ);
 
