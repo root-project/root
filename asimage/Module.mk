@@ -85,23 +85,35 @@ else
 		cd $(ASTEPVERS); \
 		ACC=; \
 		ACFLAGS="-O"; \
-		if [ $(CC) = "icc" ]; then \
+		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
 		fi; \
-		if [ $(ARCH) = "sgicc64" ]; then \
+		if [ "$(ARCH)" = "sgicc64" ]; then \
 			ACC="gcc -mabi=64"; \
 		fi; \
-		if [ $(ARCH) = "linuxx8664gcc" ]; then \
+		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			MMX="--enable-mmx-optimization=no"; \
+		fi; \
+		if [ "$(ASJPEGINCDIR)" != "" ]; then \
+			JPEGINCDIR="--with-jpeg-includes=$(ASJPEGINCDIR)"; \
+		fi; \
+		if [ "$(ASPNGINCDIR)" != "" ]; then \
+			PNGINCDIR="--with-png-includes=$(ASPNGINCDIR)"; \
+		fi; \
+		if [ "$(ASTIFFINCDIR)" != "" ]; then \
+			TIFFINCDIR="--with-tiff-includes=$(ASTIFFINCDIR)"; \
+		fi; \
+		if [ "$(ASGIFINCDIR)" != "" ]; then \
+			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
 		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
 		$$MMX \
 		--with-ttf=NO --with-builtin-ungif=no --with-afterbase=no \
-		--with-jpeg-includes=$(ASJPEGINCDIR) \
-		--with-png-includes=$(ASPNGINCDIR) \
-		--with-tiff-includes=$(ASTIFFINCDIR) \
-		--with-gif-includes=$(ASGIFINCDIR); \
+		$$JPEGINCDIR \
+		$$PNGINCDIR \
+		$$TIFFINCDIR \
+		$$GIFINCDIR; \
 		$(MAKE))
 endif
 
