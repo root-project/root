@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.54 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.55 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -516,6 +516,13 @@ void TGeoPainter::Draw(Option_t *option)
    // append this volume to pad
    fGeom->GetTopVolume()->AppendPad(option);
 
+   // If we are drawing into the pad, then the view needs to be
+   // set to perspective
+   TView *view = gPad->GetView();
+   if (view) {
+      if (!view->IsPerspective()) view->SetPerspective();
+   }
+   
    fVisLock = kTRUE;
    fLastVolume = fGeom->GetTopVolume();
  
@@ -546,6 +553,13 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    // append this volume to pad
    overlap->AppendPad(option);
 
+   // If we are drawing into the pad, then the view needs to be
+   // set to perspective
+   TView *view = gPad->GetView();
+   if (view) {
+      if (!view->IsPerspective()) view->SetPerspective();
+   }
+   
    fVisLock = kTRUE;
 }
 
@@ -568,6 +582,12 @@ void TGeoPainter::DrawOnly(Option_t *option)
    // append this volume to pad
    fGeom->GetCurrentVolume()->AppendPad(option);
 
+   // If we are drawing into the pad, then the view needs to be
+   // set to perspective
+   TView *view = gPad->GetView();
+   if (view) {
+      if (!view->IsPerspective()) view->SetPerspective();
+   }
    fVisLock = kTRUE;
 }
 
@@ -789,7 +809,15 @@ void TGeoPainter::Paint(Option_t *option)
             node = (TGeoPhysicalNode*)nodeList->UncheckedAt(inode);
             PaintPhysicalNode(node, option);
          }
+      }      
+      
+      // If we are drawing into the pad, then the view needs to be
+      // set to perspective
+      TView *view = gPad->GetView();
+      if (view) {
+         if (!view->IsPerspective()) view->SetPerspective();
       }
+      
       fVisLock = kTRUE;
    } 
    // Check if we have to raytrace (only in pad)  

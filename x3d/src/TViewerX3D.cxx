@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.11 2005/03/09 18:19:27 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.12 2005/03/10 08:47:10 brun Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -144,6 +144,9 @@ ClassImp(TViewerX3D)
 TViewerX3D::TViewerX3D(TVirtualPad *pad)
    : TVirtualViewer3D(),
      TGMainFrame(gClient->GetRoot(), 800, 600),
+     fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
+     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
+     fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    // Create ROOT X3D viewer.
@@ -163,6 +166,9 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
      TGMainFrame(gClient->GetRoot(), width, height),
+     fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
+     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
+     fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    // Create ROOT X3D viewer.
@@ -182,6 +188,9 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
      TGMainFrame(gClient->GetRoot(), width, height),
+     fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
+     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0), 
+     fMenuBarHelpLayout(0), fCanvasLayout(0),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    // Create ROOT X3D viewer.
@@ -203,17 +212,18 @@ TViewerX3D::~TViewerX3D()
 
    if (!fPad) return;
 
-   DeleteX3DWindow();
-   
+   if (fgCreated) { 
+      DeleteX3DWindow();
+   }
+   delete fCanvasLayout;
+   delete fMenuBarHelpLayout;
+   delete fMenuBarItemLayout;
+   delete fMenuBarLayout;
+   delete fHelpMenu;
+   delete fFileMenu;
+   delete fMenuBar;   
    delete fContainer;
    delete fCanvas;
-   delete fFileMenu;
-   delete fHelpMenu;
-   delete fMenuBar;
-   delete fMenuBarLayout;
-   delete fMenuBarItemLayout;
-   delete fMenuBarHelpLayout;
-   delete fCanvasLayout;
    fgCreated = kFALSE;
 }
 
@@ -347,27 +357,31 @@ void TViewerX3D::BeginScene()
 //______________________________________________________________________________
 void  TViewerX3D::EndScene()
 {
-   if (fgCreated) {
-      return;
-   }
-   
-   // Size pass done?
-   if (fPass == kSize) {
-      // Allocate the X3D viewer buffer with sizes
-      if (!AllocateX3DBuffer()) {
-         Error("InitX3DWindow", "x3d buffer allocation failure");
-         return;
-      }
-      
-      // Enter draw pass and invoke another paint
-      fPass = kDraw;
-      fPad->Paint();
-      fPass = kSize;
-      CreateViewer(fTitle); 
-      Show();
-   }
-   
    fBuildingScene = kFALSE;   
+   
+   // Size pass done - and some points actually added
+   if (gSize3D.numPoints != 0) {
+      if (fPass == kSize) {
+         // Allocate the X3D viewer buffer with sizes if any
+         if (!AllocateX3DBuffer()) {
+            Error("InitX3DWindow", "x3d buffer allocation failure");
+            return;
+         }
+      
+         // Enter draw pass and invoke another paint
+         fPass = kDraw;
+         fPad->Paint();
+         fPass = kSize;
+         CreateViewer(fTitle); 
+         Show();
+      }
+   } else {
+      Int_t retval;
+      new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(),
+                   "X3D Viewer", "Cannot display this content in the X3D viewer",
+                   kMBIconExclamation, kMBOk, &retval);
+      CloseWindow();
+   }
 }
 
 
