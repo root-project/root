@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.198 2005/01/19 18:28:40 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.199 2005/01/26 19:59:15 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3079,7 +3079,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
    // Inspect data members
    G__DataMemberInfo m(cl);
-   char cdim[12], cvar[64];
+   char cdim[24], cvar[128];
    char clName[G__LONGLINE],fun[80];
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion(cl);
