@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.13 2005/03/07 07:44:12 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.14 2005/03/25 19:41:03 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -118,10 +117,20 @@ class TQWidgetCollection {
  private:
    QValueStack<int>         fFreeWindowsIdStack;
    QPtrVector<QPaintDevice> fWidgetCollection;
-   Int_t                    fIDMax;
+   Int_t                    fIDMax;       //  current max id
+   Int_t                    fIDTotalMax;  // life-time max id
+protected:
+   //______________________________________________________________________________
+   inline  Int_t SetMaxId(Int_t newId)
+   { 
+      fIDMax =  newId; 
+      fIDTotalMax  = newId>fIDTotalMax ? newId:fIDTotalMax; 
+      return fIDMax;
+   }
+
  public:
    //______________________________________________________________________________
-   TQWidgetCollection () : fWidgetCollection(20) , fIDMax(-1)
+   TQWidgetCollection () : fWidgetCollection(20) , fIDMax(-1), fIDTotalMax(-1)
    {
        // mark the position below kNone and beteween kNone and kDefault
        // as "free position" if any
@@ -135,7 +144,7 @@ class TQWidgetCollection {
              fWidgetCollection.insert(i,(QPaintDevice *)(-1));
              fFreeWindowsIdStack.push(i);
        }
-       fIDMax = secondRange;
+       SetMaxId (secondRange);
        fWidgetCollection.insert(kNone,0);
        fWidgetCollection.insert(kDefault,(QPaintDevice *)QApplication::desktop());
    }
@@ -146,13 +155,13 @@ class TQWidgetCollection {
       Int_t Id = 0;
       if (!fFreeWindowsIdStack.isEmpty() ) {
          Id = fFreeWindowsIdStack.pop();
-         if (Id > fIDMax )  fIDMax = Id;
+         if (Id > fIDMax ) SetMaxId ( Id );
       } else {
          Id = fWidgetCollection.count()+1;
          if (Id >= int(fWidgetCollection.size()) )
               fWidgetCollection.resize(2*Id);
          assert(fIDMax <= Id  );
-         fIDMax = Id;
+         SetMaxId ( Id );
       }
       fWidgetCollection.insert(Id,device);
       // fprintf(stderr," add %p as %d max Id = %d \n", device, Id,fIDMax);
@@ -167,7 +176,7 @@ class TQWidgetCollection {
           intWid = find( device);
           if ( intWid != -1 && fWidgetCollection.take(intWid)) {
              fFreeWindowsIdStack.push(intWid);
-             if (fIDMax == intWid) fIDMax--;
+             if (fIDMax == intWid) SetMaxId(--fIDMax);
           } else {
              intWid = kNone;
           }
@@ -182,7 +191,7 @@ class TQWidgetCollection {
      if (device) {
         delete fWidgetCollection.take(Id);
         fFreeWindowsIdStack.push(Id);
-        if (fIDMax == Id) fIDMax--;
+        if (fIDMax == Id) SetMaxId(--fIDMax);
      }
      return device;
    }
@@ -190,6 +199,8 @@ class TQWidgetCollection {
    inline uint count() const { return fWidgetCollection.count();}
    //______________________________________________________________________________
    inline uint MaxId() const { return fIDMax;}
+   //______________________________________________________________________________
+   inline uint MaxTotalId() const { return fIDTotalMax;}
    //______________________________________________________________________________
    inline int find(const QPaintDevice *device, uint i=0) const
          { return fWidgetCollection.find(device,i); }
@@ -231,12 +242,14 @@ QPaintDevice *TGQt::iwid(Int_t wid)
 {
    // method to restore (cast) the QPaintDevice object pointer from  ROOT windows "id"
    QPaintDevice *topDevice = 0;
-      if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
-         topDevice = (*fWidgetArray)[wid];
-	   else {
-         assert(0);
-         // topDevice = (QPaintDevice *)wid;
-      }
+   if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
+     topDevice = (*fWidgetArray)[wid];
+	else {         
+     assert(wid <= Int_t(fWidgetArray->MaxTotalId()));
+     // this is allowed from the embedded TCanvas dtor only.
+     //  at this point "wid" may have been destroyed
+     //-- vf topDevice = (QPaintDevice *)wid;
+   }
    return topDevice;
 }
 
@@ -611,7 +624,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.92 2005/03/25 18:30:55 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.94 2005/03/28 18:41:00 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1646,13 +1659,17 @@ void  TGQt::SelectWindow(int wid)
        fSelectedBuffer=0; fSelectedWindow = NoOperation;
    } else {
       QPaintDevice *dev = iwid(wid);
-      QPixmap *offScreenBuffer = (QPixmap *)GetDoubleBuffer(dev);
-      if ((dev == fSelectedWindow) && !( (fSelectedBuffer==0) ^ (offScreenBuffer == 0) ) ) return;
-      fPrevWindow     = fSelectedWindow;
-      if (wid == -1 || wid == (int) kNone) { fSelectedBuffer=0; fSelectedWindow = NoOperation; }
-      else {
-         fSelectedWindow = dev;
-         fSelectedBuffer = offScreenBuffer;
+      if (!dev) {
+         fSelectedBuffer=0; fSelectedWindow = NoOperation;
+      } else {
+         QPixmap *offScreenBuffer = (QPixmap *)GetDoubleBuffer(dev);
+         if ((dev == fSelectedWindow) && !( (fSelectedBuffer==0) ^ (offScreenBuffer == 0) ) ) return;
+         fPrevWindow     = fSelectedWindow;
+         if (wid == -1 || wid == (int) kNone) { fSelectedBuffer=0; fSelectedWindow = NoOperation; }
+         else {
+            fSelectedWindow = dev;
+            fSelectedBuffer = offScreenBuffer;
+         }
       }
    }
    // fprintf(stderr,"TGQt::SelectWindow fSelecteWindow old = %p; current= %p, buffer =%p\n"
