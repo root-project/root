@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.5 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.6 2004/06/02 15:42:48 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -2610,6 +2610,20 @@ hack:
       }
     }
   }
+}
+
+//______________________________________________________________________________
+void TDecompSparse::Print(Option_t *opt) const
+{
+  TDecompBase::Print(opt);
+
+  printf("fPrecision  = %.3f\n",fPrecision);
+  printf("fIPessimism = %.3f\n",fIPessimism);
+  printf("fRPessimism = %.3f\n",fRPessimism);
+
+  TMatrixDSparse fact(0,fNrows-1,0,fNrows-1,fNnonZeros,
+                      (Int_t*)fRowFact.GetArray(),(Int_t*)fColFact.GetArray(),(Double_t*)fFact.GetArray());
+  fact.Print("fFact");
 }
 
 //______________________________________________________________________________

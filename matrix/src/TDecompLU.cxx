@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.11 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.12 2004/06/11 07:29:39 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TDecompLU::TDecompLU(Int_t nrows)
   fSign = 1.0;
   fNIndex = nrows;
   fIndex = new Int_t[fNIndex];
+  memset(fIndex,0,fNIndex*sizeof(Int_t));
   fImplicitPivot = 0;
   fLU.ResizeTo(nrows,nrows);
 }
@@ -62,6 +63,7 @@ TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
   fSign = 1.0;
   fNIndex = nrows;
   fIndex = new Int_t[fNIndex];
+  memset(fIndex,0,fNIndex*sizeof(Int_t));
   fRowLwb = row_lwb;
   fColLwb = row_lwb;
   fImplicitPivot = 0;
@@ -87,6 +89,7 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
   fSign = 1.0;
   fNIndex = a.GetNcols(); 
   fIndex = new Int_t[fNIndex]; 
+  memset(fIndex,0,fNIndex*sizeof(Int_t));
   
   fRowLwb = a.GetRowLwb();
   fColLwb = a.GetColLwb();
@@ -189,6 +192,7 @@ void TDecompLU::SetMatrix(const TMatrixD &a)
   if (fNIndex != a.GetNcols()) {
     fNIndex = a.GetNcols();
     delete [] fIndex;
+    memset(fIndex,0,fNIndex*sizeof(Int_t));
     fIndex = new Int_t[fNIndex];
   }
 
@@ -521,6 +525,18 @@ void TDecompLU::Det(Double_t &d1,Double_t &d2)
   d2 = fDet2;
 }
 
+void TDecompLU::Print(Option_t *opt) const
+{
+  TDecompBase::Print(opt);
+  printf("fImplicitPivot = %d\n",fImplicitPivot);
+  printf("fSign          = %f\n",fSign);
+  printf("fIndex:\n");
+  for (Int_t i = 0; i < fNIndex; i++)
+    printf("[%d] = %d\n",i,fIndex[i]);
+  fLU.Print("fLU");
+}
+
+//______________________________________________________________________________
 //______________________________________________________________________________
 TDecompLU &TDecompLU::operator=(const TDecompLU &source)
 { 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.10 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.11 2004/06/11 07:29:39 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -69,6 +69,8 @@ public :
   static  Bool_t DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
                                   Double_t tol,Int_t &nrZeros);
   static  Bool_t InvertLU        (TMatrixD &lu,Int_t *index,Double_t tol);
+
+  void Print(Option_t *opt ="") const; // *MENU*
 
   TDecompLU &operator= (const TDecompLU &source);
 

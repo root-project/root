@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.6 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.7 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -58,6 +58,8 @@ public :
 
   virtual Double_t Condition ();
   virtual void     Det        (Double_t &d1,Double_t &d2);
+
+  void Print(Option_t *opt ="") const; // *MENU*
 
   TDecompChol &operator= (const TDecompChol &source);
 

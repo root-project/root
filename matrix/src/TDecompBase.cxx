@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.12 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.13 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -367,6 +367,17 @@ void TDecompBase::Det(Double_t &d1,Double_t &d2)
   }
   d1 = fDet1;
   d2 = fDet2;
+}
+
+//______________________________________________________________________________
+void TDecompBase::Print(Option_t * /*opt*/) const
+{
+  printf("fTol       = %.4e\n",fTol);
+  printf("fDet1      = %.4e\n",fDet1);
+  printf("fDet2      = %.4e\n",fDet2);
+  printf("fCondition = %.4e\n",fCondition);
+  printf("fRowLwb    = %d\n",fRowLwb);
+  printf("fColLwb    = %d\n",fColLwb);
 }
 
 //______________________________________________________________________________
