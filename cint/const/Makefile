@@ -9,7 +9,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 constTest: const.log
-	$(CMDECHO) diff const.log good.output
+	$(CMDECHO) diff -bw const.log good.output
 
 const.log : runConst.C runConst_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -l -q runConst.C  2>&1 | grep -v 'Info in <TUnixSystem::ACLiC>' > const.log  2>&1
