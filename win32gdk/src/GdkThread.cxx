@@ -588,7 +588,7 @@ void TGWin32::GdkThread( )
             case WIN32_GDK_PROPERTY_CHANGE:
                 gdk_property_change((GdkWindow *) fThreadP.Drawable, (GdkAtom) fThreadP.ulParam,
                                    (GdkAtom) fThreadP.ulParam1, fThreadP.iParam,
-                                   (GdkPropMode)fThreadP.iParam1, (unsigned char *) fThreadP.pParam,
+                                   (GdkPropMode)fThreadP.iParam1, (unsigned char *) fThreadP.sParam,
                                    fThreadP.iParam2);
                 break;
 
