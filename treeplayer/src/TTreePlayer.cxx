@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.27 2000/12/10 17:17:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.28 2000/12/11 12:05:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1728,7 +1728,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (!opt.Contains("selector")) {
       fprintf(fp,"   Notify();\n");
    }
-   
+
    fprintf(fp,"}\n");
    fprintf(fp,"\n");
 
@@ -2612,6 +2612,11 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 //
 //  ww is the width of the canvas in pixels
 //  wh is the height of the canvas in pixels
+
+   if (gROOT->IsBatch()) {
+      Warning("StartViewer", "viewer cannot run in batch mode");
+      return;
+   }
 
    gROOT->LoadClass("TTreeViewer","TreeViewer");
 #ifdef R__WIN32
