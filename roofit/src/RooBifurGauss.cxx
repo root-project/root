@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBifurGauss.cc,v 1.5 2001/08/23 01:23:34 verkerke Exp $
+ *    File: $Id: RooBifurGauss.cc,v 1.6 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   Abi Soffer, Coloraro State University, abi@slac.stanford.edu
  * History:
@@ -21,7 +21,7 @@
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.5 2001/08/23 01:23:34 verkerke Exp $";
+"$Id: RooBifurGauss.cc,v 1.6 2001/09/20 01:41:48 verkerke Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,
@@ -60,7 +60,7 @@ Double_t RooBifurGauss::evaluate() const {
   return exp(coef*arg*arg);
 }
 
-Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
   return 0 ;
@@ -71,7 +71,6 @@ Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 Double_t RooBifurGauss::analyticalIntegral(Int_t code) const 
 {
   switch(code) {
-  case 0: return getVal() ; 
   case 1: 
     {
       static Double_t root2 = sqrt(2) ;

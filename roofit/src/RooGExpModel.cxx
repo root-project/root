@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGExpModel.cc,v 1.1 2001/09/12 21:49:32 verkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.2 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -167,7 +167,7 @@ Double_t RooGExpModel::evaluate() const
 
 
 
-Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
   switch(_basisCode) {
 
@@ -197,10 +197,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
   static Double_t root2 = sqrt(2) ;
   static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
 
-  // No integration
-  if (code==0) return getVal() ;
-
-  // Code must be 0 or 1
+  // Code must be 1
   assert(code==1) ;
 
   Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBRArrayPdf.cc,v 1.6 2001/08/30 18:29:16 chcheng Exp $
+ *    File: $Id: RooBRArrayPdf.cc,v 1.7 2001/09/20 01:41:47 verkerke Exp $
  * Authors:
  *   JB, John Back, Queen Mary College, Univ London, jback@slac.stanford.edu
  * History:
@@ -170,7 +170,7 @@ Bool_t RooBRArrayPdf::checkDependents(const RooArgSet* nset) const
 }
 
 
-Int_t RooBRArrayPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const 
+Int_t RooBRArrayPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code

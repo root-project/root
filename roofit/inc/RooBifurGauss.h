@@ -1,8 +1,7 @@
-// -*- C++ -*-
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBifurGauss.rdl,v 1.4 2001/08/23 01:23:34 verkerke Exp $
+ *    File: $Id: RooBifurGauss.rdl,v 1.5 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   Abi Soffer, Coloraro State University, abi@slac.stanford.edu
  * History:
@@ -28,7 +27,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooBifurGauss(*this,newname); }
   inline virtual ~RooBifurGauss() { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   Double_t analyticalIntegral(Int_t code) const ;
 
 

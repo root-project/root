@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBreitWigner.rdl,v 1.1 2001/09/14 23:48:11 schieti Exp $
+ *    File: $Id: RooBreitWigner.rdl,v 1.2 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
@@ -27,7 +27,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooBreitWigner(*this,newname); }
   inline virtual ~RooBreitWigner() { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   Double_t analyticalIntegral(Int_t code) const ;
 
 protected:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBRArrayPdf.rdl,v 1.5 2001/08/23 01:23:34 verkerke Exp $
+ *    File: $Id: RooBRArrayPdf.rdl,v 1.6 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   JB, John Back, Queen Mary College, Univ London, jback@slac.stanford.edu
  * History:
@@ -31,7 +31,7 @@ public:
   virtual Bool_t canBeExtended() const { return kTRUE ;}
   virtual Double_t expectedEvents() const; 
  
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet *normSet=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
   Double_t analyticalIntegral(Int_t code) const ;
   Bool_t selfNormalized() const { return kTRUE ; }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDstD0BG.cc,v 1.3 2001/08/25 01:23:51 chcheng Exp $
+ *    File: $Id: RooDstD0BG.cc,v 1.4 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   UE, Ulrik Egede, RAL, U.Egede@rl.ac.uk
@@ -31,7 +31,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.3 2001/08/25 01:23:51 chcheng Exp $";
+"$Id: RooDstD0BG.cc,v 1.4 2001/09/20 01:41:48 verkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,
@@ -61,7 +61,7 @@ Double_t RooDstD0BG::evaluate() const
   return (val > 0 ? val : 0) ;
 }
 
-Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
   if (matchArgs(allVars,analVars,dm)) return 1 ;
   return 0 ;
@@ -70,7 +70,6 @@ Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 Double_t RooDstD0BG::analyticalIntegral(Int_t code) const 
 {
   switch(code) {
-  case 0: return getVal() ; 
   case 1: 
     {
       Double_t min= dm.min();

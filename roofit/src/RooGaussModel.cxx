@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.9 2001/09/19 00:27:32 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.10 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -87,7 +87,8 @@ Double_t RooGaussModel::evaluate() const
 
   // *** 3nd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
   Double_t sign = (_basisCode==expBasisPlus||_basisCode==sinBasisPlus||_basisCode==cosBasisPlus)?-1:1 ;
-  Double_t omega = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+  Double_t omega = (_basisCode!=expBasisPlus&&_basisCode!=expBasisMinus) ?
+                   ((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
   Double_t xprime = sign*(x-(mean*msf))/tau ;
   Double_t c = (sigma*ssf)/(root2*tau) ; 
   Double_t u = xprime/(2*c) ;
@@ -118,7 +119,7 @@ Double_t RooGaussModel::evaluate() const
 
 
 
-Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
   switch(_basisCode) {
 
@@ -148,10 +149,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
   static Double_t root2 = sqrt(2) ;
   static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
 
-  // No integration
-  if (code==0) return getVal() ;
-
-  // Code must be 0 or 1
+  // Code must be 1
   assert(code==1) ;
   
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
@@ -163,7 +161,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
     return 0.5*(erf((x.max()-(mean*msf))/xscale)-erf((x.min()-(mean*msf))/xscale));
   }
 
-  Double_t omega = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+  Double_t omega = (_basisCode!=expBasisPlus&&_basisCode!=expBasisMinus) ?
+                   ((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
 
   // *** 2nd form: unity, used for sinBasis and cosBasis with tau=0 (PDF is zero) ***
   if (tau==0&&omega!=0) return 1. ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExponential.cc,v 1.2 2001/08/23 01:23:35 verkerke Exp $
+ *    File: $Id: RooExponential.cc,v 1.3 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
@@ -38,7 +38,7 @@ Double_t RooExponential::evaluate() const{
   return exp(c*x);
 }
 
-Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
   return 0 ;
@@ -47,7 +47,6 @@ Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 Double_t RooExponential::analyticalIntegral(Int_t code) const 
 {
   switch(code) {
-  case 0: return getVal() ;
   case 1: 
     {
       if(c == 0.0) return 0;

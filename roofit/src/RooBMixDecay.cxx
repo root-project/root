@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooBMixDecay.cc,v 1.1 2001/06/26 18:13:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -97,11 +97,11 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) cons
     // Integration over 'tag'
   case 1:
     if (basisIndex==_basisExpPlus || basisIndex==_basisExpMinus) {
-      return 2 ;
+      return 2.0 ;
     }
     
     if (basisIndex==_basisCosPlus || basisIndex==_basisCosMinus) {
-      return 0 ;
+      return 0.0 ;
     }
   default:
     assert(0) ;

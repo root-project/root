@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.cc,v 1.3 2001/09/08 02:29:49 bevan Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.4 2001/09/12 21:49:32 verkerke Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -466,8 +466,8 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName)
   RooAbsReal & yArg = (RooAbsReal&)y.arg();
 
   // make the histogram with a normalization of 1
-  TH2F * hist = this->plot(xArg, yArg, 1.0, _nPoints, _nPoints);
-  hist->SetName(histName);
+  // WVE temp disabled TH2F * hist = this->plot(xArg, yArg, 1.0, _nPoints, _nPoints);
+  // hist->SetName(histName);
   file->Write();
   file->Close();
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormFactor.cc,v 1.2 2001/08/23 17:43:29 david Exp $
+ *    File: $Id: RooFormFactor.cc,v 1.3 2001/09/20 01:41:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,7 +34,7 @@ ClassImp(RooFormFactor)
   ;
 
 static const char rcsid[] =
-"$Id: RooFormFactor.cc,v 1.2 2001/08/23 17:43:29 david Exp $";
+"$Id: RooFormFactor.cc,v 1.3 2001/09/20 01:41:48 verkerke Exp $";
 
 RooFormFactor::RooFormFactor(const char *name, const char *title,
 			     RooAbsReal& _w, RooAbsReal& _ctl, RooAbsReal& _ctv, 
@@ -71,7 +71,7 @@ RooFormFactor::RooFormFactor(const RooFormFactor& other,const  char *name):
 {
 }
 
-Int_t RooFormFactor::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooFormFactor::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
   if (matchArgs(allVars,analVars,w,ctl,ctv,chi)) return 1 ;
   return 0 ;
@@ -82,7 +82,6 @@ Int_t RooFormFactor::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 Double_t RooFormFactor::analyticalIntegral(Int_t code) const 
 {
   switch(code) {
-  case 0: return getVal() ; 
   case 1: 
     {
 
