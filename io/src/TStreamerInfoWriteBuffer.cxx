@@ -243,7 +243,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
          case kCounter: { 
             Int_t *x=(Int_t*)(arr[0]+ioffset);
             b << *x;
-            if (i == last-1) return x[0]; // info used by TBranchElement::FillLeaves
+            if (i == last-1) {
+               b.DecrementLevel(this);
+               return x[0]; // info used by TBranchElement::FillLeaves
+            }
             continue; 
          }
 
