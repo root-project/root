@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.218 2005/01/19 18:30:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.219 2005/01/19 22:03:15 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1816,8 +1816,8 @@ Int_t TStreamerInfo::New(const char *p)
             // must be specified
             sprintf(clonesClass,"%s"," ");
             if (element->GetClassPointer() == TClonesArray::Class()) {
-               char *bracket1 = (char*)strchr(element->GetTitle(),'(');
-               char *bracket2 = (char*)strchr(element->GetTitle(),')');
+               char *bracket1 = (char*)strrchr(element->GetTitle(),'(');
+               char *bracket2 = (char*)strrchr(element->GetTitle(),')');
                if (bracket1 && bracket2) {
                   clonesClass[0] = '"';
                   strncat(clonesClass,bracket1+1,bracket2-bracket1-1);
