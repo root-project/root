@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TAttPad.h"
 #include "TBuffer.h"
 #include "TStyle.h"
+#include "TClass.h"
 
 ClassImp(TAttPad)
 
@@ -128,7 +129,13 @@ void TAttPad::Streamer(TBuffer &R__b)
    // Stream an object of class TAttPad.
 
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion();
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TAttPad::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       R__b >> fLeftMargin;
       R__b >> fRightMargin;
       R__b >> fBottomMargin;
@@ -148,24 +155,9 @@ void TAttPad::Streamer(TBuffer &R__b)
          R__b >> fFrameBorderSize;
          R__b >> fFrameBorderMode;
       }
+      //====end of old versions
+      
    } else {
-      R__b.WriteVersion(TAttPad::IsA());
-      R__b << fLeftMargin;
-      R__b << fRightMargin;
-      R__b << fBottomMargin;
-      R__b << fTopMargin;
-      R__b << fXfile;
-      R__b << fYfile;
-      R__b << fAfile;
-      R__b << fXstat;
-      R__b << fYstat;
-      R__b << fAstat;
-      R__b << fFrameFillColor;
-      R__b << fFrameLineColor;
-      R__b << fFrameFillStyle;
-      R__b << fFrameLineStyle;
-      R__b << fFrameLineWidth;
-      R__b << fFrameBorderSize;
-      R__b << fFrameBorderMode;
+      TAttPad::Class()->WriteBuffer(R__b,this);
    }
 }
