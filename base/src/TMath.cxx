@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.66 2004/07/06 09:04:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.67 2004/07/08 08:19:17 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1464,15 +1464,15 @@ Short_t TMath::Median(Int_t n, const Short_t *a)
 
    if (n <= 0) return 0;
 
-   // create a temporary clone array of a and sort it
-   Double_t *temp = new Double_t[n];
    Int_t *ind = new Int_t[n];
    TMath::Sort(n,a,ind,kFALSE);
-   for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
-   Short_t median = (Short_t)TMath::MedianSorted(n,temp);
+   Double_t median;
+
+   if (n%2==1) median = a[ind[n/2]];
+   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
    delete [] ind;
-   delete [] temp;
-   return median;
+   Short_t res = (Short_t)median;
+   return res;
 }
 
 //______________________________________________________________________________
@@ -1485,15 +1485,15 @@ Int_t TMath::Median(Int_t n, const Int_t *a)
 
    if (n <= 0) return 0;
 
-   // create a temporary clone array of a and sort it
-   Double_t *temp = new Double_t[n];
    Int_t *ind = new Int_t[n];
    TMath::Sort(n,a,ind,kFALSE);
-   for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
-   Int_t median = (Int_t)TMath::MedianSorted(n,temp);
+   Double_t median;
+
+   if (n%2==1) median = a[ind[n/2]];
+   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
    delete [] ind;
-   delete [] temp;
-   return median;
+   Int_t res = (Int_t)median;
+   return res;
 }
 
 //______________________________________________________________________________
@@ -1506,14 +1506,13 @@ Float_t TMath::Median(Int_t n, const Float_t *a)
 
    if (n <= 0) return 0;
 
-   // create a temporary clone array of a and sort it
-   Double_t *temp = new Double_t[n];
    Int_t *ind = new Int_t[n];
    TMath::Sort(n,a,ind,kFALSE);
-   for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
-   Float_t median = (Float_t)TMath::MedianSorted(n,temp);
+   Float_t median;
+
+   if (n%2==1) median = a[ind[n/2]];
+   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
    delete [] ind;
-   delete [] temp;
    return median;
 }
 
@@ -1527,14 +1526,13 @@ Double_t TMath::Median(Int_t n, const Double_t *a)
 
    if (n <= 0) return 0;
 
-   // create a temporary clone array of a and sort it
-   Double_t *temp = new Double_t[n];
    Int_t *ind = new Int_t[n];
    TMath::Sort(n,a,ind,kFALSE);
-   for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
-   Double_t median = (Double_t)TMath::MedianSorted(n,temp);
+   Double_t median;
+
+   if (n%2==1) median = a[ind[n/2]];
+   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
    delete [] ind;
-   delete [] temp;
    return median;
 }
 
@@ -1548,15 +1546,15 @@ Long_t TMath::Median(Int_t n, const Long_t *a)
 
    if (n <= 0) return 0;
 
-   // create a temporary clone array of a and sort it
-   Double_t *temp = new Double_t[n];
    Int_t *ind = new Int_t[n];
    TMath::Sort(n,a,ind,kFALSE);
-   for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
-   Long_t median = (Long_t)TMath::MedianSorted(n,temp);
+   Double_t median;
+
+   if (n%2==1) median = a[ind[n/2]];
+   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
    delete [] ind;
-   delete [] temp;
-   return median;
+   Long_t res = (Long_t)median;
+   return res;
 }
 
 //______________________________________________________________________________
@@ -1569,15 +1567,15 @@ Long64_t TMath::Median(Int_t n, const Long64_t *a)
 
    if (n <= 0) return 0;
 
-   // create a temporary clone array of a and sort it
-   Double_t *temp = new Double_t[n];
    Int_t *ind = new Int_t[n];
    TMath::Sort(n,a,ind,kFALSE);
-   for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
-   Long64_t median = (Long64_t)TMath::MedianSorted(n,temp);
+   Double_t median;
+
+   if (n%2==1) median = a[ind[n/2]];
+   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
    delete [] ind;
-   delete [] temp;
-   return median;
+   Long64_t res = (Long64_t)median;
+   return res;
 }
 
 //______________________________________________________________________________
