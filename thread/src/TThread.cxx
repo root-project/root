@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.10 2001/07/02 16:35:24 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.11 2001/07/17 14:38:41 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // This class implements threads. A thread is an execution environment  //
 // much lighter than a process. A single process can have multiple      //
 // threads. The actual work is done via the TThreadImp class (either    //
-// TThreadPosix, TThreadSolaris or TThreadNT).                          //
+// TPosixThread, TThreadSolaris or TThreadNT).                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
