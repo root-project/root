@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.8 2000/12/14 11:22:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.9 2001/01/24 12:02:22 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -58,7 +58,15 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
       Error("TBranchObject","Cannot find class:%s",classname);
       return;
    }
-   gTree->BuildStreamerInfo(cl);
+   char **apointer = (char**)(addobj);
+   TObject *obj = (TObject*)(*apointer);
+   Bool_t delobj = kFALSE;
+   if (!obj) {
+      obj = (TObject*)cl->New();
+      delobj = kTRUE;
+   }
+   gTree->BuildStreamerInfo(cl,obj);
+   if (delobj) delete obj;
    
    SetName(name);
    SetTitle(name);
