@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.57 2001/10/15 07:01:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.58 2001/10/17 10:22:08 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1154,9 +1154,11 @@ void *TClass::New(Bool_t defConstructor)
       Bool_t statsave = GetObjectStat();
       SetObjectStat(kFALSE);
       TStreamerInfo *sinfo = GetStreamerInfo();
-      Int_t l = sinfo->GetSize();
+      Int_t l = sinfo->GetSize() + 8;
       char *pp = new char[l];
       memset(pp, 0, l);
+      Long_t pp8 = (Long_t)pp;
+      pp = (char*)(pp8 - pp8%8 +8); //always align to 8 bytes address
       sinfo->New(pp);
       SetObjectStat(statsave);
       return pp;
