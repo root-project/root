@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.3 2000/08/18 10:59:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.4 2000/08/18 13:44:34 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1391,8 +1391,8 @@ void TView::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) {};
       //unfortunately we forgot to increment the TView version number
-      //when the class was upgraded to double precision.
-      //we are force to use the file version number to recognize old files.
+      //when the class was upgraded to double precision in version 2.25.
+      //we are forced to use the file version number to recognize old files.
       if (gFile->GetVersion() < 22500) { //old version in single precision
          TObject::Streamer(R__b);
          TAttLine::Streamer(R__b);
