@@ -6,30 +6,58 @@
 # Author: Fons Rademakers, 27/7/2000
 
 PLATFORM=$1
-CINT=$2
-MAKELIB=$3
-CXX=$4
-CC=$5
-LD=$6
-OPT=$7
-CINTCXXFLAGS=$8
-CINTCFLAGS=$9
-shift
-LDFLAGS=$9
-shift
-SOFLAGS=$9
-shift
-SOEXT=$9
+if [ $PLATFORM != "clean" ]; then
+   CINT=$2
+   MAKELIB=$3
+   CXX=$4
+   CC=$5
+   LD=$6
+   OPT=$7
+   CINTCXXFLAGS=$8
+   CINTCFLAGS=$9
+   shift
+   LDFLAGS=$9
+   shift
+   SOFLAGS=$9
+   shift
+   SOEXT=$9
+fi
 
 CINTDIRL=cint/lib
 CINTDIRI=cint/include
 CINTDIRS=cint/stl
+
+clean() {
+   rm -f $CINTDIRI/long.dl
+   rm -f $CINTDIRI/posix.dll
+   rm -f $CINTDIRI/sys/ipc.dll
+   rm -f $CINTDIRS/string.dll
+   rm -f $CINTDIRS/vector.dll
+   rm -f $CINTDIRS/list.dll
+   rm -f $CINTDIRS/deque.dll
+   rm -f $CINTDIRS/map.dll
+   rm -f $CINTDIRS/set.dll
+   rm -f $CINTDIRS/multimap.dll
+   rm -f $CINTDIRS/multiset.dll
+   rm -f $CINTDIRS/stack.dll
+   rm -f $CINTDIRS/queue.dll
+   rm -f $CINTDIRS/valarray.dll
+   rm -f $CINTDIRS/exception.dll
+}
 
 rename() {
    if [ "$SOEXT" != "dll" ]; then
       mv $1.$SOEXT $1.dll;
    fi;
 }
+
+##### first delete old dll's #####
+
+clean
+
+if [ $PLATFORM = "clean" ]; then
+   exit 0;
+fi
 
 ##### long.dl (note .dl not .dll) #####
 
