@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.206 2004/11/10 06:26:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.207 2004/11/17 06:02:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -545,7 +545,7 @@ namespace {
 
       Bool_t done = kFALSE;
       for(UInt_t i = 0, done = false; (i<oldlen) && !done ; ++i) {
-         switch ( oldcl->GetName()[i] ) {
+         switch ( oldClass->GetName()[i] ) {
             case ':' : return kFALSE; /* old class is in some scope */
             case '<' : done = kTRUE; break; /* we got to a template parameter, so the old class was not in any scope */
          }
