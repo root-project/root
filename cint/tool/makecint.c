@@ -1190,10 +1190,10 @@ char **argv;
      * function headers. This is not a good manner but -K -c-2 and -c-2 -K
      * has different meaning. */
 #ifndef G__OLDIMPLEMENTATION783
-    fprintf(fp,"\tcint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #else
-    fprintf(fp,"\tcint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CHEADERCINT)" 
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CHEADERCINT)" 
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #endif
     if(G__CSTUB) fprintf(fp," +STUB $(CSTUBCINT) -STUB\n");
@@ -1216,10 +1216,10 @@ char **argv;
     fprintf(fp,"$(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint\n");
 #endif
 #ifndef G__OLDIMPLEMENTATION783
-    fprintf(fp,"\tcint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #else
-    fprintf(fp,"\tcint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CPPHEADERCINT)"
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CPPHEADERCINT)"
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #endif
     if(G__CPPSTUB) fprintf(fp," +STUB $(CPPSTUBCINT) -STUB\n");

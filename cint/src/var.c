@@ -1859,7 +1859,7 @@ int ig15;
     G__inc_cp_asm(2,0);
     for(i=pinc-1;i>=0;--i) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,-size*pinc);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,-size);
 #endif
       G__asm_inst[G__asm_cp] = G__ADDSTROS;
       G__asm_inst[G__asm_cp+1] = (long)(-size);
@@ -2308,12 +2308,19 @@ struct G__var_array *varglobal,*varlocal;
       G__asm_noverflow=0;
     }
   }
+#ifndef G__OLDIMPLEMENTATION1443
+  if(G__cppconstruct) {
+    G__asm_noverflow=0;
+  }
 #endif
+#endif
+
 
   /* evaluate parameter */
   for(ig15=0;ig15<paran;ig15++) {
     para[ig15]=G__getexpr(parameter[ig15]);
   }
+
 
 #ifndef G__OLDIMPLEMENTATION1119
   G__asm_wholefunction = store_asm_wholefunction;

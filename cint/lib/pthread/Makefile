@@ -5,7 +5,7 @@
 # Copying $CINTSYSDIR/MAKEINFO #############################
 
 ############################################################
-# platform/linux2.0RH6.2
+# platform/linux_RH6.2
 #  Platform dependent information for LINUX 2.0 RedHatH6.2 or later
 #  Redhat-6.2
 ############################################################
@@ -117,7 +117,7 @@ $(CPPIFO) : $(CPPIFC)
 
 # Create C++ Interface routine ###########################
 $(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint
-	cint  -w1 -zpthread -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT  -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)
+	$(CINTSYSDIR)/cint  -w1 -zpthread -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT  -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)
 
 
 # Clean up #################################################

@@ -9,7 +9,7 @@
  ************************************************************************
  * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
- * Permission to use, copy, modify and distribute this software and its
+ * Permission to use, copy, modify and distribute this software and its 
  * documentation for non-commercial purpose is hereby granted without fee,
  * provided that the above copyright notice appear in all copies and
  * that both that copyright notice and this permission notice appear
@@ -160,8 +160,15 @@ extern char *getcwd(char *buf,size_t size);
 
 extern long int sysconf(int name);
 
-#if defined(__SUNPRO_C) || defined(G__SUNPRO_C) || (__GLIBC__<2) || \
-   (defined(__MAKECINT__) && (G__GLIBC<2))
+#if defined(G__GLIBC) && defined(G__GLIBC_MINOR)
+#define G__GLIBC_ (G__GLIBC*100+G__GLIBC_MINOR)
+#elif defined(__GLIBC__) && defined(__GLIBC_MINOR__)
+#define G__GLIBC_ (__GLIBC__*100+__GLIBC_MINOR__)
+#endif
+
+#if defined(__SUNPRO_C) || defined(G__SUNPRO_C) 
+extern int putenv(char *string);
+#elif defined(G__GLIBC_) && (G__GLIBC_<=201)
 extern int putenv(char *string);
 #else
 extern int putenv(const char *string);
@@ -194,7 +201,7 @@ extern time_t time(time_t *t);
 #ifndef G__HPUX
 #ifdef __MAKECINT__
 int S_ISLNK(mode_t m);
-int S_ISSOCK(mode_t m);
+int S_ISSOCK(mode_t m); 
 #endif
 extern int fchown(int fd,uid_t owner,gid_t group);
 extern int fchdir(int fd);

@@ -3808,15 +3808,20 @@ G__value G__exec_statement()
 	  }
 	  
 	  /* Normal commands 'xxxx;' */
-#ifdef G__ASM
-	  if(G__asm_noverflow) G__asm_clear();
+#ifndef G__OLDIMPLEMENTATION1439
+	  if(statement[0] && iout) {
 #endif
-	  result=G__getexpr(statement);
-
-	  if(G__p_tempbuf->level>=G__templevel && G__p_tempbuf->prev) {
-	    G__free_tempobject();
+#ifdef G__ASM
+	    if(G__asm_noverflow) G__asm_clear();
+#endif
+	    result=G__getexpr(statement);
+	    
+	    if(G__p_tempbuf->level>=G__templevel && G__p_tempbuf->prev) {
+	      G__free_tempobject();
+	    }
+#ifndef G__OLDIMPLEMENTATION1439
 	  }
-	  
+#endif
 	}
 	
 	if(largestep) G__afterlargestep(&largestep);

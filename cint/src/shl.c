@@ -453,8 +453,8 @@ so we try to catch symbols not in there before we call it*/
 
   sym_s = sym;
   if(strstr(sym_s,"G__cpp_dllrev")) {
-//   This one is not defined as extern "C" in rootcint, so name is mangled
-//   We need to mangle this one to match up
+/*   This one is not defined as extern "C" in rootcint, so name is mangled */
+/*   We need to mangle this one to match up */
      strcpy(&sym_s[strlen(sym_s)],"__xv");
      }
   sym_d.dsc$a_pointer = sym_s;

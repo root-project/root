@@ -1881,7 +1881,8 @@ int G__init_globals()
                              G__NOT_USING_2ARG_NEW ;
 #else
   G__is_operator_newdelete = G__DUMMYARG_NEWDELETE 
-                          /* | G__DUMMYARG_NEWDELETE_STATIC */ ;
+                          /* | G__DUMMYARG_NEWDELETE_STATIC */
+                             | G__NOT_USING_2ARG_NEW ;
 #endif
 #else /* 1423 */
 #if defined(G__ROOT) 

@@ -40,9 +40,9 @@
 #endif
 
 #ifdef G__CONSTNESSFLAG
-#define G__CREATEDLLREV       (51455+G__VF+G__TF)
+#define G__CREATEDLLREV       (51463+G__VF+G__TF)
 #define G__ACCEPTDLLREV_FROM  (51111+G__VF+G__TF)
-#define G__ACCEPTDLLREV_UPTO  (51455+G__VF+G__TF)
+#define G__ACCEPTDLLREV_UPTO  (51463+G__VF+G__TF)
 #else
 #define G__CREATEDLLREV       (51111+G__VF+G__TF)
 #define G__ACCEPTDLLREV_FROM  (51111+G__VF+G__TF)

@@ -542,23 +542,41 @@ FILE *fp;
     if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE_STATIC))
       fprintf(fp,"static ");
     fprintf(fp,"void* operator new(size_t size,G__%s_tag* p) {\n",G__NEWID);
+#ifndef G__OLDIMPLEMENTATION1436
+    fprintf(fp,"  if(p && G__PVOID!=G__getgvp()) return((void*)p);\n");
+#else
     fprintf(fp,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return((void*)p);\n");
+#endif
+    fprintf(fp,"#ifndef G__ROOT\n");
+    fprintf(fp,"  return(malloc(size));\n");
+    fprintf(fp,"#else\n");
     fprintf(fp,"  return new char[size];\n");
+    fprintf(fp,"#endif\n");
     fprintf(fp,"}\n\n");
 
 #ifndef G__OLDIMPLEMENTATION1431
     fprintf(fp,"/* dummy, for exception */\n");
+    fprintf(fp,"#if !defined(__BCPLUSPLUS__)\n");
     if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE_STATIC))
       fprintf(fp,"static ");
     fprintf(fp,"void operator delete(void *p,G__%s_tag* x) {\n",G__NEWID);
     fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
-    fprintf(fp,"  delete p;\n");
-    fprintf(fp,"}\n\n");
+    fprintf(fp,"#ifndef G__ROOT\n");
+    fprintf(fp,"  free(p);\n");
+    fprintf(fp,"#else\n");
+    fprintf(fp,"  delete[] p;\n");
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"}\n");
+    fprintf(fp,"#endif\n\n");
 #endif
     
     fprintf(fp,"static void G__operator_delete(void *p) {\n");
     fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
-    fprintf(fp,"  delete p;\n");
+    fprintf(fp,"#ifndef G__ROOT\n");
+    fprintf(fp,"  free(p);\n");
+    fprintf(fp,"#else\n");
+    fprintf(fp,"  delete[] p;\n");
+    fprintf(fp,"#endif\n");
     fprintf(fp,"}\n\n");
     
   }
@@ -2454,7 +2472,11 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,"     else {\n");
 	  fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
 #ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	     ) 
 	    fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) "
 		    ,G__NEWID,G__fulltagname(tagnum,1));
 	  else
@@ -2464,7 +2486,11 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
 	  fprintf(fp,"     }\n");
 #ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	     )
 	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
 		    ,G__NEWID,G__fulltagname(tagnum,1));
 	  else
@@ -2483,13 +2509,11 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
-	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
-		    ,G__NEWID,G__fulltagname(tagnum,1));
-	  else
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	     )
 	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
 		    ,G__NEWID,G__fulltagname(tagnum,1));
 	  else
@@ -2504,16 +2528,24 @@ struct G__ifunc_table *ifunc;
 	if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	     )
 	    fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
 		    ,G__NEWID,G__fulltagname(tagnum,1));
 	  else
 #endif
-	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
+	    fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
 	}
 	else {
 #ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
+#endif
+	     )
 	    fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
 		    ,G__NEWID,G__fulltagname(tagnum,1));
 	  else
@@ -2552,7 +2584,11 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,"     else {\n");
 	fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
 #ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	   )
 	  fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
 		  ,G__NEWID,G__fulltagname(tagnum,1));
 	else
@@ -2562,7 +2598,11 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
 	fprintf(fp,"     }\n");
 #ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	   )
 	  fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
 		  ,G__NEWID,G__fulltagname(tagnum,1));
 	else
@@ -2581,7 +2621,11 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
+#endif
+	   )
 	  fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
 		  ,G__NEWID,G__fulltagname(tagnum,1));
 	else
@@ -2595,7 +2639,11 @@ struct G__ifunc_table *ifunc;
       if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	   )
 	  fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
 		  ,G__NEWID,G__fulltagname(tagnum,1));
 	else
@@ -2604,7 +2652,11 @@ struct G__ifunc_table *ifunc;
       }
       else {
 #ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
+#endif
+	   )
 	  fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
 		  ,G__NEWID,G__fulltagname(tagnum,1));
 	else
@@ -2979,22 +3031,30 @@ int isnonpublicnew;
       fprintf(fp,"     else {\n");
       fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
 #ifndef G__OLDIMPLEMENTATION1423
-      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	 )
 	fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
 		,G__NEWID,G__fulltagname(tagnum,1));
       else 
 #endif
-      fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
+	fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
       fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
       fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
       fprintf(fp,"     }\n");
 #ifndef G__OLDIMPLEMENTATION1423
-      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	 )
 	fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
 		,G__NEWID,G__fulltagname(tagnum,1));
       else
 #endif
-      fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
+	fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
     }
     else {
 #ifndef G__OLDIMPLEMENTATION1377
@@ -3008,7 +3068,11 @@ int isnonpublicnew;
       fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
-      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
+#endif
+	 )
 	fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
 		,G__NEWID,G__fulltagname(tagnum,1));
       else
@@ -3071,11 +3135,15 @@ int isnonpublicnew;
     if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
-      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
+#ifndef G__OLDIMPLEMENTATION1441
+	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	 )
 	fprintf(fp,"   p=new((G__%s_tag*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",G__NEWID,temp,temp);
       else
 #endif
-      fprintf(fp,"   p=new((void*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
+	fprintf(fp,"   p=new((void*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
     }
     else {
       fprintf(fp,"   p=new %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
@@ -3142,7 +3210,11 @@ int isnonpublicnew;
     fprintf(fp,"     else\n");
     fprintf(fp,"       for(int i=G__getaryconstruct()-1;i>=0;i--)\n");
 #ifndef G__OLDIMPLEMENTATION1423
-    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) {
+    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
+#ifndef G__OLDIMPLEMENTATION1441
+       && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORDELETE)
+#endif
+       ) {
       fprintf(fp,"         ((%s *)",G__fulltagname(tagnum,1));
       fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i))" ,G__fulltagname(tagnum,1));
       fprintf(fp,"->~%s();\n",dtorname);
@@ -3162,7 +3234,11 @@ int isnonpublicnew;
     }
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
-    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) {
+    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
+#ifndef G__OLDIMPLEMENTATION1441
+       && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORDELETE)
+#endif
+       ) {
       fprintf(fp,"   else {\n");
       fprintf(fp,"     ((%s *)(G__getstructoffset()))",G__fulltagname(tagnum,1));
       fprintf(fp,"->~%s();\n",dtorname);
@@ -3551,7 +3627,11 @@ char *endoffunc;
 	  fprintf(fp,"        %s *pobj,xobj=",G__type2string('u',tagnum,-1,0,0));
 	  if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
 #ifndef G__OLDIMPLEMENTATION1423
-	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE)
+	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
+#ifndef G__OLDIMPLEMENTATION1441
+	      && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+		)
 	      sprintf(endoffunc,";\n        pobj=new((G__%s_tag*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
 		      ,G__NEWID,G__type2string('u',tagnum,-1,0,0));
 	    else
@@ -3573,7 +3653,11 @@ char *endoffunc;
 	  if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
-	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE)
+	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
+#ifndef G__OLDIMPLEMENTATION1441
+	       && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#endif
+	       )
 	      fprintf(fp,"        pobj=new((G__%s_tag*)G__getgvp()) %s("
 		      ,G__NEWID,G__type2string('u',tagnum,-1,0,0));
 	    else
@@ -4003,17 +4087,26 @@ FILE *hfp;
 	 ) {
 	if('e'==G__struct.type[i])
 	  fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
-		  ,G__mark_linked_tagnum(i)
-		  ,"int"
-		  ,G__globalcomp ,G__struct.isabstract[i],buf);
+		  ,G__mark_linked_tagnum(i) ,"int" ,G__globalcomp 
+#ifndef G__OLDIMPLEMENTATION1442
+		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		  ,G__struct.isabstract[i]
+#endif
+		  ,buf);
 #ifndef G__OLDIMPLEMENTATION1054
 	else if('n'==G__struct.type[i]) {
 	  strcpy(mappedtagname,G__map_cpp_name(tagname));
 	  fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),0,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
 		  ,G__mark_linked_tagnum(i)
 		  /* ,G__type2string('u',i,-1,0,0) */
-		  ,G__globalcomp ,G__struct.isabstract[i],buf
-		  ,mappedtagname,mappedtagname);
+		  ,G__globalcomp 
+#ifndef G__OLDIMPLEMENTATION1442
+		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		  ,G__struct.isabstract[i]
+#endif
+		  ,buf,mappedtagname,mappedtagname);
 	}
 #endif
 	else {
@@ -4024,20 +4117,35 @@ FILE *hfp;
 	      fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
 		      ,G__mark_linked_tagnum(i)
 		      ,G__type2string('u',i,-1,0,0)
-		      ,G__globalcomp ,G__struct.isabstract[i],buf
-		      ,mappedtagname);
+		      ,G__globalcomp 
+#ifndef G__OLDIMPLEMENTATION1442
+		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		      ,G__struct.isabstract[i]
+#endif
+		      ,buf ,mappedtagname);
 	    else
 	      fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
 		      ,G__mark_linked_tagnum(i)
 		      ,G__type2string('u',i,-1,0,0)
-		      ,G__globalcomp ,G__struct.isabstract[i],buf
-		      ,mappedtagname,mappedtagname);
+		      ,G__globalcomp 
+#ifndef G__OLDIMPLEMENTATION1442
+		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		      ,G__struct.isabstract[i]
+#endif
+		      ,buf ,mappedtagname,mappedtagname);
 #else
 	    fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
-		    ,G__globalcomp ,G__struct.isabstract[i],buf
-		    ,mappedtagname,mappedtagname);
+		    ,G__globalcomp 
+#ifndef G__OLDIMPLEMENTATION1442
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		    ,G__struct.isabstract[i]
+#endif
+		    ,buf ,mappedtagname,mappedtagname);
 #endif
 	  }
 	  else if('$'==G__struct.name[i][0]&&
@@ -4045,14 +4153,25 @@ FILE *hfp;
 	    fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
-		    ,G__globalcomp ,G__struct.isabstract[i],buf);
+		    ,G__globalcomp 
+#ifndef G__OLDIMPLEMENTATION1442
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		    ,G__struct.isabstract[i]
+#endif
+		    ,buf);
 	  }
 	  else {
 	    fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
-		    ,G__globalcomp ,G__struct.isabstract[i],buf
-		    ,mappedtagname);
+		    ,G__globalcomp 
+#ifndef G__OLDIMPLEMENTATION1442
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		    ,G__struct.isabstract[i]
+#endif
+		    ,buf ,mappedtagname);
 	  }
 
 	}
@@ -4060,7 +4179,13 @@ FILE *hfp;
       else {
 	fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),0,%d,%d,%s,NULL,NULL);\n"
 		,G__mark_linked_tagnum(i)
-		,G__globalcomp ,G__struct.isabstract[i],buf);
+		,G__globalcomp 
+#ifndef G__OLDIMPLEMENTATION1442
+		,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		,G__struct.isabstract[i]
+#endif
+		,buf);
       }
       if('e'!=G__struct.type[i]) {
 	if(strchr(tagname,'<')) { /* template class */
@@ -5555,7 +5680,13 @@ G__incsetup setup_memfunc;
 #endif
   G__struct.size[tagnum] = size;
   G__struct.iscpplink[tagnum] = cpplink;
+#ifndef G__OLDIMPLEMENTATION1442
+  G__struct.funcs[tagnum] = isabstract/0x100;
+  G__struct.isabstract[tagnum] = isabstract%0x100;
+#else
   G__struct.isabstract[tagnum] = isabstract;
+#endif
+
 #ifdef G__FONS_COMMENT
   G__struct.comment[tagnum].p.com = comment;
   if(comment) G__struct.comment[tagnum].filenum = -2;

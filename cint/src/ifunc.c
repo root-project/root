@@ -1515,6 +1515,17 @@ char *funcheader;   /* funcheader = 'funcname(' */
       /* operator= */
 	G__struct.funcs[G__def_tagnum] |= G__HAS_ASSIGNMENTOPERATOR;
     }
+#ifndef G__OLDIMPLEMENTATION1441
+    else if(strcmp("operator new",G__p_ifunc->funcname[func_now])==0) {
+      if(1==G__p_ifunc->para_nu[func_now])
+	G__struct.funcs[G__def_tagnum] |= G__HAS_OPERATORNEW1ARG;
+      else
+	G__struct.funcs[G__def_tagnum] |= G__HAS_OPERATORNEW2ARG;
+    }
+    else if(strcmp("operator delete",G__p_ifunc->funcname[func_now])==0) {
+      G__struct.funcs[G__def_tagnum] |= G__HAS_OPERATORDELETE;
+    }
+#endif
   }
 
   /****************************************************************
@@ -1874,6 +1885,28 @@ int func_now;
     }
 
     /* determine type */
+#ifndef G__OLDIMPLEMENTATION1438
+    if(strcmp(paraname,"struct")==0) {
+      c=G__fgetname_template(paraname,",)&*[(=");
+      tagnum = G__search_tagname(paraname,'s');
+      type = 'u';
+    }
+    else if(strcmp(paraname,"class")==0) {
+      c=G__fgetname_template(paraname,",)&*[(=");
+      tagnum = G__search_tagname(paraname,'c');
+      type = 'u';
+    }
+    else if(strcmp(paraname,"union")==0) {
+      c=G__fgetname_template(paraname,",)&*[(=");
+      tagnum = G__search_tagname(paraname,'u');
+      type = 'u';
+    }
+    else if(strcmp(paraname,"enum")==0) {
+      c=G__fgetname_template(paraname,",)&*[(=");
+      tagnum = G__search_tagname(paraname,'e');
+      type = 'i';
+    }
+#else
     if(strcmp(paraname,"struct")==0 || strcmp(paraname,"class")==0 ||
        strcmp(paraname,"union")==0) {
       c=G__fgetname_template(paraname,",)&*[(=");
@@ -1885,6 +1918,7 @@ int func_now;
       tagnum = G__defined_tagname(paraname,0);
       type = 'i';
     }
+#endif
     else if(strcmp(paraname,"int")==0) type='i'+isunsigned;
     else if(strcmp(paraname,"char")==0) type='c'+isunsigned;
     else if(strcmp(paraname,"short")==0) type='s'+isunsigned ;
@@ -3119,6 +3153,7 @@ int formal_isconst;
 #define G__BASECONVMATCH  0x00000001
 #define G__C2P2FCONVMATCH 0x00000001
 #define G__V2P2FCONVMATCH 0x00000002
+#define G__TOVOIDPMATCH   0x00000003
 
 /***********************************************************************
 * struct G__overload_func
@@ -3421,6 +3456,13 @@ int recursive;
 	else {
 	}
 	break;
+#ifndef G__OLDIMPLEMENTATION1435
+      case 'Y':
+	if(isupper(param_type)||0==libp->para[i].obj.i) {
+	  funclist->p_rate[i] = G__PROMOTIONMATCH+G__TOVOIDPMATCH;
+	}
+	break;
+#endif
       default:
 	break;
       }
@@ -3583,9 +3625,7 @@ int recursive;
       default:
 	/* questionable */
 	if((param_type=='Y'||param_type=='Q'||0==libp->para[0].obj.i)&&
-	   (isupper(formal_type)
-	    || 'a'==formal_type
-	    )) {
+	   (isupper(formal_type) || 'a'==formal_type)) {
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	}
 	break;
@@ -4551,6 +4591,37 @@ int recursive;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1445
+/***********************************************************************
+* G__identical_function
+**********************************************************************/
+int G__identical_function(match,func)
+struct G__funclist *match;
+struct G__funclist *func;
+{
+  int ipara;
+  
+  for(ipara=0;ipara<match->ifunc->para_nu[match->ifn];ipara++) {
+    if(
+       (match->ifunc->para_type[match->ifn][ipara] !=
+	func->ifunc->para_type[func->ifn][ipara]) ||
+       (match->ifunc->para_p_tagtable[match->ifn][ipara] !=
+	func->ifunc->para_p_tagtable[func->ifn][ipara]) ||
+       (match->ifunc->para_p_typetable[match->ifn][ipara] !=
+	func->ifunc->para_p_typetable[func->ifn][ipara]) ||
+       (match->ifunc->para_isconst[match->ifn][ipara] !=
+	func->ifunc->para_isconst[func->ifn][ipara]) ||
+       (match->ifunc->para_reftype[match->ifn][ipara] !=
+	func->ifunc->para_reftype[func->ifn][ipara])
+       ) {
+      return(0);
+    }
+  }
+
+  return(1);
+}
+#endif
+
 
 /***********************************************************************
 * G__overload_match(funcname,libp,hash,p_ifunc,memfunc_flag,access,pifn)
@@ -4658,7 +4729,11 @@ int recursive;
     }
     else if(func->rate==bestmatch && bestmatch!=G__NOMATCH) {
       match = func;
+#ifndef G__OLDIMPLEMENTATION1445
+      if(0==G__identical_function(match,func)) ++ambiguous;
+#else
       ++ambiguous;
+#endif
     }
     func = func->prev;
   }
@@ -6634,7 +6709,11 @@ asm_ifunc_start:   /* loop compilation execution label */
   /* recover line number and filename*/
   G__ifile.line_number = G_local.prev_line_number;
   G__ifile.filenum=G_local.prev_filenum;
-  if(-1!=G__ifile.filenum && 0!=G__srcfile[G__ifile.filenum].filename) 
+  if(-1!=G__ifile.filenum
+#ifndef G__OLDIMPLEMENTATION1440
+     && 0!=G__srcfile[G__ifile.filenum].filename 
+#endif
+     ) 
     strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
   else {
     G__ifile.name[0]='\0';

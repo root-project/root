@@ -150,7 +150,7 @@ static int G__ios_basecLcLInit_getinit_cnt__0_0(G__value *result7,G__CONST char 
 
 static int G__ios_basecLcLInit_Init_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ios_base::Init *p=NULL;
-   if(G__getaryconstruct()) p=new ios_base::Init[G__getaryconstruct()];
+   if(G__getaryconstruct()) {p=0;G__genericerror("Error: Array construction with private/protected destructor is illegal");}
    else                    p=new ios_base::Init;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
@@ -252,7 +252,6 @@ static int G__char_traitslEchargR_assign_3_1(G__value *result7,G__CONST char *fu
 // automatic default constructor
 static int G__char_traitslEchargR_char_traitslEchargR_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    char_traits<char> *p;
-   if(0!=libp->paran) ;
    if(G__getaryconstruct()) p=new char_traits<char>[G__getaryconstruct()];
    else                    p=new char_traits<char>;
    result7->obj.i = (long)p;
@@ -1459,7 +1458,7 @@ static int G__basic_iostreamlEcharcOchar_traitslEchargRsPgR_wAbasic_iostreamlEch
 
 
 /* Setting up global function */
-static int G___ws_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___ws_7_12(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=ws(*(istream*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1467,7 +1466,7 @@ static int G___ws_1_0(G__value *result7,G__CONST char *funcname,struct G__param 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___endl_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___endl_8_12(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=endl(*(ostream*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1475,7 +1474,7 @@ static int G___endl_2_0(G__value *result7,G__CONST char *funcname,struct G__para
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___ends_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___ends_9_12(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=ends(*(ostream*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1483,7 +1482,7 @@ static int G___ends_3_0(G__value *result7,G__CONST char *funcname,struct G__para
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___flush_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___flush_0_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=flush(*(ostream*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1491,7 +1490,7 @@ static int G___flush_4_0(G__value *result7,G__CONST char *funcname,struct G__par
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_1_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(char)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1499,7 +1498,7 @@ static int G___operatorlElE_5_0(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_2_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(char*)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1507,7 +1506,7 @@ static int G___operatorlElE_6_0(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_3_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(void*)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1515,7 +1514,7 @@ static int G___operatorlElE_7_0(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_4_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(unsigned char)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1523,7 +1522,7 @@ static int G___operatorlElE_8_0(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_5_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(short)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1531,7 +1530,7 @@ static int G___operatorlElE_9_0(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_6_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(unsigned short)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1539,7 +1538,7 @@ static int G___operatorlElE_0_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_1_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_7_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(int)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1547,7 +1546,7 @@ static int G___operatorlElE_1_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_8_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(unsigned int)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1555,7 +1554,7 @@ static int G___operatorlElE_2_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_9_13(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(long)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1563,7 +1562,7 @@ static int G___operatorlElE_3_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_0_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(unsigned long)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1571,7 +1570,7 @@ static int G___operatorlElE_4_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_1_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(float)G__double(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1579,7 +1578,7 @@ static int G___operatorlElE_5_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_2_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(double)G__double(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1587,7 +1586,7 @@ static int G___operatorlElE_6_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorlElE_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorlElE_3_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         ostream& obj=operator<<(*(ostream*)libp->para[0].ref,(bool)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1595,7 +1594,7 @@ static int G___operatorlElE_7_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_8_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_4_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(char*)G__Charref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1603,7 +1602,7 @@ static int G___operatorgRgR_8_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_9_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_5_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(unsigned char*)G__UCharref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1611,7 +1610,7 @@ static int G___operatorgRgR_9_1(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_0_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_6_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(short*)G__Shortref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1619,7 +1618,7 @@ static int G___operatorgRgR_0_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_1_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_7_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(unsigned short*)G__UShortref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1627,7 +1626,7 @@ static int G___operatorgRgR_1_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_2_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_8_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(int*)G__Intref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1635,7 +1634,7 @@ static int G___operatorgRgR_2_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_3_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_9_14(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(unsigned int*)G__UIntref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1643,7 +1642,7 @@ static int G___operatorgRgR_3_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_4_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_0_15(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(long*)G__Longref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1651,7 +1650,7 @@ static int G___operatorgRgR_4_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_5_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_1_15(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(unsigned long*)G__ULongref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1659,7 +1658,7 @@ static int G___operatorgRgR_5_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_6_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_2_15(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(float*)G__Floatref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1667,7 +1666,7 @@ static int G___operatorgRgR_6_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_7_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_3_15(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(double*)G__Doubleref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1675,7 +1674,7 @@ static int G___operatorgRgR_7_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_8_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_4_15(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,*(bool*)libp->para[1].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1683,7 +1682,7 @@ static int G___operatorgRgR_8_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_9_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_5_15(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,(char*)G__int(libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1691,7 +1690,7 @@ static int G___operatorgRgR_9_2(G__value *result7,G__CONST char *funcname,struct
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___operatorgRgR_0_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___operatorgRgR_6_15(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         istream& obj=operator>>(*(istream*)libp->para[0].ref,libp->para[1].ref?*(void**)libp->para[1].ref:*(void**)(&G__Mlong(libp->para[1])));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -2069,9 +2068,6 @@ extern "C" void G__cpp_setup_inheritanceG__stream() {
 extern "C" void G__cpp_setup_typetableG__stream() {
 
    /* Setting up typedef entry */
-   G__search_typename2("size_t",104,-1,0,
--1);
-   G__setnewtype(-1,NULL,0);
    G__search_typename2("streampos",108,-1,0,
 -1);
    G__setnewtype(-1,NULL,0);
@@ -2969,90 +2965,90 @@ extern "C" void G__cpp_setup_globalG__stream() {
 extern "C" void G__cpp_setup_funcG__stream() {
    G__lastifuncposition();
 
-   G__memfunc_setup("ws",234,G___ws_1_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,1,1,1,0,"u 'basic_istream<char,char_traits<char> >' 'istream' 1 - -",(char*)NULL
+   G__memfunc_setup("ws",234,G___ws_7_12,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,1,1,1,0,"u 'basic_istream<char,char_traits<char> >' 'istream' 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("endl",419,G___endl_2_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,1,1,1,0,"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - i",(char*)NULL
+   G__memfunc_setup("endl",419,G___endl_8_12,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,1,1,1,0,"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - i",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("ends",426,G___ends_3_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,1,1,1,0,"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - i",(char*)NULL
+   G__memfunc_setup("ends",426,G___ends_9_12,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,1,1,1,0,"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - i",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("flush",546,G___flush_4_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,1,1,1,0,"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - -",(char*)NULL
+   G__memfunc_setup("flush",546,G___flush_0_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,1,1,1,0,"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_5_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_1_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - c - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_6_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_2_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - C - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_7_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_3_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - Y - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_8_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_4_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - b - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_9_0,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_5_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - s - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_0_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_6_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - r - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_1_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_7_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - i - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_2_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_8_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - h - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_3_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_9_13,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - l - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_4_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_0_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - k - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_5_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_1_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - f - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_6_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_2_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - d - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G___operatorlElE_7_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G___operatorlElE_3_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - i 'bool' - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_8_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_4_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - c - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_9_1,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_5_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - b - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_0_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_6_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - s - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_1_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_7_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - r - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_2_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_8_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - i - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_3_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_9_14,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - h - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_4_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_0_15,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - l - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_5_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_1_15,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - k - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_6_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_2_15,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - f - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_7_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_3_15,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - d - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_8_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_4_15,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - i 'bool' - 1 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_9_2,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_5_15,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - C - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G___operatorgRgR_0_3,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G___operatorgRgR_6_15,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - Y - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
 
@@ -3136,49 +3132,49 @@ extern "C" void G__cpp_reset_tagtableG__stream() {
 extern "C" void G__cpp_setup_tagtableG__stream() {
 
    /* Setting up class,struct,union tag entry */
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_base),sizeof(ios_base),-1,0,(char*)NULL,G__setup_memvarios_base,G__setup_memfuncios_base);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_base),sizeof(ios_base),-1,1280,(char*)NULL,G__setup_memvarios_base,G__setup_memfuncios_base);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLio_state),sizeof(int),-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLopen_mode),sizeof(int),-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLseek_dir),sizeof(int),-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLfmt_flags),sizeof(int),-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLevent),sizeof(int),-1,0,(char*)NULL,NULL,NULL);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLInit),sizeof(ios_base::Init),-1,0,(char*)NULL,G__setup_memvarios_basecLcLInit,G__setup_memfuncios_basecLcLInit);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLInit),sizeof(ios_base::Init),-1,1280,(char*)NULL,G__setup_memvarios_basecLcLInit,G__setup_memfuncios_basecLcLInit);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_char_traitslEchargR),sizeof(char_traits<char>),-1,0,(char*)NULL,G__setup_memvarchar_traitslEchargR,G__setup_memfuncchar_traitslEchargR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_istream<char,char_traits<char> >),-1,0,(char*)NULL,G__setup_memvarbasic_istreamlEcharcOchar_traitslEchargRsPgR
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_istream<char,char_traits<char> >),-1,1280,(char*)NULL,G__setup_memvarbasic_istreamlEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_istreamlEcharcOchar_traitslEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgR),sizeof(basic_ios<char,char_traits<char> >),-1,0,(char*)NULL,G__setup_memvarbasic_ioslEcharcOchar_traitslEchargRsPgR
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgR),sizeof(basic_ios<char,char_traits<char> >),-1,3840,(char*)NULL,G__setup_memvarbasic_ioslEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_ioslEcharcOchar_traitslEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgR),sizeof(basic_streambuf<char,char_traits<char> >),-1,0,(char*)NULL,G__setup_memvarbasic_streambuflEcharcOchar_traitslEchargRsPgR
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgR),sizeof(basic_streambuf<char,char_traits<char> >),-1,1280,(char*)NULL,G__setup_memvarbasic_streambuflEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_streambuflEcharcOchar_traitslEchargRsPgR);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgRcLcLpos_type),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgRcLcLoff_type),0,-1,0,(char*)NULL,NULL,NULL);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_ostream<char,char_traits<char> >),-1,0,(char*)NULL,G__setup_memvarbasic_ostreamlEcharcOchar_traitslEchargRsPgR
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_ostream<char,char_traits<char> >),-1,1280,(char*)NULL,G__setup_memvarbasic_ostreamlEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_ostreamlEcharcOchar_traitslEchargRsPgR);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLpos_type),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLoff_type),0,-1,0,(char*)NULL,NULL,NULL);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry),sizeof(basic_ostream<char,char_traits<char> >::sentry),-1,0,(char*)NULL,G__setup_memvarbasic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry
-,G__setup_memfuncbasic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry),sizeof(basic_ostream<char,char_traits<char> >::sentry),-1,3584,(char*)NULL
+,G__setup_memvarbasic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry,G__setup_memfuncbasic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgRcLcLoff_type),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgRcLcLpos_type),0,-1,0,(char*)NULL,NULL,NULL);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry),sizeof(basic_istream<char,char_traits<char> >::sentry),-1,0,(char*)NULL,G__setup_memvarbasic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry
-,G__setup_memfuncbasic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_filebuflEcharcOchar_traitslEchargRsPgR),sizeof(basic_filebuf<char,char_traits<char> >),-1,0,(char*)NULL,G__setup_memvarbasic_filebuflEcharcOchar_traitslEchargRsPgR
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry),sizeof(basic_istream<char,char_traits<char> >::sentry),-1,1024,(char*)NULL
+,G__setup_memvarbasic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry,G__setup_memfuncbasic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_filebuflEcharcOchar_traitslEchargRsPgR),sizeof(basic_filebuf<char,char_traits<char> >),-1,1280,(char*)NULL,G__setup_memvarbasic_filebuflEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_filebuflEcharcOchar_traitslEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ifstreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_ifstream<char,char_traits<char> >),-1,0,(char*)NULL,G__setup_memvarbasic_ifstreamlEcharcOchar_traitslEchargRsPgR
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ifstreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_ifstream<char,char_traits<char> >),-1,1280,(char*)NULL,G__setup_memvarbasic_ifstreamlEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_ifstreamlEcharcOchar_traitslEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_ofstream<char,char_traits<char> >),-1,0,(char*)NULL,G__setup_memvarbasic_ofstreamlEcharcOchar_traitslEchargRsPgR
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_ofstream<char,char_traits<char> >),-1,1280,(char*)NULL,G__setup_memvarbasic_ofstreamlEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_ofstreamlEcharcOchar_traitslEchargRsPgR);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_allocatorlEchargR),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_allocatorlEwchar_tgR),0,-1,0,(char*)NULL,NULL,NULL);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_stringbuf<char,char_traits<char>,allocator<char> >),-1,0,(char*)NULL
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_stringbuf<char,char_traits<char>,allocator<char> >),-1,1280,(char*)NULL
 ,G__setup_memvarbasic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR,G__setup_memfuncbasic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_istringstream<char,char_traits<char>,allocator<char> >),-1,0,(char*)NULL
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_istringstream<char,char_traits<char>,allocator<char> >),-1,1280,(char*)NULL
 ,G__setup_memvarbasic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR,G__setup_memfuncbasic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_ostringstream<char,char_traits<char>,allocator<char> >),-1,0,(char*)NULL
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_ostringstream<char,char_traits<char>,allocator<char> >),-1,1280,(char*)NULL
 ,G__setup_memvarbasic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR,G__setup_memfuncbasic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_stringstream<char,char_traits<char>,allocator<char> >),-1,0,(char*)NULL
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_stringstream<char,char_traits<char>,allocator<char> >),-1,1280,(char*)NULL
 ,G__setup_memvarbasic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR,G__setup_memfuncbasic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_iostream<char,char_traits<char> >),-1,0,(char*)NULL,G__setup_memvarbasic_iostreamlEcharcOchar_traitslEchargRsPgR
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_iostream<char,char_traits<char> >),-1,1280,(char*)NULL,G__setup_memvarbasic_iostreamlEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_iostreamlEcharcOchar_traitslEchargRsPgR);
 }
 extern "C" void G__cpp_setupG__stream(void) {

@@ -337,6 +337,10 @@ long localmem;
   long store_struct_offset_localmem;
   struct G__ifunc_table *ifunc;
 #endif
+#ifndef G__OLDIMPLEMENTATION1437
+  int store_cpp_aryindex[10];
+  int store_cpp_aryindexp=0;
+#endif
 
 
   G__no_exec_compile=0;
@@ -1870,9 +1874,11 @@ long localmem;
       if(G__asm_dbg) fprintf(G__serr,"%3x,%d: DELETEFREE %lx\n"
 			     ,pc,sp,G__store_struct_offset);
 #endif
+#ifdef G__OLDIMPLEMENTATION1437 /* risk */
       if(G__asm_inst[pc+1]) {
 	pinc=G__free_newarraylist(G__store_struct_offset);
       }
+#endif
       if(G__store_struct_offset) {
 #if defined(G__ROOT) && !defined(G__OLDIMPLEMENTATION1229)
 	G__delete_interpreted_object((void*)G__store_struct_offset);
@@ -2490,6 +2496,66 @@ long localmem;
       goto pcode_parse_start;
 #endif
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1437
+    case G__SETARYINDEX:
+      /***************************************
+      * inst
+      * 0 SETARYINDEX
+      * 1 allocflag, 1: new object, 0: auto object
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr,"%3x,%d: SETARYINDEX\n",pc,sp);
+#endif
+      store_cpp_aryindex[store_cpp_aryindexp++] = G__cpp_aryconstruct;
+      G__cpp_aryconstruct = G__int(G__asm_stack[sp-1]);
+      if(G__asm_inst[pc+1]) --sp;
+      pc+=2;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+    case G__RESETARYINDEX:
+      /***************************************
+      * inst
+      * 0 RESETARYINDEX
+      * 1 allocflag, 1: new object, 0: auto object
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr,"%3x,%d: RESETARYINDEX\n",pc,sp);
+#endif
+      if(G__asm_inst[pc+1]) {
+	G__alloc_newarraylist(G__int(G__asm_stack[sp-1]),G__cpp_aryconstruct);
+      }
+      if(store_cpp_aryindexp>0)
+	G__cpp_aryconstruct = store_cpp_aryindex[--store_cpp_aryindexp];
+      pc+=2;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+    case G__GETARYINDEX:
+      /***************************************
+      * inst
+      * 0 GETARYINDEX
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr,"%3x,%d: GETARYINDEX\n",pc,sp);
+#endif
+      store_cpp_aryindex[store_cpp_aryindexp++] = G__cpp_aryconstruct;
+      G__cpp_aryconstruct = G__free_newarraylist(G__store_struct_offset);
+      ++pc;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+#endif /* 1437 */
 
 #ifdef G__NEVER_BUT_KEEP
     case G__NOP:
@@ -9728,6 +9794,46 @@ int *start;
       break;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1437
+    case G__SETARYINDEX:
+      /***************************************
+      * inst
+      * 0 SETARYINDEX
+      * 1 allocflag, 1: new object, 0: auto object
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr,"%3lx: SETARYINDEX\n",pc);
+#endif
+      /* no optimization */
+      pc+=2;
+      break;
+
+    case G__RESETARYINDEX:
+      /***************************************
+      * inst
+      * 0 RESETARYINDEX
+      * 1 allocflag, 1: new object, 0: auto object
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr,"%3lx: RESETARYINDEX\n",pc);
+#endif
+      /* no optimization */
+      pc+=2;
+      break;
+
+    case G__GETARYINDEX:
+      /***************************************
+      * inst
+      * 0 GETARYINDEX
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr,"%3lx: GETARYINDEX\n",pc);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+#endif
+
     case G__NOP:
       /***************************************
       * 0 NOP
@@ -10888,6 +10994,43 @@ int isthrow;
 	return(G__CATCH);
       }
       pc+=5;
+      break;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1437
+    case G__SETARYINDEX:
+      /***************************************
+      * inst
+      * 0 SETARYINDEX
+      * 1 allocflag, 1: new object, 0: auto object
+      ***************************************/
+      if(isthrow) {
+	fprintf(G__serr,"%3lx: SETARYINDEX\n",pc);
+      }
+      pc+=2;
+      break;
+
+    case G__RESETARYINDEX:
+      /***************************************
+      * inst
+      * 0 RESETARYINDEX
+      * 1 allocflag, 1: new object, 0: auto object
+      ***************************************/
+      if(isthrow) {
+	fprintf(G__serr,"%3lx: RESETARYINDEX\n",pc);
+      }
+      pc+=2;
+      break;
+
+    case G__GETARYINDEX:
+      /***************************************
+      * inst
+      * 0 GETARYINDEX
+      ***************************************/
+      if(isthrow) {
+	fprintf(G__serr,"%3lx: GETARYINDEX\n",pc);
+      }
+      ++pc;
       break;
 #endif
 

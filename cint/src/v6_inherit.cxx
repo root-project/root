@@ -94,6 +94,9 @@ char baseaccess;
   }
 
   G__struct.isabstract[to_tagnum]+=G__struct.isabstract[from_tagnum];
+#ifndef G__OLDIMPLEMENTATION1441
+  G__struct.funcs[to_tagnum] |= (G__struct.funcs[from_tagnum]&0xf0);
+#endif
 
   /****************************************************
   *  copy grand base class info 

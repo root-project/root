@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION 5014062
-#define G__CINTVERSIONSTR  "5.14.62, Nov 12 2000"
+#define G__CINTVERSION      5014063
+#define G__CINTVERSIONSTR  "5.14.63, Nov 19 2000"
 
 
 /**********************************************************************
@@ -30,8 +30,8 @@
 **********************************************************************/
 
 /* New memory allocation scheme is turned on for ROOT by defining 
- * following macro. Default off for ROOT. */
-/* #define G__EXPERIMENTAL1423 */
+ * following macro. */
+#define G__EXPERIMENTAL1423
 
 /* New memory allocation scheme is turned off for pure Cint by defining 
  * following macro. Default on for pure Cint */

@@ -823,7 +823,7 @@ int start;
   }
   if(G__more(fout,msg)) return(1);
   sprintf(msg
-	  ," (tagnum=%d,voffset=%d,isabstract=%d,parent=%d,gcomp=%d,=~cd=%x)" 
+	  ," (tagnum=%d,voffset=%d,isabstract=%d,parent=%d,gcomp=%d,d21=~cd=%x)" 
 	  ,tagnum ,G__struct.virtual_offset[tagnum]
 	  ,G__struct.isabstract[tagnum] ,G__struct.parent_tagnum[tagnum]
 	  ,G__struct.globalcomp[tagnum]
@@ -2256,7 +2256,7 @@ int G__system(char *com)
   CloseHandle(ProcessInformation.hThread);
 
   if(WaitForSingleObject(hProcess,INFINITE) != WAIT_FAILED) {
-    // the process terminated
+    /* the process terminated */
     fExist = GetExitCodeProcess(hProcess,&dwExitCode);
   }
   else {

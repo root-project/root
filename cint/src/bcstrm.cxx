@@ -15,17 +15,42 @@ extern "C" void G__set_cpp_environmentG__stream() {
   G__add_compiledheader("stdiostr.h");
   G__add_compiledheader("<stdio.h");
   G__add_compiledheader("<bool.h");
+  G__add_compiledheader("<stdfunc.dll");
   G__add_compiledheader("strstrm.h");
   G__cpp_reset_tagtableG__stream();
 }
-static void* operator new(size_t size,void* p) {
-  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);
+class G__bcstrmdOcxx_tag {};
+
+void* operator new(size_t size,G__bcstrmdOcxx_tag* p) {
+  if(p && G__PVOID!=G__getgvp()) return((void*)p);
 #ifndef G__ROOT
   return(malloc(size));
 #else
   return new char[size];
 #endif
 }
+
+/* dummy, for exception */
+#if !defined(__BCPLUSPLUS__)
+void operator delete(void *p,G__bcstrmdOcxx_tag* x) {
+  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
+#ifndef G__ROOT
+  free(p);
+#else
+  delete[] p;
+#endif
+}
+#endif
+
+static void G__operator_delete(void *p) {
+  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
+#ifndef G__ROOT
+  free(p);
+#else
+  delete[] p;
+#endif
+}
+
 #include "dllrev.h"
 extern "C" int G__cpp_dllrevG__stream() { return(G__CREATEDLLREV); }
 
@@ -148,15 +173,18 @@ static int G__streambuf_sgetn_7_1(G__value *result7,G__CONST char *funcname,stru
 }
 
 // automatic destructor
+typedef streambuf G__Tstreambuf;
 static int G__streambuf_wAstreambuf_1_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (streambuf *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((streambuf *)((G__getstructoffset())+sizeof(streambuf)*i))->~streambuf();
-   else if(G__PVOID==G__getgvp()) delete (streambuf *)(G__getstructoffset());
-   else ((streambuf *)(G__getstructoffset()))->~streambuf();
+         ((streambuf *)((G__getstructoffset())+sizeof(streambuf)*i))->~G__Tstreambuf();
+   else {
+     ((streambuf *)(G__getstructoffset()))->~G__Tstreambuf();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -165,7 +193,7 @@ static int G__streambuf_wAstreambuf_1_2(G__value *result7,G__CONST char *funcnam
 /* ostream */
 static int G__ostream_ostream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ostream *p=NULL;
-      p = new((void*)G__getgvp()) ostream((streambuf*)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ostream((streambuf*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -326,15 +354,18 @@ static int G__ostream_write_1_2(G__value *result7,G__CONST char *funcname,struct
 }
 
 // automatic destructor
+typedef ostream G__Tostream;
 static int G__ostream_wAostream_2_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (ostream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((ostream *)((G__getstructoffset())+sizeof(ostream)*i))->~ostream();
-   else if(G__PVOID==G__getgvp()) delete (ostream *)(G__getstructoffset());
-   else ((ostream *)(G__getstructoffset()))->~ostream();
+         ((ostream *)((G__getstructoffset())+sizeof(ostream)*i))->~G__Tostream();
+   else {
+     ((ostream *)(G__getstructoffset()))->~G__Tostream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -496,7 +527,7 @@ static int G__ios_sync_with_stdio_9_2(G__value *result7,G__CONST char *funcname,
 /* istream */
 static int G__istream_istream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    istream *p=NULL;
-      p = new((void*)G__getgvp()) istream((streambuf*)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) istream((streambuf*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -779,15 +810,18 @@ static int G__istream_putback_0_3(G__value *result7,G__CONST char *funcname,stru
 }
 
 // automatic destructor
+typedef istream G__Tistream;
 static int G__istream_wAistream_2_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (istream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((istream *)((G__getstructoffset())+sizeof(istream)*i))->~istream();
-   else if(G__PVOID==G__getgvp()) delete (istream *)(G__getstructoffset());
-   else ((istream *)(G__getstructoffset()))->~istream();
+         ((istream *)((G__getstructoffset())+sizeof(istream)*i))->~G__Tistream();
+   else {
+     ((istream *)(G__getstructoffset()))->~G__Tistream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -796,7 +830,7 @@ static int G__istream_wAistream_2_3(G__value *result7,G__CONST char *funcname,st
 /* iostream */
 static int G__iostream_iostream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    iostream *p=NULL;
-      p = new((void*)G__getgvp()) iostream((streambuf*)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) iostream((streambuf*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -805,15 +839,18 @@ static int G__iostream_iostream_0_0(G__value *result7,G__CONST char *funcname,st
 }
 
 // automatic destructor
+typedef iostream G__Tiostream;
 static int G__iostream_wAiostream_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (iostream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((iostream *)((G__getstructoffset())+sizeof(iostream)*i))->~iostream();
-   else if(G__PVOID==G__getgvp()) delete (iostream *)(G__getstructoffset());
-   else ((iostream *)(G__getstructoffset()))->~iostream();
+         ((iostream *)((G__getstructoffset())+sizeof(iostream)*i))->~G__Tiostream();
+   else {
+     ((iostream *)(G__getstructoffset()))->~G__Tiostream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -822,15 +859,8 @@ static int G__iostream_wAiostream_3_0(G__value *result7,G__CONST char *funcname,
 /* filebuf */
 static int G__filebuf_filebuf_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    filebuf *p=NULL;
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       p=new filebuf[G__getaryconstruct()];
-     else {
-       for(int i=0;i<G__getaryconstruct();i++)
-         p=new((void*)(G__getgvp()+sizeof(filebuf)*i)) filebuf;
-       p=(filebuf*)G__getgvp();
-     }
-   else p=new((void*)G__getgvp()) filebuf;
+   if(G__getaryconstruct()) p=new filebuf[G__getaryconstruct()];
+   else p=new((G__bcstrmdOcxx_tag*)G__getgvp()) filebuf;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -840,7 +870,7 @@ static int G__filebuf_filebuf_0_0(G__value *result7,G__CONST char *funcname,stru
 
 static int G__filebuf_filebuf_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    filebuf *p=NULL;
-      p = new((void*)G__getgvp()) filebuf((int)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) filebuf((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -850,7 +880,7 @@ static int G__filebuf_filebuf_1_0(G__value *result7,G__CONST char *funcname,stru
 
 static int G__filebuf_filebuf_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    filebuf *p=NULL;
-      p = new((void*)G__getgvp()) filebuf(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) filebuf(
 (int)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       result7->obj.i = (long)p;
@@ -927,15 +957,18 @@ static int G__filebuf_setbuf_3_1(G__value *result7,G__CONST char *funcname,struc
 }
 
 // automatic destructor
+typedef filebuf G__Tfilebuf;
 static int G__filebuf_wAfilebuf_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (filebuf *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((filebuf *)((G__getstructoffset())+sizeof(filebuf)*i))->~filebuf();
-   else if(G__PVOID==G__getgvp()) delete (filebuf *)(G__getstructoffset());
-   else ((filebuf *)(G__getstructoffset()))->~filebuf();
+         ((filebuf *)((G__getstructoffset())+sizeof(filebuf)*i))->~G__Tfilebuf();
+   else {
+     ((filebuf *)(G__getstructoffset()))->~G__Tfilebuf();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -944,15 +977,8 @@ static int G__filebuf_wAfilebuf_4_1(G__value *result7,G__CONST char *funcname,st
 /* fstreambase */
 static int G__fstreambase_fstreambase_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    fstreambase *p=NULL;
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       p=new fstreambase[G__getaryconstruct()];
-     else {
-       for(int i=0;i<G__getaryconstruct();i++)
-         p=new((void*)(G__getgvp()+sizeof(fstreambase)*i)) fstreambase;
-       p=(fstreambase*)G__getgvp();
-     }
-   else p=new((void*)G__getgvp()) fstreambase;
+   if(G__getaryconstruct()) p=new fstreambase[G__getaryconstruct()];
+   else p=new((G__bcstrmdOcxx_tag*)G__getgvp()) fstreambase;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -964,12 +990,12 @@ static int G__fstreambase_fstreambase_1_0(G__value *result7,G__CONST char *funcn
    fstreambase *p=NULL;
    switch(libp->paran) {
    case 3:
-      p = new((void*)G__getgvp()) fstreambase(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) fstreambase(
 (const char*)G__int(libp->para[0]),(int)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       break;
    case 2:
-      p = new((void*)G__getgvp()) fstreambase((const char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) fstreambase((const char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
       break;
    }
       result7->obj.i = (long)p;
@@ -981,7 +1007,7 @@ static int G__fstreambase_fstreambase_1_0(G__value *result7,G__CONST char *funcn
 
 static int G__fstreambase_fstreambase_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    fstreambase *p=NULL;
-      p = new((void*)G__getgvp()) fstreambase((int)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) fstreambase((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -991,7 +1017,7 @@ static int G__fstreambase_fstreambase_2_0(G__value *result7,G__CONST char *funcn
 
 static int G__fstreambase_fstreambase_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    fstreambase *p=NULL;
-      p = new((void*)G__getgvp()) fstreambase(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) fstreambase(
 (int)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       result7->obj.i = (long)p;
@@ -1034,15 +1060,18 @@ static int G__fstreambase_rdbuf_8_0(G__value *result7,G__CONST char *funcname,st
 }
 
 // automatic destructor
+typedef fstreambase G__Tfstreambase;
 static int G__fstreambase_wAfstreambase_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (fstreambase *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((fstreambase *)((G__getstructoffset())+sizeof(fstreambase)*i))->~fstreambase();
-   else if(G__PVOID==G__getgvp()) delete (fstreambase *)(G__getstructoffset());
-   else ((fstreambase *)(G__getstructoffset()))->~fstreambase();
+         ((fstreambase *)((G__getstructoffset())+sizeof(fstreambase)*i))->~G__Tfstreambase();
+   else {
+     ((fstreambase *)(G__getstructoffset()))->~G__Tfstreambase();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1051,15 +1080,8 @@ static int G__fstreambase_wAfstreambase_9_0(G__value *result7,G__CONST char *fun
 /* ifstream */
 static int G__ifstream_ifstream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ifstream *p=NULL;
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       p=new ifstream[G__getaryconstruct()];
-     else {
-       for(int i=0;i<G__getaryconstruct();i++)
-         p=new((void*)(G__getgvp()+sizeof(ifstream)*i)) ifstream;
-       p=(ifstream*)G__getgvp();
-     }
-   else p=new((void*)G__getgvp()) ifstream;
+   if(G__getaryconstruct()) p=new ifstream[G__getaryconstruct()];
+   else p=new((G__bcstrmdOcxx_tag*)G__getgvp()) ifstream;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1071,15 +1093,15 @@ static int G__ifstream_ifstream_1_0(G__value *result7,G__CONST char *funcname,st
    ifstream *p=NULL;
    switch(libp->paran) {
    case 3:
-      p = new((void*)G__getgvp()) ifstream(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ifstream(
 (const char*)G__int(libp->para[0]),(int)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       break;
    case 2:
-      p = new((void*)G__getgvp()) ifstream((const char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ifstream((const char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
       break;
    case 1:
-      p = new((void*)G__getgvp()) ifstream((const char*)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ifstream((const char*)G__int(libp->para[0]));
       break;
    }
       result7->obj.i = (long)p;
@@ -1091,7 +1113,7 @@ static int G__ifstream_ifstream_1_0(G__value *result7,G__CONST char *funcname,st
 
 static int G__ifstream_ifstream_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ifstream *p=NULL;
-      p = new((void*)G__getgvp()) ifstream((int)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ifstream((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1101,7 +1123,7 @@ static int G__ifstream_ifstream_2_0(G__value *result7,G__CONST char *funcname,st
 
 static int G__ifstream_ifstream_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ifstream *p=NULL;
-      p = new((void*)G__getgvp()) ifstream(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ifstream(
 (int)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       result7->obj.i = (long)p;
@@ -1136,15 +1158,18 @@ static int G__ifstream_open_6_0(G__value *result7,G__CONST char *funcname,struct
 }
 
 // automatic destructor
+typedef ifstream G__Tifstream;
 static int G__ifstream_wAifstream_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (ifstream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((ifstream *)((G__getstructoffset())+sizeof(ifstream)*i))->~ifstream();
-   else if(G__PVOID==G__getgvp()) delete (ifstream *)(G__getstructoffset());
-   else ((ifstream *)(G__getstructoffset()))->~ifstream();
+         ((ifstream *)((G__getstructoffset())+sizeof(ifstream)*i))->~G__Tifstream();
+   else {
+     ((ifstream *)(G__getstructoffset()))->~G__Tifstream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1153,15 +1178,8 @@ static int G__ifstream_wAifstream_7_0(G__value *result7,G__CONST char *funcname,
 /* ofstream */
 static int G__ofstream_ofstream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ofstream *p=NULL;
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       p=new ofstream[G__getaryconstruct()];
-     else {
-       for(int i=0;i<G__getaryconstruct();i++)
-         p=new((void*)(G__getgvp()+sizeof(ofstream)*i)) ofstream;
-       p=(ofstream*)G__getgvp();
-     }
-   else p=new((void*)G__getgvp()) ofstream;
+   if(G__getaryconstruct()) p=new ofstream[G__getaryconstruct()];
+   else p=new((G__bcstrmdOcxx_tag*)G__getgvp()) ofstream;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1173,15 +1191,15 @@ static int G__ofstream_ofstream_1_0(G__value *result7,G__CONST char *funcname,st
    ofstream *p=NULL;
    switch(libp->paran) {
    case 3:
-      p = new((void*)G__getgvp()) ofstream(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ofstream(
 (const char*)G__int(libp->para[0]),(int)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       break;
    case 2:
-      p = new((void*)G__getgvp()) ofstream((const char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ofstream((const char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
       break;
    case 1:
-      p = new((void*)G__getgvp()) ofstream((const char*)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ofstream((const char*)G__int(libp->para[0]));
       break;
    }
       result7->obj.i = (long)p;
@@ -1193,7 +1211,7 @@ static int G__ofstream_ofstream_1_0(G__value *result7,G__CONST char *funcname,st
 
 static int G__ofstream_ofstream_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ofstream *p=NULL;
-      p = new((void*)G__getgvp()) ofstream((int)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ofstream((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1203,7 +1221,7 @@ static int G__ofstream_ofstream_2_0(G__value *result7,G__CONST char *funcname,st
 
 static int G__ofstream_ofstream_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ofstream *p=NULL;
-      p = new((void*)G__getgvp()) ofstream(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ofstream(
 (int)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       result7->obj.i = (long)p;
@@ -1238,15 +1256,18 @@ static int G__ofstream_open_6_0(G__value *result7,G__CONST char *funcname,struct
 }
 
 // automatic destructor
+typedef ofstream G__Tofstream;
 static int G__ofstream_wAofstream_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (ofstream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((ofstream *)((G__getstructoffset())+sizeof(ofstream)*i))->~ofstream();
-   else if(G__PVOID==G__getgvp()) delete (ofstream *)(G__getstructoffset());
-   else ((ofstream *)(G__getstructoffset()))->~ofstream();
+         ((ofstream *)((G__getstructoffset())+sizeof(ofstream)*i))->~G__Tofstream();
+   else {
+     ((ofstream *)(G__getstructoffset()))->~G__Tofstream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1255,15 +1276,8 @@ static int G__ofstream_wAofstream_7_0(G__value *result7,G__CONST char *funcname,
 /* fstream */
 static int G__fstream_fstream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    fstream *p=NULL;
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       p=new fstream[G__getaryconstruct()];
-     else {
-       for(int i=0;i<G__getaryconstruct();i++)
-         p=new((void*)(G__getgvp()+sizeof(fstream)*i)) fstream;
-       p=(fstream*)G__getgvp();
-     }
-   else p=new((void*)G__getgvp()) fstream;
+   if(G__getaryconstruct()) p=new fstream[G__getaryconstruct()];
+   else p=new((G__bcstrmdOcxx_tag*)G__getgvp()) fstream;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1275,12 +1289,12 @@ static int G__fstream_fstream_1_0(G__value *result7,G__CONST char *funcname,stru
    fstream *p=NULL;
    switch(libp->paran) {
    case 3:
-      p = new((void*)G__getgvp()) fstream(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) fstream(
 (const char*)G__int(libp->para[0]),(int)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       break;
    case 2:
-      p = new((void*)G__getgvp()) fstream((const char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) fstream((const char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
       break;
    }
       result7->obj.i = (long)p;
@@ -1292,7 +1306,7 @@ static int G__fstream_fstream_1_0(G__value *result7,G__CONST char *funcname,stru
 
 static int G__fstream_fstream_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    fstream *p=NULL;
-      p = new((void*)G__getgvp()) fstream((int)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) fstream((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1302,7 +1316,7 @@ static int G__fstream_fstream_2_0(G__value *result7,G__CONST char *funcname,stru
 
 static int G__fstream_fstream_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    fstream *p=NULL;
-      p = new((void*)G__getgvp()) fstream(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) fstream(
 (int)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       result7->obj.i = (long)p;
@@ -1333,15 +1347,18 @@ static int G__fstream_open_6_0(G__value *result7,G__CONST char *funcname,struct 
 }
 
 // automatic destructor
+typedef fstream G__Tfstream;
 static int G__fstream_wAfstream_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (fstream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((fstream *)((G__getstructoffset())+sizeof(fstream)*i))->~fstream();
-   else if(G__PVOID==G__getgvp()) delete (fstream *)(G__getstructoffset());
-   else ((fstream *)(G__getstructoffset()))->~fstream();
+         ((fstream *)((G__getstructoffset())+sizeof(fstream)*i))->~G__Tfstream();
+   else {
+     ((fstream *)(G__getstructoffset()))->~G__Tfstream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1350,15 +1367,8 @@ static int G__fstream_wAfstream_7_0(G__value *result7,G__CONST char *funcname,st
 /* strstreambuf */
 static int G__strstreambuf_strstreambuf_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    strstreambuf *p=NULL;
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       p=new strstreambuf[G__getaryconstruct()];
-     else {
-       for(int i=0;i<G__getaryconstruct();i++)
-         p=new((void*)(G__getgvp()+sizeof(strstreambuf)*i)) strstreambuf;
-       p=(strstreambuf*)G__getgvp();
-     }
-   else p=new((void*)G__getgvp()) strstreambuf;
+   if(G__getaryconstruct()) p=new strstreambuf[G__getaryconstruct()];
+   else p=new((G__bcstrmdOcxx_tag*)G__getgvp()) strstreambuf;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1368,7 +1378,7 @@ static int G__strstreambuf_strstreambuf_0_0(G__value *result7,G__CONST char *fun
 
 static int G__strstreambuf_strstreambuf_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    strstreambuf *p=NULL;
-      p = new((void*)G__getgvp()) strstreambuf((int)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) strstreambuf((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1380,12 +1390,12 @@ static int G__strstreambuf_strstreambuf_2_0(G__value *result7,G__CONST char *fun
    strstreambuf *p=NULL;
    switch(libp->paran) {
    case 3:
-      p = new((void*)G__getgvp()) strstreambuf(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) strstreambuf(
 (char*)G__int(libp->para[0]),(int)G__int(libp->para[1])
 ,(char*)G__int(libp->para[2]));
       break;
    case 2:
-      p = new((void*)G__getgvp()) strstreambuf((char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) strstreambuf((char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
       break;
    }
       result7->obj.i = (long)p;
@@ -1431,15 +1441,18 @@ static int G__strstreambuf_seekoff_0_1(G__value *result7,G__CONST char *funcname
 }
 
 // automatic destructor
+typedef strstreambuf G__Tstrstreambuf;
 static int G__strstreambuf_wAstrstreambuf_1_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (strstreambuf *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((strstreambuf *)((G__getstructoffset())+sizeof(strstreambuf)*i))->~strstreambuf();
-   else if(G__PVOID==G__getgvp()) delete (strstreambuf *)(G__getstructoffset());
-   else ((strstreambuf *)(G__getstructoffset()))->~strstreambuf();
+         ((strstreambuf *)((G__getstructoffset())+sizeof(strstreambuf)*i))->~G__Tstrstreambuf();
+   else {
+     ((strstreambuf *)(G__getstructoffset()))->~G__Tstrstreambuf();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1455,7 +1468,7 @@ static int G__strstreambase_rdbuf_0_0(G__value *result7,G__CONST char *funcname,
 /* istrstream */
 static int G__istrstream_istrstream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    istrstream *p=NULL;
-      p = new((void*)G__getgvp()) istrstream((char*)G__int(libp->para[0]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) istrstream((char*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1465,7 +1478,7 @@ static int G__istrstream_istrstream_0_0(G__value *result7,G__CONST char *funcnam
 
 static int G__istrstream_istrstream_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    istrstream *p=NULL;
-      p = new((void*)G__getgvp()) istrstream((char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) istrstream((char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1474,15 +1487,18 @@ static int G__istrstream_istrstream_1_0(G__value *result7,G__CONST char *funcnam
 }
 
 // automatic destructor
+typedef istrstream G__Tistrstream;
 static int G__istrstream_wAistrstream_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (istrstream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((istrstream *)((G__getstructoffset())+sizeof(istrstream)*i))->~istrstream();
-   else if(G__PVOID==G__getgvp()) delete (istrstream *)(G__getstructoffset());
-   else ((istrstream *)(G__getstructoffset()))->~istrstream();
+         ((istrstream *)((G__getstructoffset())+sizeof(istrstream)*i))->~G__Tistrstream();
+   else {
+     ((istrstream *)(G__getstructoffset()))->~G__Tistrstream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1493,12 +1509,12 @@ static int G__ostrstream_ostrstream_0_0(G__value *result7,G__CONST char *funcnam
    ostrstream *p=NULL;
    switch(libp->paran) {
    case 3:
-      p = new((void*)G__getgvp()) ostrstream(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ostrstream(
 (char*)G__int(libp->para[0]),(int)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       break;
    case 2:
-      p = new((void*)G__getgvp()) ostrstream((char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) ostrstream((char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
       break;
    }
       result7->obj.i = (long)p;
@@ -1510,15 +1526,8 @@ static int G__ostrstream_ostrstream_0_0(G__value *result7,G__CONST char *funcnam
 
 static int G__ostrstream_ostrstream_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ostrstream *p=NULL;
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       p=new ostrstream[G__getaryconstruct()];
-     else {
-       for(int i=0;i<G__getaryconstruct();i++)
-         p=new((void*)(G__getgvp()+sizeof(ostrstream)*i)) ostrstream;
-       p=(ostrstream*)G__getgvp();
-     }
-   else p=new((void*)G__getgvp()) ostrstream;
+   if(G__getaryconstruct()) p=new ostrstream[G__getaryconstruct()];
+   else p=new((G__bcstrmdOcxx_tag*)G__getgvp()) ostrstream;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1537,15 +1546,18 @@ static int G__ostrstream_pcount_4_0(G__value *result7,G__CONST char *funcname,st
 }
 
 // automatic destructor
+typedef ostrstream G__Tostrstream;
 static int G__ostrstream_wAostrstream_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (ostrstream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((ostrstream *)((G__getstructoffset())+sizeof(ostrstream)*i))->~ostrstream();
-   else if(G__PVOID==G__getgvp()) delete (ostrstream *)(G__getstructoffset());
-   else ((ostrstream *)(G__getstructoffset()))->~ostrstream();
+         ((ostrstream *)((G__getstructoffset())+sizeof(ostrstream)*i))->~G__Tostrstream();
+   else {
+     ((ostrstream *)(G__getstructoffset()))->~G__Tostrstream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1554,15 +1566,8 @@ static int G__ostrstream_wAostrstream_5_0(G__value *result7,G__CONST char *funcn
 /* strstream */
 static int G__strstream_strstream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    strstream *p=NULL;
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       p=new strstream[G__getaryconstruct()];
-     else {
-       for(int i=0;i<G__getaryconstruct();i++)
-         p=new((void*)(G__getgvp()+sizeof(strstream)*i)) strstream;
-       p=(strstream*)G__getgvp();
-     }
-   else p=new((void*)G__getgvp()) strstream;
+   if(G__getaryconstruct()) p=new strstream[G__getaryconstruct()];
+   else p=new((G__bcstrmdOcxx_tag*)G__getgvp()) strstream;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1572,7 +1577,7 @@ static int G__strstream_strstream_0_0(G__value *result7,G__CONST char *funcname,
 
 static int G__strstream_strstream_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    strstream *p=NULL;
-      p = new((void*)G__getgvp()) strstream(
+      p = new((G__bcstrmdOcxx_tag*)G__getgvp()) strstream(
 (char*)G__int(libp->para[0]),(int)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       result7->obj.i = (long)p;
@@ -1588,15 +1593,18 @@ static int G__strstream_str_3_0(G__value *result7,G__CONST char *funcname,struct
 }
 
 // automatic destructor
+typedef strstream G__Tstrstream;
 static int G__strstream_wAstrstream_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (strstream *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((strstream *)((G__getstructoffset())+sizeof(strstream)*i))->~strstream();
-   else if(G__PVOID==G__getgvp()) delete (strstream *)(G__getstructoffset());
-   else ((strstream *)(G__getstructoffset()))->~strstream();
+         ((strstream *)((G__getstructoffset())+sizeof(strstream)*i))->~G__Tstrstream();
+   else {
+     ((strstream *)(G__getstructoffset()))->~G__Tstrstream();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -2681,25 +2689,25 @@ extern "C" void G__cpp_reset_tagtableG__stream() {
 extern "C" void G__cpp_setup_tagtableG__stream() {
 
    /* Setting up class,struct,union tag entry */
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_streambuf),sizeof(streambuf),-1,0,(char*)NULL,G__setup_memvarstreambuf,G__setup_memfuncstreambuf);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ostream),sizeof(ostream),-1,0,(char*)NULL,G__setup_memvarostream,G__setup_memfuncostream);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios),sizeof(ios),-1,0,(char*)NULL,G__setup_memvarios,G__setup_memfuncios);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_streambuf),sizeof(streambuf),-1,1792,(char*)NULL,G__setup_memvarstreambuf,G__setup_memfuncstreambuf);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ostream),sizeof(ostream),-1,1024,(char*)NULL,G__setup_memvarostream,G__setup_memfuncostream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios),sizeof(ios),-1,3840,(char*)NULL,G__setup_memvarios,G__setup_memfuncios);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ioscLcLio_state),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ioscLcLopen_mode),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ioscLcLseek_dir),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ioscLcLdA),0,-1,0,(char*)NULL,NULL,NULL);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_istream),sizeof(istream),-1,0,(char*)NULL,G__setup_memvaristream,G__setup_memfuncistream);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_iostream),sizeof(iostream),-1,0,(char*)NULL,G__setup_memvariostream,G__setup_memfunciostream);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_filebuf),sizeof(filebuf),-1,0,(char*)NULL,G__setup_memvarfilebuf,G__setup_memfuncfilebuf);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_fstreambase),sizeof(fstreambase),-1,0,(char*)NULL,G__setup_memvarfstreambase,G__setup_memfuncfstreambase);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ifstream),sizeof(ifstream),-1,0,(char*)NULL,G__setup_memvarifstream,G__setup_memfuncifstream);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ofstream),sizeof(ofstream),-1,0,(char*)NULL,G__setup_memvarofstream,G__setup_memfuncofstream);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_fstream),sizeof(fstream),-1,0,(char*)NULL,G__setup_memvarfstream,G__setup_memfuncfstream);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_strstreambuf),sizeof(strstreambuf),-1,0,(char*)NULL,G__setup_memvarstrstreambuf,G__setup_memfuncstrstreambuf);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_strstreambase),sizeof(strstreambase),-1,0,(char*)NULL,G__setup_memvarstrstreambase,G__setup_memfuncstrstreambase);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_istrstream),sizeof(istrstream),-1,0,(char*)NULL,G__setup_memvaristrstream,G__setup_memfuncistrstream);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ostrstream),sizeof(ostrstream),-1,0,(char*)NULL,G__setup_memvarostrstream,G__setup_memfuncostrstream);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_strstream),sizeof(strstream),-1,0,(char*)NULL,G__setup_memvarstrstream,G__setup_memfuncstrstream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_istream),sizeof(istream),-1,1280,(char*)NULL,G__setup_memvaristream,G__setup_memfuncistream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_iostream),sizeof(iostream),-1,1280,(char*)NULL,G__setup_memvariostream,G__setup_memfunciostream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_filebuf),sizeof(filebuf),-1,1280,(char*)NULL,G__setup_memvarfilebuf,G__setup_memfuncfilebuf);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_fstreambase),sizeof(fstreambase),-1,1280,(char*)NULL,G__setup_memvarfstreambase,G__setup_memfuncfstreambase);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ifstream),sizeof(ifstream),-1,1280,(char*)NULL,G__setup_memvarifstream,G__setup_memfuncifstream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ofstream),sizeof(ofstream),-1,1280,(char*)NULL,G__setup_memvarofstream,G__setup_memfuncofstream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_fstream),sizeof(fstream),-1,1280,(char*)NULL,G__setup_memvarfstream,G__setup_memfuncfstream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_strstreambuf),sizeof(strstreambuf),-1,1280,(char*)NULL,G__setup_memvarstrstreambuf,G__setup_memfuncstrstreambuf);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_strstreambase),sizeof(strstreambase),-1,1280,(char*)NULL,G__setup_memvarstrstreambase,G__setup_memfuncstrstreambase);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_istrstream),sizeof(istrstream),-1,1024,(char*)NULL,G__setup_memvaristrstream,G__setup_memfuncistrstream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ostrstream),sizeof(ostrstream),-1,1280,(char*)NULL,G__setup_memvarostrstream,G__setup_memfuncostrstream);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_strstream),sizeof(strstream),-1,1280,(char*)NULL,G__setup_memvarstrstream,G__setup_memfuncstrstream);
 }
 extern "C" void G__cpp_setupG__stream(void) {
   G__check_setup_version(G__CREATEDLLREV,"G__cpp_setupG__stream()");

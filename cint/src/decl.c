@@ -1974,6 +1974,18 @@ int tagnum,typenum;      /* overrides global variables */
 	      p_inc=G__getarrayindex(index);
 	      if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
 		/* precompiled class. First, call constructor (new) function */
+#ifndef G__OLDIMPLEMENTATION1437
+#ifdef G__ASM
+		if(G__asm_noverflow && p_inc>1) {
+#ifdef G__ASM_DBG
+		  if(G__asm_dbg) fprintf(G__serr,"%3x: SETARYINDEX\n" ,G__asm_cp);
+#endif
+		  G__asm_inst[G__asm_cp]=G__SETARYINDEX;
+		  G__asm_inst[G__asm_cp+1]= 0;
+		  G__inc_cp_asm(2,0);
+		}
+#endif
+#endif
 		G__cpp_aryconstruct=p_inc;
 		reg=G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
 		G__cpp_aryconstruct=0;
@@ -2009,13 +2021,25 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 		  if(G__return>G__RETURN_NORMAL||0==known) break;
 		  G__store_struct_offset+=G__struct.size[G__tagnum];
+#ifndef G__OLDIMPLEMENTATION1444
+		  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+		    if(G__asm_dbg) fprintf(G__serr ,"%3x: ADDSTROS %d\n"
+					   ,G__asm_cp
+					   ,G__struct.size[G__tagnum]);
+#endif
+		    G__asm_inst[G__asm_cp]=G__ADDSTROS;
+		    G__asm_inst[G__asm_cp+1]=G__struct.size[G__tagnum];
+		    G__inc_cp_asm(2,0);
+		  }
+#endif
 #ifndef G__OLDIMPLEMENTATION1073
 		  if(G__asm_wholefunction && G__asm_noverflow) {
 #ifdef G__ASM_DBG
 		    if(G__asm_dbg) fprintf(G__serr ,"%3x: ADDSTROS %d\n"
 			              ,G__asm_cp,G__struct.size[G__tagnum]);
 #endif
-		    G__asm_inst[G__asm_cp]=G__POPSTROS;
+		    G__asm_inst[G__asm_cp]=G__POPSTROS; /* ??? ADDSTROS */
 		    G__asm_inst[G__asm_cp+1]=G__struct.size[G__tagnum];
 		    G__inc_cp_asm(2,0);
 		  }

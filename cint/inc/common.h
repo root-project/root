@@ -251,6 +251,10 @@
 #define G__HAS_COPYCONSTRUCTOR     0x02
 #define G__HAS_DESTRUCTOR          0x04
 #define G__HAS_ASSIGNMENTOPERATOR  0x08
+#define G__HAS_OPERATORNEW1ARG     0x10
+#define G__HAS_OPERATORNEW2ARG     0x20
+#define G__HAS_OPERATORNEW         0x30
+#define G__HAS_OPERATORDELETE      0x40
 
 /**************************************************************************
 * Default parameter expression as function
@@ -392,6 +396,9 @@
 
 #define G__THROW              0x0042
 #define G__CATCH              0x0043
+#define G__SETARYINDEX        0x0044
+#define G__RESETARYINDEX      0x0045
+#define G__GETARYINDEX        0x0046
 
 #define G__NOP                0xffff
 

@@ -394,8 +394,34 @@ char *expression;
       /* This is a pre-compiled class */
       long store_globalvarpointer = G__globalvarpointer;
       if(memarena) G__globalvarpointer = memarena;
-      if(arrayindex) G__cpp_aryconstruct=pinc;
+      if(arrayindex) {
+	G__cpp_aryconstruct=pinc;
+#ifndef G__OLDIMPLEMENTATION1437
+#ifdef G__ASM
+	if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) fprintf(G__serr,"%3x: SETARYINDEX\n" ,G__asm_cp);
+#endif
+	  G__asm_inst[G__asm_cp]=G__SETARYINDEX;
+	  G__asm_inst[G__asm_cp+1]= 1;
+	  G__inc_cp_asm(2,0);
+	}
+#endif
+#endif
+      }
       result=G__getfunction(construct,&known,G__CALLCONSTRUCTOR);
+#ifndef G__OLDIMPLEMENTATION1437
+#ifdef G__ASM
+      if(arrayindex && G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) fprintf(G__serr,"%3x: RESETARYINDEX\n" ,G__asm_cp);
+#endif
+	G__asm_inst[G__asm_cp]=G__RESETARYINDEX;
+	G__asm_inst[G__asm_cp+1] = 1;
+	G__inc_cp_asm(2,0);
+      }
+#endif
+#endif
       result.type=toupper(result.type);
       result.ref=0;
       G__cpp_aryconstruct=0;
@@ -820,6 +846,15 @@ int isarray;
 	fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1437
+      if(isarray) {
+	G__asm_inst[G__asm_cp] = G__GETARYINDEX;
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) fprintf(G__serr,"%3x: GETARYINDEX\n",G__asm_cp-2);
+#endif
+	G__inc_cp_asm(1,0);
+#endif
+      }
     }
 #endif /* G__ASM */
 #endif /* G__ASM_IFUNC */
@@ -922,6 +957,16 @@ int isarray;
 #ifdef G__ASM_IFUNC
 #ifdef G__ASM
     if(G__asm_noverflow) {
+#ifndef G__OLDIMPLEMENTATION1437
+      if(isarray) {
+	G__asm_inst[G__asm_cp] = G__RESETARYINDEX;
+	G__asm_inst[G__asm_cp+1] = 0;
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) fprintf(G__serr,"%3x: RESETARYINDEX\n",G__asm_cp-2);
+#endif
+	G__inc_cp_asm(2,0);
+      }
+#endif
       if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) {
 	/* if interpreted class, free memory */
 #ifdef G__ASM_DBG
