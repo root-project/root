@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.2 2003/08/29 17:23:32 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.3 2004/03/17 17:52:24 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 
@@ -138,7 +138,7 @@ void DaemonStart(int ignsigcld, int fdkeep, EService service)
 #else
    if (setpgrp(0, getpid()) == -1) {
 #endif
-      if (service == kROOTD) 
+      if (service == kROOTD)
          fprintf(stderr, "DaemonStart: can't change process group\n");
       Error(gErrSys,kErrFatal, "DaemonStart: can't change process group");
    }
@@ -154,11 +154,10 @@ void DaemonStart(int ignsigcld, int fdkeep, EService service)
 #else
 
    if (setpgrp() == -1) {
-      if (service == kROOTD) 
+      if (service == kROOTD)
          fprintf(stderr,"DaemonStart: can't change process group\n");
       Error(gErrSys,kErrFatal, "DaemonStart: can't change process group");
    }
-
 
    signal(SIGHUP, SIG_IGN);    // immune from pgrp leader death
 

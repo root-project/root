@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.32 2004/03/17 17:52:24 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.33 2004/04/06 21:50:26 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -373,7 +373,7 @@ void RpdSetRootLogFlag(int RootLog)
    // Change the value of the static gRootLog to RootLog.
    // Recognized values:
    //                       0      log to syslog (for root started daemons)
-   //                       1      log to stderr ( for user started daemons)
+   //                       1      log to stderr (for user started daemons)
 
    gRootLog = RootLog;
    if (gDebug > 2)

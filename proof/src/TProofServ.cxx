@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.68 2004/03/11 11:02:55 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.69 2004/03/17 17:52:23 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -233,6 +233,9 @@ TProofServ::TProofServ(int *argc, char **argv)
       ;
 #endif
 
+   // get socket to be used (setup in proofd)
+   Int_t sock = atoi(argv[8]);
+
    // make sure all registered dictionaries have been initialized
    // and that all types have been loaded
    gInterpreter->InitializeDictionaries();
@@ -252,7 +255,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    fRealTime        = 0.0;
    fCpuTime         = 0.0;
    fProof           = 0;
-   fSocket          = new TSocket(0);
+   fSocket          = new TSocket(sock);
    fEnabledPackages = new TList;
    fEnabledPackages->SetOwner();
 
@@ -329,14 +332,14 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // Install interrupt and message input handlers
    gSystem->AddSignalHandler(new TProofServInterruptHandler(this));
-   gSystem->AddFileHandler(new TProofServInputHandler(this, 0));
+   gSystem->AddFileHandler(new TProofServInputHandler(this, sock));
 
    gProofServ = this;
 
    // if master, start slave servers
    if (IsMaster()) {
       TString master = "proof://__master__";
-      TInetAddress a = gSystem->GetSockName(0);
+      TInetAddress a = gSystem->GetSockName(sock);
       if (a.IsValid()) {
          master += ":";
          master += a.GetPort();
@@ -673,7 +676,7 @@ void TProofServ::HandleSocketInput()
 
             TMessage answ(kPROOF_REPORTSIZE);
             answ << entries;
-            SendLogFile(); // in case of error messages            
+            SendLogFile(); // in case of error messages
             fSocket->Send(answ);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Done");
          }
@@ -1260,14 +1263,6 @@ void TProofServ::RedirectOutput()
    // Redirect stdout to a log file. This log file will be flushed to the
    // client or master after each command.
 
-   // Duplicate the initial socket (0), this will yield a socket with
-   // a descriptor >0, which will free descriptor 0 for stdout.
-   int isock;
-   if ((isock = dup(fSocket->GetDescriptor())) < 0)
-      SysError("RedirectOutput", "could not duplicate output socket");
-   fSocket->SetDescriptor(isock);
-
-   // Create new log files.
    char logfile[512];
 
    if (IsMaster()) {
@@ -1478,10 +1473,10 @@ void TProofServ::Setup()
 
       if (retval > -1) {
 
-         if (lApp && lApp->Argc() > 3 && strlen(lApp->Argv()[3]) > 0 &&
+         if (lApp && lApp->Argc() > 3 && strlen(lApp->Argv(3)) > 0 &&
              gROOT->IsProofServ()) {
             // We got a file name ... extract the tmp directory path
-            TString KeyFile = lApp->Argv()[3];
+            TString KeyFile = lApp->Argv(3);
             KeyFile += "/rpk_";
             KeyFile += retval;
 
@@ -1533,8 +1528,8 @@ void TProofServ::Setup()
    TAuthenticate::SetGlobalPasswd(fPasswd);
    TAuthenticate::SetGlobalPwHash(fPwHash);
    TAuthenticate::SetGlobalSRPPwd(fSRPPwd);
-   if (lApp && lApp->Argc() > 7 && strlen(lApp->Argv()[7]) > 0) {
-      Bool_t rha = (Bool_t)atoi(lApp->Argv()[7]);
+   if (lApp && lApp->Argc() > 7 && strlen(lApp->Argv(7)) > 0) {
+      Bool_t rha = (Bool_t)atoi(lApp->Argv(7));
       TAuthenticate::SetReadHomeAuthrc(rha);
    }
 
@@ -1542,7 +1537,7 @@ void TProofServ::Setup()
    // receive auth info transmitted from the client
 
    if (IsMaster())
-      fSocket->RecvHostAuth("M",fConfFile);
+      fSocket->RecvHostAuth("M", fConfFile);
    else
       fSocket->RecvHostAuth("S");
 
@@ -1638,6 +1633,8 @@ void TProofServ::Setup()
       if (!gSystem->ChangeDirectory(fSessionDir)) {
          SysError("Setup", "can not change to working directory %s",
                   fSessionDir.Data());
+      } else {
+         gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
       }
    }
 
@@ -1668,7 +1665,7 @@ void TProofServ::Terminate(Int_t status)
       gSystem->Exec(Form("%s %s", kRM, fSessionDir.Data()));
    }
 
-   // Remove input handler to avoid spurious signals in socket 
+   // Remove input handler to avoid spurious signals in socket
    // selection for closing activities executed upon exit()
    TIter next(gSystem->GetListOfFileHandlers());
    TObject *fh = 0;

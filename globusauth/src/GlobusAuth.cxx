@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.9 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.10 2004/03/17 17:52:23 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -139,9 +139,9 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    // Set local certificates according to user requests ...
    GlobusSetCertificates(LocalCallEnv,Prompt,PromptReUse,details);
 
-   // Now we send to the rootd/proofd daemons the issuer name 
+   // Now we send to the rootd/proofd daemons the issuer name
    // of our globus certificates ..
-   // We get it the x509 relevant certificate ... 
+   // We get it the x509 relevant certificate ...
    // The location depends on the calling environment
    TString certfile;
    if ((rc = GlobusCertFile(LocalCallEnv, certfile))) {
@@ -366,10 +366,10 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    }
 
    // Create SecContext object
-   TSecContext *ctx = 
-      Auth->GetHostAuth()->CreateSecContext((const char *)lUser, 
+   TSecContext *ctx =
+      Auth->GetHostAuth()->CreateSecContext((const char *)lUser,
           hostFQDN, (Int_t)TAuthenticate::kGlobus, OffSet,
-          details, (const char *)Token, ExpDate, 
+          details, (const char *)Token, ExpDate,
           (void *)GlbContextHandle, RSAKey);
    // Transmit it to TAuthenticate
    Auth->SetSecContext(ctx);
@@ -470,10 +470,10 @@ void GlobusError(char *mess, OM_uint32 majs, OM_uint32 mins, int toks)
 
    if (!globus_gss_assist_display_status_str
        (&GlbErr, mess, majs, mins, toks)) {
-        Error("GlobusError:","%s (majst=%d,minst=%d,tokst:%d)", 
+        Error("GlobusError:","%s (majst=%d,minst=%d,tokst:%d)",
             GlbErr, majs, mins, toks);
    } else {
-      Error("GlobusError:","%s (not resolved) (majst=%d,minst=%d,tokst:%d)", 
+      Error("GlobusError:","%s (not resolved) (majst=%d,minst=%d,tokst:%d)",
             mess, majs, mins, toks);
    }
 
@@ -493,27 +493,24 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
    if (gDebug > 2) {
       int i = 0;
       for (; i < lApp->Argc(); i++) {
-         Info("GlobusGetLocalEnv", " Application arguments: %d: %s", i,
-              lApp->Argv()[i]);
+         Info("GlobusGetLocalEnv", "Application arguments: %d: %s", i,
+              lApp->Argv(i));
       }
    }
 
    *LocalEnv = 0;
    if (lApp != 0) {
-      if (lApp->Argc() > 11 && gROOT->IsProofServ()) {
+      if (lApp->Argc() > 9 && gROOT->IsProofServ()) {
          // This is PROOF ... either Master or Slave ...
          if (gDebug > 3) {
             Info("GlobusGetLocalEnv",
-                 " PROOF environment, called by the MASTER/SLAVE");
+                 "PROOF environment, called by the MASTER/SLAVE");
             Info("GlobusGetLocalEnv",
-                 " String with Pointer to del cred is 0x%x",
+                 "String with pointer to del cred is 0x%x",
                  GlbDelCredHandle);
          }
          *LocalEnv = 2;
-         gShmIdCred = atoi(lApp->Argv()[8]);
-         gSystem->Setenv("X509_CERT_DIR", lApp->Argv()[9]);
-         gSystem->Setenv("X509_USER_CERT", lApp->Argv()[10]);
-         gSystem->Setenv("X509_USER_KEY", lApp->Argv()[11]);
+         gShmIdCred = atoi(lApp->Argv(9));
          if (gShmIdCred <= 0) {
             Info("GlobusGetLocalEnv",
                     " Delegate credentials undefined");
@@ -604,7 +601,7 @@ Int_t GlobusNameFromCred(gss_cred_id_t Cred, TString &SubjName)
    gss_cred_usage_t CredUsage;
    gss_OID_set Mech;
    gss_OID NameType;
-   if ((MajStat = gss_inquire_cred(&MinStat, Cred, &Name, 
+   if ((MajStat = gss_inquire_cred(&MinStat, Cred, &Name,
                   &LifeTime, &CredUsage, &Mech)) != GSS_S_COMPLETE) {
       if (gDebug > 0)
          GlobusError("GlobusNameFromCred: gss_inquire_cred",
@@ -727,7 +724,7 @@ int GlobusGetCredHandle(Int_t LocalEnv, Int_t NeedProxy, gss_cred_id_t * CredHan
 
    if (LocalEnv == 2) {
       // If we are a PROOF Master autheticating vs Slaves
-      // we only need to fetch the delegated credentials 
+      // we only need to fetch the delegated credentials
       // from the shared memory segment the first time we are called ...
       if (GlbDelCredHandle == GSS_C_NO_CREDENTIAL) {
          if (GlobusGetDelCred()) {
@@ -846,7 +843,7 @@ Int_t GlobusGetSecContLifeTime(gss_ctx_id_t ctx)
 
    if (ctx != 0 && ctx != GSS_C_NO_CONTEXT) {
       if ((MajStat = gss_inquire_context(&MinStat, ctx, Name,
-                     TargName, &GlbContLifeTime, &MechType, &GssRetFlags, 
+                     TargName, &GlbContLifeTime, &MechType, &GssRetFlags,
                      &Dum1, &Dum2)) != GSS_S_COMPLETE) {
          if (gDebug > 0)
             GlobusError("GlobusGetSecContLifeTime: gss_inquire_context",
@@ -858,7 +855,7 @@ Int_t GlobusGetSecContLifeTime(gss_ctx_id_t ctx)
                   GlbContLifeTime);
          return (Int_t)GlbContLifeTime;
       }
-   } 
+   }
    return 0;
 }
 
@@ -886,7 +883,7 @@ void GlobusSetCertificates(int LocalEnv, int Prompt, TString PromptReUse, TStrin
       }
       if (gDebug > 3)
          Info("GlobusSetCertificates", " LocDet : %s", LocDet.Data());
-      
+
       TString PromptString = LocDet;
       PromptString.Insert(0," Local Globus Certificates (");
       PromptString += TString(")\n Enter <key>:<new value> to change: ");
@@ -956,7 +953,7 @@ void GlobusSetCertificates(int LocalEnv, int Prompt, TString PromptReUse, TStrin
       Details = PromptReUse + TString(" ") + ddir + TString(" ") +
          dcer + TString(" ") + dkey + TString(" ") + dadi;
 
-      // Perform "~" expansion ... 
+      // Perform "~" expansion ...
       // or allow for paths relative to .globus
       const char *globusdef = "/.globus/";
       gSystem->ExpandPathName(ddir);
@@ -1015,10 +1012,10 @@ Int_t GlobusCheckSecCtx(const char *subj, TSecContext *ctx)
    // Globus version of CheckSecCtx to be passed to TAuthenticate::AuthExists
    // Check if Subj matches the one in Ctx
    // Returns: 1 if ok, 0 if not
-   // Deactivates Ctx is not valid 
+   // Deactivates Ctx is not valid
 
    Int_t rc = 0;
- 
+
    if (ctx->IsActive()) {
       rc = GlobusCheckSecContext(subj,(gss_ctx_id_t)(ctx->GetContext()));
    } else {
@@ -1040,11 +1037,11 @@ void GlobusCleanupShm()
    TApplication *lApp = gROOT->GetApplication();
 
    if (lApp != 0) {
-      if (lApp->Argc() > 11 && gROOT->IsProofServ()) {
+      if (lApp->Argc() > 9 && gROOT->IsProofServ()) {
          struct shmid_ds shm_ds;
          int rc;
          // Delegated Credentials
-         gShmIdCred = atoi(lApp->Argv()[8]);
+         gShmIdCred = atoi(lApp->Argv(9));
          if (gShmIdCred != -1) {
             if ((rc = shmctl(gShmIdCred, IPC_RMID, &shm_ds)) != 0) {
                if ((rc == EINVAL) || (rc == EIDRM)) {
@@ -1087,7 +1084,7 @@ Int_t GlobusCheckSecContext(const char *SubjName, gss_ctx_id_t Ctx)
    OM_uint32 GlbContLifeTime = 0;
 
    if (gDebug > 2)
-      Info("GlobusCheckSecContext", 
+      Info("GlobusCheckSecContext",
            "checking subj:%s", SubjName);
 
    // Check validity of the retrieved context ...
@@ -1098,7 +1095,7 @@ Int_t GlobusCheckSecContext(const char *SubjName, gss_ctx_id_t Ctx)
    if (Ctx != 0 && Ctx != GSS_C_NO_CONTEXT) {
 
       if ((MajStat = gss_inquire_context(&MinStat, Ctx, &Name,
-                     TargName, &GlbContLifeTime, &MechType, 
+                     TargName, &GlbContLifeTime, &MechType,
                      &GssRetFlags, &Dum1, &Dum2)) != GSS_S_COMPLETE) {
          if (gDebug > 0)
             GlobusError("GlobusCheckSecContext: gss_inquire_context",
@@ -1107,7 +1104,7 @@ Int_t GlobusCheckSecContext(const char *SubjName, gss_ctx_id_t Ctx)
       } else {
          gss_buffer_desc Name_buffer;
          // Get the subject name now
-         if ((MajStat = gss_display_name(&MinStat, Name, &Name_buffer, 
+         if ((MajStat = gss_display_name(&MinStat, Name, &Name_buffer,
                                         GLOBUS_NULL)) != GSS_S_COMPLETE) {
             if (gDebug > 0)
                GlobusError("GlobusCheckSecContext: gss_display_name",
@@ -1118,7 +1115,7 @@ Int_t GlobusCheckSecContext(const char *SubjName, gss_ctx_id_t Ctx)
             char *theName = new char[Name_buffer.length+1];
             strncpy(theName,(char *)Name_buffer.value,(Int_t)Name_buffer.length);
             theName[Name_buffer.length]= '\0';
-            if (gDebug > 2) 
+            if (gDebug > 2)
                Info("GlobusCheckSecContext","with Subject Name: %s (%d)",
                                              theName,Name_buffer.length);
             if (!strcmp(theName, SubjName)) {
@@ -1130,7 +1127,7 @@ Int_t GlobusCheckSecContext(const char *SubjName, gss_ctx_id_t Ctx)
             }
             // Release allocated space
             if (theName) delete[] theName;
-            if ((MajStat = gss_release_name(&MinStat, &Name)) 
+            if ((MajStat = gss_release_name(&MinStat, &Name))
                                           != GSS_S_COMPLETE) {
                if (gDebug > 0)
                    GlobusError("GlobusCheckSecContext: gss_release_name",

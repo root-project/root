@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.44 2004/03/24 17:26:15 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.45 2004/03/26 16:47:00 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -110,7 +110,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    fVersion  = 3;                // The latest, by default
    fRSAKey   = 0;
    fSecContext = 0;
-   
+
    if (gDebug > 2)
       Info("TAuthenticate", "Enter: local host: %s, user is: %s (proto: %s)",
            gSystem->HostName(), user, proto);
@@ -1997,7 +1997,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
       if (Anon == 0 && Crypt == 1) {
 
          // Needs to send this for consistency
-         fSocket->Send("\0", kROOTD_PASS);  
+         fSocket->Send("\0", kROOTD_PASS);
          if (SecureSend(fSocket, 1, PasHash) == -1) {
             Warning("ClearAuth", "problems secure-sending pass hash"
                     " - may result in authentication failure");
@@ -3674,7 +3674,7 @@ void TAuthenticate::ReadProofConf(const char *conffile)
       ::Info("ReadProofConf", "checking PROOF config file %s", fconf);
    if (gSystem->AccessPathName(fconf, kReadPermission)) {
       TApplication *lApp = gROOT->GetApplication();
-      sprintf(fconf, "%s/proof/etc/%s",lApp->Argv()[2], conffile);
+      sprintf(fconf, "%s/proof/etc/%s",lApp->Argv(2), conffile);
       if (gDebug > 2)
          ::Info("ReadProofConf", "checking PROOF config file %s", fconf);
       if (gSystem->AccessPathName(fconf, kReadPermission)) {
@@ -3850,10 +3850,10 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &Out)
    if (cSec == (Int_t) TAuthenticate::kGlobus) {
 #ifdef R__GLBS
       TApplication *lApp = gROOT->GetApplication();
-      if (lApp != 0 && lApp->Argc() > 11) {
+      if (lApp != 0 && lApp->Argc() > 9) {
          if (gROOT->IsProofServ()) {
             // Delegated Credentials
-            Int_t ShmId = atoi(lApp->Argv()[8]);
+            Int_t ShmId = atoi(lApp->Argv(9));
             if (ShmId != -1) {
                struct shmid_ds shm_ds;
                if (shmctl(ShmId, IPC_STAT, &shm_ds) == 0)
@@ -3861,11 +3861,11 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &Out)
             }
             if (rc) {
                // Build details .. CA dir
-               TString Adir(lApp->Argv()[9]);
+               TString Adir(gSystem->Getenv("X509_CERT_DIR"));
                // Usr Cert
-               TString Ucer(lApp->Argv()[10]);
+               TString Ucer(gSystem->Getenv("X509_USER_CERT"));
                // Usr Key
-               TString Ukey(lApp->Argv()[11]);
+               TString Ukey(gSystem->Getenv("X509_USER_KEY"));
                // Usr Dir
                TString Cdir = Ucer;
                Cdir.Resize(Cdir.Last('/')+1);

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.60 2004/03/17 17:52:24 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.61 2004/03/30 13:10:16 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -156,6 +156,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/param.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -417,14 +418,11 @@ void ProofdExec()
    // Authenticate the user and exec the proofserv program.
    // gConfdir is the location where the PROOF config files and binaries live.
 
-#ifdef R__GLBS
-   char *argvv[13];
-#else
-   char *argvv[9];
-#endif
+   char *argvv[11];
    char  arg0[256];
    char  msg[80];
-   char  rpid[20] = {0};
+   char  sfd[64];
+   char  rpid[64];
 
 #ifdef R__DEBUG
    int debug = 1;
@@ -475,14 +473,38 @@ void ProofdExec()
       }
    }
    if (gDebug > 0)
-      ErrorInfo("ProofdExec: send Okay (gSockFd: %d)",gSockFd);
+      ErrorInfo("ProofdExec: send Okay (gSockFd: %d)", gSockFd);
 
    NetSend("Okay");
 
+   // Find a free filedescriptor outside the standard I/O range
+   if (gSockFd == 0 || gSockFd == 1 || gSockFd == 2) {
+      Int_t fd;
+      struct stat stbuf;
+      for (fd = 3; fd < NOFILE; fd++) {
+         ResetErrno();
+         if (fstat(fd, &stbuf) == -1 && GetErrno() == EBADF) {
+            dup2(gSockFd, fd);
+            close(gSockFd);
+            gSockFd = fd;
+            close(2);
+            close(1);
+            close(0);
+            RpdSetRootLogFlag(0);   //syslog only from here
+            break;
+         }
+      }
+
+      if (fd == NOFILE) {
+         NetSend("Cannot start proofserver -- no free filedescriptor");
+         return;
+      }
+   }
+
 #ifdef R__GLBS
    // to pass over shm id to proofserv
-   char  cShmIdCred[16];
-   sprintf(cShmIdCred,"%d",gShmIdCred);
+   char  cShmIdCred[64];
+   sprintf(cShmIdCred, "%d", gShmIdCred);
 #endif
 
    // start server version
@@ -496,17 +518,13 @@ void ProofdExec()
    argvv[5] = rpid;
    argvv[6] = gUser;
    argvv[7] = gReadHomeAuthrc;
+   sprintf(sfd, "%d", gSockFd);
+   argvv[8] = sfd;
 #ifdef R__GLBS
-   argvv[8] = cShmIdCred;
-   argvv[9] = 0;
+   argvv[9] = cShmIdCred;
    argvv[10] = 0;
-   argvv[11] = 0;
-   if (getenv("X509_CERT_DIR"))  argvv[9] = strdup(getenv("X509_CERT_DIR"));
-   if (getenv("X509_USER_CERT")) argvv[10] = strdup(getenv("X509_USER_CERT"));
-   if (getenv("X509_USER_KEY"))  argvv[11] = strdup(getenv("X509_USER_KEY"));
-   argvv[12] = 0;
 #else
-   argvv[8] = 0;
+   argvv[9] = 0;
 #endif
 
 #ifndef ROOTPREFIX
@@ -550,7 +568,7 @@ void ProofdExec()
    char *authrc = 0;
    if (strlen(gAuthrc)) {
       if (gDebug > 0)
-         ErrorInfo("ProofdExec: seetting ROOTAUTHRC to %s",gAuthrc);
+         ErrorInfo("ProofdExec: setting ROOTAUTHRC to %s", gAuthrc);
       authrc = new char[15+strlen(gAuthrc)];
       sprintf(authrc, "ROOTAUTHRC=%s", gAuthrc);
       putenv(authrc);
@@ -559,24 +577,14 @@ void ProofdExec()
    if (gDebug > 0)
 #ifdef R__GLBS
       ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s,"
-                " %s, %s, %s, %s, %s)",
+                " %s, %s, %s)",
                 argvv[0], argvv[1], argvv[2], argvv[3], argvv[4],
-                argvv[5], argvv[6], argvv[7], argvv[8], argvv[9],
-                argvv[10], argvv[11]);
+                argvv[5], argvv[6], argvv[7], argvv[8], argvv[9]);
 #else
-      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s, %s)",
-                argvv[0], argvv[1], argvv[2], argvv[3],
-                argvv[4], argvv[5], argvv[6], argvv[7]);
+      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                argvv[0], argvv[1], argvv[2], argvv[3], argvv[4],
+                argvv[5], argvv[6], argvv[7], argvv[8]);
 #endif
-
-   if (!gInetdFlag) {
-      // Duplicate the socket onto the descriptors 0, 1 and 2
-      // and close the original socket descriptor (like inetd).
-      dup2(gSockFd, 0);
-      close(gSockFd);
-      dup2(0, 1);
-      dup2(0, 2);
-   }
 
    // Start proofserv
    execv(arg0, argvv);
