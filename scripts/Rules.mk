@@ -217,6 +217,8 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 %.log : run%.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
+.PRECIOUS: %_C.$(DllSuf) 
+
 %.clog : run%_C.$(DllSuf) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b run$*.C+ > $@ 2>&1
 
