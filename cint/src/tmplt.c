@@ -2510,10 +2510,13 @@ int funcmatch;
       }
 #endif
       /* template argument  (T a) */
-#ifndef G__OLDIMPLEMENTATION922
-      strcpy(paratype,G__type2string(type,tagnum,-1,reftype,0));
+#ifndef G__OLDIMPLEMENTATION1374
+      if(G__PARAREFERENCE==reftype)
+	strcpy(paratype,G__type2string(type,tagnum,-1,0,0));
+      else
+	strcpy(paratype,G__type2string(type,tagnum,-1,reftype,0));
 #else
-      strcpy(paratype,G__type2string(type,tagnum,-1,0,0));
+      strcpy(paratype,G__type2string(type,tagnum,-1,reftype,0));
 #endif
 #ifndef G__OLDIMPLEMENTATION731
       if(strncmp(paratype,"class ",6)==0) {

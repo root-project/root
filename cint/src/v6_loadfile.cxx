@@ -279,8 +279,8 @@ char *item;
 {
   char makeinfo[G__MAXFILENAME];
   FILE *fp;
-  char line[G__ONELINE];
-  char argbuf[G__ONELINE];
+  char line[G__LONGLINE*2];
+  char argbuf[G__LONGLINE*2];
   char *arg[G__MAXARG];
   int argn;
   char *p;

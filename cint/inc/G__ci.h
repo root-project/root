@@ -21,12 +21,18 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION 5014047
-#define G__CINTVERSIONSTR  "5.14.47, Aug 12 2000"
+#define G__CINTVERSION 5014049
+#define G__CINTVERSIONSTR  "5.14.49, Aug 27 2000"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* Define following macros if you want to store where global variables
+ * and typedefs are defined in source files. Reason of not making this
+ * default is because it breaks DLL compatibility. */
+#define G__VARIABLEFPOS
+#define G__TYPEDEFFPOS 
 
 /* If you use old g++ and having problem compiling dictionary with 
  * true pointer to function with const return value, define following
@@ -50,8 +56,8 @@
 
 /* Define G__EXCEPTIONWRAPPER for activating C++ exception catching 
  * when calling precompiled function. It is better to define this macro
- * in platform dependency file OTHMACRO flag.
- */
+ * in platform dependency file OTHMACRO flag. Reason of not making this
+ * default is because some old compilers may not support exception. */
 /* #define G__EXCEPTIONWRAPPER */
 /* #define G__STD_EXCEPTION */
 #if defined(G__STD_EXCEPTION) && !defined(G__EXCEPTIONWRAPPER)
@@ -59,11 +65,11 @@
 #endif
 
 /* If you define G__REFCONV in platform dependency file, bug fix for 
- * reference argument conversion is activated. Reason of not making
- * this default is because it breaks DLL compatibility. If you define
+ * reference argument conversion is activated. This macro breaks DLL
+ * compatibility between cint5.14.14 and 5.14.15. If you define
  * G__REFCONV, cint5.14.15 or newer version can load older DLL. But 
  * cint5.14.14 or older version can not load DLL that is created by
- * cint5.14.15 or later. */
+ * cint5.14.15 or later cint. */
 #define G__REFCONV
 
 /* This change activates bytecode compilation of class object 
@@ -88,8 +94,13 @@
 /* #define G__OLDIMPLEMENTATION973 */
 
 
-#define G__OLDIMPLEMENTATION834 /* THIS MODIFICATION IS TURNED OFF */
+/* Unlimited number of function arguments. THIS MODIFICATION IS TURNED OFF
+ * because the change did not work. I decided to keep the code somehow. */
+#define G__OLDIMPLEMENTATION834 
 
+/**********************************************************************
+* END OF SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
+**********************************************************************/
 
 #ifndef G__OLDIMPLEMENTATION1231
 /**************************************************************************
@@ -114,12 +125,6 @@
 
 #endif
 
-/**********************************************************************
-* Define following macro if you want to know where global variable is defined. 
-* This macro is usually not defined to keep backward compatibility of DLL.
-**********************************************************************/
-/* #define G__VARIABLEFPOS */
-/* #define G__TYPEDEFFPOS */
 
 /**************************************************************************
 * if __MAKECINT__ is defined, do not include this file
@@ -1693,6 +1698,7 @@ extern int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,stru
 #define puts    G__puts
 #define fgets   G__fgets
 #define gets    G__gets
+#define system  G__system
 
 int G__printf G__P((char* fmt,...));
 extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
@@ -1702,6 +1708,7 @@ int G__fputs G__P((char *string,FILE *fp));
 int G__puts G__P((char *string));
 char *G__fgets G__P((char *string,int n,FILE *fp));
 char *G__gets G__P((char *buffer));
+int G__system G__P((char *com));
 
 #ifdef G__SPECIALSTDIO
 

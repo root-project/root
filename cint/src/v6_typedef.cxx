@@ -1183,7 +1183,11 @@ int reftype;
 /* G__OLDIMPLEMENTATIONON620 should affect, but not implemented here */
   /* Doing exactly the same thing as G__defined_typename() */
   len=strlen(typename);
-  if(typename[len-1]=='*') {
+  if(
+#ifndef G__OLDIMPLEMENTATION1370
+     len &&
+#endif
+     typename[len-1]=='*') {
     typename[--len]='\0';
     ispointer = 'A' - 'a';
   }

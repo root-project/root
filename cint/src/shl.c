@@ -654,6 +654,19 @@ extern int G__call_setup_funcs();
 
 #ifdef G__SHAREDLIB
 /**************************************************************************
+ * G__show_dllrev
+ **************************************************************************/
+void G__show_dllrev(shlfile,sharedlib_func)
+char *shlfile;
+int (*sharedlib_func)();
+{
+  fprintf(G__serr,"%s:DLLREV=%d\n",shlfile,(*sharedlib_func)());
+  fprintf(G__serr,"  This cint accepts DLLREV=%d~%d and creates %d\n"
+	  ,G__ACCEPTDLLREV_FROM,G__ACCEPTDLLREV_UPTO
+	  ,G__CREATEDLLREV);
+}
+
+/**************************************************************************
 * G__shl_load()
 *
 * Comment:
@@ -747,57 +760,69 @@ char *shlfile;
   sharedlib_func=
     (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
 #ifndef G__OLDIMPLEMENTATION1169
-  if(sharedlib_func && (*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
-     && (*sharedlib_func)()<G__ACCEPTDLLREV_FROM) {
+  if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
+     || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
 #else
   if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
 #endif
     G__check_setup_version((*sharedlib_func)(),"");
     error++;
   }
-  if(sharedlib_func) cintdll++;
+  if(sharedlib_func) {
+    cintdll++;
+    if(G__asm_dbg) G__show_dllrev(shlfile,sharedlib_func);
+  }
 
   sprintf(dllid,"G__cpp_dllrev%s",dllidheader);
   sharedlib_func=
     (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
 #ifndef G__OLDIMPLEMENTATION1169
-  if(sharedlib_func && (*sharedlib_func)()>G__ACCEPTDLLREV_UPTO 
-     && (*sharedlib_func)()<G__ACCEPTDLLREV_FROM) {
+  if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO 
+     || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
 #else
   if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
 #endif
     G__check_setup_version((*sharedlib_func)(),"");
     error++;
   }
-  if(sharedlib_func) cintdll++;
+  if(sharedlib_func) {
+    cintdll++;
+    if(G__asm_dbg) G__show_dllrev(shlfile,sharedlib_func);
+  }
 
   sprintf(dllid,"G__c_dllrev");
   sharedlib_func=
     (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
 #ifndef G__OLDIMPLEMENTATION1169
-  if(sharedlib_func && (*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
-     && (*sharedlib_func)()<G__ACCEPTDLLREV_FROM) {
+  if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
+     || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
 #else
   if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
 #endif
     G__check_setup_version((*sharedlib_func)(),"");
     error++;
   }
-  if(sharedlib_func) cintdll++;
+  if(sharedlib_func) {
+    cintdll++;
+    if(G__asm_dbg) G__show_dllrev(shlfile,sharedlib_func);
+  }
 
   sprintf(dllid,"G__c_dllrev%s",dllidheader);
   sharedlib_func=
     (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
 #ifndef G__OLDIMPLEMENTATION1169
-  if(sharedlib_func && (*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
-     && (*sharedlib_func)()<G__ACCEPTDLLREV_FROM) {
+  if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
+     || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
 #else
   if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
 #endif
     G__check_setup_version((*sharedlib_func)(),"");
     error++;
   }
-  if(sharedlib_func) cintdll++;
+  if(sharedlib_func) {
+    cintdll++;
+    if(G__asm_dbg) G__show_dllrev(shlfile,sharedlib_func);
+  }
 
   if(error) {
     G__shl_load_error(shlfile ,"Revision mismatch");

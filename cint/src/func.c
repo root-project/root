@@ -1416,6 +1416,9 @@ int memfunc_flag;
 	  }
 #endif
 	case G__CALLCONSTRUCTOR:
+#ifndef G__OLDIMPLEMENTATION1376
+	  if(G__NOLINK > G__globalcomp) break;
+#endif
 #ifndef G__OLDIMPLEMENTATION1185
 	  fprintf(G__serr, "Error: Can't call %s::%s in current scope"
 		  ,G__struct.name[G__tagnum],item);

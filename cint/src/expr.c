@@ -184,9 +184,16 @@ G__value G__calc(exprwithspace)
 char *exprwithspace;
 {
   G__value result;
+#ifndef G__OLDIMPLEMENTATION1376
+  int store_security_error; 
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1035
   G__LockCriticalSection();
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1376
+  store_security_error = G__security_error;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1031
@@ -199,9 +206,14 @@ char *exprwithspace;
   G__security_recover(G__serr);
 #endif
   
+#ifndef G__OLDIMPLEMENTATION1376
+  G__security_error = store_security_error;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1035
   G__UnlockCriticalSection();
 #endif
+
   return(result);
 }
 

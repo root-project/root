@@ -47,9 +47,10 @@ char baseaccess;
      G__CPPLINK!=G__struct.iscpplink[to_tagnum]) {
 #ifndef G__OLDIMPLEMENTATION1368
     fprintf(G__serr
-	   ,"Warning: Interpreted class %s derived from",G__fulltagname(to_tagnum,1));
+	   ,"Warning: Interpreted class %s derived from"
+	    ,G__fulltagname(to_tagnum,1));
     fprintf(G__serr
-	   ,"Warning: precompiled class %s",G__fulltagname(from_tagnum,1));
+	   ," precompiled class %s",G__fulltagname(from_tagnum,1));
 #else
     fprintf(G__serr
 	   ,"Warning: precompiled class %s ",G__fulltagname(from_tagnum,1));
@@ -57,7 +58,7 @@ char baseaccess;
 	   ,"inherited from interpreted class %s",G__fulltagname(to_tagnum,1));
 #endif
     G__printlinenum();
-    fprintf(G__serr,"There are some limitations regarding compiled/interpreted class inheritance\n");
+    fprintf(G__serr,"!!!There are some limitations regarding compiled/interpreted class inheritance\n");
   }
 #endif
 

@@ -802,7 +802,7 @@ G__COMPLETIONLIST G__completionlist[] = {
 	{"G__optimizemode",NULL},
 	{"G__getoptimizemode",NULL},
 #endif
-	{"G__breakline",NULL},
+	/* {"G__breakline",NULL}, */
 	{"G__split",NULL},
 	{"G__readline",NULL},
 	{"G__cmparray",NULL},
@@ -3557,7 +3557,7 @@ void G__list_sut(fp) FILE *fp; {
    fprintf(fp,"   char *G__input(char prompt[]);\n");
    fprintf(fp,"   int G__pause();\n");
    fprintf(fp,"   int G__tracemode(int on_off);\n");
-   fprintf(fp,"   int G__breakline(int line);\n");
+   /* fprintf(fp,"   int G__breakline(int line);\n"); */
    fprintf(fp,"   int G__stepmode(int on_off);\n");
    fprintf(fp,"   [anytype] G__calc(char *expression);\n");
    fprintf(fp,"   [anytype] G__exec_text(char *text);\n");

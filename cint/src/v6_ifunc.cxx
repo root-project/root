@@ -4612,7 +4612,11 @@ int recursive;
   /*  check private, protected access rights 
    *    display error if no access right
    *    do parameter conversion if needed */
-  if(0==(p_ifunc->access[*pifn]&access)&&(!G__isfriend(p_ifunc->tagnum))) {
+  if(0==(p_ifunc->access[*pifn]&access)&&(!G__isfriend(p_ifunc->tagnum))
+#ifndef G__OLDIMPLEMENTATION1376
+     && G__NOLINK==G__globalcomp
+#endif
+     ) {
     /* no access right */
     fprintf(G__serr,"Error: can not call private or protected function");
     G__genericerror((char*)NULL);

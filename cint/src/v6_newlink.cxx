@@ -37,10 +37,9 @@ void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc
 
 /**************************************************************************
 * CAUTION:
-*  Following macro G__N_EXPLICITDESTRUCTOR must be defined at normal cint
+*  Following macro G__BUILTIN must not be defined at normal cint
 * installation. This macro must be deleted only when you generate following
-* source files. You also have to eliminate G__P2FCAST and G__P2FDECL macro
-* in platform dependent file.
+* source files. 
 *     src/libstrm.cxx in lib/stream
 *     src/vcstrm.cxx  in lib/vcstream
 *     src/bcstrm.cxx  in lib/bcstream
@@ -52,7 +51,9 @@ void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc
 * g++ has a bug of distinguishing 'static operator delete(void* p)' in
 * different file scope. Deleting this macro will avoid this problem.
 **************************************************************************/
-#if !defined(G__DECCXX)
+/* #define G__BUILTIN */
+
+#if !defined(G__DECCXX) && !defined(G__BUILTIN)
 #define G__N_EXPLICITDESTRUCTOR
 #endif
 
@@ -194,12 +195,14 @@ The internal data structures have been changed.\n\
 Please recompile the setup file which contains\n\
 the definition \"%s\"\n\
 using CINT version %s.\n\
-library=%d cintbody=%d,%d\n\n\
+library=%d cintbody accepts=%d,%d\n\
+and creates %d\n\n\
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n",
             func, G__cint_version(),version
 #ifndef G__OLDIMPLEMENTATION1169
 	      ,G__ACCEPTDLLREV_FROM
 	      ,G__ACCEPTDLLREV_UPTO
+	      ,G__CREATEDLLREV
 #else
 	      ,G__DLLREV
 #endif
@@ -449,7 +452,12 @@ void G__gen_clink()
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1169
+#ifdef G__BUILTIN
+  fprintf(fp,"#include \"dllrev.h\"\n");
+  fprintf(fp,"int G__c_dllrev%s() { return(G__CREATEDLLREV); }\n",G__DLLID);
+#else
   fprintf(fp,"int G__c_dllrev%s() { return(%d); }\n",G__DLLID,G__CREATEDLLREV);
+#endif
 #else
   fprintf(fp,"int G__c_dllrev%s() { return(%d); }\n",G__DLLID,G__DLLREV);
 #endif
@@ -464,8 +472,13 @@ void G__gen_clink()
   G__cpplink_tagtable(fp,hfp);
   fprintf(fp,"void G__c_setup%s() {\n",G__DLLID);
 #ifndef G__OLDIMPLEMENTATION1169
+#ifdef G__BUILTIN
+  fprintf(fp,"  G__check_setup_version(G__CREATEDLLREV,\"G__c_setup%s()\");\n",
+          G__DLLID);
+#else
   fprintf(fp,"  G__check_setup_version(%d,\"G__c_setup%s()\");\n",
           G__CREATEDLLREV,G__DLLID);
+#endif
 #else
   fprintf(fp,"  G__check_setup_version(%d,\"G__c_setup%s()\");\n",
           G__DLLREV,G__DLLID);
@@ -498,10 +511,10 @@ FILE *fp;
   fprintf(fp,"class G__cpp_setup_init%s {\n",G__DLLID);
   fprintf(fp,"  public:\n");
   if (G__DLLID && G__DLLID[0]) {
-    fprintf(fp,"    G__cpp_setup_init%s() { G__add_setup_func(\"%s\",(G__incsetup)&G__cpp_setup%s); }\n",G__DLLID,G__DLLID,G__DLLID);
+    fprintf(fp,"    G__cpp_setup_init%s() { G__add_setup_func(\"%s\",(G__incsetup)(&G__cpp_setup%s)); }\n",G__DLLID,G__DLLID,G__DLLID);
     fprintf(fp,"   ~G__cpp_setup_init%s() { G__remove_setup_func(\"%s\"); }\n",G__DLLID,G__DLLID);
   } else {
-    fprintf(fp,"    G__cpp_setup_init() { G__add_setup_func(\"G__Default\",(G__incsetup)&G__cpp_setup); }\n");
+    fprintf(fp,"    G__cpp_setup_init() { G__add_setup_func(\"G__Default\",(G__incsetup)(&G__cpp_setup)); }\n");
     fprintf(fp,"   ~G__cpp_setup_init() { G__remove_setup_func(\"G__Default\"); }\n");
   }
   fprintf(fp,"};\n");
@@ -597,7 +610,12 @@ void G__gen_cpplink()
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1169
-  fprintf(fp,"extern \"C\" int G__cpp_dllrev%s() { return(%d); }\n",G__DLLID,G__CREATEDLLREV);
+#ifdef G__BUILTIN
+    fprintf(fp,"#include \"dllrev.h\"\n");
+    fprintf(fp,"extern \"C\" int G__cpp_dllrev%s() { return(G__CREATEDLLREV); }\n",G__DLLID);
+#else
+    fprintf(fp,"extern \"C\" int G__cpp_dllrev%s() { return(%d); }\n",G__DLLID,G__CREATEDLLREV);
+#endif
 #else
   fprintf(fp,"extern \"C\" int G__cpp_dllrev%s() { return(%d); }\n",G__DLLID,G__DLLREV);
 #endif
@@ -635,8 +653,13 @@ void G__gen_cpplink()
   G__cpplink_tagtable(fp,hfp);
   fprintf(fp,"extern \"C\" void G__cpp_setup%s(void) {\n",G__DLLID);
 #ifndef G__OLDIMPLEMENTATION1169
+#ifdef G__BUILTIN
+  fprintf(fp,"  G__check_setup_version(G__CREATEDLLREV,\"G__cpp_setup%s()\");\n",
+          G__DLLID);
+#else
   fprintf(fp,"  G__check_setup_version(%d,\"G__cpp_setup%s()\");\n",
           G__CREATEDLLREV,G__DLLID);
+#endif
 #else
   fprintf(fp,"  G__check_setup_version(%d,\"G__cpp_setup%s()\");\n",
           G__DLLREV,G__DLLID);
@@ -3877,9 +3900,35 @@ FILE *fp;
 		      );
 	    }
 	    else {
+#ifndef G__OLDIMPLEMENTATION1371
+	      int basen2,flag2=0;
+	      for(basen2=0;basen2<G__struct.baseclass[i]->basen;basen2++) {
+		if(basen2!=basen &&
+		   (G__struct.baseclass[i]->basetagnum[basen]
+		    == G__struct.baseclass[i]->basetagnum[basen2]) &&
+		   ((G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE)
+		    ==0 ||
+		    (G__struct.baseclass[i]->property[basen2]&G__ISVIRTUALBASE)
+		    ==0 )) {
+		  flag2=1;
+		}
+	      }
+	      strcpy(temp,G__fulltagname(basetagnum,1));
+	      if(!flag2) 
+		fprintf(fp,"       %s *G__Lpbase=(%s*)G__Lderived;\n"
+			,temp,G__fulltagname(basetagnum,1));
+	      else {
+		fprintf(G__serr
+			,"Warning: multiple ambiguous inheritance %s and %s. Cint will not get correct base object address\n"
+			,temp,G__fulltagname(i,1));
+		fprintf(fp,"       %s *G__Lpbase=(%s*)((long)G__Lderived);\n"
+			,temp,G__fulltagname(basetagnum,1));
+	      }
+#else
 	      strcpy(temp,G__fulltagname(basetagnum,1));
 	      fprintf(fp,"       %s *G__Lpbase=(%s*)G__Lderived;\n"
 		      ,temp,G__fulltagname(basetagnum,1));
+#endif
 	      strcpy(temp,G__mark_linked_tagnum(basetagnum));
 	      fprintf(fp,"       G__inheritance_setup(G__get_linked_tagnum(&%s),G__get_linked_tagnum(&%s),(long)G__Lpbase-(long)G__Lderived,%d,%ld);\n"
 		      ,G__mark_linked_tagnum(i)
@@ -6202,6 +6251,16 @@ int link_stub;
 #endif
       return;
     }
+
+#ifndef G__OLDIMPLEMENTATION1369
+    p = G__strrstr(buf,"::");
+    if(p) {
+      int ixx=0;
+      p+=2;
+      while(*p) buf[ixx++] = *p++;
+      buf[ixx] = 0;
+    }
+#endif
 
     /* search for wildcard character */
     p = strchr(buf,'*');

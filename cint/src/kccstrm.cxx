@@ -28,9 +28,11 @@ static void operator delete(void *p)
       return;
    free(p);
 }
+
+#include "dllrev.h"
 extern "C" int G__cpp_dllrev()
 {
-   return (51111);
+   return (G__CREATEDLLREV);
 }
 
 /*********************************************************
@@ -9578,7 +9580,7 @@ extern "C" void G__cpp_setup_tagtable()
 }
 extern "C" void G__cpp_setupG__stream()
 {
-   G__check_setup_version(51111, "G__cpp_setupG__stream()");
+   G__check_setup_version(G__CREATEDLLREV, "G__cpp_setupG__stream()");
    G__set_cpp_environment();
    G__cpp_setup_tagtable();
 

@@ -13,18 +13,21 @@ extern "C" void G__set_cpp_environmentG__stream() {
   G__add_compiledheader("iostrm.h");
   G__add_compiledheader("fstrm.h");
   G__add_compiledheader("stdiostr.h");
+  G__add_compiledheader("<stdio.h");
+  G__add_compiledheader("<bool.h");
   G__add_compiledheader("strstrm.h");
   G__cpp_reset_tagtableG__stream();
 }
 static void* operator new(size_t size,void* p) {
-  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);
+  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);
 #ifndef G__ROOT
   return(malloc(size));
 #else
   return new char[size];
 #endif
 }
-extern "C" int G__cpp_dllrevG__stream() { return(51111); }
+#include "dllrev.h"
+extern "C" int G__cpp_dllrevG__stream() { return(G__CREATEDLLREV); }
 
 /*********************************************************
 * Member function Interface Method
@@ -2336,9 +2339,9 @@ static void G__setup_memfuncios(void) {
    G__memfunc_setup("rdbuf",531,G__ios_rdbuf_3_2,85,G__get_linked_tagnum(&G__G__streamLN_streambuf),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("iword",549,G__ios_iword_4_2,108,-1,-1,1,1,1,1,0,"i - - 0 - -",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("pword",556,G__ios_pword_5_2,89,-1,-1,1,1,1,1,0,"i - - 0 - -",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("bitalloc",842,G__ios_bitalloc_6_2,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("xalloc",643,G__ios_xalloc_7_2,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("sync_with_stdio",1626,G__ios_sync_with_stdio_9_2,121,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("bitalloc",842,G__ios_bitalloc_6_2,108,-1,-1,0,0,3,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("xalloc",643,G__ios_xalloc_7_2,105,-1,-1,0,0,3,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("sync_with_stdio",1626,G__ios_sync_with_stdio_9_2,121,-1,-1,0,0,3,1,0,"",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2674,6 +2677,7 @@ extern "C" void G__cpp_reset_tagtableG__stream() {
   G__G__streamLN_strstream.tagnum = -1 ;
 }
 
+
 extern "C" void G__cpp_setup_tagtableG__stream() {
 
    /* Setting up class,struct,union tag entry */
@@ -2697,8 +2701,8 @@ extern "C" void G__cpp_setup_tagtableG__stream() {
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ostrstream),sizeof(ostrstream),-1,0,(char*)NULL,G__setup_memvarostrstream,G__setup_memfuncostrstream);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_strstream),sizeof(strstream),-1,0,(char*)NULL,G__setup_memvarstrstream,G__setup_memfuncstrstream);
 }
-extern "C" void G__cpp_setupG__stream() {
-  G__check_setup_version(51111,"G__cpp_setupG__stream()");
+extern "C" void G__cpp_setupG__stream(void) {
+  G__check_setup_version(G__CREATEDLLREV,"G__cpp_setupG__stream()");
   G__set_cpp_environmentG__stream();
   G__cpp_setup_tagtableG__stream();
 

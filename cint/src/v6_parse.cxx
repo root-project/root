@@ -2335,32 +2335,38 @@ G__value G__exec_if()
     /* increment temp_read */
     c=G__fgetc();
     G__temp_read++;
-    if(c=='/') {
-      c=G__fgetc();
-      /*****************************
-       * new
-       *****************************/
-      switch(c) {
-      case '*':
-	if(G__skip_comment()==EOF) return(G__null);
+#ifndef G__OLDIMPLEMENTATION1375
+    while(c=='/' || c=='#') {
+#endif
+      if(c=='/') {
+	c=G__fgetc();
+	/*****************************
+	 * new
+	 *****************************/
+	switch(c) {
+	case '*':
+	  if(G__skip_comment()==EOF) return(G__null);
+	  break;
+	case '/':
+	  G__fignoreline();
 	break;
-      case '/':
-	G__fignoreline();
-	break;
-      default:
-	G__commenterror();
-	break;
+	default:
+	  G__commenterror();
+	  break;
       }
-      fgetpos(G__ifile.fp,&store_fpos);
-      store_line_number=G__ifile.line_number;
-      c=G__fgetc();
-      G__temp_read=1;
+	fgetpos(G__ifile.fp,&store_fpos);
+	store_line_number=G__ifile.line_number;
+	c=G__fgetc();
+	G__temp_read=1;
+      }
+      else if('#'==c) {
+	G__pp_command();
+	c=G__fgetc();
+	G__temp_read=1;
+      }
+#ifndef G__OLDIMPLEMENTATION1375
     }
-    else if('#'==c) {
-      G__pp_command();
-      c=G__fgetc();
-      G__temp_read=1;
-    }
+#endif
     if(c==EOF) {
       G__genericerror("Error: unexpected if() { } EOF");
       if(G__key!=0) system("key .cint_key -l execute");

@@ -4955,7 +4955,29 @@ long G__struct_offset; /* used to be int */
 #ifndef G__OLDIMPLEMENTATION1073
 	G__oprovld=1;
 #endif
+#ifndef G__OLDIMPLEMENTATION1373
+	{ /* rather big change, risk5, 2000/8/26 */
+	  int store_cp = G__asm_cp;
+	  int store_dt = G__asm_dt;
+	  G__getfunction(result7,&ig2 ,G__TRYCONSTRUCTOR);
+	  if(ig2 && G__asm_noverflow) {
+	    int x;
+	    G__asm_dt = store_dt;
+	    if(G__LD_FUNC==G__asm_inst[G__asm_cp-5]) {
+	      for(x=0;x<5;x++) 
+		G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-5+x];
+	      G__asm_cp = store_cp + 5;
+	    }
+	    else if(G__LD_IFUNC==G__asm_inst[G__asm_cp-8]) {
+	      for(x=0;x<8;x++) 
+		G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-8+x];
+	      G__asm_cp = store_cp + 8;
+	    }
+	  }
+	}
+#else
 	G__getfunction(result7,&ig2 ,G__TRYCONSTRUCTOR);
+#endif
 #ifndef G__OLDIMPLEMENTATION1073
 	G__oprovld=0;
 	if(G__asm_wholefunction && 0==ig2) {
@@ -5615,13 +5637,25 @@ int parameter00;
   if(0==G__definemacro&&G__NOLINK==G__globalcomp&&'p'==G__var_type&&
      -1!=result.tagnum) {
 #endif
-     /* undeclared variable assignment of class/struct will create 
-      * a global object of pointer or reference */
+#ifndef G__OLDIMPLEMENTATION1372
+    if(G__IsInMacro()) {
+      /* undeclared variable assignment of class/struct will create 
+       * a global object of pointer or reference */
+      autoobjectflag=1;
+      if(G__p_local) {
+	var=varglobal;
+	while(var->next) var=var->next;
+      }
+    }
+#else
+    /* undeclared variable assignment of class/struct will create 
+     * a global object of pointer or reference */
     autoobjectflag=1;
     if(G__p_local) {
       var=varglobal;
       while(var->next) var=var->next;
     }
+#endif
     store_var_type = G__var_type;
     store_tagnum = G__tagnum;
     store_typenum = G__typenum;

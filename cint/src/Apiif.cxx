@@ -22,7 +22,8 @@ static void* operator new(size_t size,void* p) {
   return new char[size];
 #endif
 }
-extern "C" int G__cpp_dllrevG__API() { return(51428); }
+#include "dllrev.h"
+extern "C" int G__cpp_dllrevG__API() { return(G__CREATEDLLREV); }
 
 /*********************************************************
 * Member function Interface Method
@@ -1630,25 +1631,25 @@ static int G__G__IncludePathInfo_wAG__IncludePathInfo_8_0(G__value *result7,G__C
 
 
 /* Setting up global function */
-static int G___G__SetGlobalcomp_0_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__SetGlobalcomp_5_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__SetGlobalcomp((char*)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitGetSpecialObject_1_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitGetSpecialObject_6_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitGetSpecialObject((G__pMethodSpecialObject)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitGetSpecialValue_2_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitGetSpecialValue_7_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitGetSpecialValue((G__pMethodSpecialValue)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitUpdateClassInfo_3_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitUpdateClassInfo_8_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitUpdateClassInfo((G__pMethodUpdateClassInfo)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
@@ -2324,15 +2325,15 @@ extern "C" void G__cpp_setup_globalG__API() {
 extern "C" void G__cpp_setup_funcG__API() {
    G__lastifuncposition();
 
-   G__memfunc_setup("G__SetGlobalcomp",1585,G___G__SetGlobalcomp_0_19,105,-1,-1,0,3,1,1,0,
+   G__memfunc_setup("G__SetGlobalcomp",1585,G___G__SetGlobalcomp_5_6,105,-1,-1,0,3,1,1,0,
 "C - - 0 - funcname C - - 0 - param "
 "i - - 0 - globalcomp",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitGetSpecialObject",2257,G___G__InitGetSpecialObject_1_19,121,-1,-1,0,1,1,1,0,"Q - 'G__pMethodSpecialObject' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitGetSpecialObject",2257,G___G__InitGetSpecialObject_6_6,121,-1,-1,0,1,1,1,0,"Q - 'G__pMethodSpecialObject' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitGetSpecialValue",2167,G___G__InitGetSpecialValue_2_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialValue' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitGetSpecialValue",2167,G___G__InitGetSpecialValue_7_6,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialValue' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitUpdateClassInfo",2174,G___G__InitUpdateClassInfo_3_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodUpdateClassInfo' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitUpdateClassInfo",2174,G___G__InitUpdateClassInfo_8_6,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodUpdateClassInfo' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
 
    G__resetifuncposition();
@@ -2398,7 +2399,7 @@ extern "C" void G__cpp_setup_tagtableG__API() {
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_G__IncludePathInfo),sizeof(G__IncludePathInfo),-1,0,(char*)NULL,G__setup_memvarG__IncludePathInfo,G__setup_memfuncG__IncludePathInfo);
 }
 extern "C" void G__cpp_setupG__API(void) {
-  G__check_setup_version(51428,"G__cpp_setupG__API()");
+  G__check_setup_version(G__CREATEDLLREV,"G__cpp_setupG__API()");
   G__set_cpp_environmentG__API();
   G__cpp_setup_tagtableG__API();
 

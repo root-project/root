@@ -24,3 +24,5 @@ extern G__linked_taginfo G__G__stdstrctLN_lconv;
 extern G__linked_taginfo G__G__stdstrctLN_tm;
 extern G__linked_taginfo G__G__stdstrctLN_dAdiv_t;
 extern G__linked_taginfo G__G__stdstrctLN_dAldiv_t;
+
+/* STUB derived class for protected member access */

@@ -61,7 +61,8 @@ static void operator delete[](void *p, const cintnew_t &) {
 
 
 
-extern "C" int G__cpp_dllrevG__stream() { return(51111); }
+#include "dllrev.h"
+extern "C" int G__cpp_dllrevG__stream() { return(G__CREATEDLLREV); }
 
 /*********************************************************
 * Member function Interface Method
@@ -3223,7 +3224,7 @@ extern "C" void G__cpp_setup_tagtableG__stream() {
 ,G__setup_memfuncbasic_iostreamlEcharcOchar_traitslEchargRsPgR);
 }
 extern "C" void G__cpp_setupG__stream() {
-  G__check_setup_version(51111,"G__cpp_setupG__stream()");
+  G__check_setup_version(G__CREATEDLLREV,"G__cpp_setupG__stream()");
   G__set_cpp_environmentG__stream();
   G__cpp_setup_tagtableG__stream();
 
