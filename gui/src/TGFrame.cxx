@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.87 2004/09/29 10:42:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.88 2004/10/06 09:14:42 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2221,22 +2221,12 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    char quote = '"';
    ofstream out;
-   Int_t lenfile = filename ? strlen(filename) : 0;
-   const char *fname;
+   const char *fname = gSystem->BaseName(filename);
 
-   // if filename is given, open this file, otherwise create a file Rootappl.C
+   out.open(filename, ios::out);
 
-   if (lenfile) {
-      fname = gSystem->BaseName(filename);
-   } else {
-      fname = "Rootappl.C";
-      lenfile = 10;
-   }
-
-   out.open(fname, ios::out);
-
-   if (!out.good()) {
-       Error("SaveSource", "cannot open file: %s", fname);
+   if (!out.good() || !strlen(fname)) {
+       Error("SaveSource", "cannot open file: %s", filename);
        return;
    }
 
@@ -2623,22 +2613,12 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    char quote = '"';
    ofstream out;
-   Int_t lenfile = filename ? strlen(filename) : 0;
-   const char *fname;
+   const char *fname = gSystem->BaseName(filename);
 
-   // if filename is given, open this file, otherwise create a file Rootappl.C
+   out.open(filename, ios::out);
 
-   if (lenfile) {
-      fname = gSystem->BaseName(filename);
-   } else {
-      fname = "Rootdlog.C";
-      lenfile = 10;
-   }
-
-   out.open(fname, ios::out);
-
-   if (!out.good()) {
-       Error("SaveSource", "cannot open file: %s", fname);
+   if (!out.good() || !strlen(fname)) {
+       Error("SaveSource", "cannot open file: %s", filename);
        return;
    }
 
