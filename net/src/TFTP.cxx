@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.17 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.18 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -249,10 +249,12 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
 
    if (!IsOpen() || !file || !*file) return -1;
 
-#ifndef WIN32
-   Int_t fd = open(file, O_RDONLY);
-#else
+#if defined(WIN32) || defined(R__WINGCC)
    Int_t fd = open(file, O_RDONLY | O_BINARY);
+#elif defined(R__SEEK64)
+   Int_t fd = open64(file, O_RDONLY);
+#else
+   Int_t fd = open(file, O_RDONLY);
 #endif
    if (fd < 0) {
       Error("PutFile", "cannot open %s in read mode", file);
@@ -276,13 +278,13 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
    if (!remoteName)
       remoteName = file;
 
-   Long_t restartat = fRestartAt;
+   Long64_t restartat = fRestartAt;
 
    // check if restartat value makes sense
    if (restartat && (restartat >= size))
       restartat = 0;
 
-   if (fSocket->Send(Form("%s %d %d %ld %ld", remoteName, fBlockSize, fMode,
+   if (fSocket->Send(Form("%s %d %d %lld %lld", remoteName, fBlockSize, fMode,
                      size, restartat), kROOTD_PUTFILE) < 0) {
       Error("PutFile", "error sending kROOTD_PUTFILE command");
       close(fd);
@@ -298,7 +300,7 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
       return -1;
    }
 
-   Printf("<TFTP::PutFile>: sending file %s (%ld bytes, starting at %ld)",
+   Printf("<TFTP::PutFile>: sending file %s (%lld bytes, starting at %lld)",
           file, size, restartat);
 
    TStopwatch timer;
@@ -309,7 +311,13 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
 
 #ifndef HAVE_MMAP
    char *buf = new char[fBlockSize];
+#if defined(R__SEEK64)
+   lseek64(fd, pos, SEEK_SET);
+#elif defined(WIN32)
+   _lseeki64(fd, pos, SEEK_SET);
+#else
    lseek(fd, pos, SEEK_SET);
+#endif
 #endif
 
    while (pos < size) {
@@ -317,7 +325,11 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
       if (left > fBlockSize)
          left = fBlockSize;
 #ifdef HAVE_MMAP
+#if defined(R__SEEK64)
+      char *buf = (char*) mmap64(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
+#else
       char *buf = (char*) mmap(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
+#endif
       if (buf == (char *) -1) {
          Error("PutFile", "mmap of file %s failed", file);
          close(fd);
@@ -379,7 +391,7 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
    // provide timing numbers
    Double_t speed, t = timer.RealTime();
    if (t > 0)
-      speed = (size - restartat) / t;
+      speed = Double_t(size - restartat) / t;
    else
       speed = 0.0;
    if (speed > 524288)
@@ -417,9 +429,9 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
          localName = file;
    }
 
-   Long_t restartat = fRestartAt;
+   Long64_t restartat = fRestartAt;
 
-   if (fSocket->Send(Form("%s %d %d %ld", file, fBlockSize, fMode,
+   if (fSocket->Send(Form("%s %d %d %lld", file, fBlockSize, fMode,
                      restartat), kROOTD_GETFILE) < 0) {
       Error("GetFile", "error sending kROOTD_GETFILE command");
       return -2;
@@ -434,16 +446,15 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    }
 
    // get size of remote file
-   Long_t sizel;
-   Int_t  what;
-   char   mess[64];
+   Long64_t size;
+   Int_t    what;
+   char     mess[128];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("GetFile", "error receiving remote file size");
       return -2;
    }
-   sscanf(mess, "%ld", &sizel);
-   Long64_t size = (Long64_t) sizel;
+   sscanf(mess, "%lld", &size);
 
    // check if restartat value makes sense
    if (restartat && (restartat >= size))
@@ -452,24 +463,28 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    // open local file
    Int_t fd;
    if (!restartat) {
-#ifndef WIN32
-      fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY, 0600);
-#else
+#if defined(WIN32) || defined(R__WINGCC)
       if (fMode == kBinary)
          fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
                    S_IREAD | S_IWRITE);
       else
          fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY,
                    S_IREAD | S_IWRITE);
+#elif defined(R__SEEK64)
+      fd = open64(localName, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+#else
+      fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 #endif
    } else {
-#ifndef WIN32
-      fd = open(localName, O_WRONLY, 0600);
-#else
+#if defined(WIN32) || defined(R__WINGCC)
       if (fMode == kBinary)
          fd = open(localName, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
       else
          fd = open(localName, O_WRONLY, S_IREAD | S_IWRITE);
+#elif defined(R__SEEK64)
+      fd = open64(localName, O_WRONLY, 0600);
+#else
+      fd = open(localName, O_WRONLY, 0600);
 #endif
    }
 
@@ -483,7 +498,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    if (strcmp(localName, "/dev/null")) {
       Long_t id, bsize, blocks, bfree;
       if (gSystem->GetFsInfo(localName, &id, &bsize, &blocks, &bfree) == 0) {
-         Double_t space = (Double_t)bsize * (Double_t)bfree;
+         Long64_t space = (Long64_t)bsize * (Long64_t)bfree;
          if (space < size - restartat) {
             Error("GetFile", "not enough space to store file %s", localName);
             // send urgent message to rootd to stop tranfer
@@ -496,7 +511,13 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
 
    // seek to restartat position
    if (restartat) {
-      if (lseek(fd, (off_t) restartat, SEEK_SET) < 0) {
+#if defined(R__SEEK64)
+      if (lseek64(fd, restartat, SEEK_SET) < 0) {
+#elif defined(WIN32)
+      if (_lseeki64(fd, restartat, SEEK_SET) < 0) {
+#else
+      if (lseek(fd, restartat, SEEK_SET) < 0) {
+#endif
          Error("GetFile", "cannot seek to position %ld in file %s",
                restartat, localName);
          // if cannot seek send urgent message to rootd to stop tranfer
@@ -505,8 +526,8 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
       }
    }
 
-   Printf("<TFTP::GetFile>: getting file %s (%ld bytes, starting at %ld)",
-          localName, sizel, restartat);
+   Printf("<TFTP::GetFile>: getting file %s (%lld bytes, starting at %lld)",
+          localName, size, restartat);
 
    TStopwatch timer;
    timer.Start();
@@ -594,7 +615,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    // provide timing numbers
    Double_t speed, t = timer.RealTime();
    if (t > 0)
-      speed = (size - restartat) / t;
+      speed = Double_t(size - restartat) / t;
    else
       speed = 0.0;
    if (speed > 524288)

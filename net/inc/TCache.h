@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.4 2001/04/11 11:10:44 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.5 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -66,16 +66,16 @@ private:
       TPage(Long64_t offset, char *page, Int_t size)
          { fOffset = offset; fData = page; fSize = size; }
       ~TPage() { delete [] fData; }
-      ULong_t Hash() const { return fOffset; }
-      Bool_t  IsEqual(const TObject *obj) const
+      ULong_t  Hash() const { return (ULong_t) fOffset; }
+      Bool_t   IsEqual(const TObject *obj) const
          { return fOffset == ((const TPage*)obj)->fOffset; }
-      Bool_t  IsSortable() const { return kTRUE; }
-      Int_t   Compare(const TObject *obj) const
+      Bool_t   IsSortable() const { return kTRUE; }
+      Int_t    Compare(const TObject *obj) const
          { return fOffset > ((const TPage*)obj)->fOffset ? 1 :
                   fOffset < ((const TPage*)obj)->fOffset ? -1 : 0; }
-      Long64_t  Offset() const { return fOffset; }
-      char   *Data() const { return fData; }
-      Int_t   Size() const { return fSize; }
+      Long64_t Offset() const { return fOffset; }
+      char    *Data() const { return fData; }
+      Int_t    Size() const { return fSize; }
    };
 
    class TCacheList : public THashList {

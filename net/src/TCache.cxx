@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.5 2001/02/09 14:04:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.6 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -167,7 +167,7 @@ Int_t TCache::ReadBuffer(Long64_t offset, char *buf, Int_t len)
    // Find in which page offset is located
    Long64_t pageoffset = (offset >> fDiv) << fDiv;  // offset & ~(fPageSize-1)
    Int_t  begin = Int_t(offset & (fPageSize-1));
-   Long64_t boff  = 0;
+   Long_t boff  = 0;
 
    do {
       Int_t blen = begin+len>fPageSize ? fPageSize-begin : len;
@@ -233,7 +233,7 @@ Int_t TCache::WriteBuffer(Long64_t offset, const char *buf, Int_t len)
    // Find in which page offset is located
    Long64_t pageoffset = (offset >> fDiv) << fDiv;  // offset & ~(fPageSize-1)
    Int_t  begin = Int_t(offset & (fPageSize-1));
-   Long64_t boff  = 0;
+   Long_t boff  = 0;
 
    do {
       Int_t blen = begin+len>fPageSize ? fPageSize-begin : len;
