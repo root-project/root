@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.121 2002/12/17 16:15:00 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.122 2002/12/17 21:14:11 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2828,6 +2828,7 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
 //______________________________________________________________________________
 void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
 {
+   //fprintf(stderr,"qualifying %s\n",originalName);
    string subQualifiedName = "";
 
    fullyQualifiedName = "::";
@@ -2836,6 +2837,11 @@ void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
    G__ClassInfo arg;
 
    int len = name.length();
+   if (!len) {
+      fullyQualifiedName = "";
+      return;
+   }
+
    int nesting = 0;
    const char *current, *next;
    current = next = 0;
@@ -2863,7 +2869,7 @@ void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
             if (c+1<len) next = &(name[c+1]);
             else next = 0;
             arg.Init(current);
-            if (arg.IsValid()) {
+            if (strlen(current) && arg.IsValid()) {
                 GetFullyQualifiedName(arg,subQualifiedName);
                 fullyQualifiedName += subQualifiedName;
             } else {
@@ -2880,7 +2886,7 @@ void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
             if (c+1<len) next = &(name[c+1]);
             else next = 0;
             arg.Init(current);
-            if (arg.IsValid()) {
+            if (strlen(current) && arg.IsValid()) {
                 GetFullyQualifiedName(arg,subQualifiedName);
                 fullyQualifiedName += subQualifiedName;
             } else {
@@ -2900,18 +2906,21 @@ void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
             if (c+1<len) next = &(name[c+1]);
             else next = 0;
             arg.Init(current);
-            if (arg.IsValid()) {
+            if (strlen(current) && arg.IsValid()) {
                 GetFullyQualifiedName(arg,subQualifiedName);
                 fullyQualifiedName += subQualifiedName;
             } else {
                 fullyQualifiedName += current;
             }
             fullyQualifiedName += keep;
-            //fprintf(stderr,"will copy3: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
+            //fprintf(stderr,"will copy4: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
+            //fprintf(stderr,"have current %p, &name[0] %p for name %s \n",
+            //        current,&(name[0]),name.c_str());
          }
          break;
       }
    }
+   //fprintf(stderr,"preCalculated: %s\n",fullyQualifiedName.c_str());
    if (current == &(name[0]) ) {
       fullyQualifiedName += name;
    } else if ( next ) {
@@ -3598,7 +3607,6 @@ int main(int argc, char **argv)
    G__setglobalcomp(0);  // G__NOLINK
 
 #endif
-
    if (use_preprocessor && icc)
       ReplaceBundleInDict(argv[ifl], bundlename);
 
