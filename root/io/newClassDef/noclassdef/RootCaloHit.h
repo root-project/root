@@ -7,7 +7,7 @@
 
 class RootCaloHit : public TObject { 
 public:
-	RootCaloHit() : index(0) {
+	RootCaloHit() : index(0),objVarArr(0) {
       for(int i=0;i<4;i++) myArrFix[i]=0;
       myArrVar=0;
 
@@ -31,6 +31,7 @@ public:
            mycell(s, id), 
            index(0),
            myArrVar(0),
+           objVarArr(0),
            mynocell(7),
            myobj(8),
            myobj2(9)
@@ -52,6 +53,10 @@ public:
              myArrVar = new RootPCellID*[index];
              myArrVar[0] = new RootPCvirt(0);
              myArrVar[1] = new RootPCfix(1);
+
+             objVarArr = new RootPCellID[index];
+             objVarArr[0] = RootPCellID("varr",3);
+             objVarArr[1] = RootPCellID("varr",4);            
 
              myobjp = new RootPCobject(10);
              myobj2p = new RootPCobject2(11);
@@ -79,6 +84,7 @@ public:
            for(i = 0; i<4; i++) delete myArrFix[i];
            for(i = 0; i<index; i++) delete myArrVar[i];
            delete []myArrVar;
+           delete []objVarArr;
            delete myobjp; myobjp = 0;
            delete myobj2p; myobj2p = 0;
 
@@ -109,7 +115,9 @@ public:
           int i = 0;
           for(i=0; i<3; i++) myArr[i].Print();
           for(i=0; i<4; i++) if (myArrFix[i]) myArrFix[i]->Print();
+/*           fprintf(stderr,"myArrVar is %p %p\n",myArrVar,objVarArr); */
           if (myArrVar) for(i=0; i<index; i++) if (myArrVar[i]) myArrVar[i]->Print();
+          if (objVarArr) for(i=0; i<index; i++) objVarArr[i].Print();
           myobj.Print();
           myobj2.Print();
 
@@ -142,7 +150,8 @@ public:
    RootPCellID      myArr[3];
    RootPCtemp<int> *myArrFix[4]; 
    int index;
-   RootPCellID    **myArrVar;    //! WAITING on Vicktor's implementation [index]
+   RootPCellID    **myArrVar;    //![index]  WAITING on Vicktor's implementation [index]
+   RootPCellID     *objVarArr;   //![index]  Not implemented yet ... will it ever?
    RootPCnodict     mynocell;
 	RootPCellID     *mycellnull; 
 	RootPCellID     *mycellfix; //
@@ -164,24 +173,24 @@ public:
 	RootPCobject    *myobjdp;  //
 	RootPCobject2   *myobj2dp; //
    
-   RootPCobject     myobjarr[2];  // Does not work with Victor's code
-   RootPCobject2    myobjarr2[2];  // Does not work with Victor's code
+   RootPCobject     myobjarr[2];    //
+   RootPCobject2    myobjarr2[2];   //
 #else
-	RootPCobject     myobj;    //!
+	RootPCobject     myobj;          //!
 	RootPCobject2    myobj2;         //!     
-	RootPCellID     *myobjp;   //!
+	RootPCellID     *myobjp;         //!
 	RootPCellID     *myobj2p;        //!
-	RootPCobject    *myobjSt;  //!->
+	RootPCobject    *myobjSt;        //!->
 	RootPCobject2   *myobj2St;       //!->
-   TObject         *mytobjp;  //!
+   TObject         *mytobjp;        //!
    TObject         *mytobj2p;       //!
    TObject         *mytobjSt;       //!->
    TObject         *mytobj2St;      //!->
 
-	RootPCobject    *myobjdp;  //!
+	RootPCobject    *myobjdp;         //!
 	RootPCobject2   *myobj2dp;        //!
 
-   RootPCobject     myobjarr[2]; //!
+   RootPCobject     myobjarr[2];     //!
    RootPCobject2    myobjarr2[2];    //!
 #endif
 

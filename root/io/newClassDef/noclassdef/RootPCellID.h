@@ -17,9 +17,12 @@ class RootPCellID : public crap {
 public:
 
   RootPCellID(){    
-    for(int j=0;j<5;j++) base[j]=0;
+     for(int j=0;j<5;j++) base[j]=0;
   }
- 
+  RootPCellID(const RootPCellID&orig) {
+     for(int j=0;j<5;j++) base[j]=orig.base[j];     
+     id = orig.id;
+  }
   RootPCellID(const std::string & b, unsigned int i):id(i) {
     for(int j=0;j<4;j++) base[j]=b[j];
     base[4]= 0;

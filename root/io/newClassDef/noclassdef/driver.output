@@ -64,6 +64,10 @@ virt 	44
 base 	f i x 1 
 id 	1
 fix 	33
+base 	v a r r 
+id 	3
+base 	v a r r 
+id 	4
 base 	o b j 1 
 id 	8
 obj 	101
@@ -122,7 +126,8 @@ itra                          2
 mycell.id                     3           
 mycell.base[5]                test        
 index                         2           
-*myArrVar                     ->0         ! WAITING on Vicktor's implementation [index]
+*myArrVar                     ->0         ![index]  WAITING on Vicktor's implementation [index]
+*objVarArr                    ->0         ![index]  Not implemented yet ... will it ever?
 *mycellnull                   ->0         
 myobj.obj                     101         
 myobj.id                      8           
@@ -278,6 +283,10 @@ virt 	44
 base 	f i x 1 
 id 	1
 fix 	33
+base 	v a r r 
+id 	3
+base 	v a r r 
+id 	4
 base 	o b j 1 
 id 	8
 obj 	101
@@ -336,7 +345,8 @@ itra                          2
 mycell.id                     3           
 mycell.base[5]                test        
 index                         2           
-*myArrVar                     ->0         ! WAITING on Vicktor's implementation [index]
+*myArrVar                     ->0         ![index]  WAITING on Vicktor's implementation [index]
+*objVarArr                    ->0         ![index]  Not implemented yet ... will it ever?
 *mycellnull                   ->0         
 myobj.obj                     101         
 myobj.id                      8           
