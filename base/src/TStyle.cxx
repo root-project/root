@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.28 2003/03/07 10:18:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.29 2003/03/18 20:25:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -899,6 +899,9 @@ void TStyle::SetOptStat(Int_t mode)
 //           gStyle->SetOptStat(1101);  displays the name of histogram, mean value and RMS.
 //  WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
 //          be taken as an octal number !!
+//  NOTE that in case of 2-D histograms, when selecting just underflow (10000)
+//        or overflow (100000), the stats box will show all combinations
+//        of underflow/overflows and not just one single number!
 //
    fOptStat = mode;
    if (gPad) {

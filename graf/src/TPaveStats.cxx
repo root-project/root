@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.14 2002/09/06 09:03:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.15 2003/03/07 10:18:21 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -49,6 +49,12 @@ ClassImp(TPaveStats)
 //  Example: gStyle->SetOptFit(1011);
 //        or this->SetOptFit(1011);
 //           print fit probability, parameter names/values and errors.
+//
+//  WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
+//          be taken as an octal number !!
+//  NOTE that in case of 2-D histograms, when selecting just underflow (10000)
+//        or overflow (100000), the stats box will show all combinations
+//        of underflow/overflows and not just one single number!
 //
 
 const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
