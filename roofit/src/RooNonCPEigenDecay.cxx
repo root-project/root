@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.1 2002/03/10 21:36:32 stark Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -38,8 +38,8 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 					RooAbsCategory& tag,
 					RooAbsReal&     tau, 
 					RooAbsReal&     dm,
-					RooAbsReal&     avgDil, 
-					RooAbsReal&     delDil, 
+					RooAbsReal&     avgW, 
+					RooAbsReal&     delW, 
 					RooAbsCategory& rhoQ, 
 					RooAbsReal&     correctQ,
 					RooAbsReal&     acp,
@@ -57,8 +57,8 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   _a_cos_m  ( "a_cos_m",  "a-(cos)",            this, a_cos_m  ),
   _a_sin_p  ( "a_sin_p",  "a+(sin)",            this, a_sin_p  ),
   _a_sin_m  ( "a_sin_m",  "a-(sin)",            this, a_sin_m  ),
-  _avgDil   ( "avgDil",   "Average dilution",   this, avgDil   ),
-  _delDil   ( "delDil",   "Shift in dilution",  this, delDil   ),
+  _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
+  _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
   _tag      ( "tag",      "CP state",           this, tag      ),
   _tau      ( "tau",      "decay time",         this, tau      ),
   _dm       ( "dm",       "mixing frequency",   this, dm       ),
@@ -97,8 +97,8 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const c
   _a_cos_m  ( "a_cos_m",  this, other._a_cos_m  ),
   _a_sin_p  ( "a_sin_p",  this, other._a_sin_p  ),
   _a_sin_m  ( "a_sin_m",  this, other._a_sin_m  ),
-  _avgDil   ( "avgDil",   this, other._avgDil   ),
-  _delDil   ( "delDil",   this, other._delDil   ),
+  _avgW     ( "avgW",     this, other._avgW     ),
+  _delW     ( "delW",     this, other._delW     ),
   _tag      ( "tag",      this, other._tag      ),
   _tau      ( "tau",      this, other._tau      ),
   _dm       ( "dm",       this, other._dm       ),
@@ -131,7 +131,7 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 
   if (basisIndex == _basisExp) {
     if (rhoQc == -1 || rhoQc == +1) 
-      return (1.0 + rhoQc*_acp)*(1 + 0.5*_tag*_delDil);
+      return (1.0 + rhoQc*_acp)*(1 + 0.5*_tag*(-2.*_delW));
     else
       return 1.0;
   }
@@ -139,21 +139,21 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
   if (basisIndex == _basisSin) {
     
     if (rhoQc == -1) 
-      return + (1.0 - _acp) * (_a_sin_m * _avgDil)*_tag;
+      return + (1.0 - _acp) * (_a_sin_m * (1.-2.*_avgW))*_tag;
     else if (rhoQc == +1)
-      return + (1.0 + _acp) * (_a_sin_p * _avgDil)*_tag;
+      return + (1.0 + _acp) * (_a_sin_p * (1.-2.*_avgW))*_tag;
     else 
-       return _tag * ((_a_sin_p + _a_sin_m)/2) * _avgDil;
+       return _tag * ((_a_sin_p + _a_sin_m)/2) * (1.-2.*_avgW);
   }
 
   if (basisIndex == _basisCos) {
     
     if ( rhoQc == -1) 
-      return - (1.0 - _acp) * (_a_cos_m * _avgDil)*_tag;
+      return - (1.0 - _acp) * (_a_cos_m * (1.-2.*_avgW))*_tag;
     else if (rhoQc == +1)
-      return - (1.0 + _acp) * (_a_cos_p * _avgDil)*_tag;
+      return - (1.0 + _acp) * (_a_cos_p * (1.-2.*_avgW))*_tag;
     else 
-      return -_tag * ((_a_cos_p + _a_cos_m)/2) * _avgDil;
+      return -_tag * ((_a_cos_p + _a_cos_m)/2) * (1.-2.*_avgW);
   }
 
   return 0;
@@ -189,11 +189,11 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 
     // Integration over 'rhoQ'
   case 2:
-    if (basisIndex == _basisExp) return 2*(1 + 0.5*_tag*_delDil);
+    if (basisIndex == _basisExp) return 2*(1 + 0.5*_tag*(-2.*_delW));
     if (basisIndex == _basisSin)
-      return + ( (1.0 - _acp)*_a_sin_m + (1.0 + _acp)*_a_sin_p )*_avgDil*_tag; 
+      return + ( (1.0 - _acp)*_a_sin_m + (1.0 + _acp)*_a_sin_p )*(1.-2.*_avgW)*_tag; 
     if (basisIndex == _basisCos)
-      return - ( (1.0 - _acp)*_a_cos_m + (1.0 + _acp)*_a_cos_p )*_avgDil*_tag; 
+      return - ( (1.0 - _acp)*_a_cos_m + (1.0 + _acp)*_a_cos_p )*(1.-2.*_avgW)*_tag; 
     assert( kFALSE );
 
     // Integration over 'tag' and 'rhoQ'
@@ -236,7 +236,7 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
     if (Debug_RooNonCPEigenDecay == 1) 
       cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : " 
 	   << _genB0Frac 
-	   << ", tag dilution: " << _avgDil
+	   << ", tag dilution: " << (1.-2.*_avgW)
 	   << endl;
   }  
 
@@ -296,11 +296,11 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     }
 
     // accept event if T is in generated range
-    Double_t basisC  = (1.0 + rhoQc*_acp)*(1 + 0.5*_delDil);
-    Double_t sineC   = (rhoQc == -1) ? + (1.0 - _acp) * (_a_sin_m*_avgDil)*_tag :
-                                       + (1.0 + _acp) * (_a_sin_p*_avgDil)*_tag;
-    Double_t cosineC = (rhoQc == -1) ? - (1.0 - _acp) * (_a_cos_m*_avgDil)*_tag :
-                                       - (1.0 + _acp) * (_a_cos_p*_avgDil)*_tag;
+    Double_t basisC  = (1.0 + rhoQc*_acp)*(1 + 0.5*(-2.*_delW));
+    Double_t sineC   = (rhoQc == -1) ? + (1.0 - _acp) * (_a_sin_m*(1.-2.*_avgW))*_tag :
+                                       + (1.0 + _acp) * (_a_sin_p*(1.-2.*_avgW))*_tag;
+    Double_t cosineC = (rhoQc == -1) ? - (1.0 - _acp) * (_a_cos_m*(1.-2.*_avgW))*_tag :
+                                       - (1.0 + _acp) * (_a_cos_p*(1.-2.*_avgW))*_tag;
 
     // maximum probability density
     Double_t maxAcceptProb = basisC + fabs(sineC) + fabs(cosineC);
