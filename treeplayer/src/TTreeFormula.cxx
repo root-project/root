@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.24 2001/02/09 17:18:55 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.25 2001/02/21 07:28:30 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -290,7 +290,8 @@ static TLeaf* FindLeaf(const TObjArray * list, const char* searchname) {
          // This is the less sturdy part of this search ... it may
          // need refining ... 
          if (strstr(searchname,".")
-             && !strcmp(searchname,branch->GetName())) return leaf;            }
+             && !strcmp(searchname,branch->GetName())) return leaf;            
+      }
    }
    return 0;
 }
