@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.18 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.19 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -515,13 +515,14 @@ TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 void TGeoPara::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoPara parameters ***\n");
+   printf("*** Shape %s: TGeoPara ***\n", GetName());
    printf("    dX = %11.5f\n", fX);
    printf("    dY = %11.5f\n", fY);
    printf("    dZ = %11.5f\n", fZ);
    printf("    alpha = %11.5f\n", fAlpha);
    printf("    theta = %11.5f\n", fTheta);
    printf("    phi   = %11.5f\n", fPhi);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

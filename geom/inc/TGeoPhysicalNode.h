@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.1 2004/02/19 15:00:40 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -58,12 +58,13 @@ public:
    // destructor
    virtual ~TGeoPhysicalNode();
 
-   void              Align(TGeoMatrix *newmat=0, TGeoShape *newshape=0);
+   void              Align(TGeoMatrix *newmat=0, TGeoShape *newshape=0, Bool_t check=kFALSE);
    void              cd() const;
    void              Draw(Option_t *option="");
    Int_t             GetLevel() const {return fLevel;}
    TGeoHMatrix      *GetMatrix(Int_t level=-1) const;
    TGeoNode         *GetMother(Int_t levup=1) const;
+   const char       *GetName() const;
    TGeoNode         *GetNode(Int_t level=-1) const;
    TGeoShape        *GetShape(Int_t level=-1) const;
    TGeoVolume       *GetVolume(Int_t level=-1) const;

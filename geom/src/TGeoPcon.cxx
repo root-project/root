@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.24 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.25 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -622,7 +622,7 @@ void TGeoPcon::GetBoundingCylinder(Double_t *param) const
 Double_t TGeoPcon::GetRmin(Int_t ipl) const
 {
    if (ipl<0 || ipl>(fNz-1)) {
-      Error("GetRmin","ipl=%i out of range (0,%i)",ipl,0,fNz-1);
+      Error("GetRmin","ipl=%i out of range (0,%i) in shape %s",ipl,fNz-1,GetName());
       return 0.;
    }
    return fRmin[ipl];
@@ -632,7 +632,7 @@ Double_t TGeoPcon::GetRmin(Int_t ipl) const
 Double_t TGeoPcon::GetRmax(Int_t ipl) const
 {
    if (ipl<0 || ipl>(fNz-1)) {
-      Error("GetRmax","ipl=%i out of range (0,%i)",ipl,0,fNz-1);
+      Error("GetRmax","ipl=%i out of range (0,%i) in shape %s",ipl,fNz-1,GetName());
       return 0.;
    }
    return fRmax[ipl];
@@ -642,7 +642,7 @@ Double_t TGeoPcon::GetRmax(Int_t ipl) const
 Double_t TGeoPcon::GetZ(Int_t ipl) const
 {
    if (ipl<0 || ipl>(fNz-1)) {
-      Error("GetZ","ipl=%i out of range (0,%i)",ipl,0,fNz-1);
+      Error("GetZ","ipl=%i out of range (0,%i) in shape %s",ipl,fNz-1,GetName());
       return 0.;
    }
    return fZ[ipl];
@@ -652,12 +652,13 @@ Double_t TGeoPcon::GetZ(Int_t ipl) const
 void TGeoPcon::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoPcon parameters ***\n");
+   printf("*** Shape %s: TGeoPcon ***\n", GetName());
    printf("    Nz    = %i\n", fNz);
    printf("    phi1  = %11.5f\n", fPhi1);
    printf("    dphi  = %11.5f\n", fDphi);
    for (Int_t ipl=0; ipl<fNz; ipl++)
       printf("     plane %i: z=%11.5f Rmin=%11.5f Rmax=%11.5f\n", ipl, fZ[ipl], fRmin[ipl], fRmax[ipl]);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

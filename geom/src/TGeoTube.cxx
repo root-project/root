@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.32 2004/02/10 08:56:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.33 2004/03/15 12:23:17 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -561,10 +561,11 @@ TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 void TGeoTube::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoTube parameters ***\n");
+   printf("*** Shape %s: TGeoTube ***\n", GetName());
    printf("    Rmin = %11.5f\n", fRmin);
    printf("    Rmax = %11.5f\n", fRmax);
    printf("    dz   = %11.5f\n", fDz);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 
@@ -1311,12 +1312,13 @@ TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
 void TGeoTubeSeg::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoTubeSeg parameters ***\n");
+   printf("*** Shape %s: TGeoTubeSeg ***\n", GetName());
    printf("    Rmin = %11.5f\n", fRmin);
    printf("    Rmax = %11.5f\n", fRmax);
    printf("    dz   = %11.5f\n", fDz);
    printf("    phi1 = %11.5f\n", fPhi1);
    printf("    phi2 = %11.5f\n", fPhi2);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 
@@ -2068,7 +2070,7 @@ TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 void TGeoCtub::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoCtub parameters ***\n");
+   printf("*** Shape %s: TGeoCtub ***\n", GetName());
    printf("    lx = %11.5f\n", fNlow[0]);
    printf("    ly = %11.5f\n", fNlow[1]);
    printf("    lz = %11.5f\n", fNlow[2]);

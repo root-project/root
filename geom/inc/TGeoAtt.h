@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.3 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.4 2003/08/29 09:55:29 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -65,6 +65,7 @@ public:
    virtual ~TGeoAtt();
    // methods
    void                SetBit(UInt_t f)   {fGeoAtt |= f & kBitMask;}
+   void                SetBit(UInt_t f, Bool_t set) {(set)?SetBit(f):ResetBit(f);};
    void                ResetBit(UInt_t f) {fGeoAtt &= ~(f & kBitMask);}
    Bool_t              TestBit(UInt_t f) const {return (Bool_t)((fGeoAtt & f) != 0);}
 
@@ -72,13 +73,18 @@ public:
    void                SetVisDaughters(Bool_t vis=kTRUE);
    void                SetVisStreamed(Bool_t vis=kTRUE);
    void                SetVisTouched(Bool_t vis=kTRUE);
-   virtual void        SetActivity(Option_t *option);
-   virtual void        SetOptimization(Option_t *option);
+   void                SetActivity(Bool_t flag=kTRUE) {SetBit(kActThis, flag);}
+   void                SetActiveDaughters(Bool_t flag=kTRUE) {SetBit(kActDaughters,flag);}
+   
+   void                SetOptimization(Option_t *option);
 
-   virtual Bool_t      IsVisible() const {return TestBit(kVisThis);}
-   virtual Bool_t      IsVisDaughters() const {return TestBit(kVisDaughters);}
-   virtual Bool_t      IsVisStreamed() const {return TestBit(kVisStreamed);}
-   virtual Bool_t      IsVisTouched() const {return TestBit(kVisTouched);}
+   
+   Bool_t              IsActive() const {return TestBit(kActThis);}
+   Bool_t              IsActiveDaughters() const {return TestBit(kActDaughters);}
+   Bool_t              IsVisible() const {return TestBit(kVisThis);}
+   Bool_t              IsVisDaughters() const {return TestBit(kVisDaughters);}
+   Bool_t              IsVisStreamed() const {return TestBit(kVisStreamed);}
+   Bool_t              IsVisTouched() const {return TestBit(kVisTouched);}
 //   EGeoVisibilityAtt   GetVisAttributes();
 //   EGeoActivityAtt     GetActivityAtt();
 //   EGeoOptimizationAtt GetOptimizationAtt();

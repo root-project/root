@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.77 2004/03/05 11:53:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.78 2004/03/15 12:11:51 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2155,6 +2155,15 @@ void TGeoManager::SetVisOption(Int_t option) {
    if ((option>=0) && (option<3)) fVisOption=option;
    fPainter->SetVisOption(option);
 }
+
+//_____________________________________________________________________________
+void TGeoManager::ViewLeaves(Bool_t flag)
+{
+// Set visualization option (leaves only OR all volumes)
+   if (flag) SetVisOption(1);
+   else      SetVisOption(0);
+}
+
 //_____________________________________________________________________________
 void TGeoManager::SetVisLevel(Int_t level) {
 // set default level down to which visualization is performed

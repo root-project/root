@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.3 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.4 2003/01/20 10:25:57 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -76,11 +76,6 @@ void TGeoAtt::SetVisTouched(Bool_t vis)
 // set visibility for this object
    if (vis)  SetBit(kVisTouched);
    else      ResetBit(kVisTouched);
-}
-//-----------------------------------------------------------------------------
-void TGeoAtt::SetActivity(Option_t * /*option*/)
-{
-// set activity flags 
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetOptimization(Option_t * /*option*/)

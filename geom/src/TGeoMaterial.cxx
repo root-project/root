@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.8 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.9 2004/01/29 11:59:11 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -34,26 +34,29 @@ ClassImp(TGeoMaterial)
 TGeoMaterial::TGeoMaterial()
 {
 // Default constructor
-   fIndex   = -1;
-   fShader  = 0;
-   fA       = 0;
-   fZ       = 0;
-   fDensity = 0;
-   fRadLen  = 0;
-   fIntLen  = 0;       
+   fIndex    = -1;
+   fShader   = 0;
+   fA        = 0;
+   fZ        = 0;
+   fDensity  = 0;
+   fRadLen   = 0;
+   fIntLen   = 0;       
+   fCerenkov = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoMaterial::TGeoMaterial(const char *name)
              :TNamed(name, "")
 {
 // constructor
-   fIndex   = -1;
-   fShader  = 0;
-   fA       = 0;
-   fZ       = 0;
-   fDensity = 0;
-   fRadLen  = 0;
-   fIntLen  = 0;       
+   fIndex    = -1;
+   fShader   = 0;
+   fA        = 0;
+   fZ        = 0;
+   fDensity  = 0;
+   fRadLen   = 0;
+   fIntLen   = 0;
+   fCerenkov = 0;
+   
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
    }
@@ -65,12 +68,14 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
              :TNamed(name, "")
 {
 // constructor
-   fShader  = 0;
-   fIndex   = -1;
-   fA       = a;
-   fZ       = z;
-   fDensity = rho;
-   fRadLen  = radlen;
+   fShader   = 0;
+   fIndex    = -1;
+   fA        = a;
+   fZ        = z;
+   fDensity  = rho;
+   fRadLen   = radlen;
+   fCerenkov = 0;
+   
    if (a > 0 && fRadLen <= 0) {
       //taken grom Geant3 routine GSMATE
       const Double_t ALR2AV=1.39621E-03, AL183=5.20948;
@@ -118,6 +123,7 @@ Bool_t TGeoMaterial::IsEq(const TGeoMaterial *other) const
    if (TMath::Abs(fA-other->GetA())>1E-3) return kFALSE;
    if (TMath::Abs(fZ-other->GetZ())>1E-3) return kFALSE;
    if (TMath::Abs(fDensity-other->GetDensity())>1E-6) return kFALSE;
+   if (GetCerenkovProperties() != other->GetCerenkovProperties()) return kFALSE;
 //   if (fRadLen != other->GetRadLen()) return kFALSE;
 //   if (fIntLen != other->GetIntLen()) return kFALSE;
    return kTRUE;
@@ -234,6 +240,7 @@ Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
    if (TMath::Abs(fA-other->GetA())>1E-3) return kFALSE;
    if (TMath::Abs(fZ-other->GetZ())>1E-3) return kFALSE;
    if (TMath::Abs(fDensity-other->GetDensity())>1E-6) return kFALSE;
+   if (GetCerenkovProperties() != other->GetCerenkovProperties()) return kFALSE;
 //   if (fRadLen != other->GetRadLen()) return kFALSE;
 //   if (fIntLen != other->GetIntLen()) return kFALSE;
    for (Int_t i=0; i<fNelements; i++) {

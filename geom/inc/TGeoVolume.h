@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.30 2003/10/20 08:46:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.31 2004/01/18 12:31:54 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -79,7 +79,8 @@ public:
       kVolumeImportNodes = BIT(18),
       kVolumeMulti   =     BIT(19),
       kVoxelsXYZ     =     BIT(20),
-      kVoxelsCyl     =     BIT(21)
+      kVoxelsCyl     =     BIT(21),
+      kVolumeClone   =     BIT(22)
    };
    // constructors
    TGeoVolume();
@@ -94,6 +95,7 @@ public:
    void            ClearNodes() {fNodes = 0;}
    void            ClearShape();
    void            CleanAll();
+   TGeoVolume     *CloneVolume() const;
    void            CheckGeometry(Int_t nrays=1, Double_t startx=0, Double_t starty=0, Double_t startz=0) const;
    void            CheckOverlaps(Double_t ovlp=0.1, Option_t *option="") const; // *MENU*
    Int_t           CountNodes(Int_t nlevels=1000);
@@ -120,8 +122,12 @@ public:
 
    Bool_t          IsCylVoxels() const {return TObject::TestBit(kVoxelsCyl);}
    Bool_t          IsXYZVoxels() const {return TObject::TestBit(kVoxelsXYZ);}
+   Bool_t          IsTopVolume() const;
    Bool_t          IsValid() const {return fShape->IsValid();}
    Bool_t          IsVisible() const {return TGeoAtt::IsVisible();}
+   Bool_t          IsVisibleDaughters() const {return TGeoAtt::IsVisDaughters();}
+   Bool_t          IsAllInvisible() const {return ((!IsVisible()) & (!IsVisibleDaughters()));}
+   Bool_t          IsRaytracing() const;
    TGeoNode       *FindNode(const char *name) const;
    void            FindOverlaps() const;
    Bool_t          FindMatrixOfDaughterVolume(TGeoVolume *vol) const;
@@ -154,28 +160,29 @@ public:
    Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
-   void            Raytrace(Option_t *option=""); // *MENU*
-   void            SetAsTopVolume(); // *MENU*
-   void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);// *MENU*
+   void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
+   void            SetAsTopVolume(); // *TOGGLE* *GETTER=IsTopVolume
+   void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);
    void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}
    void            SetNodes(TObjArray *nodes) {fNodes = nodes; TObject::SetBit(kVolumeImportNodes);}
    void            SetShape(const TGeoShape *shape);
    void            SetField(const TObject *field)          {fField = (TObject*)field;}
    void            SetOption(const char *option);
-   virtual void    SetVisibility(Bool_t vis=kTRUE); // *MENU*
+   virtual void    SetVisibility(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisible
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
-   void            SetInvisible() {SetVisibility(kFALSE);} // *MENU*
+   void            SetInvisible() {SetVisibility(kFALSE);}
    virtual void    SetMedium(const TGeoMedium *medium) {fMedium = (TGeoMedium*)medium;}
    void            SetVoxelFinder(const TGeoVoxelFinder *finder) {fVoxels=(TGeoVoxelFinder*)finder;}
    void            SetFinder(const TGeoPatternFinder *finder) {fFinder=(TGeoPatternFinder*)finder;}
    void            SetNumber(Int_t number) {fNumber = number;}
+   void            SetNtotal(Int_t ntotal) {fNtotal = ntotal;}
    virtual void    Sizeof3D() const;
    void            SortNodes();
    Bool_t          Valid() const;
-   void            VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
-   void            InvisibleAll() {SetInvisible(); VisibleDaughters(kFALSE);} // *MENU*
+   void            VisibleDaughters(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisibleDaughters
+   void            InvisibleAll(Bool_t flag=kTRUE) {SetVisibility(!flag); VisibleDaughters(!flag);} // *TOGGLE* *GETTER=IsAllInvisible
    void            Voxelize(Option_t *option);
    Double_t        Weight(Double_t precision=0.01, Option_t *option="v"); // *MENU*
 

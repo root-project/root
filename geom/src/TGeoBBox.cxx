@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.24 2003/12/11 10:34:33 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.25 2004/02/10 06:58:19 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -418,7 +418,7 @@ TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) con
 void TGeoBBox::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoBBox parameters ***\n");
+   printf("*** Shape %s: TGeoBBox ***\n", GetName());
    printf("    dX = %11.5f\n", fDX);
    printf("    dY = %11.5f\n", fDY);
    printf("    dZ = %11.5f\n", fDZ);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.32 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.33 2003/12/30 21:44:41 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1070,7 +1070,7 @@ void TGeoPgon::GetBoundingCylinder(Double_t *param) const
 //_____________________________________________________________________________
 void TGeoPgon::InspectShape() const
 {
-   printf("*** TGeoPgon parameters ***\n");
+   printf("*** Shape %s: TGeoPgon ***\n", GetName());
    printf("    Nedges = %i\n", fNedges);
    TGeoPcon::InspectShape();
 }

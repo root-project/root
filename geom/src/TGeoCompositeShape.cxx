@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.16 2003/09/23 10:33:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.17 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -171,9 +171,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
    fNode  = 0;
    MakeNode(expression);
    if (!fNode) {
-      char message[256];
-      sprintf(message, "could not parse expression %s", expression);
-      Error("ctor", message);
+      Error("ctor", "cannot parse expression: %s", expression);
       return;
    }
    ComputeBBox();
@@ -257,6 +255,7 @@ void TGeoCompositeShape::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoCompositeShape : %s = %s\n", GetName(), GetTitle());
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

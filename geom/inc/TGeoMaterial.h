@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.7 2003/02/17 11:57:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.8 2003/07/31 20:19:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -51,6 +51,8 @@ protected:
    Double_t                 fRadLen;     // radiation length
    Double_t                 fIntLen;     // interaction length
    TObject                 *fShader;     // shader with optical properties
+   TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
+
 // methods
 
 public:
@@ -71,12 +73,15 @@ public:
    virtual Double_t         GetRadLen() const  {return fRadLen;}
    virtual Double_t         GetIntLen() const  {return fIntLen;}
    Int_t                    GetIndex();
+   virtual TObject         *GetCerenkovProperties() const {return fCerenkov;}
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    virtual Bool_t           IsMixture() const {return kFALSE;}
    virtual void             Print(const Option_t *option="") const;
    void                     SetIndex(Int_t index) {fIndex=index;}
+   virtual void             SetCerenkovProperties(TObject* cerenkov) {fCerenkov = cerenkov;}
    static  Double_t         ScreenFactor(Double_t z);
 
+   
 
   ClassDef(TGeoMaterial, 3)              // base material class
 

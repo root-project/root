@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.1 2004/02/09 14:03:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.2 2004/03/15 12:11:51 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -512,13 +512,14 @@ Bool_t TGeoXtru::IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *n
 void TGeoXtru::InspectShape() const
 {
 // Print actual Xtru parameters.
-   printf("*** TGeoXtru parameters ***\n");
+   printf("*** Shape %s: TGeoXtru ***\n", GetName());
    printf("    Nz    = %i\n", fNz);
    printf("    List of (x,y) of polygon vertices:\n");
    for (Int_t ivert = 0; ivert<fNvert; ivert++)
       printf("    x = %11.5f  y = %11.5f\n", fX[ivert],fY[ivert]);
    for (Int_t ipl=0; ipl<fNz; ipl++)
       printf("     plane %i: z=%11.5f x0=%11.5f y0=%11.5f scale=%11.5f\n", ipl, fZ[ipl], fX0[ipl], fY0[ipl], fScale[ipl]);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

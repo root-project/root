@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.21 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.22 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -769,13 +769,14 @@ void TGeoSphere::GetBoundingCylinder(Double_t *param) const
 void TGeoSphere::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoSphere parameters ***\n");
+   printf("*** Shape %s: TGeoSphere ***\n", GetName());
    printf("    Rmin = %11.5f\n", fRmin);
    printf("    Rmax = %11.5f\n", fRmax);
    printf("    Th1  = %11.5f\n", fTheta1);
    printf("    Th2  = %11.5f\n", fTheta2);
    printf("    Ph1  = %11.5f\n", fPhi1);
    printf("    Ph2  = %11.5f\n", fPhi2);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.1 2004/02/19 15:00:41 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -67,9 +67,74 @@ TGeoPhysicalNode::~TGeoPhysicalNode()
 }
 
 //_____________________________________________________________________________
-void TGeoPhysicalNode::Align(TGeoMatrix * /*newmat*/, TGeoShape * /*newshape*/)
+void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t check)
 {
-   Warning("Align","Not yet implemenetd");
+   // Align a physical node with a new relative matrix/shape.
+   // Example: /TOP_1/A_1/B_1/C_1
+   //    node->Align(transl_1, box) will perform:
+   //    - change RELATIVE translation of C_1 node (with respect to its
+   //      container volume B) to transl_1
+   //    - change the shape of the C volume
+   // *NOTE* The operations will affect ONLY the LAST node in the branch. All
+   //   volumes/nodes in the branch represented by this physical node are
+   //   CLONED so the operation does not affect other possible replicas.
+   printf("Aligning %s\n", GetName());
+   if (!newmat && !newshape) return;
+   TGeoNode *node = GetNode();
+   if (node->IsOffset()) {
+      Error("Align", "Cannot align division nodes: %s\n",node->GetName());
+      return;
+   }   
+   TGeoNode *nnode = 0;
+   TGeoVolume *vm = GetVolume(0);
+   TGeoVolume *vd = 0;   
+   Int_t i,id;
+   for (i=0; i<fLevel; i++) {
+      // Get daughter node and its id inside vm
+      node = GetNode(i+1);
+      id = vm->GetIndex(node);
+      if (id < 0) {
+         Error("Align","cannot align node %s",GetNode(i+1)->GetName());
+         return;
+      }
+      // Clone daughter volume and node
+      vd = node->GetVolume()->CloneVolume();
+      printf("Volume %s cloned\n", vd->GetName());
+      nnode = node->MakeCopyNode();
+      printf("  daughter node %s cloned\n", nnode->GetName());
+      // Correct pointers to mother and volume
+      nnode->SetVolume(vd);
+      nnode->SetMotherVolume(vm);
+      // Decouple old node from mother volume and connect new one
+      vm->GetNodes()->RemoveAt(id);
+      vm->GetNodes()->AddAt(nnode,id);
+      fNodes->RemoveAt(i+1);
+      fNodes->AddAt(nnode,i+1);
+      // Consider new cloned volume as mother and continue
+      vm = vd;
+   }   
+   // Now nnode is a cloned node of the one that need to be aligned
+   TGeoNodeMatrix *aligned = (TGeoNodeMatrix*)nnode;
+   vm = nnode->GetMotherVolume();
+   vd = nnode->GetVolume();
+   if (newmat) {
+      // Register matrix and make it the active one
+      if (!newmat->IsRegistered()) newmat->RegisterYourself();    
+      aligned->SetMatrix(newmat);
+      // Update the global matrix for the aligned node
+      TGeoHMatrix *global = GetMatrix();
+      TGeoHMatrix *up = GetMatrix(fLevel-1);
+      *global = up;
+      global->Multiply(newmat);
+   }
+   // Change the shape for the aligned node
+   if (newshape) vd->SetShape(newshape);
+   // Now we have to re-voxelize the mother volume
+   vm->SetVoxelFinder(0);
+   vm->Voxelize("ALL");
+   vm->FindOverlaps(); 
+   // Eventually check for overlaps
+   if (check) vm->CheckOverlaps();
 }   
 
 //_____________________________________________________________________________
@@ -100,6 +165,19 @@ TGeoHMatrix *TGeoPhysicalNode::GetMatrix(Int_t level) const
    if (level<0) return (TGeoHMatrix*)fMatrices->UncheckedAt(fLevel);
    if (level>fLevel) return 0;
    return (TGeoHMatrix*)fMatrices->UncheckedAt(level);
+}
+
+//_____________________________________________________________________________
+const char *TGeoPhysicalNode::GetName() const
+{
+// Retreive the name of this physical node
+   static TString name;
+   name = "";
+   for (Int_t level=0;level<fLevel+1; level++) {
+      name += "/";
+      name += GetNode(level)->GetName();
+   }    
+   return name.Data();  
 }
 
 //_____________________________________________________________________________

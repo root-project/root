@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.14 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.15 2003/12/11 10:34:33 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -318,10 +318,11 @@ TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 void TGeoEltu::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoEltu parameters ***\n");
+   printf("*** Shape %s: TGeoEltu ***\n", GetName());
    printf("    A    = %11.5f\n", fRmin);
    printf("    B    = %11.5f\n", fRmax);
    printf("    dz   = %11.5f\n", fDz);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

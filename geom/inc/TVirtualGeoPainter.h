@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.23 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.24 2004/02/09 14:03:34 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -92,6 +92,7 @@ public:
    virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;
    virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0) =0;
    virtual Double_t  *GetViewBox() = 0;
+   virtual Bool_t     IsRaytracing() const = 0;
    virtual Bool_t     IsExplodedView() const = 0;
    virtual TH2F      *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,

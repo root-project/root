@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.22 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.23 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -552,12 +552,13 @@ TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 void TGeoTrd2::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoTrd2 parameters ***\n");
+   printf("*** Shape %s: TGeoTrd2 ***\n", GetName());
    printf("    dx1 = %11.5f\n", fDx1);
    printf("    dx2 = %11.5f\n", fDx2);
    printf("    dy1 = %11.5f\n", fDy1);
    printf("    dy2 = %11.5f\n", fDy2);
    printf("    dz  = %11.5f\n", fDz);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

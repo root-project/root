@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.25 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.26 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -591,12 +591,13 @@ TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 void TGeoCone::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoCone parameters ***\n");
-   printf("    dz    = %11.5f\n", fDz);
+   printf("*** Shape %s TGeoCone ***\n", GetName());
+   printf("    dz    =: %11.5f\n", fDz);
    printf("    Rmin1 = %11.5f\n", fRmin1);
    printf("    Rmax1 = %11.5f\n", fRmax1);
    printf("    Rmin2 = %11.5f\n", fRmin2);
    printf("    Rmax2 = %11.5f\n", fRmax2);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 
@@ -1494,7 +1495,7 @@ TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
 void TGeoConeSeg::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoConeSeg parameters ***\n");
+   printf("*** Shape %s: TGeoConeSeg ***\n", GetName());
    printf("    dz    = %11.5f\n", fDz);
    printf("    Rmin1 = %11.5f\n", fRmin1);
    printf("    Rmax1 = %11.5f\n", fRmax1);
@@ -1502,6 +1503,7 @@ void TGeoConeSeg::InspectShape() const
    printf("    Rmax2 = %11.5f\n", fRmax2);
    printf("    phi1  = %11.5f\n", fPhi1);
    printf("    phi2  = %11.5f\n", fPhi2);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.46 2004/02/19 12:58:29 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.47 2004/03/05 11:53:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -177,6 +177,7 @@ public:
    Int_t                  GetVisOption() const;
    Bool_t                 IsInPhiRange() const;
    Bool_t                 IsDrawingExtra() const {return fDrawExtra;}
+   Bool_t                 IsVisLeaves() const {return (fVisOption==1)?kTRUE:kFALSE;}
    void                   ModifiedPad() const;
    void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
    void                   SetClipping(Bool_t flag=kTRUE) {SetClippingShape(((flag)?fClippingShape:0));} // *MENU*
@@ -189,7 +190,8 @@ public:
    void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
    void                   SetDrawExtraPaths(Bool_t flag=kTRUE) {fDrawExtra=flag;}
    void                   SetVisLevel(Int_t level=3);   // *MENU*
-   void                   SetVisOption(Int_t option=0); // *MENU*
+   void                   SetVisOption(Int_t option=0);
+   void                   ViewLeaves(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsVisLeaves
    void                   SaveAttributes(const char *filename="tgeoatt.C"); // *MENU*
    void                   RestoreMasterVolume(); // *MENU*
 

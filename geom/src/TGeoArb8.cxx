@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.31 2004/01/18 16:33:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.32 2004/01/19 13:45:04 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -600,11 +600,12 @@ Int_t TGeoArb8::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
 void TGeoArb8::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoArb8 parameters ***\n");
+   printf("*** Shape %s: TGeoArb8 ***\n", GetName());
    for (Int_t ip=0; ip<8; ip++) {
       printf("    point #%i : x=%11.5f y=%11.5f z=%11.5f\n", 
              ip, fXY[ip][0], fXY[ip][1], fDz*((ip<4)?-1:1));
    }
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 

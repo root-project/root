@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.8 2003/10/20 08:46:33 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.9 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -631,7 +631,7 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
    sort[3] = xmax2;
    TMath::Sort(4, &sort[0], &isort[0], kFALSE);
    if (isort[1]%2) {
-      Warning("ComputeBBox", "shapes does not intersect");
+      Warning("ComputeBBox", "shapes %s and %s do not intersect", fLeft->GetName(), fRight->GetName());
       dx = dy = dz = 0;
       memset(origin, 0, 3*sizeof(Double_t));
       return;
@@ -644,7 +644,7 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
    sort[3] = ymax2;
    TMath::Sort(4, &sort[0], &isort[0], kFALSE);
    if (isort[1]%2) {
-      Warning("ComputeBBox", "shapes does not intersect");
+      Warning("ComputeBBox", "shapes %s and %s do not intersect", fLeft->GetName(), fRight->GetName());
       dx = dy = dz = 0;
       memset(origin, 0, 3*sizeof(Double_t));
       return;
@@ -657,7 +657,7 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
    sort[3] = zmax2;
    TMath::Sort(4, &sort[0], &isort[0], kFALSE);
    if (isort[1]%2) {
-      Warning("ComputeBBox", "shapes does not intersect");
+      Warning("ComputeBBox", "shapes %s and %s do not intersect", fLeft->GetName(), fRight->GetName());
       dx = dy = dz = 0;
       memset(origin, 0, 3*sizeof(Double_t));
       return;

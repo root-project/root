@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.40 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.41 2004/01/20 15:44:33 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -388,14 +388,15 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
 TGeoVolume::~TGeoVolume()
 {
 // Destructor
+   
    if (fNodes) { 
       if (!TObject::TestBit(kVolumeImportNodes)) {
          fNodes->Delete();
       }   
       delete fNodes;
    }
-   if (fFinder && !TObject::TestBit(kVolumeImportNodes)) delete fFinder;
-   if (fVoxels) delete fVoxels;
+   if (fFinder && !TObject::TestBit(kVolumeImportNodes) ) delete fFinder;
+   if (fVoxels && !TObject::TestBit(kVolumeClone)) delete fVoxels;
 }
 
 //_____________________________________________________________________________
@@ -565,6 +566,20 @@ Bool_t TGeoVolume::IsStyleDefault() const
    if (GetLineStyle() != gStyle->GetLineStyle()) return kFALSE;
    if (GetLineWidth() != gStyle->GetLineWidth()) return kFALSE;
    return kTRUE;
+}
+
+//_____________________________________________________________________________
+Bool_t TGeoVolume::IsTopVolume() const
+{
+// True if this is the top volume of the geometry
+   if (gGeoManager->GetTopVolume() == this) return kTRUE;
+   return kFALSE;
+}
+
+//_____________________________________________________________________________
+Bool_t TGeoVolume::IsRaytracing() const
+{
+   return gGeoManager->GetGeomPainter()->IsRaytracing();
 }
 
 //_____________________________________________________________________________
@@ -936,17 +951,17 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
 }
 
 //_____________________________________________________________________________
-void TGeoVolume::Raytrace(Option_t * /*option*/)
+void TGeoVolume::Raytrace(Bool_t flag)
 {
 // Draw this volume with current settings and perform raytracing in the pad.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter->GetDrawnVolume()) {
       Draw();
-      painter->SetRaytracing();
+      painter->SetRaytracing(flag);
       return;
    }
    if (painter->GetDrawnVolume() != this) Draw();
-   painter->SetRaytracing();
+   painter->SetRaytracing(flag);
    painter->ModifiedPad();
 }   
 
@@ -1014,6 +1029,54 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 }      
 
 //_____________________________________________________________________________
+void TGeoVolume::GrabFocus()
+{
+// Move perspective view focus to this volume
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (painter) painter->GrabFocus();
+}   
+
+//_____________________________________________________________________________
+TGeoVolume *TGeoVolume::CloneVolume() const
+{
+   char *name = new char[strlen(GetName())+1];
+   sprintf(name, "%s", GetName());
+   // build a volume with same name, shape and medium
+   TGeoVolume *vol = new TGeoVolume(name, fShape, fMedium);
+   TObject *vobj = (TObject*)vol;
+   TGeoAtt *vatt = (TGeoAtt*)vol;
+   Int_t i;
+   // copy volume attributes
+   vol->SetLineColor(GetLineColor());
+   vol->SetLineStyle(GetLineStyle());
+   vol->SetLineWidth(GetLineWidth());
+   vol->SetFillColor(GetFillColor());
+   vol->SetFillStyle(GetFillStyle());
+   // copy other attributes
+   Int_t nbits = 8*sizeof(UInt_t);
+   for (i=0; i<nbits; i++) 
+      vatt->SetBit(1<<i, TGeoAtt::TestBit(1<<i));
+   
+   // copy field
+   vol->SetField(fField);
+   // Set bits
+   for (i=0; i<nbits; i++) 
+      vobj->SetBit(1<<i, TObject::TestBit(1<<i));
+   vobj->SetBit(kVolumeClone);   
+   // copy nodes
+   vol->MakeCopyNodes(this);
+   // if volume is divided, copy finder
+   vol->SetFinder(fFinder);
+   // copy voxels
+   vol->SetVoxelFinder(fVoxels);
+   // copy option, uid
+   vol->SetOption(fOption);
+   vol->SetNumber(fNumber);
+   vol->SetNtotal(fNtotal);
+   return vol;
+}
+
+//_____________________________________________________________________________
 void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
 {
 // make a new list of nodes and copy all nodes of other volume inside
@@ -1028,14 +1091,6 @@ void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
    for (Int_t i=0; i<nd; i++) fNodes->Add(other->GetNode(i));
    TObject::SetBit(kVolumeImportNodes);
 }      
-
-//_____________________________________________________________________________
-void TGeoVolume::GrabFocus()
-{
-// Move perspective view focus to this volume
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (painter) painter->GrabFocus();
-}   
 
 //_____________________________________________________________________________
 TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
@@ -1330,7 +1385,7 @@ void TGeoVolume::Voxelize(Option_t *option)
    if (!nd) return;
    // delete old voxelization if any
    if (fVoxels) {
-      delete fVoxels;
+      if (!TObject::TestBit(kVolumeClone)) delete fVoxels;
       fVoxels = 0;
    }   
    // see if a given voxelization type is enforced

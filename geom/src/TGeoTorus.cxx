@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.6 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.7 2004/03/15 12:23:17 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -479,12 +479,13 @@ TGeoShape *TGeoTorus::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /
 void TGeoTorus::InspectShape() const
 {
 // print shape parameters
-   printf("*** TGeoTorus parameters ***\n");
+   printf("*** Shape %s: TGeoTorus ***\n", GetName());
    printf("    R    = %11.5f\n", fR);
    printf("    Rmin = %11.5f\n", fRmin);
    printf("    Rmax = %11.5f\n", fRmax);
    printf("    Phi1 = %11.5f\n", fPhi1);
    printf("    Dphi = %11.5f\n", fDphi);
+   printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 
