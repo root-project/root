@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.13 2002/12/03 16:01:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.14 2002/12/10 07:52:33 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -410,6 +410,9 @@ void TGeoVolume::Draw(Option_t *option)
 void TGeoVolume::DrawOnly(Option_t *option)
 {
 // draw only this volume
+   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
+   if (old_vol!=this) gGeoManager->SetTopVolume(this);
+   else old_vol=0;
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    painter->DrawOnly(option);   

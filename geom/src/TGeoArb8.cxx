@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.11 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.12 2002/12/10 14:34:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -300,12 +300,11 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
             x1=xs1+tx1*dir[2]*s;
             x2=xs2+tx2*dir[2]*s;
             xp=point[0]+s*dir[0];
-            if ((x1==x2) || ((xp-x1)*(x2-xp)>=0)) {
-               y1=ys1+ty1*dir[2]*s;
-               y2=ys2+ty2*dir[2]*s;
-               yp=point[1]+s*dir[1];
-               if ((y1==y2) || ((yp-y1)*(y2-yp)>=0)) return s;
-            }
+            y1=ys1+ty1*dir[2]*s;
+            y2=ys2+ty2*dir[2]*s;
+            yp=point[1]+s*dir[1];
+            zi = (xp-x1)*(xp-x2)+(yp-y1)*(yp-y2);
+            if (zi<=0) return s;
          }      
       }
       return kBig;
@@ -322,12 +321,11 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
             x1=xs1+tx1*dir[2]*s;
             x2=xs2+tx2*dir[2]*s;
             xp=point[0]+s*dir[0];
-            if ((x1==x2) || ((xp-x1)*(x2-xp)>=0)) {
-               y1=ys1+ty1*dir[2]*s;
-               y2=ys2+ty2*dir[2]*s;
-               yp=point[1]+s*dir[1];
-               if ((y1==y2) || ((yp-y1)*(y2-yp)>=0)) return s;
-            }
+            y1=ys1+ty1*dir[2]*s;
+            y2=ys2+ty2*dir[2]*s;
+            yp=point[1]+s*dir[1];
+            zi = (xp-x1)*(xp-x2)+(yp-y1)*(yp-y2);
+            if (zi<=0) return s;
          }      
       }
       s=-b+TMath::Sqrt(d);
@@ -338,12 +336,11 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
             x1=xs1+tx1*dir[2]*s;
             x2=xs2+tx2*dir[2]*s;
             xp=point[0]+s*dir[0];
-            if ((x1==x2) || ((xp-x1)*(x2-xp)>=0)) {
-               y1=ys1+ty1*dir[2]*s;
-               y2=ys2+ty2*dir[2]*s;
-               yp=point[1]+s*dir[1];
-               if ((y1==y2) || ((yp-y1)*(y2-yp)>=0)) return s;
-            }
+            y1=ys1+ty1*dir[2]*s;
+            y2=ys2+ty2*dir[2]*s;
+            yp=point[1]+s*dir[1];
+            zi = (xp-x1)*(xp-x2)+(yp-y1)*(yp-y2);
+            if (zi<=0) return s;
          }      
       }
    }

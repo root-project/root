@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.9 2002/12/06 16:45:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.10 2002/12/10 14:34:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -453,12 +453,20 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
 {
 // compute distance to outside from a  pgon phi trapezoid
    Double_t saf;
+   Double_t dmin = kBig;
    Double_t snext[6];
    Int_t i;
    for (i=0; i<6; i++) snext[i]=kBig;
    Double_t zmin = fZ[iz];
    Double_t zmax = fZ[iz+1];
-   if (zmax==zmin) return 1E-12;
+   if (zmax==zmin) {
+      iz += (dir[2]>0)?1:-1;
+      Double_t pt[3];
+      for (i=0; i<3; i++) pt[i] = point[i]+1E-8*dir[i];
+      dmin = 0.;
+      if (Contains(&pt[0])) dmin = DistToOutSect(&pt[0], dir, iz, isect);
+      return (dmin+1E-8);
+   }      
    Double_t divphi = fDphi/fNedges;
    Double_t phi1 = (fPhi1 + divphi*(isect-1))*kDegRad;
    Double_t phi2 = phi1 + divphi*kDegRad;
@@ -466,7 +474,6 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
    Double_t cphim = TMath::Cos(phim);
    Double_t sphim = TMath::Sin(phim);
    Double_t minsafe = 0;
-   Double_t dmin = kBig;
    Double_t no[3];
    // check outer slanted face
    Double_t ct, st;
@@ -534,8 +541,9 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
       // z plane crossed
       iz += 2*icheck-5;
       if ((iz<0) || (iz>(fNz-2))) return dmin;
-      for (i=0; i<3; i++) pt[i]=point[i]+(dmin+1E-10)*dir[i];
-      dmin += DistToOutSect(&pt[0], dir, iz, isect)+1E-10;
+      for (i=0; i<3; i++) pt[i]=point[i]+(dmin+1E-8)*dir[i];
+      if (Contains(&pt[0]))
+         dmin += DistToOutSect(&pt[0], dir, iz, isect)+1E-8;
       return dmin;
    }
    isect += 2*icheck-9;
@@ -545,8 +553,8 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
    } else {      
       if ((isect<1) || (isect>fNedges)) return dmin;
    }      
-   for (i=0; i<3; i++) pt[i]=point[i]+(dmin+1E-10)*dir[i];
-   dmin += DistToOutSect(&pt[0], dir, iz, isect)+1E-10;
+   for (i=0; i<3; i++) pt[i]=point[i]+(dmin+1E-8)*dir[i];
+   dmin += DistToOutSect(&pt[0], dir, iz, isect)+1E-8;
    return dmin;
 }
 //-----------------------------------------------------------------------------

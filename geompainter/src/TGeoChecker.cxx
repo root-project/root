@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.17 2002/12/10 08:40:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.18 2002/12/10 14:34:50 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // TGeoChecker::CheckGeometry() by Mihaela Gheata
 
@@ -79,8 +79,8 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
    Double_t dir[3];
    Double_t dummy[3];
    Double_t eps = 0.;
-   Double_t *array1 = new Double_t[3*100];
-   Double_t *array2 = new Double_t[3*100];
+   Double_t *array1 = new Double_t[3*1000];
+   Double_t *array2 = new Double_t[3*1000];
    TObjArray *pma = new TObjArray();
    TPolyMarker3D *pm;
    pm = new TPolyMarker3D();
@@ -99,7 +99,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
    pm->SetMarkerSize(0.4);
    pma->AddAt(pm, 2);
    Int_t nelem1, nelem2;
-   Int_t dim1=100, dim2=100;
+   Int_t dim1=1000, dim2=1000;
    if ((startx==0) && (starty==0) && (startz==0)) eps=1E-3;
    start[0] = startx+eps;
    start[1] = starty+eps;
@@ -284,8 +284,10 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
    pm->SetNextPoint(local[0], local[1], local[2]);
    if (vol->GetNdaughters()) {
       fGeom->SetVisLevel(1);
+      if (!vol->IsVisible()) vol->SetVisibility(kTRUE);
       vol->Draw();
    } else {
+      if (!vol->IsVisible()) vol->SetVisibility(kTRUE);
       vol->DrawOnly();
    }   
    pm->Draw("SAME");
@@ -459,14 +461,13 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    Double_t start[3];
    Double_t dir[3];
    Double_t eps = 0.;
+   Int_t istep= 0;
    if ((startx==0) && (starty==0) && (startz==0)) eps=1E-3;
    Double_t *point = fGeom->GetCurrentPoint();
    vol->Draw();
    printf("Start... %i rays\n", nrays);
-   //TGeoNode *node;
-   //Bool_t is_sentering;
    TGeoNode *startnode, *endnode;
-   Bool_t vis1,vis2, is_entering;
+   Bool_t vis1,vis2;
    Int_t i=0;
    Int_t ipoint;
    Int_t itot=0;
@@ -481,7 +482,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       start[0] = startx+eps;
       start[1] = starty+eps;
       start[2] = startz+eps;
-//      printf("startpoint : %g, %g, %g\n", startx, starty, startz);
       phi = 2*TMath::Pi()*gRandom->Rndm();
       theta= TMath::ACos(1.-2.*gRandom->Rndm());
       dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
@@ -490,82 +490,54 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       fGeom->InitTrack(&start[0], &dir[0]);
       line = 0;
       startnode = fGeom->GetCurrentNode();
-//      if (startnode) printf("---first : %s\n", startnode->GetName());
-//      else printf("---first : NULL\n");
       if (fGeom->IsOutside()) startnode=0;
       vis1 = (startnode)?(startnode->IsOnScreen()):kFALSE;
       if (vis1) {
-//         printf(" >>>starting first segment\n");
-//         if (startnode) printf( ">>>start = %s\n", startnode->GetName());
          line = new TPolyLine3D(2);
          line->SetLineColor(startnode->GetVolume()->GetLineColor());
          line->SetPoint(ipoint++, startx, starty, startz);
          i++;
          pm->Add(line);
-      } //else printf(" invisible, no segment\n");
-      // find the node that will be crossed first      
-      fGeom->FindNextBoundary();
-      fGeom->IsStepEntering();
+      }
       // find where we end-up
-      endnode = fGeom->Step();
-      if (fGeom->IsOutside()) endnode=0;
-//      if (endnode) printf("---end : %s\n", endnode->GetName());
-//      else printf("---end : NULL\n");
+      fGeom->FindNextBoundary();
       step = fGeom->GetStep();
+      endnode = fGeom->Step();
       vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
-//      if (endnode) printf(">>>endnode : %s\n", endnode->GetName());
-//      if (vis2) printf(" end visible\n");
-//      else printf(" end invisible\n");
-      is_entering = fGeom->IsEntering();
-//      is_null = fGeom->IsNullStep();
-//      printf("endpoint : %g, %g, %g  step: %g\n", fGeom->GetCurrentPoint()[0],
-//         fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2], step);
-//      printf("propagating...\n");
       while (step<1E10) {
-         if (is_entering && ipoint>0) {
-//            printf("  ending segment\n");
+         while (!fGeom->IsEntering()) {
+            istep++;
+            if (istep>1E4) break;
+            fGeom->SetStep(1E-3);
+            endnode = fGeom->Step();
+            step += 1E-3;
+         }      
+         if (istep>1E4) break;
+//         if (istep) printf("ADDED : %f (%i steps)\n", istep*1E-3, istep);
+         vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
+         if (ipoint>0) {
          // old visible node had an entry point -> finish segment
             line->SetPoint(ipoint, point[0], point[1], point[2]);
             ipoint = 0;
             line   = 0;
          }
-         if (is_entering && vis2) {
+         if (vis2) {
             // create new segment
-//            printf(" >>>new segment for : %s\n", endnode->GetName());
             line = new TPolyLine3D(2);   
             line->SetLineColor(endnode->GetVolume()->GetLineColor());
             line->SetPoint(ipoint++, point[0], point[1], point[2]);
             i++;
             pm->Add(line);
-         } // else printf("   entering=%i vis2=%i - no segment\n", (Int_t)is_entering, (Int_t)vis2);
+         } 
          // now see if we can make an other step
-         if (endnode==0 && step>1E10) {
-//            printf("NULL. End track.\n");
-            break;
-         }
-         while (!fGeom->IsEntering()) {
-            fGeom->SetStep(1E-3);
-            fGeom->Step();
-         }      
-//         if (is_null) printf("null step, start:%f %f %f\n", fGeom->GetCurrentPoint()[0],
-//         fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2]);
+         if (endnode==0 && step>1E10) break;
+         istep = 0;
          // generate an extra step to cross boundary
          startnode = endnode;    
          fGeom->FindNextBoundary();
-//         fGeom->IsStepEntering();
-         endnode = fGeom->Step();
-         if (fGeom->IsOutside()) endnode=0;
-//         if (endnode) printf(">>>new node: %s\n", endnode->GetName());
          step = fGeom->GetStep();
+         endnode = fGeom->Step();
          vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
-         is_entering = fGeom->IsEntering();
-//         is_null = fGeom->IsNullStep();
-//         printf(" new step : %g point: %g, %g, %g\n", step, fGeom->GetCurrentPoint()[0],
-//            fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2]);
-//         if (is_entering) printf(" entering\n");
-//         else printf(" not entering, same node\n");
-//         if (endnode) printf("   node after step :  %s\n",   endnode->GetName());
-//         else printf("   NULL node after step\n");
       }      
    }   
    // draw all segments

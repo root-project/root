@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.23 2002/11/15 14:41:19 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.24 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2147,6 +2147,7 @@ TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
    }
    if (is_geom) epsil=(cross)?1E-6:-1E-6;
    TGeoNode *old = fCurrentNode;
+   Int_t idold = GetNodeId();
    if (fIsOutside) old = 0;
    fStep += epsil;
    for (Int_t i=0; i<3; i++) fPoint[i]+=fStep*fDirection[i];
@@ -2154,6 +2155,10 @@ TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
    if (fIsOutside) current=0;
    if (is_geom) {
       fIsEntering = (current==old)?kFALSE:kTRUE;
+      if (!fIsEntering) {
+         Int_t id = GetNodeId();
+         fIsEntering = (id==idold)?kFALSE:kTRUE;
+      }   
       fIsExiting  = !fIsEntering;
       if (fIsEntering && fIsNullStep) fIsNullStep = kFALSE;
       fIsOnBoundary = kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.8 2002/10/11 16:41:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.9 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -334,6 +334,12 @@ TGeoNode *TGeoNodeCache::GetMother(Int_t up) const
    return mother;
 }
 //-----------------------------------------------------------------------------
+Int_t TGeoNodeCache::GetNodeId() const
+{
+// Get unique node id.
+   return fBranch[fLevel];
+}
+//-----------------------------------------------------------------------------
 const char *TGeoNodeCache::GetPath()
 {
 // prints the current path
@@ -490,6 +496,15 @@ void TGeoCacheDummy::CdUp()
    fNode = fNodeBranch[fLevel];
    fMatrix = fMatrixBranch[fLevel];
 }
+//-----------------------------------------------------------------------------
+Int_t TGeoCacheDummy::GetNodeId() const
+{
+// Get unique node id.
+   Int_t id=0;
+   for (Int_t level=0;level<fLevel+1; level++) id += (Int_t)fNodeBranch[level];
+   return id;
+}
+
 //-----------------------------------------------------------------------------
 const char *TGeoCacheDummy::GetPath()
 {

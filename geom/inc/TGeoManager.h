@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.11 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.12 2002/10/22 07:43:12 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -270,6 +270,7 @@ public:
 
    //--- modeler state getters/setters
    TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->At(level);}
+   Int_t                  GetNodeId() const {return fCache->GetNodeId();}
    TGeoNode              *GetNextNode() const         {return fNextNode;}
    TGeoNode              *GetMother(Int_t up=1) const {return fCache->GetMother(up);}
    TGeoHMatrix           *GetHMatrix();

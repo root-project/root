@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.12 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.13 2002/12/03 17:42:59 rdm Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -94,7 +94,7 @@ public:
    void            ClearNodes() {fNodes = 0;}
    void            ClearShape();
    void            CleanAll();
-   void            CheckGeometry(Int_t nrays=1, Double_t startx=0, Double_t starty=0, Double_t startz=0) const; // *MENU*
+   void            CheckGeometry(Int_t nrays=1, Double_t startx=0, Double_t starty=0, Double_t startz=0) const;
    Int_t           CountNodes(Int_t nlevels=1000) const; // *MENU*
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    Bool_t          IsFolder() const;

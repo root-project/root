@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.7 2002/12/03 16:01:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.8 2002/12/03 17:42:59 rdm Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -155,6 +155,7 @@ public:
    virtual Int_t        GetNfree() const       {return (fSize-fNused);}
    virtual Int_t        GetNused() const       {return fNused;}
    virtual const char  *GetPath();
+   virtual Int_t        GetNodeId() const;
    Int_t                GetSize() const        {return fSize;}
    virtual Int_t        GetUsageCount() const;
    virtual void         IncreasePool(Int_t size) {fSize+=size;}
@@ -219,6 +220,7 @@ public:
    virtual Int_t        GetNfree() const       {return fGeoCacheMaxSize;}
    virtual Int_t        GetNused() const       {return 0;}
    virtual const char  *GetPath();
+   virtual Int_t        GetNodeId() const;
    virtual Int_t        GetUsageCount() const {return 0;}
    virtual void         IncreasePool(Int_t /*size*/) {;}
    virtual void         IncrementUsageCount() {;}
