@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.67 2003/07/25 05:15:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.68 2003/08/04 20:31:09 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1343,6 +1343,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    //     f : force recompilation.
    //     g : compile with debug symbol
    //     O : optimized the code (ignore if 'd' is specified)
+   //     c : compile only, do not attempt to the load the library.
    //
    // If library_specified is specified, CompileMacro generates the file
    // "library_specified".soext where soext is the shared library extension for
@@ -1436,11 +1437,13 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    //
    // (the ... have to be replaced by the actual values and are here only to
    // shorten this comment).
-
+   //
+   
    // ======= Analyze the options
    Bool_t keep = kFALSE;
    Bool_t recompile = kFALSE;
    EAclicMode mode = fAclicMode;
+   Bool_t loadLib = kTRUE;
    if (opt) {
       keep = (strchr(opt,'k')!=0);
       recompile = (strchr(opt,'f')!=0);
@@ -1449,6 +1452,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       }
       if (strchr(opt,'g')!=0) {
          mode = kDebug;
+      }
+      if (strchr(opt,'c')!=0) {
+         loadLib = kFALSE;
       }
    }
    if (mode==kDefault) {
@@ -1546,8 +1552,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       ::Warning("ACLiC","unloading %s and compiling it", filename);
 
       if ( G__unloadfile( (char*) filename ) != 0 ) {
-        // We can not unload it.
-        return(G__LOADFILE_FAILURE);
+         // We can not unload it.
+         return(G__LOADFILE_FAILURE);
       }
    }
 
@@ -1555,17 +1561,17 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString includes = GetIncludePath();
    {
       // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
-     TRegexp rel_inc("-I[^/\\$%-][^:-]+");
-     Int_t len,pos;
-     pos = rel_inc.Index(includes,&len);
-     while( len != 0 ) {
-        TString sub = includes(pos,len);
-        sub.Remove(0,2); // Remove -I
-        sub = ConcatFileName( WorkingDirectory(), sub );
-        sub.Prepend(" -I");
-        includes.Replace(pos,len,sub);
-        pos = rel_inc.Index(includes,&len);
-     }
+      TRegexp rel_inc("-I[^/\\$%-][^:-]+");
+      Int_t len,pos;
+      pos = rel_inc.Index(includes,&len);
+      while( len != 0 ) {
+         TString sub = includes(pos,len);
+         sub.Remove(0,2); // Remove -I
+         sub = ConcatFileName( WorkingDirectory(), sub );
+         sub.Prepend(" -I");
+         includes.Replace(pos,len,sub);
+         pos = rel_inc.Index(includes,&len);
+      }
    }
    includes += " -I" + build_loc;
    includes += " -I";
@@ -1578,15 +1584,15 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // Extract the -D for the dependency generation.
    TString defines = " ";
    {
-     TString cmd = GetMakeSharedLib();
-     TRegexp rel_def("-D[^\\s\\t\\n\\r]*");
-     Int_t len,pos;
-     pos = rel_def.Index(cmd,&len);
-     while( len != 0 ) {
-        defines += cmd(pos,len);
-        defines += " ";
-        pos = rel_def.Index(cmd,&len,pos+1);
-     }
+      TString cmd = GetMakeSharedLib();
+      TRegexp rel_def("-D[^\\s\\t\\n\\r]*");
+      Int_t len,pos;
+      pos = rel_def.Index(cmd,&len);
+      while( len != 0 ) {
+         defines += cmd(pos,len);
+         defines += " ";
+         pos = rel_def.Index(cmd,&len,pos+1);
+      }
 
    }
 
@@ -1595,8 +1601,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    /*
      this is intentionally disabled until it can become usefull
      if (gEnv) {
-        linkLibraries =  gEnv->GetValue("ACLiC.Libraries","");
-        linkLibraries.Prepend(" ");
+     linkLibraries =  gEnv->GetValue("ACLiC.Libraries","");
+     linkLibraries.Prepend(" ");
      }
    */
    linkLibraries.Prepend(GetLibraries("","SDL"));
@@ -1638,7 +1644,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
            ||
            (gSystem->GetPathInfo( filename, 0, 0, 0, &file_time ) == 0
             && ( lib_time < file_time ) )
-         ) {
+           ) {
          // the library does not exist and is older than the script.
          recompile = kTRUE;
 
@@ -1680,8 +1686,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
 
             if (!depbuilt) {
-              ::Warning("ACLiC","Failed to generate the dependency file for %s",
-                        library.Data());
+               ::Warning("ACLiC","Failed to generate the dependency file for %s",
+                         library.Data());
             } else {
 #ifdef WIN32
                gSystem->Unlink(stderrfile);
@@ -1709,43 +1715,43 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
             Int_t nested = 0;
 
             while ((c = fgetc(depfile)) != EOF) {
-              if (c=='#') {
-                // skip comment
-                while ((c = fgetc(depfile)) != EOF) {
-                  if (c=='\n') {
-                    break;
+               if (c=='#') {
+                  // skip comment
+                  while ((c = fgetc(depfile)) != EOF) {
+                     if (c=='\n') {
+                        break;
+                     }
                   }
-                }
-                continue;
-              }
-              if (isspace(c) && !nested) {
-                if (current) {
-                  if (line[current-1]!=':') {
-                    // ignore target
-                    line[current] = 0;
+                  continue;
+               }
+               if (isspace(c) && !nested) {
+                  if (current) {
+                     if (line[current-1]!=':') {
+                        // ignore target
+                        line[current] = 0;
 
-                    Long_t filetime;
-                    if ( gSystem->GetPathInfo( line, 0, 0, 0, &filetime ) == 0 ) {
-                      modified |= ( lib_time <= filetime );
-                    }
+                        Long_t filetime;
+                        if ( gSystem->GetPathInfo( line, 0, 0, 0, &filetime ) == 0 ) {
+                           modified |= ( lib_time <= filetime );
+                        }
+                     }
                   }
-                }
-                current = 0;
-                line[0] = 0;
-              } else {
-                if (current==sz-1) {
-                  sz = 2*sz;
-                  char *newline = new char[sz];
-                  strcpy(newline,line);
-                  delete [] line;
-                  line = newline;
-                }
-                if (c=='"') nested = !nested;
-                else {
-                  line[current] = c;
-                  current++;
-                }
-              }
+                  current = 0;
+                  line[0] = 0;
+               } else {
+                  if (current==sz-1) {
+                     sz = 2*sz;
+                     char *newline = new char[sz];
+                     strcpy(newline,line);
+                     delete [] line;
+                     line = newline;
+                  }
+                  if (c=='"') nested = !nested;
+                  else {
+                     line[current] = c;
+                     current++;
+                  }
+               }
             }
             delete [] line;
             fclose(depfile);
@@ -1763,11 +1769,11 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       ::Warning("ACLiC","%s script has already been compiled and loaded",
                 modified ? "modified" : "unmodified");
       if ( !recompile ) {
-         return G__LOADFILE_SUCCESS;
+         return kTRUE;
       } else {
 #ifdef R__KCC
          ::Error("ACLiC","shared library can not be updated (when using the KCC compiler)!");
-         return G__LOADFILE_DUPLICATE;
+         return kFALSE;
 #else
          // the following is not working in KCC because it seems that dlclose
          // does not properly get rid of the object.  It WILL provoke a
@@ -1776,7 +1782,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          ::Warning("ACLiC","it will be regenerated and reloaded!");
          if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
-           return(G__LOADFILE_FAILURE);
+            return kFALSE;
          }
          Unlink(library);
 #endif
@@ -1784,8 +1790,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
    }
    if (!recompile) {
-     // The library already exist, let's just load it.
-     return !gSystem->Load(library);
+      // The library already exist, let's just load it.
+      if (loadLib) return !gSystem->Load(library);
+      else return kTRUE;
    }
 
    if (!canWrite && recompile) {
@@ -1811,9 +1818,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // by rootcint as a variable name so all character need to be valid!
    static const int maxforbidden = 27;
    static const char *forbidden_chars[maxforbidden] =
-         { "+","-","*","/","&","%","|","^",">","<",
-           "=","~",".","(",")","[","]","!",",","$",
-           " ",":","'","#","@","\\","\"" };
+      { "+","-","*","/","&","%","|","^",">","<",
+        "=","~",".","(",")","[","]","!",",","$",
+        " ",":","'","#","@","\\","\"" };
    for( int ic = 0; ic < maxforbidden; ic++ ) {
       dict.ReplaceAll( forbidden_chars[ic],"_" );
    }
@@ -1964,27 +1971,28 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
    if ( result ) {
 
-     if (!keep) fCompiled->Add(new TObjString( library ));
+      if (!keep) fCompiled->Add(new TObjString( library ));
 
 #ifndef NOCINT
-     // This is intended to force a failure if not all symbols needed
-     // by the library are present.
-     G__Set_RTLD_NOW();
+      // This is intended to force a failure if not all symbols needed
+      // by the library are present.
+      G__Set_RTLD_NOW();
 #endif
-     if (gDebug>3)  ::Info("ACLiC","loading the shared library");
-     result = !gSystem->Load(library);
+      if (gDebug>3)  ::Info("ACLiC","loading the shared library");
+      if (loadLib) result = !gSystem->Load(library);
+      else result = kTRUE;
 #ifndef NOCINT
-     G__Set_RTLD_LAZY();
+      G__Set_RTLD_LAZY();
 #endif
 
-     if ( !result ) {
-        if (gDebug>3) {
-           ::Info("ACLiC","testing for missing symbols:");
-           if (gDebug>4)  ::Info("ACLiC",testcmd.Data());
-        }
-        gSystem->Exec(testcmd);
-        gSystem->Unlink( exec );
-     }
+      if ( !result ) {
+         if (gDebug>3) {
+            ::Info("ACLiC","testing for missing symbols:");
+            if (gDebug>4)  ::Info("ACLiC",testcmd.Data());
+         }
+         gSystem->Exec(testcmd);
+         gSystem->Unlink( exec );
+      }
 
    };
 
@@ -2003,9 +2011,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       gSystem->Exec(rcint);
       gSystem->Exec( cmd );
       gSystem->Exec(testcmd);
-  }
+   }
 
-  return result;
+   return result;
 }
 
 //______________________________________________________________________________
