@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.24 2004/02/27 01:03:58 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.25 2004/04/22 16:28:28 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -49,6 +49,7 @@ class TCanvas : public TPad {
 
 friend class TCanvasImp;
 friend class TThread;
+friend class TInterpreter;
 
 protected:
    TAttCanvas    fCatt;            //Canvas attributes
