@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.66 2004/01/31 08:59:09 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.67 2004/01/31 11:57:34 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -290,7 +290,7 @@
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   endif
-#   if __GNUC__ >= 3 
+#   if __GNUC__ >= 3 || ( __GNUC__ == 2 && __GNUC_MINOR__ >= 95) 
 #         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
