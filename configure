@@ -1133,7 +1133,7 @@ echo $ac_n "Writing $MAKEOUT ... $ac_c"
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@rootbuild@|$rootbuild|"         \
     -e "s|@mkliboption@|$mkliboption|"     \
-    -e "s|@ldflags@|-L$libdir|"            \
+    -e "s|@ldflags@||"                     \
     -e "s|@bindir@|$bindir|"               \
     -e "s|@libdir@|$libdir|"               \
     -e "s|@incdir@|$incdir|"               \
