@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.77 2002/06/04 17:50:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.78 2002/06/18 07:00:33 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1898,7 +1898,7 @@ void TClass::Streamer(void *object, TBuffer &b)
    if (IsTObject()) {           // TObject, regular case
 
       if (!fInterStreamer) {
-         fInterStreamer = fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+         fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
          fOffsetStreamer = GetBaseClassOffset(TObject::Class());
       }
       TObject * tobj = (TObject*)((Long_t)object + fOffsetStreamer);
@@ -1907,7 +1907,7 @@ void TClass::Streamer(void *object, TBuffer &b)
    } else if (!IsForeign()) {   // Instrumented class 
 
       if (!fInterStreamer) {
-        fInterStreamer = fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+        fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
       }
 
       G__CallFunc func;
