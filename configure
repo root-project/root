@@ -367,7 +367,7 @@ echo $rfio
 # Check for CERN libs (libpacklib and libkernlib)
 echo $ac_n "Checking for libpacklib... $ac_c"
 cernlibdirs="$CERNLIB $CERNLIB/lib /cern/pro/lib /cern/old/lib /cern/new/lib"
-packlibs="libpacklib.a libpacklib.so libpacklib.sl libpacklib.lib"
+packlibs="libpacklib.a libpacklib.so libpacklib.sl packlib.lib"
 
 if [ -z "$cernlibdir" ]; then
    cernlibdir=NO
