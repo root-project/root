@@ -57,6 +57,8 @@ CXXFLAGS      = -O
 LD            = xlC
 LDFLAGS       = -O
 SOFLAGS       =
+ROOTLIBS     := $(shell root-config --nonew --libs)
+ROOTGLIBS    := $(shell root-config --nonew --glibs)
 endif
 
 ifeq ($(ARCH),aixegcs)
