@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1803,4 +1803,20 @@ void TTree::Streamer(TBuffer &b)
       fStreamerInfoList->Streamer(b);
       b.SetByteCount(R__c, kTRUE);
    }
+}
+
+//______________________________________________________________________________
+void TTree::UseCurrentStyle()
+{
+//*-*-*-*-*-*Replace current attributes by current style*-*-*-*-*
+//*-*        ===========================================
+
+   SetFillColor(gStyle->GetHistFillColor());
+   SetFillStyle(gStyle->GetHistFillStyle());
+   SetLineColor(gStyle->GetHistLineColor());
+   SetLineStyle(gStyle->GetHistLineStyle());
+   SetLineWidth(gStyle->GetHistLineWidth());
+   SetMarkerColor(gStyle->GetMarkerColor());
+   SetMarkerStyle(gStyle->GetMarkerStyle());
+   SetMarkerSize(gStyle->GetMarkerSize());
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -224,6 +224,7 @@ public:
     virtual void      SetUpdate(Int_t freq=0) {fUpdate = freq;}
     virtual void      Show(Int_t entry=-1);
     virtual void      StartViewer(Int_t ww=520, Int_t wh=400); // *MENU*
+    void              UseCurrentStyle();
 
     ClassDef(TTree,4)  //Tree descriptor (the main ROOT I/O class)
 };
