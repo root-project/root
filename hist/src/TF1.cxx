@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.92 2004/09/01 10:29:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.93 2004/09/03 17:08:55 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2116,7 +2116,7 @@ L90:
    result += rgnval;
    abserr += rgnerr;
    ifncls += irlcls;
-   //aresult = TMath::Abs(result);
+   aresult = TMath::Abs(result);
    //if (result > 0 && aresult< 1e-100) {
    //   delete [] wk;
    //   ifail = 0;  //function is probably symmetric ==> integral is null: not an error
