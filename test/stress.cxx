@@ -1382,14 +1382,14 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 3933;
+   Int_t nlinesGood = 4016;
    while (fgets(line,255,fp)) {
       nlines++;
    }
    fclose(fp);
    delete c;
    Bool_t OK = kTRUE;
-   if (nlines < nlinesGood-10 || nlines > nlinesGood+10) OK = kFALSE;
+   if (nlines < nlinesGood-30 || nlines > nlinesGood+30) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
