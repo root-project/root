@@ -27,8 +27,8 @@ ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *
 
 .PHONY: clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils
 
-export CURDIR=$(shell basename `pwd`)
-#debug:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=`pwd` 1>&2 ) 
+CURDIR:=$(shell basename `pwd`)
+#debug2:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=$(PWD) 1>&2 ) 
 ifeq ($(CALLDIR),)
 	export CALLDIR:=.
 else
@@ -52,7 +52,7 @@ tests: $(SUCCESS_FILE)
 
 $(TEST_TARGETS_DIR): %.test:
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; gmake --no-print-directory test; \
+	@(cd $*; gmake CURDIR=$(CURDIR)/$* --no-print-directory test; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
          len=`echo Tests in $(CALLDIR)/$* | wc -m `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
@@ -83,12 +83,20 @@ clean:  $(CLEAN_TARGETS_DIR)
 
 # here we guess the platform
 
-ARCH          = $(shell root-config --arch)
+ifeq ($(ARCH),)
+   ARCH          = $(shell root-config --arch)
+endif
 PLATFORM      = $(ARCH)
 
-CXXFLAGS = $(shell root-config --cflags)
-ROOTLIBS     := $(shell root-config --nonew --libs)
-ROOTGLIBS    := $(shell root-config --nonew --glibs)
+ifeq ($(CXXFLAGS),)
+   export CXXFLAGS = $(shell root-config --cflags)
+endif
+ifeq ($(ROOTLIBS),)
+   export ROOTLIBS     := $(shell root-config --nonew --libs)
+endif
+ifeq ($(ROOTGLIBS),)
+   export ROOTGLIBS    := $(shell root-config --nonew --glibs)
+endif
 
 ObjSuf   = o
 
@@ -97,7 +105,9 @@ ROOT_LOC = $(ROOTSYS)
 ifeq ($(PLATFORM),win32)
 
 ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
-ROOT_LOC := $(shell cygpath -u '$(ROOTSYS)')
+ifeq ($(ROOT_LOC),)
+   export ROOT_LOC := $(shell cygpath -u '$(ROOTSYS)')
+endif
 
 # Windows with the VC++ compiler
 ObjSuf        = obj
