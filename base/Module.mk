@@ -26,7 +26,7 @@ BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3)
 BASEDH       := $(BASEDS:.cxx=.h)
 
 BASEH1       := $(wildcard $(MODDIRI)/T*.h)
-BASEH3       := GuiTypes.h KeySymbols.h
+BASEH3       := GuiTypes.h KeySymbols.h Buttons.h
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
