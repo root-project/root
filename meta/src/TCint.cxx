@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -438,37 +438,20 @@ void TCint::UpdateListOfGlobalFunctions()
 //______________________________________________________________________________
 void TCint::UpdateListOfTypes()
 {
-   // Update the list of pointers to datatype (typedef) definitions. This
+   // Update the list of pointers to Datatype (typedef) definitions. This
    // function is called by TROOT::GetListOfTypes().
 
-   G__TypedefInfo *a;
-   int last  = 0;
-   int ntype = 0;
-
-   // find the number of typedefs
-   G__TypedefInfo t;
-   while (t.Next()) ntype++;
-
-   for (int i = 0; i < ntype; i++) {
-      a = new G__TypedefInfo();
-      a->Next();   // initial positioning
-
-      for (int j = 0; j < last; j++)
-         a->Next();
-
-      // if name cannot be obtained no use to put in list
-      if (a->IsValid() && a->Name()) {
-         TDataType *d = (TDataType *)gROOT->fTypes->FindObject(a->Name());
+   G__TypedefInfo t, *a;
+   while (t.Next()) {
+      if (t.IsValid() && t.Name()) {
+         TDataType *d = (TDataType *)gROOT->fTypes->FindObject(t.Name());
          // only add new types, don't delete old ones with the same name
          // (as is done in UpdateListOfGlobals())
-         if (!d)
+         if (!d) {
+            a = new G__TypedefInfo(t);
             gROOT->fTypes->Add(new TDataType(a));
-         else
-            delete a;
-      } else
-         delete a;
-
-      last++;
+         }
+      }
    }
 }
 
