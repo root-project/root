@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.92 2003/06/04 20:17:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.93 2003/06/11 16:09:38 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -986,10 +986,23 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
 
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
+      
+      if (faddr == (Long_t)G__exec_bytecode) {
+         // the method is actually interpreted, its address is
+         // not a discriminant (it always point to the same
+         // function (G__exec_bytecode).
 
-      while ((f = (TFunction *) next())) {
-         if (faddr == (Long_t) f->InterfaceMethod());
-            return f;
+         TString mangled = fInterpreter->GetMangledName(0, function, params);
+         while ((f = (TFunction *) next())) {
+            if (faddr == (Long_t) f->InterfaceMethod() 
+                && mangled == f->GetMangledName()) return f;
+         }
+
+      } else {
+         while ((f = (TFunction *) next())) {
+            if (faddr == (Long_t) f->InterfaceMethod())
+               return f;
+         }
       }
       return 0;
    }
@@ -1011,15 +1024,31 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
          Fatal("GetGlobalFunctionWithPrototype", "fInterpreter not initialized");
 
       Long_t faddr = (Long_t)fInterpreter->GetInterfaceMethodWithPrototype(0,
-                                                            function, proto);
+                                                                           function,
+                                                                           proto);
       if (!faddr) return 0;
 
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
 
-      while ((f = (TFunction *) next())) {
-         if (faddr == (Long_t) f->InterfaceMethod());
-            return f;
+      if (faddr == (Long_t)G__exec_bytecode) {
+         // the method is actually interpreted, its address is
+         // not a discriminant (it always point to the same
+         // function (G__exec_bytecode).
+
+         TString mangled = fInterpreter->GetMangledNameWithPrototype(0,
+                                                                     function, 
+                                                                     proto);
+         while ((f = (TFunction *) next())) {
+            if (faddr == (Long_t) f->InterfaceMethod() 
+                && mangled == f->GetMangledName()) return f;
+         }
+
+      } else {
+         while ((f = (TFunction *) next())) {
+            if (faddr == (Long_t) f->InterfaceMethod())
+               return f;
+         }
       }
       return 0;
    }
