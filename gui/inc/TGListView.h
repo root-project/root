@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.6 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.7 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -196,8 +196,10 @@ public:
    virtual const char *GetHeader(Int_t idx) const;
 
    virtual void SelectionChanged() { Emit("SelectionChanged()"); }  //*SIGNAL*
-   virtual void DoubleClicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
    virtual void Clicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
+   virtual void Clicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
+   virtual void DoubleClicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
+   virtual void DoubleClicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
 
    ClassDef(TGListView,0)  // List view widget (iconbox, small icons or tabular view)
 };
