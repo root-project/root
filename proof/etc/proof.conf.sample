@@ -1,0 +1,38 @@
+# PROOF config file. It has a very simple format:
+#
+# node <hostname> [image=<imagename>]
+# slave <hostname> [perf=<perfindex>] [image=<imagename>]
+# user <username> on <hostname>
+#
+# For each unique node in the cluster add a "node" line.
+# For each node in the cluster that can run a slave server add a "slave" line.
+# A single node can run multiple slaves (e.g. an SMP machine). In that case
+# repeat the slave line N times, where N is the number of CPU's in the machine.
+# Perfindex is a number specifying the relative speed of each slave CPU in the
+# cluster. Say, the fastest CPU is 100, a CPU 30% slower has perf=70. The
+# perfindex is used for load balancing. By default perf=100.
+# Image is used to tell the system that system images are shared between
+# nodes/CPU's in the cluster. For example if all nodes share a common user
+# directory, like with AFS, set image=afs (<imagename> is arbitrary but should
+# be unique for each different image). By default imagename is the hostname.
+# 
+# Users can be redirected to have their master server run on a predetermined
+# node. For that use the "user" line.
+#
+
+#node pcna49a image=nfs
+
+#slave pcna49a  perf=100 image=nfs
+#slave pcna49b  perf=100 image=nfs
+#slave pcna49c  perf=100 image=nfs
+#slave pcna49d  perf=100 image=nfs
+#slave pcna49e  perf=75 image=nfs
+
+#user rdm on pcna49d
+
+
+node localhost
+
+slave localhost
+slave localhost
+
