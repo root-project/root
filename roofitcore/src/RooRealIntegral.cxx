@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.41 2001/09/26 18:29:33 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.42 2001/10/01 22:04:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -132,12 +132,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
   }
   delete bIter ;
-  cout << "Initial LVBranch list: " ; exclLVBranches.Print("v") ;
 
   // Initial fill of list of LValue leaf servers (put in intDepList)
   RooArgSet exclLVServers("exclLVServers") ;
   exclLVServers.add(intDepList) ;
-  cout << "Initial LVServer list: " ; exclLVServers.Print("v") ;
 
   // Obtain mutual exclusive dependence by iterative reduction
   TIterator *sIter = exclLVServers.createIterator() ;
@@ -151,7 +149,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     sIter->Reset() ;
     while (server=(RooAbsArg*)sIter->Next()) {
       if (!servesExclusively(server,exclLVBranches)) {
-	cout << "removing LVServer " << server->GetName() << endl ;
 	exclLVServers.remove(*server) ;
 	converged=kFALSE ;
       }
@@ -164,10 +161,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       RooArgSet bsList(*brDepList,"bsList") ;
       delete brDepList ;
       bsList.remove(exclLVServers) ;
-      bsList.Print("v") ;
       if (bsList.getSize()>0) {
 	exclLVBranches.remove(*branch) ;
-	cout << "removing LVBranch " << branch->GetName() << endl ;
 	converged=kFALSE ;
       }
     }
@@ -180,14 +175,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     intDepList.remove(exclLVServers) ;
     intDepList.add(exclLVBranches) ;
   }
-    
-  cout << "exclLVServers: " ; exclLVServers.Print("v") ;
-  cout << "exclLVBranches: " ; exclLVBranches.Print("v") ;
-  
-  cout << "depList:" ; depList.Print("v") ;
-  cout << "intDepList: " ; intDepList.Print("v") ;
-
- 
+     
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * C) Check for dependents that the PDF insists on integrating *
   //      analytically iself                                       *
@@ -389,7 +377,6 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
 
   // If server has no clients and is not an LValue itself, return false
    if (server->_clientList.GetSize()==0 && exclLVBranches.find(server->GetName())) {
-     cout << server->GetName() << ": non-lvalue endpoint, returning kFALSE" << endl ;
      return kFALSE ;
    }
 
@@ -403,18 +390,15 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
      if (!exclLVBranches.find(client->GetName())) {
        if (!servesExclusively(client,exclLVBranches)) {
 	 // Client is a non-LValue that doesn't have an exclusive LValue server
-	 cout << client->GetName() << ": non-lvalue chain, returning kFALSE" << endl ;
 	 ret = kFALSE ;
        }
      } else {
        // Client is an LValue       
-       cout << server->GetName() << "  numLVServ++ (B) for client " << client->GetName() << endl ;
        numLVServ++ ;
      }
    }
 
    delete cIter ;
-   cout << server->GetName() << ": numLVServ = " << numLVServ << endl ;
    return (numLVServ==1) ;
 }
 
