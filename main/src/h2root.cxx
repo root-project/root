@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.18 2003/07/14 16:11:01 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.20 2004/02/19 21:48:06 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -229,7 +229,7 @@ extern void convert_cwn(Int_t id);
 extern void convert_rwn(Int_t id);
 
 Int_t golower  = 1;
-Int_t bufsize  = 8000;
+Int_t bufsize  = 64000;
 Int_t optcwn = 1;
 int main(int argc, char **argv)
 {
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
      printf("      tolower  = 1 by default (use 0 to keep case of column names)\n");
      printf("      lrecl =0 by default (must be specified if >8092)\n");
      printf("      bufsize = 8000 by default (branch buffer size)\n");
-     printf("      optcwn  = 1  by default convert int of <= 16 bit into short (to preserve types use 0) \n");
+     printf("      for cwn ntuple only: optcwn  = 1 (default)  1-byte int -> char, 2-byte int -> short, (use 0 to keep 4-byte int) \n");
      return 1;
   }
   lq = &pawc[9];
@@ -715,8 +715,10 @@ void convert_directory(const char *dir)
        else if( isize == 8) strcat(fullname,"/D");
      }
      
-     // add support for UShort_t   
- 
+     
+     // add support for 1-byte (Char_t) and 2-byte (Short_t) integers  
+     Int_t nBytesUsed = 4; // default for integers
+     
      if( itype == 2 )  
        {
 	 if( optcwn == 1 ) 
@@ -727,36 +729,56 @@ void convert_directory(const char *dir)
 	       }
 	     else 
 	       {
-		 strcat(fullname,"/S");
+		 if( nbits > 8 )
+		   { 
+		     strcat(fullname,"/S");
+		     nBytesUsed = 2;
+		   }
+		 else
+		   {
+		     strcat(fullname,"/B");
+		     nBytesUsed = 1;
+		   }
 	       }
 	   }
 	 else 
 	   {
-	    strcat(fullname,"/I");
+	     strcat(fullname,"/I");
 	   }
        }
      
-     // add support for Short_t   
+     // add support for 1-byte (UChar_t) and 2-byte (UShort_t) integers  
      if ( itype == 3 ) 
        {
 	 if(  optcwn == 1 ) 
 	   { 
-	     if( nbits > 16) {
-	       strcat(fullname,"/i");
-	     }
-	     else 
+	     if( nbits > 16) 
 	       {
-		 strcat(fullname,"/s");
+		 strcat(fullname,"/i");
+	       }
+	     else
+	       {   
+		 if( nbits > 8 )
+		   {
+		     strcat(fullname,"/s");
+		     nBytesUsed = 2;
+		   }
+		 else
+		   {
+		     strcat(fullname,"/b");
+		     nBytesUsed = 1;
+		   }
 	       }
 	   }
 	 else 
 	   {
 	     strcat(fullname,"/i");
 	   }
-     }
-
- 
-
+       }
+     
+     
+     
+     
 //     if (itype == 4) strcat(fullname,"/i");
      if (itype == 4) strcat(fullname,"/b");
      if (itype == 5) strcat(fullname,"/C");
@@ -820,6 +842,66 @@ printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, 
            }
         }
      }
+
+    // if optimizing cwn ntuple then look up bufpos and adjust integers to be shorts or chars
+    if(  optcwn == 1 ) 
+      { 
+	bufpos = 0;
+	for(int k=0; k<nvar;k++) 
+	  {
+#ifndef WIN32
+	    hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
+#else
+	    hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
+#endif
+	    
+	    Int_t nBytesUsed = 4; // default for integers
+	    
+	    if ( itype == 2 || itype == 3) 
+	      {
+		if( nbits > 16) 
+		  {
+		    // do nothing for integers of 4 byte
+		  }
+		else
+		  {   
+		    if( nbits > 8 )
+		      {
+			nBytesUsed = 2;
+		      }
+		    else
+		      {
+			nBytesUsed = 1;
+		      }
+		  }
+	      }
+	    
+	    if(nBytesUsed == 1)
+	      {
+		
+		for(Int_t index = 0; index < ielem; index++)
+		  {
+		    // shift all chars with data to be one after another
+		    bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
+		  }
+	      } 
+	    else
+	      {
+		if(nBytesUsed == 2)
+		  {
+		    
+		    for(Int_t index = 0; index < ielem; index++)
+		      {
+			// shift all shorts ( 2 chars) with data to be one after another 
+			bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
+			bigbuf[bufpos + index*nBytesUsed+1 ] =  bigbuf[bufpos + index * isize+1];
+		      }
+		  }
+	      }
+	    bufpos += isize*ielem;
+	  }
+      }
+
      tree->Fill();
   }
   tree->Print();
