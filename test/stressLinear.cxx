@@ -286,8 +286,8 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
   printf("******************************************************************\n");
   gBenchmark->Print("stress");
   const Int_t nr = 7;
-  const Double_t x_b12[] = { 10.,   30.,   50.,  100.,  300.,  500.,    700.};
-  const Double_t y_b12[] = {9.58, 13.87, 17.58, 31.39, 64.98, 164.14, 434.10};
+  const Double_t x_b12[] = { 10.,   30.,   50.,   100.,  300.,  500.,    700.};
+  const Double_t y_b12[] = {10.74, 15.72, 20.00, 35.79, 98.77, 415.34, 1390.33};
 
   TGraph gr(nr,x_b12,y_b12);
   Double_t ct = gBenchmark->GetCpuTime("stress");

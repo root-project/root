@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.53 2004/01/10 10:52:30 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.54 2004/02/09 21:00:57 rdm Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -13,8 +13,8 @@
 //   gmake  on Unix systems
 //   nmake  on Windows
 // To run in batch, do
-//   stress   : with no parameters, run standard test with 1000 events
-//   stress 30: run test with 30 events only
+//   stress -b 1000  : with no parameters, run standard test with 1000 events
+//   stress -b 30:     run test with 30 events only
 //
 // To run interactively, do
 // root -b
@@ -59,11 +59,11 @@
 // ******************************************************************
 //*  Linux pcbrun.cern.ch 2.4.20 #1 Thu Jan 9 12:21:02 MET 2003
 //******************************************************************
-//stress    : Total I/O =  699.0 Mbytes, I =  532.0, O = 167.0
-//stress    : Compr I/O =  549.5 Mbytes, I =  419.9, O = 129.7
-//stress    : Real Time =  63.53 seconds Cpu Time =  59.80 seconds
+//stress    : Total I/O =  703.7 Mbytes, I =  535.2, O = 168.5
+//stress    : Compr I/O =  557.0 Mbytes, I =  425.1, O = 131.9
+//stress    : Real Time =  64.84 seconds Cpu Time =  61.00 seconds
 //******************************************************************
-//*  ROOTMARKS = 600.1   *  Root3.05/02   20030131/1208
+//*  ROOTMARKS = 600.1   *  Root4.02/00   20041217/1146
 //******************************************************************
 // 
 //_____________________________batch only_____________________
@@ -208,11 +208,11 @@ void stress(Int_t nevent, Int_t style = 1,
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t cp_brun_30   = 13.64;
-   Float_t cp_brun_1000 = 60.92;
+   Float_t cp_brun_30   = 12.73;
+   Float_t cp_brun_1000 = 61.88;
 #else
-   Float_t cp_brun_30   = 32.11;  //The difference is essentially coming from stress16
-   Float_t cp_brun_1000 = 84.85;
+   Float_t cp_brun_30   = 31.03;  //The difference is essentially coming from stress16
+   Float_t cp_brun_1000 = 84.30;
 #endif
    Float_t cp_brun = cp_brun_1000 - (cp_brun_1000 - cp_brun_30)*(1000-nevent)/(1000-30);
    Float_t ct = gBenchmark->GetCpuTime("stress");

@@ -674,7 +674,7 @@ int main(int argc, char **argv)
   Double_t cp11r = timer.CpuTime();
   cptot += cp11r;
   printf("9 Clones2  r: RT=%6.2f s  Cpu=%6.2f s\n",rt11r,cp11r);
-  Double_t cpref = 153.47;
+  Double_t cpref = 152.93;
   Double_t rootmarks = cpref*600/cptot;
 
   //print all results
@@ -741,7 +741,7 @@ int main(int argc, char **argv)
   printf("******************************************************************************\n");
   printf("* Time to write in seconds      comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        0.40    %6.2f        1.42     *\n",cp2w-cp1, cp3w-cp1);
+  printf("* vector<THit>                  %6.2f        0.65    %6.2f        1.42     *\n",cp2w-cp1, cp3w-cp1);
   printf("* list<THit>                    %6.2f        0.47    %6.2f        1.58     *\n",cp2wL-cp1L,cp3wL-cp1L);
   printf("* deque<THit>                   %6.2f        0.45    %6.2f        1.53     *\n",cp2wD-cp1D,cp3wD-cp1D);
   printf("* set<THit>                     %6.2f        0.46    %6.2f        1.41     *\n",cp2wS-cp1S,cp3wS-cp1S);

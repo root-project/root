@@ -126,11 +126,11 @@
    if (rtall) {
       Float_t rtbrun, cpbrun;
       if (batch) {
-         rtbrun    = 2.41;
-         cpbrun    = 2.35;
+         rtbrun    = 3.45;
+         cpbrun    = 3.24;
       } else {
-         rtbrun    = 6.38;
-         cpbrun    = 2.72;
+         rtbrun    = 5.79;
+         cpbrun    = 4.08;
       }
       Float_t rootmarks = norm*(rtbrun+cpbrun)/(rtall+cpall);
       printf("\n");
