@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.39 2001/04/03 13:44:32 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.42 2001/05/16 06:39:18 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1934,6 +1934,7 @@ int main(int argc, char **argv)
          // these change (STK)
          char *request = strtok(0, "-!+;");
          // just in case remove trailing space and tab
+         while (*request == ' ') request++;
          int len = strlen(request)-1;
          while( request[len]==' '||request[len]=='\t' ) request[len--] ='\0';
          G__ClassInfo cl(request);
