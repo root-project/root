@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.161 2004/07/20 09:40:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.162 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1351,19 +1351,19 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (opt.Contains("selector")) {
       fprintf(fp,"\n");
       fprintf(fp,"   %s(TTree *tree=0) { }\n",classname) ;
-      fprintf(fp,"   ~%s() { }\n",classname);
-      fprintf(fp,"   Int_t   Version() const {return 1;}\n");
-      fprintf(fp,"   void    Begin(TTree *tree);\n");
-      fprintf(fp,"   void    SlaveBegin(TTree *tree);\n");
-      fprintf(fp,"   void    Init(TTree *tree);\n");
-      fprintf(fp,"   Bool_t  Notify();\n");
-      fprintf(fp,"   Bool_t  Process(Long64_t entry);\n");
-      fprintf(fp,"   void    SetOption(const char *option) { fOption = option; }\n");
-      fprintf(fp,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
-      fprintf(fp,"   void    SetInputList(TList *input) {fInput = input;}\n");
-      fprintf(fp,"   TList  *GetOutputList() const { return fOutput; }\n");
-      fprintf(fp,"   void    SlaveTerminate();\n");
-      fprintf(fp,"   void    Terminate();\n\n");
+      fprintf(fp,"   virtual ~%s() { }\n",classname);
+      fprintf(fp,"   virtual Int_t   Version() const {return 1;}\n");
+      fprintf(fp,"   virtual void    Begin(TTree *tree);\n");
+      fprintf(fp,"   virtual void    SlaveBegin(TTree *tree);\n");
+      fprintf(fp,"   virtual void    Init(TTree *tree);\n");
+      fprintf(fp,"   virtual Bool_t  Notify();\n");
+      fprintf(fp,"   virtual Bool_t  Process(Long64_t entry);\n");
+      fprintf(fp,"   virtual void    SetOption(const char *option) { fOption = option; }\n");
+      fprintf(fp,"   virtual void    SetObject(TObject *obj) { fObject = obj; }\n");
+      fprintf(fp,"   virtual void    SetInputList(TList *input) {fInput = input;}\n");
+      fprintf(fp,"   virtual TList  *GetOutputList() const { return fOutput; }\n");
+      fprintf(fp,"   virtual void    SlaveTerminate();\n");
+      fprintf(fp,"   virtual void    Terminate();\n\n");
       fprintf(fp,"   ClassDef(%s,0);\n",classname);
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
@@ -1372,14 +1372,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    } else {
       fprintf(fp,"\n");
       fprintf(fp,"   %s(TTree *tree=0);\n",classname);
-      fprintf(fp,"   ~%s();\n",classname);
-      fprintf(fp,"   Int_t    Cut(Long64_t entry);\n");
-      fprintf(fp,"   Int_t    GetEntry(Long64_t entry);\n");
-      fprintf(fp,"   Long64_t LoadTree(Long64_t entry);\n");
-      fprintf(fp,"   void     Init(TTree *tree);\n");
-      fprintf(fp,"   void     Loop();\n");
-      fprintf(fp,"   Bool_t   Notify();\n");
-      fprintf(fp,"   void     Show(Long64_t entry = -1);\n");
+      fprintf(fp,"   virtual ~%s();\n",classname);
+      fprintf(fp,"   virtual Int_t    Cut(Long64_t entry);\n");
+      fprintf(fp,"   virtual Int_t    GetEntry(Long64_t entry);\n");
+      fprintf(fp,"   virtual Long64_t LoadTree(Long64_t entry);\n");
+      fprintf(fp,"   virtual void     Init(TTree *tree);\n");
+      fprintf(fp,"   virtual void     Loop();\n");
+      fprintf(fp,"   virtual Bool_t   Notify();\n");
+      fprintf(fp,"   virtual void     Show(Long64_t entry = -1);\n");
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
       fprintf(fp,"#endif\n");
