@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.rdl,v 1.7 2001/06/16 20:28:21 david Exp $
+ *    File: $Id: RooHist.rdl,v 1.8 2001/09/27 18:22:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -19,6 +19,7 @@ class TH1;
 
 class RooHist : public TGraphAsymmErrors, public RooPlotable {
 public:
+  RooHist() {} ;
   RooHist(Double_t nominalBinWidth, Double_t nSigma= 1);
   RooHist(const TH1 &data, Double_t nominalBinWidth= 0, Double_t nSigma= 1);
   virtual ~RooHist();
