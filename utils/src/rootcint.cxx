@@ -223,20 +223,21 @@ enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 FILE *fp;
 
 //______________________________________________________________________________
-int GetClassVersion(G__ClassInfo &cl)
+int GetClassVersion(G__ClassInfo &cl) 
 {
    // Return the version number of the class or -1
-   // if the function Class_Version does not exist.
+   // if the function Class_Version does not exist. 
 
-   if (!cl.HasMethod("Class_Version")) return -1;
+  if (!cl.HasMethod("Class_Version")) return -1;
 
-   const char *classname = cl.Fullname();
-   const char *function = "::Class_Version()";
-   char *name = new char[strlen(classname)+strlen(function)+1];
-   sprintf(name, "%s%s", classname, function);
-   int version = (int)G__int(G__calc(name));
-   delete name;
-   return version;
+  char * function = "::Class_Version()";
+  const char * classname = cl.Fullname();
+  char * name = new char[strlen(classname)+strlen(function)+1];
+  sprintf(name, "%s%s", classname, function);
+  int version = (int)G__int(G__calc(name));
+  delete name;
+  return version;
+
 }
 
 //______________________________________________________________________________
@@ -488,8 +489,21 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
             else {
                if (stltype == kMap || stltype == kMultimap) {
                   fprintf(fp, "            R__b >> R__t;\n");
-                  fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
-                  fprintf(fp, "            R__b >> R__t2;\n");
+                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
+                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
+                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
+                     fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
+                     fprintf(fp, "            R__b >> R__t2;\n");
+                  } else {
+                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
+                        fprintf(fp, "            static TString R__str;\n");
+                        fprintf(fp, "            R__str.Streamer(R__b);\n");
+                        fprintf(fp, "            string R__t2 = R__str.Data();\n");
+                     } else {
+                        fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
+                        fprintf(fp, "            R__t2.Streamer(R__b);\n");
+                     }
+                 }
                } else if (stltype == kSet || stltype == kMultiset) {
                   fprintf(fp, "            R__b >> R__t;\n");
                } else {
@@ -504,7 +518,26 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
              }
           } else {
             if (TemplateArg(m).HasMethod("Streamer")) {
-               fprintf(fp, "            R__t.Streamer(R__b);\n");
+               if (stltype == kMap || stltype == kMultimap) {
+                  fprintf(fp, "            R__t.Streamer(R__b);\n");
+                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
+                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
+                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
+                     fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
+                     fprintf(fp, "            R__b >> R__t2;\n");
+                  } else {
+                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
+                        fprintf(fp, "            static TString R__str;\n");
+                        fprintf(fp, "            R__str.Streamer(R__b);\n");
+                        fprintf(fp, "            string R__t2 = R__str.Data();\n");
+                     } else {
+                        fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
+                        fprintf(fp, "            R__t2.Streamer(R__b);\n");
+                     }
+                  }
+               } else {
+                  fprintf(fp, "            R__t.Streamer(R__b);\n");
+               }
             } else {
               if (strcmp(s,"string") == 0) {
                  fprintf(fp,"            static TString R__str;\n");
@@ -564,7 +597,18 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
             else {
                if (stltype == kMap || stltype == kMultimap) {
                   fprintf(fp, "            R__b << (*R__k).first;\n");
-                  fprintf(fp, "            R__b << (*R__k).second;\n");
+                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
+                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
+                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
+                     fprintf(fp, "            R__b << (*R__k).second;\n");
+                  } else {
+                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
+                        fprintf(fp, "            static TString R__str = ((%s&)((*R__k).second)).c_str();\n",TemplateArg(m,1).Name());
+                        fprintf(fp, "            R__str.Streamer(R__b);\n");
+                     } else {
+                        fprintf(fp, "            ((%s&)((*R__k).second)).Streamer(R__b);\n",TemplateArg(m,1).Name());
+                     }
+                  }
                } else if (stltype == kSet || stltype == kMultiset) {
                   fprintf(fp, "            R__b << *R__k;\n");
                } else {
@@ -584,7 +628,19 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          } else {
             if (TemplateArg(m).HasMethod("Streamer")) {
                if (stltype == kMap || stltype == kMultimap) {
-                  fprintf(fp, "            (*R__k).Streamer(R__b);\n");
+                  fprintf(fp, "            ((%s&)((*R__k).first)).Streamer(R__b);\n",TemplateArg(m).Name());
+                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
+                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
+                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
+                     fprintf(fp, "            R__b << (*R__k).second;\n");
+                  } else {
+                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
+                        fprintf(fp, "            static TString R__str = ((%s&)((*R__k).second)).c_str();\n",TemplateArg(m,1).Name());
+                        fprintf(fp, "            R__str.Streamer(R__b);\n");
+                     } else {
+                        fprintf(fp, "            ((%s&)((*R__k).second)).Streamer(R__b);\n",TemplateArg(m,1).Name());
+                     }
+                  }
                } else if (stltype == kSet || stltype == kMultiset) {
                   fprintf(fp, "            (*R__k).Streamer(R__b);\n");
                } else {
@@ -1043,7 +1099,7 @@ void WritePointersSTL(G__ClassInfo &cl)
    char a[80];
    char clName[G__LONGLINE];
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
-   int version = GetClassVersion(cl);
+   int version = GetClassVersion( cl);
    if (version <= 0) return;
 
    G__DataMemberInfo m(cl);
