@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.24 2004/10/15 17:06:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.25 2004/10/22 15:21:19 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -299,7 +299,7 @@ void TGLVEntry::DoRedraw()
    // List view item is placed and layouted in the container frame,
    // but is drawn in viewport.
 
-   if (IsMapped()) DrawCopy(fId, 0, 0);
+   DrawCopy(fId, 0, 0);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.21 2004/12/08 17:13:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.22 2004/12/09 17:05:41 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -273,6 +273,7 @@ public:
    virtual TGViewPort  *GetViewPort() const { return fVport; }
    virtual TGScrollBar *GetScrollBar() const { return fVScrollbar; }
    virtual TGVScrollBar *GetVScrollbar() const { return fVScrollbar; }
+
    virtual void DrawBorder();
    virtual void Resize(UInt_t w, UInt_t h);
    virtual void Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }

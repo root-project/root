@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.27 2004/10/21 12:07:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.28 2004/12/08 17:13:41 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -125,7 +125,7 @@ TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
 
    fContainer = 0;
    fX0 = fY0  = 0;
-   MapSubwindows();
+
    AddInput(kStructureNotifyMask);
 }
 
@@ -139,9 +139,10 @@ void TGViewPort::SetContainer(TGFrame *f)
    if (!fContainer) {
       fContainer = f;
       AddFrame(f, 0);
-      if (fContainer->InheritsFrom(TGContainer::Class())) {
+
+     if (fContainer->InheritsFrom(TGContainer::Class())) {
          ((TGContainer*)fContainer)->fViewPort = this;
-         ((TGContainer*)fContainer)->fCanvas = (TGCanvas*)this->GetParent();
+         if (fParent->InheritsFrom(TGCanvas::Class())) ((TGContainer*)fContainer)->fCanvas = (TGCanvas*)fParent;
       }
    }
 }
@@ -294,6 +295,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fScrollTimer = new TGContainerScrollTimer(this);
    fKeyTimerActive = kFALSE;
    fScrolling = kFALSE;
+   fCanvas = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                         kButtonPressMask | kButtonReleaseMask |
@@ -720,16 +722,17 @@ void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    TIter next(fList);
 
    while ((el = (TGFrameElement *) next())) {
-      if ((Int_t(el->fFrame->GetY())> yy-(Int_t)el->fFrame->GetHeight()) &&
-          (Int_t(el->fFrame->GetX())> xx-(Int_t)el->fFrame->GetWidth()) &&
-          (Int_t(el->fFrame->GetY())< yy+Int_t(h+el->fFrame->GetHeight())) &&
-          (Int_t(el->fFrame->GetX())< xx+Int_t(w+el->fFrame->GetWidth()))) {
+      if ((Int_t(el->fFrame->GetY())> yy - (Int_t)el->fFrame->GetHeight()) &&
+          (Int_t(el->fFrame->GetX())> xx - (Int_t)el->fFrame->GetWidth()) &&
+          (Int_t(el->fFrame->GetY())< yy + Int_t(h + el->fFrame->GetHeight())) &&
+          (Int_t(el->fFrame->GetX())< xx + Int_t(w + el->fFrame->GetWidth()))) {
 
          // draw either in container window or in double-buffer
-         if (!fMapSubwindows)
-            el->fFrame->DrawCopy(id, el->fFrame->GetX()-pos.fX, el->fFrame->GetY()-pos.fY);
-         else
+         if (!fMapSubwindows) {
+            el->fFrame->DrawCopy(id, el->fFrame->GetX() - pos.fX, el->fFrame->GetY() - pos.fY);
+         } else {
             fClient->NeedRedraw(el->fFrame);
+         }
       }
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.32 2004/12/08 17:13:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.33 2004/12/09 17:05:41 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -341,7 +341,8 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fLastActive = 0;
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
-   fMapSubwindows = kFALSE;
+
+   fMapSubwindows = !gVirtualX->InheritsFrom("TGX11");
 }
 
 //______________________________________________________________________________
@@ -838,11 +839,10 @@ void TGListBox::InitListBox()
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, 6);
    fLbc = new TGLBContainer(fVport, 10, 10, kVerticalFrame, fgWhitePixel);
    fLbc->fViewPort = fVport;
-
    fLbc->Associate(this);
    fLbc->SetListBox(this);
    SetContainer(fLbc);
-   fLbc->fViewPort = fVport;
+
 
    AddFrame(fVport, 0);
    AddFrame(fVScrollbar, 0);
