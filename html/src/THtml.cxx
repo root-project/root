@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.70 2005/01/10 11:00:44 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.71 2005/03/20 21:36:51 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2832,7 +2832,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                // look for '('
                Bool_t isfunc = ((*tempEndPtr == '(')
                                 || c == '(') ? kTRUE : kFALSE;
-               if (!isfunc) {
+               if (!isfunc && *tempEndPtr) {
                   char *bptr = tempEndPtr + 1;
                   while (*bptr && isspace(*bptr))
                      bptr++;
