@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.9 2001/10/08 05:20:15 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.10 2001/10/13 21:53:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -122,10 +122,13 @@ void RooGenCategory::updateIndexList()
   RooArgSet* tmp=(RooArgSet*) RooArgSet(_superCatProxy.arg()).snapshot(kTRUE) ;
   RooSuperCategory* superClone = (RooSuperCategory*) tmp->find(_superCatProxy.arg().GetName()) ;
 
-  TIterator* sIter = superClone->MakeIterator() ;
-  RooArgSet *catList ;
-  while (catList=(RooArgSet*)sIter->Next()) {
+  TIterator* sIter = superClone->typeIterator() ;
+  RooArgSet *catList = superClone->getParameters((const RooArgSet*)0) ;
+  RooCatType* type ;
+  while (type=(RooCatType*)sIter->Next()) {
     // Call user function
+    superClone->setIndex(type->getVal()) ;
+
     TString typeName = evalUserFunc(catList) ;
 
     // Check if type exists for given name, register otherwise
@@ -134,10 +137,11 @@ void RooGenCategory::updateIndexList()
 
     // Fill map for this super-state
     _map[superClone->getIndex()] = type->getVal() ;
-//     cout << "updateIndexList(" << GetName() << ") _map[" << superClone->getLabel() << "] = " << type->GetName() << endl ;
+    //cout << "updateIndexList(" << GetName() << ") _map[" << superClone->getLabel() << "] = " << type->GetName() << endl ;
   }
 
-  delete superClone ;
+  delete tmp ;
+  delete catList ;
 }
 
 
