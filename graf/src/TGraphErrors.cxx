@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.7 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.8 2000/12/15 12:05:24 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -92,7 +92,7 @@ TGraphErrors::TGraphErrors(Int_t n)
 
 
 //______________________________________________________________________________
-TGraphErrors::TGraphErrors(Int_t n, Float_t *x, Float_t *y, Float_t *ex, Float_t *ey)
+TGraphErrors::TGraphErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *ex, const Float_t *ey)
        : TGraph(n,x,y)
 {
 //*-*-*-*-*-*-*-*-*-*-*TGraphErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -118,7 +118,7 @@ TGraphErrors::TGraphErrors(Int_t n, Float_t *x, Float_t *y, Float_t *ex, Float_t
 
 
 //______________________________________________________________________________
-TGraphErrors::TGraphErrors(Int_t n, Double_t *x, Double_t *y, Double_t *ex, Double_t *ey)
+TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *ex, const Double_t *ey)
        : TGraph(n,x,y)
 {
 //*-*-*-*-*-*-*-*-*-*-*TGraphErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
