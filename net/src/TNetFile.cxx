@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.19 2001/02/22 09:44:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.20 2001/02/22 15:18:56 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -363,9 +363,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    Int_t         stat, n;
    EMessageTypes kind;
 
-   n = Recv(stat, kind);
-
-   if (kind == kROOTD_ERR || n < 0) {
+   if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
       PrintError("ReadBuffer", stat);
       result = kTRUE;
       goto end;
@@ -433,12 +431,10 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
       goto end;
    }
 
-   Int_t         stat, n;
+   Int_t         stat;
    EMessageTypes kind;
 
-   n = Recv(stat, kind);
-
-   if (kind == kROOTD_ERR || n < 0) {
+   if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
       PrintError("WriteBuffer", stat);
       result = kTRUE;
       goto end;
