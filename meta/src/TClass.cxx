@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.158 2005/01/17 16:26:41 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.159 2005/01/17 19:37:40 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -145,7 +145,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
           TDatime::GetDateTime(cdatime[0],cdate,ctime);
           sprintf(&line[kvalue],"%d/%d",cdate,ctime);
        } else if (isbits) {
-          sprintf(&line[kvalue],"0x%08lx", *(UInt_t*)pointer);
+          sprintf(&line[kvalue],"0x%08x", *(UInt_t*)pointer);
        } else {
           strcpy(&line[kvalue], membertype->AsString(pointer));
        }
