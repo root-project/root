@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.8 2003/11/07 22:47:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.9 2004/03/08 08:04:25 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -105,8 +105,12 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    fCanvasContainer = new TRootEmbeddedContainer(this, win, GetViewPort());
    SetContainer(fCanvasContainer);
 
-   if (name)
-      fCanvas = new TCanvas(name, w, h, fCWinId);
+   fCanvas = new TCanvas(name ? name : GetName(), w, h, fCWinId);
+   if (!p) {
+      fCanvas->SetBorderMode(0);
+      MapSubwindows();
+      Resize();
+   }
 }
 
 //______________________________________________________________________________

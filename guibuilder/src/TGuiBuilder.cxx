@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.6 2004/09/21 05:16:21 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.7 2004/09/21 10:09:18 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -290,6 +290,21 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    act->fPic = "bld_vseparator.xpm";
    AddAction(act, "Standard");
 
+   act = new TGuiBldAction("TGStatusBar", "Status Bar", kGuiBldCtor);
+   act->fAct = "new TGStatusBar()";
+   act->fPic = "bld_statusbar.xpm";
+   AddAction(act, "Standard");
+
+   act = new TGuiBldAction("TGHProgressBar", "Progress Bar", kGuiBldCtor);
+   act->fAct = "new TGHProgressBar()";
+   act->fPic = "bld_hprogressbar.xpm";
+   AddAction(act, "Standard");
+/*
+   act = new TGuiBldAction("TRootEmbeddedCanvas", "Embedded Canvas", kGuiBldCtor);
+   act->fAct = "new TRootEmbeddedCanvas()";
+   act->fPic = "bld_embedcanvas.xpm";
+   AddAction(act, "Standard");
+*/
    // Containers
    act = new TGuiBldAction("TGHorizontalFrame", "Horizontal Frame", kGuiBldCtor);
    act->fAct = "new TGHorizontalFrame()";
@@ -651,6 +666,8 @@ static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
 Bool_t TGuiBuilder::HandleKey(Event_t *event)
 {
    //
+
+   if (!fClient->IsEditable()) return kFALSE;
 
    fEditable = FindEditableMdiFrame(fClient->GetRoot());
 

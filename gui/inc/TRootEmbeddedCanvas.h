@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.7 2004/06/18 13:57:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.8 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -51,8 +51,8 @@ protected:
    virtual Bool_t HandleContainerCrossing(Event_t *ev);
 
 public:
-   TRootEmbeddedCanvas(const char *name = 0, const TGWindow *p = 0, UInt_t w = 1,
-            UInt_t h = 1, UInt_t options = kSunkenFrame | kDoubleBorder,
+   TRootEmbeddedCanvas(const char *name = 0, const TGWindow *p = 0, UInt_t w = 10,
+            UInt_t h = 10, UInt_t options = kSunkenFrame | kDoubleBorder,
             Pixel_t back = GetDefaultFrameBackground());
    virtual ~TRootEmbeddedCanvas();
 
