@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.50 2003/10/07 14:00:59 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.51 2003/11/10 10:45:10 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -242,10 +242,10 @@ TWinNTSystem::~TWinNTSystem()
    }
 
 #ifdef GDK_WIN32
-   if (hThread1) CloseHandle(hThread1);
+   if (hThread1) ::CloseHandle(hThread1);
 #endif
 
-   CloseHandle(fhTermInputEvent);
+   ::CloseHandle(fhTermInputEvent);
 }
 
 #ifdef GDK_WIN32
@@ -255,12 +255,16 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
 
    while (1) {
       if(gROOT->GetApplication()) {
-         ::WaitForSingleObject(hEvent1, INFINITE);
+         if (hEvent1) {
+            ::WaitForSingleObject(hEvent1, INFINITE);
+            ::CloseHandle(hEvent1);
+            hEvent1 = 0;
+         }
          if(!gROOT->IsLineProcessing()) {
             gApplication->HandleTermInput();
          }
          ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
-         ::ResetEvent(hEvent1);
+         if (hEvent1) ::ResetEvent(hEvent1);
       } else {
          static int i = 0;
          ::SleepEx(100,1);
@@ -774,7 +778,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
             return;
          }
       }
-      SetEvent(hEvent1);
+      if (hEvent1) ::SetEvent(hEvent1);
       if (gXDisplay) {
          if(gXDisplay->Notify()) {
             if (fReadready.IsSet(gXDisplay->GetFd())) {
