@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.49 2004/04/22 13:10:47 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.50 2004/04/28 11:45:47 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -858,7 +858,8 @@ void TAuthenticate::SetEnvironment()
          }
       }
       if (fgDefaultUser == "anonymous" || fgDefaultUser == "rootd" ||
-          fgUser != "")  // when set by user don't prompt for it anymore
+          // when set by user don't prompt for it anymore
+          fgUser != "" || fUser != "")  
          fgPromptUser = kFALSE;
 
       if (gDebug > 2)
