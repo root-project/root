@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.21 2004/09/10 21:34:20 brun Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.22 2004/10/15 16:55:06 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -383,7 +383,7 @@ Long64_t TDCacheFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 
    dc_errno = 0;
 
-   Long64_t rc = dc_lseek(fd, offset, whence);
+   Long64_t rc = dc_lseek64(fd, offset, whence);
 
    if (rc < 0) {
       if (dc_errno != 0)
@@ -430,7 +430,7 @@ Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
    // If in read mode, uses the cached file status, if available, to avoid
    // costly dc_stat() call.
 
-   struct stat & statbuf = fStatBuffer; // reference the cache
+   struct stat64 & statbuf = fStatBuffer; // reference the cache
 
    if (fOption != "READ" || !fStatCached) {
      // We are not in read mode, or the file status information is not yet
@@ -440,7 +440,7 @@ Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
      TString pathString = GetDcapPath(path);
      path = pathString.Data();
 
-     if (path != 0 && dc_stat(path, &statbuf) >= 0) {
+     if ( (path != NULL) && (dc_stat64(path, &statbuf) >= 0) ) {
         fStatCached = kTRUE;
      }
    }
@@ -605,9 +605,9 @@ int TDCacheSystem::GetPathInfo(const char *path, FileStat_t &buf)
    TString pathString = TDCacheFile::GetDcapPath(path);
    path = pathString.Data();
 
-   struct stat sbuf;
+   struct stat64 sbuf;
 
-   if (path != 0 && dc_stat(path, &sbuf) >= 0) {
+   if ( (path != NULL)  && (dc_stat64(path, &sbuf) >= 0) ) {
 
       buf.fDev    = sbuf.st_dev;
       buf.fIno    = sbuf.st_ino;

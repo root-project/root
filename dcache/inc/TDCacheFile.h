@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.7 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.8 2004/10/15 16:55:06 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Updated: William Tanenbaum 21/11/2003
 // Updated: Tgiran Mkrtchyan 28/06/2004
@@ -42,7 +42,7 @@ class TDCacheFile : public TFile {
 
 private:
    Bool_t fStatCached;       //! (transient) is file status cached?
-   struct stat fStatBuffer;  //! (transient) Cached file status buffer (for performance)
+   struct stat64 fStatBuffer;  //! (transient) Cached file status buffer (for performance)
 
    TDCacheFile() : fStatCached(kFALSE) { }
 
