@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsData.cc,v 1.17 2002/09/05 04:33:04 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -64,10 +64,11 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
 
 
 RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) : 
-  TNamed(newname?newname:other.GetName(),other.GetTitle()), _vars(other._vars),
+  TNamed(newname?newname:other.GetName(),other.GetTitle()), _vars(),
   _cachedVars("Cached Variables"), _doDirtyProp(kTRUE)
 {
   // Copy constructor
+  _vars.addClone(other._vars) ;
   _iterator= _vars.createIterator();
   _cacheIter = _cachedVars.createIterator() ;
 }
@@ -131,7 +132,7 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
   }
   delete iter ;
 
-  if (cut) {
+  if (cut && strlen(cut)>0) {
     RooFormulaVar cutVar(cut,cut,*get()) ;
     return reduceEng(varSubset2,&cutVar,kFALSE) ;      
   } 

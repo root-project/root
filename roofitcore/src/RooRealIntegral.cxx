@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.64 2002/09/05 04:33:52 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.65 2002/09/30 00:57:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -488,6 +488,11 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   }
   else {
     // let the constructor check that the domain is finite
+
+    cout << "RooRealIntegral::initNumIntegrator(" << GetName() 
+	 << ") WARNING: Evaluation may be slow: integral contains " << _intList.getSize() << "D Monte Carlo integration over " ;
+    _intList.Print("1") ;
+    
     if (_iconfig) {
       _numIntEngine= new RooMCIntegrator(*_numIntegrand,*_iconfig);
     } else {
@@ -499,6 +504,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
     return kFALSE;
   }
 
+  _restartNumIntEngine = kFALSE ;
   return kTRUE;
 }
 
@@ -604,9 +610,9 @@ Double_t RooRealIntegral::evaluate() const
     }    
   } 
 
-  if (RooAbsPdf::_verboseEval>0)
+  if (RooAbsPdf::_verboseEval>0) {
     cout << "RooRealIntegral::evaluate(" << GetName() << ") raw*fact = " << retVal << endl ;
-
+  }
   return retVal ;
 }
 
