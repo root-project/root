@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.25 2002/11/27 08:19:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.26 2003/02/21 15:07:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -672,6 +672,9 @@ void TStyle::SetHeaderPS(const char *header)
 // immediatly following the %%Page line
 // For example, this string may contain special Postscript instructions like
 //      200 200 translate
+// the following header string will print the string "my annotation" at the
+// bottom left corner of the page (outside the user area)
+//  "gsave 100 -100 t 0 r 0 0 m /Helvetica-Bold findfont 56 sf 0 0 m ( my annotation ) show gr"   
 // This information is used in TPostScript::Initialize
 
    fHeaderPS = header;
