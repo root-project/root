@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.3 2002/07/19 11:41:41 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.4 2003/01/07 17:31:53 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -32,13 +32,13 @@
 
 #include <dcap.h>
 
-//______________________________________________________________________________
+
 static const char* const DCACHE_PREFIX = "dcache:";
 static const size_t DCACHE_PREFIX_LEN = strlen(DCACHE_PREFIX);
 static const char* const DCAP_PREFIX = "dcap:";
 static const size_t DCAP_PREFIX_LEN = strlen(DCAP_PREFIX);
 
-//______________________________________________________________________________
+
 ClassImp(TDCacheFile)
 
 //______________________________________________________________________________
