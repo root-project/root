@@ -1,0 +1,17 @@
+{
+   gROOT->ProcessLine(".L na.cxx+");
+   gSystem->Load("libHistPainter.so");
+   TFile f("hout.root");
+   TH1 * h = f.Get("hpxpy");
+   h->SetDirectory(gROOT);
+   f.Close();
+   TList * l = h->GetListOfFunctions();
+//l->Print();
+   int last = l->LastIndex();
+   for(int i=0; i<=last; i++) {
+     fprintf(stderr,"Obj#%d %p ",i,l->At(i));
+     fprintf(stderr,"class %p ",l->At(i)->IsA());
+     fprintf(stderr,"name %s\n",l->At(i)->IsA()->GetName());
+
+   };
+}
