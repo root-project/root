@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:$:$Id:$
+// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.h,v 1.1 2005/03/14 15:33:43 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -35,13 +35,10 @@
 #include "TXMLParser.h"
 #endif
 
-extern "C" {
-  struct _xmlSAXHandler;
-  struct _xmlEntity;
-}
 
 class TList;
 class TSAXParserCallback;
+struct _xmlSAXHandler;
 
 
 class TSAXParser : public TXMLParser {
@@ -49,7 +46,7 @@ class TSAXParser : public TXMLParser {
 friend class TSAXParserCallback;
 
 private:
-   _xmlSAXHandler         *fSAXHandler;  // libxml SAX handler
+   _xmlSAXHandler         *fSAXHandler;  // libxml2 SAX handler
 
    virtual Int_t           Parse();
 

@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:$:$Id:$
+// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.cxx,v 1.1 2005/03/14 15:33:43 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -41,9 +41,10 @@
 #include "Varargs.h"
 #include "TObjString.h"
 #include "TList.h"
+#include "snprintf.h"
 
-#include "libxml/parser.h"
-#include "libxml/parserInternals.h"
+#include <libxml/parser.h>
+#include <libxml/parserInternals.h>
 
 
 class TSAXParserCallback {
@@ -65,46 +66,22 @@ ClassImp(TSAXParser)
 
 //______________________________________________________________________________
 TSAXParser::TSAXParser()
-  : fSAXHandler(new _xmlSAXHandler)
 {
    // Create SAX parser.
 
-   xmlSAXHandler temp = {
-      0,  // internalSubset
-      0,  // isStandalone
-      0,  // hasInternalSubset
-      0,  // hasExternalSubset
-      0,  // resolveEntity
-      0,  // getEntity
-      0,  // entityDecl
-      0,  // notationDecl
-      0,  // attributeDecl
-      0,  // elementDecl
-      0,  // unparsedEntityDecl
-      0,  // setDocumentLocator
-      TSAXParserCallback::StartDocument, // startDocument
-      TSAXParserCallback::EndDocument, // endDocument
-      TSAXParserCallback::StartElement, // startElement
-      TSAXParserCallback::EndElement, // endElement
-      0,  // reference
-      TSAXParserCallback::Characters, // characters
-      0,  // ignorableWhitespace
-      0,  // processingInstruction
-      TSAXParserCallback::Comment,  // comment
-      TSAXParserCallback::Warning,  // warning
-      TSAXParserCallback::Error,  // error
-      TSAXParserCallback::FatalError, // fatalError
-      0,  // getParameterEntity
-      TSAXParserCallback::CdataBlock, // cdataBlock
-      0,  // externalSubset
-      0,  // initialized
-      0,  // _private
-      0,  // startElementNs
-      0,  // endElementNs
-      0   // serror
-   };
+   fSAXHandler = new xmlSAXHandler;
+   memset(fSAXHandler, 0, sizeof(xmlSAXHandler));
 
-   *fSAXHandler = temp;
+   fSAXHandler->startDocument = TSAXParserCallback::StartDocument;
+   fSAXHandler->endDocument   = TSAXParserCallback::EndDocument;
+   fSAXHandler->startElement  = TSAXParserCallback::StartElement;
+   fSAXHandler->endElement    = TSAXParserCallback::EndElement;
+   fSAXHandler->characters    = TSAXParserCallback::Characters;
+   fSAXHandler->comment       = TSAXParserCallback::Comment;
+   fSAXHandler->warning       = TSAXParserCallback::Warning;
+   fSAXHandler->error         = TSAXParserCallback::Error;
+   fSAXHandler->fatalError    = TSAXParserCallback::FatalError;
+   fSAXHandler->cdataBlock    = TSAXParserCallback::CdataBlock;
 }
 
 //______________________________________________________________________________
