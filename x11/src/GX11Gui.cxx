@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.3 2000/07/04 11:32:32 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.4 2000/07/06 16:49:39 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1825,7 +1825,19 @@ void TGX11::FreeFontStruct(FontStruct_t fs)
 {
    // Free font structure returned by GetFontStruct().
 
-   XFreeFontInfo(0, (XFontStruct *) fs, 1);
+   // in XFree86 4.0 XFreeFontInfo() is broken, ok again in 4.0.1
+   static int xfree86_400 = -1;
+   if (xfree86_400 == -1) {
+      if (strstr(XServerVendor(fDisplay), "XFree86") &&
+          XVendorRelease(fDisplay) == 4000)
+         xfree86_400 = 1;
+      else
+         xfree86_400 = 0;
+      //printf("Vendor: %s, Release = %d\n", XServerVendor(fDisplay), XVendorRelease(fDisplay));
+   }
+
+   if (xfree86_400 == 0)
+      XFreeFontInfo(0, (XFontStruct *) fs, 1);
 }
 
 //______________________________________________________________________________
