@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.21 2000/09/08 07:41:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.22 2000/09/12 15:45:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1864,8 +1864,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"Bool_t %s::ProcessCut(Int_t entry)\n",classname);
       fprintf(fpc,"{\n");
       fprintf(fpc,"// Selection function\n");
+      fprintf(fpc,"// entry is the entry number in the current Tree\n");
       fprintf(fpc,"// Read only the necessary branches to select entries.\n");
       fprintf(fpc,"// return as soon as a bad entry is detected.\n");
+      fprintf(fpc,"// to read complete event, call fChain->GetTree()->GetEntry(entry)\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");
@@ -1874,7 +1876,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"void %s::ProcessFill(Int_t entry)\n",classname);
       fprintf(fpc,"{\n");
       fprintf(fpc,"// function called for selected entries only\n");
+      fprintf(fpc,"// entry is the entry number in the current Tree\n");
       fprintf(fpc,"// read branches not processed in ProcessCut and fill histograms\n");
+      fprintf(fpc,"// to read complete event, call fChain->GetTree()->GetEntry(entry)\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"}\n");
@@ -2247,13 +2251,13 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
 //   
-//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
-//          before processing entry. It is the user's responsability to read
+//     Bool_t TSelector::ProcessCut(Int_t tentry). This function is called
+//          before processing tentry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
-//          kFALSE otherwise.
+//          kFALSE otherwise. tentry is the entry number in the current Tree.
 //
-//     void TSelector::ProcessFill(Int_t entry). This function is called for
+//     void TSelector::ProcessFill(Int_t tentry). This function is called for
 //          all selected events. User fills histograms in this function.
 //
 //     void TSelector::Terminate(). This function is called at the end of
@@ -2298,13 +2302,13 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
 //   
-//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
-//          before processing entry. It is the user's responsability to read
+//     Bool_t TSelector::ProcessCut(Int_t tentry). This function is called
+//          before processing tentry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
-//          kFALSE otherwise.
+//          kFALSE otherwise. tentry is the entry number in the current Tree.
 //
-//     void TSelector::ProcessFill(Int_t entry). This function is called for
+//     void TSelector::ProcessFill(Int_t tentry). This function is called for
 //          all selected events. User fills histograms in this function.
 //
 //     void TSelector::Terminate(). This function is called at the end of
