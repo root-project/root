@@ -28,6 +28,7 @@
 #define G__TYPEINFO_TYPENUM   3
 #define G__TYPEINFO_REFTYPE   4
 #define G__TYPEINFO_SIZE      5
+#define G__TYPEINFO_ISCONST   6
 
 #ifndef G__OLDIMPLEMENTATION849
 int G__rootCcomment=0;
@@ -402,6 +403,9 @@ char *typenamein;
   int tag_type_info;
   char typenamebuf[G__MAXNAME*2];
   char *typename;
+#ifndef G__OLDIMPLEMENTATION1895
+  int isconst = 0;
+#endif
 
   /**********************************************************************
   * Get type_info tagname 
@@ -613,6 +617,9 @@ char *typenamein;
     tagnum = buf.tagnum;
     typenum = buf.typenum;
     isref = 0;
+#ifndef G__OLDIMPLEMENTATION1895
+    isconst = buf.isconst;
+#endif
 
     if(-1!=tagnum && 'u'==tolower(type) && buf.ref && -1!=G__struct.virtual_offset[tagnum]) {
       /* In case of polymorphic object, get the actual tagnum from the hidden
@@ -666,6 +673,9 @@ char *typenamein;
   type_info[G__TYPEINFO_TYPENUM] = typenum;
   type_info[G__TYPEINFO_REFTYPE] = reftype;
   type_info[G__TYPEINFO_SIZE] = size;
+#ifndef G__OLDIMPLEMENTATION1895
+  type_info[G__TYPEINFO_ISCONST] = isconst;
+#endif
 
   return( type_info ) ;
 

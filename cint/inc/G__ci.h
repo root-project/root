@@ -21,13 +21,17 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015098
-#define G__CINTVERSIONSTR  "5.15.98, Aug 5 2003"
+#define G__CINTVERSION      5015099
+#define G__CINTVERSIONSTR  "5.15.99, Aug 10 2003"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* Define G__FIX1 if you have problem defining variable argument functions
+ * such as printf, fprintf, etc... in Windows */
+/* #define G__FIX1 */
 
 /* 1885 has side-effect in building ROOT */
 #define G__OLDIMPLEMENTATION1885
@@ -1848,7 +1852,11 @@ extern int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,stru
 /**************************************************************************
  * Exported Cint API functions
  **************************************************************************/
+#ifdef G__FIX1
+extern G__EXPORT int G__fprintf (FILE* fp,char* fmt,...);
+#else
 extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
+#endif
 extern G__EXPORT int G__setmasksignal G__P((int));
 #ifndef G__OLDIMPLEMENTATION1596
 extern void G__settemplevel G__P((int val));
@@ -2489,7 +2497,11 @@ G__EXPORT void G__SetCppCintApiPointers(
 #define gets    G__gets
 #define system  G__system
 
+#ifdef G__FIX1
+int G__printf (char* fmt,...);
+#elsee
 int G__printf G__P((char* fmt,...));
+#endif
 int G__fputc G__P((int character,FILE *fp));
 int G__putchar G__P((int character));
 int G__fputs G__P((char *string,FILE *fp));

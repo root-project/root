@@ -2063,7 +2063,7 @@ char *dllid;
 #ifndef G__OLDIMPLEMENTATION665
   p = strrchr(linkfilepref,'/'); /* ../aaa/bbb/ccc.cxx */
 #ifdef G__WIN32
-  if (!p) p = strrchr(linkfilepref,'\\'); /* just in case we have a Windows pathname */
+  if (!p) p = strrchr(linkfilepref,'\\'); /* in case of Windows pathname */
 #endif
   if (!p) p = linkfilepref;      /*  /ccc.cxx */
   p = strrchr (p, '.');          /*  .cxx     */

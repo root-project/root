@@ -2100,6 +2100,9 @@ void G__platformMacro()
   /***********************************************************************
    * compiler and library
    ***********************************************************************/
+#ifdef G__MINGW /* Mingw */
+  sprintf(temp,"G__MINGW=%ld",(long)G__MINGW); G__add_macro(temp);
+#endif
 #ifdef G__CYGWIN /* Cygwin */
   sprintf(temp,"G__CYGWIN=%ld",(long)G__CYGWIN); G__add_macro(temp);
 #endif

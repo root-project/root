@@ -18,7 +18,6 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
-/* #define G__FIX1 */
 
 #include "common.h"
 
@@ -2074,8 +2073,8 @@ void *p;
 * G__fprinterr()
 *
 * CAUTION:
-*  In case you have problem compling following function, define G__FIX1
-* at the beginning of this file.
+*  In case you have problem compiling following function, define G__FIX1
+* in G__ci.h
 **************************************************************************/
 #if defined(G__ANSI) || defined(G__WIN32) || defined(G__FIX1)
 int G__fprinterr(FILE* fp,char* fmt,...)

@@ -113,8 +113,12 @@ const char *G__psep = "/";
 void G__printtitle()
 {
   printf("################################################################\n");
-#ifdef G__DJGPP
+#if defined(G__DJGPP)
   printf("# makecint : interpreter-compiler for cint (MS-DOS DJGPP version)\n");
+#elif defined(G__CYGWIN)
+  printf("# makecint : interpreter-compiler for cint (Windows Cygwin version)\n");
+#elif defined(G__MINGW)
+  printf("# makecint : interpreter-compiler for cint (Windows Mingw version)\n");
 #else
   printf("# makecint : interpreter-compiler for cint (UNIX version)\n");
 #endif
@@ -995,7 +999,11 @@ char **argv;
    * Print out variables
    ***************************************************************************/
   fprintf(fp,"# Set variables ############################################\n");
+#if defined(G__MINGW)
+  fprintf(fp,"IPATH      = $(subst \\,/,$(SYSIPATH))\n");
+#else
   fprintf(fp,"IPATH      = $(SYSIPATH) ");
+#endif
   G__printstringlist(fp,G__IPATH,G__PRINTSTRING);
   fprintf(fp,"\n");
   fprintf(fp,"MACRO      = $(SYSMACRO)");
@@ -1026,6 +1034,8 @@ char **argv;
 #endif
 #ifdef __hpux
   fprintf(fp,"CINTIPATH  = \n");
+#elif defined(G__MINGW)
+  fprintf(fp,"CINTIPATH  = -I$(subst \\,/,$(CINTSYSDIR))\n");
 #else
   fprintf(fp,"CINTIPATH  = -I$(CINTSYSDIR)\n");
 #endif
@@ -1145,7 +1155,7 @@ char **argv;
 #if defined(_AIX)
     fprintf(fp,"$(OBJECT) : $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
     fprintf(fp,"\t$(LDDLL) $(LDDLLOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS)\n");
-#elif defined(G__CYGWIN)
+#elif defined(G__CYGWIN)||defined(G__MINGW)
     /* Problem reported by Joseph Canedo 2001/6/7 $(CINTLIB) added for DLL */
     fprintf(fp,"$(OBJECT) : $(CINTLIB) $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
     fprintf(fp,"\t$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(CINTLIB) $(LIBS)\n");

@@ -695,6 +695,12 @@ char *string,*endmark;
 	  pflag = 1;
 	}
 #endif
+#define G__OLDIMPLEMENTATION1894
+#ifndef G__OLDIMPLEMENTATION1894
+	else {
+	  pp=string+i;
+	}
+#endif
 #endif
 	ignoreflag=1;
       }
@@ -816,6 +822,16 @@ char *string,*endmark;
 
 #ifndef G__OLDIMPLEMENTATION608
     case ',':
+#ifndef G__OLDIMPLEMENTATION1894
+      if(pp!=string && !isspace(*(pp-1)) && !G__isoperator(*(pp-1)) 
+	 && G__isstoragekeyword(pp)) {
+	char tmp[30];
+	strcpy(tmp,pp);
+	*pp=' ';
+	strcpy(pp+1,tmp);
+	++i;
+      }
+#endif
 #ifdef G__OLDIMPLEMENTATION1577
       pp = string+i+1;
 #endif
