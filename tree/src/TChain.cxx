@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.34 2002/01/07 09:10:20 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.35 2002/01/15 07:47:36 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -57,7 +57,6 @@ TChain::TChain(): TTree()
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
-   fNotify         = 0;
 }
 
 //______________________________________________________________________________
@@ -102,7 +101,6 @@ TChain::TChain(const char *name, const char *title)
    gDirectory->GetList()->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
-   fNotify    = 0;
 }
 
 //______________________________________________________________________________
@@ -163,15 +161,33 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 // the chain name will be assumed.
 // Name may use the wildcarding notation, eg "xxx*.root" means all files
 // starting with xxx in the current file system directory.
-//
-// If nentries <= 0, the file is connected and the tree header read in memory
-// to get the number of entries.
-// If (nentries > 0, the file is not connected, nentries is assumed to be
-// the number of entries in the file. In this case, no check is made that
-// the file exists and the Tree existing in the file. This second mode
-// is interesting in case the number of entries in the file is already stored
-// in a run data base for example.
 // NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
+//
+//    A- if nentries <= 0, the file is connected and the tree header read 
+//       in memory to get the number of entries.
+//
+//    B- if (nentries > 0, the file is not connected, nentries is assumed to be
+//       the number of entries in the file. In this case, no check is made that
+//       the file exists and the Tree existing in the file. This second mode
+//       is interesting in case the number of entries in the file is already stored
+//       in a run data base for example.
+//
+//    C- if (nentries == 1000000000) (default), the file is not connected.
+//       the number of entries in each file will be read only when the file
+//       will need to be connected to read an entry.
+//       This option is the default and very efficient if one process
+//       the chain sequentially. Note that in case TChain::GetEntry(entry)
+//       is called and entry refers to an entry in the 3rd file, for example,
+//       this forces the Tree headers in the first and second file
+//       to be read to find the number of entries in these files.
+//       Note that if one calls TChain::GetEntries() after having created
+//       a chain with this default, GetEntries will return 1000000000!
+//       One can force the Tree headers of all the files to be read
+//       by calling TChain::GetEntry(bigentry) with bigentry greater than 
+//       the first entry number of the last file, eg 999999999.
+//       To compute the number of entries in a chain built with this option, do:
+//            chain.GetEntry(999999999);
+//            chain.GetEntries();
 
    // case with one single file
    if (strchr(name,'*') == 0) {
@@ -226,14 +242,32 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 {
 //       Add a new file to this chain.
 //
-//    if nentries <= 0, the file is connected and the tree header read in memory
-//    to get the number of entries.
-//    if (nentries > 0, the file is not connected, nentries is assumed to be
-//    the number of entries in the file. In this case, no check is made that
-//    the file exists and the Tree existing in the file. This second mode
-//    is interesting in case the number of entries in the file is already stored
-//    in a run data base for example.
-
+//    A- if nentries <= 0, the file is connected and the tree header read 
+//       in memory to get the number of entries.
+//
+//    B- if (nentries > 0, the file is not connected, nentries is assumed to be
+//       the number of entries in the file. In this case, no check is made that
+//       the file exists and the Tree existing in the file. This second mode
+//       is interesting in case the number of entries in the file is already stored
+//       in a run data base for example.
+//
+//    C- if (nentries == 1000000000) (default), the file is not connected.
+//       the number of entries in each file will be read only when the file
+//       will need to be connected to read an entry.
+//       This option is the default and very efficient if one process
+//       the chain sequentially. Note that in case TChain::GetEntry(entry)
+//       is called and entry refers to an entry in the 3rd file, for example,
+//       this forces the Tree headers in the first and second file
+//       to be read to find the number of entries in these files.
+//       Note that if one calls TChain::GetEntries() after having created
+//       a chain with this default, GetEntries will return 1000000000!
+//       One can force the Tree headers of all the files to be read
+//       by calling TChain::GetEntry(bigentry) with bigentry greater than 
+//       the first entry number of the last file, eg 999999999.
+//       To compute the number of entries in a chain built with this option, do:
+//            chain.GetEntry(999999999);
+//            chain.GetEntries();
+   
    TDirectory *cursav = gDirectory;
    char *treename = (char*)GetName();
    char *dot = (char*)strstr(name,".root");
@@ -294,9 +328,14 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
    }
 
    if (nentries > 0) {
-      fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
+      if (nentries < 1000000000) {
+         fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
+         fEntries += nentries;
+      } else {
+         fTreeOffset[fNtrees+1] = 1000000000;
+         fEntries = nentries;
+      }
       fNtrees++;
-      fEntries += nentries;
 
       TChainElement *element = new TChainElement(treename,filename);
       element->SetPacketSize(pksize);
@@ -613,7 +652,19 @@ Int_t TChain::LoadTree(Int_t entry)
    fTree = (TTree*)fFile->Get(element->GetName());
    fTreeNumber = t;
    fDirectory = fFile;
-
+   
+   //check if fTreeOffset has really been set
+   Int_t nentries = (Int_t)fTree->GetEntries();
+   if (fTreeOffset[fTreeNumber+1] != fTreeOffset[fTreeNumber] + nentries) {
+      fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
+      fEntries = fTreeOffset[fNtrees]; 
+      if (entry > fTreeOffset[fTreeNumber+1]) {
+         cursav->cd();
+         if (fTreeNumber < fNtrees) return LoadTree(entry);
+         else                       fReadEntry = -2;
+      }
+   }
+   
    //Set the branches status and address for the newly connected file
    fTree->SetMakeClass(fMakeClass);
    fTree->SetMaxVirtualSize(fMaxVirtualSize);
@@ -788,7 +839,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    Int_t treeNumber = -1;
    Int_t nentries = Int_t(GetEntries());
    for (Int_t i=0;i<nentries;i++) {
-      GetEntry(i);
+      if (GetEntry(i) <= 0) break;
       if (treeNumber != fTreeNumber) {
          treeNumber = fTreeNumber;
          TIter next(fTree->GetListOfBranches());
@@ -910,7 +961,6 @@ void TChain::Reset(Option_t *)
    TChainElement *element = new TChainElement("*","");
    fStatus->Add(element);
    fDirectory = 0;
-   fNotify    = 0;
 
    TTree::Reset();
 }
