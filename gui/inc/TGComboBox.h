@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.5 2002/01/18 14:25:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -107,6 +107,7 @@ public:
    virtual void Selected(Int_t widgetId, Int_t id); //*SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } //*SIGNAL*
    virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } //*SIGNAL*
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGComboBox,0)  // Combo box widget
 };

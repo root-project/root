@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.15 2003/09/26 09:23:29 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.16 2003/10/18 17:00:27 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 #include "TGToolTip.h"
 #include "TGButtonGroup.h"
 #include "TGResourcePool.h"
+#include "Riostream.h"
 
 
 const TGGC *TGButton::fgHibckgndGC = 0;
@@ -360,19 +361,19 @@ void TGTextButton::SetText(TGHotString *new_label)
 
    int hotchar;
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-   
+
    if (fLabel) {
-      if (fHKeycode) 
+      if (fHKeycode)
          main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
       delete fLabel;
    }
 
    fLabel = new_label;
    if ((hotchar = fLabel->GetHotChar()) != 0) {
-      if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) 
+      if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0)
          main->BindKey(this, fHKeycode, kKeyMod1Mask);
    }
-   
+
    int max_ascent, max_descent;
    fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -434,22 +435,22 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
 
    Bool_t click = kFALSE;
 
-   if (event->fType == kGKeyPress) 
+   if (event->fType == kGKeyPress)
       gVirtualX->SetKeyAutoRepeat(kFALSE);
-   else 
+   else
       gVirtualX->SetKeyAutoRepeat(kTRUE);
-  
+
    if (fTip && event->fType == kGKeyPress) fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;
 
-   // We don't need to check the key number as GrabKey will only 
+   // We don't need to check the key number as GrabKey will only
    // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
       if (fState == kButtonEngaged) return kTRUE;
       SetState(kButtonDown);
-   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) { 
+   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) {
       if (fState == kButtonEngaged /*&& !allowRelease*/) return kTRUE;
       click = (fState == kButtonDown);
       if (click && fStayDown)
@@ -476,6 +477,7 @@ FontStruct_t TGTextButton::GetDefaultFontStruct()
 }
 
 //______________________________________________________________________________
+
 void TGTextButton::SetFont(FontStruct_t font)
 {
    // Changes text font
@@ -792,21 +794,21 @@ Bool_t TGCheckButton::HandleKey(Event_t *event)
 
    Bool_t click = kFALSE;
 
-   if (event->fType == kGKeyPress) 
+   if (event->fType == kGKeyPress)
       gVirtualX->SetKeyAutoRepeat(kFALSE);
-   else 
+   else
       gVirtualX->SetKeyAutoRepeat(kTRUE);
-  
+
    if (fTip && event->fType == kGKeyPress) fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;
 
-   // We don't need to check the key number as GrabKey will only 
+   // We don't need to check the key number as GrabKey will only
    // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
       PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp);
-   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) { 
+   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) {
       click = (fState != fPrevState);
       fPrevState = fState;
    }
@@ -816,7 +818,6 @@ Bool_t TGCheckButton::HandleKey(Event_t *event)
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON), fWidgetId,
                            (Long_t) fUserData);
    }
-
    return kTRUE;
 }
 
@@ -1053,16 +1054,16 @@ Bool_t TGRadioButton::HandleKey(Event_t *event)
 {
    // Handle key event. This function will be called when the hotkey is hit.
 
-   if (event->fType == kGKeyPress) 
+   if (event->fType == kGKeyPress)
       gVirtualX->SetKeyAutoRepeat(kFALSE);
-   else 
+   else
       gVirtualX->SetKeyAutoRepeat(kTRUE);
-  
-   if (fTip && event->fType == kGKeyPress) fTip->Hide();
+
+  if (fTip && event->fType == kGKeyPress) fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;
 
-   // We don't need to check the key number as GrabKey will only 
+   // We don't need to check the key number as GrabKey will only
    // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
@@ -1071,10 +1072,9 @@ Bool_t TGRadioButton::HandleKey(Event_t *event)
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                            fWidgetId, (Long_t) fUserData);
-   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) { 
+   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) {
       fPrevState = fState;
    }
-
    return kTRUE;
 }
 
@@ -1129,4 +1129,305 @@ const TGGC &TGRadioButton::GetDefaultGC()
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+void TGButton::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a button widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   if (fState == kButtonDown) {
+      out << "   " << GetName() << "->SetState(kButtonDown);"  << endl;
+   }
+   if (fState == kButtonDisabled) {
+      out << "   " << GetName() << "->SetState(kButtonDisabled);"  << endl;
+   }
+   if (fState == kButtonEngaged) {
+      out << "   " << GetName() << "->SetState(kButtonEngaged);"  << endl;
+   }
+   if (fBackground != fgDefaultFrameBackground) {
+      SaveUserColor(out, option);
+      out << "   " << GetName() << "->ChangeBackground(ucolor);" << endl;
+   }
+
+   if (fTip) {
+      out << "   ";
+      out << GetName() << "->SetToolTipText(" << quote
+          << fTip->GetText()->GetString() << quote << ");"  << endl;
+   }
+   if (strlen(fCommand)) {
+      out << "   " << GetName() << "->SetCommand(" << quote << fCommand
+          << quote << ");" << endl;
+   }
+   //if (fGroup) {
+   //    out << "   if (" << GetName() << ") { };" << endl;
+   //}
+}
+
+//______________________________________________________________________________
+void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a text button widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   const char *text = fLabel->GetString();
+   Int_t hotpos = fLabel->GetHotPos();
+   Int_t lentext = fLabel->GetLength();
+   char *outext = new char[lentext+2];
+   Int_t i=0;
+   while (lentext) {
+      if (i == hotpos-1) {
+         outext[i] = '&';
+         i++;
+      }
+      outext[i] = *text;
+      i++;
+      text++;
+      lentext--;
+   }
+   outext[i]=0;
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << "   TGTextButton *";
+   out << GetName() << " = new TGTextButton(" << fParent->GetName()
+       << "," << quote << outext << quote;
+
+   if (GetOptions() == kRaisedFrame | kDoubleBorder) {
+      if (fFontStruct == GetDefaultFontStruct()) {
+         if (fNormGC == GetDefaultGC()()) {
+            if (fWidgetId == -1) {
+               out << ");" << endl;
+            } else {
+               out << "," << fWidgetId <<");" << endl;
+            }
+         } else {
+            out << "," << fWidgetId << "," << ParGC << ");" << endl;
+         }
+      } else {
+         out << "," << fWidgetId << "," << ParGC << "," << ParFont << ");" << endl;
+      }
+   } else {
+      out << "," << fWidgetId << "," << ParGC << "," << ParFont << "," << GetOptionString() << ");" << endl;
+   }
+
+   delete [] outext;
+
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
+       << ");" 	<< endl;
+
+   TGButton::SavePrimitive(out,option);
+}
+
+//______________________________________________________________________________
+void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a picture button widget as a C++ statement(s) on output stream out
+
+   if (!fPic) {
+      Error("SavePrimitive()", "pixmap not found for picture button %d ", fWidgetId);
+      return;
+   }
+
+   // GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50];
+   if (GetDefaultGC()() != fNormGC) {
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   char quote = '"';
+
+   out <<"   TGPictureButton *";
+   out << GetName() << " = new TGPictureButton(" << fParent->GetName()
+       << ",gClient->GetPicture(" << quote << fPic->GetName() << quote << ")";
+
+   if (GetOptions() == kRaisedFrame | kDoubleBorder) {
+      if (fNormGC == GetDefaultGC()()) {
+         if (fWidgetId == -1) {
+            out << ");" << endl;
+         } else {
+            out << "," << fWidgetId << ");" << endl;
+         }
+      } else {
+         out << "," << fWidgetId << "," << ParGC << ");" << endl;
+      }
+   } else {
+      out << "," << fWidgetId << "," << ParGC << "," << GetOptionString() << ");" << endl;
+   }
+
+   TGButton::SavePrimitive(out,option);
+}
+
+//______________________________________________________________________________
+void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a check button widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   const char *text = fLabel->GetString();
+   char hotpos = fLabel->GetHotPos();
+   Int_t lentext = fLabel->GetLength();
+   char *outext = new char[lentext+2];       // should be +2 because of \0
+   Int_t i=0;
+
+
+   while (lentext) {
+      if (i == hotpos-1) {
+         outext[i] = '&';
+         i++;
+      }
+      outext[i] = *text;
+      i++;
+      text++;
+      lentext--;
+   }
+   outext[i]=0;
+
+   out <<"   TGCheckButton *";
+   out << GetName() << " = new TGCheckButton(" << fParent->GetName()
+       << "," << quote << outext << quote;
+
+   delete [] outext;
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (GetOptions() == kRaisedFrame | kDoubleBorder) {
+      if (fFontStruct == GetDefaultFontStruct()) {
+         if (fNormGC == GetDefaultGC()()) {
+            if (fWidgetId == -1) {
+               out << ");" << endl;
+            } else {
+               out << "," << fWidgetId << ");" << endl;
+            }
+         } else {
+            out << "," << fWidgetId << "," << ParGC << ");" << endl;
+         }
+      } else {
+         out << "," << fWidgetId << "," << ParGC << "," << ParFont << ");" << endl;
+      }
+   } else {
+      out << "," << fWidgetId << "," << ParGC << "," << ParFont << "," << GetOptionString() << ");" << endl;
+   }
+
+   TGButton::SavePrimitive(out,option);
+}
+
+//______________________________________________________________________________
+void TGRadioButton::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a radio button widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   const char *text = fLabel->GetString();
+   char hotpos = fLabel->GetHotPos();
+   Int_t lentext = fLabel->GetLength();
+   char *outext = new char[lentext+2];
+   Int_t i=0;
+
+   while (lentext) {
+      if (i == hotpos-1) {
+         outext[i] = '&';
+         i++;
+      }
+      outext[i] = *text;
+      i++; text++; lentext--;
+   }
+   outext[i]=0;
+   out << "   TGRadioButton *";
+   out << GetName() << " = new TGRadioButton(" << fParent->GetName()
+       << "," << quote << outext << quote;
+
+   delete [] outext;
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (GetOptions() == kRaisedFrame | kDoubleBorder) {
+      if (fFontStruct == GetDefaultFontStruct()) {
+         if (fNormGC == GetDefaultGC()()) {
+            if (fWidgetId == -1) {
+               out <<");" << endl;
+            } else {
+               out << "," << fWidgetId << ");" << endl;
+            }
+         } else {
+            out << "," << fWidgetId << "," << ParGC << ");" << endl;
+         }
+      } else {
+         out << "," << fWidgetId << "," << ParGC << "," << ParFont << ");" << endl;
+      }
+   } else {
+      out << "," << fWidgetId << "," << ParGC << "," << ParFont << "," << GetOptionString() << ");" << endl;
+   }
+
+   TGButton::SavePrimitive(out,option);
 }

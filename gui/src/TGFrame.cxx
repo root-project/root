@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.28 2003/07/25 17:22:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.29 2003/10/24 16:27:27 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -70,6 +70,14 @@
 #include "TTimer.h"
 #include "Riostream.h"
 
+#include "TObjString.h"
+#include "TObjArray.h"
+#include "TBits.h"
+#include "TColor.h"
+#include "TROOT.h"
+#include "TGShutter.h"
+#include "KeySymbols.h"
+#include "TGFileDialog.h"
 
 Bool_t      TGFrame::fgInit = kFALSE;
 Pixel_t     TGFrame::fgDefaultFrameBackground = 0;
@@ -90,9 +98,11 @@ Window_t    TGFrame::fgDbw = 0;
 const TGFont *TGGroupFrame::fgDefaultFont = 0;
 const TGGC   *TGGroupFrame::fgDefaultGC = 0;
 
-
 TGLayoutHints *TGCompositeFrame::fgDefaultHints = new TGLayoutHints;
 
+static const char *gSaveTypes[] = { "Macro files", "*.C",
+                                    "All files",   "*",
+                                    0,             0 };
 
 ClassImp(TGFrame)
 ClassImp(TGCompositeFrame)
@@ -626,10 +636,10 @@ Time_t TGFrame::GetLastClick()
 //______________________________________________________________________________
 void TGFrame::Print(Option_t *option) const
 {
-   // print window id
+   // Print window id.
 
    cout <<  option << ClassName() << ":\tid=" << fId << " parent=" << fParent->GetId();
-   cout <<" x=" << fX << " y=" << fY;
+   cout << " x=" << fX << " y=" << fY;
    cout << " w=" << fWidth << " h=" << fHeight << endl;
 }
 
@@ -974,6 +984,10 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fWMWidthInc  = (UInt_t) -1;
    fWMHeightInc = (UInt_t) -1;
    fWMInitState = (EInitialState) 0;
+
+   gVirtualX->GrabKey(fId, kKey_s, kKeyControlMask, kTRUE);
+
+   AddInput(kKeyPressMask | kKeyReleaseMask);
 }
 
 //______________________________________________________________________________
@@ -998,6 +1012,10 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
    else
       gVirtualX->SetKeyAutoRepeat(kTRUE);
 
+   if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
+         SaveSource("MviaS.C","");
+         return kTRUE;
+   }
    if (!fBindList) return kFALSE;
 
    TIter next(fBindList);
@@ -1221,6 +1239,46 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
       gVirtualX->SetWMTransientHint(fId, fMain->GetId());
 }
 
+//______________________________________________________________________________
+Bool_t TGTransientFrame::HandleKey(Event_t *event)
+{
+   // Handle keyboard events.
+
+   if (event->fType == kGKeyPress)
+      gVirtualX->SetKeyAutoRepeat(kFALSE);
+   else
+      gVirtualX->SetKeyAutoRepeat(kTRUE);
+
+   if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
+      SaveSource("TviaS.C","");
+      //static TString dir(".");
+      //TGFileInfo fi;
+      //fi.fFileTypes = gSaveTypes;
+      //fi.fIniDir    = StrDup(dir);
+      //new TGFileDialog(fClient->GetRoot(), this, kFDSave,&fi);
+      //if (!fi.fFilename) return kTRUE;
+      //dir = fi.fIniDir;
+      //if (strstr(fi.fFilename, ".C"))
+      //   SaveSource(strstr(fi.fFilename, dir),"");
+      //else
+      //   Warning("HandleKey", "file with extension (%s) cannot be saved ", fi.fFilename);
+      return kTRUE;
+   }
+
+   if (!fBindList) return kFALSE;
+
+   TIter next(fBindList);
+   TGMapKey *m;
+   TGFrame  *w;
+
+   while ((m = (TGMapKey *) next())) {
+      if (m->fKeyCode == event->fCode) {
+         w = (TGFrame *) m->fWindow;
+         return w->HandleKey(event);
+      }
+   }
+   return kFALSE;
+}
 
 //______________________________________________________________________________
 TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
@@ -1410,4 +1468,892 @@ const TGGC &TGGroupFrame::GetDefaultGC()
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+void TGFrame::SaveUserColor(ofstream &out, Option_t *)
+{
+   // Save a user color in a C++ macro file - used in SavePrimitive().
+
+   char quote = '"';
+
+   if (gROOT->ClassSaved(TGFrame::Class())) {
+      out << endl;
+   } else {
+      //  declare a color variable to reflect required user changes
+      out << endl;
+      out << "   ULong_t ucolor;        // will reflect user color changes" << endl;
+   }
+   ULong_t ucolor = GetBackground();
+   const char *ucolorname = TColor::PixelAsHexString(ucolor);
+   out << "   gClient->GetColorByName(" << quote << ucolorname << quote
+       << ",ucolor);" << endl;
+}
+
+//______________________________________________________________________________
+TString TGFrame::GetOptionString() const
+{
+   // Returns a frame option string - used in SavePrimitive().
+
+   TString options;
+
+   if (!GetOptions()) {
+      options = "kChildFrame";
+   } else {
+      if (fOptions & kMainFrame) {
+         if (options.Length() == 0) options  = "kMainFrame";
+         else                       options += " | kMainFrame";
+      }
+      if (fOptions & kVerticalFrame) {
+         if (options.Length() == 0) options  = "kVerticalFrame";
+         else                       options += " | kVerticalFrame";
+      }
+      if (fOptions & kHorizontalFrame) {
+         if (options.Length() == 0) options  = "kHorizontalFrame";
+         else                       options += " | kHorizontalFrame";
+      }
+      if (fOptions & kSunkenFrame) {
+         if (options.Length() == 0) options  = "kSunkenFrame";
+         else                       options += " | kSunkenFrame";
+      }
+      if (fOptions & kRaisedFrame) {
+         if (options.Length() == 0) options  = "kRaisedFrame";
+         else                       options += " | kRaisedFrame";
+      }
+      if (fOptions & kDoubleBorder) {
+         if (options.Length() == 0) options  = "kDoubleBorder";
+         else                       options += " | kDoubleBorder";
+      }
+      if (fOptions & kFitWidth) {
+         if (options.Length() == 0) options  = "kFitWidth";
+         else                       options += " | kFitWidth";
+      }
+      if (fOptions & kFixedWidth) {
+         if (options.Length() == 0) options  = "kFixedWidth";
+         else                       options += " | kFixedWidth";
+      }
+      if (fOptions & kFitHeight) {
+         if (options.Length() == 0) options  = "kFitHeight";
+         else                       options += " | kFitHeight";
+      }
+      if (fOptions & kFixedHeight) {
+         if (options.Length() == 0) options  = "kFixedHeight";
+         else                       options += " | kFixedHeight";
+      }
+      if (fOptions & kOwnBackground) {
+         if (options.Length() == 0) options  = "kOwnBackground";
+         else                       options += " | kOwnBackground";
+      }
+      if (fOptions & kTransientFrame) {
+         if (options.Length() == 0) options  = "kTransientFrame";
+         else                       options += " | kTransientFrame";
+      }
+      if (fOptions & kTempFrame) {
+         if (options.Length() == 0) options  = "kTempFrame";
+         else                       options += " | kTempFrame";
+      }
+   }
+   return options;
+}
+
+//______________________________________________________________________________
+TString TGMainFrame::GetMWMvalueString() const
+{
+   // Returns MWM decoration hints as a string - used in SavePrimitive().
+
+   TString hints;
+
+   if (fMWMValue) {
+      if (fMWMValue & kMWMDecorAll) {
+         if (hints.Length() == 0) hints  = "kMWMDecorAll";
+         else                     hints += " | kMWMDecorAll";
+      }
+      if (fMWMValue & kMWMDecorBorder) {
+         if (hints.Length() == 0) hints  = "kMWMDecorBorder";
+         else                     hints += " | kMWMDecorBorder";
+      }
+      if (fMWMValue & kMWMDecorResizeH) {
+         if (hints.Length() == 0) hints  = "kMWMDecorResizeH";
+         else                     hints += " | kMWMDecorResizeH";
+      }
+      if (fMWMValue & kMWMDecorTitle) {
+         if (hints.Length() == 0) hints  = "kMWMDecorTitle";
+         else                     hints += " | kMWMDecorTitle";
+      }
+      if (fMWMValue & kMWMDecorMenu) {
+         if (hints.Length() == 0) hints  = "kMWMDecorMenu";
+         else                     hints += " | kMWMDecorMenu";
+      }
+      if (fMWMValue & kMWMDecorMinimize) {
+         if (hints.Length() == 0) hints  = "kMWMDecorMinimize";
+         else                     hints += " | kMWMDecorMinimize";
+      }
+      if (fMWMValue & kMWMDecorMaximize) {
+         if (hints.Length() == 0) hints  = "kMWMDecorMaximize";
+         else                     hints += " | kMWMDecorMaximize";
+      }
+   }
+   return hints;
+}
+
+//______________________________________________________________________________
+TString TGMainFrame::GetMWMfuncString() const
+{
+   // Returns MWM function hints as a string - used in SavePrimitive().
+
+   TString hints;
+
+   if (fMWMFuncs) {
+
+      if (fMWMFuncs & kMWMFuncAll) {
+         if (hints.Length() == 0) hints  = "kMWMFuncAll";
+         else                     hints += " | kMWMFuncAll";
+      }
+      if (fMWMFuncs & kMWMFuncResize) {
+         if (hints.Length() == 0) hints  = "kMWMFuncResize";
+         else                     hints += " | kMWMFuncResize";
+      }
+      if (fMWMFuncs & kMWMFuncMove) {
+         if (hints.Length() == 0) hints  = "kMWMFuncMove";
+         else                     hints += " | kMWMFuncMove";
+      }
+      if (fMWMFuncs & kMWMFuncMinimize) {
+         if (hints.Length() == 0) hints  = "kMWMFuncMinimize";
+         else                     hints += " | kMWMFuncMinimize";
+      }
+      if (fMWMFuncs & kMWMFuncMaximize) {
+         if (hints.Length() == 0) hints  = "kMWMFuncMaximize";
+         else                     hints += " | kMWMFuncMaximize";
+      }
+      if (fMWMFuncs & kMWMFuncClose) {
+         if (hints.Length() == 0) hints  = "kMWMFuncClose";
+         else                     hints += " | kMWMFuncClose";
+      }
+   }
+   return hints;
+}
+
+//______________________________________________________________________________
+TString TGMainFrame::GetMWMinpString() const
+{
+   // Returns MWM input mode hints as a string - used in SavePrimitive().
+
+   TString hints;
+
+   if (fMWMInput == 0) hints = "kMWMInputModeless";
+
+   if (fMWMInput == 1) hints = "kMWMInputPrimaryApplicationModal";
+
+   if (fMWMInput == 2) hints = "kMWMInputSystemModal";
+
+   if (fMWMInput == 3) hints = "kMWMInputFullApplicationModal";
+
+   return hints;
+}
+
+//______________________________________________________________________________
+void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a composite frame widget as a C++ statement(s) on output stream out
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // composite frame" << endl;
+   out << "   TGCompositeFrame *";
+   out << GetName() << " = new TGCompositeFrame(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         out << ");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");"<< endl;
+   }
+   if (fLayoutManager != 0) {
+      out << "   " << GetName() <<"->SetLayoutManager(";
+      fLayoutManager->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
+}
+
+//______________________________________________________________________________
+void TGMainFrame::SaveSource(const char *filename, Option_t *option)
+{
+   // Save the GUI main frame widget in a C++ macro file
+
+   //   iteration over all active classes to exclude the base ones
+
+   TBits *bc = new TBits();
+   TClass *c1, *c2, *c3;
+   UInt_t k = 0;      // will mark k-bit of TBits if the class is a base class
+
+   TIter nextc1(gROOT->GetListOfClasses());
+   //gROOT->GetListOfClasses()->ls();    // valid. test
+   while((c1 = (TClass *)nextc1())) {
+
+      //   resets bit TClass::kClassSaved for all classes
+      c1->ResetBit(TClass::kClassSaved);
+
+      TIter nextc2(gROOT->GetListOfClasses());
+      while ((c2 = (TClass *)nextc2())) {
+         if (c1==c2) continue;
+         else {
+            c3 = c2->GetBaseClass(c1);
+            if (c3 != 0) {
+               bc->SetBitNumber(k, kTRUE);
+               break;
+            }
+         }
+      }
+      k++;
+   }
+
+   TList *ilist = new TList();   // will contain include file names without '.h'
+   ilist->SetName("ListOfIncludes");
+   gROOT->GetListOfSpecials()->Add(ilist);
+   k=0;
+
+   //   completes list of include file names
+   TIter nextdo(gROOT->GetListOfClasses());
+   while ((c2 = (TClass *)nextdo())) {
+      // for used GUI header files
+      if (bc->TestBitNumber(k) == 0 && c2->InheritsFrom(TGObject::Class()) == 1) {
+         // for any used ROOT header files activate the line below, comment the line above
+         //if (bc->TestBitNumber(k) == 0) {
+         const char *iname;
+         iname = c2->GetDeclFileName();
+         if (strlen(iname) != 0 && strstr(iname,".h")) {
+            const char *lastsl = strrchr(iname,'/');
+            if (lastsl) iname = lastsl + 1;
+               char *tname = new char[strlen(iname)];
+               Int_t i=0;
+               while (*iname != '.') {
+                  tname[i] = *iname;
+                  i++; iname++;
+               }
+               tname[i] = 0;    //tname = include file name without '.h'
+
+               TObjString *iel = (TObjString *)ilist->FindObject(tname);
+               if (!iel) {
+                  ilist->Add(new TObjString(tname));
+               }
+               delete [] tname;
+            }
+            k++;  continue;
+        }
+        k++;
+   }
+
+   char quote = '"';
+   ofstream out;
+   Int_t lenfile = strlen(filename);
+   char *fname;
+
+   //	 if filename is given, open this file, otherwise create a file Rootappl.C
+
+   if (lenfile) {
+      fname = (char *)filename;
+   } else {
+      fname="Rootappl.C"; lenfile = 10;
+   }
+
+   out.open(fname, ios::out);
+
+   if (!out.good()) {
+       Error("SaveSource", "cannot open file: %s", fname);
+       if (!lenfile) delete [] fname;
+       return;
+   }
+
+   //   writes include files in C++ macro
+   TObjString *inc;
+   ilist = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfIncludes");
+
+   if (!ilist) return;
+
+   //  Write macro header, date/time stamp as string, and the used Root version
+   TDatime t;
+   out <<"// Mainframe macro generated from application: "<< gApplication->Argv(0) << endl;
+   out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
+   out << endl;
+
+   out << "#ifndef __CINT__" << endl << endl;
+
+   TIter nexti(ilist);
+   while((inc = (TObjString *)nexti())) {
+         out << "#ifndef ROOT_" << inc->GetString() << endl;
+         out << "#include " << quote << inc->GetString() << ".h" << quote << endl;
+         out << "#endif" << endl;
+         if (strstr(inc->GetString(),"TRootEmbeddedCanvas")) {
+            out << "#ifndef ROOT_TCanvas" << endl;
+            out << "#include " << quote << "TCanvas.h" << quote << endl;
+            out << "#endif" << endl;
+         }
+   }
+   out << endl << "#endif" << endl;
+   //    deletes created ListOfIncludes
+   gROOT->GetListOfSpecials()->Remove(ilist);
+   ilist->Delete();
+   delete ilist;
+   delete bc;
+
+   // Does not work when filename contains dots (RDM)
+   // writes the macro entry point equal to the filename
+   char *sname = new char[lenfile];
+   Int_t i=0;
+   while (*fname != '.') {
+       sname[i] = *fname;
+       i++; fname++;
+   }
+   sname[i] = 0;
+
+   out << endl;
+   out << "void " << sname << "()" << endl;
+   delete [] sname;
+
+   // write TGMainFrame ctor + window's parameters
+   out <<"{"<< endl;
+   out << endl << "   // main frame" << endl;
+   out << "   TGMainFrame *";
+   out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
+       << GetOptionString() << ");" <<endl;
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
+   out << endl;
+
+   // setting layout manager if it differs from the main frame type
+
+   TGLayoutManager * lm = GetLayoutManager();
+
+   if (GetOptions() & kHorizontalFrame) {
+      if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
+   } else if (GetOptions() & kVerticalFrame) {
+      if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
+   } else {
+      out << "   " << GetName() <<"->SetLayoutManager(";
+      GetLayoutManager()->SavePrimitive(out, option);
+      out << ");"<< endl;
+   }
+
+   if (strlen(fWindowName)) {
+      out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
+          << quote << ");" << endl;
+   }
+   if (strlen(fIconName)) {
+      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<endl;
+   }
+   if (strlen(fIconPixmap)) {
+      out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
+          << quote << ");" << endl;
+   }
+
+   GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
+   if (strlen(fClassName) || strlen(fResourceName)) {
+      out << "   " << GetName() << "->SetClassHints(" << quote << fClassName
+          << quote << "," << quote << fResourceName << quote << ");" << endl;
+   }
+
+   GetMWMHints(fMWMValue, fMWMFuncs, fMWMInput);
+   if (fMWMValue || fMWMFuncs || fMWMInput) {
+      out << "   " << GetName() << "->SetMWMHints(";
+      out << GetMWMvalueString() << "," << endl;
+      out << "                        ";
+      out << GetMWMfuncString() << "," << endl;
+      out << "                        ";
+      out << GetMWMinpString() << ");"<< endl;
+   }
+
+///   GetWMPosition(fWMX, fWMY);
+///   if ((fWMX != -1) || (fWMY != -1)) {
+///      out <<"   "<<GetName()<<"->SetWMPosition("<<fWMX<<","<<fWMY<<");"<<endl;
+///   }   // does not work - fixed via Move() below...
+
+   GetWMSize(fWMWidth, fWMHeight);
+   if (fWMWidth != UInt_t(-1) || fWMHeight != UInt_t(-1)) {
+      out <<"   "<<GetName()<<"->SetWMSize("<<fWMWidth<<","<<fWMHeight<<");"<<endl;
+   }
+
+   GetWMSizeHints(fWMMinWidth, fWMMinHeight, fWMMaxWidth, fWMMaxHeight, fWMWidthInc, fWMHeightInc);
+   if (fWMMinWidth != UInt_t(-1) || fWMMinHeight != UInt_t(-1) ||
+      fWMMaxWidth != UInt_t(-1) || fWMMaxHeight != UInt_t(-1) ||
+      fWMWidthInc != UInt_t(-1) || fWMHeightInc != UInt_t(-1)) {
+      out <<"   "<<GetName()<<"->SetWMSizeHints("<<fWMMinWidth<<","<<fWMMinHeight
+          <<","<<fWMMaxWidth<<","<<fWMMaxHeight
+          <<","<<fWMWidthInc<<","<<fWMHeightInc <<");"<<endl;
+   }
+
+   out << "   " <<GetName()<< "->MapSubwindows();" << endl;
+   out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
+   out << "   " <<GetName()<< "->MapWindow();" <<endl;
+
+   GetWMPosition(fWMX, fWMY);
+   if ((fWMX != -1) || (fWMY != -1)) {
+      out <<"   "<<GetName()<<"->Move("<<fWMX<<","<<fWMY<<");"<<endl;
+   }
+
+   // needed in case the frame was resized
+   // otherwhice the frame became bigger showing all hidden widgets (layout algorithm)
+   out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
+   out << "}  " << endl;
+
+   out.close();
+
+   Printf(" C++ macro file %s has been generated", fname-i);
+
+   // reset bit TClass::kClassSaved for all classes
+   nextc1.Reset();
+   while((c1=(TClass*)nextc1())) {
+      c1->ResetBit(TClass::kClassSaved);
+   }
+   if (!lenfile) delete [] fname;
+}
+
+//______________________________________________________________________________
+void TGHorizontalFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a horizontal frame widget as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // horizontal frame" << endl;
+   out << "   TGHorizontalFrame *";
+   out << GetName() << " = new TGHorizontalFrame(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         out << ");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
+}
+
+//______________________________________________________________________________
+void TGVerticalFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save a vertical frame widget as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // vertical frame" << endl;
+   out << "   TGVerticalFrame *";
+   out << GetName() << " = new TGVerticalFrame(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
+}
+
+//______________________________________________________________________________
+void TGFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a frame widget as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << "   TGFrame *";
+   out << GetName() << " = new TGFrame("<< fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+}
+
+//______________________________________________________________________________
+void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a group frame widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // " << quote << GetTitle() << quote << " group frame" << endl;
+   out << "   TGGroupFrame *";
+   out << GetName() <<" = new TGGroupFrame("<<fParent->GetName()
+       << "," << quote << GetTitle() << quote;
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (fFontStruct == GetDefaultFontStruct()) {
+         if (fNormGC == GetDefaultGC()()) {
+            if (GetOptions() & kVerticalFrame) {
+               out <<");" << endl;
+            } else {
+               out << "," << GetOptionString() <<");" << endl;
+            }
+         } else {
+            out << "," << GetOptionString() << "," << ParGC <<");" << endl;
+         }
+      } else {
+         out << "," << GetOptionString() << "," << ParGC << "," << ParFont << ");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << "," << ParGC << "," << ParFont << ",ucolor);"  << endl;
+   }
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
+
+   if (GetTitlePos() != -1)
+      out << "   " << GetName() <<"->SetTitlePos(";
+   if (GetTitlePos() == 0)
+      out << "TGGroupFrame::kCenter);" << endl;
+   if (GetTitlePos() == 1)
+      out << "TGGroupFrame::kRight);" << endl;
+
+   // setting layout manager if different from frame type
+   //TGLayoutManager * lm = GetLayoutManager();
+   //if (GetOptions() & kHorizontalFrame) {
+   //   if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
+   //} else if (GetOptions() & kVerticalFrame) {
+   //   if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
+   //} else {
+      out << "   " << GetName() <<"->SetLayoutManager(";
+      GetLayoutManager()->SavePrimitive(out, option);
+      out << ");"<< endl;
+   //}
+
+   out << "   " << GetName() <<"->Resize();" << endl;
+}
+
+//______________________________________________________________________________
+void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
+{
+   // Save the GUI tranzient frame widget in a C++ macro file
+
+   // iterate over all active classes to exclude the base ones
+
+   TBits *bc = new TBits();
+   TClass *c1, *c2, *c3;
+   UInt_t k = 0;      // will mark k-bit of TBits if the class is a base class
+
+   TIter nextc1(gROOT->GetListOfClasses());
+   while((c1 = (TClass *)nextc1())) {
+
+      //   resets bit TClass::kClassSaved for all classes
+      c1->ResetBit(TClass::kClassSaved);
+
+      TIter nextc2(gROOT->GetListOfClasses());
+      while ((c2 = (TClass *)nextc2())) {
+         if (c1==c2) continue;
+         else {
+            c3 = c2->GetBaseClass(c1);
+            if (c3 != 0) {
+               bc->SetBitNumber(k, kTRUE);
+               break;
+            }
+         }
+      }
+      k++;
+   }
+
+   TList *ilist = new TList();   // will contain include file names without '.h'
+   ilist->SetName("ListOfIncludes");
+   gROOT->GetListOfSpecials()->Add(ilist);
+   k=0;
+
+   // completes list of include file names
+   TIter nextdo(gROOT->GetListOfClasses());
+   while ((c2 = (TClass *)nextdo())) {
+      // to have only used GUI header files
+      if (bc->TestBitNumber(k) == 0 && c2->InheritsFrom(TGObject::Class()) == 1) {
+         // for any used ROOT header files activate the line below, comment the line above
+         //if (bc->TestBitNumber(k) == 0) {
+         const char *iname;
+         iname = c2->GetDeclFileName();
+         if (strlen(iname) != 0 && strstr(iname,".h")) {
+            const char *lastsl = strrchr(iname,'/');
+            if (lastsl) iname = lastsl + 1;
+               char *tname = new char[strlen(iname)];
+               Int_t i=0;
+               while (*iname != '.') {
+                  tname[i] = *iname;
+                  i++; iname++;
+               }
+               tname[i] = 0;    //tname = include file name without '.h'
+
+               TObjString *iel = (TObjString *)ilist->FindObject(tname);
+               if (!iel) {
+                  ilist->Add(new TObjString(tname));
+               }
+               delete [] tname;
+            }
+            k++;  continue;
+        }
+        k++;
+   }
+
+   char quote = '"';
+   ofstream out;
+   Int_t lenfile = strlen(filename);
+   char *fname;
+
+   // if filename is given, open this file, otherwise create a file Rootappl.C
+
+   if (lenfile) {
+      fname = (char *)filename;
+   } else {
+      fname = "Rootdialog.C";
+      lenfile = 10;
+   }
+   Printf("%s", fname);
+
+   out.open(fname, ios::out);
+
+   if (!out.good()) {
+       Error("SaveSource", "cannot open file: %s", fname);
+       if (!lenfile) delete [] fname;
+       return;
+   }
+
+   //   writes include files in C++ macro
+   TObjString *inc;
+   ilist = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfIncludes");
+
+   if (!ilist) return;
+
+   //  Write macro header, date/time stamp as string, and the used Root version
+   TDatime t;
+   out <<"// Dialog macro generated from application: "<< gApplication->Argv(0) << endl;
+   out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
+   out << endl;
+
+   out <<"#ifndef __CINT__" << endl << endl;
+
+   TIter nexti(ilist);
+   while((inc = (TObjString *)nexti())) {
+      out <<"#ifndef ROOT_"<< inc->GetString() << endl;
+      out <<"#include "<< quote << inc->GetString() <<".h"<< quote << endl;
+      out <<"#endif" << endl;
+      if (strstr(inc->GetString(),"TRootEmbeddedCanvas")) {
+         out <<"#ifndef ROOT_TCanvas"<< endl;
+         out <<"#include "<< quote <<"TCanvas.h"<< quote << endl;
+         out <<"#endif" << endl;
+      }
+   }
+   out << endl << "#endif" << endl;
+   // deletes created ListOfIncludes
+   gROOT->GetListOfSpecials()->Remove(ilist);
+   ilist->Delete();
+   delete ilist;
+   delete bc;
+
+   // Does not work when filename contains more dots (RDM)
+   // writes the macro entry point equal to the filename
+   char *sname = new char[lenfile];
+   Int_t i=0;
+   while (*fname != '.') {
+      sname[i] = *fname;
+      i++; fname++;
+   }
+   sname[i] = 0;
+
+   out << endl;
+   out <<"void "<< sname << "()" << endl;
+   delete [] sname;
+
+   //  Save GUI widgets as a C++ macro in a file
+   out <<"{"<< endl;
+   out << endl << "   // transient frame" << endl;
+   out << "   TGTransientFrame *";
+   out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
+       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << endl;
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
+   out << endl;
+
+   // setting layout manager if different from frame type
+   TGLayoutManager * lm = GetLayoutManager();
+   switch (GetOptions()){
+      case kHorizontalFrame:
+         if (!lm->InheritsFrom(TGHorizontalLayout::Class())) {
+            out << "   " << GetName() << "->SetLayoutManager(";
+            GetLayoutManager()->SavePrimitive(out, option);
+            out << ");" << endl;
+         }
+         break;
+      case kVerticalFrame:
+         if (!lm->InheritsFrom(TGVerticalLayout::Class())) {
+            out << "   " << GetName() << "->SetLayoutManager(";
+            GetLayoutManager()->SavePrimitive(out, option);
+            out << ");"<< endl;
+         }
+         break;
+      default:
+         out << "   " << GetName() << "->SetLayoutManager(";
+         GetLayoutManager()->SavePrimitive(out, option);
+         out << ");"<< endl;
+         break;
+   }
+
+   if (strlen(fWindowName)) {
+      out<<"   "<<GetName()<< "->SetWindowName("<<quote<<GetWindowName()<<quote<<");"<<endl;
+   }
+   if (strlen(fIconName)) {
+      out<<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<endl;
+   }
+   if (strlen(fIconPixmap)) {
+      out<<"   "<<GetName()<< "->SetIconPixmap("<<quote<<GetIconPixmap()<<quote<<");"<<endl;
+   }
+
+   GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
+   if (strlen(fClassName) || strlen(fResourceName)) {
+      out<<"   "<<GetName()<< "->SetClassHints("<<quote<<fClassName<<quote
+                                            <<"," <<quote<<fResourceName<<quote
+                                            <<");"<<endl;
+   }
+
+   GetMWMHints(fMWMValue, fMWMFuncs, fMWMInput);
+   if (fMWMValue || fMWMFuncs || fMWMInput) {
+      out << "   " << GetName() << "->SetMWMHints(";
+      out << GetMWMvalueString() << "," << endl;
+      out << "                        ";
+      out << GetMWMfuncString() << "," << endl;
+      out << "                        ";
+      out << GetMWMinpString() << ");"<< endl;
+   }
+
+   GetWMPosition(fWMX, fWMY);
+   if ((fWMX != -1) || (fWMY != -1)) {
+      out <<"   "<<GetName()<<"->SetWMPosition("<<fWMX<<","<<fWMY<<");"<<endl;
+   }
+
+   GetWMSize(fWMWidth, fWMHeight);
+   if (fWMWidth != UInt_t(-1) || fWMHeight != UInt_t(-1)) {
+      out <<"   "<<GetName()<<"->SetWMSize("<<fWMWidth<<","<<fWMHeight<<");"<<endl;
+   }
+
+   GetWMSizeHints(fWMMinWidth,fWMMinHeight,fWMMaxWidth,fWMMaxHeight,fWMWidthInc,fWMHeightInc);
+   if (fWMMinWidth != UInt_t(-1) || fWMMinHeight != UInt_t(-1) ||
+       fWMMaxWidth != UInt_t(-1) || fWMMaxHeight != UInt_t(-1) ||
+       fWMWidthInc != UInt_t(-1) || fWMHeightInc != UInt_t(-1)) {
+
+      out <<"   "<<GetName()<<"->SetWMSizeHints("<<fWMMinWidth<<","<<fWMMinHeight
+          <<","<<fWMMaxWidth<<","<<fWMMaxHeight <<","<<fWMWidthInc<<","<<fWMHeightInc
+          <<");"<<endl;
+   }
+
+   out << "   " <<GetName()<< "->MapSubwindows();" << endl;
+   out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
+   out << "   " <<GetName()<< "->MapWindow();" <<endl;
+   out << "   " <<GetName()<< "->Resize();" << endl;
+
+   out << "}  " << endl;
+
+   out.close();
+
+   Printf(" C++ macro file %s has been generated", fname-i);
+
+   // reset bit TClass::kClassSaved for all classes
+   nextc1.Reset();
+   while((c1=(TClass*)nextc1())) {
+      c1->ResetBit(TClass::kClassSaved);
+   }
+   if (!lenfile) delete [] fname;
 }

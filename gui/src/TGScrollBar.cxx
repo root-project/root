@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.10 2002/11/15 13:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.11 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -447,7 +447,7 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
 
    fRange = TMath::Max((Int_t) h - (fgScrollBarWidth << 1), 1);
    fPsize = fRange >> 1;
-
+    
    fSliderSize  = 50;
    fSliderRange = 1;
 }
@@ -595,7 +595,7 @@ Bool_t TGVScrollBar::HandleMotion(Event_t *event)
 void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
 {
    // Set range of vertical scrollbar.
-
+   
    fRange = TMath::Max(range, 1);
    fPsize = TMath::Max(page_size, 0);
 
@@ -616,7 +616,7 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
 
    fPos = TMath::Max(fPos, 0);
    fPos = TMath::Min(fPos, fRange-fPsize);
-
+   
    SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.15 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.16 2003/07/09 09:58:13 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -208,6 +208,7 @@ All other keys with valid ASCII codes insert themselves into the line.
 #include "TMath.h"
 #include "TTimer.h"
 #include "KeySymbols.h"
+#include "Riostream.h"
 
 
 TString      *TGTextEntry::fgClipboardText = 0;
@@ -1637,4 +1638,83 @@ const TGGC &TGTextEntry::GetDefaultSelectedBackgroundGC()
    if (!fgDefaultSelectedBackgroundGC)
       fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
    return *fgDefaultSelectedBackgroundGC;
+}
+
+//______________________________________________________________________________
+void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a text entry widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC.GetGC())) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC.GetGC());
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
+
+   out << "   TGTextEntry *";
+   out << GetName() << " = new TGTextEntry(" << fParent->GetName()
+       << ", new TGTextBuffer(" << GetBuffer()->GetBufferLength() << ")";
+
+   if (fBackground == GetWhitePixel()) {
+       if (GetOptions() == kSunkenFrame | kDoubleBorder) {
+           if (fFontStruct == GetDefaultFontStruct()) {
+               if (fNormGC() == GetDefaultGC()()) {
+                    if (fWidgetId == -1) {
+                       out <<");" << endl;
+                   } else {
+                     out << "," << fWidgetId << ");" << endl;
+                   }
+               } else {
+                 out << "," << fWidgetId << "," << ParGC << ");" << endl;
+               }
+           } else {
+             out << "," << fWidgetId << "," << ParGC << "," << ParFont
+                 <<");" << endl;
+           }
+       } else {
+         out << "," << fWidgetId << "," << ParGC << "," << ParFont
+             << "," << GetOptionString() << ");" << endl;
+       }
+   } else {
+     out << "," << fWidgetId << "," << ParGC << "," << ParFont
+         << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   out << "   " << GetName() << "->SetMaxLength(" << GetMaxLength() << ");" << endl;
+
+   out << "   " << GetName() << "->SetAlignment(";
+
+   if (fAlignment == kTextLeft)
+      out << "kTextLeft);"    << endl;
+
+   if (fAlignment == kTextRight)
+      out << "kTextRight);"   << endl;
+
+   if (fAlignment == kTextCenterX)
+      out << "kTextCenterX);" << endl;
+
+   out << "   " << GetName() << "->SetText(" << quote << GetText() << quote
+       << ");" << endl;
+
+   out << "   " << GetName() << "->Resize("<< GetWidth() << "," << GetName()
+       << "->GetDefaultHeight());" << endl;
 }

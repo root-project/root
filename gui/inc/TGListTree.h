@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.12 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.13 2003/10/10 11:20:23 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -231,6 +231,8 @@ public:
    virtual void Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
+
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGListTree,0)  //Show items in a tree structured list
 };

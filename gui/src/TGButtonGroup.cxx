@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.13 2003/05/12 16:44:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.14 2003/06/23 22:18:37 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -84,6 +84,8 @@
 #include "TClass.h"
 #include "TGLayout.h"
 #include "TList.h"
+#include "TGResourcePool.h"
+#include "Riostream.h"
 
 
 ClassImpQ(TGButtonGroup)
@@ -457,3 +459,221 @@ void TGButtonGroup::SetLayoutHints(TGLayoutHints *l, TGButton *button)
    Layout();
 }
 
+//______________________________________________________________________________
+void TGButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a button group widget as a C++ statement(s) on output stream out
+
+   char quote ='"';
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // buttongroup frame" << endl;
+
+   out << "   TGButtonGroup *";
+   out << GetName() << " = new TGButtonGroup(" << fParent->GetName()
+       << ","<< quote << fText->GetString() << quote;
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (fFontStruct == GetDefaultFontStruct()) {
+         if (fNormGC == GetDefaultGC()()) {
+            if (!GetOptions()) {
+               out <<");" << endl;
+            } else {
+               out << "," << GetOptionString() <<");" << endl;
+            }
+         } else {
+            out << "," << GetOptionString() << "," << ParGC <<");" << endl;
+         }
+      } else {
+         out << "," << GetOptionString() << "," << ParGC << "," << ParFont <<");" << endl;
+      }
+   } else {
+     out << "," << GetOptionString() << "," << ParGC << "," << ParFont << ",ucolor);" << endl;
+   }
+   
+   TGFrameElement *f;
+   TIter next(GetList());
+   while ((f = (TGFrameElement *)next())) {
+      f->fFrame->SavePrimitive(out,option);
+   }
+
+   if (IsExclusive())
+      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << endl;
+
+   if (IsRadioButtonExclusive())
+      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << endl;
+
+   if (!IsBorderDrawn())
+      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << endl;
+
+
+   out << "   " << GetName() << "->Resize(" << GetWidth()
+       << "," << GetHeight() << ");" << endl;
+
+   out << "   " << GetName() << "->Show();" << endl;
+}
+
+//______________________________________________________________________________
+void TGHButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a button group widget as a C++ statement(s) on output stream out
+
+   char quote ='"';
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // horizontal buttongroup frame" << endl;
+
+   out << "   TGHButtonGroup *";
+   out << GetName() << " = new TGHButtonGroup(" << fParent->GetName()
+       << "," << quote << fText->GetString() << quote;
+   if (fBackground == GetDefaultFrameBackground()) {
+
+      if (fFontStruct == GetDefaultFontStruct()) {
+
+         if (fNormGC == GetDefaultGC()()) {
+            out << ");" << endl;
+         } else {
+            out << "," << ParGC <<");" << endl;
+         }
+      } else {
+         out << "," << ParGC << "," << ParFont <<");" << endl;
+      }
+   } else {
+      out << "," << ParGC << "," << ParFont << ",ucolor);" << endl;
+   }
+
+   TGFrameElement *f;
+   TIter next(GetList());
+   while ((f = (TGFrameElement *)next())) {
+      f->fFrame->SavePrimitive(out,option);
+   }
+
+   if (IsExclusive())
+      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << endl;
+
+   if (IsRadioButtonExclusive())
+      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << endl;
+
+   if (!IsBorderDrawn())
+      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << endl;
+
+   out << "   " << GetName() <<"->Resize(" << GetWidth() << ","
+       << GetHeight() << ");" << endl;
+
+   out << "   " << GetName() << "->Show();" << endl;
+}
+
+//______________________________________________________________________________
+void TGVButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a button group widget as a C++ statement(s) on output stream out
+
+   char quote ='"';
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // vertical buttongroup frame" << endl;
+
+   out << "   TGVButtonGroup *";
+   out << GetName() << " = new TGVButtonGroup(" << fParent->GetName()
+       << "," << quote << fText->GetString() << quote;
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (fFontStruct == GetDefaultFontStruct()) {
+         if (fNormGC == GetDefaultGC()()) {
+            out <<");" << endl;
+         } else {
+            out << "," << ParGC <<");" << endl;
+         }
+      } else {
+         out << "," << ParGC << "," << ParFont <<");" << endl;
+      }
+   } else {
+      out << "," << ParGC << "," << ParFont << ",ucolor);" << endl;
+   }
+
+   TGFrameElement *f;
+   TIter next(GetList());
+   while ((f = (TGFrameElement *)next())) {
+      f->fFrame->SavePrimitive(out,option);
+   }
+
+   if (IsExclusive())
+      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << endl;
+
+   if (IsRadioButtonExclusive())
+      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << endl;
+
+   if (!IsBorderDrawn())
+      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << endl;
+
+   out << "   " << GetName() << "->Resize(" << GetWidth()
+       << "," << GetHeight() << ");"<< endl;
+    
+   out << "   " << GetName() << "->Show();" << endl;
+}

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.17 2003/07/09 00:53:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.18 2003/07/09 12:34:35 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -200,6 +200,7 @@ public:
    virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
    virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
    virtual void Activate(Bool_t) { }
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGPopupMenu,0)  // Popup menu
 };
@@ -250,6 +251,7 @@ public:
    TGPopupMenu *GetMenu() const { return fMenu; }
    const char  *GetName() const { return fLabel ? fLabel->GetString() : 0; }
    virtual void DoSendMessage();
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGMenuTitle,0)  // Menu title class
 };
@@ -293,6 +295,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGMenuBar,0)  // Menu bar class
 };

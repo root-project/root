@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.5 2003/10/08 09:50:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.6 2003/10/10 11:20:23 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 
 #include "TGStatusBar.h"
 #include "TGResourcePool.h"
+#include "Riostream.h"
 
 
 const TGFont *TGStatusBar::fgDefaultFont = 0;
@@ -48,6 +49,7 @@ public:
    TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t back = GetDefaultFrameBackground());
    ~TGStatusBarPart() { delete fStatusInfo; DestroyWindow(); }
    void SetText(TGString *text);
+   const TGString *GetText() const { return fStatusInfo; }
 };
 
 //______________________________________________________________________________
@@ -335,5 +337,50 @@ TGDimension TGStatusBar::GetDefaultSize() const
    for (int i = 0; i < fNpart; i++) {
       h = TMath::Max(h,fStatusPart[i]->GetDefaultHeight()+1);
    }
-   return TGDimension(fWidth, h); 
+   return TGDimension(fWidth, h);
+}
+
+//______________________________________________________________________________
+void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save a status bar widget as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl;
+   out << "   // status bar" << endl;
+
+   out << "   TGStatusBar *";
+   out << GetName() <<" = new TGStatusBar("<< fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (GetOptions() == kSunkenFrame) {
+           out <<");" << endl;
+      } else {
+        out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+     out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   int i; char quote = '"';
+
+   if (fNpart > 1)  {
+      out << "   Int_t parts[] = {" << fParts[0];
+
+      for (i=1; i<fNpart; i++) {
+           out  << "," << fParts[i];
+      }
+      out << "};" << endl;
+
+      out << "   " << GetName() << "->SetParts(parts," << fNpart << ");" <<endl;
+   }
+   for (i=0; i<fNpart; i++) {
+      if (fStatusPart[i]->GetText())
+          out << "   " << GetName() << "->SetText(" << quote
+              << fStatusPart[i]->GetText()->GetString()
+              << quote << "," << i << ");" << endl;
+
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.11 2001/08/31 17:49:44 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.12 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -156,6 +156,7 @@ public:
    virtual  void        SetState(Bool_t state);
    virtual  void        SetText(const char *text);
    virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000);
+   virtual  void        SavePrimitive(ofstream &out, Option_t *option);
 
    virtual  Bool_t      HandleButton(Event_t *event);
    virtual  Bool_t      HandleDoubleClick(Event_t *event);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.6 2001/05/29 14:26:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.7 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -71,6 +71,7 @@ public:
    void SetText(const char *newText) { SetText(new TGString(newText)); }
    void SetText(Int_t number) { SetText(new TGString(number)); }
    void SetTextJustify(Int_t tmode) { fTMode = tmode; }
+   virtual void SavePrimitive(ofstream &out, Option_t *option);   
 
    ClassDef(TGLabel,0)  // A label GUI element
 };

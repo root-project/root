@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.5 2003/06/24 13:41:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.6 2003/10/14 15:08:46 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -33,7 +33,11 @@
 #include "TList.h"
 #include "TGButton.h"
 #include "TGPicture.h"
-
+#include "TGPicture.h"
+#include "TGToolTip.h"
+#include "TSystem.h"
+#include "TROOT.h"
+#include "Riostream.h"
 
 ClassImp(TGToolBar)
 
@@ -98,7 +102,7 @@ void TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacin
 //______________________________________________________________________________
 void TGToolBar::ChangeIcon(ToolBarData_t *button, const char *new_icon)
 {
-   // Change the icon of a toolbar button. 
+   // Change the icon of a toolbar button.
 
    const TGPicture *pic = fClient->GetPicture(new_icon);
    if (!pic) {
@@ -123,4 +127,81 @@ void TGToolBar::Cleanup()
    fTrash = 0;
 
    TGCompositeFrame::Cleanup();
+}
+
+//______________________________________________________________________________
+void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save an horizontal slider as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl;
+   out << "   // tool bar" << endl;
+
+   out << "   TGToolBar *";
+   out << GetName() << " = new TGToolBar(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   char quote = '"';
+
+   char name[kMAXPATHLEN];
+   int i = 0, len = 0;
+   const char *picname, *rootname, *pos;
+
+   rootname = gSystem->Getenv("ROOTSYS");
+   len = strlen(rootname);
+
+   TGFrameElement *f;
+   TIter next(GetList());
+
+   while ((f = (TGFrameElement *) next())) {
+      if (f->fFrame->InheritsFrom(TGPictureButton::Class())) {
+         if (!gROOT->ClassSaved(TGPictureButton::Class())) {
+            //  declare a structure used for pictute buttons
+            out << endl << "   ToolBarData_t t;" << endl;
+         }
+
+         TGPictureButton *pb = (TGPictureButton *)f->fFrame;
+         out << "   t.fPixmap = " << quote;
+
+         // next write the absolute path as $ROOTSYS/path
+         picname = pb->GetPicture()->GetName();
+         pos = strstr(picname, rootname);
+         if (pos) {
+            sprintf(name,"$ROOTSYS%s",pos+len);  // if absolute path
+            out << name;
+         } else {
+            out << picname;                      // if no path
+         }
+         out << quote << ";" << endl;
+         out << "   t.fTipText = " << quote
+             << pb->GetToolTip()->GetText()->GetString() << quote << ";" << endl;
+         if (pb->GetState() == kButtonDown) {
+            out << "   t.fStayDown = kTRUE;" << endl;
+         } else {
+            out << "   t.fStayDown = kFALSE;" << endl;
+         }
+         out << "   t.fId = " << i+1 << ";" << endl;
+         out << "   t.fButton = 0;" << endl;
+         out << "   " << GetName() << "->AddButton(" << GetParent()->GetName()
+             << ",&t," << f->fLayout->GetPadLeft() << ");" << endl;
+         i++;
+      } else {
+         f->fFrame->SavePrimitive(out, option);
+		       out << "   " << GetName()<<"->AddFrame(" << f->fFrame->GetName();
+         f->fLayout->SavePrimitive(out, option);
+         out << ");"<< endl;
+      }
+   }
 }

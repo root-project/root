@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.4 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 #include "TGWidget.h"
 #include "TGString.h"
 #include "TGResourcePool.h"
-
+#include "Riostream.h"
 
 const TGFont *TGLabel::fgDefaultFont = 0;
 const TGGC   *TGLabel::fgDefaultGC = 0;
@@ -75,7 +75,6 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    fNormGC      = norm;
 
    int max_ascent, max_descent;
-
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
@@ -157,4 +156,59 @@ const TGGC &TGLabel::GetDefaultGC()
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+void TGLabel::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a label widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   // font + GC
+   option = GetName()+5;         // unique digit id of the name
+   char ParGC[50], ParFont[50];
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      if (ufont) {
+         ufont->SavePrimitive(out, option);
+         sprintf(ParFont,"ufont->GetFontStruct()");
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
+
+      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (userGC) {
+         userGC->SavePrimitive(out, option);
+         sprintf(ParGC,"uGC->GetGC()");
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
+   }
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   TString label = GetText()->GetString();
+   label.ReplaceAll("\"","\\\"");
+
+   out << "   TGLabel *";
+   out << GetName() << " = new TGLabel("<< fParent->GetName()
+       << "," << quote << label << quote;
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         if (fFontStruct == GetDefaultFontStruct()) {
+            if (fNormGC == GetDefaultGC()()) {
+               out <<");" << endl;
+            } else {
+               out << "," << ParGC << ");" << endl;
+            }
+         } else {
+            out << "," << ParGC << "," << ParFont << ");" << endl;
+         }
+      } else {
+         out << "," << ParGC << "," << ParFont << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << ParGC << "," << ParFont << "," << GetOptionString() << ",ucolor);" << endl;
+   }
 }

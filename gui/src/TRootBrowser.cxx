@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.44 2003/09/20 14:39:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.45 2003/10/07 19:02:26 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -51,7 +51,7 @@
 #include "TInterpreter.h"
 
 #include "HelpText.h"
-
+#include "TGFrame.h"
 
 // Browser menu command ids
 enum ERootBrowserCommands {

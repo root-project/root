@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.4 2003/01/20 10:25:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.5 2003/07/25 17:22:38 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -35,6 +35,8 @@
 ClassImp(TGWindow)
 ClassImp(TGUnknownWindowHandler)
 
+Int_t TGWindow::fgCounter = 0;
+
 //______________________________________________________________________________
 TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
                    UInt_t border, Int_t depth, UInt_t clss, void *visual,
@@ -53,6 +55,12 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
     			            depth, clss, visual, attr, wtype);
       fClient->RegisterWindow(this);
       fNeedRedraw = kFALSE;
+
+      // name will be used in SavePrimitive methods
+      fgCounter++;
+      fName = "frame";
+      fName += fgCounter;
+
    } else {
       Error("TGWindow", "no parent specified");
    }
@@ -116,8 +124,15 @@ Bool_t TGWindow::IsMapped()
 //______________________________________________________________________________
 void TGWindow::Print(Option_t *) const
 {
-   // print window id
+   // Print window id.
 
    cout << ClassName() << ":t" << fId << endl;
 }
 
+//______________________________________________________________________________
+Int_t TGWindow::GetCounter()
+{
+   // Return global window counter (total number of created windows).
+
+   return fgCounter;
+}

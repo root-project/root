@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.6 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.7 2003/07/04 08:48:28 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGDoubleSlider.h"
+#include "Riostream.h"
 
 
 ClassImp(TGDoubleSlider)
@@ -106,6 +107,29 @@ void TGDoubleSlider::FixBounds(Float_t &min, Float_t &max)
    }
 }
 
+//______________________________________________________________________________
+TString TGDoubleSlider::GetSString() const
+{
+   // Returns the slider type as a string - used in SavePrimitive()
+
+   TString stype;
+
+   if (fScaleType) {
+       if (fScaleType & kDoubleScaleNo)  {
+           if (stype.Length() == 0) stype  = "kDoubleScaleNo";
+           else                     stype += " | kDoubleScaleNo";
+       }
+       if (fScaleType & kDoubleScaleDownRight) {
+           if (stype.Length() == 0) stype  = "kDoubleScaleDownRight";
+           else                     stype += " | kDoubleScaleDownRight";
+       }
+       if (fScaleType & kDoubleScaleBoth) {
+           if (stype.Length() == 0) stype  = "kDoubleScaleBoth";
+           else                     stype += " | kDoubleScaleBoth";
+       }
+   }
+   return stype;
+}
 
 //______________________________________________________________________________
 TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
@@ -433,4 +457,84 @@ Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
       PositionChanged();
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGDoubleHSlider::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save an horizontal slider as a C++ statement(s) on output stream out.
+
+   SaveUserColor(out, option);
+
+   out <<"   TGDoubleHSlider *";
+   out << GetName() << " = new TGDoubleHSlider(" << fParent->GetName()
+       << "," << GetWidth() << ",";
+   out << GetSString() << "," << WidgetId() << ",";
+   out << GetOptionString() << ",ucolor";
+   if (fMarkEnds) {
+      switch (fReversedScale) {
+         case kTRUE:
+            out << ",kTRUE,kTRUE);";
+            break;
+         case kFALSE:
+            out << ",kFALSE,kTRUE);";
+            break;
+      }
+   } else if (fReversedScale) {
+      out << ",kTRUE);";
+   }
+   out <<");" << endl;
+
+   if (fVmin != 0 || fVmax != (Int_t)fWidth)
+      out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax
+          << ");" << endl;
+
+   if (fSmin != fWidth/8*3 || fSmax != fWidth/8*5)
+      out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
+          << "," << GetMaxPosition() << ");" << endl;
+
+   if (fScale != 10)
+      out << "   " << GetName() << "->SetScale(" << fScale << ");" << endl;
+
+}
+
+//______________________________________________________________________________
+void TGDoubleVSlider::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save an horizontal slider as a C++ statement(s) on output stream out.
+
+   SaveUserColor(out, option);
+
+   out<<"   TGDoubleVSlider *";
+   out << GetName() << " = new TGDoubleVSlider("<< fParent->GetName()
+       << "," << GetHeight() << ",";
+   out << GetSString() << "," << WidgetId() << ",";
+   out << GetOptionString() << ",ucolor";
+   if (fMarkEnds) {
+      switch (fReversedScale) {
+         case kTRUE:
+            out << ",kTRUE,kTRUE);";
+            break;
+         case kFALSE:
+            out << ",kFALSE,kTRUE);";
+            break;
+      }
+   } else if (fReversedScale) {
+      out << ",kTRUE);";
+   }
+   out <<");" << endl;
+
+   if (fVmin != 0 || fVmax != (Int_t)fHeight)
+      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax
+          << ");" << endl;
+
+
+   if (fSmin != fHeight/8*3 || fSmax != fHeight/8*5)
+      out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
+          << "," << GetMaxPosition() << ");" << endl;
+
+
+   if (fScale != 10)
+      out << "   " << GetName() << "->SetScale(" << fScale << ");" << endl;
+
 }

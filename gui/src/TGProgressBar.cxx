@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.6 2003/08/11 12:51:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.7 2003/10/19 14:15:08 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 
 #include "TGProgressBar.h"
 #include "TGResourcePool.h"
+#include "Riostream.h"
 
 
 const TGFont *TGProgressBar::fgDefaultFont = 0;
@@ -325,3 +326,79 @@ void TGVProgressBar::DoRedraw()
    fDrawBar = kFALSE;
 }
 
+//______________________________________________________________________________
+void TGProgressBar::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save progress bar parameters as a C++ statement(s) on output stream out
+
+   if (fMin != 0 && fMax != 100)
+      out << "   " << GetName() << "->SetRange(" << fMin << "," << fMax
+      << ");" << endl;
+
+   out <<"   "<< GetName() <<"->SetPosition("<< fPos <<");"<< endl;
+
+}
+
+//______________________________________________________________________________
+void TGVProgressBar::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a vertical progress bar as a C++ statement(s) on output stream out
+
+
+   out << "   TGVProgressBar *";
+   out << GetName() << " = new TGVProgressBar(" << fParent->GetName();
+
+   if (GetBarType()) {
+       out << ",TGProgressBar::kFancy,";
+   } else {
+     out << ",TGProgressBar::kStandard,";
+   }
+
+   out << GetHeight() <<");" << endl;
+
+   if (GetFillType() == kBlockFill)
+      out << "   " << GetName() <<"->SetFillType(TGProgressBar::kBlockFill);"<< endl;
+
+   out << "   " << GetName() << "->SetBarColor(" << fBarColorGC.GetForeground()
+       << ");"  << endl;
+   TGProgressBar::SavePrimitive(out, option);
+}
+
+//______________________________________________________________________________
+void TGHProgressBar::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save a vertical progress bar as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   out<<"   TGHProgressBar *";
+   out << GetName() <<" = new TGHProgressBar("<< fParent->GetName();
+
+   if (GetBarType()) {
+       out << ",TGProgressBar::kFancy,";
+   } else {
+     out << ",TGProgressBar::kStandard,";
+   }
+
+   out << GetWidth() << ");" << endl;
+
+   if (GetFillType() == kBlockFill)
+      out << "   " << GetName() <<"->SetFillType(TGProgressBar::kBlockFill);"<< endl;
+
+   if (GetShowPos()) {
+       out << "   " << GetName() <<"->ShowPosition(kTRUE,";
+       if (UsePercent()) {
+           out << "kTRUE,";
+       } else {
+         out << "kFALSE,";
+       }
+       out << quote << GetFormat() << quote << ");"<< endl;
+
+   } else if (UsePercent() && !GetFillType()) {
+      out << "   " << GetName() <<"->ShowPosition();" << endl;
+   }
+   out << "   " << GetName() <<"->SetBarColor(" << fBarColorGC.GetForeground()
+       << ");"  << endl;
+   TGProgressBar::SavePrimitive(out, option);
+
+}

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.2 2000/10/20 12:18:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.3 2001/07/26 16:10:40 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -54,6 +54,7 @@
 #include "TGFrame.h"
 #include "TList.h"
 #include "TMath.h"
+#include "Riostream.h"
 
 
 ClassImp(TGLayoutHints)
@@ -773,4 +774,146 @@ TGDimension TGListDetailsLayout::GetDefaultSize() const
    }
 
    return TGDimension(max_osize.fWidth, y);
+}
+
+// ________________________________________________________________________
+void TGLayoutHints::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save layout hints as a C++ statement(s) on output stream out
+
+   TString hints;
+   UInt_t pad = GetPadLeft()+GetPadRight()+GetPadTop()+GetPadBottom();
+
+   if (!GetLayoutHints()) return;
+
+   if ((fLayoutHints == kLHintsNormal) && (pad == 0)) return;
+
+   if (fLayoutHints & kLHintsLeft) {
+      if (hints.Length() == 0) hints  = "kLHintsLeft";
+			   else                     hints += " | kLHintsLeft";
+   }
+   if (fLayoutHints & kLHintsCenterX) {
+      if  (hints.Length() == 0) hints  = "kLHintsCenterX";
+      else                     hints += " | kLHintsCenterX";
+   }
+   if (fLayoutHints & kLHintsRight) {
+      if (hints.Length() == 0) hints  = "kLHintsRight";
+      else                     hints += " | kLHintsRight";
+   }
+   if (fLayoutHints & kLHintsTop) {
+      if (hints.Length() == 0) hints  = "kLHintsTop";
+      else                     hints += " | kLHintsTop";
+   }
+   if (fLayoutHints & kLHintsCenterY) {
+      if (hints.Length() == 0) hints  = "kLHintsCenterY";
+	     else                     hints += " | kLHintsCenterY";
+   }
+   if (fLayoutHints & kLHintsBottom) {
+      if (hints.Length() == 0) hints  = "kLHintsBottom";
+      else                     hints += " | kLHintsBottom";
+   }
+   if (fLayoutHints & kLHintsExpandX) {
+      if (hints.Length() == 0) hints  = "kLHintsExpandX";
+      else                     hints += " | kLHintsExpandX";
+   }
+   if (fLayoutHints & kLHintsExpandY) {
+      if (hints.Length() == 0) hints  = "kLHintsExpandY";
+      else                     hints += " | kLHintsExpandY";
+   }
+
+   out << ", new TGLayoutHints(" << hints;
+
+   if (pad) {
+      out << "," << GetPadLeft() << "," << GetPadRight()
+          << "," << GetPadTop()  << "," << GetPadBottom();
+    }
+    out<< ")";
+}
+
+// __________________________________________________________________________
+void TGVerticalLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save vertical layout manager as a C++ statement(s) on output stream
+
+   out << " new TGVerticalLayout(" << fMain->GetName() << ")";
+
+}
+
+// __________________________________________________________________________
+void TGHorizontalLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save horizontal layout manager as a C++ statement(s) on output stream
+
+   out << " new TGHorizontalLayout(" << fMain->GetName() << ")";
+}
+
+// __________________________________________________________________________
+void TGRowLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save row layout manager as a C++ statement(s) on output stream
+
+   out << " new TGRowLayout(" << fMain->GetName() << ","
+                             << fSep << ")";
+}
+
+// __________________________________________________________________________
+void TGColumnLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save column layout manager as a C++ statement(s) on output stream
+
+   out << " new TGColumnLayout(" << fMain->GetName() << ","
+                                << fSep << ")";
+
+}
+
+// __________________________________________________________________________
+void TGMatrixLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save matrix layout manager as a C++ statement(s) on output stream
+
+   out << " new TGMatrixLayout(" << fMain->GetName() << ","
+                                << fRows << ","
+                                << fColumns << ","
+                                << fSep << ","
+                                << fHints <<")";
+
+}
+
+// __________________________________________________________________________
+void TGTileLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save tile layout manager as a C++ statement(s) on output stream
+
+   out << " new TGTileLayout(" << fMain->GetName() << ","
+                              << fSep << ")";
+
+}
+
+// __________________________________________________________________________
+void TGListLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save list layout manager as a C++ statement(s) on output stream
+
+   out << " new TGListLayout(" << fMain->GetName() << ","
+                              << fSep << ")";
+
+}
+
+// __________________________________________________________________________
+void TGListDetailsLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save list details layout manager as a C++ statement(s) on out stream
+
+   out << " new TGListDetailsLayout(" << fMain->GetName() << ","
+                                     << fSep << ")";
+
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.27 2003/08/07 21:27:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.28 2003/10/10 11:20:23 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -48,6 +48,7 @@
 #include "TGTextEditDialogs.h"
 #include "TGResourcePool.h"
 #include "TGMsgBox.h"
+#include "Riostream.h"
 
 
 Pixel_t        TGListTree::fgGrayPixel = 0;
@@ -560,7 +561,7 @@ void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
    // const Mask_t kButton4Mask    = BIT(11);
    // const Mask_t kButton5Mask    = BIT(12);
    // const Mask_t kAnyModifier    = BIT(15);
-  
+
    Long_t args[3];
    args[0] = (Long_t)entry;
    args[1] = (Long_t)keysym;
@@ -1766,4 +1767,36 @@ const TGGC &TGListTree::GetHighlightGC()
       fgHighlightGC = gClient->GetGC(&gcv, kTRUE);
    }
    return *fgHighlightGC;
+}
+
+//______________________________________________________________________________
+void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a list tree widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
+
+   out << endl << "   // list tree" << endl;
+   out << "   TGListTree *";
+
+   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
+      out << GetName() << " = new TGListTree(" << GetCanvas()->GetName();
+   } else {
+      out << GetName() << " = new TGListTree(" << fParent->GetName();
+      out << "," << GetWidth() << "," << GetHeight();
+   }
+
+   if (fBackground == GetWhitePixel()) {
+      if (GetOptions() == kSunkenFrame) {
+         out <<");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+   out << "   " << GetName() << "->AddItem(0," << quote
+       << GetFirstItem()->GetText() << quote << ");" << endl;
 }

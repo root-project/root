@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.3 2003/01/28 18:31:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.4 2003/05/28 11:55:31 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -61,6 +61,7 @@
 #include "TGResourcePool.h"
 #include "TG3DLine.h"
 #include "TColor.h"
+#include "Riostream.h"
 
 ClassImp(TGColorFrame)
 ClassImp(TG16ColorSelector)
@@ -512,4 +513,29 @@ void TGColorSelect::SetColor(ULong_t color)
    fColor = color;
    fDrawGC.SetForeground(color);
    gClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGColorSelect::SavePrimitive(ofstream &out, Option_t *)
+{
+    // Save a color select widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   ULong_t color = GetColor();
+   const char *colorname = TColor::PixelAsHexString(color);
+   gClient->GetColorByName(colorname, color);
+
+   out << endl << "   // color select widget" << endl;
+   out << "   ULong_t ColPar;" << endl;
+   out << "   gClient->GetColorByName(" << quote << colorname << quote
+       << ", ColPar);" << endl;
+
+   out <<"   TGColorSelect *";
+   out << GetName() << " = new TGColorSelect(" << fParent->GetName()
+       << ", ColPar, " << WidgetId() << ");" << endl;
+
+   if (!IsEnabled()) {
+      out << "   " << GetName() << "->Disable();" << endl;
+   }
+   out << endl;
 }

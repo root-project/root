@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.3 2001/09/22 10:04:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.4 2002/12/02 18:50:03 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -82,6 +82,7 @@
 #include "TTimer.h"
 #include "TSystem.h"
 #include "TGToolTip.h"
+#include "Riostream.h"
 #include <ctype.h>
 
 
@@ -1987,4 +1988,107 @@ void TGNumberEntry::ValueChanged(Long_t val)
    // val / 10000 != 0 indicates button down
 
    Emit("ValueChanged(Long_t)", val);
+}
+
+//______________________________________________________________________________
+void TGNumberEntry::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save a number entry widget as a C++ statement(s) on output stream out.
+
+   // to calculate the digits parameter
+   Int_t w = fNumericEntry->GetWidth();
+   Int_t h = fNumericEntry->GetHeight();
+   Int_t charw  = fNumericEntry->GetCharWidth("0123456789");
+   Int_t digits = (30*w - 240 -20*h)/(3*charw) + 3;
+
+   // for time format
+   Int_t hour, min, sec;
+   GetTime(hour, min, sec);
+
+   // for date format
+   Int_t yy, mm, dd;
+   GetDate(yy, mm, dd);
+
+   out << "   TGNumberEntry *";
+   out << GetName() << " = new TGNumberEntry(" << fParent->GetName() << ", (Double_t) ";
+   switch (GetNumStyle()){
+      case kNESInteger:
+         out << GetIntNumber() << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESRealOne:
+         out << GetNumber() << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESRealTwo:
+         out << GetNumber() << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESRealThree:
+         out << GetNumber() << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESRealFour:
+         out << GetNumber() << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESReal:
+         out << GetNumber() << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESDegree:
+         out << GetIntNumber() << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESMinSec:
+         out << min*60 + sec << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESHourMin:
+         out << hour*60 + min << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESHourMinSec:
+         out << hour*3600 + min*60 + sec << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESDayMYear:
+         out << yy << mm << dd << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESMDayYear:
+         out << yy << mm << dd << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESHex:
+      {  char hex[150];
+         ULong_t l = GetHexNumber();
+         IntToHexStr(hex, l);
+         out << "0x" << hex << "U," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      }
+   }
+   if (GetNumMax() ==1) {
+      if (GetNumMin() == 0) {
+         if (GetNumLimits() == kNELNoLimits) {
+            if (GetNumAttr() == kNEAAnyNumber) {
+               out << ");" << endl;
+            } else {
+               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");" << endl;
+            }
+         } else {
+            out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
+                << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ");" << endl;
+         }
+      } else {
+         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
+             << ",(TGNumberFormat::ELimit) " << GetNumLimits()
+             << "," << GetNumMin() << ");" << endl;
+      }
+   } else {
+         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
+             << ",(TGNumberFormat::ELimit) " << GetNumLimits()
+             << "," << GetNumMin() << "," << GetNumMax() << ");" << endl;
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.25 2003/08/06 23:42:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.26 2003/10/22 17:20:50 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -585,7 +585,7 @@ Bool_t TGClient::HandleEvent(Event_t *event)
    // Handle a GUI event.
 
    TGWindow *w;
-
+   
    // Find window where event happened
    if ((w = GetWindowById(event->fWindow)) == 0) {
       if (fUWHandlers && fUWHandlers->GetSize() > 0) {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.7 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.8 2003/07/08 19:42:07 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -128,6 +128,8 @@ public:
    virtual void GetFilePictures(const TGPicture **pic, const TGPicture **lpic,
                                 Int_t file_type, Bool_t is_link, const char *ext,
                                 Bool_t small);
+
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGFileContainer,0)  // Container containing file system objects
 };

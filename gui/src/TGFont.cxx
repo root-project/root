@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.1 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -35,6 +35,8 @@
 #include "THashTable.h"
 #include "TVirtualX.h"
 
+#include "Riostream.h"
+#include "TROOT.h"
 
 ClassImp(TGFont)
 
@@ -194,4 +196,21 @@ void TGFontPool::Print(Option_t *) const
    // List all fonts in the pool.
 
    fList->Print();
+}
+
+//______________________________________________________________________________
+void TGFont::SavePrimitive(ofstream &out, Option_t *)
+{
+    // Save the used font as a C++ statement(s) on output stream out
+
+   char quote = '"';
+
+   if (gROOT->ClassSaved(TGFont::Class())) {
+       out << endl;
+   } else {
+      //  declare a font object to reflect required user changes
+      out << endl;
+      out << "   TGFont *ufont;         // will reflect user font changes" << endl;
+   }
+   out << "   ufont = gClient->GetFont(" << quote << GetName() << quote << ");" << endl;
 }

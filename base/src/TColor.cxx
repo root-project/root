@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.14 2002/09/13 01:33:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.15 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -547,4 +547,18 @@ void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
    r = color.fRed / 257;
    g = color.fGreen / 257;
    b = color.fBlue / 257;
+}
+
+//______________________________________________________________________________
+const char *TColor::PixelAsHexString(ULong_t pixel)
+{
+   // Convert machine dependent pixel value (obtained via RGB2Pixel or
+   // via Number2Pixel() or via TColor::GetPixel()) to a hexidecimal string.
+   // This string can be directly passed to, for example,
+   // TGClient::GetColorByName(). String will be reused so copy immediately
+   // if needed.
+
+   Int_t r, g, b;
+   Pixel2RGB(pixel, r, g, b);
+   return Form("#%02x%02x%02x", r, g, b);
 }

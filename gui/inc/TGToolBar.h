@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.7 2003/06/24 13:41:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.8 2003/10/14 15:08:46 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -55,6 +55,7 @@ public:
    void AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing = 0);
    void ChangeIcon(ToolBarData_t *button, const char *new_icon);
    void Cleanup();
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGToolBar,0)  //A bar containing picture buttons
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.9 2003/04/14 14:13:51 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.10 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
 #include "TMath.h"
+#include "Riostream.h"
 
 
 const TGFont *TGTextLBEntry::fgDefaultFont = 0;
@@ -631,7 +632,7 @@ void TGListBox::InitListBox()
    fVScrollbar->AddInput(kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask);
    fLbc->AddInput(kButtonPressMask | kButtonReleaseMask
-                  /*| kPointerMotionMask */);
+                  | kPointerMotionMask );
 }
 
 //______________________________________________________________________________
@@ -952,4 +953,53 @@ void TGListBox::Selected(Int_t widgetId, Int_t id)
    args[1] = id;
 
    Emit("Selected(Int_t,Int_t)", args);
+}
+
+//______________________________________________________________________________
+void TGListBox::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save a list box widget as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
+
+   out << endl << "   // list box" << endl;
+
+   out<<"   TGListBox *";
+   out << GetName() << " = new TGListBox(" << fParent->GetName();
+
+   if (fBackground == GetWhitePixel()) {
+       if (GetOptions() == kSunkenFrame | kDoubleBorder) {
+          if (fWidgetId == -1) {
+               out <<");" << endl;
+           } else {
+             out << "," << fWidgetId << ");" << endl;
+           }
+       } else {
+         out << "," << fWidgetId << "," << GetOptionString() <<");" << endl;
+       }
+   } else {
+     out << "," << fWidgetId << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   if (!fLbc->GetList()) return;
+
+   TGFrameElement *el;
+   TIter next(fLbc->GetList());
+
+   while ((el = (TGFrameElement *) next())) {
+      out << "   " << GetName() << "->AddEntry(";
+      el->fFrame->SavePrimitive(out, option);
+      out << ");"<< endl;
+   }
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
+       << ");" << endl;
+}
+
+//______________________________________________________________________________
+void TGTextLBEntry::SavePrimitive(ofstream &out, Option_t *)
+{
+    // Save a list box entry widget as a C++ statement(s) on output stream out
+
+    char quote = '"';
+    out << quote << GetText()->GetString() << quote << "," << EntryId();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.15 2002/06/10 18:35:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.16 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "TGMsgBox.h"
 #include "TGFileDialog.h"
 #include "KeySymbols.h"
+#include "Riostream.h"
 
 
 static const char *gFiletypes[] = { "All files",     "*",
@@ -1603,4 +1604,39 @@ const TGGC &TGTextEdit::GetCursor1GC()
       fgCursor1GC->SetFunction(kGXand);
    }
    return *fgCursor1GC;
+}
+
+//______________________________________________________________________________
+void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save a text edit widget as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   out << "   TGTextEdit *";
+   out << GetName() << " = new TGTextEdit(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight()
+       //<< "," << GetText()
+       //<< "," << WidgetId()
+       << ");"<< endl;
+
+   TGText *txt = GetText();
+   Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;
+   char fn[kMAXPATHLEN];    // file name
+
+   if (fromfile) {
+      int len = 0;
+      const char *filename, *rootname, *pos;
+      rootname = gSystem->Getenv("ROOTSYS");
+      len = strlen(rootname);
+      filename = txt->GetFileName();
+      pos = strstr(filename, rootname);
+      if (pos) {
+         sprintf(fn,"$ROOTSYS%s",pos+len);  // if absolute path
+      }
+   } else {
+      sprintf(fn,"EditorText");
+      txt->Save(fn);
+   }
+
+   out << "   " << GetName() << "->LoadFile(" << quote << fn << quote << ");" << endl;
 }

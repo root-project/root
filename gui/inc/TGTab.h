@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.6 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.7 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGTabLayout,0)  // Layout manager for TGTab widget
 };
@@ -124,6 +125,7 @@ public:
    TGTabElement     *GetCurrentTab() const { return GetTabTab(fCurrent); }
    UInt_t            GetTabHeight() const { return fTabh; }
    Int_t             GetNumberOfTabs() const;
+   virtual void      SavePrimitive(ofstream &out, Option_t *option);
 
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
 

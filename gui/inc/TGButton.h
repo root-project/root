@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.17 2003/08/11 12:51:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.18 2003/08/13 11:38:46 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -115,6 +115,7 @@ public:
    virtual Bool_t       IsToggleButton() const { return kFALSE; }
    virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
    virtual void         Toggle() { SetDown(IsDown() ? kFALSE : kTRUE); }
+   virtual void         SavePrimitive(ofstream &out, Option_t *option);
 
    virtual void Pressed()  { Emit("Pressed()"); }   // *SIGNAL*
    virtual void Released() { Emit("Released()"); }  // *SIGNAL*
@@ -167,6 +168,7 @@ public:
    virtual void       SetFont(FontStruct_t font);
    virtual void       SetFont(const char *fontName);
    virtual void       SetTextColor(Pixel_t color);
+   virtual void       SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGTextButton,0)  // A text button widget
 };
@@ -191,6 +193,8 @@ public:
                    UInt_t option = kRaisedFrame | kDoubleBorder);
 
    void SetPicture(const TGPicture *new_pic);
+   const TGPicture *GetPicture() const { return fPic; };
+   virtual void     SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGPictureButton,0)  // A picture button widget
 };
@@ -237,6 +241,7 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual void   SetState(EButtonState state) { PSetState(fPrevState = state); }
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGCheckButton,0)  // A check button widget
 };
@@ -286,6 +291,7 @@ public:
    virtual void SetState(EButtonState state) { PSetState(fPrevState = state); }
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGRadioButton,0)  // A radio button widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.4 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.5 2003/03/14 11:34:18 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGSplitter.h"
+#include "Riostream.h"
 
 
 ClassImp(TGSplitter)
@@ -300,4 +301,56 @@ void TGHSplitter::DrawBorder()
 
    // Currently no special graphical representation except for cursor change
    // when crossing a splitter
+}
+
+//______________________________________________________________________________
+void TGVSplitter::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save a splitter widget as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << "   TGVSplitter *";
+   out << GetName() <<" = new TGVSplitter("<< fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+       if (!GetOptions()) {
+            out <<");" << endl;
+       } else {
+         out << "," << GetOptionString() <<");" << endl;
+       }
+   } else {
+     out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
+   if (GetLeft())        out << ",kTRUE);" << endl;
+   else                  out << ",kFALSE);"<< endl;
+}
+
+//______________________________________________________________________________
+void TGHSplitter::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save a splitter widget as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << "   TGHSplitter *";
+   out << GetName() <<" = new TGHSplitter("<< fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+       if (!GetOptions()) {
+            out <<");" << endl;
+       } else {
+         out << "," << GetOptionString() <<");" << endl;
+       }
+   } else {
+     out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
+   if (GetAbove())       out << ",kTRUE);" << endl;
+   else                  out << ",kFALSE);"<< endl;
 }

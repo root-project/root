@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.7 2003/07/25 17:22:37 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -41,6 +41,8 @@ friend class TGClient;
 protected:
    const TGWindow   *fParent;         // Parent window
    Bool_t            fNeedRedraw;     // kTRUE if window needs to be redrawn
+   TString           fName;           // name of the window used in SavePrimitive()
+   static Int_t      fgCounter;       // counter of created windows in SavePrimitive
 
    TGWindow(Window_t id) : fNeedRedraw(kFALSE) { fClient = 0; fId = id; }
 
@@ -84,6 +86,10 @@ public:
    virtual void   MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t IsMapped();
    virtual void   Print(Option_t *option="") const;
+
+   virtual const char *GetName() const { return fName; }
+   void                SetName(const char *name) { fName = name; }
+   static Int_t        GetCounter();
 
    ClassDef(TGWindow,0)  // GUI Window base class
 };

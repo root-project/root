@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.19 2003/10/10 11:20:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.20 2003/10/13 20:21:32 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -61,6 +61,7 @@
 #include "TGTextEditDialogs.h"
 #include "TGMsgBox.h"
 #include "TGResourcePool.h"
+#include "Riostream.h"
 
 
 TGGC *TGContainer::fgLineGC = 0;
@@ -340,7 +341,7 @@ void TGContainer::KeyPressed(TGFrame *frame, UInt_t keysym, UInt_t mask)
 {
    // Signal emitted when keyboard key pressed
    //
-   // frame - activated frame 
+   // frame - activated frame
    // keysym - defined in "KeySymbols.h"
    // mask - modifier key mask, defined in "GuiTypes.h"
    //
@@ -354,7 +355,7 @@ void TGContainer::KeyPressed(TGFrame *frame, UInt_t keysym, UInt_t mask)
    // const Mask_t kButton4Mask    = BIT(11);
    // const Mask_t kButton5Mask    = BIT(12);
    // const Mask_t kAnyModifier    = BIT(15);
-  
+
    Long_t args[3];
    args[0] = (Long_t)frame;
    args[1] = (Long_t)keysym;
@@ -1975,5 +1976,88 @@ void TGCanvas::SetScrolling(Int_t scrolling)
    if (scrolling != fScrolling) {
       fScrolling = scrolling;
       Layout();
+   }
+}
+
+//______________________________________________________________________________
+void TGCanvas::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a canvas widget as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // canvas widget" << endl;
+
+   out << "   TGCanvas *";
+   out << GetName() << " = new TGCanvas("<< fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (GetOptions() == kSunkenFrame | kDoubleBorder) {
+         out << ");" << endl;
+      } else {
+         out << "," << GetOptionString() << ");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   TGViewPort *vp = GetViewPort();
+   out << endl << "   // canvas viewport" << endl;
+   out << "   TGViewPort *" << vp->GetName() << " = " << GetName()
+       << "->GetViewPort();" << endl;
+
+   TGContainer *cont = (TGContainer*)GetContainer();
+   cont->SavePrimitive(out, option);
+
+   out << "   " << vp->GetName() << "->AddFrame(" << cont->GetName()
+       << ");" << endl;
+
+   out << "   " << cont->GetName() << "->SetLayoutManager(";
+   cont->GetLayoutManager()->SavePrimitive(out, option);
+   out << ");"<< endl;
+
+   out << "   " << cont->GetName() << "->MapSubwindows();" << endl;
+
+   out << "   " << GetName() << "->SetContainer(" << cont->GetName()
+       << ");" << endl;
+
+   out << "   " << GetName() << "->MapSubwindows();" << endl;
+
+   if (fHScrollbar && fHScrollbar->IsMapped())
+      out << "   " << GetName() << "->SetHsbPosition(" << GetHsbPosition()
+          << ");" << endl;
+
+
+   if (fVScrollbar && fVScrollbar->IsMapped())
+      out << "   " << GetName() << "->SetVsbPosition(" << GetVsbPosition()
+          << ");" << endl;
+
+}
+
+//______________________________________________________________________________
+void TGContainer::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a canvas container as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // canvas container" << endl;
+
+   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
+      out << GetName() << " = new TGContainer(" << GetCanvas()->GetName();
+   } else {
+      out << GetName() << " = new TGContainer(" << fParent->GetName();
+      out << "," << GetWidth() << "," << GetHeight();
+   }
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (GetOptions() & kSunkenFrame | kDoubleBorder) {
+         out <<");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 }

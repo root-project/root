@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.7 2003/10/08 09:50:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.8 2003/10/10 11:20:23 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -64,6 +64,8 @@ public:
    void         Draw3DCorner(Bool_t corner) { f3DCorner = corner; }
    TGCompositeFrame *GetBarPart(Int_t npart) const;
    TGDimension GetDefaultSize() const;
+
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGStatusBar,0)  // Status bar widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TG3DLine.h,v 1.2 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TG3DLine.h,v 1.3 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -42,6 +42,7 @@ public:
       gVirtualX->DrawLine(fId, GetHilightGC()(), 0, 1, fWidth-1, 1);
       gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, 0, fWidth-1, 1);
    }
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHorizontal3DLine,0)  //A horizontal 3D separator line
 };
@@ -60,6 +61,7 @@ public:
       gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 0, 1, fHeight-1);
       gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, 1, fHeight-1);
    }
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGVertical3DLine,0)  //A vertical 3D separator line
 };

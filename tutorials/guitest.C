@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.33 2003/08/06 23:40:22 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.34 2003/10/02 09:27:28 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -47,7 +47,7 @@
 #include <TEnv.h>
 #include <TFile.h>
 #include <TKey.h>
-#include <TVirtualX.h>
+
 
 enum ETestCommandIdentifiers {
    M_FILE_OPEN,

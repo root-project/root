@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.5 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.6 2003/08/11 12:51:31 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -86,6 +86,7 @@ public:
    Bool_t       GetShowPos() const { return fShowPos; }
    TString      GetFormat() const { return fFormat; }
    Bool_t       UsePercent() const { return fPercent; }
+   virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGProgressBar,0)  // Progress bar abstract base class
 };
@@ -113,6 +114,7 @@ public:
 
    void ShowPosition(Bool_t set = kTRUE, Bool_t percent = kTRUE,
                      const char *format = "%.2f");
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHProgressBar,0)  // Horizontal progress bar widget
 };
@@ -137,6 +139,7 @@ public:
 
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fBarWidth, fHeight); }
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGVProgressBar,0)  // Vertical progress bar widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.11 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.12 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -121,6 +121,7 @@ public:
    void SetText(TGString *new_text);
    virtual void Update(TGLBEntry *e)
        { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
+   virtual void SavePrimitive(ofstream &out, Option_t *); 
 
    ClassDef(TGTextLBEntry,0)  // Text listbox entry
 };
@@ -242,6 +243,7 @@ public:
    virtual Bool_t GetSelection(Int_t id) { return fLbc->GetSelection(id); }
    virtual TGLBEntry *GetSelectedEntry() const { return fLbc->GetSelectedEntry(); }
    virtual void GetSelectedEntries(TList *selected);
+   virtual void SavePrimitive(ofstream &out, Option_t *option);   
 
    virtual void Selected(Int_t widgetId, Int_t id);   //*SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } //*SIGNAL*
