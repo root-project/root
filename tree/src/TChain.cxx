@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.87 2004/03/08 17:06:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.88 2004/03/09 21:17:06 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -310,7 +310,7 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
    Int_t pksize = 0;
    if (nentries <= 0) {
       TFile *file = TFile::Open(filename);
-      if (file->IsZombie()) {
+      if (!file || file->IsZombie()) {
          delete file;
          delete [] filename;
          return 0;
@@ -818,8 +818,7 @@ Int_t TChain::LoadTree(Int_t entry)
       if (!element) return -4;
    }
    fFile = TFile::Open(element->GetTitle());
-   if (fFile==0) return -3;
-   if (fFile->IsZombie()) {
+   if (!fFile || fFile->IsZombie()) {
       delete fFile; fFile = 0;
       return -3;
    }
@@ -1090,7 +1089,7 @@ void TChain::Print(Option_t *option) const
    TChainElement *element;
    while ((element = (TChainElement*)next())) {
       TFile *file = TFile::Open(element->GetTitle());
-      if (!file->IsZombie()) {
+      if (file && !file->IsZombie()) {
          TTree *tree = (TTree*)file->Get(element->GetName());
          if (tree) tree->Print(option);
       }
