@@ -91,7 +91,7 @@ solarisx86)
    ;;
 sgicc)
    # SGI
-   auxcflags=
+   auxcflags="-LANG:std"
    auxlibs="-lm -ldl"
    auxglibs=${auxlibs}
    ;;

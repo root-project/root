@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.12 2000/12/10 17:57:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.13 2001/02/28 17:30:05 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -50,6 +50,7 @@
 #      define R__B64
 #      define R__BYTESWAP
 #      if __DECCXX_VER >= 60060002
+#         define __USE_STD_IOSTREAM
 #         define R__VECNEWDELETE /* supports overloading of new[] and delete[] */
 #         define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      endif
