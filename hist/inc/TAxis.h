@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.13 2001/10/31 11:21:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.14 2001/11/03 16:51:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -61,9 +61,9 @@ public:
         virtual void     CenterTitle(Bool_t center=kTRUE);  // *MENU*
         const char      *ChooseTimeFormat(Double_t axislength=0);
         virtual void     Copy(TObject &axis);
-        virtual void     Delete(Option_t *option="") {;}
+        virtual void     Delete(Option_t */*option*/="") {;}
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-        virtual TObject *DrawClone(Option_t *option="") const {return 0;}
+        virtual TObject *DrawClone(Option_t */*option*/="") const {return 0;}
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual Int_t    FindBin(Axis_t x);
         virtual Int_t    FindFixBin(Axis_t x) const;
@@ -88,7 +88,7 @@ public:
         virtual void     Set(Int_t nbins, Axis_t xmin, Axis_t xmax);
         virtual void     Set(Int_t nbins, const Float_t *xbins);
         virtual void     Set(Int_t nbins, const Axis_t *xbins);
-        virtual void     SetDrawOption(Option_t *option="") {;}
+        virtual void     SetDrawOption(Option_t */*option*/="") {;}
         virtual void     SetLimits(Axis_t xmin, Axis_t xmax);
         virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
         virtual void     SetParent(TObject *obj) {fParent = obj;}

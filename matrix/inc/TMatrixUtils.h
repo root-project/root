@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.4 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.5 2001/07/02 19:23:48 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -103,7 +103,7 @@ protected:
    Int_t fColUpb;
    Int_t fColLwb;
 
-   TLazyMatrix(const TLazyMatrix &) { }
+   TLazyMatrix(const TLazyMatrix &) : TObject() { }
    void operator=(const TLazyMatrix &) { }
 
 private:

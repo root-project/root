@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.7 2001/03/29 10:57:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.8 2001/03/29 11:25:00 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -83,7 +83,7 @@ private:
 
 public:
    TAssoc(TObject *key, TObject *value) : fKey(key), fValue(value) { }
-   TAssoc(const TAssoc &a) : fKey(a.fKey), fValue(a.fValue) { }
+   TAssoc(const TAssoc &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
    virtual               ~TAssoc() { }
    Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);

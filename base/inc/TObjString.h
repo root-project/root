@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjString.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObjString.h,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -36,7 +36,7 @@ private:
 
 public:
    TObjString(const char *s = "") : fString(s) { }
-   TObjString(const TObjString &s) : fString(s.fString) { }
+   TObjString(const TObjString &s) : TObject(), fString(s.fString) { }
    ~TObjString() { }
    Int_t     Compare(const TObject *obj) const;
    const char *GetName() const { return fString.Data(); }

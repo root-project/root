@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.3 2000/11/21 21:58:19 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.4 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -106,7 +106,7 @@ protected:
 private:
    virtual void FillIn(TMatrixD &m) const = 0;
 
-   TLazyMatrixD(const TLazyMatrixD &) { }
+   TLazyMatrixD(const TLazyMatrixD &) : TObject() { }
    void operator=(const TLazyMatrixD &) { }
 
 public:
