@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.7 2002/10/03 13:19:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.8 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -252,7 +252,7 @@ public:
    
    
    //--- I/O
-   virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="");
+   virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="v");
    static TGeoManager    *Import(const char *filename, const char *name="", Option_t *option="");
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
    

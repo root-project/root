@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.3 2002/10/09 12:57:40 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -100,7 +100,7 @@ protected :
 public:
    // constructors
    TGeoMixture();
-   TGeoMixture(const char *name, const char *title, Int_t nel);
+   TGeoMixture(const char *name, const char *title, Int_t nel, Double_t rho=-1);
    // destructor
    virtual ~TGeoMixture();
    // methods

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.3 2002/10/09 12:57:40 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -149,7 +149,7 @@ TGeoMixture::TGeoMixture()
    fWeights    = 0;
 }
 //-----------------------------------------------------------------------------
-TGeoMixture::TGeoMixture(const char *name, const char *title, Int_t nel)
+TGeoMixture::TGeoMixture(const char *name, const char *title, Int_t nel, Double_t rho)
             :TGeoMaterial(name, title)
 {
 // constructor
@@ -168,7 +168,8 @@ TGeoMixture::TGeoMixture(const char *name, const char *title, Int_t nel)
       fAmixture[j] = 0;
       fWeights[j]  = 0;
    }
-   fDensity = 0.001; //TO BE CORRECTED
+   fDensity = rho; //TO BE CORRECTED
+   if (fDensity < 0) fDensity = 0.001;
 }
 //-----------------------------------------------------------------------------
 TGeoMixture::~TGeoMixture()

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.16 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.17 2002/10/09 12:57:40 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -462,7 +462,7 @@ void TGeoManager::Init()
    }
    
    gGeoManager = this;
-   fStreamVoxels = kTRUE;
+   fStreamVoxels = kFALSE;
    fIsGeomReading = kFALSE;
    fSearchOverlaps = kFALSE;
    fLoopVolumes = kFALSE;
@@ -2192,7 +2192,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
 {
    // Export this geometry on filename with a key=name
    // By default the geometry is saved without the voxelisation info.
-   // Use option 'v" to NOT save the voxelisation info.
+   // Use option 'v" to save the voxelisation info.
    
    TFile f(filename,"recreate");
    if (f.IsZombie()) return 0;
@@ -2201,10 +2201,9 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    if (strlen(keyname) == 0) strcpy(keyname,GetName());
    TString opt = option;
    opt.ToLower();
-   Bool_t voxels = fStreamVoxels;
-   if (opt.Contains("v")) fStreamVoxels = kFALSE;
+   if (opt.Contains("v")) fStreamVoxels = kTRUE;
    Int_t nbytes = Write(keyname);
-   fStreamVoxels = voxels;
+   fStreamVoxels = kFALSE;
    return nbytes;
 }
 
