@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.137 2004/01/31 08:59:09 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.138 2004/02/03 16:45:29 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1724,6 +1724,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TBranchElement *branch) {
    TBranchElement * leafcount2 = branch->GetBranchCount2();
    if (leafcount2) {
       // With have a second variable dimensions
+      if (!branch->GetBranchCount()) return 0;
       fManager->EnableMultiVarDims();
       TFormLeafInfoMultiVarDim * info = new TFormLeafInfoMultiVarDimDirect();
       fDataMembers.AddAtAndExpand(info, code);
@@ -3370,6 +3371,7 @@ TClass* TTreeFormula::EvalClass() const
             TStreamerInfo * info = branch->GetInfo();
             Int_t id = branch->GetID();
             if (id>=0) {
+               if (!info) return 0;
                TStreamerElement* elem = (TStreamerElement*)info->GetElems()[id];
                return gROOT->GetClass( elem->GetTypeName() );
             } else return gROOT->GetClass( branch->GetClassName() );
@@ -3379,7 +3381,9 @@ TClass* TTreeFormula::EvalClass() const
       }
       case kMethod: return 0; // kMethod is deprecated so let's no waste time implementing this.
       case kDataMember: {
-        return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetClass();
+        TObject *obj = fDataMembers.UncheckedAt(0);
+        if (!obj) return 0;
+        return ((TFormLeafInfo*)obj)->GetClass();
       }
       default: return 0;
    }
@@ -3524,7 +3528,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             return result;
          }
          case kMethod:     { TT_EVAL_INIT; return GetValueFromMethod(0,leaf);  }
-         case kDataMember: { TT_EVAL_INIT; return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance); }
+         case kDataMember: { TT_EVAL_INIT; TObject *obj=fDataMembers.UncheckedAt(0); if (!obj) return 0; return ((TFormLeafInfo*)obj)->GetValue(leaf,real_instance); }
          case kIndexOfEntry: return fTree->GetReadEntry();
          case kEntries:      return fTree->GetEntries();
          case kLength:       return fManager->fNdata;
@@ -4081,6 +4085,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
       case kMethod:
       case kDataMember:
          info = GetLeafInfo(code);
+         if (!info) return kFALSE;
          return info->IsInteger();
       case kDirect:
          break;
@@ -4145,6 +4150,7 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
             TBranchElement * br = (TBranchElement*)leaf->GetBranch();
             Int_t bid = br->GetID();
             if (bid < 0) return kFALSE;
+            if (!br->GetInfo()) return kFALSE;
             TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElems()[bid];
             if (elem->GetNewType()== TStreamerInfo::kOffsetL +kChar_t) {
                // Check whether a specific element of the string is specified!
@@ -4166,6 +4172,7 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
          return kFALSE;
       case kDataMember:
          info = GetLeafInfo(code);
+         if (!info) return kFALSE;
          return info->IsString();
       default:
          return kFALSE;
@@ -4324,6 +4331,7 @@ void TTreeFormula::UpdateFormulaLeaves()
             fVarIndexes[j][k]->UpdateFormulaLeaves();
          }
       }
+      if (!GetLeafInfo(j)) continue;
       if (fLookupType[j]==kDataMember) GetLeafInfo(j)->Update();
       if (j<fNval && fCodes[j]<0) {
          TCutG *gcut = (TCutG*)fMethods.At(j);
