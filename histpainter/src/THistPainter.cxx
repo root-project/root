@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.177 2004/06/24 16:57:13 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.178 2004/06/28 12:14:57 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4296,12 +4296,14 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //           print only name of histogram and number of entries.
 //
 // The type of information about fit parameters printed in the histogram
-// statistics box can be selected via the parameter mode.
+// statistics box can be selected via gStyle->SetOptFit(mode).
 //  The parameter mode can be = pcev  (default = 0111)
 //    v = 1;  print name/values of parameters
 //    e = 1;  print errors (if e=1, v must be 1)
-//    c = 1;  print Chisquare/Number of degress of freedom
+//    c = 1;  print Chisquare/Number of degrees of freedom
 //    p = 1;  print Probability
+//    When "v"=1 is specified, only the non-fixed parameters are shown.
+//    When "v"=2 all parameters are shown.
 //  Example: gStyle->SetOptFit(1011);
 //           print fit probability, parameter names/values and errors.
 //
@@ -4349,7 +4351,10 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    Int_t print_fchi2   = (dofit/100)%10;
    Int_t print_fprob   = (dofit/1000)%10;
    Int_t nlinesf = print_fval + print_fchi2 + print_fprob;
-   if (fit) nlinesf += fit->GetNpar();
+   if (fit) {
+      if (print_fval < 2) nlinesf += fit->GetNumberFreeParameters();
+      else                nlinesf += fit->GetNpar();
+   }
    if (fH->InheritsFrom("TProfile")) nlinesf += print_mean + print_rms;
 
 //     Pavetext with statistics
@@ -4445,7 +4450,10 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
          stats->AddText(t);
       }
       if (print_fval || print_ferrors) {
+         Double_t parmin,parmax;
          for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
+            fit->GetParLimits(ipar,parmin,parmax);
+            if (print_fval < 2 && parmin*parmax != 0 && parmin >= parmax) continue;
             if (print_ferrors) {
                sprintf(textstats,"%-8s = %s%s #pm %s ",fit->GetParName(ipar), "%",stats->GetFitFormat(),
                        GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));

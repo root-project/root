@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.34 2004/02/13 17:04:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.35 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -871,6 +871,8 @@ void TStyle::SetOptFit(Int_t mode)
 //    p = 1;  print Probability
 //  Example: gStyle->SetOptFit(1011);
 //           print fit probability, parameter names/values and errors.
+//    When "v"=1 is specified, only the non-fixed parameters are shown.
+//    When "v"=2 all parameters are shown.
 // see also SetOptStat below.
    
    fOptFit = mode;
