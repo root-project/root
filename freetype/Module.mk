@@ -45,7 +45,12 @@ else
 			echo "*** Building $@..."; \
 			cd $(FREETYPEDIRS); \
 			if [ ! -d $(FREETYPEVERS) ]; then \
-				zcat $(FREETYPEVERS).tar.gz | tar xf -; \
+				TAR=`which gtar`; \
+				if [ $$? -eq 0 ]; then \
+					gtar zxf $(FREETYPEVERS).tar.gz; \
+				else \
+					zcat $(FREETYPEVERS).tar.gz | tar xf -; \
+				fi; \
 			fi; \
 			cd $(FREETYPEVERS); \
 			GNUMAKE=$(MAKE) ./configure CFLAGS=-O2; \
