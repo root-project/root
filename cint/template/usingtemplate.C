@@ -13,3 +13,14 @@ public:
    X<float> xd;
 
 };
+
+namespace other {
+   template <class T> class Y {};
+}
+namespace application {
+   using namespace other;
+   class MyClass {
+   public:
+      Y<float> xd;
+   };
+}
