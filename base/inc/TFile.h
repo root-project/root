@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.27 2003/01/17 13:59:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.28 2003/02/26 10:11:50 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -50,6 +50,7 @@ protected:
    Int_t       fNbytesInfo;       //Number of bytes for StreamerInfo record
    Int_t       fWritten;          //Number of objects written so far
    Int_t       fNProcessIDs;      //Number of TProcessID written to this file
+   TString     fRealName;         //Effective real file name (not original url)
    TString     fOption;           //File options
    Char_t      fUnits;            //Number of bytes for file pointers
    TList      *fFree;             //Free segments linked list table
@@ -156,7 +157,7 @@ public:
    static void       SetFileBytesRead(Double_t bytes=0);
    static void       SetFileBytesWritten(Double_t bytes=0);
 
-   ClassDef(TFile,3)  //ROOT file
+   ClassDef(TFile,4)  //ROOT file
 };
 
 R__EXTERN TFile   *gFile;

@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.4 2003/01/07 17:31:53 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.5 2003/01/09 16:52:11 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -119,7 +119,10 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
          }
       }
    }
+
    // Connect to file system stream
+   fRealName = fname;
+
    if (create || update) {
 #ifndef WIN32
       fD = SysOpen(fname, O_RDWR | O_CREAT, 0644);

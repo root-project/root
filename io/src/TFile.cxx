@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.89 2003/04/03 13:46:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.90 2003/04/03 14:52:37 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -274,7 +274,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       }
    }
 
-//*-*--------------Connect to file system stream
+   // Connect to file system stream
+   fRealName = fname;
+
    if (create || update) {
 #ifndef WIN32
       fD = SysOpen(fname, O_RDWR | O_CREAT, 0644);
@@ -1184,8 +1186,7 @@ Int_t TFile::ReOpen(Option_t *mode)
    // 0 in case the mode was successfully modified, 1 in case the mode
    // did not change (was already as requested or wrong input arguments)
    // and -1 in case of failure, in which case the file cannot be used
-   // anymore.
-   // The Current Directory is changed to this file
+   // anymore. The current directory (gFile) is changed to this file.
 
    cd();
 
@@ -1232,9 +1233,9 @@ Int_t TFile::ReOpen(Option_t *mode)
       // open in READ mode
       fOption = opt;    // set fOption before SysOpen() for TNetFile
 #ifndef WIN32
-      fD = SysOpen(GetName(), O_RDONLY, 0644);
+      fD = SysOpen(fRealName, O_RDONLY, 0644);
 #else
-      fD = SysOpen(GetName(), O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
+      fD = SysOpen(fRealName, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
          SysError("ReOpen", "file %s can not be opened in read mode", GetName());
@@ -1254,9 +1255,9 @@ Int_t TFile::ReOpen(Option_t *mode)
       // open in UPDATE mode
       fOption = opt;    // set fOption before SysOpen() for TNetFile
 #ifndef WIN32
-      fD = SysOpen(GetName(), O_RDWR | O_CREAT, 0644);
+      fD = SysOpen(fRealName, O_RDWR | O_CREAT, 0644);
 #else
-      fD = SysOpen(GetName(), O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
+      fD = SysOpen(fRealName, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
          SysError("ReOpen", "file %s can not be opened in update mode", GetName());

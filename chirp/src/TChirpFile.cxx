@@ -73,6 +73,8 @@ TChirpFile::TChirpFile(const char *path, Option_t *option,
 
    fname = GetName();
 
+   fRealName = fname;
+
    if (create || update || recreate) {
       Int_t mode = O_RDWR | O_CREAT;
       if (recreate) mode |= O_TRUNC;

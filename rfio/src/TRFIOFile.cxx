@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.21 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.22 2003/01/13 15:05:29 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -186,6 +186,9 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
          goto zombie;
       }
    }
+
+   // Connect to file system stream
+   fRealName = fname;
 
    if (create || update) {
 #ifndef WIN32
