@@ -74,7 +74,7 @@ if [ $# -lt 1 ] ; then
 else
    case $1 in
    -h|--help) confhelp ; exit 0 ;;
-   *) if `grep "^$1" $ARCHS >/dev/null 2>&1` ; then
+   *) if `grep "^$1 " $ARCHS >/dev/null 2>&1` ; then
          arch=$1
          echo "Configuring for $arch"
          shift
