@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.24 2002/04/13 14:25:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.25 2002/05/18 08:51:49 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -681,6 +681,17 @@ void TDirectory::FillBuffer(char *&buffer)
    tobuf(buffer, fSeekDir);
    tobuf(buffer, fSeekParent);
    tobuf(buffer, fSeekKeys);
+   //save TObject part in case this directory is TReferenced
+   if (!TestBit(kIsReferenced)) {
+      R__b << fUniqueID;
+      R__b << fBits;
+   } else {
+      UInt_t uid = fUniqueID & 0xffffff;
+      R__b << uid;
+      R__b << fBits;
+      pidf = TProcessID::WriteProcessID(0,file);
+      R__b << pidf;
+   }
 }
 
 //______________________________________________________________________________
