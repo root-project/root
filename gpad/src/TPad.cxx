@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.116 2003/11/18 18:08:14 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.117 2004/01/01 18:03:02 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2749,6 +2749,7 @@ void TPad::PaintModified()
           tdate->SetTextAngle(gStyle->GetAttDate()->GetTextAngle());
           tdate->SetNDC();
           tdate->Draw();
+          delete tdate;
        }
    }
    TList *pList = GetListOfPrimitives();
