@@ -22,6 +22,7 @@
 #pragma link C++ class TAttMarkerEditor;
 #pragma link C++ class TAttTextEditor;
 #pragma link C++ class TAxisEditor;
+#pragma link C++ class TGraphEditor;
 #pragma link C++ class TPaveStatsEditor;
 #pragma link C++ class TPadEditor;
 #pragma link C++ class TGedToolBox;
