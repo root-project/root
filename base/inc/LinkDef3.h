@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.4 2002/01/31 14:09:25 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.5 2002/02/14 16:12:52 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,6 +16,8 @@
 
 #pragma link C++ global kDefaultScrollBarWidth;
 #pragma link C++ global kNone;
+#pragma link C++ global kCopyFromParent;
+#pragma link C++ global kParentRelative;
 #pragma link C++ global kWABackPixmap;
 #pragma link C++ global kWABackPixel;
 #pragma link C++ global kWABorderPixmap;
@@ -94,6 +96,10 @@
 #pragma link C++ global kPAReturnPixels;
 #pragma link C++ global kPACloseness;
 
+#pragma link C++ global kPrimarySelection;
+#pragma link C++ global kCutBuffer;
+#pragma link C++ global kMaxPixel;
+
 #pragma link C++ enum EGuiConstants;
 #pragma link C++ enum EGEventType;
 #pragma link C++ enum EGraphicsFunction;
@@ -104,9 +110,34 @@
 #pragma link C++ enum EKeySym;
 #pragma link C++ enum EEventType;
 
-#pragma link C++ struct  Event_t;
-#pragma link C++ struct  timespec;
 #pragma link C++ typedef timespec_t;
+#pragma link C++ typedef Handle_t;
+#pragma link C++ typedef Display_t;
+#pragma link C++ typedef Visual_t;
+#pragma link C++ typedef Window_t;
+#pragma link C++ typedef Pixmap_t;
+#pragma link C++ typedef Drawable_t;
+#pragma link C++ typedef Region_t;
+#pragma link C++ typedef Colormap_t;
+#pragma link C++ typedef Cursor_t;
+#pragma link C++ typedef FontH_t;
+#pragma link C++ typedef KeySym_t;
+#pragma link C++ typedef Atom_t;
+#pragma link C++ typedef GContext_t;
+#pragma link C++ typedef FontStruct_t;
+#pragma link C++ typedef Mask_t;
+#pragma link C++ typedef Time_t;
+
+#pragma link C++ struct Event_t;
+#pragma link C++ struct SetWindowAttributes_t;
+#pragma link C++ struct WindowAttributes_t;
+#pragma link C++ struct GCValues_t;
+#pragma link C++ struct ColorStruct_t;
+#pragma link C++ struct PictureAttributes_t;
+#pragma link C++ struct Segment_t;
+#pragma link C++ struct Point_t;
+#pragma link C++ struct Rectangle_t;
+#pragma link C++ struct timespec;
 
 #pragma link C++ function operator<<(ostream&, const TTimeStamp&);
 #pragma link C++ function operator<<(TBuffer&, const TTimeStamp&);
