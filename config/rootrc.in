@@ -58,18 +58,17 @@ Canvas.HighLightColor:      2
 Canvas.ShowEventStatus:     false
 Canvas.AutoExec:            true
 
-# THtml specific settings.
-Root.Html.OutputDir:         htmldoc/
-Root.Html.SourcePrefix:
+# THtml specific settings (for more see doc of THtml class)
 Unix.*.Root.Html.SourceDir:  .:src:include
 WinNT.*.Root.Html.SourceDir: .;src;include
-#Root.Html.Author:           // Author:
-#Root.Html.Author:           Fons Rademakers
-#Root.Html.Copyright:        * Copyright
-#Root.Html.LastUpdate:       // @(#)
+#Root.Html.OutputDir:        htmldoc/
+#Root.Html.Homepage:
+#Root.Html.Header:
+#Root.Html.Footer:
 #Root.Html.Description:      //____________________
-#Root.Html.Root:             http://root.cern.ch/root/html
-#Root.Html.SearchEngine:     ../Search.phtml
+#Root.Html.Author:           // Author:
+#Root.Html.LastUpdate:       // @(#)
+#Root.Html.Copyright:        * Copyright
 
 # GUI specific settings
 Gui.NormalFont:        -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
