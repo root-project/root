@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.26 2003/08/21 10:17:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.27 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -565,10 +565,10 @@ Int_t TGeoArb8::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    Double_t lower[8];
    SetPlaneVertices(origin[2]-dd[2], lower);
    SetPlaneVertices(origin[2]+dd[2], upper);
-   Double_t ddmin=TGeoShape::TGeoShape::Big();
+   Double_t ddmin=TGeoShape::Big();
    for (Int_t iaxis=0; iaxis<2; iaxis++) {
       if (dd[iaxis]>=0) continue;
-      ddmin=TGeoShape::TGeoShape::Big();
+      ddmin=TGeoShape::Big();
       for (Int_t ivert=0; ivert<4; ivert++) {
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-lower[2*ivert+iaxis]));
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-upper[2*ivert+iaxis]));
