@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.5 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.6 2002/02/02 11:56:14 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -15,9 +15,11 @@
 
 #include "Riostream.h"
 #include "TPaveStats.h"
+#include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TFile.h"
 #include "TClass.h"
+#include "TLatex.h"
 
 ClassImp(TPaveStats)
 
@@ -51,18 +53,14 @@ ClassImp(TPaveStats)
 //______________________________________________________________________________
 TPaveStats::TPaveStats(): TPaveText()
 {
-//*-*-*-*-*-*-*-*-*-*-*pavetext default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
-
+   // TPaveStats default constructor
 }
 
 //______________________________________________________________________________
 TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
-//*-*-*-*-*-*-*-*-*-*-*pavetext normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
-//
+   // TPaveStats normal constructor
 
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
@@ -73,15 +71,14 @@ TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Optio
 //______________________________________________________________________________
 TPaveStats::~TPaveStats()
 {
-//*-*-*-*-*-*-*-*-*-*-*pavetext default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // TPaveStats default destructor
 }
 
 //______________________________________________________________________________
 void TPaveStats::SaveStyle()
 {
-//  Save This TPaveStats options in current style
-//
+   //  Save This TPaveStats options in current style
+
    gStyle->SetOptFit(fOptFit);
    gStyle->SetOptStat(fOptStat);
    gStyle->SetFitFormat(fFitFormat.Data());
@@ -102,6 +99,129 @@ void TPaveStats::SetStatFormat(const char *form)
    // Change (i.e. set) the format for printing statistics
 
    fStatFormat = form;
+}
+
+//______________________________________________________________________________
+void TPaveStats::Paint(Option_t *option)
+{
+   TPave::ConvertNDCtoPad();
+   TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
+
+   if (!fLines) return;
+   Double_t dx = fX2 - fX1;
+   Double_t dy = fY2 - fY1;
+   Double_t textsize = GetTextSize();
+   Int_t nlines = GetSize();
+   if (nlines == 0) nlines = 5;
+
+   // Evaluate text size as a function of the number of lines
+   Double_t y1       = gPad->GetY1();
+   Double_t y2       = gPad->GetY2();
+   Float_t margin    = fMargin*(fX2-fX1);
+   Double_t yspace   = (fY2 - fY1)/Double_t(nlines);
+   Double_t textsave = textsize;
+   TObject *line;
+   TLatex *latex, *latex_tok;
+   TIter next(fLines);
+   Double_t longest = 0;
+   Double_t w, wtok[2];
+   char *st, *sl;
+   if (textsize == 0)  {
+      textsize = 0.85*yspace/(y2 - y1);
+      wtok[0] = 0; wtok[1] = 0;
+      while ((line = (TObject*) next())) {
+	 if (line->IsA() == TLatex::Class()) {
+            latex = (TLatex*)line;
+            sl = new char[strlen(latex->GetTitle())+1];
+            strcpy(sl, latex->GetTitle());
+            if (strpbrk(sl, "=") !=0) {
+               st = strtok(sl, "=");
+               Int_t itok = 0;
+               while ( st !=0 ) {
+                  latex_tok = new TLatex(0.,0.,st);
+                  latex_tok->SetTextSize(textsize);
+                  w = latex_tok->GetXsize();
+                  if (w > wtok[itok]) wtok[itok] = w;
+                  st = strtok(0, "=");
+                  ++itok;
+                  delete latex_tok;
+               }
+            }
+         }
+      }
+      longest = wtok[0]+wtok[1];
+      if (longest > 0.98*dx) textsize *= 0.98*dx/longest;
+      SetTextSize(textsize);
+   }
+   Double_t yfont;
+   if (GetTextFont()%10 > 2) {
+      yfont = (gPad->PixeltoY(Int_t(-textsize))-gPad->PixeltoY(0))/(y2-y1)*dy;
+   } else {
+      yfont = textsize*dy;
+   }
+   Double_t ytext = fY2 + 0.5*yspace;
+   Double_t xtext = 0;
+
+   // Iterate over all lines
+   // Copy pavetext attributes to line attributes if line attributes not set
+   next.Reset();
+   while ((line = (TObject*) next())) {
+      if (line->IsA() == TLatex::Class()) {
+         latex = (TLatex*)line;
+         ytext -= yspace;
+         Double_t xl    = latex->GetX();
+         Double_t yl    = latex->GetY();
+         Short_t talign = latex->GetTextAlign();
+         Color_t tcolor = latex->GetTextColor();
+         Style_t tfont  = latex->GetTextFont();
+         Size_t  tsize  = latex->GetTextSize();
+         if (tcolor == 0) latex->SetTextColor(GetTextColor());
+         if (tfont  == 0) latex->SetTextFont(GetTextFont());
+         if (tsize  == 0) latex->SetTextSize(GetTextSize());
+
+         sl = new char[strlen(latex->GetTitle())+1];
+         strcpy(sl, latex->GetTitle());
+         if (strpbrk(sl, "=") !=0) {
+           st = strtok(sl, "=");
+           Int_t halign = 12;
+           while ( st !=0 ) {
+              latex->SetTextAlign(halign);
+              if (halign == 12) xtext = fX1 + margin;
+              if (halign == 32) {
+                 xtext = fX2 - margin;
+		 // Clean trailing blank in case of right alignment.
+                 char *stc;
+		 stc=st+strlen(st)-1;
+		 while (*stc == ' ') {
+                    *stc = '\0';
+                    --stc;
+                 }
+              }
+              latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
+                                            latex->GetTextSize(),
+                                            st);
+              st = strtok(0, "=");
+              halign = 32;
+           }
+         } else {
+           latex->SetTextAlign(22);
+           xtext = 0.5*(fX1+fX2);
+           latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
+                                         latex->GetTextSize(),
+                                         sl);
+           gPad->PaintLine(fX1,fY2-yspace,fX2,fY2-yspace);
+         }
+         delete [] sl;
+
+         latex->SetTextAlign(talign);
+         latex->SetTextColor(tcolor);
+         latex->SetTextFont(tfont);
+         latex->SetTextSize(tsize);
+         latex->SetX(xl);  //paintlatex modifies fX and fY
+         latex->SetY(yl);
+      }
+   }
+   SetTextSize(textsave);
 }
 
 

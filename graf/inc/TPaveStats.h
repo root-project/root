@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.5 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.6 2002/02/23 15:45:56 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -28,34 +28,37 @@
 class TPaveStats : public TPaveText {
 
 protected:
-        Int_t         fOptFit;            //option Fit
-        Int_t         fOptStat;           //option Stat
-        TString       fFitFormat;         //Printing format for fit parameters
-        TString       fStatFormat;        //Printing format for stats
+   Int_t         fOptFit;            //option Fit
+   Int_t         fOptStat;           //option Stat
+   TString       fFitFormat;         //Printing format for fit parameters
+   TString       fStatFormat;        //Printing format for stats
 
 public:
-        TPaveStats();
-        TPaveStats(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
-        virtual ~TPaveStats();
-        virtual TBox    *AddBox(Double_t , Double_t , Double_t , Double_t) {return 0;}
-        virtual TLine   *AddLine(Double_t , Double_t , Double_t, Double_t) {return 0;}
-        virtual void     DeleteText() {;}
-        virtual void     EditText() {;}
-        virtual const char  *GetFitFormat()  const {return fFitFormat.Data();}
-        virtual const char  *GetStatFormat() const {return fStatFormat.Data();}
-        Int_t            GetOptFit() const {return fOptFit;}
-        Int_t            GetOptStat() const {return fOptStat;}
-        virtual void     InsertText(const char *) {;}
-        virtual void     ReadFile(const char *, Option_t *, Int_t, Int_t) {;}
-        virtual void     SaveStyle(); // *MENU*
-        virtual void     SetAllWith(const char *, Option_t *, Double_t) {;}
-        virtual void     SetMargin(Float_t) {;}
-        virtual void     SetFitFormat(const char *format="5.4g");    // *MENU*
-        virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*
-        void             SetOptFit(Int_t fit=1) {fOptFit = fit;}     // *MENU*
-        void             SetOptStat(Int_t stat=1) {fOptStat = stat;} // *MENU*
+   TPaveStats();
+   TPaveStats(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
+   virtual ~TPaveStats();
+   virtual TBox    *AddBox(Double_t , Double_t , Double_t , Double_t) {return 0;}
+   virtual TLine   *AddLine(Double_t , Double_t , Double_t, Double_t) {return 0;}
+   virtual void     DeleteText() {;}
+   virtual void     EditText() {;}
+   virtual const char  *GetFitFormat()  const {return fFitFormat.Data();}
+   virtual const char  *GetStatFormat() const {return fStatFormat.Data();}
+   Int_t            GetOptFit() const {return fOptFit;}
+   Int_t            GetOptStat() const {return fOptStat;}
+   virtual void     Paint(Option_t *option="");
+   virtual void     InsertText(const char *) {;}
+   virtual void     InsertLine() {;}
+   virtual void     SetLabel(const char *label) {;}
+   virtual void     ReadFile(const char *, Option_t *, Int_t, Int_t) {;}
+   virtual void     SaveStyle(); // *MENU*
+   virtual void     SetAllWith(const char *, Option_t *, Double_t) {;}
+   virtual void     SetMargin(Float_t) {;}
+   virtual void     SetFitFormat(const char *format="5.4g");    // *MENU*
+   virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*
+   void             SetOptFit(Int_t fit=1) {fOptFit = fit;}     // *MENU*
+   void             SetOptStat(Int_t stat=1) {fOptStat = stat;} // *MENU*
 
-        ClassDef(TPaveStats,3)  //A special TPaveText to draw histogram statistics.
+   ClassDef(TPaveStats,3)  //A special TPaveText to draw histogram statistics.
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.71 2002/02/25 09:57:20 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.72 2002/02/25 23:10:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2338,7 +2338,7 @@ void THistPainter::PaintErrors()
    //  compute the offset of the error bars due to the symbol size
    s2x    = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
    s2y    =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   
+
    // compute size of the lines at the end of the error bars
    Int_t dxend = Int_t(1+gStyle->GetEndErrorSize());
    bxsize    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
@@ -3831,7 +3831,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //     Pavetext with statistics
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
-      if (fStats) { delete fStats; fStats = 0; } 
+      if (fStats) { delete fStats; fStats = 0; }
       return;
    }
    Double_t  statw  = gStyle->GetStatW();
@@ -3846,7 +3846,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
                gStyle->GetStatY()-stath,
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
-      
+
       fStats->SetOptFit(dofit);
       fStats->SetOptStat(dostat);
       fStats->SetFillColor(gStyle->GetStatColor());
@@ -3865,8 +3865,8 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    if (print_name)  fStats->AddText(fH->GetName());
    if (print_entries) {
-      if (fH->GetEntries() < 1e7) sprintf(t,"Nent = %-7d",Int_t(fH->GetEntries()));
-      else                        sprintf(t,"Nent = %14.7g",Float_t(fH->GetEntries()));
+      if (fH->GetEntries() < 1e7) sprintf(t,"Entries = %-7d",Int_t(fH->GetEntries()));
+      else                        sprintf(t,"Entries = %14.7g",Float_t(fH->GetEntries()));
       fStats->AddText(t);
    }
    char textstats[50];
@@ -3881,17 +3881,17 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       fStats->AddText(t);
    }
    if (print_under) {
-      sprintf(textstats,"Under = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Underflow = %s%s","%",fStats->GetStatFormat());
       sprintf(t,textstats,fH->GetBinContent(0));
       fStats->AddText(t);
    }
    if (print_over) {
-      sprintf(textstats,"Over  = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Overflow  = %s%s","%",fStats->GetStatFormat());
       sprintf(t,textstats,fH->GetBinContent(fXaxis->GetNbins()+1));
       fStats->AddText(t);
    }
    if (print_integral) {
-      sprintf(textstats,"Integ = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Integral = %s%s","%",fStats->GetStatFormat());
       sprintf(t,textstats,fH->Integral());
       fStats->AddText(t);
    }
@@ -3899,7 +3899,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //     Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      sprintf(textstats,"Chi2 / ndf = %s%s / %d","%",fStats->GetFitFormat(),ndf);
+      sprintf(textstats,"#chi^{2} / ndf = %s%s / %d","%",fStats->GetFitFormat(),ndf);
       sprintf(t,textstats,(Float_t)fit->GetChisquare());
       if (print_fchi2) fStats->AddText(t);
       if (print_fprob) {
@@ -4003,8 +4003,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(h2->GetName());
    if (print_entries) {
-      if (h2->GetEntries() < 1e7) sprintf(t,"Nent = %-7d",Int_t(h2->GetEntries()));
-      else                        sprintf(t,"Nent = %14.7g",Float_t(h2->GetEntries()));
+      if (h2->GetEntries() < 1e7) sprintf(t,"Entries = %-7d",Int_t(h2->GetEntries()));
+      else                        sprintf(t,"Entries = %14.7g",Float_t(h2->GetEntries()));
       stats->AddText(t);
    }
    if (print_mean) {
@@ -4044,14 +4044,14 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       stats->AddText(t);
    }
    if (print_integral) {
-      sprintf(t,"Integ  = %6.4g",h2->Integral());
+      sprintf(t,"Integral  = %6.4g",h2->Integral());
       stats->AddText(t);
    }
 
    // Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNumberFitPoints() - fit->GetNpar();
-      sprintf(t,"Chi2 / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
+      sprintf(t,"#chi^{2} / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
       stats->AddText(t);
       for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
          sprintf(t,"%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
