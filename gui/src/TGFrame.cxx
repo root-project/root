@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.24 2003/05/12 16:44:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.25 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -641,7 +641,7 @@ void TGCompositeFrame::Cleanup()
 {
    // Cleanup and delete all objects contained in this composite frame.
    // This will delete all objects added via AddFrame().
-   // CAUTION: all objects (frames and layouthints) must be unique, i.e.
+   // CAUTION: all objects (frames and layout hints) must be unique, i.e.
    // cannot be shared.
 
    if (!fList) return;

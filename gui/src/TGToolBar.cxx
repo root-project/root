@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.4 2003/05/23 16:20:24 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -100,7 +100,7 @@ void TGToolBar::Cleanup()
 {
    // Cleanup and delete all objects contained in this composite frame.
    // This will delete all objects added via AddFrame().
-   // CAUTION: all objects (frames and layouthints) must be unique, i.e.
+   // CAUTION: all objects (frames and layout hints) must be unique, i.e.
    // cannot be shared.
 
    // avoid double deletion of objects in trash

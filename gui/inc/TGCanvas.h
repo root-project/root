@@ -1,9 +1,9 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.13 2003/05/12 16:44:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.14 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                        f          *
+ * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
