@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.11 2001/02/22 13:54:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.12 2001/04/16 19:15:49 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -75,10 +75,15 @@ void TLeafC::FillBasket(TBuffer &b)
 //*-*                  ==========================================
 
    if (fPointer) fValue = *fPointer;
-   UChar_t len = strlen(fValue);
+   Int_t len = strlen(fValue);
    if (len >= fMaximum) fMaximum = len+1;
    if (len >= fLen)     fLen = len+1;
-   b << len;
+   if (len < 255) {
+      b << (UChar_t)len;
+   } else {
+      b << (UChar_t)255;
+      b << len;
+   }
    if (len) b.WriteFastArray(fValue,len);
 }
 
@@ -121,8 +126,14 @@ void TLeafC::ReadBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
 //*-*                  ===========================================
 
-   UChar_t len;
-   b >> len;
+   Int_t len;
+   UChar_t lenchar;
+   b >> lenchar;
+   if (lenchar < 255) {
+      len = lenchar;
+   } else {
+      b >> len;
+   }
    if (len) {
       if (len >= fLen) len = fLen-1;
       b.ReadFastArray(fValue,len);
