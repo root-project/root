@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.35 2001/04/27 19:06:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.36 2001/05/09 13:30:01 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -180,6 +180,7 @@ Int_t       gDebug;
 
 Int_t         TROOT::fgDirLevel = 0;
 Bool_t        TROOT::fgRootInit = kFALSE;
+TString       TROOT::fgMacroPath;
 VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
 
 
@@ -1363,30 +1364,39 @@ const char *TROOT::GetMacroPath()
 {
    // Get macro search path. Static utility function.
 
-   static TString macropath;
-
-   if (macropath.Length()==0) {
-      macropath = gEnv->GetValue("Root.MacroPath", (char*)0);
-      if (macropath.Length()== 0)
+   if (fgMacroPath.Length() == 0) {
+      fgMacroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
+      if (fgMacroPath.Length() == 0)
 #if !defined (__VMS ) && !defined(WIN32)
    #ifdef ROOTMACRODIR
-         macropath = ".:" ROOTMACRODIR;
+         fgMacroPath = ".:" ROOTMACRODIR;
    #else
-         macropath = StrDup(Form(".:%s/macros", gRootDir));
+         fgMacroPath = TString(".:") + gRootDir + "/macros";
    #endif
 #elif !defined(__VMS)
    #ifdef ROOTMACRODIR
-         macropath = ".;" ROOTMACRODIR;
+         fgMacroPath = ".;" ROOTMACRODIR;
    #else
-         macropath = StrDup(Form(".;%s/macros", gRootDir));
+         fgMacroPath = TString(".;") + gRootDir + "/macros";
    #endif
 #else
-/*        if (strrchr(gRootDir,']'))
-             *strrchr(gRootDir,']') = '.'; */
-         macropath = StrDup(Form("%sTUTORIALS]",gRootDir));
+         fgMacroPath = TString(gRootDir) + "MACROS]";
 #endif
    }
-   return macropath;
+
+   return fgMacroPath;
+}
+
+//______________________________________________________________________________
+void TROOT::SetMacroPath(const char *newpath)
+{
+   // Set or extend the macro search path. Static utility function.
+   // If newpath=0 or "" reset to value specified in the rootrc file.
+
+   if (!newpath || !*newpath)
+      fgMacroPath = "";
+   else
+      fgMacroPath = newpath;
 }
 
 //______________________________________________________________________________

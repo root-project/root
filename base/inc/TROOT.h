@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.11 2000/12/02 15:47:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.12 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -50,9 +50,10 @@ class TROOT : public TDirectory {
 friend class TCint;
 
 private:
-   static Int_t    fgDirLevel;            //indentation level for ls()
-   static Bool_t   fgRootInit;            //Singleton initialization flag
    Int_t           fLineIsProcessing;     //To synchronize multi-threads
+   static Int_t    fgDirLevel;            //Indentation level for ls()
+   static Bool_t   fgRootInit;            //Singleton initialization flag
+   static TString  fgMacroPath;           //Macro search path
 
 protected:
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
@@ -210,10 +211,11 @@ public:
    static Int_t       DecreaseDirLevel();
    static Int_t       GetDirLevel();
    static const char *GetMacroPath();
+   static void        SetMacroPath(const char *newpath);
    static Int_t       IncreaseDirLevel();
    static void        IndentLevel();
    static Bool_t      Initialized();
-   static void        SetDirLevel(Int_t level=0);
+   static void        SetDirLevel(Int_t level = 0);
    static void        SetMakeDefCanvas(VoidFuncPtr_t makecanvas);
 
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
