@@ -35,7 +35,7 @@ To install and use PROOF on a cluster do the following:
         wait                    = no
         user                    = root
         server                  = /usr/local/root/bin/rootd
-        server_args             = -i
+        server_args             = -i /usr/local/root
         log_on_success          += DURATION USERID
         log_on_failure          += USERID
    }
