@@ -1,16 +1,20 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.4 2004/10/30 06:26:43 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.5 2004/11/23 21:45:06 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
+#include "ObjectProxy.h"
+#include "MethodProxy.h"
+#include "PropertyProxy.h"
 #include "RootWrapper.h"
+#include "Utility.h"
 
 // Standard
 #include <string>
 
 
 //- data -----------------------------------------------------------------------
-PyObject* g_modroot = 0;
+PyObject* gRootModule = 0;
 
 
 //- private helpers ------------------------------------------------------------
@@ -19,7 +23,8 @@ namespace {
    typedef PyDictEntry* (*dictlookup) ( PyDictObject*, PyObject*, long );
    dictlookup dictLookupOrg = 0;
 
-   PyDictEntry* rootLookDictString( PyDictObject* mp, PyObject* key, long hash ) {
+   PyDictEntry* RootLookDictString( PyDictObject* mp, PyObject* key, long hash )
+   {
    // first search dictionary itself
       PyDictEntry* ep = (*dictLookupOrg)( mp, key, hash );
       if ( ! ep || ep->me_value != 0 )
@@ -39,16 +44,16 @@ namespace {
          return ep;
 
    // all failed, attempt to get ROOT enum/global/class
-      PyObject* val = PyObject_GetAttr( g_modroot, key );
+      PyObject* val = PyObject_GetAttr( gRootModule, key );
 
       if ( ! val ) {
          PyErr_Clear();
-         val = PyROOT::makeRootClassFromString( strkey );
+         val = PyROOT::MakeRootClassFromString( strkey );
       }
 
       if ( ! val ) {
          PyErr_Clear();
-         val = PyROOT::getRootGlobalFromString( strkey );
+         val = PyROOT::GetRootGlobalFromString( strkey );
       }
 
       if ( val != Py_None ) {
@@ -63,20 +68,21 @@ namespace {
          ep->me_hash  = hash;
          ep->me_value = val;
          mp->ma_used++;
-      }
-      else
+      } else
       // failure ...
          Py_DECREF( val );
 
       return ep;
    }
 
-   PyObject* setRootLazyLookup( PyObject*, PyObject* args ) {
+//____________________________________________________________________________
+   PyObject* SetRootLazyLookup( PyObject*, PyObject* args )
+   {
       PyObject* dict = 0;
       if ( ! PyArg_ParseTuple( args, "O!", &PyDict_Type, &dict ) )
          return 0;
 
-      ((PyDictObject*)dict)->ma_lookup = rootLookDictString;
+      ((PyDictObject*)dict)->ma_lookup = RootLookDictString;
 
       Py_INCREF( Py_None );
       return Py_None;
@@ -87,23 +93,44 @@ namespace {
 
 //- data -----------------------------------------------------------------------
 static PyMethodDef PyROOTMethods[] = {
-   { (char*) "makeRootClass", (PyCFunction) PyROOT::makeRootClass,
+   { (char*) "makeRootClass", (PyCFunction) PyROOT::MakeRootClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "getRootGlobal", (PyCFunction) PyROOT::getRootGlobal,
+   { (char*) "getRootGlobal", (PyCFunction) PyROOT::GetRootGlobal,
      METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "setRootLazyLookup", (PyCFunction) setRootLazyLookup,
+   { (char*) "setRootLazyLookup", (PyCFunction) SetRootLazyLookup,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { NULL, NULL, 0, NULL }
 };
 
 
-extern "C" void initlibPyROOT() {
+//____________________________________________________________________________
+extern "C" void initlibPyROOT()
+{
+   using namespace PyROOT;
+
 // prepare for lazyness
-   dictLookupOrg = ((PyDictObject*)PyDict_New())->ma_lookup;
+   PyObject* dict = PyDict_New();
+   dictLookupOrg = ((PyDictObject*)dict)->ma_lookup;
+   Py_DECREF( dict );
 
 // setup PyROOT
-   g_modroot = Py_InitModule( const_cast< char* >( "libPyROOT" ), PyROOTMethods );
+   gRootModule = Py_InitModule( const_cast< char* >( "libPyROOT" ), PyROOTMethods );
+   if ( ! gRootModule )
+      return;
+   Py_INCREF( gRootModule );
+
+// inject object proxy type
+   if ( ! Utility::InitProxy( gRootModule, &ObjectProxy_Type, "ObjectProxy" ) )
+      return;
+
+// inject method proxy type
+   if ( ! Utility::InitProxy( gRootModule, &MethodProxy_Type, "MethodProxy" ) )
+      return;
+
+// inject property proxy type
+   if ( ! Utility::InitProxy( gRootModule, &PropertyProxy_Type, "PropertyProxy" ) )
+      return;
 
 // setup ROOT
-   PyROOT::initRoot();
+   PyROOT::InitRoot();
 }

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.5 2004/08/13 06:02:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.6 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -17,7 +17,7 @@ namespace {
    PyObject* sizeCallbackString_ = PyString_FromString( sizeCallback );
 
 // callable cache
-   std::map< PyObject*, PyObject* > s_sizeCallbacks;
+   std::map< PyObject*, PyObject* > gSizeCallbacks;
 
 // make copies of buffer types
    PyTypeObject      PyLongBuffer_Type           = PyBuffer_Type;
@@ -31,9 +31,10 @@ namespace {
 
 
 // implement 'length' and 'get' functions (use explicit funcs: vc++ can't handle templates)
-   int buffer_length( PyObject* self, const int tsize ) {
-      std::map< PyObject*, PyObject* >::iterator iscbp = s_sizeCallbacks.find( self );
-      if ( iscbp != s_sizeCallbacks.end() ) {
+   int buffer_length( PyObject* self, const int tsize )
+   {
+      std::map< PyObject*, PyObject* >::iterator iscbp = gSizeCallbacks.find( self );
+      if ( iscbp != gSizeCallbacks.end() ) {
          PyObject* pylen = PyObject_CallObject( iscbp->second, NULL );
          int nlen = PyInt_AsLong( pylen );
          Py_DECREF( pylen );
@@ -45,7 +46,9 @@ namespace {
       return (*(PyBuffer_Type.tp_as_sequence->sq_length))(self) / tsize;
    }
 
-   const char* get_buffer( PyObject* self, int idx, const int tsize ) {
+//____________________________________________________________________________
+   const char* get_buffer( PyObject* self, int idx, const int tsize )
+   {
       if ( idx < 0 || idx >= buffer_length( self, tsize ) ) {
          PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
          return 0;
@@ -57,12 +60,15 @@ namespace {
       return buf;
    }
 
-
-   int long_buffer_length( PyObject* self ) {
+//____________________________________________________________________________
+   int long_buffer_length( PyObject* self )
+   {
       return buffer_length( self, sizeof( long ) );
    }
 
-   PyObject* long_buffer_item( PyObject* self, int idx ) {
+//____________________________________________________________________________
+   PyObject* long_buffer_item( PyObject* self, int idx )
+   {
       const char* buf = get_buffer( self, idx, sizeof( long ) );
       if ( ! buf )
          return 0;
@@ -70,10 +76,13 @@ namespace {
       return PyLong_FromLong( *((long*)buf + idx) );
    }
 
-   int int_buffer_length( PyObject* self ) {
+//____________________________________________________________________________
+   int int_buffer_length( PyObject* self )
+   {
       return buffer_length( self, sizeof( int ) );
    }
 
+//____________________________________________________________________________
    PyObject* int_buffer_item( PyObject* self, int idx ) {
       const char* buf = get_buffer( self, idx, sizeof( int ) );
       if ( ! buf )
@@ -82,11 +91,15 @@ namespace {
       return PyInt_FromLong( *((int*)buf + idx) );
    }
 
-   int double_buffer_length( PyObject* self ) {
+//____________________________________________________________________________
+   int double_buffer_length( PyObject* self )
+   {
       return buffer_length( self, sizeof( double ) );
    }
 
-   PyObject* double_buffer_item( PyObject* self, int idx ) {
+//____________________________________________________________________________
+   PyObject* double_buffer_item( PyObject* self, int idx )
+   {
       const char* buf = get_buffer( self, idx, sizeof( double ) );
       if ( ! buf )
          return 0;
@@ -94,11 +107,14 @@ namespace {
       return PyFloat_FromDouble( *((double*)buf + idx) );
    }
 
+//____________________________________________________________________________
    int float_buffer_length( PyObject* self ) {
       return buffer_length( self, sizeof( float ) );
    }
 
-   PyObject* float_buffer_item( PyObject* self, int idx ) {
+//____________________________________________________________________________
+   PyObject* float_buffer_item( PyObject* self, int idx )
+   {
       const char* buf = get_buffer( self, idx, sizeof( float ) );
       if ( ! buf )
          return 0;
@@ -110,14 +126,16 @@ namespace {
 
 
 //- instance handler ------------------------------------------------------------
-PyROOT::PyBufferFactory* PyROOT::PyBufferFactory::getInstance() {
+PyROOT::PyBufferFactory* PyROOT::PyBufferFactory::Instance()
+{
    static PyBufferFactory* fac = new PyBufferFactory();
    return fac;
 }
 
 
 //- constructor/destructor ------------------------------------------------------
-PyROOT::PyBufferFactory::PyBufferFactory() {
+PyROOT::PyBufferFactory::PyBufferFactory()
+{
    PyLongBuffer_SeqMethods.sq_item      = (intargfunc) long_buffer_item;
    PyLongBuffer_SeqMethods.sq_length    = (inquiry) &long_buffer_length;
    PyLongBuffer_Type.tp_as_sequence     = &PyLongBuffer_SeqMethods;
@@ -135,14 +153,15 @@ PyROOT::PyBufferFactory::PyBufferFactory() {
    PyFloatBuffer_Type.tp_as_sequence    = &PyFloatBuffer_SeqMethods;
 }
 
-
-PyROOT::PyBufferFactory::~PyBufferFactory() {
-
+//____________________________________________________________________________
+PyROOT::PyBufferFactory::~PyBufferFactory()
+{
 }
 
 
 //- public members --------------------------------------------------------------
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( long* address, int size ) {
+PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( long* address, int size )
+{
    size = size < 0 ? int(INT_MAX/double(sizeof(long)))*sizeof(long) : size*sizeof(long);
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );
    Py_INCREF( &PyLongBuffer_Type );
@@ -150,16 +169,20 @@ PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( long* address, int size 
    return buf;
 }
 
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( long* address, PyObject* scb ) {
+//____________________________________________________________________________
+PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( long* address, PyObject* scb )
+{
    PyObject* buf = PyBuffer_FromMemory( address, 0 );
    if ( buf != 0 && PyCallable_Check( scb ) ) {
       Py_INCREF( scb );
-      s_sizeCallbacks[ buf ] = scb;
+      gSizeCallbacks[ buf ] = scb;
    }
    return buf;
 }
 
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( int* address, int size ) {
+//____________________________________________________________________________
+PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( int* address, int size )
+{
    size = size < 0 ? int(INT_MAX/double(sizeof(int)))*sizeof(int) : size*sizeof(int);
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );
    Py_INCREF( &PyIntBuffer_Type );
@@ -167,16 +190,20 @@ PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( int* address, int size )
    return buf;
 }
 
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( int* address, PyObject* scb ) {
+//____________________________________________________________________________
+PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( int* address, PyObject* scb )
+{
    PyObject* buf = PyBuffer_FromMemory( address, 0 );
    if ( buf != 0 && PyCallable_Check( scb ) ) {
       Py_INCREF( scb );
-      s_sizeCallbacks[ buf ] = scb;
+      gSizeCallbacks[ buf ] = scb;
    }
    return buf;
 }
 
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( double* address, int size ) {
+//____________________________________________________________________________
+PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( double* address, int size )
+{
    size = size < 0 ? int(INT_MAX/double(sizeof(double)))*sizeof(double) : size*sizeof(double);
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );
    Py_INCREF( &PyDoubleBuffer_Type );
@@ -184,16 +211,20 @@ PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( double* address, int siz
    return buf;
 }
 
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( double* address, PyObject* scb ) {
+//____________________________________________________________________________
+PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( double* address, PyObject* scb )
+{
    PyObject* buf = PyBuffer_FromMemory( address, 0 );
    if ( buf != 0 && PyCallable_Check( scb ) ) {
       Py_INCREF( scb );
-      s_sizeCallbacks[ buf ] = scb;
+      gSizeCallbacks[ buf ] = scb;
    }  
    return buf;
 }
 
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( float* address, int size ) {
+//____________________________________________________________________________
+PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( float* address, int size )
+{
    size = size < 0 ? int(INT_MAX/double(sizeof(float)))*sizeof(float) : size*sizeof(float);
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );
    Py_INCREF( &PyFloatBuffer_Type );
@@ -201,11 +232,13 @@ PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( float* address, int size
    return buf;
 }
 
-PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( float* address, PyObject* scb ) {
+//____________________________________________________________________________
+PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( float* address, PyObject* scb )
+{
    PyObject* buf = PyBuffer_FromMemory( address, 0 );
    if ( buf != 0 && PyCallable_Check( scb ) ) {
       Py_INCREF( scb );
-      s_sizeCallbacks[ buf ] = scb;
+      gSizeCallbacks[ buf ] = scb;
    }
    return buf;
 }

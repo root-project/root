@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.5 2004/10/30 06:26:43 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.6 2004/11/23 21:45:06 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_ROOTWRAPPER_H
@@ -14,30 +14,27 @@ class TGlobal;
 
 namespace PyROOT {
 
-// bindings
-   class ObjectHolder;
-
-
 // initialize ROOT
-   void initRoot();
+   void InitRoot();
 
 // construct the dictionary of the given ROOT class in pyclass
-   int buildRootClassDict( TClass* cls, PyObject* pyclass );
+   int BuildRootClassDict( TClass* klass, PyObject* pyclass );
 
 // construct a tuple of base classes for the given ROOT class
-   PyObject* buildRootClassBases( TClass* cls );
+   PyObject* BuildRootClassBases( TClass* klass );
 
 // construct a Python shadow class for the named ROOT class
-   PyObject* makeRootClass( PyObject* self, PyObject* args );
-   PyObject* makeRootClassFromString( const std::string& className );
+   PyObject* MakeRootClass( PyObject*, PyObject* args );
+   PyObject* MakeRootClassFromString( const std::string& name );
 
 // convenience function to retrieve global variables and enums
-   PyObject* getRootGlobal( PyObject* self, PyObject* args );
-   PyObject* getRootGlobalFromString( const std::string& globalName );
+   PyObject* GetRootGlobal( PyObject*, PyObject* args );
+   PyObject* GetRootGlobalFromString( const std::string& name );
 
-// bind a ROOT object into a Python object (if force is false, allow recycle)
-   PyObject* bindRootObject( ObjectHolder* obh, bool force = false );
-   PyObject* bindRootGlobal( TGlobal* );
+// bind a ROOT object into a Python object
+   PyObject* BindRootObjectNoCast( void* object, TClass* klass, bool isRef = false );
+   PyObject* BindRootObject( void* object, TClass* klass, bool isRef = false );
+   PyObject* BindRootGlobal( TGlobal* );
 
 } // namespace PyROOT
 

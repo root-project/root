@@ -1,33 +1,29 @@
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "ClassMethodHolder.h"
-#include "ObjectHolder.h"
-#include "Utility.h"
-
-// ROOT
-#include "TClass.h"
-#include "TMethod.h"
-#include "TMethodCall.h"
 
 
 //- constructor -----------------------------------------------------------------
-PyROOT::ClassMethodHolder::ClassMethodHolder( TClass* cls, TMethod* tm ) :
-      MethodHolder( cls, tm ) {
+PyROOT::ClassMethodHolder::ClassMethodHolder( TClass* klass, TMethod* method ) :
+      MethodHolder( klass, method )
+{
 }
 
 
 //- public members --------------------------------------------------------------
-PyObject* PyROOT::ClassMethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict */ ) {
+PyObject* PyROOT::ClassMethodHolder::operator()( ObjectProxy*, PyObject* args, PyObject* )
+{
 // setup as necessary
-   if ( ! initialize() )
+   if ( ! Initialize() )
       return 0;                              // important: 0, not PyNone
 
 // translate the arguments
-   if ( ! setMethodArgs( aTuple, 0 ) )
+   if ( ! SetMethodArgs( args ) )
       return 0;                              // important: 0, not PyNone
 
 // execute function
-   return callMethod( 0 );
+   return Execute( 0 );
 }

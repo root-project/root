@@ -1,26 +1,27 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.9 2004/11/02 10:13:06 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.10 2004/11/03 17:58:14 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
 #define PYROOT_UTILITY_H
 
+// ROOT
+#include "DllImport.h"
+
 // Standard
+#include <map>
 #include <string>
 
 
 namespace PyROOT {
 
-// Bindings
-   class ObjectHolder;
-
    namespace Utility {
 
    // convenience functions
-      void addToClass( const char* label, PyCFunction cfunc, PyObject* cls,
+      bool AddToClass( PyObject* pyclass, const char* label, PyCFunction cfunc,
                        int flags = METH_VARARGS );
+      bool AddToClass( PyObject* pyclass, const char* label, const char* func );
 
-      ObjectHolder* getObjectHolder( PyObject* self );
-      void* getObjectFromHolderFromArgs( PyObject* argsTuple );
+      bool InitProxy( PyObject* module, PyTypeObject* pytype, const char* name );
 
    // data/return types
       const int kPtrMask = 0x10000000;
@@ -48,12 +49,13 @@ namespace PyROOT {
          kVoidPtr     = kPtrMask | kVoid
       };
 
-      EDataType effectiveType( const std::string& typeName );
-      int isPointer( const std::string& typeName ); // 0 = no, 1 = yes, 2 = ref
+   // data/operator mappings
+      typedef std::map< std::string, std::string > TC2POperatorMapping_t;
+      R__EXTERN TC2POperatorMapping_t gC2POperatorMapping;
 
-   // data
-      extern char* theObject_;
-      extern PyObject* theObjectString_;
+   // meta information
+      EDataType effectiveType( const std::string& name );
+      int isPointer( const std::string& name );   // 0 = no, 1 = yes, 2 = ref
 
    } // namespace Utility
 

@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.15 2004/11/13 12:58:20 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.16 2004/11/23 21:45:05 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/15/04
+# Last: 01/04/05
 
 """PyROOT user module.
 
@@ -126,8 +126,9 @@ sys.displayhook = _displayhook
 ### root thread -----------------------------------------------------------------
 def _processRootEvents():
    global gSystem
+   gSystemProcessEvents = gSystem.ProcessEvents
    while 1:
-      gSystem.ProcessEvents()
+      gSystemProcessEvents()
       time.sleep( 0.01 )
 
 thread.start_new_thread( _processRootEvents, () )
@@ -142,7 +143,8 @@ class ModuleFacade:
       for name in _thismodule.__pseudo__all__:
           self.__dict__[ name ] = getattr( _thismodule, name )
 
-      self.__dict__[ '__doc__' ] = _thismodule.__doc__
+      self.__dict__[ '__doc__'  ] = _thismodule.__doc__
+      self.__dict__[ '__name__' ] = _thismodule.__name__
 
    def __getattr__( self, name ):
     # support for "from ROOT import *" at the module level

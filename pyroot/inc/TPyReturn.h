@@ -1,3 +1,4 @@
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.h,v 1.6 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen   May 2004
 
 #ifndef ROOT_TPyReturn
@@ -26,7 +27,7 @@ typedef _object PyObject;
 class TPyReturn : public TObject {
 public:
    TPyReturn();
-   TPyReturn( PyObject* obj, TClass* cls );
+   TPyReturn( PyObject* pyobject, TClass* klass );
    virtual ~TPyReturn();
 
    virtual TClass* IsA() const;
@@ -44,11 +45,11 @@ private:
    TPyReturn( const TPyReturn& );
    TPyReturn& operator=( const TPyReturn& );
 
-   void autoDestruct() const;
+   void AutoDestruct_() const;
 
 private:
-   PyObject* m_object;             // python side object
-   TClass* m_class;                // TClass of held object if ROOT object
-};
+   PyObject* fPyObject;            // python side object
+   TClass*   fClass;               // TClass of held object if ROOT object
 
+};
 #endif

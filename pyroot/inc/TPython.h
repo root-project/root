@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.5 2004/07/17 06:32:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.6 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen   April 2004
 
 #ifndef ROOT_TPython
@@ -32,10 +32,10 @@ public:
    static void Exec( const char* cmd );
 
 // evaluate a python expression (e.g. "1+1")
-   static const TPyReturn& Eval( const char *expr );
+   static const TPyReturn& Eval( const char* expr );
 
 // bind a ROOT object with, at the python side, the name "label"
-   static Bool_t Bind( TObject* obj, const char* label );
+   static Bool_t Bind( TObject* object, const char* label );
 
 // enter an interactive python session (exit with ^D)
    static void Prompt();

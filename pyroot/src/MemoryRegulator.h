@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.h,v 1.4 2004/07/30 06:31:18 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.h,v 1.5 2004/11/23 21:45:06 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_MEMORYREGULATOR_H
@@ -16,26 +16,30 @@ namespace PyROOT {
 /** Communicate object destruction across ROOT/CINT/PyROOT/
       @author  WLAV
       @date    11/23/2004
-      @version 1.3
+      @version 2.0
  */
+
+   class ObjectProxy;
 
    class MemoryRegulator : public TObject {
    public:
       MemoryRegulator();
-      virtual void RecursiveRemove( TObject* obj );
 
-   // add an object to the table of managed objects
-      static void RegisterObject( PyObject*, TObject* );
+   // callback for ROOT/CINT
+      virtual void RecursiveRemove( TObject* object );
 
-   // new reference to python object corresponding to ptr, or 0 on failure
-      static PyObject* RetrieveObject( TObject* ptr );
+   // add a python object to the table of managed objects
+      static void RegisterObject( ObjectProxy* pyobj, TObject* object );
+
+   // new reference to python object corresponding to object, or 0 on failure
+      static PyObject* RetrieveObject( TObject* object );
 
    // callback when weak refs to managed objects are destroyed
-      static PyObject* objectEraseCallback( PyObject* self, PyObject* ref );
+      static PyObject* ObjectEraseCallback( PyObject*, PyObject* pyref );
 
    private:
-      typedef std::map< TObject*, PyObject* > objmap_t;
-      static objmap_t s_objectTable;
+      typedef std::map< TObject*, PyObject* > ObjectMap_t;
+      static ObjectMap_t fgObjectTable;
    };
 
 } // namespace PyROOT

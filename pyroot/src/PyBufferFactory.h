@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.h,v 1.3 2004/08/13 06:02:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.h,v 1.4 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYBUFFERFACTORY_H
@@ -15,7 +15,7 @@ namespace PyROOT {
 
 class PyBufferFactory {
 public:
-   static PyBufferFactory* getInstance();
+   static PyBufferFactory* Instance();
 
    PyObject* PyBuffer_FromMemory( long* buf, int size = -1 );
    PyObject* PyBuffer_FromMemory( long* buf, PyObject* sizeCallback );

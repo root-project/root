@@ -1,10 +1,10 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.11 2004/11/02 10:13:06 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.12 2004/11/05 09:05:45 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "Utility.h"
-#include "ObjectHolder.h"
+#include "ObjectProxy.h"
 
 // ROOT
 #include "TClassEdit.h"
@@ -13,16 +13,56 @@
 #include "Api.h"
 
 
-//- data ------------------------------------------------------------------------
-char* PyROOT::Utility::theObject_ = const_cast< char* >( "_theObject" );
+//- data _____________________________________________________________________
+PyROOT::Utility::TC2POperatorMapping_t PyROOT::Utility::gC2POperatorMapping;
 
-PyObject* PyROOT::Utility::theObjectString_ =
-   PyString_FromString( PyROOT::Utility::theObject_ );
+namespace {
+
+   using namespace PyROOT::Utility;
+
+   class InitOperatorMapping_ {
+   public:
+      InitOperatorMapping_() {
+         gC2POperatorMapping[ "[]" ]  = "__getitem__";
+         gC2POperatorMapping[ "()" ]  = "__call__";
+         gC2POperatorMapping[ "+" ]   = "__add__";
+         gC2POperatorMapping[ "-" ]   = "__sub__";
+         gC2POperatorMapping[ "*" ]   = "__mul__";
+         gC2POperatorMapping[ "/" ]   = "__div__";
+         gC2POperatorMapping[ "%" ]   = "__mod__";
+         gC2POperatorMapping[ "**" ]  = "__pow__";
+         gC2POperatorMapping[ "<<" ]  = "__lshift__";
+         gC2POperatorMapping[ ">>" ]  = "__rshift__";
+         gC2POperatorMapping[ "&" ]   = "__and__";
+         gC2POperatorMapping[ "|" ]   = "__or__";
+         gC2POperatorMapping[ "^" ]   = "__xor__";
+         gC2POperatorMapping[ "+=" ]  = "__iadd__";
+         gC2POperatorMapping[ "-=" ]  = "__isub__";
+         gC2POperatorMapping[ "*=" ]  = "__imul__";
+         gC2POperatorMapping[ "/=" ]  = "__idiv__";
+         gC2POperatorMapping[ "/=" ]  = "__imod__";
+         gC2POperatorMapping[ "**=" ] = "__ipow__";
+         gC2POperatorMapping[ "<<=" ] = "__ilshift__";
+         gC2POperatorMapping[ ">>=" ] = "__irshift__";
+         gC2POperatorMapping[ "&=" ]  = "__iand__";
+         gC2POperatorMapping[ "|=" ]  = "__ior__";
+         gC2POperatorMapping[ "^=" ]  = "__ixor__";
+         gC2POperatorMapping[ "==" ]  = "__eq__";
+         gC2POperatorMapping[ "!=" ]  = "__ne__";
+         gC2POperatorMapping[ ">" ]   = "__gt__";
+         gC2POperatorMapping[ "<" ]   = "__lt__";
+         gC2POperatorMapping[ ">=" ]  = "__ge__";
+         gC2POperatorMapping[ "<=" ]  = "__le__";
+      }
+   } initOperatorMapping_;
+
+} // unnamed namespace
 
 
-//- public functions ------------------------------------------------------------
-void PyROOT::Utility::addToClass(
-      const char* label, PyCFunction cfunc, PyObject* cls, int flags ) {
+//- public functions ---------------------------------------------------------
+bool PyROOT::Utility::AddToClass(
+      PyObject* pyclass, const char* label, PyCFunction cfunc, int flags )
+{
    PyMethodDef* pdef = new PyMethodDef;
    pdef->ml_name  = const_cast< char* >( label );
    pdef->ml_meth  = cfunc;
@@ -30,54 +70,58 @@ void PyROOT::Utility::addToClass(
    pdef->ml_doc   = NULL;
 
    PyObject* func = PyCFunction_New( pdef, NULL );
-   PyObject* method = PyMethod_New( func, NULL, cls );
-   PyObject_SetAttrString( cls, pdef->ml_name, method );
+   PyObject* method = PyMethod_New( func, NULL, pyclass );
+   PyObject_SetAttrString( pyclass, pdef->ml_name, method );
    Py_DECREF( func );
    Py_DECREF( method );
+
+   if ( PyErr_Occurred() )
+      return false;
+
+   return true;
+}
+
+//____________________________________________________________________________
+bool PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, const char* func )
+{
+   PyObject* pyfunc = PyObject_GetAttrString( pyclass, const_cast< char* >( func ) );
+   if ( ! pyfunc )
+      return false;
+
+   return PyObject_SetAttrString( pyclass, const_cast< char* >( label ), pyfunc ) == 0;
 }
 
 
-PyROOT::ObjectHolder* PyROOT::Utility::getObjectHolder( PyObject* self ) {
-   if ( ! self )
-      return 0;
+//____________________________________________________________________________
+bool PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const char* name )
+{
+// finalize proxy type
+   if ( PyType_Ready( pytype ) < 0 )
+      return false;
 
-   PyObject* cobj = PyObject_GetAttr( self, theObjectString_ );
-   if ( cobj != 0 ) {
-      ObjectHolder* holder =
-         reinterpret_cast< PyROOT::ObjectHolder* >( PyCObject_AsVoidPtr( cobj ) );
-      Py_DECREF( cobj );
-      return holder;
+// add proxy type to the given (ROOT) module
+   Py_INCREF( pytype );         // PyModule_AddObject steals reference
+   if ( PyModule_AddObject( module, (char*)name, (PyObject*)pytype ) < 0 ) {
+      Py_DECREF( pytype );
+      return false;
    }
-   else
-      PyErr_Clear();
 
-   return 0;
+// declare success
+   return true;
 }
 
-
-void* PyROOT::Utility::getObjectFromHolderFromArgs( PyObject* argsTuple ) {
-   PyObject* self = PyTuple_GET_ITEM( argsTuple, 0 );
-   Py_INCREF( self );
-
-   PyROOT::ObjectHolder* holder = getObjectHolder( self );
-   Py_DECREF( self );
-
-   if ( holder != 0 )
-      return holder->getObject();
-   return 0;
-}
-
-
-PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& typeName ) {
+//____________________________________________________________________________
+PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& name )
+{
    EDataType effType = kOther;
 
-   G__TypeInfo ti( typeName.c_str() );
+   G__TypeInfo ti( name.c_str() );
    if ( ti.Property() & G__BIT_ISENUM )
       return EDataType( (int) kEnum );
 
    std::string shortName = TClassEdit::ShortType( ti.TrueName(), 1 );
 
-   const int isp = isPointer( typeName );
+   const int isp = isPointer( name );
    const int mask = isp == 1 ? kPtrMask : 0;
 
    if ( shortName == "bool" )
@@ -110,19 +154,18 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& ty
    return effType;
 }
 
-
-int PyROOT::Utility::isPointer( const std::string& tn ) {
+//____________________________________________________________________________
+int PyROOT::Utility::isPointer( const std::string& name )
+{
    int isp = 0;
-   for ( std::string::const_reverse_iterator it = tn.rbegin(); it != tn.rend(); ++it ) {
+   for ( std::string::const_reverse_iterator it = name.rbegin(); it != name.rend(); ++it ) {
       if ( *it == '*' ) {
          isp = 1;
          break;
-      }
-      else if ( *it == '&' ) {
+      } else if ( *it == '&' ) {
          isp = 2;
          break;
-      }
-      else if ( isalnum( *it ) )
+      } else if ( isalnum( *it ) )
          break;
    }
 

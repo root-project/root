@@ -4,50 +4,54 @@
 // Bindings
 #include "PyROOT.h"
 #include "MemoryRegulator.h"
-#include "Utility.h"
-#include "ObjectHolder.h"
+#include "ObjectProxy.h"
 
+// ROOT
 #include "TObject.h"
 #include "TClass.h"
 
 // Standard
 #include <string.h>
-#include <iostream>
+#include <Riostream.h>
 
 
 //- static data -----------------------------------------------------------------
-PyROOT::MemoryRegulator::objmap_t PyROOT::MemoryRegulator::s_objectTable;
+PyROOT::MemoryRegulator::ObjectMap_t PyROOT::MemoryRegulator::fgObjectTable;
 
 
 namespace {
 
 // memory regulater callback for deletion of registered objects
    PyMethodDef methoddef_ = {
-      const_cast< char* >( "MemoryRegulator_internal_objectEraseCallback" ),
-      (PyCFunction) PyROOT::MemoryRegulator::objectEraseCallback,
+      const_cast< char* >( "MemoryRegulator_internal_ObjectEraseCallback" ),
+      (PyCFunction) PyROOT::MemoryRegulator::ObjectEraseCallback,
       METH_O,
       NULL
    };
 
-   PyObject* g_objectEraseCallback = PyCFunction_New( &methoddef_, NULL );
+   PyObject* gObjectEraseCallback = PyCFunction_New( &methoddef_, NULL );
 
 
 // pseudo-None type for masking out objects on the python side
    PyTypeObject PyROOT_NoneType;
 
-   int AlwaysNullLength( PyObject* ) {
+//____________________________________________________________________________
+   int AlwaysNullLength( PyObject* )
+   {
       return 0;
    }
 
+//____________________________________________________________________________
    PyMappingMethods PyROOT_NoneType_mapping = {
         (inquiry) AlwaysNullLength,
         (binaryfunc)             0,
         (objobjargproc)          0
    };
 
+//____________________________________________________________________________
    struct Init_PyROOT_NoneType {
-      Init_PyROOT_NoneType() {
-
+      Init_PyROOT_NoneType()
+      {
          memset( &PyROOT_NoneType, 0, sizeof( PyROOT_NoneType ) );
 
          PyROOT_NoneType.ob_type   = &PyType_Type;
@@ -70,44 +74,42 @@ namespace {
          PyType_Ready( &PyROOT_NoneType );
       }
 
-      static void dealloc( PyObject* obj ) {
-         obj->ob_type->tp_free( obj );
-      }
+      static void dealloc( PyObject* obj ) { obj->ob_type->tp_free( obj ); }
+      static int ptrhash( PyObject* obj ) { return (int) long(obj); }
 
-      static PyObject* richcompare( PyObject*, PyObject* other, int opid ) {
+      static PyObject* richcompare( PyObject*, PyObject* other, int opid )
+      {
          return PyObject_RichCompare( other, Py_None, opid );
       }
 
-      static int compare( PyObject*, PyObject* other ) {
+      static int compare( PyObject*, PyObject* other )
+      {
          return PyObject_Compare( other, Py_None );
       }
-
-      static int ptrhash( PyObject* obj ) {
-         return (int) long(obj);
-      }
-
    };
 
 } // unnamed namespace
 
 
 //- constructor -----------------------------------------------------------------
-PyROOT::MemoryRegulator::MemoryRegulator() {
+PyROOT::MemoryRegulator::MemoryRegulator()
+{
    static Init_PyROOT_NoneType init_PyROOT_NoneType;
 }
 
 
 //- public members --------------------------------------------------------------
-void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
-   if ( obj == 0 || s_objectTable.size() == 0 )   // table can be deleted before libCore is done
+void PyROOT::MemoryRegulator::RecursiveRemove( TObject* object )
+{
+   if ( ! object || fgObjectTable.size() == 0 )   // table can be deleted before libCore is done
       return;
 
 // see whether we're tracking this object
-   objmap_t::iterator ppo = s_objectTable.find( obj );
+   ObjectMap_t::iterator ppo = fgObjectTable.find( object );
 
-   if ( ppo != s_objectTable.end() ) {
+   if ( ppo != fgObjectTable.end() ) {
    // get the tracked object
-      PyObject* pyobj = PyWeakref_GetObject( ppo->second );
+      ObjectProxy* pyobj = (ObjectProxy*)PyWeakref_GetObject( ppo->second );
       if ( ! pyobj )
          return;
 
@@ -115,7 +117,7 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
       Py_DECREF( ppo->second );
 
    // nullify the object
-      if ( pyobj != Py_None ) {
+      if ( ObjectProxy_Check( pyobj ) ) {
          if ( ! PyROOT_NoneType.tp_traverse ) {
          // take a reference as we're copying its function pointers
             Py_INCREF( pyobj->ob_type );
@@ -124,8 +126,7 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
             PyROOT_NoneType.tp_traverse   = pyobj->ob_type->tp_traverse;
             PyROOT_NoneType.tp_clear      = pyobj->ob_type->tp_clear;
             PyROOT_NoneType.tp_free       = pyobj->ob_type->tp_free;
-         }
-         else if ( PyROOT_NoneType.tp_traverse != pyobj->ob_type->tp_traverse ) {
+         } else if ( PyROOT_NoneType.tp_traverse != pyobj->ob_type->tp_traverse ) {
             std::cerr << "in PyROOT::MemoryRegulater, unexpected object of type: "
                       << pyobj->ob_type->tp_name << std::endl;
 
@@ -133,10 +134,10 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
             return;
          }
 
-      // notify weak referents by playing dead
+      // notify any other weak referents by playing dead
          int refcnt = pyobj->ob_refcnt;
          pyobj->ob_refcnt = 0;
-         PyObject_ClearWeakRefs( pyobj );
+         PyObject_ClearWeakRefs( (PyObject*)pyobj );
          pyobj->ob_refcnt = refcnt;
 
       // reset type object
@@ -146,31 +147,31 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
       }
 
    // erase the object from tracking
-      s_objectTable.erase( ppo );
+      fgObjectTable.erase( ppo );
    }
 }
 
-
-void PyROOT::MemoryRegulator::RegisterObject( PyObject* obj, TObject* ptr ) {
-   if ( ! ( obj && ptr ) )
+//____________________________________________________________________________
+void PyROOT::MemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
+{
+   if ( ! ( pyobj && object ) )
       return;
 
-   objmap_t::iterator ppo = s_objectTable.find( ptr );
-   if ( ppo != s_objectTable.end() )
-      Py_INCREF( ppo->second );
-   else {
-      ptr->SetBit( kMustCleanup );
-      s_objectTable[ ptr ] = PyWeakref_NewRef( obj, g_objectEraseCallback );
+   ObjectMap_t::iterator ppo = fgObjectTable.find( object );
+   if ( ppo == fgObjectTable.end() ) {
+      object->SetBit( kMustCleanup );
+      fgObjectTable[ object ] = PyWeakref_NewRef( (PyObject*)pyobj, gObjectEraseCallback );
    }
 }
 
-
-PyObject* PyROOT::MemoryRegulator::RetrieveObject( TObject* ptr ) {
-   if ( ! ptr )
+//____________________________________________________________________________
+PyObject* PyROOT::MemoryRegulator::RetrieveObject( TObject* object )
+{
+   if ( ! object )
       return 0;
 
-   objmap_t::iterator ppo = s_objectTable.find( ptr );
-   if ( ppo != s_objectTable.end() ) {
+   ObjectMap_t::iterator ppo = fgObjectTable.find( object );
+   if ( ppo != fgObjectTable.end() ) {
       PyObject* pyobj = PyWeakref_GetObject( ppo->second );
       Py_XINCREF( pyobj );
       return pyobj;
@@ -181,39 +182,37 @@ PyObject* PyROOT::MemoryRegulator::RetrieveObject( TObject* ptr ) {
 
 
 //- private static members ------------------------------------------------------
-PyObject* PyROOT::MemoryRegulator::objectEraseCallback( PyObject* /* self */, PyObject* ref ) {
+PyObject* PyROOT::MemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* pyref )
+{
 // called when one of the python objects we've registered is going away
-   PyObject* pyobj = PyWeakref_GetObject( ref );
+   ObjectProxy* pyobj = (ObjectProxy*)PyWeakref_GetObject( pyref );
 
-   if ( pyobj != 0 && pyobj != Py_None ) {
-   // get holder if root object
-      PyROOT::ObjectHolder* obh = Utility::getObjectHolder( pyobj );
-      if ( obh != 0 && obh->objectIsA() != 0 ) {
+   if ( ObjectProxy_Check( pyobj ) && pyobj->GetObject() != 0 ) {
+   // get TObject pointer to the object
+      TObject* object = (TObject*)pyobj->ObjectIsA()->DynamicCast(
+         TObject::Class(), pyobj->GetObject() );
 
-      // get TObject pointer to the object
-         TObject* tobj = (TObject*) obh->objectIsA()->DynamicCast(
-            TObject::Class(), obh->getObject() );
-
-         if ( tobj != 0 ) {
-         // erase if tracked
-            objmap_t::iterator ppo = s_objectTable.find( tobj );
-            if ( ppo != s_objectTable.end() ) {
-            // cleanup weak reference2, and table entry
-               Py_DECREF( ppo->second );
-               s_objectTable.erase( ppo );
-            }
+      if ( object != 0 ) {
+      // erase if tracked
+         ObjectMap_t::iterator ppo = fgObjectTable.find( object );
+         if ( ppo != fgObjectTable.end() ) {
+         // cleanup weak reference, and table entry
+            Py_DECREF( ppo->second );
+            fgObjectTable.erase( ppo );
          }
       }
-   }
-   else {
-      objmap_t::iterator ppo = s_objectTable.begin();
-      for ( ; ppo != s_objectTable.end(); ++ppo ) {
-         if ( ppo->second == ref )
+   } else {
+      ObjectMap_t::iterator ppo = fgObjectTable.begin();
+      for ( ; ppo != fgObjectTable.end(); ++ppo ) {
+         if ( ppo->second == pyref )
             break;
       }
 
-      if ( ppo != s_objectTable.end() )
-         s_objectTable.erase( ppo );
+      if ( ppo != fgObjectTable.end() ) {
+      // cleanup weak reference, and table entry
+         Py_DECREF( ppo->second );
+         fgObjectTable.erase( ppo );
+      }
    }
 
    Py_INCREF( Py_None );

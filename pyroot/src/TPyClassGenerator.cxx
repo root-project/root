@@ -1,3 +1,4 @@
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -15,11 +16,12 @@
 
 
 //- public members -----------------------------------------------------------
-TClass* TPyClassGenerator::GetClass( const char* classname, Bool_t load ) {
-   if ( ! load || ! classname )
+TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
+{
+   if ( ! load || ! name )
       return 0;
 
-   std::string fullName = classname;
+   std::string fullName = name;
 
 // determine module and class name part
    std::string::size_type pos = fullName.rfind( '.' );
@@ -37,6 +39,7 @@ TClass* TPyClassGenerator::GetClass( const char* classname, Bool_t load ) {
       return 0;                              // the module is no longer available?!
    }
 
+   Py_INCREF( mod );
    PyObject* pyclass =
       PyDict_GetItemString( PyModule_GetDict( mod ), const_cast< char* >( className.c_str() ) );
    Py_XINCREF( pyclass );
@@ -53,13 +56,14 @@ TClass* TPyClassGenerator::GetClass( const char* classname, Bool_t load ) {
 // TODO: construct ROOT class
    Py_DECREF( pyclass );
 
-   TClass* cls = new TClass( className.c_str() );
-   gROOT->AddClass( cls );
+   TClass* klass = new TClass( className.c_str() );
+   gROOT->AddClass( klass );
 
-   return cls;
+   return klass;
 }
 
-
-TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load ) {
+//____________________________________________________________________________
+TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load )
+{
    return GetClass( typeinfo.name(), load );
 }

@@ -1,9 +1,8 @@
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
 #include "PyROOT.h"
-#include "ObjectHolder.h"
-#include "Utility.h"
 #include "TPyReturn.h"
 
 // ROOT
@@ -31,7 +30,8 @@ ClassImp(TPyReturn)
 
 
 //- private helpers ----------------------------------------------------------
-void TPyReturn::autoDestruct() const {
+void TPyReturn::AutoDestruct_() const
+{
 // Private harakiri method.
    if ( gInterpreter != 0 )
       gInterpreter->DeleteGlobal( (void*) this );
@@ -40,46 +40,57 @@ void TPyReturn::autoDestruct() const {
 
 
 //- constructors/destructor --------------------------------------------------
-TPyReturn::TPyReturn() : m_class( 0 ) {
+TPyReturn::TPyReturn() : fClass( 0 )
+{
 // Construct a TPyReturn object from Py_None.
    Py_INCREF( Py_None );
-   m_object = Py_None;
+   fPyObject = Py_None;
 }
 
-TPyReturn::TPyReturn( PyObject* obj, TClass* cls ) :
-   m_object( obj ), m_class( cls ) {
+//____________________________________________________________________________
+TPyReturn::TPyReturn( PyObject* pyobject, TClass* klass ) :
+   fPyObject( pyobject ), fClass( klass )
+{
 // Construct a TPyReturn from a python object. If the python object holds on to
 // a ROOT object, the TClass should be given. Reference counting for the python
 // object is in effect.
 }
 
-TPyReturn::TPyReturn( const TPyReturn& s ) : TObject( s ) {
+//____________________________________________________________________________
+TPyReturn::TPyReturn( const TPyReturn& other ) : TObject( other )
+{
 // Private copy constructor; throws if called.
    throw std::runtime_error( "TPyReturn objects may not be copied!" );
 }
 
-TPyReturn& TPyReturn::operator=( const TPyReturn& ) {
+//____________________________________________________________________________
+TPyReturn& TPyReturn::operator=( const TPyReturn& )
+{
 // Private assignment operator; throws if called.
    throw std::runtime_error( "TPyReturn objects may not be assigned to!" );
    return *this;
 }
 
-TPyReturn::~TPyReturn() {
+//____________________________________________________________________________
+TPyReturn::~TPyReturn()
+{
 // Destructor. Reference counting for the held python object is in effect.
-   Py_XDECREF( m_object );
+   Py_XDECREF( fPyObject );
 }
 
 
 //- public members -----------------------------------------------------------
-TClass* TPyReturn::IsA() const {
+TClass* TPyReturn::IsA() const
+{
 // Return the held object TClass (not the TPyReturn TClass).
-   return m_class;
+   return fClass;
 }
 
-
-TPyReturn::operator const char*() const {
-   const char* s = PyString_AsString( m_object );
-   autoDestruct();
+//____________________________________________________________________________
+TPyReturn::operator const char*() const
+{
+   const char* s = PyString_AsString( fPyObject );
+   AutoDestruct_();
 
    if ( PyErr_Occurred() ) {
       PyErr_Print();
@@ -89,9 +100,11 @@ TPyReturn::operator const char*() const {
    return s;
 }
 
-TPyReturn::operator long() const {
-   long l = PyLong_AsLong( m_object );
-   autoDestruct();
+//____________________________________________________________________________
+TPyReturn::operator long() const
+{
+   long l = PyLong_AsLong( fPyObject );
+   AutoDestruct_();
 
    if ( PyErr_Occurred() )
       PyErr_Print();
@@ -99,13 +112,17 @@ TPyReturn::operator long() const {
    return l;
 }
 
-TPyReturn::operator int() const {
+//____________________________________________________________________________
+TPyReturn::operator int() const
+{
    return (int) operator long();
 }
 
-TPyReturn::operator double() const {
-   double d = PyFloat_AsDouble( m_object );
-   autoDestruct();
+//____________________________________________________________________________
+TPyReturn::operator double() const
+{
+   double d = PyFloat_AsDouble( fPyObject );
+   AutoDestruct_();
 
    if ( PyErr_Occurred() )
       PyErr_Print();
@@ -113,10 +130,14 @@ TPyReturn::operator double() const {
    return d;
 }
 
-TPyReturn::operator float() const {
+//____________________________________________________________________________
+TPyReturn::operator float() const
+{
    return (float) operator double();
 }
 
-TPyReturn::operator TObject*() const {
+//____________________________________________________________________________
+TPyReturn::operator TObject*() const
+{
    return (TObject*) this;
 }

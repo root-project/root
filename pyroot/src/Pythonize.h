@@ -1,3 +1,4 @@
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.h,v 1.68 2005/01/28 05:45:41 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 #ifndef PYROOT_PYTHONIZE_H
@@ -10,8 +11,8 @@
 namespace PyROOT {
 
 // make the named ROOT class more python-like
-   bool pythonize( PyObject* pyclass, const std::string& name );
+   bool Pythonize( PyObject* pyclass, const std::string& name );
 
-}
+} // namespace PyROOT
 
 #endif // !PYROOT_PYTHONIZE_H

@@ -1,26 +1,22 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.26 2004/11/05 09:05:45 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.27 2004/11/23 21:45:06 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "MethodHolder.h"
-#include "ObjectHolder.h"
-#include "PyBufferFactory.h"
+#include "Converters.h"
+#include "Executors.h"
+#include "ObjectProxy.h"
 #include "RootWrapper.h"
+#include "TPyException.h"
 
 // ROOT
 #include "TROOT.h"
 #include "TClass.h"
-#include "TObject.h"
 #include "TString.h"
-#include "TArray.h"
-#include "TGlobal.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TClassEdit.h"
-#include "Gtypes.h"
-#include "GuiTypes.h"
-#include "Rtypes.h"
 
 // CINT
 #include "Api.h"
@@ -28,227 +24,13 @@
 
 // Standard
 #include <assert.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
 #include <exception>
-#include <map>
 #include <string>
-#include <iostream>
+#include <Riostream.h>
 
 
-//- local helpers ---------------------------------------------------------------
+//- local helpers ------------------------------------------------------------
 namespace {
-
-// converters for built-ins
-   bool long_convert( PyObject* obj, G__CallFunc* func, void*& ) {
-      func->SetArg( PyLong_AsLong( obj ) );
-      if ( PyErr_Occurred() )
-         return false;
-      return true;
-   }
-
-   bool longlong_convert( PyObject* obj, G__CallFunc* func, void*& buf ) {
-   // get value
-      Long64_t ll = PyLong_AsLongLong( obj );
-      if ( PyErr_Occurred() )
-         return false;
-
-   // create memory if necessary
-      if ( ! buf )
-         buf = reinterpret_cast< void* >( new Long64_t( 0 ) );
-
-   // copy new value
-      *(reinterpret_cast< Long64_t* >( buf )) = ll;
-
-   // set value and declare success
-      func->SetArg( (long) buf );
-      return true;
-   }
-
-   bool double_convert( PyObject* obj, G__CallFunc* func, void*& ) {
-      func->SetArg( PyFloat_AsDouble( obj ) );
-      if ( PyErr_Occurred() )
-         return false;
-      return true;
-   }
-
-   bool cstring_convert( PyObject* obj, G__CallFunc* func, void*& buf ) {
-   // construct a new string and copy it in new memory
-      const char* s = PyString_AsString( obj );
-      if ( PyErr_Occurred() )
-         return false;
-
-   // destroy old memory
-      delete[] reinterpret_cast< char* >( buf );
-
-   // copy the new string
-      char* p = new char[ strlen( s ) + 1 ];
-      strcpy( p, s );
-
-   // store the new memory for deletion the next time around
-      buf = reinterpret_cast< void* >( p );
-
-   // set the value
-      func->SetArg( reinterpret_cast< long >( p ) );
-
-   // done, declare success
-      return true;
-   }
-
-   bool tstring_convert( PyObject* obj, G__CallFunc* func, void*& buf ) {
-   // all similar to cstring, see above
-      const char* s = PyString_AsString( obj );
-      if ( PyErr_Occurred() )
-         return false;
-
-      delete[] reinterpret_cast< TString* >( buf );
-      TString* p = new TString( s );
-      buf = reinterpret_cast< void* >( p );
-
-      func->SetArg( reinterpret_cast< long >( p ) );
-
-      return true;
-
-   }
-
-   bool void_convert( PyObject*, G__CallFunc* func, void*& ) {
-   // TODO: verify to see if this is the proper approach
-      func->SetArg( 0l );
-      std::cerr << "convert< void > called ... may not be proper\n";
-      return true;
-   }
-
-
-// traits for python's array type codes
-#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-   template< class aType > struct tct {};
-   template<> struct tct< int > { static const char tc; };
-   template<> struct tct< long > { static const char tc; };
-   template<> struct tct< float > { static const char tc; };
-   template<> struct tct< double > { static const char tc; };
-   const char tct< int >::tc = 'i';
-   const char tct< long >::tc = 'l';
-   const char tct< float >::tc = 'f';
-   const char tct< double >::tc = 'd';
-#else
-   static char GetTct(int) { return 'i'; };
-   static char GetTct(long) { return 'l'; };
-   static char GetTct(float) { return 'f'; };
-   static char GetTct(double) { return 'd'; };
-#endif
-
-// pointer/array conversions
-   bool voidarray_convert( PyObject* obj, G__CallFunc* func, void*& ) {
-   // just convert pointer if it is a ROOT object
-      PyROOT::ObjectHolder* holder = PyROOT::Utility::getObjectHolder( obj );
-      if ( holder != 0 ) {
-      // this object can no longer be held, as the pointer to it may get copied
-         holder->release();
-
-      // set pointer
-         func->SetArg( reinterpret_cast< long >( holder->getObject() ) );
-         return true;
-      }
-
-   // special case: allow null pointer
-      long val = PyLong_AsLong( obj );
-      if ( PyErr_Occurred() )
-         PyErr_Clear();
-      else if ( val == 0 ) {
-         func->SetArg( val );
-         return true;
-      }
-
-   // special case: don't handle strings here (they're buffers, but not quite)
-      if ( PyString_Check( obj ) )
-         return false;
-      
-   // ok, then attempt to retrieve pointer to buffer interface
-      PyBufferProcs* bufprocs = obj->ob_type->tp_as_buffer;
-      PySequenceMethods* seqmeths = obj->ob_type->tp_as_sequence;
-      if ( seqmeths != 0 && bufprocs != 0 && bufprocs->bf_getwritebuffer != 0 &&
-           (*(bufprocs->bf_getsegcount))( obj, 0 ) == 1 ) {
-
-      // get the buffer
-         void* buf = 0;
-         int buflen = (*(bufprocs->bf_getwritebuffer))( obj, 0, &buf );
-
-      // determine buffer compatibility
-         if ( buflen / (*(seqmeths->sq_length))( obj ) == sizeof( void* ) ) {
-         // this is a gamble ... may or may not be ok, but that's for the user
-            func->SetArg( (long) buf );
-            return true;
-         }
-      }
-
-   // give up
-      return false;
-   }
-
-   template< class aType >
-   bool carray_convert( PyObject* obj, G__CallFunc* func, void*& ) {
-   // special case: don't handle strings here (they're buffers, but not quite)
-      if ( PyString_Check( obj ) )
-         return false;
-
-   // attempt to retrieve pointer to buffer interface
-      PyBufferProcs* bufprocs = obj->ob_type->tp_as_buffer;
-      PySequenceMethods* seqmeths = obj->ob_type->tp_as_sequence;
-      if ( seqmeths != 0 && bufprocs != 0 && bufprocs->bf_getwritebuffer != 0 &&
-           (*(bufprocs->bf_getsegcount))( obj, 0 ) == 1 ) {
-
-      // get the buffer
-         void* buf = 0;
-         int buflen = (*(bufprocs->bf_getwritebuffer))( obj, 0, &buf );
-
-      // determine buffer compatibility (use "buf" as a status flag)
-         PyObject* tc = PyObject_GetAttrString( obj, const_cast< char* >( "typecode" ) );
-         if ( tc != 0 ) {                    // for array objects
-   #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-            if ( PyString_AS_STRING( tc )[0] != tct< aType >::tc )
-   #else
-            if ( PyString_AS_STRING( tc )[0] != GetTct( (aType)0 ) )
-   #endif
-               buf = 0;                      // no match
-            Py_DECREF( tc );
-         }
-         else if ( buflen / (*(seqmeths->sq_length))( obj ) == sizeof( aType ) ) {
-         // this is a gamble ... may or may not be ok, but that's for the user
-            PyErr_Clear();
-         }
-         else
-            buf = 0;                         // not compatible
-
-         if ( buf != 0 ) {
-            func->SetArg( (long) buf );
-            return true;
-         }
-      }
-
-   // give up
-      return false;
-   }
-
-   bool carray_convert_int( PyObject* obj, G__CallFunc* func, void*& ref) {
-      return carray_convert< int >(obj,func,ref);
-   }
-   bool carray_convert_long( PyObject* obj, G__CallFunc* func, void*& ref) {
-      return carray_convert< long >(obj,func,ref);
-   }
-   bool carray_convert_float( PyObject* obj, G__CallFunc* func, void*& ref) {
-      return carray_convert< float >(obj,func,ref);
-   }
-   bool carray_convert_double( PyObject* obj, G__CallFunc* func, void*& ref) {
-      return carray_convert< double >(obj,func,ref);
-   }
- 
-
-// python C-API objects conversion
-   static bool pyobject_convert( PyObject* obj, G__CallFunc* func, void*& ) {
-      func->SetArg( reinterpret_cast< long >( obj ) );
-      return true;
-   }
 
 // CINT temp level guard
    struct TempLevelGuard {
@@ -259,113 +41,51 @@ namespace {
 } // unnamed namespace
 
 
-//- data -----------------------------------------------------------------------
-namespace {
-
-   typedef std::pair< const char*, PyROOT::MethodHolder::cnvfct_t > ncp_t;
-
-// handlers for ROOT types
-   ncp_t handlers_[] = {
-   // basic types
-      ncp_t( "char",               &long_convert                      ),
-      ncp_t( "unsigned char",      &long_convert                      ),
-      ncp_t( "short",              &long_convert                      ),
-      ncp_t( "unsigned short",     &long_convert                      ),
-      ncp_t( "int",                &long_convert                      ),
-      ncp_t( "unsigned int",       &long_convert                      ),
-      ncp_t( "long",               &long_convert                      ),
-      ncp_t( "unsigned long",      &long_convert                      ),
-      ncp_t( "long long",          &longlong_convert                  ),
-      ncp_t( "float",              &double_convert                    ),
-      ncp_t( "double",             &double_convert                    ),
-      ncp_t( "void",               &void_convert                      ),
-      ncp_t( "bool",               &long_convert                      ),
-      ncp_t( "const char*",        &cstring_convert                   ),
-      ncp_t( "TString",            &tstring_convert                   ),
-
-   // string type
-      ncp_t( "char*",              &cstring_convert                   ),
-
-   // pointer types
-      ncp_t( "int*",               &carray_convert_int                ),
-      ncp_t( "long*",              &carray_convert_long               ),
-      ncp_t( "float*",             &carray_convert_float              ),
-      ncp_t( "double*",            &carray_convert_double             ),
-
-   // default pointer type
-      ncp_t( "void*",              &voidarray_convert                 ),
-
-   // python C-API objects
-      ncp_t( "PyObject*",          &pyobject_convert                  ),
-      ncp_t( "_object*",           &pyobject_convert                  )
-   };
-
-   const int nHandlers_ = sizeof( handlers_ ) / sizeof( handlers_[ 0 ] );
-
-   typedef std::map< std::string, PyROOT::MethodHolder::cnvfct_t > Handlers_t;
-   Handlers_t theHandlers;
-
-   class InitHandlers_ {
-   public:
-      InitHandlers_() {
-         for ( int i = 0; i < nHandlers_; ++i ) {
-            theHandlers[ handlers_[ i ].first ] = handlers_[ i ].second;
-         }
-      }
-   } initHandlers_;
-
-} // unnamed namespace
-
-
-//- private helpers ------------------------------------------------------------
-inline void PyROOT::MethodHolder::copy_( const MethodHolder& om ) {
-   std::cout << "copying a method holder" << std::endl;
+//- private helpers ----------------------------------------------------------
+inline void PyROOT::MethodHolder::Copy_( const MethodHolder& other )
+{
 // yes, these pointer copy semantics are proper
-   m_class       = om.m_class;
-   m_method      = om.m_method;
-   m_methodCall  = 0;
-   m_argRequired = om.m_argRequired;
-   m_returnType  = om.m_returnType;
-   m_rtShortName = om.m_rtShortName;
-   m_offset      = 0;
-   m_tagnum      = -1;
+   fClass  = other.fClass;
+   fMethod = other.fMethod;
 
-   m_argsConverters = om.m_argsConverters;
-   m_isInitialized  = om.m_isInitialized;
+// do not copy caches
+   fMethodCall = 0;
+   fExecutor   = 0;
 
-   Py_XINCREF( m_refSelf );
-   m_refSelf   = om.m_refSelf;
-   m_refHolder = om.m_refHolder;
+   fArgsRequired = -1;
+   fOffset       =  0;
+   fTagnum       = -1;
 
-// the new args buffer is clean
-   m_argsBuffer.resize( om.m_argsBuffer.size() );
-
-// only copy if available: this is a lazy cache value
-   if ( om.m_methodCall ) {
-      m_methodCall = new G__CallFunc( *om.m_methodCall );
-   }
+// being uninitialized will trigger setting up caches as appropriate
+   fIsInitialized  = false;
 }
 
+//____________________________________________________________________________
+inline void PyROOT::MethodHolder::Destroy_() const
+{
+// no deletion of fMethod (ROOT responsibility)
+   delete fMethodCall;
 
-inline void PyROOT::MethodHolder::destroy_() const {
-// no deletion of m_method (ROOT resposibility)
-   delete m_methodCall;
-// buffer is leaked for now
+// destroy executor and argument converters
+   delete fExecutor;
+
+   for ( int i = 0; i < (int)fConverters.size(); ++i )
+      delete fConverters[ i ];
 }
 
-
-bool PyROOT::MethodHolder::initDispatch_( std::string& callString ) {
+//____________________________________________________________________________
+bool PyROOT::MethodHolder::InitCallFunc_( std::string& callString )
+{
 // buffers for argument dispatching
-   const int nArgs = m_method ? m_method->GetNargs() : 0;
+   const int nArgs = fMethod ? fMethod->GetNargs() : 0;
    if ( nArgs == 0 )
       return true;
 
-   m_argsBuffer.resize( nArgs );        // zeroes as defaults
-   m_argsConverters.resize( nArgs );    // id.
+   fConverters.resize( nArgs );    // id.
 
 // setup the dispatch cache
    int iarg = 0;
-   TIter nextarg( m_method->GetListOfMethodArgs() );
+   TIter nextarg( fMethod->GetListOfMethodArgs() );
    while ( TMethodArg* arg = (TMethodArg*)nextarg() ) {
       G__TypeInfo argType = arg->GetTypeName();
 
@@ -373,23 +93,22 @@ bool PyROOT::MethodHolder::initDispatch_( std::string& callString ) {
       std::string realType = argType.TrueName();
 
       if ( Utility::isPointer( fullType ) ) {
-         Handlers_t::iterator h = theHandlers.find( realType + "*" );
-         if ( h == theHandlers.end() ) {
-            h = theHandlers.find( "void*" );
+         ConvFactories_t::iterator h = gConvFactories.find( realType + "*" );
+         if ( h == gConvFactories.end() ) {
+            if ( fullType.find( "const" ) != std::string::npos )
+               h = gConvFactories.find( "const void*" );
+            else
+               h = gConvFactories.find( "void*" );
          }
-         m_argsConverters[ iarg ] = h->second;
-      }
-      else if ( argType.Property() & G__BIT_ISENUM ) {
-         m_argsConverters[ iarg ] = theHandlers.find( "UInt_t" )->second;
-      }
-      else {
-         Handlers_t::iterator hit = theHandlers.find( realType );
-         if ( hit != theHandlers.end() ) {
-            m_argsConverters[ iarg ] = hit->second;
-         }
-         else {
-            PyErr_SetString(
-               PyExc_TypeError, ("argument type " + fullType + " not handled").c_str() );
+         fConverters[ iarg ] = (h->second)();
+      } else if ( argType.Property() & G__BIT_ISENUM ) {
+         fConverters[ iarg ] = (gConvFactories.find( "UInt_t" )->second)();
+      } else {
+         ConvFactories_t::iterator h = gConvFactories.find( realType );
+         if ( h != gConvFactories.end() ) {
+            fConverters[ iarg ] = (h->second)();
+         } else {
+            PyErr_Format( PyExc_TypeError, "argument type %s not handled", fullType.c_str() );
             return false;
          }
       }
@@ -407,164 +126,176 @@ bool PyROOT::MethodHolder::initDispatch_( std::string& callString ) {
    return true;
 }
 
+//____________________________________________________________________________
+bool PyROOT::MethodHolder::InitExecutor_( Executor*& executor )
+{
+// determine effective return type
+   std::string longName = fMethod ? fMethod->GetReturnTypeName() : fClass->GetName();
+   std::string shortName = TClassEdit::ShortType( G__TypeInfo( longName.c_str() ).TrueName(), 1 );
 
-void PyROOT::MethodHolder::calcOffset_( void* obj, TClass* cls ) {
+// select and set executor
+   const char* q = "";
+   if ( Utility::isPointer( longName ) == 1 )
+      q = "*";
+
+   ExecFactories_t::iterator h = gExecFactories.find( shortName + q );
+   if ( h != gExecFactories.end() )
+      executor = (h->second)();
+   else {
+      TClass* klass = gROOT->GetClass( shortName.c_str() );
+      if ( klass != 0 )
+         executor = new RootObjectExecutor( klass );
+      else {
+         std::cerr << "return type in method not handled! " << shortName << std::endl;
+         executor = (gExecFactories[ "void" ])();
+      }
+   }
+
+   return true;
+}
+
+//____________________________________________________________________________
+inline void PyROOT::MethodHolder::CalcOffset_( void* obj, TClass* klass )
+{
 // actual offset calculation, as needed
-   long derivedtagnum = cls->GetClassInfo()->Tagnum();
+   long derivedtagnum = klass->GetClassInfo()->Tagnum();
 
-   if ( derivedtagnum != m_tagnum ) {
-      m_offset = G__isanybase( m_class->GetClassInfo()->Tagnum(), derivedtagnum, (long) obj );
-      m_tagnum = derivedtagnum;
+   if ( derivedtagnum != fTagnum ) {
+      fOffset = G__isanybase( fClass->GetClassInfo()->Tagnum(), derivedtagnum, (long) obj );
+      fTagnum = derivedtagnum;
    }
 }
 
 
-//- constructors and destructor ------------------------------------------------
-PyROOT::MethodHolder::MethodHolder( TClass* cls, TMethod* tm ) :
-      m_class( cls ), m_method( tm ), m_rtShortName( "" ) {
-   m_methodCall    = 0;
-   m_argRequired   = 0;
-   m_offset        = 0;
-   m_tagnum        = -1;
-   m_refSelf       = 0;
-   m_refHolder     = 0;
-   m_returnType    = Utility::kOther;
-   m_isInitialized = false;
+//- constructors and destructor ----------------------------------------------
+PyROOT::MethodHolder::MethodHolder( TClass* klass, TMethod* method ) :
+      fClass( klass ), fMethod( method )
+{
+   fMethodCall    =  0;
+   fExecutor      =  0;
+   fArgsRequired  = -1;
+   fOffset        =  0;
+   fTagnum        = -1;
+
+   fIsInitialized = false;
 }
 
-PyROOT::MethodHolder::MethodHolder( const MethodHolder& om ) : PyCallable( om ) {
-   copy_( om );
+//____________________________________________________________________________
+PyROOT::MethodHolder::MethodHolder( const MethodHolder& other ) : PyCallable( other )
+{
+   Copy_( other );
 }
 
-
-PyROOT::MethodHolder& PyROOT::MethodHolder::operator=( const MethodHolder& om ) {
-   if ( this != &om ) {
-      destroy_();
-      copy_( om );
+//____________________________________________________________________________
+PyROOT::MethodHolder& PyROOT::MethodHolder::operator=( const MethodHolder& other )
+{
+   if ( this != &other ) {
+      Destroy_();
+      Copy_( other );
    }
 
    return *this;
 }
 
-
-PyROOT::MethodHolder::~MethodHolder() {
-   destroy_();
+//____________________________________________________________________________
+PyROOT::MethodHolder::~MethodHolder()
+{
+   Destroy_();
 }
 
 
-//- protected members -----------------------------------------------------------
-bool PyROOT::MethodHolder::execute( void* self ) {
-   R__LOCKGUARD( gCINTMutex );
-   TempLevelGuard g;
-
-   try {
-      m_methodCall->Exec( (void*) ( (long) self + m_offset ) );
-   }
-   catch ( std::exception& e ) {
-      std::cout << "C++ exception caught: " << e.what() << std::endl;
-      return false;
-   }
-
-   return true;
+//- public members -----------------------------------------------------------
+PyObject* PyROOT::MethodHolder::GetDocString()
+{
+   return PyString_FromFormat( "%s%s %s::%s%s",
+      ( fMethod->Property() & G__BIT_ISSTATIC ) ? "static " : "", fMethod->GetReturnTypeName(),
+      fClass->GetName(), fMethod->GetName(), fMethod->GetSignature() );
 }
 
-
-bool PyROOT::MethodHolder::execute( void* self, long& val ) {
-   R__LOCKGUARD( gCINTMutex );
-   TempLevelGuard g;
-
-   try {
-      val = m_methodCall->ExecInt( (void*) ( (long) self + m_offset ) );
-   }
-   catch ( std::exception& e ) {
-      std::cout << "C++ exception caught: " << e.what() << std::endl;
-      return false;
-   }
-
-   return true;
-}
-
-
-bool PyROOT::MethodHolder::execute( void* self, double& val ) {
-   R__LOCKGUARD( gCINTMutex );
-   TempLevelGuard g;
-
-   try {
-      val = m_methodCall->ExecDouble( (void*) ( (long) self + m_offset ) );
-   }
-   catch ( std::exception& e ) {
-      std::cout << "C++ exception caught: " << e.what() << std::endl;
-      return false;
-   }
-
-   return true;
-}
-
-
-//- public members -------------------------------------------------------------
-bool PyROOT::MethodHolder::initialize() {
+//____________________________________________________________________________
+bool PyROOT::MethodHolder::Initialize()
+{
 // done if cache is already setup
-   if ( m_isInitialized == true )
+   if ( fIsInitialized == true )
       return true;
 
    std::string callString = "";
-   if ( ! initDispatch_( callString ) )
+   if ( ! InitCallFunc_( callString ) )
       return false;
 
-// determine effective return type
-   std::string returnType = m_method ? m_method->GetReturnTypeName() : m_class->GetName();
-   m_rtShortName = TClassEdit::ShortType( G__TypeInfo( returnType.c_str() ).TrueName(), 1 );
-   m_returnType = Utility::effectiveType( returnType );
+   if ( ! InitExecutor_( fExecutor ) )
+      return false;
 
 // setup call func
-   assert( m_methodCall == 0 );
+   assert( fMethodCall == 0 );
 
-   m_methodCall = new G__CallFunc();
-   m_methodCall->SetFuncProto( m_class->GetClassInfo(),
-      m_method ? m_method->GetName() : m_class->GetName(), callString.c_str(), &m_offset );
+   fMethodCall = new G__CallFunc();
+   fMethodCall->SetFuncProto( fClass->GetClassInfo(),
+      fMethod ? fMethod->GetName() : fClass->GetName(), callString.c_str(), &fOffset );
 
 // minimum number of arguments when calling
-   m_argRequired = m_method ? m_method->GetNargs() - m_method->GetNargsOpt() : 0;
+   fArgsRequired = fMethod ? fMethod->GetNargs() - fMethod->GetNargsOpt() : 0;
 
 // init done
-   m_isInitialized = true;
+   fIsInitialized = true;
 
    return true;
 }
 
 
-bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple, int offset ) {
+//____________________________________________________________________________
+bool PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject*& args, PyObject*& )
+{
+// verify self
+   if ( self != 0 )
+      return true;
+
+// otherwise, check for a suitable 'self' in args and update accordingly
+   if ( PyTuple_GET_SIZE( args ) != 0 ) {
+      ObjectProxy* pyobj = (ObjectProxy*)PyTuple_GET_ITEM( args, 0 );
+      if ( ObjectProxy_Check( pyobj ) ) {
+      // reset self
+         self = pyobj;
+
+      // offset args by 1
+         args = PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) );
+
+      // declare success
+         return true;
+      }
+   }
+
+// no self, set error and lament
+   PyErr_Format( PyExc_TypeError,
+      "unbound method %s::%s must be called with a %s instance as first argument",
+      fClass->GetName(), fMethod->GetName(), fClass->GetName() );
+   return false;
+}
+
+//____________________________________________________________________________
+bool PyROOT::MethodHolder::SetMethodArgs( PyObject* args )
+{
 // clean slate
-   m_methodCall->ResetArg();
+   fMethodCall->ResetArg();
 
-   int argc = PyTuple_GET_SIZE( aTuple );
-
-   int argGiven = argc - offset;
-   int argMax = m_argsBuffer.size();
+   int argc = PyTuple_GET_SIZE( args );
+   int argMax = fConverters.size();
 
 // argc must be between min and max number of arguments
-   if ( argGiven < m_argRequired ) {
-      char txt[ 256 ];
-      sprintf( txt, "%s() takes at least %d arguments (%d given)",
-         m_method ? m_method->GetName() : m_class->GetName(), m_argRequired, argGiven );
-      PyErr_SetString( PyExc_TypeError, txt );
+   if ( argc < fArgsRequired ) {
+      PyErr_Format( PyExc_TypeError, "%s() takes at least %d arguments (%d given)",
+         fMethod ? fMethod->GetName() : fClass->GetName(), fArgsRequired, argc );
       return false;
-   }
-   else if ( argMax < argGiven ) {
-      char txt[ 256 ];
-      sprintf( txt, "%s() takes at most %d arguments (%d given)",
-         m_method ? m_method->GetName() : m_class->GetName(), argMax, argGiven );
-      PyErr_SetString( PyExc_TypeError, txt );
+   } else if ( argMax < argc ) {
+      PyErr_Format( PyExc_TypeError, "%s() takes at most %d arguments (%d given)",
+         fMethod ? fMethod->GetName() : fClass->GetName(), argMax, argc );
       return false;
    }
 
 // convert the arguments to the method call array
-   for ( int i = offset; i < argc; i++ ) {
-      if ( ! m_argsConverters[ i - offset ](
-              PyTuple_GET_ITEM( aTuple, i ), m_methodCall, m_argsBuffer[ i - offset ] ) ) {
-         char txt[ 64 ];
-         sprintf( txt, "could not convert argument %d", i );
-         PyErr_SetString( PyExc_TypeError, txt );
+   for ( int i = 0; i < argc; i++ ) {
+      if ( ! fConverters[ i ]->SetArg( PyTuple_GET_ITEM( args, i ), fMethodCall ) ) {
+         PyErr_Format( PyExc_TypeError, "could not convert argument %d", i );
          return false;
       }
    }
@@ -572,168 +303,53 @@ bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple, int offset ) {
    return true;
 }
 
+//____________________________________________________________________________
+PyObject* PyROOT::MethodHolder::Execute( void* self )
+{
+   R__LOCKGUARD( gCINTMutex );
+   TempLevelGuard g;
 
-PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
-// execute the method and translate return type
-   switch ( m_returnType ) {
-   case Utility::kFloat:
-   case Utility::kDouble: {
-      double returnValue;
-      execute( self, returnValue );
-      return PyFloat_FromDouble( returnValue );
-   }
-   case Utility::kString: {
-      long returnValue = 0;
-      execute( self, returnValue );
-      return PyString_FromString( (char*) returnValue );
-   }
-   case Utility::kChar: {
-      long buf = 0;
-      execute( self, buf );
-      char c[2]; c[1] = '\0';
-      c[0] = (char) buf;
-      return PyString_FromString( c );
-   }
-   case Utility::kBool:
-   case Utility::kShort:
-   case Utility::kInt: {
-      long returnValue = 0;
-      execute( self, returnValue );
-      return PyInt_FromLong( returnValue );
-   }
-   case Utility::kLong: {
-      long returnValue = 0;
-      execute( self, returnValue );
-      return PyLong_FromLong( returnValue );
-   }
-   case Utility::kUInt:
-   case Utility::kULong: {
-      unsigned long returnValue = 0;
-      execute( self, (long&)returnValue );
-      return PyLong_FromUnsignedLong( returnValue );
-   }
-   case Utility::kLongLong: {
-      long returnValue = 0;
-      execute( self, returnValue );
-      return PyLong_FromLongLong( *(reinterpret_cast< Long64_t* >( returnValue )) );
-   }
-   case Utility::kVoid: {
-      execute( self );
-      Py_INCREF( Py_None );
-      return Py_None;
-   }
-   case Utility::kSTLString: {
-      long address = 0;
-      execute( self, address );
-      return PyString_FromString( ((std::string*)address)->c_str() );
-   }
-   case Utility::kOther: {
-   // get a string representation of the return type
-      TClass* cls = gROOT->GetClass( m_rtShortName.c_str() );
-      if ( cls != 0 ) {
-         long address = 0;
-         execute( self, address );
+   PyObject* result = 0;
 
-      // return null object if failed
-         if ( ! address ) {
-            Py_INCREF( Py_None );
-            return Py_None;
-         }
-
-      // special case: cross-cast to real class for TGlobal returns
-         if ( m_rtShortName == "TGlobal" )
-            return bindRootGlobal( (TGlobal*)address );
-
-      // upgrade to real class for TObject returns
-         TClass* clActual = cls->GetActualClass( (void*)address );
-         if ( clActual ) {
-            int offset = (cls != clActual) ? clActual->GetBaseClassOffset( cls ) : 0;
-            address -= offset;
-         }
-
-         return bindRootObject( new ObjectHolder( (void*)address, clActual, false ) );
-      }
-
-   // confused ...
-      std::cout << "unsupported return type (" << m_rtShortName << "), returning void\n";
-   }
-   default:
-      break;
+   try {
+      result = fExecutor->Execute( fMethodCall, (void*)((long)self + fOffset) );
+   } catch ( TPyException& ) {
+      result = TPyExceptionMagic;
+   } catch ( std::exception& e ) {
+      std::cout << "C++ exception caught: " << e.what() << std::endl;
+      result = 0;
    }
 
-// pointer types
-   if ( Utility::kDoublePtr <= m_returnType ) {
-      long address;
-      execute( self, address );
-
-      if ( address ) {
-         switch ( m_returnType ) {
-         case Utility::kLongPtr: {
-            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (long*)address );
-         }
-         case Utility::kIntPtr: {
-            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (int*)address );
-         }
-         case Utility::kDoublePtr: {
-            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (double*)address );
-         }
-         case Utility::kFloatPtr: {
-            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (float*)address );
-         }
-         case Utility::kVoidPtr: {
-            return PyLong_FromVoidPtr( (void*) address );
-         }
-         default:
-            break;
-         }
-      }
-      else {
-         Py_INCREF( Py_None );
-         return Py_None;
-      }
-   }
-
-// still here? confused ...
-   PyErr_SetString( PyExc_TypeError, "return type in method not handled" );
-   return 0;
+   return result;
 }
 
-
-PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict */ ) {
-// precaution
-   if ( aTuple == 0 )
-      return 0;                              // should not happen
-
+//____________________________________________________________________________
+PyObject* PyROOT::MethodHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+{
 // setup as necessary
-   if ( ! initialize() )
+   if ( ! Initialize() )
       return 0;                              // important: 0, not PyNone
+
+// verify and put the arguments in usable order
+   if ( ! FilterArgs( self, args, kwds ) )
+      return 0;
 
 // translate the arguments
-   if ( ! setMethodArgs( aTuple, 1 ) )
+   if ( ! SetMethodArgs( args ) )
       return 0;                              // important: 0, not PyNone
 
-// start actual method invocation
-   PyObject* self = PyTuple_GetItem( aTuple, 0 );
-   Py_INCREF( self );
+// get the ROOT object that this object proxy is a handle for
+   void* object = self->GetObject();
 
-   if ( ! ( m_refHolder && self == PyWeakref_GET_OBJECT( m_refSelf ) ) ) {
-      ObjectHolder* obh = Utility::getObjectHolder( self );
-      if ( ! ( obh && obh->getObject() ) ) {
-         PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
-         return 0;
-      }
-
-   // reset offset
-      calcOffset_( obh->getObject(), obh->objectIsA() );
-
-   // loop optimization cache
-      Py_XDECREF( m_refSelf );
-      m_refSelf   = PyWeakref_NewRef( self, NULL );
-      m_refHolder = obh;
+// validity check that should not fail
+   if ( ! object ) {
+      PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
+      return 0;
    }
 
-   Py_DECREF( self );
+// reset this method's offset for the object as appropriate
+   CalcOffset_( object, self->ObjectIsA() );
 
-// execute function
-   return callMethod( m_refHolder->getObject() );
+// actual call
+   return Execute( self->GetObject() );
 }
