@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.3 2000/12/13 15:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.4 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -71,7 +71,7 @@ protected:
 public:
    virtual ~TGPicture();
 
-   const char *GetName() const { return fName.Data(); }
+   const char *GetName() const { return fName; }
    UInt_t      GetWidth() const { return fAttributes.fWidth; }
    UInt_t      GetHeight() const { return fAttributes.fHeight; }
    Pixmap_t    GetPicture() const { return fPic; }
@@ -117,7 +117,7 @@ public:
    }
    virtual ~TGPicturePool();
 
-   const char      *GetPath() const { return fPath.Data(); }
+   const char      *GetPath() const { return fPath; }
    const TGPicture *GetPicture(const char *name);
    const TGPicture *GetPicture(const char *name, UInt_t new_width, UInt_t new_height);
    void             FreePicture(const TGPicture *pic);

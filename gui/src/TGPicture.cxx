@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.9 2004/07/09 12:34:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.10 2004/07/09 12:47:02 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -57,11 +57,13 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    TString pname = name;
 
    if (pname.EndsWith(".xpm")) {
-      pname = gSystem->ExpandPathName(gSystem->UnixPathName(pname.Data()));
+      const char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
+      pname = pxname;
+      delete [] pxname;
    }
    TGPicture *pic;
 
-   pic = (TGPicture *)fPicList->FindObject(pname.Data());
+   pic = (TGPicture *)fPicList->FindObject(pname);
    if (pic && !pic->IsScaled()) {
       if (pic->fPic == kNone)
          return 0;
@@ -69,20 +71,20 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       return pic;
    }
 
-   pic = new TGPicture(pname.Data());
+   pic = new TGPicture(pname);
    pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
    pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
    pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
 
-   char *picnam = gSystem->Which(fPath.Data(), pname.Data(), kReadPermission);
+   char *picnam = gSystem->Which(fPath, pname, kReadPermission);
    if (!picnam) {
       fPicList->Add(pic);
       return 0;
    }
 
    if (gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(), picnam,
-                                    pic->fPic, pic->fMask,
-                                    pic->fAttributes)) {
+                                        pic->fPic, pic->fMask,
+                                        pic->fAttributes)) {
       fPicList->Add(pic);
    } else {
       delete pic;
@@ -110,12 +112,14 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    TString pname = name;
 
    if (pname.EndsWith(".xpm")) {
-      pname = gSystem->ExpandPathName(gSystem->UnixPathName(pname.Data()));
+      const char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
+      pname = pxname;
+      delete [] pxname;
    }
 
    TGPicture *pic;
 
-   const char *hname = TGPicture::HashName(pname.Data(), new_width, new_height);
+   const char *hname = TGPicture::HashName(pname, new_width, new_height);
    pic = (TGPicture *)fPicList->FindObject(hname);
    if (pic && pic->GetWidth() == new_width && pic->GetHeight() == new_height) {
       if (pic->fPic == kNone)
@@ -129,7 +133,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
    pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
 
-   char *picnam = gSystem->Which(fPath.Data(), pname.Data(), kReadPermission);
+   char *picnam = gSystem->Which(fPath, pname, kReadPermission);
    if (!picnam) {
       pic->fAttributes.fWidth  = new_width;
       pic->fAttributes.fHeight = new_height;
