@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.7 2001/04/12 19:17:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.8 2001/04/16 19:16:20 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -35,6 +35,7 @@ protected:
 
     TString             fClassName;     //Class name of referenced object
     TString             fParentName;    //Name of parent class
+    TString             fClonesName;    //Name of class in TClonesArray (if any)
     Int_t               fClassVersion;  //Version number of class
     Int_t               fID;            //element serial number in fInfo
     Int_t               fType;          //branch type
@@ -79,7 +80,7 @@ public:
     virtual void     SetType(Int_t btype) {fType=btype;}
     virtual Int_t    Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype);
 
-    ClassDef(TBranchElement,3)  //Branch in case of an object
+    ClassDef(TBranchElement,4)  //Branch in case of an object
 };
 
 #endif

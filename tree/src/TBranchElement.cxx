@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.15 2001/04/12 19:17:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.16 2001/04/16 19:16:21 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -97,7 +97,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    // Set the bit kAutoDelete to specify that when reading
    // the object should be deleted before calling Streamer.
    // It is foreseen to not set this bit in a future version.
-   SetAutoDelete(kTRUE);
+   //SetAutoDelete(kTRUE);
+   SetAutoDelete(kFALSE);
 
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
@@ -135,10 +136,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          else                              Unroll(name,clm,clm,basketsize,splitlevel,0);
          if (!strcmp(name,clm->GetName())) return;
          if (strchr(bname,'.')) return;
-         //if (strchr(bname,'_')) return;
          if (nbranches == fBranches.GetEntriesFast()) {
             if (strlen(bname)) sprintf(name,"%s.%s",bname,clm->GetName());
-            //if (strlen(bname)) sprintf(name,"%s_%s",bname,clm->GetName());
             else               sprintf(name,"%s",clm->GetName());
             SetName(name);
             SetTitle(name);
@@ -172,6 +171,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          //This name is mandatory when reading the Tree later on and
          //the parent class with the pointer to the TClonesArray is not available.
          //This info will be used by TStreamerInfo::New
+         fClonesName = clm->GetName();
          char aname[100];
          sprintf(aname," (%s)",clm->GetName());
          TString atitle = element->GetTitle();
@@ -189,7 +189,6 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          for (Int_t i=0;i<nbranches;i++) {
             TBranchElement *bre = (TBranchElement*)fBranches.At(i);
             const char *fin = strrchr(bre->GetTitle(),'.');
-            //const char *fin = strrchr(bre->GetTitle(),'_');
             if (fin == 0) continue;
             TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
             sprintf(branchname,"%s[%s_]",fin+1,name);
@@ -287,7 +286,8 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    // Set the bit kAutoDelete to specify that when reading
    // the object should be deleted before calling Streamer.
    // It is foreseen to not set this bit in a future version.
-   SetAutoDelete(kTRUE);
+   //SetAutoDelete(kTRUE);
+   SetAutoDelete(kFALSE);
 
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
@@ -308,6 +308,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
       fType = 3;
       TClass *clm = clones->GetClass();
       if (!clm) return;
+      fClonesName = clm->GetName();
       char branchname[kMaxLen];
       sprintf(branchname,"%s_",name);
       SetTitle(branchname);
@@ -404,14 +405,12 @@ void TBranchElement::FillLeaves(TBuffer &b)
   } else if (fType == 41) {   // sub branch of an STL class
     //char **ppointer = (char**)fAddress;
   } else if (fType == 3) {   //top level branch of a TClonesArray
-    char **ppointer = (char**)fAddress;
-    TClonesArray *clones = (TClonesArray*)(*ppointer);
+    TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return; 
     Int_t n = clones->GetEntriesFast();
     b << n;
   } else if (fType == 31) {   // sub branch of a TClonesArray
-    char **ppointer = (char**)fAddress;
-    TClonesArray *clones = (TClonesArray*)(*ppointer);
+    TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return; 
     Int_t n = clones->GetEntriesFast();
     fInfo->WriteBufferClones(b,clones,n,fID);
@@ -542,8 +541,7 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len) const
       fBranchCount->TBranch::GetEntry(entry);
    }
    if (fType == 31) {
-      char **ppointer = (char**)GetAddress();
-      TClonesArray *clones = (TClonesArray*)(*ppointer);
+      TClonesArray *clones = (TClonesArray*)fObject;
       return fInfo->GetValueClones(clones,fID, j/len, j%len);
    } else {
       return fInfo->GetValue(GetAddress(),fID,j);
@@ -600,8 +598,7 @@ void TBranchElement::PrintValue(Int_t len) const
       TClonesArray *clones = (TClonesArray*)(*ppointer);
       printf(" %-15s = %d",GetTitle(),clones->GetEntriesFast());
    } else if (fType == 31) {
-      char **ppointer = (char**)GetAddress();
-      TClonesArray *clones = (TClonesArray*)(*ppointer);
+      TClonesArray *clones = (TClonesArray*)fObject;
       fInfo->PrintValueClones(GetName(),clones,fID);
    } else {
       fInfo->PrintValue(GetName(),GetAddress(),fID);
@@ -618,17 +615,16 @@ void TBranchElement::ReadLeaves(TBuffer &b)
   } else if (fType == 41) {    // sub branch of an STL class
     //char **ppointer = (char**)fAddress;
   } else if (fType == 3) {    //top level branch of a TClonesArray
-    char **ppointer = (char**)fAddress;
-    TClonesArray *clones = (TClonesArray*)(*ppointer);
+    TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return; 
     Int_t n;
     b >> n;
     fNdata = n;
     clones->Clear();
+//printf("ExpandCreate n=%d, size=%d, branch=%s, class=%s\n",n,clones->GetSize(),GetName(),clones->GetClass()->GetName());
     clones->ExpandCreateFast(n);
   } else if (fType == 31) {    // sub branch of a TClonesArray
-    char **ppointer = (char**)fAddress;
-    TClonesArray *clones = (TClonesArray*)(*ppointer);
+    TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return; 
     Int_t n = clones->GetEntriesFast();
     fNdata = n;
@@ -695,9 +691,21 @@ void TBranchElement::SetAddress(void *add)
    
    //special case for a TClonesArray when address is not yet set
    //we must create the clonesarray first
-   if (fAddress == 0 && fType ==3) {
-      printf("Branch: %s, Creating TClonesArray\n",GetName());
-      Dump();
+   if (fType ==3) {
+      if (fAddress) {
+         TClonesArray **ppointer = (TClonesArray**)fAddress;
+         fObject = (char*)*ppointer;
+      } else {
+         printf("Branch: %s, Creating TClonesArray\n",GetName());
+         //Dump();
+         TStreamerInfo::Optimize(kFALSE);
+         TClass *clm = gROOT->GetClass(fClonesName.Data());
+         if (clm) clm->GetStreamerInfo();
+         //TClonesArray **ppointer = (TClonesArray**)&fAddress;
+         fObject = (char*)new TClonesArray(fClonesName.Data(),1500);
+         //fObject = (char*)*ppointer;
+         fAddress = (char*)&fObject;
+      }
    }
       
    if (nbranches == 0) return;
