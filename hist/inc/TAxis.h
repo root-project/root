@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.2 2000/06/09 16:28:16 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -27,8 +27,8 @@
 #ifndef ROOT_TAttAxis
 #include "TAttAxis.h"
 #endif
-#ifndef ROOT_TArrayF
-#include "TArrayF.h"
+#ifndef ROOT_TArrayD
+#include "TArrayD.h"
 #endif
 
 
@@ -38,8 +38,8 @@ private:
         Int_t        fNbins;          //Number of bins
         Axis_t       fXmin;           //low edge of first bin
         Axis_t       fXmax;           //upper edge of last bin
-        TArrayF      fXbins;          //Bin edges array in X
-        Char_t       *fXlabels;       //!Labels associated to axis
+        TArrayD      fXbins;          //Bin edges array in X
+        Char_t      *fXlabels;        //!Labels associated to axis
         Int_t        fFirst;          //first bin to display
         Int_t        fLast;           //last bin to display
         TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
@@ -58,7 +58,7 @@ public:
         TAxis(const TAxis &axis);
         virtual ~TAxis();
         virtual void    CenterTitle(Bool_t center=kTRUE);  //*MENU*
-        const char      *ChooseTimeFormat(Float_t axislength=0);
+        const char      *ChooseTimeFormat(Double_t axislength=0);
         virtual void    Copy(TObject &axis);
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
         virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
@@ -76,8 +76,8 @@ public:
         virtual TObject *GetParent() {return fParent;}
         virtual Bool_t  GetTimeDisplay() {return fTimeDisplay;}
         virtual const char  *GetTimeFormat() const {return fTimeFormat.Data();}
-         const char   *GetTitle() const {return fTitle.Data();}
-              TArrayF   *GetXbins() {return &fXbins;}
+         const char    *GetTitle() const {return fTitle.Data();}
+              TArrayD  *GetXbins() {return &fXbins;}
                  Int_t  GetFirst();
                  Int_t  GetLast();
                 Axis_t  GetXmin() const {return fXmin;}
@@ -94,7 +94,7 @@ public:
         virtual void    SetTimeFormat(const char *format="");  //*MENU*
         virtual void    UnZoom();  //*MENU*
 
-        ClassDef(TAxis,4)  //Axis class
+        ClassDef(TAxis,5)  //Axis class
 };
 
 #endif
