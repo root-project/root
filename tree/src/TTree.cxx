@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.48 2001/01/25 15:02:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.49 2001/01/29 09:17:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -757,13 +757,12 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    
    //build the StreamerInfo if first time for the class
    TStreamerInfo::Optimize(kFALSE);
-   BuildStreamerInfo(cl,objadd);
+   TStreamerInfo *sinfo = BuildStreamerInfo(cl,objadd);
 
    // create a dummy top level  branch object
-   TStreamerInfo *sinfo = cl->GetStreamerInfo();
-   branch = new TBranchElement(name,sinfo,-1,(char*)objadd,bufsize,0);
-   fBranches.Add(branch);
-   TObjArray *blist = branch->GetListOfBranches();   
+   TBranchElement *bre = new TBranchElement(name,sinfo,-1,(char*)objadd,bufsize,0);
+   fBranches.Add(bre);
+   TObjArray *blist = bre->GetListOfBranches();   
    
 //*-*- Loop on all public data members of the class and its base classes
    TIter next(sinfo->GetElements());
@@ -771,16 +770,15 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    Int_t id = 0;
    while ((element = (TStreamerElement*)next())) {
       char *pointer = (char*)objadd + element->GetOffset();
-      blist->Add(new TBranchElement(element->GetName(),sinfo,id,pointer,bufsize,splitlevel-1));
+      TBranchElement *bre = new TBranchElement(element->GetName(),sinfo,id,pointer,bufsize,splitlevel-1);
+      blist->Add(bre);
       id++;
    }
          
-   branch->SetAddress(add);
-   
-   TStreamerInfo::Optimize(kTRUE);
+   bre->SetAddress(add);
    
    if (delobj) delete objadd;
-   return branch;
+   return bre;
 }
 
 
@@ -847,13 +845,12 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
 }
 
 //______________________________________________________________________________
-void TTree::BuildStreamerInfo(TClass *cl, void *pointer)
+TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
 {
   // Build StreamerInfo for class cl
   // pointer is an optional argument that may contain a pointer to an object of cl
    
-   if (!cl) return;
-   if (cl->Property() & kIsAbstract) return;
+   if (!cl) return 0;
    cl->BuildRealData(pointer);
    TStreamerInfo *sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
    sinfo->ForceWriteInfo();
@@ -865,7 +862,7 @@ void TTree::BuildStreamerInfo(TClass *cl, void *pointer)
       TClass *clm = gROOT->GetClass(base->GetName());
       BuildStreamerInfo(clm);
    }
-
+   return sinfo;
 }
 
 //______________________________________________________________________________
@@ -1451,6 +1448,32 @@ Int_t TTree::GetEntryNumber(Int_t entry) const
 
 
 //______________________________________________________________________________
+Int_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
+{
+// Return entry number corresponding to major and minor number
+// Note that this function returns only the entry number, not the data
+// To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
+// the BuildIndex function has created a table of Double_t* of sorted values
+// corresponding to val = major + minor*1e-9;
+// The function performs binary search in this sorted table.
+// If it finds a pair that maches val, it returns directly the
+// index in the table.
+// If an entry corresponding to major and minor is not found, the function
+// returns the index of the major,minor pair immediatly lower than the 
+// requested value, ie it will return -1 if the pair is lower than
+// the first entry in the index.
+//
+// See also GetEntryNumberWithIndex
+   
+   if (fIndex.fN == 0) return -1;
+   Double_t value = major + minor*1e-9;
+   Int_t i = TMath::BinarySearch(Int_t(fEntries), fIndexValues.fArray, value);
+   if (i < 0) return -1;
+   return fIndex.fArray[i];
+}
+
+
+//______________________________________________________________________________
 Int_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 {
 // Return entry number corresponding to major and minor number
@@ -1459,16 +1482,16 @@ Int_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 // the BuildIndex function has created a table of Double_t* of sorted values
 // corresponding to val = major + minor*1e-9;
 // The function performs binary search in this sorted table.
-// If it find an array value that maches val, it returns directly the
-// index in the table.
-// If an entry corresponding to major and minor is not found, the function
-// returns a value = -lowest -1 where lowest is the entry number in the table
-// immediatly lower than the requested value.
+// If it finds a pair that maches val, it returns directly the
+// index in the table, otherwise it returns -1.
+//
+// See also GetEntryNumberWithBestIndex
    
    if (fIndex.fN == 0) return -1;
    Double_t value = major + minor*1e-9;
    Int_t i = TMath::BinarySearch(Int_t(fEntries), fIndexValues.fArray, value);
-   if (TMath::Abs(fIndexValues.fArray[i] - value) > 1.e-10) return -1-i;
+   if (i < 0) return -1;
+   if (TMath::Abs(fIndexValues.fArray[i] - value) > 1.e-10) return -1;
    return fIndex.fArray[i];
 }
 
