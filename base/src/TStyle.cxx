@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.21 2002/08/16 10:54:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.22 2002/09/07 20:55:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -759,13 +759,22 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
 
 
 //______________________________________________________________________________
-void TStyle::SetOptDate(Int_t mode)
+void TStyle::SetOptDate(Int_t optdate)
 {
-// if mode is non null, the current date/time will be printed in the canvas.
+// if optdate is non null, the current date/time will be printed in the canvas.
 // The position of the date string can be controlled by:
-//    mode = 1 (default) date is printed in the bottom/left corner.
-//    mode = 2 date is printed in the bottom/right corner.
-//    mode = 3 date is printed in the top/right corner.
+//  optdate = 10*format + mode
+//    mode = 1   (default) date is printed in the bottom/left corner.
+//    mode = 2   date is printed in the bottom/right corner.
+//    mode = 3   date is printed in the top/right corner.
+//    format = 0 (default) date has the format like: "Wed Sep 25 17:10:35 2002"
+//    format = 1 date has the format like: "2002-09-25"
+//    format = 2 date has the format like: "2002-09-25 17:10:35"
+//
+//  examples:
+//    optdate = 1  date like "Wed Sep 25 17:10:35 2002" in the bottom/left corner.
+//    optdate = 13 date like "2002-09-25" in the top/right corner.
+//
 //  The date position can also be controlled by:
 //    gStyle->SetDateX(x);  x in NDC
 //    gStyle->SetDateY(y);  y in NDC
@@ -785,7 +794,8 @@ void TStyle::SetOptDate(Int_t mode)
 //  The DATE attributes can also be edited interactively (position
 //  and attributes) via the normal context menu.
 
-   fOptDate = mode;
+   fOptDate = optdate;
+   Int_t mode = optdate%10;
    if (mode == 1) {
       SetDateX(0.01);
       SetDateY(0.01);
