@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.115 2003/06/25 07:16:22 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.116 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1612,7 +1612,25 @@ void TBranchElement::SetAddress(void *add)
             TBranchElement *parent = (TBranchElement*) branch->GetMother()->GetSubBranch(branch);
             assert(parent==this);
 
-            if ( strcmp(GetClassName(),info->GetName())!=0 ) {               
+            Int_t parentID = parent->GetID();
+            assert(parentID>=0 || parentID==-2);  // if the ID was negative, the branch would not have been split!
+            
+            TStreamerInfo *parentInfo = parent->GetInfo();
+            assert(parentInfo != 0);
+            
+            TClass *parentBranchClass = 0;
+            if (parentID==-2) {
+               parentBranchClass = parentInfo->GetClass();
+            } else {
+               TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
+               parentBranchClass = parentElem->GetClassPointer();
+            }
+
+            TClass *containingClass = info->GetClass();
+
+            if ( parentBranchClass != containingClass ) {
+
+               // We are in the case where there is a missing branch in the hiearchy
 
                // Since we do not have a proper hierachy, fObject does NOT point
                // to object of type 'clparent'.  Instead it points to an object 
