@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.5 2000/09/13 07:03:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.6 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -96,7 +96,7 @@
 #include "TClass.h"
 #include "TMath.h"
 
-#ifdef R__UNIX
+#if defined(R__UNIX) && !defined(R__MACOSX)
 #define HAVE_SEMOP
 #include <sys/types.h>
 #include <sys/ipc.h>

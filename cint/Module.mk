@@ -76,7 +76,6 @@ ifeq ($(PLATFORM),alphaegcs)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 endif
-
 ifeq ($(PLATFORM),sunos)
 CINTS1       += $(MODDIRS)/sunos.c
 endif
@@ -86,6 +85,9 @@ endif
 ifeq ($(PLATFORM),macos)
 CINTS1       += $(MODDIRS)/macos.c
 CINTS2       += $(MODDIRS)/fakestrm.cxx
+endif
+ifeq ($(PLATFORM),macosx)
+CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),lynxos)
 CINTS2       += $(MODDIRS)/fakestrm.cxx

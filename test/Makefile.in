@@ -349,6 +349,18 @@ LDFLAGS       = -O
 SOFLAGS       = -shared -Wl,-x
 endif
 
+ifeq ($(ARCH),macosx)
+# MacOS X with cc (GNU cc 2.95.2)
+CXX           = c++
+CXXFLAGS      = -O -pipe -W -Wall -fPIC
+LD            = c++
+LDFLAGS       = -O
+# The SOFLAGS will be used to create the .dylib; the .so will
+# be created separately
+DllSuf        = dylib
+SOFLAGS       = -dylib -r -nostartfiles -Wl,-x
+endif
+
 ifeq ($(ARCH),hiux)
 # Hitachi HIUX
 CXX           = g++
@@ -504,6 +516,12 @@ ifeq ($(ARCH),alphacxx)
 		   -o libEvent.so Event.o EventDict.o -lcxxstd -lcxx \
 		   -lexc -lots -lc
 else
+ifeq ($(ARCH),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO) -ldl
+		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $(EVENTO) \
+		   $(OutPutOpt) libEvent.so -ldl
+else
 ifeq ($(ARCH),win32)
 		bindexplib $* $^ > $*.def
 		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
@@ -582,6 +600,12 @@ ifeq ($(ARCH),alphacxx)
  -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
  -o Hello.so Hello.o HelloDict.o -lcxxstd -lcxx -lexc -lots -lc
 else
+ifeq ($(ARCH),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ -ldl
+		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		   $(OutPutOpt) Hello.so -ldl
+else
 ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
@@ -601,6 +625,12 @@ ifeq ($(ARCH),alphacxx)
 		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
  -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
  -o Aclock.so Aclock.o AclockDict.o -lcxxstd -lcxx -lexc -lots -lc
+else
+ifeq ($(ARCH),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ -ldl
+		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		   $(OutPutOpt) Aclock.so -ldl
 else
 ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
@@ -622,6 +652,12 @@ ifeq ($(ARCH),alphacxx)
  -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
  -o Tetris.so Tetris.o TetrisDict.o -lcxxstd -lcxx -lexc -lots -lc
 else
+ifeq ($(ARCH),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ -ldl
+		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+	 	   $(OutPutOpt) Tetris.so -ldl
+else
 ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
@@ -640,6 +676,12 @@ ifeq ($(ARCH),alphacxx)
 		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
  -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
  -o TBench.so TBench.o TBenchDict.o -lcxxstd -lcxx -lexc -lots -lc
+else
+ifeq ($(ARCH),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ -ldl
+		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		   $(OutPutOpt) TBench.so -ldl
 else
 ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.30 2001/03/01 07:21:23 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.31 2001/03/30 15:09:30 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -141,6 +141,9 @@
 #ifndef R__TRUE64
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
+#elif defined(__APPLE__)
+#include <sys/mount.h>
+extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #elif defined(linux) || defined(__hpux)
 #include <sys/vfs.h>
 #else
@@ -148,7 +151,8 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 
 #if defined(linux) || defined(__hpux) || defined(_AIX) || defined(__alpha) || \
-    defined(__sun) || defined(__sgi) || defined(__FreeBSD__)
+    defined(__sun) || defined(__sgi) || defined(__FreeBSD__) || \
+    defined(__APPLE__)
 #define HAVE_MMAP
 #endif
 
@@ -168,7 +172,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #   endif
 #endif
 
-#if defined(__FreeBSD__) && (__FreeBSD__ < 4)
+#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
 #define	F_LOCK             (LOCK_EX | LOCK_NB)
@@ -176,7 +180,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__)
+    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__)
 #include <grp.h>
 #include <sys/types.h>
 #endif

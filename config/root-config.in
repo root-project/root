@@ -222,6 +222,12 @@ freebsd4)
    auxlibs="-lm -lstdc++"
    auxglibs=${auxlibs}
    ;;
+macosx)
+   # MacOS X with cc (GNU cc v2.95.2.)
+   auxcflags=
+   auxlibs="-lm -ldl"
+   auxglibs=${auxlibs}
+   ;;
 hiux)
    # Hitachi HIUX
    auxcflags=

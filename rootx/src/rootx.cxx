@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.3 2000/12/10 16:02:49 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.4 2001/04/04 17:17:30 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -36,7 +36,7 @@
 #define UTMP_NO_ADDR
 #endif
 #if (defined(__alpha) && !defined(__linux)) || defined(_AIX) || \
-    defined(__FreeBSD__) || defined(__Lynx__)
+    defined(__FreeBSD__) || defined(__Lynx__) || defined(__APPLE__)
 #define UTMP_NO_ADDR
 #endif
 

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.16 2001/03/30 15:09:30 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.17 2001/04/03 10:07:29 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -187,6 +187,11 @@
 #   define R__UNIX
 #   define R__BYTESWAP
 #   define R__NOSTATS         /* problem using stats with FreeBSD malloc/free */
+#endif
+
+#if defined(__APPLE__)  /* MacOS X support, initially following FreeBSD */
+#   define R__MACOSX
+#   define R__UNIX
 #endif
 
 #ifdef _HIUX_SOURCE

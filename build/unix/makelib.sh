@@ -74,6 +74,13 @@ elif [ $PLATFORM = "fbsd" ]; then
    $LD $SOFLAGS $LDFLAGS -o $LIB `lorder $OBJS | tsort -q` $EXTRA
    # for elf:  echo $PLATFORM: $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS
    # for elf:  $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB `lorder $OBJS | tsort -q`
+elif [ $PLATFORM = "macosx" ]; then
+   # We need two library files: a .dylib to link to and a .so to load
+   echo $LD $SOFLAGS $LDFLAGS -o $LIB -ldl $OBJS $EXTRA
+   $LD $SOFLAGS $LDFLAGS -o $LIB -ldl $OBJS $EXTRA
+   BUNDLE=`echo $LIB | sed s/.dylib/.so/`
+   echo $LD -bundle -undefined suppress -Wl,-x $LDFLAGS -o $BUNDLE -ldl $OBJS $EXTRA
+   $LD -bundle -undefined suppress -Wl,-x $LDFLAGS -o $BUNDLE -ldl $OBJS $EXTRA
 elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA
    $LD $LDFLAGS -o $LIB $OBJS $EXTRA

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.5 2000/11/23 15:53:02 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.6 2001/02/22 09:36:57 rdm Exp $ */
 /* Author: */
 
 /*
@@ -336,7 +336,7 @@ static void     search_forw(int s);     /* look forw for current string */
 #  include <unistd.h>
 #endif
 
-#if defined(_AIX) || defined(__Lynx__)
+#if defined(_AIX) || defined(__Lynx__) || defined(__APPLE__)
 #define unix
 #endif
 

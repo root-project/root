@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.22 2001/03/30 15:09:30 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.23 2001/04/03 10:38:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -40,9 +40,10 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || defined(R__AIX) || \
-    defined(R__LINUX) || defined(R__SOLARIS) || defined(R__ALPHA) || \
-    defined(R__HIUX) || defined(R__FBSD)
+#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
+    defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
+    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
+    defined(R__MACOSX)
 #   include <dirent.h>
 #else
 #   include <sys/dir.h>
@@ -50,8 +51,9 @@
 #if defined(ULTRIX) || defined(R__SUN)
 #   include <sgtty.h>
 #endif
-#if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || defined(R__SGI) || \
-    defined(R__HIUX) || defined(R__FBSD) || defined(R__LYNXOS)
+#if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || \
+    defined(R__SGI) || defined(R__HIUX) || defined(R__FBSD) || \
+    defined(R__LYNXOS) || defined(R__MACOSX)
 #   include <sys/ioctl.h>
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
@@ -68,6 +70,9 @@
 #   ifndef R__TRUE64
     extern "C" int statfs(const char *file, struct statfs *buffer);
 #   endif
+#elif defined(R__MACOSX)
+#   include <sys/mount.h>
+    extern "C" int statfs(const char *file, struct statfs *buffer);
 #elif defined(R__LINUX) || defined(R__HPUX)
 #   include <sys/vfs.h>
 #else
@@ -146,7 +151,8 @@ extern "C" {
 #   define HAVE_UTMPX_H
 #   define UTMP_NO_ADDR
 #endif
-#if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || defined(R__LYNXOS)
+#if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || \
+    defined(R__LYNXOS) || defined(R__MACOSX)
 #   define UTMP_NO_ADDR
 #endif
 
@@ -2173,9 +2179,10 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
    // Returns the next directory entry.
 
    DIR *dirp = (DIR*)dirp1;
-#if defined(R__SUN) || defined(R__SGI) || defined(R__AIX) || defined(R__HPUX) || \
-    defined(R__LINUX) || defined(R__SOLARIS) || defined(R__ALPHA) || \
-    defined(R__HIUX) || defined(R__FBSD)
+#if defined(R__SUN) || defined(R__SGI) || defined(R__AIX) || \
+    defined(R__HPUX) || defined(R__LINUX) || defined(R__SOLARIS) || \
+    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
+    defined(R__MACOSX)
    struct dirent *dp;
 #else
    struct direct *dp;

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:$:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: daemon.cxx,v 1.1 2000/12/15 19:38:35 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -38,13 +38,13 @@
 #define USE_SIGCHLD
 #endif
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__APPLE__)
 #define USE_SIGCHLD
 #define	SIGCLD SIGCHLD
 #endif
 
-#if defined(__linux) || defined(__linux__) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__)
+#if defined(linux) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
+    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__)
 #define USE_SETSID
 #endif
 
@@ -56,7 +56,7 @@
 static void SigChild(int)
 {
    int         pid;
-#if defined(__hpux) || defined(__FreeBSD__)
+#if defined(__hpux) || defined(__FreeBSD__) || defined(__APPLE__)
    int status;
 #else
    union wait  status;

@@ -1,0 +1,40 @@
+# Makefile of ROOT for MacOS X, using cc (Based on gcc version 2.95.2)
+
+PLATFORM      = macosx
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = c++
+CC            = cc
+CXXFLAGS      = -pipe -W -Wall -fPIC -fsigned-char -fno-common -dynamic \
+                -I/usr/X11R6/include $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -W -Wall -fPIC -fsigned-char -fno-common -dynamic \
+                -I/usr/X11R6/include $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -W -Wall -fPIC -fsigned-char -fno-common -dynamic \
+                -DG__REGEXP $(EXTRA_CXXFLAGS) -DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
+CINTCFLAGS    = -pipe -W -Wall -fPIC -fsigned-char -fno-common -dynamic \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = c++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -dylib -r -nostartfiles -Wl,-x
+SOEXT         = dylib
+
+# System libraries:
+SYSLIBS       = -lm
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+CILIBS        = -lm -ldl
+
+# Override default in Makefile.config
+INSTALL        := cp -pR
+INSTALLDATA    := cp -pR
