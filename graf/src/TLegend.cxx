@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.21 2004/08/18 08:47:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.22 2004/11/26 07:33:37 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -404,13 +404,7 @@ void TLegend::PaintPrimitives()
 
     if ( opt.Contains("f")) {
       if (eobj && eobj->InheritsFrom(TAttFill::Class())) {
-         char cmd[50];
-         sprintf(cmd,"((%s*)0x%lx)->GetFillColor();",
-              entry->GetObject()->ClassName(),(Long_t)eobj);
-         entry->Execute("SetFillColor",cmd);
-         sprintf(cmd,"((%s*)0x%lx)->GetFillStyle();",
-              entry->GetObject()->ClassName(),(Long_t)eobj);
-         entry->Execute("SetFillStyle",cmd);
+         dynamic_cast<TAttFill*>(eobj)->Copy(*entry);
       }
 
       // box total height is yspace*0.7
@@ -435,20 +429,8 @@ void TLegend::PaintPrimitives()
 
     if ( opt.Contains("l") || opt.Contains("f")) {
 
-      Color_t lcolor = entry->GetLineColor();
-      Style_t lstyle = entry->GetLineStyle();
-      Width_t lwidth = entry->GetLineWidth();
       if (eobj && eobj->InheritsFrom(TAttLine::Class())) {
-         char cmd[50];
-         sprintf(cmd,"((%s*)0x%lx)->GetLineColor();",
-                entry->GetObject()->ClassName(),(Long_t)eobj);
-         entry->Execute("SetLineColor",cmd);
-         sprintf(cmd,"((%s*)0x%lx)->GetLineStyle();",
-                entry->GetObject()->ClassName(),(Long_t)eobj);
-         entry->Execute("SetLineStyle",cmd);
-         sprintf(cmd,"((%s*)0x%lx)->GetLineWidth();",
-                entry->GetObject()->ClassName(),(Long_t)eobj);
-         entry->Execute("SetLineWidth",cmd);
+         dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
       }
       // line total length (in x) is margin*0.8
       TLine entryline( xsym - boxw, ysym, xsym + boxw, ysym );
@@ -476,37 +458,18 @@ void TLegend::PaintPrimitives()
                                    xsym, ysym + yspace*0.30);            
          }
       }
-
-      entry->SetLineColor(lcolor);
-      entry->SetLineStyle(lstyle);
-      entry->SetLineWidth(lwidth);
     }
 
     // Draw Polymarker
 
     if ( opt.Contains("p")) {
 
-      Color_t mcolor = entry->GetMarkerColor();
-      Style_t mstyle = entry->GetMarkerStyle();
-      Size_t msize = entry->GetMarkerSize();
       if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
-        char cmd[50];
-        sprintf(cmd,"((%s*)0x%lx)->GetMarkerColor();",
-                entry->GetObject()->ClassName(),(Long_t)eobj);
-        entry->Execute("SetMarkerColor",cmd);
-        sprintf(cmd,"((%s*)0x%lx)->GetMarkerStyle();",
-                entry->GetObject()->ClassName(),(Long_t)eobj);
-        entry->Execute("SetMarkerStyle",cmd);
-        sprintf(cmd,"((%s*)0x%lx)->GetMarkerSize();",
-                entry->GetObject()->ClassName(),(Long_t)eobj);
-        entry->Execute("SetMarkerSize",cmd);
+        dynamic_cast<TAttMarker*>(eobj)->Copy(*entry);
       }
       TMarker entrymarker( xsym, ysym, 0 );
       entrymarker.SetNDC();
       entry->TAttMarker::Copy(entrymarker);
-      entry->SetMarkerColor(mcolor);
-      entry->SetMarkerStyle(mstyle);
-      entry->SetMarkerSize(msize);
       entrymarker.Paint();
     }
   }
