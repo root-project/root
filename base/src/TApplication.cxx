@@ -605,7 +605,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
       if (len>1) {
          if (strcmp(fn+len-1,"d")==0) mode = "d";
          else if (strcmp(fn+len-1,"o")==0) mode = "o";
-         len--;
+         if (mode) len--;
       }
       Bool_t compile = !strncmp(fn+len-1,"+",1);
       Bool_t remove  = !strncmp(fn+len-2,"++",2);

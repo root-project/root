@@ -1040,8 +1040,8 @@ char *filenamein;
     } else {
       if (compiler_option) {
          switch(compiler_option[0]) {
-            case 'o': compiler_option = "ko";
-            case 'd': compiler_option = "kd";
+            case 'o': compiler_option = "ko"; break;
+            case 'd': compiler_option = "kd"; break;
             default: G__genericerror("Should not have been reached!");
          }
       } else {
