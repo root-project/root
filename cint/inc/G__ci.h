@@ -699,7 +699,6 @@ typedef int (*G__IgnoreInclude)();
 #define G__MAXFUNCPARA   40  /* Function argument */
 #define G__MAXVARDIM     10  /* Array dimention */
 #define G__LENPOST       10  /* length of file name extention */
-//#define G__MAXBASE       30  /* maximum inheritable class */
 #define G__MAXBASE       50  /* maximum inheritable class */
 #define G__TAGNEST       20  /* depth of nested class */
 
