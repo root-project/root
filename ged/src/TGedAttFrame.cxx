@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.14 2004/04/29 14:46:37 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.15 2004/05/06 08:07:51 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -528,7 +528,8 @@ Bool_t TGedAttTextFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          fModel->Execute("SetTextSize", a, 0);
          b = true;
       } else if (parm1 == kFONT_STYLE) {
-         snprintf(a, 100, "%ld", parm2 * 10);
+         Int_t fontPrec = ExecuteInt(fModel, "GetTextFont", "")%10;
+		 snprintf(a, 100, "%ld", parm2 * 10 + fontPrec);
          fModel->Execute("SetTextFont", a, 0);
          b = true;
       } else if (parm1 == kFONT_ALIGN) {
