@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.8 2001/01/08 14:24:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.9 2001/02/21 14:57:37 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -60,8 +60,12 @@ public:
     virtual void    Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual TH1    *DrawCopy(Option_t *option="");
             Int_t   Fill(Axis_t) {return -1;} //MayNotUse
+            Int_t   Fill(const char*, Stat_t) {return -1;} //MayNotUse
             Int_t   Fill(Axis_t, Stat_t) {return -1; } //MayNotUse
-            Int_t   Fill(Axis_t x, Axis_t y, Stat_t z);
+            Int_t   Fill(Axis_t x, Axis_t y, Axis_t z);
+    virtual Int_t   Fill(Axis_t x, const char *namey, Axis_t z);
+    virtual Int_t   Fill(const char *namex, Axis_t y, Axis_t z);
+    virtual Int_t   Fill(const char *namex, const char *namey, Axis_t z);
     virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
     virtual Stat_t  GetBinContent(Int_t bin) const;
     virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
@@ -74,6 +78,9 @@ public:
     virtual void    GetStats(Stat_t *stats) const;
     virtual Double_t GetZmin() const {return fZmin;}
     virtual Double_t GetZmax() const {return fZmax;}
+    virtual void    LabelsDeflate(Option_t *axis="X");
+    virtual void    LabelsInflate(Option_t *axis="X");
+    virtual void    LabelsOption(Option_t *option="h", Option_t *axis="X");
     virtual void    Multiply(TF1 *h1, Double_t c1=1);
     virtual void    Multiply(TH1 *h1);
     virtual void    Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.5 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.6 2001/02/21 14:57:37 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -526,6 +526,100 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z)
 }
 
 //______________________________________________________________________________
+Int_t TProfile2D::Fill(Axis_t x, const char *namey, Axis_t z)
+{
+// Fill a Profile2D histogram (no weights)
+//
+   Int_t bin,binx,biny;
+
+   if (fZmin != fZmax) {
+      if (z <fZmin || z> fZmax) return -1;
+   }
+
+   fEntries++;
+   binx =fXaxis.FindBin(x);
+   biny =fYaxis.FindBin(namey);
+   bin  = biny*(fXaxis.GetNbins()+2) + binx;
+   AddBinContent(bin, z);
+   fSumw2.fArray[bin] += (Stat_t)z*z;
+   fBinEntries.fArray[bin] += 1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   Axis_t y = fYaxis.GetBinCenter(biny);
+   ++fTsumw;
+   ++fTsumw2;
+   fTsumwx  += x;
+   fTsumwx2 += x*x;
+   fTsumwy  += y;
+   fTsumwy2 += y*y;
+   fTsumwxy += x*y;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TProfile2D::Fill(const char *namex, const char *namey, Axis_t z)
+{
+// Fill a Profile2D histogram (no weights)
+//
+   Int_t bin,binx,biny;
+
+   if (fZmin != fZmax) {
+      if (z <fZmin || z> fZmax) return -1;
+   }
+
+   fEntries++;
+   binx =fXaxis.FindBin(namex);
+   biny =fYaxis.FindBin(namey);
+   bin  = biny*(fXaxis.GetNbins()+2) + binx;
+   AddBinContent(bin, z);
+   fSumw2.fArray[bin] += (Stat_t)z*z;
+   fBinEntries.fArray[bin] += 1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   Axis_t x = fYaxis.GetBinCenter(binx);
+   Axis_t y = fYaxis.GetBinCenter(biny);
+   ++fTsumw;
+   ++fTsumw2;
+   fTsumwx  += x;
+   fTsumwx2 += x*x;
+   fTsumwy  += y;
+   fTsumwy2 += y*y;
+   fTsumwxy += x*y;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TProfile2D::Fill(const char *namex, Axis_t y, Axis_t z)
+{
+// Fill a Profile2D histogram (no weights)
+//
+   Int_t bin,binx,biny;
+
+   if (fZmin != fZmax) {
+      if (z <fZmin || z> fZmax) return -1;
+   }
+
+   fEntries++;
+   binx =fXaxis.FindBin(namex);
+   biny =fYaxis.FindBin(y);
+   bin  = biny*(fXaxis.GetNbins()+2) + binx;
+   AddBinContent(bin, z);
+   fSumw2.fArray[bin] += (Stat_t)z*z;
+   fBinEntries.fArray[bin] += 1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   Axis_t x = fYaxis.GetBinCenter(binx);
+   ++fTsumw;
+   ++fTsumw2;
+   fTsumwx  += x;
+   fTsumwx2 += x*x;
+   fTsumwy  += y;
+   fTsumwy2 += y*y;
+   fTsumwxy += x*y;
+   return bin;
+}
+
+//______________________________________________________________________________
 Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile2D histogram with weights*-*-*-*-*-*-*-*
@@ -662,6 +756,261 @@ void TProfile2D::GetStats(Stat_t *stats) const
       }
    }
 }
+
+//___________________________________________________________________________
+void TProfile2D::LabelsDeflate(Option_t *ax)
+{
+// Reduce the number of bins for this axis to the number of bins having a label.
+   
+   TAxis *axis = GetXaxis();
+   if (ax[0] == 'y' || ax[0] == 'Y') axis = GetYaxis();
+   if (!axis->GetLabels()) return;
+   TIter next(axis->GetLabels());
+   TObject *obj;
+   Int_t nbins = 0;
+   while ((obj = next())) {
+      if (obj->GetUniqueID()) nbins++;
+   }
+   if (nbins < 2) nbins = 2;
+   TProfile2D *hold = (TProfile2D*)Clone();
+   hold->SetDirectory(0);
+   
+   Int_t  nbxold = fXaxis.GetNbins();
+   Double_t xmin = axis->GetXmin();
+   Double_t xmax = axis->GetBinUpEdge(nbins);
+   axis->SetRange(0,0); 
+   axis->Set(nbins,xmin,xmax);
+   Int_t  nbinsx = fXaxis.GetNbins();
+   Int_t  nbinsy = fYaxis.GetNbins();
+   Int_t ncells = (nbinsx+2)*(nbinsy+2);
+   SetBinsLength(ncells);
+   fBinEntries.Set(ncells);   
+   fSumw2.Set(ncells);   
+
+   //now loop on all bins and refill
+   Int_t bin,ibin,binx,biny;
+   for (biny=1;biny<=nbinsy;biny++) {
+      for (binx=1;binx<=nbinsx;binx++) {
+         bin   = biny*(nbxold+2) + binx;
+         ibin  = biny*(nbinsx+2) + binx;
+         fArray[ibin] = hold->fArray[bin];
+         fBinEntries.fArray[ibin] = hold->fBinEntries.fArray[bin];
+         fSumw2.fArray[ibin] = hold->fSumw2.fArray[bin];
+      }
+   }   
+   delete hold;   
+}
+
+//___________________________________________________________________________
+void TProfile2D::LabelsInflate(Option_t *ax)
+{
+// Double the number of bins for axis.
+// Refill histogram
+// This function is called by TAxis::FindBin(const char *label)
+      
+   TAxis *axis = GetXaxis();
+   if (ax[0] == 'y' || ax[0] == 'Y') axis = GetYaxis();
+   TProfile2D *hold = (TProfile2D*)Clone();
+   hold->SetDirectory(0);
+   
+   Int_t  nbxold = fXaxis.GetNbins();
+   Int_t  nbyold = fYaxis.GetNbins();
+   Int_t  nbins  = axis->GetNbins();
+   Double_t xmin = axis->GetXmin();
+   Double_t xmax = axis->GetXmax();
+   xmax = xmin + 2*(xmax-xmin);
+   axis->SetRange(0,0); 
+   axis->Set(2*nbins,xmin,xmax);
+   nbins *= 2;
+   Int_t  nbinsx = fXaxis.GetNbins();
+   Int_t  nbinsy = fYaxis.GetNbins();
+   Int_t ncells = (nbinsx+2)*(nbinsy+2);
+   SetBinsLength(ncells);
+   fBinEntries.Set(ncells);   
+   fSumw2.Set(ncells);   
+
+   //now loop on all bins and refill
+   Int_t bin,ibin,binx,biny;
+   for (biny=1;biny<=nbinsy;biny++) {
+      for (binx=1;binx<=nbinsx;binx++) {
+         bin   = biny*(nbxold+2) + binx;
+         ibin  = biny*(nbinsx+2) + binx;
+         if (binx <= nbxold && biny <= nbyold) {
+            fArray[ibin] = hold->fArray[bin];
+            fBinEntries.fArray[ibin] = hold->fBinEntries.fArray[bin];
+            fSumw2.fArray[ibin] = hold->fSumw2.fArray[bin];
+         } else {
+            fArray[ibin] = 0;
+            fBinEntries.fArray[ibin] = 0;
+            fSumw2.fArray[ibin] = 0;
+         }
+      }
+   }   
+   delete hold;   
+}
+
+//___________________________________________________________________________
+void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
+{
+//  Set option(s) to draw axis with labels
+//  option = "a" sort by alphabetic order
+//         = ">" sort by decreasing values
+//         = "<" sort by increasing values
+//         = "h" draw labels horizonthal
+//         = "v" draw labels vertical
+//         = "u" draw labels up (end of label right adjusted)
+//         = "d" draw labels down (start of label left adjusted)
+   
+   TAxis *axis = GetXaxis();
+   if (ax[0] == 'y' || ax[0] == 'Y') axis = GetYaxis();
+   THashList *labels = axis->GetLabels();
+   if (!labels) {
+      Warning("LabelsOption","Cannot sort. No labels");
+      return;
+   }
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("h")) {
+      fXaxis.SetBit(TAxis::kLabelsHori);
+      fXaxis.ResetBit(TAxis::kLabelsVert);
+      fXaxis.ResetBit(TAxis::kLabelsDown);
+      fXaxis.ResetBit(TAxis::kLabelsUp);
+   }
+    if (opt.Contains("v")) {
+      fXaxis.SetBit(TAxis::kLabelsVert);
+      fXaxis.ResetBit(TAxis::kLabelsHori);
+      fXaxis.ResetBit(TAxis::kLabelsDown);
+      fXaxis.ResetBit(TAxis::kLabelsUp);
+   }
+   if (opt.Contains("u")) {
+      fXaxis.SetBit(TAxis::kLabelsUp);
+      fXaxis.ResetBit(TAxis::kLabelsVert);
+      fXaxis.ResetBit(TAxis::kLabelsDown);
+      fXaxis.ResetBit(TAxis::kLabelsHori);
+   }
+   if (opt.Contains("d")) {
+      fXaxis.SetBit(TAxis::kLabelsDown);
+      fXaxis.ResetBit(TAxis::kLabelsVert);
+      fXaxis.ResetBit(TAxis::kLabelsHori);
+      fXaxis.ResetBit(TAxis::kLabelsUp);
+   }
+   Int_t sort = -1;
+   if (opt.Contains("a")) sort = 0;
+   if (opt.Contains(">")) sort = 1;
+   if (opt.Contains("<")) sort = 2;
+   if (sort < 0) return;
+   
+   Int_t nx = fXaxis.GetNbins()+2;
+   Int_t ny = fYaxis.GetNbins()+2;
+   Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
+   Int_t *a = new Int_t[n+2];
+   Int_t i,j,k,bin;
+   Double_t *sumw   = new Double_t[nx*ny];
+   Double_t *errors = new Double_t[nx*ny];
+   Double_t *ent    = new Double_t[nx*ny];
+   THashList *labold = new THashList(labels->GetSize(),1);
+   TIter nextold(labels);
+   TObject *obj;
+   while ((obj=nextold())) {
+      labold->Add(obj);
+   }
+   labels->Clear();
+   if (sort > 0) {
+      //---sort by values of bins 
+      Double_t *pcont = new Double_t[n+2];
+      for (i=0;i<=n;i++) pcont[i] = 0;
+      for (i=1;i<nx;i++) {
+         for (j=1;j<ny;j++) {
+            bin = i+nx*j;
+            sumw[bin]   = fArray[bin];
+            errors[bin] = fSumw2.fArray[bin];
+            ent[bin]    = fBinEntries.fArray[bin];
+            if (axis == GetXaxis()) k = i;
+            else                    k = j;
+            if (fBinEntries.fArray[bin] != 0) pcont[k-1] += fArray[bin]/fBinEntries.fArray[bin];
+         }
+      }
+      if (sort ==1) TMath::Sort(n,pcont,a,kTRUE);  //sort by decreasing values
+      else          TMath::Sort(n,pcont,a,kFALSE); //sort by increasing values
+      delete [] pcont;
+      for (i=0;i<n;i++) {
+         obj = labold->At(a[i]);
+         labels->Add(obj);
+         obj->SetUniqueID(i+1);
+      }
+      for (i=1;i<nx;i++) {
+         for (j=1;j<ny;j++) {
+            bin = i+nx*j;
+            if (axis == GetXaxis()) {
+               fArray[bin] = sumw[a[i-1]+1+nx*j];
+               fSumw2.fArray[bin] = errors[a[i-1]+1+nx*j];
+               fBinEntries.fArray[bin] = ent[a[i-1]+1+nx*j];
+            } else {
+               fArray[bin] = sumw[i+nx*(a[j-1]+1)];
+               fSumw2.fArray[bin] = errors[i+nx*(a[j-1]+1)];
+               fBinEntries.fArray[bin] = ent[i+nx*(a[j-1]+1)];
+            }
+         }
+      }
+   } else {
+      //---alphabetic sort
+      const UInt_t kUsed = 1<<18;
+      TObject *objk=0;
+      a[0] = 0;
+      a[n+1] = n+1;
+      for (i=1;i<=n;i++) {
+         const char *label = "zzzzzzzzzzzz";
+         for (j=1;j<=n;j++) {
+            obj = labold->At(j-1);
+            if (!obj) continue;
+            if (obj->TestBit(kUsed)) continue;
+            //use strcasecmp for case non-sensitive sort (may be an option)
+            if (strcmp(label,obj->GetName()) < 0) continue;
+            objk = obj;
+            a[i] = j;
+            label = obj->GetName();
+         }
+         if (objk) {
+            objk->SetUniqueID(i);
+            labels->Add(objk);
+            objk->SetBit(kUsed);
+         }
+      }
+      for (i=1;i<=n;i++) {
+         obj = labels->At(i-1);
+         if (!obj) continue;
+         obj->ResetBit(kUsed);
+      }
+      for (i=0;i<nx;i++) {
+         for (j=0;j<ny;j++) {
+            bin = i+nx*j;
+            sumw[bin]   = fArray[bin];
+            errors[bin] = fSumw2.fArray[bin];
+            ent[bin]    = fBinEntries.fArray[bin];
+         }
+      }
+      for (i=0;i<nx;i++) {
+         for (j=0;j<ny;j++) {
+            bin = i+nx*j;
+            if (axis == GetXaxis()) {
+               fArray[bin] = sumw[a[i]+nx*j];
+               fSumw2.fArray[bin] = errors[a[i]+nx*j];
+               fBinEntries.fArray[bin] = ent[a[i]+nx*j];
+            } else {
+               fArray[bin] = sumw[i+nx*a[j]];
+               fSumw2.fArray[bin] = errors[i+nx*a[j]];
+               fBinEntries.fArray[bin] = ent[i+nx*a[j]];
+            }
+         }
+      }
+   }
+   delete labold; 
+   if (a)      delete [] a;
+   if (sumw)   delete [] sumw;
+   if (errors) delete [] errors;
+   if (ent)    delete [] ent;
+}
+
 
 
 //______________________________________________________________________________
