@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.96 2002/08/24 17:17:02 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.97 2002/09/09 15:21:39 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2908,6 +2908,10 @@ int main(int argc, char **argv)
 #ifdef __HP_aCC
          argvv[argcc] = (char *)calloc(64, 1);
          sprintf(argvv[argcc], "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
+#endif
+#ifdef __sun
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__sun=%ld", (long)__sun); argcc++;
 #endif
 #ifdef __SUNPRO_CC
          argvv[argcc] = (char *)calloc(64, 1);
