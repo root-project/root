@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.105 2002/09/13 19:44:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.106 2002/09/21 21:58:07 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1781,7 +1781,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          leafobj = (TLeafObject*)leaf;
          if (!leafobj->GetClass()) {leafStatus[l] = 1; head = headcom;}
          fprintf(fp,"%s%-15s *%s;\n",head,leafobj->GetTypeName(), leafobj->GetName());
-         mustInit.Add(leafobj);
+         if (leafStatus[l] == 0) mustInit.Add(leafobj);
          continue;
       }
       if (leafcount) {
@@ -1797,7 +1797,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          bre = (TBranchElement*)branch;
          if (bre->GetType() != 3 && bre->GetStreamerType() <= 0 && bre->GetListOfBranches()->GetEntriesFast()) leafStatus[l] = 0;
          if (bre->GetType() == 3) {
-            fprintf(fp,"   %-15s %s;\n","Int_t", branchname);
+            fprintf(fp,"   %-15s %s_;\n","Int_t", branchname);
             continue;
          }
          if (bre->IsBranchFolder()) {
@@ -1810,7 +1810,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          if (bre->GetStreamerType() <= 0) {
             if (!gROOT->GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
             fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
-            mustInit.Add(bre);
+            if (leafStatus[l] == 0) mustInit.Add(bre);
             continue;
          }
          if (bre->GetStreamerType() > 60) {
@@ -1907,11 +1907,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
-      //if ( branch->GetNleaves() <= 1 ) {
-      //   if (branch->IsA() != TBranchObject::Class()) {
-      //      if (!leafcount) strcpy(branchname,leaf->GetTitle()); //<========
-      //   }
-      //}
+      if ( branch->GetNleaves() <= 1 ) {
+         if (branch->IsA() != TBranchObject::Class()) {
+            if (!leafcount) strcpy(branchname,leaf->GetTitle()); 
+         }
+      }
       bname = branchname;
       char *twodim = (char*)strstr(bname,"[");
       if (twodim) *twodim = 0;
@@ -2091,6 +2091,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          }
       } else {
          strcpy(branchname,branch->GetName());
+         if (branch->IsA() == TBranchElement::Class()) {
+            bre = (TBranchElement*)branch;
+               if (bre->GetType() == 3) strcat(branchname,"_");
+         }
       }
       bname = branchname;
       char *brak = strstr(branchname,"[");     if (brak) *brak = 0;
