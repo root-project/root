@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.30 2004/06/22 15:36:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.31 2004/07/21 06:56:01 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -535,7 +535,11 @@ void THStack::Paint(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-
+   Bool_t lsame = kFALSE;
+   if (opt.Contains("same")) {
+      lsame = kTRUE;
+      opt.ReplaceAll("same","");
+   }
    if (opt.Contains("pads")) {
       Int_t npads = fHists->GetSize();
       TVirtualPad *padsav = gPad;
@@ -654,10 +658,8 @@ void THStack::Paint(Option_t *option)
          else                           fHistogram->SetMinimum(themin);
       }
    }
-   fHistogram->Paint(loption);
+   if (!lsame) fHistogram->Paint(loption);
 
-   char *lsame = strstr(loption,"same");
-   if (lsame) strncpy(lsame,"    ",4);
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);
    if (strstr(loption,"lego")) return;
 
