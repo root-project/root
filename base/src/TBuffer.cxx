@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.50 2003/04/11 21:58:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.51 2003/04/28 16:18:36 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -268,10 +268,10 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
             fMap->Remove(offset);
             fMap->Add(offset, -1);
             offset = 0;
-            if (cl) 
+            if (cl)
                Warning("CheckObject", "reference to unavailable class %s,"
                        " pointers of this type will be 0", cl->GetName());
-            else 
+            else
                Warning("CheckObject", "reference to an unavailable class,"
                        " pointers of that type will be 0");
          }
@@ -369,7 +369,8 @@ void TBuffer::MapObject(const TObject *obj, UInt_t offset)
       }
    } else {
       fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset, (obj&&obj!=(TObject*)-1)?(Long_t)((TObject*)obj)->IsA():0);
+      fClassMap->Add(offset,
+             (obj && obj != (TObject*)-1) ? (Long_t)((TObject*)obj)->IsA() : 0);
       fMapCount++;
    }
 }
