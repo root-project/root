@@ -24,6 +24,11 @@
 # be unique for each different image). By default imagename is the hostname.
 # Port is used to tell PROOF to connect to the workers on the specified
 # port (in case proofd was started by the user instead of via inetd).
+#
+# For condorworkers the special image IGNORE can be used to exclude
+# a worker from the set of active workers. The worker (Condor VM) will
+# be suspended and resumed. This supports situations where there a more
+# VMs then CPUs.
 # 
 # Users can be redirected to have their master server run on a pre-determined
 # node. For that use the "user" line.
