@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.11 2004/07/07 22:42:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.12 2004/08/27 15:47:24 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -170,6 +170,7 @@ public:
                         UInt_t *sec = 0) const;
    Int_t        GetDayOfYear(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
    Int_t        GetDayOfWeek(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
+   Int_t        GetMonth(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
    Int_t        GetWeek(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
    Bool_t       IsLeapYear(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
 

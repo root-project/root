@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.13 2004/07/07 22:42:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.14 2004/08/27 15:47:24 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -308,9 +308,22 @@ Int_t TTimeStamp::GetDayOfWeek(Bool_t inUTC, Int_t secOffset) const
 }
 
 //______________________________________________________________________________
+Int_t TTimeStamp::GetMonth(Bool_t inUTC, Int_t secOffset) const
+{
+   // Get the month of the year. Valid return values are between 1 and 12.
+
+   time_t atime = fSec + secOffset;
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+
+   return ptm->tm_mon + 1;
+}
+
+//______________________________________________________________________________
 Int_t TTimeStamp::GetWeek(Bool_t inUTC, Int_t secOffset) const
 {
-   // Get the week of the year. Valid return values are between 1 and 53.
+   // Get the week of the year. Valid week values are between 1 and 53.
+   // The return value is the year*100+week (1 Jan may be in the last
+   // week of the previous year so the year must be returned too).
 
    time_t atime = fSec + secOffset;
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
