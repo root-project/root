@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddGenContext.cc,v 1.8 2003/05/14 02:58:39 wverkerke Exp $
+ *    File: $Id: RooAddGenContext.cc,v 1.9 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -113,5 +113,15 @@ void RooAddGenContext::updateThresholds()
   for (i=0 ; i<_nComp ; i++) {
     _coefThresh[i+1] = _pdf->_coefCache[i] ;
     _coefThresh[i+1] += _coefThresh[i] ;
+  }
+}
+
+
+void RooAddGenContext::setProtoDataOrder(Int_t* lut)
+{
+  RooAbsGenContext::setProtoDataOrder(lut) ;
+  Int_t i ;
+  for (i=0 ; i<_nComp ; i++) {
+    ((RooAbsGenContext*)_gcList.At(i))->setProtoDataOrder(lut) ;
   }
 }

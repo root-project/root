@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimGenContext.cc,v 1.12 2002/09/05 04:33:57 verkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.13 2004/03/19 06:09:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -198,3 +198,14 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   }
 }
 
+void RooSimGenContext::setProtoDataOrder(Int_t* lut)
+{
+  RooAbsGenContext::setProtoDataOrder(lut) ;
+
+  TIterator* iter = _gcList.MakeIterator() ;
+  RooAbsGenContext* gc ;
+  while(gc=(RooAbsGenContext*)iter->Next()) {
+    gc->setProtoDataOrder(lut) ;
+  }
+  delete iter ;
+}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.rdl,v 1.11 2002/09/05 04:33:40 verkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.12 2003/06/17 20:14:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,6 +60,7 @@ protected:
   Bool_t run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) ;
   Bool_t fitSample(RooAbsData* genSample) ;
   void calcPulls() ;
+  Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen) ;
     
   RooAbsPdf*        _genModel ;    // Generator model 
   RooAbsGenContext* _genContext ;  // Generator context 
@@ -81,8 +82,10 @@ protected:
   Bool_t      _extendedGen ;    // Add poisson term to number of events to generate?
   Bool_t      _binGenData ;     // Bin data between generating and fitting
   Double_t    _nExpGen ;        // Number of expected events to generate in extended mode
+  Bool_t      _randProto ;      // Randomize order of prototype data access
 
   Bool_t      _canAddFitResults ; // Allow adding of external fit results?
+  Bool_t      _verboseGen       ; // Verbose generation?
 
 private:
   RooMCStudy(const RooMCStudy&) ;

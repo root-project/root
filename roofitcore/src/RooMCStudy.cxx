@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.18 2003/06/17 20:14:14 wverkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.19 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,6 +44,7 @@
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooGenericPdf.hh"
 #include "RooFitCore/RooRandom.hh"
+#include "RooFitCore/RooInt.hh"
 
 
 ClassImp(RooMCStudy)
@@ -79,17 +80,19 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   // Decode generator options
   TString genOpt(genOptions) ;
   genOpt.ToLower() ;
-  Bool_t verboseGen = genOpt.Contains("v") ;
+  _verboseGen = genOpt.Contains("v") ;
   _extendedGen = genOpt.Contains("e") ;
   _binGenData = genOpt.Contains("b") ;
+  _randProto = genOpt.Contains("r") ;
 
-  if (_extendedGen && genProtoData) {
+  if (_extendedGen && genProtoData && !_randProto) {
     cout << "RooMCStudy::RooMCStudy: WARNING Using generator option 'e' (Poisson distribution of #events) together " << endl
 	 << "                        with a prototype dataset implies incomplete sampling or oversampling of proto data." << endl
-	 << "                        Generated datasets will not faithfully reproduce prototype data" << endl ;
+	 << "                        Use option \"r\" to randomize prototype dataset order and thus to randomize" << endl
+         << "                        the set of over/undersampled prototype events for each generation cycle." << endl ;
   }
 
-  _genContext = genModel.genContext(dependents,genProtoData,0,verboseGen) ;
+  _genContext = genModel.genContext(dependents,genProtoData,0,_verboseGen) ;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
   _genParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
   delete tmp ;
@@ -167,6 +170,13 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
      if (_extendedGen) {
        nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample==0?_nExpGen:nEvtPerSample) ;
      }
+
+     if (_randProto && _genProtoData && _genProtoData->numEntries()!=nEvt) {
+       cout << "RooMCStudy: (Re)randomizing event order in prototype dataset (Nevt=" << nEvt << ")" << endl ;
+       Int_t* newOrder = randomizeProtoOrder(_genProtoData->numEntries(),nEvt) ;
+       _genContext->setProtoDataOrder(newOrder) ;
+       delete[] newOrder ;
+     }
  
       genSample = _genContext->generate(nEvt) ;
 
@@ -208,6 +218,38 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
   if (fit) calcPulls() ;
   return kFALSE ;
 }
+
+
+
+Int_t* RooMCStudy::randomizeProtoOrder(Int_t nProto,Int_t nGen) 
+{
+  // Return lookup table with randomized access order for prototype events,
+  // given nProto prototype data events and nGen events that will actually
+  // be accessed
+
+  // Make unsorted linked list of indeces
+  RooLinkedList l ;
+  Int_t i ;
+  for (i=0 ; i<nProto ; i++) {
+    l.Add(new RooInt(i)) ;
+  }
+
+  // Make output list
+  Int_t* lut = new Int_t[nProto] ;
+
+  // Randomly samply input list into output list
+  for (i=0 ; i<nProto ; i++) {
+    Int_t iran = RooRandom::integer(nProto-i) ;
+    RooInt* sample = (RooInt*) l.At(iran) ;
+    lut[i] = *sample ;
+    l.Remove(sample) ;
+    delete sample ;
+  }
+  
+  return lut ;
+}
+
+
 
 
 Bool_t RooMCStudy::generateAndFit(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) 

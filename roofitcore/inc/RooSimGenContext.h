@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimGenContext.rdl,v 1.7 2002/09/05 04:33:57 verkerke Exp $
+ *    File: $Id: RooSimGenContext.rdl,v 1.8 2004/03/19 06:09:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,6 +29,7 @@ public:
   RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooSimGenContext();
+  virtual void setProtoDataOrder(Int_t* lut) ;
 
 protected:
 

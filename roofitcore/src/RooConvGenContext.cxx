@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.7 2002/09/05 04:33:20 verkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.8 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -129,4 +129,12 @@ void RooConvGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       return ;
     }
   }
+}
+
+
+void RooConvGenContext::setProtoDataOrder(Int_t* lut)
+{
+  RooAbsGenContext::setProtoDataOrder(lut) ;
+  _modelGen->setProtoDataOrder(lut) ;
+  _pdfGen->setProtoDataOrder(lut) ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.rdl,v 1.8 2002/09/05 04:33:05 verkerke Exp $
+ *    File: $Id: RooAbsGenContext.rdl,v 1.9 2004/03/19 06:09:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,6 +36,8 @@ public:
   inline void setVerbose(Bool_t verbose= kTRUE) { _verbose= verbose; }
   inline Bool_t isVerbose() const { return _verbose; }
 
+  virtual void setProtoDataOrder(Int_t* lut) ;
+
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
@@ -59,6 +61,7 @@ protected:
   RooArgSet _protoVars;
   Int_t _nextProtoIndex;
   RooAbsPdf::ExtendMode _extendMode ;
+  Int_t* _protoOrder ;
 
   ClassDef(RooAbsGenContext,0) // Abstract context for generating a dataset from a PDF
 };

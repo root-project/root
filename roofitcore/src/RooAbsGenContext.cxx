@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.cc,v 1.10 2003/05/14 02:58:39 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.11 2004/03/19 06:09:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,8 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   _prototype(prototype), 
   _theEvent(0), 
   _isValid(kTRUE),
-  _verbose(verbose) 
+  _verbose(verbose),
+  _protoOrder(0) 
 {
   // Constructor
 
@@ -79,6 +80,7 @@ RooAbsGenContext::~RooAbsGenContext()
   // Destructor
 
   if(0 != _theEvent) delete _theEvent;
+  if (_protoOrder) delete[] _protoOrder ;
 }
 
 RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
@@ -156,14 +158,17 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
     // first, load values from the prototype dataset, if one was provided
     if(0 != _prototype) {
       if(_nextProtoIndex >= _prototype->numEntries()) _nextProtoIndex= 0;
-      const RooArgSet *subEvent= _prototype->get(_nextProtoIndex);
+
+      Int_t actualProtoIdx = _protoOrder ? _protoOrder[_nextProtoIndex] : _nextProtoIndex ;
+
+      const RooArgSet *subEvent= _prototype->get(actualProtoIdx);
       _nextProtoIndex++;
       if(0 != subEvent) {
 	*_theEvent= *subEvent;
       }
       else {
 	cout << ClassName() << "::" << GetName() << ":generate: cannot load event "
-	     << _nextProtoIndex << " from prototype dataset" << endl;
+	     << actualProtoIdx << " from prototype dataset" << endl;
 	return 0;
       }
     }
@@ -192,5 +197,26 @@ void RooAbsGenContext::printToStream(ostream &os, PrintOption opt, TString inden
     _theEvent->printToStream(os,less,deeper);
     os << indent << "  Prototype variables are ";
     _protoVars.printToStream(os,less,deeper);
+  }
+}
+
+
+
+void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
+{
+  // Delete any previous lookup table
+  if (_protoOrder) {
+    delete[] _protoOrder ;
+    _protoOrder = 0 ;
+  }
+  
+  // Copy new lookup table if provided and needed
+  if (lut && _prototype) {
+    Int_t n = _prototype->numEntries() ;
+    _protoOrder = new Int_t[n] ;
+    Int_t i ;
+    for (i=0 ; i<n ; i++) {
+      _protoOrder[i] = lut[i] ;
+    }
   }
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.9 2003/07/10 00:03:43 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.10 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -279,6 +279,17 @@ void RooProdGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     // Generate component 
     gc->generateEvent(theEvent,remaining) ;
 //     theEvent.Print("v") ;
+  }
+}
+
+
+void RooProdGenContext::setProtoDataOrder(Int_t* lut)
+{
+  RooAbsGenContext::setProtoDataOrder(lut) ;
+  _gcIter->Reset() ;
+  RooAbsGenContext* gc ;
+  while(gc=(RooAbsGenContext*)_gcIter->Next()) {
+    gc->setProtoDataOrder(lut) ;
   }
 }
 
