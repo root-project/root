@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.2 2000/10/13 19:04:40 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.3 2000/10/15 01:29:48 rdm Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -372,9 +372,8 @@ void TViewerX3D::DeleteX3DWindow()
 void TViewerX3D::CloseWindow()
 {
    // In case window is closed via WM we get here.
-   // Forward message to central message handler as button event.
 
-   SendMessage(this, MK_MSG(kC_COMMAND, kCM_BUTTON), kFileCloseViewer, 0);
+   delete this;
 }
 
 //______________________________________________________________________________
@@ -411,7 +410,7 @@ Bool_t TViewerX3D::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFilePrint:
                      break;
                   case kFileCloseViewer:
-                     delete this;
+                     SendCloseMessage();
                      break;
 
                   // Handle Help menu items...

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.7 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.8 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -651,9 +651,9 @@ void TRootBrowser::BrowseObj(TObject *obj)
 void TRootBrowser::CloseWindow()
 {
    // In case window is closed via WM we get here.
-   // Forward message to central message handler as button event.
 
-   SendMessage(this, MK_MSG(kC_COMMAND, kCM_BUTTON), kFileCloseBrowser, 0);
+   gInterpreter->DeleteGlobal(fBrowser);
+   delete fBrowser;  // this in turn will delete this object
 }
 
 //______________________________________________________________________________
@@ -764,8 +764,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kFilePrint:
                      break;
                   case kFileCloseBrowser:
-                     gInterpreter->DeleteGlobal(fBrowser);
-                     delete fBrowser;  // this in turn will delete this object
+                     SendCloseMessage();
                      break;
                   case kFileQuit:
                      gApplication->Terminate(0);

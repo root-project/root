@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.4 2000/10/08 14:30:43 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -374,9 +374,12 @@ TRootCanvas::~TRootCanvas()
 void TRootCanvas::CloseWindow()
 {
    // In case window is closed via WM we get here.
-   // Forward message to central message handler as button event.
 
-   SendMessage(this, MK_MSG(kC_COMMAND, kCM_BUTTON), kFileCloseCanvas, 0);
+   TVirtualPad *savepad = gPad;
+   gPad = 0;        // hide gPad from CINT
+   gInterpreter->DeleteGlobal(fCanvas);
+   gPad = savepad;  // restore gPad for ROOT
+   delete fCanvas;  // this in turn will delete this object
 }
 
 //______________________________________________________________________________
@@ -429,7 +432,6 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
    TRootHelpDialog *hd;
    TList *lc;
-   TVirtualPad *savepad;
 
    switch (GET_MSG(msg)) {
 
@@ -492,11 +494,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fCanvas->Print();
                      break;
                   case kFileCloseCanvas:
-                     savepad = gPad;
-                     gPad = 0;        // hide gPad from CINT
-                     gInterpreter->DeleteGlobal(fCanvas);
-                     gPad = savepad;  // restore gPad for ROOT
-                     delete fCanvas;  // this in turn will delete this object
+                     SendCloseMessage();
                      break;
                   case kFileQuit:
                      gApplication->Terminate(0);

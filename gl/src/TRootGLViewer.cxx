@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.3 2000/10/13 19:00:46 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.4 2000/10/15 01:28:29 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -289,9 +289,9 @@ void TRootGLViewer::DeleteGLWindow()
 void TRootGLViewer::CloseWindow()
 {
    // In case window is closed via WM we get here.
-   // Forward message to central message handler as button event.
 
-   SendMessage(this, MK_MSG(kC_COMMAND, kCM_BUTTON), kFileCloseViewer, 0);
+   delete fGLView;  // this in turn will delete this object
+   fGLView = 0;
 }
 
 //______________________________________________________________________________
@@ -367,8 +367,7 @@ Bool_t TRootGLViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFilePrint:
                      break;
                   case kFileCloseViewer:
-                     delete fGLView;  // this in turn will delete this object
-                     fGLView = 0;
+                     SendCloseMessage();
                      break;
 
                   // Handle Help menu items...
