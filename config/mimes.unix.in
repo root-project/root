@@ -213,7 +213,7 @@ action = new TGuiBldTextDialog("%s")
 
 [root/textentry]
 pattern = TGTextEntry
-icon = bld_textentry.xpm bld_textentry.xpm
+icon = bld_entry.xpm bld_entry.xpm
 action = new TGuiBldTextDialog("%s")
 
 [root/groupframe]
