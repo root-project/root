@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.2 2000/11/21 12:22:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.3 2002/02/15 20:59:30 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -34,15 +34,15 @@ int gErrorAbortLevel  = kSysError+1;
 const char *kAssertMsg = "%s violated at line %d of `%s'";
 const char *kCheckMsg  = "%s not true at line %d of `%s'";
 
-static ErrorHandlerFunc_t errorhandler = DefaultErrorHandler;
+static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 
 //______________________________________________________________________________
 ErrorHandlerFunc_t SetErrorHandler(ErrorHandlerFunc_t newhandler)
 {
    // Set an errorhandler function. Returns the old handler.
 
-   ErrorHandlerFunc_t oldhandler = errorhandler;
-   errorhandler = newhandler;
+   ErrorHandlerFunc_t oldhandler = gErrorHandler;
+   gErrorHandler = newhandler;
    return oldhandler;
 }
 
@@ -51,7 +51,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 {
    // Returns the current error handler function.
 
-   return errorhandler;
+   return gErrorHandler;
 }
 
 //______________________________________________________________________________
@@ -106,7 +106,7 @@ void ErrorHandler(int level, const char *location, const char *fmt, va_list ap)
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= buf_size) {
-      Warning("ErrorHandler", "Error message string truncated ....");
+      Warning("ErrorHandler", "Error message string truncated...");
    }
    if (level >= kSysError && level < kFatal)
       bp = Form("%s (%s)", buf, gSystem->GetError());
@@ -114,9 +114,9 @@ void ErrorHandler(int level, const char *location, const char *fmt, va_list ap)
       bp = buf;
 
    if (level != kFatal)
-      errorhandler(level, level >= gErrorAbortLevel, location, bp);
+      gErrorHandler(level, level >= gErrorAbortLevel, location, bp);
    else
-      errorhandler(level, kTRUE, location, bp);
+      gErrorHandler(level, kTRUE, location, bp);
 }
 
 //______________________________________________________________________________
