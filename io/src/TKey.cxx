@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.3 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.4 2000/09/11 09:59:26 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -432,6 +432,7 @@ TObject *TKey::ReadObj()
    // Create an instance of this class
    gROOT->SetReadingObject(kTRUE);
    obj = (TObject*)cl->New();
+   gROOT->SetReadingObject(kFALSE);
    if (!obj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
       return 0;
@@ -459,7 +460,6 @@ TObject *TKey::ReadObj()
    } else {
       obj->Streamer(*fBufferRef);
    }
-   gROOT->SetReadingObject(kFALSE);
 
    if (gROOT->GetForceStyle()) obj->UseCurrentStyle();
 
