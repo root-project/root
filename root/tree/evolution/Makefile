@@ -78,19 +78,19 @@ listfile.root: $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) WriteList.C
 ReadClones.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) ReadClones.C clonesfile.root
 	$(CMDECHO) root.exe -q -b -l ReadClones.C > ReadClones.log
 	
-ReadVector.log:  $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) ReadVector.C oldfile.root vectorfile.root listfile.root
+ReadVector.log:  $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) ReadVector.C clonesfile.root vectorfile.root listfile.root
 	$(CMDECHO) root.exe -q -b -l ReadVector.C > ReadVector.log
 
-ReadList.log:  $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) ReadList.C oldfile.root vectorfile.root listfile.root
+ReadList.log:  $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) ReadList.C clonesfile.root vectorfile.root listfile.root
 	$(CMDECHO) root.exe -q -b -l ReadList.C > ReadList.log
 
-ReadNolib.log:  $(ROOTCORELIBS) ReadNolib.C oldfile.root
+ReadNolib.log:  $(ROOTCORELIBS) ReadNolib.C clonesfile.root
 	$(CMDECHO) root.exe -q -b -l ReadNolib.C > ReadNolib.log 2>&1
 
 containerEvolution.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) MyClassVector_cxx.$(DllSuf) MyClassList_cxx.$(DllSuf)
 
-containerEvolution: containerEvolution.log ReadOld.log ReadVector.log ReadList.log ReadNolib.log
-	$(CMDECHO) diff -b -w ReadOld.ref ReadOld.log
+containerEvolution: containerEvolution.log ReadClones.log ReadVector.log ReadList.log ReadNolib.log
+	$(CMDECHO) diff -b -w ReadClones.ref ReadClones.log
 	$(CMDECHO) diff -b -w ReadVector.ref ReadVector.log
 	$(CMDECHO) diff -b -w ReadList.ref ReadList.log
 	$(CMDECHO) diff -b -w ReadNolib.ref ReadNolib.log

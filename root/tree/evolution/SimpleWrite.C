@@ -3,7 +3,7 @@ void Write(const char *filename)
    TFile *file = new TFile(filename,"RECREATE");
    TTree *tree = new TTree("tree","simple tree");
    Simple *s = new Simple;
-   tree->Branch("simple.","Simple",&s);
+   tree->Branch("simple","Simple",&s,32000,0);
    for(int i=0; i<3; ++i) {
       s->fData = i;
       tree->Fill();
