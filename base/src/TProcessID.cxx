@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.5 2001/10/05 16:27:56 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.6 2001/11/20 09:32:54 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -28,18 +28,26 @@
 // any TObject pointed by a TRef.
 // 
 // When a referenced object is read from a file (its bit kIsReferenced is set),
-// this object is entered into the TExmap *fMap of the corresponding TProcessID.
+// this object is entered into the objects table of the corresponding TProcessID.
 // Each TFile has a list of TProcessIDs (see TFile::fProcessIDs) also
 // accessible via gROOT->GetListOfProcessIDs() (for all files).
-// When this object is deleted, it is removed from the map via the cleanup
+// When this object is deleted, it is removed from the table via the cleanup
 // mechanism invoked by the TObject destructor.
+//
+// Each TProcessID has a table (TObjArray *fObjects) that keeps track
+// of all referenced objects. If a referenced object has a fUniqueID set,
+// a pointer to this unique object may be found via fObjects->At(fUniqueID).
+// In the same way, when a TRef::GetObject is called, GetObject uses
+// its own fUniqueID to find the pointer to the referenced object.
+// See TProcessID::GetObjectWithID and PutObjectWithID.
 // 
+// When a referenced object is deleted, its slot in fObjects is set to null.
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "TProcessID.h"
 #include "TROOT.h"
 #include "TFile.h"
-#include "TObjArray.h"
 #include "TSystem.h"
 #include "TUUID.h"
 
@@ -50,19 +58,19 @@ ClassImp(TProcessID)
 TProcessID::TProcessID()
 {
    fCount = 0;
-   fMap = 0;
+   fObjects = 0;
    gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
-TProcessID::TProcessID(Int_t pid)
+TProcessID::TProcessID(UShort_t pid)
 {
    char name[20];
    sprintf(name,"ProcessID%d",pid);
    SetName(name);
    TUUID u;
    SetTitle(u.AsString());
-   fMap = 0;
+   fObjects = 0;
    fCount = 0;
    gROOT->GetListOfCleanups()->Add(this);
 }
@@ -71,8 +79,8 @@ TProcessID::TProcessID(Int_t pid)
 TProcessID::~TProcessID()
 {
 
-   delete fMap;
-   fMap = 0;
+   delete fObjects;
+   fObjects = 0;
    gROOT->GetListOfProcessIDs()->Remove(this);
    gROOT->GetListOfCleanups()->Remove(this);
 }
@@ -97,34 +105,32 @@ Int_t TProcessID::DecrementCount()
 Int_t TProcessID::IncrementCount() 
 {
 
+   if (!fObjects) fObjects = new TObjArray(100);
    fCount++;
    return fCount;
 }
 
 //______________________________________________________________________________
-TObject *TProcessID::GetObjectWithID(Long_t uid) 
+TObject *TProcessID::GetObjectWithID(UInt_t uid) 
 {
-   //returns the TObject with unique identifier uid in the TExMap
-   if (!fMap) return 0;
-   Long_t id = fMap->GetValue(uid);
-   return (TObject *)id;
+   //returns the TObject with unique identifier uid in the table of objects
+   if ((Int_t)uid > fObjects->GetSize()) return 0;
+   return fObjects->UncheckedAt(uid);
 }
 
 //______________________________________________________________________________
-void TProcessID::PutObjectWithID(Long_t uid, TObject *obj) 
+void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid) 
 {
 
-   //stores the object with its key uid in the TExmap.
+   //stores the object at the uid th slot in the table of objects
    //The object uniqueid is set as well as its kMustCleanup bit
-   if (!fMap) fMap = new TExMap(100);
-   Long_t id = (Long_t)obj;
+   if (uid == 0) uid = obj->GetUniqueID();
+   fObjects->AddAtAndExpand(obj,uid);
    obj->SetBit(kMustCleanup);
-   obj->SetUniqueID(UInt_t(uid));
-   if (!fMap->GetValue(uid)) fMap->Add(uid,id);
 }
 
 //______________________________________________________________________________
-TProcessID  *TProcessID::ReadProcessID(Int_t pidf, TFile *file)
+TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
 {
 // static function
 
@@ -162,9 +168,9 @@ TProcessID  *TProcessID::ReadProcessID(Int_t pidf, TFile *file)
 void TProcessID::RecursiveRemove(TObject *obj)
 {
    // called by the object destructor
-   if (!fMap) return;
+   // remove reference to obj from the current table if it is referenced
+
    if (!obj->TestBit(kIsReferenced)) return;
-   Long_t uid = (Long_t)obj->GetUniqueID();
-   if (!uid) return;
-   fMap->Remove(uid);
+   UInt_t uid = obj->GetUniqueID();
+   if (obj == GetObjectWithID(uid)) fObjects->RemoveAt(uid);
 }
