@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.17 2001/06/27 16:54:25 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.18 2001/08/01 17:35:58 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -20,6 +20,7 @@
 #include <TGLabel.h>
 #include <TGButton.h>
 #include <TGTextEntry.h>
+#include <TGNumberEntry.h>
 #include <TGMsgBox.h>
 #include <TGMenu.h>
 #include <TGCanvas.h>
@@ -51,6 +52,7 @@ enum ETestCommandIdentifiers {
    M_TEST_SLIDER,
    M_TEST_SHUTTER,
    M_TEST_PROGRESS,
+   M_TEST_NUMBERENTRY,
 
    M_HELP_CONTENTS,
    M_HELP_SEARCH,
@@ -326,6 +328,38 @@ public:
 };
 
 
+class EntryTestDlg : public TGTransientFrame {
+
+private:
+   TGVerticalFrame      *fF1;
+   TGVerticalFrame      *fF2;
+   TGHorizontalFrame    *fF[13];
+   TGLayoutHints        *fL1;
+   TGLayoutHints        *fL2;
+   TGLayoutHints        *fL3;
+   TGLabel              *fLabel[13];
+   TGNumberEntry        *fNumericEntries[13];
+   TGCheckButton        *fLowerLimit;
+   TGCheckButton        *fUpperLimit;
+   TGNumberEntry        *fLimits[2];
+   TGCheckButton        *fPositive;
+   TGCheckButton        *fNonNegative;
+   TGButton             *fSetButton;
+   TGButton             *fExitButton;
+
+   static const char *const numlabel[13];
+   static const Double_t numinit[13];
+
+public:
+   EntryTestDlg(const TGWindow *p, const TGWindow *main);
+   virtual ~EntryTestDlg();
+   virtual void CloseWindow();
+
+   void SetLimits();
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+};
+
+
 class Editor : public TGTransientFrame {
 
 private:
@@ -463,6 +497,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Sliders...", M_TEST_SLIDER);
    fMenuTest->AddEntry("Sh&utter...", M_TEST_SHUTTER);
    fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
+   fMenuTest->AddEntry("&Number Entry...", M_TEST_NUMBERENTRY);
    fMenuTest->AddSeparator();
    fMenuTest->AddPopup("&Cascaded menus", fCascadeMenu);
 
@@ -633,6 +668,10 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_TEST_PROGRESS:
                      new TestProgress(fClient->GetRoot(), this, 600, 300);
+                     break;
+
+                  case M_TEST_NUMBERENTRY:
+                     new EntryTestDlg(fClient->GetRoot(), this);
                      break;
 
                   default:
@@ -1670,6 +1709,208 @@ Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    }
    return kTRUE;
 }
+
+
+// TGNumberEntry widget test dialog
+const char *const EntryTestDlg::numlabel[13] = {
+   "Integer",
+   "One digit real",
+   "Two digit real",
+   "Three digit real",
+   "Four digit real",
+   "Real",
+   "Degree.min.sec",
+   "Min:sec",
+   "Hour:min",
+   "Hour:min:sec",
+   "Day/month/year",
+   "Month/day/year",
+   "Hex"
+};
+
+const Double_t EntryTestDlg::numinit[13] = {
+   12345, 1.0, 1.00, 1.000, 1.0000, 1.2E-12,
+   90 * 3600, 120 * 60, 12 * 60, 12 * 3600 + 15 * 60,
+   19991121, 19991121, (Double_t) 0xDEADFACE
+};
+
+EntryTestDlg::EntryTestDlg(const TGWindow * p, const TGWindow * main)
+ : TGTransientFrame(p, main, 10, 10, kHorizontalFrame)
+{
+   // build widgets
+   fF1 = new TGVerticalFrame(this, 200, 300);
+   fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2);
+   AddFrame(fF1, fL1);
+   fL2 = new TGLayoutHints(kLHintsCenterY | kLHintsRight, 2, 2, 2, 2);
+   for (int i = 0; i < 13; i++) {
+      fF[i] = new TGHorizontalFrame(fF1, 200, 30);
+      fF1->AddFrame(fF[i], fL2);
+      fNumericEntries[i] = new TGNumberEntry(fF[i], numinit[i], 12, i + 20,
+                                             (TGNumberFormat::EStyle) i);
+      fNumericEntries[i]->Associate(this);
+      fF[i]->AddFrame(fNumericEntries[i], fL2);
+      fLabel[i] = new TGLabel(fF[i], numlabel[i]);
+      fF[i]->AddFrame(fLabel[i], fL2);
+   }
+   fF2 = new TGVerticalFrame(this, 200, 500);
+   fL3 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2);
+   AddFrame(fF2, fL3);
+   fLowerLimit = new TGCheckButton(fF2, "lower limit:", 4);
+   fLowerLimit->Associate(this);
+   fF2->AddFrame(fLowerLimit, fL3);
+   fLimits[0] = new TGNumberEntry(fF2, 0, 12, 10);
+   fLimits[0]->SetLogStep(kFALSE);
+   fLimits[0]->Associate(this);
+   fF2->AddFrame(fLimits[0], fL3);
+   fUpperLimit = new TGCheckButton(fF2, "upper limit:", 5);
+   fUpperLimit->Associate(this);
+   fF2->AddFrame(fUpperLimit, fL3);
+   fLimits[1] = new TGNumberEntry(fF2, 0, 12, 11);
+   fLimits[1]->SetLogStep(kFALSE);
+   fLimits[1]->Associate(this);
+   fF2->AddFrame(fLimits[1], fL3);
+   fPositive = new TGCheckButton(fF2, "Positive", 6);
+   fPositive->Associate(this);
+   fF2->AddFrame(fPositive, fL3);
+   fNonNegative = new TGCheckButton(fF2, "Non negative", 7);
+   fNonNegative->Associate(this);
+   fF2->AddFrame(fNonNegative, fL3);
+   fSetButton = new TGTextButton(fF2, " Set ", 2);
+   fSetButton->Associate(this);
+   fF2->AddFrame(fSetButton, fL3);
+   fExitButton = new TGTextButton(fF2, " Close ", 1);
+   fExitButton->Associate(this);
+   fF2->AddFrame(fExitButton, fL3);
+
+   // set dialog box title
+   SetWindowName("Number Entry Test");
+   SetIconName("Number Entry Test");
+   SetClassHints("NumberEntryDlg", "NumberEntryDlg");
+   // resize & move to center
+   MapSubwindows();
+   UInt_t width = GetDefaultWidth();
+   UInt_t height = GetDefaultHeight();
+   Resize(width, height);
+   Int_t ax;
+   Int_t ay;
+   if (main) {
+      Window_t wdum;
+      gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
+                                      (((TGFrame *) main)->GetWidth() -
+                                       fWidth) >> 1,
+                                      (((TGFrame *) main)->GetHeight() -
+                                       fHeight) >> 1, ax, ay, wdum);
+   } else {
+      UInt_t root_w, root_h;
+      gVirtualX->GetWindowSize(fClient->GetRoot()->GetId(), ax, ay,
+                               root_w, root_h);
+      ax = (root_w - fWidth) >> 1;
+      ay = (root_h - fHeight) >> 1;
+   }
+   Move(ax, ay);
+   SetWMPosition(ax, ay);
+   // make the message box non-resizable
+   SetWMSize(width, height);
+   SetWMSizeHints(width, height, width, height, 0, 0);
+   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH | kMWMDecorMaximize |
+               kMWMDecorMinimize | kMWMDecorMenu,
+               kMWMFuncAll | kMWMFuncResize | kMWMFuncMaximize |
+               kMWMFuncMinimize, kMWMInputModeless);
+
+   MapWindow();
+   fClient->WaitFor(this);
+}
+
+EntryTestDlg::~EntryTestDlg()
+{
+   for (int i = 0; i < 13; i++) {
+      delete fNumericEntries[i];
+      delete fLabel[i];
+      delete fF[i];
+   }
+   delete fLowerLimit;
+   delete fUpperLimit;
+   delete fLimits[0];
+   delete fLimits[1];
+   delete fPositive;
+   delete fNonNegative;
+   delete fSetButton;
+   delete fExitButton;
+   delete fF1;
+   delete fF2;
+   delete fL1;
+   delete fL2;
+   delete fL3;
+}
+
+void EntryTestDlg::CloseWindow()
+{
+   delete this;
+}
+
+void EntryTestDlg::SetLimits()
+{
+   Double_t min = fLimits[0]->GetNumber();
+   Bool_t low = (fLowerLimit->GetState() == kButtonDown);
+   Double_t max = fLimits[1]->GetNumber();
+   Bool_t high = (fUpperLimit->GetState() == kButtonDown);
+   TGNumberFormat::ELimit lim;
+   if (low && high) {
+      lim = TGNumberFormat::kNELLimitMinMax;
+   } else if (low) {
+      lim = TGNumberFormat::kNELLimitMin;
+   } else if (high) {
+      lim = TGNumberFormat::kNELLimitMax;
+   } else {
+      lim = TGNumberFormat::kNELNoLimits;
+   }
+   Bool_t pos = (fPositive->GetState() == kButtonDown);
+   Bool_t nneg = (fNonNegative->GetState() == kButtonDown);
+   TGNumberFormat::EAttribute attr;
+   if (pos) {
+      attr = TGNumberFormat::kNEAPositive;
+   } else if (nneg) {
+      attr = TGNumberFormat::kNEANonNegative;
+   } else {
+      attr = TGNumberFormat::kNEAAnyNumber;
+   }
+   for (int i = 0; i < 13; i++) {
+      fNumericEntries[i]->SetFormat(fNumericEntries[i]->GetNumStyle(), attr);
+      fNumericEntries[i]->SetLimits(lim, min, max);
+   }
+}
+
+Bool_t EntryTestDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+{
+   switch (GET_MSG(msg)) {
+   case kC_COMMAND:
+      {
+         switch (GET_SUBMSG(msg)) {
+         case kCM_BUTTON:
+            {
+               switch (parm1) {
+                  // exit button
+               case 1:
+                  {
+                     CloseWindow();
+                     break;
+                  }
+                  // set button
+               case 2:
+                  {
+                     SetLimits();
+                     break;
+                  }
+               }
+               break;
+            }
+         }
+         break;
+      }
+   }
+   return kTRUE;
+}
+
 
 Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
     TGTransientFrame(gClient->GetRoot(), main, w, h)
