@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.9 2001/10/10 06:25:56 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.10 2001/12/07 21:58:59 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -87,6 +87,9 @@ protected:
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
 
    Int_t Pdcholesky(const Real_t *a, Real_t *u, const Int_t n);
+   void  MakeTridiagonal(TMatrix &a,TVector &d,TVector &e);
+   void  MakeEigenVectors(TVector &d,TVector &e,TMatrix &z);
+   void  EigenSort(TMatrix &eigenVectors,TVector &eigenValues);
 
    // Elementary constructors
    void Transpose(const TMatrix &m);
@@ -117,6 +120,7 @@ public:
    void ResizeTo(const TMatrix &m);
 
    Bool_t IsValid() const;
+   Bool_t IsSymmetric() const;
 
    Int_t GetRowLwb() const     { return fRowLwb; }
    Int_t GetRowUpb() const     { return fNrows+fRowLwb-1; }
@@ -153,6 +157,8 @@ public:
 
    TMatrix &Invert(Double_t *determ_ptr = 0);
    TMatrix &InvertPosDef();
+
+   TMatrix EigenVectors(TVector &eigenValues);
 
    TMatrix &UnitMatrix();
    TMatrix &HilbertMatrix();

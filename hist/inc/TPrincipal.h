@@ -1,8 +1,8 @@
 // -*- mode: c++ -*-
 //
-// $Id: TPrincipal.h,v 1.6 2001/02/28 11:04:06 brun Exp $
+// $Id: TPrincipal.h,v 1.7 2001/11/29 08:27:39 brun Exp $
 // $Author: brun $
-// $Date: 2001/02/28 11:04:06 $
+// $Date: 2001/11/29 08:27:39 $
 //
 #ifndef ROOT_TPrincipal
 #define ROOT_TPrincipal
@@ -45,9 +45,6 @@ protected:
   Bool_t     fStoreData;            // Should we store input data? 
 
   void       MakeNormalised();
-  void       MakeTridiagonal();
-  void       MakeEigenVectors();
-  void       MakeOrdered();
   void       MakeRealCode(const char *filename, const char *prefix, Option_t *option="");
 
 public:
