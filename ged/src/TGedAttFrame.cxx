@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.8 2004/04/15 10:09:01 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.9 2004/04/22 16:28:28 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -868,7 +868,7 @@ void TGedAttAxisFrame::DoTicks()
       snprintf(a, 100, "\"+-\"");
    } else {
       if (fTicksFlag == -1) snprintf(a, 100, "\"-\"");
-      else snprintf(a, 100, "\"+\"");
+      else snprintf(a, 100, "\"\"");
   }
    fModel->Execute("SetTicks", a, 0);
    Update();
