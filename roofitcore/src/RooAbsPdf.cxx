@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.42 2001/10/08 05:20:11 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.43 2001/10/08 21:22:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -264,7 +264,15 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 
   syncNormalization(nset) ;
   if (_verboseEval>1) cout << IsA()->GetName() << "::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
-  return _norm->getVal() ;
+
+  Double_t ret = _norm->getVal() ;
+  if (ret==0.) {
+    cout << "RooAbsPdf::getNorm(" << GetName() << ":: WARNING normalization is zero, nset = " ; 
+    nset->Print("1") ;
+    _norm->Print("v") ;
+  }
+
+  return ret ;
 }
 
 
@@ -627,7 +635,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions,
   // is controlled by ScaleType
   //
   //  Relative  -  Scale factor is applied on top of PDF normalization scale factor 
-  //  NumEvents -  Scale factor is interpreted as a number of events. The surface area
+  //  NumEvent  -  Scale factor is interpreted as a number of events. The surface area
   //               under the PDF curve will match that of a histogram containing the specified
   //               number of event
   //  Raw       -  Scale factor is applied to the raw (projected) probability density.

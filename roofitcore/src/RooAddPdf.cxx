@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.18 2001/10/06 06:19:52 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.19 2001/10/08 05:20:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -234,7 +234,11 @@ Double_t RooAddPdf::evaluate() const
       value += pdf->getVal(nset)*nExpected ; 
       totExpected += nExpected ;
     }	    
-    value /= totExpected ;
+    if (totExpected==0.) {
+      cout << "RooAddPdf::evaluate(" << GetName() << ") WARNING: total number of expected events is 0" << endl ;
+    } else {
+      value /= totExpected ;
+    }
 
   } else {
     if (_haveLastCoef) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.6 2001/10/03 21:53:59 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.7 2001/10/08 05:20:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -242,6 +242,22 @@ Bool_t RooAbsCollection::add(const RooAbsCollection& list, Bool_t silent)
 
   return result;  
 }
+
+
+Bool_t RooAbsCollection::addOwned(const RooAbsCollection& list, Bool_t silent)
+{
+  // Add a collection of arguments to this collection by calling addOwned()
+  // for each element in the source collection
+  Bool_t result(false) ;
+
+  Int_t n= list.getSize() ;
+  for(Int_t index= 0; index < n; index++) {
+    result |= addOwned((RooAbsArg&)*list._list.At(index),silent) ;
+  }
+
+  return result;  
+}
+
 
 Bool_t RooAbsCollection::replace(const RooAbsCollection &other) {
   // Replace any args in our set with args of the same name from the other set

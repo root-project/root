@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooCutNorm.cc,v 1.3 2001/10/08 05:20:14 verkerke Exp $
+ *    File: $Id: RooCutNorm.cc,v 1.4 2001/10/08 21:22:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -158,6 +158,11 @@ Double_t RooCutNorm::expectedEvents() const
 
   // Evaluate fraction integral and return normalized by full integral
   Double_t fracInt = _fracIntegral->getVal() ;
+  if ( fracInt == 0. || normInt == 0. || _n == 0.) {
+    cout << "RooCutNorm(" << GetName() << ") WARNING: nExpected = " << _n << " / ( " 
+	 << fracInt << " / " << normInt << " ), for nset = " ;
+    if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
+  }
   return  _n / ( fracInt / normInt ) ;
 }
 

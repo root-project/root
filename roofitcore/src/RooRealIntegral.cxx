@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.44 2001/10/03 16:16:32 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.45 2001/10/08 05:20:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -486,13 +486,6 @@ RooRealIntegral::~RooRealIntegral()
 
 Double_t RooRealIntegral::evaluate() const 
 {
-  if (_function.arg().operMode()==RooAbsArg::AClean) {
-    if (RooAbsPdf::_verboseEval>1) 
-      cout << "RooRealIntegral::evaluate(" << GetName() 
-	   << ") integrand is AClean, returning cached value of " << _value << endl ;
-    return _value ;
-  }
-
   Double_t retVal ;
   switch (_operMode) {
     
