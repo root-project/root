@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.183 2004/08/19 06:47:05 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.184 2004/08/20 08:13:45 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -231,7 +231,9 @@ FUNCTIONS:
    TObject *f;
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
-      Int_t dist = f->DistancetoPrimitive(-px,py);
+      Int_t dist;
+      if (f->InheritsFrom(TF1::Class())) dist = f->DistancetoPrimitive(-px,py);
+      else                               dist = f->DistancetoPrimitive(px,py);
       if (dist < kMaxDiff) {gPad->SetSelected(f); return dist;}
    }
    return curdist;
