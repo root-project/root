@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.8 2003/05/15 19:18:31 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.1 2005/03/04 09:06:37 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 
@@ -80,7 +80,7 @@ class TLinearFitter: public TVirtualFitter {
    virtual void       ClearPoints();
    virtual void       Chisquare();
    virtual void       Eval();
-   virtual Int_t      ExecuteCommand(const char *command, Double_t */*args*/, Int_t /*nargs*/);
+   virtual Int_t      ExecuteCommand(const char *command, Double_t * /*args*/, Int_t /*nargs*/);
    virtual void       FixParameter(Int_t ipar);
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);
    virtual Double_t   GetChisquare();
@@ -106,13 +106,13 @@ class TLinearFitter: public TVirtualFitter {
 
    //dummy functions for TVirtualFitter:
 
-   virtual Double_t  Chisquare(Int_t /*npar*/, Double_t */*params*/) const {return 0;}
+   virtual Double_t  Chisquare(Int_t /*npar*/, Double_t * /*params*/) const {return 0;}
    virtual Int_t     GetErrors(Int_t /*ipar*/,Double_t & /*eplus*/, Double_t & /*eminus*/, Double_t & /*eparab*/, Double_t & /*globcc*/) const {return 0;}
    virtual Int_t     GetParameter(Int_t /*ipar*/,char* /*name*/,Double_t& /*value*/,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const  {return 0;}
    virtual Int_t     GetStats(Double_t& /*amin*/, Double_t& /*edm*/, Double_t& /*errdef*/, Int_t& /*nvpar*/, Int_t& /*nparx*/) const {return 0;}
    virtual Double_t  GetSumLog(Int_t /*i*/) {return 0;}
-   virtual void      SetFitMethod(const char */*name*/) {;}
-   virtual Int_t     SetParameter(Int_t /*ipar*/,const char */*parname*/,Double_t /*value*/,Double_t /*verr*/,Double_t /*vlow*/, Double_t /*vhigh*/) {return 0;}
+   virtual void      SetFitMethod(const char * /*name*/) {;}
+   virtual Int_t     SetParameter(Int_t /*ipar*/,const char * /*parname*/,Double_t /*value*/,Double_t /*verr*/,Double_t /*vlow*/, Double_t /*vhigh*/) {return 0;}
    
 
    ClassDef(TLinearFitter, 1) //fit a set of data points with a linear combination of functions

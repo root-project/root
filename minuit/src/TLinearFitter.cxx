@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.8 2003/05/15 19:18:31 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.1 2005/03/04 09:06:37 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -399,7 +399,7 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
 }
 
 //______________________________________________________________________________
-void TLinearFitter::Clear(Option_t */*option*/)
+void TLinearFitter::Clear(Option_t * /*option*/)
 {
    //clears everything. used in TH1::Fit
 
@@ -607,7 +607,7 @@ void TLinearFitter::Eval()
    }
    fParCovar=chol.Invert();
 
-   for (Int_t i=0; i<fNfunctions; i++){
+   for (i=0; i<fNfunctions; i++){
      fTValues(i) = fParams(i)/(TMath::Sqrt(fParCovar(i, i))); 
      fParSign(i) = 2*(1-TMath::StudentI(TMath::Abs(fTValues(i)),fNpoints-fNfunctions));
    } 
