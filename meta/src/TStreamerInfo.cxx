@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.172 2003/05/27 00:39:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.173 2003/06/21 06:07:46 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1106,23 +1106,48 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
       return element;
    }
 
-   TStreamerElement *base_element;
-   TBaseClass *base;
-   TClass *base_cl;
-   Int_t base_offset = 0;
-   Int_t local_offset = 0;
-   TIter nextb(fClass->GetListOfBases());
-   //iterate on list of base classes
-   while((base = (TBaseClass*)nextb())) {
-      base_cl = gROOT->GetClass(base->GetName());
-      base_element = (TStreamerElement*)fElements->FindObject(base->GetName());
-      if (!base_cl || !base_element) continue;
-      base_offset = base_element->GetOffset();
+   if (fClass->GetClassInfo()) {
+      // We have the class's shared library.
 
-      element = base_cl->GetStreamerInfo()->GetStreamerElement(datamember,local_offset);
-      if (element) {
-        offset = base_offset + local_offset;
-        return element;
+      TStreamerElement *base_element;
+      TBaseClass *base;
+      TClass *base_cl;
+      Int_t base_offset = 0;
+      Int_t local_offset = 0;
+      TIter nextb(fClass->GetListOfBases());
+      //iterate on list of base classes
+      while((base = (TBaseClass*)nextb())) {
+         base_cl = gROOT->GetClass(base->GetName());
+         base_element = (TStreamerElement*)fElements->FindObject(base->GetName());
+         if (!base_cl || !base_element) continue;
+         base_offset = base_element->GetOffset();
+         
+         element = base_cl->GetStreamerInfo()->GetStreamerElement(datamember,local_offset);
+         if (element) {
+            offset = base_offset + local_offset;
+            return element;
+         }
+      }
+   } else {      
+      // We do not have the class's shared library
+
+      TIter next( fElements );
+      TStreamerElement * curelem;
+      while ((curelem = (TStreamerElement*)next())) {
+
+         if (curelem->InheritsFrom(TStreamerBase::Class())) {
+
+            TClass *baseClass = curelem->GetClassPointer();
+            if (!baseClass) continue;
+            Int_t base_offset = curelem->GetOffset();
+            
+            Int_t local_offset = 0;
+            element = baseClass->GetStreamerInfo()->GetStreamerElement(datamember,local_offset);
+            if (element) {
+               offset = base_offset + local_offset;
+               return element;
+            }
+         }
       }
    }
    return 0;
