@@ -198,21 +198,21 @@ void stress(Int_t nevent)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t rt_dell_30   = 29.99;  //Pentium III 600 Mhz times with the native compiler
-   Float_t cp_dell_30   = 27.94;
-   Float_t rt_dell_1000 = 85.94;
-   Float_t cp_dell_1000 = 69.39;
+   Float_t rt_dell_30   = 30.50;  //Pentium III 600 Mhz times with the native compiler
+   Float_t cp_dell_30   = 27.99;
+   Float_t rt_dell_1000 = 83.50;
+   Float_t cp_dell_1000 = 70.20;
 #else
    Float_t rt_dell_30   = 75.86;  //Pentium III 600 Mhz times with CINT
    Float_t cp_dell_30   = 72.98;  //The difference is essentially coming from stress16
    Float_t rt_dell_1000 = 146.80;
    Float_t cp_dell_1000 = 131.99;
 #endif
-   Float_t cp_piii = cp_dell_1000 - (cp_dell_1000 - cp_dell_30)*(1000-nevent)/(1000-30);
-   Float_t rt_piii = rt_dell_1000 - (rt_dell_1000 - rt_dell_30)*(1000-nevent)/(1000-30);
+   Float_t cp_dell = cp_dell_1000 - (cp_dell_1000 - cp_dell_30)*(1000-nevent)/(1000-30);
+   Float_t rt_dell = rt_dell_1000 - (rt_dell_1000 - rt_dell_30)*(1000-nevent)/(1000-30);
    Float_t rt = gBenchmark->GetRealTime("stress");
    Float_t ct = gBenchmark->GetCpuTime("stress");
-   Float_t rootmarks = 200*(rt_piii + cp_piii)/(rt + ct);
+   Float_t rootmarks = 200*(rt_dell + cp_dell)/(rt + ct);
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");
