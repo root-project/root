@@ -56,10 +56,17 @@ $(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GRAFH) $(GRAFL2)
 
+ifneq ($(ARCH),alphacxx6)
 $(GRAFDO1):     $(GRAFDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 $(GRAFDO2):     $(GRAFDS2) $(FREETYPELIB)
 		$(CXX) $(NOOPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -I. -o $@ -c $<
+else
+$(GRAFDO1):     $(GRAFDS1)
+		$(CXX) $(DEBUGFLAGS) $(CXXFLAGS) -I. -o $@ -c $<
+$(GRAFDO2):     $(GRAFDS2) $(FREETYPELIB)
+		$(CXX) $(DEBUGFLAGS) -I$(FREETYPEDIRI) $(CXXFLAGS) -I. -o $@ -c $<
+endif
 
 all-graf:       $(GRAFLIB)
 
