@@ -22,6 +22,7 @@ void anim()
 }   
 void Animate()
 {
+   if (!gROOT->GetListOfCanvases()->FindObject("c1")) return; //just in case the canvas has been deleted
    t += 0.05*pi;
    f2->SetParameter(0,TMath::Cos(t));
    phi += 2;
