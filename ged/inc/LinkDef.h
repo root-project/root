@@ -30,6 +30,9 @@
 #pragma link C++ class TPadEditor;
 #pragma link C++ class TGedToolBox;
 #pragma link C++ class TGedEditor;
+#pragma link C++ class TArrowEditor;
+#pragma link C++ class TCurlyArcEditor;
+#pragma link C++ class TCurlyLineEditor;
 #pragma link C++ class TGedPopup;
 #pragma link C++ class TGedSelect;
 #pragma link C++ class TGedPatternFrame;

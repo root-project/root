@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.4 2002/02/23 15:45:56 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -29,7 +29,7 @@ public:
    TCurlyArc(){;}
    TCurlyArc(Double_t x1, Double_t y1, Double_t rad,
              Double_t phimin, Double_t phimax,
-             Double_t tl = .05, Double_t trad = .02);
+             Double_t tl = .02, Double_t trad = .01);
    virtual     ~TCurlyArc(){;}
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py);

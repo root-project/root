@@ -1,5 +1,5 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h
-// Author: Ilka  Antcheva 20/10/04
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.h
+// Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TArrowEditor
-#define ROOT_TArrowEditor
+#ifndef ROOT_TCurlyArcEditor
+#define ROOT_TCurlyArcEditor
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TArrowEditor                                                        //
+//  TCurlyArcEditor                                                     //
 //                                                                      //
-//  Implements GUI for editing arrow attributes: shape, size, angle.    //                                             //
+//  Implements GUI for editing CurlyArc attributes: radius, phi1 phi2.  //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -29,41 +29,35 @@
 
 class TGComboBox;
 class TGNumberEntry;
-class TArrow;
+class TCurlyArc;
 
-class TArrowEditor : public TGedFrame {
+class TCurlyArcEditor : public TGedFrame {
 
 protected:
-   TArrow               *fArrow;            // arrow object
-   TGComboBox           *fOptionCombo;      // arrow shapes combo box
-   TGNumberEntry        *fAngleEntry;       // opening angle entry
-   TGNumberEntry        *fSizeEntry;        // size entry
-   TGNumberEntry        *fStartPointXEntry; // start point x entry
-   TGNumberEntry        *fEndPointXEntry;   // end point x entry
-   TGNumberEntry        *fStartPointYEntry; // start point y entry
-   TGNumberEntry        *fEndPointYEntry;   // end point y entry
+   TCurlyArc            *fCurlyArc;         // CurlyArc object
+   TGNumberEntry        *fRadiusEntry;      // radius entry
+   TGNumberEntry        *fPhiminEntry;      // Phimin entry
+   TGNumberEntry        *fPhimaxEntry;      // Phimax entry
+   TGNumberEntry        *fCenterXEntry;     // center x entry
+   TGNumberEntry        *fCenterYEntry;     // center y entry
 
    virtual void   ConnectSignals2Slots();
    TGComboBox    *BuildOptionComboBox(TGFrame* parent, Int_t id);
-   Int_t          GetShapeEntry(Option_t *opt);
    
 public:
-   TArrowEditor(const TGWindow *p, Int_t id,
+   TCurlyArcEditor(const TGWindow *p, Int_t id,
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TArrowEditor();
+   virtual ~TCurlyArcEditor();
 
    virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
-   virtual void   DoAngle();
-   virtual void   DoOption(Int_t id);
-   virtual void   DoSize();
-   virtual void   DoStartPointX();
-   virtual void   DoEndPointX();
-   virtual void   DoStartPointY();
-   virtual void   DoEndPointY();
+   virtual void   DoRadius();
+   virtual void   DoPhimin();
+   virtual void   DoPhimax();
+   virtual void   DoCenterXY();
 
-   ClassDef(TArrowEditor,0)  // GUI for editing arrow attributes
+   ClassDef(TCurlyArcEditor,0)  // GUI for editing arrow attributes
 };
 
 #endif

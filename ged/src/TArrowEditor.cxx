@@ -36,7 +36,9 @@ ClassImp(TArrowEditor)
 enum {
    kARROW_ANG,
    kARROW_OPT,
-   kARROW_SIZ
+   kARROW_SIZ,
+   kARROW_STA,
+   kARROW_END
 };
 
 
@@ -84,6 +86,42 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t id, Int_t width,
                                   TGNumberFormat::kNELLimitMinMax, 0.01, 0.30);
    fSizeEntry->GetNumberEntry()->SetToolTipText("Set the size of arrow.");
    f4->AddFrame(fSizeEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
+//
+   TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
+
+   TGLabel *fStartPointXLabel = new TGLabel(f5, "Start X:");
+   f5->AddFrame(fStartPointXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
+   fStartPointXEntry = new TGNumberEntry(f5, 0.0, 8, kARROW_STA);
+   fStartPointXEntry->GetNumberEntry()->SetToolTipText("Set start point of arrow.");
+   f5->AddFrame(fStartPointXEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
+//
+   TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
+
+   TGLabel *fStartPointYLabel = new TGLabel(f6, "Start Y:");
+   f6->AddFrame(fStartPointYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
+   fStartPointYEntry = new TGNumberEntry(f6, 0.0, 8, kARROW_STA);
+   fStartPointYEntry->GetNumberEntry()->SetToolTipText("Set start point of arrow.");
+   f6->AddFrame(fStartPointYEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
+//
+   TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
+
+   TGLabel *fEndPointXLabel = new TGLabel(f7, "End X:");
+   f7->AddFrame(fEndPointXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
+   fEndPointXEntry = new TGNumberEntry(f7, 0.0, 8, kARROW_END);
+   fEndPointXEntry->GetNumberEntry()->SetToolTipText("Set end point of arrow.");
+   f7->AddFrame(fEndPointXEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
+//
+   TGCompositeFrame *f8 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   AddFrame(f8, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
+
+   TGLabel *fEndPointYLabel = new TGLabel(f8, "End Y:");
+   f8->AddFrame(fEndPointYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
+   fEndPointYEntry = new TGNumberEntry(f8, 0.0, 8, kARROW_END);
+   fEndPointYEntry->GetNumberEntry()->SetToolTipText("Set end point of arrow.");
+   f8->AddFrame(fEndPointYEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
 
    TClass *cl = TAttLine::Class();
    TGedElement *ge = new TGedElement;
@@ -118,6 +156,15 @@ void TArrowEditor::ConnectSignals2Slots()
    fSizeEntry->Connect("ValueSet(Long_t)", "TArrowEditor", this, "DoSize()");
    (fSizeEntry->GetNumberEntry())->Connect("ReturnPressed()", "TArrowEditor", this, "DoSize()");
 
+   fStartPointXEntry->Connect("ValueSet(Long_t)", "TArrowEditor", this, "DoStartPointX()");
+   (fStartPointXEntry->GetNumberEntry())->Connect("ReturnPressed()", "TArrowEditor", this, "DoStartPointX()");
+   fStartPointYEntry->Connect("ValueSet(Long_t)", "TArrowEditor", this, "DoStartPointY()");
+   (fStartPointYEntry->GetNumberEntry())->Connect("ReturnPressed()", "TArrowEditor", this, "DoStartPointY()");
+   fEndPointXEntry->Connect("ValueSet(Long_t)", "TArrowEditor", this, "DoEndPointX()");
+   (fEndPointXEntry->GetNumberEntry())->Connect("ReturnPressed()", "TArrowEditor", this, "DoEndPointX()");
+   fEndPointYEntry->Connect("ValueSet(Long_t)", "TArrowEditor", this, "DoEndPointY()");
+   (fEndPointYEntry->GetNumberEntry())->Connect("ReturnPressed()", "TArrowEditor", this, "DoEndPointY()");
+
    fInit = kFALSE;
 }
 
@@ -148,6 +195,15 @@ void TArrowEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    Int_t deg = (Int_t)fArrow->GetAngle();
    fAngleEntry->SetNumber(deg);
+
+   Float_t val = fArrow->GetX1();
+   fStartPointXEntry->SetNumber(val);
+           val = fArrow->GetX2();
+   fEndPointXEntry->SetNumber(val);
+           val = fArrow->GetY1();
+   fStartPointYEntry->SetNumber(val);
+           val = fArrow->GetY2();
+   fEndPointYEntry->SetNumber(val);
 
    if (fInit) ConnectSignals2Slots();
    SetActive();
@@ -217,7 +273,43 @@ void TArrowEditor::DoSize()
    fArrow->Paint(fArrow->GetDrawOption());
    Update();
 }
+//______________________________________________________________________________
+void TArrowEditor::DoStartPointX()
+{
+   // Slot connected to the arrow StartPoint.
 
+   fArrow->SetX1(fStartPointXEntry->GetNumber());
+   fArrow->Paint(fArrow->GetDrawOption());
+   Update();
+}
+//______________________________________________________________________________
+void TArrowEditor::DoEndPointX()
+{
+   // Slot connected to the arrow EndPoint.
+
+   fArrow->SetX2(fEndPointXEntry->GetNumber());
+   fArrow->Paint(fArrow->GetDrawOption());
+   Update();
+}
+
+//______________________________________________________________________________
+void TArrowEditor::DoStartPointY()
+{
+   // Slot connected to the arrow StartPoint.
+
+   fArrow->SetY1(fStartPointYEntry->GetNumber());
+   fArrow->Paint(fArrow->GetDrawOption());
+   Update();
+}
+//______________________________________________________________________________
+void TArrowEditor::DoEndPointY()
+{
+   // Slot connected to the arrow EndPoint.
+
+   fArrow->SetY2(fEndPointYEntry->GetNumber());
+   fArrow->Paint(fArrow->GetDrawOption());
+   Update();
+}
 //______________________________________________________________________________
 TGComboBox* TArrowEditor::BuildOptionComboBox(TGFrame* parent, Int_t id)
 {
