@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.86 2001/08/10 10:07:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.87 2001/08/13 08:54:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2054,13 +2054,32 @@ TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 }
 
 //______________________________________________________________________________
-TLeaf *TTree::GetLeaf(const char *name)
+TLeaf *TTree::GetLeaf(const char *aname)
 {
 // Return pointer to the 1st Leaf named name in any Branch of this Tree
 // or any branch in the list of friend trees.
+//
+//  aname may be of the form branchname/leafname
+   
+   char *slash = (char*)strchr(aname,'/');
+   char *name;
+   Int_t nbch;
+   if (slash) {
+      name = slash+1;
+      nbch = slash-aname;
+   } else {
+      name = (char*)aname;
+   }
+   TLeaf *leaf = 0;
+   TIter nextl(GetListOfLeaves());
+   while ((leaf = (TLeaf*)nextl())) {
+      if (strcmp(leaf->GetName(),name)) continue;
+      if (slash) {
+         if (strncmp(leaf->GetBranch()->GetName(),aname,nbch)) continue;
+      }
+      return leaf;
+   }
 
-   TLeaf *leaf = (TLeaf*)fLeaves.FindObject(name);
-   if (leaf) return leaf;
    if (!fFriends) return 0;
    TIter next(fFriends);
    TFriendElement *fe;
