@@ -37,6 +37,6 @@ CILIBS        = -lm -ltermcap
 F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
 
 # Extras
-CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -lX11 -lXext -lXmu -lXi -lm
