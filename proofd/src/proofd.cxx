@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.11 2000/12/01 14:22:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.12 2000/12/13 12:08:00 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -81,11 +81,11 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/stat.h>
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <errno.h>
 
 #if defined(linux)
 #   include <features.h>
@@ -96,7 +96,15 @@
 #   endif
 #endif
 
-#if defined(linux) || defined(__sun) || defined(__sgi) || defined(_AIX)
+#if defined(__FreeBSD__) && (__FreeBSD__ < 4)
+#include <sys/file.h>
+#define lockf(fd, op, sz)   flock((fd), (op))
+#define	F_LOCK             (LOCK_EX | LOCK_NB)
+#define	F_ULOCK             LOCK_UN
+#endif
+
+#if defined(linux) || defined(__sun) || defined(__sgi) || \
+    defined(_AIX) || defined(__FreeBSD__)
 #include <grp.h>
 #include <sys/types.h>
 #endif
@@ -113,7 +121,7 @@ extern "C" char *crypt(const char *, const char *);
 extern "C" int initgroups(const char *name, int basegid);
 #endif
 
-#if defined(__sgi) && !defined(__GNUG__) && (!defined(SGI_REL) || (SGI_REL<62))
+#if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
 extern "C" {
    int seteuid(int euid);
    int setegid(int egid);
@@ -139,13 +147,41 @@ extern "C" int gethostname(char *, int);
 #include <shadow.h>
 #endif
 
-#include "MessageTypes.h"
+#ifdef R__AFS
+//#include <afs/kautils.h>
+#define KA_USERAUTH_VERSION 1
+#define KA_USERAUTH_DOSETPAG 0x10000
+#define NOPAG  0xffffffff
+extern "C" int ka_UserAuthenticateGeneral(int,char*,char*,char*,char*,int,int,int,char**);
+#endif
+
+#ifdef R__SRP
+extern "C" {
+#include <t_pwd.h>
+#include <t_server.h>
+}
+#endif
+
+#include "proofdp.h"
 
 
-const int kMaxSlaves = 32;
+//--- Globals ------------------------------------------------------------------
 
-static int sockin  = 0;
-static int sockout = 1;
+const char kProofdService[] = "proofd";
+const char kProofdPass[]    = ".rootdpass";
+const char kSProofdPass[]   = ".srootdpass";
+const int  kMaxSlaves       = 32;
+const int  kMAXPATHLEN      = 1024;
+
+int  gInetdFlag             = 0;
+int  gPort                  = 0;
+int  gDebug                 = 0;
+int  gSockFd                = -1;
+int  gAuth                  = 0;
+char gConfDir[kMAXPATHLEN]  = { 0 };
+
+
+//--- Machine specific routines ------------------------------------------------
 
 #if !defined(__hpux)
 static int setresgid(gid_t r, gid_t e, gid_t)
@@ -164,43 +200,7 @@ static int setresuid(uid_t r, uid_t e, uid_t)
 #endif
 
 
-void Send(const char *msg)
-{
-   // Simulate TSocket::Send(const char *str).
-
-   int hdr[2];
-   int hlen = sizeof(kMESS_STRING) + strlen(msg)+1;  // including \0
-   hdr[0] = htonl(hlen);
-   hdr[1] = htonl(kMESS_STRING);
-   if (send(sockout, (const char *)hdr, sizeof(hdr), 0) != sizeof(hdr))
-      exit(1);
-   hlen -= sizeof(kMESS_STRING);
-   if (send(sockout, msg, hlen, 0) != hlen)
-      exit(1);
-}
-
-int Recv(char *msg, int max)
-{
-   // Simulate TSocket::Recv(char *str, int max).
-
-   int n, hdr[2];
-
-   if ((n = recv(sockin, (char *)hdr, sizeof(hdr), 0)) < 0)
-      return -1;
-
-   int hlen = ntohl(hdr[0]) - sizeof(kMESS_STRING);
-   if (hlen > max) hlen = max;
-   if ((n = recv(sockin, msg, hlen, 0)) < 0)
-      return -1;
-
-   return hlen;
-}
-
-void fatal_error(const char *msg)
-{
-   Send(msg);
-   exit(1);
-}
+//--- Proofd routines ----------------------------------------------------------
 
 char *check_pass()
 {
@@ -212,35 +212,29 @@ char *check_pass()
    char   pass_word[32];
    char  *pass_crypt;
    char  *passw;
-   char   msg[80];
    struct passwd *pw;
 #ifdef SHADOWPW
    struct spwd *spw;
 #endif
    int    n, i;
 
-   if ((n = Recv(new_user_pass, sizeof(new_user_pass))) < 0) {
-      fatal_error("Cannot receive authentication");
-   }
+   if ((n = NetRecv(new_user_pass, sizeof(new_user_pass))) < 0)
+      ErrorFatal("Cannot receive authentication");
 
    for (i = 0; i < n-1; i++)
       user_pass[i] = ~new_user_pass[i];
    user_pass[i] = '\0';
 
-   if (sscanf(user_pass, "%s %s", user_name, pass_word) != 2) {
-      fatal_error("Bad authentication record");
-   }
+   if (sscanf(user_pass, "%s %s", user_name, pass_word) != 2)
+      ErrorFatal("Bad authentication record");
 
-   if ((pw = getpwnam(user_name)) == 0) {
-      sprintf(msg, "Passwd: User %s unknown", user_name);
-      fatal_error(msg);
-   }
+   if ((pw = getpwnam(user_name)) == 0)
+      ErrorFatal("Passwd: User %s unknown", user_name);
+
 #ifdef SHADOWPW
    // System V Rel 4 style shadow passwords
-   if ((spw = getspnam(user_name)) == NULL) {
-      sprintf(msg, "Passwd: User %s password unavailable", user_name);
-      fatal_error(msg);
-   }
+   if ((spw = getspnam(user_name)) == NULL)
+      ErrorFatal("Passwd: User %s password unavailable", user_name);
    passw = spw->sp_pwdp;
 #else
    passw = pw->pw_passwd;
@@ -249,30 +243,21 @@ char *check_pass()
    n = strlen(passw);
 #if 0
    // no passwd checking for time being.......... rdm
-   if (strncmp(pass_crypt, passw, n+1) != 0) {
-      sprintf(msg, "Passwd: Invalid password for user %s", user_name);
-      fatal_error(msg);
-   }
+   if (strncmp(pass_crypt, passw, n+1) != 0)
+      ErrorFatal("Passwd: Invalid password for user %s", user_name);
 #endif
 
    // set access control list from /etc/initgroup
    initgroups(user_name, pw->pw_gid);
 
-   if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1) {
-      sprintf(msg, "Cannot setgid for user %s", user_name);
-      fatal_error(msg);
-   }
+   if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
+      ErrorFatal("Cannot setgid for user %s", user_name);
 
-   if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1) {
-      sprintf(msg, "Cannot setuid for user %s", user_name);
-      fatal_error(msg);
-   }
+   if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
+      ErrorFatal("Cannot setuid for user %s", user_name);
 
-
-   if (chdir(pw->pw_dir) == -1) {
-      sprintf(msg, "Cannot change directory to %s", pw->pw_dir);
-      fatal_error(msg);
-   }
+   if (chdir(pw->pw_dir) == -1)
+      ErrorFatal("Cannot change directory to %s", pw->pw_dir);
 
    char *home = new char[6+strlen(pw->pw_dir)];
    sprintf(home, "HOME=%s", pw->pw_dir);
@@ -281,14 +266,14 @@ char *check_pass()
    return user_name;
 }
 
-char *reroute_user(const char *confdir, const char *user_name)
+char *reroute_user(const char *user_name)
 {
    // Look if user should be rerouted to another server node.
 
    char conffile[256];
    FILE *proofconf;
 
-   sprintf(conffile, "%s/etc/proof.conf", confdir);
+   sprintf(conffile, "%s/etc/proof.conf", gConfDir);
    if ((proofconf = fopen(conffile, "r")) != 0) {
       // read configuration file
       static char user_on_node[32];
@@ -314,8 +299,10 @@ char *reroute_user(const char *confdir, const char *user_name)
             struct hostent *hp;
 
             if ((hp = gethostbyname(word[1])) != 0) {
-               strcpy(node_name[nnodes], word[1]);
-               nnodes++;
+               if (nnodes < kMaxSlaves) {
+                  strcpy(node_name[nnodes], word[1]);
+                  nnodes++;
+               }
             }
             continue;
          }
@@ -344,7 +331,7 @@ char *reroute_user(const char *confdir, const char *user_name)
       // get the node name from next.node update by a daemon monitoring
       // the system load; make sure the file is not completely out of date
       //
-      sprintf(conffile, "%s/etc/next.node", confdir);
+      sprintf(conffile, "%s/etc/next.node", gConfDir);
       if (stat(conffile, &statbuf) == -1) {
          return 0;
       } else if (difftime(time(0), statbuf.st_mtime) < 600 &&
@@ -365,26 +352,17 @@ char *reroute_user(const char *confdir, const char *user_name)
 }
 
 //______________________________________________________________________________
-int main(int /* argc */, char **argv)
+void ProofdExec()
 {
-   // Arguments:  <confdir>
-   // Confdir is the location where the PROOF config files and binaries live.
+   // Authenticate the user and exec the proofserv program.
+   // gConfdir is the location where the PROOF config files and binaries live.
 
-   char *argvv[4];
-   char  arg0[256];
+   char *argvv[5];
+   char  arg0[256], arg1[32];
    char *user_name;
    char *node_name;
    char  msg[80];
    int   master;
-
-   //
-   // Make this process the process group leader and disassociate from
-   // control terminal - fork is executed to ensure a unique process id
-   // and to make sure our process already isn't a process group leader
-   // in which case the call to setsid would fail
-   //
-   if (fork() != 0) exit(0);   // parent exits
-   setsid();
 
 #ifdef R__DEBUG
    int debug = 1;
@@ -392,17 +370,23 @@ int main(int /* argc */, char **argv)
       ;
 #endif
 
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: gConfDir = %s", gConfDir);
+
    // find out if we are supposed to be a master or a slave server
-   if (Recv(msg, sizeof(msg)) < 0)
-      fatal_error("Cannot receive master/slave status");
+   if (NetRecv(msg, sizeof(msg)) < 0)
+      ErrorFatal("Cannot receive master/slave status");
 
    master = !strcmp(msg, "master") ? 1 : 0;
+
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: master/slave = %s", msg);
 
    // user authentication
    user_name = check_pass();
 
    // only reroute in case of master server
-   if (master && (node_name = reroute_user(argv[1], user_name)) != 0) {
+   if (master && (node_name = reroute_user(user_name)) != 0) {
       // send a reroute request to the client passing the IP address
 
       char host_name[32];
@@ -429,43 +413,123 @@ int main(int /* argc */, char **argv)
                //
                if (strcmp(host_numb, node_numb) != 0) {
                   sprintf(msg, "Reroute:%s", node_numb);
-                  Send(msg);
+                  NetSend(msg);
                   exit(0);
                }
             }
          }
       }
    }
-   Send("Okay");
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: send Okay");
+
+   NetSend("Okay");
 
    // start server version
-   sprintf(arg0, "%s/bin/proofserv", argv[1]);
+   sprintf(arg0, "%s/bin/proofserv", gConfDir);
+   sprintf(arg1, "%d", gSockFd);
    argvv[0] = arg0;
-   argvv[1] = (char *)(master ? "proofserv" : "proofslave");
-   argvv[2] = argv[1];
-   argvv[3] = 0;
+   argvv[1] = arg1;
+   argvv[2] = (char *)(master ? "proofserv" : "proofslave");
+   argvv[3] = gConfDir;
+   argvv[4] = 0;
 #ifndef ROOTPREFIX
-   char *rootsys = new char[9+strlen(argv[1])];
-   sprintf(rootsys, "ROOTSYS=%s", argv[1]);
+   char *rootsys = new char[9+strlen(gConfDir)];
+   sprintf(rootsys, "ROOTSYS=%s", gConfDir);
    putenv(rootsys);
 #endif
 #ifndef ROOTLIBDIR
-   char *ldpath = new char[21+strlen(argv[1])];
+   char *ldpath = new char[21+strlen(gConfDir)];
 #   if defined(__hpux) || defined(_HIUX_SOURCE)
-   sprintf(ldpath, "SHLIB_PATH=%s/lib", argv[1]);
+   sprintf(ldpath, "SHLIB_PATH=%s/lib", gConfDir);
 #   elif defined(_AIX)
-   sprintf(ldpath, "LIBPATH=%s/lib", argv[1]);
+   sprintf(ldpath, "LIBPATH=%s/lib", gConfDir);
 #   else
-   sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", argv[1]);
+   sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", gConfDir);
 #   endif
    putenv(ldpath);
 #endif
+
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s)", argvv[0], argvv[1],
+                argvv[2], argvv[3]);
+
    execv(arg0, argvv);
 
    // tell client that exec failed
    sprintf(msg,
    "Cannot start PROOF server --- make sure %s exists!", arg0);
-   Send(msg);
+   NetSend(msg);
+}
 
+//______________________________________________________________________________
+int main(int argc, char **argv)
+{
+   int    childpid;
+   char  *s;
+
+   ErrorInit(argv[0]);
+
+   while (--argc > 0 && (*++argv)[0] == '-')
+      for (s = argv[0]+1; *s != 0; s++)
+         switch (*s) {
+            case 'i':
+               gInetdFlag = 1;
+               break;
+
+            case 'p':
+               if (--argc <= 0)
+                  ErrorFatal("-p requires a port number as argument");
+               gPort = atoi(*++argv);
+               break;
+
+            case 'd':
+               if (--argc <= 0)
+                  gDebug = 0;
+               else
+                  gDebug = atoi(*++argv);
+               break;
+
+            default:
+               ErrorFatal("unknown command line option: %s", *s);
+         }
+
+   if (argc > 0) {
+      strncpy(gConfDir, *argv, kMAXPATHLEN-1);
+      gConfDir[kMAXPATHLEN-1] = 0;
+   } else
+      ErrorFatal("no config directory specified");
+
+   if (!gInetdFlag) {
+
+      // Start proofd up as a daemon process (in the background).
+      // Also initialize the network connection - create the socket
+      // and bind our well-know address to it.
+
+      DaemonStart(1);
+
+      NetInit(kProofdService, gPort);
+   }
+
+   if (gDebug > 0)
+      ErrorInfo("main: pid = %d, gInetdFlag = %d", getpid(), gInetdFlag);
+
+   // Concurrent server loop.
+   // The child created by NetOpen() handles the client's request.
+   // The parent waits for another request. In the inetd case,
+   // the parent from NetOpen() never returns.
+
+   while (1) {
+      if ((childpid = NetOpen(gInetdFlag)) == 0) {
+         ProofdExec();     // child processes client's requests
+         NetClose();       // then we are done
+         exit(0);
+      }
+
+      // parent waits for another client to connect
+
+   }
+
+   // not reached
    return 0;
 }
