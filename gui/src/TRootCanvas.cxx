@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.67 2004/12/16 19:42:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.68 2005/01/14 18:10:26 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -611,6 +611,8 @@ void TRootCanvas::Close()
    // Called via TCanvasImp interface by TCanvas.
 
    if (fEditor) fEditor->DeleteEditors();
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+      TVirtualPadEditor::Terminate();
 
    gVirtualX->CloseWindow();
 }
@@ -621,14 +623,14 @@ void TRootCanvas::ReallyDelete()
    // Really delete the canvas and this GUI.
 
    if (fEditor) fEditor->DeleteEditors();
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+      TVirtualPadEditor::Terminate();
+
    TVirtualPad *savepad = gPad;
    gPad = 0;        // hide gPad from CINT
    gInterpreter->DeleteGlobal(fCanvas);
    gPad = savepad;  // restore gPad for ROOT
    delete fCanvas;  // will in turn delete this object
-
-   if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
-      TVirtualPadEditor::Terminate();
 }
 
 //______________________________________________________________________________
@@ -1301,7 +1303,7 @@ void TRootCanvas::ShowEditor(Bool_t show)
 //______________________________________________________________________________
 void TRootCanvas::CreateEditor()
 {
-   // Create editor.
+   // Create embedded editor.
 
    fEditorFrame->SetEditable();
    gPad = Canvas();

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.14 2004/12/03 12:07:44 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.15 2004/12/10 12:54:17 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -106,22 +106,26 @@ void TGedEditor::GetEditors()
             TIter next(l);
             while ((fr = (TGFrameElement *) next())) {
                TGedFrame *f = ge->fGedFrame;
-               found = fr->fFrame->InheritsFrom(f->ClassName());
+               found = (fr->fFrame->InheritsFrom(f->ClassName()) && (ge->fCanvas == fCanvas));
                if (found) break;
+               else {
+                  GetClassEditor(fModel->IsA());
+                  TList *blist = fModel->IsA()->GetListOfBases();
+                  if (blist->First() != 0) 
+                     GetBaseClassEditor(fModel->IsA());
+               }
             }
          }
-         if (found == kFALSE)
-            fStyle->AddFrame(ge->fGedFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX,\
-                                               0, 0, 2, 2));
       }
    } else {
 
       //search for a class editor = classname + 'Editor'
-       GetClassEditor(fModel->IsA());
+      GetClassEditor(fModel->IsA());
 
       //now scan all base classes
       list = fModel->IsA()->GetListOfBases();
-      if (list->First() != 0) GetBaseClassEditor(fModel->IsA());
+      if (list->First() != 0) 
+         GetBaseClassEditor(fModel->IsA());
    }
 
    fStyle->Layout();
@@ -188,7 +192,7 @@ void TGedEditor::GetClassEditor(TClass *cl)
 void TGedEditor::ConnectToCanvas(TCanvas *c)
 {
 
-   TQObject::Connect(c, "Selected(TVirtualPad*,TObject*,Int_t)", "TGedEditor",
+   c->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TGedEditor",
                      this, "SetModel(TVirtualPad*,TObject*,Int_t)");
    c->Selected(c->GetSelectedPad(), c->GetSelected(), kButton1Down);
 }
@@ -198,6 +202,10 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
 
    if (event != kButton1Down) return;
+
+   TCanvas *c = (TCanvas *) gTQSender;
+
+   if (c != fCanvas) return; 
 
    fModel = obj;
    fPad   = pad;
@@ -240,6 +248,8 @@ void TGedEditor::Show()
 void TGedEditor::DeleteEditors()
 {
    // Delete GUI editors connected to the canvas fCanvas.
+
+   Disconnect(fCanvas, "Selected(TVirtualPad*,TObject*,Int_t)", this, "SetModel(TVirtualPad*,TObject*,Int_t)");
 
    TClass * cl;
    TIter next(gROOT->GetListOfClasses());
