@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.140 2003/04/19 16:59:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.141 2003/04/30 21:24:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5609,7 +5609,7 @@ void TH1C::SetBinContent(Int_t bin, Stat_t content)
          if (bin == fNcells-1) fArray[bin] = Char_t (content);
          return;
       }
-      while (bin > fNcells-1)  LabelsInflate();
+      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Char_t (content);
    fEntries++;
@@ -5814,7 +5814,7 @@ void TH1S::SetBinContent(Int_t bin, Stat_t content)
          if (bin == fNcells-1) fArray[bin] = Short_t (content);
          return;
       }
-      while (bin > fNcells-1)  LabelsInflate();
+      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Short_t (content);
    fEntries++;
@@ -6013,7 +6013,7 @@ void TH1F::SetBinContent(Int_t bin, Stat_t content)
          if (bin == fNcells-1) fArray[bin] = Float_t (content);
          return;
       }
-      while (bin > fNcells-1)  LabelsInflate();
+      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Float_t (content);
    fEntries++;
@@ -6213,7 +6213,7 @@ void TH1D::SetBinContent(Int_t bin, Stat_t content)
          if (bin == fNcells-1) fArray[bin] = content;
          return;
       }
-      while (bin > fNcells-1)  LabelsInflate();
+      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = content;
    fEntries++;
