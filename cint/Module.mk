@@ -34,6 +34,7 @@ CINTS1       := $(filter-out $(MODDIRS)/sunos.%,$(CINTS1))
 CINTS1       := $(filter-out $(MODDIRS)/dlfcn.%,$(CINTS1))
 CINTS1       := $(filter-out $(MODDIRS)/macos.%,$(CINTS1))
 CINTS1       := $(filter-out $(MODDIRS)/winnt.%,$(CINTS1))
+CINTS1       := $(filter-out $(MODDIRS)/newsos.%,$(CINTS1))
 
 CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
@@ -135,6 +136,8 @@ CINTO        := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
 CINTTMPO     := $(subst loadfile.o,loadfile_tmp.o,$(CINTO))
 CINTTMPINC   := -Icint/include -Icint/stl -Icint/lib
 CINTDEP      := $(CINTO:.o=.d)
+CINTDEP      += $(MODDIRS)/loadfile_tmp.d
+CINTALLDEP   += $(MODDIRS)/loadfile_tmp.d
 
 CINTLIB      := $(LPATH)/libCint.$(SOEXT)
 
@@ -232,3 +235,8 @@ $(CINTDIRT)/makecint.o: $(CINTDIRT)/makecint.c
 
 $(CINTDIRT)/makecint_tmp.o: $(CINTDIRT)/makecint.c
 	$(CC) $(OPT) $(CINTCFLAGS) -UHAVE_CONFIG -DROOTBUILD -o $@ -c $<
+
+$(CINTDIRS)/loadfile_tmp.d: $(CINTDIRS)/loadfile.c $(RMKDEP)
+	@cp $(CINTDIRS)/loadfile.c $(CINTDIRS)/loadfile_tmp.c
+	$(MAKEDEP) $@ "$(CFLAGS)" $(CINTDIRS)/loadfile_tmp.c > $@
+	@rm -f $(CINTDIRS)/loadfile_tmp.c
