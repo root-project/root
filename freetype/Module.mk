@@ -18,15 +18,20 @@ FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype213MT.lib
 FREETYPELIB  := $(LPATH)/libfreetype.lib
 else
 FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a
+ifeq ($(PLATFORM),macosx)
+FREETYPELIB  := $(LPATH)/libfreetype.dylib
+else
 FREETYPELIB  := $(LPATH)/libfreetype.a
+endif
 endif
 
 ##### local rules #####
 $(FREETYPELIB): $(FREETYPELIBA)
+ifeq ($(PLATFORM),macosx)
+		$(CC) $(SOFLAGS)libfreetype.dylib -o $@ -all_load $<
+else
 		cp $< $@
-		@(if [ $(PLATFORM) = "macosx" ]; then \
-			ranlib $@; \
-		fi)
+endif
 
 $(FREETYPELIBA): $(FREETYPELIBS)
 ifeq ($(PLATFORM),win32)
