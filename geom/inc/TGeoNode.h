@@ -17,8 +17,9 @@
 #ifndef ROOT_TGeoNode
 #define ROOT_TGeoNode
 
-#include "fstream.h"
-#include "iostream.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 
 #ifndef ROOT_TGeoAtt
 #include "TGeoAtt.h"
@@ -50,7 +51,7 @@ class TGeoPatternFinder;
 /*************************************************************************
  * TGeoNode - base class for logical nodes. They represent volumes
  *   positioned inside a mother volume
- *   
+ *
  *************************************************************************/
 
 class TGeoNode : public TNamed,
@@ -59,7 +60,7 @@ class TGeoNode : public TNamed,
 protected:
    TGeoVolume       *fVolume;         // volume associated with this
    TGeoVolume       *fMother;         // mother volume
-   Int_t            *fOverlaps;       // list of indices for overlapping brothers 
+   Int_t            *fOverlaps;       // list of indices for overlapping brothers
    Int_t             fNovlp;          // number of overlaps
 public:
    enum {
@@ -67,7 +68,7 @@ public:
       kGeoNodeOffset = BIT(11),
       kGeoNodeVC     = BIT(12)
    };
-   
+
    // constructors
    TGeoNode();
    TGeoNode(TGeoVolume *vol);
@@ -85,7 +86,7 @@ public:
    virtual Int_t     GetByteCount() {return 44;}
    TGeoNode         *GetDaughter(Int_t ind) {return fVolume->GetNode(ind);}
    virtual TGeoMatrix *GetMatrix() const = 0;
-   
+
    Int_t             GetColour() {return fVolume->GetLineColor();}
    virtual Int_t     GetIndex()                          {return 0;}
    virtual TGeoPatternFinder *GetFinder()                {return 0;}
@@ -112,12 +113,12 @@ public:
    void              SetOverlaps(Int_t *ovlp, Int_t novlp);
    virtual void      UpdateGlobalMatrix(TGeoMatrix *globmat = 0) = 0;
    virtual void      StoreGlobalMatrix();
-   
+
    virtual void      MasterToLocal(const Double_t *master, Double_t *local);
    virtual void      MasterToLocalVect(const Double_t *master, Double_t *local);
    virtual void      LocalToMaster(const Double_t *local, Double_t *master);
    virtual void      LocalToMasterVect(const Double_t *local, Double_t *master);
-   
+
    virtual void      ls(Option_t *option = "") const;
    virtual void      Paint(Option_t *option = "");
    void              PrintCandidates(); // *MENU*
@@ -125,11 +126,11 @@ public:
    void              VisibleDaughters(Bool_t vis);
 
   ClassDef(TGeoNode, 0)               // base class for all geometry nodes
-}; 
+};
 
 /*************************************************************************
- * TGeoNodeMatrix - node containing a general transformation 
- *   
+ * TGeoNodeMatrix - node containing a general transformation
+ *
  *************************************************************************/
 
 class TGeoNodeMatrix : public TGeoNode
@@ -147,18 +148,18 @@ public:
    virtual Int_t     GetByteCount();
    virtual Bool_t    IsFolder() const {return kTRUE;}
    virtual TGeoMatrix *GetMatrix() const   {return fMatrix;}
-   virtual TGeoNode *MakeCopyNode();   
+   virtual TGeoNode *MakeCopyNode();
    void              SetMatrix(TGeoMatrix *matrix) {fMatrix = matrix;}
 
    virtual void      UpdateGlobalMatrix(TGeoMatrix *globmat = 0);
-   
+
 
   ClassDef(TGeoNodeMatrix, 1)               // a geometry node in the general case
 };
 
 /*************************************************************************
- * TGeoNodeOffset - node containing only an translation offset 
- *   
+ * TGeoNodeOffset - node containing only an translation offset
+ *
  *************************************************************************/
 
 class TGeoNodeOffset : public TGeoNode
@@ -179,7 +180,7 @@ public:
    virtual Int_t     GetIndex();
    virtual TGeoPatternFinder *GetFinder() {return fFinder;}
    virtual TGeoMatrix *GetMatrix() const {return fFinder->GetMatrix();}
-   virtual TGeoNode *MakeCopyNode();   
+   virtual TGeoNode *MakeCopyNode();
    void              SetFinder(TGeoPatternFinder *finder) {fFinder = finder;}
    virtual void      UpdateGlobalMatrix(TGeoMatrix *globmat = 0);
 

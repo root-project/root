@@ -9,37 +9,37 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // The geometry package
-// --------------------   
+// --------------------
 //
 //   The new ROOT geometry package is a tool designed for building, browsing,
 // tracking and visualizing a detector geometry. The code is independent from
-// other external MC for simulation, therefore it does not contain any 
-// constraints related to physics. However, the package defines a number of 
+// other external MC for simulation, therefore it does not contain any
+// constraints related to physics. However, the package defines a number of
 // hooks for physics, such as materials or magnetic field, in order to allow
-// interfaces to tracking MC's. The final purpose is to be able to use the same 
+// interfaces to tracking MC's. The final purpose is to be able to use the same
 // geometry for several purposes, such as tracking, reconstruction or visualization,
-// taking advantage of the ROOT features related to bookkeeping, I/O, 
-// histograming, browsing and GUI's.  
-//    
+// taking advantage of the ROOT features related to bookkeeping, I/O,
+// histograming, browsing and GUI's.
+//
 //   The geometrical modeler is the most important component of the package and
 // it provides answers to the basic questions like "where am I" or "how far
 // from the next boundary", but also to more complex ones like "how far from
 // the closest surface" or "which is the next crossing along a parametric curve".
-// It can provide the current material and allows an user-defined stack of the 
+// It can provide the current material and allows an user-defined stack of the
 // last classified points in order to fasten tracking.
 //
 //   The architecture of the modeler is a combination between a GEANT-like
 // containment scheme - for speeding up tracking - and a normal CSG binary tree
-// at the level of shapes - for allowing building of more complex shapes from a 
+// at the level of shapes - for allowing building of more complex shapes from a
 // set of primitives via bolean operations. The base classes used for building
 // the GEANT-like tree are TGeoVolume and TGeoNode. These allow replicating a
 // given volume several times in the geometry. A volume contains no information
 // of his position in the geometry nor of his container, but only about its
 // daughter nodes. On the other hand, nodes are unique non-overlapping volumes
-// that are holding a transformation in the local reference system and know 
+// that are holding a transformation in the local reference system and know
 // the volume in which they are contained. A geometry tree made of volumes and
 // nodes is browsed starting with the top level in order to answer a geometrical
-// query. 
+// query.
 //
 //   A volume can be divided according default or user-defined patterns, creating
 // automatically the list of division nodes inside. The elementary volumes
@@ -49,11 +49,11 @@
 //
 //   The primitive shapes supported by the package are basically the GEANT3
 // shapes (see class TGeoShape), extruded shapes and arbitrary wedges with eight
-// vertices on two paralel planes. In order to build a TGeoCompositeShape, one has 
-// to define first the primitive components. The object that handle boolean 
-// operations among components is called TGeoBoolFinder and it has to be 
+// vertices on two paralel planes. In order to build a TGeoCompositeShape, one has
+// to define first the primitive components. The object that handle boolean
+// operations among components is called TGeoBoolFinder and it has to be
 // constructed providing a string boolean expression between the components names.
-// 
+//
 //  Example for building a simple geometry :
 //______________________________________________________________________________
 //   TGeometry *geom = new TGeometry("Geometry", "Simple geometry");
@@ -114,7 +114,7 @@
 // ---------------------------------------------------------
 //   Contains the lists (arrays) of all user defined or default objects used
 // in building the geometry : materials, geometrical transformations, shapes,
-// volumes. The user can navigate downwords through the tree of nodes 
+// volumes. The user can navigate downwords through the tree of nodes
 // starting from any point. In order to navigate upwords, the current branch
 // is stored in a TObjArray .
 //   Materials, shapes and volumes can be retreived by name :
@@ -131,18 +131,18 @@
 // ----------------------
 //   Any logical volume can be drawn via TGeoVolume::Draw() member function.
 // This can be direcly accessed from the context menu of the volume object
-// directly from the browser. 
-//   There are several drawing options that can be set with 
+// directly from the browser.
+//   There are several drawing options that can be set with
 // TGeoManager::SetVisOption(Int_t opt) method :
-// opt=1 - only the content of the volume is drawn, N levels down (default N=3). 
+// opt=1 - only the content of the volume is drawn, N levels down (default N=3).
 //    This is the default behavior. The number of levels to be drawn can be changed
 //    via TGeoManager::SetVisLevel(Int_t level) method.
 // opt=2 - the final leaves (e.g. daughters with no containment) of the branch
-//    starting from volume are drawn. WARNING : This mode is memory consuming 
+//    starting from volume are drawn. WARNING : This mode is memory consuming
 //    depending of the size of geometry, so drawing from top level within this mode
-//    should be handled with care. In future there will be a limitation on the 
+//    should be handled with care. In future there will be a limitation on the
 //    maximum number of nodes to be visualized.
-// opt=3 - only a given path is visualized. This is automatically set by 
+// opt=3 - only a given path is visualized. This is automatically set by
 //    TGeoVolume::DrawPath(const char *path) method
 //
 //    The current view can be exploded in cartesian, cylindrical or spherical
@@ -154,14 +154,14 @@
 // - "CYL"  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
 //   are considered
 // - "SPH"  - bomb in radial spherical coordinate : TGeoManager::SetBombR()+5
-//   
+//
 //Begin_Html
 /*
 <img src="gif/t_mgr.jpg">
 */
 //End_Html
-#include <fstream.h>
-#include <iostream.h>
+
+#include "Riostream.h"
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -288,7 +288,7 @@ TGeoManager::TGeoManager(const char *name, const char *title)
       sprintf(name, "global%i", level);
       fGlobalMatrices->AddAt(new TGeoHMatrix(name), level);
    }
-   fLevel = 0; 
+   fLevel = 0;
    fVisLevel = kGeoVisLevel;
    fVisOption = kGeoVisDefault;
    fVisBranch = "";
@@ -376,7 +376,7 @@ Int_t TGeoManager::AddMaterial(TGeoMaterial *material)
       Error("AddMaterial", "invalid material");
       return -1;
    }
-//   printf("adding material %s\n", material->GetTitle()); 
+//   printf("adding material %s\n", material->GetTitle());
    Int_t index = GetMaterialIndex(material->GetName());
    if (index >= 0) return index;
    index = fMaterials->GetSize();
@@ -391,7 +391,7 @@ Int_t TGeoManager::AddTransformation(TGeoMatrix *matrix)
       Error("AddMatrix", "invalid matrix");
       return -1;
    }
-//   printf("adding matrix %s\n", matrix->GetName()); 
+//   printf("adding matrix %s\n", matrix->GetName());
    Int_t index = fMatrices->GetSize();
    fMatrices->Add(matrix);
    return index;
@@ -411,7 +411,7 @@ Int_t TGeoManager::AddShape(TGeoShape *shape)
    TList *list = fShapes;
    if (shape->IsRunTimeShape()) list = fGShapes;;
    Int_t index = list->GetSize();
-//   printf("adding shape %i\n", index); 
+//   printf("adding shape %i\n", index);
    list->Add(shape);
    return index;
 }
@@ -442,7 +442,7 @@ void TGeoManager::Browse(TBrowser *b)
 //-----------------------------------------------------------------------------
 void TGeoManager::BombTranslation(const Double_t *tr, Double_t *bombtr)
 {
-// get the new 'bombed' translation vector according current exploded view mode 
+// get the new 'bombed' translation vector according current exploded view mode
    memcpy(bombtr, tr, 3*sizeof(Double_t));
    switch (fExplodedView) {
       case kGeoNoBomb:
@@ -453,23 +453,23 @@ void TGeoManager::BombTranslation(const Double_t *tr, Double_t *bombtr)
          bombtr[2] *= fBombZ;
          return;
       case kGeoBombCyl:
-         bombtr[0] *= fBombR;      
-         bombtr[1] *= fBombR;      
+         bombtr[0] *= fBombR;
+         bombtr[1] *= fBombR;
          bombtr[2] *= fBombZ;
          return;
       case kGeoBombSph:
-         bombtr[0] *= fBombR;      
-         bombtr[1] *= fBombR;      
+         bombtr[0] *= fBombR;
+         bombtr[1] *= fBombR;
          bombtr[2] *= fBombR;
          return;
       default:
-         return;      
+         return;
    }
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 {
-// get the new 'unbombed' translation vector according current exploded view mode 
+// get the new 'unbombed' translation vector according current exploded view mode
    memcpy(bombtr, tr, 3*sizeof(Double_t));
    switch (fExplodedView) {
       case kGeoNoBomb:
@@ -480,17 +480,17 @@ void TGeoManager::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
          bombtr[2] /= fBombZ;
          return;
       case kGeoBombCyl:
-         bombtr[0] /= fBombR;      
-         bombtr[1] /= fBombR;      
+         bombtr[0] /= fBombR;
+         bombtr[1] /= fBombR;
          bombtr[2] /= fBombZ;
          return;
       case kGeoBombSph:
-         bombtr[0] /= fBombR;      
-         bombtr[1] /= fBombR;      
+         bombtr[0] /= fBombR;
+         bombtr[1] /= fBombR;
          bombtr[2] /= fBombR;
          return;
       default:
-         return;      
+         return;
    }
 }
 //-----------------------------------------------------------------------------
@@ -502,8 +502,8 @@ void TGeoManager::BuildCache()
       if (fNNodes>5000000)
          fCache = new TGeoCacheDummy(fTopNode);
       else
-         fCache = new TGeoNodeCache(0);   
-   }     
+         fCache = new TGeoNodeCache(0);
+   }
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::ClearPad()
@@ -533,7 +533,7 @@ void TGeoManager::ClearAttributes()
       vol->SetLineWidth(gStyle->GetLineWidth());
       vol->SetVisTouched(kFALSE);
    }
-}      
+}
 //-----------------------------------------------------------------------------
 void TGeoManager::CloseGeometry()
 {
@@ -557,7 +557,7 @@ void TGeoManager::ClearShape(TGeoShape *shape)
 {
    if (fShapes->FindObject(shape)) fShapes->Remove(shape);
    delete shape;
-}   
+}
 //-----------------------------------------------------------------------------
 void TGeoManager::CleanGarbage()
 {
@@ -567,8 +567,8 @@ void TGeoManager::CleanGarbage()
    while ((vol=(TGeoVolume*)nextv()))
       vol->SetFinder(0);
    fGVolumes->Delete();
-   fGShapes->Delete();   
-}      
+   fGShapes->Delete();
+}
 //-----------------------------------------------------------------------------
 void TGeoManager::CdTop()
 {
@@ -578,7 +578,7 @@ void TGeoManager::CdTop()
 //   return;
 //-----------------------
    fLevel = 0;
-   if (fCurrentOverlapping) fLastNode = fCurrentNode;   
+   if (fCurrentOverlapping) fLastNode = fCurrentNode;
    fCurrentNode = fTopNode;
    gGeoNodeCache->CdTop();
    fCurrentOverlapping = fCurrentNode->IsOverlapping();
@@ -612,14 +612,14 @@ void TGeoManager::CdDown(Int_t index)
 //-----------------------
    TGeoNode *node = fCurrentNode->GetDaughter(index);
    Bool_t is_offset = node->IsOffset();
-   if (is_offset) 
+   if (is_offset)
       node->GetFinder()->cd(node->GetIndex());
    else
-      fCurrentOverlapping = node->IsOverlapping();   
+      fCurrentOverlapping = node->IsOverlapping();
    gGeoNodeCache->CdDown(index);
    fCurrentNode = node;
-   fLevel++; 
-}     
+   fLevel++;
+}
 //-----------------------------------------------------------------------------
 Bool_t TGeoManager::cd(const char *path)
 {
@@ -650,7 +650,7 @@ Bool_t TGeoManager::cd(const char *path)
 //         printf("current vol : %s\n", vol->GetName());
          node = vol->GetNode(name.Data());
 //         printf("current node : %s\n", node->GetName());
-      } else node = 0;   
+      } else node = 0;
       if (!node) {
          Error("cd", "path not valid");
          return kFALSE;
@@ -668,7 +668,7 @@ Int_t TGeoManager::CountNodes(TGeoVolume *vol, Int_t nlevels)
    TGeoVolume *top;
    if (!vol) {
       top = fTopVolume;
-   } else {     
+   } else {
       top = vol;
    }
    Int_t count = top->CountNodes(nlevels);
@@ -686,7 +686,7 @@ void TGeoManager::DefaultAngles()
       view->SetView(-206,126,75,irep);
       gPad->Modified();
       gPad->Update();
-   }   
+   }
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::Down(Int_t id)
@@ -728,7 +728,7 @@ void TGeoManager::DrawPoint(Double_t x, Double_t y, Double_t z)
    for (Int_t i=0; i<nd; i++) {
       node1 = node->GetDaughter(i);
       node1->GetVolume()->SetVisibility(kTRUE);
-   }   
+   }
    Double_t point[3];
    Double_t current[3];
    memcpy(&point[0], fPoint, 3*sizeof(Double_t));
@@ -737,7 +737,7 @@ void TGeoManager::DrawPoint(Double_t x, Double_t y, Double_t z)
    GetCurrentVolume()->Draw();
    DrawCurrentPoint(2);
    memcpy(fPoint, &point[0], 3*sizeof(Double_t));
-   
+
 //   node->GetVolume()->SetLineColor(2);
 //      node = fCurrentNode;
 //      node->Draw("");
@@ -829,7 +829,7 @@ void TGeoManager::DrawPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
          ymin = TMath::Min(ymin, xyz[1]);
          ymax = TMath::Max(ymax, xyz[1]);
          zmin = TMath::Min(zmin, xyz[2]);
-         zmax = TMath::Max(zmax, xyz[2]);   
+         zmax = TMath::Max(zmax, xyz[2]);
 //         ntpl->Fill(xyz[0], xyz[1], xyz[2]);
          marker->SetNextPoint(xyz[0], xyz[1], xyz[2]);
          i++;
@@ -841,16 +841,16 @@ void TGeoManager::DrawPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
       ymin = TMath::Min(ymin, xyz[1]);
       ymax = TMath::Max(ymax, xyz[1]);
       zmin = TMath::Min(zmin, xyz[2]);
-      zmax = TMath::Max(zmax, xyz[2]);   
+      zmax = TMath::Max(zmax, xyz[2]);
 //      ntpl->Fill(xyz[0], xyz[1], xyz[2]);
       marker->SetNextPoint(xyz[0], xyz[1], xyz[2]);
       if ((i%1000) == 0) printf("%i\n", i);
-      i++; 
+      i++;
       ratio = (Double_t)i/(Double_t)igen;
    }
    timer->Stop();
    timer->Print();
-   printf("ratio : %g  volume of inner structures for %s : %g[cm3]\n", 
+   printf("ratio : %g  volume of inner structures for %s : %g[cm3]\n",
            ratio, vol->GetName(), ratio*dx*dy*dz);
    ntpl->Fill(xmin,ymin,zmin);
    ntpl->Fill(xmax,ymin,zmin);
@@ -980,7 +980,7 @@ void TGeoManager::TestOverlaps(const char* path)
    ntpl->Fill(xmin,ymax,zmax);
    ntpl->Fill(xmax,ymax,zmax);
    ntpl->Draw("z:y:x");
-   
+
    // shoot the poins in the geometry
    TGeoNode *node;
    TString cpath;
@@ -1009,7 +1009,7 @@ void TGeoManager::TestOverlaps(const char* path)
       }
       // draw the overlapping point
       marker->SetNextPoint(xyz[3*j], xyz[3*j+1], xyz[3*j+2]);
-      if (node) { 
+      if (node) {
          if (overlaps->IndexOf(node) < 0) overlaps->Add(node);
       }
    }
@@ -1020,7 +1020,7 @@ void TGeoManager::TestOverlaps(const char* path)
    }
    markthis->Draw("SAME");
    if (gPad) gPad->Update();
-   // display overlaps 
+   // display overlaps
    if (overlaps->GetEntriesFast()) {
       printf("list of overlapping nodes :\n");
       for (i=0; i<overlaps->GetEntriesFast(); i++) {
@@ -1054,15 +1054,15 @@ Int_t TGeoManager::GetVirtualLevel()
       if (!mother->IsOverlapping() && !mother->IsOffset()) {
          if (!new_media) new_media=(mother->GetMedia()==imedia)?0:virtual_level;
          break;
-      }   
-      //if (mother->IsOverlapping()) 
+      }
+      //if (mother->IsOverlapping())
          //last_many=virtual_level;
       if (!new_media) new_media=(mother->GetMedia()==imedia)?0:virtual_level;
       virtual_level++;
-   }  
+   }
 //   if (last_many<0) return 0;
-   return (new_media==0)?virtual_level:(new_media-1);    
-}   
+   return (new_media==0)?virtual_level:(new_media-1);
+}
 //-----------------------------------------------------------------------------
 Bool_t TGeoManager::GotoSafeLevel()
 {
@@ -1076,18 +1076,18 @@ Bool_t TGeoManager::GotoSafeLevel()
    TGeoNode *mother = 0;
 
    while ((mother=GetMother(virtual_level))) {
-      if (!mother->IsOverlapping() && !mother->IsOffset()) 
+      if (!mother->IsOverlapping() && !mother->IsOffset())
          break;
-      if (mother->IsOverlapping()) 
+      if (mother->IsOverlapping())
          last_many=virtual_level;
       virtual_level++;
-   }  
+   }
    if (last_many<0) return kFALSE;
    while (virtual_level--) CdUp();
 */
    while (fCurrentOverlapping && fLevel) CdUp();
    return kTRUE;
-} 
+}
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoManager::FindInCluster(Int_t *cluster, Int_t nc)
 {
@@ -1122,7 +1122,7 @@ TGeoNode *TGeoManager::FindInCluster(Int_t *cluster, Int_t nc)
          PopDummy(ipop);
 //         printf("Final node in cluster: %s\n", found->GetName());
          return found;
-      }   
+      }
 //      printf("node found in cluster: %s\n", found->GetName());
       found_virtual = fLevel-GetVirtualLevel();
       if (added) {
@@ -1139,7 +1139,7 @@ TGeoNode *TGeoManager::FindInCluster(Int_t *cluster, Int_t nc)
                }
             } else                 replace = kFALSE;
          }
-//         if (replace) printf("...will become current candidate\n");         
+//         if (replace) printf("...will become current candidate\n");
          // if this was the last checked node
          if (i==(nc-1)) {
             if (replace) {
@@ -1151,7 +1151,7 @@ TGeoNode *TGeoManager::FindInCluster(Int_t *cluster, Int_t nc)
                PopDummy(ipop);
 //               printf("Final node in cluster: %s\n", fCurrentNode->GetName());
                return fCurrentNode;
-            }      
+            }
          }
          // we still have to go on
          if (replace) {
@@ -1165,26 +1165,26 @@ TGeoNode *TGeoManager::FindInCluster(Int_t *cluster, Int_t nc)
          // restore top of cluster
          fCurrentOverlapping = PopPath(ipop);
 //         printf("popped ipop=%i\n", ipop);
-//         continue;   
+//         continue;
       } else {
       // the stack was clean, push new one
          PushPath();
 //         printf("pushed new found ipop=%i stack=%i\n", ipop, GetStackLevel());
          added = kTRUE;
          deepest = fLevel;
-         deepest_virtual = found_virtual;           
+         deepest_virtual = found_virtual;
          // restore original path
          fCurrentOverlapping = PopPath(ipop);
 //         printf("popped ipop=%i\n", ipop);
-      }      
+      }
    }
 //   printf("woops - abnormal return\n");
    PopDummy(ipop);
 //   printf("Final node in cluster: %s\n", fCurrentNode->GetName());
    return fCurrentNode;
-}   
+}
 //-----------------------------------------------------------------------------
-Int_t TGeoManager::GetTouchedCluster(Int_t start, Double_t *point, 
+Int_t TGeoManager::GetTouchedCluster(Int_t start, Double_t *point,
                               Int_t *check_list, Int_t ncheck, Int_t *result)
 {
 // make the cluster of overlapping nodes in a voxel, containing point in reference
@@ -1204,7 +1204,7 @@ Int_t TGeoManager::GetTouchedCluster(Int_t start, Double_t *point,
       result[ntotal++]=check_list[start];
 //      printf("CLUSTER node : %s\n", current->GetName());
    }
-      
+
    Int_t jst=0, i, j;
    while ((ovlps[jst]<=check_list[start]) && (jst<novlps))  jst++;
    if (jst==novlps) return 0;
@@ -1217,12 +1217,12 @@ Int_t TGeoManager::GetTouchedCluster(Int_t start, Double_t *point,
             if (current->GetVolume()->Contains(&local[0])) {
                result[ntotal++]=check_list[i];
 //               printf("CLUSTER node : %s\n", current->GetName());
-            }  
-         }  
+            }
+         }
       }
-   }          
+   }
    return ntotal;
-}   
+}
 //-----------------------------------------------------------------------------
 void TGeoManager::DefaultColors()
 {
@@ -1236,7 +1236,7 @@ void TGeoManager::DefaultColors()
          gPad->Modified();
          gPad->Update();
       }
-   }         
+   }
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::SetVisOption(Int_t option) {
@@ -1250,7 +1250,7 @@ void TGeoManager::SetVisOption(Int_t option) {
       gPad->Modified();
       gPad->Update();
    }
-}      
+}
 //-----------------------------------------------------------------------------
 void TGeoManager::SetVisLevel(Int_t level) {
 // set default level down to which visualization is performed
@@ -1260,7 +1260,7 @@ void TGeoManager::SetVisLevel(Int_t level) {
       gPad->Modified();
       gPad->Update();
    }
-}      
+}
 //-----------------------------------------------------------------------------
 void TGeoManager::SaveAttributes(const char *filename)
 {
@@ -1268,11 +1268,11 @@ void TGeoManager::SaveAttributes(const char *filename)
    if (!fTopNode) {
       printf("SaveAttributes - geometry must be closed\n");
       return;
-   }   
+   }
    ofstream out;
    char *fname = new char[20];
    char quote = '"';
-   if (!strlen(filename)) 
+   if (!strlen(filename))
       sprintf(fname, "tgeoatt.C");
    else
       sprintf(fname, "%s", filename);
@@ -1292,7 +1292,7 @@ void TGeoManager::SaveAttributes(const char *filename)
    out << "//=== Attributes for " << GetTitle() << " geometry"<<endl;
    out << "//===== <run this macro AFTER loading the geometry in memory>"<<endl;
    // save current top volume
-   out << "   TGeoVolume *top = gGeoManager->GetVolume("<<quote<<gGeoManager->GetTopVolume()->GetName()<<quote<<");"<<endl;   
+   out << "   TGeoVolume *top = gGeoManager->GetVolume("<<quote<<gGeoManager->GetTopVolume()->GetName()<<quote<<");"<<endl;
    out << "   TGeoVolume *vol = 0;"<<endl;
    out << "   // clear all volume attributes"<<endl;
    out << "   gGeoManager->ClearAttributes();"<<endl;
@@ -1312,16 +1312,16 @@ void TGeoManager::SaveAttributes(const char *filename)
 /*
       if (vol->IsStyleDefault()) continue;
       out << "   vol = gGeoManager->GetVolume("<<quote<<vol->GetName()<<quote<<");"<<endl;
-      if (!vol->IsVisible()) 
+      if (!vol->IsVisible())
          out << "   vol->SetVisibility(kFALSE);"<<endl;
-      if (vol->GetLineColor() != gStyle->GetLineColor())   
+      if (vol->GetLineColor() != gStyle->GetLineColor())
          out << "   vol->SetLineColor("<<vol->GetLineColor()<<");"<<endl;
-      if (vol->GetLineStyle() != gStyle->GetLineStyle())   
+      if (vol->GetLineStyle() != gStyle->GetLineStyle())
          out << "   vol->SetLineStyle("<<vol->GetLineStyle()<<");"<<endl;
-      if (vol->GetLineWidth() != gStyle->GetLineWidth())   
+      if (vol->GetLineWidth() != gStyle->GetLineWidth())
          out << "   vol->SetLineWidth("<<vol->GetLineWidth()<<");"<<endl;
 */
-   } 
+   }
    out << "   // draw top volume with new settings"<<endl;
    out << "   top->Draw();"<<endl;
    out << "}" << endl;
@@ -1349,7 +1349,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, TGeoNode *skipnode)
          if (!fLevel) {
             fIsOutside = kTRUE;
             return 0;
-         }   
+         }
          CdUp();
          return SearchNode(kFALSE, skip);
       }
@@ -1361,15 +1361,15 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, TGeoNode *skipnode)
       MasterToLocal(fPoint, &point[0]);
       if (fCurrentNode==skipnode) {
       // in case searching down and skipping this
-         inside_current = kTRUE; 
+         inside_current = kTRUE;
       } else {
          inside_current = vol->Contains(&point[0]);
          if (!inside_current) return 0;
       }
-   }       
+   }
 //   printf("Point is inside\n");
 //   printf("current safe node : %s\n", fCurrentNode->GetName());
-   // point inside current (safe) node -> search downwards   
+   // point inside current (safe) node -> search downwards
    TGeoNode *node;
    Int_t ncheck = 0;
    // if inside an non-overlapping node, reset overlap searches
@@ -1377,7 +1377,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, TGeoNode *skipnode)
 //      printf("current node is ONLY -> reset ovlp srch. : %s\n", fCurrentNode->GetName());
       fSearchOverlaps = kFALSE;
 //      printf("=== overlap search reset ===\n");
-   } //else printf("current node is MANY\n");  
+   } //else printf("current node is MANY\n");
 
    Int_t nd = vol->GetNdaughters();
    // in case there are no daughters
@@ -1395,13 +1395,13 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, TGeoNode *skipnode)
          CdDown(node->GetIndex());
          return SearchNode(kTRUE, node);
       }
-      // point is not inside the division, but might be in other nodes 
+      // point is not inside the division, but might be in other nodes
       // at the same level (NOT SUPPORTED YET)
       return fCurrentNode;
    }
    // second, look if current volume is voxelized
    TGeoVoxelFinder *voxels = vol->GetVoxels();
-   Int_t *check_list = 0; 
+   Int_t *check_list = 0;
    if (voxels) {
       // get the list of nodes passing thorough the current voxel
       check_list = voxels->GetCheckList(&point[0], ncheck);
@@ -1421,7 +1421,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, TGeoNode *skipnode)
                node = FindInCluster(cluster, nc);
                delete [] cluster;
                return node;
-            }   
+            }
          }
 //         printf("     down %i\n", check_list[id]);
          CdDown(check_list[id]);
@@ -1459,7 +1459,7 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
 
    // convert current point and direction to local reference
    fStep = TGeoShape::kBig;
-   Double_t point[3]; 
+   Double_t point[3];
    Double_t dir[3];
    if (strlen(path)) {
       PushPath();
@@ -1467,13 +1467,13 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
          PopPath();
          return 0;
       }
-      TGeoNode *target=fCurrentNode;   
+      TGeoNode *target=fCurrentNode;
       TGeoVolume *tvol=fCurrentNode->GetVolume();
       MasterToLocal(fPoint, &point[0]);
       MasterToLocalVect(fDirection, &dir[0]);
       if (tvol->Contains(&point[0]))
          fStep=tvol->GetShape()->DistToOut(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
-      else   
+      else
          fStep=tvol->GetShape()->DistToIn(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
       PopPath();
       return target;
@@ -1482,14 +1482,14 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    MasterToLocalVect(fDirection, &dir[0]);
 //   printf("master p: %f %f %f  local p:%f %f %f\n", fPoint[0], fPoint[1], fPoint[2], point[0], point[1], point[2]);
 //   printf("master d: %f %f %f  local d:%f %f %f\n", fDirection[0], fDirection[1], fDirection[2], dir[0], dir[1], dir[2]);
-   // compute distance to exit point from current node and the distance to its 
+   // compute distance to exit point from current node and the distance to its
    // closest boundary
    TGeoVolume *vol = fCurrentNode->GetVolume();
    // if point is outside, just check the top node
    if (fIsOutside) {
       fStep = vol->GetShape()->DistToOut(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
       return fTopNode;
-   }   
+   }
 //   printf("shape is : %s\n", vol->GetShape()->ClassName());
    if (fIsEntering || fIsExiting) {
       fStep = vol->GetShape()->DistToOut(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
@@ -1497,7 +1497,7 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    } else {
       fStep = vol->GetShape()->DistToOut(&point[0], &dir[0], 2, TGeoShape::kBig, &fSafety);
 //      printf("step to out : %f\n", fStep);
-   }   
+   }
    // get number of daughters. If no daughters we are done.
    Int_t nd = vol->GetNdaughters();
 //   printf("Vol : %s number of daughters : %i\n", vol->GetName(),nd);
@@ -1523,7 +1523,7 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
          fStep=snext;
          return current;
       }
-      return clnode;   
+      return clnode;
    }
 */
    if (nd<3) {
@@ -1542,8 +1542,8 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
 //            printf("CLOSER: %s AT %f\n", clnode->GetName(), fStep);
          }
       }
-   return clnode;   
-   }         
+   return clnode;
+   }
    // if current volume is divided, we are in the non-divided region. We
    // check only the first and the last cell
    TGeoPatternFinder *finder = vol->GetFinder();
@@ -1560,7 +1560,7 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
          fStep=snext;
          clnode = current;
 //         printf("CLOSER: %s AT %f\n", clnode->GetName(), fStep);
-      }   
+      }
       Int_t ilast = ifirst+finder->GetNdiv()-1;
       if (ilast==ifirst) return clnode;
       current = vol->GetNode(ilast);
@@ -1580,8 +1580,8 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    if (voxels) {
 //      printf("VOXELS\n");
       Int_t ncheck = 0;
-      Int_t *vlist = 0;   
-//      printf("Entering voxels of %s, path=%s\n", vol->GetName(), GetPath());  
+      Int_t *vlist = 0;
+//      printf("Entering voxels of %s, path=%s\n", vol->GetName(), GetPath());
       voxels->SortCrossedVoxels(&point[0], &dir[0]);
       Bool_t first = kTRUE;
 //      Bool_t end = kFALSE;
@@ -1595,7 +1595,7 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
             // compute also safety if we are in the starting voxel
                snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 2, TGeoShape::kBig, &safety);
                if (safety<fSafety) fSafety=safety;
-            }   
+            }
             else
                snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 3, TGeoShape::kBig, &safety);
 //            printf(" checking %s : %f\n", current->GetName(), snext);
@@ -1604,12 +1604,12 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
 //               end = kTRUE;
                clnode = current;
 //               printf("CLOSER: %s AT %f\n", current->GetName(), fStep);
-            }   
+            }
          }
          first=kFALSE;
 //         if (end) return clnode;
       }
-   }         
+   }
    // if no voxels and more than 1 daughter (should never happen) just
    // loop on volumes
    return clnode;
@@ -1624,7 +1624,7 @@ TGeoNode *TGeoManager::FindNodeLast(Bool_t downwards)
    if (!fCurrentNode->IsOverlapping()) {
       ResetIgnored();
       return fCurrentNode;
-   }   
+   }
    // now check if current node might have real overlaps
    if (fILevel != (fLevel-1)) ResetIgnored();
    TGeoNode *node = FindNodeOverlap();
@@ -1674,7 +1674,7 @@ TGeoNode *TGeoManager::FindNodeOverlap()
    if (!voxels) return 0;
    Double_t point[3];
    Int_t *check_list = 0;
-   Int_t ncheck = 0; 
+   Int_t ncheck = 0;
    TGeoNode *last_node = fCurrentNode;
    Int_t last_level = fLevel;
    PushPath();
@@ -1692,7 +1692,7 @@ TGeoNode *TGeoManager::FindNodeOverlap()
    if (!ncheck) {
       PopPath();
       return 0;
-   }   
+   }
 //   if (!ncheck) printf("WOOPS ncheck... lost it\n");
    Int_t current = vol->GetNodeIndex(last_node, check_list, ncheck);
    if (current<0) {
@@ -1701,9 +1701,9 @@ TGeoNode *TGeoManager::FindNodeOverlap()
 //      printf("WOOPS current node not in mother's voxel ???\n");
 //      printf("mother is %s  node is %s\n", vol->GetName(), last_node->GetName());
 //      printf("check list :\n");
-//      for (Int_t i=0; i<ncheck; i++) 
+//      for (Int_t i=0; i<ncheck; i++)
 //         printf("%s\n", vol->GetNode(check_list[ncheck])->GetName());
-   }   
+   }
    Bool_t is_virtual = kFALSE;
    TGeoNode *node = 0;
    if (ncheck>1) {
@@ -1723,56 +1723,56 @@ TGeoNode *TGeoManager::FindNodeOverlap()
                // an ONLY was found
                   PopDummy();
                   return node;
-               }   
+               }
                if (fLevel>last_level) {
-               // deeper node found               
+               // deeper node found
                   if (last_node->IsVirtual()) {
                      PopDummy();
                      return node;
-                  }   
-                  is_virtual = node->IsVirtual();                                    
+                  }
+                  is_virtual = node->IsVirtual();
                   if (!is_virtual) {
                      PopDummy();
                      return node;
-                  }   
-                  for (Int_t i=1; i<(fLevel-last_level+2); i++)                  
-                     is_virtual = is_virtual & GetMother(i)->IsVirtual();                  
+                  }
+                  for (Int_t i=1; i<(fLevel-last_level+2); i++)
+                     is_virtual = is_virtual & GetMother(i)->IsVirtual();
                   if (!is_virtual) {
                      PopDummy();
                      return node;
-                  }   
+                  }
                   // branch to new node virtual, if old node also virtual choose new
                   PopPath();
                   return 0;
-               }                                       
-               // new level equal to old one               
+               }
+               // new level equal to old one
                if (node->IsVirtual()) {
                // keep old one, new node virtual
                   PopPath();
                   return 0;
-               }   
+               }
                if (last_node->IsVirtual()) {
                // the new node is not virtual - this is the solution
                   PopDummy();
                   return node;
                } else {
-               // both nodes not virtual at same level               
-                  if (last_node->GetMedia()!=node->GetMedia()) 
+               // both nodes not virtual at same level
+                  if (last_node->GetMedia()!=node->GetMedia())
                      printf("ERROR in geom : 2 MANY's with different media at same level overlapping\n");
                   PopPath();
                   return 0;
-               }                  
+               }
             } else {
                PopPath();
                PushPath();
                CdUp();
-            }   
+            }
          }
       }
    }
    PopPath();
    return 0;
-} 
+}
 //-----------------------------------------------------------------------------
 void TGeoManager::InitTrack(Double_t *point, Double_t *dir)
 {
@@ -1862,7 +1862,7 @@ Int_t TGeoManager::GetMaterialIndex(const char *matname)
    return -1;  // fail
 }
 //-----------------------------------------------------------------------------
-void TGeoManager::RandomRays(Int_t nrays) 
+void TGeoManager::RandomRays(Int_t nrays)
 {
 // randomly shoot nrays and plot intersections with surfaces for current
 // top node
@@ -1927,8 +1927,8 @@ void TGeoManager::RandomRays(Int_t nrays)
                   } else {
                      draw=kFALSE;
                   }
-               }   
-                        
+               }
+
                if (draw) {
                   if (ic >= 128) ic = 0;
                   marker = (TPolyMarker3D*)pm->At(ic);
@@ -1943,14 +1943,14 @@ void TGeoManager::RandomRays(Int_t nrays)
                }
             }
             startnode=endnode;
-            vis1=vis2;      
+            vis1=vis2;
             node = FindNextBoundary();
 //            if (fStep<1E-9) break;
             endnode = Step();
             vis2=(endnode)?(endnode->IsOnScreen()):kFALSE;
          }
       }
-   }         
+   }
    for (Int_t m=0; m<128; m++) {
       marker = (TPolyMarker3D*)pm->At(m);
       if (marker) marker->Draw("SAME");
@@ -2024,8 +2024,8 @@ TGeoVolume *TGeoManager::MakeArb8(const char *name, const char *material,
    TGeoArb8 *arb = new TGeoArb8(dz, vertices);
    TGeoVolume *vol = new TGeoVolume(name, arb, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
-}  
+   return vol;
+}
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeBox(const char *name, const char *material,
                                     Double_t dx, Double_t dy, Double_t dz)
@@ -2042,7 +2042,7 @@ TGeoVolume *TGeoManager::MakeBox(const char *name, const char *material,
    TGeoBBox *box = new TGeoBBox(dx, dy, dz);
    TGeoVolume *vol = new TGeoVolume(name, box, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakePara(const char *name, const char *material,
@@ -2053,7 +2053,7 @@ TGeoVolume *TGeoManager::MakePara(const char *name, const char *material,
    if ((alpha==0) && (theta==0)) {
       printf("Warning : para %s with alpha=0, theta=0 -> making box instead\n", name);
       return MakeBox(name, material, dx, dy, dz);
-   }   
+   }
    TGeoVolume *old = 0;
    old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoMaterial *mat = GetMaterial(material);
@@ -2066,11 +2066,11 @@ TGeoVolume *TGeoManager::MakePara(const char *name, const char *material,
    para = new TGeoPara(dx, dy, dz, alpha, theta, phi);
    TGeoVolume *vol = new TGeoVolume(name, para, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeSphere(const char *name, const char *material,
-                                    Double_t rmin, Double_t rmax, Double_t themin, Double_t themax, 
+                                    Double_t rmin, Double_t rmax, Double_t themin, Double_t themax,
                                     Double_t phimin, Double_t phimax)
 {
 // Make in one step a volume pointing to a sphere shape with given material
@@ -2085,11 +2085,11 @@ TGeoVolume *TGeoManager::MakeSphere(const char *name, const char *material,
    TGeoSphere *sph = new TGeoSphere(rmin, rmax, themin, themax, phimin, phimax);
    TGeoVolume *vol = new TGeoVolume(name, sph, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeTube(const char *name, const char *material,
-                                     Double_t rmin, Double_t rmax, Double_t dz)                                    
+                                     Double_t rmin, Double_t rmax, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given material
    TGeoVolume *old = 0;
@@ -2103,7 +2103,7 @@ TGeoVolume *TGeoManager::MakeTube(const char *name, const char *material,
    TGeoTube *tube = new TGeoTube(rmin, rmax, dz);
    TGeoVolume *vol = new TGeoVolume(name, tube, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeTubs(const char *name, const char *material,
@@ -2122,11 +2122,11 @@ TGeoVolume *TGeoManager::MakeTubs(const char *name, const char *material,
    TGeoTubeSeg *tubs = new TGeoTubeSeg(rmin, rmax, dz, phi1, phi2);
    TGeoVolume *vol = new TGeoVolume(name, tubs, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeEltu(const char *name, const char *material,
-                                     Double_t a, Double_t b, Double_t dz)                                    
+                                     Double_t a, Double_t b, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given material
    TGeoVolume *old = 0;
@@ -2140,7 +2140,7 @@ TGeoVolume *TGeoManager::MakeEltu(const char *name, const char *material,
    TGeoEltu *eltu = new TGeoEltu(a, b, dz);
    TGeoVolume *vol = new TGeoVolume(name, eltu, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeCtub(const char *name, const char *material,
@@ -2159,7 +2159,7 @@ TGeoVolume *TGeoManager::MakeCtub(const char *name, const char *material,
    TGeoCtub *ctub = new TGeoCtub(rmin, rmax, dz, phi1, phi2, lx, ly, lz, hx, hy, hz);
    TGeoVolume *vol = new TGeoVolume(name, ctub, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeCone(const char *name, const char *material,
@@ -2178,7 +2178,7 @@ TGeoVolume *TGeoManager::MakeCone(const char *name, const char *material,
    TGeoCone *cone = new TGeoCone(dz, rmin1, rmax1, rmin2, rmax2);
    TGeoVolume *vol = new TGeoVolume(name, cone, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeCons(const char *name, const char *material,
@@ -2198,7 +2198,7 @@ TGeoVolume *TGeoManager::MakeCons(const char *name, const char *material,
    TGeoConeSeg *cons = new TGeoConeSeg(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    TGeoVolume *vol = new TGeoVolume(name, cons, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakePcon(const char *name, const char *material,
@@ -2216,7 +2216,7 @@ TGeoVolume *TGeoManager::MakePcon(const char *name, const char *material,
    TGeoPcon *pcon = new TGeoPcon(phi, dphi, nz);
    TGeoVolume *vol = new TGeoVolume(name, pcon, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakePgon(const char *name, const char *material,
@@ -2234,7 +2234,7 @@ TGeoVolume *TGeoManager::MakePgon(const char *name, const char *material,
    TGeoPgon *pgon = new TGeoPgon(phi, dphi, nedges, nz);
    TGeoVolume *vol = new TGeoVolume(name, pgon, mat);
    if (old) vol->MakeCopyNodes(old);
-   return vol; 
+   return vol;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeTrd1(const char *name, const char *material,
@@ -2276,7 +2276,7 @@ TGeoVolume *TGeoManager::MakeTrd2(const char *name, const char *material,
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeTrap(const char *name, const char *material,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t h1,
-                                  Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+                                  Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
 // Make in one step a volume pointing to a trd2 shape with given material
@@ -2288,7 +2288,7 @@ TGeoVolume *TGeoManager::MakeTrap(const char *name, const char *material,
       Warning("MakeTrap", "Material unknown");
       mat = GetMaterial("default");
    }
-   TGeoTrap *trap = new TGeoTrap(dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, 
+   TGeoTrap *trap = new TGeoTrap(dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, trap, mat);
    if (old) vol->MakeCopyNodes(old);
@@ -2297,7 +2297,7 @@ TGeoVolume *TGeoManager::MakeTrap(const char *name, const char *material,
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeGtra(const char *name, const char *material,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
-                                  Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+                                  Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
 // Make in one step a volume pointing to a trd2 shape with given material
@@ -2309,7 +2309,7 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, const char *material,
       Warning("MakeTrap", "Material unknown");
       mat = GetMaterial("default");
    }
-   TGeoGtra *gtra = new TGeoGtra(dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2, 
+   TGeoGtra *gtra = new TGeoGtra(dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, gtra, mat);
    if (old) vol->MakeCopyNodes(old);
@@ -2334,7 +2334,7 @@ void TGeoManager::SetExplodedView(UInt_t ibomb)
 
    if (ibomb==kGeoNoBomb) {
       change &= ((fExplodedView==kGeoNoBomb)?kFALSE:kTRUE);
-   }      
+   }
    if (ibomb==kGeoBombXYZ) {
       change &= ((fExplodedView==kGeoBombXYZ)?kFALSE:kTRUE);
    }
@@ -2347,8 +2347,8 @@ void TGeoManager::SetExplodedView(UInt_t ibomb)
    fExplodedView = ibomb;
    if (change && gPad->GetView()) {
       gPad->Modified();
-      gPad->Update();  
-   }       
+      gPad->Update();
+   }
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::SetNsegments(Int_t nseg)
@@ -2376,7 +2376,7 @@ Double_t TGeoManager::CoSin(Double_t phi, Bool_t icos)
 {
    if (phi<0) phi+=360;
    Int_t n1 = ((Int_t)(phi/fSegStep))%fNsegments;
-   if (icos) 
+   if (icos)
       return kGeoCosTable[n1];
    else
       return kGeoSinTable[n1];
@@ -2399,18 +2399,18 @@ TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
 // direction (fDirection). If the step is imposed by geometry, is_geom flag
 // must be true (default). The cross flag specifies if the boundary should be
 // crossed in case of a geometry step (default true). Returns new node after step.
-   Double_t epsil = 0;   
+   Double_t epsil = 0;
    if (is_geom) {
       epsil=(cross)?1E-9:-1E-9;
       fIsEntering = cross;
       fIsExiting  = !cross;
    } else {
       fIsEntering = fIsExiting = kFALSE;
-   }      
-   for (Int_t i=0; i<3; i++) 
+   }
+   for (Int_t i=0; i<3; i++)
       fPoint[i]+=(fStep+epsil)*fDirection[i];
    return FindNode();
-}      
+}
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
                                     const char* g3path)
@@ -2452,20 +2452,20 @@ TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
                common = name;
                continue;
             } else break;
-         }   
+         }
       }
       // if g3 response was given, cd to common path
       if (strlen(common.Data())) {
          while (strcmp(gGeoManager->GetPath(), common.Data()) && fLevel) {
             nodegeo = fCurrentNode;
             CdUp();
-         }   
+         }
          cd(g3path);
          solg3 = fCurrentNode;
          while (strcmp(gGeoManager->GetPath(), common.Data()) && fLevel) {
             nodeg3 = fCurrentNode;
             CdUp();
-         }   
+         }
          if (!nodegeo) return 0;
          if (!nodeg3) return 0;
          cd(common.Data());
@@ -2493,13 +2493,13 @@ TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
                eps[0] = TMath::Abs(point[0]-fPoint[0]);
                eps[1] = TMath::Abs(point[1]-fPoint[1]);
                eps[2] = TMath::Abs(point[2]-fPoint[2]);
-            }   
-         }            
+            }
+         }
       }
       if (!node_close) dist = -1;
       return node_close;
    }
-         
+
 //   gRandom = new TRandom3();
    // save current point
    memcpy(&point[0], fPoint, 3*sizeof(Double_t));
@@ -2521,14 +2521,14 @@ TGeoNode *TGeoManager::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
             eps[1] = TMath::Abs(point[1]-fPoint[1]);
             eps[2] = TMath::Abs(point[2]-fPoint[2]);
          }
-      }         
+      }
    }
 //   delete [] geopath;
    // restore the original point and path
    memcpy(fPoint, &point[0], 3*sizeof(Double_t));
    FindNode();  // really needed ?
    if (!node_close) dist=-1;
-   return node_close;            
+   return node_close;
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::SetRandomBox(Double_t ox, Double_t dx, Double_t oy, Double_t dy,
@@ -2598,7 +2598,7 @@ void TGeoManager::SelectTrackingMedia()
             mat->SetMedia(imedia);
             media[i] = imedia++;
             mat->Print();
-         }   
+         }
       }
    }
 }
@@ -2625,21 +2625,21 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
    SetCurrentPoint(x,y,z);
    current = FindNode();
    printf("point: x=%f y=%f z=%f\n", x,y,z);
-   if (current) 
+   if (current)
       printf("node containing point : %s\n", current->GetName());
    else
-      printf("node containing point : none\n");   
+      printf("node containing point : none\n");
    node = SamplePoints(10000, dist, 0.01);
    if (dist>1E9) {
       printf("No boundary closer than 0.01\n");
       return;
    }
-   printf("     closest boundary : %f sampled with %d points\n", dist, 10000);    
+   printf("     closest boundary : %f sampled with %d points\n", dist, 10000);
    if (node)
       printf("         closest node : %s\n", node->GetName());
    else
-      printf("         closest node : NULL\n");   
-      
+      printf("         closest node : NULL\n");
+
 /*
    TString opt = option;
    opt.ToLower();
@@ -2660,15 +2660,15 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
    }
    if (fTopVolume != fMasterVolume) RestoreMasterVolume();
    SetCurrentPoint(x,y,z);
-   SetRandomBox(x, 0.1, y, 0.1, z, 0.1); 
+   SetRandomBox(x, 0.1, y, 0.1, z, 0.1);
    DrawPoints();
 */
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::CheckGeometry(Option_t *option)
 {
-// instances a TGeoChecker object and investigates the geometry according to 
-// option 
+// instances a TGeoChecker object and investigates the geometry according to
+// option
    // check shapes first
    fTopNode->CheckShapes();
 //   CleanGarbage();

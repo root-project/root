@@ -6,14 +6,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 // Author : Andrei Gheata
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 // TGeoNode
 //----------
 //   Nodes are positioned volumes. They have a pointer to the corresponding
 // volume. Nodes always belong to a mother container volume, so they also
 // have a pointer to this. The base class for nodes is TGeoNode, describing only
-// the logical tree. The position of the node with respect to its mother is 
+// the logical tree. The position of the node with respect to its mother is
 // defined by classes deriving from TGeoNode and is stored as a transformation
 // matrix by TGeoNodeMatrix or just an offset by division nodes (TGeoNodeXXX).
 //   Nodes are invisible to user at build time : to create a node one has only
@@ -27,13 +27,13 @@
 //   mother->AddNode(vol, t1);
 //
 //   The last line will create a branch : HALL->SPH . A node named SPH:0 will
-// be created. If trying to place the same volume many times inside the same 
-// mother, the automatic naming scheme for the corresponding nodes is just 
+// be created. If trying to place the same volume many times inside the same
+// mother, the automatic naming scheme for the corresponding nodes is just
 // appending <:copy_number> to the name of the volume. Therefore :
-//   
+//
 //   TGeoTranslation *t2 = new TGeoTranslation(0,0,-300);
 //   mother->AddNode(vol, t2);
-//  
+//
 // will create a TGeoNodeMatrix named SPH:1 inside HALL.
 //
 //   When creating division nodes (TGeoVolume::Divide()), one has to specify the
@@ -42,8 +42,8 @@
 //
 //   mother->Divide(5, "X");
 //
-// will create five TGeoNodeOffset nodes, pointing to the same basic cell volume 
-// which is automatically generated : 
+// will create five TGeoNodeOffset nodes, pointing to the same basic cell volume
+// which is automatically generated :
 //
 //   HALL:0 --|
 //   HALL:1 --|
@@ -51,8 +51,8 @@
 //   HALL:3 --|
 //   HALL:4 --|
 //
-//   One can subsequently add usual nodes inside HALL_C cell or divide it, and the 
-// action will affect all nodes HALL:i . 
+//   One can subsequently add usual nodes inside HALL_C cell or divide it, and the
+// action will affect all nodes HALL:i .
 //   If the basic cell volumes coming from a division operation are not identical,
 // a volume will be generated per division node, and the naming sheme for them
 // will be HALL_d1, HALL_d2, ... .
@@ -66,8 +66,8 @@
 <img src="gif/t_node.jpg">
 */
 //End_Html
-#include "fstream.h"
-#include "iostream.h"
+
+#include "Riostream.h"
 
 #include "TBrowser.h"
 #include "TObjArray.h"
@@ -100,8 +100,8 @@ TGeoNode::TGeoNode(TGeoVolume *vol)
 // Constructor
    if (!vol) {
       Error("ctor", "volume not specified");
-      return;   
-   }   
+      return;
+   }
    fVolume       = vol;
    fMother       = 0;
    fOverlaps     = 0;
@@ -118,7 +118,7 @@ void TGeoNode::Browse(TBrowser *b)
 {
    if (!b) return;
 //   if (!GetNdaughters()) b->Add(this);
-   for (Int_t i=0; i<GetNdaughters(); i++) 
+   for (Int_t i=0; i<GetNdaughters(); i++)
       b->Add(GetDaughter(i));
 }
 //-----------------------------------------------------------------------------
@@ -146,7 +146,7 @@ Bool_t TGeoNode::IsOnScreen()
          break;
       case TGeoManager::kGeoVisBranch:
          return kFALSE;
-         break;  
+         break;
       default:
          return kFALSE;
    }
@@ -211,7 +211,7 @@ void TGeoNode::DrawOverlaps()
       node->GetVolume()->SetVisibility(kTRUE);
    }
    gGeoManager->GetTopVolume()->Draw();
-}   
+}
 //-----------------------------------------------------------------------------
 Int_t TGeoNode::FindNode(TGeoNode *node, Int_t level)
 {
@@ -250,19 +250,19 @@ void TGeoNode::SaveAttributes(ofstream &out)
    char quote='"';
    if ((!fVolume->IsStyleDefault()) && (fVolume->IsVisTouched())) {
       out << "   vol = gGeoManager->GetVolume("<<quote<<fVolume->GetName()<<quote<<");"<<endl;
-      if (!fVolume->IsVisDaughters()) 
+      if (!fVolume->IsVisDaughters())
          out << "   vol->SetVisDaughters(kFALSE);"<<endl;
       if (fVolume->IsVisible()) {
          if (fVolume->GetLineColor() != gStyle->GetLineColor())
-            out<<"   vol->SetLineColor("<<fVolume->GetLineColor()<<");"<<endl;     
+            out<<"   vol->SetLineColor("<<fVolume->GetLineColor()<<");"<<endl;
          if (fVolume->GetLineStyle() != gStyle->GetLineStyle())
-            out<<"   vol->SetLineStyle("<<fVolume->GetLineStyle()<<");"<<endl;     
+            out<<"   vol->SetLineStyle("<<fVolume->GetLineStyle()<<");"<<endl;
          if (fVolume->GetLineWidth() != gStyle->GetLineWidth())
-            out<<"   vol->SetLineWidth("<<fVolume->GetLineWidth()<<");"<<endl;     
+            out<<"   vol->SetLineWidth("<<fVolume->GetLineWidth()<<");"<<endl;
       } else {
          out <<"   vol->SetVisibility(kFALSE);"<<endl;
       }
-   }            
+   }
    if (!fVolume->IsVisDaughters()) return;
    Int_t nd = GetNdaughters();
    if (!nd) return;
@@ -275,19 +275,19 @@ void TGeoNode::SaveAttributes(ofstream &out)
 //-----------------------------------------------------------------------------
 void TGeoNode::StoreGlobalMatrix()
 {
-// Store the global matrix in the stack and reference it in fGlobalMatrix   
+// Store the global matrix in the stack and reference it in fGlobalMatrix
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::MasterToLocal(const Double_t *master, Double_t *local)
 {
 // Convert the point coordinates from mother reference to local reference system
-   GetMatrix()->MasterToLocal(master, local);  
+   GetMatrix()->MasterToLocal(master, local);
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::MasterToLocalVect(const Double_t *master, Double_t *local)
 {
 // Convert a vector from mother reference to local reference system
-   GetMatrix()->MasterToLocalVect(master, local);  
+   GetMatrix()->MasterToLocalVect(master, local);
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::LocalToMaster(const Double_t *local, Double_t *master)
@@ -304,7 +304,7 @@ void TGeoNode::LocalToMasterVect(const Double_t *local, Double_t *master)
 //-----------------------------------------------------------------------------
 void TGeoNode::ls(Option_t *option) const
 {
-// Print the path (A/B/C/...) to this node on stdout  
+// Print the path (A/B/C/...) to this node on stdout
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::Paint(Option_t *option)
@@ -349,16 +349,16 @@ void TGeoNode::Paint(Option_t *option)
          fVolume->GetShape()->Paint(option);
          break;
       case TGeoManager::kGeoVisBranch:
-         gGeoManager->cd(gGeoManager->GetDrawPath()); 
+         gGeoManager->cd(gGeoManager->GetDrawPath());
          while (gGeoManager->GetLevel()) {
-            if (gGeoManager->GetCurrentVolume()->IsVisible()) 
+            if (gGeoManager->GetCurrentVolume()->IsVisible())
                gGeoManager->GetCurrentVolume()->GetShape()->Paint(option);
             gGeoManager->CdUp();
-         } 
-         break;  
+         }
+         break;
       default:
          return;
-   }  
+   }
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::PrintCandidates()
@@ -491,7 +491,7 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode()
    if (fNovlp>0) {
       if (fOverlaps) {
          Int_t *ovlps = new Int_t[fNovlp];
-         memcpy(ovlps, fOverlaps, fNovlp*sizeof(Int_t)); 
+         memcpy(ovlps, fOverlaps, fNovlp*sizeof(Int_t));
          node->SetOverlaps(ovlps, fNovlp);
       } else {
          node->SetOverlaps(fOverlaps, fNovlp);
@@ -500,18 +500,18 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode()
    // copy VC
    if (IsVirtual()) node->SetVirtual();
    return node;
-}           
+}
 //-----------------------------------------------------------------------------
 void TGeoNodeMatrix::UpdateGlobalMatrix(TGeoMatrix *globmat)
 {
 // Compute the global matrix in globmat. If globmat=0, create the global
 // matrix and reference it with fGlobalMatrix
-   
+
 }
 
 /*************************************************************************
  * TGeoNodeOffset - node containing an offset
- *   
+ *
  *************************************************************************/
 ClassImp(TGeoNodeOffset)
 
@@ -556,11 +556,11 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode()
    // set the finder
    node->SetFinder(GetFinder());
    return node;
-}           
+}
 //-----------------------------------------------------------------------------
 void TGeoNodeOffset::UpdateGlobalMatrix(TGeoMatrix *globmat)
 {
 // Compute the global matrix in globmat. If globmat=0, create the global
-// matrix and reference it with fGlobalMatrix   
+// matrix and reference it with fGlobalMatrix
 }
 
