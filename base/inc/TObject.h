@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -149,14 +149,14 @@ public:
    virtual void        Paint(Option_t *option="");
    virtual void        Pop();
    virtual void        Print(Option_t *option="");
-   virtual void        Read(const char *name);
+   virtual Int_t       Read(const char *name);
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
    virtual const char *StreamerInfo() const;
    virtual void        UseCurrentStyle();
-   virtual void        Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
 
    //----- operators
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }

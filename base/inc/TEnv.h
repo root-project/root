@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -107,10 +107,10 @@ private:
    void     ChangeValue(const TString &v, const char *t, EEnvLevel l);
    TString  ExpandValue(const char *v);
    void     Read(TObject *obj);
-   void     Read(const char *name) { TObject::Read(name); }
+   Int_t    Read(const char *name) { return TObject::Read(name); }
    void     Write(TObject *obj);
-   void     Write(const char *name=0, Int_t opt=0, Int_t bufs=0)
-                                     { TObject::Write(name, opt, bufs); }
+   Int_t    Write(const char *name=0, Int_t opt=0, Int_t bufs=0)
+                                     { return TObject::Write(name, opt, bufs); }
    Int_t    Compare(TObject *obj);
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -956,7 +956,7 @@ void TDirectory::ReadAll(Option_t *)
 }
 
 //______________________________________________________________________________
-void TDirectory::ReadKeys()
+Int_t TDirectory::ReadKeys()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Read the KEYS linked list*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =========================
@@ -1019,6 +1019,7 @@ void TDirectory::ReadKeys()
    delete headerkey;
 
    cursav->cd();
+   return nkeys;
 }
 
 //______________________________________________________________________________
@@ -1128,7 +1129,7 @@ void TDirectory::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
+Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
 {
    // Write all objects in memory to disk.
    // Loop on all objects in memory (including subdirectories).
@@ -1136,16 +1137,21 @@ void TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
    // For allowed options see TObject::Write().
    // The directory header info is rewritten on the directory header record
 
-   if (!IsWritable()) return;
+   if (!IsWritable()) return 0;
    TDirectory *cursav = gDirectory;
    cd();
 
    // Loop on all objects (including subdirs)
-   fList->ForEach(TObject,Write)(0,opt,bufsiz);
-
+   TIter next(fList);
+   TObject *obj;
+   Int_t nbytes = 0;
+   while ((obj=next())) {
+      nbytes += obj->TObject::Write(0,opt,bufsiz);
+   }
    SaveSelf(kTRUE);   // force save itself
 
    cursav->cd();
+   return nbytes;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
    void               SetCurrentCollection();
    virtual void       SetName(const char *name) { fName = name; }
    void               SetParent(TObject *parent) { fParent = parent; }
-   virtual void       Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
 
    static TCollection  *GetCurrentCollection();
    static void          StartGarbageCollection();
