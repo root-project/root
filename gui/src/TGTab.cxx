@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.15 2004/08/26 17:03:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.16 2004/09/20 19:07:23 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -59,10 +59,10 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
 {
    // Create a tab element. Text is adopted by tab element.
 
-   fText        = text;
-   fBorderWidth = 0;
-   fNormGC      = norm;
-   fFontStruct  = font;
+   fText         = text;
+   fBorderWidth  = 0;
+   fNormGC       = norm;
+   fFontStruct   = font;
    fEditDisabled = kTRUE;
 
    int max_ascent, max_descent;
