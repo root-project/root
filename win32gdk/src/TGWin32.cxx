@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.89 2005/01/12 18:39:30 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.90 2005/03/16 06:22:37 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -857,7 +857,7 @@ static Bool_t MessageProcessingFunc(MSG *msg)
       TGWin32ProxyBase::GlobalUnlock();
    } else {
       if ( (msg->message >= WM_NCMOUSEMOVE) &&
-            (msg->message <= WM_NCMBUTTONDBLCLK) ) {
+           (msg->message <= WM_NCMBUTTONDBLCLK) ) {
          TGWin32ProxyBase::GlobalLock();
       }
       TGWin32MainThread::LockMSG();
@@ -5666,6 +5666,7 @@ void TGWin32::NextEvent(Event_t & event)
    // fill in Event_t
    event.fType = kOtherEvent;   // bb add
    if (xev == NULL) {
+      TGWin32MainThread::UnlockMSG();
       return;
    }
    MapEvent(event, *xev, kFALSE);
