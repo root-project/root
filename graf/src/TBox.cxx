@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.4 2000/11/21 20:23:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -439,26 +439,26 @@ again:
 
       if (px1 < 0 ) break;
       if (PA) {
-         fX1 = gPad->AbsPixeltoX(px);
+         fX1 = gPad->AbsPixeltoX(pxold);
          fY1 = gPad->AbsPixeltoY(pyt);
          fX2 = gPad->AbsPixeltoX(pxt);
-         fY2 = gPad->AbsPixeltoY(py);
+         fY2 = gPad->AbsPixeltoY(pyold);
       }
       if (PB) {
          fX1 = gPad->AbsPixeltoX(pxl);
          fY1 = gPad->AbsPixeltoY(pyt);
-         fX2 = gPad->AbsPixeltoX(px);
-         fY2 = gPad->AbsPixeltoY(py);
+         fX2 = gPad->AbsPixeltoX(pxold);
+         fY2 = gPad->AbsPixeltoY(pyold);
       }
       if (PC) {
          fX1 = gPad->AbsPixeltoX(pxl);
-         fY1 = gPad->AbsPixeltoY(py);
-         fX2 = gPad->AbsPixeltoX(px);
+         fY1 = gPad->AbsPixeltoY(pyold);
+         fX2 = gPad->AbsPixeltoX(pxold);
          fY2 = gPad->AbsPixeltoY(pyl);
       }
       if (PD) {
-         fX1 = gPad->AbsPixeltoX(px);
-         fY1 = gPad->AbsPixeltoY(py);
+         fX1 = gPad->AbsPixeltoX(pxold);
+         fY1 = gPad->AbsPixeltoY(pyold);
          fX2 = gPad->AbsPixeltoX(pxt);
          fY2 = gPad->AbsPixeltoY(pyl);
       }
@@ -620,7 +620,7 @@ void TBox::Streamer(TBuffer &R__b)
       R__b >> y2; fY2 = y2;
       R__b.CheckByteCount(R__s, R__c, TBox::IsA());
       //====end of old versions
-      
+
    } else {
       TBox::Class()->WriteBuffer(R__b,this);
    }

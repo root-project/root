@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.37 2001/05/31 16:27:19 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.38 2001/06/01 16:44:45 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1977,26 +1977,26 @@ again:
    case kButton1Up:
 
       if (PA) {
-         fX1 = AbsPixeltoX(px);
+         fX1 = AbsPixeltoX(pxold);
          fY1 = AbsPixeltoY(pyt);
          fX2 = AbsPixeltoX(pxt);
-         fY2 = AbsPixeltoY(py);
+         fY2 = AbsPixeltoY(pyold);
       }
       if (PB) {
          fX1 = AbsPixeltoX(pxl);
          fY1 = AbsPixeltoY(pyt);
-         fX2 = AbsPixeltoX(px);
-         fY2 = AbsPixeltoY(py);
+         fX2 = AbsPixeltoX(pxold);
+         fY2 = AbsPixeltoY(pyold);
       }
       if (PC) {
          fX1 = AbsPixeltoX(pxl);
-         fY1 = AbsPixeltoY(py);
-         fX2 = AbsPixeltoX(px);
+         fY1 = AbsPixeltoY(pyold);
+         fX2 = AbsPixeltoX(pxold);
          fY2 = AbsPixeltoY(pyl);
       }
       if (PD) {
-         fX1 = AbsPixeltoX(px);
-         fY1 = AbsPixeltoY(py);
+         fX1 = AbsPixeltoX(pxold);
+         fY1 = AbsPixeltoY(pyold);
          fX2 = AbsPixeltoX(pxt);
          fY2 = AbsPixeltoY(pyl);
       }
