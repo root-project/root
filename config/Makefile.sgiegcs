@@ -11,14 +11,14 @@ NOOPT         =
 endif
 
 # Compiler:
-CXX           = g++
-CC            = gcc
-CXXFLAGS      = -ansi -fsigned-char -Wall -fPIC $(EXTRA_CXXFLAGS)
+CXX           = g++ -ansi
+CC            = gcc -ansi
+CXXFLAGS      = -fsigned-char -Wall -fPIC $(EXTRA_CXXFLAGS)
 CFLAGS        = -fsigned-char -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -ansi -fsigned-char -Wall -fPIC -DG__REGEXP1 \
+CINTCXXFLAGS  = -fsigned-char -Wall -fPIC -DG__REGEXP1 \
                 -DG__UNIX -DG__SIGNEDCHAR -DG__SHAREDLIB -DG__OSFDLL \
                 -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -fsigned-char -DG__REGEXP1 -DG__SIGNEDCHAR -DG__UNIX -DG__SHAREDLIB \
+CINTCFLAGS    = -fsigned-char -fPIC -DG__REGEXP1 -DG__SIGNEDCHAR -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 
 # Linker:
@@ -29,8 +29,11 @@ SOFLAGS       = -shared
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lg++ -lm -lPW -ldl
+SYSLIBS       = -lstdc++ -lm
 XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
-CILIBS        =  -lm -ltermcap -lbsd -ldl -lg++
+CILIBS        =  -lm -lgen -lbsd -lstdc++
+
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a
 
 
