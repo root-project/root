@@ -5488,6 +5488,7 @@ int isrecursive;
   fpara.para[0].typenum = -1;
   fpara.para[0].obj.i = G__store_struct_offset;;
   fpara.para[0].ref = G__store_struct_offset;;
+  fpara.para[0].isconst = 0; /* this is just a temporary fix.  It should be set to the 'constness' of the object */
 
   /* set 2nd to n arguments */
   fpara.paran = libp->paran+1;
