@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.4 2002/02/19 17:08:08 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.5 2002/02/20 16:57:31 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -306,8 +306,8 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
      if (quest[0]) break;
      if (quest[13] & 8) continue;
      Int_t id = quest[20];
-     THbookKey *key = new THbookKey(id,this);
-     fKeys->Add(key);
+     THbookKey *akey = new THbookKey(id,this);
+     fKeys->Add(akey);
   }
 }
 
