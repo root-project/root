@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.53 2003/12/09 16:50:50 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.54 2003/12/13 16:01:27 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1339,7 +1339,7 @@ int TWinNTSystem::Rename(const char *f, const char *t)
 }
 
 //______________________________________________________________________________
-int TWinNTSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+int TWinNTSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                               Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.

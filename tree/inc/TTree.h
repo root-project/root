@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.55 2003/11/12 11:09:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.56 2003/11/14 11:11:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -119,7 +119,7 @@ protected:
     TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
     TList        *fClones;            //! List of cloned trees which share our addresses
   static Int_t    fgBranchStyle;      //  Old/New branch style
-  static Int_t    fgMaxTreeSize;      //  Maximum size of a file containg a Tree
+  static Long64_t fgMaxTreeSize;      //  Maximum size of a file containg a Tree
 
 protected:
     void             AddClone(TTree*);
@@ -209,7 +209,7 @@ public:
     virtual Int_t     GetMakeClass() const {return fMakeClass;}
     virtual Int_t     GetMaxEntryLoop() const {return fMaxEntryLoop;}
     virtual Double_t  GetMaximum(const char *columname);
-    static  Int_t     GetMaxTreeSize();
+    static  Long64_t  GetMaxTreeSize();
     virtual Int_t     GetMaxVirtualSize() const {return fMaxVirtualSize;}
     virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches() {return fBranches.GetEntriesFast();}
@@ -275,7 +275,7 @@ public:
     virtual void      SetEventList(TEventList *list) {fEventList = list;}
     virtual void      SetMakeClass(Int_t make) {fMakeClass = make;}
     virtual void      SetMaxEntryLoop(Int_t maxev=1000000000) {fMaxEntryLoop = maxev;} // *MENU*
-    static  void      SetMaxTreeSize(Int_t maxsize=1900000000);
+    static  void      SetMaxTreeSize(Long64_t maxsize=1900000000);
     virtual void      SetMaxVirtualSize(Int_t size=0) {fMaxVirtualSize = size;} // *MENU*
     virtual void      SetName(const char *name); // *MENU*
     virtual void      SetNotify(TObject *obj) {fNotify = obj;}

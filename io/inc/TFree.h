@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFree.h,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFree.h,v 1.4 2003/02/26 10:11:50 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -29,21 +29,21 @@
 class TFree : public TObject {
 
 protected:
-        Seek_t        fFirst;            //First free word of segment
-        Seek_t        fLast;             //Last free word of segment
+        Long64_t        fFirst;            //First free word of segment
+        Long64_t        fLast;             //Last free word of segment
 
 public:
         TFree();
-        TFree(TList *lfree, Seek_t first, Seek_t last);
+        TFree(TList *lfree, Long64_t first, Long64_t last);
         virtual ~TFree();
-               TFree     *AddFree(TList *lfree, Seek_t first, Seek_t last);
+               TFree     *AddFree(TList *lfree, Long64_t first, Long64_t last);
         virtual void     FillBuffer(char *&buffer);
-               TFree     *GetBestFree(TList *lfree, Int_t nbytes);
-              Seek_t     GetFirst() const {return fFirst;}
-              Seek_t     GetLast() const {return fLast;}
+               TFree    *GetBestFree(TList *lfree, Int_t nbytes);
+              Long64_t   GetFirst() const {return fFirst;}
+              Long64_t   GetLast() const {return fLast;}
         virtual void     ReadBuffer(char *&buffer);
-                void     SetFirst(Seek_t first) {fFirst=first;}
-                void     SetLast(Seek_t last) {fLast=last;}
+                void     SetFirst(Long64_t first) {fFirst=first;}
+                void     SetLast(Long64_t last) {fLast=last;}
                Int_t     Sizeof() const;
 
         ClassDef(TFree,1)  //Description of free segments on a file

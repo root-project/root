@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.102 2003/09/27 18:45:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.103 2003/11/07 03:29:41 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -349,10 +348,8 @@ void TFile::Init(Bool_t create)
 {
    // Initialize a TFile object.
 
-   Seek_t max_file_size = kStartBigFile;
-   if (sizeof(Seek_t) > 4) max_file_size *= 500;
    Int_t nfree;
-   fBEGIN  = (Seek_t)kBEGIN;    //First used word in file following the file header
+   fBEGIN  = (Long64_t)kBEGIN;    //First used word in file following the file header
 
    // make newly opened file the current file and directory
    cd();
@@ -361,7 +358,7 @@ void TFile::Init(Bool_t create)
    if (create) {
       fFree        = new TList;
       fEND         = fBEGIN;    //Pointer to end of file
-      new TFree(fFree, fBEGIN, max_file_size);  //Create new free list
+      new TFree(fFree, fBEGIN, Long64_t(kStartBigFile));  //Create new free list
 
 //*-* Write Directory info
       Int_t namelen= TNamed::Sizeof();
@@ -395,28 +392,27 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &fVersion);
       Int_t headerLength;
       frombuf(buffer, &headerLength);
-      fBEGIN = (Seek_t)headerLength;
+      fBEGIN = (Long64_t)headerLength;
       if (fVersion < 1000000) { //small file
          Int_t send,sfree,sinfo;
-         frombuf(buffer, &send);         fEND     = (Seek_t)send;
-         frombuf(buffer, &sfree);        fSeekFree= (Seek_t)sfree;
+         frombuf(buffer, &send);         fEND     = (Long64_t)send;
+         frombuf(buffer, &sfree);        fSeekFree= (Long64_t)sfree;
          frombuf(buffer, &fNbytesFree);
          frombuf(buffer, &nfree);
          frombuf(buffer, &fNbytesName);
          frombuf(buffer, &fUnits );
          frombuf(buffer, &fCompress);
-         frombuf(buffer, &sinfo);        fSeekInfo = (Seek_t)sinfo;
+         frombuf(buffer, &sinfo);        fSeekInfo = (Long64_t)sinfo;
          frombuf(buffer, &fNbytesInfo);
       } else { // new format to support large files
-         Long_t send,sfree,sinfo;
-         frombuf(buffer, &send);         fEND     = (Seek_t)send;
-         frombuf(buffer, &sfree);        fSeekFree= (Seek_t)sfree;
+         frombuf(buffer, &fEND);
+         frombuf(buffer, &fSeekFree);
          frombuf(buffer, &fNbytesFree);
          frombuf(buffer, &nfree);
          frombuf(buffer, &fNbytesName);
          frombuf(buffer, &fUnits );
          frombuf(buffer, &fCompress);
-         frombuf(buffer, &sinfo);        fSeekInfo = (Seek_t)sinfo;
+         frombuf(buffer, &fSeekInfo);
          frombuf(buffer, &fNbytesInfo);
       }
       fSeekDir = fBEGIN;
@@ -444,18 +440,17 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &fNbytesKeys);
       frombuf(buffer, &fNbytesName);
       Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
-                +2*sizeof(Seek_t);
+                +2*sizeof(Int_t);
       if (version > 1000) {
          nk += 12;
-         Long_t sdir,sparent,skeys;
-         frombuf(buffer, &sdir);    fSeekDir    = (Seek_t)sdir;
-         frombuf(buffer, &sparent); fSeekParent = (Seek_t)sparent;
-         frombuf(buffer, &skeys);   fSeekKeys   = (Seek_t)skeys;
+         frombuf(buffer, &fSeekDir);
+         frombuf(buffer, &fSeekParent);
+         frombuf(buffer, &fSeekKeys);
       } else {
          Int_t sdir,sparent,skeys;
-         frombuf(buffer, &sdir);    fSeekDir    = (Seek_t)sdir;
-         frombuf(buffer, &sparent); fSeekParent = (Seek_t)sparent;
-         frombuf(buffer, &skeys);   fSeekKeys   = (Seek_t)skeys;
+         frombuf(buffer, &sdir);    fSeekDir    = (Long64_t)sdir;
+         frombuf(buffer, &sparent); fSeekParent = (Long64_t)sparent;
+         frombuf(buffer, &skeys);   fSeekKeys   = (Long64_t)skeys;
       }
       if (versiondir > 1) fUUID.ReadBuffer(buffer);
 
@@ -471,7 +466,7 @@ void TFile::Init(Bool_t create)
          goto zombie;
       }
 //*-* -------------Check if file is truncated
-      Long_t size;
+      Long64_t size;
       if ((size = GetSize()) == -1) {
          Error("Init", "cannot stat the file %s", GetName());
          goto zombie;
@@ -723,7 +718,7 @@ Float_t TFile::GetCompressionFactor()
    Int_t    nbytes, objlen, nwh = 64;
    char    *header = new char[fBEGIN];
    char    *buffer;
-   Seek_t   idcur = fBEGIN;
+   Long64_t   idcur = fBEGIN;
    Float_t comp,uncomp;
    comp = uncomp = fBEGIN;
 
@@ -769,7 +764,7 @@ void TFile::ResetErrno() const
 }
 
 //______________________________________________________________________________
-Int_t TFile::GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen)
+Int_t TFile::GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen)
 {
 //*-*-*-*-*-*-*-*-*Read the logical record header starting at position first
 //*-*              =========================================================
@@ -818,12 +813,13 @@ Int_t TFile::GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nby
 }
 
 //______________________________________________________________________________
-Seek_t TFile::GetSize() const
+Long64_t TFile::GetSize() const
 {
    // Returns the current file size. Returns -1 in case the file could not
    // be stat'ed.
 
-   Long_t id, size, flags, modtime;
+   Long64_t size;
+   Long_t id, flags, modtime;
 
    if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
       Error("GetSize", "cannot stat the file %s", GetName());
@@ -902,7 +898,7 @@ Bool_t TFile::IsOpen() const
 }
 
 //______________________________________________________________________________
-void TFile::MakeFree(Seek_t first, Seek_t last)
+void TFile::MakeFree(Long64_t first, Long64_t last)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Mark unused bytes on the file*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
@@ -918,12 +914,14 @@ void TFile::MakeFree(Seek_t first, Seek_t last)
    if (!f1) return;
    TFree *newfree = f1->AddFree(fFree,first,last);
    if(!newfree) return;
-   Seek_t nfirst  = newfree->GetFirst();
-   Seek_t nlast   = newfree->GetLast();
-   Int_t nbytes   = Int_t (nfirst - nlast -1);
-   Int_t nb       = sizeof(Int_t);
-   char * buffer  = new char[nb];
-   char * psave   = buffer;
+   Long64_t nfirst = newfree->GetFirst();
+   Long64_t nlast  = newfree->GetLast();
+   Long64_t nbytesl= nlast-nfirst+1;
+   if (nbytesl > 2000000000) nbytesl = 2000000000;
+   Int_t nbytes    = -Int_t (nbytesl);
+   Int_t nb        = sizeof(Int_t);
+   char * buffer   = new char[nb];
+   char * psave    = buffer;
    tobuf(buffer, nbytes);
    if (nlast == fEND-1) fEND = nfirst;
    Seek(nfirst);
@@ -971,10 +969,10 @@ void TFile::Map()
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
-   Seek_t   seekkey,seekpdir;
+   Long64_t seekkey,seekpdir;
    char    *buffer;
    char     nwhc;
-   Seek_t   idcur = fBEGIN;
+   Long64_t idcur = fBEGIN;
 
    nwheader = 64;
    Int_t nread = nwheader;
@@ -989,11 +987,11 @@ void TFile::Map()
       buffer=header;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
-         Printf("Address = %d\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
+         Printf("Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
          break;
       }
       if (nbytes < 0) {
-         Printf("Address = %d\tNbytes = %d\t=====G A P===========", idcur, nbytes);
+         Printf("Address = %lld\tNbytes = %d\t=====G A P===========", idcur, nbytes);
          idcur -= nbytes;
          Seek(idcur);
          continue;
@@ -1005,13 +1003,12 @@ void TFile::Map()
       frombuf(buffer, &keylen);
       frombuf(buffer, &cycle);
       if (versionkey > 1000) {
-         Long_t skey,sdir;
-         frombuf(buffer, &skey);  seekkey  = (Seek_t)skey;
-         frombuf(buffer, &sdir);  seekpdir = (Seek_t)sdir;
+         frombuf(buffer, &seekkey);
+         frombuf(buffer, &seekpdir);
       } else {
          Int_t skey,sdir;
-         frombuf(buffer, &skey);  seekkey  = (Seek_t)skey;
-         frombuf(buffer, &sdir);  seekpdir = (Seek_t)sdir;
+         frombuf(buffer, &skey);  seekkey  = (Long64_t)skey;
+         frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
       }
       frombuf(buffer, &nwhc);
       int i;
@@ -1023,13 +1020,16 @@ void TFile::Map()
       TDatime::GetDateTime(datime, date, time);
       if (objlen != nbytes-keylen) {
          Float_t cx = Float_t(objlen+keylen)/Float_t(nbytes);
-         Printf("%d/%06d  At:%-8d  N=%-8d  %-14s CX = %5.2f",date,time,idcur,nbytes,classname,cx);
+         //Printf("%d/%06d  At:%-8d  N=%-8d  %-14s CX = %5.2f",date,time,idcur,nbytes,classname,cx);
+         Printf("%d/%06d  At:%lld  N=%-8d  %-14s CX = %5.2f",date,time,idcur,nbytes,classname,cx);
       } else {
-         Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
+         //Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
+         Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
       }
       idcur += nbytes;
    }
-   Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,1,"END");
+   //Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,1,"END");
+   Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,1,"END");
 }
 
 //______________________________________________________________________________
@@ -1117,19 +1117,19 @@ Int_t TFile::Recover()
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
-   Seek_t   seekkey,seekpdir;
+   Long64_t seekkey,seekpdir;
    char     header[1024];
    char    *buffer, *bufread;
    char     nwhc;
-   Seek_t   idcur = fBEGIN;
+   Long64_t idcur = fBEGIN;
 
-   Long_t size;
+   Long64_t size;
    if ((size = GetSize()) == -1) {
       Error("Recover", "cannot stat the file %s", GetName());
       return 0;
    }
 
-   fEND = Seek_t(size);
+   fEND = Long64_t(size);
 
    if (fWritable && !fFree) fFree  = new TList;
 
@@ -1146,7 +1146,7 @@ Int_t TFile::Recover()
       bufread = header;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
-         Printf("Address = %d\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
+         Printf("Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
          break;
       }
       if (nbytes < 0) {
@@ -1162,16 +1162,17 @@ Int_t TFile::Recover()
       frombuf(buffer, &keylen);
       frombuf(buffer, &cycle);
       if (versionkey > 1000) {
-         Long_t skey,sdir;
-         frombuf(buffer, &skey);  seekkey  = (Seek_t)skey;
-         frombuf(buffer, &sdir);  seekpdir = (Seek_t)sdir;
+         frombuf(buffer, &seekkey);
+         frombuf(buffer, &seekpdir);
       } else {
          Int_t skey,sdir;
-         frombuf(buffer, &skey);  seekkey  = (Seek_t)skey;
-         frombuf(buffer, &sdir);  seekpdir = (Seek_t)sdir;
+         frombuf(buffer, &skey);  seekkey  = (Long64_t)skey;
+         frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
       }
       frombuf(buffer, &nwhc);
-      char *classname = new char[nwhc+1];
+      char *classname = 0;
+      if (nwhc <= 0 || nwhc > 100) break;
+      classname = new char[nwhc+1];
       int i;
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhc] = '\0';
@@ -1186,15 +1187,15 @@ Int_t TFile::Recover()
             AppendKey(key);
             nrecov++;
             SetBit(kRecovered);
-            Info("Recover", "%s, recovered key %s:%s at address %d",GetName(),key->GetClassName(),key->GetName(),idcur);
+            Info("Recover", "%s, recovered key %s:%s at address %lld",GetName(),key->GetClassName(),key->GetName(),idcur);
          }
       }
       delete [] classname;
       idcur += nbytes;
    }
    if (fWritable) {
-      Seek_t max_file_size = kStartBigFile;
-      if (sizeof(Seek_t) > 4) max_file_size *= 500;
+      Long64_t max_file_size = Long64_t(kStartBigFile);
+      if (max_file_size < fEND) max_file_size = fEND+1000000000;
       new TFree(fFree,fEND,max_file_size);
       if (nrecov) Write();
    }
@@ -1300,7 +1301,7 @@ Int_t TFile::ReOpen(Option_t *mode)
 }
 
 //______________________________________________________________________________
-void TFile::Seek(Seek_t offset, ERelativeTo pos)
+void TFile::Seek(Long64_t offset, ERelativeTo pos)
 {
    // Seek to a specific position in the file. Pos it either kBeg, kCur or kEnd.
 
@@ -1316,8 +1317,8 @@ void TFile::Seek(Seek_t offset, ERelativeTo pos)
       whence = SEEK_END;
       break;
    }
-   if (SysSeek(fD, offset, whence) < 0)
-      SysError("Seek", "cannot seek to position %d in file %s", offset, GetName());
+   if (Long64_t retpos = SysSeek(fD, offset, whence) < 0)
+      SysError("Seek", "cannot seek to position %lld in file %s, retpos=%lld", offset, GetName(),retpos);
 }
 
 //______________________________________________________________________________
@@ -1552,14 +1553,14 @@ void TFile::WriteHeader()
       tobuf(buffer, (Int_t)fSeekInfo);
       tobuf(buffer, fNbytesInfo);
    } else {
-      tobuf(buffer, (Long_t)fEND);
-      tobuf(buffer, (Long_t)fSeekFree);
+      tobuf(buffer, fEND);
+      tobuf(buffer, fSeekFree);
       tobuf(buffer, fNbytesFree);
       tobuf(buffer, nfree);
       tobuf(buffer, fNbytesName);
       tobuf(buffer, fUnits);
       tobuf(buffer, fCompress);
-      tobuf(buffer, (Long_t)fSeekInfo);
+      tobuf(buffer, fSeekInfo);
       tobuf(buffer, fNbytesInfo);
    }
    fUUID.FillBuffer(buffer);
@@ -1991,7 +1992,7 @@ Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
    // although this is posix default it has to be set explicitly
    return ::open(pathname, flags | O_BINARY, mode);
 #else
-   return ::open(pathname, flags, mode);
+   return ::open(pathname, flags | O_LARGEFILE, mode);
 #endif
 }
 
@@ -2020,17 +2021,21 @@ Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Seek_t TFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
+Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
    // Interface to system lseek. All arguments like in POSIX lseek()
    // except that the offset and return value are of a type which will
    // be able to handle 64 bit file systems in the future.
 
+#if defined (R__LINUX)
+   return ::lseek64(fd, offset, whence);
+#else
    return ::lseek(fd, offset, whence);
+#endif
 }
 
 //______________________________________________________________________________
-Int_t TFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags,
+Int_t TFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags,
                      Long_t *modtime)
 {
    // Return file stat information. The interface and return value is

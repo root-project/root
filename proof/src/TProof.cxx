@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.58 2003/11/25 11:34:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.59 2003/12/02 08:37:41 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1457,7 +1457,8 @@ Long_t TProof::CheckFile(const char *file, TSlave *slave)
    // Returns size of file in case file needs to be send, returns 0 in case
    // file is already on remote and -1 in case of error.
 
-   Long_t id, size, flags, modtime;
+   Long64_t size;
+   Long_t id, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 1) {
       Error("CheckFile", "cannot stat file %s", file);
       return -1;

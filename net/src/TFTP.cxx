@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.16 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.17 2003/11/26 10:33:08 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -235,7 +235,7 @@ void TFTP::SetBlockSize(Int_t blockSize)
 }
 
 //______________________________________________________________________________
-Seek_t TFTP::PutFile(const char *file, const char *remoteName)
+Long64_t TFTP::PutFile(const char *file, const char *remoteName)
 {
    // Transfer file to remote host. Returns number of bytes
    // sent or < 0 in case of error. Error -1 connection is still
@@ -259,7 +259,8 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
       return -1;
    }
 
-   Long_t id, size, flags, modtime;
+   Long64_t size;
+   Long_t id, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
       if (flags > 1) {
          Error("PutFile", "%s not a regular file (%ld)", file, flags);
@@ -303,7 +304,7 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
    TStopwatch timer;
    timer.Start();
 
-   Seek_t pos = restartat & ~(fBlockSize-1);
+   Long64_t pos = restartat & ~(fBlockSize-1);
    Int_t skip = restartat - pos;
 
 #ifndef HAVE_MMAP
@@ -312,7 +313,7 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
 #endif
 
    while (pos < size) {
-      Seek_t left = Seek_t(size - pos);
+      Long64_t left = Long64_t(size - pos);
       if (left > fBlockSize)
          left = fBlockSize;
 #ifdef HAVE_MMAP
@@ -391,11 +392,11 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
       Printf("<TFTP::PutFile>: %.3f seconds, %.2f bytes per second",
              t, speed);
 
-   return Seek_t(size - restartat);
+   return Long64_t(size - restartat);
 }
 
 //______________________________________________________________________________
-Seek_t TFTP::GetFile(const char *file, const char *localName)
+Long64_t TFTP::GetFile(const char *file, const char *localName)
 {
    // Transfer file from remote host. Returns number of bytes
    // received or < 0 in case of error. Error -1 connection is still
@@ -442,7 +443,7 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
       return -2;
    }
    sscanf(mess, "%ld", &sizel);
-   Seek_t size = (Seek_t) sizel;
+   Long64_t size = (Long64_t) sizel;
 
    // check if restartat value makes sense
    if (restartat && (restartat >= size))
@@ -515,11 +516,11 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
    if (fMode == kAscii)
       buf2 = new char[fBlockSize];
 
-   Seek_t pos = restartat & ~(fBlockSize-1);
+   Long64_t pos = restartat & ~(fBlockSize-1);
    Int_t skip = restartat - pos;
 
    while (pos < size) {
-      Seek_t left = size - pos;
+      Long64_t left = size - pos;
       if (left > fBlockSize)
          left = fBlockSize;
 
@@ -606,7 +607,7 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
       Printf("<TFTP::GetFile>: %.3f seconds, %.2f bytes per second",
              t, speed);
 
-   return Seek_t(size - restartat);
+   return Long64_t(size - restartat);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.5 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.6 2002/12/10 12:11:31 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -148,7 +148,7 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-void TWebFile::Seek(Seek_t offset, ERelativeTo pos)
+void TWebFile::Seek(Long64_t offset, ERelativeTo pos)
 {
    // Set position from where to start reading.
 
@@ -166,7 +166,7 @@ void TWebFile::Seek(Seek_t offset, ERelativeTo pos)
 }
 
 //______________________________________________________________________________
-Seek_t TWebFile::GetSize() const
+Long64_t TWebFile::GetSize() const
 {
    // Return maximum file size to by-pass truncation checking.
 

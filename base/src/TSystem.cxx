@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.75 2003/11/18 19:04:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.76 2003/12/01 07:15:26 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -918,7 +918,7 @@ int TSystem::Unlink(const char *)
 }
 
 //______________________________________________________________________________
-int TSystem::GetPathInfo(const char*, Long_t*, Long_t*, Long_t*, Long_t*)
+int TSystem::GetPathInfo(const char*, Long_t*, Long64_t*, Long_t*, Long_t*)
 {
    // Get info about a file: id, size, flags, modification time.
 

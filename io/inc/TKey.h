@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.6 2002/02/02 11:54:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.7 2002/04/04 08:58:49 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -43,12 +43,12 @@ protected:
     TDatime     fDatime;         //Date/Time of insertion in file
     Short_t     fKeylen;         //Number of bytes for the key itself
     Short_t     fCycle;          //Cycle number
-    Seek_t      fSeekKey;        //Location of object on file
-    Seek_t      fSeekPdir;       //Location of parent directory on file
+    Long64_t    fSeekKey;        //Location of object on file
+    Long64_t    fSeekPdir;       //Location of parent directory on file
     TString     fClassName;      //Object Class name
     Int_t       fLeft;           //Number of bytes left in current segment
-    char        *fBuffer;        //Object buffer
-    TBuffer     *fBufferRef;     //Pointer to the TBuffer object
+    char       *fBuffer;         //Object buffer
+    TBuffer    *fBufferRef;      //Pointer to the TBuffer object
 
     virtual void     Create(Int_t nbytes);
     virtual Int_t    Read(const char *name) { return TObject::Read(name); }
@@ -58,7 +58,7 @@ public:
     TKey(const char *name, const char *title, TClass *cl, Int_t nbytes);
     TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes);
     TKey(TObject *obj, const char *name, Int_t bufsize);
-    TKey(Seek_t pointer, Int_t nbytes);
+    TKey(Long64_t pointer, Int_t nbytes);
     virtual ~TKey();
     virtual void      Browse(TBrowser *b);
     virtual void      Delete(Option_t *option="");
@@ -69,12 +69,12 @@ public:
          TBuffer     *GetBufferRef() const {return fBufferRef;}
          Short_t      GetCycle() const ;
          Short_t      GetKeep() const;
-           Int_t      GetKeylen() const  {return fKeylen;}
-           Int_t      GetNbytes() const  {return fNbytes;}
-           Int_t      GetObjlen() const  {return fObjlen;}
-           Int_t      GetVersion() const {return fVersion;}
-    virtual Seek_t    GetSeekKey() const  {return fSeekKey;}
-    virtual Seek_t    GetSeekPdir() const {return fSeekPdir;}
+           Int_t      GetKeylen() const   {return fKeylen;}
+           Int_t      GetNbytes() const   {return fNbytes;}
+           Int_t      GetObjlen() const   {return fObjlen;}
+           Int_t      GetVersion() const  {return fVersion;}
+    virtual Long64_t  GetSeekKey() const  {return fSeekKey;}
+    virtual Long64_t  GetSeekPdir() const {return fSeekPdir;}
     virtual ULong_t   Hash() const;
     Bool_t            IsFolder() const;
     virtual void      Keep();
@@ -89,7 +89,7 @@ public:
     virtual Int_t     Sizeof() const;
     virtual Int_t     WriteFile(Int_t cycle=1);
 
-    ClassDef(TKey,2)  //Header description of a logical record on file
+    ClassDef(TKey,3)  //Header description of a logical record on file
 };
 
 #endif

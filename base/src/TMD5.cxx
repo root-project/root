@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.11 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.12 2003/03/06 17:09:42 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -456,7 +456,8 @@ TMD5 *TMD5::FileChecksum(const char *file)
    // so it can be safely used in conjunction with methods that keep track
    // of the file's modtime. Static utility function.
 
-   Long_t id, size, flags, modtime;
+   Long64_t size;
+   Long_t id, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
       if (flags > 1) {
          Error("TMD5::FileChecksum", "%s not a regular file (%ld)", file, flags);
@@ -479,12 +480,12 @@ TMD5 *TMD5::FileChecksum(const char *file)
 
    TMD5 *md5 = new TMD5;
 
-   Seek_t pos = 0;
+   Long64_t pos = 0;
    const Int_t bufSize = 8192;
    UChar_t buf[bufSize];
 
    while (pos < size) {
-      Seek_t left = Seek_t(size - pos);
+      Long64_t left = Long64_t(size - pos);
       if (left > bufSize)
          left = bufSize;
       Int_t siz;

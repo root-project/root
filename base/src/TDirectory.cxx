@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.37 2003/06/02 09:53:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.38 2003/06/30 12:12:05 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -108,7 +108,6 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
    }
    fWritable    = kTRUE;
    fSeekParent  = gFile->GetSeekDir();
-   if (gFile && gFile->GetEND() > TFile::kStartBigFile) SetBit(kIsBigFile);
    Int_t nbytes = TDirectory::Sizeof();
    TKey *key    = new TKey(fName,fTitle,cl,nbytes);
    fNbytesName  = key->GetKeylen();
@@ -679,16 +678,16 @@ void TDirectory::FillBuffer(char *&buffer)
 //*-*-*-*-*-*-*-*-*-*-*-*Encode directory header into output buffer*-*-*-*-*-*
 //*-*                    =========================================
    Version_t version = TDirectory::Class_Version();
-   if (TestBit(kIsBigFile)) version += 1000;
+   if (fSeekKeys > TFile::kStartBigFile) version += 1000;
    tobuf(buffer, version);
    fDatimeC.FillBuffer(buffer);
    fDatimeM.FillBuffer(buffer);
    tobuf(buffer, fNbytesKeys);
    tobuf(buffer, fNbytesName);
    if (version > 1000) {
-      tobuf(buffer, (Long_t)fSeekDir);
-      tobuf(buffer, (Long_t)fSeekParent);
-      tobuf(buffer, (Long_t)fSeekKeys);
+      tobuf(buffer, fSeekDir);
+      tobuf(buffer, fSeekParent);
+      tobuf(buffer, fSeekKeys);
    } else {
       tobuf(buffer, (Int_t)fSeekDir);
       tobuf(buffer, (Int_t)fSeekParent);
@@ -1151,20 +1150,19 @@ Int_t TDirectory::ReadKeys()
    frombuf(buffer, &fNbytesKeys);
    frombuf(buffer, &fNbytesName);
    if (versiondir > 1000) {
-      Long_t sdir,sparent,skeys;
-      frombuf(buffer, &sdir);    fSeekDir    = (Seek_t)sdir;
-      frombuf(buffer, &sparent); fSeekParent = (Seek_t)sparent;
-      frombuf(buffer, &skeys);   fSeekKeys   = (Seek_t)skeys;
+      frombuf(buffer, &fSeekDir);
+      frombuf(buffer, &fSeekParent);
+      frombuf(buffer, &fSeekKeys);
    } else {
       Int_t sdir,sparent,skeys;
-      frombuf(buffer, &sdir);    fSeekDir    = (Seek_t)sdir;
-      frombuf(buffer, &sparent); fSeekParent = (Seek_t)sparent;
-      frombuf(buffer, &skeys);   fSeekKeys   = (Seek_t)skeys;
+      frombuf(buffer, &sdir);    fSeekDir    = (Long64_t)sdir;
+      frombuf(buffer, &sparent); fSeekParent = (Long64_t)sparent;
+      frombuf(buffer, &skeys);   fSeekKeys   = (Long64_t)skeys;
    }
    delete [] header;
 
    Int_t nkeys = 0;
-   Long_t fsize = fFile->GetSize();
+   Long64_t fsize = fFile->GetSize();
    if ( fSeekKeys >  0) {
       TKey *headerkey    = new TKey(fSeekKeys,fNbytesKeys);
       headerkey->ReadFile();
@@ -1302,7 +1300,7 @@ Int_t TDirectory::Sizeof() const
    nbytes     += fDatimeC.Sizeof();
    nbytes     += fDatimeM.Sizeof();
    nbytes     += fUUID.Sizeof();
-   if (TestBit(kIsBigFile)) nbytes += 12;
+   nbytes += 12; //always assume that the file may be above 2 Gbytes
    return nbytes;
 }
 
@@ -1323,15 +1321,14 @@ void TDirectory::Streamer(TBuffer &b)
       b >> fNbytesName;
       if (version > 1000) {
          SetBit(kIsBigFile);
-         Long_t sdir,sparent,skeys;
-         b >> sdir;    fSeekDir    = (Seek_t)sdir;
-         b >> sparent; fSeekParent = (Seek_t)sparent;
-         b >> skeys;   fSeekKeys   = (Seek_t)skeys;
+         b >> fSeekDir;
+         b >> fSeekParent;
+         b >> fSeekKeys;
       } else {
          Int_t sdir,sparent,skeys;
-         b >> sdir;    fSeekDir    = (Seek_t)sdir;
-         b >> sparent; fSeekParent = (Seek_t)sparent;
-         b >> skeys;   fSeekKeys   = (Seek_t)skeys;
+         b >> sdir;    fSeekDir    = (Long64_t)sdir;
+         b >> sparent; fSeekParent = (Long64_t)sparent;
+         b >> skeys;   fSeekKeys   = (Long64_t)skeys;
       }
       v = version%1000;
       if (v == 2) {
@@ -1343,16 +1340,16 @@ void TDirectory::Streamer(TBuffer &b)
       if (fSeekKeys) ReadKeys();
    } else {
       version = TDirectory::Class_Version();
-      if (TestBit(kIsBigFile)) version += 1000;
+      if (fFile && fFile->GetEND() > TFile::kStartBigFile) version += 1000;
       b << version;
       fDatimeC.Streamer(b);
       fDatimeM.Streamer(b);
       b << fNbytesKeys;
       b << fNbytesName;
       if (version > 1000) {
-         b << (Long_t)fSeekDir;
-         b << (Long_t)fSeekParent;
-         b << (Long_t)fSeekKeys;
+         b << fSeekDir;
+         b << fSeekParent;
+         b << fSeekKeys;
       } else {
          b << (Int_t)fSeekDir;
          b << (Int_t)fSeekParent;
@@ -1398,7 +1395,7 @@ void TDirectory::WriteDirHeader()
    char * buffer = header;
    fDatimeM.Set();
    TDirectory::FillBuffer(buffer);
-   Seek_t pointer= fSeekDir + fNbytesName; // do not overwrite the name/title part
+   Long64_t pointer= fSeekDir + fNbytesName; // do not overwrite the name/title part
    fModified     = kFALSE;
    gFile->Seek(pointer);
    gFile->WriteBuffer(header, nbytes);
@@ -1423,6 +1420,7 @@ void TDirectory::WriteKeys()
    TKey *key;
    Int_t nkeys  = fKeys->GetSize();
    Int_t nbytes = sizeof nkeys;          //*-* Compute size of all keys
+   if (gFile && gFile->GetEND() > TFile::kStartBigFile) nbytes += 8;
    while ((key = (TKey*)next())) {
       nbytes += key->Sizeof();
    }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.7 2002/02/03 16:15:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.8 2003/04/30 16:29:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -65,8 +65,8 @@ public:
             Int_t   GetNevBuf() const {return fNevBuf;}
             Int_t   GetNevBufSize() const {return fNevBufSize;}
             Int_t   GetLast() const {return fLast;}
-            Int_t   ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file);
-            Int_t   ReadBasketBytes(Seek_t pos, TFile *file);
+            Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
+            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
 
             void    SetBranch(TBranch *branch) {fBranch = branch;}
             void    SetNevBufSize(Int_t n) {fNevBufSize=n;}

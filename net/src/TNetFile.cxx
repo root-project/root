@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.41 2003/11/28 18:01:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.42 2003/12/10 11:03:40 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -147,7 +147,7 @@ Int_t TNetFile::SysClose(Int_t /*fd*/)
 }
 
 //______________________________________________________________________________
-Int_t TNetFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime)
+Int_t TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime)
 {
    // Return file stat information. The interface and return value is
    // identical to TSystem::GetPathInfo().
@@ -162,7 +162,7 @@ Int_t TNetFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags, Long_t *
    Int_t kind;
    fSocket->Recv(msg, 128, kind);
 
-   sscanf(msg, "%ld %ld %ld %ld", id, size, flags, modtime);
+   sscanf(msg, "%ld %lld %ld %ld", id, size, flags, modtime);
 
    if (*id == -1)
       return 1;
@@ -267,7 +267,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Seek_t off = fOffset;
+      Long64_t off = fOffset;
       if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
          Error("ReadBuffer", "error reading from cache");
          return kTRUE;
@@ -335,7 +335,7 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Seek_t off = fOffset;
+      Long64_t off = fOffset;
       if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
          Error("WriteBuffer", "error writing to cache");
          return kTRUE;
@@ -403,7 +403,7 @@ Int_t TNetFile::Recv(Int_t &status, EMessageTypes &kind)
 }
 
 //______________________________________________________________________________
-void TNetFile::Seek(Seek_t offset, ERelativeTo pos)
+void TNetFile::Seek(Long64_t offset, ERelativeTo pos)
 {
    // Set position from where to start reading.
 

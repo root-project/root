@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.46 2003/11/11 18:07:19 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.47 2003/11/20 15:03:44 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -318,7 +318,8 @@ fMapDocElements(0)
                       "http://consult.cern.ch/xwho/people?");
 
    Int_t st;
-   Long_t sId, sSize, sFlags, sModtime;
+   Long64_t sSize;
+   Long_t sId, sFlags, sModtime;
    if ((st =
         gSystem->GetPathInfo(fOutputDir, &sId, &sSize, &sFlags, &sModtime))
        || !(sFlags & 2)) {
@@ -1755,8 +1756,9 @@ Bool_t THtml::CopyHtmlFile(const char *sourceName, const char *destName)
       tmp1 = 0;
 
       // Get info about a file
-      Long_t sId, sSize, sFlags, sModtime;
-      Long_t dId, dSize, dFlags, dModtime;
+      Long64_t sSize, dSize;
+      Long_t sId, sFlags, sModtime;
+      Long_t dId, dFlags, dModtime;
       if (!
           (check =
            gSystem->GetPathInfo(sourceFile, &sId, &sSize, &sFlags,
@@ -2937,8 +2939,9 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
    }
 
    // Get info about a file
-   Long_t sId, sSize, sFlags, sModtime;
-   Long_t dId, dSize, dFlags, dModtime;
+   Long64_t sSize, dSize;
+   Long_t sId, sFlags, sModtime;
+   Long_t dId, dFlags, dModtime;
 
    if (!
        (gSystem->

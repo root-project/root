@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.0 2003/11/11 10:00:00 peters Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.1 2003/11/13 15:15:11 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -379,7 +379,7 @@ Int_t TAlienFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Seek_t TAlienFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
+Long64_t TAlienFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
    // Interface to system lseek. All arguments like in "man 2 lseek"
    // except that the offset and return value are Long_t to be able to

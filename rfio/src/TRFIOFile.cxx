@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.26 2003/11/13 14:37:29 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.27 2003/12/02 07:49:11 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -278,7 +278,7 @@ Int_t TRFIOFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
+Long64_t TRFIOFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
    // Interface to system lseek. All arguments like in POSIX lseek
    // except that the offset and return value are Long_t to be able to
@@ -286,7 +286,7 @@ Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 
    if (whence == SEEK_SET && offset == fOffset) return offset;
 
-   Seek_t ret = ::rfio_lseek(fd, offset, whence);
+   Long64_t ret = ::rfio_lseek(fd, offset, whence);
 
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
@@ -297,7 +297,7 @@ Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 }
 
 //______________________________________________________________________________
-Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags,
+Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
                          Long_t *modtime)
 {
    // Interface to TSystem:GetPathInfo(). Generally implemented via
@@ -341,7 +341,7 @@ Bool_t TRFIOFile::ReadBuffer(char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Seek_t off = fOffset;
+      Long64_t off = fOffset;
       if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
          Error("ReadBuffer", "error reading from cache");
          return kTRUE;
@@ -366,7 +366,7 @@ Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Seek_t off = fOffset;
+      Long64_t off = fOffset;
       if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
          Error("WriteBuffer", "error writing to cache");
          return kTRUE;
@@ -496,7 +496,7 @@ const char *TRFIOSystem::GetDirEntry(void *dirp)
 }
 
 //______________________________________________________________________________
-Int_t TRFIOSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+Int_t TRFIOSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                                Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.

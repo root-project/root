@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.23 2003/11/22 14:51:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.24 2003/12/08 16:04:36 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -152,7 +152,7 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 }
 
 //_______________________________________________________________________
-Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
+Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 {
 //*-*-*-*-*-*-*-*-*Read basket buffers in memory and cleanup*-*-*-*-*-*-*
 //*-*              =========================================
@@ -255,7 +255,7 @@ AfterBuffer:
 }
 
 //_______________________________________________________________________
-Int_t TBasket::ReadBasketBytes(Seek_t pos, TFile *file)
+Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
 {
 //*-*-*-*-*-*-*-*-*Read basket buffers in memory and cleanup*-*-*-*-*-*-*
 //*-*              =========================================

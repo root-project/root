@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.48 2003/10/22 17:20:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.49 2003/11/24 19:54:54 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -304,7 +304,8 @@ void TApplication::GetOptions(int *argc, char **argv)
          // splash screen can be popped down (TRint::PrintLogo())
          argv[i] = 0;
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
-         Long_t id, size, flags, modtime;
+         Long64_t size;
+         Long_t id, flags, modtime;
          char *arg = strchr(argv[i], '(');
          if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.h,v 1.1 2003/01/17 17:48:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.h,v 1.2 2003/01/19 21:18:36 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -41,9 +41,9 @@ protected:
     Int_t          fXsize;          //size in bytes of X axis
     Int_t          fYsize;          //size in K/Mbytes of Y axis
            
-    virtual void     DrawMarker(Int_t marker, Seek_t eseek);
+    virtual void     DrawMarker(Int_t marker, Long64_t eseek);
     virtual Bool_t   GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char *info) const;
-    virtual void     PaintBox(TBox &box, Seek_t bseek, Int_t nbytes);
+    virtual void     PaintBox(TBox &box, Long64_t bseek, Int_t nbytes);
     virtual void     PaintDir(TDirectory *dir, const char *keys);
     virtual TObject *GetObject(); 
        

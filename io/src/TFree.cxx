@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFree.cxx,v 1.3 2003/02/26 10:11:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFree.cxx,v 1.4 2003/02/26 14:59:28 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -40,7 +40,7 @@ TFree::TFree()
 }
 
 //______________________________________________________________________________
-TFree::TFree(TList *lfree, Seek_t first, Seek_t last)
+TFree::TFree(TList *lfree, Long64_t first, Long64_t last)
 {
 //*-*-*-*-*-*-*-*-*-*-*Constructor for a FREE segment*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============================
@@ -50,7 +50,7 @@ TFree::TFree(TList *lfree, Seek_t first, Seek_t last)
 }
 
 //______________________________________________________________________________
-TFree *TFree::AddFree(TList *lfree, Seek_t first, Seek_t last)
+TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
 {
 //*-*-*-*-*-*-*-*-*-*Add a new free segment to the list of free segments*-*-*
 //*-*                ===================================================
@@ -64,8 +64,8 @@ TFree *TFree::AddFree(TList *lfree, Seek_t first, Seek_t last)
 //
    TFree *idcur = this;
    while (idcur) {
-      Seek_t curfirst = idcur->GetFirst();
-      Seek_t curlast  = idcur->GetLast();
+      Long64_t curfirst = idcur->GetFirst();
+      Long64_t curlast  = idcur->GetLast();
       if (curlast == first-1) {
          idcur->SetLast(last);
          TFree *idnext = (TFree*)lfree->After(idcur);
@@ -107,9 +107,10 @@ void TFree::FillBuffer(char *&buffer)
    Version_t version = TFree::Class_Version();
    if (fLast > TFile::kStartBigFile) version += 1000;
    tobuf(buffer, version);
+//printf("TFree::fillBuffer, fFirst=%lld, fLast=%lld, version=%d\n",fFirst,fLast,version);
    if (version > 1000) {
-      tobuf(buffer, (Long_t)fFirst);
-      tobuf(buffer, (Long_t)fLast);
+      tobuf(buffer, fFirst);
+      tobuf(buffer, fLast);
    } else {
       tobuf(buffer, (Int_t)fFirst);
       tobuf(buffer, (Int_t)fLast);
@@ -125,13 +126,18 @@ TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
    if (idcur == 0) return 0;
    TFree *idcur1 = 0;
    do {
-      Seek_t nleft = Seek_t(idcur->fLast - idcur->fFirst +1);
+      Long64_t nleft = Long64_t(idcur->fLast - idcur->fFirst +1);
       if (nleft == nbytes) return idcur;             //*-* found an exact match
-      if(nleft > nbytes+3) if (idcur1 == 0) idcur1=idcur;
+      if(nleft > (Long64_t)(nbytes+3)) if (idcur1 == 0) idcur1=idcur;
       idcur = (TFree*)lfree->After(idcur);
    } while (idcur !=0);
-   return idcur1;                                    //*-* return first segment >nbytes
-}
+   if (idcur1) return idcur1;                                    //*-* return first segment >nbytes
+   //try big file
+   idcur = (TFree*)lfree->Last();
+   Long64_t last = idcur->fLast+1000000000;
+   idcur->SetLast(last);
+   return idcur;
+   }
 
 //______________________________________________________________________________
 void TFree::ReadBuffer(char *&buffer)
@@ -141,13 +147,12 @@ void TFree::ReadBuffer(char *&buffer)
    Version_t version;
    frombuf(buffer, &version);
    if (version > 1000) {
-      Long_t first,last;
-      frombuf(buffer, &first);  fFirst = (Seek_t)first;
-      frombuf(buffer, &last);   fLast  = (Seek_t)last;
+      frombuf(buffer, &fFirst);
+      frombuf(buffer, &fLast);
    } else {
       Int_t first,last;
-      frombuf(buffer, &first);  fFirst = (Seek_t)first;
-      frombuf(buffer, &last);   fLast  = (Seek_t)last;
+      frombuf(buffer, &first);  fFirst = (Long64_t)first;
+      frombuf(buffer, &last);   fLast  = (Long64_t)last;
    }
 }
 

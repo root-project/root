@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.2 2002/03/25 16:43:16 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.3 2003/12/02 02:07:44 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Updated: William Tanenbaum 21/11/2003
 
@@ -37,18 +37,18 @@
 class TDCacheFile : public TFile {
 
 private:
-   Seek_t fOffset;
+   Long64_t fOffset;
 
    TDCacheFile() : fOffset(0) { }
 
    // Interface to basic system I/O routines
-   Int_t  SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   Int_t  SysClose(Int_t fd);
-   Int_t  SysRead(Int_t fd, void *buf, Int_t len);
-   Int_t  SysWrite(Int_t fd, const void *buf, Int_t len);
-   Seek_t SysSeek(Int_t fd, Seek_t offset, Int_t whence);
-   Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
-   Int_t  SysSync(Int_t fd);
+   Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
+   Int_t    SysClose(Int_t fd);
+   Int_t    SysRead(Int_t fd, void *buf, Int_t len);
+   Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
+   Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
+   Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
+   Int_t    SysSync(Int_t fd);
 
 public:
    TDCacheFile(const char *path, Option_t *option="",
@@ -99,7 +99,7 @@ public:
    void       *OpenDirectory(const char *name);
    void        FreeDirectory(void *dirp);
    const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, Long_t *id, Long_t *size,
+   Int_t       GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                            Long_t *flags, Long_t *modtime);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
 

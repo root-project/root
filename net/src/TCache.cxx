@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.4 2001/01/17 12:11:53 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.5 2001/02/09 14:04:26 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -101,7 +101,7 @@ void TCache::SetPageSize(Int_t size)
 }
 
 //______________________________________________________________________________
-TCache::TPage *TCache::ReadPage(Seek_t offset)
+TCache::TPage *TCache::ReadPage(Long64_t offset)
 {
    // Read the page starting at offset in the cache and return the
    // page object. If there are no more free pages free pages up
@@ -156,7 +156,7 @@ TCache::TPage *TCache::ReadPage(Seek_t offset)
 }
 
 //______________________________________________________________________________
-Int_t TCache::ReadBuffer(Seek_t offset, char *buf, Int_t len)
+Int_t TCache::ReadBuffer(Long64_t offset, char *buf, Int_t len)
 {
    // Return in buf len bytes starting at offset. Returns < 0 in
    // case of error, 0 in case ReadBuffer() was recursively called
@@ -165,9 +165,9 @@ Int_t TCache::ReadBuffer(Seek_t offset, char *buf, Int_t len)
    if (fRecursive) return 0;
 
    // Find in which page offset is located
-   Seek_t pageoffset = (offset >> fDiv) << fDiv;  // offset & ~(fPageSize-1)
+   Long64_t pageoffset = (offset >> fDiv) << fDiv;  // offset & ~(fPageSize-1)
    Int_t  begin = Int_t(offset & (fPageSize-1));
-   Seek_t boff  = 0;
+   Long64_t boff  = 0;
 
    do {
       Int_t blen = begin+len>fPageSize ? fPageSize-begin : len;
@@ -222,7 +222,7 @@ Int_t TCache::WritePage(TPage *page)
 }
 
 //______________________________________________________________________________
-Int_t TCache::WriteBuffer(Seek_t offset, const char *buf, Int_t len)
+Int_t TCache::WriteBuffer(Long64_t offset, const char *buf, Int_t len)
 {
    // Write a buffer to the cache. Returns < 0 in case of error, 0 in
    // case WriteBuffer() was recursively called via WritePage() and 1
@@ -231,9 +231,9 @@ Int_t TCache::WriteBuffer(Seek_t offset, const char *buf, Int_t len)
    if (fRecursive) return 0;
 
    // Find in which page offset is located
-   Seek_t pageoffset = (offset >> fDiv) << fDiv;  // offset & ~(fPageSize-1)
+   Long64_t pageoffset = (offset >> fDiv) << fDiv;  // offset & ~(fPageSize-1)
    Int_t  begin = Int_t(offset & (fPageSize-1));
-   Seek_t boff  = 0;
+   Long64_t boff  = 0;
 
    do {
       Int_t blen = begin+len>fPageSize ? fPageSize-begin : len;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.124 2003/12/25 17:55:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.125 2003/12/26 22:06:40 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -148,7 +148,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBasketSize     = basketsize;
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
-   fBasketSeek     = new Seek_t[fMaxBaskets];
+   fBasketSeek     = new Long64_t[fMaxBaskets];
 
    for (Int_t i=0;i<fMaxBaskets;i++) {
       fBasketBytes[i] = 0;
@@ -324,7 +324,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fBasketSize     = basketsize;
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
-   fBasketSeek     = new Seek_t[fMaxBaskets];
+   fBasketSeek     = new Long64_t[fMaxBaskets];
 
    for (Int_t i=0;i<fMaxBaskets;i++) {
       fBasketBytes[i] = 0;

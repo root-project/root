@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.28 2003/02/26 10:11:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.29 2003/04/28 10:18:38 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -39,10 +39,10 @@ protected:
    Double_t    fSum2Buffer;       //Sum of squares of buffer sizes of objects written so far
    Double_t    fBytesWrite;       //Number of bytes written to this file
    Double_t    fBytesRead;        //Number of bytes read from this file
-   Seek_t      fBEGIN;            //First used byte in file
-   Seek_t      fEND;              //Last used byte in file
-   Seek_t      fSeekFree;         //Location on disk of free segments structure
-   Seek_t      fSeekInfo;         //Location on disk of StreamerInfo record
+   Long64_t    fBEGIN;            //First used byte in file
+   Long64_t    fEND;              //Last used byte in file
+   Long64_t    fSeekFree;         //Location on disk of free segments structure
+   Long64_t    fSeekInfo;         //Location on disk of StreamerInfo record
    Int_t       fD;                //File descriptor
    Int_t       fVersion;          //File format version
    Int_t       fCompress;         //Compression level from 0(not compressed) to 9 (max compression)
@@ -64,13 +64,13 @@ protected:
    void Init(Bool_t create);
 
    // Interface to basic system I/O routines
-   virtual Int_t  SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   virtual Int_t  SysClose(Int_t fd);
-   virtual Int_t  SysRead(Int_t fd, void *buf, Int_t len);
-   virtual Int_t  SysWrite(Int_t fd, const void *buf, Int_t len);
-   virtual Seek_t SysSeek(Int_t fd, Seek_t offset, Int_t whence);
-   virtual Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
-   virtual Int_t  SysSync(Int_t fd);
+   virtual Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
+   virtual Int_t    SysClose(Int_t fd);
+   virtual Int_t    SysRead(Int_t fd, void *buf, Int_t len);
+   virtual Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
+   virtual Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
+   virtual Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
+   virtual Int_t    SysSync(Int_t fd);
 
 private:
    TFile(const TFile &);            //Files cannot be copied
@@ -101,7 +101,7 @@ public:
    TArrayC          *GetClassIndex() const { return fClassIndex; }
    Int_t             GetCompressionLevel() const { return fCompress; }
    Float_t           GetCompressionFactor();
-   virtual Seek_t    GetEND() const { return fEND; }
+   virtual Long64_t  GetEND() const { return fEND; }
    virtual Int_t     GetErrno() const;
    virtual void      ResetErrno() const;
    Int_t             GetFd() const { return fD; }
@@ -113,17 +113,17 @@ public:
    Double_t          GetBytesRead() const { return fBytesRead; }
    Double_t          GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
-   Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
+   Int_t             GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t     GetNbytesInfo() const {return fNbytesInfo;}
    virtual Int_t     GetNbytesFree() const {return fNbytesFree;}
-   virtual Seek_t    GetSeekFree() const {return fSeekFree;}
-   virtual Seek_t    GetSeekInfo() const {return fSeekInfo;}
-   virtual Seek_t    GetSize() const;
+   virtual Long64_t  GetSeekFree() const {return fSeekFree;}
+   virtual Long64_t  GetSeekInfo() const {return fSeekInfo;}
+   virtual Long64_t  GetSize() const;
    TList            *GetStreamerInfoList();
    virtual void      IncrementProcessIDs() {fNProcessIDs++;}
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="") const;
-   virtual void      MakeFree(Seek_t first, Seek_t last);
+   virtual void      MakeFree(Long64_t first, Long64_t last);
    virtual void      MakeProject(const char *dirname, const char *classes="*", Option_t *option="new"); // *MENU*
    virtual void      Map(); // *MENU*
    virtual void      Paint(Option_t *option="");
@@ -133,9 +133,9 @@ public:
    virtual void      ReadStreamerInfo();
    virtual Int_t     Recover();
    virtual Int_t     ReOpen(Option_t *mode);
-   virtual void      Seek(Seek_t offset, ERelativeTo pos = kBeg);
+   virtual void      Seek(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void      SetCompressionLevel(Int_t level=1);
-   virtual void      SetEND(Seek_t last) { fEND = last; }
+   virtual void      SetEND(Long64_t last) { fEND = last; }
    virtual void      SetOption(Option_t *option=">") { fOption = option; }
    virtual void      ShowStreamerInfo();
    virtual Int_t     Sizeof() const;
@@ -157,7 +157,7 @@ public:
    static void       SetFileBytesRead(Double_t bytes=0);
    static void       SetFileBytesWritten(Double_t bytes=0);
 
-   ClassDef(TFile,4)  //ROOT file
+   ClassDef(TFile,5)  //ROOT file
 };
 
 R__EXTERN TFile   *gFile;

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.13 2003/09/23 22:06:16 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.14 2003/12/01 07:15:26 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -52,7 +52,7 @@ protected:
    static void         UnixResetSignal(ESignals sig);
    static void         UnixResetSignals();
    static void         UnixIgnoreSignal(ESignals sig, Bool_t ignore);
-   static int          UnixFilestat(const char *path, Long_t *id, Long_t *size,
+   static int          UnixFilestat(const char *path, Long_t *id, Long64_t *size,
                                     Long_t *flags, Long_t *modtime);
    static int          UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
                                   Long_t *blocks, Long_t *bfree);
@@ -144,7 +144,7 @@ public:
    int               Link(const char *from, const char *to);
    int               Symlink(const char *from, const char *to);
    int               Unlink(const char *name);
-   int               GetPathInfo(const char *path, Long_t *id, Long_t *size,
+   int               GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                                  Long_t *flags, Long_t *modtime);
    int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
                                Long_t *blocks, Long_t *bfree);

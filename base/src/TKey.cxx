@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.35 2003/12/10 20:36:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.36 2003/12/10 20:40:45 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -83,7 +83,7 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0)
 }
 
 //______________________________________________________________________________
-TKey::TKey(Seek_t pointer, Int_t nbytes) : TNamed()
+TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a TKey object to read keys*-*-*-*-*-*-*-*
 //*-*                      =================================
@@ -314,9 +314,9 @@ void TKey::Delete(Option_t *option)
 // This is different from the behaviour of TObject::Delete()!
 
 
-   if (option && option[0] == 'v') printf("Deleting key: %s at address %d, nbytes = %d\n",GetName(),fSeekKey,fNbytes);
-   Seek_t first = fSeekKey;
-   Seek_t last  = fSeekKey + fNbytes -1;
+   if (option && option[0] == 'v') printf("Deleting key: %s at address %lld, nbytes = %d\n",GetName(),fSeekKey,fNbytes);
+   Long64_t first = fSeekKey;
+   Long64_t last  = fSeekKey + fNbytes -1;
    gFile->MakeFree(first, last);  // release space used by this key
    gDirectory->GetListOfKeys()->Remove(this);
 }
@@ -365,8 +365,8 @@ void TKey::FillBuffer(char *&buffer)
   tobuf(buffer, fKeylen);
   tobuf(buffer, fCycle);
   if (fVersion > 1000) {
-     tobuf(buffer, (Long_t)fSeekKey);
-     tobuf(buffer, (Long_t)fSeekPdir);
+     tobuf(buffer, fSeekKey);
+     tobuf(buffer, fSeekPdir);
   } else {
      tobuf(buffer, (Int_t)fSeekKey);
      tobuf(buffer, (Int_t)fSeekPdir);
@@ -621,13 +621,12 @@ void TKey::ReadBuffer(char *&buffer)
    frombuf(buffer, &fKeylen);
    frombuf(buffer, &fCycle);
    if (fVersion > 1000) {
-      Long_t seekkey,seekdir;
-      frombuf(buffer, &seekkey); fSeekKey = (Seek_t)seekkey;
-      frombuf(buffer, &seekdir); fSeekPdir= (Seek_t)seekdir;
+      frombuf(buffer, &fSeekKey);
+      frombuf(buffer, &fSeekPdir);
    } else {
       Int_t seekkey,seekdir;
-      frombuf(buffer, &seekkey); fSeekKey = (Seek_t)seekkey;
-      frombuf(buffer, &seekdir); fSeekPdir= (Seek_t)seekdir;
+      frombuf(buffer, &seekkey); fSeekKey = (Long64_t)seekkey;
+      frombuf(buffer, &seekdir); fSeekPdir= (Long64_t)seekdir;
    }
    fClassName.ReadBuffer(buffer);
    fName.ReadBuffer(buffer);
@@ -702,13 +701,12 @@ void TKey::Streamer(TBuffer &b)
       b >> fKeylen;
       b >> fCycle;
       if (fVersion > 1000) {
-         Long_t seekkey, seekdir;
-         b >> seekkey; fSeekKey = (Seek_t)seekkey;
-         b >> seekdir; fSeekPdir= (Seek_t)seekdir;
+         b >> fSeekKey;
+         b >> fSeekPdir;
       } else {
          Int_t seekkey, seekdir;
-         b >> seekkey; fSeekKey = (Seek_t)seekkey;
-         b >> seekdir; fSeekPdir= (Seek_t)seekdir;
+         b >> seekkey; fSeekKey = (Long64_t)seekkey;
+         b >> seekdir; fSeekPdir= (Long64_t)seekdir;
       }
       fClassName.Streamer(b);
       fName.Streamer(b);
@@ -723,8 +721,8 @@ void TKey::Streamer(TBuffer &b)
       b << fKeylen;
       b << fCycle;
       if (fVersion > 1000) {
-         b << (Long_t)fSeekKey;
-         b << (Long_t)fSeekPdir;
+         b << fSeekKey;
+         b << fSeekPdir;
       } else {
          b << (Int_t)fSeekKey;
          b << (Int_t)fSeekPdir;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.61 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.62 2003/12/02 08:37:41 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -387,7 +387,8 @@ Int_t TProofServ::CatMotd()
    // get last modification time of the file ~/proof/.prooflast
    lastname = TString(kPROOF_WorkDir) + "/.prooflast";
    char *last = gSystem->ExpandPathName(lastname.Data());
-   Long_t id, size, flags, modtime, lasttime;
+   Long64_t size;
+   Long_t id, flags, modtime, lasttime;
    if (gSystem->GetPathInfo(last, &id, &size, &flags, &lasttime) == 1)
       lasttime = 0;
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.172 2003/12/19 13:40:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.173 2003/12/27 16:14:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -300,8 +300,8 @@
 #include "TCut.h"
 #include "Api.h"
 
-Int_t TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
-Int_t TTree::fgMaxTreeSize = 1900000000;
+Int_t    TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
+Long64_t TTree::fgMaxTreeSize = 1900000000;
 
 TTree *gTree;
 const Int_t kMaxLen = 512;
@@ -2209,7 +2209,7 @@ Int_t TTree::Fill()
    //to the case where the Tree is in the top level directory.
    if (!fDirectory) return nbytes;
    TFile *file = fDirectory->GetFile();
-   if (file && file->GetEND() > (Double_t)fgMaxTreeSize) {
+   if (file && file->GetEND() > fgMaxTreeSize) {
       if (fDirectory == (TDirectory*)file) ChangeFile(file);
    }
 
@@ -2861,7 +2861,7 @@ Double_t TTree::GetMaximum(const char *columname)
 
 
 //______________________________________________________________________________
-Int_t TTree::GetMaxTreeSize()
+Long64_t TTree::GetMaxTreeSize()
 {
 // static function
 // return maximum size of a Tree file
@@ -3783,7 +3783,7 @@ void TTree::SetFileNumber(Int_t number)
 }
   
 //______________________________________________________________________________
-void TTree::SetMaxTreeSize(Int_t maxsize)
+void TTree::SetMaxTreeSize(Long64_t maxsize)
 {
 // static function
 // Set the maximum size of a Tree file.

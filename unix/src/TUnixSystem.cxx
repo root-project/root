@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.80 2003/12/11 16:35:19 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.81 2003/12/12 15:13:34 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1032,7 +1032,7 @@ int TUnixSystem::Rename(const char *f, const char *t)
 }
 
 //______________________________________________________________________________
-int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                              Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
@@ -1095,10 +1095,15 @@ int TUnixSystem::Unlink(const char *name)
    // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
    // -1 in case of failure.
 
+#if defined(R__LINUX)
+   struct stat64 finfo;
+   if (stat64(name, &finfo) < 0)
+      return -1;
+#else
    struct stat finfo;
-
    if (stat(name, &finfo) < 0)
       return -1;
+#endif
 
    if (S_ISDIR(finfo.st_mode))
       return ::rmdir(name);
@@ -2931,7 +2936,7 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 //---- files -------------------------------------------------------------------
 
 //______________________________________________________________________________
-int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long_t *size,
+int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long64_t *size,
                               Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
@@ -2944,9 +2949,13 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long_t *size,
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
+#if defined(R__LINUX)
+   struct stat64 statbuf;
+   if (path != 0 && stat64(path, &statbuf) >= 0) {
+#else
    struct stat statbuf;
-
    if (path != 0 && stat(path, &statbuf) >= 0) {
+#endif
       if (id)
 #if defined(R__KCC) && defined(R__LINUX)
          *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;

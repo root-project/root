@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.13 2003/12/02 07:49:11 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.14 2003/12/25 18:11:57 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 
@@ -197,7 +197,7 @@ Bool_t TDCacheFile::ReadBuffer(char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Seek_t off = fOffset;
+      Long64_t off = fOffset;
       if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
          Error("ReadBuffer", "error reading from cache");
          return kTRUE;
@@ -222,7 +222,7 @@ Bool_t TDCacheFile::WriteBuffer(const char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Seek_t off = fOffset;
+      Long64_t off = fOffset;
       if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
          Error("WriteBuffer", "error writing to cache");
          return kTRUE;
@@ -407,7 +407,7 @@ Int_t TDCacheFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
+Long64_t TDCacheFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
    // Interface to system seek. All arguments like in POSIX lseek.
 
@@ -415,7 +415,7 @@ Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 
    dc_errno = 0;
 
-   Seek_t rc = dc_lseek(fd, offset, whence);
+   Long64_t rc = dc_lseek(fd, offset, whence);
 
    if (rc < 0) {
       if (dc_errno != 0)
@@ -439,7 +439,7 @@ Int_t TDCacheFile::SysSync(Int_t)
 }
 
 //______________________________________________________________________________
-Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long_t *size,
+Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
                            Long_t *flags, Long_t *modtime)
 {
    // Return file stat information. The interface and return value is
@@ -560,7 +560,7 @@ Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
 }
 
 //______________________________________________________________________________
-int TDCacheSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+int TDCacheSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                                Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.

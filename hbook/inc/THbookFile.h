@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.5 2002/04/30 07:26:47 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.6 2002/10/22 12:10:01 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    const char       *GetCurDir() const {return fCurDir.Data();}
    Int_t             GetEntry(Int_t entry,Int_t id, Int_t atype, Float_t *x);
    Int_t             GetEntryBranch(Int_t entry,Int_t id);
-   Seek_t            GetSize() const {return 0;}
+   Long64_t          GetSize() const {return 0;}
    TList            *GetList() const {return fList;}
    TList            *GetListOfKeys() const { return fKeys; }
    void              InitLeaves(Int_t id, Int_t var, TTreeFormula *formula);

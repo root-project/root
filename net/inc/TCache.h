@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.3 2001/01/16 17:23:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.4 2001/04/11 11:10:44 brun Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -58,12 +58,12 @@ private:
    class TPage : public TObject {
    friend class TCache;
    private:
-      Seek_t    fOffset; // offset of page in file
-      char     *fData;   // pointer to page data
-      Int_t     fSize;   // size of page
+      Long64_t   fOffset;  // offset of page in file
+      char      *fData;    // pointer to page data
+      Int_t      fSize;    // size of page
    public:
       enum { kDirty = BIT(14), kLocked = BIT(15) };
-      TPage(Seek_t offset, char *page, Int_t size)
+      TPage(Long64_t offset, char *page, Int_t size)
          { fOffset = offset; fData = page; fSize = size; }
       ~TPage() { delete [] fData; }
       ULong_t Hash() const { return fOffset; }
@@ -73,7 +73,7 @@ private:
       Int_t   Compare(const TObject *obj) const
          { return fOffset > ((const TPage*)obj)->fOffset ? 1 :
                   fOffset < ((const TPage*)obj)->fOffset ? -1 : 0; }
-      Seek_t  Offset() const { return fOffset; }
+      Long64_t  Offset() const { return fOffset; }
       char   *Data() const { return fData; }
       Int_t   Size() const { return fSize; }
    };
@@ -88,7 +88,7 @@ private:
    TSortedList *fNew;           // list constaining new pages that have to be written to disk
    TList       *fFree;          // list containing unused pages
    TFile       *fFile;          // file for which pages are being cached
-   Seek_t       fEOF;           // end of file
+   Long64_t     fEOF;           // end of file
    ULong_t      fHighWater;     // high water mark (i.e. maximum cache size in bytes)
    ULong_t      fLowWater;      // low water mark (free pages till low water mark is reached)
    Int_t        fPageSize;      // size of cached pages
@@ -97,7 +97,7 @@ private:
    Bool_t       fRecursive;     // true to prevent recusively calling ReadBuffer()
 
    void   SetPageSize(Int_t size);
-   TPage *ReadPage(Seek_t offset);
+   TPage *ReadPage(Long64_t offset);
    Int_t  WritePage(TPage *page);
    Int_t  FlushList(TList *list);
    Int_t  FlushNew();
@@ -119,8 +119,8 @@ public:
    Int_t Resize(Int_t maxCacheSize);
    void  SetLowLevel(Int_t percentOfHigh);
 
-   Int_t ReadBuffer(Seek_t offset, char *buf, Int_t len);
-   Int_t WriteBuffer(Seek_t offset, const char *buf, Int_t len);
+   Int_t ReadBuffer(Long64_t offset, char *buf, Int_t len);
+   Int_t WriteBuffer(Long64_t offset, const char *buf, Int_t len);
    Int_t Flush();
 
    ClassDef(TCache,0)  // Page cache used for remote I/O

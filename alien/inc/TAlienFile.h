@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.0 2003/09/11 10:00:00 peters Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.1 2003/11/13 15:15:11 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -41,21 +41,21 @@
 class TAlienFile : public TFile {
 
 private:
-   TUrl     fUrl;                 //URL of file
-   Seek_t   fOffset;              //seek offet
-   TFile   *fSubFile;             //sub file (PFN)
+   TUrl      fUrl;                 //URL of file
+   Long64_t  fOffset;              //seek offet
+   TFile    *fSubFile;             //sub file (PFN)
 
    TAlienFile() : fUrl("dummy") { }
 
    // Interface to basic system I/O routines
-   Int_t  SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   Int_t  SysClose(Int_t fd);
-   Int_t  SysRead(Int_t fd, void *buf, Int_t len);
-   Int_t  SysWrite(Int_t fd, const void *buf, Int_t len);
-   Seek_t SysSeek(Int_t fd, Seek_t offset, Int_t whence);
-   Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags,
-                  Long_t *modtime);
-   Int_t  SysSync(Int_t);
+   Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
+   Int_t    SysClose(Int_t fd);
+   Int_t    SysRead(Int_t fd, void *buf, Int_t len);
+   Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
+   Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
+   Int_t    SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags,
+                    Long_t *modtime);
+   Int_t    SysSync(Int_t);
 
 public:
    TAlienFile(const char *url, Option_t * option = "",
