@@ -65,7 +65,8 @@
   hpx->SetFillColor(0);
   hfile->Write();
   hpx->SetFillColor(48);
-
+  c1->Modified();
+  
 // Note that the file is automatically close when application terminates
 // or when the file destructor is called.
 }
