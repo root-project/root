@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.16 2001/12/06 10:10:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.17 2001/12/06 13:37:41 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -39,7 +39,6 @@ protected:
     TFile       *fFile;             //! Pointer to current file
     TObjArray   *fFiles;            //->  List of file names containing the Trees
     TList       *fStatus;           //->  List of active/inactive branches
-    TObject     *fNotify;           //! Object to be notified when loading a new file
   static Int_t   fgMaxMergeSize;    //  Maximum size of a merged file
 
 public:
@@ -48,7 +47,7 @@ public:
     virtual ~TChain();
 
     virtual Int_t     Add(TChain *chain);
-    virtual Int_t     Add(const char *name, Int_t nentries=-1);
+    virtual Int_t     Add(const char *name, Int_t nentries=1000000000);
     virtual Int_t     AddFile(const char *name, Int_t nentries);
     virtual TFriendElement *AddFriend(const char *chainname, const char *dummy="");
     virtual TFriendElement *AddFriend(const char *chainname, TFile *dummy);
@@ -73,7 +72,6 @@ public:
     virtual Double_t  GetMaximum(const char *columname);
     virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches();
-    TObject          *GetNotify() const {return fNotify;}
     TList            *GetStatus() const {return fStatus;}
     TTree            *GetTree() const {return fTree;}
             Int_t     GetTreeNumber() const {return fTreeNumber;}
@@ -92,9 +90,8 @@ public:
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
     static  void      SetMaxMergeSize(Int_t maxsize=1900000000);
     virtual void      SetPacketSize(Int_t size = 100);
-    virtual void      SetNotify(TObject *obj) {fNotify = obj;}
 
-    ClassDef(TChain,3)  //A chain of TTrees
+    ClassDef(TChain,4)  //A chain of TTrees
 };
 
 inline void TChain::Draw(Option_t *opt)

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.106 2001/12/12 09:48:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.107 2002/01/15 07:48:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -330,6 +330,7 @@ TTree::TTree(): TNamed()
    fDebugMax       = 9999999;
    fFriends        = 0;
    fMakeClass      = 0;
+   fNotify         = 0;
 }
 
 //______________________________________________________________________________
@@ -369,6 +370,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fDebugMax       = 9999999;
    fFriends        = 0;
    fMakeClass      = 0;
+   fNotify         = 0;
 
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -2441,6 +2443,9 @@ Int_t TTree::LoadTree(Int_t entry)
 
 // this function is overloaded in TChain
 
+   if (fNotify) {
+      if (fReadEntry < 0) fNotify->Notify();
+   }
    fReadEntry = entry;
    return fReadEntry;
 
@@ -2848,6 +2853,7 @@ void TTree::Reset(Option_t *option)
 //*-*-*-*-*-*-*-*Reset buffers and entries count in all branches/leaves*-*-*
 //*-*            ======================================================
 
+   fNotify         = 0;
    fEntries        = 0;
    fTotBytes       = 0;
    fZipBytes       = 0;
