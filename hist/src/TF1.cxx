@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.70 2003/09/20 08:07:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.71 2003/09/23 14:56:50 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1986,6 +1986,8 @@ void TF1::Paint(Option_t *option)
          fHistogram = new TH1D("Func",GetTitle(),fNpx,xmin,xmax);
       }
       if (!fHistogram) return;
+      if (fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
+      if (fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
       fHistogram->SetDirectory(0);
    }
    //restore axis titles
@@ -2001,6 +2003,7 @@ void TF1::Paint(Option_t *option)
 //*-*- Copy Function attributes to histogram attributes
    Double_t minimum   = fHistogram->GetMinimumStored();
    Double_t maximum   = fHistogram->GetMaximumStored();
+   if (minimum <= 0 && gPad->GetLogy()) minimum = -1111; //this can happen when switching from lin to log scale
    if (minimum == -1111) { //this can happen after unzooming
       if (fHistogram->TestBit(TH1::kIsZoomed)) {
          minimum = fHistogram->GetYaxis()->GetXmin();
@@ -2181,6 +2184,30 @@ void TF1::SetCurrent(TF1 *f1)
    // when fitting or painting a function.
    
    fgCurrent = f1;
+}
+
+//______________________________________________________________________________
+void TF1::SetMaximum(Double_t maximum)
+{
+// Set the maximum value along Y for this function
+// In case the function is already drawn, set also the maximum in the
+// helper histogram
+
+   fMaximum = maximum;
+   if (fHistogram) fHistogram->SetMaximum(maximum);
+   if (gPad) gPad->Modified();
+}
+
+//______________________________________________________________________________
+void TF1::SetMinimum(Double_t minimum)
+{
+// Set the minimum value along Y for this function
+// In case the function is already drawn, set also the minimum in the
+// helper histogram
+
+   fMinimum = minimum;
+   if (fHistogram) fHistogram->SetMinimum(minimum);
+   if (gPad) gPad->Modified();
 }
 
 //______________________________________________________________________________
