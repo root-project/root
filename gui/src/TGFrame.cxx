@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.12 2001/01/10 09:35:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.13 2001/04/03 10:36:21 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -711,11 +711,11 @@ TGMainFrame::~TGMainFrame()
 {
    // TGMainFrame destructor.
 
-   DestroyWindow();
    if (fBindList) {
       fBindList->Delete();
       delete fBindList;
    }
+   DestroyWindow();
 }
 
 //______________________________________________________________________________
