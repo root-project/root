@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.5 2002/12/06 11:12:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.6 2003/05/05 09:18:42 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -372,8 +372,9 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Axis_t &xmin, A
       Double_t dxmax = Double_t(ixmax);
       if (xmin < 0 && xmin != dxmin) xmin = dxmin - 1;
       else                           xmin = dxmin;
-      if (xmax > 0 && xmax != dxmax) xmax = dxmax + 1;
-      else                           xmax = dxmax;
+      if (xmax > 0 && xmax != dxmax)      xmax = dxmax + 1;
+      else if (xmax ==0 && xmax == dxmax) xmax = 1;
+      else                                xmax = dxmax;
       if (xmin >= xmax) xmax = xmin+1;
       Int_t bw = Int_t((xmax-xmin)/nbins);
       if (bw == 0) bw = 1;
