@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.2 2004/01/26 16:43:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.3 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -888,22 +888,31 @@ void TMatrixDSym::Streamer(TBuffer &R__b)
   if (R__b.IsReading()) {
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-    if (R__v > 1) {
       Clear();
-      TMatrixDSym::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+      TMatrixDBase::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+      fElements = new Double_t[fNelems];
+      Int_t i;
+      for (i = 0; i < fNrows; i++) {
+        R__b.ReadFastArray(fElements+i*fNcols+i,fNcols-i);
+      }
       if (fNelems <= kSizeMax) {
         memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
         delete [] fElements;
         fElements = fDataStack;
       }
+
+      // copy to Lower left triangle
+      for (i = 0; i < fNrows; i++) {
+        for (Int_t j = 0; j < i; j++) {
+          fElements[i*fNcols+j] = fElements[j*fNrows+i];
+        }
+      }
       return;
-    }
-    //====process old versions before automatic schema evolution
-    TObject::Streamer(R__b);
-    fNelems = R__b.ReadArray(fElements);
-    R__b.CheckByteCount(R__s,R__c,TMatrixDSym::IsA());
-    //====end of old versions
   } else {
-    TMatrixDSym::Class()->WriteBuffer(R__b,this);
+    TMatrixDBase::Class()->WriteBuffer(R__b,this);
+    // Only write the Upper right triangle
+    for (Int_t i = 0; i < fNrows; i++) {
+      R__b.WriteFastArray(fElements+i*fNcols+i,fNcols-i);
+    }
   }
 }
