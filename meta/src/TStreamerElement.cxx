@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.8 2000/12/18 07:12:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.9 2000/12/22 10:44:44 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -580,7 +580,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
          if (isPointer) fCtype = TStreamerInfo::kObjectp;
          else           fCtype = TStreamerInfo::kObject;
       } else {
-         printf ("UNKNOW type, sopen=%s\n",sopen);
+         if(strcmp(sopen,"string")) printf ("UNKNOW type, sopen=%s\n",sopen);
       }
    }
    delete [] s;
