@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawInfo.cxx,v 1.1 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawInfo.cxx,v 1.2 2005/03/10 18:25:19 rdm Exp $
 // Author: Marek Biskup   24/01/2004
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TDrawInfo                                                            //
 //                                                                      //
-// Class that parses all parameters for TTree::Draw                     //
+// Class that parses all parameters for TTree::Draw().                  //
 // See TTree::Draw() for the format description.                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ void TDrawInfo::ClearPrevious()
 //______________________________________________________________________________
 Bool_t TDrawInfo::SplitVariables(TString variables)
 {
-   // parse expression [var1 [:var2 [:var3] ...]]
+   // Parse expression [var1 [:var2 [:var3] ...]],
    // number of variables cannot be greater than fgMaxDimension.
    // A colon which is followed by (or that follows) another semicolon
    // is not regarded as a separator.
@@ -82,7 +82,7 @@ Bool_t TDrawInfo::SplitVariables(TString variables)
    // fVarExp[0] := <first variable string>
    // fVarExp[1] := <second variable string>
    // ..
-   // returns kFALSE in case of an error
+   // Returns kFALSE in case of an error.
 
    fDimension = 0;
    if (variables.Length() == 0)
@@ -110,12 +110,12 @@ Bool_t TDrawInfo::SplitVariables(TString variables)
 //______________________________________________________________________________
 Bool_t TDrawInfo::ParseName(TString name)
 {
-   // syntax:
+   // Syntax:
    // [[+]name[(num1 [, [num2] ] [, [num3] ] ...)]]
    // num's are floating point numbers
    // sets the fileds fNoParameters, fParameterGiven, fParameters, fAdd, fName
-   // to apropriate values
-   // returns fKALSE in case of an error
+   // to apropriate values.
+   // Returns fKALSE in case of an error.
 
    if (name.Length() != 0 && name[0] == '+') {
       fAdd = kTRUE;
@@ -144,7 +144,7 @@ Bool_t TDrawInfo::ParseName(TString name)
             fNoParameters++;
          }
          if (p == end) {
-            Error("ParseName", "Error: \')\' expected");
+            Error("ParseName", "expected \')\'");
             result = kFALSE;
             break;
          }
@@ -153,7 +153,7 @@ Bool_t TDrawInfo::ParseName(TString name)
          else if (*p == ',')
             p++;
          else {
-            Error("ParseName", "Impossible value for *q!");
+            Error("ParseName", "impossible value for *q!");
             result = kFALSE;
             break;
          }
@@ -184,7 +184,7 @@ Bool_t TDrawInfo::ParseVarExp()
    }
    Bool_t result = SplitVariables(variables) && ParseName(name);
    if (!result) {
-      Error("ParseVarExp", "Error parsing variable expression");
+      Error("ParseVarExp", "error parsing variable expression");
       return kFALSE;
    }
    return result;
@@ -206,7 +206,6 @@ Bool_t TDrawInfo::ParseOption()
    }
    return true;
 }
-
 
 //______________________________________________________________________________
 Bool_t TDrawInfo::Parse(const char *varexp, const char *selection, Option_t *option)
@@ -239,7 +238,6 @@ Bool_t TDrawInfo::Parse(const char *varexp, const char *selection, Option_t *opt
 
    return kTRUE;
 }
-
 
 //______________________________________________________________________________
 TDrawInfo::EOutputType TDrawInfo::DefineType()
@@ -311,7 +309,7 @@ TString TDrawInfo::GetProofSelectorName() const
 }
 
 //______________________________________________________________________________
-Double_t TDrawInfo::GetParameter(int num) const
+Double_t TDrawInfo::GetParameter(Int_t num) const
 {
    // returns *num*-th parameter from brackets in the expression
    // in case of an error (wrong number) returns 0.0
@@ -320,7 +318,7 @@ Double_t TDrawInfo::GetParameter(int num) const
    if (num >= 0 && num <= fgMaxParameters && fParameterGiven[num])
       return fParameters[num];
    else {
-      Error("GetParameter","Wrong arguments");
+      Error("GetParameter","wrong arguments");
       return 0.0;
    }
 }
@@ -350,7 +348,7 @@ Bool_t TDrawInfo::IsSpecified(int num) const
    if (num >= 0 && num <= fgMaxParameters)
       return fParameterGiven[num];
    else
-      Error("Specified", "Wrong parameter %d; fgMaxParameters: %d", num, fgMaxParameters);
+      Error("Specified", "wrong parameter %d; fgMaxParameters: %d", num, fgMaxParameters);
    return kFALSE;
 }
 
@@ -363,7 +361,7 @@ TString TDrawInfo::GetVarExp(Int_t num) const
    if (num >= 0 && num < fDimension)
       return fVarExp[num];
    else
-      Error("GetVarExp", "Wrong Parameters %d; fDimension = %d", num, fDimension);
+      Error("GetVarExp", "wrong Parameters %d; fDimension = %d", num, fDimension);
    return "";
 }
 

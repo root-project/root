@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawInfo.h,v 1.1 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawInfo.h,v 1.2 2005/03/10 18:25:19 rdm Exp $
 // Author: Marek Biskup   24/01/2004
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TDrawFeedback                                                        //
+// TDrawInfo                                                            //
 //                                                                      //
 // Class that parses all parameters for TTree::Draw().                  //
 // See TTree::Draw() for the format description.                        //
