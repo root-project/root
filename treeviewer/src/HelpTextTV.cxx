@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.8 2001/02/22 15:15:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.9 2001/02/26 10:28:53 brun Exp $
 // Author: Andrei Gheata   02/10/00
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include "HelpTextTV.h"
 
-#ifndef R__WIN32
+#if !defined(R__WIN32) || defined(GDK_WIN32)
 const char gTVHelpAbout[] = "\
    TreeViewer is a graphic user interface designed to handle ROOT trees and to \n\
 take advantage of TTree class features. It uses ROOT native GUI widgets adapted\n\
