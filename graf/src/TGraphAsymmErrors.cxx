@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.25 2002/11/22 10:05:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.26 2003/01/02 22:41:49 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -559,6 +559,48 @@ void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
    }
    out<<"   grae->Draw("
       <<quote<<option<<quote<<");"<<endl;
+}
+
+//______________________________________________________________________________
+void TGraphAsymmErrors::Set(Int_t n) 
+{
+// Set number of points in the graph
+// Existing coordinates are preserved
+// New coordinates and errors above fNpoints are preset to 0.
+  if (n < 0) n = 0;
+  if (n == fNpoints) return;
+                
+  TGraph::Set(n);
+        
+  Double_t *exh=0, *exl=0, *eyh=0, *eyl=0;
+  if (n > 0) {
+          exh = new Double_t[n];
+          exl = new Double_t[n];
+          eyh = new Double_t[n];
+          eyl = new Double_t[n];
+  }
+  Int_t i;
+  for (i=0; i<fNpoints && i<n;i++) {
+     if (fEXlow)  exl[i] = fEXlow[i];
+     if (fEXhigh) exh[i] = fEXhigh[i];
+     if (fEYlow)  eyl[i] = fEYlow[i];
+     if (fEYhigh) eyh[i] = fEYhigh[i];
+  }
+  for (i=fNpoints; i<n;i++) {
+     exh[i] = 0;
+     exl[i] = 0;
+     eyh[i] = 0;
+     eyl[i] = 0;
+  }
+  delete [] fEXlow;
+  delete [] fEXhigh;
+  delete [] fEYlow;
+  delete [] fEYhigh;
+        
+  fEXhigh = exh;
+  fEXlow  = exl;
+  fEYhigh = eyh;
+  fEYlow  = eyl;
 }
 
 //______________________________________________________________________________
