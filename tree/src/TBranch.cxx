@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.68 2004/01/05 11:22:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.69 2004/01/06 07:30:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1406,6 +1406,8 @@ void TBranch::Streamer(TBuffer &b)
       b << fWriteBasket;
       b << fEntryNumber;
       b << fOffset;
+      fMaxBaskets = fBaskets.GetEntriesFast();
+      if (fMaxBaskets < 10) fMaxBaskets=10;
       b << fMaxBaskets;
       b << fSplitLevel;
       b << fEntries;
