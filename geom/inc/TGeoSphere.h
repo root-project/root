@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.5 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -57,6 +57,7 @@ public:
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
+   Double_t              DistToSphere(Double_t *point, Double_t *dir, Double_t rsph, Bool_t check=kTRUE, Bool_t firstcross=kTRUE) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                                 Double_t /*start*/, Double_t /*step*/) {return voldiv;}
@@ -74,6 +75,7 @@ public:
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
+   Bool_t                IsPointInside(Double_t *point, Bool_t checkR=kTRUE, Bool_t checkTh=kTRUE, Bool_t checkPh=kTRUE) const;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);

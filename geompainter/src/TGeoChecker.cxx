@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.13 2002/12/03 16:01:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.14 2002/12/03 16:10:27 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // TGeoChecker::CheckGeometry() by Mihaela Gheata
 
@@ -125,9 +125,10 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
 //      for (j=0; j<nelem1; j++) printf("%i : %f %f %f\n", j, array1[3*j], array1[3*j+1], array1[3*j+2]);
       memcpy(&end[0], &array1[3*(nelem1-1)], 3*sizeof(Double_t));
       // shoot ray backwards
+//      printf("BACK %i\n", i);
       ShootRay(&end[0], -dir[0], -dir[1], -dir[2], array2, nelem2, dim2, &start[0]);
       if (!nelem2) {
-         printf("nothing on way back!!!\n");
+         printf("#### NOTHING BACK ###########################\n");
          for (j=0; j<nelem1; j++) {
             pm = (TPolyMarker3D*)pma->At(0);
             pm->SetNextPoint(array1[3*j], array1[3*j+1], array1[3*j+2]);
@@ -142,7 +143,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
          memcpy(&array2[3*(nelem2-1-j)], &dummy[0], 3*sizeof(Double_t));
       }
 //      for (j=0; j<nelem2; j++) printf("%i : %f ,%f ,%f   \n", j, array2[3*j], array2[3*j+1], array2[3*j+2]);	 
-      if (nelem1!=nelem2) printf("nelem1=%i nelem2=%i\n", nelem1, nelem2);
+      if (nelem1!=nelem2) printf("### DIFFERENT SIZES : nelem1=%i nelem2=%i ##########\n", nelem1, nelem2);
       ist1 = ist2 = 0;
       // check first match
       
@@ -158,10 +159,9 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
 //         printf("   matching %i (%g, %g, %g)\n", ist2, array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
          ist2++;
       } else {
-         printf("   NOT matching %i (%g, %g, %g)\n", ist2, array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
-	       pm = (TPolyMarker3D*)pma->At(0);
-	       pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
-         printf("   DCLOSE=%f\n", dw);
+         printf("### NOT MATCHING %i f:(%f, %f, %f) b:(%f %f %f) DCLOSE=%f\n", ist2, array1[3*ist1], array1[3*ist1+1], array1[3*ist1+2], array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2],dw);
+         pm = (TPolyMarker3D*)pma->At(0);
+         pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
          if (dw<0) {
             // first boundary missed on way back
          } else {
@@ -208,7 +208,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
                   fGeom->FindNode();
      	          pm = (TPolyMarker3D*)pma->At(2);
 	          pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
-                  printf("   extra boundary %i :  %s found at DCLOSE=%f\n", ist2, fGeom->GetPath(), dw);
+                  printf("### EXTRA BOUNDARY %i :  %s found at DCLOSE=%f\n", ist2, fGeom->GetPath(), dw);
                   ist2++;
                   continue;
                }
@@ -219,7 +219,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
                   fGeom->FindNode();
 	          pm = (TPolyMarker3D*)pma->At(1);
 	          pm->SetNextPoint(array2[3*ist1+3], array2[3*ist1+4], array2[3*ist1+5]);
-                  printf("boundary missed on way back\n");
+                  printf("### BOUNDARY MISSED BACK #########################\n");
                   ist1++;
                   break;
                } else {
@@ -301,11 +301,11 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    TH2F *hist = new TH2F("lego", option, nphi, phimin, phimax, ntheta, themin, themax);
    
    Double_t degrad = TMath::Pi()/180.;
-   Double_t theta, phi, step, matprop, x, dstep;
+   Double_t theta, phi, step, matprop, x;
    Double_t start[3];
    Double_t dir[3];
    TGeoNode *startnode, *endnode;
-   Bool_t is_entering, is_null;
+   Bool_t is_entering;
    Int_t i;  // loop index for phi
    Int_t j;  // loop index for theta
    Int_t ntot = ntheta * nphi;
@@ -340,22 +340,18 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
          if (fGeom->IsOutside()) endnode=0;
          step = fGeom->GetStep();
          is_entering = fGeom->IsEntering();
-         is_null = fGeom->IsNullStep();
          while (step<1E10) {
             // now see if we can make an other step
-            dstep = 0.;
-            if (is_null) {
-               dstep = 0.1;
-               fGeom->SetStep(dstep);
+            while (!fGeom->IsEntering()) {
+               fGeom->SetStep(1E-3);
+	       step += 1E-3;
                endnode = fGeom->Step();
-               is_entering = fGeom->IsEntering();   
             }
-            step += dstep;   
                
-            if (is_entering && matprop>0) {
+            if (matprop>0) {
                x += step/matprop;
             }   
-            if (endnode==0) break;
+            if (endnode==0 && step>1E10) break;
          //printf("x=%f, step==%g, matprop=%g\n", x,step,matprop);
             // generate an extra step to cross boundary
             startnode = endnode;    
@@ -370,8 +366,8 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
             if (fGeom->IsOutside()) endnode=0;
             step = fGeom->GetStep();
             is_entering = fGeom->IsEntering();
-            is_null = fGeom->IsNullStep();
          }
+	 printf("%i : x=%f\n", igen, x);
          hist->Fill(phi, theta, x); 
       }
    }
@@ -541,11 +537,11 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
             pm->Add(line);
          } // else printf("   entering=%i vis2=%i - no segment\n", (Int_t)is_entering, (Int_t)vis2);
          // now see if we can make an other step
-         if (endnode==0) {
+         if (endnode==0 && step>1E10) {
 //            printf("NULL. End track.\n");
             break;
          }
-         if (!is_entering) {
+         while (!fGeom->IsEntering()) {
             fGeom->SetStep(1E-3);
             fGeom->Step();
          }      
@@ -718,12 +714,10 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
    dir[2] = dirz;
    fGeom->InitTrack(start, &dir[0]);
    fGeom->GetCurrentNode();
-//   if (startnode) printf("Startnode : %s (%f,%f,%f)\n", startnode->GetName(), point[0], point[1], point[2]);
-//   else printf("Startnode : OUTSIDE (%f,%f,%f)\n", point[0], point[1], point[2]);
+//   printf("Start : (%f,%f,%f)\n", point[0], point[1], point[2]);
    fGeom->FindNextBoundary();
    step = fGeom->GetStep();
-//   if (node) printf("---next : %s at step=%f\n", node->GetName(), step);
-//   else      printf("---next : OUTSIDE at step=%f\n", step);
+//   printf("---next : at step=%f\n", step);
    if (step>1E10) return;
    endnode = fGeom->Step();
    is_entering = fGeom->IsEntering();
@@ -744,8 +738,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
 	          dim += 20;
          }
          memcpy(&array[3*nelem], point, 3*sizeof(Double_t)); 
-//         if (endnode) printf("%i (%f, %f, %f) step=%f: %s\n", nelem, point[0], point[1], point[2], step, endnode->GetName());
-//         else printf("%i (%f, %f, %f) : OUTSIDE step=%f\n", nelem, point[0], point[1], point[2], step);
+//         printf("%i (%f, %f, %f) step=%f\n", nelem, point[0], point[1], point[2], step);
          nelem++; 
       } else {
          if (endnode==0 && step>1E10) {
@@ -760,7 +753,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
          while (!fGeom->IsEntering()) {
             istep++;
 	    if (istep>1E3) {
-	       Error("ShootRay", "more than 1000 steps. Step was %f", step);
+//	       Error("ShootRay", "more than 1000 steps. Step was %f", step);
 	       nelem = 0;
 	       return;
 	    }   
@@ -776,15 +769,13 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
 	          dim += 20;
          }
          memcpy(&array[3*nelem], point, 3*sizeof(Double_t)); 
-//         if (endnode) printf("%i (%f, %f, %f) step=%f : %s\n", nelem, point[0], point[1], point[2], step, endnode->GetName());
-//         else printf("%i (%f, %f, %f) step=%f : OUTSIDE\n", nelem, point[0], point[1], point[2], step);
+//         if (endnode) printf("%i (%f, %f, %f) step=%f\n", nelem, point[0], point[1], point[2], step);
          nelem++;   
          is_entering = kTRUE;
       }
       fGeom->FindNextBoundary();
       step = fGeom->GetStep();
-//      if (node) printf("---next : %s at step=%f\n", node->GetName(), step);
-//      else      printf("---next : OUTSIDE at step=%f\n", step);
+//      printf("---next at step=%f\n", step);
       endnode = fGeom->Step();
       is_entering = fGeom->IsEntering();
    }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.7 2002/10/13 15:45:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.8 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -512,10 +512,10 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t pt[3];
    Double_t eps = 0;
    memcpy(&pt[0], point, 3*sizeof(Double_t));
-   if ((pt[0]*pt[1])==0) {
-      eps = 1E-3;
-      for (Int_t i=0; i<3; i++) pt[i]+=eps*dir[i];
-   }      
+//   if ((pt[0]*pt[1])==0) {
+//      eps = 1E-3;
+//      for (Int_t i=0; i<3; i++) pt[i]+=eps*dir[i];
+//   }      
 
    UChar_t bits=0;
    const UChar_t kUp = 0x01;
@@ -633,6 +633,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    saf[5]=r*TMath::Sin(dph2*kDegRad);
 //   printf("safphi1=%g\n", saf[4]);   
 //   printf("safphi2=%g\n", saf[5]);   
+
 /*
    if (bits & kUp) printf("UP\n");
    if (bits & kDown) printf("DOWN\n");
@@ -663,6 +664,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
                                 UChar_t &bits, Double_t *saf) const 
 {
    // propagate to next Z plane
+//   printf("--dist to sector %i\n", iz);
    const UChar_t kUp = 0x01;
    const UChar_t kDown = 0x02;
 //   const UChar_t kOut  = kUp | kDown;
@@ -695,7 +697,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
          }         
       }
    }      
-//   printf("dist to Z : %f\n", snxt);
+//   printf("---dist to Z : %f\n", snxt);
    // propagate to closest wall
    Double_t calf,tz, st, ct, sp, cp;
 //   Double_t divphi=fDphi/fNedges;
@@ -746,7 +748,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
       }
    }   
    // propagate to phi planes
-   if (saf[4]>0) {
+   if (saf[4]>=0) {
       nwall[0]=-TMath::Sin(phi1*kDegRad);
       nwall[1]=TMath::Cos(phi1*kDegRad);
       nwall[2]=0;
@@ -766,7 +768,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
       }
    }      
 
-   if (saf[5]>0) {
+   if (saf[5]>=0) {
       nwall[0]=TMath::Sin(phi2*kDegRad);
       nwall[1]=-TMath::Cos(phi2*kDegRad);
       nwall[2]=0;

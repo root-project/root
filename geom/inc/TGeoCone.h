@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.4 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.5 2002/12/03 16:01:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -113,8 +113,6 @@ protected:
    Double_t              fPhi1;  // first phi limit 
    Double_t              fPhi2;  // second phi limit 
     
-   static Double_t       DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
-                                      Double_t s2, Double_t c2, Double_t sm, Double_t cm);   
 public:
    // constructors
    TGeoConeSeg();
@@ -139,6 +137,8 @@ public:
                                     Double_t rmin1, Double_t rmax1, Double_t z1, Double_t rmin2, Double_t rmax2, Double_t z2, Double_t phi1, Double_t phi2);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
+   static Double_t       DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
+                                      Double_t s2, Double_t c2, Double_t sm, Double_t cm);   
 //   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
 //                                   Double_t dz, Double_t ro1, Double_t tg1, Double_t cr1, Double_t zv1,
 //                                   Double_t ro2, Double_t tg2, Double_t cr2, Double_t zv2, Double_t r2, Double_t rin, Double_t rout,
