@@ -732,6 +732,7 @@ char *argv[] ;
 
     case 'J':
       G__dispmsg = atoi(optarg);
+      break;
 
 #ifndef G__OLDIMPLEMENTATION1525
     case 'j':
