@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.8 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.10 2002/05/10 08:30:10 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -474,7 +474,7 @@ void test_matrix_slices(int vsize)
    Assert( !( m == pattern ) && !( m != pattern ) );
    {
       TMatrixDiag md(m);
-      for (int j = 1; j <= md.GetNdiags(); j++)
+      for (int j = 0; j < md.GetNdiags(); j++)
          md(j) /= 1.5;
    }
    vc = TMatrixDiag(m);
