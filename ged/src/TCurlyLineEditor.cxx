@@ -133,7 +133,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fEndYEntry->GetNumberEntry()->SetToolTipText("Set end point Y coordinate of curly line.");
    fEndYFrame->AddFrame(fEndYEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
 
-   TClass *cl = TAttLine::Class();
+   TClass *cl = TCurlyLine::Class();
    TGedElement *ge = new TGedElement;
    ge->fGedFrame = this;
    ge->fCanvas = 0;

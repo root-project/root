@@ -137,7 +137,7 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t id, Int_t width,
    fEndPointYEntry->GetNumberEntry()->SetToolTipText("Set end point Y coordinate of arrow.");
    f8->AddFrame(fEndPointYEntry, new TGLayoutHints(kLHintsLeft, 11, 1, 1, 1));
 
-   TClass *cl = TAttLine::Class();
+   TClass *cl = TArrow::Class();
    TGedElement *ge = new TGedElement;
    ge->fGedFrame = this;
    ge->fCanvas = 0;

@@ -113,7 +113,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
    fCenterYEntry->GetNumberEntry()->SetToolTipText("Set center Y coordinate.");
    f7->AddFrame(fCenterYEntry, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
 
-   TClass *cl = TAttLine::Class();
+   TClass *cl = TCurlyArc::Class();
    TGedElement *ge = new TGedElement;
    ge->fGedFrame = this;
    ge->fCanvas = 0;
