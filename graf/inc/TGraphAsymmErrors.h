@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.12 2003/04/10 20:12:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.13 2004/02/22 11:31:17 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -41,6 +41,7 @@ public:
         TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl=0, const Float_t *exh=0, const Float_t *eyl=0, const Float_t *eyh=0);
         TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl=0, const Double_t *exh=0, const Double_t *eyl=0, const Double_t *eyh=0);
         TGraphAsymmErrors(const TGraphAsymmErrors &gr);
+        TGraphAsymmErrors(const TH1 *h);
         virtual ~TGraphAsymmErrors();
         virtual void    Apply(TF1 *f);
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
@@ -60,6 +61,10 @@ public:
         virtual void    SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void    SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh); // *MENU*
         virtual void    SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh);
+        virtual void    SetPointEXlow(Int_t i, Double_t exl);
+        virtual void    SetPointEXhigh(Int_t i, Double_t exh);
+        virtual void    SetPointEYlow(Int_t i, Double_t eyl);
+        virtual void    SetPointEYhigh(Int_t i, Double_t eyh);
 
         ClassDef(TGraphAsymmErrors,3)  //A graph with asymmetric error bars
 };

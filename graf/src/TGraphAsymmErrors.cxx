@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.28 2003/04/10 20:12:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.29 2004/02/22 11:31:17 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -182,6 +182,27 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
       else     fEYhigh[i] = 0;
    }
 }
+
+//______________________________________________________________________________
+TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
+       : TGraph(h)
+{
+// TGraphAsymmErrors constructor importing its parameters from the TH1 object passed as argument
+// the low and high errors are set to the bin error of the histogram.
+   
+   if (fNpoints <= 0) return;
+   fEXlow       = new Double_t[fNpoints];
+   fEYlow       = new Double_t[fNpoints];
+   fEXhigh      = new Double_t[fNpoints];
+   fEYhigh      = new Double_t[fNpoints];
+
+   for (Int_t i=0;i<fNpoints;i++) {
+      fEXlow[i]  = h->GetBinWidth(i+1)*gStyle->GetErrorX();
+      fEXhigh[i] = fEXlow[i];
+      fEYlow[i]  = h->GetBinError(i+1);
+      fEYhigh[i] = fEYlow[i];
+   }
+}   
 
 //______________________________________________________________________________
 TGraphAsymmErrors::~TGraphAsymmErrors()
@@ -710,6 +731,58 @@ void TGraphAsymmErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Doubl
    fEYlow[i]  = eyl;
    fEXhigh[i] = exh;
    fEYhigh[i] = eyh;
+}
+
+//______________________________________________________________________________
+void TGraphAsymmErrors::SetPointEXlow(Int_t i, Double_t exl)
+{
+// Set EXlow for point i
+
+   if (i < 0) return;
+   if (i >= fNpoints) {
+   // re-allocate the object
+      TGraphAsymmErrors::SetPoint(i,0,0);
+   }
+   fEXlow[i]  = exl;
+}
+
+//______________________________________________________________________________
+void TGraphAsymmErrors::SetPointEXhigh(Int_t i, Double_t exh)
+{
+// Set EXhigh for point i
+
+   if (i < 0) return;
+   if (i >= fNpoints) {
+   // re-allocate the object
+      TGraphAsymmErrors::SetPoint(i,0,0);
+   }
+   fEXhigh[i]  = exh;
+}
+
+//______________________________________________________________________________
+void TGraphAsymmErrors::SetPointEYlow(Int_t i, Double_t eyl)
+{
+// Set EYlow for point i
+
+   if (i < 0) return;
+   if (i >= fNpoints) {
+   // re-allocate the object
+      TGraphAsymmErrors::SetPoint(i,0,0);
+   }
+   fEYlow[i]  = eyl;
+}
+
+//______________________________________________________________________________
+void TGraphAsymmErrors::SetPointEYhigh(Int_t i, Double_t eyh)
+{
+// Set EYhigh for point i
+
+   if (i < 0) return;
+   if (i >= fNpoints) {
+   // re-allocate the object
+      TGraphAsymmErrors::SetPoint(i,0,0);
+   }
+   fEYhigh[i]  = eyh;
 }
 
 //______________________________________________________________________________
