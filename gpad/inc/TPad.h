@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.19 2002/07/17 11:07:37 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.20 2002/07/23 09:43:26 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -324,6 +324,10 @@ public:
    virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view) {fView = view;}
    virtual void      Update();
+   virtual void      UpdateFillAttributes(Int_t col, Int_t sty);
+   virtual void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
+   virtual void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz);
+   virtual void      UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize);
    Int_t             UtoAbsPixel(Double_t u) const {return Int_t(fUtoAbsPixelk + u*fUtoPixel);}
    Int_t             VtoAbsPixel(Double_t v) const {return Int_t(fVtoAbsPixelk + v*fVtoPixel);}
    Int_t             UtoPixel(Double_t u) const;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.11 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.12 2002/05/03 10:48:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,8 +10,8 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TROOT.h"
 #include "Strlen.h"
+#include "TROOT.h"
 #include "TAttText.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
@@ -323,17 +323,7 @@ void TAttText::SetTextAttributes()
 //*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Text attributes*-*-*-*-*-*-*
 //*-*              =======================================
 
-   if (gPad) gROOT->SetSelectedPad(gPad->GetSelectedPad());
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (!lc->FindObject("R__atttext")) {
-      gROOT->ProcessLine("TAttTextCanvas *R__atttext = "
-                         "new TAttTextCanvas(\"R__atttext\",\"Text Attributes\","
-                         "400,600);");
-   }
-   gROOT->ProcessLine(Form("R__atttext->UpdateTextAttributes(%d,%f,%d,%d,%f);"
-                           "R__atttext->Show();",fTextAlign,fTextAngle,
-                           fTextColor,fTextFont,fTextSize));
+   if (gPad) gPad->UpdateTextAttributes(fTextAlign,fTextAngle,fTextColor,fTextFont,fTextSize);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.4 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.5 2002/05/03 10:48:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TROOT.h"
 #include "TAttFill.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
@@ -135,14 +134,5 @@ void TAttFill::SetFillAttributes()
 //*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Fill attributes*-*-*-*-*-*-*
 //*-*              =======================================
 
-   if (gPad) gROOT->SetSelectedPad(gPad->GetSelectedPad());
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (!lc->FindObject("R__attfill")) {
-      gROOT->ProcessLine("TAttFillCanvas *R__attfill = "
-                         "new TAttFillCanvas(\"R__attfill\",\"Fill Attributes\","
-                         "250,400);");
-   }
-   gROOT->ProcessLine(Form("R__attfill->UpdateFillAttributes(%d,%d);"
-                           "R__attfill->Show();",fFillColor,fFillStyle));
+   if (gPad) gPad->UpdateFillAttributes(fFillColor,fFillStyle);
 }

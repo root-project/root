@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.10 2001/10/30 17:22:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.11 2002/01/07 18:02:24 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -223,6 +223,10 @@ public:
    virtual void     SetView(TView *view) = 0;
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;
+   virtual void     UpdateFillAttributes(Int_t col, Int_t sty) = 0;
+   virtual void     UpdateLineAttributes(Int_t col, Int_t sty, Int_t width) = 0;
+   virtual void     UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz) = 0;
+   virtual void     UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize) = 0;
    virtual Int_t    UtoAbsPixel(Double_t u) const = 0;
    virtual Int_t    VtoAbsPixel(Double_t v) const = 0;
    virtual Int_t    UtoPixel(Double_t u) const = 0;

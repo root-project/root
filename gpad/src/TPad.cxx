@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.82 2002/09/10 13:17:41 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.83 2002/09/10 14:58:12 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -53,6 +53,10 @@
 #include "TPadView3D.h"
 #include "TDatime.h"
 #include "TColor.h"
+#include "TAttFillCanvas.h"
+#include "TAttLineCanvas.h"
+#include "TAttMarkerCanvas.h"
+#include "TAttTextCanvas.h"
 #include "TPluginManager.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
@@ -4698,7 +4702,75 @@ void TPad::Streamer(TBuffer &b)
       TPad::Class()->WriteBuffer(b,this);
    }
 }
+   
+   
+//______________________________________________________________________________
+void TPad::UpdateFillAttributes(Int_t col, Int_t sty)
+{
+// update fill area attributes via the dialog canvas
+   
+   gROOT->SetSelectedPad(gPad->GetSelectedPad());
 
+   TList *lc = (TList*)gROOT->GetListOfCanvases();
+   TAttFillCanvas *R__attfill = (TAttFillCanvas*)lc->FindObject("R__attfill");
+   if (!R__attfill) {
+      R__attfill = new TAttFillCanvas("R__attfill","Fill Attributes",250,400);
+   }
+   R__attfill->UpdateFillAttributes(col,sty);
+   R__attfill->Show();
+}
+   
+   
+//______________________________________________________________________________
+void TPad::UpdateLineAttributes(Int_t col, Int_t sty, Int_t width)
+{
+// update line attributes via the dialog canvas
+   
+   gROOT->SetSelectedPad(gPad->GetSelectedPad());
+
+   TList *lc = (TList*)gROOT->GetListOfCanvases();
+   TAttLineCanvas *R__attline = (TAttLineCanvas*)lc->FindObject("R__attline");
+   if (!R__attline) {
+      R__attline = new TAttLineCanvas("R__attline","Line Attributes",250,400);
+   }
+   R__attline->UpdateLineAttributes(col,sty,width);
+   R__attline->Show();
+}
+   
+   
+//______________________________________________________________________________
+void TPad::UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz)
+{
+// update marker attributes via the dialog canvas
+   
+   gROOT->SetSelectedPad(gPad->GetSelectedPad());
+
+   TList *lc = (TList*)gROOT->GetListOfCanvases();
+   TAttMarkerCanvas *R__attmarker = (TAttMarkerCanvas*)lc->FindObject("R__attmarker");
+   if (!R__attmarker) {
+      R__attmarker = new TAttMarkerCanvas("R__attmarker","Marker Attributes",250,400);
+   }
+   R__attmarker->UpdateMarkerAttributes(col,sty,msiz);
+   R__attmarker->Show();
+}
+   
+   
+//______________________________________________________________________________
+void TPad::UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize)
+{
+// update text attributes via the dialog canvas
+   
+   gROOT->SetSelectedPad(gPad->GetSelectedPad());
+
+   TList *lc = (TList*)gROOT->GetListOfCanvases();
+   TAttTextCanvas *R__atttext = (TAttTextCanvas*)lc->FindObject("R__atttext");
+   if (!R__atttext) {
+      R__atttext = new TAttTextCanvas("R__atttext","Text Attributes",400,600);
+   }
+   R__atttext->UpdateTextAttributes(align,angle,col,font,tsize);
+   R__atttext->Show();
+}
+   
 //______________________________________________________________________________
 void TPad::UseCurrentStyle()
 {

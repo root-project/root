@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.5 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.6 2002/05/03 10:48:53 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-#include "Strlen.h"
+#include "Riostream.h"
 #include "TAttLine.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TMath.h"
-#include "Riostream.h"
 
 ClassImp(TAttLine)
 
@@ -190,14 +188,5 @@ void TAttLine::SetLineAttributes()
 //*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Line attributes*-*-*-*-*-*-*
 //*-*              =======================================
 
-   if (gPad) gROOT->SetSelectedPad(gPad->GetSelectedPad());
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (!lc->FindObject("R__attline")) {
-      gROOT->ProcessLine("TAttLineCanvas *R__attline = "
-                         "new TAttLineCanvas(\"R__attline\",\"Line Attributes\","
-                         "250,400);");
-   }
-   gROOT->ProcessLine(Form("R__attline->UpdateLineAttributes(%d,%d,%d);"
-                           "R__attline->Show();",fLineColor,fLineStyle,fLineWidth));
+   if (gPad) gPad->UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.5 2002/03/20 10:39:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.6 2002/05/03 10:48:53 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TROOT.h"
 #include "Strlen.h"
 #include "TAttMarker.h"
 #include "TVirtualPad.h"
@@ -169,14 +168,5 @@ void TAttMarker::SetMarkerAttributes()
 //*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Marker attributes*-*-*-*-*-*-*
 //*-*              =========================================
 
-   if (gPad) gROOT->SetSelectedPad(gPad->GetSelectedPad());
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (!lc->FindObject("R__attmarker")) {
-      gROOT->ProcessLine("TAttMarkerCanvas *R__attmarker = "
-                         "new TAttMarkerCanvas(\"R__attmarker\",\"Marker Attributes\","
-                         "250,400);");
-   }
-   gROOT->ProcessLine(Form("R__attmarker->UpdateMarkerAttributes(%d,%d,%f);"
-                           "R__attmarker->Show();",fMarkerColor,fMarkerStyle,fMarkerSize));
+   if (gPad) gPad->UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
 }
