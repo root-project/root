@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.15 2000/09/11 09:06:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.16 2000/09/16 19:36:16 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1976,7 +1976,6 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
      if (!OptionRot) {
         npt = 0;
         for (i=first; i<=last;i++) {
-           if ((i == last) && OptionBins) continue;
            npt++;
            if (!OptionBins) xwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
            else {
@@ -2094,7 +2093,6 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
 
       for (ip = first; ip < last; ip++) {
         Double_t xw;
-        if ((ip == last) && OptionBins) continue;
         if (!OptionBins) xw = wminstep + (ip-first)*delta;
         else             xw = x[ip-1];
 
@@ -2180,7 +2178,6 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
      if (!OptionRot) {
         npt = 0;
         for (i=first; i<=last;i++) {
-           if ((i == last) && OptionBins) continue;
            npt++;
            if (!OptionBins) xwork[npt-1] = wminstep + (i-first)*delta;
            else {

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.16 2000/09/11 09:06:05 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.17 2000/09/13 12:04:15 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2273,7 +2273,11 @@ void THistPainter::PaintHist()
 
    if (fixbin) { keepx[0] = Hparam.xmin; keepx[1] = Hparam.xmax; }
    else {
-      for (i=0; i<=nbins; i++) keepx[i] = fXaxis->GetXbins()->fArray[i+first-1];
+      if (Hoption.Line) {
+         for (i=0; i<=nbins; i++) keepx[i] = fXaxis->GetBinCenter(i+first);
+      } else {
+         for (i=0; i<=nbins; i++) keepx[i] = fXaxis->GetBinLowEdge(i+first);
+      }
    }
 
 //*-*-     Prepare Fill area (systematic with option "Bar").
