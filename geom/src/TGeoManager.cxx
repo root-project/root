@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.103 2004/12/03 08:14:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.104 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1454,7 +1454,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
       Error("CloseGeometry","you MUST call SetTopVolume() first !");
       return;
    }
-   gROOT->GetListOfBrowsables()->Add(this);
+   if (!gROOT->GetListOfBrowsables()->FindObject(this)) gROOT->GetListOfBrowsables()->Add(this);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
    TBrowser *browser = 0;
@@ -4129,7 +4129,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    }
    if (old) old->cd();
    delete f;
-   if (gGeoManager) gROOT->GetListOfBrowsables()->Add(gGeoManager);
+   if (gGeoManager && (!gROOT->GetListOfBrowsables()->FindObject(gGeoManager))) gROOT->GetListOfBrowsables()->Add(gGeoManager);
    return gGeoManager;
 }
 //______________________________________________________________________________
