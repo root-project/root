@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.119 2004/03/16 16:15:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.120 2004/03/30 21:14:11 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1376,11 +1376,11 @@ void TROOT::InitThreads()
 //______________________________________________________________________________
 TClass *TROOT::LoadClass(const char *classname) const
 {
-   // Helper function used by TROOT::GetClass
-   // This attempts to load the dictionary for 'classname' either from
-   // the TClassTable or from the list of generator.
+   // Helper function used by TROOT::GetClass().
+   // This function attempts to load the dictionary for 'classname'
+   // either from the TClassTable or from the list of generator.
 
-   // This function do not (and should not) attempts to check in the
+   // This function does not (and should not) attempt to check in the
    // list of load classes or in the typedef.
 
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
@@ -1410,7 +1410,7 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
    // be made in the DynamicPath (see .rootrc). If not found a search
    // will be made on libname (without "lib" prepended) and if not found
    // a direct try of libname will be made (in case it contained an
-   // absolute path.
+   // absolute path).
    // If check is true it will only check if libname exists and is
    // readable.
    // Returns 0 on successful loading and -1 in case libname does not
@@ -1453,9 +1453,9 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
       ;  //Error("LoadClass", "library %s could not be loaded", libname);
 
    if (err == 1) {
-      Error("LoadClass", "library %s already loaded, but class %s unknown",
-            libname, classname);
-      err = -1;
+      //Error("LoadClass", "library %s already loaded, but class %s unknown",
+      //      libname, classname);
+      err = 0;
    }
 
    return err;
