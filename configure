@@ -2463,9 +2463,14 @@ checking_msg "Clarens support"
 
 if test ! "x$enable_clarens" = "xno" ; then
 
-    clarensinc=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
-    clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
-
+    myxmlrpc=`which xmlrpc-c-config 2> /dev/null`
+    if test ! "x$myxmlrpc" = "x" ; then
+        clarensinc=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
+        clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
+    else
+        clarensinc=""
+        clarenslibs=""
+    fi
     if test "x$clarensinc" = "x" || test "x$clarenslibs" = "x"; then
         enable_clarens="no"
     fi
