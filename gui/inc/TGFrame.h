@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.41 2004/06/22 16:27:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.42 2004/09/01 14:35:33 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -222,6 +222,8 @@ public:
    virtual void    Layout() { }
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
+   virtual void    ReparentWindow(const TGWindow *p, Int_t x = 0, Int_t y = 0) 
+                            { TGWindow::ReparentWindow(p, x, y); fX = x; fY = y; }
    virtual void    DrawBorder();
    virtual void    DrawCopy(Handle_t /*id*/, Int_t /*x*/, Int_t /*y*/) { }
    virtual void    Activate(Bool_t) { }
