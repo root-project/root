@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.5 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.6 2004/03/21 10:52:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -66,7 +66,7 @@ protected:
   Bool_t    fIsOwner;             //!default kTRUE, when Use array kFALSE
 
   Float_t* New_m   (Int_t size);
-  void      Delete_m(Int_t size,Float_t*);
+  void      Delete_m(Int_t size,Float_t*&);
   Int_t     Memcpy_m(Float_t *newp,const Float_t *oldp,Int_t copySize,
                      Int_t newSize,Int_t oldSize);
 

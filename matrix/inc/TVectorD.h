@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.27 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.28 2004/03/21 10:52:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -39,7 +39,7 @@ protected:
   Bool_t    fIsOwner;              //!default kTRUE, when Use array kFALSE
 
   Double_t* New_m   (Int_t size);
-  void      Delete_m(Int_t size,Double_t*);
+  void      Delete_m(Int_t size,Double_t*&);
   Int_t     Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
                      Int_t newSize,Int_t oldSize);
 

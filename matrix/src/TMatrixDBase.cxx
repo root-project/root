@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.5 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.6 2004/03/21 10:52:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -199,7 +199,7 @@
 ClassImp(TMatrixDBase)
 
 //______________________________________________________________________________
-void TMatrixDBase::Delete_m(Int_t size,Double_t* m)
+void TMatrixDBase::Delete_m(Int_t size,Double_t*& m)
 { 
   // delete data pointer m, if it was assigned on the heap
 
