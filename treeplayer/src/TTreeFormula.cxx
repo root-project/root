@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.38 2001/04/30 16:16:42 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.39 2001/05/02 20:44:34 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public:
    TFormLeafInfo    *fNext;
 
    virtual Double_t  GetCounterValue(TLeaf* leaf);
-   virtual Double_t  GetValue(char *where, Int_t instance = 0);
+   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
 
@@ -84,7 +84,7 @@ public:
                        TStreamerElement* element = 0) :
      TFormLeafInfo(classptr,offset,element) {};
    virtual Double_t  GetCounterValue(TLeaf* leaf);
-   virtual Double_t  GetValue(char *where, Int_t instance = 0);
+   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
 };
 
@@ -92,10 +92,10 @@ public:
 Double_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf) {
    // Return the current size of the the TClonesArray
 
-   return fCounter->GetValue((char*)GetValuePointer(leaf,0)) + 1;
+   return fCounter->ReadValue((char*)GetValuePointer(leaf,0)) + 1;
 }
 //______________________________________________________________________________
-Double_t TFormLeafInfoClones::GetValue(char *where, Int_t instance) { 
+Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance) { 
    // Return the value of the underlying data member inside the 
    // clones array.
    
@@ -113,7 +113,7 @@ Double_t TFormLeafInfoClones::GetValue(char *where, Int_t instance) {
    // Note we take advantage of having only one physically variable
    // dimension:
    char * obj = (char*)clones->UncheckedAt(index);
-   return fNext->GetValue(obj,sub_instance);
+   return fNext->ReadValue(obj,sub_instance);
 }
 
 //______________________________________________________________________________
@@ -135,7 +135,7 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
    // Note we take advantage of having only one physically variable
    // dimension:
    char * obj = (char*)clones->UncheckedAt(index);
-   return fNext->GetValue(obj,sub_instance);
+   return fNext->ReadValue(obj,sub_instance);
 }
 
 //______________________________________________________________________________
@@ -149,7 +149,9 @@ public:
                         TStreamerElement* element = 0) :
       TFormLeafInfo(classptr,offset,element) { };
 
-   virtual Double_t  GetValue(char *where, Int_t instance = 0) { 
+   virtual Double_t  ReadValue(char *where, Int_t instance = 0) { 
+      // Return the value of the underlying pointer data member 
+
       if (!fNext) return 0;
       char * whereoffset = where+fOffset;
       switch (fElement->GetType()) {
@@ -157,7 +159,7 @@ public:
          case TStreamerInfo::kObjectp: 
          case TStreamerInfo::kObjectP: 
          {TObject **obj = (TObject**)(whereoffset);    
-          return fNext->GetValue((char*)*obj,instance); }
+          return fNext->ReadValue((char*)*obj,instance); }
 
          case TStreamerInfo::kObject: 
          case TStreamerInfo::kTString: 
@@ -167,7 +169,7 @@ public:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
          case TStreamerInfo::kAny:
            {TObject *obj = (TObject*)(whereoffset);   
-            return fNext->GetValue((char*)obj,instance); }
+            return fNext->ReadValue((char*)obj,instance); }
         
          case kOther_t:  
          default:        return 0;
@@ -175,9 +177,11 @@ public:
      
    } ;
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) {
+      // Return the value of the underlying pointer data member  
+
       if (!fNext) return 0;
       char * where = (char*)GetValuePointer(leaf,instance);
-      return fNext->GetValue(where,instance);
+      return fNext->ReadValue(where,instance);
    };
 };
 
@@ -192,11 +196,10 @@ public:
    
    TFormLeafInfoMethod(TClass* classptr = 0, TMethodCall *method = 0) :
      TFormLeafInfo(classptr,0,0),fMethod(method) {};
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) {
-      return TFormLeafInfo::GetValue(leaf,instance);
-   }
   
-   virtual Double_t  GetValue(char *where, Int_t instance = 0) {
+   virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
+      // Execute the method on the given address 
+
       void *thisobj = where;
       TMethodCall::EReturnType r = fMethod->ReturnType();
 
@@ -213,7 +216,7 @@ public:
       if (fNext) {
         char * result = 0;
         fMethod->Execute(thisobj, &result);
-        return fNext->GetValue(result,instance);
+        return fNext->ReadValue(result,instance);
       } else fMethod->Execute(thisobj);
 
       return 0;
@@ -1116,6 +1119,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          DefineDimensions( branch_dim, code, virt_dim);
       }
       
+      if (leaf->IsA() == TLeafElement::Class()) {
+         TBranchElement* branch = (TBranchElement*) leaf->GetBranch();
+         if (branch->GetBranchCount2()) {
+           Warning("TTreeFormula","Variable size array in TClonesArray not yet fully supported! Only the first element is currently used.");
+         }
+      }             
+
       if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) return 5000+code;
       if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) return 5000+code;
       return code;
@@ -1172,7 +1182,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance) const
          return gcut->IsInside(xcut,ycut);
       }
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
-      
+
       // Now let calculate what physical instance we really need.
       // Some redundant code is used to speed up the cases where
       // they are no dimensions.
@@ -1482,15 +1492,22 @@ Int_t TTreeFormula::GetNdata()
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       if (leaf->GetLeafCount()) {
          TLeaf* leafcount = leaf->GetLeafCount();
-         TBranch *branch = leafcount->GetBranch();
+         TBranch *branchcount = leafcount->GetBranch();
          if (leaf->IsA() == TLeafElement::Class()) {
             //if branchcount address not yet set, GetEntry will set the address
             // read branchcount value
-            if (!branch->GetAddress()) branch->GetEntry(fTree->GetReadEntry());
-            else branch->TBranch::GetEntry(fTree->GetReadEntry());
-            size = ((TBranchElement*)branch)->GetNdata();
+            if (!branchcount->GetAddress()) branchcount->GetEntry(fTree->GetReadEntry());
+            else branchcount->TBranch::GetEntry(fTree->GetReadEntry());
+            size = ((TBranchElement*)branchcount)->GetNdata();
+
+            TBranchElement* branch = (TBranchElement*) leaf->GetBranch();
+            if (branch->GetBranchCount2()) branch->GetBranchCount2()->GetEntry(fTree->GetReadEntry());
+
+            // Here we need to add the code to take in consideration the 
+            // double variable length
+      
          } else {
-            branch->GetEntry(fTree->GetReadEntry());
+            branchcount->GetEntry(fTree->GetReadEntry());
             size = leaf->GetLen() / leaf->GetLenStatic();
          }
          if (fIndexes[i][0]==-1) {
@@ -1711,15 +1728,15 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf,
       if (address) thisobj = (char*) *(void**)(address+offset);
       else thisobj = branch->GetObject();
    }
-   return GetValue(thisobj,instance);
+   return ReadValue(thisobj,instance);
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfo::GetValue(char *thisobj, 
+Double_t TFormLeafInfo::ReadValue(char *thisobj, 
                                  Int_t instance)
 {
-   if (fNext) return fNext->GetValue(thisobj+fOffset,instance);
-   //   return fInfo->GetValue(thisobj+fOffset,fElement->GetType(),instance,1);
+   if (fNext) return fNext->ReadValue(thisobj+fOffset,instance);
+   //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetType(),instance,1);
    switch (fElement->GetType()) {
          // basic types
       case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+fOffset));
