@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.17 2002/02/01 11:03:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.18 2002/02/02 11:56:14 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -647,7 +647,7 @@ void TH3::GetStats(Stat_t *stats) const
 }
 
 //______________________________________________________________________________
-Stat_t TH3::Integral(Option_t *option)
+Stat_t TH3::Integral(Option_t *option) const
 {
 //Return integral of bin contents. Only bins in the bins range are considered.
 // By default the integral is computed as the sum of bin contents in the range.
@@ -660,7 +660,7 @@ Stat_t TH3::Integral(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option)
+Stat_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option) const
 {
 //Return integral of bin contents in range [binx1,binx2],[biny1,biny2],[binz1,binz2]
 // for a 3-D histogram
@@ -1023,7 +1023,7 @@ Int_t TH3::Merge(TCollection *list)
 }   
 
 //______________________________________________________________________________
-TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, Int_t iymax, Option_t *option)
+TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, Int_t iymax, Option_t *option) const
 {
 //*-*-*-*-*Project a 3-D histogram into a 1-D histogram along Z*-*-*-*-*-*-*
 //*-*      ====================================================
@@ -1055,7 +1055,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
      sprintf(pname,"%s%s",GetName(),name);
   }
   TH1D *h1;
-  TArrayD *bins = fZaxis.GetXbins();
+  const TArrayD *bins = fZaxis.GetXbins();
   if (bins->fN == 0) {
      h1 = new TH1D(pname,GetTitle(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
   } else {
@@ -1093,7 +1093,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
 }
 
 //______________________________________________________________________________
-TH1 *TH3::Project3D(Option_t *option)
+TH1 *TH3::Project3D(Option_t *option) const
 {
    // Project a 3-d histogram into 1 or 2-d histograms depending on the
    // option parameter
@@ -1144,10 +1144,10 @@ TH1 *TH3::Project3D(Option_t *option)
   nch = strlen(GetTitle()) +opt.Length() +2;
   char *title = new char[nch];
   sprintf(title,"%s_%s",GetTitle(),option);
-  TArrayD *bins;
-  TArrayD *xbins;
-  TArrayD *ybins;
-  TArrayD *zbins;
+  const TArrayD *bins;
+  const TArrayD *xbins;
+  const TArrayD *ybins;
+  const TArrayD *zbins;
   switch (pcase) {
      case 1:
         bins = fXaxis.GetXbins();
