@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.25 2003/11/04 15:28:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.26 2004/01/29 23:08:16 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -38,6 +38,12 @@
 
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
+#endif
+
+#include <string>
+
+#ifdef R__GLOBALSTL
+namespace std { using ::string; }
 #endif
 
 #ifdef R__MWERKS
@@ -210,7 +216,7 @@ public:
 
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
-   TString(const std::string& s);              
+   TString(const std::string& s);
    TString(char c) { InitChar(c); }
 
    TString(char c, Ssiz_t s);
