@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.62 2001/10/23 09:20:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.63 2001/10/24 14:03:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1886,9 +1886,11 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
       for (biny=yfirst;biny<=ylast;biny++) {
          x[1]  = yaxis->GetBinCenter(biny);
          for (binx=xfirst;binx<=xlast;binx++) {
+            x[0]  = xaxis->GetBinCenter(binx);
+            if (!gF1->IsInside(x)) continue;
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
-            x[0]  = xaxis->GetBinCenter(binx);
+            TF1::RejectPoint(kFALSE);
             if (Foption.Integral) {
                binlow  = xaxis->GetBinLowEdge(binx);
                binsize = xaxis->GetBinWidth(binx);
@@ -1897,6 +1899,7 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
             } else {
                fu = gF1->EvalPar(x,u);
             }
+            if (TF1::RejectedPoint()) continue;
             if (Foption.W1) {
                if (cu == 0) continue;
                eu = 1;
@@ -1949,9 +1952,11 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
       for (biny=yfirst;biny<=ylast;biny++) {
          x[1]  = yaxis->GetBinCenter(biny);
          for (binx=xfirst;binx<=xlast;binx++) {
+            x[0]  = xaxis->GetBinCenter(binx);
+            if (!gF1->IsInside(x)) continue;
+            TF1::RejectPoint(kFALSE);
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
-            x[0]  = xaxis->GetBinCenter(binx);
             if (Foption.Integral) {
                binlow  = xaxis->GetBinLowEdge(binx);
                binsize = xaxis->GetBinWidth(binx);
@@ -1960,6 +1965,7 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
             } else {
                fu = gF1->EvalPar(x,u);
             }
+            if (TF1::RejectedPoint()) continue;
             npfits++;
             if (flag == 2) {
                for (k=0;k<npar;k++) {
