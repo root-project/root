@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.20 2001/02/06 19:12:35 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.21 2001/02/22 09:43:25 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -117,6 +117,7 @@
 
 // Protocol changes:
 // 2 -> 3: added handling of kROOTD_FSTAT message.
+// 3 -> 4: added support for TFTP (i.e. kROOTD_PUTFILE, kROOTD_GETFILE, etc.)
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -129,7 +130,12 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <errno.h>
+#if defined(__alpha) && !defined(linux)
+#include <sys/mount.h>
+extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
+#else
 #include <sys/vfs.h>
+#endif
 
 #if defined(linux)
 #   include <features.h>
@@ -224,7 +230,7 @@ int     gAuth              = 0;
 int     gAnon              = 0;
 int     gFd                = -1;
 int     gWritable          = 0;
-int     gProtocol          = 3;       // increase when protocol changes
+int     gProtocol          = 4;       // increase when protocol changes
 double  gBytesRead         = 0;
 double  gBytesWritten      = 0;
 char    gUser[64]          = { 0 };
