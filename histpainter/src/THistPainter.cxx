@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.109 2002/11/27 08:20:21 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.110 2002/12/04 15:11:52 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1832,7 +1832,8 @@ void THistPainter::PaintColorLevels(Option_t *)
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Double_t z, xk,xstep, yk, ystep, xlow, xup, ylow, yup;
-   Double_t dz = Hparam.zmax - Hparam.zmin;
+   Double_t zmin = fH->GetMinimum();
+   Double_t dz = Hparam.zmax - zmin;
    if (dz <= 0) return;
 
    Style_t fillsav   = fH->GetFillStyle();
@@ -1886,7 +1887,7 @@ void THistPainter::PaintColorLevels(Option_t *)
          if (ylow < gPad->GetUymin()) continue;
          if (xup  > gPad->GetUxmax()) continue;
          if (yup  > gPad->GetUymax()) continue;
-         color = Int_t(0.01+(z- Hparam.zmin)*scale);
+         color = Int_t(0.01+(z-zmin)*scale);
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
          if (z >= Hparam.zmax) theColor = ncolors-1;
          fH->SetFillColor(gStyle->GetColorPalette(theColor));
