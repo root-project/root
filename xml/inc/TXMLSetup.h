@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -26,7 +26,8 @@ extern const char* NameSpaceBase;
 
 extern const char* xmlNames_Root;
 extern const char* xmlNames_Setup;
-extern const char* xmlNames_Version;
+extern const char* xmlNames_ClassVersion;
+extern const char* xmlNames_OnlyVersion;
 extern const char* xmlNames_Ptr;
 extern const char* xmlNames_Ref;
 extern const char* xmlNames_Null;
@@ -38,6 +39,7 @@ extern const char* xmlNames_Cycle;
 extern const char* xmlNames_XmlBlock;
 extern const char* xmlNames_Zip;
 extern const char* xmlNames_Object;
+extern const char* xmlNames_ObjClass;
 extern const char* xmlNames_Class;
 extern const char* xmlNames_Member;
 extern const char* xmlNames_Item;
@@ -68,7 +70,7 @@ class TStreamerElement;
 
 class TXMLSetup {
    public:
-      enum TXMLLayout { kSpecialized = 2,
+      enum EXMLLayout { kSpecialized = 2,
                         kGeneralized = 3 };
 
       TXMLSetup();
@@ -76,49 +78,51 @@ class TXMLSetup {
       TXMLSetup(const TXMLSetup& src);
       virtual ~TXMLSetup();
 
-      void StoreSetup(xmlNodePointer node);
-      Bool_t ReadSetup(xmlNodePointer node);
+      void           StoreSetup(xmlNodePointer node);
+      Bool_t         ReadSetup(xmlNodePointer node);
 
-      void PrintSetup();
+      void           PrintSetup();
 
-      TXMLLayout GetXmlLayout() const { return fXmlLayout; }
-      void SetXmlLayout(TXMLLayout layout) { fXmlLayout = layout; }
+      EXMLLayout     GetXmlLayout() const { return fXmlLayout; }
+      void           SetXmlLayout(EXMLLayout layout) { fXmlLayout = layout; }
 
-      Bool_t IsaSolidDataBlock() const { return fSolidDataBlock; }
-      void SetSolidDataBlock(Bool_t iSolid = kTRUE) { fSolidDataBlock = iSolid; }
+      Bool_t         IsaSolidDataBlock() const { return fSolidDataBlock; }
+      void           SetSolidDataBlock(Bool_t iSolid = kTRUE) { fSolidDataBlock = iSolid; }
 
-      Bool_t IsConvertBasicTypes() const { return fConvertBasicTypes; }
-      void SetConvertBasicTypes(Bool_t iConvert = kTRUE) { fConvertBasicTypes = iConvert; }
+      Bool_t         IsConvertBasicTypes() const { return fConvertBasicTypes; }
+      void           SetConvertBasicTypes(Bool_t iConvert = kTRUE) { fConvertBasicTypes = iConvert; }
 
-      Bool_t IsUseDtd() const { return fUseDtd; }
-      void SetUsedDtd(Bool_t use = kTRUE) { fUseDtd = use; }
+      Bool_t         IsUseDtd() const { return fUseDtd; }
+      void           SetUsedDtd(Bool_t use = kTRUE) { fUseDtd = use; }
 
-      Bool_t IsUseNamespaces() const { return fUseNamespaces; }
-      void SetUseNamespaces(Bool_t iUseNamespaces = kTRUE) { fUseNamespaces = iUseNamespaces; }
+      Bool_t         IsUseNamespaces() const { return fUseNamespaces; }
+      void           SetUseNamespaces(Bool_t iUseNamespaces = kTRUE) { fUseNamespaces = iUseNamespaces; }
 
-      const char* XmlConvertClassName(const TClass* cl);
-      const char* XmlClassNameSpaceRef(const TClass* cl);
+      const char*    XmlConvertClassName(const TClass* cl);
+      const char*    XmlClassNameSpaceRef(const TClass* cl);
 
-      Int_t GetNextRefCounter() { return fRefCounter++; }
+      Int_t          GetNextRefCounter() { return fRefCounter++; }
 
    protected:
 
-      TClass* XmlDefineClass(const char* xmlClassName);
-      const char* GetElItemName(TStreamerElement* el);
-      const char* GetElName(TStreamerElement* el);
+      TClass*        XmlDefineClass(const char* xmlClassName);
+      const char*    GetElItemName(TStreamerElement* el);
+      const char*    GetElName(TStreamerElement* el);
 
-      Bool_t ReadSetupFromStr(const char* setupstr);
+      Bool_t         ReadSetupFromStr(const char* setupstr);
 
-      TXMLLayout fXmlLayout;
-      Bool_t fSolidDataBlock;
-      Bool_t fConvertBasicTypes;
-      Bool_t fUseDtd;
-      Bool_t fUseNamespaces;
+      Int_t          AtoI(const char* sbuf, Int_t def = 0, const char* errinfo = 0);
 
-      Int_t  fRefCounter;
 
-      TString fStrBuf;          //!
-      TString fNameBuf;         //!
+      EXMLLayout     fXmlLayout;
+      Bool_t         fSolidDataBlock;
+      Bool_t         fConvertBasicTypes;
+      Bool_t         fUseDtd;
+      Bool_t         fUseNamespaces;
+
+      Int_t          fRefCounter;      //!  counter , used to build id of xml references
+
+      TString        fStrBuf;          //!  buffer, used in XmlDefineClass() function
 
    ClassDef(TXMLSetup,1);
 };

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLKey.cxx,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLKey.cxx,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -56,10 +56,8 @@ TXMLKey::TXMLKey(TXMLFile* file, xmlNodePointer keynode) :
 
   xmlNodePointer objnode = gXML->GetChild(keynode);
   gXML->SkipEmpty(objnode);
-  if (file->GetXmlLayout() == TXMLSetup::kGeneralized)
-     fClassName = gXML->GetProp(objnode, xmlNames_Class);
-  else
-     fClassName = gXML->GetNodeName(objnode);
+
+  fClassName = gXML->GetProp(objnode, xmlNames_ObjClass);
 }
 
 //______________________________________________________________________________
@@ -99,7 +97,7 @@ void TXMLKey::StoreObject(TXMLFile* file, const void* obj, const TClass* cl)
    fCycle  = file->AppendKey(this);
 
    TXMLBuffer buffer(TBuffer::kWrite, *file, file);
-   buffer.SetParent(0);
+   buffer.SetParent(file);
    buffer.SetDtdGenerator(file->GetDtdGenerator());
    xmlNodePointer node = buffer.XmlWrite(obj, cl);
 

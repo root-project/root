@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -70,6 +70,7 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual Long64_t  GetSeekFree() const {return 0; }
       virtual Long64_t  GetSeekInfo() const {return 0; }
       virtual Long64_t  GetSize() const { return 0; }
+      virtual TList*    GetStreamerInfoList();
 
       virtual Bool_t    IsOpen() const;
 
@@ -80,13 +81,12 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual void      Print(Option_t* ="") const {}
       virtual Bool_t    ReadBuffer(char*, Int_t) { return kFALSE; }
       virtual void      ReadFree() {}
-      virtual void      ReadStreamerInfo() {}
+      virtual void      ReadStreamerInfo();
       virtual Int_t     Recover() { return 0; }
       virtual Int_t     ReOpen(Option_t *mode);
       virtual void      Seek(Long64_t, ERelativeTo=kBeg) {}
 
       virtual void      SetEND(Long64_t) {}
-      virtual void      ShowStreamerInfo() {}
       virtual Int_t     Sizeof() const { return 0; }
 
       virtual void      UseCache(Int_t = 10, Int_t = TCache::kDfltPageSize) {}
@@ -96,7 +96,7 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual void      WriteHeader() {}
       virtual Int_t     WriteObject(const TObject* obj, const char* name = 0, Option_t *option="");
       virtual Int_t     WriteObjectAny(const void* obj, const TClass* cl, const char* name, Option_t *option="");
-      virtual void      WriteStreamerInfo() {}
+      virtual void      WriteStreamerInfo();
 
       // XML specific functions
 
@@ -106,13 +106,9 @@ class TXMLFile : public TFile, public TXMLSetup {
 
    protected:
       // functions to store streamer infos
-
-      xmlNodePointer    CreateStreamerInfoNode();
-      void              ReadStreamerInfos(xmlNodePointer fRootNode);
-
+      
       void              StoreStreamerElement(xmlNodePointer node, TStreamerElement* elem);
       void              ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info);
-
 
       Bool_t            ReadFromFile();
 
@@ -120,9 +116,11 @@ class TXMLFile : public TFile, public TXMLSetup {
 
       static void       ProduceFileNames(const char* filename, TString& fname, TString& dtdname);
 
-      xmlDocPointer     fDoc;              //!
+      xmlDocPointer     fDoc;                  //!
 
-      TXMLDtdGenerator*  fDtdGener;        //!
+      TXMLDtdGenerator* fDtdGener;            //!
+      
+      xmlNodePointer    fStreamerInfoNode;     //!
 
    ClassDef(TXMLFile,1);
 };

@@ -54,6 +54,7 @@ TXMLBuffer::TXMLBuffer(TBuffer::EMode mode, const TXMLSetup& setup, TXMLFile* fi
     fErrorFlag(0),
     fCanUseCompact(kFALSE),
     fExpectedChain(kFALSE) {
+//   SetParent(file);     
 }
 
 //______________________________________________________________________________
@@ -80,7 +81,7 @@ xmlNodePointer TXMLBuffer::XmlWrite(const void* obj, const TClass* cl) {
 
    fStoredBuffePos = Length();
 
-   xmlNodePointer res = XmlWriteObjectNew(obj, cl);
+   xmlNodePointer res = XmlWriteObject(obj, cl);
 
    XmlWriteBlock(kTRUE);
    return res;
@@ -104,7 +105,7 @@ void* TXMLBuffer::XmlReadAny(xmlNodePointer node) {
    if (IsaSolidDataBlock())
      XmlReadBlock(gXML->GetChild(node));
 
-   void* obj = XmlReadObjectNew(0);
+   void* obj = XmlReadObject(0);
 
    return obj;
 }
@@ -219,7 +220,7 @@ void TXMLBuffer::XmlWriteBlock(Bool_t force) {
    xmlNodePointer node = 0;
 
    if (GetXmlLayout()==kGeneralized) {
-      node = XmlCreateMember(0, "block", res, BlockSize);
+//      node = XmlCreateMember(0, "block", res, BlockSize);
    } else {
       node = gXML->NewChild(StackNode(), 0, xmlNames_XmlBlock, res);
       sprintf(sbuf, "%d", BlockSize);
@@ -263,7 +264,7 @@ void TXMLBuffer::XmlReadBlock(xmlNodePointer node) {
 
    if (blocknode==0) return;
 
-   Int_t blockSize = atoi(gXML->GetProp(blocknode, xmlNames_Size));
+   Int_t blockSize = AtoI(gXML->GetProp(blocknode, xmlNames_Size));
    bool blockCompressed = gXML->HasProp(blocknode, xmlNames_Zip);
    char* fUnzipBuffer = 0;
 
@@ -288,7 +289,7 @@ void TXMLBuffer::XmlReadBlock(xmlNodePointer node) {
       content = gXML->GetNodeContent(blocknode);
 
    if (blockCompressed) {
-      Int_t zipSize = atoi(gXML->GetProp(blocknode, xmlNames_Zip));
+      Int_t zipSize = AtoI(gXML->GetProp(blocknode, xmlNames_Zip));
       fUnzipBuffer = new char[zipSize];
 
       tgt = fUnzipBuffer;
@@ -445,6 +446,28 @@ Bool_t TXMLBuffer::VerifyStackNode(const char* name, const char* errinfo) {
 }
 
 //______________________________________________________________________________
+xmlNodePointer TXMLBuffer::CreateItemNode(const char* name) {
+   xmlNodePointer node = 0; 
+   if (GetXmlLayout()==kGeneralized) {
+      node = gXML->NewChild(StackNode(), 0, xmlNames_Item, 0);
+      gXML->NewProp(node, 0, xmlNames_Name, name);  
+   } else
+       node = gXML->NewChild(StackNode(), 0, name, 0);
+   return node;    
+}
+
+//______________________________________________________________________________
+Bool_t TXMLBuffer::VerifyItemNode(const char* name, const char* errinfo) {
+   Bool_t res = kTRUE; 
+   if (GetXmlLayout()==kGeneralized) 
+      res = VerifyStackNode(xmlNames_Item, errinfo) &&
+            VerifyStackProp(xmlNames_Name, name, errinfo);
+   else
+      res = VerifyStackNode(name, errinfo);
+   return res;
+}   
+
+//______________________________________________________________________________
 Bool_t TXMLBuffer::VerifyProp(xmlNodePointer node, const char* propname, const char* propvalue, const char* errinfo) {
    if ((node==0) || (propname==0) || (propvalue==0)) return kFALSE;
    const char* cont = gXML->GetProp(node, propname);
@@ -463,65 +486,6 @@ Bool_t TXMLBuffer::VerifyProp(xmlNodePointer node, const char* propname, const c
 Bool_t TXMLBuffer::VerifyStackProp(const char* propname, const char* propvalue, const char* errinfo) {
    return VerifyProp(StackNode(), propname, propvalue, errinfo);
 }
-
-//______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlCreateMember(const char* name,
-                                           const char* type,
-                                           const char* value,
-                                           Int_t size) {
-   xmlNodePointer node = 0;
-   if (GetXmlLayout()==kGeneralized) {
-      if (name!=0) {
-         node = gXML->NewChild(StackNode(), 0, xmlNames_Member, 0);
-         gXML->NewProp(node, 0, xmlNames_Name, name);
-      } else
-         node = gXML->NewChild(StackNode(), 0, xmlNames_Item, 0);
-      gXML->NewProp(node, 0, xmlNames_Type, type);
-      if (value) gXML->NewProp(node, 0, xmlNames_Value, value);
-      if (size>=0) {
-         char ssize[30];
-         sprintf(ssize,"%d",size);
-         gXML->NewProp(node, 0, xmlNames_Size, ssize);
-      }
-   } else {
-      if (name!=0)
-         node = gXML->NewChild(StackNode(), 0, name, value);
-      else
-         node = gXML->NewChild(StackNode(), 0, type, value);
-   }
-   return node;
-}
-
-//______________________________________________________________________________
-Bool_t TXMLBuffer::VerifyMember(const char* name,
-                                const char* type,
-                                Int_t size,
-                                const char* errinfo) {
-   if (GetXmlLayout()==kGeneralized) {
-      if (name!=0) {
-        if (!VerifyStackNode(xmlNames_Member, errinfo)) return kFALSE;
-        if (!VerifyStackProp(xmlNames_Name, name, errinfo)) return kFALSE;
-      } else
-        if (!VerifyStackNode(xmlNames_Item, errinfo)) return kFALSE;
-
-      if (!VerifyStackProp(xmlNames_Type, type, errinfo)) return kFALSE;
-      if (size>=0) {
-        const char* ssize = gXML->GetProp(StackNode(), xmlNames_Size);
-        if ((ssize==0) || (atoi(ssize) != size)) {
-           cout << errinfo << " : invalid Member " << name <<" size property. Expected "
-                << size << ", get " << ssize << endl;
-           fErrorFlag = 1;
-           return kFALSE;
-       }
-     }
-     return kTRUE;
-   } else
-     if (name!=0)
-       return VerifyStackNode(name, errinfo);
-     else
-       return VerifyStackNode(type, errinfo);
-}
-
 
 // ################ redefined virtual functions ###########################
 
@@ -556,7 +520,11 @@ Int_t  TXMLBuffer::CheckByteCount(UInt_t, UInt_t, const char*) {
 void TXMLBuffer::SetByteCount(UInt_t, Bool_t) {
 }
 
+//______________________________________________________________________________
 Version_t TXMLBuffer::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*cl*/) {
+    
+   if (gDebug>3) 
+     cout << "TXMLBuffer::ReadVersion " << endl;
 
    BeforeIOoperation();
 
@@ -564,13 +532,12 @@ Version_t TXMLBuffer::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*
 
    if (start) *start = 0;
    if (bcnt) *bcnt = 0;
-
-   if (VerifyNode(StackNode(),"Version")) {
-      res = atoi(XmlReadValue("Version"));
-     //      cout << "Reading version from Version tag" << endl;
+   
+   if (VerifyItemNode(xmlNames_OnlyVersion)) {
+      res = AtoI(XmlReadValue(xmlNames_OnlyVersion));
    } else
-   if (VerifyNode(StackNode(),xmlNames_Class)) {
-     res = atoi(gXML->GetProp(StackNode(), xmlNames_Version));
+   if (VerifyStackNode(xmlNames_Class)) {
+     res = AtoI(gXML->GetProp(StackNode(), xmlNames_ClassVersion));
    } else {
       cerr << "Error reading version " << endl;
       fErrorFlag = 1;
@@ -587,7 +554,7 @@ void TXMLBuffer::CheckVersionBuf() {
   if (IsWriting() && (fVersionBuf>=-100)) {
      char sbuf[20];
      sprintf(sbuf, "%d", fVersionBuf);
-     XmlWriteValue(sbuf, "Version");
+     XmlWriteValue(sbuf, xmlNames_OnlyVersion);
      fVersionBuf = -111;
   }
 }
@@ -603,7 +570,7 @@ UInt_t TXMLBuffer::WriteVersion(const TClass *cl, Bool_t /* useBcnt */) {
 
 
    if (gDebug>2)
-      cout << "##### TXMLBuffer::WriteVersion " << endl;
+      cout << "TXMLBuffer::WriteVersion " << (cl ? cl->GetName() : "null") << "   ver = " << fVersionBuf << endl;
 
 //   XmlWriteBasic(cl->GetClassVersion(), "Version");
 
@@ -615,7 +582,7 @@ void* TXMLBuffer::ReadObjectAny(const TClass*) {
    BeforeIOoperation();
    if (gDebug>2)
       cout << "TXMLBuffer::ReadObjectAny   " << gXML->GetNodeName(StackNode()) << endl;
-   void* res = XmlReadObjectNew(0);
+   void* res = XmlReadObject(0);
    return res;
 }
 
@@ -624,7 +591,7 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
    BeforeIOoperation();
    if (gDebug>2)
       cout << "TXMLBuffer::WriteObject of class " << (actualClass ? actualClass->GetName() : " null") << endl;
-   XmlWriteObjectNew(actualObjStart, actualClass);
+   XmlWriteObject(actualObjStart, actualClass);
 }
 
 // ########################### XMLStyle2 ################################
@@ -639,7 +606,7 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
    while(indx<n) { \
      Int_t cnt = 1; \
      if (gXML->HasProp(StackNode(), "cnt")) { \
-        cnt = atoi(gXML->GetProp(StackNode(), "cnt")); \
+        cnt = AtoI(gXML->GetProp(StackNode(), "cnt")); \
      } \
      XmlReadBasic(vname[indx]); \
      Int_t curr = indx; indx++; \
@@ -651,13 +618,13 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
 }
 
 
-
 #define TXMLBuffer_ReadArray(tname, vname) \
 { \
    BeforeIOoperation(); \
    if (!IsConvertBasicTypes()) \
       return TBuffer::ReadArray(vname); \
-   Int_t n = atoi(gXML->GetProp(StackNode(), xmlNames_Size)); \
+   if (!VerifyItemNode(xmlNames_Array,"ReadArray")) return 0; \
+   Int_t n = AtoI(gXML->GetProp(StackNode(), xmlNames_Size)); \
    if (n<=0) return 0; \
    if (!vname) vname = new tname[n]; \
    PushStack(StackNode()); \
@@ -746,7 +713,8 @@ Int_t TXMLBuffer::ReadArrayDouble32(Double_t  *&d) {
    BeforeIOoperation(); \
    if (!IsConvertBasicTypes()) \
       return TBuffer::ReadStaticArray(vname); \
-   Int_t n = atoi(gXML->GetProp(StackNode(), xmlNames_Size)); \
+   if (!VerifyItemNode(xmlNames_Array,"ReadStaticArray")) return 0; \
+   Int_t n = AtoI(gXML->GetProp(StackNode(), xmlNames_Size)); \
    if (n<=0) return 0; \
    if (!vname) return 0; \
    PushStack(StackNode()); \
@@ -851,6 +819,7 @@ Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d) {
           XmlReadBasic(vname[indx]); \
       } \
    } else { \
+      if (!VerifyItemNode(xmlNames_Array,"ReadFastArray")) return; \
       PushStack(StackNode()); \
       TXMLReadArrayCompress(vname); \
       PopStack(); \
@@ -865,7 +834,7 @@ void TXMLBuffer::ReadFastArray(Bool_t    *b, Int_t n) {
 
 //______________________________________________________________________________
 void TXMLBuffer::ReadFastArray(Char_t    *c, Int_t n) {
-   if ((n>0) && VerifyNode(StackNode(), xmlNames_CharStar)) {
+   if ((n>0) && VerifyItemNode(xmlNames_CharStar)) {
       const char* buf = XmlReadValue(xmlNames_CharStar);
       Int_t size = strlen(buf);
       if (size<n) size = n;
@@ -977,7 +946,7 @@ void TXMLBuffer::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
       TBuffer::WriteArray(vname, n); \
       return; \
    } \
-   xmlNodePointer arrnode = gXML->NewChild(StackNode(), 0, xmlNames_Array, 0); \
+   xmlNodePointer arrnode = CreateItemNode(xmlNames_Array); \
    char sbuf[50]; \
    sprintf(sbuf,"%d",n); \
    gXML->NewProp(arrnode, 0, xmlNames_Size, sbuf); \
@@ -1083,7 +1052,7 @@ void TXMLBuffer::WriteArrayDouble32(const Double_t  *d, Int_t n) {
           XmlWriteBasic(vname[indx]); \
       } \
    } else {\
-      xmlNodePointer arrnode = gXML->NewChild(StackNode(), 0, xmlNames_Array, 0); \
+      xmlNodePointer arrnode = CreateItemNode(xmlNames_Array); \
       PushStack(arrnode); \
       TXMLWriteArrayCompress(vname); \
       PopStack(); \
@@ -1207,9 +1176,9 @@ void TXMLBuffer::StreamObject(void *obj, const TClass *cl) {
    if (gDebug>1)
      cout << " TXMLBuffer::StreamObject class = " << (cl ? cl->GetName() : "none") << endl;
    if (IsReading()) {
-      XmlReadObjectNew(obj);
+      XmlReadObject(obj);
    } else {
-      XmlWriteObjectNew(obj, cl);
+      XmlWriteObject(obj, cl);
    }
 }
 
@@ -1475,18 +1444,14 @@ xmlNodePointer TXMLBuffer::XmlWriteBasic(ULong64_t value) {
 //______________________________________________________________________________
 xmlNodePointer TXMLBuffer::XmlWriteValue(const char* value,
                                          const char* name) {
-   TXMLLayout mode = GetXmlLayout();
-
    xmlNodePointer node = 0;
+   
+   if (fCanUseCompact) 
+     node = StackNode();
+   else 
+     node = CreateItemNode(name);
 
-   if (mode==kGeneralized) {
-      //      node = XmlCreateMember(name, name_t, value);
-   } else {
-     if (fCanUseCompact) node = StackNode();
-                    else node = gXML->NewChild(StackNode(), 0, name, 0);
-
-     gXML->NewProp(node, 0, "v", value);
-   }
+   gXML->NewProp(node, 0, "v", value);
 
    fCanUseCompact = kFALSE;
 
@@ -1619,47 +1584,35 @@ void TXMLBuffer::XmlReadBasic(ULong64_t& value) {
 const char* TXMLBuffer::XmlReadValue(const char* name) {
    if (fErrorFlag>0) return 0;
 
-   TXMLLayout mode = GetXmlLayout();
+   if (gDebug>4)
+      cout << "     read value " << name << " = " ;
 
-   if (mode==kGeneralized) {
-      //      if (!VerifyMember(name, name_t, -1, "XmlReadValue")) return 0;
-      //      fValueBuf = gXML->GetProp(StackNode(), xmlNames_Value);
-      //      ShiftStack("general");
-   } else {
+   Bool_t trysimple = fCanUseCompact;
+   fCanUseCompact = kFALSE;
 
-      if (gDebug>4)
-         cout << "     read value " << name << " = " ;
+   if (trysimple)
+     if (gXML->HasProp(Stack(1)->fNode,"v"))
+       fValueBuf = gXML->GetProp(Stack(1)->fNode, "v");
+     else
+       trysimple = kFALSE;
 
-      Bool_t trysimple = fCanUseCompact;
-      fCanUseCompact = kFALSE;
-
-      if (trysimple)
-        if (gXML->HasProp(Stack(1)->fNode,"v"))
-          fValueBuf = gXML->GetProp(Stack(1)->fNode, "v");
-        else
-          trysimple = kFALSE;
-
-      if (!trysimple) {
-        if (!VerifyStackNode(name, "XmlReadValue")) return 0;
-        fValueBuf = gXML->GetProp(StackNode(), "v");
-      }
-
-      if (gDebug>4)
-         cout << fValueBuf << endl;
-
-      if (!trysimple)
-         ShiftStack("readvalue");
+   if (!trysimple) {
+     if (!VerifyItemNode(name, "XmlReadValue")) return 0;
+     fValueBuf = gXML->GetProp(StackNode(), "v");
    }
+
+   if (gDebug>4)
+     cout << fValueBuf << endl;
+
+   if (!trysimple)
+      ShiftStack("readvalue");
 
    return fValueBuf.Data();
 }
 
-
-// ******************************** new stuff ***********************************8
-
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteObjectNew(const void* obj,
-                                             const TClass* cl) {
+xmlNodePointer TXMLBuffer::XmlWriteObject(const void* obj,
+                                          const TClass* cl) {
    xmlNodePointer objnode = gXML->NewChild(StackNode(), 0, xmlNames_Object, 0);
 
    if (!cl) obj = 0;
@@ -1667,7 +1620,7 @@ xmlNodePointer TXMLBuffer::XmlWriteObjectNew(const void* obj,
 
    TString clname = XmlConvertClassName(cl);
 
-   gXML->NewProp(objnode, 0, "class", clname);
+   gXML->NewProp(objnode, 0, xmlNames_ObjClass, clname);
 
    RegisterPointer(obj, objnode);
 
@@ -1684,7 +1637,7 @@ xmlNodePointer TXMLBuffer::XmlWriteObjectNew(const void* obj,
 }
 
 //______________________________________________________________________________
-void* TXMLBuffer::XmlReadObjectNew(void* obj) {
+void* TXMLBuffer::XmlReadObject(void* obj) {
 
    xmlNodePointer objnode = StackNode();
 
@@ -1697,7 +1650,7 @@ void* TXMLBuffer::XmlReadObjectNew(void* obj) {
    if (ExtractPointer(objnode, obj))
       return obj;
 
-   TString clname = gXML->GetProp(objnode, "class");
+   TString clname = gXML->GetProp(objnode, xmlNames_ObjClass);
    TClass* objClass = XmlDefineClass(clname);
 
    if (objClass==0) {
@@ -1738,7 +1691,7 @@ void  TXMLBuffer::IncrementLevel(TStreamerInfo* info) {
    TString clname = XmlConvertClassName(info->GetClass());
 
    if (gDebug>2)
-     cout << " TXMLBuffer::StartInfo " << clname << endl;
+     cout << " IncrementLevel " << clname << endl;
 
    if (IsWriting()) {
       xmlNodePointer classnode = gXML->NewChild(StackNode(), 0, xmlNames_Class, 0);
@@ -1747,15 +1700,15 @@ void  TXMLBuffer::IncrementLevel(TStreamerInfo* info) {
       if (fVersionBuf>=0) {
          char sbuf[20];
          sprintf(sbuf,"%d", fVersionBuf);
-         gXML->NewProp(classnode, 0, xmlNames_Version, sbuf);
+         gXML->NewProp(classnode, 0, xmlNames_ClassVersion, sbuf);
          fVersionBuf = -111;
       }
 
       TXMLStackObj* stack = PushStack(classnode);
       stack->fInfo = info;
    } else {
-      if (!VerifyNode(StackNode(), xmlNames_Class, "StartInfo")) return;
-      if (!VerifyProp(StackNode(), "name", clname, "StartInfo")) return;
+      if (!VerifyStackNode(xmlNames_Class, "StartInfo")) return;
+      if (!VerifyStackProp("name", clname, "StartInfo")) return;
 
       TXMLStackObj* stack = PushStack(StackNode());
       stack->fInfo = info;
@@ -1770,11 +1723,7 @@ void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number) {
     if (GetXmlLayout()==kGeneralized) {
       elemnode = gXML->NewChild(StackNode(), 0, xmlNames_Member, 0);
       gXML->NewProp(elemnode, 0, xmlNames_Name, elem->GetName());
-      char sbuf[20];
-      sprintf(sbuf,"%d", elem->GetType());
-      gXML->NewProp(elemnode, 0, xmlNames_Type, sbuf);
     } else {
-
        elemnode = gXML->NewChild(StackNode(), 0, elem->GetName(), 0);
     }
 
@@ -1786,13 +1735,10 @@ void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number) {
 //______________________________________________________________________________
 Bool_t TXMLBuffer::VerifyElemNode(const TStreamerElement* elem, Int_t number) {
     if (GetXmlLayout()==kGeneralized) {
-       if (!VerifyNode(StackNode(), xmlNames_Member)) return kFALSE;
-       if (!VerifyProp(StackNode(), xmlNames_Name, elem->GetName())) return kFALSE;
-       char sbuf[20];
-       sprintf(sbuf,"%d", elem->GetType());
-       if (!VerifyProp(StackNode(), xmlNames_Type, sbuf)) return kFALSE;
+       if (!VerifyStackNode(xmlNames_Member)) return kFALSE;
+       if (!VerifyStackProp(xmlNames_Name, elem->GetName())) return kFALSE;
     } else {
-       if (!VerifyNode(StackNode(), elem->GetName())) return kFALSE;
+       if (!VerifyStackNode(elem->GetName())) return kFALSE;
     }
 
     TXMLStackObj* curr = PushStack(StackNode()); // set pointer to first data inside element
@@ -1826,10 +1772,16 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number) {
       TStreamerInfo* info = stack->fInfo;
 
       TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
-      if (!elem) {
-         Error("SetStreamerElementNumber","class: %s, element:%d returns null",info->GetName(),number);
+      
+      if (gDebug>3) {
+         cout << "SetStreamerElementNumber num = " << number << "  elem = " << (elem ? elem->GetName() : "null") << endl;
+      }
+      
+      if (elem==0) {
+         cerr << "Error elem = 0 in SetStreamerElementNumber " << endl;
          return;
       }
+
       Int_t comp_type = info->GetTypes()[number];
 
       Bool_t isBasicType = (elem->GetType()>0) && (elem->GetType()<20);
@@ -1855,8 +1807,13 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number) {
       TStreamerInfo* info = stack->fInfo;
 
       TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
-      if (!elem) return;
       
+      if (elem==0) {
+         cerr << "Error elem = 0 in SetStreamerElementNumber " << endl;
+         return;
+      }
+
+
       Int_t comp_type = info->GetTypes()[number];
 
       Bool_t isBasicType = (elem->GetType()>0) && (elem->GetType()<20);
@@ -1869,45 +1826,6 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number) {
    }
 }
 
-
-//______________________________________________________________________________
-void  TXMLBuffer::StartElement(TStreamerElement* elem) {
-   CheckVersionBuf();
-
-   TXMLStackObj* stack = dynamic_cast<TXMLStackObj*> (fStack.Last());
-   if (stack==0) {
-       cerr << "Fatal error in StartElement" << endl;
-       return;
-    }
-
-   TString elemname = elem->GetName();
-
-   fCanUseCompact = (elem->GetType()>0) && (elem->GetType()<20);
-
-   if (gDebug>2)
-      cout << "   TXMLBuffer::StartElement " << elemname << endl;
-
-   if (IsWriting()) {
-
-      if (stack->fInfo==0)  // this is not a first element
-        PopStack();
-      xmlNodePointer elemnode = gXML->NewChild(StackNode(), 0, elemname , 0);
-
-      TXMLStackObj* curr = PushStack(elemnode);
-      curr->fLastElem = elem;
-   } else {
-       if (stack->fInfo==0) {  // this is not a first element
-          PopStack();         // go level back
-          ShiftStack("startelem");   // shift to next element
-       }
-
-      if (!VerifyNode(StackNode(), elemname, "StartElement")) return;
-
-      TXMLStackObj* curr = PushStack(StackNode()); // set pointer to first data inside element
-      curr->fLastElem = elem;
-   }
-}
-
 //______________________________________________________________________________
 void  TXMLBuffer::DecrementLevel(TStreamerInfo* info) {
    CheckVersionBuf();
@@ -1917,10 +1835,8 @@ void  TXMLBuffer::DecrementLevel(TStreamerInfo* info) {
    fCanUseCompact = kFALSE;
    fExpectedChain = kFALSE;
 
-   //   cout << " <++++ " << info->GetName() << endl;
-
    if (gDebug>2)
-      cout << " TXMLBuffer::StopInfo " << info->GetClass()->GetName() << endl;
+      cout << " DecrementLevel " << info->GetClass()->GetName() << endl;
 
    TXMLStackObj* stack = dynamic_cast<TXMLStackObj*> (fStack.Last());
 

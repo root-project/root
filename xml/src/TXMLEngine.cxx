@@ -196,11 +196,8 @@ xmlDocPointer TXMLEngine::ParseFile(const char* filename) {
 Bool_t TXMLEngine::ValidateDocument(xmlDocPointer doc, Bool_t doout) {
 	xmlValidCtxt cvp;
 	cvp.userData = doout ? (void *) stderr : 0;
-	//the following two lines do not compile on Solaris
-        //cvp.error    = doout ? (xmlValidityErrorFunc) fprintf : 0;
-	//cvp.warning  = doout ? (xmlValidityWarningFunc) fprintf : 0;
-	cvp.error    = 0;
-	cvp.warning  = 0;
+	cvp.error    = doout ? (xmlValidityErrorFunc) fprintf : 0;
+	cvp.warning  = doout ? (xmlValidityWarningFunc) fprintf : 0;
 
     xmlDocPtr docptr = (xmlDocPtr) doc;
 

@@ -319,14 +319,12 @@ void TXMLDtdGenerator::ProduceDtdForBlackClass(ofstream& fs, TClass* cl) {
    fs << "<!ATTLIST " << clname << endl;
    if (IsUseNamespaces())
       fs << "          xmlns:" << clname << " CDATA \"" << XmlClassNameSpaceRef(cl) << "\"" << endl;
-   fs << "          " << xmlNames_Version << " CDATA #IMPLIED" << endl;
+   fs << "          " << xmlNames_ClassVersion << " CDATA #IMPLIED" << endl;
    fs << "          " << xmlNames_Ref << " ID #IMPLIED>" << endl << endl;
 }
 
 //______________________________________________________________________________
 void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInfo* info) {
-
-   int n;
 
    if (info==0) return;
    TString clname = XmlConvertClassName(info->GetClass());
@@ -338,7 +336,7 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
    bool first = true, canhasblock = IsaSolidDataBlock();
 
    // producing list of elements inside class element
-   for (n=0;n<=elements->GetLast();n++) {
+   for (int n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
 
       Int_t typ = dtdType(el);
@@ -378,9 +376,9 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
    fs << "<!ATTLIST " << clname << endl;
    if (IsUseNamespaces())
      fs << "          xmlns:" << clname << " CDATA \"" << XmlClassNameSpaceRef(info->GetClass()) << "\"" << endl;
-   fs << "          " << xmlNames_Version << " CDATA #IMPLIED" << endl;
+   fs << "          " << xmlNames_ClassVersion << " CDATA #IMPLIED" << endl;
 
-   for (n=0;n<=elements->GetLast();n++) {
+   for (int n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
       if (dtdType(el) == dtd_attr)
         fs << "          " << GetElName(el) << " CDATA #REQUIRED" << endl;
@@ -389,7 +387,7 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
 
    // produce description for each element
 
-   for (n=0;n<=elements->GetLast();n++) {
+   for (int n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
       int eltype = dtdType(el);
       Int_t arrlen = el->GetArrayLength();
@@ -495,7 +493,7 @@ void TXMLDtdGenerator::ProduceGeneralDtd(ofstream& fs, TClass* onlyclass) {
                                                  << xmlNames_Item << ")*>" << endl;
    fs << "<!ATTLIST " << xmlNames_Object << endl
       << "          " << xmlNames_Class << " CDATA #REQUIRED" << endl
-      << "          " << xmlNames_Version << " CDATA #IMPLIED" << endl
+      << "          " << xmlNames_ClassVersion << " CDATA #IMPLIED" << endl
       << "          " << xmlNames_Ref << " ID #IMPLIED>" << endl << endl;
 
    fs << "<!ELEMENT " << xmlNames_Member << " (" << xmlNames_Object << "|" << xmlNames_Item << ")*>" << endl;
@@ -516,8 +514,7 @@ void TXMLDtdGenerator::ProduceGeneralDtd(ofstream& fs, TClass* onlyclass) {
 
 //______________________________________________________________________________
 void TXMLDtdGenerator::ProduceSpecificDtd(ofstream& fs, TClass* onlyclass) {
-   Int_t n;
-   for (n=0;n<MaxBaseTypeNum;n++)
+   for (int n=0;n<MaxBaseTypeNum;n++)
      fUsedBaseTypes[n] = kFALSE;
 
    fClassSpace.Clear();
@@ -573,7 +570,7 @@ void TXMLDtdGenerator::ProduceSpecificDtd(ofstream& fs, TClass* onlyclass) {
    }
 */
 
-   for (n=0;n<MaxBaseTypeNum;n++)
+   for (int n=0;n<MaxBaseTypeNum;n++)
       if (fUsedBaseTypes[n] || IsConvertBasicTypes()) {
         const char* iname = dtdBaseTypeName(n);
         if (strlen(iname)>0)

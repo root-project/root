@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -22,7 +22,8 @@ const char* NameSpaceBase = "http://root.cern.ch/";
 
 const char* xmlNames_Root        = "root";
 const char* xmlNames_Setup       = "setup";
-const char* xmlNames_Version     = "version";
+const char* xmlNames_ClassVersion= "version";
+const char* xmlNames_OnlyVersion = "Version";
 const char* xmlNames_Ptr         = "ptr";
 const char* xmlNames_Ref         = "ref";
 const char* xmlNames_Null        = "null";
@@ -34,6 +35,7 @@ const char* xmlNames_Cycle       = "cycle";
 const char* xmlNames_XmlBlock    = "XmlBlock";
 const char* xmlNames_Zip         = "zip";
 const char* xmlNames_Object      = "Object";
+const char* xmlNames_ObjClass    = "class";
 const char* xmlNames_Class       = "Class";
 const char* xmlNames_Member      = "Member";
 const char* xmlNames_Item        = "Item";
@@ -111,8 +113,8 @@ void TXMLSetup::StoreSetup(xmlNodePointer node)
 //______________________________________________________________________________
 Bool_t TXMLSetup::ReadSetupFromStr(const char* setupstr)
 {
-   if ((setupstr==0) || (strlen(setupstr)<6)) return kFALSE;
-   Int_t lay          = TXMLLayout(setupstr[0] - 48);
+   if ((setupstr==0) || (strlen(setupstr)<5)) return kFALSE;
+   Int_t lay          = EXMLLayout(setupstr[0] - 48);
    if (lay==kGeneralized) fXmlLayout = kGeneralized;
                      else fXmlLayout = kSpecialized;
 
@@ -192,3 +194,11 @@ TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName)
    }
    return 0;
 }
+
+//______________________________________________________________________________
+Int_t TXMLSetup::AtoI(const char* sbuf, Int_t def, const char* errinfo) {
+   if (sbuf!=0) return atoi(sbuf);
+   if (errinfo) cerr << errinfo << " atoi report sbuf = 0" << endl;
+   return def;
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -70,9 +70,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       virtual void*     ReadObjectAny(const TClass* clCast);
 
       virtual void      IncrementLevel(TStreamerInfo*);
-      virtual void      StartElement(TStreamerElement*);
       virtual void      SetStreamerElementNumber(Int_t);
-
       virtual void      DecrementLevel(TStreamerInfo*);
 
       // end of redefined virtual functions of XMLStyle1
@@ -217,19 +215,12 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
 
       Bool_t VerifyNode(xmlNodePointer node, const char* name, const char* errinfo = 0);
       Bool_t VerifyStackNode(const char* name, const char* errinfo = 0);
+      
+      xmlNodePointer CreateItemNode(const char* name);
+      Bool_t VerifyItemNode(const char* name, const char* errinfo = 0);
 
       Bool_t VerifyProp(xmlNodePointer node, const char* propname, const char* propvalue, const char* errinfo = 0);
       Bool_t VerifyStackProp(const char* propname, const char* propvalue, const char* errinfo = 0);
-
-      xmlNodePointer XmlCreateMember(const char* name,
-                                     const char* type,
-                                     const char* value = 0,
-                                     Int_t size = -1);
-
-      Bool_t VerifyMember(const char* name,
-                          const char* type,
-                          Int_t size = -1,
-                          const char* errinfo = 0);
 
       void XmlWriteBlock(Bool_t force = kFALSE);
       void XmlReadBlock(xmlNodePointer node = 0);
@@ -271,15 +262,15 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
 
       TXMLFile* XmlFile();
 
-      xmlNodePointer XmlWriteObjectNew(const void* obj, const TClass* objClass);
-      void* XmlReadObjectNew(void* obj);
+      xmlNodePointer XmlWriteObject(const void* obj, const TClass* objClass);
+      void* XmlReadObject(void* obj);
 
       void CreateElemNode(const TStreamerElement* elem, Int_t number = -1);
       Bool_t VerifyElemNode(const TStreamerElement* elem, Int_t number = -1);
 
       void              BeforeIOoperation();
       void              CheckVersionBuf();
-
+      
       Int_t             fStoredBuffePos;       //!
 
       TObjArray         fStack;                //!
