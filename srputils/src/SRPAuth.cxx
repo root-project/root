@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name$:$Id$
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -17,20 +17,23 @@ extern "C" {
 }
 
 #include "TSocket.h"
-#include "TNetFile.h"
+#include "TAuthenticate.h"
+#include "TError.h"
 
-   
-Int_t SRPAuthenticate(TNetFile *);
+
+Int_t SRPAuthenticate(TSocket *, const char *user, const char *passwd,
+                      const char *remote);
 
 class SRPAuthInit {
 public:
-   SRPAuthInit() { TNetFile::SetSecureAuthHook(&SRPAuthenticate); }
+   SRPAuthInit() { TAuthenticate::SetSecureAuthHook(&SRPAuthenticate); }
 };
 static SRPAuthInit srpauth_init;
 
 
 //______________________________________________________________________________
-Int_t SRPAuthenticate(TNetFile *nf)
+Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
+                      const char *remote)
 {
    // Authenticate to remote rootd server using the SRP (secure remote
    // password) protocol. Returns 0 if authentication failed, 1 if
@@ -38,25 +41,30 @@ Int_t SRPAuthenticate(TNetFile *nf)
    // authentication should be tried
 
    Int_t  result = 0;
-   char  *passwd = 0;
-   Int_t  stat, ikind;
-   EMessageTypes kind;
-   
+   char  *usr = 0;
+   char  *psswd = 0;
+   Int_t  stat, kind;
+
    // check rootd protocol version (we need at least protocol version 2)
    /* Redundant since kROOTD_PROTOCOL is only known since version 2
-   nf->fSocket->Send(kROOTD_PROTOCOL);
-   nf->Recv(stat, kind);
+   sock->Send(kROOTD_PROTOCOL);
+   sock->Recv(stat, kind);
    if (kind == kROOTD_PROTOCOL && stat < 2)
       return 2;
    */
 
    // send user name
-   nf->fSocket->Send(nf->fUser, kROOTD_SRPUSER);
+   if (user)
+      usr = StrDup(user);
+   else
+      usr = TAuthenticate::GetUser(remote);
 
-   nf->Recv(stat, kind);
+   sock->Send(usr, kROOTD_SRPUSER);
+
+   sock->Recv(stat, kind);
 
    if (kind == kROOTD_ERR) {
-      nf->PrintError("SRPAuthenticate", stat);
+      TAuthenticate::AuthError("SRPAuthenticate", stat);
       return result;
    }
    // stat == 2 when no SRP support compiled in remote rootd
@@ -69,51 +77,53 @@ Int_t SRPAuthenticate(TNetFile *nf)
    UChar_t buf1[MAXPARAMLEN], buf2[MAXPARAMLEN], buf3[MAXSALTLEN];
 
    // receive n from server
-   nf->fSocket->Recv(hexbuf, MAXHEXPARAMLEN, ikind);
-   if ((EMessageTypes)ikind != kROOTD_SRPN) {
-      nf->Error("SRPAuthenticate", "expected kROOTD_SRPN message");
+   sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
+   if (kind != kROOTD_SRPN) {
+      ::Error("SRPAuthenticate", "expected kROOTD_SRPN message");
       goto out;
    }
    n.data = buf1;
    n.len  = t_fromb64((char*)n.data, hexbuf);
 
    // receive g from server
-   nf->fSocket->Recv(hexbuf, MAXHEXPARAMLEN, ikind);
-   if ((EMessageTypes)ikind != kROOTD_SRPG) {
-      nf->Error("SRPAuthenticate", "expected kROOTD_SRPG message");
+   sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
+   if (kind != kROOTD_SRPG) {
+      ::Error("SRPAuthenticate", "expected kROOTD_SRPG message");
       goto out;
    }
    g.data = buf2;
    g.len  = t_fromb64((char*)g.data, hexbuf);
 
    // receive salt from server
-   nf->fSocket->Recv(hexbuf, MAXHEXPARAMLEN, ikind);
-   if ((EMessageTypes)ikind != kROOTD_SRPSALT) {
-      nf->Error("SRPAuthenticate", "expected kROOTD_SRPSALT message");
+   sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
+   if (kind != kROOTD_SRPSALT) {
+      ::Error("SRPAuthenticate", "expected kROOTD_SRPSALT message");
       goto out;
    }
    s.data = buf3;
    s.len  = t_fromb64((char*)s.data, hexbuf);
 
-   tc = t_clientopen(nf->fUser, &n, &g, &s);
+   tc = t_clientopen(usr, &n, &g, &s);
 
    A = t_clientgenexp(tc);
 
    // send A to server
-   nf->fSocket->Send(t_tob64(hexbuf, (char*)A->data, A->len), kROOTD_SRPA);
+   sock->Send(t_tob64(hexbuf, (char*)A->data, A->len), kROOTD_SRPA);
 
-   if (!passwd) {
-      passwd = nf->GetPasswd("Secure password: ");
-      if (!passwd)
-         nf->Error("SRPAuthenticate", "password not set");
+   if (passwd)
+      psswd = StrDup(passwd);
+   else {
+      psswd = TAuthenticate::GetPasswd("Secure password: ");
+      if (!psswd)
+         ::Error("SRPAuthenticate", "password not set");
    }
 
-   t_clientpasswd(tc, passwd);
+   t_clientpasswd(tc, psswd);
 
    // receive B from server
-   nf->fSocket->Recv(hexbuf, MAXHEXPARAMLEN, ikind);
-   if ((EMessageTypes)ikind != kROOTD_SRPB) {
-      nf->Error("SRPAuthenticate", "expected kROOTD_SRPB message");
+   sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
+   if (kind != kROOTD_SRPB) {
+      ::Error("SRPAuthenticate", "expected kROOTD_SRPB message");
       goto out;
    }
    B.data = buf1;
@@ -122,19 +132,20 @@ Int_t SRPAuthenticate(TNetFile *nf)
    t_clientgetkey(tc, &B);
 
    // send response to server
-   nf->fSocket->Send(t_tohex(hexbuf, (char*)t_clientresponse(tc), RESPONSE_LEN),
-                     kROOTD_SRPRESPONSE);
+   sock->Send(t_tohex(hexbuf, (char*)t_clientresponse(tc), RESPONSE_LEN),
+              kROOTD_SRPRESPONSE);
 
    t_clientclose(tc);
 
-   nf->Recv(stat, kind);
+   sock->Recv(stat, kind);
    if (kind == kROOTD_ERR)
-      nf->PrintError("SRPAuthenticate", stat);
+      TAuthenticate::AuthError("SRPAuthenticate", stat);
    if (kind == kROOTD_AUTH && stat == 1)
       result = 1;
 
 out:
-   delete [] passwd;
+   delete [] usr;
+   delete [] psswd;
 
    return result;
 }
