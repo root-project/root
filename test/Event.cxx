@@ -88,6 +88,13 @@ Event::Event()
    fTracks = fgTracks;
    fNtrack = 0;
    fH      = 0;
+   Int_t i0,i1;
+   for (i0 = 0; i0 < 4; i0++) {
+      for (i1 = 0; i1 < 4; i1++) {
+         fMatrix[i0][i1] = 0.0;
+      }
+   }
+   for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
 }
 
 //______________________________________________________________________________
@@ -136,6 +143,10 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
    fH->Fill(random);
 }
 
+void Event::SetMeasure(UChar_t which, Int_t what) {
+   if (which<10) fMeasures[which] = what;
+}
+
 //______________________________________________________________________________
 void Event::Streamer(TBuffer &R__b)
 {
@@ -155,6 +166,8 @@ void Event::Streamer(TBuffer &R__b)
       fTracks->Streamer(R__b);
       if (!fH) fH = new TH1F();
       fH->Streamer(R__b);
+      R__b.ReadFastArray(fMeasures,10);
+      R__b.ReadFastArray((float*)fMatrix,16);
    } else {
       R__b.WriteVersion(Event::IsA());
       TObject::Streamer(R__b);
@@ -167,6 +180,8 @@ void Event::Streamer(TBuffer &R__b)
       fEvtHdr.Streamer(R__b);
       fTracks->Streamer(R__b);
       fH->Streamer(R__b);
+      R__b.WriteFastArray(fMeasures,10);      
+      R__b.WriteFastArray((float*)fMatrix,16);      
    }
 }
 

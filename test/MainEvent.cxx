@@ -212,6 +212,15 @@ int main(int argc, char **argv)
          event->SetFlag(UInt_t(random+0.5));
          event->SetTemperature(random+20.);
 
+         for(UChar_t m = 0; m < 10; m++) {
+            event->SetMeasure( m, gRandom->Gaus(m,m+1) ); 
+         }
+         for(UChar_t i0 = 0; i0 < 4; i0++) {
+            for(UChar_t i1 = 0; i1 < 4; i1++) {
+               event->SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
+            }
+         }
+
          //  Create and Fill the Track objects
          for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
 

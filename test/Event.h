@@ -51,6 +51,8 @@ private:
    EventHeader    fEvtHdr;
    TClonesArray  *fTracks;
    TH1F          *fH;
+   Int_t          fMeasures[10];
+   Float_t        fMatrix[4][4];
 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
@@ -69,6 +71,8 @@ public:
    void          SetType(char *type) {strcpy(fType,type);}
    void          SetHeader(Int_t i, Int_t run, Int_t date, Float_t random);
    void          AddTrack(Float_t random);
+   void          SetMeasure(UChar_t which, Int_t what);
+   void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
 
    char         *GetType() {return fType;}
    Int_t         GetNtrack() const { return fNtrack; }
@@ -79,6 +83,8 @@ public:
    EventHeader  *GetHeader() { return &fEvtHdr; }
    TClonesArray *GetTracks() const { return fTracks; }
    TH1F         *GetHistogram() const { return fH; }
+   Int_t         GetMeasure(UChar_t which) { return (which<10)?fMeasures[which]:0; }
+   Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
 
    ClassDef(Event,1)  //Event structure
 };
