@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.9 2004/04/24 13:50:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.10 2004/06/02 15:17:12 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -173,9 +173,12 @@ void TGStatusBar::DrawBorder()
       else
          xmax = fXt[i+1] - 2;
 
-      if (i == fNpart-1)
-         fStatusPart[i]->MoveResize(fXt[i]+2, 1, xmax - fXt[i] - 15, fHeight - 2);
-      else
+      if (i == fNpart-1) {
+         if (f3DCorner)
+            fStatusPart[i]->MoveResize(fXt[i]+2, 1, xmax - fXt[i] - 15, fHeight - 2);
+         else
+            fStatusPart[i]->MoveResize(fXt[i]+2, 1, xmax - fXt[i], fHeight - 2);
+      } else
          fStatusPart[i]->MoveResize(fXt[i]+2, 1, xmax - fXt[i] - 4, fHeight - 2);
 
       gVirtualX->DrawLine(fId, GetShadowGC()(), xmin, 0, xmax-2, 0);
