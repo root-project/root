@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name: v3-03-05 $:$Id: TDCacheFile.cxx,v 1.2 2002/03/25 16:43:16 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.3 2002/07/19 11:41:41 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -50,19 +50,17 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN))
       path += 7;
 
-   fOption = option;
    fOffset = 0;
+   fOption = option;
+   fOption.ToUpper();
 
-   Bool_t create = kFALSE;
-   if (!fOption.CompareTo("NEW", TString::kIgnoreCase) ||
-       !fOption.CompareTo("CREATE", TString::kIgnoreCase))
-      create = kTRUE;
-   Bool_t recreate = fOption.CompareTo("RECREATE", TString::kIgnoreCase)
-      ? kFALSE : kTRUE;
-   Bool_t update   = fOption.CompareTo("UPDATE", TString::kIgnoreCase)
-      ? kFALSE : kTRUE;
-   Bool_t read     = fOption.CompareTo("READ", TString::kIgnoreCase)
-      ? kFALSE : kTRUE;
+   if (fOption == "NEW")
+      fOption = "CREATE";
+
+   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
+   Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
+   Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
+   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
    if (!create && !recreate && !update && !read) {
       read    = kTRUE;
       fOption = "READ";
