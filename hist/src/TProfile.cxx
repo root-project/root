@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.32 2002/12/02 18:50:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.33 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -735,6 +735,30 @@ Stat_t TProfile::GetBinError(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin error of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =======================================
+//
+// Computing errors: A moving field
+// =================================
+// The computation of errors for a TProfile has evolved with the versions
+// of ROOT. The difficulty is in computing errors for bins with low statistics.
+// - prior to version 3.00, we had no special treatment of low statistic bins.
+//   As a result, these bins had huge errors. The reason is that the
+//   expression eprim2 is very close to 0 (rounding problems) or 0.
+// - in version 3.00 (18 Dec 2000), the algorithm is protected for values of
+//   eprim2 very small and the bin errors set to the average bin errors, following
+//   recommendations from a group of users.
+// - in version 3.01 (19 Apr 2001), it is realized that the algorithm above
+//   should be applied only to low statistic bins.
+// - in version 3.02 (26 Sep 2001), the same group of users recommend instead
+//   to take two times the average error on all bins for these low
+//   statistics bins giving a very small value for eprim2.
+// - in version 3.04 (Nov 2002), the algorithm is modified/protected for the case
+//   when a TProfile is projected (ProjectionX). The previous algorithm
+//   generated a N^2 problem when projecting a TProfile with a large number of 
+//   bins (eg 100000).
+// 
+// Ideas for improvements of this algorithm are welcome. No suggestions
+// received since our call for advice to roottalk in Jul 2002.
+// see for instance: http://root.cern.ch/root/roottalk/roottalk02/2916.html
 
    if (fBuffer) ((TProfile*)this)->BufferEmpty();
 
@@ -755,7 +779,7 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    //if (eprim <= 0) {   test in version 2.25/03
    //if (test < 1.e-4) { test in version 3.01/06
    //if (test < 1.e-4 || eprim2 < 1e-6) { test in version 3.03/09
-   if (fNcells <=1002 && (test < 1.e-4 || eprim2 < 1e-6)) {
+   if (fNcells <=1002 && (test < 1.e-4 || eprim2 < 1e-6)) { //3.04
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
