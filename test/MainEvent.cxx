@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.22 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.23 2002/01/24 11:39:31 rdm Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -229,6 +229,7 @@ int main(int argc, char **argv)
          if (hm) hm->Hfill(event);      //fill histograms
       }
       if (write) {
+         hfile = tree->GetCurrentFile(); //just in case we switched to a new file
          hfile->Write();
          tree->Print();
       }
