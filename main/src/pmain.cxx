@@ -1,4 +1,4 @@
-// @(#)root/main:$Name$:$Id$
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -25,6 +25,14 @@ TROOT root("Proofserv","The PROOF Server");
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
+   // PROOF server main program.
+
+#ifdef R__DEBUG
+   int debug = 1;
+   while (debug)
+      ;
+#endif
+
    gROOT->SetBatch();
    TProofServ *theApp = new TProofServ(&argc, argv);
 
