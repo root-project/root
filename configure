@@ -545,7 +545,7 @@ fi
 # On win32 we always have OpenGL available (is this true?)
 #
 if [ "$arch" = "win32" ]; then
-   enable_opngl=yes
+   enable_opengl=yes
    openglincdir=include
 fi
 
@@ -628,7 +628,7 @@ if [ "x$enable_mysql" != "xno" ]; then
         enable_mysql="no"
     else
         if [ "$arch" = "win32" ];then
-            mysqllib=`cygpath -w -- ${mysqllibdir}/${mysqllib}`
+            mysqllib=${mysqllibdir}/${mysqllib}
             unset mysqllibdir
         elif [ "x$enable_shared" = "xno" ]; then
             mysqllib=${mysqllibdir}/${mysqllib}
@@ -683,8 +683,7 @@ if [ "x$enable_cern" != "xno" ]; then
         unset cernlib
     else
         if [ "$arch" = "win32" ]; then
-            cernlib="`cygpath -w -- ${cernlibdir}/packlib.lib`"
-            cernlib="$cernlib `cygpath -w -- ${cernlibdir}/kernlib.lib`"
+            cernlib="${cernlibdir}/packlib.lib ${cernlibdir}/kernlib.lib"
             unset cernlibdir
         elif [ "x$enable_shared" = "xno" ]; then
             cernlib="${cernlibdir}/libpacklib.a ${cernlibdir}/libkernlib.a"
@@ -741,7 +740,7 @@ if [ "x$enable_pythia" != "xno" ]; then
         enable_pythia=no
     else
         if [ "$arch" = "win32" ]; then
-            pythialib=`cygpath -w -- ${pythialibdir}/${pythialib}`
+            pythialib=${pythialibdir}/${pythialib}
             unset pythialibdir
         elif [ "x$enable_shared" = "xno" ]; then
             pythialib=${pythialibdir}/${pythialib}
@@ -798,7 +797,7 @@ if [ "x$enable_pythia6" != "xno" ]; then
         enable_pythia6=no
     else
         if [ "$arch" = "win32" ]; then
-            pythia6lib=`cygpath -w -- ${pythia6libdir}/${pythia6lib}`
+            pythia6lib=${pythia6libdir}/${pythia6lib}
             unset pythia6libdir
         elif [ "x$enable_shared" = "xno" ]; then
             pythia6lib=${pythia6libdir}/${pythia6lib}
@@ -851,7 +850,7 @@ if [ "x$enable_venus" != "xno" ]; then
         enable_venus=no
     else
         if [ "$arch" = "win32" ]; then
-            venuslib=`cygpath -w -- ${venuslibdir}/${venuslib}`
+            venuslib=${venuslibdir}/${venuslib}
             unset venuslibdir
         elif [ "x$enable_shared" = "xno" ]; then
             venuslib=${venuslibdir}/${venuslib}

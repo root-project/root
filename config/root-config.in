@@ -8,6 +8,10 @@
 arch=@architecture@
 libdir=@libdir@
 incdir=@incdir@
+if test "$arch" = "win32"; then
+   incdir=`cygpath -u $incdir`
+   libdir=`cygpath -u $libdir`
+fi
 
 ### ROOT libraries ###
 
@@ -322,7 +326,7 @@ while test $# -gt 0; do
          libs=${rootlibs}
       fi
       if test "$arch" = "win32"; then
-         nlibs=`echo $libs | sed "s@-l\([a-zA-Z]*\)@${libdir}/lib\1.lib@g"`
+         nlibs=`echo $libs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          libs=
          for i in $nlibs; do
             libs="$libs '`cygpath -w $i`'"
@@ -339,7 +343,7 @@ while test $# -gt 0; do
          glibs="${rootlibs} ${rootglibs}"
       fi
       if test "$arch" = "win32"; then
-         nlibs=`echo $glibs | sed "s@-l\([a-zA-Z]*\)@${libdir}/lib\1.lib@g"`
+         nlibs=`echo $glibs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          glibs=
          for i in $nlibs; do
             glibs="$glibs '`cygpath -w $i`'"
