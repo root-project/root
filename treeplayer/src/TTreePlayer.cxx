@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.58 2001/09/18 12:49:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.59 2001/09/19 20:05:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -868,7 +868,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
          if (!opt.Contains("same"))h1->SetBit(TH1::kCanRebin);
          if (!hkeep) {
             h1->SetBit(kCanDelete);
-            h1->SetDirectory(0);
+            if (!opt.Contains("goff")) h1->SetDirectory(0);
          }
          if (opt.Length() && opt[0] == 'e') h1->Sumw2();
       }
@@ -894,7 +894,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                fDraw = 1;
             } else if (!hkeep) {
                h1->SetBit(kCanDelete);
-               h1->SetDirectory(0);
+               if (!opt.Contains("goff")) h1->SetDirectory(0);
             }
          }
       } else if (gProofServ) {
@@ -967,7 +967,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"");
             if (!hkeep) {
                hp->SetBit(kCanDelete);
-               hp->SetDirectory(0);
+               if (!opt.Contains("goff")) hp->SetDirectory(0);
             }
             hp->SetLineColor(fTree->GetLineColor());
             hp->SetLineWidth(fTree->GetLineWidth());
@@ -998,7 +998,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
             if (!hkeep) {
                h2->SetBit(kCanDelete);
                h2->SetBit(TH1::kNoStats);
-               h2->SetDirectory(0);
+               if (!opt.Contains("goff")) h2->SetDirectory(0);
             }
          }
          Int_t noscat = strlen(option);
@@ -1065,7 +1065,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"");
             if (!hkeep) {
                hp->SetBit(kCanDelete);
-               hp->SetDirectory(0);
+               if (!opt.Contains("goff")) hp->SetDirectory(0);
             }
             hp->SetLineColor(fTree->GetLineColor());
             hp->SetLineWidth(fTree->GetLineWidth());
@@ -1098,7 +1098,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
             if (!hkeep) {
                h3->SetBit(kCanDelete);
                h3->SetBit(TH1::kNoStats);
-               h3->SetDirectory(0);
+               if (!opt.Contains("goff")) h3->SetDirectory(0);
             }
          }
          Int_t noscat = strlen(option);
