@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.23 2001/12/03 21:31:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.24 2002/01/08 18:14:25 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -251,6 +251,8 @@ TLatex::TLatex()
       fError       = 0;
       fShow        = kFALSE;
       fPos=fTabMax = 0;
+      fOriginSize  = 0.04;
+      fTabSize     = 0;
       SetLineWidth(2);
 }
 
@@ -265,6 +267,8 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
       fError       = 0;
       fShow        = kFALSE;
       fPos=fTabMax = 0;
+      fOriginSize  = 0.04;
+      fTabSize     = 0;
       SetLineWidth(2);
 }
 
@@ -290,6 +294,7 @@ void TLatex::Copy(TObject &obj)
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
    ((TLatex&)obj).fError       = fError;
    ((TLatex&)obj).fShow        = fShow;
+   ((TLatex&)obj).fTabSize     = 0;
    ((TLatex&)obj).fOriginSize  = fOriginSize;
    ((TLatex&)obj).fTabMax      = fTabMax;
    ((TLatex&)obj).fPos         = fPos;
