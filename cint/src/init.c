@@ -1975,6 +1975,9 @@ void G__platformMacro()
 #ifdef __KCC 
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__getexpr(temp);
 #endif
+#ifdef G__ROOT
+  sprintf(temp,"G__ROOT=%ld",(long)G__ROOT); G__getexpr(temp);
+#endif
 #ifdef G__CONSTNESSFLAG
 /*
   sprintf(temp,"G__CONSTNESSFLAG=1"); G__getexpr(temp);

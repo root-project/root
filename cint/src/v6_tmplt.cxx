@@ -343,7 +343,7 @@ struct G__Templatearg *G__read_formal_templatearg()
       else {
 	if(G__dispsource) {
 	  fprintf(G__serr,"Limitation: template argument type '%s' may cause problem",type);
-	  G__genericerror((char*)NULL);
+	  G__printlinenum();
 	}
 	p->type = G__TMPLT_INTARG;
       }
@@ -1241,7 +1241,21 @@ int *pnpara;
 	break;
 #endif
       default:
+#ifndef G__OLDIMPLEMENTATION1381
+	{
+	  int store_memberfunc_tagnum = G__memberfunc_tagnum;
+	  int store_exec_memberfunc = G__exec_memberfunc;
+	  if(-1!=G__tagdefining) {
+	    G__exec_memberfunc = 1;
+	    G__memberfunc_tagnum = G__tagdefining;
+	  }
+	  buf = G__getexpr(string);
+	  G__exec_memberfunc = store_exec_memberfunc;
+	  G__memberfunc_tagnum = store_memberfunc_tagnum;
+	}
+#else
 	buf = G__getexpr(string);
+#endif
 	G__string(buf,temp);
 	if(strcmp(temp,string)!=0) {
 	  searchflag=1;

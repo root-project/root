@@ -2114,8 +2114,7 @@ int func_now;
       ifunc->para_def[func_now][iin] = 
 	(char*)malloc(strlen(paraname)+1);
       strcpy(ifunc->para_def[func_now][iin],paraname);
-      ifunc->para_default[func_now][iin] = 
-	(G__value*)malloc(sizeof(G__value));
+      ifunc->para_default[func_now][iin] = (G__value*)malloc(sizeof(G__value));
       store_var_type=G__var_type;
       G__var_type='p';
       if(-1!=G__def_tagnum) {
@@ -2144,9 +2143,23 @@ int func_now;
       }
 #ifndef G__OLDIMPLEMENTATION1354
       {
+#ifndef G__OLDIMPLEMENTATION1380
+	G__value *tmpx;
+#endif
 	struct G__ifunc_table *store_pifunc = G__p_ifunc;
 	G__p_ifunc = &G__ifunc;
 	*ifunc->para_default[func_now][iin] = G__getexpr(paraname);
+#ifndef G__OLDIMPLEMENTATION1380
+	tmpx = ifunc->para_default[func_now][iin];
+	if(reftype && (tmpx->type!=type || tmpx->tagnum!=tagnum) &&
+	   0==pointlevel) {
+	  char tmpy[G__ONELINE];
+	  sprintf(tmpy,"%s(%s)"
+		  ,G__type2string(type,tagnum,-1,0,0),paraname);
+	  *tmpx = G__getexpr(tmpy);
+	  if('u'==tmpx->type) tmpx->ref = tmpx->obj.i;
+	}
+#endif
 	G__p_ifunc = store_pifunc;
       }
 #else

@@ -2492,7 +2492,9 @@ template <class charT>
 ostream&
 operator<< (ostream& o, const basic_string<charT>& s) 
 {
+#ifndef __CINT__
     typedef  basic_string<charT>::baggage_type  baggage_type;
+#endif
     for (size_t count = 0; count < s.length(); ++count)
 #ifdef __CINT__
         basic_string<charT>::baggage_type::char_out (o, *(s.data()+count));
@@ -2506,7 +2508,9 @@ template <class charT>
 istream&
 operator>> (istream& i, basic_string<charT>& s) 
 {
+#ifndef __CINT__
     typedef  basic_string<charT>::baggage_type  baggage_type; 
+#endif
     s.remove();
     while (true)
     {

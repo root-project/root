@@ -2237,6 +2237,37 @@ struct G__ifunc_table *ifunc;
 #endif
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1377
+/**************************************************************************
+* G__isprotecteddestructoronelevel()
+*
+**************************************************************************/
+static int G__isprotecteddestructoronelevel(tagnum)
+int tagnum;
+{
+  char *dtorname;
+  struct G__ifunc_table *ifunc;
+  int ifn;
+  ifunc=G__struct.memfunc[tagnum];
+  dtorname = malloc(strlen(G__struct.name[tagnum])+2);
+  dtorname[0]='~';
+  strcpy(dtorname+1,G__struct.name[tagnum]);
+  do {
+    for(ifn=0;ifn<ifunc->allifunc;ifn++) {
+      if(strcmp(dtorname,ifunc->funcname[ifn])==0) {
+	if(G__PRIVATE==ifunc->access[ifn]||G__PROTECTED==ifunc->access[ifn]) {
+	  free((void*)dtorname);
+	  return(1);
+	}
+      }
+    }
+    ifunc=ifunc->next;
+  } while(ifunc);
+  free((void*)dtorname);
+  return(0);
+}
+#endif
+
 /**************************************************************************
 * G__cppif_genconstructor()
 *
@@ -2253,6 +2284,9 @@ struct G__ifunc_table *ifunc;
 {
 #ifndef G__SMALLOBJECT
   int k,m;
+#ifndef G__OLDIMPLEMENTATION1377
+  int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
+#endif
 
   G__ASSERT( tagnum != -1 );
 
@@ -2305,7 +2339,16 @@ struct G__ifunc_table *ifunc;
 #endif
 	  fprintf(fp,"   if(G__getaryconstruct())\n");
 	  fprintf(fp,"     if(G__PVOID==G__getgvp())\n");
+#ifndef G__OLDIMPLEMENTATION1377
+	  if(isprotecteddtor) {
+	    fprintf(fp,"       {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
+	  }
+	  else {
+	    fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	  }
+#else
 	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+#endif
 	  fprintf(fp,"     else {\n");
 	  fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
 	  fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
@@ -2315,7 +2358,16 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
 	}
 	else {
+#ifndef G__OLDIMPLEMENTATION1377
+	  if(isprotecteddtor) {
+	    fprintf(fp,"   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
+	  }
+	  else {
+	    fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	  }
+#else
 	  fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+#endif
 	  fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
 	}
       }
@@ -2357,7 +2409,16 @@ struct G__ifunc_table *ifunc;
 #endif
 	fprintf(fp,"   if(G__getaryconstruct())\n");
 	fprintf(fp,"     if(G__PVOID==G__getgvp())\n");
+#ifndef G__OLDIMPLEMENTATION1377
+	if(isprotecteddtor) {
+	  fprintf(fp,"       {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
+	}
+	else {
+	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	}
+#else
 	fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+#endif
 	fprintf(fp,"     else {\n");
 	fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
 	fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
@@ -2367,7 +2428,16 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
       }
       else {
+#ifndef G__OLDIMPLEMENTATION1377
+	if(isprotecteddtor) {
+	  fprintf(fp,"   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
+	}
+	else {
+	  fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	}
+#else
 	fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+#endif
 	fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));}
     }
     else {
@@ -2688,6 +2758,9 @@ int isnonpublicnew;
   int page;
   char funcname[G__MAXNAME*6];
   char temp[G__MAXNAME*6];
+#ifndef G__OLDIMPLEMENTATION1377
+  int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
+#endif
 
   G__ASSERT( tagnum != -1 );
 
@@ -2736,7 +2809,16 @@ int isnonpublicnew;
 #endif
       fprintf(fp,"   if(G__getaryconstruct())\n");
       fprintf(fp,"     if(G__PVOID==G__getgvp())\n");
+#ifndef G__OLDIMPLEMENTATION1377
+      if(isprotecteddtor) {
+	fprintf(fp,"       {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
+      }
+      else {
+	fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+      }
+#else
       fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+#endif
       fprintf(fp,"     else {\n");
       fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
       fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
@@ -2746,7 +2828,16 @@ int isnonpublicnew;
       fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
     }
     else {
+#ifndef G__OLDIMPLEMENTATION1377
+      if(isprotecteddtor) {
+	fprintf(fp,"   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
+      }
+      else {
+	fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+      }
+#else
       fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+#endif
       fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
     }
     fprintf(fp,"   result7->obj.i = (long)p;\n");
@@ -4251,7 +4342,11 @@ FILE *fp;
 	    for(k=1;k<var->paran[j];k++) {
 	      fprintf(fp,"[%d]",var->varlabel[j][k+1]);
 	    }
-	    if(pvoidflag) {
+	    if(pvoidflag
+#ifndef G__OLDIMPLEMENTATION1378
+	       && G__LOCALSTATIC==var->statictype[j]
+#endif
+	       ) {
 	      /* local enum member as static member.
 	       * CAUTION: This implementation cause error on enum in
 	       * nested class. */

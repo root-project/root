@@ -495,12 +495,14 @@ int noerror;
       int store_def_tagnum=G__def_tagnum;
       int store_tagnum=G__tagnum;
       int store_cpp=G__cpp;
+      struct G__ifunc_table *store_ifunc = G__p_ifunc;
       G__cpp=0;
       G__globalvarpointer=G__PVOID;
       G__tagdefining = -1;
       G__def_struct_member=0;
       G__def_tagnum = -1;
       G__tagnum = -1;
+      G__p_ifunc = &G__ifunc;
 #endif
       boolflag=1;
       G__loadfile("bool.h");
@@ -512,6 +514,7 @@ int noerror;
       G__def_struct_member=store_def_struct_member;
       G__def_tagnum = store_def_tagnum;
       G__tagnum = store_tagnum;
+      G__p_ifunc = store_ifunc;
 #endif
       return(i);
     }

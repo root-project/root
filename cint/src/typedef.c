@@ -763,7 +763,7 @@ void G__define_type()
     else if(-1!=G__func_now) {
       env_tagnum = -2;
 #ifndef G__OLDIMPLEMENTATION1145
-      fprintf(G__serr,"Limitation: In class typedef not allowed in cint");
+      fprintf(G__serr,"Limitation: In function typedef not allowed in cint");
       G__printlinenum();
 #endif
     }

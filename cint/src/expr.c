@@ -194,6 +194,7 @@ char *exprwithspace;
 
 #ifndef G__OLDIMPLEMENTATION1376
   store_security_error = G__security_error;
+  G__security_error = G__NOERROR;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1031
@@ -1789,11 +1790,19 @@ char *item;
 	/* append $ to object and try to find it again */
 	if (!gettingspecial && item[0] != '$') {
 	  char sbuf[G__LONGLINE];
+#ifndef G__OLDIMPLEMENTATION1379
+	  int store_return = G__return;
+	  int store_security_error = G__security_error;
+#endif
 	  sprintf(sbuf, "$%s", item);
 	  gettingspecial = 1;
           G__var_type = store_var_typeB; /* BUG FIX ROOT Special object */
 	  result3 = G__getitem(sbuf);
 	  gettingspecial = 0;
+#ifndef G__OLDIMPLEMENTATION1379
+	  G__return = store_return;
+	  G__security_error = store_security_error;
+#endif
 	  return result3;
 	}
 #endif
