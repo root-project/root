@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.21 2003/04/18 10:03:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.22 2003/04/18 12:55:50 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -460,8 +460,10 @@ void THStack::Paint(Option_t *option)
    else fHistogram->GetPainter()->SetStack(fHists);
 
    if (!fHistogram->TestBit(TH1::kIsZoomed)) {
-      fHistogram->SetMaximum(1.05*themax);
-      fHistogram->SetMinimum(themin);
+      if (nostack && fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
+      else                              fHistogram->SetMaximum(themax +0.05*(themax-themin));
+      if (nostack && fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
+      else                              fHistogram->SetMinimum(themin);
    }
    fHistogram->Paint(loption);
 
