@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.72 2002/01/02 21:48:08 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.73 2002/01/08 14:44:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -800,7 +800,6 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    fHistogram = 0;
    char *hname = 0;
    for(UInt_t k=strlen(varexp0)-1;k>0;k--) {
-      if (varexp0[k]==')' || varexp0[k]==']') break;
       if (varexp0[k]=='>' && varexp0[k-1]=='>') {
          hname = (char*) &(varexp0[k-1]);
          break;
@@ -818,19 +817,213 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       if (*hname == '+') {
          hnameplus = kTRUE;
          hname++;
-         while (*hname == ' ') hname++;
-         j = strlen(hname)-1;
-         while (j) {
-            if (hname[j] != ' ') break;
-            hname[j] = 0;
-            j--;
-         }
+         while (*hname == ' ') hname++; //skip ' '
       }
+      j = strlen(hname) - 1;   // skip ' '  at the end
+      while (j) {            
+	if (hname[j] != ' ') break; 
+	hname[j] = 0;
+	j--;
+      }
+
       if (i) {
          strncpy(varexp,varexp0,i); varexp[i]=0;
-         oldh1 = (TH1*)gDirectory->Get(hname);
-         if (oldh1 && !hnameplus) oldh1->Reset();
-      } else {
+
+	 Int_t mustdelete=0;
+
+	 // parse things that follow the name of the histo between '(' and ')'. 
+	 // At this point hname contains the name of the specified histogram.
+	 //   Now the syntax is exended to handle an hname of the following format
+	 //   hname(nBIN [[,[xlow]][,xhigh]],...)
+	 //   so enclosed in brackets is the binning information, xlow, xhigh, and
+	 //   the same for the other dimensions
+	 
+	 char *pstart;    // pointer to '('
+	 char *pend;      // pointer to ')'
+	 char *cdummy;    // dummy pointer
+
+	 int ncomma;      // number of commas between '(' and ')', later number of arguments 
+	 int ncols;       // number of columns in varexpr
+
+	 int iindex[4];   // index
+	 int ii=0;        // index for vexp and iindex
+	 TString vexp;
+
+	 const Int_t maxvalues=9;
+
+	 Double_t value;       // parsed value (by sscanf)
+
+	 int isize;            // size returned from snprintf
+	 static int size=10;   // buffer size; dynamically adjusted
+	 static char *buffer;  // temporary buffer
+	 int size_not_ok;      // set to 1 if size was not large enough
+	   
+
+	 pstart=index(hname,'(');
+	 pend=  index(hname,')');
+	 if (pstart != NULL ){  // found the bracket
+
+	   mustdelete=1;
+
+	   // check that there is only one open and close bracket
+	   if (pstart == rindex(hname,'(')  &&  pend == rindex(hname,')')) { 
+
+	     // count number of ',' between '(' and ')'
+	     ncomma=0;
+	     cdummy = pstart;
+	     cdummy = index(&cdummy[1],',');
+	     while (cdummy != NULL) {
+	       cdummy = index(&cdummy[1],',');
+	       ncomma++;
+	     }
+
+	     if (ncomma+1 > maxvalues) {
+	       Error("DrawSelect","ncomma+1>maxvalues, ncomma=%d, maxvalues=%d",ncomma,maxvalues);
+	       ncomma=maxvalues-1;
+	     }
+
+	     ncomma++; 	       // number of arguments
+	     cdummy = pstart;
+
+	     //   build index of columns 'iindex'
+	     ncols  = 1;
+	     vexp=varexp;
+	     for (int j=0;j<i;j++)  if (vexp[j] == ':') ncols++;
+	     if (ncols < 4 ) {  // max 3 columns
+	       MakeIndex(vexp,iindex);
+	     } else {
+	       Error("DrawSelect","ncols > 3, ncols=%d",ncols);
+	       ncols = 0;
+	     }
+
+	     // check dimensions before and after ">>"
+	     if (ncols*3 < ncomma) {
+	       Error("DrawSelect","ncols*3 < ncomma ncols=%d, ncomma=%d",ncols,ncomma);
+	       ncomma = ncols*3;
+	     }
+
+	     // scan the values one after the other
+	     for (int j=0;j<ncomma;j++) {
+	       cdummy++;  // skip '(' or ','
+	       if (sscanf(cdummy," %lf ",&value) == 1) {
+		 cdummy=index(&cdummy[1],',');
+
+		 do {
+		   isize=0;
+		   size_not_ok=0;
+		   if (!buffer) buffer = new char[size];
+		     
+		   if (size>0) buffer[0]='\0'; 
+
+		   switch (j) {  // do certain settings depending on position of argument
+		   case 0:  // binning x-axis
+		     if      (ncols<2) {
+                        gEnv->SetValue("Hist.Binning.1D.x",(int)value);
+                     } else if (ncols<3) {
+		        gEnv->SetValue("Hist.Binning.2D.x",(int)value); 
+		        gEnv->SetValue("Hist.Binning.2D.Prof",(int)value);
+		     } else {
+		        gEnv->SetValue("Hist.Binning.3D.x",(int)value);
+		        gEnv->SetValue("Hist.Binning.3D.Profx",(int)value);
+		     }
+		       
+		     break;
+		   case 1:  // lower limit x-axis
+		     ii=0;
+		     if      (ncols==1) ii=0;
+		     else if (ncols==2) ii=1;
+		     else               ii=2; 
+		       
+		     if (ncols>ii) 
+		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		     break;
+		   case 2:  // upper limit x-axis
+		     ii=0; 
+		     if      (ncols==1) ii=0;
+		     else if (ncols==2) ii=1;
+		     else               ii=2; 
+		       
+		     if (ncols>ii) 
+		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		     break;
+		   case 3:  // binning y-axis
+		     if (ncols<3) gEnv->SetValue("Hist.Binning.2D.y",(int)value);
+		     else {
+		       gEnv->SetValue("Hist.Binning.3D.y",(int)value); 
+		       gEnv->SetValue("Hist.Binning.3D.Profy",(int)value); 
+		     }
+		     break;
+		   case 4:  // lower limit y-axis
+		     ii=1; 
+		     if      (ncols==2) ii=0;
+		     else               ii=1;
+		       
+		     if (ncols>ii) 
+		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		     break;
+		   case 5:  // upper limit y-axis
+		     ii=1; 
+		     if      (ncols==2) ii=0;
+		     else               ii=1;
+		     if (ncols>ii) 
+		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		     break;
+		   case 6:  // binning z-axis
+		     gEnv->SetValue("Hist.Binning.3D.z",(int)value);
+		     break;
+		   case 7:  // lower limit z-axis
+		     ii=0; 
+		     if (ncols>ii) 
+		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		     break;
+		   case 8:  // upper limit z-axis
+		     ii=0; 
+		     if (ncols>ii) 
+		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		     break;
+		   default:
+		     Error("DrawSelect","j>8");
+		     break;
+		   }
+		   if (isize>size) {
+		     delete [] buffer; 
+		     buffer=0;
+		     size=isize+1;
+		     size_not_ok=1;
+		   }
+		 } while (size_not_ok);
+		 if (strlen(buffer)>0) {
+                    //next statement is wrong
+                    //realSelection += buffer;
+                 }
+	       }  // if sscanf == 1 
+	     } // for j=0;j<ncomma;j++
+	   } else {
+	     Error("DrawSelect","Two open or close brackets found, hname=%s",hname);
+	   }
+
+	   // fix up hname
+	   pstart[0]='\0';   // removes things after (and including) '('
+	 } // if '(' is found
+
+	 j = strlen(hname) - 1; // skip ' '  at the end
+	 while (j) {
+	   if (hname[j] != ' ') break; // skip ' '  at the end
+	   hname[j] = 0;
+	   j--;
+	 } 
+
+         oldh1 = (TH1*)gDirectory->Get(hname);  // if hname contains '(...)' the return values is NULL, which is what we want
+         if (oldh1 && !hnameplus) oldh1->Reset();  // reset unless adding is wanted
+
+	 if (mustdelete) {
+	   if (gDebug) {
+              Warning("Draw","Deleting old histogram, since (possibly new) limits and binnings have been given");
+           }
+           delete oldh1; oldh1=0;
+	 }
+	 
+      } else { // if (i)                       // make selection list (i.e. varexp0 starts with ">>")
          elist = (TEventList*)gDirectory->Get(hname);
          if (!elist) {
             elist = new TEventList(hname,realSelection.GetTitle(),1000,0);
@@ -852,8 +1045,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                elist->SetTitle(upd.GetTitle());
             }
          }
-      }
-   } else {
+      }  // if (i)
+   } else { // if (hname)
       hname  = hdefault;
       hkeep  = 0;
       varexp = (char*)varexp0;
@@ -866,7 +1059,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    if (nentries > fTree->GetMaxEntryLoop()) nentries = fTree->GetMaxEntryLoop();
 
 //*-*- Decode varexp and selection
-
+   
    CompileVariables(varexp, realSelection.GetTitle());
    if (!fVar1 && !elist) return -1;
 
@@ -1002,6 +1195,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
             }
          fDraw = 1;   // do not draw histogram
       } else
+
          EntryLoop(action, h1, nentries, firstentry, option);
 
       if (fVar1->IsInteger()) h1->LabelsDeflate("X");
@@ -1331,7 +1525,6 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
    if (fVar2 && fVar2->GetMultiplicity()) Var2Multiple = kTRUE;
    if (fVar3 && fVar3->GetMultiplicity()) Var3Multiple = kTRUE;
    if (fSelect && fSelect->GetMultiplicity()) SelectMultiple = kTRUE;
-
 
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
