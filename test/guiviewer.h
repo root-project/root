@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.h,v 1.1 2001/05/03 08:56:58 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guiviewer.h,v 1.2 2001/05/09 13:09:12 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 #ifndef ROOT_TGFrame
@@ -29,4 +29,5 @@ public:
    void DoSlider();
    void SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
                  Bool_t move_slider = kTRUE);
+   ClassDef(Viewer,0) //GUI example
 };
