@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.55 2002/03/22 22:43:57 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.56 2002/03/29 03:19:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -372,11 +372,15 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Determine auto-dirty status
   
-  // If any of our servers are is forcedDirty than we should be too
+  // If any of our servers are is forcedDirty or a projectedDependent, then we need to be ADirty
   Bool_t adirty(kFALSE) ;
   TIterator* iter = serverIterator() ;  
   while(arg=(RooAbsArg*)iter->Next()){
     if (arg->operMode()==ADirty && arg->isValueServer(*this)) {      
+      setOperMode(ADirty) ;
+      break ;
+    }
+    if (arg->getAttribute("projectedDependent")) {
       setOperMode(ADirty) ;
       break ;
     }
@@ -515,7 +519,7 @@ RooRealIntegral::~RooRealIntegral()
 
 
 Double_t RooRealIntegral::evaluate() const 
-{
+{  
   Double_t retVal ;
   switch (_operMode) {
     

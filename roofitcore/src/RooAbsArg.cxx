@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.67 2002/04/03 23:37:22 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.68 2002/04/08 22:08:39 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -46,6 +46,7 @@ ClassImp(RooAbsArg)
 ;
 
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
+Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
 Int_t  RooAbsArg::_nameLength(0) ;
 
 RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
@@ -581,7 +582,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
   // change to all of our clients. If the object is not in automatic dirty
   // state propagation mode, this call has no effect
 
-  if (_operMode!=Auto) return ;
+  if (_operMode!=Auto || _inhibitDirty) return ;
 
   if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
 			  << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
@@ -660,6 +661,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
 
   // Trivial case, no servers
   if (!_serverList.First()) return kFALSE ;
+  if (newSet.getSize()==0) return kFALSE ;
 
   // Replace current servers with new servers with the same name from the given list
   Bool_t ret(kFALSE) ;
@@ -1076,11 +1078,23 @@ void RooAbsArg::printAttribList(ostream& os) const
   delete attribIter ;
 }
 
-void RooAbsArg::attachDataSet(const RooAbsData &set) 
+void RooAbsArg::attachDataSet(const RooAbsData &data) 
 {
   // Replace server nodes with names matching the dataset variable names
   // with those data set variables, making this PDF directly dependent on the dataset
-  recursiveRedirectServers(*set.get(),kFALSE);
+//   recursiveRedirectServers(*data.get(),kFALSE);
+//   return ;
+
+  const RooArgSet* set = data.get() ;
+  RooArgSet branches ;
+  branchNodeServerList(&branches) ;
+
+  TIterator* iter = branches.createIterator() ;
+  RooAbsArg* branch ;
+  while(branch=(RooAbsArg*)iter->Next()) {
+    branch->redirectServers(*set,kFALSE,kFALSE) ;  
+  }
+  delete iter ;
 }
 
 

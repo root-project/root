@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.21 2001/10/31 07:19:29 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.22 2002/04/03 23:37:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,41 +39,32 @@ ClassImp(RooFormulaVar)
 
 
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents) : 
-  RooAbsReal(name,title), _formula(name,formula,dependents)
+  RooAbsReal(name,title), _formExpr(formula), _formula(0),
+  _actualVars("actualVars","Variables used by formula expression",this)
 {  
-  Bool_t anyServers(kFALSE) ;
   // Constructor with formula expression and list of input variables
-  TIterator* depIter = _formula.actualDependents().createIterator() ;
-  RooAbsArg* server = 0;
-  while (server=(RooAbsArg*)depIter->Next()) {
-    addServer(*server,kTRUE,kFALSE) ;
-    anyServers=kTRUE ;
-  }
-  delete depIter ;
+  RooFormula tmpFormula(name,formula,dependents) ;
+  _actualVars.add(tmpFormula.actualDependents()) ;
 
-  if (!anyServers) _value = traceEval(0) ;
+  if (_actualVars.getSize()==0) _value = traceEval(0) ;
 }
 
 
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents) : 
-  RooAbsReal(name,title), _formula(name,title,dependents)
+  RooAbsReal(name,title), _formExpr(title), _formula(0),
+  _actualVars("actualVars","Variables used by formula expression",this)
 {  
-  Bool_t anyServers(kFALSE) ;
   // Constructor with formula expression, title and list of input variables
-  TIterator* depIter = _formula.actualDependents().createIterator() ;
-  RooAbsArg* server = 0;
-  while (server=(RooAbsArg*)depIter->Next()) {
-    addServer(*server,kTRUE,kFALSE) ;
-    anyServers=kTRUE ;
-  }
-  delete depIter ;
+  RooFormula tmpFormula(name,title,dependents) ;
+  _actualVars.add(tmpFormula.actualDependents()) ;
 
-  if (!anyServers) _value = traceEval(0) ;
+  if (_actualVars.getSize()==0) _value = traceEval(0) ;
 }
 
 
 RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) : 
-  RooAbsReal(other, name), _formula(other._formula)
+  RooAbsReal(other, name), _formExpr(other._formExpr), _formula(0),
+  _actualVars("actualVars",this,other._actualVars) 
 {
   // Copy constructor
 }
@@ -82,26 +73,25 @@ RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
 RooFormulaVar::~RooFormulaVar() 
 {
   // Destructor
+  if (_formula) delete _formula ;
+}
+
+
+RooFormula& RooFormulaVar::formula() const
+{
+  if (!_formula) {
+    _formula = new RooFormula(GetName(),_formExpr,_actualVars) ;    
+  }
+  return *_formula ;
 }
 
 
 Double_t RooFormulaVar::evaluate() const
 {
   // Calculate current value of object
-  return _formula.eval(0) ;
+  return formula().eval(0) ;
 }
 
-
-
-Bool_t RooFormulaVar::setFormula(const char* formula) 
-{
-  // Change formula expression
-  if (_formula.reCompile(formula)) return kTRUE ;
-  
-  SetTitle(formula) ;
-  setValueDirty() ;
-  return kFALSE ;
-}
 
 
 Bool_t RooFormulaVar::isValidReal(Double_t value, Bool_t printError) const {
@@ -114,8 +104,7 @@ Bool_t RooFormulaVar::isValidReal(Double_t value, Bool_t printError) const {
 Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange)
 {
   // Propagate server change information to embedded RooFormula object
-
-  return _formula.changeDependents(newServerList,mustReplaceAll,nameChange) ;
+  return _formula ? _formula->changeDependents(newServerList,mustReplaceAll,nameChange) : kFALSE ;
 }
 
 
@@ -127,23 +116,18 @@ void RooFormulaVar::printToStream(ostream& os, PrintOption opt, TString indent) 
   if(opt >= Verbose) {
     indent.Append("  ");
     os << indent;
-    _formula.printToStream(os,opt,indent);
+    formula().printToStream(os,opt,indent);
   }
 }
-
 
 
 Bool_t RooFormulaVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 {
   // Read object contents from given stream
-  if (compact) {
-    cout << "RooFormulaVar::readFromStream(" << GetName() << "): can't read in compact mode" << endl ;
-    return kTRUE ;
-  } else {
-    RooStreamParser parser(is) ;
-    return setFormula(parser.readLine()) ;
-  }
+  cout << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << endl ;
+  return kTRUE ;
 }
+
 
 void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
 {

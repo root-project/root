@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.8 2002/04/03 23:37:24 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.9 2002/04/08 20:20:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -267,6 +267,9 @@ RooAbsArg* RooCustomizer::build(const char* masterCatState, Bool_t verbose)
 RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose) 
 {
   // Protected build engine
+//   RooAbsArg::setDirtyInhibit(kTRUE) ;
+  TStopwatch t1 ;
+  t1.Start() ;
 
   // Find nodes that must be split according to provided description, Clone nodes, change their names
   RooArgSet masterNodesToBeSplit("masterNodesToBeSplit") ;
@@ -288,6 +291,9 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   nodeList.add(_masterBranchList) ;
   TIterator* nIter = nodeList.createIterator() ;
 
+//   cout << "#cloneNodeList = " << _cloneNodeList->getSize() << endl ;
+
+//   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
   while(node=(RooAbsArg*)nIter->Next()) {
     RooAbsArg* splitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):0 ;
     if (splitArg) {
@@ -302,10 +308,10 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       newName.Append(splitCat->getLabel()) ;	
 
       // Check if this node instance already exists
-      if (_cloneNodeList->find(newName)) {
+      RooAbsArg* specNode = _cloneNodeList->find(newName) ;
+      if (specNode) {
 
 	// Copy instance to one-time use list for this build
-	RooAbsArg* specNode = _cloneNodeList->find(newName) ;
 	clonedMasterNodes.add(*specNode) ;
 	if (verbose) {
 	  cout << "RooCustomizer::build(" << _masterPdf->GetName() 
@@ -365,12 +371,12 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   }
   if (!_sterile) _cloneNodeList->addOwned(clonedMasterNodes) ;
 
-
   // Find branches that are affected by splitting and must be cloned
   RooArgSet masterBranchesToBeCloned("masterBranchesToBeCloned") ;
   masterBranchesToBeCloned.setHashTableSize(1000) ;
   _masterBranchListIter->Reset() ;
   RooAbsArg* branch ;
+//   cout << "loop over " << _masterBranchList.getSize() << " nodes" << endl ;
   while(branch=(RooAbsArg*)_masterBranchListIter->Next()) {
     
     // If branch is split itself, don't handle here
@@ -427,6 +433,15 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   _cloneBranchList.addOwned(clonedMasterBranches) ;
 
 
+//   cout << "RooCustomizer::doBuild #clonedMasterBranches=" << clonedMasterBranches.getSize() 
+//        << " #clonedMasterNodes=" << clonedMasterNodes.getSize() << " #masterReplacementNodes = " 
+//        << masterReplacementNodes.getSize() << endl ;
+    
+
+//   TStopwatch t2 ;
+//   t1.Stop() ;
+//   t2.Start() ;
+
   // Reconnect cloned branches to each other and to cloned nodess
   iter = clonedMasterBranches.createIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {
@@ -436,7 +451,9 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   }
   delete iter ;  
 
-
+//   cout << "RooCustomizer build time = " << t1.CpuTime() << endl ;
+//   cout << "RooCustomizer redirect time = " << t2.CpuTime() << endl ;
+//   RooAbsArg::setDirtyInhibit(kFALSE) ;
   return cloneTopPdf?cloneTopPdf:_masterPdf ;
 }
 

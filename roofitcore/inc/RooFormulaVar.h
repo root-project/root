@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.rdl,v 1.17 2001/10/27 22:28:22 verkerke Exp $
+ *    File: $Id: RooFormulaVar.rdl,v 1.18 2001/10/31 07:19:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,6 +16,7 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooFormula.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "RooFitCore/RooListProxy.hh"
 
 class RooArgSet ;
 
@@ -29,12 +30,10 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooFormulaVar(*this,newname); }
   virtual ~RooFormulaVar();
 
-  // Formula editing interface
-  Bool_t setFormula(const char* formula) ;
-  inline Bool_t ok() const { return _formula.ok() ; }
+  inline Bool_t ok() const { return formula().ok() ; }
 
-  inline RooAbsArg* getParameter(const char* name) const { return _formula.getParameter(name) ; }
-  inline RooAbsArg* getParameter(Int_t index) const { return _formula.getParameter(index) ; }
+  inline RooAbsArg* getParameter(const char* name) const { return _actualVars.find(name) ; }
+  inline RooAbsArg* getParameter(Int_t index) const { return _actualVars.at(index) ; }
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -44,7 +43,7 @@ public:
   virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   // Debugging
-  void dumpFormula() { _formula.dump() ; }
+  void dumpFormula() { formula().dump() ; }
 
   // In general, we cannot be normalized sensibly so pretend that we are always normalized
 //   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
@@ -55,13 +54,16 @@ protected:
 
   // Function evaluation
   virtual Double_t evaluate() const ;
+  RooFormula& formula() const ;
 
   // Post-processing of server redirection
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
 
   virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
 
-  mutable RooFormula _formula ; // Formula engine 
+  RooListProxy _actualVars ; 
+  mutable RooFormula* _formula ; // Formula engine 
+  TString _formExpr ;
 
   ClassDef(RooFormulaVar,1) // Real-valued variable, calculated from a string expression formula 
 };

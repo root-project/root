@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.64 2002/03/07 06:22:17 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.65 2002/03/22 22:43:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -122,6 +122,7 @@ public:
   static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
   static void copyList(TList& dest, const TList& source) ;
   void printDirty(Bool_t depth=kTRUE) const ;
+  static void setDirtyInhibit(Bool_t flag) { _inhibitDirty = flag ; }
 
   // Universal assignment operators to fundamentals
   virtual RooAbsArg& operator=(Int_t ival) ;
@@ -150,6 +151,7 @@ protected:
   // Dirty state accessor/modifiers
   inline Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
   inline Bool_t isValueDirty() const { 
+    if (_inhibitDirty) return kTRUE ;
     switch(_operMode) {
     case AClean: return kFALSE ;
     case ADirty: return kTRUE ;
@@ -176,9 +178,9 @@ protected:
   friend class RooCustomizer ;
   friend class RooFitContext ;
   TList _serverList       ; //! list of server objects
-  TList _clientList       ; //! list of client objects
-  TList _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
-  TList _clientListValue  ; //! subset of clients that requested value dirty flag propagation
+  THashList _clientList       ; //! list of client objects
+  THashList _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
+  THashList _clientListValue  ; //! subset of clients that requested value dirty flag propagation
   TList _proxyList        ; //! list of proxies
   TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
@@ -235,6 +237,7 @@ protected:
   
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
+  static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
 
   static Int_t _nameLength ;
 

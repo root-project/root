@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.rdl,v 1.11 2001/10/03 16:16:32 verkerke Exp $
+ *    File: $Id: RooSetProxy.rdl,v 1.12 2001/10/09 01:41:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -21,7 +21,7 @@ class RooSetProxy : public RooArgSet, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.
-  RooSetProxy() {} ;
+  RooSetProxy() { _iter = createIterator() ; } ;
   RooSetProxy(const char* name, const char* desc, RooAbsArg* owner, 
 	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
   RooSetProxy(const char* name, RooAbsArg* owner, const RooSetProxy& other) ;
@@ -47,6 +47,7 @@ protected:
   RooAbsArg* _owner ;
   Bool_t _defValueServer ;
   Bool_t _defShapeServer ;
+  TIterator* _iter ; //! do not persist
 
   virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE) ;
 

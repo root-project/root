@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooListProxy.cc,v 1.5 2001/10/19 06:56:53 verkerke Exp $
+ *    File: $Id: RooListProxy.cc,v 1.6 2001/10/22 07:12:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -38,6 +38,7 @@ RooListProxy::RooListProxy(const char* name, const char* desc, RooAbsArg* owner,
 {
   //SetTitle(desc) ;
   _owner->registerProxy(*this) ;
+  _iter = createIterator() ;
 }
 
 
@@ -47,12 +48,14 @@ RooListProxy::RooListProxy(const char* name, RooAbsArg* owner, const RooListProx
   _defShapeServer(other._defShapeServer)
 {
   _owner->registerProxy(*this) ;
+  _iter = createIterator() ;
 }
 
 
 RooListProxy::~RooListProxy()
 {
   _owner->unRegisterProxy(*this) ;
+  delete _iter ;
 }
 
 
@@ -131,15 +134,14 @@ Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t
 {
   if (getSize()==0) return kTRUE ;
 
-  TIterator* iter = createIterator() ;
+  _iter->Reset() ;
   RooAbsArg* arg ;
   Bool_t error(kFALSE) ;
-  while (arg=(RooAbsArg*)iter->Next()) {
+  while (arg=(RooAbsArg*)_iter->Next()) {
     
     RooAbsArg* newArg= arg->findNewServer(newServerList, nameChange);
     if (newArg) error |= !RooArgList::replace(*arg,*newArg) ;
   }
-  delete iter ;
   return !error ;
 }
 

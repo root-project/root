@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.20 2002/04/08 21:06:30 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.21 2002/04/08 22:08:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -141,13 +141,17 @@ RooFitResult* RooSimFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
 Double_t RooSimFitContext::nLogLikelihood(Bool_t dummy, Int_t nObserved) const 
 {
   Double_t nllSum(0) ;
+  TStopwatch t ;
+  t.Start() ;
   // Update likelihood from subcontexts that changed
   Double_t offSet(log(_nCtxFilled)) ;
   Int_t i ;
+  Int_t nRecalc(0) ;
   for (i=0 ; i<_nCtx ; i++) {
     if (_ctxArray[i]) {
       if (_dirtyArray[i]) {
 	Bool_t extend = (_extendedMode && _ctxArray[i]->_pdfClone->canBeExtended()) ;
+	nRecalc++ ;
 	_nllArray[i] = _ctxArray[i]->nLogLikelihood(extend,_nGlobEvents) + _offArray[i] ;
 	_dirtyArray[i] = kFALSE ;	
 
@@ -160,7 +164,13 @@ Double_t RooSimFitContext::nLogLikelihood(Bool_t dummy, Int_t nObserved) const
       nllSum += _nllArray[i] ;
     }
   }
-  
+
+  // Optional verbose timing info
+  if (_verboseFit && _profileTimer) {
+    cout << " (" << nRecalc << " out of " << _nCtxFilled 
+	 << " sub-contexts in " << t.CpuTime() << " seconds.)" ;
+  }
+
   // Return sum of NLL from subcontexts
   return nllSum ;
 }

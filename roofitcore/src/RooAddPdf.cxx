@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.34 2002/03/29 03:19:00 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.35 2002/04/03 23:37:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -411,7 +411,7 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset) const
       _coefCache[_coefList.getSize()] = lastCoef ;
       
       // Warn about coefficient degeneration
-      if (lastCoef<0 || lastCoef>1) {
+      if (lastCoef<-1e-05 || (lastCoef-1)>1e-5) {
 	cout << "RooAddPdf::updateCoefCache(" << GetName() 
 	     << " WARNING: sum of PDF coefficients not in range [0-1], value=" 
 	     << 1-lastCoef << endl ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.53 2002/04/08 20:20:44 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.54 2002/04/08 22:08:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -111,6 +111,7 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
 
   // Clone all PDF compents by copying all branch nodes
   RooArgSet tmp("PdfBranchNodeList") ;
+  TStopwatch t ;
   if (attachData) pdf->branchNodeServerList(&tmp) ;
 
   if (clonePdf) {
@@ -169,6 +170,11 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
   if (projDeps) {
     _projDeps = (RooArgSet*) projDeps->snapshot(kFALSE) ;
     _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
+
+    // Mark all projected dependents as such
+    RooArgSet *projDataDeps = (RooArgSet*) _dataClone->get()->selectCommon(*_projDeps) ;
+    projDataDeps->setAttribAll("projectedDependent") ;
+    delete projDataDeps ;
   }
 }
 
@@ -316,7 +322,14 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 
       // Create trimmed data set
       RooAbsData *trimData = _dataClone->reduceEng(newVarList,0,kTRUE) ;
-      
+
+      // Mark all projected dependents as such
+      if (_projDeps) {
+	RooArgSet *projDataDeps = (RooArgSet*) trimData->get()->selectCommon(*_projDeps) ;
+	projDataDeps->setAttribAll("projectedDependent") ;
+	delete projDataDeps ;
+      }
+
       // Unattach PDF clone from previous dataset
       _pdfClone->recursiveRedirectServers(_origLeafNodeList,kFALSE);
       
@@ -381,6 +394,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       cacheArg->setOperMode(RooAbsArg::AClean) ;
     }
     delete cIter ;
+    _dataClone->setDirtyProp(kFALSE) ;
   }    
   //-----------------------------------------------------------------------------
 
@@ -493,8 +507,8 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
   Bool_t performHesse  = fitOpts.Contains("h") ;
   Bool_t saveLog       = fitOpts.Contains("l") ;
         _verboseFit    = fitOpts.Contains("v") ;
-  Bool_t profileTimer  = fitOpts.Contains("t") ;
-         _extendedMode = fitOpts.Contains("e") ;
+        _profileTimer  = fitOpts.Contains("t") ;
+        _extendedMode  = fitOpts.Contains("e") ;
   Bool_t doStrat0      = fitOpts.Contains("0") ;
   Bool_t doSaveResult  = fitOpts.Contains("r") ;
 
@@ -572,7 +586,7 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
 
   // Start a profiling timer if requested
   TStopwatch timer;
-  if(profileTimer) timer.Start();
+  if(_profileTimer) timer.Start();
 
   // Initialize MINUIT
   Int_t nPar= _floatParamList->getSize();
@@ -734,7 +748,7 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
   }
 
   // Print the time used, if requested
-  if(profileTimer) {
+  if(_profileTimer) {
     timer.Stop();
     cout << fName << "::fitTo: ";
     timer.Print();

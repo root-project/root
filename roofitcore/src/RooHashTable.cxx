@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHashTable.cc,v 1.1 2001/11/19 07:23:56 verkerke Exp $
+ *    File: $Id: RooHashTable.cc,v 1.2 2002/04/08 20:20:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -77,6 +77,31 @@ Bool_t RooHashTable::remove(RooAbsArg* arg)
 
 
 
+Double_t RooHashTable::avgCollisions() const 
+{
+  Int_t i,h[20] ;
+  for (i=0 ;  i<20 ; i++) h[i]=0 ; 
+
+  for (i=0 ; i<_size ; i++) {
+    if (_arr[i]) {
+      Int_t count = _arr[i]->GetSize() ;
+      if (count<20) {
+	h[count]++ ;
+      } else {
+	h[19]++ ;
+      }
+    } else {
+      h[0]++ ;
+    }
+  }
+
+  for (i=0 ; i<20 ; i++) {
+    cout << "h[" << i << "] = " << h[i] << endl ;
+  }
+  return 0 ;
+}
+
+
 Bool_t RooHashTable::replace(const RooAbsArg* oldArg, const RooAbsArg* newArg) 
 {
   Int_t slot = oldArg->Hash() % _size ;
@@ -97,4 +122,9 @@ RooAbsArg* RooHashTable::find(const char* name) const
 
 RooHashTable::~RooHashTable() 
 {  
+  Int_t i ;
+  for (i=0 ; i<_size ; i++) {
+    if (_arr[i]) delete _arr[i] ;  
+  }
+  delete[] _arr ;
 }

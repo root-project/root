@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.18 2002/04/03 23:37:22 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.19 2002/04/08 20:20:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -152,7 +152,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   // First create empty list
   TString snapName("Snapshot of ") ;
   snapName.Append(GetName()) ;
-  RooAbsCollection* snapshot = (RooAbsCollection*) create(snapName.Data()) ; //new RooAbsCollection(snapName.Data()) ;
+  RooAbsCollection* snapshot = (RooAbsCollection*) create(snapName.Data()) ;
   snapshot->setHashTableSize(1000) ;
 
 //   cout << "snapshot: copying original contents" << endl ;

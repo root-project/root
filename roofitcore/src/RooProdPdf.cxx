@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.19 2001/12/06 07:06:37 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.20 2002/03/22 22:43:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -224,7 +224,7 @@ Double_t RooProdPdf::evaluate() const
     RooArgSet analVars ;
     _evalCode = getAnalyticalIntegralWN(allVars,analVars,nset) ;
     _lastEvalNSet = (RooArgSet*) nset ;
-   //cout << "RooProdPdf::evaluate(" << GetName() << "): new code = " << _evalCode << endl ;    
+    //cout << "RooProdPdf::evaluate(" << GetName() << "): new code = " << _evalCode << endl ;    
   }
 
   return analyticalIntegralWN(_evalCode,nset) ;
