@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.34 2004/01/24 23:07:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.35 2004/01/25 17:59:53 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -269,6 +269,7 @@ public:
    virtual int             Link(const char *from, const char *to);
    virtual int             Symlink(const char *from, const char *to);
    virtual int             Unlink(const char *name);
+   int                     GetPathInfo(const char *path, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
    virtual int             GetPathInfo(const char *path, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
    virtual int             GetFsInfo(const char *path, Long_t *id, Long_t *bsize, Long_t *blocks, Long_t *bfree);
    virtual int             Umask(Int_t mask);

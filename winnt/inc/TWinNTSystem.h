@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.23 2004/01/25 15:48:49 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.24 2004/01/26 09:49:26 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -127,6 +127,9 @@ public:
    int               Link(const char *from, const char *to);
    int               Unlink(const char *name);
    int               SetNonBlock(int fd);
+   int               GetPathInfo(const char *path, Long_t *id, Long_t *size,
+                                 Long_t *flags, Long_t *modtime)
+                        { return TSystem::GetPathInfo(path, id, size, flags, modtime); }
    int               GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                                  Long_t *flags, Long_t *modtime);
    int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,

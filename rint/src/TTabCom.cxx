@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.18 2003/06/05 14:22:51 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.19 2003/06/06 09:09:42 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1027,7 +1027,7 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
    ///////////////////////////////////////////////////////
 
    Long_t flags = 0;
-   gSystem->GetPathInfo(fileName, 0, 0, &flags, 0);
+   gSystem->GetPathInfo(fileName, 0, (Long_t*)0, &flags, 0);
    return (int) flags & 2;
 }
 TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.14 2003/12/01 07:15:26 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.15 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -144,6 +144,9 @@ public:
    int               Link(const char *from, const char *to);
    int               Symlink(const char *from, const char *to);
    int               Unlink(const char *name);
+   int               GetPathInfo(const char *path, Long_t *id, Long_t *size,
+                                 Long_t *flags, Long_t *modtime)
+                        { return TSystem::GetPathInfo(path, id, size, flags, modtime); }
    int               GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                                  Long_t *flags, Long_t *modtime);
    int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.79 2004/01/24 23:07:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.80 2004/01/25 17:59:54 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -917,7 +917,25 @@ int TSystem::Unlink(const char *)
 }
 
 //______________________________________________________________________________
-int TSystem::GetPathInfo(const char*, Long_t*, Long64_t*, Long_t*, Long_t*)
+int TSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+                         Long_t *flags, Long_t *modtime)
+{
+   // Get info about a file: id, size, flags, modification time.
+
+   Long64_t lsize;
+
+   int res = GetPathInfo(path, id, &lsize, flags, modtime);
+
+   if (size && sizeof(Long_t) == 4 && lsize > kMaxInt) {
+      Error("GetPathInfo", "file %s > 2 GB, use GetPathInfo() with Long64_t size", path);
+      *size = kMaxInt;
+   }
+
+   return res;
+}
+
+//______________________________________________________________________________
+int TSystem::GetPathInfo(const char *, Long_t *, Long64_t *, Long_t *, Long_t *)
 {
    // Get info about a file: id, size, flags, modification time.
 
@@ -926,7 +944,7 @@ int TSystem::GetPathInfo(const char*, Long_t*, Long64_t*, Long_t*, Long_t*)
 }
 
 //______________________________________________________________________________
-int TSystem::GetFsInfo(const char*, Long_t*, Long_t*, Long_t*, Long_t*)
+int TSystem::GetFsInfo(const char *, Long_t *, Long_t *, Long_t *, Long_t *)
 {
    // Get info about a file system: fs type, block size, number of blocks,
    // number of free blocks.
@@ -1748,9 +1766,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       AssignAndDelete( stderrfile, ConcatFileName(build_loc,"stderr.tmp") );
 #endif
 
-      if ( (gSystem->GetPathInfo( library, 0, 0, 0, &lib_time ) != 0)
+      if ( (gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0)
            ||
-           (gSystem->GetPathInfo( filename, 0, 0, 0, &file_time ) == 0
+           (gSystem->GetPathInfo( filename, 0, (Long_t*)0, 0, &file_time ) == 0
             && ( lib_time < file_time ) )
            ) {
          // the library does not exist and is older than the script.
@@ -1762,7 +1780,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          // does  not exist we regenerate it
 
          Bool_t needDependencies;
-         if ( gSystem->GetPathInfo( depfilename, 0, 0, 0, &file_time ) == 0 ) {
+         if ( gSystem->GetPathInfo( depfilename, 0,(Long_t*) 0, 0, &file_time ) == 0 ) {
             needDependencies = ( file_time < lib_time );
          } else {
             needDependencies = true;
@@ -1839,7 +1857,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
                         line[current] = 0;
 
                         Long_t filetime;
-                        if ( gSystem->GetPathInfo( line, 0, 0, 0, &filetime ) == 0 ) {
+                        if ( gSystem->GetPathInfo( line, 0, (Long_t*)0, 0, &filetime ) == 0 ) {
                            modified |= ( lib_time <= filetime );
                         }
                      }
