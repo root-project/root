@@ -1375,9 +1375,9 @@ int main(int argc, char **argv)
     gRandom->SetSeed( (UInt_t)time( NULL ) );
     const Int_t NRGBs = 5;
     Double_t Stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-    Double_t Red[NRGBs] = { 1.00, 0.75, 0.50, 0.25, 0.00 };
-    Double_t Green[NRGBs] = { 0.00, 0.00, 0.00, 0.00, 0.00 };
-    Double_t Blue[NRGBs] = { 0.00, 0.25, 0.50, 0.75, 1.00 };
+    Double_t Red[NRGBs] = { 1.00, 1.00, 1.00, 1.00, 1.00 };
+    Double_t Green[NRGBs] = { 1.00, 0.75, 0.50, 0.25, 0.00 };
+    Double_t Blue[NRGBs] = { 0.00, 0.00, 0.00, 0.00, 0.00 };
     gColIndex = gStyle->CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, 11);
 
     // Create RootShower

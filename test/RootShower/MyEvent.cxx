@@ -181,7 +181,7 @@ Int_t MyEvent::Action(Int_t id)
    Int_t  nchild;
    CheckMatter(id);
    if(GetParticle(id)->GetDecayType() == UNDEFINE)
-      Define_decay(id);
+      DefineDecay(id);
    if(GetParticle(id)->GetPdgCode() == PHOTON) {
       // compute the step delta x to be covered by the particle
       TVector3 delta_x(GetParticle(id)->GetvMoment() * 
@@ -220,7 +220,7 @@ Int_t MyEvent::Action(Int_t id)
       if(GetParticle(id)->GetPDG()->Charge() != 0)
          ScatterAngle(id);
       if((fB != 0) && (GetParticle(id)->GetPDG()->Charge() != 0)) 
-         Magnetic_field(id);
+         MagneticField(id);
       // compute the step delta x to be covered by the particle
       TVector3 delta_x(GetParticle(id)->GetvMoment() *  (CSpeed * 
                        fDetector.GetdT(fMatter) / GetParticle(id)->Energy()));
@@ -232,7 +232,7 @@ Int_t MyEvent::Action(Int_t id)
       else {
          // check energy loss, and if too much energy loss 
          // ( particle at rest ) set its status as dead 
-         if(dE_dX(id) == DEAD) DeleteParticle(id);
+         if(DEDX(id) == DEAD) DeleteParticle(id);
          else {
             // if at end of particle's life time, decay it
             if(CheckDecayTime(id) == 1) {
@@ -276,7 +276,7 @@ Int_t MyEvent::Action(Int_t id)
 }
 
 //______________________________________________________________________________
-Double_t MyEvent::Brems_prob(Int_t id)
+Double_t MyEvent::BremsProb(Int_t id)
 {
    // Check if bremsstrahlung is allowed and generate
    // a random decay length related to detector's material
@@ -317,7 +317,7 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
         part->SetTimeOfDecay(GetParticle(id)->GetTimeOfDecay());
         GetParticle(id)->SetChild(0, d_num1);
         // add a track related to this particle
-        AddTrack(GetParticle(id)->GetvLocation(),Particle_color(id));
+        AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
         // add a particle related list tree item to the event list tree
         gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
@@ -335,7 +335,7 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
         GetParticle(id)->SetChild(1, d_num2);
         
         // add a track related to this particle
-        AddTrack(GetParticle(id)->GetvLocation(),Particle_color(id));
+        AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
         // add a particle related list tree item to the event list tree
         gTmpLTI = gEventListTree->AddItem(gLTI[id],part->GetName());
@@ -440,7 +440,7 @@ Int_t MyEvent::Decay(Int_t id)
       part->GenerateTimeOfDecay();
       GetParticle(id)->SetChild(i, d_num[i]);
       // add a track related to this child
-      AddTrack(GetParticle(id)->GetvLocation(),Particle_color(id));
+      AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
       // add a child related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
@@ -454,7 +454,7 @@ Int_t MyEvent::Decay(Int_t id)
 }
 
 //______________________________________________________________________________
-void MyEvent::Define_decay(Int_t id)
+void MyEvent::DefineDecay(Int_t id)
 {
    // Define decay type for particle "id", then check decay length for it
 
@@ -465,7 +465,7 @@ void MyEvent::Define_decay(Int_t id)
    if ( (GetParticle(id)->GetPdgCode() == ELECTRON) ||
         (GetParticle(id)->GetPdgCode() == POSITRON)) {
       // check if bremsstrahlung is allowed
-      if( (iactual_length = Brems_prob(id)) > 0.) {
+      if( (iactual_length = BremsProb(id)) > 0.) {
          if( (idecay_length == -1) || (iactual_length < idecay_length) ) {
             idecay_length = iactual_length;
             idecay_type = BREMS;
@@ -474,7 +474,7 @@ void MyEvent::Define_decay(Int_t id)
    }
    else if(GetParticle(id)->GetPdgCode() == PHOTON) {
       // check if pair production is allowed
-      if( (iactual_length = Pair_prob(id)) > 0. ) {
+      if( (iactual_length = PairProb(id)) > 0. ) {
          if( (idecay_length == -1) ||
              (iactual_length < idecay_length) ) {
             idecay_length = iactual_length;
@@ -518,7 +518,7 @@ void MyEvent::DeleteParticle(Int_t id)
 }
 
 //______________________________________________________________________________
-Int_t MyEvent::dE_dX(Int_t id)
+Int_t MyEvent::DEDX(Int_t id)
 {
    // Compute de/dx for particle "id" into detector material
    // for more infos, please refer to the particle data booklet
@@ -588,7 +588,7 @@ Int_t MyEvent::FindFreeId(Int_t *FreeId)
 }
 
 //______________________________________________________________________________
-void MyEvent::Magnetic_field(Int_t id)
+void MyEvent::MagneticField(Int_t id)
 {
    // extrapolate track in a constant field oriented along X axis
    // translated to C++ from GEANT3 routine GHELX3
@@ -657,14 +657,14 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
 }
 
 //______________________________________________________________________________
-Double_t MyEvent::Pair_prob(Int_t id)
+Double_t MyEvent::PairProb(Int_t id)
 {
    // check if pair production is allowed and generate
    // a random decay length related to detector's material
    // radiation length (X0)
    Double_t p;
 
-   if(GetParticle(id)->Energy() > 2.0 * m_e) {
+   if(GetParticle(id)->Energy() > 2.0 * EMass) {
       p = gRandom->Uniform(0.0, 1.0);
       return ((-9.)*fDetector.GetX0(fMatter)*TMath::Log(p)/7.);
    }
@@ -675,18 +675,17 @@ Double_t MyEvent::Pair_prob(Int_t id)
 Int_t MyEvent::PairCreation(Int_t id)
 {
    // compute the pair production for particle "id"
-   Double_t ratio = 1.0;
-   Int_t    d_num1,d_num2;
+   Int_t    d_num1, d_num2;
    Char_t   strtmp[80];
    MyParticle *part;
    TGenPhaseSpace genPhaseSpace;
 
    // setup the decay
-   TLorentzVector target(0.0, 0.0, 0.0, 2.0 * m_e);
+   TLorentzVector target(0.0, 0.0, 0.0, 2.0 * 0.00511);
    TLorentzVector beam(GetParticle(id)->GetvMoment(), 
                        GetParticle(id)->Energy());
    TLorentzVector W = beam + target;
-   Double_t masses[2] = { m_e, m_e } ;
+   Double_t masses[2] = { EMass, EMass } ;
     
    if(!genPhaseSpace.SetDecay( W, 2, masses ))
       return (DEAD);
@@ -708,7 +707,7 @@ Int_t MyEvent::PairCreation(Int_t id)
       part->GenerateTimeOfDecay();
       GetParticle(id)->SetChild(0, d_num1);
       // add a track related to this particle
-      AddTrack(GetParticle(id)->GetvLocation(),Particle_color(id));
+      AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
       // add a particle related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
@@ -728,7 +727,7 @@ Int_t MyEvent::PairCreation(Int_t id)
       part->GenerateTimeOfDecay();
       GetParticle(id)->SetChild(1, d_num2);
       // add a track related to this particle
-      AddTrack(GetParticle(id)->GetvLocation(),Particle_color(id));
+      AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
       // add a particle related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
@@ -745,7 +744,7 @@ Int_t MyEvent::PairCreation(Int_t id)
 }
 
 //______________________________________________________________________________
-Int_t MyEvent::Particle_color(Int_t id)
+Int_t MyEvent::ParticleColor(Int_t id)
 {
    // return color index related to particle's energy
    Int_t ctable[11] = {2,50,46,45,44,43,42,41,21,19,5};
