@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.95 2003/06/23 22:18:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.96 2003/06/25 14:34:53 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -536,7 +536,7 @@ void TROOT::AddClass(TClass *cl)
 }
 
 //______________________________________________________________________________
-void TROOT::AddClassGenerator(ROOT::TClassGenerator *generator)
+void TROOT::AddClassGenerator(TClassGenerator *generator)
 {
    // Add a class generator.  This generator will be called by TROOT::GetClass
    // in case its does not find a loaded rootcint dictionary to request the
@@ -791,8 +791,8 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    if (cl) return cl;
 
    TIter next(fClassGenerators);
-   ROOT::TClassGenerator *gen;
-   while( (gen = (ROOT::TClassGenerator*)next()) ) {
+   TClassGenerator *gen;
+   while( (gen = (TClassGenerator*) next()) ) {
       cl = gen->GetClass(name,load);
       if (cl) return cl;
    }
@@ -854,8 +854,8 @@ TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
    if (cl) return cl;
 
    TIter next(fClassGenerators);
-   ROOT::TClassGenerator *gen;
-   while( (gen = (ROOT::TClassGenerator*)next()) ) {
+   TClassGenerator *gen;
+   while( (gen = (TClassGenerator*) next()) ) {
       cl = gen->GetClass(typeinfo,load);
       if (cl) return cl;
    }

@@ -1,8 +1,8 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.25 2003/05/01 07:42:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassGenerator.h,v 1.1 2003/06/25 15:12:47 brun Exp $
 // Author: Philippe Canal 24/06/2003
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers, and al.       *
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers, and al.       *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -26,21 +26,18 @@
 #endif
 
 class TClass;
-namespace ROOT {
 
-   class TClassGenerator : public TObject {
+class TClassGenerator : public TObject {
 
-   public:
-      virtual TClass *GetClass(const char* classname, Bool_t load) = 0;
-      virtual TClass *GetClass(const type_info& typeinfo, Bool_t load) = 0;
+protected:
+   TClassGenerator() : TObject() { }
+   virtual ~TClassGenerator() { }
 
-   protected:
-      TClassGenerator() : TObject() {};
-      ~TClassGenerator() {};
-      
-      ClassDef(TClassGenerator,1);  // interface for TClass generators
-   };
+public:
+   virtual TClass *GetClass(const char* classname, Bool_t load) = 0;
+   virtual TClass *GetClass(const type_info& typeinfo, Bool_t load) = 0;
 
-}
+   ClassDef(TClassGenerator,1);  // interface for TClass generators
+};
 
-#endif // ifndef ROOT_TClassGenerator
+#endif

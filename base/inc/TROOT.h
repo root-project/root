@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.31 2003/04/04 00:10:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.32 2003/06/25 14:34:52 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -46,9 +46,9 @@ class TFunction;
 class TFolder;
 class TPluginManager;
 class TProcessUUID;
+class TClassGenerator;
 
 namespace ROOT {
-   class TClassGenerator;
    class TMapTypeToTClass;
 }
 
@@ -127,8 +127,8 @@ protected:
 public:
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
    virtual           ~TROOT();
-   void              AddClass(TClass *);
-   void              AddClassGenerator(ROOT::TClassGenerator *);
+   void              AddClass(TClass *cl);
+   void              AddClassGenerator(TClassGenerator *gen);
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
    virtual TObject  *FindObject(const char *name) const;

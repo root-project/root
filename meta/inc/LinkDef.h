@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.9 2002/05/09 20:22:00 brun Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.10 2003/06/25 14:34:53 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,11 +18,9 @@
 
 #pragma link C++ global gInterpreter;
 
-#pragma link C++ namespace ROOT;
-
 #pragma link C++ class TBaseClass;
 #pragma link C++ class TClass;
-#pragma link C++ class ROOT::TClassGenerator+;
+#pragma link C++ class TClassGenerator+;
 #pragma link C++ class TDataMember;
 #pragma link C++ class TDataType;
 #pragma link C++ class TDictionary;
