@@ -1,74 +1,86 @@
-// @(#)root/meta:$Name:  $:$Id: $
+// @(#)root/meta:$Name:  $:$Id: GenericClassInfo.cxx,v 1.1 2002/05/09 20:53:21 brun Exp $
 // Author: Philippe Canal 08/05/2002
+
+/*************************************************************************
+ * Copyright (C) 1995-2002, Rene Brun, Fons Rademakers and al.           *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "Rtypes.h"
 #include "TNamed.h"
 #include "TClass.h"
 
 
-
 namespace ROOT {
-   
-   const InitBehavior *DefineBehavior(void * /*parent_type*/,
-                                      void * /*actual_type*/) {
 
-      // This function loads the default behavior for the 
+   const InitBehavior *DefineBehavior(void * /*parent_type*/,
+                                      void * /*actual_type*/)
+   {
+
+      // This function loads the default behavior for the
       // loading of classes.
 
-      static DefaultInitBehavior Default;
-      return &Default;
+      static DefaultInitBehavior theDefault;
+      return &theDefault;
    }
 
-   GenericClassInfo::GenericClassInfo(const char *fullClassname, 
+   GenericClassInfo::GenericClassInfo(const char *fullClassname,
                                       const char *declFileName, Int_t declFileLine,
                                       const type_info &info, const InitBehavior  *action,
-                                      void *showmembers, VoidFuncPtr_t dictionary, 
-                                      IsAFunc_t isa, Int_t pragmabits) 
+                                      void *showmembers, VoidFuncPtr_t dictionary,
+                                      IsAFunc_t isa, Int_t pragmabits)
       : fAction(action), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers), 
+        fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers),
         fVersion(1)
    {
       Init(pragmabits);
    }
-   
+
    GenericClassInfo::GenericClassInfo(const char *fullClassname, Int_t version,
                                       const char *declFileName, Int_t declFileLine,
                                       const type_info &info, const InitBehavior  *action,
-                                      void* showmembers,  VoidFuncPtr_t dictionary, 
+                                      void* showmembers,  VoidFuncPtr_t dictionary,
                                       IsAFunc_t isa, Int_t pragmabits)
       : fAction(action), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers), 
-        fVersion(version) {
+        fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers),
+        fVersion(version)
+   {
       Init(pragmabits);
    }
-   
+
    GenericClassInfo::GenericClassInfo(const char *fullClassname, Int_t version,
                                       const char *declFileName, Int_t declFileLine,
                                       const type_info &info, const InitBehavior  *action,
-                                      void* showmembers,  VoidFuncPtr_t dictionary, 
+                                      void* showmembers,  VoidFuncPtr_t dictionary,
                                       Int_t pragmabits)
       : fAction(action), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(0), fShowMembers(showmembers), 
-        fVersion(version) {
+        fDictionary(dictionary), fInfo(info), fIsA(0), fShowMembers(showmembers),
+        fVersion(version)
+   {
       Init(pragmabits);
    }
- 
+
    GenericClassInfo::GenericClassInfo(const char *fullClassname, Int_t version,
                                       const char *declFileName, Int_t declFileLine,
                                       const type_info &info, const InitBehavior  *action,
-                                      VoidFuncPtr_t dictionary, 
+                                      VoidFuncPtr_t dictionary,
                                       Int_t pragmabits)
       : fAction(action), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(0), fShowMembers(0), 
-        fVersion(version) {
+        fDictionary(dictionary), fInfo(info), fIsA(0), fShowMembers(0),
+        fVersion(version)
+   {
       Init(pragmabits);
    }
-   
-   void GenericClassInfo::Init(Int_t pragmabits) {
+
+   void GenericClassInfo::Init(Int_t pragmabits)
+   {
       if (!fAction) return;
       GetAction().Register(fClassName,
                            fVersion,
@@ -76,18 +88,19 @@ namespace ROOT {
                            fDictionary,
                            pragmabits);
    }
-   
-   GenericClassInfo::~GenericClassInfo() { if (fAction) GetAction().Unregister(GetClassName()); }
-   
-   const InitBehavior &GenericClassInfo::GetAction() {
-      //if (!fAction) {
-      //   RootClass *ptr = 0;
-      //   fAction = DefineBehavior(ptr, ptr);
-      //}
+
+   GenericClassInfo::~GenericClassInfo()
+   {
+      if (fAction) GetAction().Unregister(GetClassName());
+   }
+
+   const InitBehavior &GenericClassInfo::GetAction() const
+   {
       return *fAction;
    }
-      
-   TClass *GenericClassInfo::GetClass() {
+
+   TClass *GenericClassInfo::GetClass()
+   {
       if (!fClass && fAction) {
          fClass = GetAction().CreateClass(GetClassName(),
                                           GetVersion(),
@@ -101,63 +114,78 @@ namespace ROOT {
       }
       return fClass;
    }
-   
-   const char *GenericClassInfo::GetClassName() {
+
+   const char *GenericClassInfo::GetClassName() const
+   {
       return fClassName;
    }
-   
-   const type_info &GenericClassInfo::GetInfo() {
+
+   const type_info &GenericClassInfo::GetInfo() const
+   {
       return fInfo;
    }
-   
-   void *GenericClassInfo::GetShowMembers() {
+
+   void *GenericClassInfo::GetShowMembers() const
+   {
       return fShowMembers;
    }
-   
-   void GenericClassInfo::SetFromTemplate() {
+
+   void GenericClassInfo::SetFromTemplate()
+   {
       TNamed *info = ROOT::RegisterClassTemplate(GetClassName(), 0, 0);
       if (info) SetImplFile(info->GetTitle(), info->GetUniqueID());
    }
 
-   int GenericClassInfo::SetImplFile(const char *file, Int_t line) {
+   Int_t GenericClassInfo::SetImplFile(const char *file, Int_t line)
+   {
       fImplFileName = file;
       fImplFileLine = line;
       if (fClass) fClass->AddImplFile(file,line);
       return 0;
    }
 
-   Short_t GenericClassInfo::SetVersion(Short_t version) {
+   Short_t GenericClassInfo::SetVersion(Short_t version)
+   {
       ROOT::ResetClassVersion(fClass, GetClassName(),version);
       fVersion = version;
       return version;
    }
-   
-   const char *GenericClassInfo::GetDeclFileName() {
+
+   const char *GenericClassInfo::GetDeclFileName() const
+   {
       return fDeclFileName;
    }
-   
-   Int_t GenericClassInfo::GetDeclFileLine() {
+
+   Int_t GenericClassInfo::GetDeclFileLine() const
+   {
       return fDeclFileLine;
    }
-   
-   const char *GenericClassInfo::GetImplFileName() {
+
+   const char *GenericClassInfo::GetImplFileName()
+   {
       if (!fImplFileName) SetFromTemplate();
       return fImplFileName;
    }
-   
-   Int_t GenericClassInfo::GetImplFileLine() {
-      if (!fImplFileLine) SetFromTemplate(); 
+
+   Int_t GenericClassInfo::GetImplFileLine()
+   {
+      if (!fImplFileLine) SetFromTemplate();
       return fImplFileLine;
    }
-   
-   Int_t GenericClassInfo::GetVersion() {
+
+   Int_t GenericClassInfo::GetVersion() const
+   {
       return fVersion;
    }
-   
-   TClass* GenericClassInfo::IsA(const void *obj) {
+
+   TClass *GenericClassInfo::IsA(const void *obj)
+   {
       return (GetIsA())(obj);
    }
-   
-   IsAFunc_t GenericClassInfo::GetIsA() { return fIsA; }
+
+   IsAFunc_t GenericClassInfo::GetIsA() const
+   {
+      return fIsA;
+   }
 
 }
