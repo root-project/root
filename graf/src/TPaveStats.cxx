@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.9 2002/03/16 08:52:43 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.10 2002/03/16 18:41:41 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -109,6 +109,7 @@ void TPaveStats::Paint(Option_t *option)
 
    if (!fLines) return;
    Double_t dx = fX2 - fX1;
+   Double_t titlesize=0;
    Double_t textsize = GetTextSize();
    Int_t nlines = GetSize();
    if (nlines == 0) nlines = 5;
@@ -122,11 +123,12 @@ void TPaveStats::Paint(Option_t *option)
    TObject *line;
    TLatex *latex, *latex_tok;
    TIter next(fLines);
-   Double_t longest = 0;
+   Double_t longest = 0, titlelength = 0;
    Double_t w, wtok[2];
    char *st, *sl;
    if (textsize == 0)  {
       textsize = 0.85*yspace/(y2 - y1);
+      titlesize = textsize;
       wtok[0] = 0; wtok[1] = 0;
       while ((line = (TObject*) next())) {
 	 if (line->IsA() == TLatex::Class()) {
@@ -145,6 +147,11 @@ void TPaveStats::Paint(Option_t *option)
                   ++itok;
                   delete latex_tok;
                }
+            } else if (strpbrk(sl, "|") !=0) {
+            } else {
+               latex->SetTextSize(titlesize);
+               titlelength = latex->GetXsize()+2.*margin;
+               if (titlelength > 0.98*dx) titlesize *= 0.98*dx/titlelength;
             }
          }
       }
@@ -174,7 +181,7 @@ void TPaveStats::Paint(Option_t *option)
 
          sl = new char[strlen(latex->GetTitle())+1];
          strcpy(sl, latex->GetTitle());
-	 // Draw all the histogram except the 2D under/overflow
+         // Draw all the histogram stats except the 2D under/overflow
          if (strpbrk(sl, "=") !=0) {
            st = strtok(sl, "=");
            Int_t halign = 12;
@@ -224,7 +231,7 @@ void TPaveStats::Paint(Option_t *option)
            latex->SetTextAlign(22);
            xtext = 0.5*(fX1+fX2);
            latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
-                                         latex->GetTextSize(),
+                                         titlesize,
                                          sl);
            gPad->PaintLine(fX1,fY2-yspace,fX2,fY2-yspace);
          }
