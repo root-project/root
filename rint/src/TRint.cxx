@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.40 2004/08/07 18:19:12 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.41 2004/08/07 23:49:31 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -160,6 +160,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
       delete [] mac;
    }
 
+   // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
