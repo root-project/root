@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.2 2000/07/11 17:11:14 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.3 2000/10/30 08:01:10 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@
 #include "TPythia6.h"
 
 #include "TClonesArray.h"
-#include "TMCParticle.h"
+#include "TMCParticle6.h"
 #include "TParticle.h"
 
 TPythia6*  TPythia6::fgInstance = 0;
