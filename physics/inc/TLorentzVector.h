@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.8 2002/01/21 16:29:20 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.9 2002/06/04 14:38:26 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -109,7 +109,7 @@ public:
 
   inline Double_t Theta() const;
   inline Double_t CosTheta() const;
-  inline Double_t Phi() const;
+  inline Double_t Phi() const; //returns phi from -pi to pi
   inline Double_t Rho() const;
   // Get spatial vector components in spherical coordinate system.
 

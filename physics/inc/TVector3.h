@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.9 2002/04/22 06:26:26 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.10 2002/08/02 20:56:10 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
   // not checked!
 
   inline Double_t Phi() const;
-  // The azimuth angle.
+  // The azimuth angle. returns phi from -pi to pi 
 
   inline Double_t Theta() const;
   // The polar angle.
