@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.15 2005/03/08 21:23:25 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.16 2005/03/10 22:26:15 rdm Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -239,10 +239,14 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)  {
     // scope, so let's first look for an emulated class:
     fType = gROOT->GetClass(intype.c_str());
     if (fType && !fType->IsLoaded()) {
-        fCase  |= G__BIT_ISCLASS;
-        fCtor   = fType->GetNew();
-        fDtor   = fType->GetDestructor();
-        fDelete = fType->GetDelete();
+       if (intype != inside) {
+          fCase |= G__BIT_ISPOINTER;
+          fSize = sizeof(void*);
+       }
+       fCase  |= G__BIT_ISCLASS;
+       fCtor   = fType->GetNew();
+       fDtor   = fType->GetDestructor();
+       fDelete = fType->GetDelete();
     } else {
        G__TypeInfo ti(inside.c_str());
        if ( !ti.IsValid() ) {
