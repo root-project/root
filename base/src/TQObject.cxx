@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.9 2001/04/21 17:20:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.10 2001/04/22 23:09:18 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -458,7 +458,7 @@ TQObject::~TQObject()
    // TQObject Destructor.
    //    - delete all connections and signal list
 
-//   Destroyed();   // emit "Destroyed()" signal
+   Destroyed();   // emit "Destroyed()" signal
 
    TQConnectionList *list = 0;
 
