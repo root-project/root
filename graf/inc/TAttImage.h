@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.3 2004/12/07 15:34:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.4 2005/02/28 15:42:03 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -116,7 +116,7 @@ public:
    };
 
 protected:
-   EImageQuality    fImageQuality;       //quality of image
+   EImageQuality    fImageQuality;       // *OPTION={GetMethod="GetImageQuality";SetMethod="SetImageQuality";Items=(kImgDefault="Default",kImgPoor="Poor",kImgFast="Fast",kImgGood="Good",kImgBest="Best")}*
    UInt_t           fImageCompression;   //compression [0 .. 100] 0: no compression
    Bool_t           fConstRatio;         //keep aspect ratio of image on the screen
    TImagePalette    fPalette;            //color palette for value -> color conversion
@@ -142,7 +142,7 @@ public:
    virtual void     SetImageCompression(UInt_t lcompression)
                        { fImageCompression = (lcompression > 100) ? 100 : lcompression; } // *MENU*
    virtual void     SetImageQuality(EImageQuality lquality)
-                       { fImageQuality = lquality;} // *MENU*
+                       { fImageQuality = lquality;} // *SUBMENU*
    virtual void     SetPalette(const TImagePalette *palette);
    virtual void     StartPaletteEditor(); // *MENU*
    virtual void     EditorClosed() { fPaletteEditor = 0; }

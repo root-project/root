@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.22 2004/07/13 05:46:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.23 2004/11/22 15:53:41 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -359,12 +359,15 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             fOptions->Add(it1);
          }  else {
             //We'll try to find global enum existing in ROOT...
-            Long_t l;
+            Long_t l=0;
             Int_t  *value;
             TGlobal *enumval = gROOT->GetGlobal(ptr1,kTRUE);
             if (enumval){
                 value = (Int_t*)(enumval->GetAddress());
                 l     = (Long_t)(*value);
+            } else if (IsEnum()) {
+               TObject *obj = fClass->GetListOfDataMembers()->FindObject(ptr1);
+               if (obj) l = gROOT->ProcessLineFast(Form("%s::%s;",fClass->GetName(),ptr1));
             } else l = atol(ptr1);
 
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
