@@ -86,6 +86,10 @@ N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
 D: TLegend class
 
+N: Pierre-Luc Drouin
+E: pldrouin@physics.carleton.ca
+D: Extensions of TFormula and bug fix
+
 N: Rutger v.d. Eijk
 E: r36@nikhef.nl
 D: various contributions to GUI classes
