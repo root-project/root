@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.65 2004/04/22 13:10:47 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.66 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -540,7 +540,7 @@ void ProofdExec()
    char *authrc = 0;
    if (gAuthrc.length()) {
       if (gDebug > 0)
-         ErrorInfo("ProofdExec: seetting ROOTAUTHRC to %s",gAuthrc.c_str());
+         ErrorInfo("ProofdExec: setting ROOTAUTHRC to %s",gAuthrc.c_str());
       authrc = new char[15+gAuthrc.length()];
       sprintf(authrc, "ROOTAUTHRC=%s", gAuthrc.c_str());
       putenv(authrc);
