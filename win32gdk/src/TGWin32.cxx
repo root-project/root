@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.40 2004/01/13 21:33:43 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.41 2004/01/14 21:02:18 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -22,36 +22,32 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGWin32.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <process.h>
+#include <wchar.h>
+#include "gdk/gdkkeysyms.h"
+#include "xatom.h"
+
 #include "TROOT.h"
+#include "TApplication.h"
 #include "TColor.h"
 #include "TPoint.h"
 #include "TMath.h"
 #include "TStorage.h"
 #include "TStyle.h"
 #include "TSystem.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <process.h>
-#include "gdk/gdkkeysyms.h"
-
-#include "xatom.h"
-
 #include "TGFrame.h"
-#include "TGWin32.h"
 #include "TError.h"
 #include "TException.h"
 #include "TClassTable.h"
 #include "KeySymbols.h"
 #include "TWinNTSystem.h"
-
 #include "TGWin32VirtualXProxy.h"
 #include "TGWin32InterpreterProxy.h"
-
 #include "TGLKernel.h"
-#include <wchar.h>
 #include "TWin32SplashThread.h"
 
 extern "C" {
@@ -365,8 +361,8 @@ static char p25_bits[] = {
 static bool gdk_initialized = false;
 
 
-/* Key masks. Used as modifiers to GrabButton and GrabKey, results of QueryPointer,
-   state in various key-, mouse-, and button-related events. */
+// Key masks. Used as modifiers to GrabButton and GrabKey, results of QueryPointer,
+// state in various key-, mouse-, and button-related events.
 
 //---- MWM Hints stuff
 
@@ -505,9 +501,9 @@ struct XWindow_t {
    Int_t    open;                 // 1 if the window is open, 0 if not
    Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
    Int_t    ispixmap;             // 1 if pixmap, 0 if not
-   GdkDrawable *drawing;           // drawing area, equal to window or buffer
-   GdkDrawable *window;            // win32 window
-   GdkDrawable *buffer;            // pixmap used for double buffer
+   GdkDrawable *drawing;          // drawing area, equal to window or buffer
+   GdkDrawable *window;           // win32 window
+   GdkDrawable *buffer;           // pixmap used for double buffer
    UInt_t   width;                // width of the window
    UInt_t   height;               // height of the window
    Int_t    clip;                 // 1 if the clipping is on
@@ -520,9 +516,9 @@ struct XWindow_t {
 };
 
 
-/////////////////////// auxilary functions /////////////////////////////////////
+/////////////////////static auxilary functions /////////////////////////////////
 //______________________________________________________________________________
-Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen)
+static Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen)
 {
    int i;
    int n = event->fUser[1];
@@ -571,7 +567,7 @@ inline void AsmLong(Long_t i1, Long_t i2, Long_t & ll)
 }
 
 //______________________________________________________________________________
-BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam)
+static BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam)
 {
    // Make sure the child window is visible.
 
@@ -585,16 +581,16 @@ static void _ChangeProperty(HWND w, char *np, char *dp, int n, Atom_t type)
    HGLOBAL hMem;
    char *p;
 
-   hMem = GetProp(w, np);
+   hMem = ::GetProp(w, np);
    if (hMem != NULL) {
-      GlobalFree(hMem);
+      ::GlobalFree(hMem);
    }
-   hMem = GlobalAlloc(GHND, n + sizeof(Atom_t));
-   p = (char *) GlobalLock(hMem);
+   hMem = ::GlobalAlloc(GHND, n + sizeof(Atom_t));
+   p = (char *) ::GlobalLock(hMem);
    memcpy(p, &type, sizeof(Atom_t));
    memcpy(p + sizeof(Atom_t), dp, n);
-   GlobalUnlock(hMem);
-   SetProp(w, np, hMem);
+   ::GlobalUnlock(hMem);
+   ::SetProp(w, np, hMem);
 }
 
 //______________________________________________________________________________
@@ -611,7 +607,7 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
    char propName[32];
 
    if (mode == GDK_PROP_MODE_REPLACE || mode == GDK_PROP_MODE_PREPEND) {
-      len = (int) GlobalGetAtomName(property, buffer, sizeof(buffer));
+      len = (int) ::GlobalGetAtomName(property, buffer, sizeof(buffer));
       if ((atomName = (char *) malloc(len + 1)) == NULL) {
          return;
       } else {
@@ -641,10 +637,10 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
 
    w = (HWND) GDK_DRAWABLE_XID(id);
 
-   if (IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(NULL)) {
-      handle = GetClipboardData(CF_TEXT);
+   if (::IsClipboardFormatAvailable(CF_TEXT) && ::OpenClipboard(NULL)) {
+      handle = ::GetClipboardData(CF_TEXT);
       if (handle != NULL) {
-         data = (char *) GlobalLock(handle);
+         data = (char *) ::GlobalLock(handle);
          *nitems_return = strlen(data);
          *prop_return = (UChar_t *) malloc(*nitems_return + 1);
          destPtr = (char *) *prop_return;
@@ -656,21 +652,42 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
             data++;
          }
          *destPtr = '\0';
-         GlobalUnlock(handle);
+         ::GlobalUnlock(handle);
          *actual_type_return = XA_STRING;
          *bytes_after_return = 0;
       }
-      CloseClipboard();
+      ::CloseClipboard();
       return 1;
    }
    if (delete_it) {
-      RemoveProp(w, propName);
+      ::RemoveProp(w, propName);
    }
    return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+class TGWin32RefreshTimer : public TTimer {
+
+public:
+   TGWin32RefreshTimer() : TTimer(50, kTRUE) { if (gSystem) gSystem->AddTimer(this); }
+   ~TGWin32RefreshTimer() {}
+   Bool_t Notify() 
+   {
+      Reset();
+      MSG msg;
+
+      while (::PeekMessage(&msg, NULL, 0, WM_USER, PM_NOREMOVE)) {
+         ::PeekMessage(&msg, NULL, 0, WM_USER, PM_REMOVE);
+         ::TranslateMessage(&msg);
+         ::DispatchMessage(&msg);
+      }
+      return kFALSE;
+   }
+};
+
+///////////////////////////////////////////////////////////////////////////////
 class TGWin32MainThread {
+
 public:
    void     *fHandle;      // handle of GUI thread
    DWORD    fId;           // id of GUI thread
@@ -687,10 +704,11 @@ TGWin32MainThread* gMainThread = 0;
 LPCRITICAL_SECTION TGWin32MainThread::fCritSec = 0;
 LPCRITICAL_SECTION TGWin32MainThread::fMessageMutex = 0;
 
+
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
 {
-   // thread for processing windows messages (aka Main, Server thread)
+   // thread for processing windows messages (aka Main/Server thread)
 
    MSG msg;
    Int_t erret;
@@ -700,23 +718,26 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    // force to create message queue
    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 
+   // periodically we refresh windows
+   TGWin32RefreshTimer *refersh = new TGWin32RefreshTimer;
+
    while (!endLoop) {
       erret = ::GetMessage(&msg, NULL, NULL, NULL);
       if (erret <= 0) endLoop = kTRUE;
 
-      if (msg.message==TGWin32ProxyBase::fgPostMessageId) {
+      if (msg.message == TGWin32ProxyBase::fgPostMessageId) {
          if (msg.wParam) {
             TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg.wParam;
             proxy->ExecuteCallBack(msg.wParam);
          } else {
             endLoop = kTRUE;
          }
-      } else if (msg.message==TGWin32ProxyBase::fgPingMessageId) {
+      } else if (msg.message == TGWin32ProxyBase::fgPingMessageId) {
          TGWin32ProxyBase::GlobalUnlock();
          continue;
       } else {
-         if ( (msg.message>WM_NCMOUSEMOVE) && 
-              (msg.message<=WM_NCMBUTTONDBLCLK) ) {
+         if ( (msg.message > WM_NCMOUSEMOVE) && 
+              (msg.message <= WM_NCMBUTTONDBLCLK) ) {
             TGWin32ProxyBase::GlobalLock();
          }
 
@@ -727,6 +748,8 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
       }
       last_message = msg.message;
    }
+
+   delete refersh;
 
    if (TGWin32::Instance()) TGWin32::Instance()->CloseDisplay();
 
@@ -861,8 +884,8 @@ Bool_t TGWin32::NeedSplash()
 
    TString arg = gSystem->BaseName(gApplication->Argv(0));
 
-   if ((arg!="root") && (arg!="rootn") &&
-       (arg!="root.exe") && (arg!="rootn.exe")) return kFALSE;
+   if ((arg != "root") && (arg != "rootn") &&
+       (arg != "root.exe") && (arg != "rootn.exe")) return kFALSE;
 
    if (gROOT->IsBatch()) return kFALSE;
 
@@ -870,7 +893,7 @@ Bool_t TGWin32::NeedSplash()
       arg = gApplication->Argv(i);
       arg.Strip(TString::kBoth);
 
-      if ((arg=="-l") || (arg=="-b")) {
+      if ((arg == "-l") || (arg == "-b")) {
          return kFALSE;
       }
    }
@@ -905,7 +928,7 @@ void  TGWin32::Lock()
 {
    //
 
-  if (gMainThread && gMainThread->fCritSec) ::EnterCriticalSection(gMainThread->fCritSec);
+   if (gMainThread && gMainThread->fCritSec) ::EnterCriticalSection(gMainThread->fCritSec);
 }
 
 //______________________________________________________________________________
