@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.50 2004/04/23 12:21:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.51 2004/04/23 16:18:15 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -625,20 +625,20 @@ Double_t *TMath::Normal2Plane(Double_t p1[3],Double_t p2[3],Double_t p3[3], Doub
 Double_t TMath::Poisson(Double_t x, Double_t par)
 {
   // compute the Poisson distribution function for (x,par)
-  // The Poisson PDF is implemented by means of Euler's Gamma-function 
-  // (for the factorial), so for all integer arguments it is correct. 
-  // BUT for non-integer values it IS NOT equal to the Poisson distribution. 
+  // The Poisson PDF is implemented by means of Euler's Gamma-function
+  // (for the factorial), so for all integer arguments it is correct.
+  // BUT for non-integer values it IS NOT equal to the Poisson distribution.
   // see TMath::PoissonI to get a non-smooth function.
 //Begin_Html
 /*
 <img src="gif/Poisson.gif">
 */
 //End_Html
-   
-   if (x > 0) return TMath::Power(par,x)/TMath::Gamma(x+1)/TMath::Exp(par); 
-   if (x<0) return 0;                                                         
-   return TMath::Exp(-par);                                                         
-}                                                                              
+
+   if (x > 0) return TMath::Power(par,x)/TMath::Gamma(x+1)/TMath::Exp(par);
+   if (x<0) return 0;
+   return TMath::Exp(-par);
+}
 
 //______________________________________________________________________________
 Double_t TMath::PoissonI(Double_t x, Double_t par)
@@ -650,18 +650,18 @@ Double_t TMath::PoissonI(Double_t x, Double_t par)
 <img src="gif/PoissonI.gif">
 */
 //End_Html
-   
-   
+
+
    const Double_t  kMaxInt = 2e6;
    if(x<0) return 0;
    if(x<1) return TMath::Exp(-par);
    Double_t gam;
    Int_t ix = Int_t(x);
-   if(x < kMaxInt) gam = TMath::Power(par,ix)/TMath::Gamma(ix+1); 
+   if(x < kMaxInt) gam = TMath::Power(par,ix)/TMath::Gamma(ix+1);
    else            gam = TMath::Power(par,x)/TMath::Gamma(x+1);
    return gam/TMath::Exp(par);
-}                                                                              
-    
+}
+
 //______________________________________________________________________________
 Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 {
@@ -740,7 +740,7 @@ Double_t TMath::KolmogorovProb(Double_t z)
    const Double_t c1 = -1.2337005501361697;
    const Double_t c2 = -11.103304951225528;
    const Double_t c3 = -30.842513753404244;
-   
+
    Double_t u = TMath::Abs(z);
    Double_t p;
    if (u < 0.2) {
@@ -761,7 +761,7 @@ Double_t TMath::KolmogorovProb(Double_t z)
    } else {
       p = 0;
    }
-   return p;     
+   return p;
    }
 
 //______________________________________________________________________________
@@ -828,10 +828,10 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
 
    // Local variables
 
-   int J;					 // Loop variables
-   int RG1, RG2, RG3; 				 // y polynomial flags
-   Double_t ABX, XQ, YQ, YRRTPI; 		 // --x--, x^2, y^2, y/SQRT(pi)
-   Double_t XLIM0, XLIM1, XLIM2, XLIM3, XLIM4; 	 // --x-- on region boundaries
+   int J;                                        // Loop variables
+   int RG1, RG2, RG3;                            // y polynomial flags
+   Double_t ABX, XQ, YQ, YRRTPI;                 // --x--, x^2, y^2, y/SQRT(pi)
+   Double_t XLIM0, XLIM1, XLIM2, XLIM3, XLIM4;   // --x-- on region boundaries
    Double_t A0=0, D0=0, D2=0, E0=0, E2=0, E4=0, H0=0, H2=0, H4=0, H6=0;// W4 temporary variables
    Double_t P0=0, P2=0, P4=0, P6=0, P8=0, Z0=0, Z2=0, Z4=0, Z6=0, Z8=0;
    Double_t XP[6], XM[6], YP[6], YM[6];          // CPF12 temporary values
@@ -853,127 +853,127 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
    XLIM3 = 3.097 * Y - 0.45;
    XLIM2 = 6.8 - Y;
    XLIM4 = 18.1 * Y + 1.65;
-   if ( Y <= 1e-6 ) { 	                   // When y<10^-6 avoid W4 algorithm.
-      XLIM1 = XLIM0; 
+   if ( Y <= 1e-6 ) {                      // When y<10^-6 avoid W4 algorithm
+      XLIM1 = XLIM0;
       XLIM2 = XLIM0;
    }
 
-   ABX = fabs(X); 				 // |x|
-   XQ = ABX * ABX;			         // x^2
-   if ( ABX > XLIM0 ) { 			 // Region 0 algorithm
+   ABX = fabs(X);                                // |x|
+   XQ = ABX * ABX;                               // x^2
+   if ( ABX > XLIM0 ) {                          // Region 0 algorithm
       K = YRRTPI / (XQ + YQ);
-   } else if ( ABX > XLIM1 ) { 			 // Humlicek W4 Region 1
-      if ( RG1 != 0 ) { 			 // First point in Region 1
-	 RG1 = 0;
-	 A0 = YQ + 0.5; 			 // Region 1 y-dependents
-	 D0 = A0*A0;
-	 D2 = YQ + YQ - 1.0;
+   } else if ( ABX > XLIM1 ) {                   // Humlicek W4 Region 1
+      if ( RG1 != 0 ) {                          // First point in Region 1
+         RG1 = 0;
+         A0 = YQ + 0.5;                          // Region 1 y-dependents
+         D0 = A0*A0;
+         D2 = YQ + YQ - 1.0;
       }
       D = RRTPI / (D0 + XQ*(D2 + XQ));
       K = D * Y * (A0 + XQ);
-   } else if ( ABX > XLIM2 ) { 			 // Humlicek W4 Region 2
-      if ( RG2 != 0 ) { 			 // First point in Region 2
-	 RG2 = 0;
-	 H0 = 0.5625 + YQ * (4.5 + YQ * (10.5 + YQ * (6.0 + YQ)));
-	                                         // Region 2 y-dependents
-	 H2 = -4.5 + YQ * (9.0 + YQ * ( 6.0 + YQ * 4.0));
-	 H4 = 10.5 - YQ * (6.0 - YQ * 6.0);
-	 H6 = -6.0 + YQ * 4.0;
-	 E0 = 1.875 + YQ * (8.25 + YQ * (5.5 + YQ));
-	 E2 = 5.25 + YQ * (1.0 + YQ * 3.0);
-	 E4 = 0.75 * H6;
+   } else if ( ABX > XLIM2 ) {                   // Humlicek W4 Region 2
+      if ( RG2 != 0 ) {                          // First point in Region 2
+         RG2 = 0;
+         H0 = 0.5625 + YQ * (4.5 + YQ * (10.5 + YQ * (6.0 + YQ)));
+                                                 // Region 2 y-dependents
+         H2 = -4.5 + YQ * (9.0 + YQ * ( 6.0 + YQ * 4.0));
+         H4 = 10.5 - YQ * (6.0 - YQ * 6.0);
+         H6 = -6.0 + YQ * 4.0;
+         E0 = 1.875 + YQ * (8.25 + YQ * (5.5 + YQ));
+         E2 = 5.25 + YQ * (1.0 + YQ * 3.0);
+         E4 = 0.75 * H6;
       }
       D = RRTPI / (H0 + XQ * (H2 + XQ * (H4 + XQ * (H6 + XQ))));
       K = D * Y * (E0 + XQ * (E2 + XQ * (E4 + XQ)));
-   } else if ( ABX < XLIM3 ) { 			 // Humlicek W4 Region 3
-      if ( RG3 != 0 ) { 			 // First point in Region 3
-	 RG3 = 0;
-	 Z0 = 272.1014 + Y * (1280.829 + Y *
-			      (2802.870 + Y *
-			       (3764.966 + Y *
-				(3447.629 + Y *
-				 (2256.981 + Y *
-				  (1074.409 + Y *
-				   (369.1989  + Y *
-				    (88.26741 + Y *
-				     (13.39880 + Y)
-				     ))))))));   // Region 3 y-dependents
-	 Z2 = 211.678 + Y * (902.3066 + Y *
-			     (1758.336 + Y *
-			      (2037.310 + Y *
-			       (1549.675 + Y *
-				(793.4273 + Y *
-				 (266.2987 + Y *
-				  (53.59518 + Y * 5.0)
-				  ))))));
-	 Z4 = 78.86585 + Y * (308.1852 + Y *
-			      (497.3014 + Y *
-			       (479.2576 + Y *
-				(269.2916 + Y *
-				 (80.39278 + Y * 10.0)
-				 ))));
-	 Z6 = 22.03523 + Y * (55.02933 + Y *
-			      (92.75679 + Y *
-			       (53.59518 + Y * 10.0)
-			       ));
-	 Z8 = 1.496460 + Y * (13.39880 + Y * 5.0);
-	 P0 = 153.5168 + Y * (549.3954 + Y *
-			      (919.4955 + Y *
-			       (946.8970 + Y *
-				(662.8097 + Y *
-				 (328.2151 + Y *
-				  (115.3772 + Y *
-				   (27.93941 + Y *
-				    (4.264678 + Y * 0.3183291)
-				    )))))));
-	 P2 = -34.16955 + Y * (-1.322256+ Y *
-			       (124.5975 + Y *
-				(189.7730 + Y *
-				 (139.4665 + Y *
-				  (56.81652 + Y *
-				   (12.79458 + Y * 1.2733163)
-				   )))));
-	 P4 = 2.584042 + Y * (10.46332 + Y *
-			      (24.01655 + Y *
-			       (29.81482 + Y *
-				(12.79568 + Y * 1.9099744)
-				)));
-	 P6 = -0.07272979 + Y * (0.9377051 + Y *
-				 (4.266322 + Y * 1.273316));
-	 P8 = 0.0005480304 + Y * 0.3183291;
+   } else if ( ABX < XLIM3 ) {                   // Humlicek W4 Region 3
+      if ( RG3 != 0 ) {                          // First point in Region 3
+         RG3 = 0;
+         Z0 = 272.1014 + Y * (1280.829 + Y *
+                              (2802.870 + Y *
+                               (3764.966 + Y *
+                                (3447.629 + Y *
+                                 (2256.981 + Y *
+                                  (1074.409 + Y *
+                                   (369.1989  + Y *
+                                    (88.26741 + Y *
+                                     (13.39880 + Y)
+                                     ))))))));   // Region 3 y-dependents
+         Z2 = 211.678 + Y * (902.3066 + Y *
+                             (1758.336 + Y *
+                              (2037.310 + Y *
+                               (1549.675 + Y *
+                                (793.4273 + Y *
+                                 (266.2987 + Y *
+                                  (53.59518 + Y * 5.0)
+                                  ))))));
+         Z4 = 78.86585 + Y * (308.1852 + Y *
+                              (497.3014 + Y *
+                               (479.2576 + Y *
+                                (269.2916 + Y *
+                                 (80.39278 + Y * 10.0)
+                                 ))));
+         Z6 = 22.03523 + Y * (55.02933 + Y *
+                              (92.75679 + Y *
+                               (53.59518 + Y * 10.0)
+                               ));
+         Z8 = 1.496460 + Y * (13.39880 + Y * 5.0);
+         P0 = 153.5168 + Y * (549.3954 + Y *
+                              (919.4955 + Y *
+                               (946.8970 + Y *
+                                (662.8097 + Y *
+                                 (328.2151 + Y *
+                                  (115.3772 + Y *
+                                   (27.93941 + Y *
+                                    (4.264678 + Y * 0.3183291)
+                                    )))))));
+         P2 = -34.16955 + Y * (-1.322256+ Y *
+                               (124.5975 + Y *
+                                (189.7730 + Y *
+                                 (139.4665 + Y *
+                                  (56.81652 + Y *
+                                   (12.79458 + Y * 1.2733163)
+                                   )))));
+         P4 = 2.584042 + Y * (10.46332 + Y *
+                              (24.01655 + Y *
+                               (29.81482 + Y *
+                                (12.79568 + Y * 1.9099744)
+                                )));
+         P6 = -0.07272979 + Y * (0.9377051 + Y *
+                                 (4.266322 + Y * 1.273316));
+         P8 = 0.0005480304 + Y * 0.3183291;
       }
       D = 1.7724538 / (Z0 + XQ * (Z2 + XQ * (Z4 + XQ * (Z6 + XQ * (Z8 + XQ)))));
       K = D * (P0 + XQ * (P2 + XQ * (P4 + XQ * (P6 + XQ * P8))));
-   } else { 					 // Humlicek CPF12 algorithm
+   } else {                             // Humlicek CPF12 algorithm
       YPY0 = Y + Y0;
       YPY0Q = YPY0 * YPY0;
       K = 0.0;
       for (J = 0; J <= 5; J++) {
-	 D = X - T[J];
-	 MQ[J] = D * D;
-	 MF[J] = 1.0 / (MQ[J] + YPY0Q);
-	 XM[J] = MF[J] * D;
-	 YM[J] = MF[J] * YPY0;
-	 D = X + T[J];
-	 PQ[J] = D * D;
-	 PF[J] = 1.0 / (PQ[J] + YPY0Q);
-	 XP[J] = PF[J] * D;
-	 YP[J] = PF[J] * YPY0;
+         D = X - T[J];
+         MQ[J] = D * D;
+         MF[J] = 1.0 / (MQ[J] + YPY0Q);
+         XM[J] = MF[J] * D;
+         YM[J] = MF[J] * YPY0;
+         D = X + T[J];
+         PQ[J] = D * D;
+         PF[J] = 1.0 / (PQ[J] + YPY0Q);
+         XP[J] = PF[J] * D;
+         YP[J] = PF[J] * YPY0;
       }
-      if ( ABX <= XLIM4 ) {           		 // Humlicek CPF12 Region I
-	 for (J = 0; J <= 5; J++) {
-	    K = K + C[J]*(YM[J]+YP[J]) - S[J]*(XM[J]-XP[J]) ;
-	 }
-      } else { 					 // Humlicek CPF12 Region II
-	 YF = Y + Y0PY0;
-	 for ( J = 0; J <= 5; J++) {
-	    K = K + (C[J] *
-		     (MQ[J] * MF[J] - Y0 * YM[J])
-		     + S[J] * YF * XM[J]) / (MQ[J]+Y0Q)
-	       + (C[J] * (PQ[J] * PF[J] - Y0 * YP[J])
-		  - S[J] * YF * XP[J]) / (PQ[J]+Y0Q);
-	 }
-	 K = Y * K + exp( -XQ );
+      if ( ABX <= XLIM4 ) {                      // Humlicek CPF12 Region I
+         for (J = 0; J <= 5; J++) {
+            K = K + C[J]*(YM[J]+YP[J]) - S[J]*(XM[J]-XP[J]) ;
+         }
+      } else {                                   // Humlicek CPF12 Region II
+         YF = Y + Y0PY0;
+         for ( J = 0; J <= 5; J++) {
+            K = K + (C[J] *
+                 (MQ[J] * MF[J] - Y0 * YM[J])
+                    + S[J] * YF * XM[J]) / (MQ[J]+Y0Q)
+                 + (C[J] * (PQ[J] * PF[J] - Y0 * YP[J])
+                   - S[J] * YF * XP[J]) / (PQ[J]+Y0Q);
+         }
+         K = Y * K + exp( -XQ );
       }
    }
    return K / 2.506628 / sigma; // Normalize by dividing by sqrt(2*pi)*sigma.
@@ -988,8 +988,8 @@ void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
    // Author: Jan Conrad
 
   Double_t pi= TMath::Pi();
-  Int_t Threeroots = 0; 
-  
+  Int_t Threeroots = 0;
+
   Double_t phi,q,r,s,t,p,D,R1,x,temp;
 
   a = 0.0;
@@ -1006,32 +1006,32 @@ void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
   R1 = q/TMath::Abs(q) * TMath::Sqrt(TMath::Abs(p)/3);
   if (p==0) {
      q = 8.0;
-     a = TMath::Power(q,1./3.); 
+     a = TMath::Power(q,1./3.);
      goto done;
-  }  
-      
+  }
+
   if( p < 0) {
     if (D <= 0) {
        Threeroots=1;
        phi = TMath::ACos(q/2/(R1*R1*R1));
-       a   = TMath::Cos(phi/3); 
+       a   = TMath::Cos(phi/3);
        b   = TMath::Cos(phi/3 + (2 * pi)/3);
        c   = TMath::Cos(phi/3 + (4 * pi)/3);
-    }  else { 
-       x   = q/2/(R1*R1*R1);           
+    }  else {
+       x   = q/2/(R1*R1*R1);
        phi = TMath::Log(x+TMath::Sqrt(x*x-1));
-       b   = TMath::CosH(phi/3); 
-    } 
-  } else { 
-      x   = q/2/(R1*R1*R1);           
+       b   = TMath::CosH(phi/3);
+    }
+  } else {
+      x   = q/2/(R1*R1*R1);
       phi = TMath::Log(x+TMath::Sqrt(x*x+1));
       b   = TMath::SinH(phi/3);
   }
-  
+
     a = (-2*R1)*a-r/3;
     b = (-2*R1)*b-r/3;
-    c = (-2*R1)*c-r/3;     
-  
+    c = (-2*R1)*c-r/3;
+
   done:
 
   if (Threeroots == 1) {
@@ -1039,17 +1039,17 @@ void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
        temp=a;
        a=b;
        b=temp;
-    }                               
+    }
     if (b > c) {
        temp=b;
        b=c;
-       c=temp;      
-    }              
+       c=temp;
+    }
     if (a > b) {
        temp=a;
        a=b;
        b=temp;
-    }                                                                         
+    }
   }
 }
 
@@ -2678,7 +2678,7 @@ Double_t TMath::StruveH1(Double_t x)
    Int_t i, i1;
    Double_t alfa, h, r, y, b0, b1, b2;
    Double_t v = TMath::Abs(x);
-   
+
    if (v == 0) {
       h = 0;
    } else if (v <= 0.3) {
@@ -2723,144 +2723,140 @@ Double_t TMath::StruveH1(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::StruveL0(Double_t x)
 {
-  // Modified Struve Function of Order 0
-  //  (from Kirill Filimonov)
-  
-  const Double_t pi=TMath::Pi();
-  
-  Double_t s=1.0;
-  Double_t r=1.0;
-  
-  Double_t a0,sl0,a1,bi0;
-  
-  Int_t km,i;
-  
-  if (x<=20.) {
-    a0=2.0*x/pi;
-    for (int i=1; i<=60;i++) {
-      r*=(x/(2*i+1))*(x/(2*i+1));
-      s+=r;
-      if(TMath::Abs(r/s)<1.e-12) break;
-    }
-    sl0=a0*s;
-  } else {
-    km=int(5*(x+1.0));
-    if(x>=50.0)km=25;
-    for (i=1; i<=km; i++) {
-      r*=(2*i-1)*(2*i-1)/x/x;
-      s+=r;
-      if(TMath::Abs(r/s)<1.0e-12) break;
-    }
-    a1=TMath::Exp(x)/TMath::Sqrt(2*pi*x);
-    r=1.0;
-    bi0=1.0;
-    for (i=1; i<=16; i++) {
-      r=0.125*r*(2.0*i-1.0)*(2.0*i-1.0)/(i*x);
-      bi0+=r;
-      if(TMath::Abs(r/bi0)<1.0e-12) break;
-    }
-    
-    bi0=a1*bi0;
-    sl0=-2.0/(pi*x)*s+bi0;
-  }  
-  return sl0;  
+   // Modified Struve Function of Order 0.
+   // By Kirill Filimonov.
+
+   const Double_t pi=TMath::Pi();
+
+   Double_t s=1.0;
+   Double_t r=1.0;
+
+   Double_t a0,sl0,a1,bi0;
+
+   Int_t km,i;
+
+   if (x<=20.) {
+      a0=2.0*x/pi;
+      for (int i=1; i<=60;i++) {
+         r*=(x/(2*i+1))*(x/(2*i+1));
+         s+=r;
+         if(TMath::Abs(r/s)<1.e-12) break;
+      }
+      sl0=a0*s;
+   } else {
+      km=int(5*(x+1.0));
+      if(x>=50.0)km=25;
+      for (i=1; i<=km; i++) {
+         r*=(2*i-1)*(2*i-1)/x/x;
+         s+=r;
+         if(TMath::Abs(r/s)<1.0e-12) break;
+      }
+      a1=TMath::Exp(x)/TMath::Sqrt(2*pi*x);
+      r=1.0;
+      bi0=1.0;
+      for (i=1; i<=16; i++) {
+         r=0.125*r*(2.0*i-1.0)*(2.0*i-1.0)/(i*x);
+         bi0+=r;
+         if(TMath::Abs(r/bi0)<1.0e-12) break;
+      }
+
+      bi0=a1*bi0;
+      sl0=-2.0/(pi*x)*s+bi0;
+   }
+   return sl0;
 }
 
 //______________________________________________________________________________
 Double_t TMath::StruveL1(Double_t x)
 {
-  // Modified Struve Function of Order 1
-  //  (from Kirill Filimonov)
+   // Modified Struve Function of Order 1.
+   // By Kirill Filimonov.
 
-  const Double_t pi=TMath::Pi();
-  Double_t a1,sl1,bi1,s;
-  Double_t r=1.0;
-  Int_t km,i;
-  
-  if (x<=20.) {
-    s=0.0;
-    for (i=1; i<=60;i++) {
-      r*=x*x/(4.0*i*i-1.0);
-      s+=r;
-      if(TMath::Abs(r)<TMath::Abs(s)*1.e-12) break;
-    }
-    sl1=2.0/pi*s;
-  } else {
-    s=1.0;
-    km=int(0.5*x);
-    if(x>50.0)km=25;
-    for (i=1; i<=km; i++) {
-      r*=(2*i+3)*(2*i+1)/x/x;
-      s+=r;
-      if(TMath::Abs(r/s)<1.0e-12) break;
-    }
-    sl1=2.0/pi*(-1.0+1.0/(x*x)+3.0*s/(x*x*x*x));
-    a1=TMath::Exp(x)/TMath::Sqrt(2*pi*x);
-    r=1.0;
-    bi1=1.0;
-    for (i=1; i<=16; i++) {
-      r=-0.125*r*(4.0-(2.0*i-1.0)*(2.0*i-1.0))/(i*x);
-      bi1+=r;
-      if(TMath::Abs(r/bi1)<1.0e-12) break;
-    }
-    sl1+=a1*bi1;
-  }  
-  return sl1;  
+   const Double_t pi=TMath::Pi();
+   Double_t a1,sl1,bi1,s;
+   Double_t r=1.0;
+   Int_t km,i;
+
+   if (x<=20.) {
+      s=0.0;
+      for (i=1; i<=60;i++) {
+         r*=x*x/(4.0*i*i-1.0);
+         s+=r;
+         if(TMath::Abs(r)<TMath::Abs(s)*1.e-12) break;
+      }
+      sl1=2.0/pi*s;
+   } else {
+      s=1.0;
+      km=int(0.5*x);
+      if(x>50.0)km=25;
+      for (i=1; i<=km; i++) {
+         r*=(2*i+3)*(2*i+1)/x/x;
+         s+=r;
+         if(TMath::Abs(r/s)<1.0e-12) break;
+      }
+      sl1=2.0/pi*(-1.0+1.0/(x*x)+3.0*s/(x*x*x*x));
+      a1=TMath::Exp(x)/TMath::Sqrt(2*pi*x);
+      r=1.0;
+      bi1=1.0;
+      for (i=1; i<=16; i++) {
+         r=-0.125*r*(4.0-(2.0*i-1.0)*(2.0*i-1.0))/(i*x);
+         bi1+=r;
+         if(TMath::Abs(r/bi1)<1.0e-12) break;
+      }
+      sl1+=a1*bi1;
+   }
+   return sl1;
 }
 
 //______________________________________________________________________________
 Bool_t TMath::Permute(Int_t *a, Int_t n, Bool_t &start)
 {
-  //
-  // simple recursive algorithm to find the permutations of the first
-  // n natural numbers (starting from 0)
-  // it can be found in many places on the web
-  // At the beginning the variable start has to be set to kTRUE
-  // and not touched any more. The method returns kFALSE when 
-  // all combinations are exhausted, i.e. after n! calls
-  //
-  Int_t i,itmp;
-  Int_t i1=-1;
-  
-  if(start) {
-    // Prime the array
-    for(i=0; i<n; a[i++]=i);
-    start=kFALSE;
-    return kTRUE;
-  } else {
-    // find rightmost upward transition 
-    for(i=n-2; i>-1; i--) {
-      if(a[i]<a[i+1]) {
-	i1=i;
-	break;
+   // Simple recursive algorithm to find the permutations of the first
+   // n natural numbers (starting from 0).
+   // The algorithm can be found in many places on the web.
+   // At the beginning the variable start has to be set to kTRUE
+   // and not touched any more. The method returns kFALSE when
+   // all combinations are exhausted, i.e. after n! calls.
+
+   Int_t i,itmp;
+   Int_t i1=-1;
+
+   if (start) {
+      // Prime the array
+      for (i=0; i<n; a[i++]=i);
+      start=kFALSE;
+      return kTRUE;
+   } else {
+      // find rightmost upward transition
+      for (i=n-2; i>-1; i--) {
+         if (a[i]<a[i+1]) {
+            i1=i;
+            break;
+         }
       }
-    }
-    // no more upward transitions, end of the story
-    if(i1==-1) return kFALSE;
-    else {
-      // find lower right element higher than the lower
-      // element of the upward transition
-      for(i=n-1;i>i1;i--) {
-	if(a[i] > a[i1]) {
-	  // swap the two
-	  itmp=a[i1];
-	  a[i1]=a[i];
-	  a[i]=itmp;
-	  break;
-	}
+      // no more upward transitions, end of the story
+      if (i1==-1)
+         return kFALSE;
+      else {
+         // find lower right element higher than the lower
+         // element of the upward transition
+         for (i=n-1;i>i1;i--) {
+            if (a[i] > a[i1]) {
+               // swap the two
+               itmp=a[i1];
+               a[i1]=a[i];
+               a[i]=itmp;
+               break;
+            }
+         }
+         // order the rest, in fact just invert, as there
+         // are only downward transitions from here on
+         for (i=0;i<(n-i1-1)/2;i++) {
+            itmp=a[i1+i+1];
+            a[i1+i+1]=a[n-i-1];
+            a[n-i-1]=itmp;
+         }
       }
-      // order the rest, in fact just invert, as there 
-      // are only downward transitions from here on
-      for(i=0;i<(n-i1-1)/2;i++) {
-	itmp=a[i1+i+1];
-	a[i1+i+1]=a[n-i-1];
-	a[n-i-1]=itmp;
-      }
-    }
-    return kTRUE;
-  }
+      return kTRUE;
+   }
 }
-
-
-
-
