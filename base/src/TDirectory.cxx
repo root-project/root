@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.44 2004/05/10 13:49:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.45 2004/05/14 08:26:31 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -932,7 +932,7 @@ void *TDirectory::GetObjectAny(const char *namecycle)
 
 //*-*---------------------Case of Key---------------------
 //                        ===========
-   void *idcur;
+   void *idcur=0;
    TKey *key;
    TIter nextkey(gDirectory->GetListOfKeys());
    while ((key = (TKey *) nextkey())) {
