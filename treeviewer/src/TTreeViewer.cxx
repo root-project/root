@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.8 2000/11/28 09:05:07 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.9 2000/12/10 17:44:26 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -257,6 +257,10 @@ TTreeViewer::TTreeViewer(const char* treeName)
 {
   // TTreeViewer default constructor
 
+   if (gROOT->IsBatch()) {
+      fprintf(stderr,"TTreeViewer : cannot run in batch mode\n");
+      gApplication->Terminate(0);
+   }
    fTree = 0;
    BuildInterface();
    SetTreeName(treeName);
@@ -1049,7 +1053,7 @@ Bool_t TTreeViewer::HandleTimer(TTimer *timer)
 {
 // This function is called by the fTimer object
    if (fCounting) {
-      cout << "time\n";
+//      cout << "time\n";
    }
    timer->Reset();
    // functionality to be added
@@ -1645,28 +1649,48 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
    if (parent) {
    // make list tree items for each branch according to the type
       const TGPicture *pic, *spic;
-      if (branch->GetListOfBranches()->GetEntries()) {
-         itemType = new ULong_t(kLTBranchType);
-         if (branch->InheritsFrom("TBranchObject")) {
-            pic = gClient->GetPicture("branch-ob_t.xpm");
-            spic = gClient->GetPicture("branch-ob_t.xpm");
-         } else {
-            if (branch->InheritsFrom("TBranchClones")) {
-               pic = gClient->GetPicture("branch-cl_t.xpm");
-               spic = gClient->GetPicture("branch-cl_t.xpm");
+      if ((branch->GetListOfBranches()->GetEntries()) ||
+          (branch->GetNleaves())) {
+         if (branch->GetListOfBranches()->GetEntries()) {
+            itemType = new ULong_t(kLTBranchType);
+            if (branch->InheritsFrom("TBranchObject")) {
+               pic = gClient->GetPicture("branch-ob_t.xpm");
+               spic = gClient->GetPicture("branch-ob_t.xpm");
             } else {
+               if (branch->InheritsFrom("TBranchClones")) {
+                  pic = gClient->GetPicture("branch-cl_t.xpm");
+                  spic = gClient->GetPicture("branch-cl_t.xpm");
+               } else {
+                  pic = gClient->GetPicture("branch_t.xpm");
+                  spic = gClient->GetPicture("branch_t.xpm");
+               }
+            }
+            branchItem = fLt->AddItem(parent, branch->GetName(), itemType, pic, spic);
+         } else {
+            if (branch->GetNleaves() > 1) {
+               itemType = new ULong_t(kLTBranchType);
                pic = gClient->GetPicture("branch_t.xpm");
                spic = gClient->GetPicture("branch_t.xpm");
+               branchItem = fLt->AddItem(parent, branch->GetName(), itemType,pic, spic);
+               TObjArray *Leaves = branch->GetListOfLeaves();
+	       TLeaf *leaf = 0;
+	       TString leafName;
+	       for (Int_t lf=0; lf<Leaves->GetEntries(); lf++) {
+                  leaf = (TLeaf *)Leaves->At(lf);
+	          leafName = name;
+	          leafName.Append(".").Append(leaf->GetName());
+                  itemType = new ULong_t(kLTLeafType);
+                  pic = gClient->GetPicture("leaf_t.xpm");
+                  spic = gClient->GetPicture("leaf_t.xpm");	    
+                  fLt->AddItem(branchItem, leafName.Data(), itemType, pic, spic);
+               } 	    
+	    } else {
+               itemType = new ULong_t(kLTLeafType);
+               pic = gClient->GetPicture("leaf_t.xpm");
+               spic = gClient->GetPicture("leaf_t.xpm");
+               branchItem = fLt->AddItem(parent, branch->GetName(), itemType, pic, spic);
             }
          }
-         branchItem = fLt->AddItem(parent, branch->GetName(), itemType,
-                      pic, spic);
-      } else {
-         itemType = new ULong_t(kLTLeafType);
-         pic = gClient->GetPicture("leaf_t.xpm");
-         spic = gClient->GetPicture("leaf_t.xpm");
-         branchItem = fLt->AddItem(parent, branch->GetName(), itemType,
-                                   pic, spic);
       }
    }
    // list branch in list view if necessary
@@ -1681,34 +1705,66 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
          fStopMapping = kTRUE;
       }
       textEntry = new TGString(name.Data());
-      if (branch->GetListOfBranches()->GetEntries()) {
-         if (branch->InheritsFrom("TBranchObject")) {
-            pic = gClient->GetPicture("branch-ob_t.xpm");
-            spic = gClient->GetPicture("branch-ob_t.xpm");
-         } else {
-            if (branch->InheritsFrom("TBranchClones")) {
-               pic = gClient->GetPicture("branch-cl_t.xpm");
-               spic = gClient->GetPicture("branch-cl_t.xpm");
+      if ((branch->GetListOfBranches()->GetEntries()) ||
+          (branch->GetNleaves())) {
+         if (branch->GetListOfBranches()->GetEntries()) {
+            if (branch->InheritsFrom("TBranchObject")) {
+               pic = gClient->GetPicture("branch-ob_t.xpm");
+               spic = gClient->GetPicture("branch-ob_t.xpm");
             } else {
+               if (branch->InheritsFrom("TBranchClones")) {
+                  pic = gClient->GetPicture("branch-cl_t.xpm");
+                  spic = gClient->GetPicture("branch-cl_t.xpm");
+               } else {
+                  pic = gClient->GetPicture("branch_t.xpm");
+                  spic = gClient->GetPicture("branch_t.xpm");
+               }
+            }
+            entry = new TGLVTreeEntry(fLVContainer,pic,spic,textEntry,0,kLVSmallIcons);
+            entry->SetUserData(new UInt_t(kLTBranchType));
+            fLVContainer->AddThisItem(entry);
+            entry->MapWindow();
+	    entry->SetAlias(textEntry->GetString());
+         } else {
+            if (branch->GetNleaves() > 1) {
+               itemType = new ULong_t(kLTBranchType);
+               textEntry = new TGString(name.Data());
                pic = gClient->GetPicture("branch_t.xpm");
                spic = gClient->GetPicture("branch_t.xpm");
+               entry = new TGLVTreeEntry(fLVContainer, pic, spic, textEntry,0,kLVSmallIcons);
+               entry->SetUserData(new UInt_t(kLTBranchType));
+               fLVContainer->AddThisItem(entry);
+               entry->MapWindow();
+               entry->SetAlias(textEntry->GetString());
+
+               TObjArray *Leaves = branch->GetListOfLeaves();
+	       TLeaf *leaf = 0;
+	       TString leafName;
+	       for (Int_t lf=0; lf<Leaves->GetEntries(); lf++) {
+                  leaf = (TLeaf *)Leaves->At(lf);
+	          leafName = name;
+	          leafName.Append(".").Append(leaf->GetName());
+	          textEntry = new TGString(leafName.Data());
+                  pic = gClient->GetPicture("leaf_t.xpm");
+                  spic = gClient->GetPicture("leaf_t.xpm");	    
+                  entry = new TGLVTreeEntry(fLVContainer, pic, spic, textEntry,0,kLVSmallIcons);
+                  entry->SetUserData(new UInt_t(kLTDragType | kLTLeafType));
+                  fLVContainer->AddThisItem(entry);
+                  entry->MapWindow();
+                  entry->SetAlias(textEntry->GetString());
+               }
+            } else {
+               pic = (gClient->GetMimeTypeList())->GetIcon("TLeaf",kFALSE);
+               if (!pic) pic = gClient->GetPicture("leaf_t.xpm");
+               spic = gClient->GetMimeTypeList()->GetIcon("TLeaf",kTRUE);
+               if (!spic) spic = gClient->GetPicture("leaf_t.xpm");
+               entry = new TGLVTreeEntry(fLVContainer,pic,spic,textEntry,0,kLVSmallIcons);
+               entry->SetUserData(new UInt_t(kLTDragType | kLTLeafType));
+               fLVContainer->AddThisItem(entry);
+               entry->MapWindow();
+	       entry->SetAlias(textEntry->GetString());
             }
          }
-         entry = new TGLVTreeEntry(fLVContainer,pic,spic,textEntry,0,kLVSmallIcons);
-         entry->SetUserData(new UInt_t(kLTBranchType));
-         fLVContainer->AddThisItem(entry);
-         entry->MapWindow();
-	 entry->SetAlias(textEntry->GetString());
-      } else {
-         pic = (gClient->GetMimeTypeList())->GetIcon("TLeaf",kFALSE);
-         if (!pic) pic = gClient->GetPicture("leaf_t.xpm");
-         spic = gClient->GetMimeTypeList()->GetIcon("TLeaf",kTRUE);
-         if (!spic) spic = gClient->GetPicture("leaf_t.xpm");
-         entry = new TGLVTreeEntry(fLVContainer,pic,spic,textEntry,0,kLVSmallIcons);
-         entry->SetUserData(new UInt_t(kLTDragType));
-         fLVContainer->AddThisItem(entry);
-         entry->MapWindow();
-	 entry->SetAlias(textEntry->GetString());
       }
    }
 
