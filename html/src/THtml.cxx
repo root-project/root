@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.18 2002/02/22 20:52:05 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.19 2002/04/10 18:14:26 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2181,7 +2181,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             ReplaceSpecialChars(out, *keyword);
          else
             // protect html code from special chars
-            if (*keyword>31)
+            if ((unsigned char)*keyword>31)
                if (*keyword=='<'){
                   if (keyword==strstr(keyword,"<pre>")
                       || keyword==strstr(keyword,"<PRE>"))
