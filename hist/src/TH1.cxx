@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.64 2001/10/27 10:39:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.65 2001/11/13 07:36:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3571,8 +3571,8 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
       }
    }
 
-   Double_t s1 = 1/sum1;
-   Double_t s2 = 1/sum2;
+   Double_t s1 = 1/tsum1;
+   Double_t s2 = 1/tsum2;
 
       // Find largest difference for Kolmogorov Test
    Double_t dfmax =0, rsum1 = 0, rsum2 = 0;
