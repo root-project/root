@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGraphNode.rdl $
+ *    File: $Id: RooGraphNode.rdl,v 1.1 2002/08/30 21:17:27 alixi Exp $
  * Authors:
  *   Ali Hanks, University of Washington, livelife@u.washington.edu
  * History:
@@ -14,6 +14,7 @@
 #define ROO_GRAPH_NODE
 
 #include <iostream.h>
+#include <fstream.h>
 #include "TString.h"
 #include "TObject.h"
 #include "TEllipse.h"
