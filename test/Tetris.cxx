@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.15 2003/02/02 16:25:38 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.16 2003/02/03 01:02:50 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -12,11 +12,6 @@
 //  <play game>
 //  root [2] .q
 //
-//  Other ROOT fun examples: Hello, Aclock ...
-//
-//  Begin_Html
-// <img src="http://emcal06.rhic.bnl.gov/~onuchin/root/gif/Tetris.gif">
-//  End_Html
 ///////////////////////////////////////////////////////////////////
 
 #include <TVirtualX.h>
@@ -87,6 +82,31 @@ void TetrisBox::Paint(Option_t *option)
    // Paint box if it's not hidden.
 
    if (!IsHidden() && fPad) TWbox::Paint(option);
+}
+
+void TetrisBox::Erase()
+{
+   // erase box
+
+   Double_t fX1sav = fX1;
+   Double_t fY1sav = fY1;
+   Double_t fX2sav = fX2;
+   Double_t fY2sav = fY2;
+
+   // erase 2 pix extra
+   fX1 = fX1-fPad->PixeltoX(2);
+   fY1 = fY1+fPad->PixeltoY(2);
+   fX2 = fX2+fPad->PixeltoX(2);
+   fY2 = fY2-fPad->PixeltoY(2);
+
+   SetFillColor(fPad->GetFillColor());
+   SetBorderMode(0);
+   Paint();
+
+   fX1 = fX1sav;
+   fY1 = fY1sav;
+   fX2 = fX2sav;
+   fY2 = fY2sav;
 }
 
 
@@ -476,11 +496,9 @@ void CurrentPiece::Erase()
    fBoard->cd();
 
    for (int i = 0 ; i < 4 ; i++) {
-      fBoxes[i]->SetBorderMode(0);
-      fBoxes[i]->SetFillColor(fBoard->GetFillColor());
-      fBoxes[i]->Paint();
-  }
-  padsav->cd();
+      fBoxes[i]->Erase();
+   }
+   padsav->cd();
 }
 
 
@@ -817,11 +835,11 @@ KeyHandler::KeyHandler() : TGFrame(gClient->GetRoot(),0,0)
    TRootCanvas *main_frame = (TRootCanvas*)(gTetris->GetCanvasImp());
 
    // bind arrow keys and space-bar key
-   main_frame->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Up),    kAnyModifier);
-   main_frame->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Left),  kAnyModifier);
-   main_frame->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
-   main_frame->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Down),  kAnyModifier);
-   main_frame->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Space), kAnyModifier);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Up),    kAnyModifier);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Left),  kAnyModifier);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Down),  kAnyModifier);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Space), kAnyModifier);
 }
 
 KeyHandler::~KeyHandler()
@@ -848,7 +866,7 @@ Bool_t KeyHandler::HandleKey(Event_t *event)
 
    char tmp[2];
    UInt_t keysym;
-
+printf("QQQQ\n");
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
 
    if (event->fType == kGKeyPress) {

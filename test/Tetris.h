@@ -60,6 +60,7 @@ public:
    virtual void MoveRight()        { SetX(GetX()+1); }
    virtual void MoveLeft()         { SetX(GetX()-1); }
 
+   void    Erase();
    void    Paint(Option_t *option="");
    void    ExecuteEvent(Int_t, Int_t, Int_t)  { return; }  // disable any actions on it
 };
