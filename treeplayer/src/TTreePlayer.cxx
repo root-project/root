@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.80 2002/01/15 10:29:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.81 2002/01/18 11:35:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -246,8 +246,6 @@
 #include "TGaxis.h"
 #include "TBrowser.h"
 #include "TStyle.h"
-#include "TProof.h"
-#include "TProofServ.h"
 #include "TSocket.h"
 #include "TSlave.h"
 #include "TMessage.h"
@@ -474,16 +472,6 @@ void TTreePlayer::CreatePacketGenerator(Int_t nentries, Stat_t firstEntry)
 {
    // Create or reset the packet generator.
 
-   if (!gProof) return;
-
-   Stat_t lastEntry = firstEntry + nentries - 1;
-   if (lastEntry > fTree->GetEntries()-1)
-      lastEntry = fTree->GetEntries() - 1;
-
-   if (!fPacketGen)
-      fPacketGen = new TPacketGenerator(firstEntry, lastEntry, fTree, gProof->GetListOfActiveSlaves());
-   else
-      fPacketGen->Reset(firstEntry, lastEntry, gProof->GetListOfActiveSlaves());
 }
 
 //______________________________________________________________________________
@@ -1055,7 +1043,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       varexp = (char*)varexp0;
       if (gDirectory) {
          oldh1 = (TH1*)gDirectory->Get(hname);
-         if (oldh1 && !gProofServ) { oldh1->Delete(); oldh1 = 0;}
+         if (oldh1) { oldh1->Delete(); oldh1 = 0;}
       }
    }
 //*-* Do not process more than fMaxEntryLoop entries
@@ -1098,7 +1086,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 
 //*-*- Create a default canvas if none exists
    fDraw = 0;
-   if (!gPad && !gProofServ && !opt.Contains("goff") && fDimension > 0) {
+   if (!gPad && !opt.Contains("goff") && fDimension > 0) {
       if (!gROOT->GetMakeDefCanvas()) return -1;
       (gROOT->GetMakeDefCanvas())();
    }
@@ -1132,7 +1120,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       TH1F *h1;
       if (oldh1) {
          h1 = (TH1F*)oldh1;
-         fNbins[0] = h1->GetXaxis()->GetNbins();  // for proofserv
+         fNbins[0] = h1->GetXaxis()->GetNbins();
       } else {
          h1 = new TH1F(hname,htitle,fNbins[0],fVmin[0],fVmax[0]);
          h1->SetLineColor(fTree->GetLineColor());
@@ -1153,56 +1141,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       }
       fVar1->SetAxis(h1->GetXaxis());
       
-      if (TProof::IsActive()) {
-         CreatePacketGenerator(nentries, firstentry);
-         gProof->SendCurrentState();
-         if (action == -1) h1->SetBinContent(0,1.0);
-         gProof->SendObject(h1);
-         if (!hkeep) delete h1;
-         char *mess = new char[strlen(varexp0)+strlen(selection)+strlen(option)+128];
-         sprintf(mess, "%s %d %d", fTree->GetName(), fTree->GetMaxVirtualSize(), fTree->GetEstimate());
-         gProof->Broadcast(mess, kPROOF_TREEDRAW);
-         sprintf(mess,"%s->Draw(\"%s\",\"%s\",\"%s\",%d,%d)", fTree->GetName(), varexp0,
-                 selection, option, nentries, firstentry);
-         gProof->Broadcast(mess, kMESS_CINT);
-         delete [] mess;
-         gProof->Loop(fTree);
-         if (gDirectory) {
-            h1 = (TH1F*)gDirectory->Get(hname);
-            if (!h1) {
-               Error("Draw", "histogram %s not returned by PROOF", hname);
-               fDraw = 1;
-            } else if (!hkeep) {
-               h1->SetBit(kCanDelete);
-               if (!opt.Contains("goff")) h1->SetDirectory(0);
-            }
-         }
-      } else if (gProofServ) {
-         Stat_t first;
-         fNfill = 0;
-         if (h1->GetBinContent(0) > 0) {
-            h1->SetBinContent(0,0.0);
-            action = -1;
-         }
-         while (gProofServ->GetNextPacket(nentries, first))
-            EntryLoop(action, h1, nentries, (Int_t)first, option);
-         EntryLoop(action, h1, nentries, (Int_t)first, option);
 
-         // Send all created objects back to client
-         TObject *obj;
-         TIter next(gDirectory->GetList());
-         while ((obj = next()))
-            if (obj->InheritsFrom(TH1::Class())) { // send only histograms back
-               if (gProofServ->GetLogLevel() > 2)
-                  printf("Slave %d: %s: Nentries is %.0f\n",
-                         gProofServ->GetOrdinal(), obj->GetName(),
-                         ((TH1*)obj)->GetEntries());
-               gProofServ->GetSocket()->SendObject(obj);
-            }
-         fDraw = 1;   // do not draw histogram
-      } else
-
-         EntryLoop(action, h1, nentries, firstentry, option);
+      EntryLoop(action, h1, nentries, firstentry, option);
 
       if (fVar1->IsInteger()) h1->LabelsDeflate("X");
       if (!fDraw && !opt.Contains("goff")) h1->Draw(option);
@@ -1466,12 +1406,12 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
 
    TDirectory *cursav = gDirectory;
 
-   if (!gProofServ) fNfill = 0;
+   fNfill = 0;
 
    //Create a timer to get control in the entry loop(s)
    TProcessEventTimer *timer = 0;
    Int_t interval = fTree->GetTimerInterval();
-   if (!gROOT->IsBatch() && !gProofServ && interval)
+   if (!gROOT->IsBatch() && interval)
       timer = new TProcessEventTimer(interval);
 
    npoints = 0;
@@ -1511,9 +1451,6 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
             fNfill = 0;
          }
       }
-
-      // nentries == -1 when all entries have been processed by proofserver
-      if (gProofServ && nentries != -1) return;
 
       if (fNfill) {
          TakeAction(fNfill,npoints,action,obj,option);
@@ -1606,9 +1543,6 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
    }
 
    delete timer;
-
-   // nentries == -1 when all entries have been processed by proofserver
-   if (gProofServ && nentries != -1) return;
 
    if (fNfill) {
       TakeAction(fNfill,npoints,action,obj,option);
@@ -2795,7 +2729,7 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
    //Create a timer to get control in the entry loop(s)
    TProcessEventTimer *timer = 0;
    Int_t interval = fTree->GetTimerInterval();
-   if (!gROOT->IsBatch() && !gProofServ && interval)
+   if (!gROOT->IsBatch() && interval)
       timer = new TProcessEventTimer(interval);
 
    //loop on entries (elist or all entries)
@@ -3169,17 +3103,22 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
 //*-*        =========================================
 
   Int_t i;
+//__________________________1-D histogram_______________________
   if      (action ==  1) ((TH1*)obj)->FillN(nfill,fV1,fW);
+//__________________________2-D histogram_______________________
   else if (action ==  2) {
      TH2 *h2 = (TH2*)obj;
      for(i=0;i<nfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
   }
+//__________________________Profile histogram_______________________
   else if (action ==  4) ((TProfile*)obj)->FillN(nfill,fV2,fV1,fW);
+//__________________________Event List
   else if (action ==  5) {
      TEventList *elist = (TEventList*)obj;
      Int_t enumb = fTree->GetChainOffset() + fTree->GetReadEntry();
      if (elist->GetIndex(enumb) < 0) elist->Enter(enumb);
   }
+//__________________________2D scatter plot_______________________
   else if (action == 12) {
      TPolyMarker *pm = new TPolyMarker(nfill);
      pm->SetMarkerStyle(fTree->GetMarkerStyle());
@@ -3208,7 +3147,7 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
      TH2 *h2 = (TH2*)obj;
      for(i=0;i<nfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
   }
-//----------------------------------------------------------
+//__________________________3D scatter plot_______________________
   else if (action ==  3) {
      TH3 *h3 =(TH3*)obj;
      for(i=0;i<nfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
@@ -3223,6 +3162,7 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
      TH3 *h3 =(TH3*)obj;
      for(i=0;i<nfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
   }
+//__________________________2D Profile Histogram__________________
   else if (action == 23) {
      TProfile2D *hp2 =(TProfile2D*)obj;
      for(i=0;i<nfill;i++) hp2->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
@@ -3263,15 +3203,6 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
         if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
      }
      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h1,fVmin[0],fVmax[0]);
-
-     // When a PROOF client ask master for limits
-     if (gProofServ) {
-        if (gProofServ->GetLogLevel() > 2)
-           printf("have limits: (nfill=%d) %d, %f, %f\n", nfill, fNbins[0], fVmin[0], fVmax[0]);
-        gProofServ->GetLimits(1, nfill, fNbins, fVmin, fVmax);
-        if (gProofServ->GetLogLevel() > 2)
-           printf("got limits: (nfill=%d) %d, %f, %f\n", nfill, fNbins[0], fVmin[0], fVmax[0]);
-     }
 
      h1->FillN(nfill, fV1, fW);
 //__________________________2-D histogram_______________________
