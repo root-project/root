@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.20 2004/08/13 08:05:12 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.21 2004/09/17 05:35:13 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -603,16 +603,7 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
 
       // upgrade to real class for TObject and TGlobal returns
          ObjectHolder* obh = 0;
-         if ( m_rtShortName == "TObject" ) {
-            TClass* clActual = cls->GetActualClass( (void*)address );
-            if ( clActual ) {
-               int offset = (cls != clActual) ? clActual->GetBaseClassOffset( cls ) : 0;
-               address -= offset;
-            }
-
-            obh = new ObjectHolder( (void*)address, ((TObject*)address)->IsA(), false );
-         }
-         else if ( m_rtShortName == "TGlobal" ) {
+         if ( m_rtShortName == "TGlobal" ) {
             TGlobal* g = (TGlobal*)address;
             cls = gROOT->GetClass( g->GetTypeName() );
             if ( ! cls )
@@ -626,8 +617,15 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
                   obh = new ObjectHolder( (void*)g->GetAddress(), cls, false );
             }
          }
-         else
-            obh = new ObjectHolder( (void*)address, cls, false );
+         else {
+            TClass* clActual = cls->GetActualClass( (void*)address );
+            if ( clActual ) {
+               int offset = (cls != clActual) ? clActual->GetBaseClassOffset( cls ) : 0;
+               address -= offset;
+            }
+
+            obh = new ObjectHolder( (void*)address, clActual, false );
+         }
 
          return bindRootObject( obh );
       }

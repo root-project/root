@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.12 2004/08/12 20:55:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.13 2004/09/30 11:58:06 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -338,6 +338,12 @@ PyObject* PyROOT::makeRootClassFromString( const char* className ) {
 
 
 PyObject* PyROOT::bindRootObject( ObjectHolder* obj, bool force ) {
+// for safety
+   if ( obj == 0 ) {
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
    TClass* cls = obj->objectIsA();
 
 // only known objects will be bound
