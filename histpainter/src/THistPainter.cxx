@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.28 2001/02/01 17:43:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.29 2001/02/06 14:43:20 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1762,7 +1762,7 @@ void THistPainter::PaintContour()
             }
             if (nadd == 0) break;
          }
-         theColor = Int_t((ipoly+2)*Float_t(ncolors)/Float_t(ndivz));
+         theColor = Int_t((ipoly+1)*Float_t(ncolors)/Float_t(ndivz));
          icol = gStyle->GetColorPalette(theColor);
          fH->SetFillColor(icol);
          fH->TAttFill::Modify();
