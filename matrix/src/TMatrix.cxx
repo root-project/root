@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.40 2003/07/08 10:02:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.41 2003/07/12 16:14:27 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -252,42 +252,94 @@ void TMatrix::Draw(Option_t *option)
 //______________________________________________________________________________
 void TMatrix::ResizeTo(Int_t nrows, Int_t ncols)
 {
-   // Erase the old matrix and create a new one according to new boundaries
-   // with indexation starting at 0.
+   // Set size of the matrix to nrows x ncols
+   // New dynamic elemenst are created, the overlapping part of the old ones are
+   // copied to the new structures, then the old elements are deleleted.
 
    if (IsValid()) {
       if (fNrows == nrows && fNcols == ncols)
          return;
 
-      if (fNcols != 1)
-         delete [] fIndex;
-      delete [] fElements;
-   }
+      const Real_t  *elements_old = fElements;
+      Real_t *const *index_old    = fIndex;
+      const Int_t    nrows_old    = fNrows;
+      const Int_t    ncols_old    = fNcols;
 
-   Allocate(nrows, ncols);
+      Allocate(nrows, ncols);
+
+      if (!IsValid()) {
+        Error("ResizeTo", "resizing failed");
+        return;
+      }
+
+      const Int_t ncols_copy = TMath::Min(fNcols,ncols_old);
+      const Int_t nrows_copy = TMath::Min(fNrows,nrows_old);
+
+      for (Int_t i = 0; i < ncols_copy; i++)
+         memcpy(fIndex[i],index_old[i],nrows_copy*sizeof(Real_t));
+
+      if (ncols_old != 1)
+         delete [] index_old;
+      delete [] elements_old;
+   } else {
+      Allocate(nrows, ncols);
+   }
 }
 
 //______________________________________________________________________________
 void TMatrix::ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
 {
-   // Erase the old matrix and create a new one according to new boudaries.
+   // Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
+   // New dynamic elemenst are created, the overlapping part of the old ones are
+   // copied to the new structures, then the old elements are deleleted.
 
-   Int_t new_nrows = row_upb - row_lwb + 1;
-   Int_t new_ncols = col_upb - col_lwb + 1;
+   const Int_t new_nrows = row_upb - row_lwb + 1;
+   const Int_t new_ncols = col_upb - col_lwb + 1;
 
    if (IsValid()) {
-      fRowLwb = row_lwb;
-      fColLwb = col_lwb;
 
-      if (fNrows == new_nrows && fNcols == new_ncols)
+      if (fNrows == new_nrows  && fNcols == new_ncols &&
+          fRowLwb == row_lwb && fColLwb == col_lwb)
          return;
 
-      if (fNcols != 1)
-         delete [] fIndex;
-      delete [] fElements;
-   }
+      const Real_t  *elements_old = fElements;
+      Real_t *const *index_old    = fIndex;
+      const Int_t    nrows_old    = fNrows;
+      const Int_t    ncols_old    = fNcols;
+      const Int_t    rowLwb_old   = fRowLwb;
+      const Int_t    colLwb_old   = fColLwb;
 
-   Allocate(new_nrows, new_ncols, row_lwb, col_lwb);
+      Allocate(new_nrows, new_ncols, row_lwb, col_lwb);
+
+      if (!IsValid()) {
+        Error("ResizeTo", "resizing failed");
+        return;
+      }
+
+      const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old); 
+      const Int_t colLwb_copy = TMath::Max(fColLwb,colLwb_old); 
+      const Int_t rowUpb_copy = TMath::Min(fRowLwb+fNrows-1,rowLwb_old+nrows_old-1); 
+      const Int_t colUpb_copy = TMath::Min(fColLwb+fNcols-1,colLwb_old+ncols_old-1); 
+
+      const Int_t nrows_copy = rowUpb_copy-rowLwb_copy+1;
+      const Int_t ncols_copy = colUpb_copy-colLwb_copy+1;
+
+      if (nrows_copy > 0 && ncols_copy > 0) {
+         for (Int_t i = 0; i < ncols_copy; i++) {
+            const Int_t iColOld   = colLwb_copy+i-colLwb_old;
+            const Int_t iColNew   = colLwb_copy+i-fColLwb;
+            const Int_t rowOldOff = rowLwb_copy-rowLwb_old;
+            const Int_t rowNewOff = rowLwb_copy-fRowLwb;
+            memcpy(fIndex[iColNew]+rowNewOff,index_old[iColOld]+rowOldOff,nrows_copy*sizeof(Real_t));
+         }
+      }
+
+     if (ncols_old != 1)
+        delete [] index_old;
+     delete [] elements_old;
+   } else {
+      Allocate(new_nrows, new_ncols, row_lwb, col_lwb);
+   }
 }
 
 //______________________________________________________________________________
