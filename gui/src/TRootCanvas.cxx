@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.62 2004/11/18 15:52:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.63 2004/12/03 12:07:44 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -71,13 +71,8 @@ enum ERootCanvasCommands {
    kFileSaveAsPS,
    kFileSaveAsEPS,
    kFileSaveAsPDF,
-   kFileSaveAsSVG,
    kFileSaveAsGIF,
-   kFileSaveAsXML,
-   kFileSaveAsXPM,
-   kFileSaveAsPNG,
    kFileSaveAsJPG,
-   kFileSaveAsTIFF,
    kFilePrint,
    kFileCloseCanvas,
    kFileQuit,
@@ -154,14 +149,14 @@ static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       "Encapsulated PostScript", "*.eps",
                                       "PDF",          "*.pdf",
                                       "SVG",          "*.svg",
-                                      "Gif files",    "*.gif",
-                                      "Macro files",  "*.C",
+                                      "GIF",          "*.gif",
+                                      "ROOT macros",  "*.C",
                                       "ROOT files",   "*.root",
-                                      "XML files",    "*.xml",
-                                      "PNG files",    "*.png",
-                                      "XPM files",    "*.xpm",
-                                      "JPEG files",   "*.jpg",
-                                      "TIFF files",   "*.tiff",
+                                      "XML",          "*.xml",
+                                      "PNG",          "*.png",
+                                      "XPM",          "*.xpm",
+                                      "JPEG",         "*.jpg",
+                                      "TIFF",         "*.tiff",
                                       "All files",    "*",
                                       0,              0 };
 
@@ -327,11 +322,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileSaveMenu->AddEntry(Form("%s.&ps",  name), kFileSaveAsPS);
    fFileSaveMenu->AddEntry(Form("%s.&eps", name), kFileSaveAsEPS);
    fFileSaveMenu->AddEntry(Form("%s.p&df", name), kFileSaveAsPDF);
-   fFileSaveMenu->AddEntry(Form("%s.&svg", name), kFileSaveAsSVG);
    fFileSaveMenu->AddEntry(Form("%s.&gif", name), kFileSaveAsGIF);
-   fFileSaveMenu->AddEntry(Form("%s.&C",   name), kFileSaveAsC);
-   fFileSaveMenu->AddEntry(Form("%s.&root",name), kFileSaveAsRoot);
-   fFileSaveMenu->AddEntry(Form("%s.&xml",name),  kFileSaveAsXML);
 
    static Int_t img = 0;
 
@@ -342,11 +333,11 @@ void TRootCanvas::CreateCanvas(const char *name)
       gErrorIgnoreLevel = sav;
    }
    if (img > 0) {
-      fFileSaveMenu->AddEntry(Form("%s.xp&m",name),  kFileSaveAsXPM);
       fFileSaveMenu->AddEntry(Form("%s.&jpg",name),  kFileSaveAsJPG);
-      fFileSaveMenu->AddEntry(Form("%s.p&ng",name),  kFileSaveAsPNG);
-      fFileSaveMenu->AddEntry(Form("%s.&tiff",name),  kFileSaveAsTIFF);
    }
+
+   fFileSaveMenu->AddEntry(Form("%s.&C",   name), kFileSaveAsC);
+   fFileSaveMenu->AddEntry(Form("%s.&root",name), kFileSaveAsRoot);
 
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Canvas",   kFileNewCanvas);
@@ -632,7 +623,7 @@ void TRootCanvas::ReallyDelete()
    gPad = savepad;  // restore gPad for ROOT
    delete fCanvas;  // will in turn delete this object
 
-   if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)) 
+   if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
       TVirtualPadEditor::Terminate();
 }
 
@@ -773,31 +764,48 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileSaveAs:
                      {
                         static TString dir(".");
+                        static Int_t typeidx = 0;
                         TGFileInfo fi;
-                        fi.fFileTypes = gSaveAsTypes;
-                        fi.fIniDir    = StrDup(dir);
-                        new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave,&fi);
+                        fi.fFileTypes   = gSaveAsTypes;
+                        fi.fIniDir      = StrDup(dir);
+                        fi.fFileTypeIdx = typeidx;
+                        new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
                         if (!fi.fFilename) return kTRUE;
-                        dir = fi.fIniDir;
-                        if (strstr(fi.fFilename, ".root") ||
-                            strstr(fi.fFilename, ".ps")   ||
-                            strstr(fi.fFilename, ".eps")  ||
-                            strstr(fi.fFilename, ".pdf")  ||
-                            strstr(fi.fFilename, ".svg")  ||
-                            strstr(fi.fFilename, ".gif")  ||
-                            strstr(fi.fFilename, ".xml"))
-                           fCanvas->SaveAs(fi.fFilename);
-                        else if (strstr(fi.fFilename, ".C"))
-                           fCanvas->SaveSource(fi.fFilename);
-                        else
-                           Warning("ProcessMessage", "file cannot be saved with this extension (%s)", fi.fFilename);
+                        Bool_t  appendedType = kFALSE;
+                        TString fn = fi.fFilename;
+                        TString ft = fi.fFileTypes[fi.fFileTypeIdx+1];
+                        dir     = fi.fIniDir;
+                        typeidx = fi.fFileTypeIdx;
+again:
+                        if (fn.EndsWith(".root") ||
+                            fn.EndsWith(".ps")   ||
+                            fn.EndsWith(".eps")  ||
+                            fn.EndsWith(".pdf")  ||
+                            fn.EndsWith(".svg")  ||
+                            fn.EndsWith(".gif")  ||
+                            fn.EndsWith(".xml")  ||
+                            fn.EndsWith(".xpm")  ||
+                            fn.EndsWith(".jpg")  ||
+                            fn.EndsWith(".png")  ||
+                            fn.EndsWith(".tiff")) {
+                           gSystem->Sleep(60); // give X server time to refresh
+                           fCanvas->SaveAs(fn);
+                        } else if (fn.EndsWith(".C"))
+                           fCanvas->SaveSource(fn);
+                        else {
+                           if (!appendedType) {
+                              if (ft.Index(".") != kNPOS) {
+                                 fn += ft(ft.Index("."), ft.Length());
+                                 appendedType = kTRUE;
+                                 goto again;
+                              }
+                           }
+                           Warning("ProcessMessage", "file %s cannot be saved with this extension", fi.fFilename);
+                        }
                      }
                      break;
                   case kFileSaveAsRoot:
                      fCanvas->SaveAs(".root");
-                     break;
-                  case kFileSaveAsXML:
-                     fCanvas->SaveAs(".xml");
                      break;
                   case kFileSaveAsC:
                      fCanvas->SaveSource();
@@ -811,23 +819,11 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileSaveAsPDF:
                      fCanvas->SaveAs(".pdf");
                      break;
-                  case kFileSaveAsSVG:
-                     fCanvas->SaveAs(".svg");
-                     break;
                   case kFileSaveAsGIF:
                      fCanvas->SaveAs(".gif");
                      break;
-                  case kFileSaveAsXPM:
-                     fCanvas->SaveAs(".xpm");
-                     break;
                   case kFileSaveAsJPG:
                      fCanvas->SaveAs(".jpg");
-                     break;
-                  case kFileSaveAsPNG:
-                     fCanvas->SaveAs(".png");
-                     break;
-                  case kFileSaveAsTIFF:
-                     fCanvas->SaveAs(".tiff");
                      break;
                   case kFilePrint:
                      fCanvas->Print();
@@ -839,7 +835,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kFileQuit:
                      if (fEditor) fEditor->DeleteEditors();
-                     if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)) 
+                     if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
                         TVirtualPadEditor::Terminate();
                      delete this;
                      gApplication->Terminate(0);
@@ -1247,7 +1243,7 @@ void TRootCanvas::CreateEditor()
    fEditorFrame->SetEditable();
    gPad = Canvas();
    // next two lines are related to the old editor
-   TString show = gEnv->GetValue("Canvas.ShowEditor","false");   
+   TString show = gEnv->GetValue("Canvas.ShowEditor","false");
    gEnv->SetValue("Canvas.ShowEditor","true");
    fEditor = TVirtualPadEditor::LoadEditor();
    fEditorFrame->SetEditable(0);
