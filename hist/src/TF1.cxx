@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.58 2003/03/06 15:27:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.59 2003/03/31 16:04:35 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2085,6 +2085,16 @@ void TF1::SetParError(Int_t ipar, Double_t error)
 
    if (ipar < 0 || ipar > fNpar-1) return;
    fParErrors[ipar] = error;
+}
+
+//______________________________________________________________________________
+void TF1::SetParErrors(const Double_t *errors)
+{
+// set errors for all active parameters
+// when calling this function, the array errors must have at least fNpar values
+
+   if (!errors) return;
+   for (Int_t i=0;i<fNpar;i++) fParErrors[i] = errors[i];
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.31 2003/03/06 15:27:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.32 2003/03/31 16:04:34 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -144,6 +144,7 @@ public:
    virtual void     SetNumberFitPoints(Int_t npfits) {fNpfits = npfits;}
    virtual void     SetNpx(Int_t npx=100); // *MENU*
    virtual void     SetParError(Int_t ipar, Double_t error);
+   virtual void     SetParErrors(const Double_t *errors);
    virtual void     SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax);
    virtual void     SetParent(TObject *p=0) {fParent = p;}
    virtual void     SetRange(Double_t xmin, Double_t xmax); // *MENU*
