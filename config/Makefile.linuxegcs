@@ -6,11 +6,7 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 NOOPT         =
 else
-ifneq (,$(findstring Red Hat Linux 7.0,$(shell gcc -v 2>&1)))
 OPT           = -O
-else
-OPT           = -O2
-endif
 NOOPT         =
 endif
 
