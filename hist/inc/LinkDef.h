@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.9 2002/01/15 10:23:02 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.10 2002/05/20 15:10:07 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -40,6 +40,9 @@
 #pragma link C++ class TH3S-;
 #pragma link C++ class THLimitsFinder+;
 #pragma link C++ class THStack+;
+#pragma link C++ class TLimit+;
+#pragma link C++ class TLimitDataSource+;
+#pragma link C++ class TConfidenceLevel+;
 #pragma link C++ class TMultiDimFit+;
 #pragma link C++ class TPolyMarker-;
 #pragma link C++ class TPrincipal+;
