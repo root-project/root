@@ -39,15 +39,16 @@
  * Author:   Valery Fine 16/09/96  (E-mail: fine@vxcern.cern.ch)
  *----------------------------------------------------------------------
  */
- 
+
 static char sccsid[] = "@(#) winDumpExts.c 1.2 95/10/03 15:27:34";
- 
+
 static int fort = 0;
- 
+static const int kMaxSymbolSize = 2048;
+
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
- 
+
 /*
  *----------------------------------------------------------------------
  * GetArgcArgv --
@@ -61,7 +62,7 @@ GetArgcArgv(char *s, char **argv)
     int quote = 0;
     int argc = 0;
     char *bp;
- 
+
     bp = s;
     while (1) {
         while (isspace(*bp)) {
@@ -76,7 +77,7 @@ GetArgcArgv(char *s, char **argv)
             bp++;
         }
         argv[argc++] = bp;
- 
+
         while (*bp != '\0') {
             if (quote) {
                 if (*bp == '\"') {
@@ -97,7 +98,7 @@ GetArgcArgv(char *s, char **argv)
         }
     }
 }
- 
+
 /*
  *  The names of the first group of possible symbol table storage classes
  */
@@ -107,14 +108,14 @@ char * SzStorageClass1[] = {
     "MEMBER_OF_UNION","UNION_TAG","TYPE_DEFINITION","UNDEFINED_STATIC",
     "ENUM_TAG","MEMBER_OF_ENUM","REGISTER_PARAM","BIT_FIELD"
 };
- 
+
 /*
  * The names of the second group of possible symbol table storage classes
  */
 char * SzStorageClass2[] = {
     "BLOCK","FUNCTION","END_OF_STRUCT","FILE","SECTION","WEAK_EXTERNAL"
 };
- 
+
 /*
  *----------------------------------------------------------------------
  * GetSZStorageClass --
@@ -134,7 +135,7 @@ GetSZStorageClass(BYTE storageClass)
         else
                 return "???";
 }
- 
+
 /*
  *----------------------------------------------------------------------
  * GetSectionName --
@@ -151,9 +152,9 @@ GetSectionName(PIMAGE_SYMBOL pSymbolTable, PSTR buffer, unsigned cbBuffer)
 {
     char tempbuffer[10];
     DWORD section;
- 
+
     section = pSymbolTable->SectionNumber;
- 
+
     switch ( (SHORT)section )
     {
       case IMAGE_SYM_UNDEFINED: if (pSymbolTable->Value) strcpy(tempbuffer, "COMM"); else strcpy(tempbuffer, "UNDEF"); break;
@@ -161,10 +162,10 @@ GetSectionName(PIMAGE_SYMBOL pSymbolTable, PSTR buffer, unsigned cbBuffer)
       case IMAGE_SYM_DEBUG:       strcpy(tempbuffer, "DEBUG"); break;
       default: sprintf(tempbuffer, "%-5X", section);
     }
- 
+
     strncpy(buffer, tempbuffer, cbBuffer-1);
 }
- 
+
 /*
  *----------------------------------------------------------------------
  * GetSectionCharacteristics --
@@ -184,13 +185,13 @@ GetSectionCharacteristics(PIMAGE_SECTION_HEADER pSectionHeaders, int nSectNum, P
   memset(buffer,'\0',30);
   if (nSectNum > 0) {
     SectChar = pSectionHeaders[nSectNum-1].Characteristics;
- 
+
     sprintf(buffer," %x", SectChar);
     if       (SectChar & IMAGE_SCN_CNT_CODE)                strcat(buffer," Code");
     else if  (SectChar & IMAGE_SCN_CNT_INITIALIZED_DATA)    strcat(buffer," Init. data");
     else if  (SectChar & IMAGE_SCN_CNT_UNINITIALIZED_DATA ) strcat(buffer," UnInit data");
     else                                                    strcat(buffer," Unknow type");
- 
+
     if   (SectChar & IMAGE_SCN_MEM_READ)  {
               strcat(buffer," Read");
          if (SectChar & IMAGE_SCN_MEM_WRITE)
@@ -199,10 +200,10 @@ GetSectionCharacteristics(PIMAGE_SECTION_HEADER pSectionHeaders, int nSectNum, P
     }
     else if (SectChar & IMAGE_SCN_MEM_WRITE)
               strcat(buffer," Write only");
- 
+
   }
 }
- 
+
 /*
  *----------------------------------------------------------------------
  * DumpSymbolTable --
@@ -219,28 +220,28 @@ DumpSymbolTable(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionHeader
     char sectionName[10];
     char sectionCharacter[40];
     int iSectNum;
- 
+
     fprintf(fout, "Symbol Table - %X entries  (* = auxillary symbol)\n",
             cSymbols);
- 
+
     fprintf(fout,
      "Indx Name                 Value    Section    cAux  Type    Storage  Character\n"
      "---- -------------------- -------- ---------- ----- ------- -------- ---------\n");
- 
+
     /*
      * The string table apparently starts right after the symbol table
      */
     stringTable = (PSTR)&pSymbolTable[cSymbols];
- 
+
     for ( i=0; i < cSymbols; i++ ) {
         fprintf(fout, "%04X ", i);
         if ( pSymbolTable->N.Name.Short != 0 )
             fprintf(fout, "%-20.8s", pSymbolTable->N.ShortName);
         else
             fprintf(fout, "%-20s", stringTable + pSymbolTable->N.Name.Long);
- 
+
         fprintf(fout, " %08X", pSymbolTable->Value);
- 
+
         iSectNum = pSymbolTable->SectionNumber;
         GetSectionName(pSymbolTable, sectionName,
                        sizeof(sectionName));
@@ -249,14 +250,14 @@ DumpSymbolTable(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionHeader
                pSymbolTable->NumberOfAuxSymbols,
                pSymbolTable->Type,
                GetSZStorageClass(pSymbolTable->StorageClass) );
- 
+
         GetSectionCharacteristics(pSectionHeaders,iSectNum,sectionCharacter);
         fprintf(fout," hc: %s \n",sectionCharacter);
 #if 0
         if ( pSymbolTable->NumberOfAuxSymbols )
             DumpAuxSymbols(pSymbolTable);
 #endif
- 
+
         /*
          * Take into account any aux symbols
          */
@@ -265,7 +266,7 @@ DumpSymbolTable(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionHeader
         pSymbolTable++;
     }
 }
- 
+
 /*
  *----------------------------------------------------------------------
  * DumpExternals --
@@ -280,13 +281,13 @@ DumpExternals(PIMAGE_SYMBOL pSymbolTable, FILE *fout, unsigned cSymbols)
     unsigned i;
     PSTR stringTable;
     char *s, *f;
-    char symbol[1024];
- 
+    char symbol[kMaxSymbolSize];
+
     /*
      * The string table apparently starts right after the symbol table
      */
     stringTable = (PSTR)&pSymbolTable[cSymbols];
- 
+
     for ( i=0; i < cSymbols; i++ ) {
         if (pSymbolTable->SectionNumber > 0 && pSymbolTable->Type == 0x20) {
             if (pSymbolTable->StorageClass == IMAGE_SYM_CLASS_EXTERNAL) {
@@ -309,7 +310,7 @@ DumpExternals(PIMAGE_SYMBOL pSymbolTable, FILE *fout, unsigned cSymbols)
 #endif
             }
         }
- 
+
         /*
          * Take into account any aux symbols
          */
@@ -318,7 +319,7 @@ DumpExternals(PIMAGE_SYMBOL pSymbolTable, FILE *fout, unsigned cSymbols)
         pSymbolTable++;
     }
 }
- 
+
 /*
  *----------------------------------------------------------------------
  * DumpExternalsObjects --
@@ -333,15 +334,15 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
     unsigned i;
     PSTR stringTable;
     char *s, *f;
-    char symbol[1024];
+    char symbol[kMaxSymbolSize];
     DWORD SectChar;
     static int fImportFlag = -1;  /*  The status is nor defined yet */
- 
+
     /*
      * The string table apparently starts right after the symbol table
      */
     stringTable = (PSTR)&pSymbolTable[cSymbols];
- 
+
     for ( i=0; i < cSymbols; i++ ) {
         if (pSymbolTable->SectionNumber > 0 && ( pSymbolTable->Type == 0x20 || pSymbolTable->Type == 0x0)) {
           if (pSymbolTable->StorageClass == IMAGE_SYM_CLASS_EXTERNAL) {
@@ -355,7 +356,7 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
                 s = stringTable + pSymbolTable->N.Name.Long;
                 strcpy(symbol, s);
             }
- 
+
             s = symbol;
             while (isspace(*s))  s++;
 #ifdef VISUAL_CPLUSPLUS
@@ -406,7 +407,7 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
                       fprintf(fout, "\t%s DATA \n", &symbol[1]);
           }
         }
- 
+
         /*
          * Take into account any aux symbols
          */
@@ -415,7 +416,7 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
         pSymbolTable++;
     }
 }
- 
+
 /*
  *----------------------------------------------------------------------
  * DumpObjFile --
@@ -430,17 +431,17 @@ DumpObjFile(PIMAGE_FILE_HEADER pImageFileHeader, FILE *fout, int full)
     PIMAGE_SYMBOL PCOFFSymbolTable;
     PIMAGE_SECTION_HEADER PCOFFSectionHeaders;
     DWORD COFFSymbolCount;
- 
+
     PCOFFSymbolTable = (PIMAGE_SYMBOL)
         ((DWORD)pImageFileHeader + pImageFileHeader->PointerToSymbolTable);
     COFFSymbolCount = pImageFileHeader->NumberOfSymbols;
- 
+
     PCOFFSectionHeaders = (PIMAGE_SECTION_HEADER)
                           ((DWORD)pImageFileHeader          +
                                    IMAGE_SIZEOF_FILE_HEADER +
                                    pImageFileHeader->SizeOfOptionalHeader);
- 
- 
+
+
     if (full) {
         DumpSymbolTable(PCOFFSymbolTable, PCOFFSectionHeaders, fout, COFFSymbolCount);
     } else {
@@ -448,7 +449,7 @@ DumpObjFile(PIMAGE_FILE_HEADER pImageFileHeader, FILE *fout, int full)
         DumpExternalsObjects(PCOFFSymbolTable, PCOFFSectionHeaders, fout, COFFSymbolCount);
     }
 }
- 
+
 /*
  *----------------------------------------------------------------------
  * DumpFile --
@@ -464,22 +465,22 @@ DumpFile(LPSTR filename, FILE *fout, int full)
     HANDLE hFileMapping;
     LPVOID lpFileBase;
     PIMAGE_DOS_HEADER dosHeader;
- 
+
     hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL,
                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
- 
+
     if (hFile == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Couldn't open file with CreateFile()\n");
         return;
     }
- 
+
     hFileMapping = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
     if (hFileMapping == 0) {
         CloseHandle(hFile);
         fprintf(stderr, "Couldn't open file mapping with CreateFileMapping()\n");
         return;
     }
- 
+
     lpFileBase = MapViewOfFile(hFileMapping, FILE_MAP_READ, 0, 0, 0);
     if (lpFileBase == 0) {
         CloseHandle(hFileMapping);
@@ -487,7 +488,7 @@ DumpFile(LPSTR filename, FILE *fout, int full)
         fprintf(stderr, "Couldn't map view of file with MapViewOfFile()\n");
         return;
     }
- 
+
     dosHeader = (PIMAGE_DOS_HEADER)lpFileBase;
     if (dosHeader->e_magic == IMAGE_DOS_SIGNATURE) {
 #if 0
@@ -512,7 +513,7 @@ DumpFile(LPSTR filename, FILE *fout, int full)
     CloseHandle(hFileMapping);
     CloseHandle(hFile);
 }
- 
+
 void
 main(int argc, char **argv)
 {
@@ -524,13 +525,13 @@ main(int argc, char **argv)
     int full = 0;
     char *dllname = "";
     char *outfile = NULL;
- 
+
     if (argc < 3) {
       Usage:
         fprintf(stderr, "Usage: %s ?-o outfile? ?-f(ull)? <dllname> <object filenames> ..\n", argv[0]);
         exit(1);
     }
- 
+
     fargs = NULL;
     arg = 1;
     while (argv[arg][0] == '-') {
@@ -553,7 +554,7 @@ main(int argc, char **argv)
     if (arg == argc) {
         goto Usage;
     }
- 
+
     if (outfile) {
         fout = fopen(outfile, "w+");
         if (fout == NULL) {
@@ -565,7 +566,7 @@ main(int argc, char **argv)
     } else {
         fout = stdout;
     }
- 
+
     if (! full) {
         dllname = argv[arg];
         arg++;
@@ -579,7 +580,7 @@ main(int argc, char **argv)
         fprintf(fout, "DATA PRELOAD MOVEABLE MULTIPLE\n\n");
 #endif
     }
- 
+
     for (; arg < argc; arg++) {
     WIN32_FIND_DATA FindFileData;
     HANDLE SearchFile;
@@ -628,8 +629,8 @@ main(int argc, char **argv)
                path[i+1] = '\0';
                DumpFile(strcat(path, FindFileData.cFileName), fout, full);
              } while (FindNextFile(SearchFile,&FindFileData));
- 
- 
+
+
              FindClose(SearchFile);
            }
     }
