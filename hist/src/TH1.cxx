@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.183 2004/05/26 11:30:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.184 2004/06/12 14:56:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5420,7 +5420,7 @@ void TH1::SetNameTitle(const char *name, const char *title)
 //  We must update the hashlist if we change the name
    if (fDirectory) fDirectory->GetList()->Remove(this);
    fName  = name;
-   fTitle = title;
+   SetTitle(title);
    if (fDirectory) fDirectory->GetList()->Add(this);
 }
 
