@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.cc,v 1.42 2002/09/05 04:33:27 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.43 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,10 +54,10 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
   }
   delete iter ;
 
+  _compiled = kTRUE ;
   if (Compile()) {
     cout << "RooFormula::RooFormula(" << GetName() << "): compile error" << endl ;
     _isOK = kFALSE ;
-    _compiled = kTRUE ;
     return ;
   }
 }
