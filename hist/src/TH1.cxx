@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.170 2004/02/27 04:59:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.171 2004/03/10 16:12:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3686,8 +3686,34 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
       xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
    }
+   // save the TAttAxis members (reset by SetBins)
+        Int_t    Ndivisions  = fXaxis.GetNdivisions();   
+        Color_t  AxisColor   = fXaxis.GetAxisColor();    
+        Color_t  LabelColor  = fXaxis.GetLabelColor();   
+        Style_t  LabelFont   = fXaxis.GetLabelFont();    
+        Float_t  LabelOffset = fXaxis.GetLabelOffset();  
+        Float_t  LabelSize   = fXaxis.GetLabelSize();    
+        Float_t  TickLength  = fXaxis.GetTickLength();   
+        Float_t  TitleOffset = fXaxis.GetTitleOffset();  
+        Float_t  TitleSize   = fXaxis.GetTitleSize();    
+        Color_t  TitleColor  = fXaxis.GetTitleColor();   
+		Style_t  TitleFont   = fXaxis.GetTitleFont();    
+
    hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
 
+   // Restore axis attributes
+        fXaxis.SetNdivisions(Ndivisions);
+        fXaxis.SetAxisColor(AxisColor);
+        fXaxis.SetLabelColor(LabelColor);
+        fXaxis.SetLabelFont(LabelFont);
+        fXaxis.SetLabelOffset(LabelOffset);
+        fXaxis.SetLabelSize(LabelSize);
+        fXaxis.SetTickLength(TickLength);
+        fXaxis.SetTitleOffset(TitleOffset);
+        fXaxis.SetTitleSize(TitleSize);
+        fXaxis.SetTitleColor(TitleColor);
+        fXaxis.SetTitleFont(TitleFont);
+  
    // copy merged bin contents (ignore under/overflows)
    Int_t oldbin = 0;
    Double_t binContent, binError;
