@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:$:$Id:$
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.1 2002/02/18 18:02:57 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -29,6 +29,17 @@ THbookBranch::~THbookBranch()
 
 
 //______________________________________________________________________________
+void THbookBranch::Browse(TBrowser *b)
+{
+   // Browser interface.
+   THbookTree *tree = (THbookTree*)GetTree();
+   THbookFile *file = tree->GetHbookFile();
+   file->cd();
+   
+   TBranch::Browse(b);
+}
+
+//______________________________________________________________________________
 Int_t THbookBranch::GetEntry(Int_t entry, Int_t getall)
 {
    THbookTree *tree = (THbookTree*)GetTree();
@@ -36,6 +47,7 @@ Int_t THbookBranch::GetEntry(Int_t entry, Int_t getall)
    if (tree->GetType() == 0) {
       return file->GetEntry(entry,tree->GetID(),0,tree->GetX());
    } else {
-      return file->GetEntryBranch(entry,tree->GetID(),fBlockName.Data(),GetName());
+      tree->InitBranches();
+      return file->GetEntryBranch(entry,tree->GetID());
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.3 2002/02/18 23:11:50 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.4 2002/02/19 17:08:08 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+////////////////////////////////////////////////////////////////////////
 //  This class is an interface to the Hbook objects in Hbook files
 //  Any Hbook object (1-D, 2-D, Profile, RWN or CWN can be read
 //  NB: a THbookFile can only be used in READ mode
@@ -23,18 +24,27 @@
 //  THbookTree *T = (THbookTree*)f.Get(111); //import ntuple header
 //  T->Print();  //show the Hbook ntuple variables
 //  T->Draw("x","y<0"); // as in normal TTree::Draw
+//
+//  THbookFile can be browsed via TBrowser.
+//  
+////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
+#include "TROOT.h"
 #include "THbookFile.h"
 #include "TH2.h"
 #include "THbookTree.h"
 #include "THbookBranch.h"
+#include "THbookKey.h"
 #include "TGraph.h"
 #include "TProfile.h"
+#include "TTreeFormula.h"
 #include "TLeafI.h"
+#include "TBrowser.h"
+#include "TSystem.h"
 
 #define PAWC_SIZE 2000000
 
@@ -75,6 +85,7 @@ float xmin,xmax,ymin,ymax;
 const Int_t kMIN1 = 7;
 const Int_t kMAX1 = 8;
 
+static Int_t lastentry = -1;
 
 //  Define the names of the Fortran subroutine and functions for the different OSs
 
@@ -82,14 +93,15 @@ const Int_t kMAX1 = 8;
 # define hlimit  hlimit_
 # define hldir   hldir_
 # define hropen  hropen_
+# define hrend   hrend_
 # define hrin    hrin_
 # define hnoent  hnoent_
 # define hgive   hgive_
 # define hgiven  hgiven_
-# define hprntu  hprntu_
 # define hgnpar  hgnpar_
 # define hgnf    hgnf_
 # define hgnt    hgnt_
+# define hgntf   hgntf_
 # define hgnt1   hgnt1_
 # define rzink   rzink_
 # define hdcofl  hdcofl_
@@ -97,6 +109,7 @@ const Int_t kMAX1 = 8;
 # define hminim  hminim_
 # define hdelet  hdelet_
 # define hntvar2 hntvar2_
+# define hntvar3 hntvar3_
 # define hbname  hbname_
 # define hbnamc  hbnamc_
 # define hbnam   hbnam_
@@ -108,8 +121,6 @@ const Int_t kMAX1 = 8;
 # define hijxy   hijxy_
 # define hije    hije_
 # define hcdir   hcdir_
-# define zitoh   zitoh_
-# define uhtoc   uhtoc_
 
 # define type_of_call
 # define DEFCHAR  const char*
@@ -118,14 +129,15 @@ const Int_t kMAX1 = 8;
 # define hlimit  HLIMIT
 # define hldir   HLDIR
 # define hropen  HROPEN
+# define hrend   HREND
 # define hrin    HRIN
 # define hnoent  HNOENT
 # define hgive   HGIVE
 # define hgiven  HGIVEN
-# define hprntu  HPRNTU
 # define hgnpar  HGNPAR
 # define hgnf    HGNF
 # define hgnt    HGNT
+# define hgntf   HGNTF
 # define hgnt1   HGNT1
 # define rzink   RZINK
 # define hdcofl  HDCOFL
@@ -133,6 +145,7 @@ const Int_t kMAX1 = 8;
 # define hminim  HMINIM
 # define hdelet  HDELET
 # define hntvar2 HNTVAR2
+# define hntvar3 HNTVAR3
 # define hbname  HBNAME
 # define hbnamc  HBNAMC
 # define hbnam   HBNAM
@@ -144,8 +157,6 @@ const Int_t kMAX1 = 8;
 # define hijxy   HIJXY
 # define hije    HIJE
 # define hcdir   HCDIR
-# define zitoh   ZITOH
-# define uhtoc   UHTOC
 # define type_of_call  _stdcall
 # define DEFCHAR  const char*, const int
 # define PASSCHAR(string) string, strlen(string)
@@ -155,9 +166,11 @@ extern "C" void  type_of_call hlimit(const int&);
 #ifndef WIN32
 extern "C" void  type_of_call hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,
                         const int&,const int&,const int,const int,const int);
+extern "C" void  type_of_call hrend(DEFCHAR,const int);
 #else
 extern "C" void  type_of_call hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,
                         const int&,const int&);
+extern "C" void  type_of_call hrend(DEFCHAR);
 #endif
 
 extern "C" void  type_of_call hrin(const int&,const int&,const int&);
@@ -183,8 +196,10 @@ extern "C" void  type_of_call hgnt1(const int&,DEFCHAR,DEFCHAR,const int&,const 
 
 #ifndef WIN32
 extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,const int,const int, const int);
+extern "C" void  type_of_call hntvar3(const int&,const int&,DEFCHAR, const int);
 #else
 extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&);
+extern "C" void  type_of_call hntvar3(const int&,const int&,DEFCHAR);
 #endif
 
 #ifndef WIN32
@@ -193,10 +208,10 @@ extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const 
 extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&);
 #endif
 
-extern "C" void  type_of_call hprntu(const int&);
 extern "C" void  type_of_call hgnpar(const int&,const char *,const int);
 extern "C" void  type_of_call hgnf(const int&,const int&,const float&,const int&);
 extern "C" void  type_of_call hgnt(const int&,const int&,const int&);
+extern "C" void  type_of_call hgntf(const int&,const int&,const int&);
 extern "C" void  type_of_call rzink(const int&,const int&,const char *,const int);
 extern "C" void  type_of_call hdcofl();
 extern "C" void  type_of_call hmaxim(const int&,const float&);
@@ -217,13 +232,6 @@ extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR);
 extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR);
 #endif
 
-extern "C" void  type_of_call zitoh(const int&,const int&,const int&);
-#ifndef WIN32
-extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&,const int);
-#else
-extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&);
-#endif
-
 Bool_t THbookFile::fgPawInit = kFALSE;
 Int_t  *THbookFile::fgLuns   = 0;
 R__EXTERN TTree *gTree;
@@ -233,15 +241,18 @@ ClassImp(THbookFile)
 //______________________________________________________________________________
 THbookFile::THbookFile() : TNamed()
 {
+   fList = new TList();
+   fKeys = new TList();
 }
 
 //1_____________________________________________________________________________
 THbookFile::THbookFile(const char *fname, Int_t lrecl)
            :TNamed(fname,"")
 {
-//  Constructor for an HBook TFile object
+//  Constructor for an HBook file object
 
   // Initialize the Hbook/Zebra store
+   Int_t i;
    if (!fgPawInit) {
      fgPawInit = kTRUE;
      lq = &pawc[9];
@@ -251,11 +262,12 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
      int pawc_size = PAWC_SIZE;
      hlimit(pawc_size);
      fgLuns = new Int_t[10];
+     for (i=0;i<10;i++) fgLuns[i] = 0;
   }
 
   //find a free logical unit (max 10)
   fLun = 0;
-  for (Int_t i=0;i<10;i++) {
+  for (i=0;i<10;i++) {
      if (fgLuns[i] == 0) {
         fLun = 10+i;
         fgLuns[i] = 1;
@@ -268,16 +280,34 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
   }
   char topdir[20];
   sprintf(topdir,"lun%d",fLun);
+  
   Int_t ier;
 #ifndef WIN32
   hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier,strlen(topdir),strlen(fname),1);
 #else
   hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier);
 #endif
-
+  sprintf(topdir,"//lun%d",fLun);
+  SetTitle(topdir);
+  fCurDir = topdir;
+  
   if (ier) printf (" Error on hropen was %d \n", ier);
   if (quest[0]) {
      printf("Error cannot open input file: %s\n",fname);
+  }
+  
+  gROOT->GetListOfBrowsables()->Add(this,fname);
+
+  fList = new TList();
+  fKeys = new TList();
+  for (Int_t key=1;key<1000000;key++) {
+     int z0 = 0;
+     rzink(key,z0,"S",1);
+     if (quest[0]) break;
+     if (quest[13] & 8) continue;
+     Int_t id = quest[20];
+     THbookKey *key = new THbookKey(id,this);
+     fKeys->Add(key);
   }
 }
 
@@ -285,33 +315,95 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
 THbookFile::~THbookFile()
 {
 
-   Close();
+   Close(); 
+   delete fList;
+   delete fKeys;
 }
 
+//______________________________________________________________________________
+void THbookFile::Browse(TBrowser *b)
+{
+// to be implemented
+
+   if( b ) {
+        b->Add(fList, "memory");
+        b->Add(fKeys, "IDs on disk");
+   } 
+   cd();  
+}
 
 //______________________________________________________________________________
 Bool_t THbookFile::cd(const char *dirname)
 {
 // change directory to dirname
 
+   Int_t nch = strlen(dirname);
+   if (nch == 0) {
 #ifndef WIN32
-  hcdir(PASSCHAR(dirname),PASSCHAR(" "),strlen(dirname),1);
+       hcdir(PASSCHAR(fCurDir.Data()),PASSCHAR(" "),fCurDir.Length(),1);
+#else
+       hcdir(PASSCHAR(fCurDir.Data()),PASSCHAR(" "));
+#endif
+       return kTRUE;      
+   }
+   
+   char cdir[512];
+   Int_t i;
+   for (i=0;i<512;i++) cdir[i] = ' ';
+   cdir[511] = 0;
+#ifndef WIN32
+  hcdir(PASSCHAR(dirname),PASSCHAR(" "),nch,1);
+  hcdir(PASSCHAR(cdir),PASSCHAR("R"),511,1);
 #else
   hcdir(PASSCHAR(dirname),PASSCHAR(" "));
+  hcdir(PASSCHAR(cdir),PASSCHAR("R"));
 #endif
-   return kTRUE;
+  for (i=510;i>=0;i--) {
+     if (cdir[i] != ' ') break;
+     cdir[i] = 0;
+  }  
+  fCurDir = cdir; 
+  printf("fCurdir=%s\n",fCurDir.Data());
+     
+  return kTRUE;
 }
 
 //______________________________________________________________________________
 void THbookFile::Close(Option_t *)
 {
-// here one should close the Hbook file (fortran)
+// Close the Hbook file
+   
+   cd();
+   
+   fList->Delete();
+   fKeys->Delete();
+   fgLuns[fLun-10] = 0;
+   hdelet(0);
+#ifndef WIN32
+  hrend(PASSCHAR(GetTitle()),strlen(GetTitle()));
+#else
+  hrend(PASSCHAR(GetTitle()));
+#endif
 }
 
 //______________________________________________________________________________
 void THbookFile::DeleteID(Int_t id)
 {
    hdelet(id);
+}
+
+//______________________________________________________________________________
+TObject *THbookFile::FindObject(const char *name) const
+{
+// return object with name in fList in memory
+   return fList->FindObject(name);
+}
+
+//______________________________________________________________________________
+TObject *THbookFile::FindObject(const TObject *obj) const
+{
+// return object with pointer obj in fList in memory
+   return fList->FindObject(obj);
 }
 
 //______________________________________________________________________________
@@ -339,29 +431,33 @@ TObject *THbookFile::Get(Int_t idd)
   hdcofl();
   lcid  = hcbook[10];
   lcont = lq[lcid-1];
-  TObject *obj;
+  TObject *obj = 0;
   if (hcbits[3]) {
      if (iq[lcid-2] == 2) obj = ConvertRWN(id);
      else                 obj = ConvertCWN(id);
      //hdelet(id); //cannot be deleted here since used in GetEntry
+     if (obj) fList->Add(obj);
      return obj;
   }
   if (hcbits[0] && hcbits[7]) {
      obj = ConvertProfile(id);
      hdelet(id);
+     if (obj) fList->Add(obj);
      return obj;
   }
   if (hcbits[0]) {
      obj = Convert1D(id);
      hdelet(id);
+     if (obj) fList->Add(obj);
      return obj;
   }
   if (hcbits[1] || hcbits[2]) {
      obj = Convert2D(id);
      hdelet(id);
+     if (obj) fList->Add(obj);
      return obj;
   }
-  return 0;
+  return obj;
 }
 
 
@@ -380,18 +476,86 @@ Int_t THbookFile::GetEntry(Int_t entry, Int_t id, Int_t atype, Float_t *x)
 }
 
 //______________________________________________________________________________
-Int_t THbookFile::GetEntryBranch(Int_t entry, Int_t id, const char *blockname, const char *branchname)
+Int_t THbookFile::GetEntryBranch(Int_t entry, Int_t id)
 {
 // Read in memory only the branch bname
 
+   if (entry == lastentry) return 0;
+   lastentry = entry;
    Int_t ier = 0;
-#ifndef WIN32
-   hgnt1(id,PASSCHAR(blockname),PASSCHAR(branchname),0,-1,entry+1,ier,strlen(blockname),strlen(branchname));
-#else
-   hgnt1(id,PASSCHAR(blockname),PASSCHAR(branchname),0,-1,entry+1,ier);
-#endif
+   //uses the fast read method using the Hbook tables computed in InitLeaves
+   hgntf(id,entry+1,ier);
+   //old alternative slow method
+//#ifndef WIN32
+//   hgnt1(id,PASSCHAR(blockname),PASSCHAR(branchname),0,-1,entry+1,ier,strlen(blockname),strlen(branchname));
+//#else
+//   hgnt1(id,PASSCHAR(blockname),PASSCHAR(branchname),0,-1,entry+1,ier);
+//#endif
    return 0;
 }
+
+
+//______________________________________________________________________________
+void THbookFile::InitLeaves(Int_t id, Int_t var, TTreeFormula *formula)
+{
+// This function is called from the first entry in TTreePlayer::InitLoop 
+// It analyzes the list of variables involved in the current query
+// and pre-process the internal Hbook tables to speed-up the search
+// at the next entries.
+   
+  if (!formula) return;
+   Int_t ncodes = formula->GetNcodes();
+   for (Int_t i=1;i<=ncodes;i++) {
+      TLeaf *leaf = formula->GetLeaf(i-1);
+      if (!leaf) continue;
+      if (var == 5) {
+         //leafcount may be null in case of a fix size array
+         if (leaf->GetLeafCount()) leaf = leaf->GetLeafCount();
+      }
+      Int_t last = 0;
+      if (var == 1 && i == ncodes) last = 1;
+      hntvar3(id,last,PASSCHAR(leaf->GetName()),strlen(leaf->GetName()));
+   }
+}
+
+
+//______________________________________________________________________________
+TFile *THbookFile::Convert2root(const char *rootname, Int_t lrecl, Option_t *option)
+{
+// Convert this Hbook file to a Root file with name rootname.
+// if rootname="', rootname = hbook file name with .root instead of .hbook
+// By default, the Root file is connected and returned 
+// option:
+//       - "NO" do not connect the Root file
+//       - "C"  do not compress file (default is to compress)
+//       - "L"  do not convert names to lower case (default is to convert)
+   
+   TString opt = option;
+   opt.ToLower();
+
+   char cmd[512];
+   char rfile[512];
+   Int_t nch = strlen(rootname);
+   if (nch) {
+      strcpy(rfile,rootname);
+   } else {
+      strcpy(rfile,GetName());
+      char *dot = strrchr(rfile,'.');
+      if (dot) strcpy(dot+1,"root");
+      else     strcat(rfile,".root");
+   }
+
+   sprintf(cmd,"h2root %s %s",GetName(),rfile);
+   if (opt.Contains("c")) strcat (cmd," 0");
+   if (opt.Contains("l")) strcat (cmd," 0");
+   
+   gSystem->Exec(cmd);
+   
+   if (opt.Contains("no")) return 0;
+   TFile *f = new TFile(rfile);
+   if (f->IsZombie()) {delete f; f = 0;}
+   return f;
+}      
 
 
 //______________________________________________________________________________
@@ -404,7 +568,6 @@ TObject *THbookFile::ConvertCWN(Int_t id)
   int i,j;
   int nsub,itype,isize,ielem;
   char *chtag_out;
-  //float *x;
   float rmin[1000], rmax[1000];
 
   if (id > 0) sprintf(idname,"h%d",id);
@@ -558,7 +721,7 @@ TObject *THbookFile::ConvertRWN(Int_t id)
   if (id > 0) sprintf(idname,"h%d",id);
   else        sprintf(idname,"h_%d",-id);
   hnoent(id,nentries);
-  printf(" Converting RWN with ID= %d, nentries = %d\n",id,nentries);
+  //printf(" Converting RWN with ID= %d, nentries = %d\n",id,nentries);
   nvar=0;
 #ifndef WIN32
   hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
@@ -752,13 +915,23 @@ TObject *THbookFile::Convert2D(Int_t id)
 }
 
 //______________________________________________________________________________
-void THbookFile::ls(Option_t *option) const
+void THbookFile::ls(const char *path) const
 {
 // List contents of Hbook directory
 
+   Int_t nch = strlen(path);
+   if (nch == 0) {
 #ifndef WIN32
-  hldir(PASSCHAR(" "),PASSCHAR(option),1,strlen(option));
+       hldir(PASSCHAR(fCurDir.Data()),PASSCHAR("T"),fCurDir.Length(),1);
 #else
-  hldir(PASSCHAR(" "),PASSCHAR(option));
+       hldir(PASSCHAR(fCurDir.Data()),PASSCHAR("T"));
+#endif
+       return;
+   }
+   
+#ifndef WIN32
+  hldir(PASSCHAR(path),PASSCHAR("T"),strlen(path),1);
+#else
+  hldir(PASSCHAR(path),PASSCHAR("T"));
 #endif
 }

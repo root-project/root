@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:$:$Id:$
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.1 2002/02/18 18:02:57 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 
 #include "THbookTree.h"
 #include "THbookBranch.h"
+#include "TTreeFormula.h"
 
 
 ClassImp(THbookTree)
@@ -32,6 +33,7 @@ THbookTree::THbookTree(): TTree()
    fType = 0;
    fX    = 0;
    fFile = 0;
+   fInit = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -42,6 +44,7 @@ THbookTree::THbookTree(const char *name,Int_t id)
    fType = 0;
    fX    = 0;
    fFile = 0;
+   fInit = kFALSE;
 }
 
 
@@ -59,6 +62,20 @@ Int_t THbookTree::GetEntry(Int_t entry, Int_t getall)
    return fFile->GetEntry(entry,fID,fType,GetX());
 }
 
+
+//______________________________________________________________________________
+void THbookTree::InitBranches()
+{
+   Int_t nfill = GetPlayer()->GetNfill();
+   if (nfill > 0) {fInit = kFALSE; return;}
+   if (fInit) return;
+   fInit = kTRUE;
+   fFile->InitLeaves(fID, 5,GetPlayer()->GetMultiplicity());
+   fFile->InitLeaves(fID, 0,GetPlayer()->GetSelect());
+   fFile->InitLeaves(fID, 3,GetPlayer()->GetVar3());
+   fFile->InitLeaves(fID, 2,GetPlayer()->GetVar2());
+   fFile->InitLeaves(fID, 1,GetPlayer()->GetVar1());
+}
 
 //______________________________________________________________________________
 void THbookTree::Print(Option_t *option) const

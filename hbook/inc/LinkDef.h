@@ -7,5 +7,6 @@
 #pragma link C++ class THbookFile+;
 #pragma link C++ class THbookTree+;
 #pragma link C++ class THbookBranch+;
+#pragma link C++ class THbookKey+;
 
 #endif

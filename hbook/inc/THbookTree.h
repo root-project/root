@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:$:$Id:$
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.h,v 1.1 2002/02/18 18:02:57 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -37,6 +37,7 @@ protected:
    Int_t       fID;         //Hbook identifier
    Int_t       fType;       //RWN (0) or CWN (1)
    char       *fX;          //storage area for RWN
+   Bool_t      fInit;       //flag to know if branches computed
    THbookFile *fFile;       //pointer to Hbook file
 
 public:
@@ -48,6 +49,7 @@ public:
    virtual Int_t     GetID() {return fID;}
    virtual Int_t     GetType() {return fType;}
            Float_t  *GetX() {return (Float_t*)fX;}
+   virtual void      InitBranches();
            char     *MakeX(Int_t nvars) {fX = new char[nvars]; return fX;}
    virtual void      Print(Option_t *option="") const;
    virtual void      SetEntries(Int_t n);

@@ -162,3 +162,29 @@
 *
       END
 
+      subroutine hntvar3(id,last,chvar)
+      character *80 allvars
+      common/callvars/allvars(100)
+      common/calloff/ioffset(100)
+      character *(*) chvar
+      integer id,ivar,last
+      save ivar
+      data ivar/0/
+      if (ivar.ne.0) then
+         if (allvars(ivar).ne.chvar) then
+            ivar = ivar+1
+            allvars(ivar) = chvar
+            ioffset(ivar) = 0
+         endif
+      else
+         ivar = ivar+1
+         allvars(ivar) = chvar
+         ioffset(ivar) = 0
+      endif
+      ier = 0
+      if (last.ne.0) then
+         call hgnt1(id,'*',allvars,ioffset,-ivar,1,ier)
+         allvars(1) = ''
+         ivar = 0
+      endif
+      end
