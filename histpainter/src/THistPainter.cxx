@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.118 2003/02/12 11:19:56 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.119 2003/02/12 12:05:32 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1304,11 +1304,14 @@ void THistPainter::Paint(Option_t *option)
    PaintFrame();
 //    -----
 //          Paint histogram axis only
-   PaintAxis(); //    Draw the axes
    if (Hoption.Axis > 0) {
+      PaintAxis(kFALSE);
       delete [] fXbuf; delete [] fYbuf;
       return;
    }
+   Bool_t gridx = gPad->GetGridx();
+   Bool_t gridy = gPad->GetGridy();
+   if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
 
 //    -----
 //          test for options BAR or HBAR
@@ -1338,6 +1341,12 @@ void THistPainter::Paint(Option_t *option)
       Hparam  = hparsave;
    }
 
+   if (gridx) gPad->SetGridx(0);
+   if (gridy) gPad->SetGridy(0);
+   PaintAxis(kFALSE);
+   if (gridx) gPad->SetGridx(1);
+   if (gridy) gPad->SetGridy(1);
+   
    PaintTitle();    //    Draw histogram title
      //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
@@ -1448,7 +1457,7 @@ void THistPainter::PaintArrows(Option_t *)
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintAxis()
+void THistPainter::PaintAxis(Bool_t drawGridOnly)
 {
 //    *-*-*-*-*-*-*-*-*-*Draw axis of an histogram*-*-*-*-*-*-*-*-*-*-*-*-*
 //                       =========================
@@ -1526,7 +1535,7 @@ void THistPainter::PaintAxis()
       axis.SetTitle("");
       axis.PaintAxis(axmin, aymax,
                      axmax, aymax,
-                     uminsave, umaxsave,  ndivsave, chopt, gridl);
+                     uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
    }
 //     Y axis
    axis.ImportAxisAttributes(fYaxis);
@@ -1567,7 +1576,7 @@ void THistPainter::PaintAxis()
    axis.SetOption(chopt);
    axis.PaintAxis(axmin, aymin,
                   axmin, aymax,
-                  umin, umax,  ndiv, chopt, gridl);
+                  umin, umax,  ndiv, chopt, gridl, drawGridOnly);
    if (gPad->GetTicky()) {
       if (gPad->GetTicky() < 2) {
          strcat(chopt, "U");
@@ -1579,7 +1588,7 @@ void THistPainter::PaintAxis()
       axis.SetTitle("");
       axis.PaintAxis(axmax, aymin,
                      axmax, aymax,
-                     uminsave, umaxsave,  ndivsave, chopt, gridl);
+                     uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
    }
 }
 
@@ -1693,7 +1702,7 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintFrame();
-   PaintAxis();
+   PaintAxis(kFALSE);
 
    Int_t bar = Hoption.Bar - 20;
    Double_t xmin,xmax,ymin,ymax,umin,umax,w;
@@ -4640,7 +4649,7 @@ void THistPainter::PaintTable(Option_t *option)
    if (Hoption.Lego)    PaintLego(option);
    if (Hoption.Surf && !Hoption.Contour)    PaintSurface(option);
 
-   if (!Hoption.Lego && !Hoption.Surf) PaintAxis();     //    Draw the axes
+   if (!Hoption.Lego && !Hoption.Surf) PaintAxis(kFALSE);     //    Draw the axes
 
    PaintTitle();    //    Draw histogram title
 //   PaintFile();     //    Draw Current File name corresp to current directory
