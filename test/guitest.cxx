@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.4 2000/07/13 20:55:47 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.5 2000/09/29 08:58:40 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -26,6 +26,7 @@
 #include <TGFileDialog.h>
 #include <TGTextEdit.h>
 #include <TGShutter.h>
+#include <TGProgressBar.h>
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
 #include <TH1.h>
@@ -45,6 +46,7 @@ enum ETestCommandIdentifiers {
    M_TEST_MSGBOX,
    M_TEST_SLIDER,
    M_TEST_SHUTTER,
+   M_TEST_PROGRESS,
 
    M_HELP_CONTENTS,
    M_HELP_SEARCH,
@@ -294,6 +296,23 @@ public:
    void AddShutterItem(const char *name, shutterData_t data[]);
 };
 
+class TestProgress : public TGTransientFrame {
+
+private:
+   TGHorizontalFrame *fHframe1;
+   TGVerticalFrame   *fVframe1;
+   TGLayoutHints     *fHint1, *fHint2, *fHint3, *fHint4;
+   TGHProgressBar    *fHProg1, *fHProg2;
+   TGVProgressBar    *fVProg1, *fVProg2;
+   TGTextButton      *fGO;
+
+public:
+   TestProgress(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
+   virtual ~TestProgress();
+
+   virtual void CloseWindow();
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+};
 
 class Editor : public TGTransientFrame {
 
@@ -372,6 +391,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Message Box...", M_TEST_MSGBOX);
    fMenuTest->AddEntry("&Sliders...", M_TEST_SLIDER);
    fMenuTest->AddEntry("Sh&utter...", M_TEST_SHUTTER);
+   fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
    fMenuTest->AddSeparator();
    fMenuTest->AddPopup("&Cascaded menus", fCascadeMenu);
 
@@ -534,6 +554,10 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_TEST_SHUTTER:
                      new TestShutter(fClient->GetRoot(), this, 400, 200);
+                     break;
+
+                  case M_TEST_PROGRESS:
+                     new TestProgress(fClient->GetRoot(), this, 600, 300);
                      break;
 
                   default:
@@ -1406,6 +1430,122 @@ TestShutter::~TestShutter()
    delete fLayout;
    delete fShutter;
    // add other items to be deleted
+}
+
+TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
+                           UInt_t w, UInt_t h) :
+    TGTransientFrame(p, main, w, h)
+{
+   // Dialog used to test the different supported progress bars.
+
+   ChangeOptions((GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
+
+   fHframe1 = new TGHorizontalFrame(this, 0, 0, 0);
+
+   fVProg1 = new TGVProgressBar(fHframe1, TGProgressBar::kProgressBarWidth, 300);
+   fVProg1->ShowPosition();
+   fVProg2 = new TGVProgressBar(fHframe1, TGProgressBar::kProgressBarWidth, 300);
+   fVProg2->SetFillType(TGProgressBar::kBlockFill);
+
+   fHframe1->Resize(300, 300);
+
+   fVframe1 = new TGVerticalFrame(this, 0, 0, 0);
+
+   fHProg1 = new TGHProgressBar(fVframe1, 300);
+   fHProg2 = new TGHProgressBar(fVframe1, 300);
+   fVProg2->SetFillType(TGProgressBar::kBlockFill);
+   fVProg2->ShowPosition();
+
+   fGO = new TGTextButton(fVframe1, "Go", 10);
+   fGO->Associate(this);
+
+   fVframe1->Resize(300, 300);
+
+   fHint1 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandY, 5, 10, 5, 5);
+   fHint2 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 5, 5,  5, 10);
+   fHint3 = new TGLayoutHints(kLHintsTop | kLHintsRight, 0, 50, 50, 0);
+   fHint4 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 0, 0);
+
+   fHframe1->AddFrame(fVProg1, fHint1);
+   fHframe1->AddFrame(fVProg2, fHint1);
+
+   fVframe1->AddFrame(fHProg1, fHint2);
+   fVframe1->AddFrame(fHProg2, fHint2);
+   fVframe1->AddFrame(fGO,     fHint3);
+
+   AddFrame(fHframe1, fHint4);
+   AddFrame(fVframe1, fHint4);
+
+   SetWindowName("Progress Test");
+   TGDimension size = GetDefaultSize();
+   Resize(size);
+
+   SetWMSize(size.fWidth, size.fHeight);
+   SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
+   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
+                              kMWMDecorMinimize | kMWMDecorMenu,
+               kMWMFuncAll |  kMWMFuncResize    | kMWMFuncMaximize |
+                              kMWMFuncMinimize,
+               kMWMInputModeless);
+
+   // position relative to the parent's window
+   Window_t wdummy;
+   int ax, ay;
+   gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
+                          (((TGFrame *) main)->GetWidth() - fWidth) >> 1,
+                          (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                          ax, ay, wdummy);
+   Move(ax, ay);
+
+   MapSubwindows();
+   MapWindow();
+
+   fClient->WaitFor(this);
+}
+
+TestProgress::~TestProgress()
+{
+   // Delete dialog.
+
+   delete fHframe1;
+   delete fVframe1;
+   delete fVProg1; delete fVProg2;
+   delete fHProg1; delete fHProg2;
+   delete fGO;
+   delete fHint1; delete fHint2; delete fHint3; delete fHint4;
+}
+
+void TestProgress::CloseWindow()
+{
+   // Called when window is closed via the window manager.
+
+   delete this;
+}
+
+Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+{
+   // Process slider messages.
+
+   switch (GET_MSG(msg)) {
+      case kC_COMMAND:
+         switch (GET_SUBMSG(msg)) {
+            case kCM_BUTTON:
+               switch (parm1) {
+                  case 10:
+                     printf("GO\n");
+                     break;
+                  default:
+                     break;
+               }
+               break;
+            default:
+               break;
+         }
+         break;
+      default:
+         break;
+   }
+   return kTRUE;
 }
 
 Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
