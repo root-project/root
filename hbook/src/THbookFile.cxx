@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.16 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.17 2003/01/20 10:25:57 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -874,8 +874,8 @@ TObject *THbookFile::ConvertProfile(Int_t id)
      for (Int_t j=0;j<n;j++) {
         p->Fill(x+offsetx,y);
      }
-     Float_t content = q[lcont+kCON1+i];
-     Float_t error   = TMath::Sqrt(q[lw+i]);
+     Double_t content = q[lcont+kCON1+i];
+     Double_t error   = TMath::Sqrt((Double_t)(q[lw+i]));
      p->SetBinContent(i,content);
      p->SetBinError(i,error);
   }
