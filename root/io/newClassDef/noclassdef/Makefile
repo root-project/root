@@ -1,8 +1,15 @@
+TEST_TARGETS += noclassdef
+CLEAN_TARGETS += local_clean
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 local_all: test
 .PHONY: main
 
-include $(ROOTSYS)/test/Makefile.arch
+#include $(ROOTSYS)/test/Makefile.arch
 
 #arch := $(shell grep arch `which root-config` | head -1 | cut -d'=' -f2-)
 arch := $(shell root-config --arch)
@@ -73,11 +80,10 @@ test2:
 	echo $(arch)
 
 all:	driver$(ExeSuf) libIotest.$(DllSuf)
-	./driver$(ExeSuf)
 
 shared: libIotest.$(DllSuf)
 
-test:   driver$(ExeSuf)
+noclassdef:   driver$(ExeSuf)
 	rm -f driver.output
 	./driver$(ExeSuf) 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > driver.output 
 ifeq ($(PLATFORM),win32)
@@ -85,7 +91,7 @@ ifeq ($(PLATFORM),win32)
 else
 	diff good.linux.output driver.output
 endif
-	@echo "All test succeeded in `pwd`"
+#	@echo "All test succeeded in `pwd`"
 
 otest:   driver$(ExeSuf)
 	rm -f odriver.output
@@ -95,14 +101,14 @@ ifeq ($(PLATFORM),win32)
 else
 	diff good.linux.output odriver.output
 endif
-	@echo "Testing reading old succeeded in `pwd`"
+	$(CMDECHO)echo "Testing reading old succeeded in `pwd`"
 
 
 
 local_clean:
-	@rm -rf *.o *.so ti_files ii_files 
-	@rm -rf mydict.* driver$(ExeSuf) *~
-	@rm -rf *.obj .def *.root *.mode
+	$(CMDECHO)rm -rf *.o *.so ti_files ii_files 
+	$(CMDECHO)rm -rf mydict.* driver$(ExeSuf) *~
+	$(CMDECHO)rm -rf *.obj .def *.root *.mode
 
 clean: local_clean
 
@@ -111,7 +117,7 @@ clean: local_clean
 
 
 driver$(ExeSuf): main.cc mydict.cc 
-	@$(CXX)  $^ $(CFLAGS) $(CXXFLAGS) $(CLDFLAGS) $(LIBS) $(OutPutOpt)$@
+	$(CMDECHO)$(CXX)  $^ $(CFLAGS) $(CXXFLAGS) $(CLDFLAGS) $(ROOTLIBS) $(OutPutOpt)$@
 
 stuff:
 ifeq ($(ARCH),aix)
@@ -137,7 +143,7 @@ else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
-		@$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
 endif
 endif
 endif

@@ -40,7 +40,7 @@ main: $(SHARED_LIBS)
 #	echo $(SHARED_LIBS)
 
 new: main Run.C
-	@root -q -l -b "Run.C(\"$(DllSuf)\")"
+	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")"
 #@echo "All test succeeded in `pwd`"
 
 $(DICTS) : %dict.C : %.h %linkdef.h
@@ -79,13 +79,13 @@ $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 #		@$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) $^ $(OutPutOpt)$@
 
 local_clean:
-	@rm -rf ti_files $(DICTS) $(DICTS_H) ii_files ti_files
-	@rm -rf *.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~
-	@rm -rf *.exp .def
+	$(CMDECHO)rm -rf ti_files $(DICTS) $(DICTS_H) ii_files ti_files
+	$(CMDECHO)rm -rf *.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~
+	$(CMDECHO)rm -rf *.exp .def
 
 clean: local_clean
 
 
 .C.$(ObjSuf):
-	@$(CXX) $(CXXFLAGS) -c $<
+	$(CMDECHO)$(CXX) $(CXXFLAGS) -c $<
 
