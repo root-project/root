@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.15 2002/03/21 11:47:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.16 2002/05/30 15:44:37 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -168,6 +168,7 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    file->Seek(pos);
    file->ReadBuffer(buffer,len);
    Streamer(*fBufferRef);
+
    if (fObjlen > fNbytes-fKeylen) {
       fBuffer = new char[fObjlen+fKeylen];
       memcpy(fBuffer,buffer,fKeylen);
@@ -398,11 +399,12 @@ Int_t TBasket::WriteBuffer()
          if (i == nbuffers) bufmax = fObjlen -nzip;
          else               bufmax = kMAXBUF;
          R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
-         if (nout == 0) { //this happens when the buffer cannot be compressed
+         if (nout == 0 || nout == fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
             fBufferRef->SetBufferOffset(0);
             Streamer(*fBufferRef);         //write key itself again
+            //Warning("WriteBuffer","Found pathological case where buffer cannot be compressed. Result is OK. fNbytes=%d, fObjLen=%d, fKeylen=%d",fNbytes,fObjlen,fKeylen);
             goto WriteFile;
          }
          bufcur += nout;
