@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBlindTools.cc,v 1.3 2001/11/20 21:34:54 verkerke Exp $
+ *    File: $Id: RooBlindTools.cc,v 1.4 2002/01/16 01:35:54 verkerke Exp $
  * Authors:
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -84,8 +84,9 @@ void RooBlindTools::setup(const char *stSeed)
 
   _PrecisionOffset = _PrecisionOffsetScale*MakeGaussianOffset("opqrstuvwxyzabcdefghijklmn");
 
-  _STagConstant = Randomizer("fghijklmnopqrstuvwxyzabcde");
+  _PrecisionUniform = _PrecisionOffsetScale*MakeOffset("jihgfedcbazyxwvutsrqponmlk");
 
+  _STagConstant = Randomizer("fghijklmnopqrstuvwxyzabcde");
 }
 
 
@@ -243,6 +244,24 @@ Double_t RooBlindTools::HideOffset(Double_t Precision) const{
   if(mode()==dataonly) return Precision;
   
   return Precision + _PrecisionOffset;
+}
+
+
+
+Double_t RooBlindTools::UnHideUniform(Double_t PrecisionPrime) const{
+
+  if(mode()==dataonly) return PrecisionPrime;
+
+  return PrecisionPrime - _PrecisionUniform;
+}
+
+
+
+Double_t RooBlindTools::HideUniform(Double_t Precision) const{
+
+  if(mode()==dataonly) return Precision;
+  
+  return Precision + _PrecisionUniform;
 }
 
 

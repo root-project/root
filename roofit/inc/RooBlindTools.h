@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBlindTools.rdl,v 1.3 2001/11/20 04:00:55 verkerke Exp $
+ *    File: $Id: RooBlindTools.rdl,v 1.4 2002/01/16 01:35:54 verkerke Exp $
  * Authors:
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -99,6 +99,10 @@ public:
   
   Double_t UnHideOffset( Double_t PrecisionBlind ) const;
 
+  Double_t HideUniform( Double_t Precision ) const;
+  
+  Double_t UnHideUniform( Double_t PrecisionBlind ) const;
+
 
   const char *stSeed()const {return _stSeed;}
 
@@ -128,6 +132,7 @@ private:
   Double_t _PrecisionSignFlip;
   Double_t _PrecisionOffsetScale;
   Double_t _PrecisionOffset;
+  Double_t _PrecisionUniform;
   Double_t _PrecisionCentralValue;
   blindMode _mode;
   Bool_t   _s2bMode ;
