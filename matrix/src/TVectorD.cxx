@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.38 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.39 2004/03/22 10:50:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1307,17 +1307,20 @@ TVectorD &AddElemDiv(TVectorD &target,Double_t scalar,
   const Double_t * const ftp = tp+target.GetNrows();
 
   if (scalar == 1.0 ) {
-    while ( tp < ftp )
+    while ( tp < ftp ) {
       if (*mp) *tp += *sp1 / *sp2;
       mp++; tp++; sp1++; sp2++;
+    }
   } else if (scalar == -1.0) {
-    while ( tp < ftp )
+    while ( tp < ftp ) {
       if (*mp) *tp -= *sp1 / *sp2;
       mp++; tp++; sp1++; sp2++;
+    }
   } else {
-    while ( tp < ftp )
+    while ( tp < ftp ) {
       if (*mp) *tp += scalar * *sp1 / *sp2;
       mp++; tp++; sp1++; sp2++;
+    }
   }
 
   return target;
