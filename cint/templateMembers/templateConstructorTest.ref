@@ -1,4 +1,4 @@
 
 Processing runConstructor.C...
-void A::doit(const U &) [with U = C]
-A::A(const U &) [with U = C]
+void A::doit(const U&) [with U = C]
+A::A(const U&) [with U = C]
