@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.126 2003/01/16 06:39:18 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.127 2003/01/22 08:04:40 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1405,12 +1405,12 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 
       fprintf(fp, "         int R__n=(&R__stl) ? int(R__stl.size()) : 0;\n");
       fprintf(fp, "         R__b << R__n;\n");
-      fprintf(fp, "         if(!R__n) return;\n");
+      fprintf(fp, "         if(R__n) {\n");
 
-      if (tcl1) fprintf(fp, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1.c_str());
-      if (tcl2) fprintf(fp, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2.c_str());
-      fprintf(fp, "         %s::iterator R__k;\n", stlType.c_str());
-      fprintf(fp, "         for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {\n");
+      if (tcl1) fprintf(fp, "            TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1.c_str());
+      if (tcl2) fprintf(fp, "            TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2.c_str());
+      fprintf(fp, "            %s::iterator R__k;\n", stlType.c_str());
+      fprintf(fp, "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {\n");
       if (stltype == kMap || stltype == kMultimap) {
          ElementStreamer(TemplateArg(m,0),"((*R__k).first )",rwmode,tcl1);
          ElementStreamer(TemplateArg(m,1),"((*R__k).second)",rwmode,tcl2);
@@ -1418,6 +1418,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          ElementStreamer(TemplateArg(m,0),"(*R__k)"         ,rwmode,tcl1);
       }
 
+      fprintf(fp, "            }\n");
       fprintf(fp, "         }\n");
       fprintf(fp, "      }\n");
       if (isArr) fprintf(fp, "    }\n");
@@ -3159,7 +3160,8 @@ char *StrDup(const char *str)
 
    if (!str) return 0;
 
-   char *s = new char[strlen(str)+1];
+   // allocate 20 extra characters in case of eg, vector<vector<T>>
+   char *s = new char[strlen(str)+20];
    if (s) strcpy(s, str);
 
    return s;
@@ -3174,7 +3176,8 @@ char *Compress(const char *str)
    if (!str) return 0;
 
    const char *p = str;
-   char *s, *s1 = new char[strlen(str)+1];
+   // allocate 20 extra characters in case of eg, vector<vector<T>>
+   char *s, *s1 = new char[strlen(str)+20];
    s = s1;
 
    while (*p) {
