@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.32 2003/03/31 16:04:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.33 2003/04/13 15:30:23 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -120,6 +120,7 @@ public:
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
    virtual Double_t GetSave(const Double_t *x);
+   virtual Double_t GetX(Double_t y, Double_t xmin=0, Double_t xmax=0) const;
    virtual Double_t GetXmin() const {return fXmin;}
    virtual Double_t GetXmax() const {return fXmax;}
    TAxis           *GetXaxis() const ;

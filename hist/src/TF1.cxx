@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.59 2003/03/31 16:04:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.60 2003/04/13 15:30:23 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -946,6 +946,32 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
    }
    if (dx < 1.e-9*(fXmax-fXmin)) return TMath::Min(xmax,xxmin);
    else return GetMinimumX(TMath::Max(xmin,xxmin-dx), TMath::Min(xmax,xxmin+dx));
+}
+
+//______________________________________________________________________________
+Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
+{
+// return the X value corresponding to the function value fy for (xmin<x<xmax).
+// Method:
+//   the function z = abs(f-fy) is computed at fNpx points between xmin and xmax
+//   xxmax is the X value corresponding to the minimum function value
+//   An iterative procedure computes the minimum around xxmax
+//   until dx is less than 1e-9 *(fXmax-fXmin).
+//  In case the problem has several solutions in X, the higher X solution is returned
+//  If the problem has no solution, the function returns the value of X
+//  where f(X) is closer to fy.     
+   Double_t x,y;
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+   Double_t dx = (xmax-xmin)/fNpx;
+   Double_t xxmin = xmin;
+   Double_t yymin = TMath::Abs(((TF1*)this)->Eval(xmin+dx) -fy);
+   for (Int_t i=0;i<fNpx;i++) {
+      x = xmin + (i+0.5)*dx;
+      y = TMath::Abs(((TF1*)this)->Eval(x) -fy);
+      if (y < yymin) {xxmin = x; yymin = y;}
+   }
+   if (dx < 1.e-9*(fXmax-fXmin)) return TMath::Min(xmax,xxmin);
+   else return GetX(fy,TMath::Max(xmin,xxmin-dx), TMath::Min(xmax,xxmin+dx));
 }
 
 //______________________________________________________________________________
