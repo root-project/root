@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.9 2001/02/28 07:51:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.10 2001/05/28 06:26:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -50,7 +50,8 @@ public:
         // TAxis status bits
         enum { kAxisRange   = BIT(11), 
                kCenterTitle = BIT(12),
-               kRotateTitle = BIT(13) };
+               kRotateTitle = BIT(15),
+               kPalette     = BIT(16)};
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
