@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.2 2002/05/21 13:41:11 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.3 2002/05/29 18:39:44 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -5972,7 +5972,7 @@ void TPainter3dAlgorithms::DrawFaceGouraudShaded(Int_t *icodes,
    // Draw the faces for the Gouraud Shaded Iso surfaces
 
    Int_t i, k, irep;
-   Double_t p3[12][3], x[12], y[12];
+   Double_t p3[12][3];
    
    TView *view = gPad->GetView();
    if (!view) {
@@ -5987,8 +5987,6 @@ void TPainter3dAlgorithms::DrawFaceGouraudShaded(Int_t *icodes,
       k = iface[i-1];
       if (k<0) k = -k;
       view->WCtoNDC(&xyz[k-1][0], &p3[i-1][0]);
-      x[i-1] = p3[i-1][0];
-      y[i-1] = p3[i-1][1];
    }
 
    FillPolygon(np, (Double_t *)p3, (Double_t *)t);
