@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.2 2000/06/12 15:44:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.3 2000/06/27 15:10:51 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -361,7 +361,8 @@ TROOT::~TROOT()
 
       // Problem deleting the interpreter. Want's to delete objects already
       // deleted in the dtor's above. Crash.
-      //SafeDelete(fInterpreter);
+      // statement again activated with CINT 5.14.46. Seems to work
+      SafeDelete(fInterpreter);
 
       // Remove shared libraries produced by the TSystem::CompileMacro() call
       gSystem->CleanCompiledMacros();
