@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.15 2001/02/06 19:14:29 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.16 2001/02/07 16:08:57 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -115,7 +115,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    // The netopt argument can be used to specify the size of the tcp window in
    // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
    // The default and minimum tcp window size is 65535 bytes.
-   // If netopt < 0 then |netopt| is the number of parallel sockets that will
+   // If netopt < -1 then |netopt| is the number of parallel sockets that will
    // be used to connect to rootd. This option should be used on fat pipes
    // (i.e. high bandwidth, high latency links). The ideal number of parallel
    // sockets depends on the bandwidth*delay product. Generally 5-7 is a good
@@ -159,8 +159,9 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
       tcpwindowsize = netopt;
 
    // Open connection to remote rootd server
-   if (netopt < 0) {
-      fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt);
+   if (netopt < -1) {
+      fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
+                             tcpwindowsize);
       if (!fSocket->IsValid()) {
          Error("TNetFile", "can't open %d parallel connections to rootd on "
                "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
@@ -337,12 +338,16 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
+      Seek_t off = fOffset;
       if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
          Error("ReadBuffer", "error reading from cache");
          return kTRUE;
       }
-      if (st > 0)
+      if (st > 0) {
+         // fOffset might have been changed via TCache::ReadBuffer(), reset it
+         fOffset = off + len;
          return result;
+      }
    }
 
    if (gApplication && gApplication->GetSignalHandler())
@@ -402,12 +407,16 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
+      Seek_t off = fOffset;
       if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
          Error("WriteBuffer", "error writing to cache");
          return kTRUE;
       }
-      if (st > 0)
+      if (st > 0) {
+         // fOffset might have been changed via TCache::WriteBuffer(), reset it
+         fOffset = off + len;
          return result;
+      }
    }
 
    gSystem->IgnoreInterrupt();

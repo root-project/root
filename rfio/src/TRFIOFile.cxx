@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.10 2001/01/24 15:05:21 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.11 2001/02/07 16:08:57 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -279,12 +279,16 @@ Bool_t TRFIOFile::ReadBuffer(char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
+      Seek_t off = fOffset;
       if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
          Error("ReadBuffer", "error reading from cache");
          return kTRUE;
       }
-      if (st > 0)
+      if (st > 0) {
+         // fOffset might have been changed via TCache::ReadBuffer(), reset it
+         fOffset = off + len;
          return kFALSE;
+      }
    }
 
    return TFile::ReadBuffer(buf, len);
@@ -300,12 +304,16 @@ Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
+      Seek_t off = fOffset;
       if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
          Error("WriteBuffer", "error writing to cache");
          return kTRUE;
       }
-      if (st > 0)
+      if (st > 0) {
+         // fOffset might have been changed via TCache::WriteBuffer(), reset it
+         fOffset = off + len;
          return kFALSE;
+      }
    }
 
    return TFile::WriteBuffer(buf, len);
