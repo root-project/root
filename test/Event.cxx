@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.11 2001/10/05 16:49:39 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.12 2001/10/07 20:03:29 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -158,8 +158,11 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
 
    TClonesArray &tracks = *fTracks;
    Track *track = new(tracks[fNtrack++]) Track(random);
+   //Save reference to last Track in the collection of Tracks
    fLastTrack = track;
-   if (track->GetPt() > ptmin) fHighPt->Add(track);
+   //Save reference in fHighPt if track is a high Pt track
+   if (track->GetPt() > ptmin)   fHighPt->Add(track);
+   //Save reference in fMuons if track is a muon candidate
    if (track->GetMass2() < 0.11) fMuons->Add(track);
    return track;
 }
