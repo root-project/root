@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.2 2000/05/25 06:35:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.3 2000/06/23 15:15:42 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -237,8 +237,9 @@ Double_t TRandom::Gaus(Float_t mean, Float_t sigma)
    // Local variables
    Float_t x, y, z, result;
 
-   y = Rndm();
-   if (!y) y = Rndm();
+   do {
+     y = Rndm();
+   } while (!y);
    z = Rndm();
    x = z * 6.283185;
    result = mean + sigma*TMath::Sin(x)*TMath::Sqrt(-2*TMath::Log(y));
@@ -495,8 +496,9 @@ void TRandom::Rannor(Float_t &a, Float_t &b)
    // Local variables
    Float_t r, x, y, z;
 
-   y = Rndm();
-   if (!y) y = Rndm();
+   do {
+     y = Rndm();
+   } while (!y);
    z = Rndm();
    x = z * 6.283185;
    r = TMath::Sqrt(-2*TMath::Log(y));
