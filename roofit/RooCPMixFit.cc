@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id$
+ *    File: $Id: RooCPMixFit.cc,v 1.1 2002/01/26 02:13:02 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -186,6 +186,10 @@ void RooCPMixFit::initDataVars()
   tagCat_func->map("Kaon"       ,"Kao") ;
   tagCat_func->map("NetTagger-1","NT1") ;
   tagCat_func->map("NetTagger-2","NT2") ;
+  tagCat = (RooCategory*) tagCat_func->createFundamental() ;
+
+  tagCatL = new RooMappedCategory("tagCatL","Lepton/Non-lepton tagging category",*tagCat,"NoLep") ;
+  tagCatL->map("Lep","Lep") ;
 
   tagCatN_func = (RooMappedCategory*) tagCat_func->clone("tagCatN") ;
   tagCatN_func->map("NoTag","Non") ;
@@ -208,7 +212,6 @@ void RooCPMixFit::initDataVars()
 
   mixState = (RooCategory*) mixState_func->createFundamental() ;
   tagFlav  = (RooCategory*) tagFlav_func->createFundamental() ;
-  tagCat   = (RooCategory*) tagCat_func->createFundamental() ;
   tagCatN  = (RooCategory*) tagCatN_func->createFundamental() ;
   runBlock = (RooCategory*) runBlock_func->createFundamental() ;
   physCat  = (RooCategory*) physCat_func->createFundamental() ;

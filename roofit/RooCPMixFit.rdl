@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id$
+ *    File: $Id: RooCPMixFit.rdl,v 1.1 2002/01/26 02:13:02 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -75,7 +75,7 @@ public:
 
   // Dataset derived variables
   RooCategory 
-    *mixState,*tagFlav,*tagCat,*tagCatN, *runBlock,*physCat ;
+    *mixState,*tagFlav,*tagCat,*tagCatN,*runBlock,*physCat ;
   RooAbsReal 
     *mixProb ;
 
@@ -86,7 +86,7 @@ public:
   RooThresholdCategory 
     *mixState_func,*runBlock_func,*tagFlav_func ;
   RooMappedCategory 
-    *tagCat_func, *tagCatN_func, *physCat_func ;
+    *tagCat_func,*tagCatN_func,*tagCatL,*physCat_func ;
 
   // List owning all of the components below
   RooArgList _pdfProtoOwner ;
