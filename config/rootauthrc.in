@@ -132,18 +132,25 @@
 #              SSH                          us:<username>
 #              UidGid
 #
+#
+#           The key 'us' allows to specify a target username different from
+#           the local username (which is the default target username); the 
+#           value specified via 'us' is superseeded by any user information
+#           passed through the constructor, e.g. <user> in TFTP("<user>@<host>").
+#
 #           The additional keys for UsrPwd specify:
 #              'cp' whether to encrypt the password with a public key (default)
 #                   or not (slighty faster), values are 'yes' or '1' for YES,
 #                   'no' or '0' for NO (case sensitive);
 #
-#           For Kerberos, the deafult principal is assumed of the form 
-#           <username>@<KERBEROS.REALM>; it is possible to specify a different
-#           principal via the key 'pp', access to which must be granted 
-#           remotely via .k5login . It is also possible to specify a target
-#           username via the 'us' key. For backward compatibility, the principal 
-#           can also be specified by the 'us' key (ignored if 'pp' is specified;
-#           must contain a '@', otherwise is interpreted as remote username).
+#
+#           For Kerberos, the default principal is the one associated to
+#           the local user in the Kerberos realm. A different principal
+#           can be specified via the key 'pp', access to which must be granted
+#           remotely via .k5login . For backward compatibility, the principal 
+#           can also be specified via the 'us' key (it must be in its full 
+#           form <username>@<KERBEROS.REALM>, otherwise the string pointed by
+#           'us' is interpreted as target username).
 #
 #           The keys for Globus allow to specify only partial changes of 
 #           the defaults:
