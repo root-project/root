@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.10 2002/05/01 20:09:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.11 2002/05/02 08:01:25 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1063,10 +1063,7 @@ Int_t TGListTree::Sort(TGListTreeItem *item)
       first = first->fNextsibling;
    }
    
-   Int_t (*CompareItems)(const void *item1, const void *item2);
-   CompareItems = ::Compare;
-
-   ::qsort(list, count, sizeof(TGListTreeItem*), CompareItems);
+   ::qsort(list, count, sizeof(TGListTreeItem*), ::Compare);
 
    list[0]->fPrevsibling = 0;
    for (i = 0; i < count; i++) {
