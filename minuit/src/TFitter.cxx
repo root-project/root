@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.20 2004/07/28 08:02:04 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.21 2004/08/18 07:16:34 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -474,7 +474,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 
    Double_t cu,eu,exh,exl,ey,eux,fu,fsum;
    Double_t x[1];
-   Double_t xm,xp;
+   //Double_t xm,xp;
    Int_t bin, npfits=0;
 
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
@@ -488,8 +488,8 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
-   Double_t fxmin = f1->GetXmin();
-   Double_t fxmax = f1->GetXmax();
+   //Double_t fxmin = f1->GetXmin();
+   //Double_t fxmax = f1->GetXmax();
    npar           = f1->GetNpar();
 
    f      = 0;
