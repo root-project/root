@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.5 2001/01/08 09:11:14 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.6 2001/01/16 17:22:32 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -32,15 +32,16 @@
 #include <unistd.h>
 
 extern "C" {
-   int rfio_open(char *filepath, int flags, int mode);
-   int rfio_close(int s);
-   int rfio_read(int s, char *ptr, int size);
-   int rfio_write(int s, char *ptr, int size);
-   int rfio_lseek(int s, int offset, int how);
-   int rfio_access(char *filepath, int mode);
-   int rfio_unlink(char *filepath);
-   int rfio_parse(char *name, char **host, char **path);
-   int rfio_fstat(int s, struct stat *statbuf);
+   int  rfio_open(char *filepath, int flags, int mode);
+   int  rfio_close(int s);
+   int  rfio_read(int s, char *ptr, int size);
+   int  rfio_write(int s, char *ptr, int size);
+   int  rfio_lseek(int s, int offset, int how);
+   int  rfio_access(char *filepath, int mode);
+   int  rfio_unlink(char *filepath);
+   int  rfio_parse(char *name, char **host, char **path);
+   int  rfio_fstat(int s, struct stat *statbuf);
+   void rfio_perror(const char *msg);
 };
 
 
@@ -135,7 +136,8 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle, In
       fD = SysOpen(fname, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TRFIOFile", "file %s can not be opened", fname);
+         Error("TRFIOFile", "file %s can not be opened", fname);
+         ::rfio_perror("SysError in <TRFIOFile::TRFIOFile>");
          goto zombie;
       }
       fWritable = kTRUE;
@@ -146,7 +148,8 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle, In
       fD = SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TRFIOFile", "file %s can not be opened for reading", fname);
+         Error("TRFIOFile", "file %s can not be opened for reading", fname);
+         ::rfio_perror("SysError in <TRFIOFile::TRFIOFile>");
          goto zombie;
       }
       fWritable = kFALSE;
