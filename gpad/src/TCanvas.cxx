@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.34 2001/11/18 17:19:10 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.35 2001/11/28 16:05:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1358,15 +1358,24 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    ofstream out;
    Int_t lenfile = strlen(filename);
    char * fname;
+   char lcname[10];
+   const char *cname = GetName();
+   Bool_t invalid = kFALSE;
 //    if filename is given, open this file, otherwise create a file
 //    with a name equal to the canvasname.C
    if (lenfile) {
        fname = (char*)filename;
        out.open(fname, ios::out);
    } else {
-       Int_t nch = strlen(GetName());
+       Int_t nch = strlen(cname);
+       if (nch < 10) {
+          strcpy(lcname,cname);
+          for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
+          if (lcname[0] == 0) {invalid = kTRUE; strcpy(lcname,"c1"); nch = 2;}
+          cname = lcname;
+       }
        fname = new char[nch+3];
-       strcpy(fname,GetName());
+       strcpy(fname,cname);
        strcat(fname,".C");
        out.open(fname, ios::out);
    }
@@ -1389,11 +1398,11 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
-      out<<"   "<<ClassName()<<" *"<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<w<<","<<h<<");"<<endl;
    } else {
 //   Write canvas parameters (TCanvas case)
-      out<<"   TCanvas *"<<GetName()<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<GetWindowTopX()<<","<<GetWindowTopY()<<","<<w<<","<<h<<");"<<endl;
    }
 //   Write canvas options (in $TROOT or $TStyle)
@@ -1416,7 +1425,9 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Now recursively scan all pads of this canvas
    cd();
+   if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
+   if (invalid) SetName(" ");
 
    out <<"}"<<endl;
    out.close();
