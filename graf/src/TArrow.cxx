@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.11 2004/02/07 08:54:03 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.12 2004/11/15 10:26:27 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -99,8 +99,8 @@ void TArrow::Draw(Option_t *option)
 //*-*                  ===========================================
 
    Option_t *opt;
-   if (strlen(option)) opt = option;
-   else                opt = (char*)GetOption();
+   if (option && strlen(option)) opt = option;
+   else                          opt = (char*)GetOption();
 
    AppendPad(opt);
 
@@ -134,7 +134,10 @@ void TArrow::Paint(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*-*Paint this arrow with its current attributes*-*-*-*-*-*-*
 //*-*                  ============================================
 
-   PaintArrow(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2), fArrowSize, option);
+   Option_t *opt;
+   if (option && strlen(option)) opt = option;
+   else                          opt = (char*)GetOption();
+   PaintArrow(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2), fArrowSize, opt);
 }
 
 
