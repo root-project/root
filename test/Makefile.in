@@ -236,7 +236,7 @@ CXX           = cxx
 CXXFLAGS      = -O
 LD            = cxx
 LDFLAGS       = -O
-SOFLAGS       = -Wl,-expect_unresolved,* -shared
+SOFLAGS       = -shared -nocxxstd -Wl,-expect_unresolved,*,-msym
 endif
 
 ifeq ($(ARCH),alphacxx)
@@ -566,14 +566,6 @@ else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),alphacxx)
-# due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
-# a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
-else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
@@ -588,7 +580,6 @@ ifeq ($(PLATFORM),win32)
 		   $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
 endif
 endif
 endif
@@ -664,14 +655,6 @@ else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),alphacxx)
-# due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
-# a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
-else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
@@ -682,7 +665,6 @@ ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
 endif
 endif
 endif
@@ -696,14 +678,6 @@ else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),alphacxx)
-# due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
-# a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
-else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
@@ -718,7 +692,6 @@ endif
 endif
 endif
 endif
-endif
 
 Tetris:         $(TETRISSO)
 $(TETRISSO):    $(TETRISO)
@@ -727,14 +700,6 @@ ifeq ($(ARCH),aix)
 else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
-else
-ifeq ($(ARCH),alphacxx)
-# due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
-# a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
@@ -750,7 +715,6 @@ endif
 endif
 endif
 endif
-endif
 
 $(TBENCHSO):    $(TBENCHO)
 ifeq ($(ARCH),aix)
@@ -758,14 +722,6 @@ ifeq ($(ARCH),aix)
 else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),alphacxx)
-# due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
-# a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
@@ -777,7 +733,6 @@ ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
 endif
 endif
 endif

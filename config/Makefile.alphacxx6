@@ -6,18 +6,18 @@ PLATFORM      = alpha
 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
-NOOPT         =
+NOOPT         = -O0
 else
 OPT           = -O
-NOOPT         =
+NOOPT         = -O0
 endif
 
 # Compiler:
 CXX           = cxx
 CC            = cc
-CXXFLAGS      = -tlocal -nostdnew -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -tlocal -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
 CFLAGS        = -D__osf__ -D__alpha $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -tlocal -nostdnew $(EXTRA_CXXFLAGS) \
+CINTCXXFLAGS  = -tlocal $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 CINTCFLAGS    = -DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__64BIT \
@@ -27,7 +27,7 @@ CINTCFLAGS    = -DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__64BIT \
 LD            = cxx 
 F77LD         = f77
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared -Wl,-expect_unresolved,*,-soname,
+SOFLAGS       = -shared -nocxxstd -Wl,-expect_unresolved,*,-msym,-soname,
 SOEXT         = so
 
 # System libraries:
