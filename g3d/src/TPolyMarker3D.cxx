@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.7 2001/07/28 07:33:28 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.8 2001/08/27 10:10:21 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -541,13 +541,14 @@ void TPolyMarker3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
    if (n < 0) return;
    if (!fP || n >= fN) {
    // re-allocate the object
-      Float_t *savepoint = new Float_t [kDimension*(n+1)];
+      Int_t newN = TMath::Max(2*fN,n);
+      Float_t *savepoint = new Float_t [kDimension*newN];
       if (fP && fN){
          memcpy(savepoint,fP,kDimension*fN*sizeof(Float_t));
         delete [] fP;
       }
       fP = savepoint;
-      fN = n+1;
+      fN = newN;
    }
    fP[kDimension*n  ] = x;
    fP[kDimension*n+1] = y;

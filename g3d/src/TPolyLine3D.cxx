@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.5 2001/04/10 06:25:13 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.6 2001/06/05 10:27:52 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -593,13 +593,14 @@ void TPolyLine3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
    if (n < 0) return;
    if (!fP || n >= fN) {
    // re-allocate the object
-      Float_t *savepoint = new Float_t [3*(n+1)];
+      Int_t newN = TMath::Max(2*fN,n);
+      Float_t *savepoint = new Float_t [3*newN];
       if (fP && fN){
          memcpy(savepoint,fP,3*fN*sizeof(Float_t));
         delete [] fP;
       }
       fP = savepoint;
-      fN = n+1;
+      fN = newN;
    }
    fP[3*n  ] = x;
    fP[3*n+1] = y;
