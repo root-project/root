@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.6 2003/02/07 18:20:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.7 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -424,7 +424,7 @@ TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
 //______________________________________________________________________________
 TGTabElement *TGTab::GetTabTab(Int_t tabIndex) const
 {
-   // Return container of tab with index tabIndex.
+   // Return the tab element of tab with index tabIndex.
    // Returns 0 in case tabIndex is out of range.
 
    if (tabIndex < 0) return 0;
