@@ -27,13 +27,17 @@ ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *
 
 .PHONY: clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils
 
-CURDIR:=$(shell basename `pwd`)
-#debug2:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=$(PWD) 1>&2 ) 
+ifeq ($(CURRENTDIR),)
+  export CURRENTDIR := $(shell basename `pwd`)
+else
+  export CURRENTDIR
+endif
 ifeq ($(CALLDIR),)
 	export CALLDIR:=.
 else
-	export CALLDIR:=$(CALLDIR)/$(CURDIR)
+	export CALLDIR:=$(CALLDIR)/$(CURRENTDIR)
 endif
+#debug2:=$(shell echo CALLDIR=$(CALLDIR) CURRENTDIR=$(CURRENTDIR) PWD=$(PWD) 1>&2 ) 
 
 DOTS="................................................................................"
 SUCCESS_FILE = .success.log
@@ -49,10 +53,11 @@ tests: $(SUCCESS_FILE)
 	@if [ -f $(SUCCESS_FILE) ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi
 
 #@echo "All test succeeded in $(CALLDIR)"
+#CURRENTDIR=$(CALLDIR)/$* 
 
 $(TEST_TARGETS_DIR): %.test:
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; gmake CURDIR=$(CURDIR)/$* --no-print-directory test; \
+	@(cd $*; gmake CURRENTDIR=$* --no-print-directory test; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
          len=`echo Tests in $(CALLDIR)/$* | wc -m `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
@@ -255,7 +260,7 @@ define BuildWithLib
 endef
 
 define WarnFailTest
-	$(CMDECHO)echo Warning $@ has some known skipped failures "(in ./$(CURDIR))"
+	$(CMDECHO)echo Warning $@ has some known skipped failures "(in ./$(CURRENTDIR))"
 endef
 
 define TestDiff
