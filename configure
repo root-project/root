@@ -521,7 +521,6 @@ with options, prefix with --with-, enables corresponding support
    krb5-libdir     Kerberos5 support, location of libkrb5
    globus          Globus support, path to what should be GLOBUS_LOCATION
    globus-patch    Globus support, source dir for patch to versions 2.2.x (experimental, see README.GLOBUS)
-   globus-version  Version of the Globus Tool Kit used for patching (in the form 2.4.3)
    ldap-incdir     LDAP support, location of ldap.h
    ldap-libdir     LDAP support, location of libldap
    mysql-incdir    MySQL support, location of mysql.h
@@ -642,7 +641,6 @@ if test $# -gt 0 ; then
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
       --with-globus-patch=*)   globuspatchdir=$optarg ; enable_globus="yes" ;;
-      --with-globus-version=*) globusversion=$optarg ; enable_globus="yes"  ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
       --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
@@ -1582,12 +1580,10 @@ if test ! "x$enable_globus" = "xno"; then
 
         # Everything seems ok: now check if there is the need for a patch
         patchneeded="no"
-        tobepatched="globus_gsi_system_config"
-        package="globus_gsi_sysconfig"
+        tobepatched="globus_gsi_credential"
+        package="globus_gsi_credential"
         packdir="$globusdir/etc/globus_packages/$package"
         if test -d $packdir ; then
-           patchneeded="yes"
-           echo "Checking need for globus patch ... yes"
            for i in pkg_data_${flavour}_rtl.gpt pkg_data_${flavour}_dev.gpt ; do
               if test -r $packdir/$i ; then
                  packfileinfo=$packdir/$i
@@ -1600,7 +1596,7 @@ if test ! "x$enable_globus" = "xno"; then
               echo "Checking $packfiletmp ... $packdir"
               versionstring=`grep Minor $packfileinfo`
               for i in $versionstring ; do
-                 for k in 1 3 4 6 7 9 11 ; do
+                 for k in 5 7 8 9 ; do
                     if test "Minor=\"$k\"" = "$i" ; then
                        version="0.$k"
                        break 2
@@ -1608,47 +1604,17 @@ if test ! "x$enable_globus" = "xno"; then
                  done
               done
            fi
-           if test ! "x$version" = "x" ; then
-              echo "Checking $package version ... $version"
-           fi
-           if test "x$version" = "x" || test "x$version" = "x0.1" ; then
-              mapversion=""
-              if test ! "x$globusversion" = "x" ; then
-                 mapfile="$globusauth/src/patches/$tobepatched/map"
-                 if test -r $mapfile ; then
-                    versionstring=`grep $globusversion $mapfile`
-                 fi
-                 for i in $versionstring ; do
-                    if test ! "$globusversion" = "$i" ; then
-                       mapversion="$i"
-                       break
-                    fi
-                 done
-              fi
-              if test "x$version" = "x0.1" ; then
-                 if test "x$mapversion" = "x" ; then
-                    echo "Unable to find exact version of patch for $package ... using 0.1.2"
-                    echo "(if not ok, run again with -with-globus-version=<your_exact_version>)"
-                    version="0.1.2"
-                 else
-                    version="$mapversion"
-                 fi
-              else
-                 if test "x$mapversion" = "x" ; then
-                    echo "Unable to find exact version of patch for $package ... using 0.11.0"
-                    echo "(if not ok, run again with -with-globus-version=<your_exact_version>)"
-                    version="0.11.0"
-                 else
-                    version="$mapversion"
-                 fi
-              fi
+           if test "x$version" = "x" ; then
+              patchneeded="no"
+              echo "Checking need for globus patch ... no"
            else
-              version="$version.0"
+              patchneeded="yes"
+              echo "Checking need for globus patch ... yes"
+              # copy patched file in the globusauth/src directory
+              cp -rp globusauth/src/patches/$tobepatched/$version/$tobepatched.c \
+                     globusauth/src/$tobepatched.c
            fi
 
-           # copy patched file in the globusauth/src directory
-           cp -rp globusauth/src/patches/$tobepatched/$version/$tobepatched.c \
-                  globusauth/src/$tobepatched.c
         else
            echo "Checking globus patch need ... no"
         fi
@@ -1657,16 +1623,19 @@ if test ! "x$enable_globus" = "xno"; then
         if test ! "x$globuspatchdir" = "x" && test "x$patchneeded" = "xyes" ; then
 
             glbpatchcflags="-DR__GLBCPATCH -I$globusincdir"
-            dirtmp=`find $globuspatchdir -name globus_gsi_system_config.h -exec dirname {} \;`
+            dirtmp=`find $globuspatchdir -name globus_i_gsi_credential.h -exec dirname {} \;`
             if test ! "x$dirtmp" = "x" ; then
-               echo "Checking for globus_gsi_system_config.h ... $dirtmp"
+               echo "Checking for globus_i_gsi_credential.h ... $dirtmp"
                glbpatchcflags="$glbpatchcflags -I$dirtmp"
                dirtmp=`dirname $dirtmp`
                if test -r $dirtmp/version.h ; then
                   echo "Checking for version.h ... $dirtmp"
                   glbpatchcflags="$glbpatchcflags -I$dirtmp"
-                  for i in globus_common.h globus_i_gsi_system_config.h ; do
-                     dirtmp=`find $globuspatchdir -name $i -exec dirname {} \;`
+                  for i in globus_gsi_system_config.h globus_gsi_cert_utils.h ; do
+                     dirtmp=`find $globusincdir -name $i -exec dirname {} \;`
+                     if test "x$dirtmp" = "x" ; then
+                        dirtmp=`find $globuspatchdir -name $i -exec dirname {} \;` 
+                     fi
                      if test ! "x$dirtmp" = "x" ; then
                         echo "Checking for $i ... $dirtmp"
                         add="yes"

@@ -22,6 +22,11 @@ Globus Authentication has been tested for the moment only on Linux.
 
         globus-gsi-<GTK_version>-src_bundle.tar.gz
 
+   Versions older than 2.1.2 do not have a separate bundle for GSI: in such
+   a case you need to install the 
+
+        globus-resource-management-client-<GTK_version>-src_bundle.tar.gz
+
    If you plan to install binaries, the relevant code should be contained in
    the 
 
@@ -49,21 +54,13 @@ Globus Authentication has been tested for the moment only on Linux.
 
        --with-globus-patch-dir=<GTK_source>
 
-   There is some ambiguity about the exact patched function to be applied for
-   versions 2.1.2 -> 2.2.2, since the same number has been given to different 
-   versions of the relevant subpackage; in such a case it would be better to
-   specify the GTK version with
-
-       --with-globus-version=<GTK_version>
-
-   where <GTK_version> is the version in the form, e.g., 2.1.4 .
-
    While running configure you should get the following printed
 
  ...
 Checking for openssl/x509.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for openssl/pem.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for globus_gss_assist.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
+Checking for globus_gsi_credential.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for libglobus_gss_assist_<flavour> ... <Your_GLOBUS_LOCATION>/lib
 Checking for libglobus_gssapi_gsi_<flavour> ... <Your_GLOBUS_LOCATION>/lib
 Checking for libssl_<flavour> ... <Your_GLOBUS_LOCATION>/lib
@@ -71,18 +68,22 @@ Checking for libcrypto_<flavour> ... <Your_GLOBUS_LOCATION>/lib
 Checking for libglobus_gsi_credential_<flavour> ... <Your_GLOBUS_LOCATION>/lib
 Checking for globus-user-env.sh ... <Your_GLOBUS_LOCATION>/etc
 Checking for grid-proxy-init ... <Your_GLOBUS_LOCATION>/bin
+Checking pkg_data_<flavour>_rtl.gpt ... <Your_GLOBUS_LOCATION>/etc/globus_packages/globus_gsi_credential
 Checking need for globus patch ... yes
-Checking pkg_data_<flavour>_rtl.gpt ... <Your_GLOBUS_LOCATION>/etc/globus_packages/globus_gsi_sysconfig
-Checking globus_gsi_sysconfig version ... 0.11
-Checking for globus_gsi_system_config.h ... <Your_GTK_source>/globus_gsi_sysconfig-0.11/library
-Checking for version.h ... <Your_GTK_source>/globus_gsi_sysconfig-0.11
-Checking for globus_common.h ... <Your_GTK_source>/globus_common-3.15/library
-Checking for globus_i_gsi_system_config.h ... <Your_GTK_source>/globus_gsi_sysconfig-0.11/library
-Applying experimental patch to globus_gsi_system_config.c
+Checking for globus_i_gsi_credential.h ... <Your_GTK_SOURCE>/globus_gsi_credential-0.9/library
+Checking for version.h ... <Your_GTK_SOURCE>/globus_gsi_credential-0.9
+Checking for globus_gsi_system_config.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
+Checking for globus_gsi_cert_utils.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
+Applying experimental patch to globus_gsi_credential.c
  ...
 
-   where <flavour> is either gcc32 or gcc32dbg. The last message appears only
-   if you  have activated the experimental patch mentioned above.
+   where <flavour> is either gcc32 or gcc32dbg, and <Your_GLOBUS_LOCATION>
+   is the env $GLOBUS_LOCATION. 
+   The last 5 lines appear only if the patch is needed and activated.
+   Here <Your_GTK_SOURCE> is the sirectory containing the GTK source tree.
+   In this example the version of globus_gsi_credential to be patched was
+   0.9; the other version to be ptached are 0.5, 0.7 and 0.8; versions 0.1
+   and 0.2 do not need the patch. 
 
 3) Before running, after compilation/installation
 

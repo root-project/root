@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.27 2003/11/07 03:29:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.28 2003/11/09 16:09:50 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -721,6 +721,8 @@ void TAuthenticate::SetEnvironment()
             delete u;
          }
       }
+      if (fgDefaultUser == "anonymous" || fgDefaultUser == "rootd")
+         fgPromptUser = kFALSE;
 
       if (gDebug > 2)
          Info("SetEnvironment", "UsDef:%s", fgDefaultUser.Data());
@@ -2129,16 +2131,8 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
                }
             }
          } else {
-#if 0
-            const char *sp = strstr(Host, host);
-            if (sp == 0 || sp != Host) {
-               retval = kFALSE;
-               goto exit;
-            }
-#else
             retval = kFALSE;
             goto exit;
-#endif
          }
       } else {
          if (!CheckHostWild(Host, host)) {
@@ -2364,8 +2358,10 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
 
       if (kind == kROOTD_AUTH && stat == -1) {
          if (gDebug > 3)
-            Info("ClearAuth", "anounymous user", kind, stat);
-         Anon = 1;
+            Info("ClearAuth", "anonymous user", kind, stat);
+         Anon  = 1;
+         Crypt = 0;
+         ReUse = 0;
       }
 
       if (OffSet == -1 && Anon == 0 && Crypt == 1) {
@@ -2413,31 +2409,38 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
          }
       }
       // Now get the password either from prompt or from memory, if saved already
-      if (Anon == 1 && Prompt == 0) {
+      if (Anon == 1) {
 
-         // Anonymous like login with automatic passwd generation ...
-         char *LocalUser = StrDup(gSystem->Getenv("USER"));
-         if (LocalUser == 0 || strlen(LocalUser) <= 0) {
-            UserGroup_t *pw = gSystem->GetUserInfo();
-            if (pw)
-               LocalUser = StrDup(pw->fUser);
-            delete pw;
-         }
-         if (strlen(gSystem->Getenv("HOST")) > 0) {
-            Passwd = Form("%s@%s", LocalUser, gSystem->Getenv("HOST"));
+         if (fgPasswd.Contains("@")) {
+            // Anonymous like login with user chosen passwd ...
+            Passwd = fgPasswd;
          } else {
-            Passwd = Form("%s@localhost", LocalUser);
-         }
-         if (gDebug > 2)
-            Info("ClearAuth",
-                 "automatically generated anonymous passwd: %s",
-                 Passwd.Data());
-         if (LocalUser) delete[] LocalUser;
+           // Anonymous like login with automatic passwd generation ...
+           TString LocalUser;
+           UserGroup_t *pw = gSystem->GetUserInfo();
+           if (pw)
+              LocalUser = StrDup(pw->fUser);
+           delete pw;
+           static TString LocalFQDN;
+           if (LocalFQDN == "") {
+              TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
+              if (addr.IsValid()) {
+                 LocalFQDN = addr.GetHostName();
+                 if (LocalFQDN == "UnNamedHost")
+                    LocalFQDN = addr.GetHostAddress();
+              }
+           }
+           Passwd = Form("%s@%s", LocalUser.Data(), LocalFQDN.Data());
+           if (gDebug > 2)
+              Info("ClearAuth",
+                   "automatically generated anonymous passwd: %s",
+                   Passwd.Data());
+           }
 
       } else {
 
          if (Prompt == 1 || PasHash == 0) {
-          badpass:
+
             if (Passwd == "") {
                Passwd =
                  PromptPasswd(Form("%s@%s password: ",User.Data(),fRemote.Data()));
@@ -2458,14 +2461,6 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
 #endif
                } else {
                   PasHash = StrDup(Passwd);
-               }
-            }
-            if (Anon == 1) {
-               if (!Passwd.Contains("@")) {
-                  Warning("ClearAuth",
-                          "please use passwd of form: user@host.do.main");
-                  Passwd = "";
-                  goto badpass;
                }
             }
          }
