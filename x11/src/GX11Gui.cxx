@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.13 2001/02/15 16:34:17 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.14 2001/04/03 10:34:28 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -106,6 +106,23 @@ static KeySymbolMap_t gKeyMap[] = {
    { XK_KP_Space,        kKey_Space },              // numeric keypad
    { XK_KP_Tab,          kKey_Tab },
    { XK_KP_Enter,        kKey_Enter },
+   { XK_KP_F1,           kKey_F1 },
+   { XK_KP_F2,           kKey_F2 },
+   { XK_KP_F3,           kKey_F3 },
+   { XK_KP_F4,           kKey_F4 },
+   { XK_KP_Home,         kKey_Home },
+   { XK_KP_Left,         kKey_Left },
+   { XK_KP_Up,           kKey_Up },
+   { XK_KP_Right,        kKey_Right },
+   { XK_KP_Down,         kKey_Down },
+   { XK_KP_Prior,        kKey_Prior },
+   { XK_KP_Page_Up,      kKey_PageUp },
+   { XK_KP_Next,         kKey_Next },
+   { XK_KP_Page_Down,    kKey_PageDown },
+   { XK_KP_End,          kKey_End },
+   { XK_KP_Begin,        kKey_Home },
+   { XK_KP_Insert,       kKey_Insert },
+   { XK_KP_Delete,       kKey_Delete },
    { XK_KP_Equal,        kKey_Equal },
    { XK_KP_Multiply,     kKey_Asterisk },
    { XK_KP_Add,          kKey_Plus },
