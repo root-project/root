@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.11 2004/10/20 22:32:45 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.13 2004/12/07 17:01:39 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -1144,7 +1144,7 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             imgY2 = (Int_t)(imgY2 / yfact) + fZoomOffY;
 
             Zoom((imgX1 < imgX2) ? imgX1 : imgX2, (imgY1 < imgY2) ? imgY1 : imgY2,
-                 abs(imgX1 - imgX2) + 1, abs(imgY1 - imgY2) + 1);
+                 TMath::Abs(imgX1 - imgX2) + 1, TMath::Abs(imgY1 - imgY2) + 1);
 
             gVirtualX->SetLineColor(-1);
             gPad->Modified(kTRUE);
@@ -2968,7 +2968,7 @@ void TASImage::DrawLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2,
 void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                                 UInt_t col, UInt_t thick)
 {
-   //
+   // internal drawing
 
    int dx, dy, d;
    int i1, i2;
@@ -2998,8 +2998,8 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 
    ARGB32 color = (ARGB32)col;
 
-   dx = abs(x2 - x1);
-   dy = abs(y2 - y1);
+   dx = TMath::Abs(Int_t(x2) - Int_t(x1));
+   dy = TMath::Abs(Int_t(y2) - Int_t(y1));
 
    if (!dx) {
       DrawVLine(x1, y2 > y1 ? y1 : y2, 
@@ -3014,7 +3014,7 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    }
 
    if (dy <= dx) {
-      double ac = cos(atan2(dy, dx));
+      double ac = TMath::Cos(TMath::ATan2(dy, dx));
       wid = ac != 0 ? int(thick/ac) : 1;
       wid = wid ? wid : 1;
 
@@ -3079,7 +3079,7 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       }
    } else {
 
-      double as = sin(TMath::ATan2(dy, dx));
+      double as = TMath::Sin(TMath::ATan2(dy, dx));
       wid = as != 0 ? int(thick/as) : 1;
       wid = wid ? wid : 1;
 
@@ -3314,7 +3314,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    char *pDash = new char[nDash];
 
    if (dy <= dx) {
-      double ac = cos(TMath::ATan2(dy, dx));
+      double ac = TMath::Cos(TMath::ATan2(dy, dx));
 
       for (i = 0; i < (int)nDash; i++) {
          pDash[i] = int(tDash[i] * ac);
@@ -3397,7 +3397,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          }
       }
    } else {
-      double as = sin(TMath::ATan2(dy, dx));
+      double as = TMath::Sin(TMath::ATan2(dy, dx));
 
       for (i = 0; i < (int)nDash; i++) {
          pDash[i] = int(tDash[i] * as);
@@ -3486,7 +3486,7 @@ void TASImage::DrawDashLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2, UInt_t 
                             const char *pDash, const char *col, UInt_t thick)
 
 {
-   //
+   // draw dashed line
 
    if (!InitVisual()) {
       Warning("DrawDashLine", "Visual not initiated");
@@ -3586,7 +3586,7 @@ void TASImage::PutPixel(Int_t x, Int_t y, const char *col)
 //______________________________________________________________________________
 void TASImage::PolyPoint(UInt_t npt, TPoint *ppt, const char *col, TImage::ECoordMode mode)
 {
-   //
+   // draw poly point
 
    if (!InitVisual()) {
       Warning("PolyPoint", "Visual not initiated");
@@ -3646,7 +3646,7 @@ void TASImage::PolyPoint(UInt_t npt, TPoint *ppt, const char *col, TImage::ECoor
 //______________________________________________________________________________
 void TASImage::DrawSegments(UInt_t nseg, Segment_t *seg, const char *col, UInt_t thick)
 {
-   //
+   // draw segments
 
    if (!nseg || !seg) {
       Warning("DrawSegments", "Ivalid data nseg=%d seg=%d", nseg, seg);
@@ -3670,7 +3670,7 @@ void TASImage::DrawSegments(UInt_t nseg, Segment_t *seg, const char *col, UInt_t
 void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *col,
                          const char *stipple, UInt_t w, UInt_t h)
 {
-   //
+   // fill spans with specified color or/and stipple
 
    if (!InitVisual()) {
       Warning("FillSpans", "Visual not initiated");
@@ -3728,7 +3728,7 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
 //______________________________________________________________________________
 void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
 {
-   //
+   // fille spans with tile image
 
    if (!InitVisual()) {
       Warning("FillSpans", "Visual not initiated");
@@ -3781,7 +3781,7 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
 //______________________________________________________________________________
 void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
 {
-   //
+   //  crop spans
 
    if (!InitVisual()) {
       Warning("CropSpans", "Visual not initiated");
