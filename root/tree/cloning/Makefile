@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 
-$(ROOTSYS)/test/Event.new.split0.root:
+$(ROOTSYS)/test/Event.new.split0.root: $(ROOTCORELIBS)
 	$(CMDECHO) (cd $(ROOT_LOC)/test; gmake -f dt_Makefile files)
 
 hsimple1.root: hsimple.C
