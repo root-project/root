@@ -196,10 +196,10 @@ static int G__streambuf_wAstreambuf_1_2(G__value *result7,G__CONST char *funcnam
 
 // automatic assignment operator
 static int G__streambuf_operatoreQ_2_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-   streambuf *dest = (streambuf*)(G__getstructoffset());
-   *dest = (*(streambuf*)libp->para[0].ref);
-   const streambuf& obj = *dest;
-   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   //streambuf *dest = (streambuf*)(G__getstructoffset());
+   //*dest = (*(streambuf*)libp->para[0].ref);
+   //const streambuf& obj = *dest;
+   //result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -1037,10 +1037,10 @@ static int G__filebuf_wAfilebuf_4_1(G__value *result7,G__CONST char *funcname,st
 
 // automatic assignment operator
 static int G__filebuf_operatoreQ_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-   filebuf *dest = (filebuf*)(G__getstructoffset());
-   *dest = (*(filebuf*)libp->para[0].ref);
-   const filebuf& obj = *dest;
-   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   //filebuf *dest = (filebuf*)(G__getstructoffset());
+   //*dest = (*(filebuf*)libp->para[0].ref);
+   //const filebuf& obj = *dest;
+   //result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -1528,10 +1528,10 @@ static int G__strstreambuf_wAstrstreambuf_1_1(G__value *result7,G__CONST char *f
 
 // automatic assignment operator
 static int G__strstreambuf_operatoreQ_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-   strstreambuf *dest = (strstreambuf*)(G__getstructoffset());
-   *dest = (*(strstreambuf*)libp->para[0].ref);
-   const strstreambuf& obj = *dest;
-   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   //strstreambuf *dest = (strstreambuf*)(G__getstructoffset());
+   //*dest = (*(strstreambuf*)libp->para[0].ref);
+   //const strstreambuf& obj = *dest;
+   //result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
