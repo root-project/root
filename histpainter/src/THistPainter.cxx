@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.205 2005/02/08 16:35:21 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.206 2005/02/24 11:29:37 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2151,7 +2151,7 @@ void THistPainter::PaintColorLevels(Option_t *)
    fH->SetFillStyle(1001);
    fH->TAttFill::Modify();
 
-//                  Initialize the levels on the Z axis
+   // Initialize the levels on the Z axis
    Int_t ncolors  = gStyle->GetNumberOfColors();
    Int_t ndiv   = fH->GetContour();
    if (ndiv == 0 ) {
@@ -2196,6 +2196,10 @@ void THistPainter::PaintColorLevels(Option_t *)
                if (ylow > 0) ylow = TMath::Log10(ylow);
                else continue;
             }
+            if (xup  < gPad->GetUxmin()) continue;
+            if (yup  < gPad->GetUymin()) continue;
+            if (xlow > gPad->GetUxmax()) continue;
+            if (ylow > gPad->GetUymax()) continue;
             if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
             if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
             if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
