@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.32 2002/02/25 11:20:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.31 2001/11/22 15:05:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************

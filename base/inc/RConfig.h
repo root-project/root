@@ -1,7 +1,7 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.36 2002/05/03 14:30:41 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.34 2002/05/01 14:01:37 brun Exp $ */
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -282,8 +282,11 @@
 #      define WIN32
 #   endif
 #   define R__BYTESWAP
+    /* Disable warning about truncated symboles (usually coming from stl) */
+#   pragma warning (disable: 4786)
+    /* Disable warning about inconsistent dll linkage (dllexport assumed) */
+#   pragma warning (disable: 4273)
 #endif
-
 
 #ifdef BORLAND
 #   define MSDOS        /* Windows will always stay MSDOS */
@@ -357,15 +360,6 @@
 
 #endif
 
-/* produce an indentifier that is almost unique inside a file */
-#ifndef __CINT__
-#   define _R__JOIN_(X,Y) _NAME2_(X,Y)
-#   define _R__UNIQUE_(X) _R__JOIN_(X,__LINE__)
-#else
-    // Currently CINT does not really mind to have duplicates and
-    // does not work correctly as far as merging token is concerned.
-#   define _R__UNIQUE_(X) X
-#endif
 
 /*---- misc ------------------------------------------------------------------*/
 

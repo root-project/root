@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.9 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.8 2002/01/23 17:52:51 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,6 @@
 #include "TApplication.h"
 #include "TFile.h"
 #include "TMatrix.h"
-#include "TArrayF.h"
 
 
 //
@@ -81,6 +80,10 @@ void test_allocation()
    cout << "\nDone\n" << endl;
 }
 
+//
+//------------------------------------------------------------------------
+//                Test uniform element operations
+//
 class FillMatrix : public TElementPosAction {
    int no_elems, no_cols;
    void Operation(Real_t &element)
@@ -90,47 +93,6 @@ public:
          no_elems(m.GetNoElements()), no_cols(m.GetNcols()) { }
 };
 
-//
-//------------------------------------------------------------------------
-//          Test Filling of matrix
-//
-void test_matrix_fill(int rsize, int csize)
-{
-   cout << "\n\n---> Test different matrix filling methods\n" << endl;
-
-   cout << "Creating m  with Apply function..." << endl;
-   TMatrix m(-1,rsize-2,1,csize);
-   FillMatrix f(m);
-   m.Apply(f);
-
-   TArrayF a_fortran(rsize*csize);
-   TArrayF a_c      (rsize*csize);
-   for (Int_t i = 0; i < rsize; i++)
-   {
-     for (Int_t j = 0; j < csize; j++)
-     {
-       a_c[i*csize+j] = 4*TMath::Pi()/rsize/csize*((i-1)*csize+j+1);
-       a_fortran[i+rsize*j] = a_c[i*csize+j];
-     }
-   }
-
-   cout << "Creating m_fortran by filling with fortran stored matrix" << endl;
-   TMatrix m_fortran(-1,rsize-2,1,csize,a_fortran.GetArray(),"F");
-   cout << "Check identity between m and m_fortran" << endl;
-   verify_matrix_identity(m,m_fortran);
-
-   cout << "Creating m_c by filling with c stored matrix" << endl;
-   TMatrix m_c(-1,rsize-2,1,csize,a_c.GetArray());
-   cout << "Check identity between m_fortran and m_c" << endl;
-   verify_matrix_identity(m_fortran,m_c);
-
-   cout << "\nDone\n" << endl;
-}
-
-//
-//------------------------------------------------------------------------
-//                Test uniform element operations
-//
 typedef  double (*dfunc)(double);
 class ApplyFunction : public TElementAction {
    dfunc fFunc;
@@ -924,7 +886,6 @@ int main()
           "\n\t\tVerify Operations on Matrices" << endl;
 
    test_allocation();
-   test_matrix_fill(20,10);
    test_element_op(20,10);
    test_binary_ebe_op(10,20);
    test_transposition(20);

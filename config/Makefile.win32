@@ -21,7 +21,7 @@ endif
 CXX           = build/win/cxx.sh
 CC            = build/win/cc.sh
 CXXFLAGS      = -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 \
-                -nologo -DCRTAPI1=_cdecl -DCRTAPI2=_cdecl -FIw32pragma.h \
+                -nologo -DCRTAPI1=_cdecl -DCRTAPI2=_cdecl -FIRConfig.h \
                 -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS $(EXTRA_CXXFLAGS)
 CFLAGS        = -G5 -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 -FIsehmap.h \
                 -nologo -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS $(EXTRA_CFLAGS)

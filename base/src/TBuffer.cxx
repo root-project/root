@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.26 2002/03/14 18:12:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.25 2002/02/25 18:05:02 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************

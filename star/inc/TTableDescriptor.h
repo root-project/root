@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.6 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.5 2001/07/11 06:46:19 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.15 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.14 2002/01/23 17:52:46 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************

@@ -314,7 +314,7 @@ endif
 ifeq ($(ARCH),linuxicc)
 # Linux with Intel icc compiler
 CXX           = icc
-CXXFLAGS      = -O
+CXXFLAGS      = -O -KPIC
 LD            = icc
 LDFLAGS       = -O
 SOFLAGS       = -shared
