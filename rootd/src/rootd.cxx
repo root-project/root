@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.21 2001/02/22 09:43:25 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.22 2001/02/22 13:32:43 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -133,8 +133,10 @@
 #if defined(__alpha) && !defined(linux)
 #include <sys/mount.h>
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
-#else
+#elif linux
 #include <sys/vfs.h>
+#else
+#include <sys/statfs.h>
 #endif
 
 #if defined(linux)
