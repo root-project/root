@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.10 2001/10/01 17:46:51 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.11 2001/11/28 16:05:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -190,7 +190,10 @@ public:
                                  Long_t *flags, Long_t *modtime);
    int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
                                  Long_t *blocks, Long_t *bfree);
+   int               Umask(Int_t mask);
+   int               Utime(const char *file, Long_t modtime, Long_t actime);
    const char       *UnixPathName(const char *unixpathname);
+   char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
 
    //---- Dynamic Loading --------------------------------------
    char             *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
@@ -233,7 +236,6 @@ public:
    virtual int             GetSockOpt(int sock, int opt, int *val);
 
    //---- Static utility functions ------------------------------
-   char  *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
    static const char  *GetDynamicPath();
 
    ClassDef(TWinNTSystem,0)

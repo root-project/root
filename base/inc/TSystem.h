@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.16 2002/01/17 12:15:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.17 2002/02/14 19:11:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -260,6 +260,7 @@ public:
    virtual int             GetPathInfo(const char *path, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
    virtual int             GetFsInfo(const char *path, Long_t *id, Long_t *bsize, Long_t *blocks, Long_t *bfree);
    virtual int             Umask(Int_t mask);
+   virtual int             Utime(const char *file, Long_t modtime, Long_t actime);
    virtual const char     *UnixPathName(const char *unixpathname);
    virtual char           *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
 

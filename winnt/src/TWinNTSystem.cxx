@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.27 2002/01/27 15:55:57 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.28 2002/01/30 06:48:23 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/utime.h>
 
 
 // Below my portion
@@ -1382,6 +1383,74 @@ char *TWinNTSystem::ExpandPathName(const char *path)
    return StrDup(patbuf.Data());
 }
 
+//______________________________________________________________________________
+int TWinNTSystem::Umask(Int_t mask)
+{
+   // Set the process file creation mode mask.
+
+   return ::umask(mask);
+}
+
+//______________________________________________________________________________
+int TWinNTSystem::Utime(const char *file, Long_t modtime, Long_t actime)
+{
+   // Set a files modification and access times. If actime = 0 it will be
+   // set to the modtime. Returns 0 on success and -1 in case of error.
+
+   if (AccessPathName(file, kWritePermission)) {
+      Error("Utime", "need write permission for %s to change utime", file);
+      return -1;
+   }
+
+   if (!actime)
+      actime = modtime;
+
+   struct utimbuf t;
+   t.actime  = (time_t)actime;
+   t.modtime = (time_t)modtime;
+   return ::utime(file, &t);
+}
+
+//______________________________________________________________________________
+char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mode)
+{
+   // Find location of file in a search path.
+   // User must delete returned string. Returns 0 in case file is not found.
+
+   static char name[kMAXPATHLEN];
+   char *lpFilePart = 0;
+   char *found = 0;
+
+//* Expand parameters
+
+   char *exinfile = gSystem->ExpandPathName(infile);
+//  Check whether this infile has the absolute path first
+   if (IsAbsoluteFileName(exinfile) ) {
+     found = exinfile;
+   }
+   else {
+     char *exsearch = gSystem->ExpandPathName(search);
+
+ //*-*  Check access
+
+    if (SearchPath( exsearch,exinfile,NULL,kMAXPATHLEN,name,&lpFilePart)
+                    && access(name, mode) == 0) {
+        if (gEnv->GetValue("Root.ShowPath", 0))
+           Printf("Which: %s = %s", infile, name);
+        found =  StrDup(name);
+    }
+    delete [] exsearch;
+    delete [] exinfile;
+   }
+
+   if (found  && AccessPathName(found, mode))
+   {
+     delete [] found;
+     found = 0;
+   }
+   return found;
+}
+
 //---- environment manipulation ------------------------------------------------
 
 //______________________________________________________________________________
@@ -1480,46 +1549,6 @@ const char *TWinNTSystem::GetDynamicPath()
          dynpath = StrDup(Form("%s;%s/bin;%s,", gProgPath,gRootDir,gSystem->Getenv("PATH")));
    }
    return dynpath;
-}
-
-//______________________________________________________________________________
-char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mode)
-{
-   // Find location of file in a search path.
-   // User must delete returned string. Returns 0 in case file is not found.
-
-   static char name[kMAXPATHLEN];
-   char *lpFilePart = 0;
-   char *found = 0;
-
-//* Expand parameters
-
-   char *exinfile = gSystem->ExpandPathName(infile);
-//  Check whether this infile has the absolute path first
-   if (IsAbsoluteFileName(exinfile) ) {
-     found = exinfile;
-   }
-   else {
-     char *exsearch = gSystem->ExpandPathName(search);
-
- //*-*  Check access
-
-    if (SearchPath( exsearch,exinfile,NULL,kMAXPATHLEN,name,&lpFilePart)
-                    && access(name, mode) == 0) {
-        if (gEnv->GetValue("Root.ShowPath", 0))
-           Printf("Which: %s = %s", infile, name);
-        found =  StrDup(name);
-    }
-    delete [] exsearch;
-    delete [] exinfile;
-   }
-
-   if (found  && AccessPathName(found, mode))
-   {
-     delete [] found;
-     found = 0;
-   }
-   return found;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.32 2002/02/14 19:11:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.33 2002/02/18 20:19:39 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -822,6 +822,16 @@ int TSystem::Umask(Int_t)
    // Set the process file creation mode mask.
 
    AbstractMethod("Umask");
+   return -1;
+}
+
+//______________________________________________________________________________
+int TSystem::Utime(const char *, Long_t, Long_t)
+{
+   // Set the a files modification and access times. If actime = 0 it will be
+   // set to the modtime. Returns 0 on success and -1 in case of error.
+
+   AbstractMethod("Utime");
    return -1;
 }
 

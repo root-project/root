@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.34 2002/01/27 15:55:56 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.35 2002/01/27 16:49:43 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -82,6 +82,7 @@
 #   include <sys/statfs.h>
 #endif
 
+#include <utime.h>
 #include <syslog.h>
 #include <sys/stat.h>
 #include <setjmp.h>
@@ -1023,6 +1024,21 @@ int TUnixSystem::Umask(Int_t mask)
    // Set the process file creation mode mask.
 
    return ::umask(mask);
+}
+
+//______________________________________________________________________________
+int TUnixSystem::Utime(const char *file, Long_t modtime, Long_t actime)
+{
+   // Set a files modification and access times. If actime = 0 it will be
+   // set to the modtime. Returns 0 on success and -1 in case of error.
+
+   if (!actime)
+      actime = modtime;
+
+   struct utimbuf t;
+   t.actime  = (time_t)actime;
+   t.modtime = (time_t)modtime;
+   return ::utime(file, &t);
 }
 
 //______________________________________________________________________________
