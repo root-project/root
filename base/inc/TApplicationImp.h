@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplicationImp.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplicationImp.h,v 1.2 2001/04/22 16:00:56 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -35,8 +35,7 @@ protected:
 
 public:
    TApplicationImp() { }
-   TApplicationImp(const char *appClassName, int *argc, char **argv,
-                   void *options, int numOptions);
+   TApplicationImp(const char *appClassName, int *argc, char **argv);
    virtual ~TApplicationImp() { }
 
    virtual const char *ApplicationName() const { return fApplicationName.Data(); }
@@ -53,8 +52,7 @@ public:
    ClassDef(TApplicationImp,0)  //ABC describing application protocol
 };
 
-inline TApplicationImp::TApplicationImp(const char *, int *, char **,
-                                        void *, int) { }
+inline TApplicationImp::TApplicationImp(const char *, int *, char **) { }
 inline Int_t TApplicationImp::ExecCommand(TGWin32Command *, Bool_t) { return 0; }
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TGuiFactory.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -42,11 +42,11 @@ TGuiFactory::TGuiFactory(const char *name, const char *title)
 }
 
 //______________________________________________________________________________
-TApplicationImp *TGuiFactory::CreateApplicationImp(const char *classname, int *argc, char **argv, void *options, Int_t numOptions)
+TApplicationImp *TGuiFactory::CreateApplicationImp(const char *classname, int *argc, char **argv)
 {
    // Create a batch version of TApplicationImp.
 
-   return new TApplicationImp(classname, argc, argv, options, numOptions);
+   return new TApplicationImp(classname, argc, argv);
 }
 
 //______________________________________________________________________________

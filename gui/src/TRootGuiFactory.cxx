@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootGuiFactory.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -37,11 +37,11 @@ TRootGuiFactory::TRootGuiFactory(const char *name, const char *title)
 
 //______________________________________________________________________________
 TApplicationImp *TRootGuiFactory::CreateApplicationImp(const char *classname,
-                      Int_t *argc, char **argv, void *options, Int_t numOptions)
+                      Int_t *argc, char **argv)
 {
    // Create a ROOT native GUI version of TApplicationImp
 
-   return new TRootApplication(classname, argc, argv, options, numOptions);
+   return new TRootApplication(classname, argc, argv);
 }
 
 //______________________________________________________________________________

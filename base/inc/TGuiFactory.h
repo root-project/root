@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TGuiFactory.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    TGuiFactory(const char *name = "Batch", const char *title = "Batch GUI Factory");
    virtual ~TGuiFactory() { }
 
-   virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv, void *option, Int_t numOptions);
+   virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
 
    virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
    virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);

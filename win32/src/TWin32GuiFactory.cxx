@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TWin32GuiFactory.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Rene Brun   11/12/95
 
 /*************************************************************************
@@ -38,9 +38,9 @@ TWin32GuiFactory::TWin32GuiFactory(const char *name, const char *title)
 }
 
 //______________________________________________________________________________
-   TApplicationImp *TWin32GuiFactory::CreateApplicationImp(const char *classname, int *argc, char **argv, void *option, Int_t numOptions)
+   TApplicationImp *TWin32GuiFactory::CreateApplicationImp(const char *classname, int *argc, char **argv)
 {
-   return new TWin32Application(classname,argc,argv, option, numOptions);
+   return new TWin32Application(classname,argc,argv);
 }
 
 //______________________________________________________________________________
