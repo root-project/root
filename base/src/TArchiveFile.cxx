@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.1 2004/07/07 23:25:33 rdm Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************
@@ -111,7 +111,8 @@ TArchiveFile *TArchiveFile::Open(const char *url, TFile *file)
    // This function is normall only called via TFile::Open().
 
    if (!file) {
-      ::Error("TArchiveFile::Open", "must specify a valid TFile");
+      ::Error("TArchiveFile::Open", "must specify a valid TFile to access %s",
+              url);
       return 0;
    }
 
