@@ -54,7 +54,11 @@ class deque {
 
   class iterator 
 #if defined(G__VISUAL)
+#if (G__MSC_VER>=1300)
+	: public _Ranit<T, difference_type, const_pointer, const_reference>
+#else
 	: public _Ranit<T,difference_type>
+#endif
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
 #elif defined(G__INTEL_COMPILER)
