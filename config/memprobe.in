@@ -13,7 +13,7 @@
 #  use rootn.exe. When all this is the case you will find at the end
 #  of the program execution a file "memcheck.out" in the directory
 #  where you started your ROOT program. Alternatively you can set
-#  the shell variable ROOTMEMCHECK to the name of a file to which
+#  the resource Root.MemCheckFile to the name of a file to which
 #  the leak information will be written. The contents of this
 #  "memcheck.out" file can be analyzed and transformed into printable
 #  text via the memprobe program (in $ROOTSYS/bin).
@@ -129,7 +129,7 @@ close (MEMSTAT);
 open (STDERR,">/dev/null");
 
 # Redirect list of commands to a file
-# using unix pipes ( needed for RH.7.1 & gdb5.0)
+# using unix pipes (needed for RH.7.1 & gdb5.0)
 
 open (myFile,">commands");
 
@@ -158,11 +158,11 @@ close (myFile);
 ##############################################################################
 #               Calling now gdb services in batch mode using
 #               dumped list of commands.
-#               ==> works with gdb-4.18 gdb-5.0 release versions )
+#               ==> works with gdb-4.18 gdb-5.0 release versions
 ##############################################################################
 
 
-open (PIPE, "|/d/hades/denis/gdb-4.18/gdb/gdb -n -q $ExeFile < commands > $MemDescFile")
+open (PIPE, "| gdb -n -q $ExeFile < commands > $MemDescFile")
 or die "-E- Cannot start gdb !!!";
 close (PIPE);
 
