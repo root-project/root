@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name$:$Id$
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +182,7 @@ TObjArray *TPythia6::ImportParticles(Option_t *)
    fParticles->Clear();
    Int_t numpart   = fPyjets->N;
    TClonesArray &a = *((TClonesArray*)fParticles);
-   for (Int_t i = 0; i<=numpart; i++) {
+   for (Int_t i = 0; i<numpart; i++) {
       new(a[i]) TMCParticle(fPyjets->K[0][i] ,
                             fPyjets->K[1][i] ,
                             fPyjets->K[2][i] ,
@@ -223,7 +223,7 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
   Particles.Clear();
   Int_t numpart = fPyjets->N;
   if (!strcmp(option,"") || !strcmp(option,"Final")) {
-    for (Int_t i = 0; i<=numpart; i++) {
+    for (Int_t i = 0; i<numpart; i++) {
       if (fPyjets->K[1][i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
