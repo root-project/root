@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.24 2002/11/01 19:12:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.25 2002/11/28 07:29:36 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -44,6 +44,7 @@ protected:
    Int_t     fMapSize;       //Default size of map
    Int_t     fDisplacement;  //Value to be added to the map offsets
    TExMap   *fMap;           //Map containing object,id pairs for reading/ writing
+   TExMap   *fClassMap;      //Map classes of containing object,id pairs for reading
    TObject  *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
 
    enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
@@ -79,7 +80,7 @@ public:
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
-   void     MapObject(const void *obj, UInt_t offset = 1);
+   void     MapObject(const void *obj, TClass* cl, UInt_t offset = 1);
    virtual void Reset() { SetBufferOffset(); ResetMap(); }
    void     InitMap();
    void     ResetMap();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.28 2002/11/15 14:40:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.29 2002/12/06 06:40:48 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -489,7 +489,7 @@ TObject *TKey::ReadObj()
       return 0;
    }
    if (kvers > 1)
-      fBufferRef->MapObject(pobj);  //register obj in map to handle self reference
+      fBufferRef->MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;

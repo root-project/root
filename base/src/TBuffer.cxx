@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.43 2002/12/13 18:17:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.44 2003/01/17 10:35:57 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -74,6 +74,7 @@ TBuffer::TBuffer(EMode mode)
    fMapCount = 0;
    fMapSize  = fgMapSize;
    fMap      = 0;
+   fClassMap = 0;
    fParent   = 0;
    fDisplacement = 0;
 
@@ -98,6 +99,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
    fMapCount = 0;
    fMapSize  = fgMapSize;
    fMap      = 0;
+   fClassMap = 0;
    fParent   = 0;
    fDisplacement = 0;
 
@@ -125,6 +127,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
    fMapCount = 0;
    fMapSize  = fgMapSize;
    fMap      = 0;
+   fClassMap = 0;
    fParent   = 0;
    fDisplacement = 0;
 
@@ -152,6 +155,7 @@ TBuffer::~TBuffer()
    fParent = 0;
 
    delete fMap;
+   delete fClassMap;
 }
 
 //______________________________________________________________________________
@@ -353,17 +357,21 @@ void TBuffer::MapObject(const TObject *obj, UInt_t offset)
    if (IsWriting()) {
       if (obj) {
          CheckCount(offset);
-         fMap->Add(((TObject*)obj)->TObject::Hash(), (Long_t)obj, offset);
+         ULong_t hash = ((TObject*)obj)->TObject::Hash();
+         fMap->Add(hash, (Long_t)obj, offset);
+         // No need to keep track of the class in write mode
+         // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
          fMapCount++;
       }
    } else {
       fMap->Add(offset, (Long_t)obj);
+      fClassMap->Add(offset, obj?(Long_t)((TObject*)obj)->IsA():0);
       fMapCount++;
    }
 }
 
 //______________________________________________________________________________
-void TBuffer::MapObject(const void *obj, UInt_t offset)
+void TBuffer::MapObject(const void *obj, TClass* cl, UInt_t offset)
 {
    // Add object to the fMap container.
    // If obj is not 0 add object to the map (in read mode also add 0 objects to
@@ -377,11 +385,15 @@ void TBuffer::MapObject(const void *obj, UInt_t offset)
    if (IsWriting()) {
       if (obj) {
          CheckCount(offset);
-         fMap->Add(Void_Hash(obj), (Long_t)obj, offset);
+         ULong_t hash = Void_Hash(obj);
+         fMap->Add(hash, (Long_t)obj, offset);
+         // No need to keep track of the class in write mode
+         // fClassMap->Add(hash, (Long_t)obj, (Long_t)cl);
          fMapCount++;
       }
    } else {
       fMap->Add(offset, (Long_t)obj);
+      fClassMap->Add(offset, (Long_t)cl);
       fMapCount++;
    }
 }
@@ -434,6 +446,8 @@ void TBuffer::InitMap()
    if (IsWriting()) {
       if (!fMap) {
          fMap = new TExMap(fMapSize);
+         // No need to keep track of the class in write mode
+         // fClassMap = new TExMap(fMapSize);
          fMapCount = 0;
       }
    } else {
@@ -441,6 +455,10 @@ void TBuffer::InitMap()
          fMap = new TExMap(fMapSize);
          fMap->Add(0, kNullTag);      // put kNullTag in slot 0
          fMapCount = 1;
+      }
+      if (!fClassMap) {
+         fClassMap = new TExMap(fMapSize);
+         fClassMap->Add(0, kNullTag);      // put kNullTag in slot 0
       }
    }
 }
@@ -451,7 +469,9 @@ void TBuffer::ResetMap()
    // Delete existing fMap and reset map counter.
 
    delete fMap;
+   delete fClassMap;
    fMap          = 0;
+   fClassMap     = 0;
    fMapCount     = 0;
    fDisplacement = 0;
 }
@@ -1516,7 +1536,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
       if (fVersion > 0)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
-         MapObject((void*)0, fMapCount);
+         MapObject((void*)0, 0, fMapCount);
       CheckByteCount(startpos, tag, 0);
       return 0;
    }
@@ -1535,6 +1555,17 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
          }
       }
       obj = (char *) fMap->GetValue(tag);
+      clRef = (TClass*) fClassMap->GetValue(tag);
+      
+      if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
+         //baseOffset will be -1 if clRef does not inherit from clCast.
+         baseOffset = clRef->GetBaseClassOffset(clCast);
+         if (baseOffset == -1) {
+            Error("ReadObject", "got object of wrong class");
+            // exception
+            baseOffset = 0;
+         }
+      }
 
       // There used to be a warning printed here when:
       //   obj && isTObject && !((TObject*)obj)->IsA()->InheritsFrom(clReq)
@@ -1557,9 +1588,9 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
 
       // add to fMap before reading rest of object
       if (fVersion > 0)
-         MapObject(obj, startpos+kMapOffset);
+         MapObject(obj, clRef, startpos+kMapOffset);
       else
-         MapObject(obj, fMapCount);
+         MapObject(obj, clRef, fMapCount);
 
       // let the object read itself
       clRef->Streamer(obj, *this);
@@ -1627,7 +1658,7 @@ void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
 
       // add to map before writing rest of object (to handle self reference)
       // (+kMapOffset so it's != kNullTag)
-      MapObject(actualObjectStart, cntpos+kMapOffset);
+      MapObject(actualObjectStart, actualClass, cntpos+kMapOffset);
 
       actualClass->Streamer((void*)actualObjectStart,*this);
 
