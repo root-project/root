@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.2 2000/06/13 09:49:54 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.3 2000/08/16 13:33:46 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -19,7 +19,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <iostream.h>
-#include "TROOT.h"
 #include "TFile.h"
 #include "TDirectory.h"
 #include "TTree.h"
@@ -221,8 +220,6 @@ extern void convert_rwn(Int_t id);
 
 Int_t golower  = 1;
 Int_t bufsize  = 8000;
-
-TROOT conv("h2root","Conversion from HBOOK to ROOT");
 
 int main(int argc, char **argv)
 {
