@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooFormula.cc,v 1.13 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -44,6 +44,23 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& l
 }
 
 
+RooFormula::RooFormula(const RooFormula& other, const char* name) : 
+  TFormula(), _isOK(other._isOK) 
+{
+  SetName(name?name:other.GetName()) ;
+  SetTitle(other.GetTitle()) ;
+
+  TIterator* iter = other._origList.MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    _origList.Add(arg) ;
+  }
+  
+  Compile() ;
+}
+
+
+
 Bool_t RooFormula::reCompile(const char* newFormula) 
 {
   fNval=0 ;
@@ -58,25 +75,6 @@ Bool_t RooFormula::reCompile(const char* newFormula)
 
   SetTitle(newFormula) ;
   return kFALSE ;
-}
-
-
-RooFormula::RooFormula(const RooFormula& other, const char* name) : 
-  TFormula(other), _isOK(other._isOK) 
-{
-  if (name) SetName(name) ;
-
-  TIterator* iter = other._origList.MakeIterator() ;
-  RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    _origList.Add(arg) ;
-  }
-  
-  int i ;
-  for (i=0 ; i<other._useList.GetEntries() ; i++) {
-    _useList.Add(other._useList.At(i)) ;
-    _labelList.Add(other._labelList.At(i)) ;
-  }
 }
 
 
@@ -111,8 +109,17 @@ void RooFormula::dump() {
   // DEBUG: Dump state information
   int i ;
   cout << "RooFormula::dump()" << endl ;
+  cout << "useList:" << endl ;
   for (i=0 ; i<_useList.GetEntries() ; i++) {
-    cout << "[" << i << "] = " << (void*) _useList.At(i) << " = " << ((RooAbsReal*)_useList.At(i))->getVal() << endl ;
+    cout << "[" << i << "] = " << (void*) _useList.At(i) << " " << _useList.At(i)->GetName() << endl ;
+  }
+  cout << "labelList:" << endl ;
+  for (i=0 ; i<_labelList.GetEntries() ; i++) {
+    cout << "[" << i << "] = " << (void*) _labelList.At(i) << _useList.At(i)->GetName() <<  endl ;
+  }
+  cout << "origList:" << endl ;
+  for (i=0 ; i<_origList.GetSize() ; i++) {
+    cout << "[" << i << "] = " << (void*) _origList.At(i)  << _useList.At(i)->GetName() <<  endl ;
   }
 }
 

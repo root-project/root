@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.18 2001/05/10 21:26:08 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.19 2001/05/11 06:29:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -118,7 +118,9 @@ RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
 RooArgSet::~RooArgSet() 
 {
   // delete all variables in our list if we own them
-  if(_isCopy) Delete();
+  if(_isCopy){ 
+    Delete();
+  }
 }
 
 RooArgSet* RooArgSet::snapshot(Bool_t deepCopy) const

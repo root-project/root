@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.cc,v 1.9 2001/05/10 00:16:08 verkerke Exp $
+ *    File: $Id: RooRealFormula.cc,v 1.10 2001/05/10 18:58:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,7 +17,7 @@
 ClassImp(RooRealFormula)
 
 
-RooRealFormula::RooRealFormula(const char *name, const char *title, RooArgSet& dependents) : 
+RooRealFormula::RooRealFormula(const char *name, const char *title, const RooArgSet& dependents) : 
   RooAbsReal(name,title), _formula(name,title,dependents)
 {  
   TIterator* depIter = _formula.actualDependents().MakeIterator() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.16 2001/05/10 21:26:08 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.17 2001/05/11 00:45:49 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -304,6 +304,7 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions) const {
     cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
     return 0;
   }
+
   // check that this frame knows what variable to plot
   RooAbsReal *var= frame->getPlotVar();
   if(0 == var) {
@@ -311,6 +312,7 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions) const {
 	 << ":plotOn: frame does not specify a plot variable" << endl;
     return 0;
   }
+
   // check that the plot variable is not derived
   RooRealVar* realVar= dynamic_cast<RooRealVar*>(var);
   if(0 == realVar) {
@@ -318,6 +320,7 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions) const {
 	 << ":plotOn: cannot plot derived variable \"" << var->GetName() << "\"" << endl;
     return 0;
   }
+
   // check that we actually depend on the plot variable
   if(!this->dependsOn(*realVar)) {
     cout << GetName() << "::plotOn: variable is not a dependent: " << realVar->GetName() << endl;
@@ -339,7 +342,7 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions) const {
   // add a copy of the temporary curve to the specified plot frame
   frame->addPlotable(curve, drawOptions);
 
-  // cleanup
+  // cleanup 
   delete cloneList;
 
   return frame;

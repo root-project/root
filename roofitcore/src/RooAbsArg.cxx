@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.24 2001/05/10 21:26:08 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.25 2001/05/11 06:29:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -93,7 +93,6 @@ RooAbsArg::~RooAbsArg()
 {
   // Destructor notifies its servers that they no longer need to serve us and
   // notifies its clients that they are now in limbo (!)
-
   _attribList.Delete() ;
 
   //Notify all servers that they no longer need to serve us
