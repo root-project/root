@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.46 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.47 2004/09/08 16:03:57 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -208,7 +208,7 @@ public:
    virtual Bool_t HandleDragEnter(TGFrame *) { return kFALSE; }
    virtual Bool_t HandleDragLeave(TGFrame *) { return kFALSE; }
    virtual Bool_t HandleDragMotion(TGFrame *) { return kFALSE; }
-   virtual Bool_t HandleDragDrop(TGFrame *, Int_t /*x*/, Int_t /*y*/, TGLayoutHints*) 
+   virtual Bool_t HandleDragDrop(TGFrame *, Int_t /*x*/, Int_t /*y*/, TGLayoutHints*)
                  { return kFALSE; }
    virtual void   ProcessedEvent(Event_t *event)
                  { Emit("ProcessedEvent(Event_t*)", (Long_t)event); } //*SIGNAL*
@@ -231,7 +231,7 @@ public:
    virtual void    Layout() { }
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
-   virtual void    ReparentWindow(const TGWindow *p, Int_t x = 0, Int_t y = 0) 
+   virtual void    ReparentWindow(const TGWindow *p, Int_t x = 0, Int_t y = 0)
                             { TGWindow::ReparentWindow(p, x, y); fX = x; fY = y; }
    virtual void    MapWindow() { TGWindow::MapWindow(); if (fFE) fFE->fState |= kIsVisible; }
    virtual void    MapRaised() { TGWindow::MapRaised(); if (fFE) fFE->fState |= kIsVisible; }
@@ -367,7 +367,7 @@ public:
    virtual Bool_t IsEditable() const;
    virtual void   SetEditable(Bool_t on = kTRUE);
    virtual void   SetLayoutBroken(Bool_t on = kTRUE);
-   virtual Bool_t IsLayoutBroken() const 
+   virtual Bool_t IsLayoutBroken() const
                   { return fLayoutBroken || !fLayoutManager || IsEditable(); }
    virtual void   SetEditDisabled(Bool_t on = kTRUE);
 

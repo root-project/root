@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.70 2004/09/08 10:28:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.71 2004/09/08 16:03:57 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -149,6 +149,8 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fMinHeight   = 0;
    fMaxWidth    = ~0;
    fMaxHeight   = ~0;
+   fMustCleanup = kFALSE;
+   fFE          = 0;
 
    if (fOptions & (kSunkenFrame | kRaisedFrame))
       fBorderWidth = (fOptions & kDoubleBorder) ? 2 : 1;
@@ -167,7 +169,6 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
       //   SetBackgroundPixmap(kParentRelative);
    }
    fEventMask = (UInt_t) wattr.fEventMask;
-   fFE        = 0;
 
    AddInput(kButtonPressMask); // to allow Drag and Drop
    SetWindowName();
@@ -206,11 +207,12 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fEventMask   = (UInt_t) attributes.fYourEventMask;
    fBackground  = 0;
    fOptions     = 0;
-   fFE          = 0;
    fMinWidth    = 0;
    fMinHeight   = 0;
    fMaxWidth    = ~0;
    fMaxHeight   = ~0;
+   fMustCleanup = kFALSE;
+   fFE          = 0;
 
    AddInput(kButtonPressMask); // to allow Drag and Drop
    SetWindowName();
@@ -219,13 +221,13 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
 //______________________________________________________________________________
 TGFrame::~TGFrame()
 {
-   // destructor
+   // Destructor.
 }
 
 //______________________________________________________________________________
 void TGFrame::SetCleanup(Bool_t on)
 {
-   //
+   // Turn on automatic cleanup of child frames.
 
    if (on == fMustCleanup) return;
    fMustCleanup = on;
@@ -234,7 +236,7 @@ void TGFrame::SetCleanup(Bool_t on)
 //______________________________________________________________________________
 Bool_t TGFrame::IsCleanupOn() const
 {
-   // return kTRUE if parent's Cleanup is in progress (or at ctor.)
+   // Return kTRUE if parent's Cleanup is in on (or at ctor).
 
    return kFALSE; //(fParent->MustCleanup() && !fFE);
 }
@@ -981,7 +983,7 @@ void TGCompositeFrame::MapSubwindows()
 
    while ((el = (TGFrameElement *) next())) {
       el->fFrame->MapSubwindows();
-      TGFrameElement *fe = el->fFrame->GetFrameElement(); 
+      TGFrameElement *fe = el->fFrame->GetFrameElement();
       if (fe) fe->fState |= kIsVisible;
    }
 }
@@ -1199,12 +1201,12 @@ Bool_t TGCompositeFrame::HandleDragMotion(TGFrame *)
 }
 
 //______________________________________________________________________________
-Bool_t TGCompositeFrame::HandleDragDrop(TGFrame *frame, Int_t x, Int_t y, 
+Bool_t TGCompositeFrame::HandleDragDrop(TGFrame *frame, Int_t x, Int_t y,
                                         TGLayoutHints *lo)
 {
-   //  handle drop event 
+   //  handle drop event
 
-   if (fClient && fClient->IsEditable() && frame && (x >= 0) && (y >= 0) && 
+   if (fClient && fClient->IsEditable() && frame && (x >= 0) && (y >= 0) &&
        (x + frame->GetWidth() <= fWidth) && (y + frame->GetHeight() <= fHeight)) {
       frame->ReparentWindow(this, x, y);
       AddFrame(frame, lo);
@@ -1943,7 +1945,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
 {
    // auxilary protected method  used to save subframes
 
-   if (fLayoutBroken) 
+   if (fLayoutBroken)
       out << "   " << GetName() << "->SetLayoutBroken(kTRUE);" << endl;
 
    if (!fList) return;
