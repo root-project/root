@@ -154,8 +154,8 @@ static char *CompressName(const char *method_name)
    char *tmp = str;
 
    // substitute "const" with white spaces
-   while( (tmp = strstr(tmp,"const"))) {
-      for(int i=0; i<5; i++) *(tmp+i) = ' ';
+   while ((tmp = strstr(tmp,"const"))) {
+      for (int i = 0; i < 5; i++) *(tmp+i) = ' ';
    }
 
    tmp = str;
@@ -569,7 +569,7 @@ void TQObject::LowPriority(const char *signal_name, const char *slot_name)
 }
 
 //______________________________________________________________________________
-Bool_t TQObject::HasConnection(const char *signal_name)
+Bool_t TQObject::HasConnection(const char *signal_name) const
 {
    // Return true if there is any object connected to this signal.
    // Only checks for object signals.
@@ -583,7 +583,7 @@ Bool_t TQObject::HasConnection(const char *signal_name)
    // check object signals
    TIter next_list(fListOfSignals);
    while ((clist = (TQConnectionList*)next_list())) {
-      if (!strcmp(signal,clist->GetName())) {
+      if (!strcmp(signal, clist->GetName())) {
          delete [] signal;
          return kTRUE;
       }
@@ -593,18 +593,35 @@ Bool_t TQObject::HasConnection(const char *signal_name)
 }
 
 //______________________________________________________________________________
+Int_t TQObject::NumberOfSignals() const
+{
+   // Return number of signals for this object.
+
+   if (fListOfSignals)
+      return fListOfSignals->GetSize();
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TQObject::NumberOfConnections() const
+{
+   // Return number of connections for this object.
+
+   if (fListOfConnections)
+      return fListOfConnections->GetSize();
+   return 0;
+}
+
+//______________________________________________________________________________
 void TQObject::Emit(const char *signal_name)
 {
    // Acitvate signal without args
    // Example:
    //          theButton->Emit("Clicked()");
 
-   if (!fListOfSignals)
-      return;
-
    TList *slist = GetListOfClassSignals();
 
-   if (!slist)
+   if (!slist && !fListOfSignals)
       return;
 
    gTQSender = GetSender();
@@ -656,12 +673,9 @@ void TQObject::Emit(const char *signal_name, Long_t param)
    // Example:
    //          theButton->Emit("Clicked(int)",id)
 
-   if (!fListOfSignals)
-      return;
-
    TList *slist = GetListOfClassSignals();
 
-   if (!slist)
+   if (!slist && !fListOfSignals)
       return;
 
    gTQSender = GetSender();
@@ -711,12 +725,9 @@ void TQObject::Emit(const char *signal_name, Double_t param)
 {
    // Activate signal with single parameter.
 
-   if (!fListOfSignals)
-      return;
-
    TList *slist = GetListOfClassSignals();
 
-   if (!slist)
+   if (!slist && !fListOfSignals)
       return;
 
    gTQSender = GetSender();
@@ -769,12 +780,9 @@ void TQObject::Emit(const char *signal_name, const char *params)
    // Example:
    //          myObject->Emit("Error(char*)","Fatal error");
 
-   if (!fListOfSignals)
-      return;
-
    TList *slist = GetListOfClassSignals();
 
-   if (!slist)
+   if (!slist && !fListOfSignals)
       return;
 
    gTQSender = GetSender();
@@ -838,12 +846,9 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
    //
    //    processor->Emit("Evaluated(Float_t,Float_t)",args);
 
-   if (!fListOfSignals)
-      return;
-
    TList *slist = GetListOfClassSignals();
 
-   if (!slist)
+   if (!slist && !fListOfSignals)
       return;
 
    gTQSender = GetSender();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.3 2000/10/27 16:28:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.4 2001/03/28 16:49:01 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -12,7 +12,9 @@
 #ifndef ROOT_RQ_OBJECT
 #define ROOT_RQ_OBJECT
 
+#ifndef __CINT__
 #include <TQObject.h>
+#endif
 
 //---- RQ_OBJECT macro -----------------------------------------------
 //

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.7 2001/03/28 16:49:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.8 2001/04/20 17:29:57 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -53,8 +53,8 @@ class TQObject {
 friend class TQConnection;
 
 protected:
-   TList   *fListOfSignals;       //! list of signals from this object
-   TList   *fListOfConnections;   //! list of connections to this object
+   TList   *fListOfSignals;        //! list of signals from this object
+   TList   *fListOfConnections;    //! list of connections to this object
 
    TList   *GetListOfClassSignals() const;
    TList   *GetListOfSignals() const { return fListOfSignals; }
@@ -114,7 +114,9 @@ public:
    virtual void   LowPriority(const char *signal_name,
                               const char *slot_name = 0);
 
-   virtual Bool_t HasConnection(const char *signal_name);
+   virtual Bool_t HasConnection(const char *signal_name) const;
+   virtual Int_t  NumberOfSignals() const;
+   virtual Int_t  NumberOfConnections() const;
    virtual void   Connected(const char * /*signal_name*/) { }
    virtual void   Disconnected(const char * /*signal_name*/) { }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.32 2001/04/20 17:53:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.33 2001/04/21 02:57:42 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -355,7 +355,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    InitThreads();
 
    // Load RQ_OBJECT.h in interpreter (allows signal/slot programming, like Qt)
-//   TQObject::LoadRQ_OBJECT();
+   TQObject::LoadRQ_OBJECT();
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
