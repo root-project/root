@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.rdl,v 1.6 2001/10/19 22:19:49 verkerke Exp $
+ *    File: $Id: RooTrace.rdl,v 1.7 2001/10/21 22:57:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,8 @@ public:
   inline static void active(Bool_t flag) { _active = flag ; }
   inline static void verbose(Bool_t flag) { _verbose = flag ; }
   
-  static void dump(ostream& os=cout) ;
+  static void dump(ostream& os=cout, Bool_t sinceMarked=kFALSE) ;
+  static void mark() ;
 
 protected:
 
@@ -40,6 +41,7 @@ protected:
   static Bool_t _verbose ;
   
   static RooLinkedList _list ;
+  static RooLinkedList _markList ;
 
   ClassDef(RooTrace,0) // Memory tracer utility for RooFitTools objects
 };
