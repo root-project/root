@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.13 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.14 2003/08/21 10:17:15 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -36,33 +36,33 @@ class TGeoShape : public TNamed
 public:
 enum EShapeType {
    kGeoNoShape = 0,
-   kGeoBad     = BIT(5),
-   kGeoRSeg    = BIT(6),
-   kGeoPhiSeg  = BIT(7),
-   kGeoThetaSeg = BIT(8),
-   kGeoVisX    = BIT(9),
-   kGeoVisY    = BIT(10),
-   kGeoVisZ    = BIT(11),
-   kGeoRunTimeShape = BIT(12),
-   kGeoInvalidShape = BIT(13),
-   kGeoTorus   = BIT(14),
-   kGeoBox     = BIT(15),
-   kGeoPara    = BIT(16),
-   kGeoSph     = BIT(17),
-   kGeoTube    = BIT(18),
-   kGeoTubeSeg = BIT(19), 
-   kGeoCone    = BIT(20),
-   kGeoConeSeg = BIT(21),
-   kGeoPcon    = BIT(22),
-   kGeoPgon    = BIT(23),
-   kGeoArb8    = BIT(24),
-   kGeoEltu    = BIT(25),
-   kGeoTrap    = BIT(26),
-   kGeoCtub    = BIT(27),
-   kGeoTrd1    = BIT(28),
-   kGeoTrd2    = BIT(29),
-   kGeoComb    = BIT(30),
-   kGeoClosedShape = BIT(31)
+   kGeoBad     = BIT(0),
+   kGeoRSeg    = BIT(1),
+   kGeoPhiSeg  = BIT(2),
+   kGeoThetaSeg = BIT(3),
+   kGeoVisX    = BIT(4),
+   kGeoVisY    = BIT(5),
+   kGeoVisZ    = BIT(6),
+   kGeoRunTimeShape = BIT(7),
+   kGeoInvalidShape = BIT(8),
+   kGeoTorus   = BIT(9),
+   kGeoBox     = BIT(10),
+   kGeoPara    = BIT(11),
+   kGeoSph     = BIT(12),
+   kGeoTube    = BIT(13),
+   kGeoTubeSeg = BIT(14), 
+   kGeoCone    = BIT(15),
+   kGeoConeSeg = BIT(16),
+   kGeoPcon    = BIT(17),
+   kGeoPgon    = BIT(18),
+   kGeoArb8    = BIT(19),
+   kGeoEltu    = BIT(20),
+   kGeoTrap    = BIT(21),
+   kGeoCtub    = BIT(22),
+   kGeoTrd1    = BIT(23),
+   kGeoTrd2    = BIT(24),
+   kGeoComb    = BIT(25),
+   kGeoClosedShape = BIT(26)
 };
 static const Double_t kRadDeg;   // conversion factor rad->deg
 static const Double_t kDegRad;   // conversion factor deg->rad
