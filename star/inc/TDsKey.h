@@ -21,7 +21,7 @@ class TDsKey
     virtual ~TDsKey(){}
     virtual  TDsKey &operator=( const TDsKey &from);
     virtual  TDsKey &operator=( UInt_t from);
-    virtual  TDsKey &operator=( Int_t from){return *this=(UInt_t)from; return *this;}
+    virtual  TDsKey &operator=( Int_t from){ *this=(UInt_t)from; return *this;}
     virtual  TDsKey &operator=( const char *from);
     virtual  Bool_t operator==(const TDsKey &from) const;
     virtual  UInt_t  operator[](Int_t i) const { return (*(TArrayI *)(&fUrr))[i]; }
