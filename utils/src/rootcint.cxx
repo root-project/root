@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.80 2002/06/16 08:37:28 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.81 2002/06/18 06:58:47 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcint [-f] axisDict.cxx [-c] TAttAxis.h[+][-][!] ... [LinkDef.h] //
+//  rootcint [-v] [-f] axDict.cxx [-c] TAttAxis.h[+][-][!]..[LinkDef.h] //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
 // Streamer() and ShowMembers() methods are generated while in the      //
@@ -143,7 +143,7 @@ const char *help =
 "\n"
 "or\n"
 "\n"
-"  rootcint [-f] AxisDict.cxx [-c] TAttAxis.h[{+,-}][!] ... [LinkDef.h]\n"
+"  rootcint [-v] [-f] AxisDict.cxx [-c] TAttAxis.h[{+,-}][!] ... [LinkDef.h]\n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
@@ -244,6 +244,125 @@ enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 FILE *fp;
 char *StrDup(const char *str);
 
+#ifndef ROOT_Varargs
+#include "Varargs.h"
+#endif
+const unsigned int kInfo     =   0;
+const unsigned int kWarning  =   1000;
+const unsigned int kError    =   2000;
+const unsigned int kSysError =   3000;
+const unsigned int kFatal    =   4000;
+static unsigned int gErrorIgnoreLevel = kError;
+
+//______________________________________________________________________________
+void LevelPrint(bool prefix, int level, const char *location, 
+                const char *fmt, va_list ap) {
+
+   if (level < gErrorIgnoreLevel)
+      return;
+
+   const char *type = 0;
+
+   if (level >= kInfo)
+      type = "Info";
+   if (level >= kWarning)
+      type = "Warning";
+   if (level >= kError)
+      type = "Error";
+   if (level >= kSysError)
+      type = "SysError";
+   if (level >= kFatal)
+      type = "Fatal";
+   
+   if (!location || strlen(location) == 0) {
+      if (prefix) fprintf(stderr, "%s: ", type);
+      vfprintf(stderr, (char*)va_(fmt), ap);
+   } else {
+      if (prefix) fprintf(stderr, "%s in <%s>: ", type, location);
+      else fprintf(stderr, "In <%s>: ", location);
+      vfprintf(stderr, (char*)va_(fmt), ap);
+   }
+
+   fflush(stderr);
+/*
+   if (abort) {
+      fprintf(stderr, "aborting\n");
+      fflush(stderr);
+      if (gSystem) {
+         gSystem->StackTrace();
+         gSystem->Abort();
+      } else
+         ::abort();
+   }
+*/
+}
+   
+//______________________________________________________________________________
+void LevelPrint(int level, const char *location, const char *va_(fmt), ...) {
+
+   va_list ap;
+   va_start(ap, va_(fmt));
+ 
+   LevelPrint(false, level, location, fmt, ap);
+
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+void Error(const char *location, const char *va_(fmt), ...)
+{
+   // Use this function in case an error occured.
+
+   va_list ap;
+   va_start(ap,va_(fmt));
+   LevelPrint(true, kError, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+void SysError(const char *location, const char *va_(fmt), ...)
+{
+   // Use this function in case a system (OS or GUI) related error occured.
+
+   va_list ap;
+   va_start(ap, va_(fmt));
+   LevelPrint(true, kSysError, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+void Info(const char *location, const char *va_(fmt), ...)
+{
+   // Use this function for informational messages.
+
+   va_list ap;
+   va_start(ap,va_(fmt));
+   LevelPrint(true, kInfo, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+void Warning(const char *location, const char *va_(fmt), ...)
+{
+   // Use this function in warning situations.
+
+   va_list ap;
+   va_start(ap,va_(fmt));
+   LevelPrint(true, kWarning, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+void Fatal(const char *location, const char *va_(fmt), ...)
+{
+   // Use this function in case of a fatal error. It will abort the program.
+
+   va_list ap;
+   va_start(ap,va_(fmt));
+   LevelPrint(true, kFatal, location, va_(fmt), ap);
+   va_end(ap);
+}
+
 //______________________________________________________________________________
 bool CheckInputOperator(G__ClassInfo &cl)
 {
@@ -262,32 +381,36 @@ bool CheckInputOperator(G__ClassInfo &cl)
 
    G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
 
-   fprintf(stderr, "Class %s: Do not generate operator>>()\n",
-           cl.Fullname());
+   Info(0, "Class %s: Do not generate operator>>()\n",
+        cl.Fullname());
    if (!methodinfo.IsValid() ||
         methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
-        strstr(methodinfo.FileName(),"TBuffer.h")!=0 ) {
+        strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
+        strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
-      fprintf(stderr, "ERROR: In this version of ROOT, the option '!' used in a linkdef file\n");
-      fprintf(stderr, "       implies the actual existence of customized operators.\n");
-      fprintf(stderr, "       The following declaration is now required:\n");
-      fprintf(stderr, "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
+      Error(0,
+            "In this version of ROOT, the option '!' used in a linkdef file\n"
+            "       implies the actual existence of customized operators.\n"
+            "       The following declaration is now required:\n"
+            "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
 
       has_input_error = true;
    } else {
-    // fprintf(stderr, "WARNING: TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
+    // Warning(0, "TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
    }
-   //fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
+   // fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
 
    methodinfo = gcl.GetMethod("operator<<",proto,&offset);
    if (!methodinfo.IsValid() ||
         methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
-        strstr(methodinfo.FileName(),"TBuffer.h")!=0 ) {
+        strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
+        strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
-      fprintf(stderr, "ERROR: In this version of ROOT, the option '!' used in a linkdef file\n");
-      fprintf(stderr, "       implies the actual existence of customized operator.\n");
-      fprintf(stderr, "       The following declaration is now required:\n");
-      fprintf(stderr, "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
+      Error(0, 
+            "In this version of ROOT, the option '!' used in a linkdef file\n"
+            "       implies the actual existence of customized operator.\n"
+            "       The following declaration is now required:\n"
+            "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
 
       has_input_error = true;
    } else {
@@ -336,7 +459,7 @@ int NeedTemplateKeyword(G__ClassInfo &cl) {
          // So until we get a better idea, we use the heuristic that the 2 keywords
          // should be within 3 lines.
          
-         //fprintf(stderr,"temp line %d, cl line %d\ntemp file %s, cl file %s\n",
+         //fprintf(stderr,"DEBUG: temp line %d, cl line %d\ntemp file %s, cl file %s\n",
          //        templ->line ,cl.LineNumber(),
          //        cl.FileName(), 
          //        fileinfo.Name());
@@ -960,9 +1083,9 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                  fprintf(fp,"            R__t = R__str.Data();\n");
               } else {
                  fprintf(fp, "R__b.StreamObject(&R__t,typeid(%s));\n",s);               //R__t.Streamer(R__b);\n");
-//VP                 fprintf(stderr, "*** Baseclass %s: template arg %s has no Streamer()"
-//VP                         " method (need manual intervention)\n",
-//VP                         m.Name(), TemplateArg(m).Name());
+//VP                 Error(0, "*** Baseclass %s: template arg %s has no Streamer()"
+//VP                          " method (need manual intervention)\n",
+//VP                          m.Name(), TemplateArg(m).Name());
 //VP                 fprintf(fp, "            //R__t.Streamer(R__b);\n");
               }
             }
@@ -1025,7 +1148,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                      fprintf(fp,"            R__str.Streamer(R__b);\n");
                   } else {
                      if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-                        fprintf(stderr, "Cannot process template argument1 %s\n",tmparg);
+                        Error(0, "Cannot process template argument1 %s\n",tmparg);
                         fprintf(fp, "            //R__b << *R__k;\n");
                      } else {
                         fprintf(fp, "            R__b << *R__k;\n");
@@ -1060,7 +1183,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                   fprintf(fp,"            R__str.Streamer(R__b);\n");
                } else {
                   if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-                    fprintf(stderr, "Cannot process template argument2 %s\n",tmparg);
+                    Error(0, "Cannot process template argument2 %s\n",tmparg);
                     fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
                   } else {
                     fprintf(fp, "R__b.StreamObject(R__k,typeid(%s));\n",s);               //R__t.Streamer(R__b);\n");
@@ -1256,7 +1379,7 @@ void WriteClassInit(G__ClassInfo &cl)
       }
       //static char temporary[1024];
       //sprintf(temporary,"GetClassVersion<%s>( (%s *) 0x0 )",cl.Fullname(),cl.Fullname());
-      //fprintf(stderr,"%s has value %d\n",cl.Fullname(),(int)G__int(G__calc(temporary)));
+      //fprintf(stderr,"DEBUG: %s has value %d\n",cl.Fullname(),(int)G__int(G__calc(temporary)));
    }
    char * filename = (char*)cl.FileName();
    for(unsigned int i=0; i<strlen(filename); i++) {
@@ -1365,11 +1488,11 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
       }
 
       if (where==0) {
-         fprintf(stderr,"*** Datamember %s::%s: no size indication!\n",
-                 member.MemberOf()->Name(), member.Name());
+         Error(0, "*** Datamember %s::%s: no size indication!\n",
+                     member.MemberOf()->Name(), member.Name());
       } else {
-         fprintf(stderr,"*** Datamember %s::%s: size of array (%s) %s!\n",
-                 member.MemberOf()->Name(), member.Name(), where, errorstring);
+         Error(0,"*** Datamember %s::%s: size of array (%s) %s!\n",
+                  member.MemberOf()->Name(), member.Name(), where, errorstring);
       }
    }
    return index;
@@ -1476,7 +1599,7 @@ void WriteStreamer(G__ClassInfo &cl)
                   }
                   fprintf(fp, "      for (R__i = 0; R__i < %d; R__i++)\n", s);
                  if (i == 0) {
-                     fprintf(stderr,"*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", cl.Fullname(), m.Name());
+                     Error(0, "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", cl.Fullname(), m.Name());
                      fprintf(fp, "         ;//R__b.ReadArray(%s);\n", m.Name());
                   } else {
                      fprintf(fp, "         ;//R__b.WriteArray(%s, __COUNTER__);\n", m.Name());
@@ -1485,7 +1608,7 @@ void WriteStreamer(G__ClassInfo &cl)
                   const char *indexvar = GrabIndex(m, i==0);
                   if (indexvar==0) {
                      if (i == 0) {
-                        fprintf(stderr,"*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", cl.Fullname(), m.Name());
+                        Error(0,"*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", cl.Fullname(), m.Name());
                         fprintf(fp, "      //R__b.ReadArray(%s);\n", m.Name());
                      } else {
                         fprintf(fp, "      //R__b.WriteArray(%s, __COUNTER__);\n", m.Name());
@@ -1582,7 +1705,7 @@ void WriteStreamer(G__ClassInfo &cl)
                   // Optimize this with control statement in title.
                   if (PointerToPointer(m)) {
                      if (i == 0) {
-                        fprintf(stderr,"*** Datamember %s::%s: pointer to pointer (need manual intervention)\n", cl.Fullname(), m.Name());
+                        Error(0, "*** Datamember %s::%s: pointer to pointer (need manual intervention)\n", cl.Fullname(), m.Name());
                         fprintf(fp, "      //R__b.ReadArray(%s);\n", m.Name());
                      } else {
                         fprintf(fp, "      //R__b.WriteArray(%s, __COUNTER__);\n", m.Name());
@@ -1619,8 +1742,8 @@ void WriteStreamer(G__ClassInfo &cl)
                   else {
                      fprintf(fp, "R__b.StreamObject(&R__t,typeid(%s));\n",m.Type()->Name());               //R__t.Streamer(R__b);\n");
 //VP                     if (i == 0)
-//VP                        fprintf(stderr, "*** Datamember %s::%s: object has no Streamer() method (need manual intervention)\n",
-//VP                                cl.Fullname(), m.Name());
+//VP                        Error(0, "*** Datamember %s::%s: object has no Streamer() method (need manual intervention)\n",
+//VP                                  cl.Fullname(), m.Name());
 //VP                     fprintf(fp, "      //%s.Streamer(R__b);\n", m.Name());
                   }
                }
@@ -2118,9 +2241,9 @@ void WriteClassCode(G__ClassInfo &cl) {
               WriteStreamer(cl);
             }
          } else
-            fprintf(stderr, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
+            Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
       } else {
-         fprintf(stderr, "Class %s: Streamer() not declared\n", cl.Fullname());
+         Info(0, "Class %s: Streamer() not declared\n", cl.Fullname());
 
          if (cl.RootFlag() & G__USEBYTECOUNT) WritePointersSTL(cl);
       }
@@ -2143,7 +2266,7 @@ int WriteNamespaceHeader(G__ClassInfo &cl) {
 
   int closing_brackets = 0;
   G__ClassInfo namespace_obj = cl.EnclosingSpace();
-  //fprintf(stderr,"in WriteNamespaceHeader for %s with %s\n",
+  //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
   //    cl.Fullname(),namespace_obj.Fullname());
   if (namespace_obj.Property() & G__BIT_ISNAMESPACE) {
      closing_brackets = WriteNamespaceHeader(namespace_obj);
@@ -2244,7 +2367,8 @@ void WriteShadowClass(G__ClassInfo &cl) {
 
   } else {
 
-     if (1) fprintf(stderr, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n", cl.Fullname());
+     Info( 0, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n", 
+              cl.Fullname());
 
      const char *prefix = "";
 
@@ -2367,7 +2491,7 @@ void GenerateLinkdef(int *argc, char **argv, int iv)
       if (bcnt) {
          strcpy(trail, "+");
          if (nostr)
-            fprintf(stderr, "option + mutual exclusive with -\n");
+            Error(0, "option + mutual exclusive with -\n");
       }
       char *cls = strrchr(argv[i], '/');
       if (!cls) cls = strrchr(argv[i], '\\');
@@ -2492,8 +2616,8 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
 
    FILE *fpd = fopen(dictname, "r");
    if (!fpd) {
-      fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
-              dictname);
+      Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
+               dictname);
       return;
    }
 
@@ -2501,8 +2625,8 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    sprintf(tmpdictname, "%s_+_+_+rootcinttmp", dictname);
    FILE *tmpdict = fopen(tmpdictname, "w");
    if (!tmpdict) {
-      fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
-              tmpdictname);
+      Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
+               tmpdictname);
       fclose(fpd);
       return;
    }
@@ -2520,8 +2644,8 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
          if (!strncmp(line, checkline, clen)) {
             FILE *fb = fopen(bundlename, "r");
             if (!fb) {
-               fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
-                       bundlename);
+               Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
+                        bundlename);
                fclose(fpd);
                fclose(tmpdict);
                remove(tmpdictname);
@@ -2547,8 +2671,8 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    fclose(fpd);
 
    if (unlink(dictname) == -1 || rename(tmpdictname, dictname) == -1)
-      fprintf(stderr,"rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
-              tmpdictname, dictname);
+      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
+               tmpdictname, dictname);
 
    // Next patch dict.h. Create tmp file and copy dict.h to this file.
    // When discovering a line like:
@@ -2563,13 +2687,13 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
       *(s+1) = 'h';
       *(s+2) = 0;
    } else {
-      fprintf(stderr,"rootcint: failed create dict.h in ReplaceBundleInDict()\n");
+      Error(0, "rootcint: failed create dict.h in ReplaceBundleInDict()\n");
       return;
    }
 
    fpd = fopen(dictnameh, "r");
    if (!fpd) {
-      fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
+      Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
               dictnameh);
       return;
    }
@@ -2594,7 +2718,7 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    fclose(fpd);
 
    if (unlink(dictnameh) == -1 || rename(tmpdictname, dictnameh) == -1)
-      fprintf(stderr,"rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
+      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
               tmpdictname, dictnameh);
 }
 
@@ -2607,7 +2731,7 @@ int main(int argc, char **argv)
 
    if (argc < 2) {
       fprintf(stderr,
-      "Usage: %s [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+      "Usage: %s [-v] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
@@ -2620,12 +2744,18 @@ int main(int argc, char **argv)
 
    sprintf(autold, autoldtmpl, getpid());
 
-   if (!strcmp(argv[1], "-f")) {
+   ic = 1;
+   if (!strcmp(argv[ic], "-v")) {
+      gErrorIgnoreLevel = kInfo; // The default is kError
+      ic++;
+   } 
+   
+
+   if (!strcmp(argv[ic], "-f")) {
       force = 1;
-      ic    = 2;
+      ic++;
    } else {
       force = 0;
-      ic    = 1;
    }
 
    if (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
@@ -2634,7 +2764,7 @@ int main(int argc, char **argv)
       if ((fp = fopen(argv[ic], "r")) != 0) {
          fclose(fp);
          if (!force) {
-            fprintf(stderr, "%s: output file %s already exists\n", argv[0], argv[ic]);
+            Error(0, "%s: output file %s already exists\n", argv[0], argv[ic]);
             return 1;
          }
       }
@@ -2679,7 +2809,7 @@ int main(int argc, char **argv)
       sprintf(path2,"-I%s/src", getenv("ROOTSYS"));
 #  endif
    } else {
-      fprintf(stderr, "%s: env var ROOTSYS not defined\n", argv[0]);
+      Error(0, "%s: env var ROOTSYS not defined\n", argv[0]);
       return 1;
    }
 # else
@@ -2716,6 +2846,9 @@ int main(int argc, char **argv)
 #ifdef __hpux
          argvv[argcc++] = "-I/usr/include/X11R5";
 #endif
+         if (0 < gErrorIgnoreLevel) { // If verbose is NOT requested
+            argvv[argcc++] = "-J0";        // turn off CINT Note and Warnings
+         }
          argvv[argcc++] = "-DTRUE=1";
          argvv[argcc++] = "-DFALSE=0";
          argvv[argcc++] = "-Dexternalref=extern";
@@ -2727,7 +2860,7 @@ int main(int argc, char **argv)
          argvv[argcc++] = "TROOT.h";
          argvv[argcc++] = "TMemberInspector.h";
       } else {
-         fprintf(stderr, "%s: option -c can only be used when an output file has been specified\n", argv[0]);
+         Error(0, "%s: option -c can only be used when an output file has been specified\n", argv[0]);
          return 1;
       }
    }
@@ -2749,7 +2882,7 @@ int main(int argc, char **argv)
       strcat(bundlename,".h");
       bundle = fopen(bundlename, "w");
       if (!bundle) {
-         fprintf(stderr,"%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
+         Error(0, "%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
                  argv[0], bundlename);
          use_preprocessor = 0;
       }
@@ -2767,13 +2900,13 @@ int main(int argc, char **argv)
            strstr(argv[i],"linkdef")) && strstr(argv[i],".h")) {
          il = i;
          if (i != argc-1) {
-            fprintf(stderr, "%s: %s must be last file on command line\n", argv[0], argv[i]);
+            Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
             return 1;
          }
          if (use_preprocessor) argvv[argcc++] = bundlename;
       }
       if (!strcmp(argv[i], "-c")) {
-         fprintf(stderr, "%s: option -c must come directly after the output file\n", argv[0]);
+         Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
          return 1;
       }
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && !il) {
@@ -2790,7 +2923,7 @@ int main(int argc, char **argv)
    }
 
    if (!iv) {
-      fprintf(stderr, "%s: no input files specified\n", argv[0]);
+      Error(0, "%s: no input files specified\n", argv[0]);
       return 1;
    }
 
@@ -2801,7 +2934,7 @@ int main(int argc, char **argv)
 
    G__setothermain(2);
    if (G__main(argcc, argvv) < 0) {
-      fprintf(stderr, "%s: error loading headers...\n", argv[0]);
+      Error(0, "%s: error loading headers...\n", argv[0]);
       return 1;
    }
    G__setglobalcomp(0);  // G__NOLINK
@@ -2888,7 +3021,7 @@ int main(int argc, char **argv)
       fpld = fopen(Which(argv[il]), "r");
    }
    if (!fpld) {
-      fprintf(stderr, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
+      Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
       if (use_preprocessor) remove(bundlename);
       if (!il) remove(autold);
       if (ifl) {
