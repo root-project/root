@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.134 2003/03/07 08:40:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.135 2003/04/01 08:09:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4092,6 +4092,7 @@ void TH1::Streamer(TBuffer &b)
             fDirectory = gDirectory;
             if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
          }
+         ResetBit(kCanDelete);
          return;
       }
       //process old versions before automatic schema evolution
