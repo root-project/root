@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.4 2002/02/22 10:44:31 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.5 2002/07/08 20:28:13 brun Exp $
 // Author: Fons Rademakers   20/06/96
 
 /*************************************************************************
@@ -84,6 +84,9 @@ public:
    virtual Int_t       Compare(const TObject *obj) const = 0;
    virtual ULong_t     Hash() const = 0;
    virtual Bool_t      IsSortable() const { return kTRUE; }
+
+   // Type of STL container (returned by IsSTLContainer).
+   enum ESTLType {kNone=0, kVector=1, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
    ClassDef(TDictionary,0)  //ABC defining interface to dictionary
 };

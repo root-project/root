@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.81 2002/06/22 04:56:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.82 2002/07/18 08:05:01 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -593,6 +593,7 @@ void TClass::BuildRealData(void *pointer)
       TBaseClass *base;
       TIter       next(GetListOfBases());
       while ((base = (TBaseClass *) next())) {
+         if (base->IsSTLContainer()) continue;
          TClass *c = base->GetClassPointer();
          if (c) c->BuildRealData((char*)realDataObject + base->GetDelta());
       }

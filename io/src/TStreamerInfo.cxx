@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.138 2002/08/06 21:46:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.139 2002/08/07 06:44:38 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -131,27 +131,27 @@ void TStreamerInfo::Build()
 
    //iterate on list of base classes
    while((base = (TBaseClass*)nextb())) {
+      // this case appears with STL collections as base class.
+      Streamer_t streamer = 0;
+      offset = base->GetDelta();
+      if (offset == kMissing) continue;
+      if (strcmp(base->GetName(),"string") == 0) {
+         TStreamerSTLstring *stls = new TStreamerSTLstring(base->GetName(),base->GetTitle(),offset,base->GetName());
+         fElements->Add(stls);
+         stls->SetStreamer(streamer);
+         continue;
+      }
+      if (base->IsSTLContainer()) {
+         TStreamerSTL *stl = new TStreamerSTL(base->GetName(),base->GetTitle(),offset,base->GetName(),0);
+         if (stl->GetSTLtype()) {
+            fElements->Add(stl);
+            stl->SetStreamer(streamer);
+         }
+         else delete stl;
+         continue;
+      }
       clm = gROOT->GetClass(base->GetName());
       if (!clm) {
-         // this case appears with STL collections as base class.
-         Streamer_t streamer = 0;
-         offset = base->GetDelta();
-         if (offset == kMissing) continue;
-         if (strcmp(base->GetName(),"string") == 0) {
-            TStreamerSTLstring *stls = new TStreamerSTLstring(base->GetName(),base->GetTitle(),offset,base->GetName());
-            fElements->Add(stls);
-            stls->SetStreamer(streamer);
-            continue;
-         }
-         if (strchr(base->GetName(),'<') && strchr(base->GetName(),'>')) {
-            TStreamerSTL *stl = new TStreamerSTL(base->GetName(),base->GetTitle(),offset,base->GetName(),0);
-            if (stl->GetSTLtype()) {
-               fElements->Add(stl);
-               stl->SetStreamer(streamer);
-            }
-            else delete stl;
-            continue;
-         }
          Error("Build","%s, unknown type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
          continue;
       }
@@ -252,30 +252,30 @@ void TStreamerInfo::Build()
          continue;
 
       } else {
+         // try STL container or string
+         static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+         if (strcmp(dm->GetTypeName(),"string") == 0
+             ||strcmp(dm->GetTypeName(),full_string_name)==0 ) {
+            TStreamerSTLstring *stls = new TStreamerSTLstring(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
+            fElements->Add(stls);
+            for (i=0;i<ndim;i++) stls->SetMaxIndex(i,dm->GetMaxIndex(i));
+            stls->SetArrayDim(ndim);
+            stls->SetStreamer(streamer);
+            continue;
+         }
+         if (dm->IsSTLContainer()) {
+            TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName(),dm->IsaPointer());
+            if (stl->GetSTLtype()) {
+               fElements->Add(stl);
+               for (i=0;i<ndim;i++) stl->SetMaxIndex(i,dm->GetMaxIndex(i));
+               stl->SetArrayDim(ndim);
+               stl->SetStreamer(streamer);
+            }
+            else delete stl;
+            continue;
+         }
          clm = gROOT->GetClass(dm->GetTypeName());
          if (!clm) {
-            // try STL container or string
-            static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-            if (strcmp(dm->GetTypeName(),"string") == 0
-                ||strcmp(dm->GetTypeName(),full_string_name)==0 ) {
-               TStreamerSTLstring *stls = new TStreamerSTLstring(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
-               fElements->Add(stls);
-               for (i=0;i<ndim;i++) stls->SetMaxIndex(i,dm->GetMaxIndex(i));
-               stls->SetArrayDim(ndim);
-               stls->SetStreamer(streamer);
-               continue;
-            }
-            if (dm->IsSTLContainer()) {
-               TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName(),dm->IsaPointer());
-               if (stl->GetSTLtype()) {
-                  fElements->Add(stl);
-                  for (i=0;i<ndim;i++) stl->SetMaxIndex(i,dm->GetMaxIndex(i));
-                  stl->SetArrayDim(ndim);
-                  stl->SetStreamer(streamer);
-               }
-               else delete stl;
-               continue;
-            }
             Error("Build","%s, unknow type: %s %s\n",GetName(),dm->GetFullTypeName(),dm->GetName());
             continue;
          }
@@ -1643,10 +1643,14 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
    b >> isArray; \
    Int_t *l = (Int_t*)(pointer+fMethod[i]); \
    name **f = (name**)(pointer+fOffset[i]); \
-   delete [] *f; \
-   *f = 0; if (*l <=0) break; \
-   *f = new name[*l]; \
-   b.ReadFastArray(*f,*l); break; \
+   int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+   int j; \
+   for(j=0;j<len;j++) { \
+      delete [] f[j]; \
+      f[j] = 0; if (*l <=0) continue; \
+      f[j] = new name[*l]; \
+      b.ReadFastArray(f[j],*l); \
+   } break; \
 }
 
 #define SkipBasicType(name) \
@@ -1667,7 +1671,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 { \
    Int_t *n = (Int_t*)(pointer+fMethod[i]); \
    Int_t l = b.Length(); \
-   b.SetBufferOffset(l+1+(*n)*sizeof( name )); \
+   int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+   b.SetBufferOffset(l+1+(*n)*sizeof( name )*len); \
    break; \
 }
 
@@ -1714,47 +1719,69 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
    b >> isArray; \
    if (isArray == 0) break; \
    Int_t *l = (Int_t*)(pointer+fMethod[i]); name dummy; \
+   int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+   int j; \
    switch(fNewType[i]) { \
-      case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new Char_t[*l]; Char_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Char_t)dummy;} break;} \
+      case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Char_t[*l]; Char_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Char_t)dummy;} \
+                    } break;} \
       case kShort:  {Short_t  **f=(Short_t**)(pointer+fOffset[i]); \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new Short_t[*l]; Short_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Short_t)dummy;} break;} \
-      case kInt:    {Int_t    **f=(Int_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new Int_t[*l]; Int_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Int_t)dummy;} break;} \
-      case kLong:   {Long_t   **f=(Long_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new Long_t[*l]; Long_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Long_t)dummy;} break;} \
-      case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new Float_t[*l]; Float_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Float_t)dummy;} break;} \
-      case kDouble: {Double_t **f=(Double_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new Double_t[*l]; Double_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Double_t)dummy;} break;} \
-      case kUChar:  {UChar_t  **f=(UChar_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new UChar_t[*l]; UChar_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (UChar_t)dummy;} break;} \
-      case kUShort: {UShort_t **f=(UShort_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new UShort_t[*l]; UShort_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (UShort_t)dummy;} break;} \
-      case kUInt:   {UInt_t   **f=(UInt_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new UInt_t[*l]; UInt_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (UInt_t)dummy;} break;} \
-      case kULong:  {ULong_t  **f=(ULong_t**)(pointer+fOffset[i]); delete [] *f; \
-                    *f = 0; if (*l ==0) continue; \
-                    *f = new ULong_t[*l]; ULong_t *af = *f; \
-                    for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (ULong_t)dummy;} break;} \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Short_t[*l]; Short_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Short_t)dummy;} \
+                    } break;} \
+      case kInt:    {Int_t    **f=(Int_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Int_t[*l]; Int_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Int_t)dummy;} \
+                    } break;} \
+      case kLong:   {Long_t   **f=(Long_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Long_t[*l]; Long_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Long_t)dummy;} \
+                    } break;} \
+      case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Float_t[*l]; Float_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Float_t)dummy;} \
+                    } break;} \
+      case kDouble: {Double_t **f=(Double_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Double_t[*l]; Double_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Double_t)dummy;} \
+                    } break;} \
+      case kUChar:  {UChar_t  **f=(UChar_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new UChar_t[*l]; UChar_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (UChar_t)dummy;} \
+                    } break;} \
+      case kUShort: {UShort_t **f=(UShort_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new UShort_t[*l]; UShort_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (UShort_t)dummy;} \
+                    } break;} \
+      case kUInt:   {UInt_t   **f=(UInt_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new UInt_t[*l]; UInt_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (UInt_t)dummy;} \
+                    } break;} \
+      case kULong:  {ULong_t  **f=(ULong_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new ULong_t[*l]; ULong_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (ULong_t)dummy;} \
+                    } break;} \
    } break; \
 }
 
@@ -2289,15 +2316,19 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 #define ReadCBasicPointer(name) \
 { \
    Char_t isArray; \
+   int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+   int j; \
    for (Int_t k=0;k<nc;k++) { \
       b >> isArray; \
       pointer = (char*)clones->UncheckedAt(k)+eoffset; \
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
-      delete [] *f; \
-      *f = 0; if (*l <=0) continue; \
-      *f = new name[*l]; \
-      b.ReadFastArray(*f,*l); \
+      for(j=0;j<len;j++) { \
+         delete [] f[j]; \
+         f[j] = 0; if (*l <=0) continue; \
+         f[j] = new name[*l]; \
+         b.ReadFastArray(f[j],*l); \
+      } \
    } break; \
 }
 
@@ -2320,7 +2351,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 { \
    Int_t *n = (Int_t*)(pointer+fMethod[i]); \
    Int_t l = b.Length(); \
-   b.SetBufferOffset(l+1+nc*(*n)*sizeof( name )); \
+   int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+   b.SetBufferOffset(l+1+nc*(*n)*sizeof( name )*len); \
    break; \
 }
 //==========
@@ -2930,8 +2962,11 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
    name *af = *f; \
    if (af && *l)  b << Char_t(1); \
    else          {b << Char_t(0); break;}\
-   b.WriteFastArray(af,*l); \
-   break; \
+   int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+   int j; \
+   for(j=0;j<len;j++) { \
+      b.WriteFastArray(f[j],*l); \
+   }  break; \
 }
 //==========
 
@@ -3257,6 +3292,8 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 
 #define WriteCBasicPointer(name) \
 { \
+   int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+   int j; \
    for (Int_t k=0;k<nc;k++) { \
       pointer = (char*)clones->UncheckedAt(k)+baseOffset; \
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
@@ -3264,7 +3301,9 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
       name *af = *f; \
       if (af && *l)  b << Char_t(1); \
       else          {b << Char_t(0); continue;} \
-      b.WriteFastArray(af,*l); \
+      for(j=0;j<len;j++) { \
+         b.WriteFastArray(f[j],*l); \
+      } \
    } \
    break; \
 }

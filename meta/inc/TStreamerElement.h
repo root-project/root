@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.25 2002/05/09 20:22:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.26 2002/05/23 15:27:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -129,6 +129,7 @@ public:
    Int_t          GetSize() const;
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
+   void           SetArrayDim(Int_t dim);
 
    ClassDef(TStreamerBasicPointer,2)  //Streamer element for a pointer to a basic type
 };

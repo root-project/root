@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.5 2002/02/18 07:44:14 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.6 2002/02/21 15:40:08 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -48,9 +48,6 @@ private:
    TList              *fOptions;     //list of possible values 0=no restrictions
 
 public:
-
-   // Type of STL container (returned by IsSTLContainer).
-   enum ESTLType {kNone=0, kVector=1, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
    TDataMember(G__DataMemberInfo *info = 0, TClass *cl = 0);
    virtual       ~TDataMember();

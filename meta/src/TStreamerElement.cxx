@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.48 2002/06/02 14:49:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.49 2002/06/20 21:36:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -505,6 +505,16 @@ void TStreamerBasicPointer::Init(TObject *)
    if (fCounter) {
       if (fCounter->GetType() < TStreamerInfo::kCounter) fCounter->SetType(TStreamerInfo::kCounter); 
    }  
+}
+
+//______________________________________________________________________________
+void TStreamerBasicPointer::SetArrayDim(Int_t dim)
+{
+   // Set number of array dimensions.
+   
+   fArrayDim = dim;
+   //if (dim) fType += TStreamerInfo::kOffsetL;
+   fNewType = fType;
 }
 
 //______________________________________________________________________________

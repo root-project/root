@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.6 2001/12/18 08:47:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.7 2002/05/22 17:40:58 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -109,6 +109,27 @@ ULong_t TBaseClass::Hash() const
    // Return hash value for TBaseClass based on its name.
 
    return fName.Hash();
+}
+
+//______________________________________________________________________________
+int TBaseClass::IsSTLContainer()
+{
+   // Return which type (if any) of STL container the data member is.
+
+   if (!fInfo) return kNone;
+   const char *s = fInfo->TmpltName();
+   if (!s) return kNone;
+   char type[4096];
+   strcpy(type, s);
+
+   if (!strcmp(type, "vector"))   return kVector;
+   if (!strcmp(type, "list"))     return kList;
+   if (!strcmp(type, "deque"))    return kDeque;
+   if (!strcmp(type, "map"))      return kMap;
+   if (!strcmp(type, "multimap")) return kMultimap;
+   if (!strcmp(type, "set"))      return kSet;
+   if (!strcmp(type, "multiset")) return kMultiset;
+   return kNone;
 }
 
 //______________________________________________________________________________
