@@ -142,6 +142,10 @@ N: Gerardo Ganis
 E: Gerardo.Ganis@cern.ch
 D: all matters related to client/server authentication
 
+N: Nerses Gevorgyan
+E: nerses@crdlx5.yerphi.am
+D: support for exporting Neural Nets into Fortran code
+
 N: Andrei Gheata
 E: Andrei.Gheata@cern.ch
 D: main developer of the ROOT geometry classes
