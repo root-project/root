@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.3 2002/02/21 15:40:08 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.4 2004/03/12 00:25:59 rdm Exp $
 // Author: Piotr Golonka   30/07/97
 
 /*************************************************************************
@@ -44,7 +44,7 @@ TToggle::TToggle()
    // TToggle default constructor. You have to initialize it before using
    // by making a call to SetToggledVariable() or SetToggledObject().
 
-   fState       =  0;
+   fState       =  kFALSE;
    fValue       = -1;
    fOnValue     =  1;
    fOffValue    =  0;
@@ -66,15 +66,14 @@ void TToggle::SetToggledVariable(Int_t &var)
 }
 
 //______________________________________________________________________________
-Bool_t  TToggle::GetState()
+Bool_t TToggle::GetState()
 {
    // Returns the state of Toggle according to its current value and
-   // fOnValue ; Returns true if they match.
+   // fOnValue, returns true if they match.
 
-   if (fInitialized) {
-      fGetter->Execute(fObject,fValue);
-      return (fState=(fValue==fOnValue));
-   }
+   if (fInitialized)
+      fGetter->Execute(fObject, fValue);
+   return (fState = (fValue == fOnValue));
 }
 
 //______________________________________________________________________________
