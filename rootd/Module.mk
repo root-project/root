@@ -31,7 +31,7 @@ include/%.h:    $(ROOTDDIRI)/%.h
 
 $(ROOTD):       $(ROOTDO) $(RSAO) $(GLBPATCHO) $(RPDUTILO)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTDO) $(RPDUTILO) $(GLBPATCHO) \
-		   $(RSAO) $(AUTHLIBS) $(CRYPTLIBS) $(SYSLIBS)
+		   $(RSAO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
 all-rootd:      $(ROOTD)
 

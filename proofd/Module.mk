@@ -31,7 +31,7 @@ include/%.h:    $(PROOFDDIRI)/%.h
 
 $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(GLBPATCHO) $(RPDUTILO)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
-		   $(RSAO) $(AUTHLIBS) $(CRYPTLIBS) $(SYSLIBS)
+		   $(RSAO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
 all-proofd:     $(PROOFDEXE)
 
