@@ -24,6 +24,11 @@ printALREADY_EXIST() {
 
 printERROR() { echo "ERROR: $@." >&2 ;  }
 
+# check whether sufficient args are given
+
+if [ $# -lt 2 ] ; then 
+	printUSAGE ; 
+fi
 
 check_target=`grep -F " $1 " $2/Makefile`
 #echo $check_target
@@ -43,11 +48,12 @@ fi
 
 #printERROR ;
 
-# check whether sufficient args are given
+check_target2=`grep "$1 *:" $2/Makefile`
 
-if [ $# -lt 2 ] ; then 
-	printUSAGE ; 
+if [ "$check_target2" != "" ]; then
+	printALREADY_EXIST $1 $2;
 fi
+
 
 if [ ! -d "$2" ] ; then
 	printERROR "The source $2 is not a directory, or does not exist"
