@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.28 2001/01/26 10:01:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.29 2001/02/02 11:24:12 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1305,7 +1305,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
       fStreamerInfo->AddAt(sinfo,version);
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),version);
       sinfo->Build();
-   } else if (!fRealData) {
+   } else if (!sinfo->GetOffsets()) {
       BuildRealData(pointer);
       sinfo->BuildOld();
    }
@@ -1338,7 +1338,7 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
       fStreamerInfo->AddAt(sinfo,fClassVersion);
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
       sinfo->Build();
-   } else if (!fRealData) {
+   } else if (!sinfo->GetOffsets()) {
       BuildRealData(pointer);
       sinfo->BuildOld();
    }
