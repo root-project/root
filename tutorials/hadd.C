@@ -22,15 +22,12 @@
  */
 
 
-#include <TROOT.h>
 #include "TFile.h"
 #include "TH1.h"
 #include "TTree.h"
 #include "TKey.h"
 #include <string.h>
 #include <iostream.h>
-
-TROOT Root( "hist_add", "Histogram Merger" );
 
 TList *FileList;
 TFile *Target;
