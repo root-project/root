@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.55 2002/01/08 22:13:00 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.56 2002/01/09 15:18:05 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1535,7 +1535,20 @@ void WriteShowMembers(G__ClassInfo &cl)
    fprintf(fp, "_______________________________________\n");
    fprintf(fp, "void %s::ShowMembers(TMemberInspector &R__insp, char *R__parent)\n{\n", cl.Fullname());
    fprintf(fp, "   // Inspect the data members of an object of class %s.\n\n", cl.Fullname());
+#ifdef  WIN32
+   // This is to work around a bad msvc C++ bug.
+   // This code would work in the general case, but why bother....and
+   // we want to remember to eventually remove it ...
+
+   if (strstr(cl.Fullname(),"::")) {
+       // there is a namespace involved, trigger MS VC bug workaround
+       fprintf(fp, "   typedef %s msvc_bug_workaround;\n", cl.Fullname());
+       fprintf(fp, "   TClass *R__cl  = msvc_bug_workaround::IsA();\n");
+    } else
+       fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
+#else   
    fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
+#endif
    fprintf(fp, "   Int_t   R__ncp = strlen(R__parent);\n");
    fprintf(fp, "   if (R__ncp || R__cl || R__insp.IsA()) { }\n");
 
