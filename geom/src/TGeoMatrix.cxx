@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: v4-01-02 $:$Id: TGeoMatrix.cxx,v 1.27 2004/09/06 17:01:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.28 2004/10/06 06:40:35 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -997,7 +997,7 @@ void TGeoRotation::GetInverse(Double_t *invmat) const
       Error("GetInverse", "no place to store the inverse matrix");
    }
    for (Int_t i=0; i<3; i++) {
-      for (Int_t j=0; i<3; i++) {   
+      for (Int_t j=0; j<3; j++) {   
          invmat[3*i+j] = fRotationMatrix[3*j+i];
       }
    }
