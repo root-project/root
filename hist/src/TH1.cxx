@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.82 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.83 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -425,8 +425,7 @@ TVirtualFitter *hFitter=0;
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
 
-static Int_t xfirst,xlast,yfirst,ylast,zfirst,zlast;
-static Axis_t xmin, xmax, ymin, ymax, zmin, zmax, binwidx, binwidy, binwidz;
+Int_t hxfirst,hxlast,hyfirst,hylast,hzfirst,hzlast;
 
 extern void H1InitGaus();
 extern void H1InitExpo();
@@ -1746,25 +1745,26 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    Double_t params[100], arglist[100];
+   Axis_t xmin, xmax, ymin, ymax, zmin, zmax, binwidx, binwidy, binwidz;
    TF1 *fnew1;
    TF2 *fnew2;
    TF3 *fnew3;
 
-   xfirst  = fXaxis.GetFirst();
-   xlast   = fXaxis.GetLast();
-   binwidx = fXaxis.GetBinWidth(xlast);
-   xmin    = fXaxis.GetBinLowEdge(xfirst);
-   xmax    = fXaxis.GetBinLowEdge(xlast) +binwidx;
-   yfirst  = fYaxis.GetFirst();
-   ylast   = fYaxis.GetLast();
-   binwidy = fYaxis.GetBinWidth(ylast);
-   ymin    = fYaxis.GetBinLowEdge(yfirst);
-   ymax    = fYaxis.GetBinLowEdge(ylast) +binwidy;
-   zfirst  = fZaxis.GetFirst();
-   zlast   = fZaxis.GetLast();
-   binwidz = fZaxis.GetBinWidth(zlast);
-   zmin    = fZaxis.GetBinLowEdge(zfirst);
-   zmax    = fZaxis.GetBinLowEdge(zlast) +binwidz;
+   hxfirst = fXaxis.GetFirst();
+   hxlast  = fXaxis.GetLast();
+   binwidx = fXaxis.GetBinWidth(hxlast);
+   xmin    = fXaxis.GetBinLowEdge(hxfirst);
+   xmax    = fXaxis.GetBinLowEdge(hxlast) +binwidx;
+   hyfirst = fYaxis.GetFirst();
+   hylast  = fYaxis.GetLast();
+   binwidy = fYaxis.GetBinWidth(hylast);
+   ymin    = fYaxis.GetBinLowEdge(hyfirst);
+   ymax    = fYaxis.GetBinLowEdge(hylast) +binwidy;
+   hzfirst = fZaxis.GetFirst();
+   hzlast  = fZaxis.GetLast();
+   binwidz = fZaxis.GetBinWidth(hzlast);
+   zmin    = fZaxis.GetBinLowEdge(hzfirst);
+   zmax    = fZaxis.GetBinLowEdge(hzlast) +binwidz;
    xaxis   = &fXaxis;
    yaxis   = &fYaxis;
    zaxis   = &fZaxis;
@@ -1802,12 +1802,12 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
       if (fxmax < xmax) xmax = fxmax;
       if (fymax < ymax) ymax = fymax;
       if (fzmax < zmax) zmax = fzmax;
-      xfirst = fXaxis.FindFixBin(xmin); if (xfirst < 1) xfirst = 1;
-      xlast  = fXaxis.FindFixBin(xmax); if (xlast > fXaxis.GetLast()) xlast = fXaxis.GetLast();
-      yfirst = fYaxis.FindFixBin(ymin); if (yfirst < 1) yfirst = 1;
-      ylast  = fYaxis.FindFixBin(ymax); if (ylast > fYaxis.GetLast()) ylast = fYaxis.GetLast();
-      zfirst = fZaxis.FindFixBin(zmin); if (zfirst < 1) zfirst = 1;
-      zlast  = fZaxis.FindFixBin(zmax); if (zlast > fZaxis.GetLast()) zlast = fZaxis.GetLast();
+      hxfirst = fXaxis.FindFixBin(xmin); if (hxfirst < 1) hxfirst = 1;
+      hxlast  = fXaxis.FindFixBin(xmax); if (hxlast > fXaxis.GetLast()) hxlast = fXaxis.GetLast();
+      hyfirst = fYaxis.FindFixBin(ymin); if (hyfirst < 1) hyfirst = 1;
+      hylast  = fYaxis.FindFixBin(ymax); if (hylast > fYaxis.GetLast()) hylast = fYaxis.GetLast();
+      hzfirst = fZaxis.FindFixBin(zmin); if (hzfirst < 1) hzfirst = 1;
+      hzlast  = fZaxis.FindFixBin(zmax); if (hzlast > fZaxis.GetLast()) hzlast = fZaxis.GetLast();
    } else {
       gF1->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
    }
@@ -1873,7 +1873,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 
 //   - Compute sum of squares of errors in the bin range
    Double_t ey, sumw2=0;
-   for (i=xfirst;i<=xlast;i++) {
+   for (i=hxfirst;i<=hxlast;i++) {
       ey = GetBinError(i);
       sumw2 += ey*ey;
    }
@@ -2183,11 +2183,11 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
    TH1 *hfit = (TH1*)hFitter->GetObjectFit();
    gF1->InitArgs(x,u);
    f = 0;
-   for (binz=zfirst;binz<=zlast;binz++) {
+   for (binz=hzfirst;binz<=hzlast;binz++) {
       x[2]  = zaxis->GetBinCenter(binz);
-      for (biny=yfirst;biny<=ylast;biny++) {
+      for (biny=hyfirst;biny<=hylast;biny++) {
          x[1]  = yaxis->GetBinCenter(biny);
-         for (binx=xfirst;binx<=xlast;binx++) {
+         for (binx=hxfirst;binx<=hxlast;binx++) {
             x[0]  = xaxis->GetBinCenter(binx);
             if (!gF1->IsInside(x)) continue;
             bin = hfit->GetBin(binx,biny,binz);
@@ -2248,11 +2248,11 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
    TH1 *hfit = (TH1*)hFitter->GetObjectFit();
    gF1->InitArgs(x,u);
    f = 0;
-   for (binz=zfirst;binz<=zlast;binz++) {
+   for (binz=hzfirst;binz<=hzlast;binz++) {
       x[2]  = zaxis->GetBinCenter(binz);
-      for (biny=yfirst;biny<=ylast;biny++) {
+      for (biny=hyfirst;biny<=hylast;biny++) {
          x[1]  = yaxis->GetBinCenter(biny);
-         for (binx=xfirst;binx<=xlast;binx++) {
+         for (binx=hxfirst;binx<=hxlast;binx++) {
             x[0]  = xaxis->GetBinCenter(binx);
             if (!gF1->IsInside(x)) continue;
             TF1::RejectPoint(kFALSE);
@@ -2296,13 +2296,14 @@ void H1InitGaus()
 
    Double_t allcha, sumx, sumx2, x, val, rms, mean;
    Int_t bin;
-   static Double_t sqrtpi = 2.506628;
+   const Double_t sqrtpi = 2.506628;
 
 //   - Compute mean value and RMS of the histogram in the given range
    TH1 *curHist = (TH1*)hFitter->GetObjectFit();
-   Double_t valmax = curHist->GetBinContent(xfirst);
+   Double_t valmax  = curHist->GetBinContent(hxfirst);
+   Double_t binwidx = curHist->GetBinWidth(hxfirst);
    allcha = sumx = sumx2 = 0;
-   for (bin=xfirst;bin<=xlast;bin++) {
+   for (bin=hxfirst;bin<=hxlast;bin++) {
       x       = curHist->GetBinCenter(bin);
       val     = TMath::Abs(curHist->GetBinContent(bin));
       if (val > valmax) valmax = val;
@@ -2313,7 +2314,7 @@ void H1InitGaus()
    if (allcha == 0) return;
    mean = sumx/allcha;
    rms  = TMath::Sqrt(sumx2/allcha - mean*mean);
-   if (rms == 0) rms = binwidx*(xlast-xfirst+1)/4;
+   if (rms == 0) rms = binwidx*(hxlast-hxfirst+1)/4;
    //if the distribution is really gaussian, the best approximation
    //is binwidx*allcha/(sqrtpi*rms)
    //However, in case of non-gaussian tails, this underestimates
@@ -2346,7 +2347,7 @@ void H1InitExpo()
 
    Double_t constant, slope;
    Int_t ifail;
-   Int_t nchanx = xlast - xfirst + 1;
+   Int_t nchanx = hxlast - hxfirst + 1;
 
    H1LeastSquareLinearFit(-nchanx, constant, slope, ifail);
 
@@ -2363,7 +2364,7 @@ void H1InitPolynom()
 
    Double_t fitpar[25];
 
-   Int_t nchanx = xlast - xfirst + 1;
+   Int_t nchanx = hxlast - hxfirst + 1;
    Int_t npar   = gF1->GetNpar();
 
    if (nchanx <=1 || npar == 1) {
@@ -2411,7 +2412,7 @@ void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
 	da[l-1]          = zero;
     }
     TH1 *curHist = (TH1*)hFitter->GetObjectFit();
-    for (k = xfirst; k <= xlast; ++k) {
+    for (k = hxfirst; k <= hxlast; ++k) {
 	xk     = curHist->GetBinCenter(k);
 	yk     = curHist->GetBinContent(k);
 	power  = one;
@@ -2458,7 +2459,7 @@ void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifai
     ifail = -2;
     xbar  = ybar = x2bar = xybar = 0;
     TH1 *curHist = (TH1*)hFitter->GetObjectFit();
-    for (i = xfirst; i <= xlast; ++i) {
+    for (i = hxfirst; i <= hxlast; ++i) {
 	xk = curHist->GetBinCenter(i);
 	yk = curHist->GetBinContent(i);
 	if (ndata < 0) {
@@ -3450,7 +3451,8 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    Int_t  nbinsy = fYaxis.GetNbins();
    Int_t  nbinsz = fZaxis.GetNbins();
    Axis_t range = cxmax-cxmin;
-
+   Axis_t xmin,xmax;
+   
     //recompute new axis limits by doubling the current range
    Int_t bin;
    if (x < cxmin) {
