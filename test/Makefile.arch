@@ -17,6 +17,7 @@ DllSuf        = so
 OutPutOpt     = -o # keep whitespace after "-o"
 
 ROOTCFLAGS   := $(shell root-config --cflags)
+ROOTLDFLAGS  := $(shell root-config --ldflags)
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
 HASTHREAD    := $(shell root-config --has-thread)
@@ -349,6 +350,15 @@ LDFLAGS       = -O2
 SOFLAGS       = -shared
 endif
 
+ifeq ($(ARCH),linuxppc64gcc)
+# PPC64 Linux with gcc 3.x
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),linuxx8664icc)
 # AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc compiler
 CXX           = icc
@@ -524,5 +534,6 @@ $(error $(ARCH) invalid architecture)
 endif
 
 CXXFLAGS     += $(ROOTCFLAGS)
+LDFLAGS      += $(ROOTLDFLAGS)
 LIBS          = $(ROOTLIBS) $(SYSLIBS)
 GLIBS         = $(ROOTGLIBS) $(SYSLIBS)

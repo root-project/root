@@ -197,8 +197,14 @@ linuxicc)
    auxlibs="-lm -ldl"
    ;;
 linuxppcegcs)
-   # Linux/ppc with gcc/glibc
+   # PPC Linux with gcc
    auxcflags="-fsigned-char -I/usr/X11/include"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxppc64gcc)
+   # PPC64 (64 bit mode) Linux with gcc 3.x
+   auxcflags="-m64 -fsigned-char"
+   auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxia64gcc)
@@ -219,6 +225,7 @@ linuxia64ecc)
 linuxx8664gcc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
    auxcflags="-m64"
+   auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxx8664icc)
@@ -362,13 +369,12 @@ exec_prefix=${prefix}
 exec_prefix_set=no
 new_set=no
 libsout=no
-cflags=""
 noauxlibs=no
 noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -492,8 +498,12 @@ while test $# -gt 0; do
       fi
       ;;
    --auxcflags)
-      ### output auxiliary compiler flags
+      ### Output auxiliary compiler flags
       out="$out $auxcflags"
+      ;;
+    --ldflags)
+      ### Output linker flags
+      out="$out $auxldflags"
       ;;
     --libs)
       ### Output regular ROOT libraries.  If the user said --glibs --libs,
@@ -598,6 +608,7 @@ while test $# -gt 0; do
       echo "  --libs                Print regular ROOT libraries"
       echo "  --glibs               Print regular + GUI ROOT libraries"
       echo "  --cflags              Print compiler flags and header path"
+      echo "  --ldflags             Print linker flags"
       echo "  --bindir              Print the executable directory"
       echo "  --libdir              Print the library directory"
       echo "  --incdir              Print the header directory"

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.78 2005/02/28 17:28:11 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.79 2005/03/11 18:36:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -205,6 +205,13 @@
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
+#   define R__B64
+#   define NEED_SIGJMP
+#endif
+
+#if defined(linux) && defined(R__ppc64)
+#   define R__LINUX
+#   define R__UNIX
 #   define R__B64
 #   define NEED_SIGJMP
 #endif

@@ -84,6 +84,10 @@ else
 			FREECC="cc"; \
 			ARCH_CFLAGS="-64"; \
 		fi; \
+		if [ $(ARCH) = "linuxppc64gcc" ]; then \
+			FREECC="gcc -m64"; \
+			ARCH_CFLAGS="-m64"; \
+		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			FREECC="cc"; \
 			ARCH_CFLAGS="+DD64 -Ae"; \

@@ -471,6 +471,7 @@ guess_architecture () {
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
         linux:alpha:*)         arch=linuxalphaegcs  ;;
         linux:arm*:*)          arch=linuxarm        ;;
+        linux:ppc64*:*)        arch=linuxppc64gcc   ;;
         linux:ppc*:*)          arch=linuxppcegcs    ;;
         linux:i*86:*)          arch=linux           ;;
         openbsd*:*:*)          arch=openbsd         ;;
@@ -719,7 +720,7 @@ platform=`grep "^PLATFORM *=" config/Makefile.$arch | awk '{ print $3 }'`
 case $arch in
 sgicc)
    checklib32="yes" ;;
-linuxx8664*|sgicc64)
+linuxx8664*|linuxppc64*|sgicc64)
    checklib64="yes" ;;
 hpuxia64acc)
    checkhpux64="yes" ;;
