@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.2 2001/02/01 15:06:59 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.3 2002/11/16 17:13:50 brun Exp $
 // Author: Rene Brun   19/10/99
 
 /*************************************************************************
@@ -305,6 +305,7 @@ public:
 
   void             OpenFortranFile(int lun, char* name);
   void             CloseFortranFile(int lun);
+  int              Pychge(int kf);
   int              Pycomp(int kf);
   void             Pyedit(int medit);
   void             Pyevnt();
@@ -312,6 +313,7 @@ public:
   void             Pyhepc(int mconv);
   void             Pyinit(char* frame, char* beam, char* target, double wint);
   void             Pylist(int flag);
+  double           Pymass(int kf);
   void             Pyname(int kf, char* name);
   double           Pyr(int idummy);
   void             Pyrget(int lun, int move);

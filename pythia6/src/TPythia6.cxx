@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.6 2002/10/21 16:35:22 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.7 2002/11/13 17:40:59 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,11 +66,13 @@ TPythia6*  TPythia6::fgInstance = 0;
 #ifndef WIN32
 # define pyevnt pyevnt_
 # define pyinit pyinit_
+# define pychge pychge_
 # define pycomp pycomp_
 # define pyedit pyedit_
 # define pyexec pyexec_
 # define pyhepc pyhepc_
 # define pylist pylist_
+# define pymass pymass_
 # define pyname pyname_
 # define pyr    pyr_
 # define pyrget pyrget_
@@ -90,6 +92,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pyexec PYEXEC
 # define pyhepc PYHEPC
 # define pylist PYLIST
+# define pymass PYMASS
 # define pyname PYNAME
 # define pyr    PYR
 # define pyrget PYRGET
@@ -110,7 +113,9 @@ extern "C" void type_of_call pyedit(int *medit);
 extern "C" void type_of_call pyexec();
 extern "C" void type_of_call pyhepc(int *mconv);
 extern "C" void type_of_call pylist(int *flag);
+extern "C" int  type_of_call pychge(int *kf);
 extern "C" int  type_of_call pycomp(int *kf);
+extern "C" int  type_of_call pymass(int *kf);
 extern "C" void type_of_call pyname(int *kf, char *name, Long_t l_name);
 extern "C" int  type_of_call pyr(int *dummy);
 extern "C" int  type_of_call pyrget(int *lun, int *move);
@@ -477,6 +482,7 @@ int TPythia6::Pycomp(int kf) {
 
 void TPythia6::Pyedit(int medit) {
   pyedit(&medit);
+  ImportParticles();
 }
 
 void TPythia6::Pyevnt() {
@@ -526,6 +532,14 @@ void TPythia6::Pytest(int flag) {
 
 void TPythia6::Pyupda(int mupda, int lun) {
   pyupda(&mupda,&lun);
+}
+
+double TPythia6::Pymass(int kf) {
+  return pymass(&kf);
+}
+
+int TPythia6::Pychge(int kf) {
+  return pychge(&kf);
 }
 
 //______________________________________________________________________________
