@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.7 2001/06/27 16:13:22 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.8 2001/06/27 16:54:25 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -264,6 +264,7 @@ public:
    void DoCancel();
    void DoTab(Int_t id);
    void HandleButtons(Int_t id = -1);
+   void HandleEmbeddedCanvas(Int_t event, Int_t x, Int_t y, TObject *sel);
 };
 
 class TestMsgBox {
@@ -802,6 +803,10 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
 
    fEc1->GetCanvas()->SetBorderMode(0);
    fEc2->GetCanvas()->SetBorderMode(0);
+   fEc1->GetCanvas()->SetBit(kNoContextMenu);
+   fEc1->GetCanvas()->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
+                              "TestDialog", this,
+                              "HandleEmbeddedCanvas(Int_t,Int_t,Int_t,TObject*)");
 
    // make tab yellow
    ULong_t yellow;
@@ -1096,6 +1101,15 @@ void TestDialog::DoTab(Int_t id)
    printf("Tab item %d activated\n", id);
 }
 
+void TestDialog::HandleEmbeddedCanvas(Int_t event, Int_t x, Int_t y,
+                                      TObject *sel)
+{
+   // Handle events in the left embedded canvas.
+
+   if (event == kButton3Down)
+      printf("event = %d, x = %d, y = %d, obj = %s::%s\n", event, x, y,
+             sel->IsA()->GetName(), sel->GetName());
+}
 
 TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
                        UInt_t w, UInt_t h, UInt_t options) :
