@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.7 2000/10/17 12:24:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.8 2000/12/06 07:17:43 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1398,7 +1398,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
   for ( int i = 0; i < 6; i++ ) {
     char * name;
-    TString lookup = libname;
+    TString lookup = filename_noext;
     lookup.Append(extensions[i]);
     name = Which(incPath,lookup);
     if (name) {
@@ -1454,7 +1454,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   testcmd.ReplaceAll("$IncludePath",GetIncludePath());
   testcmd.ReplaceAll("$ExeName",exec);
   testcmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
-
+  testcmd.ReplaceAll("$BuildDir",build_loc);
   // ======= Run the build
 
   if (gDebug>3) {
