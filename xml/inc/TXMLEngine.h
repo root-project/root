@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.3 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -43,6 +43,7 @@ class TXMLEngine : public TObject {
       void              AddChild(xmlNodePointer parent, xmlNodePointer child);
       void              UnlinkNode(xmlNodePointer node);
       void              FreeNode(xmlNodePointer node);
+      void              UnlinkFreeNode(xmlNodePointer node);
       const char*       GetNodeName(xmlNodePointer node);
       const char*       GetNodeContent(xmlNodePointer node);
       xmlNodePointer    GetChild(xmlNodePointer node);

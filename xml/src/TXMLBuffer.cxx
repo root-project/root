@@ -17,7 +17,7 @@
 // Instead of writing a binary data it creates a set of xml structures as
 // nodes and attributes
 // TXMLBuffer class uses streaming mechanism, provided by ROOT system,
-// therefore most of ROOT and user classes can be stored to xml. There are
+// therefore most of ROOT and user classes can be stored to xml. There are 
 // limitations for complex objects like TTree, which can not be yet converted to xml.
 //________________________________________________________________________
 
@@ -48,7 +48,7 @@ extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigne
 ClassImp(TXMLBuffer);
 
 //______________________________________________________________________________
-TXMLBuffer::TXMLBuffer() :
+TXMLBuffer::TXMLBuffer() : 
     TBuffer(),
     TXMLSetup(),
     fXML(0)
@@ -71,7 +71,7 @@ TXMLBuffer::TXMLBuffer(TBuffer::EMode mode) :
     fExpectedBaseClass(0),
     fCompressLevel(0)
 {
-// Creates buffer object to serailize/deserialize data to/from xml.
+// Creates buffer object to serailize/deserialize data to/from xml. 
 // Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
   SetParent(0);
@@ -91,7 +91,7 @@ TXMLBuffer::TXMLBuffer(TBuffer::EMode mode, TXMLFile* file) :
     fExpectedBaseClass(0),
     fCompressLevel(0)
 {
-// Creates buffer object to serailize/deserialize data to/from xml.
+// Creates buffer object to serailize/deserialize data to/from xml. 
 // This constructor should be used, if data from buffer supposed to be stored in file.
 // Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
@@ -104,9 +104,9 @@ TXMLBuffer::TXMLBuffer(TBuffer::EMode mode, TXMLFile* file) :
 
 
 //______________________________________________________________________________
-TXMLBuffer::~TXMLBuffer()
+TXMLBuffer::~TXMLBuffer() 
 {
-// destroy xml buffer
+// destroy xml buffer     
 
    if (fObjMap) delete fObjMap;
    if (fIdArray) delete fIdArray;
@@ -114,7 +114,7 @@ TXMLBuffer::~TXMLBuffer()
 }
 
 //______________________________________________________________________________
-TXMLFile* TXMLBuffer::XmlFile()
+TXMLFile* TXMLBuffer::XmlFile() 
 {
 // returns pointer to TXMLFile object
 // access to file is necessary to produce unique identifier for object references
@@ -123,107 +123,107 @@ TXMLFile* TXMLBuffer::XmlFile()
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWrite(const TObject* obj)
+xmlNodePointer TXMLBuffer::XmlWrite(const TObject* obj) 
 {
 // Convert object, derived from TObject class to xml structures
-// Return pointer on top xml element
-
+// Return pointer on top xml element    
+   
    if (obj==0) return XmlWrite(0,0);
           else return XmlWrite(obj, obj->IsA());
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWrite(const void* obj, const TClass* cl)
+xmlNodePointer TXMLBuffer::XmlWrite(const void* obj, const TClass* cl) 
 {
 // Convert object of any class to xml structures
-// Return pointer on top xml element
-
+// Return pointer on top xml element    
+    
    fErrorFlag = 0;
-
+   
    if (fXML==0) return 0;
 
    xmlNodePointer res = XmlWriteObject(obj, cl);
-
+   
    return res;
 }
 
 //______________________________________________________________________________
-TObject* TXMLBuffer::XmlRead(xmlNodePointer node)
+TObject* TXMLBuffer::XmlRead(xmlNodePointer node) 
 {
-// Recreate object from xml structure.
+// Recreate object from xml structure. 
 // Return pointer to read object.
-// If object class is not inherited from TObject,
+// If object class is not inherited from TObject, 
 // object is deleted and function return 0
-
-   TClass* cl = 0;
+    
+   TClass* cl = 0; 
    void* obj = XmlReadAny(node, &cl);
-
+   
    if ((cl!=0) && !cl->InheritsFrom(TObject::Class())) {
       cl->Destructor(obj);
-      obj = 0;
+      obj = 0; 
    }
 
    return (TObject*) obj;
 }
 
 //______________________________________________________________________________
-void* TXMLBuffer::XmlReadAny(xmlNodePointer node, TClass** cl)
+void* TXMLBuffer::XmlReadAny(xmlNodePointer node, TClass** cl) 
 {
-// Recreate object from xml structure.
+// Recreate object from xml structure. 
 // Return pointer to read object.
 // if (cl!=0) returns pointer to class of object
-
+    
    if (node==0) return 0;
    if (cl) *cl = 0;
 
    fErrorFlag = 0;
 
    if (fXML==0) return 0;
-
+   
    PushStack(node, kTRUE);
 
    void* obj = XmlReadObject(0, cl);
-
+   
    PopStack();
 
    return obj;
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteObject(const TObject *obj)
+void TXMLBuffer::WriteObject(const TObject *obj) 
 {
 // Convert object into xml structures.
-// !!! Should be used only by TXMLBuffer itself.
+// !!! Should be used only by TXMLBuffer itself. 
 // Use XmlWrite() functions to convert your object to xml
 // Redefined here to avoid gcc 3.x warning
-
+    
    TBuffer::WriteObject(obj);
 }
 
 class TXMLStackObj : public TObject {
    public:
       TXMLStackObj(xmlNodePointer node) :
-         TObject(),
-         fNode(node),
-         fInfo(0),
-         fLastElem(0),
+         TObject(), 
+         fNode(node), 
+         fInfo(0), 
+         fElem(0), 
          fElemNumber(0),
          fCompressedClassNode(kFALSE),
          fClassNs(0) {}
 
       xmlNodePointer    fNode;
       TStreamerInfo*    fInfo;
-      TStreamerElement* fLastElem;
+      TStreamerElement* fElem;
       Int_t             fElemNumber;
       Bool_t            fCompressedClassNode;
       xmlNsPointer      fClassNs;
 };
 
 //______________________________________________________________________________
-TXMLStackObj* TXMLBuffer::PushStack(xmlNodePointer current, Bool_t simple)
+TXMLStackObj* TXMLBuffer::PushStack(xmlNodePointer current, Bool_t simple) 
 {
 // add new level to xml stack
-
+    
   if (IsReading() && !simple) {
     current = fXML->GetChild(current);
     fXML->SkipEmpty(current);
@@ -235,10 +235,10 @@ TXMLStackObj* TXMLBuffer::PushStack(xmlNodePointer current, Bool_t simple)
 }
 
 //______________________________________________________________________________
-TXMLStackObj* TXMLBuffer::PopStack()
+TXMLStackObj* TXMLBuffer::PopStack() 
 {
-// remove one level from xml stack
-
+// remove one level from xml stack    
+    
   TObject* last = fStack.Last();
   if (last!=0) {
     fStack.Remove(last);
@@ -249,10 +249,10 @@ TXMLStackObj* TXMLBuffer::PopStack()
 }
 
 //______________________________________________________________________________
-TXMLStackObj* TXMLBuffer::Stack(Int_t depth)
+TXMLStackObj* TXMLBuffer::Stack(Int_t depth) 
 {
 // return xml stack object of specified depth
-
+    
   TXMLStackObj* stack = 0;
   if (depth<=fStack.GetLast())
     stack = dynamic_cast<TXMLStackObj*> (fStack.At(fStack.GetLast()-depth));
@@ -260,19 +260,19 @@ TXMLStackObj* TXMLBuffer::Stack(Int_t depth)
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::StackNode()
+xmlNodePointer TXMLBuffer::StackNode() 
 {
-// return pointer on current xml node
-
+// return pointer on current xml node    
+    
   TXMLStackObj* stack = dynamic_cast<TXMLStackObj*> (fStack.Last());
   return (stack==0) ? 0 : stack->fNode;
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ShiftStack(const char* errinfo)
+void TXMLBuffer::ShiftStack(const char* errinfo) 
 {
 // shift stack node to next
-
+    
    TXMLStackObj* stack = dynamic_cast<TXMLStackObj*> (fStack.Last());
    if (stack) {
      if (gDebug>4)
@@ -284,18 +284,18 @@ void TXMLBuffer::ShiftStack(const char* errinfo)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlWriteBlock(xmlNodePointer node)
+void TXMLBuffer::XmlWriteBlock(xmlNodePointer node) 
 {
 // write binary data block from buffer to xml
 // this data can be produced only by direct call of TBuffer::WriteBuf() functions
-
+    
    if ((node==0) || (Length()==0)) return;
 
    const char* src = Buffer();
    int srcSize = Length();
 
    char* fZipBuffer = 0;
-
+   
    Int_t complevel = fCompressLevel;
 
    if ((Length() > 512) && (complevel>0)) {
@@ -309,7 +309,7 @@ void TXMLBuffer::XmlWriteBlock(xmlNodePointer node)
       srcSize = CompressedSize;
    }
 
-   TString res;
+   TString res; 
    char sbuf[500];
    int block = 0;
    char* tgt = sbuf;
@@ -337,7 +337,7 @@ void TXMLBuffer::XmlWriteBlock(xmlNodePointer node)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBlock(xmlNodePointer blocknode)
+void TXMLBuffer::XmlReadBlock(xmlNodePointer blocknode) 
 {
 // read binary block of data from xml
 
@@ -402,9 +402,9 @@ void TXMLBuffer::XmlReadBlock(xmlNodePointer blocknode)
 }
 
 //______________________________________________________________________________
-Bool_t TXMLBuffer::ProcessPointer(const void* ptr, xmlNodePointer node)
+Bool_t TXMLBuffer::ProcessPointer(const void* ptr, xmlNodePointer node) 
 {
-// Add "ptr" attribute to node, if ptr is null or
+// Add "ptr" attribute to node, if ptr is null or 
 // if ptr is pointer on object, which is already saved in buffer
 // Automatically add "ref" attribute to node, where referenced object is stored
 
@@ -440,11 +440,11 @@ Bool_t TXMLBuffer::ProcessPointer(const void* ptr, xmlNodePointer node)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::RegisterPointer(const void* ptr, xmlNodePointer node)
+void TXMLBuffer::RegisterPointer(const void* ptr, xmlNodePointer node) 
 {
-// Register pair of object pointer and node, where this object is saved,
+// Register pair of object pointer and node, where this object is saved, 
 // in object map
-
+    
    if ((node==0) || (ptr==0)) return;
 
    ULong_t hash = TMath::Hash(&ptr, sizeof(void*));
@@ -456,10 +456,10 @@ void TXMLBuffer::RegisterPointer(const void* ptr, xmlNodePointer node)
 }
 
 //______________________________________________________________________________
-Bool_t TXMLBuffer::ExtractPointer(xmlNodePointer node, void* &ptr, TClass* &cl)
+Bool_t TXMLBuffer::ExtractPointer(xmlNodePointer node, void* &ptr, TClass* &cl) 
 {
 // Searches for "ptr" attribute and returns pointer to object and class,
-// if "ptr" attribute reference to read object
+// if "ptr" attribute reference to read object 
 
    cl = 0;
 
@@ -487,10 +487,10 @@ Bool_t TXMLBuffer::ExtractPointer(xmlNodePointer node, void* &ptr, TClass* &cl)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ExtractReference(xmlNodePointer node, const void* ptr, const TClass* cl)
+void TXMLBuffer::ExtractReference(xmlNodePointer node, const void* ptr, const TClass* cl) 
 {
 // Analyse, if node has "ref" attribute and register it to object map
-
+    
    if ((node==0) || (ptr==0)) return;
 
    const char* refid = fXML->GetAttr(node, xmlNames_Ref);
@@ -498,7 +498,7 @@ void TXMLBuffer::ExtractReference(xmlNodePointer node, const void* ptr, const TC
    if (refid==0) return;
 
    if (fIdArray==0) {
-      fIdArray = new TObjArray;
+      fIdArray = new TObjArray; 
       fIdArray->SetOwner(kTRUE);
    }
    TNamed* nid = new TNamed(refid, cl->GetName());
@@ -513,7 +513,7 @@ void TXMLBuffer::ExtractReference(xmlNodePointer node, const void* ptr, const TC
 }
 
 //______________________________________________________________________________
-Bool_t TXMLBuffer::VerifyNode(xmlNodePointer node, const char* name, const char* errinfo)
+Bool_t TXMLBuffer::VerifyNode(xmlNodePointer node, const char* name, const char* errinfo) 
 {
 // check, if node has specified name
 
@@ -530,24 +530,24 @@ Bool_t TXMLBuffer::VerifyNode(xmlNodePointer node, const char* name, const char*
 }
 
 //______________________________________________________________________________
-Bool_t TXMLBuffer::VerifyStackNode(const char* name, const char* errinfo)
+Bool_t TXMLBuffer::VerifyStackNode(const char* name, const char* errinfo) 
 {
 // check, if stack node has specified name
-
+    
    return VerifyNode(StackNode(), name, errinfo);
 }
 
 
 //______________________________________________________________________________
-Bool_t TXMLBuffer::VerifyAttr(xmlNodePointer node, const char* name, const char* value, const char* errinfo)
+Bool_t TXMLBuffer::VerifyAttr(xmlNodePointer node, const char* name, const char* value, const char* errinfo) 
 {
-// checks, that attribute of specified name exists and has specified value
-
+// checks, that attribute of specified name exists and has specified value    
+    
    if ((node==0) || (name==0) || (value==0)) return kFALSE;
    const char* cont = fXML->GetAttr(node, name);
    if (((cont==0) || (strcmp(cont, value)!=0))) {
        if  (errinfo) {
-         Error("VerifyAttr","%s : attr %s = %s, expected: %s", errinfo, name, cont, value);
+         Error("VerifyAttr","%s : attr %s = %s, expected: %s", errinfo, name, cont, value); 
          fErrorFlag = 1;
        }
        return kFALSE;
@@ -556,43 +556,43 @@ Bool_t TXMLBuffer::VerifyAttr(xmlNodePointer node, const char* name, const char*
 }
 
 //______________________________________________________________________________
-Bool_t TXMLBuffer::VerifyStackAttr(const char* name, const char* value, const char* errinfo)
+Bool_t TXMLBuffer::VerifyStackAttr(const char* name, const char* value, const char* errinfo) 
 {
-// checks stack attribute
-
+// checks stack attribute    
+    
    return VerifyAttr(StackNode(), name, value, errinfo);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::CreateItemNode(const char* name)
+xmlNodePointer TXMLBuffer::CreateItemNode(const char* name) 
 {
 // create item node of specified name
-
-   xmlNodePointer node = 0;
+    
+   xmlNodePointer node = 0; 
    if (GetXmlLayout()==kGeneralized) {
       node = fXML->NewChild(StackNode(), 0, xmlNames_Item, 0);
-      fXML->NewAttr(node, 0, xmlNames_Name, name);
+      fXML->NewAttr(node, 0, xmlNames_Name, name);  
    } else
        node = fXML->NewChild(StackNode(), 0, name, 0);
-   return node;
+   return node;    
 }
 
 //______________________________________________________________________________
-Bool_t TXMLBuffer::VerifyItemNode(const char* name, const char* errinfo)
+Bool_t TXMLBuffer::VerifyItemNode(const char* name, const char* errinfo) 
 {
 // checks, if stack node is item and has specified name
-
-   Bool_t res = kTRUE;
-   if (GetXmlLayout()==kGeneralized)
+    
+   Bool_t res = kTRUE; 
+   if (GetXmlLayout()==kGeneralized) 
       res = VerifyStackNode(xmlNames_Item, errinfo) &&
             VerifyStackAttr(xmlNames_Name, name, errinfo);
    else
       res = VerifyStackNode(name, errinfo);
    return res;
-}
+}   
 
 //______________________________________________________________________________
-void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number)
+void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number) 
 {
 // create xml node correspondent to TStreamerElement object
 
@@ -602,47 +602,49 @@ void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number)
       elemnode = fXML->NewChild(StackNode(), 0, xmlNames_Member, 0);
       fXML->NewAttr(elemnode, 0, xmlNames_Name, elem->GetName());
     } else {
-       // take namesapce for element only if it is not a base class or class name
-       xmlNsPointer ns = Stack()->fClassNs;
-       if ((elem->GetType()==TStreamerInfo::kBase)
+       // take namesapce for element only if it is not a base class or class name  
+       xmlNsPointer ns = Stack()->fClassNs; 
+       if ((elem->GetType()==TStreamerInfo::kBase) 
            || ((elem->GetType()==TStreamerInfo::kTNamed) && !strcmp(elem->GetName(), TNamed::Class()->GetName()))
            || ((elem->GetType()==TStreamerInfo::kTObject) && !strcmp(elem->GetName(), TObject::Class()->GetName()))
            || ((elem->GetType()==TStreamerInfo::kTString) && !strcmp(elem->GetName(), TString::Class()->GetName())))
-         ns = 0;
-
+         ns = 0;  
+       
        elemnode = fXML->NewChild(StackNode(), ns, elem->GetName(), 0);
     }
 
     TXMLStackObj* curr = PushStack(elemnode);
-    curr->fLastElem = (TStreamerElement*)elem;
+    curr->fElem = (TStreamerElement*)elem;
     curr->fElemNumber = number;
 }
 
 //______________________________________________________________________________
-Bool_t TXMLBuffer::VerifyElemNode(const TStreamerElement* elem, Int_t number)
+Bool_t TXMLBuffer::VerifyElemNode(const TStreamerElement* elem, Int_t number) 
 {
 // Checks, if stack node correspond to TStreamerElement object
-
+    
     if (GetXmlLayout()==kGeneralized) {
        if (!VerifyStackNode(xmlNames_Member)) return kFALSE;
        if (!VerifyStackAttr(xmlNames_Name, elem->GetName())) return kFALSE;
     } else {
        if (!VerifyStackNode(elem->GetName())) return kFALSE;
     }
-
+    
+    PerformPreProcessing(elem, StackNode());
+    
     TXMLStackObj* curr = PushStack(StackNode()); // set pointer to first data inside element
-    curr->fLastElem = (TStreamerElement*)elem;
+    curr->fElem = (TStreamerElement*)elem;
     curr->fElemNumber = number;
     return kTRUE;
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteObject(const void* obj, const TClass* cl)
+xmlNodePointer TXMLBuffer::XmlWriteObject(const void* obj, const TClass* cl) 
 {
 // Write object to buffer
 // If object was written before, only pointer will be stored
 // Return pointer to top xml node, representing object
-
+    
    xmlNodePointer objnode = fXML->NewChild(StackNode(), 0, xmlNames_Object, 0);
 
    if (!cl) obj = 0;
@@ -667,12 +669,12 @@ xmlNodePointer TXMLBuffer::XmlWriteObject(const void* obj, const TClass* cl)
 }
 
 //______________________________________________________________________________
-void* TXMLBuffer::XmlReadObject(void* obj, TClass** cl)
+void* TXMLBuffer::XmlReadObject(void* obj, TClass** cl) 
 {
-// Read object from the buffer
+// Read object from the buffer    
 
    if (cl) *cl = 0;
-
+   
    xmlNodePointer objnode = StackNode();
 
    if (fErrorFlag>0) return obj;
@@ -715,22 +717,20 @@ void* TXMLBuffer::XmlReadObject(void* obj, TClass** cl)
 
    if (gDebug>1)
      cout << "Read object of class " << clname << " done" << endl << endl;
-
+     
    if (cl) *cl = objClass;
 
    return obj;
 }
 
 //______________________________________________________________________________
-void  TXMLBuffer::IncrementLevel(TStreamerInfo* info)
+void  TXMLBuffer::IncrementLevel(TStreamerInfo* info) 
 {
 // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
 // and indent new level in xml structure.
 // This call indicates, that TStreamerInfo functions starts streaming
 // object data of correspondent class
-
-   TBuffer::IncrementLevel(info);
-
+    
    if (info==0) return;
 
    fCanUseCompact = kFALSE;
@@ -740,15 +740,15 @@ void  TXMLBuffer::IncrementLevel(TStreamerInfo* info)
 
    if (gDebug>2)
      cout << " IncrementLevel " << clname << endl;
-
+     
    Bool_t compressClassNode = fExpectedBaseClass==info->GetClass();
 //   cout << "Compressed class = " << compressClassNode << endl;
    fExpectedBaseClass= 0;
-
+   
    TXMLStackObj* stack = Stack();
 
    if (IsWriting()) {
-
+       
       xmlNodePointer classnode = 0;
       if (compressClassNode) {
         classnode = StackNode();
@@ -765,7 +765,7 @@ void  TXMLBuffer::IncrementLevel(TStreamerInfo* info)
         fXML->NewIntAttr(classnode, xmlNames_ClassVersion, fVersionBuf);
         fVersionBuf = -111;
       }
-
+      
      if (IsUseNamespaces() && (GetXmlLayout()!=kGeneralized))
        stack->fClassNs = fXML->NewNS(classnode, XmlClassNameSpaceRef(info->GetClass()), clname);
 
@@ -779,26 +779,23 @@ void  TXMLBuffer::IncrementLevel(TStreamerInfo* info)
         stack = PushStack(StackNode());
       }
    }
-
+   
    stack->fCompressedClassNode = compressClassNode;
    if (gDebug>3)
      cout << "### Inc.lvl Set stack = " << stack << "  sz =" << fStack.GetLast()+1 << endl;
-
+   
    stack->fInfo = info;
 }
 
 //______________________________________________________________________________
-void  TXMLBuffer::DecrementLevel(TStreamerInfo* info)
+void  TXMLBuffer::DecrementLevel(TStreamerInfo* info) 
 {
 // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
 // and decrease level in xml structure.
-
+    
    CheckVersionBuf();
 
-   TBuffer::DecrementLevel(info);
-
    if (info==0) return;
-
 
    fCanUseCompact = kFALSE;
    fExpectedChain = kFALSE;
@@ -808,12 +805,15 @@ void  TXMLBuffer::DecrementLevel(TStreamerInfo* info)
 
    TXMLStackObj* stack = Stack();
 
-   if (stack->fInfo==0) stack = PopStack();  // remove stack of last element
+   if (stack->fInfo==0) {
+     PerformPostProcessing();
+     stack = PopStack();  // remove stack of last element
+   }
 
    if (gDebug>3)
      cout << "### Dec.lvl Set stack = " << stack << "  sz =" << fStack.GetLast()+1 << endl;
 
-
+   
    if (stack->fCompressedClassNode) {
      stack->fInfo = 0;
      stack->fCompressedClassNode = kFALSE;
@@ -824,13 +824,13 @@ void  TXMLBuffer::DecrementLevel(TStreamerInfo* info)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::SetStreamerElementNumber(Int_t number)
+void TXMLBuffer::SetStreamerElementNumber(Int_t number) 
 {
 
 // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
 // and add/verify next element of xml structure
 // This calls allows separate data, correspondent to one class member, from another
-
+    
    CheckVersionBuf();
 
    fExpectedChain = kFALSE;
@@ -842,31 +842,32 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number)
        Error("SetStreamerElementNumber", "stack is empty");
        return;
     }
-
+   
    if (stack->fInfo==0) {  // this is not a first element
-     PopStack();         // go level back
+     PerformPostProcessing();
+     PopStack();           // go level back
      if (IsReading()) ShiftStack("startelem");   // shift to next element, only for reading
      stack = dynamic_cast<TXMLStackObj*> (fStack.Last());
    }
-
+   
    if (stack==0) {
       Error("SetStreamerElementNumber", "Lost of stack");
-      return;
+      return;   
    }
-
+   
    TStreamerInfo* info = stack->fInfo;
    if (info==0) {
       Error("SetStreamerElementNumber", "Problem in Inc/Dec level");
-      return;
+      return;   
    }
-
+   
    TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
-
+      
    if (elem==0) {
       Error("SetStreamerElementNumber", "streamer info returns elem = 0");
       return;
    }
-
+   
    if (gDebug>4)
      cout << "         Next element " << elem->GetName() << endl;
 
@@ -877,15 +878,15 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number)
    fCanUseCompact = isBasicType && (elem->GetType()==comp_type);
 
    fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
-
+   
    if ((elem->GetType()==TStreamerInfo::kBase) ||
        ((elem->GetType()==TStreamerInfo::kTNamed) && !strcmp(elem->GetName(), TNamed::Class()->GetName())))
      fExpectedBaseClass = elem->GetClassPointer();
-
+   
    if (fExpectedChain && (gDebug>3))
      cout << "Expects chain for class " << info->GetName()
           << " in elem " << elem->GetName() << " number " << number << endl;
-
+          
    if (fExpectedBaseClass && (gDebug>3))
      cout << "Expects base class " << fExpectedBaseClass->GetName() << " with standard streamer" << endl;
 
@@ -897,59 +898,239 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::BeforeIOoperation()
+void TXMLBuffer::PerformPostProcessing() 
+{
+// Function is converts TObject and TString structures to more compact representation
+
+   //cout << "PerformPostProcessing " << Stack() << "  " << Stack(1) << endl; 
+
+   if (GetXmlLayout()==kGeneralized) return;
+
+   const TStreamerElement* elem = Stack()->fElem;
+   xmlNodePointer elemnode = IsWriting() ? Stack()->fNode : Stack(1)->fNode;
+   
+   if ((elem==0) || (elemnode==0)) return;
+   
+   if (elem->GetType()==TStreamerInfo::kTString) { 
+//      cout << "Bad are " << int('<') << " " << int('>') << "  " << int ('\"') << endl;  
+   
+//      cout << "Has TString " << elem->GetName() << endl;
+   
+      xmlNodePointer node = fXML->GetChild(elemnode);
+      fXML->SkipEmpty(node);
+      
+      xmlNodePointer nodecharstar = 0;
+      xmlNodePointer nodeuchar = 0;
+      xmlNodePointer nodeint = 0;
+      
+      while (node!=0) {
+         const char* name = fXML->GetNodeName(node);
+//         cout << "Has name " << name << endl;
+         if (strcmp(name, xmlNames_UChar)==0) {
+            if (nodeuchar) return;
+            nodeuchar = node;
+         } else 
+         if (strcmp(name, xmlNames_Int)==0) {
+            if (nodeint) return;
+            nodeint = node;
+         } else 
+         if (strcmp(name, xmlNames_CharStar)==0) {
+            if (nodecharstar!=0) return;
+            nodecharstar = node;
+         } else return; // can not be something else
+         fXML->ShiftToNext(node);
+      }
+//      cout << "Looks good" << endl;
+      
+      if (nodeuchar==0) return;
+
+      TString str;
+      if (nodecharstar!=0)
+        str = fXML->GetAttr(nodecharstar, xmlNames_v);
+      fXML->NewAttr(elemnode, 0, "str", str);
+      
+//      cout << "Make string: " << str << endl;
+      
+      fXML->UnlinkFreeNode(nodeuchar);
+      fXML->UnlinkFreeNode(nodeint);  
+      fXML->UnlinkFreeNode(nodecharstar);
+   } else
+   if (elem->GetType()==TStreamerInfo::kTObject) { 
+      xmlNodePointer node = fXML->GetChild(elemnode);
+      fXML->SkipEmpty(node);
+      
+      xmlNodePointer vnode = 0;
+      xmlNodePointer idnode = 0;
+      xmlNodePointer bitsnode = 0;
+      xmlNodePointer prnode = 0;
+      while (node!=0) {
+         const char* name = fXML->GetNodeName(node);
+         
+         if (strcmp(name, xmlNames_OnlyVersion)==0) {
+            if (vnode) return;
+            vnode = node;
+         } else 
+         if (strcmp(name, xmlNames_UInt)==0) {
+            if (idnode==0) idnode = node; else
+            if (bitsnode==0) bitsnode = node; else return;
+         } else
+         if (strcmp(name, xmlNames_UShort)==0) {
+            if (prnode) return;
+            prnode = node;
+         } else return; 
+         fXML->ShiftToNext(node);
+      }
+      
+      if ((vnode==0) || (idnode==0) || (bitsnode==0)) return;
+      
+      TString str = fXML->GetAttr(idnode,xmlNames_v);
+      fXML->NewAttr(elemnode, 0, "fUniqueID", str);
+      
+      str = fXML->GetAttr(bitsnode, xmlNames_v);
+      UInt_t bits;
+      sscanf(str.Data(),"%u", &bits);
+      
+      char sbuf[20];
+      sprintf(sbuf,"%x",bits);
+      fXML->NewAttr(elemnode, 0, "fBits", sbuf);
+      
+      if (prnode!=0) {
+         str = fXML->GetAttr(prnode,xmlNames_v);   
+         fXML->NewAttr(elemnode, 0, "fProcessID", str);
+      }
+      
+      fXML->UnlinkFreeNode(vnode);
+      fXML->UnlinkFreeNode(idnode);
+      fXML->UnlinkFreeNode(bitsnode);
+      fXML->UnlinkFreeNode(prnode);
+   }
+}
+
+//______________________________________________________________________________
+void TXMLBuffer::PerformPreProcessing(const TStreamerElement* elem, xmlNodePointer elemnode) 
+{
+// Function is unpack TObject and TString structures to be able read 
+// them from custom streamers of this objects
+  
+   if (GetXmlLayout()==kGeneralized) return;
+   if ((elem==0) || (elemnode==0)) return;
+
+   if (elem->GetType()==TStreamerInfo::kTString) { 
+//     cout << "Has TString " << elem->GetName() << "  node : " << fXML->GetNodeName(elemnode) << endl;
+
+     if (!fXML->HasAttr(elemnode,"str")) return;
+     TString str = fXML->GetAttr(elemnode, "str");
+     fXML->FreeAttr(elemnode, "str");
+     Int_t len = str.Length();
+     
+//     cout << "Unpack string : " << str << endl;
+     
+     xmlNodePointer ucharnode = fXML->NewChild(elemnode, 0, xmlNames_UChar,0);
+     
+     char sbuf[20];
+     sprintf(sbuf,"%d", len);
+     if (len<255) {
+        fXML->NewAttr(ucharnode,0,xmlNames_v,sbuf); 
+     }
+     else {
+        fXML->NewAttr(ucharnode,0,xmlNames_v,"255"); 
+        xmlNodePointer intnode = fXML->NewChild(elemnode, 0, xmlNames_Int, 0); 
+        fXML->NewAttr(intnode, 0, xmlNames_v, sbuf); 
+        
+     }   
+     if (len>0) {
+       xmlNodePointer node = fXML->NewChild(elemnode, 0, xmlNames_CharStar, 0);
+       fXML->NewAttr(node, 0, xmlNames_v, str); 
+     }
+   } else
+   if (elem->GetType()==TStreamerInfo::kTObject) { 
+       if (!fXML->HasAttr(elemnode, "fUniqueID")) return;
+       if (!fXML->HasAttr(elemnode, "fBits")) return;
+       
+       TString idstr = fXML->GetAttr(elemnode, "fUniqueID");
+       TString bitsstr = fXML->GetAttr(elemnode, "fBits");
+       TString prstr = fXML->GetAttr(elemnode, "fProcessID");
+
+       fXML->FreeAttr(elemnode, "fUniqueID");
+       fXML->FreeAttr(elemnode, "fBits");
+       fXML->FreeAttr(elemnode, "fProcessID");
+       
+       xmlNodePointer node = fXML->NewChild(elemnode, 0, xmlNames_OnlyVersion, 0);
+       fXML->NewAttr(node, 0, xmlNames_v, "1");  
+       
+       node = fXML->NewChild(elemnode, 0, xmlNames_UInt, 0);
+       fXML->NewAttr(node, 0, xmlNames_v, idstr);  
+       
+       UInt_t bits;
+       sscanf(bitsstr.Data(),"%x", &bits);
+       char sbuf[20];
+       sprintf(sbuf,"%u", bits);
+       
+       node = fXML->NewChild(elemnode, 0, xmlNames_UInt, 0);
+       fXML->NewAttr(node, 0, xmlNames_v, sbuf);  
+       
+       if (prstr.Length()>0) {
+         node = fXML->NewChild(elemnode, 0, xmlNames_UShort, 0);
+         fXML->NewAttr(node, 0, xmlNames_v, sbuf);  
+       }
+   }
+}
+
+
+//______________________________________________________________________________
+void TXMLBuffer::BeforeIOoperation() 
 {
   // Function is called before any IO operation of TBuffer
   // Now is used to store version value if no proper calls are discovered
-
+  
    CheckVersionBuf();
 }
 
 //______________________________________________________________________________
-TClass* TXMLBuffer::ReadClass(const TClass*, UInt_t*)
+TClass* TXMLBuffer::ReadClass(const TClass*, UInt_t*) 
 {
 // suppressed function of TBuffer
-
+    
    return 0;
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteClass(const TClass*)
+void TXMLBuffer::WriteClass(const TClass*) 
 {
 // suppressed function of TBuffer
-
+    
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::CheckByteCount(UInt_t /*r_s */, UInt_t /*r_c*/, const TClass* /*cl*/)
+Int_t TXMLBuffer::CheckByteCount(UInt_t /*r_s */, UInt_t /*r_c*/, const TClass* /*cl*/) 
 {
-// suppressed function of TBuffer
-
+// suppressed function of TBuffer    
+    
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t  TXMLBuffer::CheckByteCount(UInt_t, UInt_t, const char*)
+Int_t  TXMLBuffer::CheckByteCount(UInt_t, UInt_t, const char*) 
 {
-// suppressed function of TBuffer
-
+// suppressed function of TBuffer    
+    
    return 0;
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::SetByteCount(UInt_t, Bool_t)
+void TXMLBuffer::SetByteCount(UInt_t, Bool_t) 
 {
-// suppressed function of TBuffer
-
+// suppressed function of TBuffer    
+    
 }
 
 //______________________________________________________________________________
-Version_t TXMLBuffer::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*cl*/)
+Version_t TXMLBuffer::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*cl*/) 
 {
 // read version value from buffer
-
-
-   if (gDebug>3)
+    
+    
+   if (gDebug>3) 
      cout << "TXMLBuffer::ReadVersion " << endl;
 
    BeforeIOoperation();
@@ -958,7 +1139,7 @@ Version_t TXMLBuffer::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*
 
    if (start) *start = 0;
    if (bcnt) *bcnt = 0;
-
+   
    if (VerifyItemNode(xmlNames_OnlyVersion)) {
       res = AtoI(XmlReadValue(xmlNames_OnlyVersion));
    } else
@@ -979,11 +1160,11 @@ Version_t TXMLBuffer::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::CheckVersionBuf()
+void TXMLBuffer::CheckVersionBuf() 
 {
-// checks buffer, filled by WriteVersion
+// checks buffer, filled by WriteVersion 
 // if next data is arriving, version should be stored in buffer
-
+    
   if (IsWriting() && (fVersionBuf>=-100)) {
      char sbuf[20];
      sprintf(sbuf, "%d", fVersionBuf);
@@ -994,14 +1175,14 @@ void TXMLBuffer::CheckVersionBuf()
 
 
 //______________________________________________________________________________
-UInt_t TXMLBuffer::WriteVersion(const TClass *cl, Bool_t /* useBcnt */)
+UInt_t TXMLBuffer::WriteVersion(const TClass *cl, Bool_t /* useBcnt */) 
 {
 // Copies class version to buffer, but not writes it to xml
-// Version will be written with next I/O operation or
+// Version will be written with next I/O operation or 
 // will be added as attribute of class tag, created by IncrementLevel call
-
+    
    BeforeIOoperation();
-
+   
    if (fExpectedBaseClass!=cl)
      fExpectedBaseClass = 0;
 
@@ -1016,10 +1197,10 @@ UInt_t TXMLBuffer::WriteVersion(const TClass *cl, Bool_t /* useBcnt */)
 }
 
 //______________________________________________________________________________
-void* TXMLBuffer::ReadObjectAny(const TClass*)
+void* TXMLBuffer::ReadObjectAny(const TClass*) 
 {
 // Read object from buffer. Only used from TBuffer
-
+    
    BeforeIOoperation();
    if (gDebug>2)
       cout << "TXMLBuffer::ReadObjectAny   " << fXML->GetNodeName(StackNode()) << endl;
@@ -1028,17 +1209,17 @@ void* TXMLBuffer::ReadObjectAny(const TClass*)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualClass)
+void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualClass) 
 {
 // Write object to buffer. Only used from TBuffer
-
+    
    BeforeIOoperation();
    if (gDebug>2)
       cout << "TXMLBuffer::WriteObject of class " << (actualClass ? actualClass->GetName() : " null") << endl;
    XmlWriteObject(actualObjStart, actualClass);
 }
 
-// Macro to read content of uncompressed array
+// Macro to read content of uncompressed array 
 #define TXMLReadArrayNoncompress(vname) \
 { \
    for(Int_t indx=0;indx<n;indx++) \
@@ -1051,8 +1232,8 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
    Int_t indx = 0; \
    while(indx<n) { \
      Int_t cnt = 1; \
-     if (fXML->HasAttr(StackNode(), "cnt")) \
-        cnt = fXML->GetIntAttr(StackNode(), "cnt"); \
+     if (fXML->HasAttr(StackNode(), xmlNames_cnt)) \
+        cnt = fXML->GetIntAttr(StackNode(), xmlNames_cnt); \
      XmlReadBasic(vname[indx]); \
      Int_t curr = indx; indx++; \
      while(cnt>1) {\
@@ -1078,114 +1259,114 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(Bool_t    *&b)
+Int_t TXMLBuffer::ReadArray(Bool_t    *&b) 
 {
 // Read array of Bool_t from buffer
-
+    
    TXMLBuffer_ReadArray(Bool_t,b);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(Char_t    *&c)
+Int_t TXMLBuffer::ReadArray(Char_t    *&c) 
 {
 // Read array of Char_t from buffer
-
+    
    TXMLBuffer_ReadArray(Char_t,c);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(UChar_t   *&c)
+Int_t TXMLBuffer::ReadArray(UChar_t   *&c) 
 {
 // Read array of UChar_t from buffer
-
+    
    TXMLBuffer_ReadArray(UChar_t,c);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(Short_t   *&h)
+Int_t TXMLBuffer::ReadArray(Short_t   *&h) 
 {
 // Read array of Short_t from buffer
-
+    
    TXMLBuffer_ReadArray(Short_t,h);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(UShort_t  *&h)
+Int_t TXMLBuffer::ReadArray(UShort_t  *&h) 
 {
 // Read array of UShort_t from buffer
-
+    
    TXMLBuffer_ReadArray(UShort_t,h);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(Int_t     *&i)
+Int_t TXMLBuffer::ReadArray(Int_t     *&i) 
 {
 // Read array of Int_t from buffer
-
+    
    TXMLBuffer_ReadArray(Int_t,i);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(UInt_t    *&i)
+Int_t TXMLBuffer::ReadArray(UInt_t    *&i) 
 {
 // Read array of UInt_t from buffer
-
+    
    TXMLBuffer_ReadArray(UInt_t,i);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(Long_t    *&l)
+Int_t TXMLBuffer::ReadArray(Long_t    *&l) 
 {
 // Read array of Long_t from buffer
-
+    
    TXMLBuffer_ReadArray(Long_t,l);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(ULong_t   *&l)
+Int_t TXMLBuffer::ReadArray(ULong_t   *&l) 
 {
 // Read array of ULong_t from buffer
-
+    
    TXMLBuffer_ReadArray(ULong_t,l);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(Long64_t  *&l)
+Int_t TXMLBuffer::ReadArray(Long64_t  *&l) 
 {
 // Read array of Long64_t from buffer
-
+    
    TXMLBuffer_ReadArray(Long64_t,l);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(ULong64_t *&l)
+Int_t TXMLBuffer::ReadArray(ULong64_t *&l) 
 {
 // Read array of ULong64_t from buffer
-
+    
    TXMLBuffer_ReadArray(ULong64_t,l);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(Float_t   *&f)
+Int_t TXMLBuffer::ReadArray(Float_t   *&f) 
 {
 // Read array of Float_t from buffer
-
+    
    TXMLBuffer_ReadArray(Float_t,f);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArray(Double_t  *&d)
+Int_t TXMLBuffer::ReadArray(Double_t  *&d) 
 {
 // Read array of Double_t from buffer
-
+    
    TXMLBuffer_ReadArray(Double_t,d);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArrayDouble32(Double_t  *&d)
+Int_t TXMLBuffer::ReadArrayDouble32(Double_t  *&d) 
 {
 // Read array of Double32_t from buffer
-
+    
    TXMLBuffer_ReadArray(Double_t,d);
 }
 
@@ -1206,114 +1387,114 @@ Int_t TXMLBuffer::ReadArrayDouble32(Double_t  *&d)
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(Bool_t    *b)
+Int_t TXMLBuffer::ReadStaticArray(Bool_t    *b) 
 {
-// Read array of Bool_t from buffer
-
+// Read array of Bool_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(b);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(Char_t    *c)
+Int_t TXMLBuffer::ReadStaticArray(Char_t    *c) 
 {
-// Read array of Char_t from buffer
-
+// Read array of Char_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(c);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(UChar_t   *c)
+Int_t TXMLBuffer::ReadStaticArray(UChar_t   *c) 
 {
-// Read array of UChar_t from buffer
-
+// Read array of UChar_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(c);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(Short_t   *h)
+Int_t TXMLBuffer::ReadStaticArray(Short_t   *h) 
 {
-// Read array of Short_t from buffer
-
+// Read array of Short_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(h);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(UShort_t  *h)
+Int_t TXMLBuffer::ReadStaticArray(UShort_t  *h) 
 {
-// Read array of UShort_t from buffer
-
+// Read array of UShort_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(h);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(Int_t     *i)
+Int_t TXMLBuffer::ReadStaticArray(Int_t     *i) 
 {
-// Read array of Int_t from buffer
-
+// Read array of Int_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(i);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(UInt_t    *i)
+Int_t TXMLBuffer::ReadStaticArray(UInt_t    *i) 
 {
-// Read array of UInt_t from buffer
-
+// Read array of UInt_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(i);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(Long_t    *l)
+Int_t TXMLBuffer::ReadStaticArray(Long_t    *l) 
 {
-// Read array of Long_t from buffer
-
+// Read array of Long_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(l);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(ULong_t   *l)
+Int_t TXMLBuffer::ReadStaticArray(ULong_t   *l) 
 {
-// Read array of ULong_t from buffer
-
+// Read array of ULong_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(l);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(Long64_t  *l)
+Int_t TXMLBuffer::ReadStaticArray(Long64_t  *l) 
 {
-// Read array of Long64_t from buffer
-
+// Read array of Long64_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(l);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(ULong64_t *l)
+Int_t TXMLBuffer::ReadStaticArray(ULong64_t *l) 
 {
-// Read array of ULong64_t from buffer
-
+// Read array of ULong64_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(l);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(Float_t   *f)
+Int_t TXMLBuffer::ReadStaticArray(Float_t   *f) 
 {
-// Read array of Float_t from buffer
-
+// Read array of Float_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(f);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArray(Double_t  *d)
+Int_t TXMLBuffer::ReadStaticArray(Double_t  *d) 
 {
-// Read array of Double_t from buffer
-
+// Read array of Double_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(d);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d)
+Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d) 
 {
-// Read array of Double32_t from buffer
-
+// Read array of Double32_t from buffer    
+    
    TXMLBuffer_ReadStaticArray(d);
 }
 
@@ -1346,15 +1527,15 @@ Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(Bool_t    *b, Int_t n)
+void TXMLBuffer::ReadFastArray(Bool_t    *b, Int_t n) 
 {
 // read array of Bool_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(b);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(Char_t    *c, Int_t n)
+void TXMLBuffer::ReadFastArray(Char_t    *c, Int_t n) 
 {
 // read array of Char_t from buffer
 // if nodename==CharStar, read all array as string
@@ -1369,115 +1550,115 @@ void TXMLBuffer::ReadFastArray(Char_t    *c, Int_t n)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(UChar_t   *c, Int_t n)
+void TXMLBuffer::ReadFastArray(UChar_t   *c, Int_t n) 
 {
 // read array of UChar_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(c);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(Short_t   *h, Int_t n)
+void TXMLBuffer::ReadFastArray(Short_t   *h, Int_t n) 
 {
 // read array of Short_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(h);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(UShort_t  *h, Int_t n)
+void TXMLBuffer::ReadFastArray(UShort_t  *h, Int_t n) 
 {
 // read array of UShort_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(h);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(Int_t     *i, Int_t n)
+void TXMLBuffer::ReadFastArray(Int_t     *i, Int_t n) 
 {
 // read array of Int_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(i);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(UInt_t    *i, Int_t n)
+void TXMLBuffer::ReadFastArray(UInt_t    *i, Int_t n) 
 {
 // read array of UInt_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(i);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(Long_t    *l, Int_t n)
+void TXMLBuffer::ReadFastArray(Long_t    *l, Int_t n) 
 {
 // read array of Long_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(ULong_t   *l, Int_t n)
+void TXMLBuffer::ReadFastArray(ULong_t   *l, Int_t n) 
 {
 // read array of ULong_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(Long64_t  *l, Int_t n)
+void TXMLBuffer::ReadFastArray(Long64_t  *l, Int_t n) 
 {
 // read array of Long64_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(ULong64_t *l, Int_t n)
+void TXMLBuffer::ReadFastArray(ULong64_t *l, Int_t n) 
 {
 // read array of ULong64_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(Float_t   *f, Int_t n)
+void TXMLBuffer::ReadFastArray(Float_t   *f, Int_t n) 
 {
 // read array of Float_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(f);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(Double_t  *d, Int_t n)
+void TXMLBuffer::ReadFastArray(Double_t  *d, Int_t n) 
 {
 // read array of Double_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(d);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArrayDouble32(Double_t  *d, Int_t n)
+void TXMLBuffer::ReadFastArrayDouble32(Double_t  *d, Int_t n) 
 {
 // read array of Double32_t from buffer
-
+    
    TXMLBuffer_ReadFastArray(d);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMemberStreamer *s)
+void TXMLBuffer::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMemberStreamer *s) 
 {
 // redefined here to avoid warning message from gcc
-
-
+    
+    
    TBuffer::ReadFastArray(start, cl, n, s);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *s)
+void TXMLBuffer::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *s) 
 {
 // redefined here to avoid warning message from gcc
-
+    
    TBuffer::ReadFastArray(startp, cl, n, isPreAlloc, s);
 }
 
@@ -1497,7 +1678,7 @@ void TXMLBuffer::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
       Int_t curr = indx; indx++; \
       while ((indx<n) && (vname[indx]==vname[curr])) indx++; \
       if (indx-curr > 1)  \
-         fXML->NewIntAttr(elemnode, "cnt", indx-curr); \
+         fXML->NewIntAttr(elemnode, xmlNames_cnt, indx-curr); \
    } \
 }
 
@@ -1522,114 +1703,114 @@ void TXMLBuffer::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const Bool_t    *b, Int_t n)
+void TXMLBuffer::WriteArray(const Bool_t    *b, Int_t n) 
 {
 // Write array of Bool_t to buffer
-
+    
    TXMLBuffer_WriteArray(b);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const Char_t    *c, Int_t n)
+void TXMLBuffer::WriteArray(const Char_t    *c, Int_t n) 
 {
 // Write array of Char_t to buffer
-
+    
    TXMLBuffer_WriteArray(c);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const UChar_t   *c, Int_t n)
+void TXMLBuffer::WriteArray(const UChar_t   *c, Int_t n) 
 {
 // Write array of UChar_t to buffer
-
+    
     TXMLBuffer_WriteArray(c);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const Short_t   *h, Int_t n)
+void TXMLBuffer::WriteArray(const Short_t   *h, Int_t n) 
 {
 // Write array of Short_t to buffer
-
+    
     TXMLBuffer_WriteArray(h);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const UShort_t  *h, Int_t n)
+void TXMLBuffer::WriteArray(const UShort_t  *h, Int_t n) 
 {
 // Write array of UShort_t to buffer
-
+    
     TXMLBuffer_WriteArray(h);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const Int_t     *i, Int_t n)
+void TXMLBuffer::WriteArray(const Int_t     *i, Int_t n) 
 {
 // Write array of Int_ to buffer
-
+    
     TXMLBuffer_WriteArray(i);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const UInt_t    *i, Int_t n)
+void TXMLBuffer::WriteArray(const UInt_t    *i, Int_t n) 
 {
 // Write array of UInt_t to buffer
-
+    
     TXMLBuffer_WriteArray(i);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const Long_t    *l, Int_t n)
+void TXMLBuffer::WriteArray(const Long_t    *l, Int_t n) 
 {
 // Write array of Long_t to buffer
-
+    
     TXMLBuffer_WriteArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const ULong_t   *l, Int_t n)
+void TXMLBuffer::WriteArray(const ULong_t   *l, Int_t n) 
 {
 // Write array of ULong_t to buffer
-
+    
     TXMLBuffer_WriteArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const Long64_t  *l, Int_t n)
+void TXMLBuffer::WriteArray(const Long64_t  *l, Int_t n) 
 {
 // Write array of Long64_t to buffer
-
+    
     TXMLBuffer_WriteArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const ULong64_t *l, Int_t n)
+void TXMLBuffer::WriteArray(const ULong64_t *l, Int_t n) 
 {
 // Write array of ULong64_t to buffer
-
+    
     TXMLBuffer_WriteArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const Float_t   *f, Int_t n)
+void TXMLBuffer::WriteArray(const Float_t   *f, Int_t n) 
 {
 // Write array of Float_t to buffer
-
+    
     TXMLBuffer_WriteArray(f);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArray(const Double_t  *d, Int_t n)
+void TXMLBuffer::WriteArray(const Double_t  *d, Int_t n) 
 {
 // Write array of Double_t to buffer
-
+    
     TXMLBuffer_WriteArray(d);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArrayDouble32(const Double_t  *d, Int_t n)
+void TXMLBuffer::WriteArrayDouble32(const Double_t  *d, Int_t n) 
 {
 // Write array of Double32_t to buffer
-
+    
    TXMLBuffer_WriteArray(d);
 }
 
@@ -1660,25 +1841,25 @@ void TXMLBuffer::WriteArrayDouble32(const Double_t  *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const Bool_t    *b, Int_t n)
+void TXMLBuffer::WriteFastArray(const Bool_t    *b, Int_t n) 
 {
 // Write array of Bool_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(b);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const Char_t    *c, Int_t n)
+void TXMLBuffer::WriteFastArray(const Char_t    *c, Int_t n) 
 {
 // Write array of Char_t to buffer
-// If array does not include any special characters,
+// If array does not include any special characters, 
 // it will be reproduced as CharStar node with string as attribute
-
+    
    Bool_t usedefault = (n==0) || fExpectedChain;
    const Char_t* buf = c;
    if (!usedefault)
      for (int i=0;i<n;i++) {
-        if ((*buf<26) || (*buf=='<') || (*buf=='>') || (*buf=='\"'))
+        if ((*buf<26)/* || (*buf=='<') || (*buf=='>') */ || (*buf=='\"'))
          { usedefault = kTRUE; break; }
         buf++;
      }
@@ -1694,148 +1875,148 @@ void TXMLBuffer::WriteFastArray(const Char_t    *c, Int_t n)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const UChar_t   *c, Int_t n)
+void TXMLBuffer::WriteFastArray(const UChar_t   *c, Int_t n) 
 {
 // Write array of UChar_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(c);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const Short_t   *h, Int_t n)
+void TXMLBuffer::WriteFastArray(const Short_t   *h, Int_t n) 
 {
 // Write array of Short_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(h);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const UShort_t  *h, Int_t n)
+void TXMLBuffer::WriteFastArray(const UShort_t  *h, Int_t n) 
 {
 // Write array of UShort_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(h);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const Int_t     *i, Int_t n)
+void TXMLBuffer::WriteFastArray(const Int_t     *i, Int_t n) 
 {
 // Write array of Int_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(i);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const UInt_t    *i, Int_t n)
+void TXMLBuffer::WriteFastArray(const UInt_t    *i, Int_t n) 
 {
 // Write array of UInt_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(i);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const Long_t    *l, Int_t n)
+void TXMLBuffer::WriteFastArray(const Long_t    *l, Int_t n) 
 {
 // Write array of Long_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const ULong_t   *l, Int_t n)
+void TXMLBuffer::WriteFastArray(const ULong_t   *l, Int_t n) 
 {
 // Write array of ULong_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const Long64_t  *l, Int_t n)
+void TXMLBuffer::WriteFastArray(const Long64_t  *l, Int_t n) 
 {
 // Write array of Long64_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const ULong64_t *l, Int_t n)
+void TXMLBuffer::WriteFastArray(const ULong64_t *l, Int_t n) 
 {
 // Write array of ULong64_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(l);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const Float_t   *f, Int_t n)
+void TXMLBuffer::WriteFastArray(const Float_t   *f, Int_t n) 
 {
 // Write array of Float_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(f);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArray(const Double_t  *d, Int_t n)
+void TXMLBuffer::WriteFastArray(const Double_t  *d, Int_t n) 
 {
 // Write array of Double_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(d);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArrayDouble32(const Double_t  *d, Int_t n)
+void TXMLBuffer::WriteFastArrayDouble32(const Double_t  *d, Int_t n) 
 {
 // Write array of Double32_t to buffer
-
+    
    TXMLBuffer_WriteFastArray(d);
 }
 
 //______________________________________________________________________________
-void  TXMLBuffer::WriteFastArray(void  *start,  const TClass *cl, Int_t n, TMemberStreamer *s)
+void  TXMLBuffer::WriteFastArray(void  *start,  const TClass *cl, Int_t n, TMemberStreamer *s) 
 {
 // Recall TBuffer function to avoid gcc warning message
-
+    
    TBuffer::WriteFastArray(start, cl, n, s);
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::WriteFastArray(void **startp, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *s)
+Int_t TXMLBuffer::WriteFastArray(void **startp, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *s) 
 {
 // Recall TBuffer function to avoid gcc warning message
-
+    
    return TBuffer::WriteFastArray(startp, cl, n, isPreAlloc, s);
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::StreamObject(void *obj, const type_info &typeinfo)
+void TXMLBuffer::StreamObject(void *obj, const type_info &typeinfo) 
 {
 // steram object to/from buffer
-
+    
    StreamObject(obj, gROOT->GetClass(typeinfo));
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::StreamObject(void *obj, const char *className)
+void TXMLBuffer::StreamObject(void *obj, const char *className) 
 {
 // steram object to/from buffer
-
+    
    StreamObject(obj, gROOT->GetClass(className));
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::StreamObject(void *obj, const TClass *cl)
+void TXMLBuffer::StreamObject(void *obj, const TClass *cl) 
 {
 // steram object to/from buffer
-
+    
    BeforeIOoperation();
    if (gDebug>1)
      cout << " TXMLBuffer::StreamObject class = " << (cl ? cl->GetName() : "none") << endl;
-   if (IsReading())
+   if (IsReading()) 
       XmlReadObject(obj);
    else
       XmlWriteObject(obj, cl);
 }
 
-// macro for right shift operator for basic type
+// macro for right shift operator for basic type 
 #define TXMLBuffer_operatorin(vname) \
 { \
   BeforeIOoperation(); \
@@ -1844,114 +2025,114 @@ void TXMLBuffer::StreamObject(void *obj, const TClass *cl)
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Bool_t    &b)
+TBuffer& TXMLBuffer::operator>>(Bool_t    &b) 
 {
 // Reads Bool_t value from buffer
-
+    
    TXMLBuffer_operatorin(b);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Char_t    &c)
+TBuffer& TXMLBuffer::operator>>(Char_t    &c) 
 {
 // Reads Char_t value from buffer
-
+    
    TXMLBuffer_operatorin(c);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(UChar_t   &c)
+TBuffer& TXMLBuffer::operator>>(UChar_t   &c) 
 {
 // Reads UChar_t value from buffer
-
+    
    TXMLBuffer_operatorin(c);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Short_t   &h)
+TBuffer& TXMLBuffer::operator>>(Short_t   &h) 
 {
 // Reads Short_t value from buffer
-
+    
    TXMLBuffer_operatorin(h);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(UShort_t  &h)
+TBuffer& TXMLBuffer::operator>>(UShort_t  &h) 
 {
 // Reads UShort_t value from buffer
-
+    
    TXMLBuffer_operatorin(h);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Int_t     &i)
+TBuffer& TXMLBuffer::operator>>(Int_t     &i) 
 {
 // Reads Int_t value from buffer
-
+    
    TXMLBuffer_operatorin(i);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(UInt_t    &i)
+TBuffer& TXMLBuffer::operator>>(UInt_t    &i) 
 {
 // Reads UInt_t value from buffer
-
+    
    TXMLBuffer_operatorin(i);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Long_t    &l)
+TBuffer& TXMLBuffer::operator>>(Long_t    &l) 
 {
 // Reads Long_t value from buffer
-
+    
    TXMLBuffer_operatorin(l);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(ULong_t   &l)
+TBuffer& TXMLBuffer::operator>>(ULong_t   &l) 
 {
 // Reads ULong_t value from buffer
-
+    
    TXMLBuffer_operatorin(l);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Long64_t  &l)
+TBuffer& TXMLBuffer::operator>>(Long64_t  &l) 
 {
 // Reads Long64_t value from buffer
-
+    
    TXMLBuffer_operatorin(l);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(ULong64_t &l)
+TBuffer& TXMLBuffer::operator>>(ULong64_t &l) 
 {
 // Reads ULong64_t value from buffer
-
+    
    TXMLBuffer_operatorin(l);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Float_t   &f)
+TBuffer& TXMLBuffer::operator>>(Float_t   &f) 
 {
 // Reads Float_t value from buffer
-
+    
    TXMLBuffer_operatorin(f);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Double_t  &d)
+TBuffer& TXMLBuffer::operator>>(Double_t  &d) 
 {
 // Reads Double_t value from buffer
-
+    
    TXMLBuffer_operatorin(d);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator>>(Char_t    *c)
+TBuffer& TXMLBuffer::operator>>(Char_t    *c) 
 {
 // Reads array of characters from buffer
-
+    
    BeforeIOoperation();
    const char* buf = XmlReadValue(xmlNames_CharStar);
    strcpy(c, buf);
@@ -1967,260 +2148,260 @@ TBuffer& TXMLBuffer::operator>>(Char_t    *c)
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(Bool_t    b)
+TBuffer& TXMLBuffer::operator<<(Bool_t    b) 
 {
 // Writes Bool_t value to buffer
-
+    
    TXMLBuffer_operatorout(b);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(Char_t    c)
+TBuffer& TXMLBuffer::operator<<(Char_t    c)  
 {
 // Writes Char_t value to buffer
-
+    
    TXMLBuffer_operatorout(c);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(UChar_t   c)
+TBuffer& TXMLBuffer::operator<<(UChar_t   c)  
 {
 // Writes UChar_t value to buffer
-
+    
    TXMLBuffer_operatorout(c);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(Short_t   h)
+TBuffer& TXMLBuffer::operator<<(Short_t   h)  
 {
 // Writes Short_t value to buffer
-
+    
    TXMLBuffer_operatorout(h);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(UShort_t  h)
+TBuffer& TXMLBuffer::operator<<(UShort_t  h)  
 {
 // Writes UShort_t value to buffer
-
+    
    TXMLBuffer_operatorout(h);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(Int_t     i)
+TBuffer& TXMLBuffer::operator<<(Int_t     i)  
 {
 // Writes Int_t value to buffer
-
+    
    TXMLBuffer_operatorout(i);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(UInt_t    i)
+TBuffer& TXMLBuffer::operator<<(UInt_t    i)  
 {
 // Writes UInt_t value to buffer
-
+    
    TXMLBuffer_operatorout(i);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(Long_t    l)
+TBuffer& TXMLBuffer::operator<<(Long_t    l)  
 {
 // Writes Long_t value to buffer
-
+    
    TXMLBuffer_operatorout(l);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(ULong_t   l)
+TBuffer& TXMLBuffer::operator<<(ULong_t   l)  
 {
 // Writes ULong_t value to buffer
-
+    
    TXMLBuffer_operatorout(l);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(Long64_t  l)
+TBuffer& TXMLBuffer::operator<<(Long64_t  l)  
 {
 // Writes Long64_t value to buffer
-
+    
    TXMLBuffer_operatorout(l);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(ULong64_t l)
+TBuffer& TXMLBuffer::operator<<(ULong64_t l)  
 {
 // Writes ULong64_t value to buffer
-
+    
    TXMLBuffer_operatorout(l);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(Float_t   f)
+TBuffer& TXMLBuffer::operator<<(Float_t   f)  
 {
 // Writes Float_t value to buffer
-
+    
    TXMLBuffer_operatorout(f);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(Double_t  d)
+TBuffer& TXMLBuffer::operator<<(Double_t  d)  
 {
 // Writes Double_t value to buffer
-
+    
    TXMLBuffer_operatorout(d);
 }
 
 //______________________________________________________________________________
-TBuffer& TXMLBuffer::operator<<(const Char_t *c)
+TBuffer& TXMLBuffer::operator<<(const Char_t *c) 
 {
 // Writes array of characters to buffer
-
+    
    BeforeIOoperation();
    XmlWriteValue(c, xmlNames_CharStar);
    return *this;
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(Char_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(Char_t value) 
 {
 // converts Char_t to string and add xml node to buffer
 
    char buf[50];
-   sprintf(buf,"%d", value);
+   sprintf(buf,"%d",value);
    return XmlWriteValue(buf, xmlNames_Char);
 }
 
 //______________________________________________________________________________
-xmlNodePointer  TXMLBuffer::XmlWriteBasic(Short_t value)
+xmlNodePointer  TXMLBuffer::XmlWriteBasic(Short_t value) 
 {
 // converts Short_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%hd", value);
    return XmlWriteValue(buf, xmlNames_Short);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(Int_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(Int_t value) 
 {
 // converts Int_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%d", value);
    return XmlWriteValue(buf, xmlNames_Int);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(Long_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(Long_t value) 
 {
 // converts Long_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%ld", value);
    return XmlWriteValue(buf, xmlNames_Long);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(Long64_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(Long64_t value) 
 {
 // converts Long64_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%lld", value);
    return XmlWriteValue(buf, xmlNames_Long64);
 }
 
 //______________________________________________________________________________
-xmlNodePointer  TXMLBuffer::XmlWriteBasic(Float_t value)
+xmlNodePointer  TXMLBuffer::XmlWriteBasic(Float_t value) 
 {
 // converts Float_t to string and add xml node to buffer
-
+    
    char buf[200];
    sprintf(buf,"%f", value);
    return XmlWriteValue(buf, xmlNames_Float);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(Double_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(Double_t value) 
 {
 // converts Double_t to string and add xml node to buffer
-
+    
    char buf[1000];
    sprintf(buf,"%f", value);
    return XmlWriteValue(buf, xmlNames_Double);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(Bool_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(Bool_t value) 
 {
 // converts Bool_t to string and add xml node to buffer
-
-   return XmlWriteValue(value ? "true" : "false", xmlNames_Bool);
+    
+   return XmlWriteValue(value ? xmlNames_true : xmlNames_false, xmlNames_Bool);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(UChar_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(UChar_t value) 
 {
 // converts UChar_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%u", value);
    return XmlWriteValue(buf, xmlNames_UChar);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(UShort_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(UShort_t value) 
 {
 // converts UShort_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%hu", value);
    return XmlWriteValue(buf, xmlNames_UShort);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(UInt_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(UInt_t value) 
 {
 // converts UInt_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%u", value);
    return XmlWriteValue(buf, xmlNames_UInt);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(ULong_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(ULong_t value) 
 {
 // converts ULong_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%lu", value);
    return XmlWriteValue(buf, xmlNames_ULong);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteBasic(ULong64_t value)
+xmlNodePointer TXMLBuffer::XmlWriteBasic(ULong64_t value) 
 {
 // converts ULong64_t to string and add xml node to buffer
-
+    
    char buf[50];
    sprintf(buf,"%llu", value);
    return XmlWriteValue(buf, xmlNames_ULong64);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLBuffer::XmlWriteValue(const char* value, const char* name)
+xmlNodePointer TXMLBuffer::XmlWriteValue(const char* value, const char* name) 
 {
 // create xml node with specified name and adds it to stack node
-
+    
    xmlNodePointer node = 0;
-
-   if (fCanUseCompact)
+   
+   if (fCanUseCompact) 
      node = StackNode();
-   else
+   else 
      node = CreateItemNode(name);
 
-   fXML->NewAttr(node, 0, "v", value);
+   fXML->NewAttr(node, 0, xmlNames_v, value);
 
    fCanUseCompact = kFALSE;
 
@@ -2228,10 +2409,10 @@ xmlNodePointer TXMLBuffer::XmlWriteValue(const char* value, const char* name)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(Char_t& value)
+void TXMLBuffer::XmlReadBasic(Char_t& value) 
 {
-// reads string from current xml node and convert it to Char_t value
-
+// reads string from current xml node and convert it to Char_t value    
+    
    const char* res = XmlReadValue(xmlNames_Char);
    if (res) {
      int n;
@@ -2242,10 +2423,10 @@ void TXMLBuffer::XmlReadBasic(Char_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(Short_t& value)
+void TXMLBuffer::XmlReadBasic(Short_t& value) 
 {
-// reads string from current xml node and convert it to Short_t value
-
+// reads string from current xml node and convert it to Short_t value    
+    
    const char* res = XmlReadValue(xmlNames_Short);
    if (res)
      sscanf(res,"%hd", &value);
@@ -2254,10 +2435,10 @@ void TXMLBuffer::XmlReadBasic(Short_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(Int_t& value)
+void TXMLBuffer::XmlReadBasic(Int_t& value) 
 {
-// reads string from current xml node and convert it to Int_t value
-
+// reads string from current xml node and convert it to Int_t value    
+    
    const char* res = XmlReadValue(xmlNames_Int);
    if (res)
       sscanf(res,"%d", &value);
@@ -2266,10 +2447,10 @@ void TXMLBuffer::XmlReadBasic(Int_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(Long_t& value)
+void TXMLBuffer::XmlReadBasic(Long_t& value) 
 {
-// reads string from current xml node and convert it to Long_t value
-
+// reads string from current xml node and convert it to Long_t value    
+    
    const char* res = XmlReadValue(xmlNames_Long);
    if (res)
      sscanf(res,"%ld", &value);
@@ -2278,10 +2459,10 @@ void TXMLBuffer::XmlReadBasic(Long_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(Long64_t& value)
+void TXMLBuffer::XmlReadBasic(Long64_t& value) 
 {
-// reads string from current xml node and convert it to Long64_t value
-
+// reads string from current xml node and convert it to Long64_t value    
+    
    const char* res = XmlReadValue(xmlNames_Long64);
    if (res)
      sscanf(res,"%lld", &value);
@@ -2290,10 +2471,10 @@ void TXMLBuffer::XmlReadBasic(Long64_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(Float_t& value)
+void TXMLBuffer::XmlReadBasic(Float_t& value) 
 {
-// reads string from current xml node and convert it to Float_t value
-
+// reads string from current xml node and convert it to Float_t value    
+    
    const char* res = XmlReadValue(xmlNames_Float);
    if (res)
      sscanf(res,"%f", &value);
@@ -2302,10 +2483,10 @@ void TXMLBuffer::XmlReadBasic(Float_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(Double_t& value)
+void TXMLBuffer::XmlReadBasic(Double_t& value) 
 {
-// reads string from current xml node and convert it to Double_t value
-
+// reads string from current xml node and convert it to Double_t value    
+    
    const char* res = XmlReadValue(xmlNames_Double);
    if (res)
      sscanf(res,"%lf", &value);
@@ -2314,22 +2495,22 @@ void TXMLBuffer::XmlReadBasic(Double_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(Bool_t& value)
+void TXMLBuffer::XmlReadBasic(Bool_t& value) 
 {
-// reads string from current xml node and convert it to Bool_t value
-
+// reads string from current xml node and convert it to Bool_t value    
+    
    const char* res = XmlReadValue(xmlNames_Bool);
    if (res)
-     value = (strcmp(res,"true")==0);
+     value = (strcmp(res, xmlNames_true)==0);
    else
      value = kFALSE;
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(UChar_t& value)
+void TXMLBuffer::XmlReadBasic(UChar_t& value) 
 {
-// reads string from current xml node and convert it to UChar_t value
-
+// reads string from current xml node and convert it to UChar_t value    
+    
    const char* res = XmlReadValue(xmlNames_UChar);
    if (res) {
      unsigned int n;
@@ -2340,10 +2521,10 @@ void TXMLBuffer::XmlReadBasic(UChar_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(UShort_t& value)
+void TXMLBuffer::XmlReadBasic(UShort_t& value) 
 {
-// reads string from current xml node and convert it to UShort_t value
-
+// reads string from current xml node and convert it to UShort_t value    
+    
    const char* res = XmlReadValue(xmlNames_UShort);
    if (res)
      sscanf(res,"%hud", &value);
@@ -2352,10 +2533,10 @@ void TXMLBuffer::XmlReadBasic(UShort_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(UInt_t& value)
+void TXMLBuffer::XmlReadBasic(UInt_t& value) 
 {
-// reads string from current xml node and convert it to UInt_t value
-
+// reads string from current xml node and convert it to UInt_t value    
+    
    const char* res = XmlReadValue(xmlNames_UInt);
    if (res)
      sscanf(res,"%u", &value);
@@ -2364,10 +2545,10 @@ void TXMLBuffer::XmlReadBasic(UInt_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(ULong_t& value)
+void TXMLBuffer::XmlReadBasic(ULong_t& value) 
 {
-// reads string from current xml node and convert it to ULong_t value
-
+// reads string from current xml node and convert it to ULong_t value    
+    
    const char* res = XmlReadValue(xmlNames_ULong);
    if (res)
      sscanf(res,"%lu", &value);
@@ -2376,10 +2557,10 @@ void TXMLBuffer::XmlReadBasic(ULong_t& value)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::XmlReadBasic(ULong64_t& value)
+void TXMLBuffer::XmlReadBasic(ULong64_t& value) 
 {
-// reads string from current xml node and convert it to ULong64_t value
-
+// reads string from current xml node and convert it to ULong64_t value    
+    
    const char* res = XmlReadValue(xmlNames_ULong64);
    if (res)
      sscanf(res,"%llu", &value);
@@ -2388,9 +2569,9 @@ void TXMLBuffer::XmlReadBasic(ULong64_t& value)
 }
 
 //______________________________________________________________________________
-const char* TXMLBuffer::XmlReadValue(const char* name)
+const char* TXMLBuffer::XmlReadValue(const char* name) 
 {
-// read string value from current stack node
+// read string value from current stack node     
 
    if (fErrorFlag>0) return 0;
 
@@ -2401,14 +2582,14 @@ const char* TXMLBuffer::XmlReadValue(const char* name)
    fCanUseCompact = kFALSE;
 
    if (trysimple)
-     if (fXML->HasAttr(Stack(1)->fNode,"v"))
-       fValueBuf = fXML->GetAttr(Stack(1)->fNode, "v");
+     if (fXML->HasAttr(Stack(1)->fNode,xmlNames_v))
+       fValueBuf = fXML->GetAttr(Stack(1)->fNode, xmlNames_v);
      else
        trysimple = kFALSE;
 
    if (!trysimple) {
      if (!VerifyItemNode(name, "XmlReadValue")) return 0;
-     fValueBuf = fXML->GetAttr(StackNode(), "v");
+     fValueBuf = fXML->GetAttr(StackNode(), xmlNames_v);
    }
 
    if (gDebug>4)

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.6 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.7 2004/05/18 14:13:20 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -36,7 +36,7 @@ extern "C" long _ftol2( double dblSource ) { return _ftol( dblSource ); }
 TXMLEngine::TXMLEngine() 
 {
    
-};
+}
 
 //______________________________________________________________________________
 TXMLEngine::~TXMLEngine() 
@@ -145,6 +145,13 @@ void TXMLEngine::UnlinkNode(xmlNodePointer node) {
 //______________________________________________________________________________
 void TXMLEngine::FreeNode(xmlNodePointer node) {
    xmlFreeNode((xmlNodePtr) node);
+}
+
+//______________________________________________________________________________
+void TXMLEngine::UnlinkFreeNode(xmlNodePointer node) 
+{
+   UnlinkNode(node); 
+   FreeNode(node);
 }
 
 //______________________________________________________________________________

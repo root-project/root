@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.5 2004/06/04 16:28:31 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.6 2004/06/09 13:52:28 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -670,7 +670,7 @@ Bool_t TXMLFile::ReadFromFile()
    fStreamerInfoNode = fXML->GetChild(fRootNode);
    fXML->SkipEmpty(fStreamerInfoNode);
    while (fStreamerInfoNode!=0) {
-      if (strcmp("StreamerInfos",fXML->GetNodeName(fStreamerInfoNode))==0) break;
+      if (strcmp(xmlNames_SInfos, fXML->GetNodeName(fStreamerInfoNode))==0) break;
       fXML->ShiftToNext(fStreamerInfoNode);
    }
    fXML->UnlinkNode(fStreamerInfoNode);
@@ -735,7 +735,7 @@ void TXMLFile::WriteStreamerInfo()
 
    if (list.GetSize()==0) return;
 
-   fStreamerInfoNode = fXML->NewChild(0, 0, "StreamerInfos");
+   fStreamerInfoNode = fXML->NewChild(0, 0, xmlNames_SInfos);
    for (int n=0;n<=list.GetLast();n++) {
       TStreamerInfo* info  = (TStreamerInfo*) list.At(n);
 

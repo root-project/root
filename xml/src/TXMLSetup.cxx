@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.3 2004/05/11 18:52:17 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.4 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -63,6 +63,11 @@ const char* xmlNames_Item        = "Item";
 const char* xmlNames_Name        = "name";
 const char* xmlNames_Type        = "type";
 const char* xmlNames_Value       = "value";
+const char* xmlNames_v           = "v";
+const char* xmlNames_cnt         = "cnt";
+const char* xmlNames_true        = "true";
+const char* xmlNames_false       = "false";
+const char* xmlNames_SInfos      = "StreamerInfos";
 
 const char* xmlNames_Array       = "Array";
 const char* xmlNames_Bool        = "Bool_t";
@@ -87,7 +92,7 @@ TString TXMLSetup::fNameSpaceBase = "http://root.cern.ch/root/htmldoc/";
 //______________________________________________________________________________
 TString TXMLSetup::DefaultXmlSetup() 
 {
-  return TString("2xox");    
+  return TString("2xoo");    
 }
 
 //______________________________________________________________________________

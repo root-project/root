@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.3 2004/05/11 18:52:17 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.4 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -41,6 +41,11 @@ extern const char* xmlNames_Item;
 extern const char* xmlNames_Name;
 extern const char* xmlNames_Type;
 extern const char* xmlNames_Value;
+extern const char* xmlNames_v;
+extern const char* xmlNames_cnt;
+extern const char* xmlNames_true;
+extern const char* xmlNames_false;
+extern const char* xmlNames_SInfos;
 
 extern const char* xmlNames_Array;
 extern const char* xmlNames_Bool;
@@ -58,8 +63,6 @@ extern const char* xmlNames_ULong;
 extern const char* xmlNames_ULong64;
 extern const char* xmlNames_String;
 extern const char* xmlNames_CharStar;
-
-
 
 class TStreamerElement;
 
