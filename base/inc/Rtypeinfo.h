@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Rtypeinfo.h,v 1.2 2002/05/03 14:41:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: Rtypeinfo.h,v 1.3 2002/05/03 16:14:33 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -16,13 +16,17 @@
 #include "RConfig.h"
 #endif
 
-#if (defined(R__SOLARIS) && !defined(R__KCC)) || defined(R__HPUX)
+#if (defined(R__SOLARIS) && !defined(R__KCC)) 
 
 // <typeinfo> includes <exception> which clashes with <math.h>
 //#include <typeinfo.h>
 namespace std { class type_info; }
 using std::type_info;
 
+#elif defined(R__HPUX)
+
+#include <typeinfo>
+// type_info is already in the global namespace.
 #else
 
 #include <typeinfo>
