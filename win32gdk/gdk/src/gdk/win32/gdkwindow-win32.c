@@ -1313,6 +1313,7 @@ void gdk_window_set_title(GdkWindow * window, const gchar * title)
    GDK_NOTE(MISC, g_print("gdk_window_set_title: %#x %s\n",
                           GDK_DRAWABLE_XID(window), title));
    if (!GDK_DRAWABLE_DESTROYED(window)) {
+#if 0 // bb
       /* As the title is in UTF-8 we must translate it
        * to the system codepage.
        */
@@ -1329,6 +1330,10 @@ void gdk_window_set_title(GdkWindow * window, const gchar * title)
 
       g_free(mbstr);
       g_free(wcstr);
+#else // bb
+      if (!SetWindowText(GDK_DRAWABLE_XID(window), title))
+         WIN32_API_FAILED("SetWindowText");
+#endif // bb
    }
 }
 
