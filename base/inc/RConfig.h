@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.48 2003/01/12 11:06:34 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.49 2003/01/31 08:22:16 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -332,7 +332,9 @@
 #   define ANSICPP
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
+#   if _MSC_VER > 1200
+#     define R__ANSISTREAM    /* ANSI C++ Standard Library conformant */
+#   endif
 #endif
 
 #ifdef __MWERKS__
