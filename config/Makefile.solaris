@@ -34,7 +34,5 @@ XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 
 # Fortran:
-F77             = /opt/SUNWspro/bin/f77
+F77           = /opt/SUNWspro/bin/f77
 F77LIBS       = $(CERNLIB)/libpacklib.a -lM77 -lF77 -lsunmath -lsocket -lnsl
-
-
