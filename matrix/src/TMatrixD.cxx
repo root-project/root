@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.8 2001/10/10 06:40:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.10 2001/10/24 15:13:43 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1060,7 +1060,7 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
 
    delete [] was_pivoted;
    delete [] pivots;
-   delete [] diag;
+   //delete [] diag;
    return *this;
 }
 
