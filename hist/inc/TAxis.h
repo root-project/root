@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.16 2001/12/10 13:50:50 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.17 2001/12/10 14:42:47 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -30,6 +30,9 @@
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
+#ifndef ROOT_THashList
+#include "THashList.h"
+#endif
 
 
 class TAxis : public TNamed, public TAttAxis {
@@ -44,14 +47,19 @@ private:
         Bool_t       fTimeDisplay;    //on/off displaying time values instead of numerics
         TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
         TObject     *fParent;         //!Object owning this axis
-
+        THashList   *fLabels;         //List of labels
+   
 public:
         // TAxis status bits
         enum { kAxisRange   = BIT(11),
                kCenterTitle = BIT(12),
                kRotateTitle = BIT(15),
                kPalette     = BIT(16),
-               kNoExponent  = BIT(17)};
+               kNoExponent  = BIT(17),
+               kLabelsHori  = BIT(18),
+               kLabelsVert  = BIT(19),
+               kLabelsDown  = BIT(20),
+               kLabelsUp    = BIT(21)};
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
@@ -66,12 +74,15 @@ public:
         virtual TObject *DrawClone(Option_t * /*option*/ ="") const {return 0;}
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual Int_t    FindBin(Axis_t x);
+        virtual Int_t    FindBin(const char *label);
         virtual Int_t    FindFixBin(Axis_t x) const;
         virtual Axis_t   GetBinCenter(Int_t bin) const;
+         const char     *GetBinLabel(Int_t bin) const;
         virtual Axis_t   GetBinLowEdge(Int_t bin) const;
         virtual Axis_t   GetBinUpEdge(Int_t bin) const;
         virtual Axis_t   GetBinWidth(Int_t bin) const;
         virtual void     GetCenter(Axis_t *center);
+        THashList       *GetLabels() {return fLabels;}
         virtual void     GetLowEdge(Axis_t *edge);
                 Int_t    GetNbins() const { return fNbins; }
         virtual TObject *GetParent() const {return fParent;}
@@ -83,11 +94,13 @@ public:
                  Int_t   GetLast() const;
                 Axis_t   GetXmin() const {return fXmin;}
                 Axis_t   GetXmax() const {return fXmax;}
+        virtual void     LabelsOption(Option_t *option="h");  // *MENU*
         virtual void     RotateTitle(Bool_t rotate=kTRUE); // *MENU*
         virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
         virtual void     Set(Int_t nbins, Axis_t xmin, Axis_t xmax);
         virtual void     Set(Int_t nbins, const Float_t *xbins);
         virtual void     Set(Int_t nbins, const Axis_t *xbins);
+        virtual void     SetBinLabel(Int_t bin, const char *label);
         virtual void     SetDrawOption(Option_t * /*option*/ ="") { }
         virtual void     SetLimits(Axis_t xmin, Axis_t xmax);
         virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
@@ -98,7 +111,7 @@ public:
         virtual void     SetTimeFormat(const char *format="");  // *MENU*
         virtual void     UnZoom();  // *MENU*
 
-        ClassDef(TAxis,6)  //Axis class
+        ClassDef(TAxis,7)  //Axis class
 };
 
 #endif
