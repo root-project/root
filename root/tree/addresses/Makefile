@@ -60,7 +60,7 @@ relations_write_C.$(DllSuf) : relations_write.C relations.h relations_load_C.$(D
 
 relations_read_C.$(DllSuf) : relations.h
 
-relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  relations_read_C.$(DllSuf) 
+relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  relations_read_C.$(DllSuf) $(ROOTCORELIBS)
 	$(CMDECHO)  root.exe -q -b -l relationsRun.C | sed 's|File  Size =.*\*||g' > relationsTest.log
 
 relationsTest: relationsTest.log 
