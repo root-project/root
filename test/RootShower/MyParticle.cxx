@@ -47,7 +47,7 @@ MyParticle::MyParticle() : TParticle()
 
 //______________________________________________________________________________
 MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const TVector3 &pLocation,
-                       const TVector3 &pMomentum,Double_t pPassed = 0.0, Double_t pDecayLen = 0.0, 
+                       const TVector3 &pMomentum,Double_t pPassed, Double_t pDecayLen = 0.0, 
                        Double_t pEnergy = 0.0)
           : TParticle(pType, pStat, 1, 0, 0, 0, pMomentum.x(), pMomentum.y(), 
                         pMomentum.z(), pEnergy, pLocation.x(), pLocation.y(), 
