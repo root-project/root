@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.20 2001/01/11 14:34:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.21 2001/01/15 01:25:24 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -60,6 +60,7 @@ TFile::TFile() : TDirectory()
    fSumBuffer  = 0;
    fSum2Buffer = 0;
    fClassIndex = 0;
+   fCache      = 0;
 
    if (gDebug)
       cerr << "TFile default ctor" <<endl;
@@ -184,6 +185,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fClassIndex = 0;
    fSeekInfo   = 0;
    fNbytesInfo = 0;
+   fCache      = 0;
 
    if (!fOption.CompareTo("NET", TString::kIgnoreCase))
       return;
@@ -301,6 +303,7 @@ TFile::~TFile()
    Close();
 
    SafeDelete(fFree);
+   SafeDelete(fCache);
 
    gROOT->GetListOfFiles()->Remove(this);
 
@@ -464,6 +467,7 @@ void TFile::Close(Option_t *)
          WriteFree();       //*-*- Write free segments linked list
          WriteHeader();     //*-*- Now write file header
       }
+      if (fCache) fCache->Flush();
    }
 
    // Delete free segments from free list (but don't delete list header)
@@ -1022,12 +1026,40 @@ void TFile::SumBuffer(Int_t bufsize)
 }
 
 //_______________________________________________________________________
-void TFile::UseCache(Int_t, Int_t)
+void TFile::UseCache(Int_t maxCacheSize, Int_t pageSize)
 {
-   // Handle for cache management. Not needed for normal disk files since
-   // the operating system will do proper caching (via the "buffer cache").
-   // Overridden in TNetFile, TWebFile and TRFIOFile.
+   // Activate caching. Use maxCacheSize to specify the maximum cache size
+   // in MB's (default is 10 MB) and pageSize to specify the page size
+   // (default is 512 KB). To turn off the cache use maxCacheSize=0.
+   // Not needed for normal disk files since the operating system will
+   // do proper caching (via the "buffer cache"). Use it for TNetFile,
+   // TWebFile and TRFIOFile.
 
+   if (IsA() == TFile::Class())
+      return;
+
+   if (maxCacheSize == 0) {
+      if (fCache) {
+         if (IsWritable())
+            fCache->Flush();
+         delete fCache;
+         fCache = 0;
+      }
+      return;
+   }
+
+   if (fCache) {
+      // if pageSize is changed, we need to delete the cache and recreate it
+      if (pageSize != fCache->GetPageSize()) {
+         if (IsWritable())
+            fCache->Flush();
+         delete fCache;
+      } else if (maxCacheSize != fCache->GetMaxCacheSize()) {
+         fCache->Resize(maxCacheSize);
+         return;
+      }
+   }
+   fCache = new TCache(maxCacheSize, this, pageSize);
 }
 
 //______________________________________________________________________________

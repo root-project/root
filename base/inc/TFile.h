@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.7 2001/01/07 15:30:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.8 2001/01/15 01:25:24 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -53,6 +53,7 @@ protected:
    Char_t      fUnits;            //Number of bytes for file pointers
    TList      *fFree;             //Free segments linked list table
    TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
+   TCache     *fCache;            //!Page cache used to reduce number of small I/O's
 
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.4 2001/01/07 15:30:11 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.5 2001/01/15 01:26:59 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -42,10 +42,9 @@ private:
    TString   fUser;       //remote user name
    Seek_t    fOffset;     //seek offset
    TSocket  *fSocket;     //connection to rootd server
-   TCache   *fCache;      //page cache to optimize network access
    Int_t     fProtocol;   //rootd protocol level
 
-   TNetFile() : fUrl("dummy") { fSocket = 0; fCache = 0; }
+   TNetFile() : fUrl("dummy") { fSocket = 0; }
    void   Init(Bool_t create);
    void   Print(Option_t *option) const;
    void   PrintError(const char *where, Int_t err) const;
@@ -62,7 +61,6 @@ public:
    Bool_t  ReadBuffer(char *buf, Int_t len);
    Bool_t  WriteBuffer(const char *buf, Int_t len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);
-   void    UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
 
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };

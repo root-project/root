@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.2 2001/01/07 15:30:11 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -50,6 +50,9 @@ private:
 public:
    TRFIOFile(const char *url, Option_t *option="", const Text_t *ftitle="", Int_t compress=1);
    ~TRFIOFile();
+
+   Bool_t  ReadBuffer(char *buf, Int_t len);
+   Bool_t  WriteBuffer(const char *buf, Int_t len);
 
    ClassDef(TRFIOFile,1)  //A ROOT file that reads/writes via a rfiod server
 };

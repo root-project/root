@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.4 2001/01/07 15:30:11 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.5 2001/01/08 09:11:14 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -211,11 +211,19 @@ Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
    // except that the offset and return value are Long_t to be able to
    // handle 64 bit file systems.
 
-   if (whence == SEEK_SET) {
+   switch (whence) {
+   case SEEK_SET:
       if (offset == fOffset)
          return 0;
       else
          fOffset = offset;
+      break;
+   case SEEK_CUR:
+      fOffset += offset;
+      break;
+   case SEEK_END:
+      fOffset = fEND + offset;
+      break;
    }
 
    return ::rfio_lseek(fd, offset, whence);
@@ -254,4 +262,44 @@ Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags,
       return 0;
    }
    return 1;
+}
+
+//______________________________________________________________________________
+Bool_t TRFIOFile::ReadBuffer(char *buf, Int_t len)
+{
+   // Read specified byte range from remote file via rfiod daemon.
+   // Returns kTRUE in case of error.
+
+   if (fCache) {
+      Int_t st;
+      if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
+         Error("ReadBuffer", "error reading from cache");
+         return kTRUE;
+      }
+      if (st > 0)
+         return kFALSE;
+   }
+
+   return TFile::ReadBuffer(buf, len);
+}
+
+//______________________________________________________________________________
+Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
+{
+   // Write specified byte range to remote file via rootd daemon.
+   // Returns kTRUE in case of error.
+
+   if (!IsOpen() || !fWritable) return kTRUE;
+
+   if (fCache) {
+      Int_t st;
+      if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
+         Error("WriteBuffer", "error writing to cache");
+         return kTRUE;
+      }
+      if (st > 0)
+         return kFALSE;
+   }
+
+   return TFile::WriteBuffer(buf, len);
 }

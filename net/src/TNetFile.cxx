@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.11 2001/01/07 15:30:11 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.12 2001/01/15 01:26:59 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -119,7 +119,6 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    Int_t sec;
 
    fOffset = 0;
-   fCache  = 0;
 
    Bool_t forceOpen = kFALSE;
    if (option[0] == 'F' || option[0] == 'f') {
@@ -215,7 +214,6 @@ TNetFile::~TNetFile()
 
    Close();
    SafeDelete(fSocket);
-   SafeDelete(fCache);
 }
 
 //______________________________________________________________________________
@@ -247,7 +245,6 @@ void TNetFile::Close(Option_t *opt)
 
    if (!fSocket) return;
 
-   if (fCache && IsWritable()) fCache->Flush();
    TFile::Close(opt);
    fSocket->Send(kROOTD_CLOSE);
 }
@@ -457,22 +454,7 @@ void TNetFile::Seek(Seek_t offset, ERelativeTo pos)
       fOffset += offset;
       break;
    case kEnd:
-      fOffset = fEND - offset;  // is fEND really EOF or logical EOF?
+      fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
       break;
    }
-}
-
-//______________________________________________________________________________
-void TNetFile::UseCache(Int_t maxCacheSize, Int_t pageSize)
-{
-   // Activate caching. Use maxCacheSize to specify the maximum cache size
-   // in MB's (default is 10 MB) and pageSize to specify the page size
-   // (default is 512 KB).
-
-   if (fCache) {
-      if (IsWritable())
-         fCache->Flush();
-      delete fCache;
-   }
-   fCache = new TCache(maxCacheSize, this, pageSize);
 }
