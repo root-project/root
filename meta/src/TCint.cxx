@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.52 2002/03/05 10:47:48 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.53 2002/03/27 07:04:13 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -99,7 +99,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
 #ifndef WIN32
    optind = 1;  // make sure getopt() works in the main program
 #endif
-   
+
    // Make sure that ALL macros are seen as C++.
    G__LockCpp();
 }
@@ -246,11 +246,12 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
          } else {
             int local_error = 0;
             ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
-            if (error) {
-               *error = (EErrorCode)local_error;
-               if (*error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2)
-                  *error = kExit;
+            if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
+               ResetGlobals();
+               gApplication->Terminate(fExitCode);
             }
+            if (error)
+               *error = (EErrorCode)local_error;
          }
 
          gROOT->SetLineHasBeenProcessed();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.29 2002/03/25 20:13:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.30 2002/03/27 17:51:32 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -570,8 +570,6 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
       return;
    }
 
-   Int_t error = 0;
-
    if (!strncmp(line, ".L", 2) || !strncmp(line, ".U", 2)) {
       char *fn = Strip(line+3);
       // See if script compilation requested
@@ -595,8 +593,8 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
       else {
          char cmd = line[1];
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".%c %s%s", cmd, mac,postfix),
-                                          (TInterpreter::EErrorCode*)&error);
+           gInterpreter->ProcessLineSynch(Form(".%c %s%s", cmd, mac, postfix),
+                                          (TInterpreter::EErrorCode*)err);
          else {
            gInterpreter->ProcessLine(Form(".%c %s%s", cmd, mac, postfix),
                                      (TInterpreter::EErrorCode*)err);
@@ -606,12 +604,12 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
       delete [] fn;
       delete [] mac;
 
-      goto out;
+      return;
    }
 
    if (!strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
-      ProcessFile(line+3, &error);
-      goto out;
+      ProcessFile(line+3, err);
+      return;
    }
 
    if (!strcmp(line, ".reset")) {
@@ -628,17 +626,9 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
    }
 
    if (sync)
-      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)&error);
+      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)err);
    else
       gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)err);
-
-out:
-   if (error == TInterpreter::kExit) {
-      gInterpreter->ResetGlobals();
-      Terminate(gInterpreter->GetExitCode());
-   }
-   if (sync && err)
-      *err = error;
 }
 
 //______________________________________________________________________________
