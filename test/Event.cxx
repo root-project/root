@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.26 2004/01/10 10:52:30 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.27 2004/01/25 20:33:32 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -88,7 +88,7 @@ TClonesArray *Event::fgTracks = 0;
 TH1F *Event::fgHist = 0;
 
 //______________________________________________________________________________
-Event::Event()
+Event::Event() : fIsValid(kFALSE)
 {
    // Create an Event object.
    // When the constructor is invoked for the first time, the class static
@@ -127,6 +127,7 @@ Event::~Event()
 
 //______________________________________________________________________________
 void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
+  fIsValid = kTRUE;
   char etype[20];
   Float_t sigmat, sigmas;
   gRandom->Rannor(sigmat,sigmas);

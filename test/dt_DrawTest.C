@@ -108,6 +108,8 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
    tree->SetAlias("mult","fPx*fPy");
    DrawSkippable(tree,"fEvtHdr.fEvtNum*6+mult", "hAlias", 1);
 
+   tree->Draw("fIsValid>>hBool", "", "goff");
+
    tree->Draw("fMatrix>>hFullMatrix","","goff");
    tree->Draw("fMatrix[][0]>>hColMatrix","","goff");
    tree->Draw("fMatrix[1][]>>hRowMatrix","","goff");

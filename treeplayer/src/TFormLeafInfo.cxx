@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.10 2004/11/18 16:54:47 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.11 2005/01/18 21:05:43 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1103,8 +1103,8 @@ TFormLeafInfoCollection::TFormLeafInfoCollection(const TFormLeafInfoCollection& 
    fTop( orig.fTop),
    fCollClass( orig.fCollClass ),
    fCollClassName( orig.fCollClassName ),
-   fLocalElement( 0 ),
-   fCollProxy( orig.fCollProxy ? orig.fCollProxy->Generate() : 0 )
+   fCollProxy( orig.fCollProxy ? orig.fCollProxy->Generate() : 0 ),
+   fLocalElement( 0 )
 {
    
 }

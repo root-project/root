@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.159 2005/01/12 18:02:28 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.160 2005/01/13 20:07:46 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3246,6 +3246,8 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
    if (!strcmp(leaf->GetTypeName(),"Short_t"))  return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UInt_t"))   return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UShort_t")) return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"Bool_t")) return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"UChar_t")) return kTRUE;
    return kFALSE;
 }
 

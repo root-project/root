@@ -117,6 +117,7 @@ private:
    TRef           fWebHistogram;      //EXEC:GetWebHistogram reference to an histogram in a TWebFile
    TH1F          *fH;                 //->
    TBits          fTriggerBits;       //Bits triggered by this event.
+   Bool_t         fIsValid;           //
 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
@@ -126,6 +127,7 @@ public:
    virtual ~Event();
    void          Build(Int_t ev, Int_t arg5=600, Float_t ptmin=1);
    void          Clear(Option_t *option ="");
+   Bool_t        IsValid() const { return fIsValid; }
    static void   Reset(Option_t *option ="");
    void          ResetHistogramPointer() {fH=0;}
    void          SetNseg(Int_t n) { fNseg = n; }

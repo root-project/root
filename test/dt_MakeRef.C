@@ -71,6 +71,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refValid  = RefClone(where,"hValid");
    TH1F *refPointValue  = RefClone(where,"hPointValue");
    TH1F *refAlias  = RefClone(where,"hAlias");
+   TH1F *refBool   = RefClone(where,"hBool");
 
    TH1F *refFullMatrix   = RefClone(where,"hFullMatrix");
    TH1F *refColMatrix    = RefClone(where,"hColMatrix");
@@ -148,6 +149,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
         refString->Fill(event->GetHeader()->GetEvtNum());
       }
       refAliasStr->Fill(strstr(event->GetType(),"1")!=0);
+      refBool->Fill(event->IsValid());
 
       Nvertex = event->GetNvertex();
       for(i0=0;i0<Nvertex;i0++) {
