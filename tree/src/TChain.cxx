@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.15 2001/02/03 17:11:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.16 2001/02/22 10:33:46 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -516,6 +516,9 @@ Int_t TChain::LoadTree(Int_t entry)
 
    if (cursav) cursav->cd();
 
+   //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
+   if (fPlayer) fPlayer->UpdateFormulaLeaves();
+   
    //Notify user if requested
    if (fNotify) fNotify->Notify();
 
