@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -250,8 +250,8 @@ namespace {
 //- data -----------------------------------------------------------------------
 namespace {
 
-   PyObject* False_ = PyInt_FromLong( 0l );
-   PyObject* True_  = PyInt_FromLong( 1l );
+   //PyObject* False_ = PyInt_FromLong( 0l );
+   //PyObject* True_  = PyInt_FromLong( 1l );
 
    typedef std::pair< const char*, PyROOT::MethodHolder::cnvfct_t > ncp_t;
 
@@ -645,19 +645,15 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
 
 
 //- nullness testing -----------------------------------------------------------
-PyObject* PyROOT::IsZero( PyObject* /* self */, PyObject* aTuple ) {
-// get a hold of the object and test it
+PyObject* PyROOT::IsZero( PyObject* /* self */, PyObject* aTuple ) { // get a hold of the object and test it
    void* obj = getObjectFromHolderFromArgs( aTuple );
-   PyObject* isZero = obj == 0 ? True_ /* yes, is zero */ : False_;
-   Py_INCREF( isZero );
-   return isZero;
+   long isZero = obj == 0 ? 1l /* yes, is zero */ : 0l;
+   return PyInt_FromLong( isZero );
 }
 
 
-PyObject* PyROOT::IsNotZero( PyObject* /* self */, PyObject* aTuple ) {
-// test for non-zero is opposite of test for zero
+PyObject* PyROOT::IsNotZero( PyObject* /* self */, PyObject* aTuple ) { // test for non-zero is opposite of test for zero
    void* obj = getObjectFromHolderFromArgs( aTuple );
-   PyObject* isNotZero = obj != 0 ? True_ /* yes, is not zero */ : False_;
-   Py_INCREF( isNotZero );
-   return isNotZero;
+   long isNotZero = obj != 0 ? 1l /* yes, is not zero */ : 0l;
+   return PyInt_FromLong( isNotZero );
 }

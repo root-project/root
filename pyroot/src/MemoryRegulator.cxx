@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -44,6 +44,7 @@ namespace {
 
    struct Init_PyROOT_NoneType {
       Init_PyROOT_NoneType() {
+
          memset( &PyROOT_NoneType, 0, sizeof( PyROOT_NoneType ) );
 
          PyROOT_NoneType.ob_type   = &PyType_Type;
@@ -78,11 +79,15 @@ namespace {
          return (int) obj;
       }
 
-   } init_PyROOT_NoneType;
+   };
 
 }
 
 
+//- constructor -----------------------------------------------------------------
+PyROOT::MemoryRegulator::MemoryRegulator() {
+   static Init_PyROOT_NoneType init_PyROOT_NoneType;
+}
 //- public members --------------------------------------------------------------
 void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
    if ( obj == 0 )
