@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.19 2002/10/25 11:19:02 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.20 2002/10/25 13:35:21 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -93,8 +93,6 @@ protected:
    Int_t     fNrows;            // number of rows
    Int_t     fRowLwb;           // lower bound of the row index
    Real_t   *fElements;	        //[fNrows] elements themselves
-
-   static Real_t fgErr;         // used to return as reference in case of error
 
    void Allocate(Int_t nrows, Int_t row_lwb = 0);
    void Invalidate() { fNrows = -1; fElements = 0; }
@@ -277,25 +275,6 @@ inline void TVector::ResizeTo(Int_t n)
 inline void TVector::ResizeTo(const TVector &v)
 {
    TVector::ResizeTo(v.GetLwb(), v.GetUpb());
-}
-
-inline const Real_t &TVector::operator()(Int_t ind) const
-{
-   fgErr = 0.0;
-
-   if (!IsValid()) {
-      Error("operator()", "vector is not initialized");
-      return fgErr;
-   }
-
-   Int_t aind = ind - fRowLwb;
-   if (aind >= fNrows || aind < 0) {
-      Error("operator()", "requested element %d is out of vector boundaries [%d,%d]",
-            ind, fRowLwb, fNrows+fRowLwb-1);
-      return fgErr;
-   }
-
-   return fElements[aind];
 }
 
 inline Real_t &TVector::operator()(Int_t index)

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.20 2002/10/25 11:19:02 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.21 2002/10/25 13:35:21 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -88,8 +88,6 @@ protected:
    Int_t      fColLwb;           // lower bound of the col index
    Double_t  *fElements;         //[fNelems] elements themselves
    Double_t **fIndex;            //! index[i] = &matrix(0,i) (col index)
-
-   static Double_t fgErr;        // used to return as reference in case of error
 
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
@@ -383,32 +381,6 @@ inline TMatrixD::TMatrixD(const TMatrixD &another) : TObject(another)
 inline void TMatrixD::ResizeTo(const TMatrixD &m)
 {
    ResizeTo(m.GetRowLwb(), m.GetRowUpb(), m.GetColLwb(), m.GetColUpb());
-}
-
-inline const Double_t &TMatrixD::operator()(int rown, int coln) const
-{
-   fgErr = 0.0;
-
-   if (!IsValid()) {
-      Error("operator()", "matrix is not initialized");
-      return fgErr;
-   }
-
-   Int_t arown = rown - fRowLwb;          // Effective indices
-   Int_t acoln = coln - fColLwb;
-
-   if (arown >= fNrows || arown < 0) {
-      Error("operator()", "row index %d is out of matrix boundaries [%d,%d]",
-            rown, fRowLwb, fNrows+fRowLwb-1);
-      return fgErr;
-   }
-   if (acoln >= fNcols || acoln < 0) {
-      Error("operator()", "col index %d is out of matrix boundaries [%d,%d]",
-            coln, fColLwb, fNcols+fColLwb-1);
-      return fgErr;
-   }
-
-   return (fIndex[acoln])[arown];
 }
 
 inline Double_t &TMatrixD::operator()(Int_t rown, Int_t coln)

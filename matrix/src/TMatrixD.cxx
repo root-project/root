@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.31 2002/10/25 11:19:02 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.32 2002/10/25 13:35:21 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -159,8 +159,6 @@
 #include "TClass.h"
 #include "TPluginManager.h"
 #include "TVirtualUtilHist.h"
-
-Double_t TMatrixD::fgErr;
 
 
 ClassImp(TMatrixD)
@@ -1410,10 +1408,7 @@ TMatrixD &TMatrixD::InvertPosDef()
 }
 
 //______________________________________________________________________________
-Int_t TMatrixD::Pdcholesky(
-const Double_t *a,
-      Double_t *u,
-const Int_t     n)
+Int_t TMatrixD::Pdcholesky(const Double_t *a, Double_t *u, const Int_t n)
 {
   //  Program Pdcholesky inverts a positiv definite (n x n) - matrix A,
   //  using the Cholesky decomposition
@@ -1474,8 +1469,7 @@ void TMatrixD::InvertPosDef(const TMatrixD &m)
 }
 
 //____________________________________________________________________
-const TMatrixD TMatrixD::EigenVectors(
-TVectorD &eigenValues) const
+const TMatrixD TMatrixD::EigenVectors(TVectorD &eigenValues) const
 {
   // Return a matrix containing the eigen-vectors; also fill the
   // supplied vector with the eigen values.
@@ -1503,10 +1497,7 @@ TVectorD &eigenValues) const
 }
 
 //____________________________________________________________________
-void TMatrixD::MakeTridiagonal(
-TMatrixD &a,
-TVectorD &d,
-TVectorD &e)
+void TMatrixD::MakeTridiagonal(TMatrixD &a, TVectorD &d, TVectorD &e)
 {
   // The comments in this algorithm are modified version of those in
   // "Numerical ...". Please refer to that book (web-page) for more on
@@ -1662,10 +1653,7 @@ TVectorD &e)
 }
 
 //____________________________________________________________________
-void TMatrixD::MakeEigenVectors(
-TVectorD &d,
-TVectorD &e,
-TMatrixD &z)
+void TMatrixD::MakeEigenVectors(TVectorD &d, TVectorD &e, TMatrixD &z)
 {
   // Begin_Html
   /*
@@ -1890,9 +1878,8 @@ TMatrixD &z)
 }
 
 //____________________________________________________________________
-void TMatrixD::EigenSort(
-TMatrixD &eigenVectors,
-TVectorD &eigenValues)
+void TMatrixD::EigenSort(TMatrixD &eigenVectors,
+                         TVectorD &eigenValues)
 {
   // Begin_Html
   /*
@@ -1936,6 +1923,36 @@ TVectorD &eigenValues)
       }
     }
   }
+}
+
+//______________________________________________________________________________
+const Double_t &TMatrixD::operator()(Int_t rown, Int_t coln) const
+{
+   // Access single matrix element.
+
+   static Double_t err;
+   err = 0.0;
+
+   if (!IsValid()) {
+      Error("operator()", "matrix is not initialized");
+      return err;
+   }
+
+   Int_t arown = rown - fRowLwb;          // Effective indices
+   Int_t acoln = coln - fColLwb;
+
+   if (arown >= fNrows || arown < 0) {
+      Error("operator()", "row index %d is out of matrix boundaries [%d,%d]",
+            rown, fRowLwb, fNrows+fRowLwb-1);
+      return err;
+   }
+   if (acoln >= fNcols || acoln < 0) {
+      Error("operator()", "col index %d is out of matrix boundaries [%d,%d]",
+            coln, fColLwb, fNcols+fColLwb-1);
+      return err;
+   }
+
+   return (fIndex[acoln])[arown];
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.20 2002/10/25 11:19:02 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.21 2002/10/25 13:35:22 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -45,8 +45,6 @@
 #include "TClass.h"
 #include "TPluginManager.h"
 #include "TVirtualUtilHist.h"
-
-Double_t TVectorD::fgErr;
 
 
 ClassImp(TVectorD)
@@ -255,6 +253,29 @@ Double_t TVectorD::NormInf() const
       norm = TMath::Max(norm, (Double_t)TMath::Abs(*vp++));
 
    return norm;
+}
+
+//______________________________________________________________________________
+const Double_t &TVectorD::operator()(Int_t ind) const
+{
+   // Access a vector element.
+
+   static Double_t err;
+   err = 0.0;
+
+   if (!IsValid()) {
+      Error("operator()", "vector is not initialized");
+      return err;
+   }
+
+   Int_t aind = ind - fRowLwb;
+   if (aind >= fNrows || aind < 0) {
+      Error("operator()", "requested element %d is out of vector boundaries [%d,%d]",
+            ind, fRowLwb, fNrows+fRowLwb-1);
+      return err;
+   }
+
+   return fElements[aind];
 }
 
 //______________________________________________________________________________

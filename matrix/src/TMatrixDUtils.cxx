@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.12 2002/10/25 11:19:02 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.13 2002/10/25 13:35:21 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -31,17 +31,36 @@
 #include "TMatrixD.h"
 #include "TClass.h"
 
-Double_t TMatrixDRow::fgErr;
-Double_t TMatrixDColumn::fgErr;
-Double_t TMatrixDDiag::fgErr;
-Double_t TMatrixDFlat::fgErr;
-
 
 ClassImp(TLazyMatrixD)
 ClassImp(TMatrixDRow)
 ClassImp(TMatrixDColumn)
 ClassImp(TMatrixDDiag)
 ClassImp(TMatrixDFlat)
+
+//______________________________________________________________________________
+const Double_t &TMatrixDRow::operator()(Int_t i) const
+{
+   // Get hold of the i-th row's element.
+
+   static Double_t err;
+   err = 0.0;
+
+   if (!fMatrix->IsValid()) {
+      Error("operator()", "matrix is not initialized");
+      return err;
+   }
+
+   Int_t acoln = i-fMatrix->fColLwb;           // Effective index
+
+   if (acoln >= fMatrix->fNcols || acoln < 0) {
+      Error("operator()", "TMatrixDRow index %d is out of row boundaries [%d,%d]",
+            i, fMatrix->fColLwb, fMatrix->fNcols+fMatrix->fColLwb-1);
+      return err;
+   }
+
+   return fMatrix->fIndex[acoln][fPtr-fMatrix->fElements];
+}
 
 //______________________________________________________________________________
 void TMatrixDRow::operator=(Double_t val)
@@ -190,6 +209,30 @@ void TMatrixDRow::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
+const Double_t &TMatrixDColumn::operator()(Int_t i) const
+{
+   // Access the i-th element of the column
+
+   static Double_t err;
+   err = 0.0;
+
+   if (!fMatrix->IsValid()) {
+      Error("operator()", "matrix is not initialized");
+      return err;
+   }
+
+   Int_t arown = i-fMatrix->fRowLwb;           // Effective indices
+
+   if (arown >= fMatrix->fNrows || arown < 0) {
+      Error("operator()", "TMatrixDColumn index %d is out of column boundaries [%d,%d]",
+            i, fMatrix->fRowLwb, fMatrix->fNrows+fMatrix->fRowLwb-1);
+      return err;
+   }
+
+   return fPtr[arown];
+}
+
+//______________________________________________________________________________
 void TMatrixDColumn::operator=(Double_t val)
 {
    // Assign val to every element of the matrix column.
@@ -335,6 +378,29 @@ void TMatrixDColumn::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
+const Double_t &TMatrixDDiag::operator()(Int_t i) const
+{
+   // Get hold of the i-th diag element (indexing always starts at 0,
+   // regardless of matrix' col_lwb and row_lwb)
+
+   static Double_t err;
+   err = 0.0;
+
+   if (!fMatrix->IsValid()) {
+      Error("operator()", "matrix is not initialized");
+      return err;
+   }
+
+   if (i >= fNdiag || i < 0) {
+      Error("TMatrixDDiag", "TMatrixDDiag index %d is out of diag boundaries [0,%d]",
+            i, fNdiag-1);
+      return err;
+   }
+
+   return fMatrix->fIndex[i][i];
+}
+
+//______________________________________________________________________________
 void TMatrixDDiag::operator=(Double_t val)
 {
    // Assign val to every element of the matrix diagonal.
@@ -474,6 +540,29 @@ void TMatrixDDiag::Streamer(TBuffer &R__b)
    } else {
       TMatrixDDiag::Class()->WriteBuffer(R__b,this);
    }
+}
+
+//______________________________________________________________________________
+const Double_t &TMatrixDFlat::operator()(Int_t i) const
+{
+   // Get hold of the i-th element (indexing always starts at 0,
+   // regardless of matrix' col_lwb and row_lwb)
+
+   static Double_t err;
+   err = 0.0;
+
+   if (!fMatrix->IsValid()) {
+      Error("operator()", "matrix is not initialized");
+      return err;
+   }
+
+   if (i >= fMatrix->fNelems || i < 0) {
+      Error("TMatrixDFlat", "TMatrixDFlat index %d is out of boundaries [0,%d]",
+            i, fMatrix->fNelems-1);
+      return err;
+   }
+
+   return fMatrix->fElements[i];
 }
 
 //______________________________________________________________________________
