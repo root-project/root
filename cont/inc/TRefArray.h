@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.10 2002/08/20 15:17:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.11 2004/11/12 21:51:18 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -50,6 +50,7 @@ protected:
    void          Init(Int_t s, Int_t lowerBound);
    Bool_t        OutOfBoundsError(const char *where, Int_t i) const;
    Int_t         GetAbsLast() const;
+   TObject      *GetFromTable(Int_t idx) const;
 
 public:
    TRefArray();
@@ -143,7 +144,9 @@ inline TObject *TRefArray::operator[](Int_t at) const
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
       if (!fPID) return 0;
-      return fPID->GetObjectWithID(fUIDs[j]);
+      TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
+      if (obj==0) obj = GetFromTable(j);
+      return obj;
    }
    BoundsOk("At", at);
    return 0;
@@ -155,7 +158,9 @@ inline TObject *TRefArray::At(Int_t at) const
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
       if (!fPID) return 0;
-      return fPID->GetObjectWithID(fUIDs[j]);
+      TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
+      if (obj==0) obj = GetFromTable(j);
+      return obj;
    }
    BoundsOk("At", at);
    return 0;

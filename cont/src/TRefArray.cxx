@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.18 2003/07/11 09:04:12 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.19 2004/11/12 21:51:18 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRefArray.h"
+#include "TRefTable.h"
 #include "TError.h"
 #include "TFile.h"
 #include "TSystem.h"
@@ -320,6 +321,19 @@ void TRefArray::Expand(Int_t newSize)
    }
    if (temp) delete [] temp;
    fSize = newSize;
+}
+
+//______________________________________________________________________________
+TObject *TRefArray::GetFromTable(Int_t idx) const 
+{
+   //the reference may be in the TRefTable
+   TRefTable *table = TRefTable::GetRefTable();
+   if (table) {
+      table->SetUID(fUIDs[idx]);
+      table->Notify();
+      return fPID->GetObjectWithID(fUIDs[idx]);
+   }
+   return 0;
 }
 
 //_______________________________________________________________________
