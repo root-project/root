@@ -240,12 +240,12 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
   gBenchmark->Print("stress");
 #ifndef __CINT__
   const Int_t nr = 7;
-  const Double_t x_b12[] = { 10.,  30.,  50., 100., 300.,  500.,   700.};
-  const Double_t y_b12[] = {7.67,11.00,13.80,26.36,95.00,420.01,1257.57};
+  const Double_t x_b12[] = { 10.,  30.,  50.,  100.,  300.,  500.,   700.};
+  const Double_t y_b12[] = {3.44, 5.02, 6.46, 12.21, 37.84,  65.01, 91.57};
 #else
   const Int_t nr = 7;
-  const Double_t x_b12[] = { 10.,  30.,  50., 100., 300.,  500.,   700.};
-  const Double_t y_b12[] = {7.67,11.00,13.80,26.36,95.00,420.01,1257.57};
+  const Double_t x_b12[] = { 10.,  30.,  50.,  100.,  300.,  500.,   700.};
+  const Double_t y_b12[] = {9.99,10.78,11.02, 12.34, 30.03, 65.01,  91.57};
 #endif
 
   TF1 f1("f1","pol3",0,1000);
@@ -1882,6 +1882,9 @@ void mstress_matrix_io()
     TMatrixD ma;
     ma.Adopt(msize,msize,pattern_array);
 
+    TMatrixDSym ms(msize);
+    ms = pattern;
+
     if (verbose)
       cout << "\nWrite matrix m to database" << endl;
     sprintf(name,"m_%d",msize);
@@ -1891,6 +1894,11 @@ void mstress_matrix_io()
       cout << "\nWrite matrix ma which adopts to database" << endl;
     sprintf(name,"ma_%d",msize);
     ma.Write(name);
+
+    if (verbose)
+      cout << "\nWrite symmetric matrix ms to database" << endl;
+    sprintf(name,"ms_%d",msize);
+    ms.Write(name);
 
     delete [] pattern_array;
 
@@ -1917,11 +1925,14 @@ void mstress_matrix_io()
     TMatrixD *mr  = (TMatrixD*) f1->Get(name);
     sprintf(name,"ma_%d",msize);
     TMatrixD *mar = (TMatrixD*) f1->Get(name);
+    sprintf(name,"ms_%d",msize);
+    TMatrixDSym *msr = (TMatrixDSym*) f1->Get(name);
 
     if (verbose)
       cout << "\nRead matrix should be same as original" << endl;
     ok &= ((*mr)  == m) ? kTRUE : kFALSE;
     ok &= ((*mar) == m) ? kTRUE : kFALSE;
+    ok &= ((*msr) == m) ? kTRUE : kFALSE;
 
     iloop++;
   }
