@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.3 2000/08/10 16:49:17 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -803,6 +803,8 @@ const char *TDirectory::GetPath() const
 TDirectory *TDirectory::mkdir(const char *name, const char *title)
 {
    // Create a sub-directory and return a pointer to the created directory.
+   // The new directory is created inside the current directory, not
+   // inside "this" directory.
    // Returns 0 in case of error.
    // Note that the directory name cannot contain slashes.
 
