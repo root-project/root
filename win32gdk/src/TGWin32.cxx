@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.88 2004/10/20 22:32:45 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.89 2005/01/12 18:39:30 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1934,7 +1934,7 @@ void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
    // xy   : x,y coordinates of markers
 
    int i;
-   static lastn = 0;
+   static int lastn = 0;
    static GdkPoint *xy = 0;
 
    if (!fWindows) return;

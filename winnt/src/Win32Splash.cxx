@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.13 2004/06/14 15:52:58 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.14 2004/07/09 06:26:45 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -347,7 +347,7 @@ void *OpenGraphic(char *name)
    HRESULT hr;
    int nPixelsPerInchX = GetDeviceCaps(hDCScreen, LOGPIXELSX);
    int nPixelsPerInchY = GetDeviceCaps(hDCScreen, LOGPIXELSY);
-   unsigned short OlePathName[512];
+   wchar_t OlePathName[512];
 
    ReleaseDC(0, hDCScreen);
    mbstowcs(OlePathName,name,strlen(name)+1);

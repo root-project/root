@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.113 2005/02/05 17:04:39 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.114 2005/02/12 09:52:25 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -812,25 +812,19 @@ void TWinNTSystem::SetProgname(const char *name)
    ULong_t  idot = 0;
    char *dot = 0;
    char *progname;
-   const char *fullname = 0; // the program name with extension
+   char *fullname = 0; // the program name with extension
 
   // On command prompt the progname can be supplied with no extension (under Windows)
-  // if it is case we have to guess that extension ourselves
-
-   const char *extlist[] = {"exe", "bat", "cmd"}; // List of extensions to guess
-   Int_t lextlist = 3;                            // number of the extra extensions to guess
-
-   if (name && strlen(name) > 0) {
+   ULong_t namelen=name ? strlen(name) : 0;
+   if (name && namelen > 0) {
       // Check whether the name contains "extention"
-      fullname = name;
-      while ( !(dot = strchr(fullname, '.')) ) {
-         idot = strlen(fullname);
-         const char *b = Form("%s.exe", name);
-         fullname = b;
-      }
+      fullname = new char[namelen+5];
+      strcpy(fullname, name);
+      if ( !strrchr(fullname, '.') )
+         strcat(fullname, ".exe");
 
       progname = StrDup(BaseName(fullname));
-      dot = strchr(progname, '.');
+      dot = strrchr(progname, '.');
       idot = (ULong_t)(dot - progname);
 
       char *which = 0;
@@ -854,14 +848,17 @@ void TWinNTSystem::SetProgname(const char *name)
 
          gProgPath = StrDup(dirname);
       } else {
-         Warning("SetProgname","Wrong Program path");
-         gProgPath = "c:/users/root/ms/bin";
+         Warning("SetProgname",
+            "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)", 
+            fullname);
+         gProgPath = WorkingDirectory();
       }
 
       // Cut the extension for progname off
       progname[idot] = '\0';
       gProgName = StrDup(progname);
       if (which) delete [] which;
+      delete[] fullname; 
    }
 }
 
@@ -1593,9 +1590,9 @@ const char *TWinNTSystem::DirName(const char *pathname)
    // Create a buffer to keep the path name
    if (pathname) {
       if (strchr(pathname, '/') || strchr(pathname, '\\')) {
-         char *rslash = strrchr(pathname, '/');
-         char *bslash = strrchr(pathname, '\\');
-         char *r = max(rslash, bslash);
+         const char *rslash = strrchr(pathname, '/');
+         const char *bslash = strrchr(pathname, '\\');
+         const char *r = max(rslash, bslash);
          const char *ptr = pathname;
          while (ptr <= r) {
             if (*ptr == ':') {
