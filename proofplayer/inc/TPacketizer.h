@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id$
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.9 2004/05/30 23:16:31 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -40,12 +40,12 @@ class TProofStats;
 
 class TPacketizer : public TVirtualPacketizer {
 
-private:
-
+public:              // public because of Sun CC bug
    class TFileNode;
    class TFileStat;
    class TSlaveStat;
 
+private:
    Long64_t       fProcessed;    // number of entries processed
    TList         *fPackets;      // all processed packets
    TProofStats   *fStat;         // PROOF runtime statistics
