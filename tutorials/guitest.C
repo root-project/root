@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.34 2003/10/02 09:27:28 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.35 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1165,6 +1165,7 @@ void TestDialog::CloseWindow()
 
 void TestDialog::DoOK()
 {
+   fFillHistos = kFALSE;
    printf("\nTerminating dialog: OK pressed\n");
 
    // Send a close message to the main frame. This will trigger the
@@ -1173,17 +1174,18 @@ void TestDialog::DoOK()
    // a segv since the OK button is still accessed after the DoOK() method.
    // This works since the close message is handled synchronous (via
    // message going to/from X server).
-   fMain->SendCloseMessage();
+   //fMain->SendCloseMessage();
 
    // The same effect can be obtained by using a singleshot timer:
-   //TTimer::SingleShot(50, "TestDialog", this, "CloseWindow()");
+   TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
 }
 
 
 void TestDialog::DoCancel()
 {
+   fFillHistos = kFALSE;
    printf("\nTerminating dialog: Cancel pressed\n");
-   fMain->SendCloseMessage();
+   TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
 }
 
 void TestDialog::HandleButtons(Int_t id)
