@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.19 2002/08/04 22:00:57 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.20 2002/08/12 06:24:13 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -206,18 +206,6 @@ TRef::TRef(TObject *obj)
    // Create a ref to obj.
 
    *this = obj;
-   if (!obj) {
-      fPID = 0;
-      return;
-   }
-   if (obj->TestBit(kHasUUID)) {
-      fPID = gROOT->GetUUIDs();
-      obj->SetBit(kIsReferenced);
-      SetBit(kHasUUID);
-      SetUniqueID(obj->GetUniqueID());
-   } else {
-      fPID = TProcessID::GetSessionProcessID();
-   }
 }
 
 //______________________________________________________________________________
