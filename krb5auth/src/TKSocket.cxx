@@ -1,9 +1,9 @@
-// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.2 2005/02/08 00:57:13 rdm Exp $
 // Author: Maarten Ballintijn   27/10/2003
 
 #include "config.h"
 #include <stdlib.h>
-
+#include <errno.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 
@@ -142,8 +142,6 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
    enc.length = ntohs(desc.length);
    enc.data = new char[enc.length+1];
 
-Info("BlockRead","read descriptor (%d bytes): lenght %d, type %d",sizeof(desc), enc.length, type);
-
    rc = krb5_net_read(fgContext, fd, enc.data, enc.length);
    enc.data[enc.length] = 0;
 
@@ -153,8 +151,6 @@ Info("BlockRead","read descriptor (%d bytes): lenght %d, type %d",sizeof(desc), 
       SysError("BlockRead","reading data (%d), %s",
                rc, error_message(rc));
       return -1;
-   } else {
-Info("BlockRead","read %d bytes (rc=%d)",enc.length, rc);
    }
 
    krb5_data out;
