@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.6 2001/02/15 21:14:56 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -47,7 +47,13 @@ TEllipse::TEllipse(): TObject(), TAttLine(), TAttFill()
 {
 //*-*-*-*-*-*-*-*-*-*-*Ellipse default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
-
+   fX1 = 0;
+   fY1 = 0;
+   fR1 = 1;
+   fR2 = 1;
+   fPhimin = 0;
+   fPhimax = 360;
+   fTheta  = 0;
 }
 //______________________________________________________________________________
 TEllipse::TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta)
@@ -105,30 +111,35 @@ Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
 //  The distance is computed in pixels units.
 //
 
-   const Double_t PI = 3.141592;
-   Double_t ct   = TMath::Cos(PI*fTheta/180);
-   Double_t st   = TMath::Sin(PI*fTheta/180);
+   const Double_t PI = TMath::Pi();
+    Double_t x = gPad->AbsPixeltoX(px);
+    Double_t y = gPad->AbsPixeltoY(py);
 
-//*-*- Compute distance of point to center of ellipse
-   Int_t pxc    = gPad->XtoAbsPixel(fX1);
-   Int_t pyc    = gPad->YtoAbsPixel(fY1);
-   Double_t dist = TMath::Sqrt(Double_t((pxc-px)*(pxc-px)+(pyc-py)*(pyc-py)));
-   Double_t cosa = TMath::Abs(px - pxc)/dist;
-   Double_t sina = TMath::Abs(py - pyc)/dist;
-//*-*- Using the angle of clicked point, compute ellipse radius
-   Double_t dx    = fR1*cosa;
-   Double_t dy    = fR2*sina;
-   Double_t xrad  = fX1 + dx*ct - dy*st;
-   Double_t yrad  = fY1 + dx*st + dy*ct;
-   Int_t pxr = gPad->XtoAbsPixel(xrad);
-   Int_t pyr = gPad->YtoAbsPixel(yrad);
-   Double_t distr = TMath::Sqrt(Double_t((pxr-pxc)*(pxr-pxc)+(pyr-pyc)*(pyr-pyc)));
+    Double_t dxnr = x - GetX1();
+    Double_t dynr = y - GetY1();
 
-   if (distr < dist ) return 9999;
+    Double_t ct = TMath::Cos(PI*GetTheta()/180.0);
+    Double_t st = TMath::Sin(PI*GetTheta()/180.0);
 
+    Double_t dx =  dxnr*ct + dynr*st;
+    Double_t dy = -dxnr*st + dynr*ct;
 
-   if (GetFillColor()) return 0;
-   return Int_t(distr-dist);
+    Double_t r1 = GetR1();
+    Double_t r2 = GetR2();
+
+    if (dx == 0 || r1 == 0 || r2 == 0) return 9999;
+    Double_t distp = TMath::Sqrt(dx*dx + dy*dy);
+
+    Double_t tana = dy/dx;
+    tana *= tana;
+    Double_t distr = TMath::Sqrt((1+tana)/(1.0/(r1*r1) + tana/(r2*r2)));
+    Int_t dist = 9999;
+    if (GetFillColor() && GetFillStyle()) {
+       if (distr > distp) dist = 0;
+    } else {
+       if (TMath::Abs(distr-distp)/(r1+r2) < 0.01) dist = 0;
+    }
+    return dist;
 }
 
 //______________________________________________________________________________
