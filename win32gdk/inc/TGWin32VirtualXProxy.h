@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.2 2003/12/15 16:37:49 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.3 2004/03/09 14:01:51 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -247,7 +247,7 @@ public:
    Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    Bool_t       EqualRegion(Region_t rega, Region_t regb);
    void         GetRegionBox(Region_t reg, Rectangle_t *rect);
-   char       **ListFonts(char *fontname, Int_t max, Int_t &count);
+   char       **ListFonts(const char *fontname, Int_t max, Int_t &count);
    void         FreeFontNames(char **fontlist);
    Drawable_t   CreateImage(UInt_t width, UInt_t height);
    void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.2 2004/02/02 15:32:57 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.3 2004/03/09 14:01:51 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -268,7 +268,7 @@ RETURN_METHOD_ARG3(VirtualX,Window_t,CreateGLWindow,Window_t,wind,Visual_t,visua
 RETURN_METHOD_ARG4(VirtualX,Pixmap_t,CreateBitmap,Drawable_t,id,const char*,bitmap,UInt_t,width,UInt_t,height)
 RETURN_METHOD_ARG7(VirtualX,Pixmap_t,CreatePixmap,Drawable_t,id,const char*,bitmap,UInt_t,width,UInt_t,height,ULong_t,forecolor,ULong_t,backcolor,Int_t,depth)
 RETURN_METHOD_ARG11(VirtualX,Window_t,CreateWindow,Window_t,parent,Int_t,x,Int_t,y,UInt_t,w,UInt_t,h,UInt_t,border,Int_t,depth,UInt_t,clss,void*,visual,SetWindowAttributes_t*,attr,UInt_t,wtype)
-RETURN_METHOD_ARG3(VirtualX,char**,ListFonts,char*,fontname,Int_t,mx,Int_t&,count)
+RETURN_METHOD_ARG3(VirtualX,char**,ListFonts,const char*,fontname,Int_t,mx,Int_t&,count)
 RETURN_METHOD_ARG4(VirtualX,Int_t,RequestLocator,Int_t,mode,Int_t,ctyp,Int_t&,x,Int_t&,y)
 RETURN_METHOD_ARG3(VirtualX,Bool_t,ParseColor,Colormap_t,cmap,const char*,cname,ColorStruct_t&,color)
 RETURN_METHOD_ARG2(VirtualX,Bool_t,AllocColor,Colormap_t,cmap,ColorStruct_t&,color)

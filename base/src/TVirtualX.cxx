@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.5 2003/12/16 16:22:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.6 2003/12/21 19:07:57 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -449,10 +449,10 @@ void TVirtualX::QueryPointer(Int_t &ix, Int_t &iy)
 }
 
 //______________________________________________________________________________
-Pixmap_t TVirtualX::ReadGIF(Int_t /*x0*/, Int_t /*y0*/, const char * /*file*/,  
+Pixmap_t TVirtualX::ReadGIF(Int_t /*x0*/, Int_t /*y0*/, const char * /*file*/,
                             Window_t /*id*/)
 {
-   // If id is NULL - loads the specified gif file at position [x0,y0] in the 
+   // If id is NULL - loads the specified gif file at position [x0,y0] in the
    // current window. Otherwise creates pixmap from gif file
 
    return 0;
@@ -1717,8 +1717,8 @@ void TVirtualX::GetWindowSize(Drawable_t /*id*/, Int_t &x, Int_t &y,
    //        parent window's origin
    // w, h - the inside size of the window, not including the border
 
-   x = y = 0; 
-   w = h = 1; 
+   x = y = 0;
+   w = h = 1;
 }
 
 //______________________________________________________________________________
@@ -1734,7 +1734,7 @@ void TVirtualX::FillPolygon(Window_t /*id*/, GContext_t /*gc*/, Point_t *
    // GC components in use: function, plane-mask, fill-style, fill-rule,
    // subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.  GC
    // mode-dependent components: foreground, background, tile, stipple,
-   // tile-stipple-x-origin, and tile-stipple-y-origin. 
+   // tile-stipple-x-origin, and tile-stipple-y-origin.
    // (see also the GCValues_t structure)
 }
 
@@ -1903,7 +1903,7 @@ void TVirtualX::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 }
 
 //______________________________________________________________________________
-char **TVirtualX::ListFonts(char * /*fontname*/, Int_t /*max*/, Int_t &/*count*/)
+char **TVirtualX::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t &/*count*/)
 {
    // Returns list of font names matching fontname regexp, like "-*-times-*".
    // The pattern string can contain any characters, but each asterisk (*)
@@ -1953,7 +1953,7 @@ void TVirtualX::PutPixel(Drawable_t /*id*/, Int_t /*x*/, Int_t /*y*/,
    // The image must contain the x and y coordinates.
    //
    // id    - specifies the image
-   // x, y  - coordinates 
+   // x, y  - coordinates
    // pixel - the new pixel value
 }
 

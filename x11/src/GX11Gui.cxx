@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.32 2003/12/16 16:22:56 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.33 2004/03/08 16:02:03 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2409,13 +2409,13 @@ void TGX11::GetRegionBox(Region_t reg, Rectangle_t *rect)
 }
 
 //______________________________________________________________________________
-char **TGX11::ListFonts(char *fontname, Int_t max, Int_t &count)
+char **TGX11::ListFonts(const char *fontname, Int_t max, Int_t &count)
 {
    // Return list of font names matching fontname regexp, like "-*-times-*".
 
    char **fontlist;
    Int_t fontcount = 0;
-   fontlist = XListFonts(fDisplay, fontname, max, &fontcount);
+   fontlist = XListFonts(fDisplay, (char *)fontname, max, &fontcount);
    count = fontcount;
    return fontlist;
 }

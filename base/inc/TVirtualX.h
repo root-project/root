@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.23 2003/11/25 15:51:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.24 2003/12/16 16:22:55 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -288,7 +288,7 @@ public:
    virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
    virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
-   virtual char       **ListFonts(char *fontname, Int_t max, Int_t &count);
+   virtual char       **ListFonts(const char *fontname, Int_t max, Int_t &count);
    virtual void         FreeFontNames(char **fontlist);
    virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
    virtual void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);

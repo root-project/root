@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.17 2003/12/16 16:22:56 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.18 2004/03/09 14:01:51 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -133,15 +133,15 @@ protected:
    Int_t       fBlueShift;          // Bits to left shift blue
    Handle_t    fXEvent;             // Current native (GDK) event
 
-   Bool_t      fFillColorModified;  //   
-   Bool_t      fFillStyleModified;  // 
+   Bool_t      fFillColorModified;  //
+   Bool_t      fFillStyleModified;  //
    Bool_t      fLineColorModified;  //
-   Bool_t      fPenModified;        // line syle || width modified 
+   Bool_t      fPenModified;        // line syle || width modified
    Bool_t      fMarkerStyleModified; //
    Bool_t      fMarkerColorModified; //
 
    void        UpdateFillColor();
-   void        UpdateFillStyle();  
+   void        UpdateFillStyle();
    void        UpdateLineColor();
    void        UpdateMarkerStyle();
    void        UpdateMarkerColor();
@@ -364,7 +364,7 @@ public:
    Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    Bool_t       EqualRegion(Region_t rega, Region_t regb);
    void         GetRegionBox(Region_t reg, Rectangle_t *);
-   char       **ListFonts(char *fontname, Int_t max, Int_t &count);
+   char       **ListFonts(const char *fontname, Int_t max, Int_t &count);
    void         FreeFontNames(char **fontlist);
    Drawable_t   CreateImage(UInt_t width, UInt_t height);
    void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
