@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  testStringFormula.log
+CLEAN_TARGETS +=  *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += testStringFormula
+TEST_TARGETS += testStringFormula testBoolOpt
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
@@ -14,6 +14,12 @@ testStringFormula.log: testString.C
 
 testStringFormula: testStringFormula.log
 	$(CMDECHO) echo testStringFormula > /dev/null
+
+testBoolOpt.log: testBoolOpt.C
+	$(CMDECHO) root.exe -b -l -q testBoolOpt.C > testBoolOpt.log 2>&1
+
+testBoolOpt : testBoolOpt.log
+	$(CMDECHO) diff -b testBoolOpt.ref testBoolOpt.log
 
 testWithFailure:
 ifeq ($(FAIL),)
