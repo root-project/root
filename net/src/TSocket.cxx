@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.25 2004/10/28 17:12:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.26 2004/12/15 17:48:03 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -759,7 +759,7 @@ Bool_t TSocket::Authenticate(const char *user)
       Info("Authenticate","Local protocol: %s",SProtocol.Data());
 
    // Get server protocol level
-   Int_t kind;
+   Int_t kind = kROOTD_PROTOCOL;
    // Warning: for backward compatibility reasons here we have to
    // send exactly 4 bytes: for fgClientClientProtocol > 99
    // the space in the format must be dropped
