@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.105 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.106 2004/10/15 17:20:17 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2104,9 +2104,17 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
       char *tmp = gSystem->ExpandPathName(search);
       TString exsearch(tmp);
       delete [] tmp;
-
+ 
       // Need to use Windows delimiters
-	   exsearch.ReplaceAll(":",";");
+      Int_t lastDelim = -1;
+      for(int i=0; i<exsearch.Length(); ++i) {
+         switch( exsearch[i] ) {
+            case ':': if (i-lastDelim!=2) exsearch[i] = ';'; // Replace the ':' unless there are after a disk suffix (aka ;c:\mydirec...)
+               lastDelim = i;
+               break;
+            case ';': lastDelim = i; break;
+         }
+      }
 
       // Check access
       struct stat finfo;
