@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.56 2002/06/08 00:45:01 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.57 2002/06/14 22:37:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -100,10 +100,23 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
       }
       
     }
-    delete iter ;
     
     // Copy data and strip entries lost by adjusted fit range
     _dataClone = ((RooAbsData*)data)->reduce(*pdfDepSet) ;
+
+    // Adjust fit ranges of real variables in stripped dataset to those of the PDF
+    iter->Reset() ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
+      if (!pdfReal) continue ;
+
+      RooRealVar* datReal = dynamic_cast<RooRealVar*>(_dataClone->get()->find(pdfReal->GetName())) ;
+      if (!datReal) continue ;
+
+      datReal->setFitRange(pdfReal->getFitMin(),pdfReal->getFitMax()) ;
+    }
+
+    delete iter ;
 
     delete pdfDepSet ;
   } else {
