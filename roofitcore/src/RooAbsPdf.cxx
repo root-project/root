@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.5 2001/05/11 23:37:40 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.6 2001/05/14 05:22:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -156,7 +156,7 @@ void RooAbsPdf::setTraceCounter(Int_t value)
 
 void RooAbsPdf::attachDataSet(const RooDataSet* set) 
 {
-  recursiveRedirectServers(*set->get(),kFALSE) ;
+  if(0 != set) recursiveRedirectServers(*set->get(),kFALSE) ;
 }
 
 
@@ -256,8 +256,6 @@ Int_t RooAbsPdf::fitTo(RooDataSet& data, Option_t *options = "", Double_t *minVa
   return context.fit(options,minValue) ;
 }
 
-
-
 void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
   // Print info about this object to the specified stream. In addition to the info
@@ -275,7 +273,82 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
   }
 }
 
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents= 0) const {
+  // Generate a new dataset containing the specified variables with
+  // events sampled from our distribution. Generate the specified
+  // number of events or else try to use expectedEvents() if nEvents <= 0.
+  // Any variables of this PDF that are not in whatVars will use their
+  // current values and be treated as fixed parameters. Returns zero
+  // in case of an error. The caller takes ownership of the returned
+  // dataset.
 
+  // Initialize an empty dataset with the specified variables.
+  RooAbsPdf *pdfClone(0);
+  RooArgSet *cloneSet(0);
+  RooDataSet *data= initGeneratedDataset(whatVars, cloneSet, pdfClone);
+  if(0 == data || 0 == cloneSet || 0 == pdfClone) {
+    cout << fName << "::" << ClassName() << ":generate: unable to initialize dataset" << endl;
+    delete cloneSet;
+    return 0;
+  }
 
+  // Calculate the expected number of events if requested
+  if(nEvents <= 0) {
+    nEvents= expectedEvents() + 0.5;
+    if(nEvents <= 0) {
+      cout << fName << "::" << ClassName()
+	   << ":generate: cannot calculate expected number of events" << endl;
+      return 0;
+    }
+  }
 
+  // Loop over events to generate using our clone
+  for(Int_t evt= 0; evt < nEvents; evt++) pdfClone->generateEvent(whatVars);
 
+  delete cloneSet;
+  return data;
+}
+
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype) const {
+  // Generate a new dataset with values of the whatVars variables
+  // sampled from our distribution. Use the specified existing dataset
+  // as a prototype: the new dataset will contain the same number of
+  // events as the prototype, and any prototype variables not in
+  // whatVars will be copied into the new dataset for each generated
+  // event and also used to set our PDF parameters. The result is a
+  // copy of the prototype dataset with only variables in whatVars
+  // randomized. Variables in whatVars that are not in the prototype
+  // will be added as new columns to the generated dataset.  Returns
+  // zero in case of an error. The caller takes ownership of the
+  // returned dataset.
+
+  return 0;
+}
+
+RooDataSet *RooAbsPdf::initGeneratedDataset(const RooArgSet &vars, RooArgSet *&cloneSet,
+					    RooAbsPdf *&pdfClone) const {
+  // create a new empty dataset using the specified variables
+  TString name(GetName()),title(GetTitle());
+  name.Append("Data");
+  title.Prepend("Generated From ");
+  RooDataSet *data= new RooDataSet(name.Data(),title.Data(),vars);
+
+  // Make a deep-copy clone of ourself
+  RooArgSet tmp("PdfBranchNodeList") ;
+  branchNodeServerList(&tmp) ;
+  cloneSet= tmp.snapshot(kFALSE) ;
+
+  // Find our clone in the snapshot list
+  pdfClone = (RooAbsPdf*)cloneSet->FindObject(GetName()) ;
+  
+  // Attach our clone to the new data set
+  pdfClone->attachDataSet(data) ;
+
+  // Reset our clone's error counters
+  pdfClone->resetErrorCounters() ;
+
+  return data;
+}
+
+void RooAbsPdf::generateEvent(const RooArgSet &vars) {
+}

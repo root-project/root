@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.8 2001/05/14 05:22:54 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.9 2001/05/14 22:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,8 @@
 
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealIntegral.hh"
+
+class RooDataSet;
 class RooArgSet ;
 class TPaveText;
 class TH1F;
@@ -29,6 +31,10 @@ public:
   RooAbsPdf(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
   RooAbsPdf(const RooAbsPdf& other, const char* name=0);
   virtual ~RooAbsPdf();
+
+  // Toy MC generation
+  RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0) const;
+  RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype) const;
 
   // Data set dependent accessors (normalization & dependent/parameter interpretation)
   virtual Bool_t selfNormalized(const RooArgSet& dependents) const { return kFALSE ; }
@@ -46,7 +52,7 @@ public:
   Int_t fitTo(RooDataSet& data, Option_t *options = "", Double_t *minValue= 0) ;
   Int_t fitTo(TH1F* hist, Option_t *options = "", Double_t *minValue= 0) { return 0 ; }
   Double_t nLogLikelihood(const RooDataSet* dset, Bool_t extended=kFALSE) const ;
-  void attachDataSet(const RooDataSet* set) ;
+  void attachDataSet(const RooDataSet *set) ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
@@ -74,6 +80,11 @@ private:
 protected:
 
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
+
+  // toy MC generator support
+  RooDataSet *initGeneratedDataset(const RooArgSet &vars, RooArgSet *&cloneSet,
+				   RooAbsPdf *&pdfClone) const;
+  void generateEvent(const RooArgSet &whatVars);
 
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral

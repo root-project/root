@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.5 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.6 2001/05/11 23:37:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,6 +28,15 @@ static TVirtualFitter *_theFitter(0);
 
 RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) 
 {
+  if(0 == data) {
+    cout << "RooFitContext: cannot create without valid dataset" << endl;
+    return;
+  }
+  if(0 == pdf) {
+    cout << "RooFitContext: cannot create without valid PDF" << endl;
+    return;
+  }
+
   // Clone data 
   _dataClone = new RooDataSet(*data) ;
 

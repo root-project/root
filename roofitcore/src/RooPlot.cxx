@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.11 2001/05/11 00:45:49 david Exp $
+ *    File: $Id: RooPlot.cc,v 1.12 2001/05/11 21:06:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -27,7 +27,6 @@
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooPlotable.hh"
-#include "RooFitCore/RooHist.hh"
 #include "RooFitCore/RooArgSet.hh"
 
 #include "TAttLine.h"
@@ -42,7 +41,7 @@
 ClassImp(RooPlot)
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.11 2001/05/11 00:45:49 david Exp $";
+"$Id: RooPlot.cc,v 1.12 2001/05/11 21:06:22 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
