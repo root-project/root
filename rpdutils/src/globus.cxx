@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.8 2004/04/20 15:21:50 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.9 2004/07/04 17:48:43 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -67,8 +67,10 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
    int retval = 1;
    std::string HostCertConf = "/hostcert.conf";
    char *certdir_default  = "/etc/grid-security/certificates";
-   char *hostcert_default = "/etc/grid-security/hostcert.pem";
-   char *hostkey_default  = "/etc/grid-security/hostkey.pem";
+   char *hostcert_default[2] = {"/etc/grid-security/root/rootcert.pem",
+                                "/etc/grid-security/hostcert.pem"};
+   char *hostkey_default[2] = {"/etc/grid-security/root/rootkey.pem",
+                               "/etc/grid-security/hostkey.pem"};
    char *gridmap_default  = "/etc/grid-security/grid-mapfile";
    char dir_def[kMAXPATHLEN] = { 0 }, cert_def[kMAXPATHLEN] = { 0 },
         key_def[kMAXPATHLEN] = { 0 }, map_def[kMAXPATHLEN]  = { 0 };
@@ -77,6 +79,7 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
    X509 *xcert = 0;
    FILE *fcert = 0;
    char *issuer_name = 0;
+   int id = 0;
 
    if (gDebug > 2)
       ErrorInfo("GlbsToolCheckCert: enter: %s", ClientIssuerName);
@@ -121,31 +124,31 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
             if (nw == 1) {
                if (dir_def[0] == '*')
                   strcpy(dir_def, certdir_default);
-               strcpy(cert_def, hostcert_default);
-               strcpy(key_def, hostkey_default);
+               strcpy(cert_def, hostcert_default[0]);
+               strcpy(key_def, hostkey_default[0]);
                strcpy(map_def, gridmap_default);
             } else if (nw == 2) {
                if (dir_def[0] == '*')
                   strcpy(dir_def, certdir_default);
                if (cert_def[0] == '*')
-                  strcpy(cert_def, hostcert_default);
-               strcpy(key_def, hostkey_default);
+                  strcpy(cert_def, hostcert_default[0]);
+               strcpy(key_def, hostkey_default[0]);
                strcpy(map_def, gridmap_default);
             } else if (nw == 3) {
                if (dir_def[0] == '*')
                   strcpy(dir_def, certdir_default);
                if (cert_def[0] == '*')
-                  strcpy(cert_def, hostcert_default);
+                  strcpy(cert_def, hostcert_default[0]);
                if (key_def[0] == '*')
-                  strcpy(key_def, hostkey_default);
+                  strcpy(key_def, hostkey_default[0]);
                strcpy(map_def, gridmap_default);
             } else if (nw == 4) {
                if (dir_def[0] == '*')
                   strcpy(dir_def, certdir_default);
                if (cert_def[0] == '*')
-                  strcpy(cert_def, hostcert_default);
+                  strcpy(cert_def, hostcert_default[0]);
                if (key_def[0] == '*')
-                  strcpy(key_def, hostkey_default);
+                  strcpy(key_def, hostkey_default[0]);
                if (map_def[0] == '*')
                   strcpy(map_def, gridmap_default);
             }
@@ -169,7 +172,7 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
                      if (!PEM_read_X509(fcert, &xcert, 0, 0)) {
                         ErrorInfo("GlbsToolCheckCert: unable to load host"
                                   " certificate (%s)", cert_tmp);
-                        goto goout;;
+                        goto goout;
                      }
                      // Get the issuer name
                      issuer_name =
@@ -223,66 +226,77 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
       ErrorInfo
           ("GlbsToolCheckCert: Try to use env definitions or defaults ...");
 
-   // We have not found a goof one: try with these envs definitions
+   // We have not found a good one: try with these envs definitions
    // or the defaults ...
    if (getenv("X509_CERT_DIR") != 0) {
       strcpy(dir_def, getenv("X509_CERT_DIR"));
    } else
       strcpy(dir_def, certdir_default);
-   if (getenv("X509_USER_CERT") != 0) {
-      strcpy(cert_def, getenv("X509_USER_CERT"));
-   } else
-      strcpy(cert_def, hostcert_default);
-   if (getenv("X509_USER_KEY") != 0) {
-      strcpy(key_def, getenv("X509_USER_KEY"));
-   } else
-      strcpy(key_def, hostkey_default);
    if (getenv("GRIDMAP") != 0) {
       strcpy(map_def, getenv("GRIDMAP"));
    } else
       strcpy(map_def, gridmap_default);
-
    // Expand for test if needed
    dir_tmp  = GlbsToolExpand(dir_def);
-   cert_tmp = GlbsToolExpand(cert_def);
-   key_tmp  = GlbsToolExpand(key_def);
    map_tmp  = GlbsToolExpand(map_def);
 
-   if (!access(dir_tmp, R_OK)) {
-      if (!access(cert_tmp, R_OK)) {
-         if (!access(key_tmp, R_OK)) {
-            // Load certificate
-            fcert = fopen(cert_tmp, "r");
-            if (!PEM_read_X509(fcert, &xcert, 0, 0)) {
-               ErrorInfo("GlbsToolCheckCert: unable to load host"
-                         " certificate (%s)",cert_tmp);
+   // First the ROOT specific, then the host one
+   for ( id = 0; id < 2; id++) {
+      // Load certificate / key names
+      if (getenv("X509_USER_CERT") != 0) {
+         strcpy(cert_def, getenv("X509_USER_CERT"));
+      } else
+         strcpy(cert_def, hostcert_default[id]);
+      if (getenv("X509_USER_KEY") != 0) {
+         strcpy(key_def, getenv("X509_USER_KEY"));
+      } else
+         strcpy(key_def, hostkey_default[id]);
+      
+      // Expand for test if needed
+      cert_tmp = GlbsToolExpand(cert_def);
+      key_tmp  = GlbsToolExpand(key_def);
+
+      if (!access(dir_tmp, R_OK)) {
+         if (!access(cert_tmp, R_OK)) {
+            if (!access(key_tmp, R_OK)) {
+               // Load certificate
+               fcert = fopen(cert_tmp, "r");
+               if (!PEM_read_X509(fcert, &xcert, 0, 0)) {
+                  ErrorInfo("GlbsToolCheckCert: unable to load host"
+                            " certificate (%s)",cert_tmp);
+                  goto goout;
+               }
+               // Get the issuer name
+               issuer_name =
+                   X509_NAME_oneline(X509_get_issuer_name(xcert), 0, 0);
+               if (strstr(issuer_name, ClientIssuerName) != 0) {
+                  CertFound = 1;
+                  if (gDebug > 2)
+                     ErrorInfo
+                         ("GlbsToolCheckCert: Issuer Subject: %s matches",
+                          issuer_name);
+                  goto found;
+               }
+            } else {
+               ErrorInfo("GlbsToolCheckCert: default hostkey file not"
+                         " existing or not readable (%s)", key_tmp);
                goto goout;
             }
-            // Get the issuer name
-            issuer_name =
-                X509_NAME_oneline(X509_get_issuer_name(xcert), 0, 0);
-            if (strstr(issuer_name, ClientIssuerName) != 0) {
-               CertFound = 1;
-               if (gDebug > 2)
-                  ErrorInfo
-                      ("GlbsToolCheckCert: Issuer Subject: %s matches",
-                       issuer_name);
-               goto found;
-            }
          } else {
-            ErrorInfo("GlbsToolCheckCert: default hostkey file not"
-                      " existing or not readable (%s)", key_tmp);
+            ErrorInfo("GlbsToolCheckCert: default hostcert file not"
+                      " existing or not readable (%s)",cert_tmp);
             goto goout;
          }
       } else {
-         ErrorInfo("GlbsToolCheckCert: default hostcert file not"
-                   " existing or not readable (%s)",cert_tmp);
+         ErrorInfo("GlbsToolCheckCert: default cert directory not"
+                   " existing or not readable (%s)",dir_tmp);
          goto goout;
       }
-   } else {
-      ErrorInfo("GlbsToolCheckCert: default cert directory not"
-                " existing or not readable (%s)",dir_tmp);
-      goto goout;
+      // Release memory before going to next set
+      if (cert_tmp)
+         delete[]cert_tmp;
+      if (key_tmp)
+         delete[]key_tmp;
    }
 
  goout:

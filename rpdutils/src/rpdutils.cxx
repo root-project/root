@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.70 2005/02/18 14:44:40 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.71 2005/02/21 11:13:00 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -3835,15 +3835,16 @@ int RpdGlobusAuth(const char *sstr)
    // Now we open the certificates and we check if we are able to
    // autheticate the client. In the affirmative case we initialize
    // our credentials and we send our subject name to the client ...
-   // NB: we try first the user proxies; if it does not work we
-   // try using the local host certificates; but only if we have
-   // the rigth privileges
+   // NB: we look first for a specific certificate for ROOT (default
+   // location under /etc/grid-security/root); if this is does not
+   // work we try to open the host certificate, which however may 
+   // require super-user privileges; finally we check if valid proxies
+   // (for the user who started the server) are available.
    char *subject_name;
    int CertRc = 0;
-   CertRc = GlbsToolCheckProxy(client_issuer_name, &subject_name);
-   if (CertRc && getuid() == 0)
-     CertRc = GlbsToolCheckCert(client_issuer_name, &subject_name);
-
+   CertRc = GlbsToolCheckCert(client_issuer_name, &subject_name);
+   if (CertRc)
+      CertRc = GlbsToolCheckProxy(client_issuer_name, &subject_name);
    if (CertRc) {
       ErrorInfo("RpdGlobusAuth: %s (%s)",
                 "host does not seem to have certificate for the requested CA",
