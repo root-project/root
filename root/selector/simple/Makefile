@@ -26,7 +26,7 @@ testLoadingSelector.log: testSel_C.$(DllSuf)  testSelector_C.$(DllSuf)
 
 
 removepwd: 
-	$(CMDECHO)sed 's|$(PWD)||g' testLoadingSelector.log >& testLoadingSelector.temp
+	$(CMDECHO)sed 's|<ACLiC>: unloading [/\\].*[/\\]|<ACLiC>: unloading |g' testLoadingSelector.log >& testLoadingSelector.temp
 	$(CMDECHO)mv testLoadingSelector.temp testLoadingSelector.log
 
 # ..... | sed -s/$(PWD)//g > testLoadingSelector.log
