@@ -336,8 +336,8 @@ Usage:     $0 <architecture> [flag=value]
    --cintincdir    CINT interpeted headers   (<datadir>/cint)
    --datadir       Data installation dir     (<prefix>/share/root)
    --docdir        Documentation             (<prefix>/share/doc/root)
-   --etcdir        Config installation dir   (/etc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
+   --etcdir        Config installation dir   (/etc/root)
    --fontdir       Font installation dir     (<datadir>/fonts)
    --iconpath      Icon installation dir     (<datadir>/icons)
    --incdir        Header installation dir   (<prefix>/include/root)
@@ -548,6 +548,7 @@ if test $# -gt 0 ; then
       --docdir=*)     haveconfig=-DHAVE_CONFIG ; docdir=$optarg      ;;
       --elispdir=*)   haveconfig=-DHAVE_CONFIG ; elispdir=$optarg    ;;
       --etcdir=*)     haveconfig=-DHAVE_CONFIG ; etcdir=$optarg      ;;
+      --fontdir=*)    haveconfig=-DHAVE_CONFIG ; fontdir=$optarg     ;;
       --iconpath=*)   haveconfig=-DHAVE_CONFIG ; iconpath=$optarg    ;;
       --incdir=*)     haveconfig=-DHAVE_CONFIG ; incdir=$optarg      ;;
       --libdir=*)     haveconfig=-DHAVE_CONFIG ; libdir=$optarg      ;;
