@@ -120,33 +120,33 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 
 
 // Some Printout
-   printf("   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-   printf("   +                                                                             +\n");
-   printf("   +                         TestAuth.C                                          +\n");
-   printf("   +                                                                             +\n");
-   printf("   +                Test of authentication methods                               +\n");
-   printf("   +                                                                             +\n");
-   printf("   +   Syntax:                                                                   +\n");
-   printf("   +                                                                             +\n");
-   printf("   + .x TestAuth.C(<port>,\"<user>\",\"<krb5_princ>\",\"<globus_det>\")                +\n");
-   printf("   +                                                                             +\n");
-   printf("   +     <port>          = rootd port (default 1094)                             +\n");
-   printf("   +     <user>          = login user name for the test                          +\n");
-   printf("   +                      (default from getpwuid)                                +\n");
-   printf("   +     <krb5_princ>    = Principal to be used for Krb5 authentication          +\n");
-   printf("   +                       in the form user@THE.REA.LM                           +\n");
-   printf("   +                      ( default: <running_user@Default_Realm with            +\n");
-   printf("   +                                 Default_realm taken from /etc/krb5.conf     +\n");
-   printf("   +                                 or the $KRB5_CONFIG file )                  +\n");
-   printf("   +     <globus_det>    = details for the globus authentication                 +\n");
-   printf("   +                      ( default ad:certificates cd:$HOME/.globus             +\n");
-   printf("   +                                cf:usercert.pem kf:userkey.pem )             +\n");
-   printf("   +                                                                             +\n");
-   printf("   +                     >>> MAKE SURE that rootd is running <<<                 +\n");
-   printf("   +                                                                             +\n");
-   printf("   +             See $ROOTSYS/README/README.AUTH for additional details          +\n");
-   printf("   +                                                                             +\n");
-   printf("   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n\n");
+   printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+   printf("+                                                                             +\n");
+   printf("+                         TestAuth.C                                          +\n");
+   printf("+                                                                             +\n");
+   printf("+                Test of authentication methods                               +\n");
+   printf("+                                                                             +\n");
+   printf("+   Syntax:                                                                   +\n");
+   printf("+                                                                             +\n");
+   printf("+ .x TestAuth.C(<port>,\"<user>\",\"<krb5_princ>\",\"<globus_det>\")                +\n");
+   printf("+                                                                             +\n");
+   printf("+     <port>          = rootd port (default 1094)                             +\n");
+   printf("+     <user>          = login user name for the test                          +\n");
+   printf("+                      (default from getpwuid)                                +\n");
+   printf("+     <krb5_princ>    = Principal to be used for Krb5 authentication          +\n");
+   printf("+                       in the form user@THE.REA.LM                           +\n");
+   printf("+                      ( default: <running_user@Default_Realm with            +\n");
+   printf("+                                 Default_realm taken from /etc/krb5.conf     +\n");
+   printf("+                                 or the $KRB5_CONFIG file )                  +\n");
+   printf("+     <globus_det>    = details for the globus authentication                 +\n");
+   printf("+                      ( default ad:certificates cd:$HOME/.globus             +\n");
+   printf("+                                cf:usercert.pem kf:userkey.pem )             +\n");
+   printf("+                                                                             +\n");
+   printf("+                     >>> MAKE SURE that rootd is running <<<                 +\n");
+   printf("+                                                                             +\n");
+   printf("+             See $ROOTSYS/README/README.AUTH for additional details          +\n");
+   printf("+                                                                             +\n");
+   printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n\n");
 
 // Useful variables
 
@@ -257,19 +257,19 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    }
 
 // Test parameter Printout
-   printf("\n   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-   printf("   +                                                                             +\n");
-   printf("   +   Basic test parameters:                                                    +\n");
-   printf("   +                                                                             +\n");
-   printf("   +   Local User is          : %s \n",User.Data());
-   printf("   +   Authentication Details : %s \n",Details.Data());
-   printf("   +   Current directory is   : %s \n",gSystem->WorkingDirectory());
-   printf("   +   TFTP string            : %s \n",TFTPPath.Data());
+   printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+   printf("+                                                                             +\n");
+   printf("+   Basic test parameters:                                                    +\n");
+   printf("+                                                                             +\n");
+   printf("+   Local User is          : %s \n",User.Data());
+   printf("+   Authentication Details : %s \n",Details.Data());
+   printf("+   Current directory is   : %s \n",gSystem->WorkingDirectory());
+   printf("+   TFTP string            : %s \n",TFTPPath.Data());
    if (HaveMeth[2]) {
-      printf("   +   Krb5 Details           : %s \n",Krb5Details.Data());
+      printf("+   Krb5 Details           : %s \n",Krb5Details.Data());
    }
-   printf("   +                                                                             +\n");
-   printf("   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+   printf("+                                                                             +\n");
+   printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 
 // Read local <RootAuthrc> now to avoid to be later superseeded
    TAuthenticate::ReadRootAuthrc();
@@ -278,8 +278,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 
    TFTP *t1 = 0;
 // UsrPwd method
-   printf("   +                                                                             +\n");
-   printf("   +   Testing UsrPwd ...                                                        +\n");
+   printf("+                                                                             +\n");
+   printf("+   Testing UsrPwd ...                                                        +\n");
 
    // Check if by any chance locally there is already an THostAuth matching
    // the one we want to use for testing
@@ -334,8 +334,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 
 // SRP method
    if ( HaveMeth[1] ) {
-      printf("   +                                                                             +\n");
-      printf("   +   Testing SRP ...                                                           +\n");
+      printf("+                                                                             +\n");
+      printf("+   Testing SRP ...                                                           +\n");
 
      // Add relevant info to HostAuth
       ha->AddFirst(1,Details.Data());
@@ -375,8 +375,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    THostAuth *hak = 0;
    THostAuth *hasv2 = 0;
    if ( HaveMeth[2] ) {
-      printf("   +                                                                             +\n");
-      printf("   +   Testing Krb5 ...                                                          +\n");
+      printf("+                                                                             +\n");
+      printf("+   Testing Krb5 ...                                                          +\n");
 
 
       // Check if by any chance locally there is already an THostAuth matching
@@ -434,8 +434,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 
 // Globus method
    if ( HaveMeth[3] ) {
-      printf("   +                                                                             +\n");
-      printf("   +   Testing Globus ...                                                        +\n");
+      printf("+                                                                             +\n");
+      printf("+   Testing Globus ...                                                        +\n");
 
      // Add relevant info to HostAuth
       ha->AddFirst(3,GlobusDetails.Data());
@@ -488,8 +488,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 // SSH method
 
    if ( HaveMeth[4] ) {
-      printf("   +                                                                             +\n");
-      printf("   +   Testing SSH ...                                                           +\n");
+      printf("+                                                                             +\n");
+      printf("+   Testing SSH ...                                                           +\n");
 
      // Add relevant info to HostAuth
       ha->AddFirst(4,Details.Data());
@@ -526,8 +526,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 
 
 // Rfio method
-   printf("   +                                                                             +\n");
-   printf("   +   Testing UidGid ...                                                        +\n");
+   printf("+                                                                             +\n");
+   printf("+   Testing UidGid ...                                                        +\n");
 
    // Add relevant info to HostAuth
    ha->AddFirst(5,Details.Data());
@@ -549,8 +549,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    // remove method from available list
    ha->RemoveMethod(5);
 
-   printf("   +                                                                             +\n");
-   printf("   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+   printf("+                                                                             +\n");
+   printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 
    // Print available host auth info
    if (lDebug > 0)
@@ -571,20 +571,20 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    }
 
 // Final Printout
-   printf("\n   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-   printf("   +                                                                             +\n");
-   printf("   +   Result of the tests:                                                      +\n");
-   printf("   +                                                                             +\n");
+   printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+   printf("+                                                                             +\n");
+   printf("+   Result of the tests:                                                      +\n");
+   printf("+                                                                             +\n");
    char status[4][20] = {"failed!","successful!","not testable","not tested"};
    int i = 0;
    for( i=0; i<6; i++ ) {
      if (HaveMeth[i] && TestMeth[i] < 2) {
        if (i < 5) {
-          printf("   +   Method: %d %8s: %11s (reuse: %11s)                      +\n",i,
+          printf("+   Method: %d %8s: %11s (reuse: %11s)                      +\n",i,
                          Form("(%s)",TAuthenticate::GetAuthMethod(i)),
                          status[TestMeth[i]],status[TestReUse[i]]);
        } else
-          printf("   +   Method: %d %8s: %11s                                           +\n",i,
+          printf("+   Method: %d %8s: %11s                                           +\n",i,
                          Form("(%s)",TAuthenticate::GetAuthMethod(i)),
                          status[TestMeth[i]]);
      }
@@ -593,17 +593,17 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    for( i=0; i<6; i++ ) {
      if (HaveMeth[i] && TestMeth[i] > 1) {
         if (NotPrinted) {
-           printf("   +                                                                             +\n");
-           printf("   +   Could not be tested:                                                      +\n");
-           printf("   +                                                                             +\n");
+           printf("+                                                                             +\n");
+           printf("+   Could not be tested:                                                      +\n");
+           printf("+                                                                             +\n");
            NotPrinted = kFALSE;
         }
-        printf("   +   Method: %d %8s: %11s                      +\n",i,
+        printf("+   Method: %d %8s: %11s                      +\n",i,
                        Form("(%s)",TAuthenticate::GetAuthMethod(i)),
                        status[TestMeth[i]]);
      }
    }
-   printf("   +                                                                             +\n");
-   printf("   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+   printf("+                                                                             +\n");
+   printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 
 }
