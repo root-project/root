@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.120 2005/03/11 18:33:47 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.121 2005/03/16 17:29:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3309,9 +3309,33 @@ int TUnixSystem::UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
       *bsize = statfsbuf.f_bsize;
       *blocks = statfsbuf.f_blocks;
       *bfree = statfsbuf.f_bfree;
- #else
+#else
    if (statfs((char*)path, &statfsbuf) == 0) {
+#ifdef R__OBSD
+      // Convert BSD filesystem names to Linux filesystem type numbers
+      // where possible.  Linux statfs uses a value of -1 to indicate
+      // an unsupported field.
+
+      if (!strcmp(statfsbuf->f_fstypename, MOUNT_FFS) ||
+          !strcmp(statfsbuf->f_fstypename, MOUNT_MFS))
+         *id = 0x11954;
+      else if (!strcmp(statfsbuf->f_fstypename, MOUNT_NFS))
+         *id = 0x6969;
+      else if (!strcmp(statfsbuf->f_fstypename, MOUNT_MSDOS))
+         *id = 0x4d44;
+      else if (!strcmp(statfsbuf->f_fstypename, MOUNT_PROCFS))
+         *id = 0x9fa0;
+      else if (!strcmp(statfsbuf->f_fstypename, MOUNT_EXT2FS))
+         *id = 0xef53;
+      else if (!strcmp(statfsbuf->f_fstypename, MOUNT_CD9660))
+         *id = 0x9660;
+      else if (!strcmp(statfsbuf->f_fstypename, MOUNT_NCPFS))
+         *id = 0x6969;
+      else
+         *id = -1;
+#else
       *id = statfsbuf.f_type;
+#endif
       *bsize = statfsbuf.f_bsize;
       *blocks = statfsbuf.f_blocks;
       *bfree = statfsbuf.f_bavail;
