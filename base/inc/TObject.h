@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.3 2000/07/29 10:54:23 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -79,7 +79,6 @@ private:
    UInt_t         fBits;       //bit field status word
 
    static Long_t  fgDtorOnly;    //object for which to call dtor only (i.e. no delete)
-   static Int_t   fgDirLevel;    //indentation level for ls()
    static Bool_t  fgObjectStat;  //if true keep track of objects in TObjectTable
 
 protected:
@@ -113,7 +112,6 @@ public:
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
    virtual TObject    *Clone();
-   virtual void        Close(Option_t *option="");
    virtual Int_t       Compare(TObject *obj);
    virtual void        Copy(TObject &object);
    virtual void        Delete(Option_t *option=""); // *MENU*
@@ -125,6 +123,8 @@ public:
    virtual void        Execute(const char *method,  const char *params);
    virtual void        Execute(TMethod *method, TObjArray *params);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual TObject    *FindObject(const char *name) const;
+   virtual TObject    *FindObject(TObject *obj) const;
    virtual Option_t   *GetDrawOption() const;
    virtual UInt_t      GetUniqueID() const;
    virtual const char *GetName() const;
@@ -137,15 +137,13 @@ public:
    virtual Bool_t      InheritsFrom(const char *classname) const;
    virtual Bool_t      InheritsFrom(const TClass *cl) const;
    virtual void        Inspect(); // *MENU*
-   virtual Bool_t      IsFolder();
+   virtual Bool_t      IsFolder() const;
    virtual Bool_t      IsEqual(TObject *obj);
    virtual Bool_t      IsSortable() const { return kFALSE; }
-   virtual Bool_t      IsModified() { return TestBit(kModified); }
            Bool_t      IsOnHeap() const { return TestBit(kIsOnHeap); }
            Bool_t      IsZombie() const { return TestBit(kZombie); }
    virtual Bool_t      Notify();
    virtual void        ls(Option_t *option="");
-   virtual void        Modified(Bool_t flag=kTRUE) {SetBit(kModified,flag); }
    virtual void        Paint(Option_t *option="");
    virtual void        Pop();
    virtual void        Print(Option_t *option="");
@@ -185,15 +183,10 @@ public:
    void     MayNotUse(const char *method) const;
 
    //---- static functions
-   static Int_t     DecreaseDirLevel();
    static Long_t    GetDtorOnly();
    static void      SetDtorOnly(void *obj);
-   static Int_t     GetDirLevel();
-   static void      SetDirLevel(Int_t level=0);
    static Bool_t    GetObjectStat();
    static void      SetObjectStat(Bool_t stat);
-   static Int_t     IncreaseDirLevel();
-   static void      IndentLevel();
 
    ClassDef(TObject,1)  //Basic ROOT object
 };

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.3 2000/07/29 10:54:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.4 2000/08/20 14:49:21 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -55,7 +55,6 @@
 
 
 Long_t TObject::fgDtorOnly = 0;
-Int_t  TObject::fgDirLevel = 0;
 Bool_t TObject::fgObjectStat = kTRUE;
 
 
@@ -293,15 +292,6 @@ TObject *TObject::Clone()
 }
 
 //______________________________________________________________________________
-void TObject::Close(Option_t *)
-{
-   // Close abstract method. Must be overridden in case an object needs to
-   // to something in case it is being removed from collections.
-
-   AbstractMethod("Close");
-}
-
-//______________________________________________________________________________
 Int_t TObject::Compare(TObject *)
 {
    // Compare abstract method. Must be overridden if a class wants to be able
@@ -449,6 +439,26 @@ void TObject::ExecuteEvent(Int_t, Int_t, Int_t)
 }
 
 //______________________________________________________________________________
+TObject *TObject::FindObject(const char *) const
+{
+// must be redefined in derived classes
+// this function is typycally used with TCollections, but can also be used
+// to find an object by name inside this object
+   
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TObject::FindObject(TObject *) const
+{
+// must be redefined in derived classes
+// this function is typycally used with TCollections, but can also be used
+// to find an object inside this object
+   
+   return 0;
+}
+
+//______________________________________________________________________________
 Option_t *TObject::GetDrawOption() const
 {
    // Get option used by the graphics system to draw this object.
@@ -574,7 +584,7 @@ void TObject::Inspect()
 }
 
 //______________________________________________________________________________
-Bool_t TObject::IsFolder()
+Bool_t TObject::IsFolder() const
 {
    // Returns kTRUE in case object contains browsable objects (like containers
    // or lists of other objects).
@@ -598,7 +608,7 @@ void TObject::ls(Option_t *)
    // The ls function lists the contents of a class on stdout. Ls output
    // is typically much less verbose then Dump().
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
         << Int_t(TestBit(kCanDelete)) << endl;
 }
@@ -940,38 +950,6 @@ void TObject::SetObjectStat(Bool_t stat)
    // Turn on/off tracking of objects in the TObjectTable.
 
    fgObjectStat = stat;
-}
-
-//______________________________________________________________________________
-void TObject::IndentLevel()
-{
-   // Functions used by ls() to indent an object hierarchy.
-
-   for (int i = 0; i < fgDirLevel; i++) cout.put(' ');
-}
-
-//______________________________________________________________________________
-Int_t TObject::GetDirLevel()
-{
-   return fgDirLevel;
-}
-
-//______________________________________________________________________________
-Int_t TObject::DecreaseDirLevel()
-{
-   return --fgDirLevel;
-}
-
-//______________________________________________________________________________
-Int_t TObject::IncreaseDirLevel()
-{
-   return ++fgDirLevel;
-}
-
-//______________________________________________________________________________
-void TObject::SetDirLevel(Int_t level)
-{
-   fgDirLevel = level;
 }
 
 //______________________________________________________________________________
