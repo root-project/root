@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.31 2001/04/12 08:21:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.32 2001/04/20 17:53:18 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -45,10 +45,7 @@
 //
 //---------------------Example of a main program--------------------------------
 //
-//       #include "TROOT.h"
 //       #include "TRint.h"
-//
-//       TROOT root("Rint", "The ROOT Interactive Interface");
 //
 //       int main(int argc, char **argv)
 //       {
@@ -358,7 +355,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    InitThreads();
 
    // Load RQ_OBJECT.h in interpreter (allows signal/slot programming, like Qt)
-   TQObject::LoadRQ_OBJECT();
+//   TQObject::LoadRQ_OBJECT();
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");

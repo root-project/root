@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.3 2000/08/20 14:42:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.4 2001/03/06 12:15:46 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -163,6 +163,10 @@ TApplication::TApplication(const char *appClassName,
    // Make sure all registered dictionaries have been initialized
    gInterpreter->InitializeDictionaries();
 
+   // Load RQ_OBJECT.h in interpreter (allows signal/slot programming, like Qt)
+   TQObject::LoadRQ_OBJECT();
+
+   // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
