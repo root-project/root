@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.18 2002/12/05 15:31:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.19 2003/09/12 15:54:16 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1350,6 +1350,10 @@ Bool_t TString::IsAscii() const
 //______________________________________________________________________________
 Bool_t TString::EndsWith(const char *s, ECaseCompare cmp) const
 {
+   // Return true if string ends with the specified string.
+
+   if (!s) return kTRUE;
+
    Ssiz_t l = strlen(s);
    if (l > Length()) return kFALSE;
    const char *s2 = Data() + Length() - l;
