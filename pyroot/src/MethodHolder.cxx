@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.19 2004/08/13 06:02:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.20 2004/08/13 08:05:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -94,6 +94,22 @@ namespace {
 
    // done, declare success
       return true;
+   }
+
+   bool tstring_convert( PyObject* obj, G__CallFunc* func, void*& buf ) {
+   // all similar to cstring, see above
+      const char* s = PyString_AsString( obj );
+      if ( PyErr_Occurred() )
+         return false;
+
+      delete[] reinterpret_cast< TString* >( buf );
+      TString* p = new TString( s );
+      buf = reinterpret_cast< void* >( p );
+
+      func->SetArg( reinterpret_cast< long >( p ) );
+
+      return true;
+
    }
 
    bool void_convert( PyObject*, G__CallFunc* func, void*& ) {
@@ -249,6 +265,7 @@ namespace {
       ncp_t( "void",               &void_convert                      ),
       ncp_t( "bool",               &long_convert                      ),
       ncp_t( "const char*",        &cstring_convert                   ),
+      ncp_t( "TString",            &tstring_convert                   ),
 
    // string type
       ncp_t( "char*",              &cstring_convert                   ),
