@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.20 2001/06/07 08:56:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.21 2001/08/03 11:53:26 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -127,7 +127,7 @@ TChain::~TChain()
 Int_t TChain::Add(TChain *chain)
 {
 // Add all files referenced by the TChain chain to this chain.
-   
+
    //Check enough space in fTreeOffset
    if (fNtrees+chain->GetNtrees() >= fTreeOffsetLen) {
       fTreeOffsetLen += 2*chain->GetNtrees();
@@ -157,22 +157,22 @@ Int_t TChain::Add(TChain *chain)
 //______________________________________________________________________________
 Int_t TChain::Add(const char *name, Int_t nentries)
 {
-//       Add a new file to this chain.
-//    name may have the following format:
-//       //machine/file_name.root/subdir/tree_name
-//      machine, subdir and tree_name are optional. If tree_name is missing,
-//      the chain name will be assumed.
-//    name may use the wildcarding notation, eg "xxx*.root" means all files
-//    starting with xxx in the current file system directory.
-// 
-//    if nentries < 0, the file is connected and the tree header read in memory
-//    to get the number of entries.
-//    if (nentries >= 0, the file is not connected, nentries is assumed to be
-//    the number of entries in the file. In this case, no check is made that
-//    the file exists and the Tree existing in the file. This second mode
-//    is interesting in case the number of entries in the file is already stored
-//    in a run data base for example.
-//  NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
+// Add a new file to this chain.
+// Argument name may have the following format:
+//   //machine/file_name.root/subdir/tree_name
+// machine, subdir and tree_name are optional. If tree_name is missing,
+// the chain name will be assumed.
+// Name may use the wildcarding notation, eg "xxx*.root" means all files
+// starting with xxx in the current file system directory.
+//
+// If nentries < 0, the file is connected and the tree header read in memory
+// to get the number of entries.
+// If (nentries >= 0, the file is not connected, nentries is assumed to be
+// the number of entries in the file. In this case, no check is made that
+// the file exists and the Tree existing in the file. This second mode
+// is interesting in case the number of entries in the file is already stored
+// in a run data base for example.
+// NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
 
    // case with one single file
    if (strchr(name,'*') == 0) {
@@ -186,8 +186,8 @@ Int_t TChain::Add(const char *name, Int_t nentries)
    strcpy(aname,name);
    char *dot = (char*)strstr(aname,".root");
 
-   const char *behind_dot_root = NULL;
-   
+   const char *behind_dot_root = 0;
+
    if (dot) {
       if (dot[5] == '/') behind_dot_root = dot + 6;
       *dot = 0;
@@ -202,7 +202,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
       strcpy(aname,gSystem->WorkingDirectory());
       slash = (char*)name;
    }
-   
+
    const char *file;
    void *dir = gSystem->OpenDirectory(gSystem->ExpandPathName(aname));
 
@@ -213,13 +213,13 @@ Int_t TChain::Add(const char *name, Int_t nentries)
          //if (IsDirectory(file)) continue;
          TString s = file;
          if (strcmp(slash,file) && s.Index(re) == kNPOS) continue;
-         if (behind_dot_root != NULL && *behind_dot_root != 0)       
+         if (behind_dot_root != 0 && *behind_dot_root != 0)
             nf += AddFile(Form("%s/%s/%s",aname,file,behind_dot_root),-1);
          else
             nf += AddFile(Form("%s/%s",aname,file),-1);
       }
       gSystem->FreeDirectory(dir);
-   }   
+   }
    return nf;
 }
 
@@ -318,17 +318,17 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
 {
 // Add a TFriendElement to the list of friends of this chain.
 //
-//   A TChain has a list of friends similar to a tree (see TTree::AddFriend). 
-// You can add a friend to a chain with the TChain::AddFriend method, and you 
+//   A TChain has a list of friends similar to a tree (see TTree::AddFriend).
+// You can add a friend to a chain with the TChain::AddFriend method, and you
 // can retrieve the list of friends with TChain::GetListOfFriends.
 // This example has four chains each has 20 ROOT trees from 20 ROOT files.
-// 
+//
 // TChain ch("t"); // a chain with 20 trees from 20 files
-// TChain ch1("t1");  
+// TChain ch1("t1");
 // TChain ch2("t2");
 // TChain ch3("t3");
 // Now we can add the friends to the first chain.
-// 
+//
 // ch.AddFriend("t1")
 // ch.AddFriend("t2")
 // ch.AddFriend("t3")
@@ -339,29 +339,29 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
 */
 //End_Html
 //
-// The parameter is the name of friend chain (the name of a chain is always 
+// The parameter is the name of friend chain (the name of a chain is always
 // the name of the tree from which it was created).
-// The original chain has access to all variable in its friends. 
-// We can use the TChain::Draw method as if the values in the friends were 
+// The original chain has access to all variable in its friends.
+// We can use the TChain::Draw method as if the values in the friends were
 // in the original chain.
 // To specify the chain to use in the Draw method, use the syntax:
-// 
+//
 // <chainname>.<branchname>.<varname>
-// If the variable name is enough to uniquely identify the variable, you can 
+// If the variable name is enough to uniquely identify the variable, you can
 // leave out the chain and/or branch name.
-// For example, this generates a 3-d scatter plot of variable "var" in the 
+// For example, this generates a 3-d scatter plot of variable "var" in the
 // TChain ch versus variable v1 in TChain t1 versus variable v2 in TChain t2.
-// 
+//
 // ch.Draw("var:t1.v1:t2.v2");
-// When a TChain::Draw is executed, an automatic call to TTree::AddFriend 
-// connects the trees in the chain. When a chain is deleted, its friend 
-// elements are also deleted. 
-// 
-// The number of entries in the friend must be equal or greater to the number 
-// of entries of the original chain. If the friend has fewer entries a warning 
+// When a TChain::Draw is executed, an automatic call to TTree::AddFriend
+// connects the trees in the chain. When a chain is deleted, its friend
+// elements are also deleted.
+//
+// The number of entries in the friend must be equal or greater to the number
+// of entries of the original chain. If the friend has fewer entries a warning
 // is given and the resulting histogram will have missing entries.
 // For additional information see TTree::AddFriend.
-    
+
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
    if (fe) {
@@ -377,7 +377,7 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
       }
    } else {
       Warning("AddFriend","Cannot add FriendElement %s",chain);
-   }   
+   }
    return fe;
 }
 
@@ -549,7 +549,7 @@ Int_t TChain::LoadTree(Int_t entry)
 //  The input argument entry is the entry serial number in the whole chain.
 //  The function finds the corresponding Tree and returns the entry number
 //  in this tree.
-   
+
    if (!fNtrees) return 1;
    if (entry < 0 || entry > fEntries) return -2;
 
@@ -601,7 +601,7 @@ Int_t TChain::LoadTree(Int_t entry)
 
    //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
    if (fPlayer) fPlayer->UpdateFormulaLeaves();
-   
+
    //Notify user if requested
    if (fNotify) fNotify->Notify();
 
@@ -894,7 +894,7 @@ void TChain::Streamer(TBuffer &b)
       }
       b.CheckByteCount(R__s, R__c, TChain::IsA());
       //====end of old versions
-      
+
    } else {
       TChain::Class()->WriteBuffer(b,this);
    }
