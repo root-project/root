@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.8 2002/12/18 08:07:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.9 2003/07/22 16:08:36 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TObjArray.h"
 #endif
 
+class TExMap;
 class TFile;
 
 class TProcessID : public TNamed {
@@ -39,6 +40,7 @@ protected:
    
    static TProcessID *fgPID;      //Pointer to current session ProcessID
    static TObjArray  *fgPIDs;     //Table of ProcessIDs
+   static TExMap     *fgObjPIDs;  //Table pointer to pids
    static UInt_t      fgNumber;   //Referenced objects count
   
   public:
@@ -60,7 +62,7 @@ protected:
    static TProcessID  *ReadProcessID(UShort_t pidf , TFile *file);
    static UShort_t     WriteProcessID(TProcessID *pid , TFile *file);
    static TProcessID  *GetProcessID(UShort_t pid);
-   static TProcessID  *GetProcessWithUID(UInt_t uid);
+   static TProcessID  *GetProcessWithUID(UInt_t uid,void *obj);
    static TProcessID  *GetSessionProcessID();
    static  UInt_t      GetObjectCount();
    static  Bool_t      IsValid(TProcessID *pid);

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.25 2004/01/30 13:58:48 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.26 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -237,7 +237,7 @@ void TRef::operator=(TObject *obj)
       } else {
          if (obj->TestBit(kIsReferenced)) {
             uid = obj->GetUniqueID();
-            fPID = TProcessID::GetProcessWithUID(uid);
+            fPID = TProcessID::GetProcessWithUID(uid,obj);
          } else {
             fPID = TProcessID::GetSessionProcessID();
             uid = TProcessID::AssignID(obj);

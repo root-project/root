@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.66 2004/10/11 22:46:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.67 2005/01/17 19:37:40 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -786,7 +786,11 @@ void TObject::Streamer(TBuffer &R__b)
       TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
       if (pid) {
          UInt_t gpid = pid->GetUniqueID();
-         fUniqueID = (fUniqueID & 0xffffff) + (gpid<<24);
+         if (gpid>=0xff) {
+            fUniqueID = fUniqueID | 0xff000000;
+         } else {
+            fUniqueID = ( fUniqueID & 0xffffff) + (gpid<<24);
+         }
          pid->PutObjectWithID(this);
       }
    } else {
@@ -802,7 +806,8 @@ void TObject::Streamer(TBuffer &R__b)
          if(table) table->Add(uid);
          R__b << uid;
          R__b << fBits;
-         TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID);
+         TProcessID *pid;
+         pid = TProcessID::GetProcessWithUID(fUniqueID,this);
          pidf = TProcessID::WriteProcessID(pid,file);
          R__b << pidf;
       }

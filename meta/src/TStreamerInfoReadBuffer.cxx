@@ -761,7 +761,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   if (pid!=0) {
                      TObject *obj = (TObject*)(arr[k]+eoffset);
                      UInt_t gpid = pid->GetUniqueID();
-                     UInt_t uid = (obj->GetUniqueID() & 0xffffff) + (gpid<<24);
+                     UInt_t uid;
+                     if (gpid>=0xff) {
+                        uid = obj->GetUniqueID() | 0xff000000;
+                     } else {
+                        uid = ( obj->GetUniqueID() & 0xffffff) + (gpid<<24);
+                     } 
                      obj->SetUniqueID(uid);
                      pid->PutObjectWithID(obj);
                   }

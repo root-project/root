@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.22 2003/07/22 16:08:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.23 2003/07/29 19:27:09 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -50,13 +50,21 @@
 #include "TROOT.h"
 #include "TFile.h"
 #include "TObjArray.h"
+#include "TExMap.h"
 
 TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
 TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
 UInt_t      TProcessID::fgNumber = 0; //Current referenced object instance count
-
+TExMap     *TProcessID::fgObjPIDs= 0; //Table (pointer,pids)
 ClassImp(TProcessID)
 
+//______________________________________________________________________________
+static inline ULong_t Void_Hash(const void *ptr)
+{
+   // Return hash value for this object.
+
+   return TMath::Hash(&ptr, sizeof(void*));
+}
 
 //______________________________________________________________________________
 TProcessID::TProcessID()
@@ -166,12 +174,18 @@ TProcessID *TProcessID::GetProcessID(UShort_t pid)
 }
 
 //______________________________________________________________________________
-TProcessID *TProcessID::GetProcessWithUID(UInt_t uid)
+TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, void *obj)
 {
 // static function returning a pointer to TProcessID with its pid
 // encoded in the highest byte of uid
 
    Int_t pid = (uid>>24)&0xff;
+   if (pid==0xff) {
+      // Look up the pid in the table (pointer,pid)
+      if (fgObjPIDs==0) return 0;
+      ULong_t hash = Void_Hash(obj);
+      pid = fgObjPIDs->GetValue(hash,(Long_t)obj);
+   }
    return (TProcessID*)fgPIDs->At(pid);
 }
 
@@ -226,13 +240,21 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
 //______________________________________________________________________________
 void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 {
-
    //stores the object at the uid th slot in the table of objects
    //The object uniqueid is set as well as its kMustCleanup bit
    //if (!fObjects) fObjects = new TObjArray(100);
+
    if (uid == 0) uid = obj->GetUniqueID() & 0xffffff;
    fObjects->AddAtAndExpand(obj,uid);
    obj->SetBit(kMustCleanup);
+   if ( (obj->GetUniqueID()&0xff000000)==0xff000000 ) {
+      // We have more than 255 pids we need to store this 
+      // pointer in the table(pointer,pid) since there is no
+      // more space in fUniqueID
+      if (fgObjPIDs==0) fgObjPIDs = new TExMap;
+      ULong_t hash = Void_Hash(obj);
+      fgObjPIDs->Add(hash, (Long_t)obj, GetUniqueID());
+   }
 }
 
 //______________________________________________________________________________

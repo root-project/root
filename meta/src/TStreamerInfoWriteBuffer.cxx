@@ -317,7 +317,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                TObject *obj = (TObject*)(arr[k]+eoffset);
                TRefTable *table = TRefTable::GetRefTable();
                if(table) table->Add(obj->GetUniqueID() & 0xffffff);
-               TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID());
+               TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID(),obj);
                UShort_t pidf = TProcessID::WriteProcessID(pid,(TFile *)b.GetParent());
                b << pidf;
             }
