@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.67 2004/07/08 08:19:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.68 2004/07/08 12:45:00 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1983,9 +1983,15 @@ Bool_t TMath::IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y)
    return kFALSE;
 }
 
+#if defined(_MSC_VER) && (_MSC_VER<1300)
+template <class Element, class Index> 
+void SortImp(Index n1, const Element *a, 
+             Index *index, Bool_t down) 
+#else
 template <class Element, class Index> 
 void TMath::SortImp(Index n1, const Element *a, 
                     Index *index, Bool_t down) 
+#endif
 {
    // Templated version of the Sort.
 
