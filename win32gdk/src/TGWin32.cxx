@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.14 2002/12/16 08:13:48 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.15 2003/01/22 11:23:04 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -115,6 +115,7 @@ static int gJoinStyle = GDK_JOIN_MITER;
 static char gDashList[4];
 static int gDashLength = 0;
 static int gDashOffset = 0;
+static int gDashSize = 0;
 
 //
 // Event masks
@@ -969,7 +970,7 @@ void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
          fThreadP.dashes[i] = (gint8) 0;
       fThreadP.GC = gGCdash;
       fThreadP.iParam = gDashOffset;
-      fThreadP.iParam2 = sizeof(gDashList);
+      fThreadP.iParam2 = gDashSize; // sizeof(gDashList);
       PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_DASHES, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
@@ -3355,6 +3356,7 @@ void TGWin32::SetLineType(int n, int *dash)
          if (++j >= n)
             j = 0;
       }
+      gDashSize = n;
       gDashOffset = 0;
       gLineStyle = GDK_LINE_ON_OFF_DASH;
       fThreadP.GC = (GdkGC *) gGCline;
