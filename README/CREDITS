@@ -72,6 +72,7 @@ N: Olivier Couet
 E: Olivier.Couet@cern.ch
 D: Implement support for CellArrays in TPostScript
 D: SVG driver
+D: Support of graphics. Development of 3-d interface
 
 N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
