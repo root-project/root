@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.42 2004/03/23 00:12:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.43 2004/03/23 15:39:19 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -109,7 +109,8 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    fHostAuth = 0;
    fVersion  = 3;                // The latest, by default
    fRSAKey   = 0;
-
+   fSecContext = 0;
+   
    if (gDebug > 2)
       Info("TAuthenticate", "Enter: local host: %s, user is: %s (proto: %s)",
            gSystem->HostName(), user, proto);
