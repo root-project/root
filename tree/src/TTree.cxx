@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.129 2002/07/09 10:24:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.130 2002/07/11 19:46:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -583,8 +583,10 @@ void TTree::AutoSave()
 //   in UPDATE mode.
 //   The Tree will be recovered at the status corresponding to the last AutoSave.
 //
-   if (!fDirectory) return;
-//   printf("AutoSave Tree:%s after %g bytes written\n",GetName(),fTotBytes);
+   if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return;
+   if (gDebug > 0) {
+      printf("AutoSave Tree:%s after %g bytes written\n",GetName(),fTotBytes);
+   }
    fSavedBytes = fTotBytes;
    TDirectory *dirsav = gDirectory;
    fDirectory->cd();
