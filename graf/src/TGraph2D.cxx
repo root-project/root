@@ -1,6 +1,6 @@
 // @(#)root/graf:$Name:  $:$Id: TGraph2D.cxx,v 1.00
 // Author: Olivier Couet   23/10/03
-// Author: Luke Jones (Royal Holloway, University of London) April 2002
+// Author: Luke Jones (Royal Holloway, University of London) for the Delaunay algorithm. April 2002
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -107,10 +107,24 @@ ClassImp(TGraph2D)
 <img src="gif/graph2dfit.gif">
 */
 //End_Html
-
-
-const Int_t kMaxStored    = 2500;
-const Int_t kMaxNTris2Try = 100000;
+//
+// Definition of Delaunay triangulation (After B. Delaunay): 
+// For a set S of points in the Euclidean plane, the unique triangulation DT(S)
+// of S such that no point in S is inside the circumcircle of any triangle in 
+// DT(S). DT(S) is the dual of the Voronoi diagram of S.
+// If n is the number of points in S, the Voronoi diagram of S is the partitioning 
+// of the plane containing S points into n convex polygons such that each polygon
+// contains exactly one point and every point in a given polygon is closer to its
+// central point than to any other. A Voronoi diagram is sometimes also known as
+// a Dirichlet tessellation. 
+//Begin_Html
+/*
+<img src="gif/dtvd.gif">
+<br>
+<a href="http://www.cs.cornell.edu/Info/People/chew/Delaunay.html">This applet</a>
+gives a nice practical view of Delaunay triangulation and Voronoi diagram. 
+*/
+//End_Html
 
 
 //______________________________________________________________________________
@@ -120,7 +134,43 @@ TGraph2D::TGraph2D()
 {
    // Graph2D default constructor
 
-   Initialise(100);
+   Build(100);
+}
+
+
+//______________________________________________________________________________
+TGraph2D::TGraph2D(Int_t n, Int_t *x, Int_t *y, Int_t *z, Option_t *)
+         : TNamed("Graph2D","Graph2D"), TAttLine(1,1,1), TAttFill(0,1001),
+           TAttMarker(), fNpoints(n)
+{
+   // Graph2D constructor with three vectors of ints as input.
+
+   Build(n);
+
+   // Copy the input vectors into local arrays
+   for (Int_t N=0; N<fNpoints; N++) {
+      fX[N] = (Double_t)x[N];
+      fY[N] = (Double_t)y[N];
+      fZ[N] = (Double_t)z[N];
+   }
+}
+
+
+//______________________________________________________________________________
+TGraph2D::TGraph2D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *)
+         : TNamed("Graph2D","Graph2D"), TAttLine(1,1,1), TAttFill(0,1001),
+           TAttMarker(), fNpoints(n)
+{
+   // Graph2D constructor with three vectors of floats as input.
+
+   Build(n);
+
+   // Copy the input vectors into local arrays
+   for (Int_t N=0; N<fNpoints; N++) {
+      fX[N] = x[N];
+      fY[N] = y[N];
+      fZ[N] = z[N];
+   }
 }
 
 
@@ -131,12 +181,34 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *)
 {
    // Graph2D constructor with three vectors of doubles as input.
 
-   Initialise(n);
+   Build(n);
 
    // Copy the input vectors into local arrays
+   for (Int_t N=0; N<fNpoints; N++) {
+      fX[N] = x[N];
+      fY[N] = y[N];
+      fZ[N] = z[N];
+   }
+}
 
-   Int_t N;
-   for (N=0; N<fNpoints; N++) {
+
+//______________________________________________________________________________
+TGraph2D::TGraph2D(const char *name,const char *title,
+                   Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *)
+         : TNamed(name,title), TAttLine(1,1,1), TAttFill(0,1001),
+           TAttMarker(), fNpoints(n)
+{
+   // Graph2D constructor with name, title and three vectors of doubles as input.
+   // name   : name of 2D graph (avoid blanks)
+   // title  : 2D graph title
+   //          if title is of the form "stringt;stringx;stringy;stringz"
+   //          the 2D graph title is set to stringt, the x axis title to stringy,
+   //          the y axis title to stringy,etc
+
+   Build(n);
+
+   // Copy the input vectors into local arrays
+   for (Int_t N=0; N<fNpoints; N++) {
       fX[N] = x[N];
       fY[N] = y[N];
       fZ[N] = z[N];
@@ -152,7 +224,7 @@ TGraph2D::TGraph2D(Int_t n, Option_t *)
    // Graph2D constructor. The arrays fX, fY and fZ should be filled via
    // calls to SetPoint
 
-   Initialise(n);
+   Build(n);
 }
 
 
@@ -164,7 +236,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *)
    // Graph2D constructor reading input from filename
    // filename is assumed to contain at least three columns of numbers
    
-   Initialise(100);
+   Build(100);
   
    Double_t x,y,z;
    FILE *fp = fopen(filename,"r");
@@ -186,26 +258,81 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *)
 
 
 //______________________________________________________________________________
+TGraph2D::TGraph2D(const TGraph2D &g) 
+         : TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g)
+{
+   // Graph2D copy constructor.
+
+   fNpoints = g.fNpoints;
+   Build(fNpoints);
+
+   for (Int_t N=0; N<fNpoints; N++) {
+      fX[N] = g.fX[N];
+      fY[N] = g.fY[N];
+      fZ[N] = g.fZ[N];
+   }
+}
+
+
+//______________________________________________________________________________
 TGraph2D::~TGraph2D()
 {
    // TGraph2D destructor.
 
-   if (fX) delete [] fX;
-   if (fY) delete [] fY;
-   if (fZ) delete [] fZ;
-   if (fHistogram)  {delete fHistogram; fHistogram = 0;}
-   if (fTried)      {delete [] fTried; fTried = 0;}
-   if (fHullPoints) {delete [] fHullPoints; fHullPoints = 0;}
-   if (fOrder)      {delete [] fOrder; fOrder = 0;}
-   if (fDist)       {delete [] fDist; fDist = 0;}
-   if (fXN)         {delete [] fXN; fXN = 0;}
-   if (fYN)         {delete [] fYN; fYN = 0;}
+   if (fX)          delete [] fX;
+   if (fY)          delete [] fY;
+   if (fZ)          delete [] fZ;
+   if (fHistogram)  delete fHistogram;
+   if (fPTried)     delete [] fPTried;
+   if (fNTried)     delete [] fNTried;
+   if (fMTried)     delete [] fMTried;
+   if (fHullPoints) delete [] fHullPoints;
+   if (fOrder)      delete [] fOrder;
+   if (fDist)       delete [] fDist;
+   if (fXN)         delete [] fXN;
+   if (fYN)         delete [] fYN;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
       fFunctions->Delete();
       delete fFunctions;
-      fFunctions = 0;
    }
+   if (fDirectory) {  
+      if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
+      fDirectory->GetList()->Remove(this);
+   }
+   fX          = 0;
+   fY          = 0;
+   fZ          = 0;
+   fHistogram  = 0;
+   fPTried     = 0;
+   fNTried     = 0;
+   fMTried     = 0;
+   fHullPoints = 0;
+   fOrder      = 0;
+   fDist       = 0;
+   fXN         = 0;
+   fYN         = 0;
+   fDirectory  = 0;
+   fFunctions  = 0;
+}
+
+
+//______________________________________________________________________________
+TGraph2D TGraph2D::operator=(const TGraph2D &g) 
+{
+   // Graph2D operator "="
+
+   if (this == &g) return *this;
+
+   fNpoints = g.fNpoints;
+   Build(fNpoints);
+
+   for (Int_t N=0; N<fNpoints; N++) {
+      fX[N] = g.fX[N];
+      fY[N] = g.fY[N];
+      fZ[N] = g.fZ[N];
+   }
+   return g;
 }
 
 
@@ -250,20 +377,15 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
 
    // check existing Delaunay triangles for a good one
    for (IT=1; IT<=fNdt; IT++) {
-      if (fTried[IT-1] > 0) {
-         tri = fTried[IT-1];
-         P   = tri%1000;
-         N   = ((tri%1000000)-P)/1000;
-         M   = (tri-N*1000-P)/1000000;
-         // P, N and M form a previously found Delaunay triangle, does it 
-         // enclose the point?
-         if (Enclose(P,N,M,0)) {
-            // yes, we have the triangle
-            thevalue = InterpolateOnPlane(P,N,M,0);
-            return thevalue;
-         }
-      } else {
-         Error("ComputeZ", "Negative/zero Delaunay triangle ? %d %d %g %g %d",IT,fNdt,xx,yy,fTried[IT-1]);
+      P = fPTried[IT-1];
+      N = fNTried[IT-1];
+      M = fMTried[IT-1];
+      // P, N and M form a previously found Delaunay triangle, does it 
+      // enclose the point?
+      if (Enclose(P,N,M,0)) {
+         // yes, we have the triangle
+         thevalue = InterpolateOnPlane(P,N,M,0);
+         return thevalue;
       }
    }
 
@@ -274,15 +396,15 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
    // it must be in a Delaunay triangle - find it...
 
    // order mass points by distance in mass plane from desired point
-   for (N=1; N<=fNpoints; N++) {
-      vxN = fXN[N];
-      vyN = fYN[N];
-      fDist[N-1] = TMath::Sqrt((xx-vxN)*(xx-vxN)+(yy-vyN)*(yy-vyN));
+   for (IT=1; IT<=fNpoints; IT++) {
+      vxN = fXN[IT];
+      vyN = fYN[IT];
+      fDist[IT-1] = TMath::Sqrt((xx-vxN)*(xx-vxN)+(yy-vyN)*(yy-vyN));
    }
 
-   // sort array 'dist' to find closest points
+   // sort array 'fDist' to find closest points
    TMath::Sort(fNpoints, fDist, fOrder, kFALSE);
-   for (N=1; N<=fNpoints; N++) fOrder[N-1]++;
+   for (IT=0; IT<fNpoints; IT++) fOrder[IT]++;
 
    // loop over triplets of close points to try to find a triangle that 
    // encloses the point.
@@ -292,7 +414,7 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
          N = fOrder[J-1];
          for (I=1; I<=J-1; I++) {
             P = fOrder[I-1];
-            if (ntris_tried > kMaxNTris2Try) {
+            if (ntris_tried > fMaxTries) {
                // perhaps this point isn't in the hull after all
 ///            Warning("ComputeZ", 
 ///                    "Abandoning the effort to find a Delaunay triangle (and thus interpolated Z-value) for point %g %g"
@@ -311,22 +433,6 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
 
             // is it a Delaunay triangle? (ie. are there any other points 
             // inside the circle that is defined by its vertices?)
-
-            // has this triangle already been tested for Delaunay'ness?
-            tri = TriEncode(P,N,M);
-            for (IT=kMaxStored-fNxt+1; IT<=kMaxStored; IT++) {
-               if (tri == TMath::Abs(fTried[IT-1])) {
-                  if (fTried[IT-1] < 0) {
-                     // yes, and it is not a Delaunay triangle, forget about it
-                     goto L90;
-                  } else {
-                     Error("ComputeZ", "Positive non-Delaunay triangle ? %g %g %d %d %d",
-                           xx,yy,IT,fNxt,fNdt);
-                     thevalue  = InterpolateOnPlane(P,N,M,0);
-                     return thevalue;
-                  }
-               }
-            }
 
             // test the triangle for Delaunay'ness
 
@@ -347,11 +453,9 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
                      if ((L<I) || (L<J) || (L<K)) {
                         // point Z is nearer to (xx,yy) than M, N or P - it could be in the 
                         // triangle so call enclose to find out
-                        if (Enclose(P,N,M,Z)) {
-                           // it is inside the triangle and so this can't be a Del' triangle
-                           FileIt(-thistri);
-                           goto L90;
-                        }
+
+                        // if it is inside the triangle this can't be a Delaunay's triangle
+                        if (Enclose(P,N,M,Z)) goto L90;
                      } else {
                         // there's no way it could be in the triangle so there's no point 
                         // calling enclose
@@ -382,7 +486,6 @@ L1:
                   // between them it's in the circle otherwise it's outside
                   if (fXN[A] != fXN[B]) {
                      if (((fXN[Z]-fXN[A])*(fXN[Z]-fXN[B])) < 0) {
-                        FileIt(-thistri);
                         goto L90;
                      } else if (((fXN[Z]-fXN[A])*(fXN[Z]-fXN[B])) == 0) {
                         // At least two points are sitting on top of each other, we will
@@ -394,7 +497,6 @@ L1:
                      }
                   } else {
                      if (((fYN[Z]-fYN[A])*(fYN[Z]-fYN[B])) < 0) {
-                        FileIt(-thistri);
                         goto L90;
                      } else if (((fYN[Z]-fYN[A])*(fYN[Z]-fYN[B])) == 0) {
                         // At least two points are sitting on top of each other - see above.
@@ -478,11 +580,9 @@ L2:
                c2      = ((fXN[F]-fXN[O1])*(fXN[F]-fXN[O2])+(fYN[F]-fYN[O1])*(fYN[F]-fYN[O2]))/dfo1/dfo2;
                sin_sum = c1*TMath::Sqrt(1-c2*c2)+c2*TMath::Sqrt(1-c1*c1);
 
-               // When being called from paw, sin_sum doesn't always come out as zero 
-               // when it should do.
+               // sin_sum doesn't always come out as zero when it should do.
                if (sin_sum < -1.E-6) {
                   // Z is inside the circle, this is not a Delaunay triangle
-                  FileIt(-thistri);
                   goto L90;
                } else if (TMath::Abs(sin_sum) <= 1.E-6) {
                   // point Z lies on the circumference of the circle (within rounding errors) 
@@ -524,10 +624,9 @@ L50:
                   T1 = P;
                   T2 = N;
                   T3 = M;
-                  // file the good triangles as good
-                  FileIt(thistri);
-                  tri = TriEncode(D,O1,O2);
-                  FileIt(tri);
+                  // file the good triangles
+                  FileIt(P, N, M);
+                  FileIt(D, O1, O2);
                } else {
                   // use other diagonal to split quadrilateral, use triangle formed by 
                   // point F, the degnerate point D and whichever of O1 and O2 create 
@@ -539,16 +638,13 @@ L50:
                   } else {
                      T3 = O2;
                   }
-                  // file the good triangles as good and the original one as bad
-                  FileIt(-thistri);
-                  tri = TriEncode(F,D,O1);
-                  FileIt(tri);
-                  tri = TriEncode(F,D,O2);
-                  FileIt(tri);
+                  // file the good triangles
+                  FileIt(F, D, O1);
+                  FileIt(F, D, O2);
                }
             } else {
-               // this is a Delaunay triangle, file it as such
-               FileIt(thistri);
+               // this is a Delaunay's triangle, file it
+               FileIt(P, N, M);
                T1 = P;
                T2 = N;
                T3 = M;
@@ -660,63 +756,70 @@ void TGraph2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TGraph2D::FileIt(Int_t tri)
+void TGraph2D::FileIt(Int_t P, Int_t N, Int_t M)
 {
-   // Files the triangle 'tri' in the fTried array. Delaunay triangles 
-   // (tri>0) are stored sequentially from fTried[0] onwards. Non-Delaunay 
-   // triangles are stored sequentially from fTried[kMaxStored-1] backwards. 
-   // If the array cannot hold all the triangles, Delaunay triangles get 
-   // priority - non-Delaunay triangles are overwritten and subsequent 
-   // non-Delaunay triangles overwrite previous non-Delaunay triangles.
+   // Files the triangle defined by the 3 vertices P, N and M into the 
+   // fxTried arrays. If these arrays are to small they are automatically
+   // expanded.
 
-   if (tri > 0) {
-      // store a new Delaunay triangle
-      fNdt++;
-      if (fNdt> kMaxStored) {
-         Error("FileIt", 
-               "No space left in fTried, the kMaxStored parameter should be increased %d",
-               tri);
-      } else {
-         fTried[fNdt-1] = tri;
-      }
-      // we may have overwritten a non-Delaunay triangle - update fNxt
-      fNxt = TMath::Min(kMaxStored-fNdt,fNxt);
-   } else if ((kMaxStored-fNxt) > fNdt) {
-      // store a new non-Delaunay triangle - we have space to do this without 
-      // overwriting anything
-      fTried[kMaxStored-fNxt-1] = tri;
-      fNxt++;
-   } else if (kMaxStored > fNdt) {
-      // store a new non-Delaunay triangle - there is still space to do this 
-      // but we will have to overwrite old non-Delaunay triangles
-      fTried[kMaxStored-1] = tri;
-      fNxt = 1;
+   Bool_t swap;
+   Int_t tmp, Ps = P, Ns = N, Ms = M;
+
+   // order the vertices before storing them
+L1:
+   swap = kFALSE;
+   if (Ns > Ps) { tmp = Ps; Ps = Ns; Ns = tmp; swap = kTRUE;}
+   if (Ms > Ns) { tmp = Ns; Ns = Ms; Ms = tmp; swap = kTRUE;}
+   if (swap) goto L1;
+
+   // expand the triangles storage if needed
+   if (fNdt> fTriedSize) {
+      Int_t newN   = 2*fTriedSize;
+      Int_t *savep = new Int_t [newN];
+      Int_t *saven = new Int_t [newN];
+      Int_t *savem = new Int_t [newN];
+      memcpy(savep,fPTried,fTriedSize*sizeof(Int_t));
+      memset(&savep[fTriedSize],0,(newN-fTriedSize)*sizeof(Int_t));
+      delete [] fPTried;
+      memcpy(saven,fNTried,fTriedSize*sizeof(Int_t));
+      memset(&saven[fTriedSize],0,(newN-fTriedSize)*sizeof(Int_t));
+      delete [] fNTried;
+      memcpy(savem,fMTried,fTriedSize*sizeof(Int_t));
+      memset(&savem[fTriedSize],0,(newN-fTriedSize)*sizeof(Int_t));
+      delete [] fMTried;
+      fPTried    = savep;
+      fNTried    = saven;
+      fMTried    = savem;
+      fTriedSize = newN;
    }
+
+   // store a new Delaunay triangle
+   fNdt++;
+   fPTried[fNdt-1] = Ps;
+   fNTried[fNdt-1] = Ns;
+   fMTried[fNdt-1] = Ms;
 }
 
 
 //______________________________________________________________________________
 void TGraph2D::FindAllTriangles()
 {
-   // Attempt to find all the Delaunay triangles of 
-   // the point set. It is not guaranteed that it will fully 
-   // succeed, and no check is made that it has fully succeeded (such 
-   // a check would be possible by referencing the points that make up 
-   // the convex hull). The method is to check if each triangle shares 
-   // all three of its sides with other triangles. If not, a point is 
-   // generated just outside the triangle on the side(s) not shared, 
-   // and a new triangle is found for that point. If you find the 
-   // routine is not working properly (many triangles are not being 
-   // found) it's probably because the new points are too far beyond or
-   // too close to the non-shared sides. You can try fiddling with the 
-   // size of the `alittlebit' parameter.
+   // Attempt to find all the Delaunay triangles of the point set. It is not
+   // guaranteed that it will fully succeed, and no check is made that it has
+   // fully succeeded (such a check would be possible by referencing the points
+   // that make up the convex hull). The method is to check if each triangle
+   // shares all three of its sides with other triangles. If not, a point is 
+   // generated just outside the triangle on the side(s) not shared, and a new
+   // triangle is found for that point. If this method is not working properly
+   // (many triangles are not being found) it's probably because the new points
+   // are too far beyond or too close to the non-shared sides. Fiddling with the 
+   // size of the `alittlebit' parameter may help.
 
    Double_t xcntr,ycntr,z,xc,yc,xm,ym,xx,yy;
    Double_t sx,sy,nx,ny,mx,my,mdotn,nn,A;
-   Int_t T1,T2,Pa,Na,Ma,Pb,Nb,Mb,Sa[3],Sb[3],P1,P2,M,N,P3=0;
+   Int_t T1,T2,Pa,Na,Ma,Pb,Nb,Mb,P1=0,P2=0,M,N,P3=0;
    Bool_t s[3];
    Double_t alittlebit = 0.0001;
-
 
    // start with a point that is guaranteed to be inside the hull (the 
    // centre of the hull)
@@ -731,106 +834,102 @@ void TGraph2D::FindAllTriangles()
    // and calculate it's triangle
    z = ComputeZ(xcntr,ycntr);
 
-   // loop over all Delaunay triangles (including those constantly being 
+   // loop over all Delaunay's triangles (including those constantly being 
    // produced within the loop) and check to see if their 3 sides also 
-   // correspond to the sides of other Delaunay triangles, i.e. that they 
+   // correspond to the sides of other Delaunay's triangles, i.e. that they 
    // have all their neighbours.
    T1 = 1;
    while (T1 <= fNdt) {
-      if (fTried[T1-1] > 0) {
-         // get the three points that make up this triangle
-         Pa = (Int_t)(fTried[T1-1]/1000000);
-         Na = ((Int_t)(fTried[T1-1]/1000))%1000;
-         Ma = fTried[T1-1]%1000;
+      // get the three points that make up this triangle
+      Pa = fPTried[T1-1];
+      Na = fNTried[T1-1];
+      Ma = fMTried[T1-1];
 
-         // produce three integers which will represent the three sides
-         Sa[0] = Pa*1000+Na;
-         Sa[1] = Pa*1000+Ma;
-         Sa[2] = Na*1000+Ma;
-         s[0]  = kFALSE;
-         s[1]  = kFALSE;
-         s[2]  = kFALSE;
-         // loop over all other Del' triangles
-         for (T2=1; T2<=fNdt; T2++) {
-            if (fTried[T2-1] > 0 && T2 != T1) {
-               // get the points that make up this triangle
-               Pb = (Int_t)(fTried[T2-1]/1000000.);
-               Nb = ((Int_t)(fTried[T2-1]/1000.))%1000;
-               Mb = fTried[T2-1]%1000;
-               // and generate integers which represent its sides
-               // (note that Mb>Nb>Pb - see routine triencode)
-               Sb[0] = Pb*1000+Nb;
-               Sb[1] = Pb*1000+Mb;
-               Sb[2] = Nb*1000+Mb;
+      // produce three integers which will represent the three sides
+      s[0]  = kFALSE;
+      s[1]  = kFALSE;
+      s[2]  = kFALSE;
+      // loop over all other Delaunays' triangles
+      for (T2=1; T2<=fNdt; T2++) {
+         if (T2 != T1) {
+            // get the points that make up this triangle
+            Pb = fPTried[T2-1];
+            Nb = fNTried[T2-1];
+            Mb = fMTried[T2-1];
+            // and generate integers which represent its sides
+            // (note that Mb>Nb>Pb - see routine triencode)
 
-               // do triangles T1 and T2 share a side?
-               if ((Sa[0]==Sb[0]) || (Sa[0]==Sb[1]) || (Sa[0]==Sb[2])) {
-                  // they share side 1
-                  s[0] = kTRUE;
-               } else if ((Sa[1]==Sb[0]) || (Sa[1]==Sb[1]) || (Sa[1]==Sb[2])) {
-                  // they share side 2
-                  s[1] = kTRUE;
-               } else if ((Sa[2]==Sb[0]) || (Sa[2]==Sb[1]) || (Sa[2]==Sb[2])) {
-                  // they share side 3
-                  s[2] = kTRUE;
-               }
+            // do triangles T1 and T2 share a side?
+            if ((Pa==Pb && Na==Nb) || (Pa==Pb && Na==Mb) || (Pa==Nb && Na==Mb)) {
+               // they share side 1
+               s[0] = kTRUE;
+            } else if ((Pa==Pb && Ma==Nb) || (Pa==Pb && Ma==Mb) || (Pa==Nb && Ma==Mb)) {
+               // they share side 2
+               s[1] = kTRUE;
+            } else if ((Na==Pb && Ma==Nb) || (Na==Pb && Ma==Mb) || (Na==Nb && Ma==Mb)) {
+               // they share side 3
+               s[2] = kTRUE;
             }
-            // if T1 shares all its sides with other Del' triangles then 
-            // forget about it
-            if (s[0] && s[1] && s[2]) continue;
          }
-         // Looks like T1 is missing a neighbour on at least one side.
-         // For each side, take a point a little bit beyond it and calculate 
-         // the Del' triangle for that point, this should be the triangle 
-         // which shares the side.
-         xc = (fXN[Pa]+fXN[Na]+fXN[Ma])/3.;
-         yc = (fYN[Pa]+fYN[Na]+fYN[Ma])/3.;
-         for (M=1; M<=3; M++) {
-            if (!s[M-1]) {
-               // get the two points that make up this side
-               P1 = (Int_t)(Sa[M-1]/1000.);
-               P2 = Sa[M-1]%1000;
-               // get the coordinates of the centre of this side
-               xm = (fXN[P1]+fXN[P2])/2.;
-               ym = (fYN[P1]+fYN[P2])/2.;
-               // we want to add a little to these coordinates to get a point just
-               // outside the triangle; (sx,sy) will be the vector that represents 
-               // the side
-               sx = fXN[P1]-fXN[P2];
-               sy = fYN[P1]-fYN[P2];
-               // (nx,ny) will be the normal to the side, but don't know if it's 
-               // pointing in or out yet
-               nx = sy;
-               ny = -sx;
-               nn = TMath::Sqrt(nx*nx+ny*ny);
-               nx = nx/nn;
-               ny = ny/nn;
-               if (M == 1) {
-                  P3 = Ma;
-               } else if (M == 2) {
-                  P3 = Na;
-               } else if (M == 3) {
-                  P3 = Pa;
-               }
-               mx    = fXN[P3]-xm;
-               my    = fYN[P3]-ym;
-               mdotn = mx*nx+my*ny;
-               if (mdotn > 0) {
-                  // (nx,ny) is pointing in, we want it pointing out
-                  nx = -nx;
-                  ny = -ny;
-               }
-               // increase/decrease xm and ym a little to produce a point 
-               // just outside the triangle (ensuring that the amount added will 
-               // be large enough such that it won't be lost in rounding errors)
-               A  = TMath::Abs(TMath::Max(alittlebit*xm,alittlebit*ym));
-               xx = xm+nx*A;
-               yy = ym+ny*A;
-               // try and find a new Delaunay triangle for this point
-               z = ComputeZ(xx,yy);
-               // this side of T1 should now, hopefully, if it's not part of the 
-               // hull, be shared with a new Del' triangle just calculated by ComputeZ
+         // if T1 shares all its sides with other Delaunays' triangles then 
+         // forget about it
+         if (s[0] && s[1] && s[2]) continue;
+      }
+      // Looks like T1 is missing a neighbour on at least one side.
+      // For each side, take a point a little bit beyond it and calculate 
+      // the Delaunays' triangle for that point, this should be the triangle 
+      // which shares the side.
+      xc = (fXN[Pa]+fXN[Na]+fXN[Ma])/3.;
+      yc = (fYN[Pa]+fYN[Na]+fYN[Ma])/3.;
+      for (M=1; M<=3; M++) {
+         if (!s[M-1]) {
+            // get the two points that make up this side
+            if (M == 1) {
+               P1 = Pa;
+               P2 = Na;
+               P3 = Ma;
+            } else if (M == 2) {
+               P1 = Pa;
+               P2 = Ma;
+               P3 = Na;
+            } else if (M == 3) {
+               P1 = Na;
+               P2 = Ma;
+               P3 = Pa;
             }
+            // get the coordinates of the centre of this side
+            xm = (fXN[P1]+fXN[P2])/2.;
+            ym = (fYN[P1]+fYN[P2])/2.;
+            // we want to add a little to these coordinates to get a point just
+            // outside the triangle; (sx,sy) will be the vector that represents 
+            // the side
+            sx = fXN[P1]-fXN[P2];
+            sy = fYN[P1]-fYN[P2];
+            // (nx,ny) will be the normal to the side, but don't know if it's 
+            // pointing in or out yet
+            nx    = sy;
+            ny    = -sx;
+            nn    = TMath::Sqrt(nx*nx+ny*ny);
+            nx    = nx/nn;
+            ny    = ny/nn;
+            mx    = fXN[P3]-xm;
+            my    = fYN[P3]-ym;
+            mdotn = mx*nx+my*ny;
+            if (mdotn > 0) {
+               // (nx,ny) is pointing in, we want it pointing out
+               nx = -nx;
+               ny = -ny;
+            }
+            // increase/decrease xm and ym a little to produce a point 
+            // just outside the triangle (ensuring that the amount added will 
+            // be large enough such that it won't be lost in rounding errors)
+            A  = TMath::Abs(TMath::Max(alittlebit*xm,alittlebit*ym));
+            xx = xm+nx*A;
+            yy = ym+ny*A;
+            // try and find a new Delaunay's triangle for this point
+            z = ComputeZ(xx,yy);
+            // this side of T1 should now, hopefully, if it's not part of the 
+            // hull, be shared with a new Delaunay's triangle just calculated by ComputeZ
          }
       }
       T1++;
@@ -977,19 +1076,24 @@ L999:
 
 
 //______________________________________________________________________________
-void TGraph2D::Initialise(Int_t n)
+void TGraph2D::Build(Int_t n)
 {
-   // Initialises the data structures needed to compute the Delaunay triangles
+   // Creates the 2D graph basic data structure
 
-   fSize   = n,
-   fMargin = 0.;
-   fNpx    = 40;
-   fNpy    = 40;
-   fZout   = 0.;
+   if (n <= 0) {
+      Error("TGraph2D", "Invalid number of points (%d)", n);
+      return;
+   }
 
+   fSize       = n,
+   fTriedSize  = 0;
+   fMargin     = 0.;
+   fNpx        = 40;
+   fNpy        = 40;
+   fZout       = 0.;
    fNdt        = 0;
-   fNxt        = 0;
    fNhull      = 0;
+   fDirectory  = 0;
    fFunctions  = 0;
    fHistogram  = 0;
    fMaximum    = -1111;
@@ -999,15 +1103,30 @@ void TGraph2D::Initialise(Int_t n)
    fYN         = 0;
    fOrder      = 0;
    fDist       = 0;
+   fPTried     = 0;
+   fNTried     = 0;
+   fMTried     = 0;
 
-   fTried = new Int_t[kMaxStored];
-   
+   SetMaxTries();
+
    fX = new Double_t[fSize];
    fY = new Double_t[fSize];
    fZ = new Double_t[fSize];
 
    fFunctions = new TList;
+
+   Bool_t add = TH1::AddDirectoryStatus();
+   if (add && gDirectory) {
+      TObject *old = (TObject*)gDirectory->GetList()->FindObject(GetName());
+      if (old) {
+         Warning("Build","Replacing existing 2D graph: %s (Potential memory leak).",GetName());
+         gDirectory->GetList()->Remove(old);
+      }
+      gDirectory->Append(this);
+      fDirectory = gDirectory;
+   }
 }
+
 
 //______________________________________________________________________________
 Double_t TGraph2D::Interpolate(Double_t x, Double_t y) const
@@ -1015,6 +1134,9 @@ Double_t TGraph2D::Interpolate(Double_t x, Double_t y) const
    // Finds the z value at the position (x,y) thanks to 
    // the Delaunay interpolation.
 
+   // If needed, offset fX and fY so they average zero, and scale so the average 
+   // of the X and Y ranges is one. The normalized version of fX and fY used 
+   // in ComputeZ.
    if (!fXN) {
       Double_t xmax = GetXmax();
       Double_t ymax = GetYmax();
@@ -1034,6 +1156,17 @@ Double_t TGraph2D::Interpolate(Double_t x, Double_t y) const
          fYN[N+1] = (fY[N]+fYoffset)*fScaleFactor;
       }
    }
+
+   // If needed, creates the arrays to hold the Delaunay's triangles.
+   // A maximum number of 2*fNpoints is guessed. If more triangles will be
+   // find, FillIt will automatically enlarge these arrays.
+   if (!fPTried) {
+      ((TGraph2D*)this)->fTriedSize = 2*fNpoints;
+      ((TGraph2D*)this)->fPTried    = new Int_t[fTriedSize];
+      ((TGraph2D*)this)->fNTried    = new Int_t[fTriedSize];
+      ((TGraph2D*)this)->fMTried    = new Int_t[fTriedSize];
+   }
+
    Double_t sx = (x+fXoffset)*fScaleFactor;
    Double_t sy = (y+fYoffset)*fScaleFactor;
    return ((TGraph2D*)this)->ComputeZ(sx, sy);
@@ -1053,6 +1186,7 @@ Double_t TGraph2D::InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) 
    Int_t T2 = TI2;
    Int_t T3 = TI3;
 
+   // order the vertices
 L1:
    swap = kFALSE;
    if (T2 > T1) { tmp = T1; T1 = T2; T2 = tmp; swap = kTRUE;}
@@ -1421,13 +1555,27 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 
 
 //______________________________________________________________________________
-TH2D *TGraph2D::GetHistogram() const
+TH2D *TGraph2D::GetHistogram(Option_t *option) const
 {
-   // Returns a pointer to the Delaunay histogram. If fHistogram doesn't exist,
-   // books the 2D histogram fHistogram with a margin around the hull.
-   // Calls ComputeZ at each bin centre to build up interpolated 2D histogram
+   // By default returns a pointer to the Delaunay histogram. If fHistogram 
+   // doesn't exist, books the 2D histogram fHistogram with a margin around 
+   // the hull. Calls ComputeZ at each bin centre to build up interpolated 2D 
+   // histogram.
+   // If the "empty" option is selected, returns an empty histogram booked with
+   // the limits of fX, fY and fZ. This option is used when the data set is drawn
+   // with markers only. In that particular case there is no need to find the
+   // Delaunay's triangles.
 
-   if (fHistogram) return fHistogram;
+   TString opt = option;
+   opt.ToLower();
+
+   if (fHistogram) {
+      if (!opt.Contains("empty") && fHistogram->GetEntries()==0) {
+         ((TGraph2D*)this)->Reset(1);
+      } else {
+         return fHistogram;
+      }
+   }
 
    Double_t x, y, z, sx, sy;
    Int_t N;
@@ -1440,16 +1588,37 @@ TH2D *TGraph2D::GetHistogram() const
    Double_t hxmin = xmin-fMargin*(xmax-xmin);
    Double_t hymin = ymin-fMargin*(ymax-ymin);
 
+   // Book fHistogram. It is not added in the current directory
+   Bool_t add = TH1::AddDirectoryStatus();
+   TH1::AddDirectory(kFALSE);
    ((TGraph2D*)this)->fHistogram = new TH2D(GetName(),GetTitle(),
                                             fNpx ,hxmin, hxmax,
                                             fNpy, hymin, hymax);
+   TH1::AddDirectory(add);
+
+   fHistogram->SetBit(TH1::kNoStats);
+
+   // Option "empty" is selected. An empty histogram is returned.
+   if (opt.Contains("empty")) {
+      if (fMinimum != -1111) {
+         fHistogram->SetMinimum(fMinimum);
+      } else {
+         fHistogram->SetMinimum(GetZmin());
+      }
+      if (fMaximum != -1111) {
+         fHistogram->SetMaximum(fMaximum);
+      } else {
+         fHistogram->SetMaximum(GetZmax());
+      }
+      return fHistogram;
+   }
 
    ((TGraph2D*)this)->fXoffset     = -(xmax+xmin)/2.;
    ((TGraph2D*)this)->fYoffset     = -(ymax+ymin)/2.;
    ((TGraph2D*)this)->fScaleFactor = 2./((xmax-xmin)+(ymax-ymin));
 
-   // Offset fX and fY so they average zero, and scale so the average of the 
-   // X and Y ranges is one. The normalized version of fX and fY used 
+   // If needed, offset fX and fY so they average zero, and scale so the average 
+   // of the X and Y ranges is one. The normalized version of fX and fY used 
    // in ComputeZ.
    if (!fXN) {
       ((TGraph2D*)this)->fXNmax = (xmax+fXoffset)*fScaleFactor;
@@ -1462,6 +1631,16 @@ TH2D *TGraph2D::GetHistogram() const
          fXN[N+1] = (fX[N]+fXoffset)*fScaleFactor;
          fYN[N+1] = (fY[N]+fYoffset)*fScaleFactor;
       }
+   }
+
+   // If needed, creates the arrays to hold the Delaunay's triangles.
+   // A maximum number of 2*fNpoints is guessed. If more triangles will be
+   // find, FillIt will automatically enlarge these arrays.
+   if (!fPTried) {
+      ((TGraph2D*)this)->fTriedSize = 2*fNpoints;
+      ((TGraph2D*)this)->fPTried    = new Int_t[fTriedSize];
+      ((TGraph2D*)this)->fNTried    = new Int_t[fTriedSize];
+      ((TGraph2D*)this)->fMTried    = new Int_t[fTriedSize];
    }
 
    ((TGraph2D*)this)->FindHull();
@@ -1482,8 +1661,6 @@ TH2D *TGraph2D::GetHistogram() const
 
    if (fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
    if (fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
-
-   fHistogram->SetBit(TH1::kNoStats);
 
    return fHistogram;
 }
@@ -1562,7 +1739,6 @@ void TGraph2D::Paint(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-
    if (opt.Contains("tri") || opt.Contains("p")) {
       PaintTriangles(option);
    } else {
@@ -1586,9 +1762,7 @@ void TGraph2D::PaintTriangles(Option_t *option)
    // Paints the 2D graph triangles
 
    Double_t x[4], y[4], temp1[3],temp2[3];
-   Int_t N,T0,T[3];
-
-   GetHistogram();
+   Int_t IT,T[3];
 
    TString opt = option;
    Bool_t triangles = opt.Contains("tri"); 
@@ -1602,6 +1776,12 @@ void TGraph2D::PaintTriangles(Option_t *option)
    Bool_t logy      = gPad->GetLogy();
    Bool_t logz      = gPad->GetLogz();
 
+   if (markers && !triangles) {
+      GetHistogram("empty");
+   } else {
+      GetHistogram();
+   }
+
    if (!same) {
       if (!backbox) {
          fHistogram->Paint("BB");
@@ -1613,7 +1793,7 @@ void TGraph2D::PaintTriangles(Option_t *option)
 
    TView *view = gPad->GetView();
    if (!view) {
-      Error("PaintTriangles", "no TView in current pad");
+      Error("PaintTriangles", "No TView in current pad");
       return;
    }
 
@@ -1643,23 +1823,23 @@ void TGraph2D::PaintTriangles(Option_t *option)
       fOrder = new Int_t[fNdt];
       fDist  = new Double_t[fNdt];
       Double_t xd,yd;
-      Int_t i1,i2,i3;
+      Int_t P, N, M;
       Bool_t o = kFALSE;
-      for (N=0; N<fNdt; N++) {
-         i1 = fTried[N]/1000000;
-         i2 = (fTried[N]%1000000)/1000;
-         i3 = fTried[N]%1000;
-         xd = (fXN[i1]+fXN[i2]+fXN[i3])/3;
-         yd = (fYN[i1]+fYN[i2]+fYN[i3])/3;
+      for (IT=0; IT<fNdt; IT++) {
+         P = fPTried[IT];
+         N = fNTried[IT];
+         M = fMTried[IT];
+         xd = (fXN[P]+fXN[N]+fXN[M])/3;
+         yd = (fYN[P]+fYN[N]+fYN[M])/3;
          if ((cp >= 0) && (sp >= 0.)) {
-            fDist[N] = -(fXNmax-xd+fYNmax-yd);
+            fDist[IT] = -(fXNmax-xd+fYNmax-yd);
          } else if ((cp <= 0) && (sp >= 0.)) {
-            fDist[N] = -(fXNmax-xd+yd-fYNmin);
+            fDist[IT] = -(fXNmax-xd+yd-fYNmin);
             o = kTRUE;
          } else if ((cp <= 0) && (sp <= 0.)) {
-            fDist[N] = -(xd-fXNmin+yd-fYNmin);
+            fDist[IT] = -(xd-fXNmin+yd-fYNmin);
          } else {
-            fDist[N] = -(xd-fXNmin+fYNmax-yd);
+            fDist[IT] = -(xd-fXNmin+fYNmax-yd);
             o = kTRUE;
          }
       }
@@ -1670,10 +1850,10 @@ void TGraph2D::PaintTriangles(Option_t *option)
    if (markers && !triangles) {
       Double_t *xm = new Double_t[fNpoints]; 
       Double_t *ym = new Double_t[fNpoints];
-      for (N=0; N<fNpoints; N++) {
-         temp1[0] = fX[N];
-         temp1[1] = fY[N];
-         temp1[2] = fZ[N];
+      for (IT=0; IT<fNpoints; IT++) {
+         temp1[0] = fX[IT];
+         temp1[1] = fY[IT];
+         temp1[2] = fZ[IT];
          temp1[0] = TMath::Max(temp1[0],xmin);
          temp1[1] = TMath::Max(temp1[1],ymin);
          temp1[2] = TMath::Max(temp1[2],zmin);
@@ -1682,8 +1862,8 @@ void TGraph2D::PaintTriangles(Option_t *option)
          if (logy) temp1[1] = TMath::Log10(temp1[1]);
          if (logz) temp1[2] = TMath::Log10(temp1[2]);
          view->WCtoNDC(temp1, &temp2[0]);
-         xm[N] = temp2[0];
-         ym[N] = temp2[1];
+         xm[IT] = temp2[0];
+         ym[IT] = temp2[1];
       }
       SetMarkerStyle(20);
       SetMarkerSize(0.4);
@@ -1704,11 +1884,10 @@ void TGraph2D::PaintTriangles(Option_t *option)
       TAttFill::Modify();
       SetLineColor(GetLineColor());
       TAttLine::Modify();
-      for (N=0; N<fNdt; N++) {
-         T0   = fTried[fOrder[N]];
-         T[0] = T0/1000000;
-         T[1] = (T0%1000000)/1000;
-         T[2] = T0%1000;
+      for (IT=0; IT<fNdt; IT++) {
+         T[0] = fPTried[fOrder[IT]];
+         T[1] = fNTried[fOrder[IT]];
+         T[2] = fMTried[fOrder[IT]];
          for (Int_t t=0; t<3; t++) {
             temp1[0] = fX[T[t]-1];
             temp1[1] = fY[T[t]-1];
@@ -1860,8 +2039,42 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
    fX = newX;
    fY = newY;
    fZ = newZ;
-   Update(1);
+   Reset(1);
    return ipoint;
+}
+
+
+//_______________________________________________________________________
+void TGraph2D::Reset(Int_t level)
+{
+   // Called each time fHistogram should be recreated.
+   // level = 0 : it is enough to delete fHistogram
+   // level = 1 : the data set has changed, the hull and triangles 
+   //             must be recomputed.
+
+   if (fHistogram) delete fHistogram;
+   fHistogram = 0;
+   
+   if (level == 0) return;
+
+   if (fHullPoints) delete [] fHullPoints;
+   if (fPTried)     delete [] fPTried;
+   if (fNTried)     delete [] fNTried;
+   if (fMTried)     delete [] fMTried;
+   if (fOrder)      delete [] fOrder;
+   if (fDist)       delete [] fDist;
+   if (fXN)         delete [] fXN;
+   if (fYN)         delete [] fYN;
+   fHullPoints = 0;
+   fPTried     = 0;
+   fNTried     = 0;
+   fMTried     = 0;
+   fOrder      = 0;
+   fDist       = 0;
+   fXN         = 0;
+   fYN         = 0;
+   fNhull      = 0;
+   fNdt        = 0;
 }
 
 
@@ -1882,6 +2095,10 @@ void TGraph2D::SavePrimitive(ofstream &out, Option_t *option)
    out<<"   graph->SetName("<<quote<<GetName()<<quote<<");"<<endl;
    out<<"   graph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
    
+   if (fDirectory == 0) {
+      out<<"   "<<GetName()<<"->SetDirectory(0);"<<endl;
+   }
+
    SaveFillAttributes(out,"graph",0,1001);
    SaveLineAttributes(out,"graph",1,1,1);
    SaveMarkerAttributes(out,"graph",1,1,1);
@@ -1906,6 +2123,22 @@ void TGraph2D::SavePrimitive(ofstream &out, Option_t *option)
 
 
 //______________________________________________________________________________
+void TGraph2D::SetDirectory(TDirectory *dir)
+{
+   // By default when an 2D graph is created, it is added to the list
+   // of 2D graph objects in the current directory in memory.
+   // Remove reference to this 2D graph from current directory and add
+   // reference to new directory dir. dir can be 0 in which case the
+   // 2D graph does not belong to any directory.
+
+   if (fDirectory == dir) return;
+   if (fDirectory) fDirectory->GetList()->Remove(this);
+   fDirectory = dir;
+   if (fDirectory) fDirectory->GetList()->Add(this);
+} 
+
+
+//______________________________________________________________________________
 void TGraph2D::SetMargin(Double_t m)
 {
    // Sets the extra space (in %) around interpolated area for the 2D histogram
@@ -1916,7 +2149,7 @@ void TGraph2D::SetMargin(Double_t m)
    } else {
       fMargin = m;
    }
-   Update();
+   Reset();
 }
 
 
@@ -1937,6 +2170,28 @@ void TGraph2D::SetMinimum(Double_t minimum)
 
 
 //______________________________________________________________________________
+void TGraph2D::SetMaxTries(Int_t n)
+{
+   // Defines the number of triangles tested for a Delaunay's triangle 
+   // before abandoning the search
+
+   fMaxTries = n;
+}
+
+//______________________________________________________________________________
+void TGraph2D::SetName(const char *name)  
+{
+   // Changes the name of this 2D graph
+          
+   //  2D graphs are named objects in a THashList.
+   //  We must update the hashlist if we change the name
+   if (fDirectory) fDirectory->GetList()->Remove(this);
+   fName = name;
+   if (fDirectory) fDirectory->GetList()->Add(this);
+}
+
+
+//______________________________________________________________________________
 void TGraph2D::SetNpx(Int_t npx)
 {
    // Sets the number of bins along X used to draw the function
@@ -1950,7 +2205,7 @@ void TGraph2D::SetNpx(Int_t npx)
    } else {
       fNpx = npx;
    }
-   Update();
+   Reset();
 }
 
 
@@ -1968,7 +2223,7 @@ void TGraph2D::SetNpy(Int_t npy)
    } else {
       fNpy = npy;
    }
-   Update();
+   Reset();
 }
 
 
@@ -1979,7 +2234,7 @@ void TGraph2D::SetMarginBinsContent(Double_t z)
    // the bins in the margin.
 
    fZout = z;
-   Update();
+   Reset();
 }
 
 //______________________________________________________________________________
@@ -2034,49 +2289,22 @@ void TGraph2D::SetTitle(const char* title)
 }
 
 
-//______________________________________________________________________________
-Int_t TGraph2D::TriEncode(Int_t T1, Int_t T2, Int_t T3) const
-{
-   // Forms the point numbers into a single number to represent the triangle
-
-   Int_t triencode = 0;
-   Int_t MinT = T1;
-   Int_t MaxT = T1;
-   if (T2 > MaxT) MaxT = T2;
-   if (T3 > MaxT) MaxT = T3;
-   if (T2 < MinT) MinT = T2;
-   if (T3 < MinT) MinT = T3;
-   
-   triencode = 1000000*MaxT+MinT;
-   if ((T1!=MaxT) && (T1!=MinT)) {
-      triencode = triencode+1000*T1;
-   } else if ((T2!=MaxT) && (T2!=MinT)) {
-      triencode = triencode+1000*T2;
-   } else if ((T3!=MaxT) && (T3!=MinT)) {
-      triencode = triencode+1000*T3;
-   } else {
-      Error("TriEncode", "Should not get to here");
-   }
-   return triencode;
-}
-
-
 //_______________________________________________________________________
-void TGraph2D::Update(Int_t level)
+void TGraph2D::Streamer(TBuffer &b)
 {
-   // Called each time fHistogram should be recreated.
-   // level = 0 : it is enough to only delete fHistogram
-   // level = 1 : the data set has changed, the hull and triangles 
-   //             must be recomputed.
+   // Stream a class object
 
-   if (fHistogram)  {delete fHistogram; fHistogram = 0;}
-   if (level == 0) return;
-   if (fHullPoints) {delete [] fHullPoints; fHullPoints = 0;}
-   if (fOrder)      {delete [] fOrder; fOrder = 0;}
-   if (fDist)       {delete [] fDist; fDist = 0;}
-   if (fXN)         {delete [] fXN; fXN = 0;}
-   if (fYN)         {delete [] fYN; fYN = 0;}
-   fNhull = 0;
-   fNdt   = 0;
-   fNxt   = 0;
+   if (b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      TGraph2D::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+
+      if (!gROOT->ReadingObject()) {
+         fDirectory = gDirectory;
+         if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
+      }
+      ResetBit(kCanDelete);
+   } else {
+      TGraph2D::Class()->WriteBuffer(b,this);
+   }
 }
