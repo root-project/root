@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.3 2003/04/03 16:55:12 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Tlist
+#ifndef ROOT_TList
 #include "TList.h"
 #endif
 #ifndef ROOT_TQObject
