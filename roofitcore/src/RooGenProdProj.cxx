@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.cc,v 1.2 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.cc,v 1.3 2003/07/30 01:19:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -191,6 +191,7 @@ Double_t RooGenProdProj::evaluate() const
 {  
   Double_t nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
   Double_t den = ((RooAbsReal*)_intList.at(1))->getVal() ;
+
   //cout << "RooGenProdProj::eval(" << GetName() << ") ret = " << nom << " / " << den << endl ;
 
   return nom / den ;
@@ -205,6 +206,7 @@ void RooGenProdProj::operModeHook()
     arg->setOperMode(_operMode) ;
   }
   delete nIter ;
+
   TIterator* dIter = _compSetOwnedD->createIterator() ;
   while(arg=(RooAbsArg*)dIter->Next()) {
     arg->setOperMode(_operMode) ;
@@ -212,8 +214,9 @@ void RooGenProdProj::operModeHook()
   delete dIter ;
 
   _intList.at(0)->setOperMode(_operMode) ;
-  _intList.at(1)->setOperMode(_operMode) ;
+  _intList.at(1)->setOperMode(Auto) ; // Denominator always stays in Auto mode (normalization integral)
 }
+
 
 
 
