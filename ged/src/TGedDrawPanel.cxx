@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedDrawPanel.cxx,v 1.5 2003/07/24 13:41:59 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedDrawPanel.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -22,7 +22,8 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "TGDoubleSlider.h"
-#include "ctype.h"
+#include <ctype.h>
+#include <snprintf.h>
 
 
 ClassImp(TGedDrawPanel)

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.0 2003/07/28 11:55:31 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "Api.h"
 #include "TGLabel.h"
 #include "TPaveLabel.h"
+#include <snprintf.h>
 
 ClassImp(TGedAttFrame)
 ClassImp(TGedAttFillFrame)

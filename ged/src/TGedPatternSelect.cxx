@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.0 2003/08/28 11:55:31 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TGResourcePool.h"
 #include "TGToolTip.h"
 #include "TGButton.h"
+#include <snprintf.h>
 
 ClassImp(TGedPopup)
 ClassImp(TGedSelect)
