@@ -20,39 +20,41 @@ ClassImp(TBuffer3D)
 //______________________________________________________________________________
 TBuffer3D::TBuffer3D()
 {
-   fType     = -1;
-   fOption   = kPAD;
-   fId       = 0;
-   fNbPnts   = 0;
-   fNbSegs   = 0;
-   fNbPols   = 0;
-   fPnts     = 0;
-   fSegs     = 0;
-   fPols     = 0;
-   fPntsSize = 0;
-   fSegsSize = 0;
-   fPolsSize = 0;
+   fTransparency = 0;
+   fType         = -1;
+   fOption       = kPAD;
+   fId           = 0;
+   fNbPnts       = 0;
+   fNbSegs       = 0;
+   fNbPols       = 0;
+   fPnts         = 0;
+   fSegs         = 0;
+   fPols         = 0;
+   fPntsSize     = 0;
+   fSegsSize     = 0;
+   fPolsSize     = 0;
 }
 
 
 //______________________________________________________________________________
 TBuffer3D::TBuffer3D(Int_t n1, Int_t n2, Int_t n3)
 {
-   fPntsSize = n1;
-   fSegsSize = n2;
-   fPolsSize = n3;
+   fTransparency = 0;
+   fPntsSize     = n1;
+   fSegsSize     = n2;
+   fPolsSize     = n3;
 
-   fType     = -1;
-   fOption   = kPAD;
-   fId       = 0;
+   fType         = -1;
+   fOption       = kPAD;
+   fId           = 0;
 
-   fNbPnts   = 0;
-   fNbSegs   = 0;
-   fNbPols   = 0;
+   fNbPnts       = 0;
+   fNbSegs       = 0;
+   fNbPols       = 0;
 
-   fPnts     = 0;
-   fSegs     = 0;
-   fPols     = 0;
+   fPnts         = 0;
+   fSegs         = 0;
+   fPols         = 0;
    if ( fPntsSize>0 ) fPnts = new Double_t[fPntsSize];
    if ( fSegsSize>0 ) fSegs = new Int_t[fSegsSize];
    if ( fPolsSize>0 ) fPols = new Int_t[fPolsSize];
@@ -106,6 +108,7 @@ void TBuffer3D::Paint(Option_t *option)
       // Paint this in gPad
       case kPAD:
       default:
+         if (fTransparency > 50) return;  //do not show semi transparent objects
          if ( fType==kMARKER ) {
             view = gPad->GetView();
             Double_t pndc[3], temp[3];
