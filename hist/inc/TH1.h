@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.16 2001/02/13 11:57:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.17 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -116,6 +116,7 @@ public:
     virtual void     AddBinContent(Int_t bin);
     virtual void     AddBinContent(Int_t bin, Stat_t w);
     static  void     AddDirectory(Bool_t add=kTRUE);
+    static  Bool_t   AddDirectoryStatus() {return fgAddDirectory;}
     virtual void     Browse(TBrowser *b);
     virtual Double_t ComputeIntegral();
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);

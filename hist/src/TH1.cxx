@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.42 2001/02/23 10:32:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.43 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -393,6 +393,11 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fFunctions = new TList;
    fIntegral  = 0;
    fPainter   = 0;
+   fEntries       = 0;
+   fNormFactor    = 0;
+   fTsumw         = fTsumw2=fTsumwx=fTsumwx2=0;
+   fMaximum       = -1111;
+   fMinimum       = -1111;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
    fZaxis.SetName("zaxis");
