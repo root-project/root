@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:$:$Id:$
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLResult.h,v 1.1 2001/06/14 23:19:15 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 #if !defined(__CINT__)
 #include <sys/time.h>
 #include <libpq-fe.h>
-#include <libpq-int.h>
 #else
 struct PGresult;
 #endif
