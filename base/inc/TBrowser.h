@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ class TBrowserTimer;
 class TBrowser : public TNamed {
 
 private:
-   TBrowserImp   *fImp;                //Window system specific browser implementation
+   TBrowserImp   *fImp;                //!Window system specific browser implementation
    TBrowserTimer *fTimer;              //Browser's timer
    TObject       *fLastSelectedObject; //The last TObject selected by user
 
