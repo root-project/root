@@ -49,12 +49,12 @@ void TGLRender::Traverse()
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    Int_t start = 0, end = fGLCameras.GetEntriesFast();
-   
+
    if (!fAllActive) {
       start = fActiveCam;
       end = start + 1;
    }
-   
+
    for (;start < end; ++start) {
       TGLCamera *currCam = (TGLCamera *)fGLCameras.At(start);
       currCam->TurnOn();
@@ -88,7 +88,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
 {
    TGLCamera *actCam = (TGLCamera *)fGLCameras.At(cam);
    UInt_t selectBuff[512] = {0};
-   
+
    glSelectBuffer(512, selectBuff);
    glRenderMode(GL_SELECT);
    glInitNames();
@@ -151,7 +151,7 @@ void TGLRender::EndMovement()
 void TGLRender::BuildGLList(Bool_t exec)
 {
    glNewList(fDList, exec ? GL_COMPILE_AND_EXECUTE : GL_COMPILE);
-   
+
    for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
       TGLSceneObject *currObj = (TGLSceneObject *)fGLObjects.At(i);
       if (currObj->IsTransparent() && currObj != fSelectedObj) {

@@ -37,7 +37,7 @@ void TGLSimpleTransform::Apply()const
 TGLPerspectiveCamera::TGLPerspectiveCamera(const Double_t *vv, const Int_t *vp,
                                            const TGLSimpleTransform &tr)
                          :TGLCamera(vv, vp),
-                          fTransformation(tr) 
+                          fTransformation(tr)
 {
 }
 
@@ -70,7 +70,7 @@ void TGLPerspectiveCamera::TurnOn(Int_t x, Int_t y)const
 
 TGLOrthoCamera::TGLOrthoCamera(const Double_t *vv, const Int_t *vp,
                                const TGLSimpleTransform &tr)
-                   :TGLCamera(vv, vp), 
+                   :TGLCamera(vv, vp),
                     fTransformation(tr)
 {
 }

@@ -19,7 +19,7 @@ public:
    TGLSceneObject(const Float_t *color = 0, UInt_t glname = 0);
 
    virtual Bool_t IsTransparent()const;
-   virtual void ResetTransparency();
+   virtual void ResetTransparency(char newval);
 
    virtual void GLDraw()const = 0;
    virtual void Shift(Double_t x, Double_t y, Double_t z);
@@ -52,14 +52,14 @@ private:
    TObject *fRealObj;
 
    Bool_t fIsTransparent;
-   Int_t fNbPols;
+   UInt_t fNbPols;
 
 public:
    TGLFaceSet(const TBuffer3D &buff, const Float_t *color,
               UInt_t glname, TObject *realObj);
 
    Bool_t IsTransparent()const;
-   void ResetTransparency();
+   void ResetTransparency(char newval);
 
    void GLDraw()const;
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.19 2004/09/06 16:42:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.20 2004/09/07 08:15:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -317,7 +317,7 @@ void TGeoShape::TransformPoints(TBuffer3D *buff) const
    // Set reflection flag and transparency
    if (gGeoManager) {
       Bool_t isReflection = gGeoManager->IsMatrixReflection();
-      if (isReflection) buff->SetBit(TBuffer3D::kIsReflection);
+      buff->SetBit(TBuffer3D::kIsReflection, isReflection);
       TGeoVolume *vol = gGeoManager->GetPaintVolume();
       buff->fTransparency = (vol==0)?0:vol->GetTransparency();
       Double_t dlocal[3];

@@ -22,7 +22,7 @@ static GLUtriangulatorObj *GetTesselator()
          typedef void (*tessfuncptr_t)();
 #endif
          fTess = gluNewTess();
-         
+
          if (!fTess) {
             Error("GetTesselator::Init", "could not create tesselation object");
          } else {
@@ -72,15 +72,15 @@ static GLenum gLightNames[] = {GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3,
 
 //______________________________________________________________________________
 TGLSceneObject::TGLSceneObject(const Float_t *color, UInt_t glname)
-                   :fColor(), fGLName(glname), fNextT(0) 
+                   :fColor(), fGLName(glname), fNextT(0)
 {
    if (color) {
       fColor[0] = color[0];
       fColor[1] = color[1];
       fColor[2] = color[2];
    } else {
-      fColor[0] = 
-      fColor[1] = 
+      fColor[0] =
+      fColor[1] =
       fColor[2] = 1.f;
    }
    fColor[3] = 1.f;
@@ -93,7 +93,7 @@ Bool_t TGLSceneObject::IsTransparent()const
 }
 
 //______________________________________________________________________________
-void TGLSceneObject::ResetTransparency()
+void TGLSceneObject::ResetTransparency(char)
 {
 }
 
@@ -107,27 +107,32 @@ TObject *TGLSceneObject::GetRealObject()const
 {
    return 0;
 }
+
 //______________________________________________________________________________
-TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, 
+TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
                        UInt_t glname, TObject *realobj)
-               :TGLSceneObject(color, glname), 
+               :TGLSceneObject(color, glname),
                 fVertices(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts),
                 fNormals(3 * buff.fNbPols)
 {
    fRealObj = realobj;
-   fIsTransparent = kFALSE;
+   fColor[3] = 1.f - buff.fTransparency / 100.f;
    fNbPols = buff.fNbPols;
 
    Int_t * segs = buff.fSegs;
    Int_t * pols = buff.fPols;
    Double_t * pnts = buff.fPnts;
+   Bool_t revOrder = buff.TestBit(TBuffer3D::kIsReflection) ? kFALSE : kTRUE;
+   Int_t shiftInd = revOrder ? -1 : 1;
 
    for (Int_t numPol = 0, e = buff.fNbPols, j = 0; numPol < e; ++numPol) {
       ++j;
-      Int_t segmentInd = pols[j] + j;
+      Int_t segmentInd = revOrder ? pols[j] + j : j + 1;
       Int_t segmentCol = pols[j];
-      Int_t seg1 = pols[segmentInd--];
-      Int_t seg2 = pols[segmentInd--];
+      Int_t seg1 = pols[segmentInd];
+      segmentInd += shiftInd;
+      Int_t seg2 = pols[segmentInd];
+      segmentInd += shiftInd;
       Int_t np[] = {segs[seg1 * 3 + 1], segs[seg1 * 3 + 2], segs[seg2 * 3 + 1], segs[seg2 * 3 + 2]};
       Int_t n[] = {-1, -1, -1};
       Int_t normp[] = {0, 0, 0};
@@ -143,22 +148,28 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
       Int_t sizeInd = fPolyDesc.size() - 1;
       fPolyDesc.insert(fPolyDesc.end(), n, n + 3);
       Int_t check = CheckPoints(n, normp), ngood = check;
+      Int_t lastAdded = n[2];
 
       if (check == 3)
          TMath::Normal2Plane(pnts + n[0] * 3, pnts + n[1] * 3, pnts + n[2] * 3, &fNormals[numPol * 3]);
 
-      while (segmentInd > j + 1) {
+      Int_t end = revOrder ? j + 1 : j + segmentCol + 1;
+
+      for (; segmentInd != end; segmentInd += shiftInd) {
+//      while (segmentInd > j + 1) {
          seg2 = pols[segmentInd];
          np[0] = segs[seg2 * 3 + 1];
          np[1] = segs[seg2 * 3 + 2];
-         if (np[0] == n[2]) {
+         if (np[0] == lastAdded) {
             fPolyDesc.push_back(np[1]);
             if (check != 3)
                normp[ngood ++] = np[1];
+            lastAdded = np[1];
          } else {
              fPolyDesc.push_back(np[0]);
              if (check != 3)
                 normp[ngood ++] = np[0];
+            lastAdded = np[0];
          }
 
          if (check != 3 && ngood == 3) {
@@ -169,7 +180,7 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
             ngood = check;
          }
          ++fPolyDesc[sizeInd];
-         --segmentInd;
+         //--segmentInd;
       }
       j += segmentCol + 1;
    }
@@ -178,13 +189,13 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
 //______________________________________________________________________________
 Bool_t TGLFaceSet::IsTransparent()const
 {
-   return fIsTransparent;
+   return fColor[3] < 1.f;;
 }
 
 //______________________________________________________________________________
-void TGLFaceSet::ResetTransparency()
+void TGLFaceSet::ResetTransparency(char newval)
 {
-   fIsTransparent = !fIsTransparent;
+   fColor[3] = 1.f - newval / 100.f;
 }
 
 //______________________________________________________________________________
@@ -193,7 +204,7 @@ void TGLFaceSet::GLDraw()const
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialf(GL_FRONT, GL_SHININESS, 60.f);
-   
+
    GLUtriangulatorObj *tessObj = GetTesselator();
    const Double_t *pnts = &fVertices[0];
    const Double_t *normals = &fNormals[0];
@@ -202,36 +213,36 @@ void TGLFaceSet::GLDraw()const
    if (IsTransparent()) {
       glEnable(GL_BLEND);
       glDepthMask(GL_FALSE);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    }
 
    glLoadName(GetGLName());
-      
+
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t npoints = pols[j++];
       if (tessObj && npoints > 4) {
          gluBeginPolygon(tessObj);
          gluNextContour(tessObj, (GLenum)GLU_UNKNOWN);
          glNormal3dv(normals + i * 3);
-         
+
          for (Int_t k = 0; k < npoints; ++k, ++j)
             gluTessVertex(tessObj, (Double_t *)pnts + pols[j] * 3, (Double_t *)pnts + pols[j] * 3);
-         
+
          gluEndPolygon(tessObj);
       } else {
          glBegin(GL_POLYGON);
          glNormal3dv(normals + i * 3);
-         
+
          for (Int_t k = 0; k < npoints; ++k, ++j)
             glVertex3dv(pnts + pols[j] * 3);
          glEnd();
       }
    }
-  
+
    if (IsTransparent()) {
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -245,7 +256,7 @@ void TGLFaceSet::SetColor(const Float_t *newcolor)
       fColor[0] =
       fColor[1] =
       fColor[2] = 1.f;
-   }  
+   }
 }
 
 //______________________________________________________________________________
@@ -291,14 +302,14 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buff, const Float_t *color)
 }
 
 //______________________________________________________________________________
-void TGLPolyMarker::GLDraw()const 
+void TGLPolyMarker::GLDraw()const
 {
    const Double_t *vertices = &fVertices[0];
    UInt_t size = fVertices.size();
    Int_t stacks = 6, slices = 6;
    Float_t pointSize = 6.f;
    Double_t top_radius = 5.;
-   GLUquadric *quadObj = GetQuadric();   
+   GLUquadric *quadObj = GetQuadric();
 
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
 
@@ -402,10 +413,10 @@ void TGLPolyLine::GLDraw()const
 {
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glBegin(GL_LINE_STRIP);
-   
+
    for (UInt_t i = 0; i < fVertices.size(); i += 3)
       glVertex3d(fVertices[i], fVertices[i + 1], fVertices[i + 2]);
-   
+
    glEnd();
 }
 
