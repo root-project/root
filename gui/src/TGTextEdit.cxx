@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.11 2000/12/13 15:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.12 2001/06/27 16:54:25 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1117,10 +1117,18 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                               new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
                                            kMBIconExclamation, kMBOk, 0);
                            }
+                        } else {
+                           delete fSearch;
+                           fSearch = 0;
                         }
                      }
                      break;
                   case kM_SEARCH_FINDAGAIN:
+                     if (!fSearch) {
+                        SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
+                                    kM_SEARCH_FIND, 0);
+                        return kTRUE;
+                     }
                      if (!Search(fSearch->fBuffer, fSearch->fDirection,
                                  fSearch->fCaseSensitive)) {
                         char msg[256];
