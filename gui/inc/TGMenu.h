@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.3 2000/09/30 11:24:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.4 2000/10/09 19:15:22 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGPopupMenu : public TGFrame {
+class TGPopupMenu : public TGFrame, public TQObject {
 
 friend class TGClient;
 friend class TGMenuTitle;
@@ -163,6 +163,9 @@ public:
    virtual Bool_t  HandleCrossing(Event_t *event);
    virtual Bool_t  HandleTimer(TTimer *t);
    virtual void    Associate(const TGWindow *w) { fMsgWindow = w; }
+
+   virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
+   virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
 
    ClassDef(TGPopupMenu,0)  // Popup menu
 };

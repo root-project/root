@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.5 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.6 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -46,7 +46,7 @@
 
 
 ClassImp(TGListTreeItem)
-ClassImp(TGListTree)
+ClassImpQ(TGListTree)
 
 
 //--- Some utility functions ---------------------------------------------------
@@ -122,7 +122,7 @@ void TGListTreeItem::SetPictures(const TGPicture* opened, const TGPicture* close
    fOpenPic   = opened;
    fClosedPic = closed;
 }
-//--------------------------------------------------------------------
+
 
 //______________________________________________________________________________
 TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
@@ -285,6 +285,7 @@ Bool_t TGListTree::HandleButton(Event_t *event)
          HighlightItem(item, kTRUE, kTRUE);
          SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_ITEMCLICK),
                      event->fCode, (event->fYRoot << 16) | event->fXRoot);
+         Clicked(item, event->fCode);
       }
    }
    return kTRUE;
@@ -309,6 +310,7 @@ Bool_t TGListTree::HandleDoubleClick(Event_t *event)
       //fClient->NeedRedraw(this); //DoRedraw();
       SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_ITEMDBLCLICK),
                   event->fCode, (event->fYRoot << 16) | event->fXRoot);
+      DoubleClicked(item, event->fCode);
    }
    return kTRUE;
 }
@@ -368,6 +370,32 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
       fTipItem = item;
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn)
+{
+   // Emit DoubleClicked() signal.
+
+   Long_t args[2];
+
+   args[0] = (Long_t)entry;
+   args[1] = btn;
+
+   Emit("DoubleClicked(TGListTreeItem*,Int_t)", args);
+}
+
+//______________________________________________________________________________
+void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn)
+{
+   // Emit Clicked() signal.
+
+   Long_t args[2];
+
+   args[0] = (Long_t)entry;
+   args[1] = btn;
+
+   Emit("Clicked(TGListTreeItem*,Int_t)", args);
 }
 
 //---- drawing functions

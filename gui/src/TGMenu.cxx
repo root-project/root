@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -38,8 +38,8 @@
 
 
 ClassImp(TGMenuBar)
-ClassImp(TGPopupMenu)
 ClassImp(TGMenuTitle)
+ClassImpQ(TGPopupMenu)
 
 
 //______________________________________________________________________________
@@ -588,9 +588,11 @@ Bool_t TGPopupMenu::HandleButton(Event_t *event)
       if (fHasGrab) gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab
       if (fCurrent != 0) {
          fCurrent->fStatus &= ~kMenuActiveMask;
-         if (fCurrent->fStatus & kMenuEnableMask)
+         if (fCurrent->fStatus & kMenuEnableMask) {
             SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), id,
                         (Long_t)fCurrent->fUserData);
+            Activated(id);
+         }
       }
    }
    return kTRUE;
@@ -687,6 +689,7 @@ void TGPopupMenu::Activate(TGMenuEntry *entry)
          // test...
          SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENUSELECT),
                      entry->fEntryId, (Long_t)entry->fUserData);
+         Highlighted(entry->fEntryId);
       }
    }
    fCurrent = entry;
@@ -1095,9 +1098,11 @@ void TGMenuTitle::DoSendMessage()
    // Send final selected menu item to be processed.
 
    if (fMenu)
-      if (fTitleId != -1)
+      if (fTitleId != -1) {
          SendMessage(fMenu->fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), fTitleId,
                      (Long_t)fTitleData);
+         fMenu->Activated(fTitleId);
+      }
 }
 
 //______________________________________________________________________________

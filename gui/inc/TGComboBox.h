@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.2 2000/10/09 19:15:22 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -59,18 +59,16 @@ public:
    ClassDef(TGComboBoxPopup,0)  // Combobox popup window
 };
 
-class TGComboBox : public TGCompositeFrame {
+class TGComboBox : public TGCompositeFrame, public TGWidget {
 
 friend class TGClient;
 
 protected:
-   Int_t                fComboBoxId;    // combobox widget id
    TGLBEntry           *fSelEntry;      // selected item frame
    TGScrollBarElement  *fDDButton;      // button controlling drop down of popup
    TGComboBoxPopup     *fComboFrame;    // popup containing a listbox
    TGListBox           *fListBox;       // the listbox with text items
    const TGPicture     *fBpic;          // down arrow picture used in fDDButton
-   const TGWindow      *fMsgWindow;     // window handling combobox messages
    TGLayoutHints       *fLhs;           // layout hints for selected item frame
    TGLayoutHints       *fLhb;           // layout hints for fDDButton
    TGLayoutHints       *fLhdd;          // layout hints for fListBox
@@ -84,7 +82,6 @@ public:
    virtual void DrawBorder();
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
-   virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
@@ -112,6 +109,10 @@ public:
            { return fListBox->GetSelectedEntry(); }
 
    virtual void SetTopEntry(TGLBEntry *e, TGLayoutHints *lh);
+
+   virtual void Selected(Int_t widgetId, Int_t id); //*SIGNAL*
+   virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } //*SIGNAL*
+   virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } //*SIGNAL*
 
    ClassDef(TGComboBox,0)  // Combo box widget
 };

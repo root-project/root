@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.5 2000/10/12 16:53:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.6 2000/10/15 13:46:40 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -46,7 +46,7 @@
 ClassImp(TGLBEntry)
 ClassImp(TGTextLBEntry)
 ClassImp(TGLBContainer)
-ClassImp(TGListBox)
+ClassImpQ(TGListBox)
 
 
 //______________________________________________________________________________
@@ -902,8 +902,21 @@ Bool_t TGListBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
       case kC_CONTAINER:
          switch (GET_SUBMSG(msg)) {
             case kCT_ITEMCLICK:
-               SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_LISTBOX),
-                           fWidgetId, parm1);
+               {
+                  SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_LISTBOX),
+                              fWidgetId, parm1);
+                  if (GetMultipleSelections()) SelectionChanged();
+                  TGLBEntry *entry = GetSelectedEntry();
+                  if (entry) {
+                     if (entry->InheritsFrom(TGTextLBEntry::Class())) {
+                        const char *text;
+                        text = ((TGTextLBEntry*)entry)->GetText()->GetString();
+                        Selected(text);
+                     }
+                     Selected(fWidgetId, (Int_t) parm1);
+                     Selected((Int_t) parm1);
+                  }
+               }
             break;
          }
          break;
@@ -913,4 +926,17 @@ Bool_t TGListBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGListBox::Selected(Int_t widgetId, Int_t id)
+{
+   // Emit signal with list box id and entry id.
+
+   Long_t args[2];
+
+   args[0] = widgetId;
+   args[1] = id;
+
+   Emit("Selected(Int_t,Int_t)", args);
 }

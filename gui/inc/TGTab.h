@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.4 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -125,6 +125,8 @@ public:
    TGTabElement     *GetCurrentTab() const { return GetTabTab(fCurrent); }
    UInt_t            GetTabHeight() const { return fTabh; }
    Int_t             GetNumberOfTabs() const;
+
+   virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
 
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();

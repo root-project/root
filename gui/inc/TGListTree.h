@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.3 2000/09/05 10:56:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.4 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -88,7 +88,7 @@ public:
 };
 
 
-class TGListTree : public TGFrame {
+class TGListTree : public TGFrame, public TGWidget {
 
 friend class TGClient;
 
@@ -109,7 +109,6 @@ protected:
    UInt_t           fDefh;           // default list height
    Int_t            fExposeTop;      // top y postion of visible region
    Int_t            fExposeBottom;   // bottom y position of visible region
-   const TGWindow  *fMsgWindow;      // pointer to window handling list messages
    TGToolTip       *fTip;            // tooltip shown when moving over list items
    TGListTreeItem  *fTipItem;        // item for which tooltip is set
    TGCanvas        *fCanvas;         // canvas which contains the tree
@@ -151,7 +150,6 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
 
-   virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void SetCanvas(TGCanvas *canvas) { fCanvas = canvas; }
 
    virtual TGDimension GetDefaultSize() const
@@ -188,6 +186,9 @@ public:
    TGListTreeItem *FindChildByName(TGListTreeItem *item, const char *name);
    TGListTreeItem *FindChildByData(TGListTreeItem *item, void *userData);
    TGListTreeItem *FindItemByPathname(const char *path);
+
+   virtual void DoubleClicked(TGListTreeItem* entry, Int_t btn);  //*SIGNAL*
+   virtual void Clicked(TGListTreeItem* entry, Int_t btn);  //*SIGNAL*
 
    ClassDef(TGListTree,0)  //Show items in a tree structured list
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.4 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.5 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -161,7 +161,7 @@ All other keys with valid ASCII codes insert themselves into the line.
 //
 //    This signal is emitted when the return or enter key is pressed.
 //______________________________________________________________________________
-// TGTextEntry::TextChanged(const Text* text)
+// TGTextEntry::TextChanged(const char *text)
 //
 //    This signal is emitted every time the text has changed.
 //    The argument is the new text.
@@ -308,7 +308,7 @@ void  TGTextEntry::ReturnPressed()
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTENTRY, kTE_ENTER), fWidgetId, 0);
    fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_ENTER),fWidgetId, 0);
 
-   // Emit("ReturnPressed()");
+   Emit("ReturnPressed()");
 }
 
 //______________________________________________________________________________
@@ -319,7 +319,7 @@ void  TGTextEntry::TextChanged(const char *)
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTENTRY, kTE_TEXTCHANGED),fWidgetId, 0);
    fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_TEXTCHANGED),fWidgetId, 0);
 
-   // Emit("TextChanged(char*)", GetText());  // The argument is the new text.
+   Emit("TextChanged(char*)", GetText());  // The argument is the new text.
 }
 
 //______________________________________________________________________________

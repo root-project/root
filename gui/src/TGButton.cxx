@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -55,13 +55,14 @@
 #include "TGWidget.h"
 #include "TGPicture.h"
 #include "TGToolTip.h"
+#include "TGButtonGroup.h"
 
 
-ClassImp(TGButton)
-ClassImp(TGTextButton)
-ClassImp(TGPictureButton)
-ClassImp(TGCheckButton)
-ClassImp(TGRadioButton)
+ClassImpQ(TGButton)
+ClassImpQ(TGTextButton)
+ClassImpQ(TGPictureButton)
+ClassImpQ(TGCheckButton)
+ClassImpQ(TGRadioButton)
 
 
 //______________________________________________________________________________
@@ -80,6 +81,11 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    fState    = kButtonUp;
    fStayDown = kFALSE;
 
+   if (p && p->IsA()->InheritsFrom(TGButtonGroup::Class())) {
+      TGButtonGroup *bg = (TGButtonGroup*) p;
+      bg->Insert(this, id);
+   }
+
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier,
                     kButtonPressMask | kButtonReleaseMask,
                     kNone, kNone);
@@ -92,6 +98,12 @@ TGButton::~TGButton()
 {
    // Delete button.
 
+   // remove from button group
+   if (fGroup) {
+      fGroup->Remove(this);
+      fGroup = 0;
+   }
+
    delete fTip;
 }
 
@@ -99,6 +111,8 @@ TGButton::~TGButton()
 void TGButton::SetState(EButtonState state)
 {
    // Set button state.
+
+   Bool_t was = !IsDown();   // kTRUE if button was off
 
    if (state != fState) {
       switch (state) {
@@ -116,6 +130,29 @@ void TGButton::SetState(EButtonState state)
       fState = state;
       fClient->NeedRedraw(this);
    }
+
+   Bool_t now = !IsDown();               // kTRUE if button now is off
+
+   // emit signals
+   if (was && !now) {
+      Pressed();                          // emit Pressed  = was off , now on
+      if (fStayDown) Clicked();           // emit Clicked
+   }
+
+   if (!was && now) {
+      Released();                         // emit Released = was on , now off
+      Clicked();                          // emit Clicked
+   }
+
+   if ((was != now) && IsToggleButton()) Toggled(!now); // emit Toggled  = was != now
+}
+
+//______________________________________________________________________________
+void TGButton::SetGroup(TGButtonGroup *group)
+{
+   // Sets new button-group for this button.
+
+   if (fGroup != group) fGroup = group;
 }
 
 //______________________________________________________________________________
@@ -298,6 +335,14 @@ void TGTextButton::SetText(TGHotString *new_label)
    fTHeight = max_ascent + max_descent;
 
    fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGTextButton::SetText(const TString &new_label)
+{
+   // Set new button text.
+
+   SetText(new TGHotString(new_label));
 }
 
 //______________________________________________________________________________
@@ -548,6 +593,13 @@ void TGCheckButton::PSetState(EButtonState state)
 
    if (state != fState) {
       fState = state;
+
+      // button signals
+      if (fState == kButtonUp)   Released();            // emit Released
+      if (fState == kButtonDown) Pressed();             // emit Pressed
+      Clicked();                                        // emit Clicked
+      Toggled(fState == kButtonDown);                   // emit Toggled
+
       fClient->NeedRedraw(this);
    }
 }
@@ -767,6 +819,10 @@ void TGRadioButton::Init()
          main->BindKey(this, fHKeycode, kKeyMod1Mask);
       }
    }
+
+   if (fParent->IsA()->InheritsFrom(TGButtonGroup::Class())) {
+      ((TGButtonGroup*)fParent)->SetRadioButtonExclusive(kTRUE);
+   }
 }
 
 //______________________________________________________________________________
@@ -790,6 +846,13 @@ void TGRadioButton::PSetState(EButtonState state)
 
    if (state != fState) {
       fPrevState = fState = state;
+
+      // button signals
+      if (fState == kButtonUp)   Released();          // emit Released
+      if (fState == kButtonDown) Pressed();           // emit Pressed
+      Clicked();                                      // emit Clicked
+      Toggled(fState == kButtonDown);                 // emit Toggled
+
       fClient->NeedRedraw(this);
    }
 }

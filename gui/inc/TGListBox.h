@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.6 2000/10/12 16:53:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.7 2000/10/15 13:46:40 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -243,6 +243,11 @@ public:
    virtual Bool_t GetSelection(Int_t id) { return fLbc->GetSelection(id); }
    virtual TGLBEntry *GetSelectedEntry() const { return fLbc->GetSelectedEntry(); }
    virtual void GetSelectedEntries(TList *selected);
+
+   virtual void Selected(Int_t widgetId, Int_t id);   //*SIGNAL*
+   virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } //*SIGNAL*
+   virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } //*SIGNAL
+   virtual void SelectionChanged() { Emit("SelectionChanged()"); } //*SIGNAL*
 
    ClassDef(TGListBox,0)  // Listbox widget
 };

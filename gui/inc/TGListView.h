@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.4 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -165,7 +165,7 @@ public:
 
 
 
-class TGListView : public TGCanvas {
+class TGListView : public TGCanvas, public TQObject {
 
 friend class TGClient;
 
@@ -194,6 +194,10 @@ public:
    virtual void   SetDefaultHeaders();
    virtual void   SetViewMode(EListViewMode ViewMode);
    virtual const char *GetHeader(Int_t idx) const;
+
+   virtual void SelectionChanged() { Emit("SelectionChanged()"); }  //*SIGNAL*
+   virtual void DoubleClicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
+   virtual void Clicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
 
    ClassDef(TGListView,0)  // List view widget (iconbox, small icons or tabular view)
 };

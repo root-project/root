@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 
 ClassImp(TGTabElement)
 ClassImp(TGTabLayout)
-ClassImp(TGTab)
+ClassImpQ(TGTab)
 
 
 //______________________________________________________________________________
@@ -335,6 +335,7 @@ void TGTab::ChangeTab(Int_t tabIndex)
       }
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_TAB), fCurrent, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_TAB), fCurrent, 0);
+      Selected(fCurrent);
    }
 }
 
@@ -342,8 +343,7 @@ void TGTab::ChangeTab(Int_t tabIndex)
 Bool_t TGTab::SetTab(Int_t tabIndex)
 {
    // Brings the composite frame with the index tabIndex to the
-   // front and generate the following event if the front tab has
-   // changed:
+   // front and generate the following event if the front tab has changed:
    // kC_COMMAND, kCM_TAB, tab id, 0.
    // Returns kFALSE if tabIndex is a not valid index
 

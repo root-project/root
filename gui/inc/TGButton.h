@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.3 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -71,6 +71,7 @@ class TGToolTip;
 class TGButton : public TGFrame, public TGWidget {
 
 friend class TGClient;
+friend class TGButtonGroup;
 
 protected:
    UInt_t         fTWidth;      // button width
@@ -80,6 +81,10 @@ protected:
    GContext_t     fNormGC;      // graphics context used for drawing button
    void          *fUserData;    // pointer to user data structure
    TGToolTip     *fTip;         // tool tip associated with button
+   TGButtonGroup *fGroup;       // button group this button belongs to
+
+   virtual void   SetGroup(TGButtonGroup *group);
+   virtual void   SetToggleButton(Bool_t) { }
 
    static TGGC fgHibckgndGC;
 #ifdef R__SUNCCBUG
@@ -100,6 +105,21 @@ public:
    virtual void         SetState(EButtonState state);
    virtual EButtonState GetState() const { return fState; }
    virtual void         AllowStayDown(Bool_t a) { fStayDown = a; }
+   TGButtonGroup       *GetGroup() const { return fGroup; }
+
+   virtual Bool_t       IsDown() const { return !(fOptions & kRaisedFrame); }
+   virtual void         SetDown(Bool_t on = kTRUE)
+                           { on ? SetState(kButtonDown) : SetState(kButtonUp); }
+   virtual Bool_t       IsOn() const { return IsDown(); }
+   virtual void         SetOn(Bool_t on = kTRUE) { SetDown(on); }
+   virtual Bool_t       IsToggleButton() const { return kFALSE; }
+   virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
+   virtual void         Toggle() { SetDown(IsDown() ? kFALSE : kTRUE); }
+
+   void Pressed()  { Emit("Pressed()"); }  //*SIGNAL*
+   void Released() { Emit("Released()");}  //*SIGNAL*
+   void Clicked()  { Emit("Clicked()"); }  //*SIGNAL*
+   void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", on); }  //*SIGNAL*
 
    static const TGGC   &GetDefaultGC();
    static const TGGC   &GetHibckgndGC();
@@ -125,22 +145,28 @@ protected:
 
 public:
    TGTextButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+                GContext_t norm = fgDefaultGC(),
+                FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    TGTextButton(const TGWindow *p, const char *s, Int_t id = -1,
-                GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+                GContext_t norm = fgDefaultGC(),
+                FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGTextButton(const TGWindow *p, const char *s, const char *cmd, Int_t id = -1,
-                GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+   TGTextButton(const TGWindow *p, const char *s, const char *cmd,
+                Int_t id = -1, GContext_t norm = fgDefaultGC(),
+                FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGTextButton();
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth+8, fTHeight+7); }
+   virtual TGDimension GetDefaultSize() const
+                { return TGDimension(fTWidth+8, fTHeight+7); }
 
-   virtual Bool_t HandleKey(Event_t *event);
+   virtual Bool_t     HandleKey(Event_t *event);
    const TGHotString *GetText() const { return fLabel; }
-   void SetTextJustify(Int_t tmode) { fTMode = tmode; }
-   void SetText(TGHotString *new_label);
+   TString            GetString() const { return TString(fLabel->GetString()); }
+   void               SetTextJustify(Int_t tmode) { fTMode = tmode; }
+   void               SetText(TGHotString *new_label);
+   void               SetText(const TString &new_label);
 
    static FontStruct_t GetDefaultFontStruct();
 
@@ -191,21 +217,26 @@ public:
 
 public:
    TGCheckButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGCheckButton(const TGWindow *p, const char *s, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGCheckButton(const TGWindow *p, const char *s, const char *cmd, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    virtual ~TGCheckButton();
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth+22, fTHeight+2); }
+   virtual TGDimension GetDefaultSize() const
+                  { return TGDimension(fTWidth+22, fTHeight+2); }
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
+   virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual void   SetState(EButtonState state) { PSetState(fPrevState = state); }
 
    static FontStruct_t  GetDefaultFontStruct();
@@ -240,22 +271,28 @@ public:
 
 public:
    TGRadioButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGRadioButton(const TGWindow *p, const char *s, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGRadioButton(const TGWindow *p, const char *s, const char *cmd, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    virtual ~TGRadioButton();
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth+22, fTHeight+2); }
+   virtual TGDimension GetDefaultSize() const
+                  { return TGDimension(fTWidth+22, fTHeight+2); }
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual void SetState(EButtonState state) { PSetState(fPrevState = state); }
+   virtual Bool_t IsToggleButton() const { return kTRUE; }
+   virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
 
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();

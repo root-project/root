@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.4 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.5 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -162,8 +162,8 @@ public:
             void        Deselect();
             void        Clear(Option_t *option="");
    virtual  void        SetFocus();
-//            Bool_t      HasFocus();
-   virtual  void        TextChanged(const char* text = 0);      //*SIGNAL*
+//          Bool_t      HasFocus();
+   virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
 
    static FontStruct_t  GetDefaultFontStruct();

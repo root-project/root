@@ -1,5 +1,5 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
-// Author: Fons Rademakers   06/01/98
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.1 2000/10/17 12:30:14 rdm Exp $
+// Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

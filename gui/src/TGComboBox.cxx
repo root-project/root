@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.6 2000/10/08 14:27:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.7 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -44,9 +44,9 @@
 #include "TGScrollBar.h"
 #include "TGPicture.h"
 
-ClassImp(TGComboBoxPopup)
-ClassImp(TGComboBox)
 
+ClassImp(TGComboBoxPopup)
+ClassImpQ(TGComboBox)
 
 //______________________________________________________________________________
 TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
@@ -123,7 +123,7 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
 {
    // Create a combo box widget.
 
-   fComboBoxId = id;
+   fWidgetId  = id;
    fMsgWindow = p;
    fBpic = fClient->GetPicture("arrow_down.xpm");
 
@@ -144,7 +144,7 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
 
    fComboFrame = new TGComboBoxPopup(fClient->GetRoot(), 100, 100, kVerticalFrame);
 
-   fListBox = new TGListBox(fComboFrame, fComboBoxId, kChildFrame);
+   fListBox = new TGListBox(fComboFrame, fWidgetId, kChildFrame);
    fListBox->Resize(100, 100);
    fListBox->Associate(this);
    fListBox->GetScrollBar()->GrabPointer(kFALSE); // combobox will do a pointergrab
@@ -271,8 +271,15 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
                Layout();
                fComboFrame->EndPopup();
                SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_COMBOBOX),
-                           fComboBoxId, parm2);
-            break;
+                           fWidgetId, parm2);
+               if (e->InheritsFrom(TGTextLBEntry::Class())) {
+                  const char *text;
+                  text = ((TGTextLBEntry*)e)->GetText()->GetString();
+                  Selected(text);
+               }
+               Selected(fWidgetId, (Int_t)parm2);
+               Selected((Int_t)parm2);
+               break;
          }
          break;
 
@@ -280,4 +287,17 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
          break;
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGComboBox::Selected(Int_t widgetId, Int_t id)
+{
+   // Emit signal.
+
+   Long_t args[2];
+
+   args[0] = widgetId;
+   args[1] = id;
+
+   Emit("Selected(Int_t,Int_t)", args);
 }

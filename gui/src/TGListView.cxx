@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.4 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.5 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -48,9 +48,7 @@
 
 ClassImp(TGLVEntry)
 ClassImp(TGLVContainer)
-ClassImp(TGListView)
-
-
+ClassImpQ(TGListView)
 
 //______________________________________________________________________________
 TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
@@ -877,11 +875,60 @@ Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       switch (GET_SUBMSG(msg)) {
          case kSB_SLIDERTRACK:
          case kSB_SLIDERPOS:
-           fVport->SetHPos((Int_t)-parm1 * fMaxSize.fWidth);
-           break;
+            fVport->SetHPos((Int_t)-parm1 * fMaxSize.fWidth);
+            break;
+         default:
+            break;
       }
    } else {
+      TGLVContainer *cnt = (TGLVContainer*)GetContainer();
+      const TGLVEntry *entry;
+      void *p = 0;
+
+      entry = cnt->GetNextSelected(&p);
+
+      switch (GET_SUBMSG(msg)) {
+         case kCT_ITEMCLICK:
+            if ((cnt->NumSelected() == 1) && (entry != 0))
+               Clicked((TGLVEntry*)entry, (Int_t)parm1);
+            break;
+         case kCT_ITEMDBLCLICK:
+            if ((cnt->NumSelected() == 1) && (entry!=0))
+               DoubleClicked((TGLVEntry*)entry, (Int_t)parm1);
+            break;
+         case kCT_SELCHANGED:
+            SelectionChanged();
+            break;
+         default:
+            break;
+      }
       return TGCanvas::ProcessMessage(msg, parm1, parm2);
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn)
+{
+   // Emit DoubleClicked() signal.
+
+   Long_t args[2];
+
+   args[0] = (Long_t)entry;
+   args[1] = btn;
+
+   Emit("DoubleClicked(TGLVEntry*,Int_t)", args);
+}
+
+//______________________________________________________________________________
+void TGListView::Clicked(TGLVEntry *entry, Int_t btn)
+{
+   // Emit Clicked() signal.
+
+   Long_t args[2];
+
+   args[0] = (Long_t)entry;
+   args[1] = btn;
+
+   Emit("Clicked(TGLVEntry*,Int_t)", args);
 }
