@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.68 2004/06/24 14:54:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.69 2004/06/25 17:27:09 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1037,7 +1037,7 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_LOGDONE:
             (*mess) >> fStatus >> fParallel;
-            PDB(kGlobal,2) Info("Collect","kPROOF_PROGRESS: status %d  parallel %d",
+            PDB(kGlobal,2) Info("Collect:kPROOF_LOGDONE","status %d  parallel %d",
                fStatus, fParallel);
             mon->DeActivate(s);
             if (!mon->GetActive()) loop = 0;
@@ -1060,7 +1060,7 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_OUTPUTLIST:
             {
-               PDB(kGlobal,2) Info("Collect","Got kPROOF_OUTPUTLIST");
+               PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
                TList *out = (TList *) mess->ReadObject(TList::Class());
                if (out) {
                   out->SetOwner();
@@ -1071,7 +1071,7 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_FEEDBACK:
             {
-               PDB(kGlobal,2) Info("Collect","Got kPROOF_FEEDBACK");
+               PDB(kGlobal,2) Info("Collect:kPROOF_FEEDBACK","Enter");
                TList *out = (TList *) mess->ReadObject(TList::Class());
                out->SetOwner();
                sl = FindSlave(s);
@@ -1100,7 +1100,7 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_PROGRESS:
             {
-               PDB(kGlobal,2) Info("Collect","Got kPROOF_PROGRESS");
+               PDB(kGlobal,2) Info("Collect:kPROOF_PROGRESS","Enter");
                Long64_t total, processed;
 
                (*mess) >> total >> processed;
@@ -1111,7 +1111,7 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_GETSLAVEINFO:
             {
-               PDB(kGlobal,2) Info("Collect","Got kPROOF_GETSLAVEINFO");
+               PDB(kGlobal,2) Info("Collect:kPROOF_GETSLAVEINFO","Enter");
 
                (*mess) >> fSlaveInfo;
                mon->DeActivate(s);
