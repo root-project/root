@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.5 2000/12/26 14:20:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.6 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1295,6 +1295,7 @@ void TMatrix::Streamer(TBuffer &R__b)
          if (fNcols == 1) {
             fIndex = &fElements;
          } else {
+            if (fNcols <= 0) return;
             fIndex = new Real_t*[fNcols];
             if (fIndex)
                memset(fIndex, 0, fNcols*sizeof(Real_t*));
