@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.202 2004/12/06 16:44:08 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.203 2005/01/04 10:25:26 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -649,7 +649,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"-+");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
 
    l = strstr(chopt,"ARR" ); if (l) { Hoption.Arrow  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
-   l = strstr(chopt,"BOX" ); if (l) { Hoption.Box    = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
+   l = strstr(chopt,"BOX" );
+   if (l) {
+      Hoption.Scat = 0;
+      Hoption.Box  = 1; strncpy(l,"   ", 3);
+      if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
+   }
    l = strstr(chopt,"COLZ"); if (l) { Hoption.Color  = 2; strncpy(l,"    ",4); Hoption.Scat = 0; Hoption.Zscale = 1;}
    l = strstr(chopt,"COL" ); if (l) { Hoption.Color  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
    l = strstr(chopt,"CHAR"); if (l) { Hoption.Char   = 1; strncpy(l,"    ",4); Hoption.Scat = 0; }
@@ -900,7 +905,11 @@ void THistPainter::Paint(Option_t *option)
 //
 //  The following options are supported for 2-D types:
 //    "ARR"    : arrow mode. Shows gradient between adjacent cells
-//    "BOX"    : a box is drawn for each cell with surface proportional to contents
+//    "BOX"    : a box is drawn for each cell with surface proportional to the
+//               content's absolute value. A negative content is marked with a X.
+//    "BOX1"   : a button is drawn for each cell with surface proportional to 
+//               content's absolute value. A sunken button is drawn for negative values
+//               a raised one for positive.
 //    "COL"    : a box is drawn for each cell with a color scale varying with contents
 //    "COLZ"   : same as "COL". In addition the color palette is also drawn
 //    "CONT"   : Draw a contour plot (same as CONT0)
@@ -1889,20 +1898,30 @@ void THistPainter::PaintBarH(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintBoxes(Option_t *)
 {
-//    *-*-*-*-*-*Control function to draw a table as a box plot*-*-*-*-*-*
-//               ==============================================
+// *Control function to draw a table as a box plot
 //
-//       For each cell (i,j) a box is drawn.
-//       The size of the box is proportional to the cell content.
+// For each cell (i,j) a box is drawn.
+// The size of the box is proportional to the absolute value of the cell content.
+// The cells with a negative content draw with a X on top of the boxes.
 //Begin_Html
 /*
 <img src="gif/PaintBox.gif">
 */
 //End_Html
+// With option BOX1 a button is drawn for each cell with surface proportional to
+// content's absolute value. A sunken button is drawn for negative values
+// a raised one for positive.
+//Begin_Html
+/*
+<img src="gif/PaintBox1.gif">
+*/
+//End_Html
 //
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
    Style_t fillsav   = fH->GetFillStyle();
+   Style_t colsav    = fH->GetFillColor();
    if (fH->GetFillColor() == 0)  fH->SetFillStyle(0);
+   if (Hoption.Box == 11) fH->SetFillStyle(1001);
    fH->TAttLine::Modify();
    fH->TAttFill::Modify();
 
@@ -1914,8 +1933,20 @@ void THistPainter::PaintBoxes(Option_t *)
    Double_t dxmin = 0.51*(gPad->PadtoX(ux1)-gPad->PadtoX(ux0));
    Double_t dymin = 0.51*(gPad->PadtoY(uy0)-gPad->PadtoY(uy1));
 
-   Double_t zmin = Hparam.zmin;
-   Double_t zmax = Hparam.zmax;
+   Double_t zmin = fH->GetMinimum();
+   Double_t zmax = fH->GetMaximum();
+
+   if (Hoption.Logz) {
+      if (zmin > 0) {
+         zmin = TMath::Log10(zmin*0.1);
+         zmax = TMath::Log10(zmax);
+      } else {
+         return;
+      }
+   } else {
+      zmin = 0;
+      zmax = TMath::Max(TMath::Abs(zmin),TMath::Abs(zmax));
+   }
 
    // In case of option SAME, zmin and zmax values are taken from the
    // first plotted 2D histogram.
@@ -1923,10 +1954,10 @@ void THistPainter::PaintBoxes(Option_t *)
       TH2 *h2;
       TIter next(gPad->GetListOfPrimitives());
       while ((h2 = (TH2 *)next())) {
-	 if (!h2->InheritsFrom(TH2::Class())) continue;
+         if (!h2->InheritsFrom(TH2::Class())) continue;
          zmin = h2->GetMinimum();
          zmax = h2->GetMaximum();
-	 if (Hoption.Logz) {
+         if (Hoption.Logz) {
             zmax = TMath::Log10(zmax);
             if (zmin <= 0) {
                zmin = TMath::Log10(zmax*0.001);
@@ -1934,21 +1965,37 @@ void THistPainter::PaintBoxes(Option_t *)
                zmin = TMath::Log10(zmin);
             }
          }
-	 Double_t YMARGIN= 0.05;
-         Int_t maximum = 0;
-         Int_t minimum = 0;
-         if (fH->GetMaximumStored() != -1111) maximum = 1;
-         if (fH->GetMinimumStored() != -1111) minimum = 1;
-         if (!maximum) zmax += YMARGIN*(zmax-zmin);
-         if (!minimum) {
-            if (zmin >= 0) zmin = 0;
-            else           zmin -= YMARGIN*(zmax-zmin);
-         }
          break;
       }
    }
-   Double_t dz  = zmax - zmin;
 
+   Double_t zratio, dz = zmax - zmin;
+   Bool_t kZNeg        = kFALSE;
+
+   // Define the dark and light colors the "button style" boxes.
+   Color_t color = fH->GetFillColor();
+   Color_t light, dark;
+   if (Hoption.Box == 11) {
+      if (color == 0) {
+         light = 0;
+         dark  = 0;
+      } else if (color <= 50 && color != 0) {
+         light = color + 150;
+         dark  = color + 100;
+      } else {
+         Float_t r, g, b, h, l, s;
+         TColor *c = gROOT->GetColor(color);
+         if (c) c->GetRGB(r, g, b);
+         else {r = 0.5; g=0.5; b=0.5;}
+         TColor::RGBtoHLS(r, g, b, h, l, s);
+         TColor::HLStoRGB(h, 0.7*l, s, r, g, b);
+         dark = TColor::GetColor(r, g, b);
+         TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
+         light = TColor::GetColor(r, g, b);
+      }
+   }
+
+   // Loop over all the bins and draw the boxes
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
       ystep = fYaxis->GetBinWidth(j);
@@ -1960,43 +2007,97 @@ void THistPainter::PaintBoxes(Option_t *)
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          xcent = 0.5*xstep;
          z     = Hparam.factor*fH->GetBinContent(bin);
+         kZNeg = kFALSE;
+         if (z < 0) {
+            if (Hoption.Logz) continue;
+            z = -z;
+            kZNeg = kTRUE;
+         }
          if (Hoption.Logz) {
             if (z != 0) z = TMath::Log10(z);
             else        z = zmin;
          }
-         if (z <= zmin) continue;
-         if (z >  zmax) z = zmax;
-         xup  = xcent*(z - zmin)/dz + xk + xcent;
+         
+         if (z <  zmin) continue; //   Can be the case with 
+         if (z >  zmax) z = zmax; // option Same
+
+         zratio = TMath::Sqrt((z-zmin)/dz);
+         if (zratio==0) continue;
+
+         xup  = xcent*zratio + xk + xcent;
          xlow = 2*(xk + xcent) - xup;
          if (xup-xlow < dxmin) xup = xlow+dxmin;
-
          if (Hoption.Logx) {
             if (xup > 0)  xup  = TMath::Log10(xup);
             else continue;
             if (xlow > 0) xlow = TMath::Log10(xlow);
             else continue;
          }
-         yup  = ycent*(z - zmin)/dz + yk + ycent;
+
+         yup  = ycent*zratio + yk + ycent;
          ylow = 2*(yk + ycent) - yup;
          if (yup-ylow < dymin) yup = ylow+dymin;
-
          if (Hoption.Logy) {
             if (yup > 0)  yup  = TMath::Log10(yup);
             else continue;
             if (ylow > 0) ylow = TMath::Log10(ylow);
             else continue;
          }
+
          if (xlow < gPad->GetUxmin()) continue;
          if (ylow < gPad->GetUymin()) continue;
          if (xup  > gPad->GetUxmax()) continue;
          if (yup  > gPad->GetUymax()) continue;
-         gVirtualX->SetFillColor(fH->GetFillColor()); //is redefined in TPad::PaintBox
-         gPad->PaintBox(xlow, ylow, xup, yup);
+
+         if (Hoption.Box == 1) {
+            fH->SetFillColor(color);
+            fH->TAttFill::Modify();
+            gPad->PaintBox(xlow, ylow, xup, yup);
+            if (kZNeg) {
+               gPad->PaintLine(xlow, ylow, xup, yup);
+               gPad->PaintLine(xlow, yup, xup, ylow);
+            }
+         } else if (Hoption.Box == 11) {
+            // Draw the center of the box
+            fH->SetFillColor(color);
+            fH->TAttFill::Modify();
+            gPad->PaintBox(xlow, ylow, xup, yup);
+
+            // Draw top&left part of the box
+            Double_t x[7], y[7];
+            Double_t bwidth = 0.1;
+            x[0] = xlow;                     y[0] = ylow;
+            x[1] = xlow + bwidth*(xup-xlow); y[1] = ylow + bwidth*(yup-ylow);
+            x[2] = x[1];                     y[2] = yup - bwidth*(yup-ylow);
+            x[3] = xup - bwidth*(xup-xlow);  y[3] = y[2];
+            x[4] = xup;                      y[4] = yup;
+            x[5] = xlow;                     y[5] = yup;
+            x[6] = xlow;                     y[6] = ylow;
+            if (kZNeg) fH->SetFillColor(dark);
+            else       fH->SetFillColor(light);
+            fH->TAttFill::Modify();
+            gPad->PaintFillArea(7, x, y);
+
+            // Draw bottom&right part of the box
+            x[0] = xlow;                     y[0] = ylow;
+            x[1] = xlow + bwidth*(xup-xlow); y[1] = ylow + bwidth*(yup-ylow);
+            x[2] = xup - bwidth*(xup-xlow);  y[2] = y[1];
+            x[3] = x[2];                     y[3] = yup - bwidth*(yup-ylow);
+            x[4] = xup;                      y[4] = yup;
+            x[5] = xup;                      y[5] = ylow;
+            x[6] = xlow;                     y[6] = ylow;
+            if (kZNeg) fH->SetFillColor(light);
+            else       fH->SetFillColor(dark);
+            fH->TAttFill::Modify();
+            gPad->PaintFillArea(7, x, y);
+         }
       }
    }
 
    if (Hoption.Zscale) PaintPalette();
    fH->SetFillStyle(fillsav);
+   fH->SetFillColor(colsav);
+   fH->TAttFill::Modify();
 }
 
 //______________________________________________________________________________
@@ -2031,6 +2132,7 @@ void THistPainter::PaintColorLevels(Option_t *)
    }
 
    Double_t dz = zmax - zmin;
+
    if (dz <= 0) return;
    if (fH->GetMinimumStored() == -1111) {
        Double_t YMARGIN = 0.05;
