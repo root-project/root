@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.2 2002/02/22 10:39:52 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.3 2002/02/22 16:57:16 rdm Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -946,13 +946,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
 
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1()); 
-   Float_t tsize;
    Float_t fontrap = 1.09; //scale down compared to X11
-   if (wh < hh)  {
-      tsize = fTextSize*wh/fontrap;
-   } else {
-      tsize = fTextSize*hh/fontrap;
-   }
    Float_t ftsize;
    
    Int_t font  = abs(fTextFont)/10;
