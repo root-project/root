@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.200 2005/02/11 21:48:58 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.201 2005/02/16 01:27:29 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -4646,7 +4646,9 @@ int main(int argc, char **argv)
                   WriteShadowClass(cl);
                   fprintf(fp, "   } // Of namespace ROOT::Shadow\n} // Of namespace ROOT\n\n");
                }
-               WriteClassInit(cl);
+               if (TClassEdit::IsSTLCont(cl.Name()) == 0 ) {
+                  WriteClassInit(cl);
+               }
             }
          }
          WriteClassCode(cl,force);
