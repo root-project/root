@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.4 2000/07/11 09:29:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.5 2000/07/11 18:03:59 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -97,7 +97,7 @@ public:
    virtual Bool_t Search(const char *string, Bool_t direction, Bool_t caseSensitive);
    virtual Bool_t Replace(TGLongPosition pos, const char *oldText, const char *newText,
                           Bool_t direction, Bool_t caseSensitive);
-   virtual Bool_t Goto(Long_t line);
+   virtual Bool_t Goto(Long_t line, Long_t column = 0);
    virtual void   SetInsertMode(EInsertMode mode = kInsert);
    EInsertMode    GetInsertMode() const { return fInsertMode; }
    TGPopupMenu   *GetMenu() const { return fMenu; }

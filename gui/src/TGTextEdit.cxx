@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.7 2000/07/11 18:03:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.8 2000/07/12 17:58:05 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -454,7 +454,7 @@ Bool_t TGTextEdit::Replace(TGLongPosition textPos, const char *oldText,
 }
 
 //______________________________________________________________________________
-Bool_t TGTextEdit::Goto(Long_t line)
+Bool_t TGTextEdit::Goto(Long_t line, Long_t column)
 {
    // Goto the specified line.
 
@@ -462,10 +462,14 @@ Bool_t TGTextEdit::Goto(Long_t line)
       line = 0;
    if (line >= fText->RowCount())
       line = fText->RowCount() - 1;
+   if (column < 0)
+      column = 0;
+   if (column > fText->GetLineLength(line))
+      column = fText->GetLineLength(line);
 
    TGLongPosition gotopos, pos;
    gotopos.fY = line;
-   gotopos.fX = 0;
+   gotopos.fX = column;
    SetCurrent(gotopos);
 
    pos.fY = ToObjYCoord(fVisible.fY);
@@ -1255,7 +1259,7 @@ void TGTextEdit::DelChar()
             pos.fY++;
             delete [] buffer;
          } else
-            pos.fX = fText->GetLineLength(fCurrent.fY -1);
+            pos.fX = fText->GetLineLength(fCurrent.fY-1);
          pos2.fY = ToScrYCoord(fCurrent.fY+1);
          pos.fY = fCurrent.fY - 1;
          fText->DelLine(fCurrent.fY);
