@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.40 2001/12/14 21:04:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.41 2001/12/19 07:15:19 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -154,7 +154,7 @@ void TCint::ExecThreadCB(TWin32SendClass *command)
 #ifdef WIN32
 #ifndef GDK_WIN32
    char *line = (char *)(command->GetData(0));
-   ErrorCode *error = 0; // NOTE: need to do something like: (EErrorCode*)(command->GetData(...));
+   EErrorCode *error = 0; // NOTE: need to do something like: (EErrorCode*)(command->GetData(...));
    Int_t iret = ProcessLine((const char *)line,error);
    delete [] line;
    if (LOWORD(command->GetCOP()) == kSendWaitClass)
@@ -264,7 +264,7 @@ Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode* error)
    return ProcessLine(line, error);
 #else
 #ifndef GDK_WIN32
-   if (error) error = kProcessing;
+   if (error) *error = kProcessing;
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
    TWin32SendClass *code = new TWin32SendClass(this,(UInt_t)cmd,0,0,0);
