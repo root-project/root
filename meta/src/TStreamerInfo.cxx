@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.90 2001/10/02 16:54:06 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.91 2001/10/03 08:35:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 #include "TArrayS.h"
 #include "TArrayL.h"
 #include "TError.h"
-#include "TObjectRef.h"
+#include "TRef.h"
  
 Int_t   TStreamerInfo::fgCount = 0;
 Bool_t  TStreamerInfo::fgCanDelete = kTRUE;
@@ -1727,7 +1727,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b >> *x;
-                       if ((*x & kIsReferenced) != 0) TObjectRef::ReadRef((TObject*)pointer,b,gFile);
+                       if ((*x & kIsReferenced) != 0) TRef::ReadRef((TObject*)pointer,b,gFile);
                        break;
                      }
 
@@ -2118,7 +2118,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                for (Int_t k=0;k<nc;k++) {
                   UInt_t *x=(UInt_t*)((char*)clones->UncheckedAt(k)+offset); b >> *x;
                   pointer = (char*)clones->UncheckedAt(k); 
-                  if ((*x & kIsReferenced) != 0) TObjectRef::ReadRef((TObject*)pointer,b,gFile);
+                  if ((*x & kIsReferenced) != 0) TRef::ReadRef((TObject*)pointer,b,gFile);
                }
             }
             break;
@@ -2563,7 +2563,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
 
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
-                       if ((*x & kIsReferenced) != 0) TObjectRef::SaveRef((TObject*)pointer,b,gFile);
+                       if ((*x & kIsReferenced) != 0) TRef::SaveRef((TObject*)pointer,b,gFile);
                        break;
                      }
 
@@ -2786,7 +2786,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
                   UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
-                  if ((*x & kIsReferenced) != 0) TObjectRef::SaveRef((TObject*)pointer,b,gFile);
+                  if ((*x & kIsReferenced) != 0) TRef::SaveRef((TObject*)pointer,b,gFile);
                }
             }
             break;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.23 2001/10/01 10:32:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.24 2001/10/03 10:16:50 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -51,7 +51,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TDatime.h"
-#include "TObjectRef.h"
+#include "TRef.h"
 #include "TMath.h"
 
 
@@ -878,14 +878,14 @@ void TObject::Streamer(TBuffer &R__b)
       //if the object is referenced, we must read its old address
       //and store it in the ProcessID map in gROOT
       if (!TestBit(kIsReferenced)) return;
-      TObjectRef::ReadRef(this,R__b,gFile);
+      TRef::ReadRef(this,R__b,gFile);
    } else {
       R__b.WriteVersion(TObject::IsA());
       R__b << fUniqueID;
       R__b << fBits;
       //if the object is referenced, we must save its address/file_pid
       if (!TestBit(kIsReferenced)) return;
-      TObjectRef::SaveRef(this,R__b,gFile);
+      TRef::SaveRef(this,R__b,gFile);
    }
 }
 

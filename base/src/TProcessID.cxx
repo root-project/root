@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.2 2001/10/01 14:15:51 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.3 2001/10/01 17:01:47 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -34,12 +34,12 @@ ClassImp(TProcessID)
 //    - The system time in clock units
 //
 // A TProcessID is automatically created by the TROOT constructor.
-// When a TFile contains referenced objects (see TObjectRef), the TProcessID
+// When a TFile contains referenced objects (see TRef), the TProcessID
 // object is written to the file.
 // If a file has been written in multiple sessions (same machine or not),
 // a TProcessID is written for each session.
-// These objects are used by the class TObjectRef to uniquely identified
-// any TObject pointed by a TObjectRef.
+// These objects are used by the class TRef to uniquely identified
+// any TObject pointed by a TRef.
 // 
 // When a referenced object is read from a file (its bit kIsReferenced is set),
 // this object is entered into the TExmap *fMap of the corresponding TProcessID.

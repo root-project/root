@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.33 2001/10/01 10:39:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.34 2001/10/02 16:55:10 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -84,7 +84,7 @@ Bool_t TStreamerElement::CannotSplit() const
    if (strspn(GetTitle(),"||") == 2) return kTRUE;
    TClass *cl = GetClassPointer();
    if (!cl) return kFALSE;  //basic type or STL
-   if (cl->InheritsFrom("TObjectRef")) return kTRUE;
+   if (cl->InheritsFrom("TRef")) return kTRUE;
    
    //iterate on list of base classes (cannot split if one base class is unknown)
    TIter nextb(cl->GetListOfBases());
