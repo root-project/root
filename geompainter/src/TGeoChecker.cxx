@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.26 2003/02/11 08:48:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.27 2003/02/17 11:57:31 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -419,15 +419,9 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
 
    Double_t point[3];
    Double_t local[3];
-   Double_t dir[3], localdir[3];
    point[0] = x;
    point[1] = y;
    point[2] = z;
-   memset(dir, 0, 3*sizeof(Double_t));
-   dir[2] = 1.;
-   memset(localdir, 0, 3*sizeof(Double_t));
-   localdir[2] = 1.;
-   // init dummy track from current point
    TGeoVolume *vol = fGeom->GetTopVolume();
    if (fVsafe) {
       TGeoNode *old = fVsafe->GetNode("SAFETY_1");
@@ -436,23 +430,13 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
 //   if (vol != fGeom->GetMasterVolume()) fGeom->RestoreMasterVolume();
    TGeoNode *node = fGeom->FindNode(point[0], point[1], point[2]);
    fGeom->MasterToLocal(point, local);
-   Double_t r = TMath::Sqrt(local[0]*local[0]+local[1]*local[1]+local[2]*local[2]);
-   if (r>1E-5) { 
-      localdir[0] = -local[0]/r;
-      localdir[1] = -local[1]/r;
-      localdir[2] = -local[2]/r;
-   }
-   fGeom->LocalToMasterVect(localdir, dir);   
-   fGeom->SetCurrentDirection(dir);
    // get current node
-   printf("===  Check current point ===\n");
-   printf("Current point : x=%f y=%f z=%f\n", point[0], point[1], point[2]);
+   printf("===  Check current point : (%g, %g, %g) ===\n", point[0], point[1], point[2]);
    printf("  - path : %s\n", fGeom->GetPath());
    // get corresponding volume
    if (node) vol = node->GetVolume();
    // compute safety distance (distance to boundary ignored)
-   fGeom->FindNextBoundary();
-   Double_t close = fGeom->GetSafeDistance();
+   Double_t close = fGeom->Safety();
    printf("Safety radius : %f\n", close);
    if (close>1E-4) {
       TGeoVolume *sph = fGeom->MakeSphere("SAFETY", vol->GetMedium(), 0, close, 0,180,0,360);

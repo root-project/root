@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.17 2003/01/30 14:05:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.18 2003/02/17 11:57:31 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -203,6 +203,23 @@ void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *mast
    TGeoMatrix *mat = fVolume->GetNode(id)->GetMatrix();
    mat->LocalToMaster(local, master);
 }
+//-----------------------------------------------------------------------------
+Bool_t TGeoVoxelFinder::IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsafe) const
+{
+// Computes squared distance from POINT to the voxel(s) containing node INODE. Returns 0
+// if POINT inside voxel(s).
+   Double_t dxyz[3];
+   Int_t ist = 6*inode;
+   Int_t i;
+   Double_t rsq = 0;
+   for (i=0; i<3; i++) {
+      dxyz[i] = TMath::Abs(point[i]-fBoxes[ist+i+3])-fBoxes[ist+i];
+      if (dxyz[i]>=minsafe) return kTRUE;
+      if (dxyz[i]>-1E-6) rsq+=dxyz[i]*dxyz[i];
+   }
+   return (rsq>=minsafe*minsafe);
+}      
+
 //-----------------------------------------------------------------------------
 Double_t TGeoVoxelFinder::Efficiency()
 {

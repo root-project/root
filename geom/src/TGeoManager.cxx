@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.45 2003/02/12 14:49:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.46 2003/02/17 11:57:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1636,6 +1636,10 @@ Double_t TGeoManager::Safety()
 // Compute safe distance from the current point. This represent the distance
 // from POINT to the closest boundary.
    
+   if (fIsOnBoundary) {
+      fSafety = 0;
+      return fSafety;
+   }   
    Double_t point[3];
    Double_t local[3];
    fSafety = TGeoShape::kBig;
@@ -1660,6 +1664,7 @@ Double_t TGeoManager::Safety()
    if (fSafety<1E-3) return fSafety;
 
    Int_t nd = fCurrentNode->GetNdaughters();
+   if (!nd) return fSafety;
    TGeoNode *node;
    Double_t safe;
    Int_t id;
@@ -1685,8 +1690,9 @@ Double_t TGeoManager::Safety()
       if (fSafety<1E-3) return fSafety;
    }
    
-   //---> If not so many daughters (???) of the current volume, just loop them
-   if (nd<1000) {
+   //---> If no voxels just loop daughters
+   TGeoVoxelFinder *voxels = vol->GetVoxels();
+   if (!voxels) {
       for (id=0; id<nd; id++) {
          node = vol->GetNode(id);
          node->MasterToLocal(point, local);
@@ -1695,7 +1701,17 @@ Double_t TGeoManager::Safety()
          if (safe<fSafety) fSafety=safe;
       }
       return fSafety;
-   }      
+   }
+         
+   //---> check fast unsafe voxels
+   for (id=0; id<nd; id++) {
+      if (voxels->IsSafeVoxel(point, id, fSafety)) continue;
+      node = vol->GetNode(id);
+      node->MasterToLocal(point, local);
+      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      if (safe<0) continue;
+      if (safe<fSafety) fSafety = safe;
+   }   
    return fSafety;
 }
 
@@ -2110,18 +2126,32 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
 //_____________________________________________________________________________
 TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 {
-// Find distance to target node given by path boundary on current direction. If no target
-// is specified, find distance to next boundary from current point to current direction
-// and store this in fStep. Returns node having this boundary. Find also
-// distance to closest boundary and store it in fSafety. Set flags
-// fIsStepEntering/fIsStepExiting according to the fact that current ray will enter
-// or exit next node.
+// Find distance to next boundary and store it in fStep. Returns node to which this
+// boundary belongs. If PATH is specified, compute only distance to the node to which
+// PATH points. If STEPMAX is specified, compute distance only in case fSafety is smaller
+// than this value. STEPMAX represent the step to be made imposed by other reasons than
+// geometry (usually physics processes). Therefore in this case this method provides the
+// answer to the question : "Is STEPMAX a safe step ?" returning a NULL node and filling
+// fStep with a big number. 
+
+// Note : safety distance for the current point is computed ONLY in case STEPMAX is 
+//        specified, otherwise users have to call explicitly TGeoManager::Safety() if
+//        they want this computed for the current point.
 
    // convert current point and direction to local reference
-//   printf("-------- currently : %s\n", fCurrentNode->GetName());
-   fStep   = stepmax;
-   fSafety = TGeoShape::kBig;
+   Int_t iact = 3;
+   fStep = TGeoShape::kBig;
+   if (stepmax<1E20) {
+      fSafety = Safety();
+      fStep = stepmax;
+      iact = 1;   
+      if (stepmax<fSafety) {
+         fStep = TGeoShape::kBig;
+         return 0;
+      }
+   }   
    Double_t snext  = TGeoShape::kBig;
+   Double_t safe;
    Double_t point[3];
    Double_t dir[3];
    if (strlen(path)) {
@@ -2135,13 +2165,9 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       fCache->MasterToLocal(fPoint, &point[0]);
       fCache->MasterToLocalVect(fDirection, &dir[0]);
       if (tvol->Contains(&point[0])) {
-         fStep=tvol->GetShape()->DistToOut(&point[0], &dir[0], 1, fStep, &fSafety);
-         fIsStepEntering=kFALSE;
-         fIsStepExiting=kTRUE;
+         fStep=tvol->GetShape()->DistToOut(&point[0], &dir[0], iact, fStep, &safe);
       } else {
-         fStep=tvol->GetShape()->DistToIn(&point[0], &dir[0], 1, fStep, &fSafety);
-         fIsStepEntering=kTRUE;
-         fIsStepExiting=kFALSE;
+         fStep=tvol->GetShape()->DistToIn(&point[0], &dir[0], iact, fStep, &safe);
       }
       PopPath();
       return target;
@@ -2150,23 +2176,25 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    // closest boundary
    // if point is outside, just check the top node
    if (fIsOutside) {
-      snext = fTopVolume->GetShape()->DistToIn(fPoint, fDirection, 1, fStep, &fSafety);
-      if (snext < fStep) fStep = snext;
-      fIsStepEntering=kTRUE;
-      fIsStepExiting=kFALSE;
-      return fTopNode;
+      snext = fTopVolume->GetShape()->DistToIn(fPoint, fDirection, iact, fStep, &safe);
+      if (snext < fStep) {
+         fStep = snext;
+         return fTopNode;
+      }
+      return 0;   
    }
    fCache->MasterToLocal(fPoint, &point[0]);
    fCache->MasterToLocalVect(fDirection, &dir[0]);
    TGeoVolume *vol = fCurrentNode->GetVolume();
    // find distance to exiting current node
-   fIsStepEntering=kFALSE;
-   fIsStepExiting=kTRUE;
-   snext = vol->GetShape()->DistToOut(&point[0], &dir[0], 1, fStep, &fSafety);
-   if (snext < fStep) fStep = snext;
+   snext = vol->GetShape()->DistToOut(&point[0], &dir[0], iact, fStep, &safe);
+   if (snext < fStep) {
+      fStep = snext;
+      if (fStep<1E-4) return fCurrentNode;
+   }   
 //   printf("to exiting : %g\n", fStep);
 //   if (fIsOnBoundary && fIsExiting) return fCurrentNode;
-   TGeoNode *clnode = fCurrentNode;
+   TGeoNode *clnode = (fStep<1E20)?fCurrentNode:0;
    TGeoNode *current = 0;
    TGeoVolume *mother = 0;
    // if we are in an overlapping node, check also the mother
@@ -2185,7 +2213,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          fCache->MasterToLocal(fPoint, &mothpt[0]);
          fCache->MasterToLocalVect(fDirection, &vecpt[0]);
          // check distance to out
-         snext = mother->GetShape()->DistToOut(&mothpt[0], &vecpt[0], 1, fStep, &fSafety);
+         snext = mother->GetShape()->DistToOut(&mothpt[0], &vecpt[0], 1, fStep, &safe);
 //         printf("-> to out : %g\n", snext);
          if (snext<fStep) {
 //            printf(" this is closer...\n");
@@ -2199,9 +2227,9 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             if (!current->IsOverlapping()) {
 //               printf("checking overlapping %s\n", current->GetName());
                current->cd();
-               current->GetMatrix()->MasterToLocal(&mothpt[0], &dpt[0]);
-               current->GetMatrix()->MasterToLocalVect(&vecpt[0], &dvec[0]);
-               snext = current->GetVolume()->GetShape()->DistToIn(&dpt[0], &dvec[0], 1, fStep, &fSafety);
+               current->MasterToLocal(&mothpt[0], &dpt[0]);
+               current->MasterToLocalVect(&vecpt[0], &dvec[0]);
+               snext = current->GetVolume()->GetShape()->DistToIn(&dpt[0], &dvec[0], 1, fStep, &safe);
 //               printf("-> to in : %g\n", snext);
                if (snext<fStep) {
 //                  printf(" this is closer\n");
@@ -2216,10 +2244,9 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    }
    // get number of daughters. If no daughters we are done.
    Int_t nd = vol->GetNdaughters();
-   if (!nd) return fCurrentNode;
+   if (!nd) return clnode;
    Double_t lpoint[3];
    Double_t ldir[3];
-   Double_t safety = TGeoShape::kBig;
    Int_t i=0;
    // if current volume is divided, we are in the non-divided region. We
    // check only the first and the last cell
@@ -2230,12 +2257,9 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       current->cd();
       current->MasterToLocal(&point[0], &lpoint[0]);
       current->MasterToLocalVect(&dir[0], &ldir[0]);
-      snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safety);
-      fSafety = TMath::Min(fSafety, safety);
+      snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safe);
       if (snext<fStep) {
          fStep=snext;
-         fIsStepEntering=kTRUE;
-         fIsStepExiting=kFALSE;
          clnode = current;
       }
       Int_t ilast = ifirst+finder->GetNdiv()-1;
@@ -2244,41 +2268,45 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       current->cd();
       current->MasterToLocal(&point[0], &lpoint[0]);
       current->MasterToLocalVect(&dir[0], &ldir[0]);
-      snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safety);
-      fSafety = TMath::Min(fSafety, safety);
+      snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safe);
       if (snext<fStep) {
          fStep=snext;
-         fIsStepEntering=kTRUE;
-         fIsStepExiting=kFALSE;
-         return current;
+         clnode = current;
       }
+      return clnode;
    }
    // if only few daughters, check all and exit
+   TGeoVoxelFinder *voxels = vol->GetVoxels();
    if (nd<5) {
       for (i=0; i<nd; i++) {
          current = vol->GetNode(i);
          current->cd();
-         current->MasterToLocal(&point[0], &lpoint[0]);
-         current->MasterToLocalVect(&dir[0], &ldir[0]);
-         snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safety);
-         fSafety = TMath::Min(fSafety, safety);
+         if (voxels && clnode) {
+            if (voxels->IsSafeVoxel(point, i, fStep)) {
+               continue;
+            }   
+            current->MasterToLocal(&point[0], &lpoint[0]);
+            current->MasterToLocalVect(&dir[0], &ldir[0]);
+            snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 3, fStep, &safe);
+         } else {
+            current->MasterToLocal(&point[0], &lpoint[0]);
+            current->MasterToLocalVect(&dir[0], &ldir[0]);
+            snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safe);
+         }   
+            
          if (snext<fStep) {
             fStep=snext;
-            fIsStepEntering=kTRUE;
-            fIsStepExiting=kFALSE;
             clnode = current;
          }
       }
       return clnode;
    }
    // if current volume is voxelized, first get current voxel
-   TGeoVoxelFinder *voxels = vol->GetVoxels();
 //   printf("---check voxels\n");
    if (voxels) {
       Int_t ncheck = 0;
       Int_t *vlist = 0;
       voxels->SortCrossedVoxels(&point[0], &dir[0]);
-      Bool_t first = kTRUE;
 //      printf("========= VOXELS  of %s, toOUT=%f\n", vol->GetName(), fStep);
       while ((vlist=voxels->GetNextVoxel(&point[0], &dir[0], ncheck))) {
 //         printf("---ncheck : %i\n", ncheck);
@@ -2289,18 +2317,11 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             current->MasterToLocal(&point[0], &lpoint[0]);
             current->MasterToLocalVect(&dir[0], &ldir[0]);
 //            printf("<<< CHECKING %s\n", current->GetName());
-            snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safety);//1
-            if (first) {
-            // compute also safety if we are in the starting voxel
-               if (safety<fSafety) fSafety=safety;
-	             if (i==(ncheck-1)) first=kFALSE;
-            }
+            snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
 //            printf("<<< step : %g\n", snext);
             if (snext<fStep) {
 //               printf("%s CLOSER at: %f\n", current->GetName(), snext);
                fStep=snext;
-               fIsStepEntering=kTRUE;
-               fIsStepExiting=kFALSE;
                clnode = current;
             }
          }
@@ -2314,6 +2335,8 @@ TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
 // Returns deepest node containing current point.
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
+   fIsEntering = fIsExiting = kFALSE;
+   fIsOnBoundary = kFALSE;
    fStartSafe = safe_start;
    return SearchNode();
 //   printf("CURRENT POINT (%g, %g, %g) in %s\n", fPoint[0], fPoint[1], fPoint[2], GetPath());
@@ -2328,6 +2351,8 @@ TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
    fPoint[2] = z;
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
+   fIsEntering = fIsExiting = kFALSE;
+   fIsOnBoundary = kFALSE;
    fStartSafe = kTRUE;
    return SearchNode();
 }
@@ -2338,6 +2363,7 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z)
 // Checks if point (x,y,z) is still in the current node.
 //---> save current point and path.
    TGeoNode *old = fCurrentNode;
+   if (fIsOutside) old=0;
    Int_t oldid = GetNodeId();
    PushPoint();
    // check if still in current volume.
@@ -2770,7 +2796,6 @@ TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
    fStep += epsil;
    for (Int_t i=0; i<3; i++) fPoint[i]+=fStep*fDirection[i];
    TGeoNode *current = FindNode();
-   if (fIsOutside) current=0;
    if (is_geom) {
       fIsEntering = (current==old)?kFALSE:kTRUE;
       if (!fIsEntering) {

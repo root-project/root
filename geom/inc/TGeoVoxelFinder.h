@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.5 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.6 2003/01/06 17:05:43 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -85,6 +85,7 @@ public :
    Int_t              *GetValidExtra(Int_t n1, UChar_t *array1, Int_t *list, Int_t &ncheck);
    Int_t              *GetValidExtra(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t *list, Int_t &ncheck);
    virtual void        FindOverlaps(Int_t inode) const;
+   Bool_t              IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsafe) const;
    virtual void        Print(Option_t *option="") const;
    void                PrintVoxelLimits(Double_t *point) const;
 //   Bool_t              Intersect(Int_t n1, Int_t *array1, Int_t n2, Int_t *array2,
