@@ -1,6 +1,6 @@
 {
-   gROOT->ProcessLine(".L MyClassOld.cxx+");
-   TFile *f = new TFile("oldfile.root","RECREATE");
+   gROOT->ProcessLine(".L MyClassClones.cxx+");
+   TFile *f = new TFile("clonesfile.root","RECREATE");
    TTree *t = new TTree("tree","test tree");
    TopLevel *obj = new TopLevel;
    t->Branch("Top","TopLevel",&obj,32000,0);

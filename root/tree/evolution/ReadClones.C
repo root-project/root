@@ -1,6 +1,6 @@
 {
-   gROOT->ProcessLine(".L MyClassOld.cxx+");
-   TFile *f = new TFile("oldfile.root","READ");
+   gROOT->ProcessLine(".L MyClassClones.cxx+");
+   TFile *f = new TFile("clonesfile.root","READ");
    TTree *t; f->GetObject("tree",t);
    //TopLevel *obj = 0;
    //t->SetBranchAddress("Top",&obj);
