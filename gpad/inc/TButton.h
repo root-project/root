@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.h,v 1.2 2000/06/13 11:25:02 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
    virtual void  SetGrid(Int_t valuex = 1, Int_t valuey = 1);
    virtual void  SetLogx(Int_t value = 1);
    virtual void  SetLogy(Int_t value = 1);
-   virtual void  SetMethod(char *method) { fMethod=method; } // *MENU*
+   virtual void  SetMethod(const char *method) { fMethod=method; } // *MENU*
    virtual void  SetName(const char *name) { fName = name; }
    virtual void  x3d(Option_t *option="");
 
