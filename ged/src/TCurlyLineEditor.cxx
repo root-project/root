@@ -31,8 +31,19 @@
 #include "TCurlyLine.h"
 #include "TVirtualPad.h"
 #include "iostream"
+
 ClassImp(TGedFrame)
 ClassImp(TCurlyLineEditor)
+
+enum {
+   kCRLL_AMPL,
+   kCRLL_WAVE,
+   kCRLL_ISW,
+   kCRLL_STRX,
+   kCRLL_STRY,
+   kCRLL_ENDX,
+   kCRLL_ENDY
+};
 
 //______________________________________________________________________________
 TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
@@ -43,80 +54,84 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
 
    fCurlyLine = 0;
    
-   MakeTitle("CurlyLine");
-
-   TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   TGLabel *fShapeLabel = new TGLabel(f2, "Shape:");
-   f2->AddFrame(fShapeLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
+   MakeTitle("Curly Line");
 
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
    TGLabel *fAmplitudeLabel = new TGLabel(f3, "Amplitude:");
-   f3->AddFrame(fAmplitudeLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fAmplitudeEntry = new TGNumberEntry(f3, 30, 8, 0, 
-                             TGNumberFormat::kNESRealThree,
-                             TGNumberFormat::kNEANonNegative,
-                             TGNumberFormat::kNELLimitMinMax,0.005,0.3);
-   fAmplitudeEntry->GetNumberEntry()->SetToolTipText("Set Amplitude");
-   f3->AddFrame(fAmplitudeEntry, new TGLayoutHints(kLHintsLeft, 16, 1, 1, 1));
+   f3->AddFrame(fAmplitudeLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 0, 1, 1));
+   fAmplitudeEntry = new TGNumberEntry(f3, 0.005, 7, kCRLL_AMPL, 
+                                       TGNumberFormat::kNESRealThree,
+                                       TGNumberFormat::kNEANonNegative,
+                                       TGNumberFormat::kNELLimitMinMax, 0.005, 0.3);
+   fAmplitudeEntry->GetNumberEntry()->SetToolTipText("Set amplitude in percent of the pad height.");
+   f3->AddFrame(fAmplitudeEntry, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
 
    TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
    TGLabel *fWaveLengthLabel = new TGLabel(f4, "Wavelgth:");
-   f4->AddFrame(fWaveLengthLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fWaveLengthEntry = new TGNumberEntry(f4, 30, 8, 0, 
-                                  TGNumberFormat::kNESRealThree,
-                                  TGNumberFormat::kNEANonNegative, 
-                                  TGNumberFormat::kNELLimitMinMax, 0.005, 0.3);
-   fWaveLengthEntry->GetNumberEntry()->SetToolTipText("Set Wavelength");
-   f4->AddFrame(fWaveLengthEntry, new TGLayoutHints(kLHintsLeft, 16, 1, 1, 1));
+   f4->AddFrame(fWaveLengthLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 0, 1, 1));
+   fWaveLengthEntry = new TGNumberEntry(f4, 0.005, 7, kCRLL_WAVE, 
+                                        TGNumberFormat::kNESRealThree,
+                                        TGNumberFormat::kNEANonNegative, 
+                                        TGNumberFormat::kNELLimitMinMax, 0.005, 0.3);
+   fWaveLengthEntry->GetNumberEntry()->SetToolTipText("Set wavelength in percent of the pad height.");
+   f4->AddFrame(fWaveLengthEntry, new TGLayoutHints(kLHintsLeft, 10, 1, 1, 1));
 
-   TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-   fIsWavy = new TGCheckButton(f5, "Is wavy (Gamma)", 0);
-   fIsWavy->SetToolTipText("Toggle wavy / curly i.e gamma / gluon"); 
-   f5->AddFrame(fIsWavy, new TGLayoutHints(kLHintsLeft, 16, 1, 1, 1));
+   fIsWavy = new TGCheckButton(this, "Gluon (default Gamma)", kCRLL_ISW);
+   fIsWavy->SetToolTipText("Toggle between wavy line (Gluon) if selected; curly line (Gamma) otherwise."); 
+   AddFrame(fIsWavy, new TGLayoutHints(kLHintsLeft, 5, 1, 5, 8));
 
 //
    fStartXFrame = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(fStartXFrame, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
    TGLabel *fStartXLabel = new TGLabel(fStartXFrame, "Start X:");
-   fStartXFrame->AddFrame(fStartXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fStartXEntry = new TGNumberEntry(fStartXFrame, 0.0, 8, 0);
-   fStartXEntry->GetNumberEntry()->SetToolTipText("Set start point of curly line.");
-   fStartXFrame->AddFrame(fStartXEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
+   fStartXFrame->AddFrame(fStartXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 23, 0, 1, 1));
+   fStartXEntry = new TGNumberEntry(fStartXFrame, 0.0, 7, kCRLL_STRX,
+                                    TGNumberFormat::kNESRealThree,
+                                    TGNumberFormat::kNEANonNegative, 
+                                    TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+   fStartXEntry->GetNumberEntry()->SetToolTipText("Set start point X ccordinate of curly line.");
+   fStartXFrame->AddFrame(fStartXEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
 //
    fStartYFrame = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(fStartYFrame, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
-   TGLabel *fStartYLabel = new TGLabel(fStartYFrame, "Start Y:");
-   fStartYFrame->AddFrame(fStartYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fStartYEntry = new TGNumberEntry(fStartYFrame, 0.0, 8, 0);
-   fStartYEntry->GetNumberEntry()->SetToolTipText("Set start point of curly line.");
-   fStartYFrame->AddFrame(fStartYEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
+   TGLabel *fStartYLabel = new TGLabel(fStartYFrame, "Y:");
+   fStartYFrame->AddFrame(fStartYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 52, 0, 1, 1));
+   fStartYEntry = new TGNumberEntry(fStartYFrame, 0.0, 7, kCRLL_STRY,
+                                    TGNumberFormat::kNESRealThree,
+                                    TGNumberFormat::kNEANonNegative, 
+                                    TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+   fStartYEntry->GetNumberEntry()->SetToolTipText("Set start point Y coordinate of curly line.");
+   fStartYFrame->AddFrame(fStartYEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
 //
    fEndXFrame = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(fEndXFrame, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
    TGLabel *fEndXLabel = new TGLabel(fEndXFrame, "End X:");
-   fEndXFrame->AddFrame(fEndXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fEndXEntry = new TGNumberEntry(fEndXFrame, 0.0, 8, 0);
-   fEndXEntry->GetNumberEntry()->SetToolTipText("Set end point of curly line.");
-   fEndXFrame->AddFrame(fEndXEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
+   fEndXFrame->AddFrame(fEndXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 25, 0, 1, 1));
+   fEndXEntry = new TGNumberEntry(fEndXFrame, 0.0, 7, kCRLL_ENDX,
+                                  TGNumberFormat::kNESRealThree,
+                                  TGNumberFormat::kNEANonNegative, 
+                                  TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+   fEndXEntry->GetNumberEntry()->SetToolTipText("Set end point X coordinate of curly line.");
+   fEndXFrame->AddFrame(fEndXEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 1));
 //
    fEndYFrame = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(fEndYFrame, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
-   TGLabel *fEndYLabel = new TGLabel(fEndYFrame, "End Y:");
-   fEndYFrame->AddFrame(fEndYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fEndYEntry = new TGNumberEntry(fEndYFrame, 0.0, 8, 0);
-   fEndYEntry->GetNumberEntry()->SetToolTipText("Set end point of curly line.");
-   fEndYFrame->AddFrame(fEndYEntry, new TGLayoutHints(kLHintsLeft, 20, 1, 1, 1));
+   TGLabel *fEndYLabel = new TGLabel(fEndYFrame, "Y:");
+   fEndYFrame->AddFrame(fEndYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 52, 0, 1, 1));
+   fEndYEntry = new TGNumberEntry(fEndYFrame, 0.0, 7, kCRLL_ENDY,
+                                  TGNumberFormat::kNESRealThree,
+                                  TGNumberFormat::kNEANonNegative, 
+                                  TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+   fEndYEntry->GetNumberEntry()->SetToolTipText("Set end point Y coordinate of curly line.");
+   fEndYFrame->AddFrame(fEndYEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
 
    TClass *cl = TAttLine::Class();
    TGedElement *ge = new TGedElement;
@@ -177,8 +192,8 @@ void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
+
    if (obj->InheritsFrom("TCurlyArc")) {
-//      std::cout << "InheritsFrom(TCurlyArc)" << std::endl;
       HideFrame(fStartXFrame);
       HideFrame(fStartYFrame);
       HideFrame(fEndXFrame);
@@ -189,18 +204,27 @@ void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    Double_t val = fCurlyLine->GetAmplitude();
    fAmplitudeEntry->SetNumber(val);
-            val = fCurlyLine->GetWaveLength();
+
+   val = fCurlyLine->GetWaveLength();
    fWaveLengthEntry->SetNumber(val);
-            val = fCurlyLine->GetStartX();
+
+   val = fCurlyLine->GetStartX();
    fStartXEntry->SetNumber(val);
-            val = fCurlyLine->GetEndX();
+
+   val = fCurlyLine->GetEndX();
    fEndXEntry->SetNumber(val);  
-            val = fCurlyLine->GetStartY();
+
+   val = fCurlyLine->GetStartY();
    fStartYEntry->SetNumber(val);
-            val = fCurlyLine->GetEndY();
+
+   val = fCurlyLine->GetEndY();
    fEndYEntry->SetNumber(val);  
-   if (fCurlyLine->GetCurly()) fIsWavy->SetState(kButtonUp);
-   else                        fIsWavy->SetState(kButtonDown);
+
+   if (fCurlyLine->GetCurly()) 
+      fIsWavy->SetState(kButtonUp);
+   else
+      fIsWavy->SetState(kButtonDown);
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -249,6 +273,7 @@ void TCurlyLineEditor::DoWaveLength()
 void TCurlyLineEditor::DoWavy()
 {
    // Slot connected to the wavy / curly setting.
+
    if (fIsWavy->GetState() == kButtonUp) fCurlyLine->SetCurly();
    else                                  fCurlyLine->SetWavy();
    fCurlyLine->Paint(fCurlyLine->GetDrawOption());
