@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.83 2004/08/03 16:01:18 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.84 2004/08/09 15:35:52 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1679,8 +1679,6 @@ void TGWin32::CloseWindow1()
 
    int wid;
 
-   if (!fWindows) return;
-
    if (gCws->ispixmap) {
       gdk_pixmap_unref(gCws->window);
    } else {
@@ -1700,6 +1698,8 @@ void TGWin32::CloseWindow1()
 
    GdiFlush();
    gCws->open = 0;
+
+   if (!fWindows) return;
 
    // make first window in list the current window
    for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
@@ -6245,7 +6245,7 @@ void TGWin32::SetIconPixmap(Window_t id, Pixmap_t pic)
 {
    // Set pixmap the WM can use when the window is iconized.
 
-   gdk_window_set_icon((GdkWindow *)id, NULL, (GdkPixmap *)pic,(GdkPixmap *)pic);
+   gdk_window_set_icon((GdkWindow *)id, NULL, (GdkPixmap *)pic, (GdkPixmap *)pic);
 }
 
 #define safestrlen(s) ((s) ? strlen(s) : 0)

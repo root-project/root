@@ -1821,9 +1821,10 @@ gdk_window_set_icon(GdkWindow * window,
 
    BitBlt(hdc_dst, 0, 0, sizex, sizey, hdc_src, 0, 0, NOTSRCCOPY);
 
-   // Deselect bitmaps
-   SelectObject(hdc_dst, old_bitmap_dst);
-   SelectObject(hdc_src, old_bitmap_src);
+   DeleteObject(old_bitmap_dst);
+   DeleteObject(old_bitmap_src);
+   DeleteObject(GDK_DRAWABLE_XID(pixmap));
+   DeleteObject(GDK_DRAWABLE_XID(mask));
 
    // Delete dc's
    DeleteDC(hdc_dst);

@@ -526,6 +526,7 @@ gdk_pointer_grab(GdkWindow * window,
       if (p_grab_cursor != NULL) {
          if (GetCursor () == p_grab_cursor)
             SetCursor (NULL);
+         DestroyCursor (p_grab_cursor);
       }
       p_grab_cursor = xcursor;
    }
@@ -554,6 +555,14 @@ void gdk_pointer_ungrab(guint32 time)
       ReleaseCapture();
 
    GDK_NOTE(EVENTS, g_print("gdk_pointer_ungrab\n"));
+  
+   p_grab_window = NULL;
+   if (p_grab_cursor != NULL) {
+      if (GetCursor () == p_grab_cursor)
+            SetCursor (NULL);
+      DestroyCursor (p_grab_cursor);
+      p_grab_cursor = NULL;
+   }
 
    p_grab_window = NULL;
 }
@@ -5948,6 +5957,11 @@ gdk_event_translate(GdkEvent * event,
          xcursor = GDK_WINDOW_WIN32DATA(window)->xcursor;
       else
          xcursor = NULL;
+   
+      /*if (p_grab_cursor != NULL) { //vo
+         DestroyCursor (p_grab_cursor);
+         p_grab_cursor = NULL;
+      }*/
 
       if (xcursor != NULL) {
          GDK_NOTE(EVENTS, g_print("...SetCursor(%#x)\n", xcursor));
