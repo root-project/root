@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.7 2004/04/14 11:31:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.8 2004/10/13 15:46:37 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -33,6 +33,9 @@
 #ifndef ROOT_TQObject
 #include "TQObject.h"
 #endif
+#ifndef ROOT_Varargs
+#include "Varargs.h"
+#endif
 
 class TQSlot;
 
@@ -57,7 +60,9 @@ public:
    const char *GetClassName() const { return fClassName; }
    void Destroyed();         // *SIGNAL*
    void ExecuteMethod();
+   void ExecuteMethod(Int_t nargs, va_list va);
    void ExecuteMethod(Long_t param);
+   void ExecuteMethod(Long64_t param);
    void ExecuteMethod(Double_t param);
    void ExecuteMethod(Long_t *params, Int_t nparam = -1);
    void ExecuteMethod(const char *params);

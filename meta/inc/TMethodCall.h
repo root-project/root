@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.10 2003/07/26 05:51:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.11 2003/08/22 15:13:18 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -81,6 +81,11 @@ public:
    EReturnType    ReturnType();
 
    void     SetParamPtrs(void *paramArr, Int_t nparam = -1);
+   void     ResetParam();
+   void     SetParam(Long_t l);
+   void     SetParam(Double_t d);
+   void     SetParam(Long64_t ll);
+   void     SetParam(ULong64_t ull);
 
    void     Execute(void *object);
    void     Execute(void *object, const char *params);

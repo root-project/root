@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.22 2003/05/15 18:01:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.23 2003/07/25 17:22:37 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -39,6 +39,9 @@
 
 #ifndef ROOT_TClass
 #include "TClass.h"
+#endif
+#ifndef ROOT_Varargs
+#include "Varargs.h"
 #endif
 
 class TList;
@@ -83,13 +86,14 @@ public:
    TList   *GetListOfSignals() const { return fListOfSignals; }
    TList   *GetListOfConnections() const { return fListOfConnections; }
 
+   void  EmitVA(const char *signal, Int_t nargs, ...);
+   void  EmitVA(const char *signal, Int_t nargs, va_list va);
    void  Emit(const char *signal);
-   void  Emit(const char *signal, const char *params);
    void  Emit(const char *signal, Long_t *paramArr);
+   void  Emit(const char *signal, const char *params);
    void  Emit(const char *signal, Double_t param);
    void  Emit(const char *signal, Long_t param);
    void  Emit(const char *signal, Long64_t param);
-   void  Emit(const char *signal, ULong64_t param);
    void  Emit(const char *signal, Bool_t param)
          { Emit(signal, (Long_t)param); }
    void  Emit(const char *signal, Char_t param)
@@ -106,6 +110,8 @@ public:
          { Emit(signal, (Long_t)param); }
    void  Emit(const char *signal, ULong_t param)
          { Emit(signal, (Long_t)param); }
+   void  Emit(const char *signal, ULong64_t param)
+         { Emit(signal, (Long64_t) param); }
    void  Emit(const char *signal, Float_t param)
          { Emit(signal, (Double_t)param); }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.40 2004/10/13 15:46:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.41 2005/01/31 17:20:30 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -73,6 +73,7 @@
 #include "Riostream.h"
 #include "RQ_OBJECT.h"
 #include "TVirtualMutex.h"
+#include "Varargs.h"
 
 #ifdef HAVE_CONFIG
 #include "config.h"
@@ -674,7 +675,7 @@ Int_t TQObject::NumberOfConnections() const
 //______________________________________________________________________________
 void TQObject::Emit(const char *signal_name)
 {
-   // Acitvate signal without args
+   // Acitvate signal without args.
    // Example:
    //          theButton->Emit("Clicked()");
 
@@ -727,11 +728,135 @@ void TQObject::Emit(const char *signal_name)
 }
 
 //______________________________________________________________________________
+void TQObject::EmitVA(const char *signal_name, Int_t va_(nargs), ...)
+{
+   // Activate signal with variable argument list.
+   // Example:
+   //          theButton->EmitVA("Clicked(int,float)", 2, id, fid)
+
+   va_list ap;
+   va_start(ap, va_(nargs));
+
+   EmitVA(signal_name, va_(nargs), ap);
+
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+void TQObject::EmitVA(const char *signal_name, Int_t nargs, va_list ap)
+{
+   // Activate signal with variable argument list.
+   // For internal use and for var arg EmitVA() in RQ_OBJECT.h.
+
+   TList *slist = GetListOfClassSignals();
+
+   if ((!slist && !fListOfSignals) || !signal_name)
+      return;
+
+   register TQConnectionList *clist  = 0;
+   register TQConnection *connection = 0;
+
+   char *signal = CompressName(signal_name);
+
+   // execute class signals
+   if (slist) {
+      TIter nextcl_list(slist);
+      while ((clist = (TQConnectionList*)nextcl_list())) {
+         if (!strcmp(signal,clist->GetName())) break;
+      }
+
+      if (clist) {
+         TIter nextcl(clist);
+         while ((connection = (TQConnection*)nextcl())) {
+            gTQSender = GetSender();
+            connection->ExecuteMethod(nargs, ap);
+         }
+      }
+   }
+   if (!fListOfSignals) {
+      delete [] signal;
+      return;
+   }
+
+   // execute object signals
+   TIter next_list(fListOfSignals);
+   while ((clist = (TQConnectionList*)next_list())) {
+      if (!strcmp(signal,clist->GetName())) break;
+   }
+   if (!clist) {
+      delete [] signal;
+      return;
+   }
+
+   TIter next(clist);
+   while (fListOfSignals && (connection = (TQConnection*)next())) {
+      gTQSender = GetSender();
+      connection->ExecuteMethod(nargs, ap);
+   }
+   delete [] signal;
+}
+
+//______________________________________________________________________________
 void TQObject::Emit(const char *signal_name, Long_t param)
 {
-   // Activate signal with single parameter
+   // Activate signal with single parameter.
    // Example:
    //          theButton->Emit("Clicked(int)",id)
+
+   TList *slist = GetListOfClassSignals();
+
+   if ((!slist && !fListOfSignals) || !signal_name)
+      return;
+
+   register TQConnectionList *clist  = 0;
+   register TQConnection *connection = 0;
+
+   char *signal = CompressName(signal_name);
+
+   // execute class signals
+   if (slist) {
+      TIter nextcl_list(slist);
+      while ((clist = (TQConnectionList*)nextcl_list())) {
+         if (!strcmp(signal,clist->GetName())) break;
+      }
+
+      if (clist) {
+         TIter nextcl(clist);
+         while ((connection = (TQConnection*)nextcl())) {
+            gTQSender = GetSender();
+            connection->ExecuteMethod(param);
+         }
+      }
+   }
+   if (!fListOfSignals) {
+      delete [] signal;
+      return;
+   }
+
+   // execute object signals
+   TIter next_list(fListOfSignals);
+   while ((clist = (TQConnectionList*)next_list())) {
+      if (!strcmp(signal,clist->GetName())) break;
+   }
+   if (!clist) {
+      delete [] signal;
+      return;
+   }
+
+   TIter next(clist);
+   while (fListOfSignals && (connection = (TQConnection*)next())) {
+      gTQSender = GetSender();
+      connection->ExecuteMethod(param);
+   }
+   delete [] signal;
+}
+
+//______________________________________________________________________________
+void TQObject::Emit(const char *signal_name, Long64_t param)
+{
+   // Activate signal with single parameter.
+   // Example:
+   //          theButton->Emit("Progress(Long64_t)",processed)
 
    TList *slist = GetListOfClassSignals();
 
@@ -785,6 +910,8 @@ void TQObject::Emit(const char *signal_name, Long_t param)
 void TQObject::Emit(const char *signal_name, Double_t param)
 {
    // Activate signal with single parameter.
+   // Example:
+   //          theButton->Emit("Scale(float)",factor)
 
    TList *slist = GetListOfClassSignals();
 
@@ -955,28 +1082,6 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
       connection->ExecuteMethod(paramArr, clist->GetNargs());
    }
    delete [] signal;
-}
-
-//______________________________________________________________________________
-void  TQObject::Emit(const char *signal, Long64_t param)
-{
-   // Emit a signal with a Long64_t argument.
-
-   Long_t args[1];
-   args[0] = (Long_t) (&param);
-
-   Emit(signal, args);
-}
-
-//______________________________________________________________________________
-void  TQObject::Emit(const char *signal, ULong64_t param)
-{
-   // Emit a signal with a ULong64_t argument.
-
-   Long_t args[1];
-   args[0] = (Long_t) (&param);
-
-   Emit(signal, args);
 }
 
 //______________________________________________________________________________

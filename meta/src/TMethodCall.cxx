@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.18 2003/08/22 15:13:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.19 2005/01/12 19:18:47 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -160,7 +160,7 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params)
    fParams   = params;
    fProto    = "";
    fDtorOnly = kFALSE;
-   fRetType  = kNone; 
+   fRetType  = kNone;
 
    R__LOCKGUARD(gCINTMutex);
    if (cl)
@@ -205,7 +205,7 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
    fParams   = "";
    fProto    = proto;
    fDtorOnly = kFALSE;
-   fRetType  = kNone; 
+   fRetType  = kNone;
 
    R__LOCKGUARD(gCINTMutex);
    if (cl)
@@ -230,7 +230,7 @@ void TMethodCall::InitWithPrototype(const char *function, const char *proto)
 }
 
 //______________________________________________________________________________
-Bool_t TMethodCall::IsValid() const 
+Bool_t TMethodCall::IsValid() const
 {
    // Return true if the method call has been properly initialized and is
    // usable.
@@ -455,9 +455,9 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
                !strcmp("Float_t", name) || !strcmp("Double_t", name))
          fRetType = kDouble;
       else if (isEnum)
-          fRetType = kLong;
-      else 
-          fRetType = kOther;
+         fRetType = kLong;
+      else
+         fRetType = kOther;
    }
    return fRetType;
 }
@@ -473,4 +473,44 @@ void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
 
    R__LOCKGUARD(gCINTMutex);
    fFunc->SetArgArray((long *)paramArr, nparam);
+}
+
+//______________________________________________________________________________
+void TMethodCall::ResetParam()
+{
+   // Reset parameter list. To be used before the first call the SetParam().
+
+   fFunc->ResetArg();
+}
+
+//______________________________________________________________________________
+void TMethodCall::SetParam(Long_t l)
+{
+   // Set long method parameter.
+
+   fFunc->SetArg(l);
+}
+
+//______________________________________________________________________________
+void TMethodCall::SetParam(Double_t d)
+{
+   // Set double method parameter.
+
+   fFunc->SetArg(d);
+}
+
+//______________________________________________________________________________
+void TMethodCall::SetParam(Long64_t ll)
+{
+   // Set long long method parameter.
+
+   fFunc->SetArg(ll);
+}
+
+//______________________________________________________________________________
+void TMethodCall::SetParam(ULong64_t ull)
+{
+   // Set unsigned long long method parameter.
+
+   fFunc->SetArg(ull);
 }

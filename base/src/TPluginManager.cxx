@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.23 2004/01/20 17:59:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.24 2004/11/22 23:37:26 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -143,7 +143,7 @@ void TPluginHandler::SetupCallEnv()
 
    // check if class exists
    TClass *cl = gROOT->GetClass(fClass);
-   if (!cl) {
+   if (!cl && !fIsGlobal) {
       Error("SetupCallEnv", "class %s not found in plugin %s", fClass.Data(),
             fPlugin.Data());
       return;
@@ -167,8 +167,11 @@ void TPluginHandler::SetupCallEnv()
    }
 
    if (!fMethod) {
-      Error("SetupCallEnv", "method %s not found in class %s", method.Data(),
-            fClass.Data());
+      if (fIsGlobal)
+         Error("SetupCallEnv", "global function %s not found", method.Data());
+      else
+         Error("SetupCallEnv", "method %s not found in class %s", method.Data(),
+               fClass.Data());
       return;
    }
 
@@ -225,7 +228,7 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
       return 0;
    }
 
-   if (!fCallEnv && fCanCall == 0)
+   if (!fCallEnv && !fCanCall)
       SetupCallEnv();
 
    if (fCanCall == -1)
@@ -241,7 +244,7 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
 
    R__LOCKGUARD(gCINTMutex);
 
-   Long_t *args = 0;
+   fCallEnv->ResetParam();
 
    if (nargs > 0) {
       TIter next(fMethod->GetListOfMethodArgs());
@@ -250,52 +253,39 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
       va_list ap;
       va_start(ap, va_(nargs));
 
-      args = new Long_t[nargs+1];
-      args[nargs] = 0;   // sentinel
-
       for (int i = 0; i < nargs; i++) {
-         union {
-           float f;
-           long  l;
-         } u;
          arg = (TMethodArg*) next();
          TString type = arg->GetFullTypeName();
          TDataType *dt = gROOT->GetType(type);
          if (dt)
             type = dt->GetFullTypeName();
          if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
-            args[i] = (Long_t) va_arg(ap, void*);
+            fCallEnv->SetParam((Long_t) va_arg(ap, void*));
          else if (type == "bool")
-            args[i] = (Long_t) va_arg(ap, int);  // bool is promoted to int
+            fCallEnv->SetParam((Long_t) va_arg(ap, int));  // bool is promoted to int
          else if (type == "char" || type == "unsigned char")
-            args[i] = (Long_t) va_arg(ap, int);  // char is promoted to int
+            fCallEnv->SetParam((Long_t) va_arg(ap, int));  // char is promoted to int
          else if (type == "short" || type == "unsigned short")
-            args[i] = (Long_t) va_arg(ap, int);  // short is promoted to int
+            fCallEnv->SetParam((Long_t) va_arg(ap, int));  // short is promoted to int
          else if (type == "int" || type == "unsigned int")
-            args[i] = (Long_t) va_arg(ap, int);
+            fCallEnv->SetParam((Long_t) va_arg(ap, int));
          else if (type == "long" || type == "unsigned long")
-            args[i] = (Long_t) va_arg(ap, long);
-         else if (type == "long long" || type == "unsigned long long") {
-            static Long64_t ll = va_arg(ap, Long64_t);
-            args[i] = (Long_t) (&ll);
-         } else if (type == "float") {
-            u.f = (Float_t) va_arg(ap, double);  // float is promoted to double
-            args[i] = (Long_t) u.l;
-         } else if (type == "double") {
-            u.f = (Float_t) va_arg(ap, double);
-            args[i] = (Long_t) u.l;
-         }
+            fCallEnv->SetParam((Long_t) va_arg(ap, long));
+         else if (type == "long long")
+            fCallEnv->SetParam((Long64_t) va_arg(ap, Long64_t));
+         else if (type == "unsigned long long")
+            fCallEnv->SetParam((ULong64_t) va_arg(ap, ULong64_t));
+         else if (type == "float")
+            fCallEnv->SetParam((Double_t) va_arg(ap, double));  // float is promoted to double
+         else if (type == "double")
+            fCallEnv->SetParam((Double_t) va_arg(ap, double));
       }
 
       va_end(ap);
-
-      fCallEnv->SetParamPtrs(args, nargs);
    }
 
    Long_t ret;
    fCallEnv->Execute(ret);
-
-   delete [] args;
 
    return ret;
 }

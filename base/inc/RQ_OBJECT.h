@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.10 2003/09/19 18:09:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.11 2003/09/20 14:39:56 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -12,9 +12,9 @@
 #ifndef ROOT_RQ_OBJECT
 #define ROOT_RQ_OBJECT
 
-#ifndef __CINT__
 #include <TQObject.h>
-#endif
+#include <Varargs.h>
+
 
 //---- RQ_OBJECT macro -----------------------------------------------
 //
@@ -73,13 +73,14 @@ Bool_t Connect(const char *sig,const char *cl,void *rcvr,const char *slt)\
 Bool_t Disconnect(const char *sig=0,void *rcvr=0,const char *slt=0){return fQObject.Disconnect(sig,rcvr,slt);}\
 void HighPriority(const char *signal_name,const char *slot_name=0){fQObject.HighPriority(signal_name,slot_name);}\
 void LowPriority(const char *signal_name,const char *slot_name=0){fQObject.LowPriority(signal_name,slot_name);}\
+void EmitVA(const char *signal,Int_t nargs, ...){va_list ap;va_start(ap,nargs);fQObject.EmitVA(signal,nargs,ap);va_end(ap);}\
 void Emit(const char *signal){fQObject.Emit(signal);}\
 void Emit(const char *signal,const char *params){fQObject.Emit(signal,params);}\
 void Emit(const char *signal,Long_t *paramArr){fQObject.Emit(signal,paramArr);}\
 void Emit(const char *signal,Double_t param){fQObject.Emit(signal,param);}\
 void Emit(const char *signal,Long_t param){fQObject.Emit(signal,param);}\
 void Emit(const char *signal,Long64_t param){fQObject.Emit(signal,param);}\
-void Emit(const char *signal,ULong64_t param){fQObject.Emit(signal, param);}\
+void Emit(const char *signal,ULong64_t param){fQObject.Emit(signal,param);}\
 void Emit(const char *signal,Bool_t param){Emit(signal,(Long_t)param);}\
 void Emit(const char *signal,Char_t param){Emit(signal,(Long_t)param);}\
 void Emit(const char *signal,UChar_t param){Emit(signal,(Long_t)param);}\

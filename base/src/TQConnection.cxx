@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.17 2004/04/14 15:02:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.18 2004/04/15 10:13:41 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 #include "TQConnection.h"
 #include "TRefCnt.h"
 #include "TClass.h"
+#include "TMethod.h"
+#include "TMethodArg.h"
+#include "TDataType.h"
 #include "Api.h"
 #include "G__ci.h"
 #include "Riostream.h"
@@ -48,6 +51,7 @@ class TQSlot : public TObject, public TRefCnt {
 
 protected:
    G__CallFunc   *fFunc;      // CINT method invocation environment
+   TFunction     *fMethod;    // slot method or global function
    Long_t         fOffset;    // offset added to object pointer
    TString        fName;      // full name of method
    Int_t          fExecuting; // true if one of this slot's ExecuteMethod methods is being called
@@ -60,7 +64,9 @@ public:
    const char *GetName() const { return fName.Data(); }
 
    void ExecuteMethod(void *object);
+   void ExecuteMethod(void *object, Int_t nargs, va_list ap);
    void ExecuteMethod(void *object, Long_t param);
+   void ExecuteMethod(void *object, Long64_t param);
    void ExecuteMethod(void *object, Double_t param);
    void ExecuteMethod(void *object, const char *params);
    void ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam = -1);
@@ -86,6 +92,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    fFunc      = 0;
    fOffset    = 0;
+   fMethod    = 0;
    fName      = "";
    fExecuting = 0;
 
@@ -119,14 +126,22 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
    // or with default params
 
    if (cl) {
-      params ?
-      fFunc->SetFunc(cl->GetClassInfo(), method, params, &fOffset) :
-      fFunc->SetFuncProto(cl->GetClassInfo(), method, proto, &fOffset);
+      if (params) {
+         fFunc->SetFunc(cl->GetClassInfo(), method, params, &fOffset);
+         fMethod = cl->GetMethod(method, params);
+      } else {
+         fFunc->SetFuncProto(cl->GetClassInfo(), method, proto, &fOffset);
+         fMethod = cl->GetMethodWithPrototype(method, proto);
+      }
    } else {
       G__ClassInfo gcl;
-      params ?
-      fFunc->SetFunc(&gcl, (char*)funcname, params, &fOffset) :
-      fFunc->SetFuncProto(&gcl, (char*)funcname, proto, &fOffset);
+      if (params) {
+         fFunc->SetFunc(&gcl, (char*)funcname, params, &fOffset);
+         fMethod = gROOT->GetGlobalFunction(funcname, params, kTRUE);
+      } else {
+         fFunc->SetFuncProto(&gcl, (char*)funcname, proto, &fOffset);
+         fMethod = gROOT->GetGlobalFunctionWithPrototype(funcname, proto, kTRUE);
+      }
    }
 
    // cleaning
@@ -139,7 +154,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
 {
    // Create the method invocation environment. Necessary input
    // information: the name of class (could be interpreted class),
-   // full method name with  prototype or parameter string
+   // full method name with prototype or parameter string
    // of the form: method(char*,int,float).
    // To initialize class method with default arguments, method
    // string with default parameters  should be of the form:
@@ -149,6 +164,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
 
    fFunc      = 0;
    fOffset    = 0;
+   fMethod    = 0;
    fName      = funcname;
    fExecuting = 0;
 
@@ -171,16 +187,28 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    fFunc = new G__CallFunc;
 
    G__ClassInfo gcl;
+   TClass *cl = 0;
 
    if (!class_name)
       ;                       // function
-   else
+   else {
       gcl.Init(class_name);   // class
+      cl = gROOT->GetClass(class_name);
+   }
 
-   if (params)
+   if (params) {
       fFunc->SetFunc(&gcl, method, params, &fOffset);
-   else
+      if (cl)
+         fMethod = cl->GetMethod(method, params);
+      else
+         fMethod = gROOT->GetGlobalFunction(method, params, kTRUE);
+   } else {
       fFunc->SetFuncProto(&gcl, method, proto , &fOffset);
+      if (cl)
+         fMethod = cl->GetMethodWithPrototype(method, proto);
+      else
+         fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kTRUE);
+   }
 
    delete [] method;
    return;
@@ -213,7 +241,102 @@ inline void TQSlot::ExecuteMethod(void *object)
 }
 
 //______________________________________________________________________________
+inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
+{
+   // ExecuteMethod the method for the specified object and
+   // with variable argument list.
+
+   if (!fMethod) {
+      Error("ExecuteMethod", "method %s not found,"
+            "\n(note: interpreted methods are not supported with varargs)",
+            fName.Data());
+      return;
+   }
+
+   if (nargs < fMethod->GetNargs() - fMethod->GetNargsOpt() ||
+       nargs > fMethod->GetNargs()) {
+      Error("ExecuteMethod", "nargs (%d) not consistent with expected number of arguments ([%d-%d])",
+            nargs, fMethod->GetNargs() - fMethod->GetNargsOpt(),
+            fMethod->GetNargs());
+      return;
+   }
+
+   void *address = 0;
+   R__LOCKGUARD(gCINTMutex);
+
+   fFunc->ResetArg();
+
+   if (nargs > 0) {
+      TIter next(fMethod->GetListOfMethodArgs());
+      TMethodArg *arg;
+
+      for (int i = 0; i < nargs; i++) {
+         arg = (TMethodArg*) next();
+         TString type = arg->GetFullTypeName();
+         TDataType *dt = gROOT->GetType(type);
+         if (dt)
+            type = dt->GetFullTypeName();
+         if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
+            fFunc->SetArg((Long_t) va_arg(ap, void*));
+            //fCallEnv->SetParam((Long_t) va_arg(ap, void*));
+         else if (type == "bool")
+            fFunc->SetArg((Long_t) va_arg(ap, int));  // bool is promoted to int
+            //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // bool is promoted to int
+         else if (type == "char" || type == "unsigned char")
+            fFunc->SetArg((Long_t) va_arg(ap, int));  // char is promoted to int
+            //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // char is promoted to int
+         else if (type == "short" || type == "unsigned short")
+            fFunc->SetArg((Long_t) va_arg(ap, int));  // short is promoted to int
+            //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // short is promoted to int
+         else if (type == "int" || type == "unsigned int")
+            fFunc->SetArg((Long_t) va_arg(ap, int));
+            //fCallEnv->SetParam((Long_t) va_arg(ap, int));
+         else if (type == "long" || type == "unsigned long")
+            fFunc->SetArg((Long_t) va_arg(ap, long));
+            //fCallEnv->SetParam((Long_t) va_arg(ap, long));
+         else if (type == "long long")
+            fFunc->SetArg((Long64_t) va_arg(ap, Long64_t));
+            //fCallEnv->SetParam((Long64_t) va_arg(ap, Long64_t));
+         else if (type == "unsigned long long")
+            fFunc->SetArg((ULong64_t) va_arg(ap, ULong64_t));
+            //fCallEnv->SetParam((ULong64_t) va_arg(ap, ULong64_t));
+         else if (type == "float")
+            fFunc->SetArg((Double_t) va_arg(ap, double));  // float is promoted to double
+            //fCallEnv->SetParam((Double_t) va_arg(ap, double));  // float is promoted to double
+         else if (type == "double")
+            fFunc->SetArg((Double_t) va_arg(ap, double));
+            //fCallEnv->SetParam((Double_t) va_arg(ap, double));
+      }
+   }
+
+   if (object) address = (void*)((Long_t)object + fOffset);
+   fExecuting++;
+   fFunc->Exec(address);
+   fExecuting--;
+   if (!TestBit(kNotDeleted) && !fExecuting)
+      delete fFunc;
+}
+
+//______________________________________________________________________________
 inline void TQSlot::ExecuteMethod(void *object, Long_t param)
+{
+   // ExecuteMethod the method for the specified object and
+   // with single argument value.
+
+   void *address = 0;
+   R__LOCKGUARD(gCINTMutex);
+   fFunc->ResetArg();
+   fFunc->SetArg(param);
+   if (object) address = (void*)((Long_t)object + fOffset);
+   fExecuting++;
+   fFunc->Exec(address);
+   fExecuting--;
+   if (!TestBit(kNotDeleted) && !fExecuting)
+      delete fFunc;
+}
+
+//______________________________________________________________________________
+inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
 {
    // ExecuteMethod the method for the specified object and
    // with single argument value.
@@ -254,8 +377,8 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
    // ExecuteMethod the method for the specified object and text param.
 
    void *address = 0;
-   gTQSlotParams = (char*)param;
    R__LOCKGUARD(gCINTMutex);
+   gTQSlotParams = (char*)param;
    fFunc->SetArgs("gTQSlotParams");
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
@@ -497,7 +620,35 @@ void TQConnection::ExecuteMethod()
 }
 
 //______________________________________________________________________________
+void TQConnection::ExecuteMethod(Int_t nargs, va_list va)
+{
+   // Apply slot-method to the fReceiver object with
+   // variable argument list.
+
+   // This connection might be deleted in result of the method execution
+   // (for example in case of a Disconnect).  Hence we do not assume
+   // the object is still valid on return.
+   TQSlot *s = fSlot;
+   fSlot->ExecuteMethod(fReceiver, nargs, va);
+   if (s->References() <= 0) delete s;
+}
+
+//______________________________________________________________________________
 void TQConnection::ExecuteMethod(Long_t param)
+{
+   // Apply slot-method to the fReceiver object with
+   // single argument value.
+
+   // This connection might be deleted in result of the method execution
+   // (for example in case of a Disconnect).  Hence we do not assume
+   // the object is still valid on return.
+   TQSlot *s = fSlot;
+   fSlot->ExecuteMethod(fReceiver, param);
+   if (s->References() <= 0) delete s;
+}
+
+//______________________________________________________________________________
+void TQConnection::ExecuteMethod(Long64_t param)
 {
    // Apply slot-method to the fReceiver object with
    // single argument value.
