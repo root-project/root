@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: THYPE.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -9,12 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TView.h"
 #include "THYPE.h"
-#include "TNode.h"
-#include "TVirtualPad.h"
-
-#include "TVirtualGL.h"
 
 ClassImp(THYPE)
 

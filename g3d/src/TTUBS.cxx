@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include "TTUBS.h"
 #include "TNode.h"
-#include "TView.h"
 #include "TVirtualPad.h"
 #include "TVirtualGL.h"
 

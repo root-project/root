@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.2 2000/11/21 20:17:47 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include "TPCON.h"
 #include "TNode.h"
-#include "TView.h"
 #include "TVirtualPad.h"
 #include "TVirtualGL.h"
 

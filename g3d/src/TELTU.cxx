@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TELTU.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TView.h"
 #include "TELTU.h"
 #include "TNode.h"
 

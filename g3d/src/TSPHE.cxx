@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.3 2001/02/28 11:04:06 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.4 2001/06/19 15:45:24 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include "TSPHE.h"
 #include "TNode.h"
-#include "TView.h"
 #include "TVirtualPad.h"
 #include "TVirtualGL.h"
 
