@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.15 2002/03/09 09:58:22 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.16 2002/05/30 19:43:07 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -337,6 +337,7 @@ Long_t TThread::Join(Long_t jid, void **ret)
 //______________________________________________________________________________
 Long_t TThread::SelfId()
 {
+   if(!fgThreadImp) return -1L;
    Long_t id = fgThreadImp->SelfId();
    if (!id) id = -1L;  // in some implementations 0 is main thread
    return id;
