@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.40 2004/02/18 16:59:44 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.41 2004/03/30 21:13:31 rdm Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -359,6 +359,14 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
       fCOMDplist = 0;
       fPARSplist = 0;
 
+      fUp        = 0;
+      fEpsi      = 0;
+      fApsi      = 0;
+      fXmidcr    = 0;
+      fYmidcr    = 0;
+      fXdircr    = 0;
+      fYdircr    = 0;   
+
       fStatus       = 0;
       fEmpty        = 0;
       fObjectFit    = 0;
@@ -368,6 +376,14 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 
    } else {
       BuildArrays(25);
+
+      fUp        = 0;
+      fEpsi      = 0;
+      fApsi      = 0;
+      fXmidcr    = 0;
+      fYmidcr    = 0;
+      fXdircr    = 0;
+      fYdircr    = 0;   
 
       fStatus       = 0;
       fEmpty        = 0;
