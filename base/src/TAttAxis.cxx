@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.2 2000/11/21 16:26:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -169,11 +169,17 @@ void TAttAxis::SetLabelSize(Float_t size)
 }
 
 //______________________________________________________________________________
-void TAttAxis::SetNdivisions(Int_t n)
+void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 {
 //   Set the number of divisions for this axis
+//   if optim = kTRUE (default), the number of divisions will be
+//                      optimized around the specified value.
+//   if optim = kFALSE, or n < 0, the axis will be forced to use 
+//                      exactly n divisions.
+   
 
    fNdivisions = n;
+   if (!optim) fNdivisions = -TMath::Abs(n);
    if (gPad) gPad->Modified();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.2 2000/11/21 16:01:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.3 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -68,7 +68,7 @@ public:
         virtual Style_t  GetTitleFont()   const {return fTitleFont;}
         virtual void     ResetAttAxis(Option_t *option="");
         virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
-        virtual void     SetNdivisions(Int_t n=510);           // *MENU*
+        virtual void     SetNdivisions(Int_t n=510, Bool_t optim=kTRUE);  // *MENU*
         virtual void     SetAxisColor(Color_t color=1);        // *MENU*
         virtual void     SetLabelColor(Color_t color=1);       // *MENU*
         virtual void     SetLabelFont(Style_t font=62);        // *MENU*
