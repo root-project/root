@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.46 2004/05/17 12:28:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.47 2004/05/26 07:40:08 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1528,6 +1528,8 @@ Int_t TDirectory::WriteObject(const TObject *obj, const char *name, Option_t *op
       return 0;
    }
 
+   if (!obj) return 0;
+   
    TString opt = option;
    opt.ToLower();
 
@@ -1605,6 +1607,9 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
 {
    // Write object of class with dictionary cl in this directory
    // obj may not derive from TObject
+   // To get the TClass* cl pointer, one can use
+   //    TClass *cl = gROOT->GetClass("classname");
+   //  An alternative is to call the function WriteObjectAny above.
    // see TDirectory::WriteObject for comments
 
    if (!fFile->IsWritable()) {
