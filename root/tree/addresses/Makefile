@@ -84,5 +84,7 @@ iobug.log : iobug_C.$(DllSuf)
 iobug: iobug.log
 	$(TestDiff)
 
+treeBranch.log: userClass_C.$(DllSuf) treeBranch_C.$(DllSuf)
+
 treeBranch: treeBranch.log
 	$(TestDiff)
