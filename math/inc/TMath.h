@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.37 2004/04/24 19:36:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.38 2004/04/28 12:13:00 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -472,6 +472,8 @@ extern "C" {
    extern double pow(double, double);
    extern double log(double);
    extern double log10(double);
+   extern double ceil(double);
+   extern double floor(double);
 #ifndef R__WIN32
 #   if !defined(finite)
        extern int finite(double);
@@ -528,6 +530,12 @@ inline Double_t TMath::ATan2(Double_t y, Double_t x)
 
 inline Double_t TMath::Sqrt(Double_t x)
    { return sqrt(x); }
+
+inline Double_t TMath::Ceil(Double_t x)
+   { return ceil(x); }
+
+inline Double_t TMath::Floor(Double_t x)
+   { return floor(x); }
 
 inline Double_t TMath::Exp(Double_t x)
    { return exp(x); }
