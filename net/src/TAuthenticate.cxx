@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.50 2004/04/28 11:45:47 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.51 2004/05/05 09:23:57 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -120,7 +120,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // Set protocol string.
    // Check if version should be different ...
    char *pdd;
-   Int_t ServType = TSocket::kSOCKD;
+   Int_t servtype = TSocket::kSOCKD;
    if (proto && strlen(proto) > 0) {
       char *sproto = StrDup(proto);
       if ((pdd = strstr(sproto, ":")) != 0) {
@@ -135,7 +135,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
                      fVersion = 0;
                }
             }
-            ServType = TSocket::kROOTD;
+            servtype = TSocket::kROOTD;
          }
          if (strstr(sproto, "proof") != 0) {
             if (rproto < 8) {
@@ -143,7 +143,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
                if (rproto < 7)
                   fVersion = 1;
             }
-            ServType = TSocket::kPROOFD;
+            servtype = TSocket::kPROOFD;
          }
          if (gDebug > 3)
             Info("TAuthenticate",
@@ -183,7 +183,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
       if (fqdn == "UnNamedHost")
          fqdn = addr.GetHostAddress();
    }
-   TString fqdnsrv(Form("%s:%d",fqdn.Data(),ServType));
+   TString fqdnsrv(Form("%s:%d",fqdn.Data(),servtype));
 
    // Read directives from files; re-read if files have changed
    TAuthenticate::ReadRootAuthrc();
@@ -2708,12 +2708,18 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
    if (ReUse == 1 && OffSet > -1) {
 
       // Receive result of checking offset
-      Int_t stat, kind;
-      if (fSocket->Recv(stat, kind) < 0)
-         return -2;
-      if (kind != kROOTD_AUTH)
-         Warning("AuthExists","protocol error: expecting %d got %d"
-                 " (value: %d)",kROOTD_AUTH,kind,stat);
+      // But only for recent servers
+      Int_t rproto = fSocket->GetRemoteProtocol();
+      Bool_t oldsrv = ((fProtocol.BeginsWith("root") && rproto == 9) ||
+                       (fProtocol.BeginsWith("proof") && rproto == 8));
+      Int_t stat = 1, kind;
+      if (!oldsrv) {
+         if (fSocket->Recv(stat, kind) < 0)
+            return -2;
+         if (kind != kROOTD_AUTH)
+            Warning("AuthExists","protocol error: expecting %d got %d"
+                    " (value: %d)",kROOTD_AUTH,kind,stat);
+      }
 
       if (stat == 1) {
          if (gDebug > 2)

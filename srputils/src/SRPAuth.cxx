@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.14 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.15 2004/03/23 00:12:42 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -291,8 +291,16 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      if (kind == kROOTD_ERR)
        if (gDebug > 0) TAuthenticate::AuthError("SRPAuthenticate", stat);
 
-     if (kind == kROOTD_AUTH && stat == 1)
+     if (kind == kROOTD_AUTH && stat == 1) {
+        // Get a SecContext for the record and avoid problems
+        // with fSecContext undefined in TAuthenticate
+        TSecContext *ctx = 
+           auth->GetHostAuth()->CreateSecContext((const char *)usr, 
+                       remote, (Int_t)TAuthenticate::kSRP,-1,Details,0);
+        // Transmit it to TAuthenticate
+        auth->SetSecContext(ctx);
         result = 1;
+     }
    }
 out:
    delete [] usr;

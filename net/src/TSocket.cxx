@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.16 2004/05/08 16:37:49 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.17 2004/05/10 08:17:57 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -732,8 +732,20 @@ Bool_t TSocket::Authenticate(const char *user)
 
    // Get server protocol level
    Int_t kind;
-   Send(Form("%d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
+   // Warning: for backward compatibility reasons here we have to
+   // send exactly 4 bytes: for fgClientClientProtocol > 99
+   // the space in the format must be dropped 
+   Send(Form(" %d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
    Recv(fRemoteProtocol, kind);
+
+   // If we are talking to an old rootd server we get a fatal
+   // error here and we need to reopen the connection,
+   // communicating first the size of the parallel socket
+   if (kind == kROOTD_ERR) {
+      fRemoteProtocol = 9;
+      return kFALSE;
+   }
+
    if (fServType == kROOTD) {
       if (fRemoteProtocol > 6 && fRemoteProtocol < 10) {
          // Middle aged versions expect client protocol now
@@ -833,39 +845,21 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    TString eurl(url);
 
    // Check if parallel
-   Bool_t Parallel = kFALSE;
-   Bool_t RootdSrv = kFALSE;
+   Bool_t parallel = kFALSE;
    TString proto(TUrl(url).GetProtocol());
    if (proto.Contains("sockd")) {
       if (proto.Index("dp",1) > 1 || size > 1)
-         Parallel = kTRUE;
+         parallel = kTRUE;
       eurl.ReplaceAll("dp",2,"d",1);
    }
    if (proto.Contains("rootd")) {
-      Parallel = kTRUE;
-      RootdSrv = kTRUE;
+      parallel = kTRUE;
       eurl.ReplaceAll("dp",2,"d",1);
-   }
-
-   // For backward compatibility we need to now the protocol
-   // version of the remote rootd; the only way is to ask it
-   Int_t RemoteProtocol = -1;
-   if (RootdSrv) {
-      // Open simple parallel socket
-      TSocket *sock = new TPSocket(eurl,TUrl(url).GetPort(),1);
-      // Inquire remote protocol (sending our)
-      sock->Send(Form("%d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
-      // Receive remote protocol
-      Int_t kind;
-      sock->Recv(RemoteProtocol, kind);
-      // Close connection
-      sock->Send(kROOTD_BYE);
-      delete sock;
    }
 
    // Create the socket now
    TSocket *sock = 0;
-   if (!Parallel) {
+   if (!parallel) {
 
       // Simple socket
       sock = new TSocket(eurl, TUrl(url).GetPort(), tcpwindowsize);
@@ -887,7 +881,6 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
       if (eurl.Contains("?"))
          eurl.Resize(eurl.Index("?"));
       eurl += "?A";
-      eurl += RemoteProtocol;
 
       // Parallel socket
       sock = new TPSocket(eurl, TUrl(url).GetPort(), size, tcpwindowsize);

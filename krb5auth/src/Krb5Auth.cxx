@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.21 2004/05/08 13:40:18 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.22 2004/05/10 08:16:10 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -516,7 +516,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
 
       // If PROOF, send credentials
-      if (sock->GetServType() == TSocket::kPROOFD) {
+      if (sock->GetServType() == TSocket::kPROOFD || version < 4) {
 
          krb5_data outdata;
          outdata.data = 0;
@@ -670,6 +670,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
          return 0;
       }
       user = answer;
+
+      // Get a SecContext for the record and avoid problems
+      // with fSecContext undefined in TAuthenticate
+      TSecContext *ctx = 
+         auth->GetHostAuth()->CreateSecContext((const char *)user,
+             auth->GetRemoteHost(), (Int_t)TAuthenticate::kKrb5, -1,
+             Details, 0);
+      // Transmit it to TAuthenticate
+      auth->SetSecContext(ctx);
    }
 
    // Receive auth from remote login function

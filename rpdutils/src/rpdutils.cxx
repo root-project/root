@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.40 2004/05/04 14:06:41 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.41 2004/05/08 13:40:18 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -2116,7 +2116,8 @@ void RpdKrb5Auth(const char *sstr)
    }
 
    // Get credentials if in a PROOF session
-   if (gClientProtocol >= 9 && gService == kPROOFD) {
+   if (gClientProtocol >= 9 && 
+      (gService == kPROOFD || gClientProtocol < 11)) {
 
       char *data = 0;
       int size = 0;
@@ -4461,39 +4462,47 @@ void RpdProtocol(int ServType)
    int readbuf = 1;
    EMessageTypes kind;
    char proto[kMAXRECVBUF];
+
    // For backward compatibility, for rootd we need to understand
    // whether we are talking to a OLD client: protocol information is
    // available only later on ...
-   if (ServType == 1) {
-      int lbuf[3];
-      if (NetRecvRaw(lbuf, sizeof(lbuf)) < 0)
-         Error(gErrFatal, kErrFatal, "RpdAuthenticate: error receiving message");
+   int lbuf[2];
+   if (NetRecvRaw(lbuf, sizeof(lbuf)) < 0)
+      Error(gErrFatal, kErrFatal, "RpdProtocol: error receiving message");
 
-      // if kind is kROOTD_PROTOCOL then it is a recent one
-      kind = (EMessageTypes) ntohl(lbuf[1]);
-      if (kind == kROOTD_PROTOCOL || kind == kROOTD_CLEANUP ||
-          kind == kROOTD_SSH) {
-         // Decode the third int received
-         memcpy(proto,((char *)lbuf)+8,4);
-         // Receive the rest
-         int len = ntohl(lbuf[0]) - 2*sizeof(int);
-         if (len) {
-            char *tmpbuf = new char[len];
-            NetRecvRaw(tmpbuf, len);
-            memcpy(proto+4,tmpbuf,len);
-            delete[] tmpbuf;
-         }
-         proto[len+4] = '\0';
-         readbuf = 0;
+   // if kind is {kROOTD_PROTOCOL, kROOTD_CLEANUP, kROOTD_SSH}
+   // receive the rest
+   kind = (EMessageTypes) ntohl(lbuf[1]);
+   if (kind == kROOTD_PROTOCOL || kind == kROOTD_CLEANUP ||
+       kind == kROOTD_SSH) {
+      // Receive the rest
+      char *buf = 0;
+      int len = ntohl(lbuf[0]) - sizeof(int);
+      if (len) {
+         buf = new char[len];
+         if (NetRecvRaw(buf, len) < 0)
+            Error(gErrFatal, kErrFatal, 
+                                     "RpdProtocol: error receiving message");
+         strcpy(proto,buf);
       } else {
-         // Need to open parallel sockets first
-         int size = ntohl(lbuf[1]);
-         int port = ntohl(lbuf[2]);
-         if (gDebug > 0)
-            ErrorInfo("RpdProtocol: port = %d, size = %d", port, size);
-         if (size > 1)
-            NetParOpen(port, size);
+         // Empty buffer
+         proto[0] = '\0';
       }
+      // Copy buffer for later use
+      readbuf = 0;
+      if (buf) delete[] buf;
+   } else {
+      // Need to open parallel sockets first
+      int size = ntohl(lbuf[1]);
+      // Read port
+      int port;
+      if (NetRecvRaw(&port, sizeof(int)) < 0)
+         Error(gErrFatal, kErrFatal, "RpdProtocol: error receiving message");
+      port = ntohl(port);
+      if (gDebug > 0)
+         ErrorInfo("RpdProtocol: port = %d, size = %d", port, size);
+      if (size > 1)
+         NetParOpen(port, size);
    }
 
    int Done = 0;

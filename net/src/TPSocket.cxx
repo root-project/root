@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.13 2004/05/06 13:04:10 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.14 2004/05/10 08:17:57 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -119,34 +119,34 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
    char *pauth = (char *)strstr(host, "?A");
    if (pauth) {
       authreq = kTRUE;
-      fRemoteProtocol = atoi(pauth+2);
    }
 
    // perhaps we can use fServType here ... to be checked
    Bool_t rootdSrv = (strstr(host,"rootd")) ? kTRUE : kFALSE;
 
-   // for older rootd servers, we need to open the parallel sockets
-   // before trying authentication ...
-   if (rootdSrv) {
-      if (fRemoteProtocol < 10) {
-         if (valid) {
-            fSize = size;
-            Init(tcpwindowsize);
-         }
-         valid = IsValid();
-      } else {
-         // for consistency at server side
-         SetOption(kNoDelay, 0);
-         TSocket::Send((Int_t)0, (Int_t)0);
-      }
-   }
-
-   // try authentication, if required
+   // try authentication , if required
    if (authreq) {
       if (valid) {
          if (!Authenticate(TUrl(host).GetUser())) {
-            TSocket::Close();
-            valid = kFALSE;
+            if (fRemoteProtocol < 10) {
+               // We failed because we are talking to an old
+               // server: we need to re-open the connection 
+               // and communicate the size first
+               Int_t tcpw = (size > 1 ? -1 : tcpwindowsize);
+               TSocket *ns = new TSocket(host, port, tcpw);
+               if (ns->IsValid()) {
+                  gROOT->GetListOfSockets()->Remove(ns);
+                  fSocket = ns->GetDescriptor();
+                  fSize = size;
+                  Init(tcpwindowsize);
+               }
+               if ((valid = IsValid())) {
+                  if (!Authenticate(TUrl(host).GetUser())) {
+                     TSocket::Close();
+                     valid = kFALSE;
+                  }
+               }
+            }
          }
       }
       // reset url to the original state
