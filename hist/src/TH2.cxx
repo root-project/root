@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.31 2002/07/11 09:05:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.32 2002/09/10 21:21:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1043,7 +1043,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
 //______________________________________________________________________________
 Int_t TH2::Merge(TCollection *list)
 {
-   //Merge all histograms in the collection in this histogram.
+   //Add all histograms in the collection to this histogram.
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
@@ -1070,8 +1070,9 @@ Int_t TH2::Merge(TCollection *list)
    const Int_t kNstat = 7;
    Stat_t stats[kNstat], totstats[kNstat];
    TH2 *h;
-   Int_t i, nentries=0;
+   Int_t i, nentries=(Int_t)fEntries;
    for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
    Bool_t same = kTRUE;
    while ((h=(TH2*)next())) {     
       if (!h->InheritsFrom(TH2::Class())) {
@@ -1117,9 +1118,9 @@ Int_t TH2::Merge(TCollection *list)
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       for (biny=0;biny<=ny+1;biny++) {
-         iy = fYaxis.FindBin(h->GetBinCenter(biny));
+         iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
          for (binx=0;binx<=nx+1;binx++) {
-            ix = fXaxis.FindBin(h->GetBinCenter(binx));
+            ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
             bin = binx +(nx+2)*biny;
             ibin = ix +(nbix+2)*iy;
             cu  = h->GetBinContent(bin);

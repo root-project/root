@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.107 2002/08/09 22:12:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.108 2002/09/06 20:48:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3070,7 +3070,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
 //______________________________________________________________________________
 Int_t TH1::Merge(TCollection *list)
 {
-// Merge all histograms in the collection in this histogram.
+// Add all histograms in the collection to this histogram.
 // This function computes the min/max for the x axis,
 // compute a new number of bins, if necessary,
 // add bin contents, errors and statistics.
@@ -3155,7 +3155,7 @@ void atest() {
    while ((h=(TH1*)next())) {
       nx   = h->GetXaxis()->GetNbins();
       for (binx=0;binx<=nx+1;binx++) {
-         ix = fXaxis.FindBin(h->GetBinCenter(binx));
+         ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
          bin = binx;
          ibin = ix;
          cu  = h->GetBinContent(bin);
