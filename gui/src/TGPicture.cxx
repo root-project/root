@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.7 2004/04/20 06:49:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.8 2004/04/23 06:37:09 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -137,77 +137,80 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       return 0;
    }
 
-#if defined(GDK_WIN32) || defined(R__QT)
-   Bool_t retc = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(),
-                                                  picnam, pic->fPic, pic->fMask,
-                                                  pic->fAttributes);
-   delete [] picnam;
-#else
-   char **data;
-   if (!gVirtualX->ReadPictureDataFromFile(picnam, &data)) {
-      delete pic;
+   Bool_t retc;
+   if (!gVirtualX->InheritsFrom("TGX11")) {
+      // case of win32gdk and qt drivers
+      retc = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(),
+                                              picnam, pic->fPic, pic->fMask,
+                                              pic->fAttributes);
       delete [] picnam;
-      return 0;
-   }
-   delete [] picnam;
+   } else {
+      // case supported by X11 driver
+      char **data;
+      if (!gVirtualX->ReadPictureDataFromFile(picnam, &data)) {
+         delete pic;
+         delete [] picnam;
+         return 0;
+      }
+      delete [] picnam;
 
-   Int_t    colors, chars, headersize, totalheight;
-   UInt_t   width, height;
-   Double_t xscale, yscale;
-   Bool_t   retc;
+      Int_t    colors, chars, headersize, totalheight;
+      UInt_t   width, height;
+      Double_t xscale, yscale;
+      Bool_t   retc;
 
-   sscanf(data[0], "%u %u %d %d", &width, &height, &colors, &chars);
-   headersize = colors + 1;
-   yscale = (Double_t) new_height / (Double_t) height;
-   xscale = (Double_t) new_width / (Double_t) width;
-   totalheight = (colors + new_height + 1);
+      sscanf(data[0], "%u %u %d %d", &width, &height, &colors, &chars);
+      headersize = colors + 1;
+      yscale = (Double_t) new_height / (Double_t) height;
+      xscale = (Double_t) new_width / (Double_t) width;
+      totalheight = (colors + new_height + 1);
 
-   if ((width != new_width) || (height != new_height)) {
-      char **smalldata;
-      Int_t    i, x1, y1, pixels;
-      Double_t x, y;
+      if ((width != new_width) || (height != new_height)) {
+         char **smalldata;
+         Int_t    i, x1, y1, pixels;
+         Double_t x, y;
 
-      smalldata = new char* [totalheight + 1];
+         smalldata = new char* [totalheight + 1];
 
-      smalldata[0] = new char[30];
-      for (i = 1; i < headersize; i++)
-         smalldata[i] = new char [strlen(data[i]) + 1];
+         smalldata[0] = new char[30];
+         for (i = 1; i < headersize; i++)
+            smalldata[i] = new char [strlen(data[i]) + 1];
 
-      for (i = headersize; i < totalheight + 1; i++)
-         smalldata[i] = new char[(new_width * chars) + 1];
+         for (i = headersize; i < totalheight + 1; i++)
+            smalldata[i] = new char[(new_width * chars) + 1];
 
-      sprintf(smalldata[0], "%u %u %d %d", new_width, new_height, colors, chars);
+         sprintf(smalldata[0], "%u %u %d %d", new_width, new_height, colors, chars);
 
-      for (i = 1; i < headersize; i++) strcpy(smalldata[i], data[i]);
+         for (i = 1; i < headersize; i++) strcpy(smalldata[i], data[i]);
 
-      y = headersize;
-      for (y1 = headersize; y1 < (Int_t)new_height + headersize; y1++) {
-         x = 0;
-         for (x1 = 0; x1 < (Int_t)new_width; x1++) {
-            for (pixels = 0; pixels < chars; pixels++)
-               smalldata[y1][x1+pixels] = data[(Int_t)y][(Int_t)x + pixels];
-            x += 1.0 / xscale;
+         y = headersize;
+         for (y1 = headersize; y1 < (Int_t)new_height + headersize; y1++) {
+            x = 0;
+            for (x1 = 0; x1 < (Int_t)new_width; x1++) {
+               for (pixels = 0; pixels < chars; pixels++)
+                  smalldata[y1][x1+pixels] = data[(Int_t)y][(Int_t)x + pixels];
+               x += 1.0 / xscale;
+            }
+            smalldata[y1][x1] = '\0';
+            y += 1.0 / yscale;
          }
-         smalldata[y1][x1] = '\0';
-         y += 1.0 / yscale;
+
+         retc = gVirtualX->CreatePictureFromData(fClient->GetDefaultRoot()->GetId(), smalldata,
+                                                 pic->fPic, pic->fMask,
+                                                 pic->fAttributes);
+
+         for (i = 0; i < totalheight + 1; i++)
+            delete [] smalldata[i];
+         delete [] smalldata;
+
+      } else {
+         retc = gVirtualX->CreatePictureFromData(fClient->GetDefaultRoot()->GetId(), data,
+                                                 pic->fPic, pic->fMask,
+                                                 pic->fAttributes);
       }
 
-      retc = gVirtualX->CreatePictureFromData(fClient->GetDefaultRoot()->GetId(), smalldata,
-                                         pic->fPic, pic->fMask,
-                                         pic->fAttributes);
-
-      for (i = 0; i < totalheight + 1; i++)
-         delete [] smalldata[i];
-      delete [] smalldata;
-
-   } else {
-      retc = gVirtualX->CreatePictureFromData(fClient->GetDefaultRoot()->GetId(), data,
-                                              pic->fPic, pic->fMask,
-                                              pic->fAttributes);
+      gVirtualX->DeletePictureData(data);
    }
-
-   gVirtualX->DeletePictureData(data);
-#endif
 
    if (!retc) {
       delete pic;

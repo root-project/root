@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.10 2003/11/10 14:07:21 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.11 2003/11/10 14:45:29 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualGL.h"
+#include "TVirtualX.h"
 #include "TPadOpenGLView.h"
 #include "TVirtualPad.h"
 #include "TView.h"
@@ -158,14 +159,18 @@ void TPadOpenGLView::MapOpenGL()
 
    gVirtualGL->PolygonGLMode(kFRONT,kFILL);
 
-#if defined(Inventor) || defined(R__QT)
+#if defined(Inventor)
    // "Default light" with Inventor is "native" Inventor
    gVirtualGL->SetRootLight(kFALSE);
 #else
-   // "Default light" with no Inventor is "ROOT artificial" light
-   gVirtualGL->SetRootLight(kTRUE);
+   if (gVirtualX->InheritsFrom("TGQt")) {
+      // "Default light" with Qt driver is "native" Qt
+      gVirtualGL->SetRootLight(kFALSE);
+   } else {
+      // "Default light" with no Inventor is "ROOT artificial" light
+      gVirtualGL->SetRootLight(kTRUE);
+   }
 #endif
-
 
    gVirtualGL->FrontGLFace(kCCW);
 
