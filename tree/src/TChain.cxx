@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.86 2003/11/12 07:23:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.87 2004/03/08 17:06:10 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -828,18 +828,23 @@ Int_t TChain::LoadTree(Int_t entry)
       fFile->UseCache(fMaxCacheSize, fPageSize);
 
    fTree = (TTree*)fFile->Get(element->GetName());
+
    if (fTree==0) {
       // Now that we do not check during the addition, we need to check here!
       Error("LoadTree","cannot find tree with name %s in file %s",
             element->GetName(),element->GetTitle());
+
       delete fFile; fFile = 0;
-      return -4;
+
+      // We do not return yet so that 'fEntries' can be updated with the
+      // sum of the entries of all the other trees.
    }
+
    fTreeNumber = t;
    fDirectory = fFile;
 
    //check if fTreeOffset has really been set
-   Int_t nentries = (Int_t)fTree->GetEntries();
+   Int_t nentries = fTree ? (Int_t)fTree->GetEntries() : 0;
    if (fTreeOffset[fTreeNumber+1] != fTreeOffset[fTreeNumber] + nentries) {
       fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
       fEntries = fTreeOffset[fNtrees];
@@ -850,6 +855,13 @@ Int_t TChain::LoadTree(Int_t entry)
          if (fTreeNumber < fNtrees-1 && entry < fTreeOffset[fTreeNumber+2]) return LoadTree(entry);
          else  fReadEntry = -2;
       }
+   }
+   if (fTree==0) {
+      // The Error message already issued.  However if we reach here
+      // we need to make sure that we do not use fTree
+
+      fTreeNumber = -1;       // Force a reload of the tree next time.
+      return -4;
    }
 
    // Since some of the friend of this chain might a simple tree (i.e. not a chain),
