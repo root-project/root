@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.16 2003/05/12 16:44:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.17 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1915,9 +1915,11 @@ void TGCanvas::SetHsbPosition(Int_t newPos)
 {
    // Set position of horizontal scrollbar.
 
-   if (fHScrollbar && fHScrollbar->IsMapped())
-     fHScrollbar->SetPosition(newPos);
-   else
+   if (fHScrollbar && fHScrollbar->IsMapped()) {
+      TGFrame *container = fVport->GetContainer();
+      fHScrollbar->SetRange((Int_t)container->GetWidth(), (Int_t)fVport->GetWidth());
+      fHScrollbar->SetPosition(newPos);
+   } else
      fVport->SetHPos(0);
 }
 
@@ -1926,9 +1928,11 @@ void TGCanvas::SetVsbPosition(Int_t newPos)
 {
    // Set position of vertical scrollbar.
 
-   if (fVScrollbar && fVScrollbar->IsMapped())
+   if (fVScrollbar && fVScrollbar->IsMapped()) {
+      TGFrame *container = fVport->GetContainer();
+      fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
       fVScrollbar->SetPosition(newPos);
-   else
+   } else
       fVport->SetVPos(0);
 }
 
