@@ -428,6 +428,7 @@
 #include "TGeoTrd1.h"
 #include "TGeoTrd2.h"
 #include "TGeoTorus.h"
+#include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
 #include "TVirtualGeoPainter.h"
 #include "TVirtualGeoTrack.h"
@@ -3481,6 +3482,16 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, const TGeoMedium *medium,
    TGeoVolume *vol = new TGeoVolume(name, gtra, medium);
    return vol;
 }
+//_____________________________________________________________________________
+TGeoVolume *TGeoManager::MakeXtru(const char *name, const TGeoMedium *medium, Int_t nz)
+{
+// Make a TGeoXtru-shaped volume with nz planes
+   TGeoXtru *xtru = new TGeoXtru(nz);
+
+   TGeoVolume *vol = new TGeoVolume(name, xtru, medium);
+   return vol;
+}   
+
 //_____________________________________________________________________________
 TGeoVolumeAssembly *TGeoManager::MakeVolumeAssembly(const char *name)
 {

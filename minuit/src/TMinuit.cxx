@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.36 2003/09/19 08:08:14 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.37 2003/10/30 16:44:19 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -4451,14 +4451,20 @@ void TMinuit::mninex(Double_t *pint)
 
     Int_t i, j;
 
-    for (j = 1; j <= fNpar; ++j) {
-	i = fNexofi[j-1];
-	if (fNvarl[i-1] == 1) {
-	    fU[i-1] = pint[j-1];
+    for (j = 0; j < fNpar; ++j) {
+	i = fNexofi[j]-1;
+	if (fNvarl[i] == 1) {
+	    fU[i] = pint[j];
 	} else {
-	    fU[i-1] = fAlim[i-1] + (TMath::Sin(pint[j-1]) + 1)*.5*(fBlim[i-1] - fAlim[i-1]);
+	    fU[i] = fAlim[i] + (TMath::Sin(pint[j]) + 1)*.5*(fBlim[i] - fAlim[i]);
 	}
     }
+    //printf("mnimex: fU[0]=%g, pint[0]=%g, fAlim[0]=%g, fBlim[0]=%g\n",fU[0],pint[0],fAlim[0],fBlim[0]);
+   if(TMath::IsNaN(fU[0])) {
+      printf("mnimex: fU[0]=%g, pint[0]=%g, fAlim[0]=%g, fBlim[0]=%g\n",fU[0],pint[0],fAlim[0],fBlim[0]);
+      TMinuit *junk=0 ;
+      junk->GetObjectFit()->Paint(); 
+   } 
 } /* mninex_ */
 
 //______________________________________________________________________________

@@ -285,6 +285,8 @@ public:
    TGeoVolume            *MakeTubs(const char *name, const TGeoMedium *medium,
                                       Double_t rmin, Double_t rmax, Double_t dz,
                                       Double_t phi1, Double_t phi2);
+   TGeoVolume            *MakeXtru(const char *name, const TGeoMedium *medium,
+                                   Int_t nz);
    TGeoVolumeAssembly    *MakeVolumeAssembly(const char *name);
    TGeoVolumeMulti       *MakeVolumeMulti(const char *name, const TGeoMedium *medium);
    void                   SetTopVolume(TGeoVolume *vol);
@@ -331,7 +333,7 @@ public:
    Bool_t                 IsOutside() const            {return fIsOutside;} 
    Bool_t                 IsOnBoundary() const         {return fIsOnBoundary;}
    Bool_t                 IsNullStep() const           {return fIsNullStep;}
-   void                   SetOutside()                 {fIsOutside = kTRUE;}
+   void                   SetOutside(Bool_t flag=kTRUE) {fIsOutside = flag;}
    void                   UpdateCurrentPosition(Double_t *nextpoint);
    
 

@@ -118,6 +118,7 @@ public:
    virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol);
    virtual void      *MakeSphere3DBuffer(const TGeoVolume *vol);
    virtual void      *MakePcon3DBuffer(const TGeoVolume *vol);
+   virtual void      *MakeXtru3DBuffer(const TGeoVolume *vol);
    virtual void       Paint(Option_t *option="");
    void               PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glmat);
    void               PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
@@ -126,6 +127,7 @@ public:
    void               PaintTube(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    void               PaintTubs(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    void               PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
+   void               PaintXtru(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
    void               PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    virtual void       PaintOverlap(void *ovlp, Option_t *option="");

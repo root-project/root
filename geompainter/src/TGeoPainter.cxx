@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.33 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.34 2003/12/11 10:34:55 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -25,6 +25,7 @@
 #include "TGeoSphere.h"
 #include "TGeoPcon.h"
 #include "TGeoTorus.h"
+#include "TGeoXtru.h"
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
@@ -1063,6 +1064,24 @@ void *TGeoPainter::MakeTube3DBuffer(const TGeoVolume *vol)
 }   
 
 //______________________________________________________________________________
+void *TGeoPainter::MakeXtru3DBuffer(const TGeoVolume *vol)
+{
+// Create a box 3D buffer for a given shape.
+   X3DPoints *buff = new X3DPoints;
+   TGeoXtru *xtru = (TGeoXtru*)vol->GetShape();
+   Int_t numpoints = xtru->GetNz()*xtru->GetNvert();
+
+   buff->numPoints = numpoints;
+
+   Double_t *points = new Double_t[3*numpoints];
+
+   xtru->SetPoints(points);
+
+   buff->points = points;
+   return buff;
+}   
+
+//______________________________________________________________________________
 void TGeoPainter::PaintTorus(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint a torus in pad or x3d
@@ -2095,6 +2114,129 @@ void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
     if (buff->polys)    delete [] buff->polys;
     if (buff)           delete    buff;
 }
+
+//______________________________________________________________________________
+void TGeoPainter::PaintXtru(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
+{
+// Paint a TGeoXtru
+   TGeoXtru *xtru = (TGeoXtru*)shape;
+   Int_t nz = xtru->GetNz();
+   Int_t nvert = xtru->GetNvert();
+   Int_t numPoints =  nz*nvert;
+   Int_t numSegs   = nvert*(2*nz-1);
+   Int_t numPolys  = nvert*(nz-1)+2;
+   
+   Float_t *points = new Float_t[3*numPoints];
+   if (!points) return;
+   shape->SetPoints(points);
+
+   Bool_t rangeView = strcmp(option,"range")==0 ? kTRUE : kFALSE;
+//   if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points, -n, nz);
+
+   Bool_t is3d = kFALSE;
+   if (strstr(option, "x3d")) is3d=kTRUE;   
+   X3DBuffer *buff = new X3DBuffer;
+   if (buff) {
+      buff->numPoints = numPoints;
+      buff->numSegs   = numSegs;
+      buff->numPolys  = (is3d)?numPolys:0;
+  }
+
+//*-* Allocate memory for points *-*
+
+   buff->points = points;
+
+   Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
+   if (c < 0) c = 0;
+   if (fPaintingOverlaps) {
+      if (fOverlap->IsExtrusion()) {
+         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      } else {
+         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      }   
+   }
+
+//*-* Allocate memory for segments *-*
+   buff->segs = new Int_t[buff->numSegs*3];
+   Int_t i,j;
+   Int_t indx, indx2, k;
+   indx = indx2 = 0;
+   for (i=0; i<nz; i++) {
+      // loop Z planes
+      indx2 = i*nvert;
+      // loop polygon segments
+      for (j=0; j<nvert; j++) {
+         k = (j+1)%nvert;
+         buff->segs[indx++] = c;
+         buff->segs[indx++] = indx2+j;
+         buff->segs[indx++] = indx2+k;
+      } 
+   } // total: nz*nvert polygon segments    
+   for (i=0; i<nz-1; i++) {
+      // loop Z planes
+      indx2 = i*nvert;
+      // loop polygon segments
+      for (j=0; j<nvert; j++) {
+         k = j + nvert;
+         buff->segs[indx++] = c;
+         buff->segs[indx++] = indx2+j;
+         buff->segs[indx++] = indx2+k;
+      }
+   } // total (nz-1)*nvert lateral segments
+
+//*-* Allocate memory for polygons *-*
+   indx = 0;
+
+   buff->polys = 0;
+   if (is3d) {
+      buff->polys = new Int_t[(buff->numPolys-2)*6 + 2*(2+nvert)];
+      // fill lateral polygons
+      for (i=0; i<nz-1; i++) {
+         indx2 = i*nvert;
+         for (j=0; j<nvert; j++) {
+            k = (j+1)%nvert;
+            buff->polys[indx++] = c+j%3;
+            buff->polys[indx++] = 4;
+            buff->polys[indx++] = indx2+j;
+            buff->polys[indx++] = nz*nvert+indx2+k;
+            buff->polys[indx++] = indx2+nvert+j;
+            buff->polys[indx++] = nz*nvert+indx2+j;
+         }
+      } // total (nz-1)*nvert polys
+      buff->polys[indx++] = c+2;      
+      buff->polys[indx++] = nvert;
+      indx2 = 0;
+      for (j=0; j<nvert; j++) {
+         buff->polys[indx++] = indx2+j;
+      }   
+      buff->polys[indx++] = c;      
+      buff->polys[indx++] = nvert;
+      indx2 = (nz-1)*nvert;          
+      for (j=0; j<nvert; j++) {
+         buff->polys[indx++] = indx2+j;
+      }   
+   }
+    //*-* Paint in the pad
+    PaintShape(buff,rangeView, glmat);
+
+    if (is3d) {
+        if(buff && buff->points && buff->segs)
+            FillX3DBuffer(buff);
+        else {
+            gSize3D.numPoints -= buff->numPoints;
+            gSize3D.numSegs   -= buff->numSegs;
+            gSize3D.numPolys  -= buff->numPolys;
+        }
+    }
+
+    delete [] points;
+    if (buff->segs)     delete [] buff->segs;
+    if (buff->polys)    delete [] buff->polys;
+    if (buff)           delete    buff;    
+}
+
 //______________________________________________________________________________
 void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 {

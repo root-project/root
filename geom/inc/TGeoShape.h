@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.19 2003/12/10 17:09:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.20 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -62,7 +62,8 @@ enum EShapeType {
    kGeoTrd1    = BIT(23),
    kGeoTrd2    = BIT(24),
    kGeoComb    = BIT(25),
-   kGeoClosedShape = BIT(26)
+   kGeoClosedShape = BIT(26),
+   kGeoXtru    = BIT(27)
 };
 
 protected :

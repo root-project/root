@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.22 2003/08/29 09:55:29 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.23 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -102,6 +102,7 @@ public:
    virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakePcon3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakeSphere3DBuffer(const TGeoVolume *vol) = 0;
+   virtual void      *MakeXtru3DBuffer(const TGeoVolume *vol) = 0;
    virtual void       ModifiedPad() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
@@ -111,6 +112,7 @@ public:
    virtual void       PaintTubs(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintXtru(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="")  = 0;
    virtual void       PrintOverlaps() const = 0;
