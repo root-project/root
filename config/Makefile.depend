@@ -158,6 +158,6 @@ RUBYLIBEXTRA        = -Llib -lHist
 NETXLIBDEP          = $(THREADLIB)
 NETXLIBEXTRA        = -Llib -lThread
 GUIBLDLIBDEP        = $(GUILIB)
-GUIBLDLIBEXTRA      = lib/libGui.lib
+GUIBLDLIBEXTRA      = -Llib -lGui
 
 endif
