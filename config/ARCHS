@@ -21,7 +21,6 @@ hpuxegcs             for HP-UX 10.20 egcs 1.1.x
 alphacxx6            for DEC Unix cxx6
 alphaegcs            for DEC Unix egcs 1.1.x
 alphakcc             for DEC Unix KCC
-osfkcc               for DEC Unix KCC same as alphakcc
 solaris              for Solaris CC
 solarisCC5           for Solaris CC 5.0
 solarisegcs          for Solaris egcs 1.1.x
