@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.2 2000/05/29 14:51:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.3 2000/06/09 16:27:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -901,8 +901,8 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
                 fVmax[0]  = oldhtemp->GetZaxis()->GetXmax();
              } else {
                 TView *view = gPad->GetView();
-                Float_t *rmin = view->GetRmin();
-                Float_t *rmax = view->GetRmax();
+                Double_t *rmin = view->GetRmin();
+                Double_t *rmax = view->GetRmax();
                 fNbins[2] = 20;
                 fVmin[2]  = rmin[0];
                 fVmax[2]  = rmax[0];
@@ -998,9 +998,9 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
       timer = new TProcessEventTimer(interval);
 
    npoints = 0;
-   if (!fV1 && fVar1)   fV1 = new Float_t[fTree->GetEstimate()];
-   if (!fV2 && fVar2)   fV2 = new Float_t[fTree->GetEstimate()];
-   if (!fV3 && fVar3)   fV3 = new Float_t[fTree->GetEstimate()];
+   if (!fV1 && fVar1)   fV1 = new Double_t[fTree->GetEstimate()];
+   if (!fV2 && fVar2)   fV2 = new Double_t[fTree->GetEstimate()];
+   if (!fV3 && fVar3)   fV3 = new Double_t[fTree->GetEstimate()];
    if (!fW)             fW  = new Double_t[fTree->GetEstimate()];
    Int_t force = TestBit(TTree::kForceRead);
    if (!fMultiplicity || !fDimension) {
@@ -1167,17 +1167,17 @@ void TTreePlayer::EstimateLimits(Int_t, Int_t nentries, Int_t firstentry)
 }
 
 //______________________________________________________________________________
-void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &xmax)
+void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax)
 {
 //*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================
 
    static TGaxis gaxis_tree;
-   Float_t binlow,binhigh,binwidth;
+   Double_t binlow,binhigh,binwidth;
    Int_t n;
-   Float_t dx = 0.1*(xmax-xmin);
-   Float_t umin = xmin - dx;
-   Float_t umax = xmax + dx;
+   Double_t dx = 0.1*(xmax-xmin);
+   Double_t umin = xmin - dx;
+   Double_t umax = xmax + dx;
    if (umin < 0 && xmin >= 0) umin = 0;
    if (umax > 0 && xmax <= 0) umax = 0;
 
@@ -2235,11 +2235,11 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
      pm->SetMarkerSize(fTree->GetMarkerSize());
      Float_t *x = pm->GetX();
      Float_t *y = pm->GetY();
-     Float_t u, v;
-     Float_t umin = gPad->GetUxmin();
-     Float_t umax = gPad->GetUxmax();
-     Float_t vmin = gPad->GetUymin();
-     Float_t vmax = gPad->GetUymax();
+     Double_t u, v;
+     Double_t umin = gPad->GetUxmin();
+     Double_t umax = gPad->GetUxmax();
+     Double_t vmin = gPad->GetUymin();
+     Double_t vmax = gPad->GetUymax();
 
      for (i=0;i<nfill;i++) {
         u = gPad->XtoPad(fV2[i]);
@@ -2295,7 +2295,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 //*-*        ===========================================
 
   Int_t i;
-  Float_t rmin[3],rmax[3];
+  Double_t rmin[3],rmax[3];
   fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
 //__________________________1-D histogram_______________________
@@ -2380,11 +2380,11 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      pm->SetMarkerSize(fTree->GetMarkerSize());
      Float_t *x = pm->GetX();
      Float_t *y = pm->GetY();
-     Float_t u, v;
-     Float_t umin = gPad->GetUxmin();
-     Float_t umax = gPad->GetUxmax();
-     Float_t vmin = gPad->GetUymin();
-     Float_t vmax = gPad->GetUymax();
+     Double_t u, v;
+     Double_t umin = gPad->GetUxmin();
+     Double_t umax = gPad->GetUxmax();
+     Double_t vmin = gPad->GetUymin();
+     Double_t vmax = gPad->GetUymax();
 
      for (i=0;i<nfill;i++) {
         u = gPad->XtoPad(fV2[i]);
