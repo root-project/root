@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.54 2001/04/18 06:11:06 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.55 2001/04/18 10:24:50 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -153,6 +153,7 @@ void TStreamerInfo::Build()
       offset = fClass->GetBaseClassOffset(clm);
       element = new TStreamerBase(base->GetName(),base->GetTitle(),offset);
       if (clm == TObject::Class() && fClass->CanIgnoreTObjectStreamer()) {
+         SetBit(TClass::kIgnoreTObjectStreamer);
          element->SetType(-1);
       }
       fElements->Add(element);
@@ -339,6 +340,7 @@ void TStreamerInfo::BuildCheck()
       fClass = new TClass(GetName(),fClassVersion,0,0,-1,-1);
       array = fClass->GetStreamerInfos();
    }
+   if (TestBit(TClass::kIgnoreTObjectStreamer)) fClass->IgnoreTObjectStreamer();
    if (fClassVersion < 0 || fClassVersion > 65000) {
       printf("ERROR reading TStreamerInfo: %s fClassVersion=%d\n",GetName(),fClassVersion);
       SetBit(kCanDelete);
