@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.2 2000/11/21 16:00:45 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -80,7 +80,7 @@ public:
    virtual void    StopIdleing();
    virtual void    Terminate(int status = 0);
 
-   virtual char   *ApplicationName() const { return fAppImp->ApplicationName(); }
+   virtual const char *ApplicationName() const { return fAppImp->ApplicationName(); }
    virtual void    Show()    { fAppImp->Show(); }
    virtual void    Hide()    { fAppImp->Hide(); }
    virtual TApplicationImp *GetApplicationImp(){ return fAppImp;}

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -145,8 +145,10 @@ unsigned int ROOT_DlgLoop(HANDLE ThrSem)
 // ClassImp(TWin32Application)
 
 //______________________________________________________________________________
-   TWin32Application::TWin32Application(const char *appClassName, int *argc, char **argv,
-                   void *options, int numOptions) {
+TWin32Application::TWin32Application(const char *appClassName, int *argc,
+                                     char **argv, void *options, int numOptions)
+{
+   fApplicationName = appClassName;
    SetConsoleTitle(appClassName);
    CreateCmdThread();
 //   gVirtualX->Init();

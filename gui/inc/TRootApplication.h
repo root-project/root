@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -36,10 +36,9 @@ class TRootApplication : public TApplicationImp {
 
 private:
    TGClient    *fClient;        // pointer to the client environment
-   char        *fAppClassName;  // application class name
    char        *fDisplay;       // display server to conntect to
 
-   TRootApplication() { fClient = 0; fAppClassName = fDisplay = 0; }
+   TRootApplication() { fClient = 0; fDisplay = 0; }
    void GetOptions(Int_t *argc, char **argv);
 
 public:
@@ -47,7 +46,6 @@ public:
                     void *options = 0, Int_t numOptions = 0);
    virtual ~TRootApplication();
 
-   const char   *ApplicationClassName() const { return fAppClassName; }
    TGClient     *Client() const { return fClient; }
 
    void    Show() { }
