@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.39 2001/01/11 09:14:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.40 2001/01/13 11:29:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -466,7 +466,6 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
       }
       rdname = rd->GetName();
       dname  = dm->GetName();
-printf("rdname=%s, dname=%s\n",rdname,dname);      
       if (cl->CanIgnoreTObjectStreamer()) {
          if (strcmp(dname,"fBits") == 0) continue;
          if (strcmp(dname,"fUniqueID") == 0) continue;
@@ -508,12 +507,14 @@ printf("rdname=%s, dname=%s\n",rdname,dname);
                   //check that index is a valid data member name
                   //if member is part of an object (eg fA and index=fN)
                   //index must be changed from fN to fA.fN
+                  char aindex[128];
+                  strcpy(aindex,rd->GetName());
+                  char *rdot = strrchr(aindex,'.');
+                  if (rdot) strcpy(rdot+1,index);
                   nexti.Reset();
                   while ((rdi = (TRealData *) nexti())) {
                      if (strcmp(rdi->GetName(),index) == 0) break;
-                     const char *rdot = strchr(rdi->GetName(),'.');
-                     if (!rdot) continue;
-                     if (strcmp(rdot+1,index) == 0) {index = rdi->GetName(); break;}
+                     if (strcmp(rdi->GetName(),aindex) == 0) {index = rdi->GetName(); break;}
                   }
                   if      (code ==  1) 
                      // Note that we differentiate between strings and
