@@ -1,1 +1,2 @@
 *_dict*
+ *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
