@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.191 2004/07/08 14:45:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.192 2004/07/23 14:06:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2037,7 +2037,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //         h.FillRandom("gaus",1000);
 //         h.Fit("gaus");
 //         TMatrixD matrix(npar,npar);
-//         gMinuit->mnemat(matrix.GetElements(),npar);
+//         gMinuit->mnemat(matrix.GetMatrixArray(),npar);
 //         matrix.Print();
 //         matrix.Draw("text");
 //
