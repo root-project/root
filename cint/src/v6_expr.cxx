@@ -726,7 +726,7 @@ int lenbuf;
 #define G__SUSPEND_ANDOPR                                             \
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
-	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
+	  if(!G__no_exec_compile && 0==G__double(vstack[sp-1])) {     \
             if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vtmp_and = vstack[sp-1];                                  \
@@ -749,7 +749,7 @@ int lenbuf;
 #define G__SUSPEND_OROPR                                              \
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
-	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
+	  if(!G__no_exec_compile && 0!=G__double(vstack[sp-1])) {     \
             if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vstack[sp-1] = G__one;                                    \
@@ -820,7 +820,7 @@ int lenbuf;
 #define G__SUSPEND_ANDOPR                                             \
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
-	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
+	  if(!G__no_exec_compile && 0==G__double(vstack[sp-1])) {     \
             G__no_exec_compile = 1;                                   \
             vtmp_and = vstack[sp-1];                                  \
 	  }                                                           \
@@ -838,7 +838,7 @@ int lenbuf;
 #define G__SUSPEND_OROPR                                              \
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
-	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
+	  if(!G__no_exec_compile && 0!=G__double(vstack[sp-1])) {     \
             G__no_exec_compile = 1;                                   \
             vstack[sp-1] = G__one;                                    \
             vtmp_or = vstack[sp-1];                                   \
@@ -2294,7 +2294,7 @@ char *expression2;
 #ifndef G__OLDIMPLEMENTATION1670
   if('f'==result.type||'d'==result.type) {
     /*
-     printf("\n!!! type=%c  d=%g i=%ld"
+    printf("\n!!! %s type=%c  d=%g i=%ld",expression2
        ,result.type,result.obj.d,result.obj.i); 
      G__printlinenum();
     */

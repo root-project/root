@@ -1942,7 +1942,11 @@ void G__free_tempobject()
 #ifndef G__OLDIMPLEMENTATION1164
   if(G__xrefflag
 #ifndef G__OLDIMPLEMENTATION1476
+#ifndef G__OLDIMPLEMENTATION1675
+     || (G__command_eval && G__DOWHILE!=G__ifswitch)
+#else
      || G__command_eval
+#endif
 #endif
      ) return;
 #endif

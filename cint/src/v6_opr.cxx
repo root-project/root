@@ -423,11 +423,20 @@ G__value *defined;
       break;
 #endif /* G__NONANSIOPR */
     case 'A': /* logic and */
+#ifndef G__OLDIMPLEMENTATION1674
+      /* printf("\n!!! %g && %g\n"); */
+      G__letint(defined,'i', 0.0!=fdefined&&0.0!=fexpression);
+#else
       G__letint(defined,'i', (long)fdefined&&(long)fexpression);
+#endif
       defined->ref=0;
       break;
     case 'O': /* logic or */
+#ifndef G__OLDIMPLEMENTATION1674
+      G__letint(defined,'i', 0.0!=fdefined||0.0!=fexpression);
+#else
       G__letint(defined,'i', (long)fdefined||(long)fexpression);
+#endif
       defined->ref=0;
       break;
     case '>':
