@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.4 2002/04/19 18:24:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.5 2002/07/17 12:29:37 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -340,6 +340,7 @@ Long64_t TEventIterTree::GetNextEvent()
    if ( attach ) {
       PDB(kLoop,1) Info("GetNextEvent","Call Init(%p)",fTree);
       fSel->Init( fTree );
+      attach = kFALSE;
    }
    --fElemNum;
    ++fElemCur;
