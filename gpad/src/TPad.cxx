@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.2 2000/06/05 07:31:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4027,13 +4027,7 @@ void TPad::x3d(Option_t *option)
          fPadView3D->SetPad(0);
       fPadView3D = gVirtualGL->CreatePadGLView(this);
       if (!fPadView3D) {
-#ifdef WIN32
-         Warning("x3d", "loading OpenGL viewer (gSystem->Load(\"libRGL\")");
-         if (gSystem->Load("libRGL"))
-            Error("x3d", "failed to load OpenGL viewer");
-#else
-         gROOT->Macro("GL.C");
-#endif
+         gROOT->LoadClass("TGLKernel", "RGL");
          fPadView3D = gVirtualGL->CreatePadGLView(this);
          if (!fPadView3D)
             Error("x3d", "OpenGL shared libraries not loaded");
