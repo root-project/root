@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.35 2003/02/20 08:49:18 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.36 2003/03/18 16:28:18 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1546,7 +1546,7 @@ void TPostScript::Initialize()
    }
 
    PrintStr("%%EndProlog@");
-   if (fMode != 3) PrintStr("%%Page: number 1@");
+   PrintStr("%%BeginSetup@");
    PrintFast(8,"newpath ");
    SaveRestore(1);
    if (fMode == 1 || fMode == 4)  {
@@ -1565,10 +1565,9 @@ void TPostScript::Initialize()
 
    PrintFast(15," .25 .25 scale ");
    if (fMode != 3) SaveRestore(1);
+   PrintStr("%%EndSetup@");
 
-// The next line has been moved just after "%%EndProlog" to be
-// compliant with the CUPS printing software.
-//   if (fMode != 3) PrintStr("%%Page: number 1@");
+   if (fMode != 3) PrintStr("%%Page: number 1@");
    if (fMode != 3) SaveRestore(1);  //required
 
    //Check is user has defined a special header in the current style
