@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.68 2004/02/05 13:16:16 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.69 2004/02/17 07:52:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -263,8 +263,10 @@
 #   define R__FBSD
 #   define R__UNIX
 #   define R__BYTESWAP
-#   define R__NOSTATS      /* problem using stats with FreeBSD malloc/free */
-#   define R__THROWNEWDELETE  /* new/delete throw exceptions */ 
+#   ifndef __i486__
+#      define __i486__       /* turn off if you really want to run on an i386 */
+#   endif
+#   define R__THROWNEWDELETE /* new/delete throw exceptions */
 #endif
 
 #if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
@@ -291,7 +293,7 @@
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   endif
-#   if __GNUC__ >= 3 || ( __GNUC__ == 2 && __GNUC_MINOR__ >= 95) 
+#   if __GNUC__ >= 3 || ( __GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 #         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
