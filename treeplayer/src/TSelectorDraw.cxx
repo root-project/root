@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.10 2003/03/28 15:02:25 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.11 2003/04/01 20:16:42 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -673,6 +673,7 @@ void TSelectorDraw::ClearFormula()
 {
    // Delete internal buffers.
 
+   ResetBit(kWarn);
    delete fVar1;   fVar1 = 0;
    delete fVar2;   fVar2 = 0;
    delete fVar3;   fVar3 = 0;
@@ -956,10 +957,13 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
             }
 
          } else {
-
-           Warning("ProcessFillObject",
-                   "Not implemented for %s",
-                   cl?cl->GetName():"unknown class");
+            
+            if (!TestBit(kWarn)) {
+               Warning("ProcessFillObject",
+                       "Not implemented for %s",
+                       cl?cl->GetName():"unknown class");
+               SetBit(kWarn);
+            }
 
          }
       }

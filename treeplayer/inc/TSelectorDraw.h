@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.4 2003/01/13 15:04:30 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.5 2003/01/24 07:04:29 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -32,6 +32,8 @@ class TH1;
 class TSelectorDraw : public TSelector {
 
 protected:
+    enum { kWarn = BIT(12) };
+
     TTree         *fTree;           //  Pointer to current Tree
     TTreeFormula  *fVar1;           //  Pointer to first variable formula
     TTreeFormula  *fVar2;           //  Pointer to second variable formula

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.114 2003/04/18 19:27:51 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.115 2003/05/06 05:27:41 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3090,8 +3090,10 @@ TClass* TTreeFormula::EvalClass() const
             TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
             TStreamerInfo * info = branch->GetInfo();
             Int_t id = branch->GetID();
-            TStreamerElement* elem = (TStreamerElement*)info->GetElements()->At(id);
-            return gROOT->GetClass( elem->GetTypeName() );
+            if (id>=0) {
+               TStreamerElement* elem = (TStreamerElement*)info->GetElements()->At(id);
+               return gROOT->GetClass( elem->GetTypeName() );
+            } else return gROOT->GetClass( branch->GetClassName() );
          } else {
             return 0;
          }
