@@ -76,6 +76,7 @@ public:
    void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
    void          SetRandomVertex();
 
+   Float_t       GetClosestDistance(Int_t i) {return fClosestDistance[i];}
    char         *GetType() {return fType;}
    Int_t         GetNtrack() const { return fNtrack; }
    Int_t         GetNseg() const { return fNseg; }
