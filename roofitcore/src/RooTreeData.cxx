@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.5 2001/09/24 23:06:01 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.6 2001/09/28 21:59:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -97,11 +97,13 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   // Constructor from existing data set with list of variables and cut expression
   initialize(vars);
 
-  // Create a RooFormulaVar cut from given cut expression
-  // Attach formula to original data set
-  RooFormulaVar cutVar(cuts,cuts,t->_vars) ;
-
-  loadValues(t->_tree,&cutVar);
+  if (cuts && *cuts) {
+    // Create a RooFormulaVar cut from given cut expression
+    RooFormulaVar cutVar(cuts,cuts,t->_vars) ;
+    loadValues(t->_tree,&cutVar);
+  } else {
+    loadValues(t->_tree,0);
+  }
 }
 
 
@@ -185,10 +187,13 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   // Constructor from existing TTree with list of variables and cut expression
   initialize(vars);
 
-  // Create a RooFormulaVar cut from given cut expression
-  RooFormulaVar cutVar(cuts,cuts,_vars) ;
-
-  loadValues(t,&cutVar);
+  if (cuts && *cuts) {
+    // Create a RooFormulaVar cut from given cut expression
+    RooFormulaVar cutVar(cuts,cuts,_vars) ;
+    loadValues(t,&cutVar);
+  } else {
+    loadValues(t,0);    
+  }
 }
 
 
@@ -205,9 +210,12 @@ RooTreeData::RooTreeData(const char *name, const char *filename,
   initialize(vars);
 
   // Create a RooFormulaVar cut from given cut expression
-  RooFormulaVar cutVar(cuts,cuts,_vars) ;
-
-  loadValues(filename,treename,&cutVar);
+  if (cuts && *cuts) {
+    RooFormulaVar cutVar(cuts,cuts,_vars) ;    
+    loadValues(filename,treename,&cutVar);
+  } else {
+    loadValues(filename,treename,0);
+  }
 }
 
 
