@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.16 2003/04/04 00:55:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.17 2003/05/01 17:51:42 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -206,8 +206,8 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
    ((TProof*)gProof)->DeActivateAsyncInput();
 
+   Bool_t done = kFALSE;
    while (kTRUE) {
-      Bool_t done = kFALSE;
 
       // send work
       while( TSlave *s = (TSlave*) workers.First() ) {
@@ -284,27 +284,39 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
       PDB(kPacketizer,3) Info("TPacketizer2","Select returned: %p", sock);
 
+      TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
+
       TMessage *reply;
 
       if ( sock->Recv(reply) <= 0 ) {
          // Help! lost a slave?
-         Error("TPacketizer2","!!!! Recv failed !!!!");
+         ((TProof*)gProof)->MarkBad(slave);
+         fValid = kFALSE;
+         Error("TPacketizer2","Recv failed! for slave-%d (%s)",
+               slave->GetOrdinal(), slave->GetName());
          continue;
       }
 
-      if ( reply->What() != kPROOF_REPORTSIZE ) {
+      if ( reply->What() == kPROOF_FATAL ) {
+         Error("TPacketizer2","kPROOF_FATAL from slave-%d (%s)",
+               slave->GetOrdinal(), slave->GetName());
+         ((TProof*)gProof)->MarkBad(slave);
+         fValid = kFALSE;
+         continue;         
+      } else if ( reply->What() != kPROOF_REPORTSIZE ) {
          // Help! unexpected message type
-         Error("TPacketizer2","unexpected message type (%d)", reply->What());
+         Error("TPacketizer2","unexpected message type (%d) from slave-%d (%s)", reply->What(),
+               slave->GetOrdinal(), slave->GetName());
+         ((TProof*)gProof)->MarkBad(slave);
+         fValid = kFALSE;
          continue;
       }
 
-      TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
       TSlaveStat *slavestat = (TSlaveStat*) fSlaveStats->GetValue( slave );
       e = slavestat->fCurFile->fElement;
       Long64_t entries;
-      Int_t    r;
 
-      (*reply) >> r >> entries;
+      (*reply) >> entries;
 
       if ( entries > 0 ) {
 
@@ -332,17 +344,21 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
          // disable element
          slavestat->fCurFile->fNextEntry = -1;
-         fValid = kFALSE; // ???
+         fValid = kFALSE; // all element must be readable!
 
-         // TODO: Error("...") or Warning("...") ?
       }
 
       if ( !done ) {
          workers.Add(slave); // Ready for the next job
       }
    }
-
+   
    ((TProof*)gProof)->ActivateAsyncInput();
+
+   if (!done) {
+      // we ran out of slaves ...
+      fValid = kFALSE;
+   }
 
    // report output from slaves??
 
@@ -423,10 +439,12 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    if ( fPacketSize < 1 ) fPacketSize = 1;
    PDB(kPacketizer,1) Info("TPacketizer2", "Base Packetsize = %d", fPacketSize);
 
-   fProgress = new TTimer;
-   fProgress->SetObject(this);
-   fProgress->Start(500,kFALSE);
-
+   if ( fValid ) {
+      fProgress = new TTimer;
+      fProgress->SetObject(this);
+      fProgress->Start(500,kFALSE);
+   }
+      
    PDB(kPacketizer,1) Info("TPacketizer2", "Return");
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.2 2003/03/19 14:01:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.3 2003/04/11 11:48:11 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -132,9 +132,13 @@ public:
    virtual TDSetElement *Next();
    TDSetElement         *Current() const { return fCurrent; };
 
-   static Int_t          GetEntries(Bool_t isTree, const char *filename,
-                                    const char *path, const char *objname,
-                                    Long64_t &entries);
+   static Long64_t       GetEntries(Bool_t isTree, const char *filename,
+                                    const char *path, const char *objname);
+
+   void        AddInput(TObject *obj);
+   void        ClearInput();
+   TObject    *GetOutput(const char *name);
+   TList      *GetOutputList();
 
    ClassDef(TDSet,1)  // Data set for remote processing (PROOF)
 };

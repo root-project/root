@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.2 2003/03/19 14:01:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.3 2003/04/04 10:21:16 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -190,6 +190,54 @@ Int_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentries,
    return -1;
 }
 
+
+//______________________________________________________________________________
+void TDSet::AddInput(TObject *obj)
+{
+   // Add objects that might be needed during the processing of
+   // the selector (see Process()).
+
+   if (gProof) {
+      gProof->AddInput(obj);
+   } else {
+      Error("AddInput","No PROOF session active");
+   }
+}
+
+
+//______________________________________________________________________________
+void TDSet::ClearInput()
+{
+   // Clear input object list.
+
+   if (gProof)
+      gProof->ClearInput();
+}
+
+
+//______________________________________________________________________________
+TObject *TDSet::GetOutput(const char *name)
+{
+   // Get specified object that has been produced during the processing
+   // (see Process()).
+
+   if (gProof)
+      return gProof->GetOutput(name);
+   return 0;
+}
+
+
+//______________________________________________________________________________
+TList *TDSet::GetOutputList()
+{
+   // Get list with all object created during processing (see Process()).
+
+   if (gProof)
+      return gProof->GetOutputList();
+   return 0;
+}
+
+
 //______________________________________________________________________________
 void TDSet::Print(const Option_t *option) const
 {
@@ -304,16 +352,17 @@ TDSetElement *TDSet::Next()
 }
 
 //______________________________________________________________________________
-Int_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
-                        const char *objname, Long64_t &entries)
+Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
+                        const char *objname)
 {
    // Returns number of entries in tree or objects in file. Returns -1 in
-   // case of error, 0 otherwise.
+   // case of error
 
    TFile *file = TFile::Open(filename);
 
    if (file->IsZombie()) {
       ::SysError("GetEntries","cannot open file %s", filename);
+      delete file; 
       return -1;
    }
 
@@ -323,9 +372,11 @@ Int_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
       delete file;
       return -1;
    }
+   
    TDirectory *dir = gDirectory;
    dirsave->cd();
 
+   Long64_t  entries;
    if (isTree) {
       TKey *key = dir->GetKey(objname);
       if (key == 0) {
@@ -349,8 +400,7 @@ Int_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
    }
 
    delete file;
-
-   return 0;
+   return entries;
 }
 
 //______________________________________________________________________________

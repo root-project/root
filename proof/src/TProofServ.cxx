@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.39 2003/04/04 10:21:16 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.40 2003/04/08 10:53:20 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -628,7 +628,6 @@ void TProofServ::HandleSocketInput()
             TString        dir;
             TString        objname;
             Long64_t       entries;
-            Int_t          r;
 
             (*mess) >> isTree >> filename >> dir >> objname;
 
@@ -637,13 +636,13 @@ void TProofServ::HandleSocketInput()
                                  objname.Data(), isTree ? "T" : "O",
                                  dir.Data(), filename.Data());
 
-            r = TDSet::GetEntries(isTree, filename, dir, objname, entries);
+            entries = TDSet::GetEntries(isTree, filename, dir, objname);
 
             PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_REPORTSIZE",
                                  "Found %d %s", entries, isTree ? "entries" : "objects");
 
             TMessage answ(kPROOF_REPORTSIZE);
-            answ << r << entries;
+            answ << entries;
             fSocket->Send(answ);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Done");
          }
