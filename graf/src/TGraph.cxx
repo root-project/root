@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.9 2000/07/21 13:10:53 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.10 2000/08/07 12:25:07 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2070,7 +2070,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
       nrPix = ay2Pix-ay1Pix+1;
 
     // Make here decision whether it should be painted in high or low resolution
-    Int_t lowRes = 0;
+    Int_t ip, ipix, lowRes = 0;
     if (3*nrPix < last-first+1) {
       lowRes = 1;
     }
@@ -2080,12 +2080,12 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
       Double_t *centrPix = new Double_t[nrPix];
       Int_t *nrEntries   = new Int_t[nrPix];
 
-      for (Int_t ip = 0; ip < nrPix; ip++) {
+      for (ip = 0; ip < nrPix; ip++) {
         minPix[ip] = 1e100;
         maxPix[ip] = -1e100;
       }
 
-      for (Int_t ip = first; ip < last; ip++) {
+      for (ip = first; ip < last; ip++) {
         Double_t xw;
         if ((ip == last) && OptionBins) continue;
         if (!OptionBins) xw = wminstep + (ip-first)*delta;
@@ -2106,7 +2106,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
         }
       }
 
-      for (Int_t ipix = 0; ipix < nrPix; ipix++) {
+      for (ipix = 0; ipix < nrPix; ipix++) {
         if (nrEntries[ipix] > 0)
           centrPix[ipix] = (minPix[ipix]+maxPix[ipix])/2.0;
         else
@@ -2118,7 +2118,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
       Double_t *yc = new Double_t[nrPix];
 
       Int_t nrLine = 0;
-      for (Int_t ipix = 0; ipix < nrPix; ipix++) {
+      for (ipix = 0; ipix < nrPix; ipix++) {
         if (minPix[ipix] <= maxPix[ipix]) {
           Double_t xl[2]; Double_t yl[2];
           if (!OptionRot) {
