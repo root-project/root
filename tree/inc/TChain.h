@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.17 2001/12/06 13:37:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.18 2002/01/18 11:29:25 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -28,6 +28,8 @@
 class TFile;
 class TBrowser;
 
+const Int_t kBigNumber = 1234567890;
+
 class TChain : public TTree {
 
 protected:
@@ -47,7 +49,7 @@ public:
     virtual ~TChain();
 
     virtual Int_t     Add(TChain *chain);
-    virtual Int_t     Add(const char *name, Int_t nentries=1000000000);
+    virtual Int_t     Add(const char *name, Int_t nentries=kBigNumber);
     virtual Int_t     AddFile(const char *name, Int_t nentries);
     virtual TFriendElement *AddFriend(const char *chainname, const char *dummy="");
     virtual TFriendElement *AddFriend(const char *chainname, TFile *dummy);
@@ -55,9 +57,9 @@ public:
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
     virtual Int_t     Draw(const char *varexp, TCut selection, Option_t *option=""
-                       ,Int_t nentries=1000000000, Int_t firstentry=0);
+                       ,Int_t nentries=kBigNumber, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
-                     ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+                     ,Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
     virtual Int_t     Fill() {MayNotUse("Fill()"); return -1;}
     virtual TBranch  *GetBranch(const char *name);
     virtual Int_t     GetChainEntryNumber(Int_t entry) const;
@@ -78,13 +80,13 @@ public:
             Int_t    *GetTreeOffset() const {return fTreeOffset;}
             Int_t     GetTreeOffsetLen() const {return fTreeOffsetLen;}
             Int_t     LoadTree(Int_t entry);
-    virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual void      Loop(Option_t *option="",Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="") const;
     virtual Int_t     Merge(const char *name);
     virtual Int_t     Merge(TFile *file, Int_t basketsize, Option_t *option="");
     virtual void      Print(Option_t *option="") const;
-    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=kBigNumber, Int_t firstentry=0);
     virtual void      Reset(Option_t *option="");
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);

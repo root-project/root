@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.35 2002/01/15 07:47:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.36 2002/01/18 11:32:13 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -172,7 +172,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 //       is interesting in case the number of entries in the file is already stored
 //       in a run data base for example.
 //
-//    C- if (nentries == 1000000000) (default), the file is not connected.
+//    C- if (nentries == kBigNumber) (default), the file is not connected.
 //       the number of entries in each file will be read only when the file
 //       will need to be connected to read an entry.
 //       This option is the default and very efficient if one process
@@ -181,7 +181,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 //       this forces the Tree headers in the first and second file
 //       to be read to find the number of entries in these files.
 //       Note that if one calls TChain::GetEntries() after having created
-//       a chain with this default, GetEntries will return 1000000000!
+//       a chain with this default, GetEntries will return kBigNumber!
 //       One can force the Tree headers of all the files to be read
 //       by calling TChain::GetEntry(bigentry) with bigentry greater than 
 //       the first entry number of the last file, eg 999999999.
@@ -251,7 +251,7 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 //       is interesting in case the number of entries in the file is already stored
 //       in a run data base for example.
 //
-//    C- if (nentries == 1000000000) (default), the file is not connected.
+//    C- if (nentries == kBigNumber) (default), the file is not connected.
 //       the number of entries in each file will be read only when the file
 //       will need to be connected to read an entry.
 //       This option is the default and very efficient if one process
@@ -260,12 +260,12 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 //       this forces the Tree headers in the first and second file
 //       to be read to find the number of entries in these files.
 //       Note that if one calls TChain::GetEntries() after having created
-//       a chain with this default, GetEntries will return 1000000000!
+//       a chain with this default, GetEntries will return kBigNumber!
 //       One can force the Tree headers of all the files to be read
 //       by calling TChain::GetEntry(bigentry) with bigentry greater than 
-//       the first entry number of the last file, eg 999999999.
+//       the first entry number of the last file, eg kBigNumber-1.
 //       To compute the number of entries in a chain built with this option, do:
-//            chain.GetEntry(999999999);
+//            chain.GetEntry(kBigNumber-1);
 //            chain.GetEntries();
    
    TDirectory *cursav = gDirectory;
@@ -328,11 +328,11 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
    }
 
    if (nentries > 0) {
-      if (nentries < 1000000000) {
+      if (nentries < kBigNumber) {
          fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
          fEntries += nentries;
       } else {
-         fTreeOffset[fNtrees+1] = 1000000000;
+         fTreeOffset[fNtrees+1] = kBigNumber;
          fEntries = nentries;
       }
       fNtrees++;
