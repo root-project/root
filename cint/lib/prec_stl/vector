@@ -261,6 +261,9 @@ class vector {
     iterator base() ;
 #endif
     T& operator*() const ;
+#ifndef G__OLDIMPLEMENTATION2019
+    T* operator->() const ;
+#endif
     reverse_iterator& operator++();
     reverse_iterator operator++(int a);
     reverse_iterator& operator--();
@@ -558,6 +561,9 @@ template <class Allocator> class vector<bool, Allocator> {
     iterator& operator--();
     iterator operator--(int);
     bool operator*();
+#ifndef G__OLDIMPLEMENTATION2019
+    //bool* operator->() const;
+#endif
 #endif
     ~iterator();
   };
@@ -573,6 +579,9 @@ template <class Allocator> class vector<bool, Allocator> {
     iterator& operator--();
     iterator operator--(int);
     bool operator*();
+#ifndef G__OLDIMPLEMENTATION2019
+    //bool* operator->() const;
+#endif
     ~iterator();
   };
   typedef const iterator  const_iterator; // See _lib.container.requirements_
@@ -594,6 +603,9 @@ template <class Allocator> class vector<bool, Allocator> {
     reverse_iterator& operator--();
     reverse_iterator operator--(int);
     bool operator*();
+#ifndef G__OLDIMPLEMENTATION2019
+    //bool* operator->() const;
+#endif
     ~reverse_iterator();
   };
   typedef const reverse_iterator const_reverse_iterator;

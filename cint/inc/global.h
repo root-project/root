@@ -7,7 +7,7 @@
  * Description:
  *  Cint parser global variables.
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -721,6 +721,15 @@ extern int G__loadingDLL;
 
 #ifndef G__OLDIMPLEMENTATION1986
 extern int G__stubcall;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2002
+extern int G__mask_error;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2005
+typedef void (*G__eolcallback_t) G__P((const char* fname,int linenum));
+extern G__eolcallback_t G__eolcallback;
 #endif
 
 #ifndef __CINT__

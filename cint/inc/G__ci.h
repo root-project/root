@@ -21,14 +21,19 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150124
-#define G__CINTVERSIONSTR  "5.15.124, Feb 17 2004"
+#define G__CINTVERSION      50150127
+#define G__CINTVERSIONSTR  "5.15.127, Mar 10 2004"
 
 #define G__ALWAYS
 /* #define G__NEVER */
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* Problem remains with autoloading if library is unloaded. Tried to fix it
+ * with 2015, but this has problem with ROOT. */
+#define G__OLDIMPLEMENTATION2015 
+
 
 /* If you have problem compiling dictionary with static member function, 
  * define following macro. */
@@ -102,7 +107,13 @@
 /* Define G__ERRORCALLBACK to activat error message redirection. If
  * G__ERRORCALLBACK is defined, a user can set a callback routine for
  * handling error message by G__set_errmsgcallback() API */
-/* #define G__ERRORCALLBACK */
+#ifndef G__ERRORCALLBACK
+#define G__ERRORCALLBACK
+#endif
+
+/* 2001 masks G__ateval overloading resolution error. It turns out this is
+ * not a good way, the feature is turned off */
+#define G__OLDIMPLEMENTATION2001
 
 /* New memory allocation scheme is turned on for ROOT by defining 
  * following macro. */
@@ -293,6 +304,7 @@
 #endif
 #ifndef G__ERRORCALLBACK
 #define G__OLDIMPLEMENTATION1485
+#define G__OLDIMPLEMENTATION2000
 #endif
 
 
@@ -981,6 +993,21 @@ struct G__bytecodefunc {
 #define G__BYTECODE_SUCCESS   3
 #define G__BYTECODE_ANALYSIS  4 /* ON1164 */
 
+#ifndef G__OLDIMPLEMENTATION2012
+/**************************************************************************
+ *                                                      1
+ *                               2            2          
+ *                        proto   interpreted   bytecode  compiled
+ * fpos_t pos;            hdrpos  src_fpos      src_fpos  ??
+ * void* p;            2  NULL    src_fp        src_fp    ifmethod
+ * int line_number;       -1      line          line      -1
+ * short filenum;      1  fnum    fnum          fnum      fnum <<<change
+ * ushort size;           0       size          size      -1   <<<change
+ * void*  tp2f;           fname   fname         bytecode  (*p2f)|ifmethod
+ * bcf* bytecode;      2  NULL    NULL          bytecode  NULL
+ * int bytecodestatus;    NOTYET  NOTYET|FAIL   SUCCESS   ??
+ **************************************************************************/
+#else
 /**************************************************************************
  *                                                      1
  *                               2            2          
@@ -994,6 +1021,7 @@ struct G__bytecodefunc {
  * bcf* bytecode;      2  NULL    NULL          bytecode  NULL
  * int bytecodestatus;    NOTYET  NOTYET|FAIL   SUCCESS   ??
  **************************************************************************/
+#endif
 
 struct G__funcentry {
   /* file position and pointer for restoring start point */
@@ -1003,7 +1031,11 @@ struct G__funcentry {
   int  line_number; /* -1 if no function body or compiled function */
   short filenum;    /* -1 if compiled function, otherwise interpreted func */
 #ifdef G__ASM_FUNC
+#ifndef G__OLDIMPLEMENTATION2012
+  int size; /* size (number of lines) of function */
+#else
   unsigned short size; /* size (number of lines) of function */
+#endif
 #endif
 #ifdef G__TRUEP2F
   void *tp2f;
@@ -1398,6 +1430,9 @@ struct G__tagtable {
 #ifdef G__ROOTSPECIAL
   void* userparam[G__MAXSTRUCT];     /* user parameter array */
 #endif
+#ifndef G__OLDIMPLEMENTATION2014
+  char* libname[G__MAXSTRUCT];
+#endif
 };
 
 /**************************************************************************
@@ -1749,7 +1784,7 @@ extern G__EXPORT void G__RegisterScriptCompiler G__P((int(*p2f)(G__CONST char*,G
 * interface method setup functions
 *************************************************************************/
 
-extern int G__defined_tagname G__P((G__CONST char* tagname,int noerror));
+extern G__EXPORT int G__defined_tagname G__P((G__CONST char* tagname,int noerror));
 
 int G__deleteglobal G__P((void* p));
 int G__deletevariable G__P((G__CONST char* varname));
@@ -1779,6 +1814,11 @@ extern G__EXPORT void G__set_smartunload G__P((int smartunload));
 
 #ifndef G__OLDIMPLEMENTATION1207
 extern G__EXPORT void G__set_autoloading G__P((int (*p2f) G__P((char*))));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2014
+extern G__EXPORT void G__set_class_autoloading_callback G__P((int (*p2f) G__P((char*,char*))));
+extern G__EXPORT void G__set_class_autoloading_table G__P((char* classname,char* libname));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1210
@@ -1855,6 +1895,10 @@ extern G__EXPORT int G__gettempfilenum G__P((void));
 extern G__EXPORT void G__LockCpp G__P((void));
 extern G__EXPORT void G__set_sym_underscore G__P((int x));
 extern G__EXPORT int G__get_sym_underscore G__P((void));
+#ifndef G__OLDIMPLEMENTATION2000
+extern G__EXPORT void* G__get_errmsgcallback G__P((void));
+extern G__EXPORT void G__mask_errmsg G__P((char* msg));
+#endif
 
 #if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
 

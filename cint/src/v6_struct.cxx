@@ -379,6 +379,73 @@ char* name;
 }
 #endif /* ON671 */
 
+#ifndef G__OLDIMPLEMENTATION2014
+/******************************************************************
+ * G__set_class_autoloading
+ ******************************************************************/
+#define G__CLASS_AUTOLOAD  'a'
+static int G__enable_autoloading=1;
+int (*G__p_class_autoloading) G__P((char*,char*));
+
+/************************************************************************
+* G__set_class_autoloading_callback
+************************************************************************/
+void G__set_class_autoloading_callback(p2f)
+int (*p2f) G__P((char*,char*));
+{
+  G__p_class_autoloading = p2f;
+}
+
+/******************************************************************
+ * G__set_class_autoloading_table
+ ******************************************************************/
+void G__set_class_autoloading_table(classname,libname)
+char* classname;
+char* libname;
+{
+  int tagnum;
+  G__enable_autoloading = 0;
+  tagnum = G__search_tagname(classname,G__CLASS_AUTOLOAD);
+  if(G__struct.libname[tagnum]) {
+    free((void*)G__struct.libname[tagnum]);
+  }
+  G__struct.libname[tagnum]=(char*)malloc(strlen(libname)+1);
+  strcpy(G__struct.libname[tagnum],libname);
+  G__enable_autoloading = 1;
+}
+
+/******************************************************************
+ * G__class_autoloading
+ ******************************************************************/
+int G__class_autoloading(tagnum) 
+int tagnum;
+{
+  char* libname;
+  if(tagnum<0 || !G__enable_autoloading) return(0);
+  if(G__CLASS_AUTOLOAD==G__struct.type[tagnum]) {
+    libname = G__struct.libname[tagnum];
+    /* G__struct.type[tagnum]=0; */
+    if(G__p_class_autoloading) {
+      return((*G__p_class_autoloading)(G__struct.name[tagnum],libname));
+    }
+    else if(libname) {
+      G__enable_autoloading = 0;
+      if(G__LOADFILE_SUCCESS<=G__loadfile(libname)) {
+	G__enable_autoloading = 1;
+	return(1);
+      }
+      else {
+	G__struct.type[tagnum]=G__CLASS_AUTOLOAD;
+	G__enable_autoloading = 1;
+	return(-1);
+      }
+    }
+    else return(0);
+  }
+  return(0);
+}
+#endif
+
 /******************************************************************
 * int G__defined_tagname(tagname,noerror)
 *
@@ -524,6 +591,9 @@ int noerror;
     if(len==G__struct.hash[i]&&strcmp(atom_tagname,G__struct.name[i])==0&&
        (((char*)NULL==p&&-1==G__struct.parent_tagnum[i])||
 	env_tagnum==G__struct.parent_tagnum[i])) {
+#ifndef G__OLDIMPLEMENTATION2014
+      G__class_autoloading(i);
+#endif
       return(i);
     }
   }
@@ -571,6 +641,9 @@ int noerror;
 	||G__isenclosingclassbase(G__struct.parent_tagnum[i],G__tmplt_def_tagnum)
 #endif
 	)) {
+#ifndef G__OLDIMPLEMENTATION2014
+      G__class_autoloading(i);
+#endif
       return(i);
     }
   }
@@ -672,7 +745,12 @@ int noerror;
   G__var_type=store_var_type;
   if(-1!=i) {
     i=G__newtype.tagnum[i];
-    if(-1!=i) return(i);
+    if(-1!=i) {
+#ifndef G__OLDIMPLEMENTATION2014
+      G__class_autoloading(i);
+#endif
+      return(i);
+    }
   }
 #ifndef G__OLDIMPLEMENTATION957
   {
@@ -697,7 +775,12 @@ int noerror;
     G__var_type=store_var_type;
     if(-1!=i) {
       i=G__newtype.tagnum[i];
-      if(-1!=i) return(i);
+      if(-1!=i) {
+#ifndef G__OLDIMPLEMENTATION2014
+	G__class_autoloading(i);
+#endif
+	return(i);
+      }
     }
 #ifndef G__OLDIMPLEMENTATION957
     while((cx=tagname[i2++])) if(G__isoperator(cx)) return(-1);
@@ -981,8 +1064,27 @@ int type;
 
     G__struct.alltag++;
   }
-  else if(0==G__struct.type[i]) {
+  else if(0==G__struct.type[i] 
+#ifndef G__OLDIMPLEMENTATION2014
+	  || 'a'==G__struct.type[i]
+#endif
+	  ) {
+#ifndef G__OLDIMPLEMENTATION2015
+    switch(type) {
+    case 'c':
+    case 's':
+    case 'e':
+    case 'n':
+    case 'a':
+      G__struct.type[i]=type; 
+      break;
+    default:
+      if('a'!=G__struct.type[i]) G__struct.type[i]=type-1;
+      break;
+    }
+#else
     G__struct.type[i]=type; 
+#endif
   }
 
   /* return tag table number */

@@ -1262,7 +1262,13 @@ void *p2f;
   int ig15;
   ifunc=G__p2f2funchandle(p2f,G__p_ifunc,&ig15);
   if(ifunc) {
-    if(-1 != ifunc->pentry[ig15]->filenum) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2012
+       -1 != ifunc->pentry[ig15]->size
+#else
+       -1 != ifunc->pentry[ig15]->filenum
+#endif
+       ) {
       if(ifunc->pentry[ig15]->bytecode) {
 	return(G__BYTECODEFUNC);
       }
@@ -1538,7 +1544,13 @@ G__value *buf;
 #endif
 	 strcmp(ifunc->funcname[i],funcname)==0) {
 #ifdef G__TRUEP2F
-	if(-1 == ifunc->pentry[i]->filenum) { /* precompiled function */
+	if(
+#ifndef G__OLDIMPLEMENTATION2012
+	   -1 == ifunc->pentry[i]->size
+#else
+	   -1 == ifunc->pentry[i]->filenum
+#endif
+	   ) { /* precompiled function */
 	  G__letint(buf,'Q',(long)ifunc->pentry[i]->tp2f);
 	  buf->typenum = G__getp2ftype(ifunc,i);
 	}
@@ -1996,6 +2008,9 @@ int state;
 #ifndef G__OLDIMPLEMENTATION1908
 #ifdef G__SHAREDLIB
 G__SHLHANDLE G__ShlHandle=(G__SHLHANDLE)0;
+#ifndef G__OLDIMPLEMENTATION2012
+int G__Shlfilenum = -1;
+#endif
 #endif
 
 /**************************************************************************
@@ -2005,11 +2020,14 @@ void G__ResetShlHandle()
 {
 #ifdef G__SHAREDLIB
   G__ShlHandle = (G__SHLHANDLE)0;
+#ifndef G__OLDIMPLEMENTATION2012
+  G__Shlfilenum = -1;
+#endif
 #endif
 }
 
 /**************************************************************************
- * G__REsetShlHandle()
+ * G__GetShlHandle()
  **************************************************************************/
 void* G__GetShlHandle()
 {
@@ -2019,6 +2037,16 @@ void* G__GetShlHandle()
   return((void*)0);
 #endif
 }
+
+#ifndef G__OLDIMPLEMENTATION2012
+/**************************************************************************
+ * G__GetShlFilenum()
+ **************************************************************************/
+int G__GetShlFilenum()
+{
+  return(G__Shlfilenum);
+}
+#endif
 
 /**************************************************************************
  * G__SetShlHandle
@@ -2032,6 +2060,9 @@ char *filename;
     if(0==strcmp(G__srcfile[i].filename,filename)) {
       isl = G__srcfile[i].slindex;
       if(-1!=isl) {
+#ifndef G__OLDIMPLEMENTATION2012
+	G__Shlfilenum = i;
+#endif
 	G__ShlHandle = G__sl_handle[isl];
 	return((void*)G__ShlHandle);
       }

@@ -89,6 +89,9 @@ class set {
 #else
     value_type& operator*() const;
 #endif
+#ifndef G__OLDIMPLEMENTATION2019
+    value_type* operator->() const;
+#endif
     iterator& operator++();
     iterator operator++(int a);
     iterator& operator--();
@@ -133,6 +136,9 @@ class set {
     value_type operator*() const;
 #else
     value_type& operator*() const;
+#endif
+#ifndef G__OLDIMPLEMENTATION2019
+    value_type* operator->() const;
 #endif
     reverse_iterator& operator++();
     reverse_iterator operator++(int a);

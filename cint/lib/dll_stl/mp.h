@@ -77,7 +77,6 @@ using namespace std;
 #endif // GNUC
 #endif // G__STRING_DLL
 
-
 #endif // G__MAP2
 
 #if defined(G__ROOT)

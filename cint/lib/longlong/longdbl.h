@@ -111,7 +111,15 @@ class G__longdouble {
   G__longdouble(const G__longdouble& x) { dat=x.dat; }
   //G__longdouble(long l=0) { dat = (G__double92)l; }
   G__longdouble(const G__longlong& x) { dat=x.dat; }
+#ifndef G__OLDIMPLEMENTATION2007
+#if defined(_MSC_VER)&&(_MSC_VER<1310)
+  G__longdouble(const G__ulonglong& x) { dat=(G__int64)x.dat; }
+#else
   G__longdouble(const G__ulonglong& x) { dat=x.dat; }
+#endif
+#else
+  G__longdouble(const G__ulonglong& x) { dat=x.dat; }
+#endif
   ~G__longdouble() {  }
 
   // conversion operator

@@ -758,6 +758,100 @@ int lenbuf;
 * G__wrap_plusminus()
 *
 ******************************************************************/
+
+#ifndef G__OLDIMPLEMENTATION2008
+
+#define G__wrap_plusminus(oprin,assignopr,preincopr,postincopr)       \
+  if((nest==0)&&(single_quote==0)&&(double_quote==0)) {               \
+    if(oprin==expression[ig1+1]                                       \
+       && (!lenbuf||(!isdigit(ebuf[0])&&'.'!=ebuf[0]))  /* 1831 */    \
+       ) {                                                            \
+      if(lenbuf) {                                                    \
+        if('='==expression[ig1+2] && 'v'==G__var_type) {              \
+          /* *a++=expr */                                             \
+          G__var_type='p';                                            \
+          ebuf[lenbuf++]=c;                                           \
+          ebuf[lenbuf++]=c;                                           \
+          ++ig1;                                                      \
+        }                                                             \
+        else if(iscastexpr) { /* added ON1342 */                      \
+          ebuf[lenbuf++]=c;                                           \
+          ebuf[lenbuf++]=c;                                           \
+          ++ig1;                                                      \
+        }                                                             \
+        else if(isalnum(expression[ig1+2])|| /* 2008 */               \
+                '.'==expression[ig1+2]||'_'==expression[ig1+2]) {     \
+	  /* a+ +b, a- -b */                                          \
+	  ebuf[lenbuf]=0;                                             \
+          ++ig1;                                                      \
+          G__exec_binopr('+',G__PREC_ADD);                            \
+        }                                                             \
+        else {                                                        \
+	  /* a++, a-- */                                              \
+          ++ig1;                                                      \
+          if('v'==G__var_type) {                                      \
+            G__exec_unaopr('*');                                      \
+            G__var_type = 'p';                                        \
+          }                                                           \
+          unaopr[up++] = postincopr;                                  \
+          /* G__exec_binopr(0,G__PREC_NOOPR); */                      \
+        }                                                             \
+      }                                                               \
+      else {                                                          \
+        /* *++a = expr should be handled at assignment oprerator */   \
+	/* ++a, --a */                                                \
+        ++ig1;                                                        \
+        if('v'==G__var_type) {                                        \
+          G__exec_unaopr('*');                                        \
+          G__var_type = 'p';                                          \
+        }                                                             \
+        G__exec_unaopr(preincopr);                                    \
+      }                                                               \
+    }                                                                 \
+    else if('='==expression[ig1+1]) {                                 \
+      /* +=, -= */                                                    \
+      if(0==lenbuf) { G__expr_error; }                                \
+      ++ig1;                                                          \
+      G__exec_oprassignopr(assignopr);                                \
+    }                                                                 \
+    else if('>'==expression[ig1+1]) {                                 \
+      /* a->b */                                                      \
+      ++ig1;                                                          \
+      ebuf[lenbuf++]=c;                                               \
+      ebuf[lenbuf++]=expression[ig1];                                 \
+    }                                                                 \
+    else if(lenbuf) {                                                 \
+      char *pebuf;                                                    \
+      if('e'==tolower(expression[ig1-1])&&                            \
+         (isdigit(ebuf[0])||'.'==ebuf[0]||                            \
+         ('('==ebuf[0]&&(pebuf=strchr(ebuf,')'))&&                    \
+          (isdigit(*++pebuf)||'.'==(*pebuf))))) {                     \
+	/* 1e+10, 1e-10, (double)1e+6 */                              \
+        ebuf[lenbuf++]=c;                                             \
+      }                                                               \
+      else {                                                          \
+	ebuf[lenbuf]=0; /* ON742 */                                   \
+	if(!G__iscastexpr(ebuf)) {                                    \
+	  /* a+b, a-b */                                              \
+          G__exec_binopr(c,G__PREC_ADD);                              \
+	}                                                             \
+	else {                                                        \
+	  /* (int)-abc */                                             \
+	  ebuf[lenbuf++]=c;                                           \
+	}                                                             \
+        /* G__exec_binopr(c,G__PREC_ADD); ON742 */                    \
+      }                                                               \
+    }                                                                 \
+    else if('-'==c) {                                                 \
+      /* -a */                                                        \
+      G__exec_unaopr(oprin);                                          \
+    }                                                                 \
+    /* else +a , ignored */                                           \
+  }                                                                   \
+  else ebuf[lenbuf++]=c
+
+#else /* 2008 */
+
 #define G__wrap_plusminus(oprin,assignopr,preincopr,postincopr)       \
   if((nest==0)&&(single_quote==0)&&(double_quote==0)) {               \
     if(oprin==expression[ig1+1]                                       \
@@ -839,6 +933,8 @@ int lenbuf;
     /* else +a , ignored */                                           \
   }                                                                   \
   else ebuf[lenbuf++]=c
+
+#endif /* 2008 */
 
 /******************************************************************
 * G__wrap_shifts()
@@ -1280,10 +1376,10 @@ char *expression;
     case '^': /* a^b, a^=b */
       G__wrap_binassignopr(c,G__PREC_BITEXOR,G__OPR_EXORASSIGN);
       break;
-    case '+': /* ++a, a++, +a, a+b, a+=b, 1e+10 */
+    case '+': /* ++a, a++, +a, a+b, a+=b, 1e+10, a+ +b */
       G__wrap_plusminus(c,G__OPR_ADDASSIGN,G__OPR_PREFIXINC,G__OPR_POSTFIXINC);
       break;
-    case '-': /* --a, a--, -a, a-b, a-=b, 1e-10, a->b */
+    case '-': /* --a, a--, -a, a-b, a-=b, 1e-10, a->b , a- -b */
       G__wrap_plusminus(c,G__OPR_SUBASSIGN,G__OPR_PREFIXDEC,G__OPR_POSTFIXDEC);
       break;
     case '<': /* a<<b, a<b, a<=b, a<<=b */
@@ -1924,7 +2020,12 @@ G__value *presult;
 	 * as function name */
 #ifndef G__OLDIMPLEMENTATION1993
 	if(('n'==G__struct.type[scope_tagnum] || memfunc->staticalloc[ifn])
-	   && memfunc->pentry[ifn]->filenum<0 && memfunc->pentry[ifn]->tp2f) {
+#ifndef G__OLDIMPLEMENTATION2012
+	   && memfunc->pentry[ifn]->size<0 
+#else
+	   && memfunc->pentry[ifn]->filenum<0 
+#endif
+	   && memfunc->pentry[ifn]->tp2f) {
 	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
 	}
 	else {
@@ -1933,7 +2034,13 @@ G__value *presult;
 #else
 	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 	/* 
-	if(memfunc->pentry[ifn]->filenum>=0) 
+	if(
+#ifndef G__OLDIMPLEMENTATION2012
+	   memfunc->pentry[ifn]->size>=0
+#else
+	   memfunc->pentry[ifn]->filenum>=0
+#endif
+          ) 
 	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 	else 
 	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);

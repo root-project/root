@@ -292,7 +292,11 @@ void G__CallFunc::SetFuncProto(G__ClassInfo* cls
 ///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetFunc(G__ClassInfo* cls
 			  ,const char* fname  ,const char* args
-			  ,long* poffset)
+			  ,long* poffset
+#ifndef G__OLDIMPLEMENTATION2019
+			  ,MatchMode mode
+#endif
+			  )
 {
   // G__getstream(), G__type2string()
   int isrc=0;
@@ -322,15 +326,30 @@ void G__CallFunc::SetFunc(G__ClassInfo* cls
       buf = &para.para[para.paran];
       // set type string
       if(pos) argtype[pos++]=',';
+#ifndef G__OLDIMPLEMENTATION2020
+      if(islower(buf->type))
+	strcpy(argtype+pos
+	       ,G__type2string(buf->type,buf->tagnum,buf->typenum,0,0));
+      else 
+	strcpy(argtype+pos
+	       ,G__type2string(buf->type,buf->tagnum,buf->typenum
+			       ,buf->obj.reftype.reftype,0));
+#else
       strcpy(argtype+pos
 	     ,G__type2string(buf->type,buf->tagnum,buf->typenum,(int)buf->ref
 			   ,0));
+#endif
       pos = strlen(argtype);
       ++para.paran; // increment argument count
     }
   } while (','==c);
 
+#ifndef G__OLDIMPLEMENTATION2019
+  // get G__MethodInfo object
+  method=cls->GetMethod(fname,argtype,poffset,(G__ClassInfo::MatchMode)mode); 
+#else
   method = cls->GetMethod(fname,argtype,poffset); // get G__MethodInfo object
+#endif
   pfunc = method.InterfaceMethod(); // get compiled interface method
   if((G__InterfaceMethod)NULL==pfunc) {
     int store_paran=para.paran;

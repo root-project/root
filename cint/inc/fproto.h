@@ -813,6 +813,9 @@ void* G__SetShlHandle G__P((char* filename));
 void G__ResetShlHandle G__P(());
 void* G__FindSymbol G__P((struct G__ifunc_table *ifunc,int ifn));
 void* G__GetShlHandle G__P(());
+#ifndef G__OLDIMPLEMENTATION2012
+int G__GetShlFilenum G__P(());
+#endif
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1919

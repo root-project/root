@@ -20,6 +20,7 @@
 
 #include "common.h"
 
+
 /* 1723 is not needed because freopen deals with both stdout and cout */
 #define G__OLDIMPLEMENTATION1723
 
@@ -811,6 +812,12 @@ G__value buf;
 #ifndef G__OLDIMPLEMENTATION1184
   int store_debug = G__debug;
 #endif
+#ifndef G__OLDIMPLEMENTATION2001
+  void *store_errmsgcallback;
+#endif
+#ifndef G__OLDIMPLEMENTATION2003
+  int store_mask_error = G__mask_error;
+#endif
 
   if(G__return>G__RETURN_NORMAL && G__security_error) return(0);
 
@@ -826,7 +833,20 @@ G__value buf;
   G__debug=0;
 #endif
   G__setdebugcond();
+#ifndef G__OLDIMPLEMENTATION2001
+  store_errmsgcallback = G__get_errmsgcallback();
+  G__set_errmsgcallback(G__mask_errmsg);
+#endif
+#ifndef G__OLDIMPLEMENTATION2003
+  G__mask_error = 1;
+#endif
   result=G__getfunction(com,&known,G__TRYNORMAL);
+#ifndef G__OLDIMPLEMENTATION2003
+  G__mask_error = store_mask_error;
+#endif
+#ifndef G__OLDIMPLEMENTATION2001
+  G__set_errmsgcallback(store_errmsgcallback);
+#endif
   G__break=store_break; G__step=store_step; G__dispsource=store_dispsource;
 #ifndef G__OLDIMPLEMENTATION1184
   G__debug=store_debug;
@@ -3339,7 +3359,11 @@ G__value *rslt;
       /*******************************************************
        * Delete break point
        *******************************************************/
-      if(1<G__findposition(string,view.file,&line_number,&filenum)) {
+      if(1<G__findposition(string,view.file,&line_number,&filenum)
+#ifndef G__OLDIMPLEMENTATION2013
+	 && filenum>=0 && line_number>=0
+#endif
+	 ) {
 	G__srcfile[filenum].breakpoint[line_number] &= G__NOBREAK;
 	fprintf(G__sout,"Break point line %d %s deleted\n"
 		,line_number,G__srcfile[filenum].filename);
@@ -3357,7 +3381,11 @@ G__value *rslt;
        * Set break point
        *******************************************************/
       if(1<G__findposition(string,view.file,&line_number,&filenum) &&
-	 G__srcfile[filenum].breakpoint && G__srcfile[filenum].maxline) {
+#ifndef G__OLDIMPLEMENTATION2013
+	 filenum>=0 && line_number>=0 &&
+#endif
+	 G__srcfile[filenum].breakpoint && G__srcfile[filenum].maxline
+	 ) {
 	fprintf(G__sout,"Break point set to line %d %s\n"
 		,line_number,G__srcfile[filenum].filename);
 	G__srcfile[filenum].breakpoint[line_number] |= G__BREAK;
@@ -3410,7 +3438,11 @@ G__value *rslt;
 #endif
 	return(ignore);
       }
-      else if(1<G__findposition(string,view.file,&line_number,&filenum)) {
+      else if(1<G__findposition(string,view.file,&line_number,&filenum)
+#ifndef G__OLDIMPLEMENTATION2013
+	      && filenum>=0 && line_number>=0 
+#endif
+	      ) {
 	G__srcfile[filenum].breakpoint[line_number] |= G__CONTUNTIL;
 	G__pause_return=1;
 #ifndef G__OLDIMPLEMENTATION464
@@ -3475,7 +3507,11 @@ G__value *rslt;
       /*******************************************************
        * Display source code
        *******************************************************/
-      if(0<G__findposition(command,view.file,&line_number,&filenum)&&filenum>=0) {
+      if(0<G__findposition(command,view.file,&line_number,&filenum)&&filenum>=0
+#ifndef G__OLDIMPLEMENTATION2013
+	 && line_number>=0 
+#endif
+	 ) {
 	view.file.filenum = filenum;
 	view.file.fp = G__srcfile[filenum].fp;
 	strcpy(view.file.name,G__srcfile[filenum].filename);
@@ -4016,7 +4052,11 @@ G__value *rslt;
 #endif
           buf=G__exec_tempfile(sname);
 #ifndef G__OLDIMPLEMENTATION1968
+#ifndef G__OLDIMPLEMENTATION2006
+	  if(G__security_error && G__pautoloading && (*G__pautoloading)(com)) {
+#else
 	  if(G__security_error && G__autoloading(com)) {
+#endif
 	    buf=G__exec_tempfile(sname);
 	  }
 #endif
@@ -4233,7 +4273,11 @@ G__value *rslt;
 	else {
 	  buf = G__calc_internal(command);
 #ifndef G__OLDIMPLEMENTATION1968
+#ifndef G__OLDIMPLEMENTATION2006
+	  if(G__security_error && G__pautoloading && (*G__pautoloading)(com)) {
+#else
 	  if(G__security_error && G__autoloading(command)) {
+#endif
 	    buf = G__calc_internal(command);
 	  }
 #endif

@@ -797,6 +797,9 @@ int type,tagnum,typenum,reftype,isconst;
 #ifndef G__OLDIMPLEMENTATION612
 	case 'n': sprintf(string,"namespace "); break;
 #endif
+#ifndef G__OLDIMPLEMENTATION612
+	case 'a': sprintf(string,""); break;
+#endif
 	case 0: sprintf(string,"(unknown) "); break;
 	}
 	len=strlen(string);

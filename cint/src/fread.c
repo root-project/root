@@ -2974,8 +2974,10 @@ struct G__comment_info *pcomment;
 /***********************************************************************
 * G__eolcallback()
 ***********************************************************************/
+#ifdef G__OLDIMPLEMENTATION2005
 typedef void (*G__eolcallback_t) G__P((const char* fname,int linenum));
 G__eolcallback_t G__eolcallback;
+#endif
 
 void G__set_eolcallback(eolcallback)
 void* eolcallback;

@@ -194,7 +194,11 @@ long G__MethodInfo::Property()
     if(ifunc->staticalloc[index]) property|=G__BIT_ISSTATIC;
     if(ifunc->isvirtual[index]) property|=G__BIT_ISVIRTUAL;
     if(ifunc->ispurevirtual[index]) property|=G__BIT_ISPUREVIRTUAL;
+#ifndef G__OLDIMPLEMENTATION2012
+    if(ifunc->pentry[index]->size<0) property|=G__BIT_ISCOMPILED;
+#else
     if(ifunc->pentry[index]->filenum<0) property|=G__BIT_ISCOMPILED;
+#endif
     if(ifunc->pentry[index]->bytecode) property|=G__BIT_ISBYTECODE;
 #ifndef G__OLDIMPLEMENTATION1287
     if(ifunc->isexplicit[index]) property|=G__BIT_ISEXPLICIT;
@@ -261,7 +265,13 @@ G__InterfaceMethod G__MethodInfo::InterfaceMethod()
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
-    if(-1==ifunc->pentry[index]->filenum) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2012
+       -1==ifunc->pentry[index]->size
+#else
+       -1==ifunc->pentry[index]->filenum
+#endif
+       ) {
 #ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
 #endif
@@ -289,7 +299,11 @@ struct G__bytecodefunc *G__MethodInfo::GetBytecode()
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
     if(!ifunc->pentry[index]->bytecode &&
+#ifndef G__OLDIMPLEMENTATION2012
+       -1!=ifunc->pentry[index]->size && 
+#else
        -1!=ifunc->pentry[index]->filenum && 
+#endif
        G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus
 #ifndef G__OLDIMPLEMENTATION1842
        && G__asm_loopcompile>=4
@@ -346,7 +360,12 @@ void* G__MethodInfo::PointerToFunc()
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
-    if(-1!=ifunc->pentry[index]->filenum && 
+    if(
+#ifndef G__OLDIMPLEMENTATION2012
+       -1!=ifunc->pentry[index]->size && 
+#else
+       -1!=ifunc->pentry[index]->filenum && 
+#endif
        G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus
 #ifndef G__OLDIMPLEMENTATION1842
        && G__asm_loopcompile>=4
@@ -461,7 +480,7 @@ const char* G__MethodInfo::FileName()
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
-    if(ifunc->pentry[index]->filenum>=0) {
+    if(ifunc->pentry[index]->filenum>=0) { /* 2012, keep this */
       return(G__srcfile[ifunc->pentry[index]->filenum].filename);
     }
     else {
@@ -479,7 +498,13 @@ FILE* G__MethodInfo::FilePointer()
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
-    if(ifunc->pentry[index]->filenum>=0) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2012
+       ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
+#else
+       ifunc->pentry[index]->filenum>=0
+#endif
+       ) {
       return(G__srcfile[ifunc->pentry[index]->filenum].fp);
     }
     else {
@@ -497,7 +522,13 @@ int G__MethodInfo::LineNumber()
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
-    if(ifunc->pentry[index]->filenum>=0) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2012
+       ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
+#else
+       ifunc->pentry[index]->filenum>=0
+#endif
+       ) {
       return(ifunc->pentry[index]->line_number);
     }
     else {
@@ -524,7 +555,13 @@ long G__MethodInfo::FilePosition()
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
 #endif
-    if(ifunc->pentry[index]->filenum>=0) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2012
+       ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
+#else
+       ifunc->pentry[index]->filenum>=0
+#endif
+       ) {
 #if defined(G__NONSCALARFPOS2)
       return((long)ifunc->pentry[index]->pos.__pos);
 #else
@@ -546,7 +583,13 @@ int G__MethodInfo::Size()
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
-    if(ifunc->pentry[index]->filenum>=0) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2012
+       ifunc->pentry[index]->size>=0
+#else
+       ifunc->pentry[index]->filenum>=0
+#endif
+       ) {
       return(ifunc->pentry[index]->size);
     }
     else {
@@ -617,7 +660,12 @@ int G__MethodInfo::LoadDLLDirect(const char* filename,const char* funcname)
   if(p2f) {
     ifunc->pentry[index]->tp2f = p2f;
     ifunc->pentry[index]->p = (void*)G__DLL_direct_globalfunc;
+#ifndef G__OLDIMPLEMENTATION2012
+    ifunc->pentry[index]->size = -1;
+    //ifunc->pentry[index]->filenum = -1; /* not good */
+#else
     ifunc->pentry[index]->filenum = -1;
+#endif
     ifunc->pentry[index]->line_number = -1;
     return 1;
   }

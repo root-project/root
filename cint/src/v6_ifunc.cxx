@@ -2163,7 +2163,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
     if(shlp2f) {
       G__p_ifunc->pentry[func_now]->tp2f = shlp2f;
       G__p_ifunc->pentry[func_now]->p = (void*)G__DLL_direct_globalfunc;
+#ifndef G__OLDIMPLEMENTATION2012
+      G__p_ifunc->pentry[func_now]->filenum = G__GetShlFilenum();
+      G__p_ifunc->pentry[func_now]->size = -1;
+#else
       G__p_ifunc->pentry[func_now]->filenum = -1;
+#endif
       G__p_ifunc->pentry[func_now]->line_number = -1;
     }
   }
@@ -4365,7 +4370,13 @@ int recursive;
 	else if('Y'==param_type) 
 	  funclist->p_rate[i] = G__STDCONVMATCH+G__V2P2FCONVMATCH;
 	else if('C'==param_type) {
-	  if(p_ifunc->pentry[ifn]->filenum>=0) 
+	  if(
+#ifndef G__OLDIMPLEMENTATION2012
+	     p_ifunc->pentry[ifn]->size>=0
+#else
+	     p_ifunc->pentry[ifn]->filenum>=0
+#endif
+	     ) 
 	    funclist->p_rate[i] = G__STDCONVMATCH-G__C2P2FCONVMATCH;
 	  else {
 	    funclist->p_rate[i] = G__STDCONVMATCH+G__C2P2FCONVMATCH;/*???*/
@@ -5228,7 +5239,13 @@ struct G__funclist *pmatch;
       }
 #ifndef G__OLDIMPLEMENTATION1365
     case 'Q':
-      if('C'==param_type && p_ifunc->pentry[ifn]->filenum<0) {
+      if('C'==param_type && 
+#ifndef G__OLDIMPLEMENTATION2012
+	 p_ifunc->pentry[ifn]->size<0
+#else
+	 p_ifunc->pentry[ifn]->filenum<0
+#endif
+	 ) {
 	G__genericerror("Limitation: Precompiled function can not get pointer to interpreted function as argument");
 	return(-1);
       }
@@ -5325,7 +5342,7 @@ int ifn;
   
 #ifndef G__OLDIMPLEMENTATION1485
   if(G__serr==fp) {
-    if(ifunc->pentry[ifn]->filenum>=0) {
+    if(ifunc->pentry[ifn]->filenum>=0) { /* 2012 must leave this one */
       G__fprinterr(G__serr,"%-10s%4d "
 	    ,G__stripfilename(G__srcfile[ifunc->pentry[ifn]->filenum].filename)
 	      ,ifunc->pentry[ifn]->line_number);
@@ -5352,7 +5369,7 @@ int ifn;
   } 
   else {
 #endif
-    if(ifunc->pentry[ifn]->filenum>=0) {
+    if(ifunc->pentry[ifn]->filenum>=0) { /* 2012 must leave this one */
       fprintf(fp,"%-10s%4d "
 	    ,G__stripfilename(G__srcfile[ifunc->pentry[ifn]->filenum].filename)
 	      ,ifunc->pentry[ifn]->line_number);
@@ -5905,11 +5922,17 @@ int doconvert;
      && !isrecursive
 #endif
      ) {
-    /* error, ambiguous overloading resolution */
-    G__fprinterr(G__serr,"Error: Ambiguous overload resolution (%x,%d)"
-	    ,bestmatch,ambiguous+1);
-    G__genericerror((char*)NULL);
-    G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
+#ifndef G__OLDIMPLEMENTATION2002
+    if(!G__mask_error) {
+#endif
+      /* error, ambiguous overloading resolution */
+      G__fprinterr(G__serr,"Error: Ambiguous overload resolution (%x,%d)"
+		   ,bestmatch,ambiguous+1);
+      G__genericerror((char*)NULL);
+      G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
+#ifndef G__OLDIMPLEMENTATION2002
+    }
+#endif
     *pifn = -1;
     G__funclist_delete(funclist);
     return((struct G__ifunc_table*)NULL);
@@ -6382,7 +6405,12 @@ asm_ifunc_start:   /* loop compilation execution label */
   /******************************************************************
    * C++ compiled function
    *******************************************************************/
-  if(-1 == p_ifunc->pentry[ifn]->filenum
+  if(
+#ifndef G__OLDIMPLEMENTATION2012
+     -1 == p_ifunc->pentry[ifn]->size
+#else
+     -1 == p_ifunc->pentry[ifn]->filenum
+#endif
 #ifndef G__OLDIMPLEMENTATION1986
      && !G__stubcall
 #endif

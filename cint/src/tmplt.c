@@ -1637,11 +1637,16 @@ void G__declare_template()
     }
     */
   }
-#ifndef G__OLDIMPLEMENTATION950
+#ifndef G__OLDIMPLEMENTATION950 
  /* template<...> X() in class context could be a ctor. */
   else if (c == '(' && G__def_struct_member && G__tagdefining >= 0 &&
            strcmp (temp, G__struct.name[G__tagdefining]) == 0)
   {
+#ifndef G__OLDIMPLEMENTATION2010
+    /*8 template<class T> A(const T& x) { }  constructor 
+    *                       ^                            */
+    /* Do nothing */
+#else /* 2010 */
     /*c = '<';*/
     /* cint doesn't handle template members of non-template classes yet.
        Just punt for now. */
@@ -1650,6 +1655,7 @@ void G__declare_template()
     if(';'!=c) c = G__fignorestream("}");
     G__freetemplatearg(targ);
     return;
+#endif /* 2010 */
   }
 #endif
 #ifndef G__OLDIMPLEMENTATION1488

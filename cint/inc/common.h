@@ -30,6 +30,7 @@
 #define G__DISPWARN  2
 #define G__DISPNOTE  3
 #define G__DISPALL   4
+#define G__DISPSTRICT 5
 #define G__DISPROOTSTRICT 5
 
 /**************************************************************************
@@ -830,6 +831,10 @@ struct G__dictposition {
   struct G__Definedtemplateclass *definedtemplateclass;
   /* function template */
   struct G__Definetemplatefunc *definedtemplatefunc;   
+
+#ifndef G__OLDIMPLEMENTATION2014
+  char* ptype; /* struct,union,enum,class */
+#endif
 };
 
 #ifdef G__SECURITY

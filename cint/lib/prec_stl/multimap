@@ -95,6 +95,9 @@ class multimap {
     iterator& operator=(const iterator& x) ;
 #endif
     value_type& operator*() ;
+#ifndef G__OLDIMPLEMENTATION2019
+    value_type* operator->() ;
+#endif
     iterator& operator++();
     iterator operator++(int a);
     iterator& operator--();
@@ -135,6 +138,9 @@ class multimap {
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
     value_type& operator*() ;
+#ifndef G__OLDIMPLEMENTATION2019
+    value_type* operator->() ;
+#endif
     reverse_iterator& operator++();
     reverse_iterator operator++(int a);
     reverse_iterator& operator--();

@@ -2,6 +2,8 @@
 #ifdef __CINT__
 //#pragma link off all functions;
 
+#pragma link off function operator>>(QTextStream&,int);
+#pragma link off function operator<<(QTextStream&,int);
 #pragma link off function operator>>(QTextStream&,void*&);
 #pragma link off function operator<<(QTextStream&,void*&);
 #pragma link off function qRemovePostRoutine(void (*)(void));

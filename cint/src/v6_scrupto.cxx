@@ -7,7 +7,7 @@
  * Description:
  *  Partial cleanup function
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -89,6 +89,15 @@ struct G__dictposition *dictpos;
   dictpos->definedtemplatefunc = &G__definedtemplatefunc;
   while(dictpos->definedtemplatefunc->next)
     dictpos->definedtemplatefunc=dictpos->definedtemplatefunc->next;
+
+#ifndef G__OLDIMPLEMENTATION2014
+  if(0==dictpos->ptype) {
+    int i;
+    dictpos->ptype = (char*)malloc(G__struct.alltag+1);
+    for(i=0;i<G__struct.alltag;i++) dictpos->ptype[i] = G__struct.type[i];
+  }
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1035
   G__UnlockCriticalSection();
 #endif
@@ -228,6 +237,15 @@ struct G__dictposition *dictpos;
 
 #ifndef G__OLDIMPLEMENTATION1045
   G__tagdefining = -1;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2014
+  if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype ) {
+    int i;
+    for(i=0;i<G__struct.alltag;i++) G__struct.type[i] = dictpos->ptype[i];
+    free((void*)dictpos->ptype);
+    dictpos->ptype = (char*)NULL;
+  }
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1035
@@ -401,6 +419,12 @@ int tagnum;
   * clearing static members
   *****************************************************************/
   for(ialltag=G__struct.alltag-1;ialltag>=tagnum;ialltag--) {
+#ifndef G__OLDIMPLEMENTATION2014
+    if(G__struct.libname[ialltag]) {
+      free((void*)G__struct.libname[ialltag]);
+      G__struct.libname[ialltag] = (char*)NULL;
+    }
+#endif
     if(G__NOLINK==G__struct.iscpplink[ialltag]) {
       /* freeing static member variable if not precompiled */
       var=G__struct.memvar[ialltag];

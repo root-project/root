@@ -512,6 +512,13 @@ int G__loadingDLL=0;
 int G__stubcall=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2002
+int G__mask_error=0;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2005
+G__eolcallback_t G__eolcallback;
+#endif
 
 /*
  * Local Variables:

@@ -1712,8 +1712,21 @@ FILE *hfp;
 	G__struct.hash[i] 
 #endif
 	|| -1!=G__struct.parent_tagnum[i])) {
+#ifndef G__OLDIMPLEMENTATION2015
+      if((G__struct.hash[i] || 0==G__struct.name[i][0]) && 
+	 (G__CPPLINK-2)==G__struct.globalcomp[i]) {
+	fprintf(fp,"G__linked_taginfo %s = { \"%s\" , %d , -1 };\n"
+		,G__get_link_tagname(i),G__fulltagname(i,0)
+		,G__struct.type[i]+1);
+      }
+      else {
+	fprintf(fp,"G__linked_taginfo %s = { \"%s\" , %d , -1 };\n"
+		,G__get_link_tagname(i),G__fulltagname(i,0),G__struct.type[i]);
+      }
+#else
       fprintf(fp,"G__linked_taginfo %s = { \"%s\" , %d , -1 };\n"
 	      ,G__get_link_tagname(i),G__fulltagname(i,0),G__struct.type[i]);
+#endif
       fprintf(hfp,"extern G__linked_taginfo %s;\n",G__get_link_tagname(i));
 #ifndef G__OLDIMPLEMENTATION1483
       if(G__privateaccess) {
@@ -1866,6 +1879,9 @@ int tagnum;
 #endif
   if(tagnum<0) {
     G__fprinterr(G__serr,"Internal error: G__mark_linked_tagnum() Illegal tagnum %d\n",tagnum);
+#ifndef G__OLDIMPLEMENTATION2016
+    return("");
+#endif
   }
 
 #ifndef G__OLDIMPLEMENTATION1853
@@ -2759,7 +2775,11 @@ FILE *hfp;
 	       G__METHODLINK!=ifunc->globalcomp[j]) continue;
 #endif
 #ifndef G__OLDIMPLEMENTATION1656
+#ifndef G__OLDIMPLEMENTATION2012
+	    if(ifunc->pentry[j]->size<0) continue; /* already precompiled */
+#else
 	    if(ifunc->pentry[j]->filenum<0) continue; /* already precompiled */
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1706
 	    if(0==ifunc->hash[j]) continue;
@@ -6205,7 +6225,11 @@ FILE *fp;
 	       G__METHODLINK!=ifunc->globalcomp[j]) continue;
 #endif
 #ifndef G__OLDIMPLEMENTATION1656
+#ifndef G__OLDIMPLEMENTATION2012
+	    if(ifunc->pentry[j]->size<0) continue; /* already precompiled */
+#else
 	    if(ifunc->pentry[j]->filenum<0) continue; /* already precompiled */
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1706
 	    if(0==ifunc->hash[j]) continue;
@@ -6426,7 +6450,7 @@ FILE *fp;
 					,ifunc->para_reftype[j][k]
 					,ifunc->para_isconst[j][k]));
 	      }
-	      fprintf(fp,"))(&%s::%s)"
+	      fprintf(fp,"))(%s::%s)"
 		      ,G__fulltagname(ifunc->tagnum,1),ifunc->funcname[j]);
 #else
 	      fprintf(fp,",(void*)%s::%s"
@@ -7267,6 +7291,9 @@ G__incsetup setup_memfunc;
 #else
   G__struct.isabstract[tagnum] = isabstract;
 #endif
+#ifndef G__OLDIMPLEMENTATION2012
+  G__struct.filenum[tagnum] = G__ifile.filenum;
+#endif
 
 #ifdef G__FONS_COMMENT
   G__struct.comment[tagnum].p.com = comment;
@@ -7285,7 +7312,12 @@ G__incsetup setup_memfunc;
     G__struct.incsetup_memvar[tagnum] = 0;
   if(0==G__struct.memfunc[tagnum]->allifunc 
      || 'n'==G__struct.type[tagnum]
-     || (-1!=G__struct.memfunc[tagnum]->pentry[0]->filenum
+     || (
+#ifndef G__OLDIMPLEMENTATION2012
+	 -1!=G__struct.memfunc[tagnum]->pentry[0]->size
+#else
+	 -1!=G__struct.memfunc[tagnum]->pentry[0]->filenum
+#endif
 	 && 2>=G__struct.memfunc[tagnum]->allifunc))
     G__struct.incsetup_memfunc[tagnum] = setup_memfunc;
   else 
@@ -7594,7 +7626,14 @@ int isvirtual;
   /* set entry pointer */
   G__p_ifunc->pentry[G__func_now] = &G__p_ifunc->entry[G__func_now];
   G__p_ifunc->entry[G__func_now].p=(void*)funcp;
+#ifndef G__OLDIMLEMENTATION2012
+  if(-1!=G__p_ifunc->tagnum) 
+    G__p_ifunc->entry[G__func_now].filenum=G__struct.filenum[G__p_ifunc->tagnum];
+  else G__p_ifunc->entry[G__func_now].filenum = G__ifile.filenum;
+  G__p_ifunc->entry[G__func_now].size = -1;
+#else
   G__p_ifunc->entry[G__func_now].filenum = -1;
+#endif
   G__p_ifunc->entry[G__func_now].line_number = -1;
 #ifdef G__ASM_WHOLEFUNC
   G__p_ifunc->entry[G__func_now].bytecode = (struct G__bytecodefunc*)NULL;
@@ -9497,7 +9536,12 @@ int link_stub;
 	for(i=0;i<ifunc->allifunc;i++) {
 #ifndef G__OLDIMPLEMENTATION1536
 	if(G__NOLINK==globalcomp ||
-	   (0<=ifunc->pentry[i]->filenum &&
+	   (
+#ifndef G__OLDIMPLEMENTATION2012
+	    0<=ifunc->pentry[i]->size && 0<=ifunc->pentry[i]->filenum &&
+#else
+	    0<=ifunc->pentry[i]->filenum &&
+#endif
 	    0==(G__srcfile[ifunc->pentry[i]->filenum].hdrprop&G__CINTHDR)))
 	  ifunc->globalcomp[i] = globalcomp;
 #else
@@ -9624,7 +9668,12 @@ int tagnum;
 #ifdef G__OLDIMPLEMENTATION1125_YET /* G__PHILIPPE26 */
     if(0==G__struct.memfunc[tagnum]->allifunc 
        || 'n'==G__struct.type[tagnum]
-       || (-1!=G__struct.memfunc[tagnum]->pentry[0]->filenum
+       || (
+#ifndef G__OLDIMPLEMENTATION2012
+	   -1!=G__struct.memfunc[tagnum]->pentry[0]->size
+#else
+	   -1!=G__struct.memfunc[tagnum]->pentry[0]->filenum
+#endif
 	   && 2>=G__struct.memfunc[tagnum]->allifunc))
       (*G__struct.incsetup_memfunc[tagnum])();
 #else

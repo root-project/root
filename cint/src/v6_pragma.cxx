@@ -272,11 +272,27 @@ int G__pragma()
   }
 
   else if(strcmp(command,"setstream")==0) {
+#ifndef G__OLDIMPLEMENTATION2012
+    struct G__input_file store_ifile = G__ifile;
+    G__ifile.filenum = -1;
+    G__ifile.line_number = -1;
+#endif
     G__cpp_setupG__stream();
+#ifndef G__OLDIMPLEMENTATION2012
+    G__ifile = store_ifile;
+#endif
   }
 
   else if(strcmp(command,"setertti")==0) {
+#ifndef G__OLDIMPLEMENTATION2012
+    struct G__input_file store_ifile = G__ifile;
+    G__ifile.filenum = -1;
+    G__ifile.line_number = -1;
+#endif
     G__cpp_setupG__API();
+#ifndef G__OLDIMPLEMENTATION2012
+    G__ifile = store_ifile;
+#endif
   }
 
 #ifndef G__OLDIMPLEMENTATION467

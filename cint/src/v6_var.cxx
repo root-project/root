@@ -1725,7 +1725,11 @@ int ig15;
   store_globalvarpointer=G__globalvarpointer;
   G__globalvarpointer=G__PVOID;
   store_cpp_aryconstruct=G__cpp_aryconstruct;
-  if(var->varlabel[ig15][1]) G__cpp_aryconstruct=var->varlabel[ig15][1]+1;
+  if(var->varlabel[ig15][1]
+#ifndef G__OLDIMPLEMENTATION2011
+     || var->paran[ig15]
+#endif
+     ) G__cpp_aryconstruct=var->varlabel[ig15][1]+1;
   else                       G__cpp_aryconstruct=0;
   store_decl=G__decl;
   G__decl=0;
@@ -1839,7 +1843,11 @@ int ig15;
 
   sprintf(temp,"~%s()",G__struct.name[G__tagnum]);
  
-  if(var->varlabel[ig15][1]) { /* array */
+  if(var->varlabel[ig15][1]
+#ifndef G__OLDIMPLEMENTATION2011
+     || var->paran[ig15]
+#endif
+     ) { /* array */
     size = G__struct.size[G__tagnum];
     pinc=var->varlabel[ig15][1]+1;
 #ifdef G__ASM_DBG
@@ -2415,7 +2423,8 @@ struct G__var_array *varglobal,*varlocal;
        (var->type[ig15]!=G__var_type||var->p_tagtable[ig15]!=G__tagnum)) {
       G__fprinterr(G__serr,"Error: %s already declared as different type",item);
       if(isupper(var->type[ig15])&&isupper(G__var_type)&&
-         0==var->varlabel[ig15][1]&&0==(*(long*)var->p[ig15])) {
+         0==var->varlabel[ig15][1]  /* 2011 ??? */
+	 &&0==(*(long*)var->p[ig15])) { 
         G__fprinterr(G__serr,". Switch to new type\n");
         var->type[ig15]=G__var_type;
         var->p_tagtable[ig15]=G__tagnum;
@@ -2798,7 +2807,8 @@ struct G__var_array *varglobal,*varlocal;
 #ifdef G__SECURITY
       if(0==G__no_exec_compile&&'v'==G__var_type&&isupper(var->type[ig15])&&
 #ifndef G__OLDIMPLEMENTATION475
-	 G__PARANORMAL==var->reftype[ig15]&&0==var->varlabel[ig15][1]&&
+	 G__PARANORMAL==var->reftype[ig15]&&
+	 0==var->varlabel[ig15][1]&&   /* 2011 ??? */
 #endif
 	 0==(*(long*)(G__struct_offset+var->p[ig15]))) {
 	G__assign_error(item,&result);
@@ -3896,7 +3906,8 @@ struct G__var_array *varglobal,*varlocal;
 #ifndef G__OLDIMPLEMENTATION776
       if(G__no_exec_compile && 
 	 (G__CONSTVAR!=var->constvar[ig15] || isupper(var->type[ig15]) ||
-	  G__PARAREFERENCE==var->reftype[ig15] || var->varlabel[ig15][1] ||
+	  G__PARAREFERENCE==var->reftype[ig15] || 
+	  var->varlabel[ig15][1] || /* 2011 ??? */
 	  var->p[ig15]<0x1000) &&
 	 'p'!=tolower(var->type[ig15])) {
 #else
@@ -4035,7 +4046,8 @@ struct G__var_array *varglobal,*varlocal;
 #ifdef G__SECURITY
       if(0==G__no_exec_compile&&'v'==G__var_type&&isupper(var->type[ig15])&&
 #ifndef G__OLDIMPLEMENTATION475
-	 G__PARANORMAL==var->reftype[ig15]&&0==var->varlabel[ig15][1]&&
+	 G__PARANORMAL==var->reftype[ig15]&&
+	 0==var->varlabel[ig15][1]&&  /* 2011 ??? */
 #endif
 	 0==(*(long*)(G__struct_offset+var->p[ig15]))) {
 	G__reference_error(item);
@@ -4768,9 +4780,9 @@ int objptr;  /* 1 : object , 2 : pointer */
       G__tagnum = store_tagnumB;
       G__store_struct_offset = store_struct_offsetB;
       if(
-#ifdef G__ROOT
+	 /* #ifdef G__ROOT */
 	 G__dispmsg >= G__DISPROOTSTRICT ||
-#endif
+	 /* #endif */
 	 G__ifile.filenum<=G__gettempfilenum()) {
 	if(G__dispmsg>=G__DISPWARN) {
 	  G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
@@ -4781,9 +4793,9 @@ int objptr;  /* 1 : object , 2 : pointer */
   }
   if(isupper(result.type)&&1==objptr) {
     if(
-#ifdef G__ROOT
+       /* #ifdef G__ROOT */
        G__dispmsg >= G__DISPROOTSTRICT ||
-#endif
+       /* #endif */
        G__ifile.filenum<=G__gettempfilenum()) {
       if(G__dispmsg>=G__DISPWARN) {
 	G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
@@ -4793,9 +4805,9 @@ int objptr;  /* 1 : object , 2 : pointer */
   }
 #else /* 1265 */
   if(
-#ifdef G__ROOT
+     /* #ifdef G__ROOT */
      G__dispmsg >= G__DISPROOTSTRICT ||
-#endif
+     /* #endif */
      G__ifile.filenum<=G__gettempfilenum() &&
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
     if(G__dispmsg>=G__DISPWARN) {
@@ -5126,9 +5138,9 @@ int objptr;  /* 1 : object , 2 : pointer */
       G__tagnum = store_tagnumB;
       G__store_struct_offset = store_struct_offsetB;
       if(
-#ifdef G__ROOT
+	 /* #ifdef G__ROOT */
 	 G__dispmsg >= G__DISPROOTSTRICT ||
-#endif
+	 /* #endif */
 	 G__ifile.filenum<=G__gettempfilenum()) {
 	if(G__dispmsg>=G__DISPWARN) {
 	  G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
@@ -5139,9 +5151,9 @@ int objptr;  /* 1 : object , 2 : pointer */
   }
   if(isupper(result.type)&&1==objptr) {
     if(
-#ifdef G__ROOT
+       /* #ifdef G__ROOT */
        G__dispmsg >= G__DISPROOTSTRICT ||
-#endif
+       /* #endif */
        G__ifile.filenum<=G__gettempfilenum()) {
       if(G__dispmsg>=G__DISPWARN) {
 	G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
@@ -5151,9 +5163,9 @@ int objptr;  /* 1 : object , 2 : pointer */
   }
 #else
   if(
-#ifdef G__ROOT
+     /* #ifdef G__ROOT */
      G__dispmsg >= G__DISPROOTSTRICT ||
-#endif
+     /* #endif */
      (G__ifile.filenum<=G__gettempfilenum() &&
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr)))){
     if(G__dispmsg>=G__DISPWARN) {
@@ -7841,7 +7853,11 @@ char *varname;
        ********************************************************/
       if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
 	G__store_struct_offset = var->p[ig15];
-	if((i=var->varlabel[ig15][1])>0) G__cpp_aryconstruct=i+1;
+	if((i=var->varlabel[ig15][1])>0
+#ifndef G__OLDIMPLEMENTATION2011
+	   || var->paran[ig15]
+#endif
+	   ) G__cpp_aryconstruct=i+1;
 	G__getfunction(temp,&done,G__TRYDESTRUCTOR); 
 	G__cpp_aryconstruct=0;
 	cpplink = G__CPPLINK;

@@ -265,6 +265,7 @@ bool operator<=(const string& a,const string& b) ;
 bool operator>=(const string& a,const string& b) ;
 string operator+(const string& a,const string& b) ;
 
+//#ifdef G__ROOT
 bool operator==(const string& a,const char *b) ;
 bool operator!=(const string& a,const char *b) ;
 bool operator<(const string& a,const char *b) ;
@@ -280,6 +281,7 @@ bool operator>(const char *a,const string& b) ;
 bool operator<=(const char *a,const string& b) ;
 bool operator>=(const char *a,const string& b) ;
 string operator+(const char *a,const string& b) ;
+//#endif
 
 typedef string cstring;
 

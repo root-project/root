@@ -319,6 +319,21 @@ int G__ClassInfo::Linkage()
 const char* G__ClassInfo::FileName()
 {
   if(IsValid()) {
+#ifndef G__OLDIMPLEMENtATION2012
+    if(-1!=G__struct.filenum[tagnum]) {
+      return(G__srcfile[G__struct.filenum[tagnum]].filename);
+    }
+    else {
+      switch(G__struct.iscpplink[tagnum]) {
+      case G__CLINK:
+	return("(C compiled)");
+      case G__CPPLINK:
+	return("(C++ compiled)");
+      default:
+	return((char*)NULL);
+      }
+    }
+#else
     switch(G__struct.iscpplink[tagnum]) {
     case G__CLINK:
       return("(C compiled)");
@@ -334,6 +349,7 @@ const char* G__ClassInfo::FileName()
     default:
       return((char*)NULL);
     }
+#endif
   }
   return((char*)NULL);
 }

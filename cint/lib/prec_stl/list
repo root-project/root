@@ -80,6 +80,9 @@ class list {
     iterator& operator=(const iterator& x) ;
 #endif
     T& operator*() const ;
+#ifndef G__OLDIMPLEMENTATION2019
+    T* operator->() const ;
+#endif
     iterator& operator++();
     iterator operator++(int a);
     iterator& operator--();
@@ -117,6 +120,9 @@ class list {
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
     T& operator*() const ;
+#ifndef G__OLDIMPLEMENTATION2019
+    T* operator->() const ;
+#endif
     reverse_iterator& operator++();
     reverse_iterator operator++(int a);
     reverse_iterator& operator--();

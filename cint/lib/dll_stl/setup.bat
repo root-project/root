@@ -3,6 +3,7 @@ del ..\..\stl\vector.dll
 del ..\..\stl\vectorbool.dll
 del ..\..\stl\list.dll
 del ..\..\stl\deque.dll
+del ..\..\stl\pair.dll
 del ..\..\stl\map.dll
 del ..\..\stl\map2.dll
 del ..\..\stl\set.dll
@@ -37,6 +38,10 @@ move Release\list.dll ..\..\stl\list.dll
 makecint -mk Makedeque -dl deque.dll -H dqu.h  -cint -Z0
 nmake -f Makedeque CFG="deque - Win32 Release"
 move Release\deque.dll ..\..\stl\deque.dll
+
+rem makecint -mk Makepair -dl pair.dll -H pr.h  -cint -Z0
+rem nmake -f Makepair CFG="pair - Win32 Release"
+rem move Release\pair.dll ..\..\stl\pair.dll
 
 makecint -mk Makemap -dl map.dll -H mp.h  -cint -Z0
 nmake -f Makemap CFG="map - Win32 Release"

@@ -1055,6 +1055,25 @@ int fentry;
   struct G__Definetemplatefunc *definedtemplatefunc;   
   struct G__dictposition* dictpos = G__srcfile[fentry].dictpos;
   int varflag = 1;
+#ifndef G__OLDIMPLEMENTATION2014
+  int tagflag ;
+
+  if(dictpos->tagnum == G__struct.alltag) {
+    tagflag = 1;
+    if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype) {
+      int i;
+      for(i=0;i<G__struct.alltag;i++) {
+	if(dictpos->ptype[i]!=G__struct.type[i]) {
+	  tagflag=0;
+	  break;
+	}
+      }
+    }
+  }
+  else {
+    tagflag = 0;
+  }
+#endif
 
   var = &G__global;
   while(var->next) var=var->next;
@@ -1088,7 +1107,12 @@ int fentry;
   while(definedtemplatefunc->next)
     definedtemplatefunc=definedtemplatefunc->next;
 
-  if(dictpos->tagnum == G__struct.alltag &&
+  if(
+#ifndef G__OLDIMPLEMENTATION2014
+     tagflag &&
+#else
+     dictpos->tagnum == G__struct.alltag &&
+#endif
      dictpos->typenum == G__newtype.alltype &&
      varflag &&
      dictpos->deffuncmacro == deffuncmacro &&
@@ -1096,6 +1120,9 @@ int fentry;
      dictpos->definedtemplatefunc == definedtemplatefunc) {
     G__srcfile[fentry].hasonlyfunc = 
       (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
+#ifndef G__OLDIMPLEMENTATION2014
+    G__srcfile[fentry].hasonlyfunc->ptype = (char*)G__PVOID;
+#endif
     G__store_dictposition(G__srcfile[fentry].hasonlyfunc);
   }
 }
@@ -1180,6 +1207,9 @@ FILE *fp;
 
   G__srcfile[fentry].dictpos
     = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
+#ifndef G__OLDIMPLEMENTATION2014
+  G__srcfile[fentry].dictpos->ptype = (char*)NULL;
+#endif
   G__store_dictposition(G__srcfile[fentry].dictpos);
 
   G__srcfile[fentry].hdrprop = hdrprop;
@@ -2107,6 +2137,9 @@ char *filenamein;
 #endif
     G__srcfile[G__nfile].dictpos
       = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
+#ifndef G__OLDIMPLEMENTATION2014
+    G__srcfile[G__nfile].dictpos->ptype = (char*)NULL;
+#endif
     G__store_dictposition(G__srcfile[G__nfile].dictpos);
     /***************************************************
      * set

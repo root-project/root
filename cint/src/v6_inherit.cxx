@@ -49,7 +49,13 @@ char baseaccess;
 #ifdef G__ROOT
     if (!strcmp(G__fulltagname(from_tagnum,1), "TSelector")) warn = 0;
 #endif
-    if(G__dispmsg>=G__DISPWARN && warn) {
+    if(
+#ifndef G__OLDIMPLEMENTATION1327
+       G__dispmsg>=G__DISPSTRICT
+#else
+       G__dispmsg>=G__DISPWARN 
+#endif
+       && warn) {
       G__fprinterr(G__serr,
 		   "Warning: Interpreted class %s derived from"
 		   ,G__fulltagname(to_tagnum,1));

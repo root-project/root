@@ -309,6 +309,21 @@ char *cindex;
   if(len>3&&'['==sindex[0]&&']'==sindex[len-1]);
 #endif
   sindex[len-1]='\0';
+
+#ifndef G__OLDIMPLEMENTATION2018
+
+  if('u'==result3->type) {
+    struct G__param fpara;
+    fpara.paran=1;
+    fpara.para[0]=G__getexpr(sindex+1);
+    G__parenthesisovldobj(result3,result3,"operator[]"
+			  ,&fpara,G__TRYNORMAL);
+    return;
+  }
+
+  index=G__int(G__getexpr(sindex+1));
+
+#else /* 2018 */
   index=G__int(G__getexpr(sindex+1));
 
 #ifndef G__OLDIMPLEMENTATION1903
@@ -321,6 +336,7 @@ char *cindex;
     return;
   }
 #endif
+#endif/* 2018 */
 
   size = G__sizeof(result3);
 #ifdef G__ASM
@@ -3348,6 +3364,9 @@ int memfunc_flag;
 	    return(G__null);
 	  }
 #endif
+#ifndef G__OLDIMPLEMENTATION2010
+	case G__CALLCONSTRUCTOR:
+#endif
 #ifndef G__OLDIMPLEMENTATION1729
 	  /******************************************************************
 	   * Search template function
@@ -3379,7 +3398,9 @@ int memfunc_flag;
 	  G__memberfunc_tagnum=store_memberfunc_tagnum;
 	  G__memberfunc_struct_offset=store_memberfunc_struct_offset;
 #endif /* 1729 */
+#ifdef G__OLDIMPLEMENTATION2010
 	case G__CALLCONSTRUCTOR:
+#endif
 #ifndef G__OLDIMPLEMENTATION1376
 	  if(G__NOLINK > G__globalcomp) break;
 #endif
@@ -5817,6 +5838,16 @@ int hash;
 	      ,(long)G__dispvalue((FILE*)libp->para[0].obj.i,&libp->para[1]));
     return(1);
   }
+
+#ifndef G__OLDIMPLEMENTATION2014
+  if(strcmp(funcname,"G__set_class_autoloading_table")==0) {
+    if(G__no_exec_compile) return(1);
+    G__set_class_autoloading_table((char *)G__int(libp->para[0])
+				   ,(char*)G__int(libp->para[1]));
+    *result7 = G__null;
+    return(1);
+  }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1762
   if(strcmp(funcname,"G__defined")==0) {

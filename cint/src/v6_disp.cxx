@@ -7,7 +7,7 @@
  * Description:
  *  Display information
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -728,6 +728,10 @@ int base;
   return(0);
 }
   
+#ifndef G__OLDIMPLEMENTATION2014
+extern int G__class_autoloading G__P((int tagnum));
+#endif
+
 /****************************************************************
 * G__display_class()
 *
@@ -775,6 +779,24 @@ int start;
     for(i=start;i<G__struct.alltag;i++) {
       if(!G__browsing) return(0);
       switch(G__struct.iscpplink[i]) {
+#ifndef G__OLDIMPLEMENTATION2012
+      case G__CLINK:
+	if (G__struct.filenum[i] == -1) sprintf(msg,"%-20s " ,"(C compiled)");
+	else
+	  sprintf(msg,"%-15s%5d " 
+		  ,G__stripfilename(G__srcfile[G__struct.filenum[i]].filename)
+		  ,G__struct.line_number[i]);
+	if(G__more(fout,msg)) return(1);
+	break;
+      case G__CPPLINK:
+	if (G__struct.filenum[i] == -1) sprintf(msg,"%-20s " ,"(C++ compiled)");
+	else
+	  sprintf(msg,"%-15s%5d " 
+		  ,G__stripfilename(G__srcfile[G__struct.filenum[i]].filename)
+		  ,G__struct.line_number[i]);
+	if(G__more(fout,msg)) return(1);
+	break;
+#else
       case G__CLINK:
 	sprintf(msg,"%-20s " ,"(C compiled)");
 	if(G__more(fout,msg)) return(1);
@@ -783,6 +805,7 @@ int start;
 	sprintf(msg,"%-20s " ,"(C++ compiled)");
 	if(G__more(fout,msg)) return(1);
 	break;
+#endif
       case 1:
 	sprintf(msg,"%-20s " ,"(C compiled old 1)");
 	if(G__more(fout,msg)) return(1);
@@ -885,6 +908,10 @@ int start;
 
   /* no such class,struct */
   if(-1==tagnum||G__struct.alltag<=tagnum) return(0); 
+
+#ifndef G__OLDIMPLEMENTATION2014
+      G__class_autoloading(tagnum);
+#endif
 
   G__more(fout,"===========================================================================\n");
   sprintf(msg,"%s ",G__tagtype2string(G__struct.type[tagnum]));
@@ -1842,7 +1869,11 @@ long offset;
     if(G__more(fout,msg)) return(1);
     sprintf(msg,"%s",var->varnamebuf[imon1]);
     if(G__more(fout,msg)) return(1);
-    if(var->varlabel[imon1][1]) {
+    if(var->varlabel[imon1][1] 
+#ifndef G__OLDIMPLEMENTATION2011
+       || var->paran[imon1]
+#endif
+       ) {
       int ixxx;
       for(ixxx=0;ixxx<var->paran[imon1];ixxx++) {
         if(ixxx) {
@@ -1866,7 +1897,11 @@ long offset;
 #endif
 
     if(-1!=offset && 0==precompiled_private && addr) {
-      if(0==var->varlabel[imon1][1]) {
+      if(0==var->varlabel[imon1][1]
+#ifndef G__OLDIMPLEMENTATION2011
+	 && 0==var->paran[imon1]
+#endif
+	 ) {
 	switch(var->type[imon1]) {
 #ifndef G__OLDIMPLEMENTATION904
 	case 'T': 
@@ -2070,6 +2105,24 @@ void *p;
 {
   G__ErrMsgCallback = (G__ErrMsgCallback_t)p;
 }
+
+#ifndef G__OLDIMPLEMENTATION2000
+/**************************************************************************
+* G__mask_errmsg()
+**************************************************************************/
+void G__mask_errmsg(msg)
+char *msg;
+{
+}
+
+/**************************************************************************
+* G__get_errmsgcallback()
+**************************************************************************/
+void* G__get_errmsgcallback()
+{
+  return(G__ErrMsgCallback);
+}
+#endif
 
 #ifndef G__TESTMAIN
 #undef G__fprinterr

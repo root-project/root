@@ -548,7 +548,12 @@ G__value result3;
 
   if(type=='\0') {
     if(strncmp(casttype,"struct",6)==0) {
+#ifndef G__OLDIMPLEMENTATION2017
+      if(isspace(casttype[6])) tagnum=G__defined_tagname(casttype+7,0);
+      else tagnum=G__defined_tagname(casttype+6,0);
+#else
       tagnum=G__defined_tagname(casttype+6,0);
+#endif
 #ifndef G__OLDIMPLEMENTATION1397
       G__castclass(&result3,tagnum,castflag,&type,reftype);
 #else
@@ -556,7 +561,12 @@ G__value result3;
 #endif
     }
     else if(strncmp(casttype,"class",5)==0) {
+#ifndef G__OLDIMPLEMENTATION2017
+      if(isspace(casttype[5])) tagnum=G__defined_tagname(casttype+6,0);
+      else tagnum=G__defined_tagname(casttype+5,0);
+#else
       tagnum=G__defined_tagname(casttype+5,0);
+#endif
 #ifndef G__OLDIMPLEMENTATION1397
       G__castclass(&result3,tagnum,castflag,&type,reftype);
 #else
@@ -564,12 +574,22 @@ G__value result3;
 #endif
     }
     else if(strncmp(casttype,"union",5)==0) {
+#ifndef G__OLDIMPLEMENTATION2017
+      if(isspace(casttype[5])) tagnum=G__defined_tagname(casttype+6,0);
+      else tagnum=G__defined_tagname(casttype+5,0);
+#else
       result3.tagnum=G__defined_tagname(casttype+5,0);
+#endif
       result3.typenum = -1;
       type='u'+castflag;
     }
     else if(strncmp(casttype,"enum",4)==0) {
+#ifndef G__OLDIMPLEMENTATION2017
+      if(isspace(casttype[4])) tagnum=G__defined_tagname(casttype+5,0);
+      else tagnum=G__defined_tagname(casttype+4,0);
+#else
       result3.tagnum=G__defined_tagname(casttype+4,0);
+#endif
       result3.typenum = -1;
 #ifndef G__OLDIMPLEMENTATION934
       type='i'+castflag;
@@ -604,7 +624,24 @@ G__value result3;
       }
       else {
 	tagnum=G__newtype.tagnum[result3.typenum];
+#ifndef G__OLDIMPLEMENTATION2016
+	if(islower(G__newtype.type[result3.typenum])) 
+	  type=G__newtype.type[result3.typenum]+castflag;
+	else {
+	  type=G__newtype.type[result3.typenum];
+	  switch(G__newtype.reftype[result3.typenum]) {
+	  case G__PARANORMAL:
+	  case G__PARAREFERENCE:
+	    reftype = G__PARAP2P;
+	    break;
+	  default:
+	    reftype = G__newtype.reftype[result3.typenum] + 1;
+	    break;
+	  }
+	}
+#else
 	type=G__newtype.type[result3.typenum]+castflag;
+#endif
 	if(tagnum != -1) {
 	  if(
 #ifndef G__OLDIMPLEMENTATION1787

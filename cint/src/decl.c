@@ -3208,6 +3208,26 @@ char *new_name;
     /* set isauto flag and reset varlabel[ig15][1] */
     isauto=1;
     var->varlabel[ig15][1] = -1;
+#ifndef G__OLDIMPLEMENTATION2009
+    if(-1!=var->tagnum && G__LOCALSTATIC==var->statictype[ig15]) {
+      G__ASSERT(G__PINVALID==var->p[ig15]&&G__prerun&&-1==G__func_now);
+    }
+    else {
+      G__ASSERT(G__PINVALID==var->p[ig15] &&
+		G__COMPILEDGLOBAL==var->statictype[ig15]);
+      if(G__static_alloc==1) {
+	if(-1 != G__func_now) {
+	  var->statictype[ig15]=G__LOCALSTATICBODY;
+	}
+	else {
+	  var->statictype[ig15]=G__ifile.filenum;
+	}
+      }
+      else {
+	var->statictype[ig15]=G__AUTO;
+      }
+    }
+#else
     G__ASSERT(G__PINVALID==var->p[ig15] &&
 	      G__COMPILEDGLOBAL==var->statictype[ig15]);
     if(G__static_alloc==1) {
@@ -3221,6 +3241,7 @@ char *new_name;
     else {
       var->statictype[ig15]=G__AUTO;
     }
+#endif
   }
 
   G__ASSERT(G__COMPILEDGLOBAL!=var->statictype[ig15]);

@@ -9,6 +9,7 @@ rm ../../stl/vector.dll
 rm ../../stl/vectorbool.dll 
 rm ../../stl/list.dll 
 rm ../../stl/deque.dll 
+rm ../../stl/pair.dll 
 rm ../../stl/map.dll 
 rm ../../stl/map2.dll 
 rm ../../stl/set.dll 
@@ -47,6 +48,12 @@ mv list.dll ../../stl/list.dll
 makecint -mk Makedeque -dl deque.dll $ALGO -H dqu.h  -cint -Z0
 make -f Makedeque
 mv deque.dll ../../stl/deque.dll
+
+###
+#makecint -mk Makepair -dl pair.dll $ALGO -H Pr.h -cint -Z0
+#make -f Makepair
+#mv pair.dll ../../stl/pair.dll
+###
 
 makecint -mk Makemap -dl map.dll $ALGO -H mp.h  -cint -Z0
 make -f Makemap 

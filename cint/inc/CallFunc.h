@@ -40,7 +40,13 @@ G__CallFunc {
   G__CallFunc() ;
   void Init() ;
 
+#ifndef G__OLDIMPLEMENTATION2019
+  enum MatchMode { ExactMatch=0, ConversionMatch=1 };
+  void SetFunc(G__ClassInfo* cls,const char* fname,const char* args
+	       ,long* poffset,MatchMode mode=ConversionMatch);
+#else
   void SetFunc(G__ClassInfo* cls,const char* fname,const char* args,long* poffset);
+#endif
 #ifndef G__OLDIMPLEMENTATION540
   void SetFuncProto(G__ClassInfo* cls,const char* fname,const char* argtype,long* poffset);
 #endif
