@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.184 2004/06/12 14:56:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.185 2004/06/14 08:26:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4039,7 +4039,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (jj = 0; jj < 3; jj++)   {
                hh[jj] = YY[ii + jj - 1];
             }
-            ZZ[ii] = TH1::SmoothMedian(3 + 2*ik, hh);
+            ZZ[ii] = TMath::MedianSorted(3 + 2*ik, hh);
          }
 
          if  (kk == 1)  {   // first median 3
@@ -4047,12 +4047,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             hh[0] = 3*YY[1] - 2*YY[2];
             hh[1] = YY[0];
             hh[2] = YY[2];
-            ZZ[0] = TH1::SmoothMedian(3, hh);
+            ZZ[0] = TMath::MedianSorted(3, hh);
 // last point
             hh[0] = YY[NN - 2];
             hh[1] = YY[NN - 1];
             hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
-            ZZ[NN - 1] = TH1::SmoothMedian(3, hh);
+            ZZ[NN - 1] = TMath::MedianSorted(3, hh);
          }
          if  (kk == 2)  {   //  median 5
   //  first point remains the same
@@ -4060,12 +4060,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[ii];
             }
-            ZZ[1] = TH1::SmoothMedian(3, hh);
+            ZZ[1] = TMath::MedianSorted(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[NN +nn2 -1 + ii];
             }
-            ZZ[NN - 2] = TH1::SmoothMedian(3, hh);
+            ZZ[NN - 2] = TMath::MedianSorted(3, hh);
             ZZ[NN - 1] = YY[NN - 1];
          }
       }
@@ -4109,7 +4109,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (jj = 0; jj < 3; jj++) {
                hh[jj] = YY[ii + jj - 1];
             }
-            ZZ[ii] = TH1::SmoothMedian(3 + 2*ik, hh);
+            ZZ[ii] = TMath::MedianSorted(3 + 2*ik, hh);
          }
 
          if  (kk == 1)  {   // first median 3
@@ -4117,12 +4117,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             hh[0] = 3*YY[1] - 2*YY[2];
             hh[1] = YY[0];
             hh[2] = YY[2];
-            ZZ[0] = TH1::SmoothMedian(3, hh);
+            ZZ[0] = TMath::MedianSorted(3, hh);
 // last point
             hh[0] = YY[NN - 2];
             hh[1] = YY[NN - 1];
             hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
-            ZZ[NN - 1] = TH1::SmoothMedian(3, hh);
+            ZZ[NN - 1] = TMath::MedianSorted(3, hh);
          }
          if  (kk == 2)  {   //  median 5
 //  first point remains the same
@@ -4130,12 +4130,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[ii];
             }
-            ZZ[1] = TH1::SmoothMedian(3, hh);
+            ZZ[1] = TMath::MedianSorted(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[NN - 3 + ii];
             }
-            ZZ[NN - 2] = TH1::SmoothMedian(3, hh);
+            ZZ[NN - 2] = TMath::MedianSorted(3, hh);
             ZZ[NN - 1] = YY[NN - 1];
          }
       }
@@ -4171,33 +4171,6 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
    delete [] YY;
    delete [] ZZ;
    delete [] RR;
-}
-
-// ------------------------------------------------------------------------
-Double_t  TH1::SmoothMedian(Int_t n, Double_t *a)
-{
-// return the median of a vector a in monotonic order with length n
-// where median is a number which divides sequence of n numbers
-// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
-// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
-
-  Int_t in, imin, imax;
-  Double_t  xm;
-
-  if  (n%2 == 0)  in = n / 2;
-  else            in = n / 2 + 1;
-
-  // find array element with maximum content
-  imax = TMath::LocMax(n,a);
-  xm = a[imax];
-
-  while (in < n) {
-     imin = TMath::LocMin(n,a);  // find array element with minimum content
-     a[imin] = xm;
-     in++;
-  }
-  imin = TMath::LocMin(n,a);
-  return a[imin];
 }
 
 

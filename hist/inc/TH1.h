@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.54 2004/02/27 04:59:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.55 2004/05/26 11:30:28 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -298,7 +298,6 @@ public:
     virtual void     SetZTitle(const char *title) {fZaxis.SetTitle(title);}
     virtual void     Smooth(Int_t ntimes=1); // *MENU*
     static  void     SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes=1);
-    static Double_t  SmoothMedian(Int_t n, Double_t *a);
     static  void     StatOverflows(Bool_t flag=kTRUE);
     virtual void     Sumw2();
     void             UseCurrentStyle();
