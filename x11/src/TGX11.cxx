@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.11 2001/05/31 15:42:38 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.12 2001/06/22 16:10:23 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1899,16 +1899,13 @@ void  TGX11::SetColor(GC gc, int ci)
 {
    // Set the foreground color in GC.
 
+   TColor *color = gROOT->GetColor(ci);
+   if (color)
+      SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
+   else
+      Warning("SetColor", "color with index %d not defined", ci);
+
    XColor_t &col = GetColor(ci);
-
-   if (!col.defined) {
-      TColor *color = gROOT->GetColor(ci);
-      if (color)
-         SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
-      else
-         Warning("SetColor", "color with index %d not defined", ci);
-   }
-
    if (fColormap && !col.defined) {
       col = GetColor(0);
    } else if (!fColormap && (ci < 0 || ci > 1)) {
@@ -2678,7 +2675,6 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
    // cindex     : color index
    // r,g,b      : red, green, blue intensities between 0.0 and 1.0
 
-
    if (fColormap) {
       XColor xcol;
       xcol.red   = (UShort_t)(r * kBIGGEST_RGB_VALUE);
@@ -2687,6 +2683,10 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
       xcol.flags = DoRed || DoGreen || DoBlue;
       XColor_t &col = GetColor(cindex);
       if (col.defined) {
+         // if color is already defined with same rgb just return
+         if (col.red  == xcol.red && col.green == xcol.green &&
+             col.blue == xcol.blue)
+            return;
          col.defined = kFALSE;
          if (fRedDiv == -1)
             XFreeColors(fDisplay, fColormap, &col.pixel, 1, 0);
