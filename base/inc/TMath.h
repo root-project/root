@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.39 2004/04/29 07:52:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.40 2004/04/29 08:12:36 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -472,6 +472,8 @@ extern "C" {
    extern double pow(double, double);
    extern double log(double);
    extern double log10(double);
+   extern double ceil(double);
+   extern double floor(double);
 #ifndef R__WIN32
 #   if !defined(finite)
        extern int finite(double);
