@@ -868,6 +868,9 @@ struct G__filetable {
 #ifndef G__OLDIMPLEMENTATION1756
   int parent_tagnum;
 #endif
+#ifndef G__OLDIMPLEMENTATION1908
+  int slindex;
+#endif
 };
 
 /**************************************************************************

@@ -5,7 +5,7 @@
  * CINT header file G__ci.h
  ************************************************************************
  * Description:
- *  C/C++ interpreter parser header file
+ *  C/C++ interpreter header file
  ************************************************************************
  * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150101
-#define G__CINTVERSIONSTR  "5.15.101, Sep 1 2003"
+#define G__CINTVERSION      50150102
+#define G__CINTVERSIONSTR  "5.15.102, Sep 6 2003"
 
 
 /**********************************************************************
@@ -316,7 +316,7 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
 #define G__DLLIMPORT
 #endif
 
-#if (defined(G__BORLAND)||defined(G__VISUAL)||defined(G__CYGWIN)) && defined(G__CINTBODY)
+#if (defined(G__BORLAND)||defined(G__VISUAL)||defined(G__CYGWIN)) && defined(G__CINTBODY) && !defined(__CINT__)
 #define G__EXPORT __declspec(dllexport)
 #else
 #define G__EXPORT
@@ -983,6 +983,20 @@ struct G__bytecodefunc {
 #define G__BYTECODE_FAILURE   2
 #define G__BYTECODE_SUCCESS   3
 #define G__BYTECODE_ANALYSIS  4 /* ON1164 */
+
+/**************************************************************************
+ *                                                      1
+ *                               2            2          
+ *                        proto   interpreted   bytecode  compiled
+ * fpos_t pos;            hdrpos  src_fpos      src_fpos  ??
+ * void* p;            2  NULL    src_fp        src_fp    ifmethod
+ * int line_number;       -1      line          line      -1
+ * short filenum;      1  fnum    fnum          fnum      -1
+ * ushort size;           0       size          size      ??
+ * void*  tp2f;           fname   fname         bytecode  (*p2f)|ifmethod
+ * bcf* bytecode;      2  NULL    NULL          bytecode  NULL
+ * int bytecodestatus;    NOTYET  NOTYET|FAIL   SUCCESS   ??
+ **************************************************************************/
 
 struct G__funcentry {
   /* file position and pointer for restoring start point */
@@ -1666,7 +1680,7 @@ typedef struct {
 } G__va_arg_buf;
 
 
-#if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
+#if (defined(__linux)&&defined(__i386))||defined(_WIN32)||defined(G__CYGWIN)
 /**********************************************
  * Intel architecture, aligns in multiple of 4 
  *    |1111|22  |3   |44444444|55555555555555  |

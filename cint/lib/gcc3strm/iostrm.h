@@ -171,7 +171,18 @@ class fpos {
   fpos();
   fpos(const fpos&);
   fpos(long);
+  operator long() const;
+  fpos operator+(long a);
+  fpos operator-(long a);
+  bool operator==(const fpos& a);
+  bool operator!=(const fpos& a);
+  //bool operator>(const fpos& a);
+  //friend bool operator<(const fpos& a,const fpos& b);
+  //friend bool operator>(const fpos& a,const fpos& b);
+  //friend bool operator<=(const fpos& a,const fpos& b);
+  //friend bool operator<=(const fpos& a,const fpos& b);
 };
+
 typedef fpos<mbstate_t> 		streampos;
 
 #ifdef G__THIS_DOES_NOT_WORK_WITH_CYGWIN_GCC3

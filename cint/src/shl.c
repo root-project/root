@@ -888,7 +888,11 @@ char *shlfile;
 
   if(G__allsl==G__MAX_SL) {
     G__shl_load_error(shlfile ,"Too many DLL");
+#ifndef G__OLDIMPLEMENTATION1908
+    return(-1);
+#else
     return(EXIT_FAILURE);
+#endif
   }
   else ++G__allsl;
 
@@ -921,14 +925,22 @@ char *shlfile;
 #ifndef G__OLDIMPLEMENTATION936
       --G__allsl;
 #endif
+#ifndef G__OLDIMPLEMENTATION1908
+      return(-1);
+#else
       return(EXIT_FAILURE);
+#endif
     }
     else {
       G__shl_load_error(shlfile,"Load Error");
 #ifndef G__OLDIMPLEMENTATION936
       --G__allsl;
 #endif
+#ifndef G__OLDIMPLEMENTATION1908
+      return(-1);
+#else
       return(EXIT_FAILURE);
+#endif
     }
   }
 
@@ -1055,7 +1067,11 @@ char *shlfile;
 #ifndef G__OLDIMPLEMENTATION936
     --G__allsl;
 #endif
+#ifndef G__OLDIMPLEMENTATION1908
+    return(-1);
+#else
     return(EXIT_FAILURE);
+#endif
   }
   if(G__asm_dbg&&0==cintdll) {
     if(G__dispmsg>=G__DISPWARN) {
@@ -1151,7 +1167,11 @@ char *shlfile;
 #endif
 
   strcpy(G__ifile.name,"");
+#ifndef G__OLDIMPLEMENTATION1908
   return(EXIT_SUCCESS);
+#else
+  return(allsl);
+#endif
 }
 #endif
 
@@ -1961,6 +1981,245 @@ int state;
   /* if no names matched , then return NULL */
   return((char *)NULL);
 }
+
+#ifndef G__OLDIMPLEMENTATION1908
+G__SHLHANDLE G__ShlHandle=(G__SHLHANDLE)0;
+
+/**************************************************************************
+ * G__REsetShlHandle()
+ **************************************************************************/
+void G__ResetShlHandle()
+{
+  G__ShlHandle = (G__SHLHANDLE)0;
+}
+
+/**************************************************************************
+ * G__REsetShlHandle()
+ **************************************************************************/
+void* G__GetShlHandle()
+{
+  return((void*)G__ShlHandle);
+}
+
+/**************************************************************************
+ * G__SetShlHandle
+ **************************************************************************/
+void* G__SetShlHandle(filename)
+char *filename;
+{
+  int i,isl;
+  for(i=0;i<G__nfile;i++) {
+    if(0==strcmp(G__srcfile[i].filename,filename)) {
+      isl = G__srcfile[i].slindex;
+      if(-1!=isl) {
+	G__ShlHandle = G__sl_handle[isl];
+	return((void*)G__ShlHandle);
+      }
+      else {
+	return 0;
+      }
+    }
+  }
+  return 0;
+}
+
+/**************************************************************************
+ * G__GccNameMangle
+ **************************************************************************/
+char* G__GccNameMangle(buf,ifunc,ifn)
+char* buf;
+struct G__ifunc_table *ifunc;
+int ifn;
+{
+  char *funcname = ifunc->funcname[ifn];
+  char tmp[4];
+  int i;
+  tmp[1]=0;
+  sprintf(buf,"_Z%d%s",strlen(funcname),funcname);
+
+  for(i=0;i<ifunc->para_nu[ifn];i++) {
+    if(isupper(ifunc->para_type[ifn][i])) strcat(buf,"P");
+    if(G__PARAREFERENCE==ifunc->para_reftype[ifn][i]) strcat(buf,"R");
+    if(G__CONSTVAR&ifunc->para_isconst[ifn][i]) strcat(buf,"K");
+    switch(tolower(ifunc->para_type[ifn][i])) {
+    case 'c':
+    case 's':
+    case 'i':
+    case 'l':
+    case 'f':
+    case 'd':
+      tmp[0] = ifunc->para_type[ifn][i];
+      break;
+    case 'b': tmp[0]='h'; break;
+    case 'r': tmp[0]='t'; break;
+    case 'h': tmp[0]='j'; break;
+    case 'k': tmp[0]='m'; break;
+    case 'y': tmp[0]='v'; break;
+    default:
+      break;
+    }
+    strcat(buf,tmp);
+  }
+  if(0==ifunc->para_nu[ifn]) strcat(buf,"v");
+  return(buf);
+}
+
+/**************************************************************************
+ * G__Vc6TypeMangle
+ * void X, char D, short F, int H, long J, float M, double N, 
+ * unsigned char E, unsigned short G, unsigned int I, unsigned long K
+ * class name  V[name]@@
+ * type * PA, const type* PB, type *const QA, const type* const QB
+ * type& AA, const type& AB, 
+ **************************************************************************/
+char* G__Vc6TypeMangle(type,tagnum,reftype,isconst)
+int type;
+int tagnum;
+int reftype;
+int isconst;
+{
+  static char buf[G__MAXNAME];
+  buf[0] = 0;
+  if(isupper(type)) {
+    if((G__CONSTVAR&isconst) && 
+       (G__PCONSTVAR&isconst) &&
+       (G__PARAREFERENCE!=reftype)) strcat(buf,"QB");
+    else if(0==(G__CONSTVAR&isconst) && 
+	    (G__PCONSTVAR&isconst) &&
+	    (G__PARAREFERENCE!=reftype)) strcat(buf,"QA");
+    else if((G__CONSTVAR&isconst) && 
+	    (0==(G__PCONSTVAR&isconst)) &&
+	    (G__PARAREFERENCE!=reftype)) strcat(buf,"PB");
+    else if((0==(G__CONSTVAR&isconst)) && 
+	    (0==(G__PCONSTVAR&isconst)) &&
+	    (G__PARAREFERENCE!=reftype)) strcat(buf,"PA");
+    else if((G__CONSTVAR&isconst) && 
+	    (0==(G__PCONSTVAR&isconst)) &&
+	    (G__PARAREFERENCE==reftype)) strcat(buf,"AB");
+    else if((0==(G__CONSTVAR&isconst)) && 
+	    (0==(G__PCONSTVAR&isconst)) &&
+	    (G__PARAREFERENCE==reftype)) strcat(buf,"AA");
+    else strcat(buf,"PA");
+  }
+  switch(tolower(type)) {
+  case 'y': strcat(buf,"X"); break;
+  case 'c': strcat(buf,"D"); break;
+  case 's': strcat(buf,"F"); break;
+  case 'i': strcat(buf,"H"); break;
+  case 'l': strcat(buf,"J"); break;
+  case 'f': strcat(buf,"M"); break;
+  case 'd': strcat(buf,"N"); break;
+  case 'b': strcat(buf,"E"); break;
+  case 'r': strcat(buf,"G"); break;
+  case 'h': strcat(buf,"I"); break;
+  case 'k': strcat(buf,"K"); break;
+  case 'u': strcat(buf,"V"); strcat(buf,G__struct.name[tagnum]); 
+    strcat(buf,"@@"); break;
+  case 'e': strcpy(buf,"PAU_iobuf@@"); break;
+  default:
+    break;
+  }
+  return(buf);
+}
+
+/**************************************************************************
+ * G__Vc6NameMangle
+ * ?[fname]@[tagname]@YA[ret][a1][a2]...@Z
+ * ?[fname]@[tagname]@YA[ret]XZ
+ **************************************************************************/
+char* G__Vc6NameMangle(buf,ifunc,ifn)
+char* buf;
+struct G__ifunc_table *ifunc;
+int ifn;
+{
+  char *funcname = ifunc->funcname[ifn];
+  int i;
+
+  /* funcname */
+  sprintf(buf,"?%s@",funcname);
+
+  /* scope */
+  if(-1!=ifunc->tagnum) strcat(buf,G__struct.name[ifunc->tagnum]);
+  strcat(buf,"@YA");
+
+  /* return type */
+  strcat(buf,G__Vc6TypeMangle(ifunc->type[ifn]
+			      ,ifunc->p_tagtable[ifn]
+			      ,ifunc->reftype[ifn]
+			      ,ifunc->isconst[ifn]));
+
+  /* arguments */
+  for(i=0;i<ifunc->para_nu[ifn];i++) {
+    strcat(buf,G__Vc6TypeMangle(ifunc->para_type[ifn][i]
+				,ifunc->para_p_tagtable[ifn][i]
+				,ifunc->para_reftype[ifn][i]
+				,ifunc->para_isconst[ifn][i]));
+  }
+  if(0==ifunc->para_nu[ifn]) strcat(buf,"X");
+  else strcat(buf,"@");
+
+  /* end */
+  strcat(buf,"Z");
+
+  return(buf);
+}
+
+/**************************************************************************
+ * G__FindSymbol
+ **************************************************************************/
+void* G__FindSymbol(ifunc,ifn)
+struct G__ifunc_table *ifunc;
+int ifn;
+{
+  char *funcname=ifunc->funcname[ifn];
+  void *p2f=0;
+  if(G__ShlHandle) {
+    char buf[G__ONELINE];
+
+    // funcname, VC++, GCC, C function
+    p2f = (void*)G__shl_findsym(&G__ShlHandle,funcname,TYPE_PROCEDURE);
+
+    // _funcname,  BC++, C function
+    if(!p2f) {
+      buf[0]='_';
+      strcpy(buf+1,funcname);
+      p2f = (void*)G__shl_findsym(&G__ShlHandle,buf,TYPE_PROCEDURE);
+    }
+
+    // GCC , C++ function
+    if(!p2f) {
+      p2f = (void*)G__shl_findsym(&G__ShlHandle
+				  ,G__GccNameMangle(buf,ifunc,ifn)
+				  ,TYPE_PROCEDURE);
+    }
+
+    // VC++ , C++ function
+    if(!p2f) {
+      p2f = (void*)G__shl_findsym(&G__ShlHandle
+				  ,G__Vc6NameMangle(buf,ifunc,ifn)
+				  ,TYPE_PROCEDURE);
+    }
+  }
+  return(p2f);
+}
+
+/**************************************************************************
+ * G__FindSym
+ **************************************************************************/
+void* G__FindSym(filename,funcname)
+char *filename;
+char *funcname;
+{
+  void *p2f;
+  G__SHLHANDLE store_ShlHandle = G__ShlHandle;
+  if(!G__SetShlHandle(filename)) return 0;
+
+  p2f = (void*)G__shl_findsym(&G__ShlHandle,funcname,TYPE_PROCEDURE);
+
+  G__ShlHandle = store_ShlHandle;
+  return(p2f);
+}
+#endif
 
 /*
  * Local Variables:

@@ -92,6 +92,10 @@ G__MethodInfo {
   char* GetPrototype();
   char* GetMangledName();
 
+#ifndef G__OLDIMPLEMENTATION1908
+  int LoadDLLDirect(const char* filename,const char* funcname);
+#endif
+
  protected:
   long handle;
   long index;

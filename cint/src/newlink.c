@@ -91,7 +91,7 @@ static int G__privateaccess = 0;
 #define G__GENWINDEF
 #endif
 
-#if 0 && (G__CYGWIN>=50)
+#if 0 && (G__CYGWIN>=50) /* DEBUG */
 #define G__GENWINDEF
 #endif
 
@@ -500,10 +500,18 @@ int ifn;
 #ifndef G__OLDIMPLEMENTATION1749
     G__CurrentCall(G__SETMEMFUNCENV, ifunc, &ifn);
 #endif
+#ifndef G__OLDIMPLEMENTATION1908
+#ifdef G__EXCEPTIONWRAPPER
+    G__ExceptionWrapper(cppfunc,result7,(char*)ifunc,libp,ifn);
+#else
+    (*cppfunc)(result7,(char*)ifunc,libp,ifn);
+#endif
+#else
 #ifdef G__EXCEPTIONWRAPPER
     G__ExceptionWrapper(cppfunc,result7,(char*)NULL,libp,0);
 #else
     (*cppfunc)(result7,(char*)NULL,libp,0);
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1749
     G__CurrentCall(G__NOP, 0, 0);

@@ -1326,7 +1326,7 @@ int n;
     else              objsize = G__sizeof(&libp->para[i]);
 
     /* Platform that decrements address */
-#if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
+#if (defined(__linux)&&defined(__i386))||defined(_WIN32)||defined(G__CYGWIN)
     /* nothing */
 #elif defined(__hpux) || defined(__hppa__)
     if(objsize > G__VAARG_PASS_BY_REFERENCE) {
@@ -1351,7 +1351,7 @@ int n;
     G__va_arg_copyvalue(type,(void*)(&pbuf->x.d[j]),&libp->para[i],objsize);
 
     /* Platform that increments address */
-#if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
+#if (defined(__linux)&&defined(__i386))||defined(_WIN32)||defined(G__CYGWIN)
     j += objsize;
     mod = j%G__va_arg_align_size;
     if(mod) j = j-mod+G__va_arg_align_size;
@@ -1483,6 +1483,56 @@ int ifn;
 }
 #endif
 
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1908
+/**************************************************************************
+ * G__DLL_direct_globalfunc
+ **************************************************************************/
+int G__DLL_direct_globalfunc(G__value *result7
+			     ,G__CONST char *funcname
+			     ,struct G__param *libp,int hash) {
+  struct G__ifunc_table *ifunc = (struct G__ifunc_table*)funcname;
+  int ifn=hash;
+
+  int (*itp2f)();
+  double (*dtp2f)();
+  void (*vtp2f)();
+  G__va_arg_buf (*utp2f)();
+
+  G__va_arg_buf G__va_arg_return;
+  G__va_arg_buf G__va_arg_bufobj;
+  G__va_arg_put(&G__va_arg_bufobj,libp,0);
+
+  switch(ifunc->type[ifn]) {
+  case 'd':
+  case 'f':
+    dtp2f = (double (*)())ifunc->pentry[ifn]->tp2f;
+    G__letdouble(result7,ifunc->type[ifn],dtp2f(G__va_arg_bufobj));
+    break;
+  case 'u':
+    utp2f = (G__va_arg_buf (*)())ifunc->pentry[ifn]->tp2f;
+    G__va_arg_return = utp2f(G__va_arg_bufobj);
+    result7->type = 'u';
+    result7->tagnum = ifunc->p_tagtable[ifn];
+    result7->typenum = ifunc->p_typetable[ifn];
+    result7->obj.i = (long)(&G__va_arg_return); /* incorrect! experimental */
+    break;
+  case 'y':
+    vtp2f = (void (*)())ifunc->pentry[ifn]->tp2f;
+    vtp2f(G__va_arg_bufobj);
+    G__setnull(result7);
+    break;
+  default:
+    itp2f = (int(*)())ifunc->pentry[ifn]->tp2f;
+    G__letint(result7,ifunc->type[ifn],itp2f(G__va_arg_bufobj));
+    break;
+  }
+
+  result7->isconst = ifunc->isconst[ifn];
+
+  return 1;
+}
 #endif
 
 

@@ -39,7 +39,9 @@ typedef struct __dirstream DIR;
 struct dirent {
   long d_ino;                /* inode number */
   /* off_t d_off; */         /* offset to this dirent */
+#ifndef G__CYGWIN
   unsigned short d_reclen;   /* length of record */
+#endif
   /* char d_namelen; */      /* length of d_name */
   char d_name[NAME_MAX+1];   /* file name */
 };
@@ -106,7 +108,7 @@ extern int seekdir(DIR *, long);
 #elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNUC)||defined(__GNUC__))
 extern void seekdir( DIR *, off_t );
 
-#elif defined(G__AIX)
+#elif defined(G__AIX) || defined(_AIX)
 #ifdef _NO_PROTO
 extern	void seekdir();
 #else /* _NO_PROTO */
@@ -116,12 +118,11 @@ extern void seekdir(DIR *, long);
 #else
 extern void seekdir(DIR* dir,long loc);
 #endif
-
 #if !defined(G__SUN) && !defined(__sun)
 extern void rewinddir(DIR *dir);
 #endif
 
-#if defined(G__AIX)
+#if defined(G__AIX) || defined(_AIX)
 #ifdef _NO_PROTO
 extern	int closedir();
 #else /* _NO_PROTO */
@@ -248,7 +249,7 @@ int S_ISSOCK(mode_t m);
 #endif
 extern int fchown(int fd,uid_t owner,gid_t group);
 extern int fchdir(int fd);
-#ifndef G__SUN
+#if !defined(G__SUN) && !defined(G__CYGWIN)
 extern char *get_current_dir_name(void);
 extern pid_t getpgid(pid_t pid);
 #endif

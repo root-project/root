@@ -273,6 +273,18 @@ char *cindex;
 #endif
   sindex[len-1]='\0';
   index=G__int(G__getexpr(sindex+1));
+
+#ifndef G__OLDIMPLEMENTATION1903
+  if('u'==result3->type) {
+    struct G__param fpara;
+    fpara.paran=1;
+    G__letint(&fpara.para[0],'i',index);
+    G__parenthesisovldobj(result3,result3,"operator[]"
+			  ,&fpara,G__TRYNORMAL);
+    return;
+  }
+#endif
+
   size = G__sizeof(result3);
 #ifdef G__ASM
   if(G__asm_noverflow) {
@@ -856,7 +868,7 @@ struct G__param* libp;
 /******************************************************************
  * G__rename_templatefunc()
  ******************************************************************/
-void G__rename_templatefunc(funcname,isrealloc)
+char* G__rename_templatefunc(funcname,isrealloc)
 char *funcname;
 int isrealloc;
 {
@@ -910,6 +922,7 @@ int isrealloc;
     }
     strcpy(funcname,funcname2);
   }
+  return(funcname);
 }
 #endif
 
@@ -1205,6 +1218,1056 @@ char* funcname;
   return(result3);
 }
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1902
+/******************************************************************
+* G__value G__getfunction_libp
+*
+*
+******************************************************************/
+G__value G__getfunction_libp(item,funcname,libp,known3,memfunc_flag)
+char* item;
+char* funcname;
+struct G__param *libp;
+int *known3;
+int memfunc_flag;
+{
+  G__value result3;
+  char result7[G__LONGLINE];
+  int ig15,ipara;
+#ifndef G__OLDIMPLEMENTATION809
+  static struct G__param *p2ffpara=(struct G__param*)NULL;
+#endif
+  int hash;
+  int funcmatch;
+  int i,classhash;
+  long store_struct_offset;
+  int store_tagnum;
+  int store_exec_memberfunc;
+  int store_asm_noverflow;
+  int store_memberfunc_tagnum;
+  long store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1741
+  int store_def_tagnum,store_tagdefining;
+#endif
+  int tempstore;
+#ifndef G__OLDIMPLEMENTATION403
+  char *pfparam;
+  struct G__var_array *var;
+#endif
+#ifndef G__OLDIMPLEMENTATION405
+  int nindex=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+  int oprp=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1570
+  int store_cp_asm=0;
+#endif
+
+  store_struct_offset = G__store_struct_offset;
+  store_tagnum = G__tagnum;
+  store_exec_memberfunc = G__exec_memberfunc;
+  store_asm_noverflow = G__asm_noverflow;
+  store_memberfunc_tagnum = G__memberfunc_tagnum;
+  store_memberfunc_struct_offset=G__memberfunc_struct_offset;
+
+  *known3 = 1; /* temporary solution */
+  
+  /* scope operator ::f() , A::B::f()
+   * note, 
+   *    G__exec_memberfunc restored at return memfunc_flag is local, 
+   *   there should be no problem modifying these variables.
+   *    store_struct_offset and store_tagnum are only used in the
+   *   explicit type conversion section.  It is OK to use them here
+   *   independently.
+   */
+  store_struct_offset=G__store_struct_offset;
+  store_tagnum=G__tagnum;
+#ifndef G__OLDIMPLEMENTATION1741
+  store_def_tagnum = G__def_tagnum;
+  store_tagdefining = G__tagdefining;
+#endif
+  switch(G__scopeoperator(funcname,&hash,&G__store_struct_offset,&G__tagnum)){
+  case G__GLOBALSCOPE: /* global scope */
+    G__exec_memberfunc=0;
+    memfunc_flag=G__TRYNORMAL;
+#ifndef G__OLDIMPLEMENTATION1741
+    G__def_tagnum = -1;
+    G__tagdefining = -1;
+#endif
+    break;
+  case G__CLASSSCOPE: /* class scope */
+#ifndef G__OLDIMPLEMENTATION1101
+    memfunc_flag=G__CALLSTATICMEMFUNC;
+#else
+    memfunc_flag=G__CALLMEMFUNC;
+#endif
+#ifndef G__OLDIMPLEMENTATION1741
+    /* This looks very risky */
+    G__def_tagnum = -1;
+    G__tagdefining = -1;
+    G__exec_memberfunc=1;
+    G__memberfunc_tagnum = G__tagnum;
+#endif
+    break;
+  }
+  
+#ifdef G__DUMPFILE
+  /***************************************************************
+   * dump that a function is called 
+   ***************************************************************/
+  if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+    for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+    fprintf(G__dumpfile,"%s(",funcname);
+    for(ipara=1;ipara<= libp->paran;ipara++) {
+      if(ipara!=1) fprintf(G__dumpfile,",");
+      G__valuemonitor(libp->para[ipara-1],result7);
+      fprintf(G__dumpfile,"%s",result7);
+    }
+    fprintf(G__dumpfile,");/*%s %d,%lx %lx*/\n" 
+	    ,G__ifile.name,G__ifile.line_number
+	    ,store_struct_offset,G__store_struct_offset);
+    G__dumpspace += 3;
+    
+  }
+#endif
+
+  /********************************************************************
+   * Begin Loop to resolve overloaded function
+   ********************************************************************/
+  for(funcmatch=G__EXACT;funcmatch<=G__USERCONV;funcmatch++) {
+    
+    /***************************************************************
+     * search for interpreted member function
+     * if(G__exec_memberfunc)     ==>  memfunc();
+     * G__TRYNORMAL!=memfunc_flag ==>  a.memfunc();
+     ***************************************************************/
+    if(G__exec_memberfunc || G__TRYNORMAL!=memfunc_flag) {
+#ifndef G__OLDIMPLEMENTATION589
+      int local_tagnum;
+      if(G__exec_memberfunc&&-1==G__tagnum)
+	local_tagnum = G__memberfunc_tagnum;
+      else 
+	local_tagnum = G__tagnum;
+      if(-1!=G__tagnum) G__incsetup_memfunc(G__tagnum);
+#else
+      G__ASSERT(0<=G__tagnum);
+      G__incsetup_memfunc(G__tagnum);
+#endif
+#ifndef G__OLDIMPLEMENTATION589
+      if(-1!=local_tagnum&& G__interpret_func(&result3,funcname,libp,hash
+			   ,G__struct.memfunc[local_tagnum]
+			   ,funcmatch,memfunc_flag)==1 ) {
+#else
+      if(G__interpret_func(&result3,funcname,libp,hash
+			   ,G__struct.memfunc[G__tagnum]
+			   ,funcmatch,memfunc_flag)==1 ) {
+#endif
+#ifdef G__DUMPFILE
+	if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+	  G__dumpspace -= 3;
+	  for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+	  G__valuemonitor(result3,result7);
+	  fprintf(G__dumpfile,"/* return(inp) %s.%s()=%s*/\n"
+		  ,G__struct.name[G__tagnum],funcname,result7);
+	}
+#endif
+#ifndef G__OLDIMPLEMENTATION517
+	if(G__store_struct_offset!=store_struct_offset) 
+	  G__gen_addstros(store_struct_offset-G__store_struct_offset);
+#endif
+	G__store_struct_offset = store_struct_offset;
+	G__tagnum = store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1741
+	G__def_tagnum = store_def_tagnum;
+	G__tagdefining = store_tagdefining;
+#endif
+	G__exec_memberfunc = store_exec_memberfunc;
+	G__memberfunc_tagnum=store_memberfunc_tagnum;
+	G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+	G__setclassdebugcond(G__memberfunc_tagnum,0);
+#ifndef G__OLDIMPLEMENTATION405
+	if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	   (isupper(result3.type)||'u'==result3.type)
+#else
+	   isupper(result3.type)
+#endif
+	   ) {
+	  G__getindexedvalue(&result3,libp->parameter[nindex]);
+	}
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+	if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+	return(result3);
+      }
+#define G__OLDIMPLEMENTATION1159
+#ifndef G__OLDIMPLEMENTATION1159
+      /* STILL WORKING , DO NOT RELEASE THIS */
+      /******************************************************************
+       * Search template function
+       ******************************************************************/
+      if((G__EXACT==funcmatch||G__USERCONV==funcmatch)) {
+        int storeX_exec_memberfunc=G__exec_memberfunc;
+        int storeX_memberfunc_tagnum=G__memberfunc_tagnum;
+        G__exec_memberfunc = 1;
+        G__memberfunc_tagnum = local_tagnum;
+	if(G__templatefunc(&result3,funcname,libp,hash,funcmatch)==1){
+#ifdef G__DUMPFILE
+          if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+	    G__dumpspace -= 3;
+	    for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+            G__valuemonitor(result3,result7);
+	    fprintf(G__dumpfile,"/* return(lib) %s()=%s */\n"
+                    ,funcname,result7);
+          }
+#endif
+      
+          G__exec_memberfunc = store_exec_memberfunc;
+          G__memberfunc_tagnum=store_memberfunc_tagnum;
+          G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1515
+	  if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+          return(result3);
+        }
+        G__exec_memberfunc=storeX_exec_memberfunc;
+        G__memberfunc_tagnum=storeX_memberfunc_tagnum;
+      }
+#endif
+    }
+    
+    
+    /***************************************************************
+     * If memberfunction is called explicitly by clarifying scope
+     * don't examine global function and exit from G__getfunction().
+     * There are 2 cases                   G__exec_memberfunc
+     *   obj.memfunc();                            1
+     *   X::memfunc();                             1
+     *    X();              constructor            2
+     *   ~X();              destructor             2
+     * If G__exec_memberfunc==2, don't display error message.
+     ***************************************************************/
+    /* If searching only member function */
+    if(memfunc_flag
+#ifndef G__OLDIMPLEMENTATION1104
+       &&(G__store_struct_offset||G__CALLSTATICMEMFUNC!=memfunc_flag)
+#endif
+       ) {
+      
+      G__exec_memberfunc = store_exec_memberfunc;
+      G__memberfunc_tagnum=store_memberfunc_tagnum;
+      G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+      
+      /* If the last resolution of overloading failed */
+      if(funcmatch==G__USERCONV) {
+	
+	if(G__TRYDESTRUCTOR==memfunc_flag) {
+	  /* destructor for base calss and class members */
+#ifdef G__ASM
+#ifdef G__SECURITY
+	  store_asm_noverflow = G__asm_noverflow;
+	  if(G__security&G__SECURE_GARBAGECOLLECTION) G__abortbytecode();
+#endif
+#endif
+#ifdef G__VIRTUALBASE
+	  if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) G__basedestructor();
+#else
+	  G__basedestructor();
+#endif
+#ifdef G__ASM
+#ifdef G__SECURITY
+	  G__asm_noverflow = store_asm_noverflow;
+#endif
+#endif
+	}
+	else {
+	  switch(memfunc_flag) {
+	  case G__CALLCONSTRUCTOR:
+	  case G__TRYCONSTRUCTOR:
+#ifndef G__OLDIMPLEMENTATION1250
+	  case G__TRYIMPLICITCONSTRUCTOR:
+#endif
+	    /* constructor for base class and class members default 
+	     * constructor only */
+#ifdef G__VIRTUALBASE
+	    if(G__CPPLINK!=G__struct.iscpplink[G__tagnum])
+	      G__baseconstructor(0 ,(struct G__baseparam *)NULL);
+#else
+	    G__baseconstructor(0 ,(struct G__baseparam *)NULL);
+#endif
+	  }
+	}
+	G__exec_memberfunc = store_exec_memberfunc;
+	G__memberfunc_tagnum=store_memberfunc_tagnum;
+	G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+	
+	
+	*known3=0;
+	switch(memfunc_flag) {
+	case G__CALLMEMFUNC:
+	  if(G__parenthesisovld(&result3,funcname,libp,G__CALLMEMFUNC)) {
+	    *known3=1;
+#ifndef G__OLDIMPLEMENTATION517
+	    if(G__store_struct_offset!=store_struct_offset) 
+	      G__gen_addstros(store_struct_offset-G__store_struct_offset);
+#endif
+	    G__store_struct_offset = store_struct_offset;
+	    G__tagnum = store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1741
+	    G__def_tagnum = store_def_tagnum;
+	    G__tagdefining = store_tagdefining;
+#endif
+#ifndef G__OLDIMPLEMENTATION405
+	    if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	       (isupper(result3.type)||'u'==result3.type)
+#else
+	       isupper(result3.type)
+#endif
+	       ) {
+	      G__getindexedvalue(&result3,libp->parameter[nindex]);
+	    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+	    if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+	    return(result3);
+	  }
+#ifndef G__OLDIMPLEMENTATION733
+	  if('~'==funcname[0]) {
+	    *known3=1;
+	    return(G__null);
+	  }
+#endif
+#ifndef G__OLDIMPLEMENTATION1729
+	  /******************************************************************
+	   * Search template function
+	   ******************************************************************/
+	  G__exec_memberfunc = 1;
+	  G__memberfunc_tagnum=G__tagnum;
+	  G__memberfunc_struct_offset=G__store_struct_offset;
+	  if((G__EXACT==funcmatch||G__USERCONV==funcmatch)&&
+	     G__templatefunc(&result3,funcname,libp,hash,funcmatch)==1){
+	    
+#ifdef G__DUMPFILE
+	    if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+	      G__dumpspace -= 3;
+	      for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+	      G__valuemonitor(result3,result7);
+	      fprintf(G__dumpfile ,"/* return(lib) %s()=%s */\n"
+		      ,funcname,result7);
+	    }
+#endif
+	    G__exec_memberfunc = store_exec_memberfunc;
+	    G__memberfunc_tagnum=store_memberfunc_tagnum;
+	    G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+	    /* don't know why if(oprp) is needed, copied from line 2111 */
+	    if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+	    else *known3=1;
+	    return(result3);
+	  }
+	  G__exec_memberfunc = store_exec_memberfunc;
+	  G__memberfunc_tagnum=store_memberfunc_tagnum;
+	  G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#endif /* 1729 */
+	case G__CALLCONSTRUCTOR:
+#ifndef G__OLDIMPLEMENTATION1376
+	  if(G__NOLINK > G__globalcomp) break;
+#endif
+#ifndef G__OLDIMPLEMENTATION1505
+	  if(!G__no_exec_compile || G__asm_noverflow) {
+#endif
+#ifndef G__OLDIMPLEMENTATION1185
+#ifndef G__OLDIMPLEMENTATION1775
+	    if (0==G__const_noerror) 
+	      G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
+			   ,G__struct.name[G__tagnum],item);
+#else
+	    G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
+			 ,G__struct.name[G__tagnum],item);
+#endif
+#else
+	    G__fprinterr(G__serr, "Error: Can't call %s::%s() in current scope"
+			 ,G__struct.name[G__tagnum],funcname);
+#endif
+	    G__genericerror((char*)NULL);
+#ifndef G__OLDIMPLEMENTATION1505
+	  }
+#endif
+	  store_exec_memberfunc=G__exec_memberfunc;
+	  G__exec_memberfunc=1;
+#ifndef G__OLDIMPLEMENTATION1103
+	  if(0==G__const_noerror
+#ifndef G__OLDIMPLEMENTATION1505
+	     && (!G__no_exec_compile || G__asm_noverflow)
+#endif
+	     ) {
+#endif
+	    G__fprinterr(G__serr,"Possible candidates are...\n");
+#ifndef G__OLDIMPLEMENTATION1079
+	    {
+	      char itemtmp[G__LONGLINE];
+	      sprintf(itemtmp,"%s::%s",G__struct.name[G__tagnum],funcname);
+	      G__display_proto(G__serr,itemtmp);
+	    }
+#else
+	    G__listfunc(G__serr,G__PUBLIC_PROTECTED_PRIVATE,funcname
+		      ,G__struct.memfunc[G__tagnum]);
+#endif
+#ifndef G__OLDIMPLEMENTATION1103
+	  }
+#endif
+	  G__exec_memberfunc=store_exec_memberfunc;
+	}
+#ifdef G__DUMPFILE
+	if(G__dumpfile!=NULL && 0==G__no_exec_compile) G__dumpspace -= 3;
+#endif
+	
+#ifndef G__OLDIMPLEMENTATION517
+	if(G__store_struct_offset!=store_struct_offset) 
+	  G__gen_addstros(store_struct_offset-G__store_struct_offset);
+#endif
+	G__store_struct_offset = store_struct_offset;
+	G__tagnum = store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1741
+	G__def_tagnum = store_def_tagnum;
+	G__tagdefining = store_tagdefining;
+#endif
+	if(libp->paran && 'u'==libp->para[0].type&&
+#ifndef G__OLDIMPLEMENTATION1250
+	   (G__TRYCONSTRUCTOR==memfunc_flag||
+	    G__TRYIMPLICITCONSTRUCTOR==memfunc_flag)
+#else
+	   G__TRYCONSTRUCTOR==memfunc_flag
+#endif
+	   ) {
+	  /* in case of copy constructor not found */
+	  return(libp->para[0]);
+	}
+	else {
+	  return(G__null);
+	}
+      }
+      /* ELSE next level overloaded function resolution */
+      continue;
+    }
+    
+    
+    
+    /***************************************************************
+     * reset G__exec_memberfunc for global function.
+     * Original value(store_exec_memberfunc) is restored when exit 
+     * from this function
+     ***************************************************************/
+    tempstore = G__exec_memberfunc;
+    G__exec_memberfunc = 0;
+    
+    
+    
+    /***************************************************************
+     * search for interpreted global function
+     *
+     ***************************************************************/
+    if( G__interpret_func(&result3,funcname,libp,hash,G__p_ifunc
+			  ,funcmatch,G__TRYNORMAL)==1 ) {
+#ifdef G__DUMPFILE
+      if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+	G__dumpspace -= 3;
+	for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+	G__valuemonitor(result3,result7);
+	fprintf(G__dumpfile ,"/* return(inp) %s()=%s*/\n" ,funcname,result7);
+      }
+#endif
+      
+      G__exec_memberfunc = store_exec_memberfunc;
+      G__memberfunc_tagnum=store_memberfunc_tagnum;
+      G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+      G__setclassdebugcond(G__memberfunc_tagnum,0);
+#ifndef G__OLDIMPLEMENTATION405
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
+	G__getindexedvalue(&result3,libp->parameter[nindex]);
+      }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+      return(result3);
+    }
+
+    G__exec_memberfunc = tempstore;
+    
+    /* there is no function overload resolution after this point,
+     * thus, if not found in G__EXACT trial, there is no chance to
+     * find matched function in consequitive search
+     */
+    if(G__USERCONV==funcmatch) goto templatefunc;
+    if(G__EXACT!=funcmatch) continue;
+    
+    
+    
+    /***************************************************************
+     * search for compiled(archived) function
+     *
+     ***************************************************************/
+    if( G__compiled_func(&result3,funcname,libp,hash)==1 ) {
+      
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+	/****************************************
+	 * LD_FUNC (compiled)
+	 ****************************************/
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,
+			       "%3x: LD_FUNC compiled %s paran=%d\n"
+			       ,G__asm_cp,funcname,libp->paran);
+#endif
+	G__asm_inst[G__asm_cp]=G__LD_FUNC;
+	G__asm_inst[G__asm_cp+1] = (long)(&G__asm_name[G__asm_name_p]);
+	G__asm_inst[G__asm_cp+2]=hash;
+	G__asm_inst[G__asm_cp+3]=libp->paran;
+	G__asm_inst[G__asm_cp+4]=(long)G__compiled_func;
+	if(G__asm_name_p+strlen(funcname)+1<G__ASM_FUNCNAMEBUF) {
+	  strcpy(G__asm_name+G__asm_name_p,funcname);
+	  G__asm_name_p += strlen(funcname)+1;
+	  G__inc_cp_asm(5,0);
+	}
+	else {
+	  G__abortbytecode();
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) {
+	    G__fprinterr(G__serr,"COMPILE ABORT function name buffer overflow");
+	    G__printlinenum();
+	  }
+#endif
+	}
+      }
+#endif /* G__ASM */
+      
+#ifdef G__DUMPFILE
+      if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+	G__dumpspace -= 3;
+	for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+	G__valuemonitor(result3,result7);
+	fprintf(G__dumpfile ,"/* return(cmp) %s()=%s */\n" ,funcname,result7);
+      }
+#endif
+      
+      G__exec_memberfunc = store_exec_memberfunc;
+      G__memberfunc_tagnum=store_memberfunc_tagnum;
+      G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION405
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
+	G__getindexedvalue(&result3,libp->parameter[nindex]);
+      }
+#endif
+      return(result3);
+    }
+    
+    
+    /***************************************************************
+     * search for library function which are included in G__ci.c
+     *
+     ***************************************************************/
+    if( G__library_func(&result3,funcname,libp,hash)==1 ) {
+#ifndef G__OLDIMPLEMENTATION1595
+      if(G__no_exec_compile) result3.type = 'i';
+#endif
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+	/****************************************
+	 * LD_FUNC (library)
+	 ****************************************/
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,
+			       "%3x: LD_FUNC library %s paran=%d\n"
+			       ,G__asm_cp,funcname,libp->paran);
+#endif
+	G__asm_inst[G__asm_cp]=G__LD_FUNC;
+	G__asm_inst[G__asm_cp+1] = (long)(&G__asm_name[G__asm_name_p]);
+	G__asm_inst[G__asm_cp+2]=hash;
+	G__asm_inst[G__asm_cp+3]=libp->paran;
+	G__asm_inst[G__asm_cp+4]=(long)G__library_func;
+	if(G__asm_name_p+strlen(funcname)+1<G__ASM_FUNCNAMEBUF) {
+	  strcpy(G__asm_name+G__asm_name_p,funcname);
+	  G__asm_name_p += strlen(funcname)+1;
+	  G__inc_cp_asm(5,0);
+	}
+	else {
+	  G__abortbytecode();
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) 
+	    G__fprinterr(G__serr,"COMPILE ABORT function name buffer overflow");
+	    G__printlinenum();
+#endif
+	}
+      }
+#endif /* G__ASM */
+      
+#ifdef G__DUMPFILE
+      if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+	G__dumpspace -= 3;
+	for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+	G__valuemonitor(result3,result7);
+	fprintf(G__dumpfile ,"/* return(lib) %s()=%s */\n" ,funcname,result7);
+      }
+#endif
+	    
+      G__exec_memberfunc = store_exec_memberfunc;
+      G__memberfunc_tagnum=store_memberfunc_tagnum;
+      G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION405
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
+	G__getindexedvalue(&result3,libp->parameter[nindex]);
+      }
+#endif
+      return(result3);
+    }
+    
+#ifdef G__TEMPLATEFUNC
+    templatefunc:
+    /******************************************************************
+     * Search template function
+     ******************************************************************/
+    if((G__EXACT==funcmatch||G__USERCONV==funcmatch)&&
+       G__templatefunc(&result3,funcname,libp,hash,funcmatch)==1){
+
+#ifdef G__DUMPFILE
+      if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+	G__dumpspace -= 3;
+	for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+	G__valuemonitor(result3,result7);
+	fprintf(G__dumpfile ,"/* return(lib) %s()=%s */\n" ,funcname,result7);
+      }
+#endif
+      
+      G__exec_memberfunc = store_exec_memberfunc;
+      G__memberfunc_tagnum=store_memberfunc_tagnum;
+      G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#ifndef G__OLDIMPLEMENTATION1729
+      else *known3=1; /* don't know why this was missing */
+#endif
+#endif
+      return(result3);
+    }
+#endif /* G__TEMPLATEFUNC */
+    
+    /******************************************************************
+     * End Loop to resolve overloaded function
+     ******************************************************************/
+    
+    /* next_overload_match:
+       ; */
+    
+  }
+
+  
+  /********************************************************************
+   * Explicit type conversion by searching constructors
+   ********************************************************************/
+  if(G__TRYNORMAL==memfunc_flag
+#ifndef G__OLDIMPLEMENTATION1104
+     ||G__CALLSTATICMEMFUNC==memfunc_flag
+#endif
+     ) {
+#ifndef G__OLDIMPLEMENTATION985
+    int store_var_typeX = G__var_type;
+#endif
+    i=G__defined_typename(funcname);
+#ifndef G__OLDIMPLEMENTATION985
+    G__var_type = store_var_typeX;
+#endif
+    if(-1!=i) {
+      if(-1!=G__newtype.tagnum[i]) {
+	strcpy(funcname,G__struct.name[G__newtype.tagnum[i]]);
+      }
+      else {
+#ifndef G__OLDIMPLEMENTATION1188
+	char ttt[G__ONELINE];
+	result3 = libp->para[0];
+	if(G__fundamental_conversion_operator(G__newtype.type[i],-1 
+					      ,i ,G__newtype.reftype[i],0
+					      ,&result3,ttt)) {
+	  *known3=1;
+#ifndef G__OLDIMPLEMENTATION1515
+	  if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+	  return(result3);
+	}
+#endif
+	strcpy(funcname,G__type2string(G__newtype.type[i]
+				       ,G__newtype.tagnum[i] ,-1
+				       ,G__newtype.reftype[i] ,0));
+      }
+      G__hash(funcname,hash,i);
+    }
+
+    classhash=strlen(funcname);
+    i=0;
+    while(i<G__struct.alltag) {
+      if((G__struct.hash[i]==classhash)&&
+	 (strcmp(G__struct.name[i],funcname)==0)
+#ifdef G__OLDIMPLEMENTATION1386
+#ifndef G__OLDIMPLEMENTATION1332
+	  &&'e'!=G__struct.type[i]
+#endif
+#endif
+	 ) {
+#ifndef G__OLDIMPLEMENTATION1386
+	if('e'==G__struct.type[i] && 
+	   -1!=libp->para[0].tagnum &&
+	   'e'==G__struct.type[libp->para[0].tagnum]) {
+	  return(libp->para[0]);
+	}
+#endif
+	store_struct_offset=G__store_struct_offset;
+	
+	/* questionable part */
+	/* store_exec_memfunc=G__exec_memberfunc; */
+	
+	store_tagnum=G__tagnum;
+	G__tagnum=i;
+	if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) {
+	  G__alloc_tempobject(G__tagnum,-1);
+	  G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#ifndef G__OLDIMPLEMENTATION843
+#ifdef G__ASM
+	  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	    if(G__asm_dbg) {
+	      G__fprinterr(G__serr,"%3x: ALLOCTEMP %d\n",G__asm_cp,G__tagnum);
+	      G__fprinterr(G__serr,"%3x: SETTEMP\n",G__asm_cp);
+	    }
+#endif
+	    G__asm_inst[G__asm_cp]=G__ALLOCTEMP;
+	    G__asm_inst[G__asm_cp+1]=G__tagnum;
+	    G__asm_inst[G__asm_cp+2]=G__SETTEMP;
+	    G__inc_cp_asm(3,0);
+	  }
+#endif
+#endif
+	}
+	else {
+	  G__store_struct_offset= G__PVOID;
+	}
+#ifndef G__OLDIMPLEMENTATION1341
+	G__incsetup_memfunc(G__tagnum);
+#endif
+	for(funcmatch=G__EXACT;funcmatch<=G__USERCONV;funcmatch++) {
+#ifdef G__OLDIMPLEMENTATION1341
+	  G__incsetup_memfunc(G__tagnum);
+#endif
+	  *known3=G__interpret_func(&result3,funcname
+				    ,libp,hash
+				    ,G__struct.memfunc[G__tagnum]
+				    ,funcmatch
+				    ,G__TRYCONSTRUCTOR);
+	  if(*known3) break;
+	}
+	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
+	  G__store_tempobject(result3);
+	  if(G__dispsource) {
+	    G__fprinterr(G__serr,
+		    "!!!Create temp object (%s)0x%lx,%d for %s()\n"
+		    ,G__struct.name[G__tagnum] ,G__p_tempbuf->obj.obj.i
+		    ,G__templevel ,funcname);
+	  }
+#ifdef G__ASM
+	  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: STORETEMP\n",G__asm_cp);
+#endif
+	    G__asm_inst[G__asm_cp]=G__STORETEMP;
+	    G__inc_cp_asm(1,0);
+	  }
+#endif
+	}
+	else {
+	  result3.type='u';
+	  result3.tagnum=G__tagnum;
+	  result3.typenum = -1;
+	  result3.obj.i=G__store_struct_offset;
+	  result3.ref=G__store_struct_offset;
+#ifdef G__OLDIMPLEMENTATION843      /* FOLLOWING PART SHOULD BE REMOVED */
+#ifdef G__ASM                       /* WATCH FOR PROBLEM in stl/vec3.cxx */
+	  /* Loop compilation of explicit conversion not ready yet, 
+	   * mainly because of temporary object handling difficulty */
+	  if(G__asm_noverflow) {
+	    G__abortbytecode();
+	    if(G__asm_dbg) {
+	      G__fprinterr(G__serr,"COMPILE ABORT Explicit conversion");
+	      G__printlinenum();
+	    }
+	  }
+#endif
+#endif
+	}
+	G__tagnum=store_tagnum;
+	
+	/* questionable part */
+	G__exec_memberfunc = store_exec_memberfunc;
+	G__memberfunc_tagnum=store_memberfunc_tagnum;
+	G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+	
+	G__store_struct_offset=store_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1500
+#ifdef G__ASM
+	  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPTEMP -1\n",G__asm_cp);
+#endif
+	    G__asm_inst[G__asm_cp]=G__POPTEMP;
+	    G__asm_inst[G__asm_cp+1] = -1;
+	    G__inc_cp_asm(2,0);
+	  }
+#endif
+#endif
+
+	if(0 == *known3) {
+#ifndef G__OLDIMPLEMENTATION1341
+	  if(-1 != i && libp->paran==1 && -1 != libp->para[0].tagnum) {
+	    long store_struct_offset = G__store_struct_offset;
+	    long store_memberfunc_struct_offset = G__memberfunc_struct_offset;
+	    int store_memberfunc_tagnum = G__memberfunc_tagnum;
+	    int store_exec_memberfunc = G__exec_memberfunc;
+	    store_tagnum = G__tagnum;
+#ifndef G__OLDIMPLEMENTATION1500
+	    G__inc_cp_asm(-5,0); /* cancel ALLOCTEMP, SETTEMP, POPTEMP */
+#else
+	    G__inc_cp_asm(-3,0); /* cancel ALLOCTEMP, SETTEMP */
+#endif
+	    G__pop_tempobject();
+	    G__tagnum = libp->para[0].tagnum;
+	    G__store_struct_offset = libp->para[0].obj.i;
+#ifdef G__ASM
+	    if(G__asm_noverflow) {
+	      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+	      G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+	      G__inc_cp_asm(2,0);
+#ifdef G__ASM_DBG
+	      if(G__asm_dbg) {
+		G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+		G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	      }
+#endif
+	    }
+#endif
+	    sprintf(funcname,"operator %s",G__fulltagname(i,1));
+	    G__hash(funcname,hash,i);
+	    G__incsetup_memfunc(G__tagnum);
+	    libp->paran = 0;
+	    for(funcmatch=G__EXACT;funcmatch<=G__USERCONV;funcmatch++) {
+	      *known3=G__interpret_func(&result3,funcname
+					,libp,hash
+					,G__struct.memfunc[G__tagnum]
+					,funcmatch
+					,G__TRYMEMFUNC);
+	      if(*known3) {
+#ifdef G__ASM
+		if(G__asm_noverflow) {
+		  G__asm_inst[G__asm_cp] = G__POPSTROS;
+		  G__inc_cp_asm(1,0);
+#ifdef G__ASM_DBG
+		  if(G__asm_dbg) 
+		    G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
+#endif
+		}
+#endif
+		break;
+	      }
+	    }
+	    G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+	    G__memberfunc_tagnum = store_memberfunc_tagnum;
+	    G__exec_memberfunc = store_exec_memberfunc;
+	    G__tagnum=store_tagnum;
+	    G__store_struct_offset = store_struct_offset;
+	  }
+#endif /* 1341 */
+#ifndef G__OLDIMPLEMENTATION1554
+	  else if(-1!=i && libp->paran==1) {
+	    G__fprinterr(G__serr,"Error: No matching constructor for explicit conversion %s",item);
+	    G__genericerror((char*)NULL);
+	  }
+#endif
+#ifndef G__OLDIMPLEMENTATION641
+	  /* omitted constructor, return uninitialized object */
+	  *known3 = 1;
+#ifndef G__OLDIMPLEMENTATION1515
+	  if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+	  return(result3);
+#else
+	  G__pop_tempobject();
+#endif
+	}
+	else {
+	  /* Return '*this' as result */
+#ifndef G__OLDIMPLEMENTATION1515
+	  if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+	  return(result3);
+	}
+      }
+      i++;
+    } /* while(i<G__struct.alltag) */
+
+#ifndef G__OLDIMPLEMENTATION571
+    result3.ref=0;
+#endif
+    if(G__explicit_fundamental_typeconv(funcname,classhash,libp,&result3)) {
+      *known3=1;
+      G__exec_memberfunc = store_exec_memberfunc;
+      G__memberfunc_tagnum=store_memberfunc_tagnum;
+      G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+      return(result3);
+    }
+
+  } /* if(G__TRYNORMAL==memfunc_flag) */
+
+  
+  if(G__parenthesisovld(&result3,funcname,libp,G__TRYNORMAL)) {
+    *known3=1;
+#ifndef G__OLDIMPLEMENTATION405
+    if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+       (isupper(result3.type)||'u'==result3.type)
+#else
+       isupper(result3.type)
+#endif
+       ) {
+      G__getindexedvalue(&result3,libp->parameter[nindex]);
+    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1871
+    else if(nindex&&'u'==result3.type) {
+      int len;
+      strcpy(libp->parameter[0],libp->parameter[nindex]+1);
+      len = strlen(libp->parameter[0]);
+      if(len>1) libp->parameter[0][len-1]=0;
+      libp->para[0] = G__getexpr(libp->parameter[0]);
+      libp->paran=1;
+      G__parenthesisovldobj(&result3,&result3,"operator[]"
+			    ,libp,G__TRYNORMAL);
+    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+    if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+    return(result3);
+  }
+
+#ifndef G__OLDIMPLEMENTATION403
+  /********************************************************************
+  * pointer to function described like normal function
+  * int (*p2f)(void);  p2f(); 
+  ********************************************************************/
+  var = G__getvarentry(funcname,hash,&ig15,&G__global,G__p_local);
+  if(var) {
+    sprintf(result7,"*%s",funcname);
+    *known3=0;
+    pfparam=strchr(item,'(');
+#ifndef G__OLDIMPLEMENTATION809
+    p2ffpara = libp;
+#endif
+    result3=G__pointer2func(result7,pfparam,known3);
+#ifndef G__OLDIMPLEMENTATION809
+    p2ffpara=(struct G__param*)NULL;
+#endif
+    if(*known3) {
+      G__exec_memberfunc = store_exec_memberfunc;
+      G__memberfunc_tagnum=store_memberfunc_tagnum;
+      G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION405
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
+	G__getindexedvalue(&result3,libp->parameter[nindex]);
+      }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+      return(result3);
+    }
+  }
+#endif
+  
+  *known3=0;
+  /* bug fix, together with G__OLDIMPLEMENTATION29 */
+#ifdef G__DUMPFILE
+  if(G__dumpfile!=NULL && 0==G__no_exec_compile) G__dumpspace -= 3;
+#endif
+  
+  G__exec_memberfunc = store_exec_memberfunc;
+  G__memberfunc_tagnum=store_memberfunc_tagnum;
+  G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+  
+
+  if(!G__oprovld) {
+#ifndef G__OLDIMPLEMENTATION1570
+    if(G__asm_noverflow && libp->paran) {
+      G__asm_cp=store_cp_asm;
+    }
+    G__asm_clear_mask = 1;
+#endif
+    result3 = G__execfuncmacro(item,known3);
+#ifndef G__OLDIMPLEMENTATION1570
+    G__asm_clear_mask = 0;
+#endif
+    if(*known3) {
+#ifndef G__OLDIMPLEMENTATION405
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
+	G__getindexedvalue(&result3,libp->parameter[nindex]);
+      }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,libp);
+#endif
+      return(result3);
+    }
+  }
+
+  
+  return(G__null);
+  /* return(result3); */
+  
+}
+#endif /* 1902 */
 
 /******************************************************************
 * G__value G__getfunction(item,known3,memfunc_flag)
@@ -1601,6 +2664,16 @@ int memfunc_flag;
 	    return(G__operatorfunction(&result3,item+ig15+2,known3
 				       ,result7,funcname));
 	  }
+#ifndef G__OLDIMPLEMENTATION1902
+	  else {
+	    result3=G__getfunction_libp(item,funcname,&fpara,known3
+					 ,G__TRYNORMAL);
+	    if(*known3) {
+	      return(G__operatorfunction(&result3,item+ig15+2,known3
+					 ,result7,funcname));
+	    }
+	  }
+#endif
 	}
 #endif
       }
@@ -2074,7 +3147,13 @@ int memfunc_flag;
 	G__memberfunc_struct_offset=store_memberfunc_struct_offset;
 	G__setclassdebugcond(G__memberfunc_tagnum,0);
 #ifndef G__OLDIMPLEMENTATION405
-	if(nindex&&isupper(result3.type)) {
+	if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	   (isupper(result3.type)||'u'==result3.type)
+#else
+	   isupper(result3.type)
+#endif
+	   ) {
 	  G__getindexedvalue(&result3,fpara.parameter[nindex]);
 	}
 #endif
@@ -2201,7 +3280,13 @@ int memfunc_flag;
 	    G__tagdefining = store_tagdefining;
 #endif
 #ifndef G__OLDIMPLEMENTATION405
-	    if(nindex&&isupper(result3.type)) {
+	    if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	       (isupper(result3.type)||'u'==result3.type)
+#else
+	       isupper(result3.type)
+#endif
+	       ) {
 	      G__getindexedvalue(&result3,fpara.parameter[nindex]);
 	    }
 #endif
@@ -2361,7 +3446,13 @@ int memfunc_flag;
       G__memberfunc_struct_offset=store_memberfunc_struct_offset;
       G__setclassdebugcond(G__memberfunc_tagnum,0);
 #ifndef G__OLDIMPLEMENTATION405
-      if(nindex&&isupper(result3.type)) {
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
 	G__getindexedvalue(&result3,fpara.parameter[nindex]);
       }
 #endif
@@ -2433,7 +3524,13 @@ int memfunc_flag;
       G__memberfunc_tagnum=store_memberfunc_tagnum;
       G__memberfunc_struct_offset=store_memberfunc_struct_offset;
 #ifndef G__OLDIMPLEMENTATION405
-      if(nindex&&isupper(result3.type)) {
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
 	G__getindexedvalue(&result3,fpara.parameter[nindex]);
       }
 #endif
@@ -2493,7 +3590,13 @@ int memfunc_flag;
       G__memberfunc_tagnum=store_memberfunc_tagnum;
       G__memberfunc_struct_offset=store_memberfunc_struct_offset;
 #ifndef G__OLDIMPLEMENTATION405
-      if(nindex&&isupper(result3.type)) {
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
 	G__getindexedvalue(&result3,fpara.parameter[nindex]);
       }
 #endif
@@ -2809,7 +3912,13 @@ int memfunc_flag;
   if(G__parenthesisovld(&result3,funcname,&fpara,G__TRYNORMAL)) {
     *known3=1;
 #ifndef G__OLDIMPLEMENTATION405
-    if(nindex&&isupper(result3.type)) {
+    if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+       (isupper(result3.type)||'u'==result3.type)
+#else
+       isupper(result3.type)
+#endif
+       ) {
       G__getindexedvalue(&result3,fpara.parameter[nindex]);
     }
 #endif
@@ -2853,7 +3962,13 @@ int memfunc_flag;
       G__memberfunc_tagnum=store_memberfunc_tagnum;
       G__memberfunc_struct_offset=store_memberfunc_struct_offset;
 #ifndef G__OLDIMPLEMENTATION405
-      if(nindex&&isupper(result3.type)) {
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
 	G__getindexedvalue(&result3,fpara.parameter[nindex]);
       }
 #endif
@@ -2889,7 +4004,13 @@ int memfunc_flag;
 #endif
     if(*known3) {
 #ifndef G__OLDIMPLEMENTATION405
-      if(nindex&&isupper(result3.type)) {
+      if(nindex&&
+#ifndef G__OLDIMPLEMENTATION1903
+	 (isupper(result3.type)||'u'==result3.type)
+#else
+	 isupper(result3.type)
+#endif
+	 ) {
 	G__getindexedvalue(&result3,fpara.parameter[nindex]);
       }
 #endif

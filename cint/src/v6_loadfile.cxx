@@ -1844,6 +1844,9 @@ char *filenamein;
 #ifndef G__OLDIMPLEMENTATION1756
     G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
 #endif
+#ifndef G__OLDIMPLEMENTATION1908
+    G__srcfile[fentry].slindex = -1;
+#endif
   }
 
   if(G__debugtrace) {
@@ -1925,7 +1928,11 @@ char *filenamein;
      * This may cause trouble in future */
     fclose(G__srcfile[fentry].fp);
     G__srcfile[fentry].fp=(FILE*)NULL;
+#ifndef G__OLDIMPLEMENTATION1908
+    G__srcfile[fentry].slindex = G__shl_load(G__ifile.name);
+#else
     G__shl_load(G__ifile.name);
+#endif
 #ifndef G__OLDIMPLEMENTATION1207
     if(G__ispermanentsl) {
       G__srcfile[fentry].initsl = G__initpermanentsl;

@@ -926,7 +926,13 @@ char *argv[] ;
 
 #ifdef G__SHAREDLIB
     case 'l': /* dynamic link file, shared library file */
-      if(G__shl_load(optarg)==EXIT_FAILURE) {
+      if(
+#ifndef G__OLDIMPLEMENTATION1908
+	 -1==G__shl_load(optarg)
+#else
+	 G__shl_load(optarg)==EXIT_FAILURE
+#endif
+	 ) {
 	if(G__key!=0) system("key .cint_key -l execute");
 	G__scratch_all();
 	return(EXIT_FAILURE);

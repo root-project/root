@@ -1924,6 +1924,9 @@ G__value *defined;
   char expr[G__LONGLINE],opr[12],arg1[G__LONGLINE],arg2[G__LONGLINE];
   long store_struct_offset; /* used to be int */
   int store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1904
+  int store_isconst;
+#endif
   G__value buffer;
   char *pos;
   int postfixflag=0;
@@ -2275,6 +2278,10 @@ G__value *defined;
       store_tagnum = G__tagnum;
       G__store_struct_offset = defined->obj.i;
       G__tagnum = defined->tagnum; 
+#ifndef G__OLDIMPLEMENTATION1904
+      store_isconst = G__isconst;
+      G__isconst = defined->isconst;
+#endif
       
 #ifndef G__OLDIMPLEMENTATION1427
       buffer = G__getfunction(expr,&ig2,G__TRYBINARYOPR);
@@ -2282,6 +2289,9 @@ G__value *defined;
       buffer = G__getfunction(expr,&ig2,G__TRYMEMFUNC);
 #endif
       
+#ifndef G__OLDIMPLEMENTATION1904
+      G__isconst = store_isconst;
+#endif
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
     }
@@ -2584,6 +2594,10 @@ int flag;
   else {
     result = G__getvariable(funcname,&known,&G__global,G__p_local);
   }
+
+#ifndef G__OLDIMPLEMENTATION1902
+  /* resolve A::staticmethod(1)(2,3) */
+#endif
 
   if(
 #ifndef G__OLDIMPLEMENTATION1876

@@ -1161,7 +1161,7 @@ char **argv;
 #elif (G__CYGWIN>=50)
     fprintf(fp,"$(OBJECT) : $(CINTLIB) $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
     fprintf(fp,"\t$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS) -L$(CINTSYSDIR) -lcint\n");
-#if 0
+#if 0 /* DEBUG */
     fprintf(fp,"\t$(DLLTOOL) --as=$(AS) --dllname $(OBJECT) --def %s.def --output-lib %s.lib\n",G__DLLID,G__DLLID);
 #endif
 

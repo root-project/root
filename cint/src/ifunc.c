@@ -1053,16 +1053,27 @@ char *funcheader;   /* funcheader = 'funcname(' */
   }
   G__p_ifunc->funcname[func_now][strlen(G__p_ifunc->funcname[func_now])-1]
     ='\0';
+
+#ifndef G__OLDIMPLEMENTATION1906
+  /******************************************************
+   * conv<B>(x) -> conv<ns::B>(x)
+   ******************************************************/
+  G__p_ifunc->funcname[func_now] = 
+    G__rename_templatefunc(G__p_ifunc->funcname[func_now],1);
+#endif
+
   G__hash(G__p_ifunc->funcname[func_now],G__p_ifunc->hash[func_now],iin2);
 
   G__p_ifunc->para_name[func_now][0]=(char*)NULL;
 
 
+#ifdef G__OLDIMPLEMENTATION1906
 #ifndef G__OLDIMPLEMENTATION1560
   /******************************************************
    * conv<B>(x) -> conv<ns::B>(x)
    ******************************************************/
   G__rename_templatefunc(G__p_ifunc->funcname[func_now],1);
+#endif
 #endif
 
 
@@ -2137,6 +2148,18 @@ char *funcheader;   /* funcheader = 'funcname(' */
     }
 #endif
   }
+
+#ifndef G__OLDIMPLEMENTATION1908
+  if(G__GetShlHandle()) {
+    void *shlp2f = G__FindSymbol(G__p_ifunc,func_now);
+    if(shlp2f) {
+      G__p_ifunc->pentry[func_now]->tp2f = shlp2f;
+      G__p_ifunc->pentry[func_now]->p = (void*)G__DLL_direct_globalfunc;
+      G__p_ifunc->pentry[func_now]->filenum = -1;
+      G__p_ifunc->pentry[func_now]->line_number = -1;
+    }
+  }
+#endif
 
 #ifdef G__FONS_COMMENT
   if(G__fons_comment && G__def_struct_member) {
@@ -3960,7 +3983,9 @@ int recursive;
 	funclist->p_rate[i] = G__EXACTMATCH;
       }
     }
-    else if('I'==param_type&&'U'==formal_type&&param_tagnum==formal_tagnum&&
+    else if(('I'==param_type||'U'==param_type)&&
+	    ('I'==formal_type||'U'==formal_type)&&
+	    param_tagnum==formal_tagnum&&
 	    -1!=formal_tagnum&&'e'==G__struct.type[formal_tagnum]) {
       funclist->p_rate[i] = G__EXACTMATCH;
     }
@@ -4384,7 +4409,18 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1628
       if(param_isconst!=formal_isconst) funclist->p_rate[i] += G__CVCONVMATCH;
 #endif
+#ifndef G__OLDIMPLEMENTATION1905
+      /*
+      if('u'==param_type && (0!=param_isconst&& 0==formal_isconst)) {
+	funclist->p_rate[i]=G__NOMATCH;
+	funclist->rate = G__NOMATCH;
+      }
+      else */ 
+      if(G__NOMATCH!=funclist->rate)
+	funclist->rate += funclist->p_rate[i];
+#else
       funclist->rate += funclist->p_rate[i];
+#endif
     }
   }
 #ifndef G__OLDIMPLEMENTATION1359
@@ -4422,6 +4458,9 @@ struct G__funclist *pmatch;
   char conv[G__ONELINE],arg1[G__ONELINE],parameter[G__ONELINE];
   long store_struct_offset; /* used to be int */
   int store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1905
+  int store_isconst;
+#endif
   int baseoffset;
   G__value reg;
   int store_oprovld;
@@ -4498,6 +4537,10 @@ struct G__funclist *pmatch;
 	
 	store_tagnum = G__tagnum;
 	G__tagnum = formal_tagnum;
+#ifndef G__OLDIMPLEMENTATION1905
+	store_isconst = G__isconst;
+	G__isconst = formal_isconst;
+#endif
 	
 	/* avoid duplicated argument evaluation in p-code stack */
 	store_oprovld = G__oprovld;
@@ -4651,6 +4694,9 @@ struct G__funclist *pmatch;
 	
 	G__oprovld=store_oprovld;
 	
+#ifndef G__OLDIMPLEMENTATION1905
+	G__isconst = store_isconst;
+#endif
 	G__tagnum = store_tagnum;
 	G__store_struct_offset = store_struct_offset;
 	
@@ -4774,6 +4820,9 @@ struct G__funclist *pmatch;
       else if(-1!=param->tagnum) {
 	long store_struct_offset=G__store_struct_offset;
 	int store_tagnum=G__tagnum;
+#ifndef G__OLDIMPLEMENTATION1905
+	int store_isconst=G__isconst;
+#endif
 	sprintf(conv,"operator %s()"
 		,G__type2string(formal_type,formal_tagnum,-1,0,0));
 	G__store_struct_offset = param->obj.i;
@@ -4816,6 +4865,9 @@ struct G__funclist *pmatch;
 	  G__tagnum=param->tagnum;
 	  reg=G__getfunction(conv,&match,G__TRYMEMFUNC);
 	}
+#endif
+#ifndef G__OLDIMPLEMENTATION1905
+	G__isconst = store_isconst;
 #endif
 	G__tagnum=store_tagnum;
 	G__store_struct_offset=store_struct_offset;
@@ -5488,7 +5540,9 @@ int isrecursive;
   fpara.para[0].typenum = -1;
   fpara.para[0].obj.i = G__store_struct_offset;;
   fpara.para[0].ref = G__store_struct_offset;;
-  fpara.para[0].isconst = 0; /* this is just a temporary fix.  It should be set to the 'constness' of the object */
+#ifndef G__OLDIMPLEMENTATION1904
+  fpara.para[0].isconst = G__isconst; 
+#endif
 
   /* set 2nd to n arguments */
   fpara.paran = libp->paran+1;
@@ -5702,6 +5756,7 @@ int isrecursive;
   }
 #endif
 
+#define G__ASM_DBG2
 #ifdef G__ASM_DBG2
   if(G__dispsource) 
     G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);

@@ -29,7 +29,7 @@
 #else
 #include <iostream.h>
 #endif
-#if !defined(__hpux) && !defined(_MSC_VER)
+#if !defined(__hpux) && !(_MSC_VER<1200)
 namespace std {} using namespace std;
 #endif
 #endif

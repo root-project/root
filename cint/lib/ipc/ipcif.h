@@ -37,7 +37,7 @@
 /* union semun is defined by including <sys/sem.h> */
 #else
 /* according to X/OPEN we have to define it ourselves */
-#if !defined(__FreeBSD__) && !defined(__KCC)
+#if !defined(__FreeBSD__) && !defined(__KCC) && !defined(__sgi)
 union semun {
   int val;                    /* value for SETVAL */
   struct semid_ds *buf;       /* buffer for IPC_STAT, IPC_SET */

@@ -7,7 +7,7 @@
  * Description:
  *  K&R style function prototype
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -602,7 +602,7 @@ char *G__valuemonitor G__P((G__value buf,char *temp));
 char *G__access2string G__P((int caccess));
 char *G__tagtype2string G__P((int tagtype));
 #ifndef G__OLDIMPLEMENTATION1560
-void G__rename_templatefunc G__P((char* funcname,int isrealloc));
+char* G__rename_templatefunc G__P((char* funcname,int isrealloc));
 char *G__fulltypename G__P((int typenum));
 #endif
 char *G__fulltagname G__P((int tagnum,int mask_dollar));
@@ -800,6 +800,16 @@ void G__redirect_off G__P((void));
 
 #ifndef G__OLDIMPLEMENTATION1836
 void G__loadlonglong G__P((int* ptag,int* ptype,int which));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1908
+int G__DLL_direct_globalfunc G__P((G__value *result7
+				   ,G__CONST char *funcname
+				   ,struct G__param *libp,int hash)) ;
+void* G__SetShlHandle G__P((char* filename));
+void G__ResetShlHandle G__P(());
+void* G__FindSymbol G__P((struct G__ifunc_table *ifunc,int ifn));
+void* G__GetShlHandle G__P(());
 #endif
 
 #ifdef __cplusplus

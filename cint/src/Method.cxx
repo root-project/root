@@ -603,6 +603,28 @@ char* G__MethodInfo::GetMangledName()
   return(G__map_cpp_name(GetPrototype()));
 }
 ///////////////////////////////////////////////////////////////////////////
+#ifndef G__OLDIMPLEMENTATION1908
+extern "C" int G__DLL_direct_globalfunc(G__value *result7
+					,G__CONST char *funcname
+					,struct G__param *libp,int hash) ;
+extern "C" void* G__FindSym(const char* filename,const char* funcname);
+int G__MethodInfo::LoadDLLDirect(const char* filename,const char* funcname) 
+{
+  void* p2f;
+  struct G__ifunc_table *ifunc;
+  ifunc = (struct G__ifunc_table*)handle;
+  p2f = G__FindSym(filename,funcname);
+  if(p2f) {
+    ifunc->pentry[index]->tp2f = p2f;
+    ifunc->pentry[index]->p = (void*)G__DLL_direct_globalfunc;
+    ifunc->pentry[index]->filenum = -1;
+    ifunc->pentry[index]->line_number = -1;
+    return 1;
+  }
+  return 0;
+}
+#endif
+///////////////////////////////////////////////////////////////////////////
 
 #ifndef G__OLDIMPLEMENTATION1294
 ///////////////////////////////////////////////////////////////////////////

@@ -738,16 +738,38 @@ int mparen;
   c = G__fgetspace();
   if('"'==c) {
     /* extern "C" {  } */
+#ifndef G__OLDIMPLEMENTATION1908
+    char fname[G__MAXFILENAME];
+    int flag=0;
+    c = G__fgetstream(fname,"\"");
+    store_iscpp=G__iscpp;
+    /* if('{'==c) G__iscpp=0; */
+    if(0==strcmp(fname,"C")) {
+      G__iscpp=0;
+    }
+    else {
+      G__loadfile(fname);
+      G__SetShlHandle(fname);
+      flag=1;
+    }
+    *pspaceflag = -1;
+    *piout=0;
+    c=G__fgetspace();
+#else
     c=G__fignorestream("\"");
     *pspaceflag = -1;
     *piout=0;
     c=G__fgetspace();
     store_iscpp=G__iscpp;
     if('{'==c) G__iscpp=0;
+#endif
     fseek(G__ifile.fp,-1,SEEK_CUR);
     if(G__dispsource) G__disp_mask=1;
     G__exec_statement();
     G__iscpp=store_iscpp;
+#ifndef G__OLDIMPLEMENTATION1908
+    if(flag) G__ResetShlHandle();
+#endif
     return(0);
   }
   else {

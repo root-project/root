@@ -9,12 +9,12 @@ using namespace std;
 #endif
 
 #include <string>
-class G__exception : public exception {
+class G__exception : public std::exception {
   string msg;
   string cname;
  public:
   G__exception() { }
-  G__exception(const G__exception& x) { msg=x.msg; cname=x.cname; }
+  G__exception(const G__exception& x) : std::exception(x) { msg=x.msg; cname=x.cname; }
   G__exception(const char* x,const char* cnm="") : msg(x),cname(cnm) { }
   G__exception(const string& x,const string& cnm="") : msg(x),cname(cnm) { }
   G__exception& operator=(const G__exception& x) 

@@ -1924,6 +1924,9 @@ struct G__Templatearg *def_para;
   temp = (char*) malloc (siz_out + 1);
 
   str_out = (char*) malloc (siz_out + 1);
+#ifndef G__OLDIMPLEMENTATION1907
+  str_out[0] = 0;
+#endif
   iout = 0;
 
   iin = 0;
@@ -1972,7 +1975,7 @@ struct G__Templatearg *def_para;
     int rlen = strlen(reslt);
     if(isconst && strncmp(reslt,"const ",6)==0 &&
        rlen>0 && '*'==reslt[rlen-1]) {
-      strcpy (str_out + iout, reslt+6);
+      strcat (str_out, reslt+6);
       strcat (str_out, " const");
       iout += lreslt;
       isconst=0;
