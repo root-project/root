@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.7 2004/08/10 19:22:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.8 2004/08/10 20:25:22 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TMath.h"
 #endif
 
+struct GLUquadric;
 
 class TGLKernel : public TVirtualGL {
 
@@ -45,7 +46,7 @@ protected:
    Bool_t       fRootLight;     // Whether the "ROOT" light will be used (otherwise OpenGL)
    Bool_t       fTrueColorMode; // Defines the whether the current hardware layer supports the true colors
    EG3D2GLmode  fFaceFlag;      // The current "face" definiton - clockwise/counterclockwise
-
+   GLUquadric * fQuad;
 public:
    TGLKernel(TVirtualGLImp *imp = 0);
    TGLKernel(const char *name);
@@ -106,14 +107,14 @@ public:
    void NewMVGL();
    void NewPRGL();
    void FrustumGL(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t znear, Double_t zfar);
-   void GLLight(EG3D2GLmode name, const Float_t * lig_prop);
+   void GLLight(EG3D2GLmode name, EG3D2GLmode prop, const Float_t * lig_prop);
    void LightModel(EG3D2GLmode name, const Float_t * lig_prop);
    void LightModel(EG3D2GLmode name, Int_t prop);
    void CullFaceGL(EG3D2GLmode);
    void ViewportGL(Int_t x, Int_t y, Int_t width, Int_t height);
    void MaterialGL(EG3D2GLmode face, const Float_t * mat_prop);
    void MaterialGL(EG3D2GLmode face, Float_t mat_prop);
-   void BeginGL();
+   void BeginGL(EG3D2GLmode);
    void EndGL();
    void SetGLVertex(const Double_t * vertex);
    void SetGLNormal(const Double_t * normal);
@@ -124,9 +125,20 @@ public:
    void GLUBeginPolygon(GLUtesselator *);
    void GLUEndPolygon(GLUtesselator *);
    void GLUTessVertex(GLUtesselator *, const Double_t *);
+   //
+   void PaintPolyMarker(const Double_t * vertex, Style_t marker_style, UInt_t size);
+   void DrawSelectionBox(Double_t xmin, Double_t xmax, 
+	                     Double_t ymin, Double_t ymax, 
+						 Double_t zmin, Double_t zmax);
+   void EnterSelectionMode(UInt_t * buff, Int_t size, Event_t *, Int_t * viewport);
+   Int_t ExitSelectionMode();
+   void GLLoadName(UInt_t name);
+   //
    void SetTrueColorMode(Bool_t flag=kTRUE) { fTrueColorMode = flag; }
    Bool_t GetRootLight() {return fRootLight;}
    Bool_t GetTrueColorMode() {return fTrueColorMode;}
+private:
+   void DrawStars(const Double_t * vertex, Style_t marker_style, UInt_t size);
 };
 
 #endif

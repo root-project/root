@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.1 2004/08/09 15:46:53 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.2 2004/08/10 20:25:22 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -40,7 +40,7 @@ public:
    ULong_t CreateContext(Window_t wind);
    void DeleteContext(ULong_t ctx);
    void MakeCurrent(Window_t wind, ULong_t ctx);
-   void SwapLayerBuffers(Window_t wind);
+   void SwapBuffers(Window_t wind);
    void AddRotation(Double_t *rotmatrix, Double_t *extraangles);
    void BeginGLCmd(EG3D2GLmode mode);
    void ClearColor(Int_t color);
@@ -51,14 +51,14 @@ public:
    void NewPRGL();
    void FrustumGL(Double_t xmin, Double_t xmax, Double_t ymin,
                   Double_t ymax, Double_t znear, Double_t zfar);
-   void GLLight(EG3D2GLmode name, const Float_t * lig_prop);
+   void GLLight(EG3D2GLmode name, EG3D2GLmode prop, const Float_t * lig_prop);
    void LightModel(EG3D2GLmode name, const Float_t * lig_prop);
    void LightModel(EG3D2GLmode name, Int_t prop);
    void CullFaceGL(EG3D2GLmode);
    void ViewportGL(Int_t xmin, Int_t ymin, Int_t width, Int_t height);
    void MaterialGL(EG3D2GLmode face, const Float_t * mat_prop);
    void MaterialGL(EG3D2GLmode face, Float_t mat_prop);
-   void BeginGL();
+   void BeginGL(EG3D2GLmode);
    void EndGL();
    void SetGLVertex(const Double_t * vert);
    void SetGLNormal(const Double_t * norm);
@@ -115,6 +115,15 @@ public:
    void SetLineAttr(Color_t color, Int_t width=1);
    void UpdateMatrix(Double_t *translate=0, Double_t *rotate=0, Bool_t isreflection=kFALSE);
    void SetTrueColorMode(Bool_t flag=kTRUE);
+   void PaintPolyMarker(const Double_t * vertices, Style_t marker_style, UInt_t size);
+   void DrawSelectionBox(
+                         Double_t xmin, Double_t xmax, 
+						 Double_t ymin, Double_t ymax,
+						 Double_t zmin, Double_t zmax
+						);
+   void EnterSelectionMode(UInt_t * buff, Int_t size, Event_t *, Int_t * viewport);
+   Int_t ExitSelectionMode();
+   void GLLoadName(UInt_t name);
 
    static TVirtualGL *ProxyObject();
    static TVirtualGL *RealObject();

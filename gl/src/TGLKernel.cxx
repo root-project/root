@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.14 2004/08/10 19:22:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.15 2004/08/10 20:25:22 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -16,7 +16,6 @@
 // The TGLKernel implementation of TVirtualGL class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 #include "TGLKernel.h"
 
 #ifdef WIN32
@@ -42,7 +41,7 @@ GLenum GLCommand[] = { GLConstants(GL_)  };
 
 
 //______________________________________________________________________________
-TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp)
+TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp), fQuad(0)
 {
    // Ctor.
 
@@ -51,7 +50,7 @@ TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp)
 }
 
 //______________________________________________________________________________
-TGLKernel::TGLKernel(const char *name) : TVirtualGL(name)
+TGLKernel::TGLKernel(const char *name) : TVirtualGL(name), fQuad(0)
 {
    // Ctor.
 
@@ -65,6 +64,7 @@ TGLKernel::~TGLKernel()
    // dtor.
 
    gROOT->GetListOfSpecials()->Remove(this);
+   gluDeleteQuadric(fQuad);
 }
 
 //______________________________________________________________________________
@@ -265,7 +265,7 @@ void TGLKernel::RotateGL(Double_t *direction, Int_t mode)
       Double_t y     = direction[2];
       Double_t z     = direction[3];
       RotateGL(angle,x,y,z);
-    } else {
+   } else {
 //*-* Double_t Theta   - polar angle for the axis x`
 //*-* Double_t Phi     - azimutal angle for the axis x`
 //*-* Double_t Psi     - azimutal angle for the axis y`
@@ -1151,11 +1151,11 @@ void TGLKernel::FrustumGL( Double_t xmin, Double_t xmax, Double_t ymin,
 }
 
 //______________________________________________________________________________
-void TGLKernel::GLLight(EG3D2GLmode name, const Float_t * lig_mat)
+void TGLKernel::GLLight(EG3D2GLmode name, EG3D2GLmode prop, const Float_t * lig_mat)
 {
    //
 
-   glLightfv(GLCommand[name], GL_POSITION, lig_mat);
+   glLightfv(GLCommand[name], GLCommand[prop], lig_mat);
 }
 
 //______________________________________________________________________________
@@ -1208,11 +1208,11 @@ void TGLKernel::MaterialGL(EG3D2GLmode face, Float_t mat_prop)
 }
 
 //______________________________________________________________________________
-void TGLKernel::BeginGL()
+void TGLKernel::BeginGL(EG3D2GLmode mode)
 {
    //
 
-   glBegin(GL_POLYGON);
+   glBegin(GLCommand[mode]);
 }
 
 //______________________________________________________________________________
@@ -1313,4 +1313,164 @@ void TGLKernel::NewPRGL()
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
+}
+
+//______________________________________________________________________________
+void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style, UInt_t size)
+{
+   if(!fQuad && (fQuad = gluNewQuadric()))
+   {
+      gluQuadricOrientation(fQuad, GLU_OUTSIDE);
+      gluQuadricDrawStyle(fQuad, GLU_FILL);
+      gluQuadricNormals(fQuad, GLU_FLAT);
+   }
+
+   Int_t stacks = 6, slices = 6;
+   Float_t point_size = 6.f;
+   Double_t top_radius = 5.;
+
+   switch(marker_style) {
+   case 27:
+      stacks = 2, slices = 4;
+   case 4:case 8:case 20:case 24:
+      if(fQuad) { //VC6.0 broken for scope
+         for(UInt_t i = 0; i < size; i += 3) {
+            glPushMatrix();
+            glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
+            gluSphere(fQuad, 5., slices, stacks);
+            glPopMatrix();
+         }
+      }
+      break;
+   case 22:case 26:
+      top_radius = 0.;
+   case 21:case 25:
+      if(fQuad){ //VC6.0 broken for scope
+         for(UInt_t i = 0; i < size; i += 3) {
+            glPushMatrix();
+            glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
+            gluCylinder(fQuad, 5., top_radius, 5., 4, 1);
+            glPopMatrix();
+         }
+      }
+      break;
+   case 23:
+      if(fQuad){//VC6.0 broken for scope
+         for(UInt_t i = 0; i < size; i += 3) {
+            glPushMatrix();
+            glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
+            glRotated(180, 1., 0., 0.);
+            gluCylinder(fQuad, 5., 0., 5., 4, 1);
+            glPopMatrix();
+         }
+      }
+      break;
+   case 3: case 2: case 5:
+      DrawStars(vertices, marker_style, size);
+      break;
+   case 1: case 9: case 10: case 11: default:{
+      glBegin(GL_POINTS);
+      for(UInt_t i = 0; i < size; i += 3)
+         glVertex3dv(vertices + i);
+      glEnd();
+   }
+   break;
+   case 6:
+      point_size = 3.f;
+   case 7:
+      glPointSize(point_size);
+      glBegin(GL_POINTS);
+      for(UInt_t i = 0; i < size; i += 3)
+         glVertex3dv(vertices + i);
+      glEnd();
+      glPointSize(1.f);
+   }
+}
+
+//______________________________________________________________________________
+void TGLKernel::DrawStars(const Double_t * vert, Style_t style, UInt_t size)
+{
+   for(Int_t i = 0; i < (Int_t)size; i += 3) {
+      Double_t x = vert[i], y = vert[i + 1], z = vert[i + 2];
+      glBegin(GL_LINES);
+      if(style == 2 || style == 3){
+         glVertex3d(x - 2., y, z);
+         glVertex3d(x + 2., y, z);
+         glVertex3d(x, y, z - 2.);
+         glVertex3d(x, y, z + 2.);
+         glVertex3d(x, y - 2., z);
+         glVertex3d(x, y + 2., z);
+      }
+      if(style != 2){
+         glVertex3d(x - 1.4, y - 1.4, z - 1.4);
+         glVertex3d(x + 1.4, y + 1.4, z + 1.4);
+         glVertex3d(x - 1.4, y - 1.4, z + 1.4);
+         glVertex3d(x + 1.4, y + 1.4, z - 1.4);
+         glVertex3d(x - 1.4, y + 1.4, z - 1.4);
+         glVertex3d(x + 1.4, y - 1.4, z + 1.4);
+         glVertex3d(x - 1.4, y + 1.4, z + 1.4);
+         glVertex3d(x + 1.4, y - 1.4, z - 1.4);
+      }
+      glEnd();
+   }
+}
+
+//______________________________________________________________________________
+void TGLKernel::DrawSelectionBox(
+ Double_t xmin, Double_t xmax,
+ Double_t ymin, Double_t ymax,
+ Double_t zmin, Double_t zmax
+)
+{
+   glBegin(GL_LINE_LOOP);
+   glVertex3d(xmin, ymin, zmin);
+   glVertex3d(xmin, ymax, zmin);
+   glVertex3d(xmax, ymax, zmin);
+   glVertex3d(xmax, ymin, zmin);
+   glEnd();
+   glBegin(GL_LINE_LOOP);
+   glVertex3d(xmin, ymin, zmax);
+   glVertex3d(xmin, ymax, zmax);
+   glVertex3d(xmax, ymax, zmax);
+   glVertex3d(xmax, ymin, zmax);
+   glEnd();
+   glBegin(GL_LINES);
+   glVertex3d(xmin, ymin, zmin);
+   glVertex3d(xmin, ymin, zmax);
+   glVertex3d(xmin, ymax, zmin);
+   glVertex3d(xmin, ymax, zmax);
+   glVertex3d(xmax, ymax, zmin);
+   glVertex3d(xmax, ymax, zmax);
+   glVertex3d(xmax, ymin, zmin);
+   glVertex3d(xmax, ymin, zmax);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void TGLKernel::EnterSelectionMode(UInt_t * buff, Int_t size, Event_t * event, Int_t * viewport)
+{
+   glGetIntegerv(GL_VIEWPORT, viewport);
+   glSelectBuffer(size, buff);
+   glRenderMode(GL_SELECT);
+   glInitNames();
+   glPushName(0);
+   glMatrixMode(GL_PROJECTION);
+   glPushMatrix();
+   glLoadIdentity();
+   gluPickMatrix(GLdouble(event->fX), GLdouble(viewport[3] - event->fY), 1., 1., viewport);
+}
+
+//______________________________________________________________________________
+Int_t TGLKernel::ExitSelectionMode()
+{
+   glMatrixMode(GL_PROJECTION);
+   glPopMatrix();
+
+   return glRenderMode(GL_RENDER);
+}
+
+//______________________________________________________________________________
+void TGLKernel::GLLoadName(UInt_t name)
+{
+   glLoadName(name);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.5 2004/08/10 14:11:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.6 2004/08/10 19:22:41 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include <utility>
 
 #include <TVirtualViewer3D.h>
+#include <TObjArray.h>
 #include <TGFrame.h>
 #include <TPoint.h>
 #include <TList.h>
@@ -57,6 +58,11 @@ private:
    
    Double_t fFrP[3];
    Double_t fZoom;
+
+   Bool_t fSelectionMode;
+   UInt_t fSelected;
+   UInt_t fNbShapes;
+   TObjArray fGLBoxes;
    
    void CreateViewer();
    void InitGLWindow();
@@ -66,7 +72,7 @@ private:
    void MakeCurrent()const;
    void SwapBuffers()const;
    void Show();
-   void UpdateRange(const class TBuffer3D * buf);
+   TObject *UpdateRange(const class TBuffer3D * buf);
    void BuildGLList()const;
    // final overriders from TGMainFrame
    void CloseWindow();
@@ -88,6 +94,9 @@ public:
    Bool_t HandleContainerMotion(Event_t *ev);
    Bool_t HandleContainerExpose(Event_t *ev);
    void   HandleInput(int, int, int) { }
+
+private:
+   void TestSelection(Event_t *);
 
    ClassDef(TViewerOpenGL, 0)
 };

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.1 2004/08/09 15:46:53 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.2 2004/08/09 22:11:00 rdm Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -36,7 +36,7 @@ public:
    ULong_t  CreateContext(Window_t wind);
    void     DeleteContext(ULong_t ctx);
    void     MakeCurrent(Window_t wind, ULong_t ctx);
-   void     SwapLayerBuffers(Window_t wind);
+   void     SwapBuffers(Window_t wind);
 
    ClassDef(TGWin32GL,0);
 };

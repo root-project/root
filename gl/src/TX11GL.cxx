@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.1 2004/08/09 22:09:15 rdm Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.2 2004/08/10 09:02:12 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -102,7 +102,7 @@ void TX11GL::MakeCurrent(Window_t wind, ULong_t ctx)
 }
 
 //______________________________________________________________________________
-void TX11GL::SwapLayerBuffers(Window_t wind)
+void TX11GL::SwapBuffers(Window_t wind)
 {
    glXSwapBuffers(fDpy, (GLXDrawable)wind);
 }

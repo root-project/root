@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.8 2004/08/10 19:22:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.9 2004/08/10 20:25:22 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -44,7 +44,6 @@
 class TPoints3DABC;
 struct GLUtesselator;
 
-
 class TVirtualGLImp {
 
 public:
@@ -52,7 +51,7 @@ public:
    virtual ULong_t  CreateContext(Window_t wind) = 0;
    virtual void     DeleteContext(ULong_t ctx) = 0;
    virtual void     MakeCurrent(Window_t wind, ULong_t ctx) = 0;
-   virtual void     SwapLayerBuffers(Window_t wind) = 0;
+   virtual void     SwapBuffers(Window_t wind) = 0;
 
    ClassDef(TVirtualGLImp,0);
 };
@@ -74,7 +73,7 @@ public:
    virtual ULong_t  CreateContext(Window_t wind) { return fImp ? fImp->CreateContext(wind) : 0; }
    virtual void     DeleteContext(ULong_t ctx) { if (fImp) fImp->DeleteContext(ctx); }
    virtual void     MakeCurrent(Window_t wind, ULong_t ctx) { if (fImp) fImp->MakeCurrent(wind, ctx); }
-   virtual void     SwapLayerBuffers(Window_t wind) { if (fImp) fImp->SwapLayerBuffers(wind); }
+   virtual void     SwapBuffers(Window_t wind) { if (fImp) fImp->SwapBuffers(wind); }
 
    // common/kernel GL methods
    virtual void AddRotation(Double_t *rotmatrix, Double_t *extraangles) = 0;
@@ -87,14 +86,14 @@ public:
    virtual void NewMVGL() = 0;
    virtual void NewPRGL() = 0;
    virtual void FrustumGL(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t znear, Double_t zfar) = 0;
-   virtual void GLLight(EG3D2GLmode name, const Float_t * lig_prop) = 0;
+   virtual void GLLight(EG3D2GLmode name, EG3D2GLmode prop_name, const Float_t * lig_prop) = 0;
    virtual void LightModel(EG3D2GLmode name, const Float_t * lig_prop) = 0;
    virtual void LightModel(EG3D2GLmode name, Int_t prop) = 0;
    virtual void CullFaceGL(EG3D2GLmode) = 0;
    virtual void ViewportGL(Int_t xmin, Int_t ymin, Int_t width, Int_t height) = 0;
    virtual void MaterialGL(EG3D2GLmode face, const Float_t * mat_prop) = 0;
    virtual void MaterialGL(EG3D2GLmode face, Float_t mat_prop) = 0;
-   virtual void BeginGL() = 0;
+   virtual void BeginGL(EG3D2GLmode) = 0;
    virtual void EndGL() = 0;
    virtual void SetGLVertex(const Double_t *vert) = 0;
    virtual void SetGLVertex(Float_t *vertex) = 0;
@@ -106,6 +105,15 @@ public:
    virtual void GLUBeginPolygon(GLUtesselator *) = 0;
    virtual void GLUEndPolygon(GLUtesselator *) = 0;
    virtual void GLUTessVertex(GLUtesselator *, const Double_t *) = 0;
+//
+   virtual void PaintPolyMarker(const Double_t * place, Style_t marker_style, UInt_t size) = 0;
+   virtual void DrawSelectionBox(Double_t xmin, Double_t xmax,
+                                 Double_t ymin, Double_t ymax,
+								 Double_t zmin, Double_t zmax) = 0;
+   virtual void EnterSelectionMode(UInt_t * buff, Int_t size, Event_t *, Int_t * viewport) = 0;
+   virtual Int_t ExitSelectionMode() = 0;
+   virtual void GLLoadName(UInt_t name) = 0;
+//
    virtual Int_t CreateGLLists(Int_t range) = 0;
    virtual void DeleteGLLists(Int_t ilist, Int_t range) = 0;
    virtual void DisableGL(EG3D2GLmode mode) = 0;

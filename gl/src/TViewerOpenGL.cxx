@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.8 2004/08/10 20:25:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.9 2004/08/11 10:30:20 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 #include <TROOT.h>
 #include <TMath.h>
 #include <HelpText.h>
-
+#include <TAttMarker.h>
 
 #include "TArcBall.h"
 
@@ -78,6 +78,9 @@ enum EGLViewerCommands{
 
 class TGLPrimitive : public TObject{
 public:
+   UInt_t fName;
+   TGLPrimitive(UInt_t name):fName(name){}
+   typedef TGLPrimitive Base;
    virtual void GLDraw(GLUtesselator * t_obj = 0)const = 0;
 };
 
@@ -89,7 +92,7 @@ private:
 
    Int_t fNbPols;
    Int_t fColorInd;
-
+   
    //non copyable class
    TGLFaceSet(const TGLFaceSet &);
    TGLFaceSet & operator = (const TGLFaceSet &);
@@ -100,15 +103,15 @@ private:
      return *p1 == *p2 && p1[1] == p2[1] && p1[2] == p2[2];
     }
 public:
-   TGLFaceSet(const TBuffer3D & buf_initializer);
+   TGLFaceSet(const TBuffer3D & buf_initializer, UInt_t name);
    void GLDraw(GLUtesselator * t_obj)const;
 };
 
 //______________________________________________________________________________
-TGLFaceSet::TGLFaceSet(const TBuffer3D & init_buf)
-   : fPnts(init_buf.fPnts, init_buf.fPnts + init_buf.fNbPnts * 3),
+TGLFaceSet::TGLFaceSet(const TBuffer3D & init_buf, UInt_t name)
+   : Base(name), fPnts(init_buf.fPnts, init_buf.fPnts + init_buf.fNbPnts * 3),
      fNormals(init_buf.fNbPols * 3), fNbPols(init_buf.fNbPols),
-     fColorInd(init_buf.fSegs[0])
+     fColorInd(init_buf.fSegs[0]) 
 {
    Int_t * segs = init_buf.fSegs;
    Int_t * pols = init_buf.fPols;
@@ -198,11 +201,8 @@ Int_t TGLFaceSet::CheckPoints(const Int_t * source, Int_t * dest) const
 void TGLFaceSet::GLDraw(GLUtesselator * t_obj)const
 {
    //first, define the color :
-   Float_t rgb[] = {colors[fColorInd * 3], colors[fColorInd * 3 + 1], colors[fColorInd * 3 + 2]};
-
-   gVirtualGL->MaterialGL(kFRONT, rgb);
+   gVirtualGL->MaterialGL(kFRONT, colors + fColorInd * 3);
    gVirtualGL->MaterialGL(kFRONT, 60.);
- 
 
    for(Int_t i = 0, j = 0; i < fNbPols; ++i){
       Int_t npoints = fPols[j++];
@@ -218,7 +218,7 @@ void TGLFaceSet::GLDraw(GLUtesselator * t_obj)const
          gVirtualGL->GLUEndPolygon(t_obj);
       }
       else{
-         gVirtualGL->BeginGL();
+         gVirtualGL->BeginGL(kPOLYGON);
          gVirtualGL->SetGLNormal(&fNormals[i * 3]);
 
          for(Int_t k = 0; k < npoints; ++k, ++j)
@@ -235,20 +235,83 @@ private:
    TGLPolyLine(const TGLPolyLine &);
    TGLPolyLine & operator = (const TGLPolyLine &);
 public:
-   TGLPolyLine(const TBuffer3D & init_buffer);
+   TGLPolyLine(const TBuffer3D & init_buffer, UInt_t name);
    void GLDraw(GLUtesselator * t_obj)const;
+
+   UInt_t fName;
 };
 
 //______________________________________________________________________________
-TGLPolyLine::TGLPolyLine(const TBuffer3D & ib)
-                  :fVertices(ib.fPnts, ib.fPnts + ib.fNbPnts * 3)
+TGLPolyLine::TGLPolyLine(const TBuffer3D & ib, UInt_t name)
+                  :Base(name), fVertices(ib.fPnts, ib.fPnts + ib.fNbPnts * 3)
 {
 }
 
 //______________________________________________________________________________
 void TGLPolyLine::GLDraw(GLUtesselator *)const
 {
+   //gVirtualGL//color
    gVirtualGL->PaintPolyLine(fVertices.size() / 3, const_cast<Double_t *>(&fVertices[0]),0);
+}
+
+class TGLPolyMarker : public TGLPrimitive{
+private:
+   Int_t fColorInd;
+   Style_t fStyle;
+   std::vector<Double_t>fVertices;
+public:
+   TGLPolyMarker(const TBuffer3D & init_buf, UInt_t name);
+   void GLDraw(GLUtesselator * t_obj)const;
+
+   UInt_t fName;
+};
+
+//______________________________________________________________________________
+TGLPolyMarker::TGLPolyMarker(const TBuffer3D & init_buf, UInt_t name)
+                    :Base(name),fColorInd(init_buf.fSegs[0]),fStyle(7),
+					 fVertices(init_buf.fPnts, init_buf.fPnts + 3 * init_buf.fNbPnts)
+{
+   fStyle = dynamic_cast<const TAttMarker *>(init_buf.fId)->GetMarkerStyle();
+	//TAttMarker is not TObject descendant, so I need dynamic_cast
+   if(const TAttMarker * ptr = dynamic_cast<const TAttMarker *>(init_buf.fId))
+      fStyle = ptr->GetMarkerStyle();	
+}
+
+//______________________________________________________________________________
+void TGLPolyMarker::GLDraw(GLUtesselator *)const
+{
+   gVirtualGL->MaterialGL(kFRONT, colors + fColorInd * 3);
+   gVirtualGL->PaintPolyMarker(&fVertices[0], fStyle, fVertices.size());
+}
+
+class TGLSelectionBox : public TObject{
+private:
+   typedef std::pair<Double_t, Double_t>PDD_t;
+   PDD_t fXrange;
+   PDD_t fYrange;
+   PDD_t fZrange;
+public:
+   TGLSelectionBox(const PDD_t & x_range, const PDD_t & y_range, const PDD_t & z_range);
+   void GLDraw()const;
+private:
+   TGLSelectionBox(const TGLSelectionBox &);
+   TGLSelectionBox & operator = (const TGLSelectionBox &);
+};
+
+//______________________________________________________________________________
+TGLSelectionBox::TGLSelectionBox(const PDD_t & x_range, const PDD_t & y_range, const PDD_t & z_range)
+                     :fXrange(x_range), fYrange(y_range), fZrange(z_range)
+{
+}
+
+//______________________________________________________________________________
+void TGLSelectionBox::GLDraw()const
+{
+   Float_t material[] = {1., 1., 1., 1.};
+
+   gVirtualGL->MaterialGL(kFRONT, material);
+   gVirtualGL->MaterialGL(kFRONT, 80.);
+   gVirtualGL->DrawSelectionBox(fXrange.first, fXrange.second, fYrange.first, fYrange.second, fZrange.first, fZrange.second);
 }
 
 class TGLWidget : public TGCompositeFrame {
@@ -293,12 +356,12 @@ TGLWidget::TGLWidget(TViewerOpenGL * c, Window_t id, const TGWindow *p)
    gVirtualX->SelectInput(
                           fId,
                           kKeyPressMask | kExposureMask | kPointerMotionMask | kStructureNotifyMask
-#ifndef GDK_WIN32
+//#ifndef GDK_WIN32
                          );
-#else
-                          | kKeyReleaseMask);
-#endif
-   gVirtualX->SetInputFocus(fId);
+//#else
+  //                        | kKeyReleaseMask);
+//#endif
+   gVirtualX->SetInputFocus(fId);//*/
 }
 
 
@@ -308,14 +371,17 @@ ClassImp(TViewerOpenGL)
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    : TVirtualViewer3D(vp), TGMainFrame(gClient->GetRoot(), 600, 600),
      fCanvasWindow(0), fCanvasContainer(0), fCanvasLayout(0),
+	 fMenuBarLayout(0), fMenuBarHelpLayout(0), fMenuBar(0), fHelpMenu(0),
      fXc(0.), fYc(0.), fZc(0.), fRad(0.),
      fCtx(0), fGLWin(0), fPressed(kFALSE),
-     fDList(1), fArcBall(0), fFrP(), fZoom(0.9)
+     fDList(1), fArcBall(0), fFrP(), fZoom(0.9),
+	 fSelectionMode(kFALSE), fSelected(0), fNbShapes(0)
 {
    fGLObjects.SetOwner(kTRUE);
    CreateViewer();
    Resize(600, 600);
    fArcBall = new TArcBall(600, 600);
+   fGLBoxes.SetOwner(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -404,7 +470,7 @@ void TViewerOpenGL::MakeCurrent()const
 //______________________________________________________________________________
 void TViewerOpenGL::SwapBuffers()const
 {
-   gVirtualGL->SwapLayerBuffers(fGLWin);
+   gVirtualGL->SwapBuffers(fGLWin);
 }
 
 //______________________________________________________________________________
@@ -412,16 +478,22 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t * event)
 {
    if(event->fType == kButtonPress && event->fCode == kButton1)
    {
-      TPoint pnt(event->fX, event->fY);
-
-      fArcBall->Click(pnt);
-      fPressed = kTRUE;
+      if(!fSelectionMode){
+         TPoint pnt(event->fX, event->fY);
+      
+		 fArcBall->Click(pnt);
+         fPressed = kTRUE;
+	  }
+	  else
+		  TestSelection(event);
    }
+   else if(event->fType == kButtonPress && event->fCode == kButton3)
+	   fSelectionMode = !fSelectionMode;
    else if(event->fType == kButtonRelease && event->fCode == kButton1){
       fPressed = kFALSE;
-#ifdef GDK_WIN32
-      gVirtualX->SetInputFocus(fGLWin);
-#endif
+//#ifdef GDK_WIN32
+  //    gVirtualX->SetInputFocus(fGLWin);
+//#endif
    }
    return kTRUE;
 }
@@ -533,18 +605,22 @@ void TViewerOpenGL::CreateScene(Option_t *)
    fFrP[2] = 3 * max;
    MakeCurrent();
 
-   gVirtualGL->ClearGLColor(1.f, 1.f, 1.f, 1.f);
+   gVirtualGL->ClearGLColor(0.f, 0.f, 0.f, 1.f);
    gVirtualGL->ClearGLDepth(1.f);
    gVirtualGL->LightModel(kLIGHT_MODEL_AMBIENT, lmodel_amb);
    gVirtualGL->LightModel(kLIGHT_MODEL_TWO_SIDE, kFALSE);
    gVirtualGL->EnableGL(kLIGHTING);
    gVirtualGL->EnableGL(kLIGHT0);
+   gVirtualGL->EnableGL(kLIGHT1);
+   gVirtualGL->EnableGL(kLIGHT2);
+   gVirtualGL->EnableGL(kLIGHT3);
    gVirtualGL->EnableGL(kDEPTH_TEST);
    gVirtualGL->EnableGL(kCULL_FACE);
    gVirtualGL->CullFaceGL(kBACK);
    gVirtualGL->PolygonGLMode(kFRONT, kFILL);
    BuildGLList();
    DrawObjects();
+   SwapBuffers();
 }
 
 //______________________________________________________________________________
@@ -553,21 +629,22 @@ void TViewerOpenGL::UpdateScene(Option_t *)
    TBuffer3D * buff = fPad->GetBuffer3D();
 
    if(buff->fOption == buff->kOGL){
-      UpdateRange(buff);
+      ++fNbShapes;
+      fGLBoxes.AddLast(UpdateRange(buff));
       TGLPrimitive * add_obj = 0;
       switch(buff->fType)
       {
       case TBuffer3D::kLINE:
-         add_obj = new TGLPolyLine(*buff);
-	 break;
+         add_obj = new TGLPolyLine(*buff, fNbShapes);
+  	  break;
       case TBuffer3D::kMARKER:
-         break;
+         add_obj = new TGLPolyMarker(*buff, fNbShapes);
+      break;
       default:
-         add_obj = new TGLFaceSet(*buff);
+         add_obj = new TGLFaceSet(*buff, fNbShapes);
          break;
       }
-      if(add_obj)
-         fGLObjects.AddLast(add_obj);
+      fGLObjects.AddLast(add_obj);
    }
 }
 
@@ -593,7 +670,8 @@ void TViewerOpenGL::DrawObjects()const
    MakeCurrent();
    gVirtualGL->ClearGL(0);
 
-   Int_t cx = GetWidth() / 2, cy = GetHeight() / 2;
+   Int_t cx = GetWidth() / 2;
+   Int_t cy = (GetHeight() - fMenuBar->GetHeight() - fMenuBarLayout->GetPadTop() - fMenuBarLayout->GetPadBottom() - fMenuBarHelpLayout->GetPadTop() - fMenuBarHelpLayout->GetPadBottom()) / 2;
    Int_t d = TMath::Min(cx, cy);
    Double_t frp = fFrP[0] * fZoom;
 
@@ -607,16 +685,39 @@ void TViewerOpenGL::DrawObjects()const
    gVirtualGL->RotateGL(-90., 1., 0., 0.);
    gVirtualGL->TranslateGL(-fXc, -fYc, -fZc);
    gVirtualGL->RunGLList(fDList);
+   
+   if(fSelected){
+      const TGLSelectionBox * selection_box = static_cast<const TGLSelectionBox *>(fGLBoxes.At(fSelected - 1));
+	  
+	  selection_box->GLDraw();
+   }
+   
    gVirtualGL->PopGLMatrix();
 
    Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
+   Float_t lig_prop[] = {1.f, 1.f, 1.f, 1.f};
 
-   gVirtualGL->GLLight(kLIGHT0, pos);
-   SwapBuffers();
+   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
+   gVirtualGL->PushGLMatrix();
+   gVirtualGL->TranslateGL(0., fRad + fYc, -fRad - fZc);
+   gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
+   gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop);
+   gVirtualGL->PopGLMatrix();
+ 
+   gVirtualGL->PushGLMatrix();
+   gVirtualGL->TranslateGL(fRad + fXc, 0., -fRad - fZc);
+   gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos);
+   gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, lig_prop);
+   gVirtualGL->PopGLMatrix();
+
+   gVirtualGL->TranslateGL(-fRad - fXc, 0., -fRad - fZc);
+   gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos);
+   gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, lig_prop);
+   gVirtualGL->SwapBuffers(fGLWin);
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::UpdateRange(const TBuffer3D * buffer)
+TObject * TViewerOpenGL::UpdateRange(const TBuffer3D * buffer)
 {
    Double_t xmin = buffer->fPnts[0], xmax = xmin, ymin = buffer->fPnts[1], ymax = ymin, zmin = buffer->fPnts[2], zmax = zmin;
    //calculate range
@@ -625,11 +726,14 @@ void TViewerOpenGL::UpdateRange(const TBuffer3D * buffer)
       ymin = TMath::Min(ymin, buffer->fPnts[i + 1]), ymax = TMath::Max(ymax, buffer->fPnts[i + 1]),
       zmin = TMath::Min(zmin, buffer->fPnts[i + 2]), zmax = TMath::Max(zmax, buffer->fPnts[i + 2]);
 
+   TGLSelectionBox * ret_val = new TGLSelectionBox(std::make_pair(xmin, xmax), std::make_pair(ymin, ymax), std::make_pair(zmin, zmax));
+
    if(!fGLObjects.GetSize()){
       fRangeX.first = xmin, fRangeX.second = xmax;
       fRangeY.first = ymin, fRangeY.second = ymax;
       fRangeZ.first = zmin, fRangeZ.second = zmax;
-      return;
+
+	  return ret_val;
    }
 
    if(fRangeX.first > xmin)
@@ -644,6 +748,8 @@ void TViewerOpenGL::UpdateRange(const TBuffer3D * buffer)
       fRangeZ.first = zmin;
    if(fRangeZ.second < zmax)
       fRangeZ.second = zmax;
+
+   return ret_val;
 }
 
 //______________________________________________________________________________
@@ -667,6 +773,7 @@ void TViewerOpenGL::BuildGLList()const
    gVirtualGL->EndGLList();
 }
 
+//______________________________________________________________________________
 Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
    switch (GET_MSG(msg)) {
@@ -702,4 +809,57 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    }
    
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TViewerOpenGL::TestSelection(Event_t * event)
+{
+   MakeCurrent();
+
+   Double_t frp = fFrP[0] * fZoom;
+   UInt_t buff[512] = {0};
+   Int_t viewport[4] = {0};
+
+   gVirtualGL->EnterSelectionMode(buff, 512, event, viewport);
+   gVirtualGL->FrustumGL(-frp, frp, -frp, frp, fFrP[1], fFrP[2]);
+   gVirtualGL->NewMVGL();
+   gVirtualGL->TranslateGL(0., 0., -fRad);
+   gVirtualGL->MultGLMatrix(fArcBall->GetRotMatrix());
+   gVirtualGL->RotateGL(-90., 1., 0., 0.);
+   gVirtualGL->TranslateGL(-fXc, -fYc, -fZc);
+
+   TObjLink * lnk = fGLObjects.FirstLink();
+   GLUtesselator * t_obj = gVirtualGL->GLUNewTess();
+  
+   while(lnk){
+	  TGLPrimitive * pobj = static_cast<TGLPrimitive *>(lnk->GetObject());
+      gVirtualGL->GLLoadName(pobj->fName);
+      pobj->GLDraw(t_obj);
+      lnk = lnk->Next();
+   }
+
+   gVirtualGL->GLUDeleteTess(t_obj);
+   SwapBuffers();
+   
+   Int_t res_hit = gVirtualGL->ExitSelectionMode();
+   
+   if(res_hit){
+      UInt_t choose = buff[3];
+	  UInt_t depth = buff[1];
+
+	  for(Int_t loop = 1; loop < res_hit; ++loop){
+		 if(buff[loop * 4 + 1] < depth){
+            choose = buff[loop * 4 + 3];
+            depth = buff[loop * 4 + 1];
+		 }
+	  }
+	  //std::cout<<"Name of selected == "<<choose<<std::endl;
+	  fSelected == choose ? fSelected = 0 : fSelected = choose;
+	  DrawObjects();
+   }
+   else if(fSelected)
+   {
+      fSelected = 0;
+	  DrawObjects();
+   }
 }

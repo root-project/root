@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.1 2004/08/09 15:46:53 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.2 2004/08/09 22:11:00 rdm Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -139,7 +139,7 @@ void TGWin32GL::MakeCurrent(Window_t wind, ULong_t ctx)
 }
 
 //______________________________________________________________________________
-void TGWin32GL::SwapLayerBuffers(Window_t wind)
+void TGWin32GL::SwapBuffers(Window_t wind)
 {
    //
 

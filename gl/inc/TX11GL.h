@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.1 2004/08/09 15:46:53 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.1 2004/08/09 22:09:14 rdm Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -46,7 +46,7 @@ public:
    ULong_t  CreateContext(Window_t wind);
    void     DeleteContext(ULong_t ctx);
    void     MakeCurrent(Window_t wind, ULong_t ctx);
-   void     SwapLayerBuffers(Window_t wind);
+   void     SwapBuffers(Window_t wind);
 
    ClassDef(TX11GL, 0);
 };
