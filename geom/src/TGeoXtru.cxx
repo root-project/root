@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.18 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.19 2005/02/03 11:40:39 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -886,7 +886,7 @@ Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
 void TGeoXtru::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;   
+   if (TObject::TestBit(kGeoSavePrimitive)) return;   
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   nz       = " << fNz << ";" << endl;
    out << "   nvert    = " << fNvert << ";" << endl;
@@ -905,7 +905,7 @@ void TGeoXtru::SavePrimitive(ofstream &out, Option_t */*option*/)
       out << "   xtru->DefineSection(" << i << ",zsect,x0,y0,scale0);" << endl;
    }
    out << "   pShape = xtru;" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 
 //_____________________________________________________________________________

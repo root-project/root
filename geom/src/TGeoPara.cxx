@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.21 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.22 2005/02/03 11:40:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -546,7 +546,7 @@ Double_t TGeoPara::Safety(Double_t *point, Bool_t in) const
 void TGeoPara::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   dx    = " << fX << ";" << endl;
    out << "   dy    = " << fY << ";" << endl;
@@ -555,7 +555,7 @@ void TGeoPara::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   theta = " << fTheta << ";" << endl;
    out << "   phi   = " << fPhi << ";" << endl;
    out << "   pShape = new TGeoPara(\"" << GetName() << "\",dx,dy,dz,alpha,theta,phi);" << endl;  
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

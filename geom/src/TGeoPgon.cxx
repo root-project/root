@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.45 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.46 2005/02/03 11:40:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1684,7 +1684,7 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
 void TGeoPgon::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   phi1    = " << fPhi1 << ";" << endl;
    out << "   dphi    = " << fDphi << ";" << endl;
@@ -1698,7 +1698,7 @@ void TGeoPgon::SavePrimitive(ofstream &out, Option_t */*option*/)
       out << "   pPgon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
    }
    out << "   pShape = pPgon;" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.38 2004/12/05 16:47:22 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.39 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -822,7 +822,7 @@ Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
 void TGeoArb8::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   dz       = " << fDz << ";" << endl;
    out << "   vert[0]  = " << fXY[0][0] << ";" << endl;
@@ -842,7 +842,7 @@ void TGeoArb8::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   vert[14] = " << fXY[7][0] << ";" << endl;
    out << "   vert[15] = " << fXY[7][1] << ";" << endl;
    out << "   pShape = new TGeoArb8(\"" << GetName() << "\", dz,vert);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________
@@ -1334,7 +1334,7 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
 void TGeoTrap::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   dz     = " << fDz << ";" << endl;
    out << "   theta  = " << fTheta << ";" << endl;
@@ -1348,7 +1348,7 @@ void TGeoTrap::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   tl2    = " << fTl2<< ";" << endl;
    out << "   alpha2 = " << fAlpha2 << ";" << endl;
    out << "   pShape = new TGeoTrap(\"" << GetName() << "\", dz,theta,phi,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 ClassImp(TGeoGtra)
@@ -1551,7 +1551,7 @@ TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 void TGeoGtra::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;  
+   if (TObject::TestBit(kGeoSavePrimitive)) return;  
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   dz     = " << fDz << ";" << endl;
    out << "   theta  = " << fTheta << ";" << endl;
@@ -1566,6 +1566,6 @@ void TGeoGtra::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   tl2    = " << fTl2<< ";" << endl;
    out << "   alpha2 = " << fAlpha2 << ";" << endl;
    out << "   pShape = new TGeoGtra(\"" << GetName() << "\", dz,theta,phi,twist,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

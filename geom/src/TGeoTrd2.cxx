@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.26 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.27 2005/02/03 11:40:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -633,7 +633,7 @@ Double_t TGeoTrd2::Safety(Double_t *point, Bool_t in) const
 void TGeoTrd2::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   dx1 = " << fDx1 << ";" << endl;
    out << "   dx2 = " << fDx2 << ";" << endl;
@@ -641,7 +641,7 @@ void TGeoTrd2::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   dy2 = " << fDy2 << ";" << endl;
    out << "   dz  = " << fDZ  << ";" << endl;
    out << "   pShape = new TGeoTrd2(\"" << GetName() << "\", dx1,dx2,dy1,dy2,dz);" << endl;  
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 } 
         
 //_____________________________________________________________________________

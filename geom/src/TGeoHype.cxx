@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.4 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.5 2005/02/03 11:40:38 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -771,7 +771,7 @@ Double_t TGeoHype::SafetyToHype(Double_t *point, Bool_t inner, Bool_t in) const
 void TGeoHype::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   rin   = " << fRmin << ";" << endl;
    out << "   stin  = " << fStIn << ";" << endl;
@@ -779,7 +779,7 @@ void TGeoHype::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   stout = " << fStOut << ";" << endl;
    out << "   dz    = " << fDz << ";" << endl;
    out << "   pShape = new TGeoHype(\"" << GetName() << "\",rin,stin,rout,stout,dz);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);  
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
 }
 
 //_____________________________________________________________________________

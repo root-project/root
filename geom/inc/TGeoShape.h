@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.30 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.31 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -71,7 +71,7 @@ enum EShapeType {
    kGeoParaboloid = BIT(28),
    kGeoHalfSpace  = BIT(29),
    kGeoHype    = BIT(30),
-   kGeoSavePrimitive = BIT(31)
+   kGeoSavePrimitive = BIT(20)
 };
 
 protected :

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.20 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.21 2005/02/03 11:40:39 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -773,7 +773,7 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
 void TGeoTorus::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;  
+   if (TObject::TestBit(kGeoSavePrimitive)) return;  
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   r    = " << fR << ";" << endl;
    out << "   rmin = " << fRmin << ";" << endl;
@@ -781,7 +781,7 @@ void TGeoTorus::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   phi1 = " << fPhi1 << ";" << endl;
    out << "   dphi = " << fDphi << ";" << endl;
    out << "   pShape = new TGeoTorus(\"" << GetName() << "\",r,rmin,rmax,phi1,dphi);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

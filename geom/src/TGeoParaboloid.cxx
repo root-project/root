@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.11 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.12 2005/02/03 11:40:39 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -518,13 +518,13 @@ Int_t TGeoParaboloid::GetNmeshVertices() const
 void TGeoParaboloid::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   rlo = " << fRlo << ";" << endl;
    out << "   rhi = " << fRhi << ";" << endl;
    out << "   dz  = " << fDZ << ";" << endl;  
    out << "   pShape = new TGeoParaboloid(\"" << GetName() << "\", rlo,rhi,dz);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 
 //_____________________________________________________________________________

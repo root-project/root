@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.4 2004/11/08 09:56:24 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.5 2005/02/03 11:40:38 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -173,7 +173,7 @@ Double_t TGeoHalfSpace::Safety(Double_t *point, Bool_t /*in*/) const
 void TGeoHalfSpace::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   point[0] = " << fP[0] << ";" << endl;
    out << "   point[1] = " << fP[1] << ";" << endl;
@@ -182,7 +182,7 @@ void TGeoHalfSpace::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   norm[1]  = " << fN[1] << ";" << endl;
    out << "   norm[2]  = " << fN[2] << ";" << endl;
    out << "   pShape = new TGeoHalfSpace(\"" << GetName() << "\", point,norm);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 
 //_____________________________________________________________________________

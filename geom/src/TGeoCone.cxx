@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.43 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.44 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -905,7 +905,7 @@ Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmi
 void TGeoCone::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   dz    = " << fDz << ";" << endl;
    out << "   rmin1 = " << fRmin1 << ";" << endl;
@@ -913,7 +913,7 @@ void TGeoCone::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   rmin2 = " << fRmin1 << ";" << endl;
    out << "   rmax2 = " << fRmax2 << ";" << endl;
    out << "   pShape = new TGeoCone(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);   
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);   
 }
          
 //_____________________________________________________________________________
@@ -2177,7 +2177,7 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
 void TGeoConeSeg::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   dz    = " << fDz << ";" << endl;
    out << "   rmin1 = " << fRmin1 << ";" << endl;
@@ -2187,7 +2187,7 @@ void TGeoConeSeg::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   phi1  = " << fPhi1 << ";" << endl;
    out << "   phi2  = " << fPhi2 << ";" << endl;
    out << "   pShape = new TGeoConeSeg(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2,phi1,phi2);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);  
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
 }
 
 //_____________________________________________________________________________

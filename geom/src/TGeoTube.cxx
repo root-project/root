@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.52 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.53 2005/02/03 11:40:39 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -833,13 +833,13 @@ Double_t TGeoTube::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t r
 void TGeoTube::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   rmin = " << fRmin << ";" << endl;
    out << "   rmax = " << fRmax << ";" << endl;
    out << "   dz   = " << fDz << ";" << endl;
    out << "   pShape = new TGeoTube(\"" << GetName() << "\",rmin,rmax,dz);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________
@@ -1910,7 +1910,7 @@ Double_t TGeoTubeSeg::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_
 void TGeoTubeSeg::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   rmin = " << fRmin << ";" << endl;
    out << "   rmax = " << fRmax << ";" << endl;
@@ -1918,7 +1918,7 @@ void TGeoTubeSeg::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   phi1 = " << fPhi1 << ";" << endl;
    out << "   phi2 = " << fPhi2 << ";" << endl;
    out << "   pShape = new TGeoTubeSeg(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________
@@ -2734,7 +2734,7 @@ void TGeoCtub::SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz, Doub
 void TGeoCtub::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   rmin = " << fRmin << ";" << endl;
    out << "   rmax = " << fRmax << ";" << endl;
@@ -2746,7 +2746,7 @@ void TGeoCtub::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   ty   = " << fNlow[1] << ";" << endl;
    out << "   tz   = " << fNlow[2] << ";" << endl;
    out << "   pShape = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,lx,ly,lz,tx,ty,tz);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);  
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
 }
 
 //_____________________________________________________________________________

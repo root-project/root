@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.24 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.25 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -329,7 +329,7 @@ Double_t TGeoCompositeShape::Safety(Double_t *point, Bool_t in) const
 void TGeoCompositeShape::SavePrimitive(ofstream &out, Option_t *option)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    if (!strcmp(option,"s")) {
       fNode->GetLeftShape()->SavePrimitive(out,option);
       fNode->GetRightShape()->SavePrimitive(out,option);
@@ -342,7 +342,7 @@ void TGeoCompositeShape::SavePrimitive(ofstream &out, Option_t *option)
    SavePrimitive(out,"s");
    out << "   bool_name = \"" << GetTitle() << "\";" << endl;
    out << "   pShape = new TGeoCompositeShape(\"" << GetName() << "\", bool_name);" << endl;
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

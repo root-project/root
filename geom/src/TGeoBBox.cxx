@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.37 2005/01/28 10:01:04 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.38 2005/02/03 11:40:38 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -574,7 +574,7 @@ Double_t TGeoBBox::Safety(Double_t *point, Bool_t in) const
 void TGeoBBox::SavePrimitive(ofstream &out, Option_t */*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   dx = " << fDX << ";" << endl;
    out << "   dy = " << fDY << ";" << endl;
@@ -587,7 +587,7 @@ void TGeoBBox::SavePrimitive(ofstream &out, Option_t */*option*/)
    } else {   
       out << "   pShape = new TGeoBBox(\"" << GetName() << "\", dx,dy,dz);" << endl;
    }
-   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 
 //_____________________________________________________________________________
