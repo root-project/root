@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.202 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.203 2004/08/03 14:50:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -317,8 +317,8 @@ TTree::TTree(): TNamed()
 //*-*-*-*-*-*-*-*-*-*-*Default Tree constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
    fScanField      = 25;
-   fMaxEntryLoop   = 100000000000;
-   fMaxEntries     = 100000000000;
+   fMaxEntryLoop   = 1000000000; fMaxEntryLoop *= 1000;
+   fMaxEntries     = 1000000000; fMaxEntries   *= 1000;
    fMaxVirtualSize = 0;
    fDirectory      = 0;
    fEntries        = 0;
@@ -364,8 +364,8 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
 // splitlevel may be used in this case to control the split level.
 
    fScanField      = 25;
-   fMaxEntryLoop   = 100000000000;
-   fMaxEntries     = 100000000000;
+   fMaxEntryLoop   = 1000000000; fMaxEntryLoop *= 1000;
+   fMaxEntries     = 1000000000; fMaxEntries   *= 1000;
    fMaxVirtualSize = 0;
    fDirectory      = gDirectory;
    fEntries        = 0;
