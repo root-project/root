@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.27 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.28 2004/06/30 22:47:59 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -102,8 +102,8 @@ public:
    TFileNode(const char *name);
    ~TFileNode() { delete fFiles; delete fActFiles; }
 
-   void        IncMySlaveCnt() { fSlaveCnt++; }
-   void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fMySlaveCnt++; }
+   void        IncMySlaveCnt() { fMySlaveCnt++; }
+   void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt++; }
    void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; Assert(fSlaveCnt >= 0); }
    Int_t       GetSlaveCnt() const {return fMySlaveCnt + fSlaveCnt;}
    Int_t       GetNumberOfActiveFiles() const { return fActFiles->GetSize(); }
