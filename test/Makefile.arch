@@ -279,7 +279,7 @@ endif
 ifeq ($(ARCH),linuxicc)
 # Linux with Intel icc compiler
 CXX           = icc
-CXXFLAGS      = -O
+CXXFLAGS      = -O -wd1476
 LD            = icc
 LDFLAGS       = -O
 SOFLAGS       = -shared
@@ -327,7 +327,7 @@ IFORT         = efc
 endif
 
 CXX           = $(ICC)
-CXXFLAGS      = -O -fPIC
+CXXFLAGS      = -O -fPIC -wd1476
 LD            = $(ICC)
 LDFLAGS       = -O
 SOFLAGS       = -shared
