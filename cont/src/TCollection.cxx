@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.2 2000/05/24 10:31:48 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -294,7 +294,6 @@ Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
    if ((option & kSingleKey)) {
       return TObject::Write(name, option, bsize);
    } else {
-      this->ForEach(TObject,Write)(name, option, bsize);
       Int_t nbytes = 0;
       TIter next(this);
       TObject *obj;
