@@ -1,6 +1,6 @@
 #! /bin/sh
 
-EXPDIR=~/root_export
+EXPDIR=$HOME/root_export
 CURVERS=`cat build/version_number | sed -e "s/^/v/" -e "s/\./-/" -e "s/\//-/"`
 ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
 MACHINE=`uname`
@@ -17,7 +17,8 @@ cvs
 !
 
 #cvs -z 3 -d :pserver:cvs@root.cern.ch:/user/cvs export -r $CURVERS root
-cvs -z 3 -d :pserver:cvs@root.cern.ch:/user/cvs export -D today root
+#cvs -z 3 -d :pserver:cvs@root.cern.ch:/user/cvs export -D today root
+cvs -z 3 -d :pserver:cvs@root.cern.ch:/user/cvs co root
 
 cvs -d :pserver:cvs@root.cern.ch:/user/cvs logout
 

@@ -9,18 +9,32 @@ ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
 MACHINE=`uname`
 OSREL=`uname -r`
 TYPE=$MACHINE.$OSREL
-TARFILE=rootcvs_$ROOTVERS.$TYPE.tar
+TARFILE=root_$ROOTVERS.$TYPE.tar
 
-cp main/src/rmain.cxx include/
-dir=`basename $(pwd)`
+TAR=`which gtar`
+dum=`echo $TAR | grep "no gtar"`
+stat=$?
+if [ "$TAR" = '' ] || [ $stat = 0 ]; then
+   TAR="tar cvf"
+   rm -f ../$TARFILE.gz
+else
+   TAR=$TAR" zcvf"
+   rm -f ../$TARFILE.gz
+   TARFILE=$TARFILE".gz"
+fi
+
+cp -f main/src/rmain.cxx include/
+pwd=`pwd`
+dir=`basename $pwd`
 cd ..
-rm -f $TARFILE.gz
-tar cvf $TARFILE $dir/LICENSE $dir/README $dir/bin \
+$TAR $TARFILE $dir/LICENSE $dir/README $dir/bin \
    $dir/include $dir/lib $dir/cint/MAKEINFO $dir/cint/include \
-   $dir/cint/lib $dir/cint/stl $dir/tutorials/.rootrc $dir/tutorials/*.C \
+   $dir/cint/lib $dir/cint/stl $dir/tutorials/*.C \
    $dir/test/*.cxx $dir/test/*.h $dir/test/Makefile* \
-   $dir/test/README $dir/macros $dir/icons system.rootrc
-gzip $TARFILE
+   $dir/test/README $dir/macros $dir/icons $dir/system.rootrc
+if [ "$TAR" = '' ]; then
+   gzip $TARFILE
+fi
 
 cd $dir
 rm -f include/rmain.cxx
