@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.130 2002/05/09 20:22:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.131 2002/05/16 16:47:53 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -891,7 +891,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    fprintf(fp,"   virtual ~%s();\n\n",GetName());
    fprintf(fp,"   ClassDef(%s,%d) //\n",GetName(),fClassVersion);
    fprintf(fp,"};\n");
-   fprintf(fp,"\n   ClassImp(%s)\n\n",GetName());
+
    //generate constructor code
    fprintf(fp,"%s::%s() {\n",GetName(),GetName());
    next.Reset();
