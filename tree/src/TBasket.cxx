@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.4 2001/01/04 13:25:48 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.5 2001/02/12 07:36:02 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -210,7 +210,7 @@ void TBasket::SetReadMode()
 {
    // Set read mode of basket.
 
-   fLast = fBufferRef->Length();
+   //fLast = fBufferRef->Length();
    fBufferRef->SetReadMode();
 }
 
@@ -266,8 +266,9 @@ void TBasket::Streamer(TBuffer &b)
    } else {
       TKey::Streamer(b);   //this must be first
       b.WriteVersion(TBasket::IsA());
-      if (fBufferRef && !fHeaderOnly) fLast = fBufferRef->Length();
+      if (fBufferRef && !fHeaderOnly && !fSeekKey) fLast = fBufferRef->Length();
       if (fLast > fBufferSize) fBufferSize = fLast;
+      
       b << fBufferSize;
       b << fNevBufSize;
       b << fNevBuf;
