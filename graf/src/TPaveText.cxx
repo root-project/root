@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.12 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.13 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -413,10 +413,12 @@ void TPaveText::PaintPrimitives(Int_t mode)
       while ((line = (TObject*) next())) {
          if (line->IsA() == TLatex::Class()) {
             latex = (TLatex*)line;
+            Float_t tangle = latex->GetTextAngle();
             if (latex->GetTextSize() != 0) continue;
             latex->SetTextSize(textsize);
             w = latex->GetXsize();
             latex->SetTextSize(0);
+            latex->SetTextAngle(tangle); //text angle was redefined in GetXsize !
             if (w > longest) longest = w;
          }
       }
@@ -528,7 +530,6 @@ void TPaveText::PaintPrimitives(Int_t mode)
          y = ytext-0.5*yfont;
          if (valign == 1) y = ytext -0.5*yspace;
          if (valign == 3) y = ytext +0.5*yspace;
-
          latex->PaintLatex(xtext,y,latex->GetTextAngle(),
                                    latex->GetTextSize(),
                                    latex->GetTitle());
