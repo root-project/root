@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.17 2004/04/29 17:05:39 brun Exp $
+// @(#)root/dcache:$Name: v4-00-08-patches $:$Id: TDCacheFile.cxx,v 1.18 2004/05/07 16:27:31 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 
@@ -75,6 +75,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    fOffset = 0;
    fOption = option;
    fOption.ToUpper();
+   fStatCached = kFALSE;
 
    if (fOption == "NEW")
       fOption = "CREATE";
