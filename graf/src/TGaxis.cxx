@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.36 2002/02/15 11:47:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.37 2002/02/15 23:22:02 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -475,7 +475,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t XX, YY;
    Double_t XexpT = 0;
    Double_t YexpT = 0;
-   Double_t XMNLOG, X00, X11, H2, H2SAV, AXMUL, Y, SMALD;
+   Double_t XMNLOG, X00, X11, H2, H2SAV, AXMUL, Y;
    Float_t chupxvsav, chupyvsav;
    Double_t rtxw, rtyw;
    Int_t Nlabels, Nticks, Nticks0, Nticks1;
@@ -1430,13 +1430,15 @@ L110:
 //*-*-              then some intermediate label is drawn (LogInteger=kTRUE).
 
       LogInteger = kFALSE;
-      if (TMath::Log10(wmax/wmin) < 2 && wmin >= 1 && wmax <= 10000) LogInteger = kTRUE;
-      SMALD = (TMath::Log10(1./0.9)/TMath::Log10(wmax/wmin))*axis_length;
-      if (xmin == xmax && SMALD <= charheight) LogInteger = kFALSE;
+      //Temporarely disable the LogInteger feature. The following histogram
+      //does not work (TH1F *h = new TH1F("h","h",100,2,100);)
+      //if (TMath::Log10(wmax/wmin) < 2 && wmin >= 1 && wmax <= 10000) LogInteger = kTRUE;
+      //Double_t SMALD = (TMath::Log10(1./0.9)/TMath::Log10(wmax/wmin))*axis_length;
+      //if (xmin == xmax && SMALD <= charheight) LogInteger = kFALSE;
       if (ymin == ymax) {
          textsize  = 0;
 //            CALL IGTEXT(0.,0.,"0.01",charheight,textsize,'S');
-         if (0.5*textsize > SMALD) LogInteger = kFALSE;
+         //if (0.5*textsize > SMALD) LogInteger = kFALSE;
       }
 
 //*-*-              Plot decade and intermediate tick marks
