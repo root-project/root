@@ -398,6 +398,7 @@ Int_t MyEvent::Decay(Int_t id)
       sumBR += GetParticle(id)->GetPDG()->DecayChannel(i)->BranchingRatio();
    }
    // choose random decay in respect to the branching ratio
+again:
    float r = gRandom->Uniform(sumBR);
    index = 0;
    while
@@ -410,6 +411,8 @@ Int_t MyEvent::Decay(Int_t id)
       // create temporary child particle to obtain its mass
       ptype[i] =
          GetParticle(id)->GetPDG()->DecayChannel(index)->DaughterPdgCode(i);
+      if(TMath::Abs(ptype[i]) < 6) // it is a quark...do it again
+         goto again;
       Particle[i] = new MyParticle(0,ptype[i], CREATED, UNDEFINE,
                                    GetParticle(id)->GetvLocation(),
                                    GetParticle(id)->GetvMoment());

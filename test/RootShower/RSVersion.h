@@ -10,7 +10,7 @@
 #ifndef ROOTSHOWER_RVersion
 #define ROOTSHOWER_RVersion
 
-#define ROOTSHOWER_RELEASE "3.15/11"
+#define ROOTSHOWER_RELEASE "3.15/13"
 #define ROOTSHOWER_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #endif
