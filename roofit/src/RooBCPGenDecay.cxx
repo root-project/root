@@ -1,9 +1,12 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooBCPGenDecay.cc,v 1.7 2002/09/10 02:01:30 verkerke Exp $
  * Authors:                                                                  *
- *   JS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu  *
+ *   JGS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu *
+ * History:
+ *   15-Aug-2002 JGS Created initial version
+ *   11-Sep-2002 JGS Mods to introduce mu (Mirna van Hoek, JGS, Nick Danielson)
  *                                                                           *
  * Copyright (c) 2000-2002, Regents of the University of California,         *
  *                          University of Colorado                           *
@@ -144,9 +147,13 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) co
       return 2 ;
     }
     
-    if (basisIndex==_basisSin || basisIndex==_basisCos) {
-      return 0 ;
-    }
+    if (basisIndex==_basisSin) {
+    return 2*_mu*_avgS ;
+  }
+    if (basisIndex==_basisCos) {
+    return -2*_mu*_avgC ;
+  }
+
   default:
     assert(0) ;
   }
