@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.205 2004/10/07 10:43:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.206 2004/10/08 08:00:26 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4774,17 +4774,20 @@ void TH1::SavePrimitiveHelp(ofstream &out, Option_t *option)
    }
 
    // save list of functions
-   TIter next(fFunctions);
+   TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
    TObject *obj;
-   while ((obj=next())) {
+   while (lnk) {
+      obj = lnk->GetObject();
       obj->SavePrimitive(out,"nodraw");
       if (obj->InheritsFrom("TF1")) {
          out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
-      }
-      if (obj->InheritsFrom("TPaveStats")) {
+      } else if (obj->InheritsFrom("TPaveStats")) {
          out<<"   "<<GetName()<<"->GetListOfFunctions()->Add(ptstats);"<<endl;
          out<<"   ptstats->SetParent("<<GetName()<<"->GetListOfFunctions());"<<endl;
+      } else {
+         out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<endl;
       }
+      lnk = (TObjOptLink*)lnk->Next();
    }
 
    // save attributes
