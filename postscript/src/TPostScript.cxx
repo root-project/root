@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.37 2003/03/19 18:06:55 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.38 2003/04/09 08:18:04 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1397,7 +1397,10 @@ void TPostScript::Initialize()
       PrintStr("%%Pages: (atend)@");
    }
    else {
-      PrintStr(pstitle);
+	 if (!strchr(pstitle,'\n')) {
+         PrintFast(2,": ");
+         PrintStr(pstitle);
+      }
       PrintStr("@");
    }
 
