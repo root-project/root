@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.3 2000/06/07 07:29:42 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -52,7 +52,7 @@ Hparam_t  Hparam;
 const Int_t kNMAX = 2000;
 
 static TH1 *hlist[10];
-const Float_t kHMAX = 1.05;
+const Double_t kHMAX = 1.05;
 const Int_t kMAXCONTOUR  = 104;
 
 ClassImp(THistPainter)
@@ -68,8 +68,8 @@ THistPainter::THistPainter()
    fZaxis = 0;
    fFunctions = 0;
    fNIDS  = 0;
-   fXbuf  = new Float_t[kNMAX];
-   fYbuf  = new Float_t[kNMAX];
+   fXbuf  = new Double_t[kNMAX];
+   fYbuf  = new Double_t[kNMAX];
 }
 
 //______________________________________________________________________________
@@ -101,7 +101,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
 
-   Float_t x = gPad->AbsPixeltoX(px);
+   Double_t x = gPad->AbsPixeltoX(px);
 
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
@@ -114,7 +114,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    TView *view = gPad->GetView();
    Int_t d1,d2,d3;
    if (view) {
-      Float_t ratio;
+      Double_t ratio;
       d3 = view->GetDistancetoAxis(3, px, py, ratio);
       if (d3 <= kMaxDiff) {gPad->SetSelected(fZaxis); return 0;}
       d1 = view->GetDistancetoAxis(1, px, py, ratio);
@@ -146,11 +146,11 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 //*-* check if point is on the color palette
    if (strcmp(fH->GetDrawOption(),"colz") == 0 || strcmp(fH->GetDrawOption(),"COLZ") == 0) {
       if (py <= puymin && py > puymax) {
-         Float_t xup  = gPad->GetUxmax();
-         Float_t x2   = gPad->GetX2();
-         Float_t xr   = 0.05*(x2 - gPad->GetX1());
-         Float_t xmin = xup +0.1*xr;
-         Float_t xmax = xmin + xr;
+         Double_t xup  = gPad->GetUxmax();
+         Double_t x2   = gPad->GetX2();
+         Double_t xr   = 0.05*(x2 - gPad->GetX1());
+         Double_t xmin = xup +0.1*xr;
+         Double_t xmax = xmin + xr;
          if (xmax > x2) xmax = x2-0.01*xr;
          Int_t xzaxis = gPad->XtoAbsPixel(xmax);
          if (TMath::Abs(px-xzaxis) < kMaxDiff) {
@@ -170,7 +170,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 
 //*-*- point is inside histogram area. Find channel number
    Int_t bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
-   Float_t binval = fH->GetBinContent(bin);
+   Double_t binval = fH->GetBinContent(bin);
    Int_t pybin    = gPad->YtoAbsPixel(gPad->YtoPad(binval));
    if (TMath::Abs(py - pybin) <= kMaxDiff) return TMath::Abs(py - pybin);
 
@@ -229,7 +229,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    static Int_t bin, px1, py1, px2, py2, pyold;
-   Float_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
+   Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
 
    if (!gPad->IsEditable()) return;
 
@@ -359,11 +359,11 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py)
 //
    if (!gPad) return (char*)"";
    static char info[64];
-   Float_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   Float_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
    const char *drawOption = fH->GetDrawOption();
-   Float_t xmin, xmax, uxmin,uxmax;
-   Float_t ymin, ymax, uymin,uymax;
+   Double_t xmin, xmax, uxmin,uxmax;
+   Double_t ymin, ymax, uymin,uymax;
    if (fH->GetDimension() == 2) {
       if (gPad->GetView() || strncmp(drawOption,"cont",4) == 0
                           || strncmp(drawOption,"CONT",4) == 0) {
@@ -546,7 +546,7 @@ void THistPainter::Paint(Option_t *option)
    TH1 *oldhist = gCurrentHist;
    gCurrentHist = fH;
    TH1 *hsave   = fH;
-   Float_t minsav = fH->GetMinimumStored();
+   Double_t minsav = fH->GetMinimumStored();
 
    if (!MakeChopt(option)) return; //check options and fill Hoption structure
 
@@ -646,16 +646,16 @@ void THistPainter::PaintArrows()
    fH->SetLineWidth(1);
    fH->TAttLine::Modify();
 
-   Float_t dx, dy, si, co, anr, x1, x2, y1, y2, xc, yc, dxn, dyn;
-   Int_t   ncx = Hparam.xlast - Hparam.xfirst + 1;
-   Int_t   ncy = Hparam.ylast - Hparam.yfirst + 1;
-   Float_t xrg = gPad->GetUxmin();
-   Float_t yrg = gPad->GetUymin();
-   Float_t xln = gPad->GetUxmax() - xrg;
-   Float_t yln = gPad->GetUymax() - yrg;
-   Float_t cx  = (xln/Float_t(ncx) -0.03)/2;
-   Float_t cy  = (yln/Float_t(ncy) -0.03)/2;
-   Float_t dn = 1.E-30;
+   Double_t dx, dy, si, co, anr, x1, x2, y1, y2, xc, yc, dxn, dyn;
+   Int_t   ncx  = Hparam.xlast - Hparam.xfirst + 1;
+   Int_t   ncy  = Hparam.ylast - Hparam.yfirst + 1;
+   Double_t xrg = gPad->GetUxmin();
+   Double_t yrg = gPad->GetUymin();
+   Double_t xln = gPad->GetUxmax() - xrg;
+   Double_t yln = gPad->GetUymax() - yrg;
+   Double_t cx  = (xln/Double_t(ncx) -0.03)/2;
+   Double_t cy  = (yln/Double_t(ncy) -0.03)/2;
+   Double_t dn  = 1.E-30;
 
    for (Int_t id=1;id<=2;id++) {
       for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
@@ -678,11 +678,11 @@ void THistPainter::PaintArrows()
                dn = TMath::Max(dn, TMath::Abs(dx));
                dn = TMath::Max(dn, TMath::Abs(dy));
             } else if (id == 2) {
-               xc  = xrg + xln*(Float_t(i - Hparam.xfirst+1)-0.5)/Float_t(ncx);
+               xc  = xrg + xln*(Double_t(i - Hparam.xfirst+1)-0.5)/Double_t(ncx);
                dxn = cx*dx/dn;
                x1  = xc - dxn;
                x2  = xc + dxn;
-               yc  = yrg + yln*(Float_t(j - Hparam.yfirst+1)-0.5)/Float_t(ncy);
+               yc  = yrg + yln*(Double_t(j - Hparam.yfirst+1)-0.5)/Double_t(ncy);
                dyn = cy*dy/dn;
                y1  = yc - dyn;
                y2  = yc + dyn;
@@ -732,14 +732,14 @@ void THistPainter::PaintAxis()
    if (Hoption.Same && Hoption.Axis <= 0) return;
 
    static char chopt[10] = "";
-   Float_t gridl = 0;
+   Double_t gridl = 0;
    Int_t ndiv, ndivx, ndivy, nx1, nx2,ndivsave;
-   Float_t umin, umax, uminsave, umaxsave;
+   Double_t umin, umax, uminsave, umaxsave;
 
-   Float_t axmin = gPad->GetUxmin();
-   Float_t axmax = gPad->GetUxmax();
-   Float_t aymin = gPad->GetUymin();
-   Float_t aymax = gPad->GetUymax();
+   Double_t axmin = gPad->GetUxmin();
+   Double_t axmax = gPad->GetUxmax();
+   Double_t aymin = gPad->GetUymin();
+   Double_t aymax = gPad->GetUymax();
    char *cw = 0;
 
 //*-*- X axis
@@ -764,6 +764,7 @@ void THistPainter::PaintAxis()
    axis.SetTitleOffset(fXaxis->GetTitleOffset());
    axis.SetTitleSize(fXaxis->GetTitleSize());
    axis.SetBit(TGaxis::kCenterTitle, fXaxis->TestBit(TGaxis::kCenterTitle));
+   axis.SetBit(TGaxis::kRotateTitle, fXaxis->TestBit(TGaxis::kRotateTitle));
    axis.SetTimeFormat(fXaxis->GetTimeFormat());
 
    chopt[0] = 0;
@@ -821,6 +822,7 @@ void THistPainter::PaintAxis()
    axis.SetTitleOffset(fYaxis->GetTitleOffset());
    axis.SetTitleSize(fYaxis->GetTitleSize());
    axis.SetBit(TGaxis::kCenterTitle, fYaxis->TestBit(TGaxis::kCenterTitle));
+   axis.SetBit(TGaxis::kRotateTitle, fYaxis->TestBit(TGaxis::kRotateTitle));
    axis.SetTimeFormat(fYaxis->GetTimeFormat());
 
       chopt[0] = 0;
@@ -900,10 +902,10 @@ void THistPainter::PaintBoxes()
    fH->TAttLine::Modify();
    fH->TAttFill::Modify();
 
-   Float_t z, xk,xstep, yk, ystep, xcent, ycent, xlow, xup, ylow, yup;
-   Float_t dz = Hparam.zmax - Hparam.zmin;
-   Float_t dxmin = 0.51*(gPad->PixeltoX(1)-gPad->PixeltoX(0));
-   Float_t dymin = 0.51*(gPad->PixeltoY(0)-gPad->PixeltoY(1));
+   Double_t z, xk,xstep, yk, ystep, xcent, ycent, xlow, xup, ylow, yup;
+   Double_t dz = Hparam.zmax - Hparam.zmin;
+   Double_t dxmin = 0.51*(gPad->PixeltoX(1)-gPad->PixeltoX(0));
+   Double_t dymin = 0.51*(gPad->PixeltoY(0)-gPad->PixeltoY(1));
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
@@ -973,8 +975,8 @@ void THistPainter::PaintColorLevels()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 
-   Float_t z, xk,xstep, yk, ystep, xlow, xup, ylow, yup;
-   Float_t dz = Hparam.zmax - Hparam.zmin;
+   Double_t z, xk,xstep, yk, ystep, xlow, xup, ylow, yup;
+   Double_t dz = Hparam.zmax - Hparam.zmin;
    if (dz <= 0) return;
 
    Style_t fillsav   = fH->GetFillStyle();
@@ -982,8 +984,8 @@ void THistPainter::PaintColorLevels()
 //   SetFillStyle(1000);
    fH->TAttFill::Modify();
 
-   Int_t ncolors = gStyle->GetNumberOfColors();
-   Float_t scale = ncolors/dz;
+   Int_t ncolors  = gStyle->GetNumberOfColors();
+   Double_t scale = ncolors/dz;
    Int_t color;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
@@ -1055,7 +1057,7 @@ void THistPainter::PaintContour()
 
    Int_t i, j, count, ncontour, icol, iend, icont, n, lj, m, ix, jx, ljfill;
    Int_t itars, mode, ir[4];
-   Float_t xsave, ysave, thesave,phisave,x[4], y[4], zc[4];
+   Double_t xsave, ysave, thesave,phisave,x[4], y[4], zc[4];
 
    if (Hoption.Contour == 1) {
       Hoption.Surf = 12;
@@ -1073,10 +1075,10 @@ void THistPainter::PaintContour()
       return;
    }
 
-   Float_t *levels  = new Float_t[kMAXCONTOUR];
-   Float_t *xarr    = new Float_t[kMAXCONTOUR];
-   Float_t *yarr    = new Float_t[kMAXCONTOUR];
-   Int_t  *itarr    = new Int_t[kMAXCONTOUR];
+   Double_t *levels  = new Double_t[kMAXCONTOUR];
+   Double_t *xarr    = new Double_t[kMAXCONTOUR];
+   Double_t *yarr    = new Double_t[kMAXCONTOUR];
+   Int_t  *itarr     = new Int_t[kMAXCONTOUR];
    for (i=0;i<kMAXCONTOUR;i++) itarr[i] = 0;
 
    ncontour  = fH->GetContour();
@@ -1090,7 +1092,7 @@ void THistPainter::PaintContour()
       ncontour = kMAXCONTOUR-1;
       fH->SetContour(ncontour);
    }
-   fH->GetContour(levels);
+   for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevel(i);
    Int_t linesav   = fH->GetLineStyle();
    Int_t colorsav  = fH->GetLineColor();
    if (Hoption.Contour == 13) {
@@ -1197,16 +1199,16 @@ void THistPainter::PaintContour()
 }
 
 //______________________________________________________________________________
-Int_t THistPainter::PaintContourLine(Float_t elev1, Int_t icont1, Float_t x1, Float_t y1,
-                            Float_t elev2, Int_t icont2, Float_t x2, Float_t y2,
-                            Float_t *xarr, Float_t *yarr, Int_t *itarr)
+Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
+                            Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
+                            Double_t *xarr, Double_t *yarr, Int_t *itarr)
 {
 //*-*-*-*-*-*-*-*Fill the matrix XARR YARR for Contour Plot*-*-*-*-*-*-*-*
 //*-*            ==========================================
 //*-*
 
    Bool_t vert;
-   Float_t tlen, tdif, elev, diff, pdif, xlen;
+   Double_t tlen, tdif, elev, diff, pdif, xlen;
    Int_t n, i, icount;
 
    if (x1 == x2) {
@@ -1266,13 +1268,13 @@ void THistPainter::PaintErrors()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    const Int_t BASEMARKER=10;
-   Float_t xp, yp, ex1, ex2, ey1, ey2;
-   Float_t delta;
-   Float_t s2x, s2y, bxsize, bysize, symbolsize, xerror;
-   Float_t xi1, xi2, xi3, xi4, yi1, yi2, yi3, yi4;
-   Float_t xmin, xmax, ymin, ymax;
-   Float_t logxmin = 0;
-   Float_t logymin = 0;
+   Double_t xp, yp, ex1, ex2, ey1, ey2;
+   Double_t delta;
+   Double_t s2x, s2y, bxsize, bysize, symbolsize, xerror;
+   Double_t xi1, xi2, xi3, xi4, yi1, yi2, yi3, yi4;
+   Double_t xmin, xmax, ymin, ymax;
+   Double_t logxmin = 0;
+   Double_t logymin = 0;
    Int_t k, npoints, first, last, fixbin;
    Int_t if1 = 0;
    Int_t if2 = 0;
@@ -1280,8 +1282,8 @@ void THistPainter::PaintErrors()
    Int_t option0, option1, option2, option3, option4, optionE;
 //*-*-_____________________________
 
-   Float_t *xline = 0;
-   Float_t *yline = 0;
+   Double_t *xline = 0;
+   Double_t *yline = 0;
    option0 = option1 = option2 = option3 = option4 = optionE = 0;
    if (Hoption.Error == 10) option0 = 1;
    if (Hoption.Error == 11) option1 = 1;
@@ -1309,7 +1311,7 @@ void THistPainter::PaintErrors()
    last       = Hparam.xlast;
    npoints    = last - first  +1;
    if (errormarker == 1) symbolsize = 0.01;
-   Float_t factor = Hparam.factor;
+   Double_t factor = Hparam.factor;
 //   xmin       = Hparam.xmin;
 //   xmax       = Hparam.xmax;
    xmin       = gPad->GetUxmin();
@@ -1321,8 +1323,8 @@ void THistPainter::PaintErrors()
 //*-*-      initialize the filled area drawing
 
    if (option3) {
-      xline = new Float_t[2*npoints];
-      yline = new Float_t[2*npoints];
+      xline = new Double_t[2*npoints];
+      yline = new Double_t[2*npoints];
       if (!xline || !yline) {
          Error("PaintErrors", "too many points, out of memory");
          return;
@@ -1559,20 +1561,20 @@ void THistPainter::PaintHist()
 
    Int_t htype, oldhtype;
    Int_t i, j, first, last, nbins, fixbin;
-   Float_t c1, yb, y1, y2, ym1, ym2, yadd, ycur, ypre;
-   Float_t ync, ynext, ypc;
+   Double_t c1, yb, y1, y2, ym1, ym2, yadd, ycur, ypre;
+   Double_t ync, ynext, ypc;
    yb = ynext = 0;
 
    strcpy(chopth, "                ");
    strcpy(choptg, "    ");
    strcpy(chtemp, "        ");
 
-   Float_t ymin = Hparam.ymin;
-   Float_t ymax = Hparam.ymax;
-   Float_t baroffset = fH->GetBarOffset();
-   Float_t barwidth  = fH->GetBarWidth();
-   Float_t baroffsetsave = gStyle->GetBarOffset();
-   Float_t barwidthsave  = gStyle->GetBarWidth();
+   Double_t ymin = Hparam.ymin;
+   Double_t ymax = Hparam.ymax;
+   Double_t baroffset = fH->GetBarOffset();
+   Double_t barwidth  = fH->GetBarWidth();
+   Double_t baroffsetsave = gStyle->GetBarOffset();
+   Double_t barwidthsave  = gStyle->GetBarWidth();
    gStyle->SetBarOffset(baroffset);
    gStyle->SetBarWidth(barwidth);
 
@@ -1582,16 +1584,16 @@ void THistPainter::PaintHist()
    last  = Hparam.xlast;
    nbins = last - first + 1;
 
-   Float_t *keepx = 0;
-   Float_t *keepy = 0;
+   Double_t *keepx = 0;
+   Double_t *keepy = 0;
    if (fXaxis->GetXbins()->fN) fixbin = 0;
-   else                       fixbin = 1;
+   else                        fixbin = 1;
    if (!Hoption.Plus) {
-      if (fixbin) keepx = new Float_t[2];
-      else        keepx = new Float_t[nbins+1];
-      keepy = new Float_t[nbins];
+      if (fixbin) keepx = new Double_t[2];
+      else        keepx = new Double_t[nbins+1];
+      keepy = new Double_t[nbins];
    }
-   Float_t logymin = 0;
+   Double_t logymin = 0;
    if (Hoption.Logy) logymin = TMath::Power(10,ymin);
 
 //*-*-  Loop on histogram bins
@@ -1823,7 +1825,7 @@ Int_t THistPainter::PaintInit()
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) return 1;
 
    static const char *where = "PaintInit";
-   Float_t YMARGIN = 0.05;
+   Double_t YMARGIN = 0.05;
    Int_t maximum = 0;
    Int_t minimum = 0;
    if (fH->GetMaximumStored() != -1111) maximum = 1;
@@ -1858,10 +1860,10 @@ Int_t THistPainter::PaintInit()
    }
 
 //*-*  Compute Y axis parameters
-   Float_t BIGP = TMath::Power(10,32);
-   Float_t ymax = -BIGP;
-   Float_t ymin = BIGP;
-   Float_t c1, e1;
+   Double_t BIGP = TMath::Power(10,32);
+   Double_t ymax = -BIGP;
+   Double_t ymin = BIGP;
+   Double_t c1, e1;
    Double_t xv[1];
    Double_t fval;
    Int_t i;
@@ -1883,9 +1885,9 @@ Int_t THistPainter::PaintInit()
                f1 = (TF1*)f;
                if (xv[0] < f1->GetXmin() || xv[0] > f1->GetXmax()) continue;
                fval = f1->Eval(xv[0],0,0);
-               ymax = TMath::Max(ymax,Float_t(fval));
+               ymax = TMath::Max(ymax,Double_t(fval));
                if (Hoption.Logy) {
-                  if (fval > 0.3*c1) ymin = TMath::Min(ymin,Float_t(fval));
+                  if (fval > 0.3*c1) ymin = TMath::Min(ymin,Double_t(fval));
                }
             }
          }
@@ -1900,7 +1902,7 @@ Int_t THistPainter::PaintInit()
       if (ymax >= 1) ymin = TMath::Max(.5,ymax*1e-10);
       else           ymin = 0.001*ymax;
    }
-   Float_t xm = ymin;
+   Double_t xm = ymin;
    if (maximum) ymax = fH->GetMaximumStored();
    if (minimum) xm   = fH->GetMinimumStored();
    if (Hoption.Logy && xm <= 0) {
@@ -2010,17 +2012,17 @@ void THistPainter::PaintLego()
    fNIDS = 0;
    hlist[0] = fH;
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
-   Int_t   nx     = Hparam.xlast - Hparam.xfirst + 1;
-   Int_t   ny     = Hparam.ylast - Hparam.yfirst + 1;
-   Float_t zmin   = Hparam.zmin;
-   Float_t zmax   = Hparam.zmax;
-   Float_t xlab1  = Hparam.xmin;
-   Float_t xlab2  = Hparam.xmax;
-   Float_t ylab1  = Hparam.ymin;
-   Float_t ylab2  = Hparam.ymax;
-   Float_t dangle = 10*3.141592/180; //Delta angle for Rapidity option
-   Float_t z1c = zmin;
-   Float_t z2c = zmax*kHMAX;
+   Int_t   nx      = Hparam.xlast - Hparam.xfirst + 1;
+   Int_t   ny      = Hparam.ylast - Hparam.yfirst + 1;
+   Double_t zmin   = Hparam.zmin;
+   Double_t zmax   = Hparam.zmax;
+   Double_t xlab1  = Hparam.xmin;
+   Double_t xlab2  = Hparam.xmax;
+   Double_t ylab1  = Hparam.ymin;
+   Double_t ylab2  = Hparam.ymax;
+   Double_t dangle = 10*3.141592/180; //Delta angle for Rapidity option
+   Double_t z1c = zmin;
+   Double_t z2c = zmax*kHMAX;
 
 
 //*-*- Compute the lego limits and instantiate a lego object
@@ -2115,9 +2117,9 @@ void THistPainter::PaintLego()
       return;
    }
 
-   Float_t thedeg =  90 - gPad->GetTheta();
-   Float_t phideg = -90 - gPad->GetPhi();
-   Float_t psideg = view->GetPsi();
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
    fLego->SetLineColor(fH->GetLineColor());
@@ -2152,7 +2154,7 @@ void THistPainter::PaintLego()
       Warning("PaintLego", "too many color levels, %d, reset to 8", ndivz);
       ndivz = 8;
    }
-   Float_t *funlevel = new Float_t[ndivz+1];
+   Double_t *funlevel = new Double_t[ndivz+1];
    Int_t *colorlevel = new Int_t[ndivz+1];
    Int_t lowcolor = fH->GetFillColor();
    Int_t theColor;
@@ -2214,19 +2216,19 @@ void THistPainter::PaintLego()
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintLegoAxis(TGaxis *axis, Float_t ang)
+void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 {
 //*-*-*-*-*-*-*Draw the axis for legos and surface plots*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
 //*-*
 
-    static Float_t epsil = 0.001;
+    static Double_t epsil = 0.001;
 
     Double_t cosa, sina;
-    Float_t bmin, bmax;
-    Float_t r[24]	/* was [3][8] */;
+    Double_t bmin, bmax;
+    Double_t r[24]	/* was [3][8] */;
     Int_t ndivx, ndivy, ndivz, i;
-    Float_t x1[3], x2[3], y1[3], y2[3], z1[3], z2[3], av[24]  /*  was [3][8] */;
+    Double_t x1[3], x2[3], y1[3], y2[3], z1[3], z2[3], av[24]  /*  was [3][8] */;
     static char chopax[8], chopay[8], chopaz[8];
     Int_t ix1, ix2, iy1, iy2, iz1, iz2;
     Double_t rad;
@@ -2235,7 +2237,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Float_t ang)
 
     if (Hoption.System != kCARTESIAN) return ;
 
-    rad = TMath::ATan(1.) * (float)4. / (float)180.;
+    rad = TMath::ATan(1.) * 4. /180.;
     cosa = TMath::Cos(ang*rad);
     sina = TMath::Sin(ang*rad);
 
@@ -2262,8 +2264,8 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Float_t ang)
 
     view->SetAxisNDC(x1, x2, y1, y2, z1, z2);
 
-    Float_t *rmin = view->GetRmin();
-    Float_t *rmax = view->GetRmax();
+    Double_t *rmin = view->GetRmin();
+    Double_t *rmax = view->GetRmax();
 
 //*-*-             Initialize the axis options
 
@@ -2319,6 +2321,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Float_t ang)
         axis->SetTitleOffset(fXaxis->GetTitleOffset());
         axis->SetTitleSize(fXaxis->GetTitleSize());
         axis->SetBit(TGaxis::kCenterTitle, fXaxis->TestBit(TGaxis::kCenterTitle));
+        axis->SetBit(TGaxis::kRotateTitle, fXaxis->TestBit(TGaxis::kRotateTitle));
 	if (Hoption.Logx) {
 	    bmin = TMath::Power(10, rmin[0]);
 	    bmax = TMath::Power(10, rmax[0]);
@@ -2354,6 +2357,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Float_t ang)
         axis->SetTitleOffset(fYaxis->GetTitleOffset());
         axis->SetTitleSize(fYaxis->GetTitleSize());
         axis->SetBit(TGaxis::kCenterTitle, fYaxis->TestBit(TGaxis::kCenterTitle));
+        axis->SetBit(TGaxis::kRotateTitle, fYaxis->TestBit(TGaxis::kRotateTitle));
 
 	if (TMath::Abs(z1[0] - z2[0]) < epsil && TMath::Abs(z1[1] - z2[1]) < epsil) {
 	    strcpy(chopay, "SDH+=N");
@@ -2400,6 +2404,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Float_t ang)
         axis->SetTitleOffset(fZaxis->GetTitleOffset());
         axis->SetTitleSize(fZaxis->GetTitleSize());
         axis->SetBit(TGaxis::kCenterTitle, fZaxis->TestBit(TGaxis::kCenterTitle));
+        axis->SetBit(TGaxis::kRotateTitle, fZaxis->TestBit(TGaxis::kRotateTitle));
 	if (Hoption.Logz) {
 	    bmin = TMath::Power(10, rmin[2]);
 	    bmax = TMath::Power(10, rmax[2]);
@@ -2429,16 +2434,16 @@ void THistPainter::PaintPalette()
 //*-*-*-*-*-*-*-*Paint the color palette on the right side of the pad*-*-*-*-*
 //*-*            ====================================================
 
-   Float_t xup  = gPad->GetUxmax();
-   Float_t x2   = gPad->GetX2();
-   Float_t ymin = gPad->GetUymin();
-   Float_t ymax = gPad->GetUymax();
-   Float_t xr   = 0.05*(x2 - gPad->GetX1());
-   Float_t xmin = xup +0.1*xr;
-   Float_t xmax = xmin + xr;
+   Double_t xup  = gPad->GetUxmax();
+   Double_t x2   = gPad->GetX2();
+   Double_t ymin = gPad->GetUymin();
+   Double_t ymax = gPad->GetUymax();
+   Double_t xr   = 0.05*(x2 - gPad->GetX1());
+   Double_t xmin = xup +0.1*xr;
+   Double_t xmax = xmin + xr;
    if (xmax > x2) xmax = x2-0.01*xr;
    Int_t ncolors = gStyle->GetNumberOfColors();
-   Float_t dy = (ymax-ymin)/ncolors;
+   Double_t dy = (ymax-ymin)/ncolors;
    for (Int_t i=0;i<ncolors;i++) {
       fH->SetFillColor(gStyle->GetColorPalette(i));
       fH->TAttFill::Modify();
@@ -2459,9 +2464,10 @@ void THistPainter::PaintPalette()
    axis.SetTitleOffset(zaxis->GetTitleOffset());
    axis.SetTitleSize(zaxis->GetTitleSize());
    axis.SetBit(TGaxis::kCenterTitle, zaxis->TestBit(TGaxis::kCenterTitle));
+   axis.SetBit(TGaxis::kRotateTitle, zaxis->TestBit(TGaxis::kRotateTitle));
    Int_t ndiv = zaxis->GetNdivisions();
-   Float_t wmin = Hparam.zmin;
-   Float_t wmax = Hparam.zmax;
+   Double_t wmin = Hparam.zmin;
+   Double_t wmax = Hparam.zmax;
    if (Hoption.Logz) {
       wmin = TMath::Power(10.,wmin);
       wmax = TMath::Power(10.,wmax);
@@ -2491,11 +2497,11 @@ void THistPainter::PaintScatterPlot()
    fH->TAttMarker::Modify();
 
    Int_t k, marker;
-   Float_t dz, z, xk,xstep, yk, ystep;
-   Float_t scale = 1;
+   Double_t dz, z, xk,xstep, yk, ystep;
+   Double_t scale = 1;
    Bool_t ltest  = kFALSE;
-   Float_t zmax  = fH->GetMaximum();
-   Float_t zmin  = fH->GetMinimum();
+   Double_t zmax  = fH->GetMaximum();
+   Double_t zmin  = fH->GetMinimum();
    if (zmin == 0 && zmax == 0) return;
    Int_t ncells = (Hparam.ylast-Hparam.yfirst)*(Hparam.xlast-Hparam.xfirst);
    if (Hoption.Logz) {
@@ -2637,9 +2643,9 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       if (stats) delete stats;
       return;
    }
-   Float_t  statw  = gStyle->GetStatW();
-   if (fit) statw  = 1.8*gStyle->GetStatW();
-   Float_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
+   Double_t  statw  = gStyle->GetStatW();
+   if (fit) statw   = 1.8*gStyle->GetStatW();
+   Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
    if (stats) {
       stats->Clear();
       done = kTRUE;
@@ -2774,9 +2780,9 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       if (stats) delete stats;
       return;
    }
-   Float_t  statw  = gStyle->GetStatW();
-   if (fit) statw  = 1.8*gStyle->GetStatW();
-   Float_t  stath  = 0.25*nlines*gStyle->GetStatH();
+   Double_t  statw  = gStyle->GetStatW();
+   if (fit) statw   = 1.8*gStyle->GetStatW();
+   Double_t  stath  = 0.25*nlines*gStyle->GetStatH();
    if (fit) stath += gStyle->GetStatH();
    if (stats) {
       stats->Clear();
@@ -2899,12 +2905,12 @@ void THistPainter::PaintSurface()
 //End_Html
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   const Float_t ydiff = 1;
-   const Float_t yligh1 = 10;
-   const Float_t qa = 0.15;
-   const Float_t qd = 0.15;
-   const Float_t qs = 0.8;
-   Float_t fmin, fmax;
+   const Double_t ydiff = 1;
+   const Double_t yligh1 = 10;
+   const Double_t qa = 0.15;
+   const Double_t qd = 0.15;
+   const Double_t qs = 0.8;
+   Double_t fmin, fmax;
    Int_t i;
    Int_t raster = 0;
    Int_t irep   = 0;
@@ -2912,17 +2918,17 @@ void THistPainter::PaintSurface()
    fNIDS        = 0;
 
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
-   Int_t   nx     = Hparam.xlast - Hparam.xfirst;
-   Int_t   ny     = Hparam.ylast - Hparam.yfirst;
-   Float_t zmin   = Hparam.zmin;
-   Float_t zmax   = Hparam.zmax;
-   Float_t xlab1  = Hparam.xmin;
-   Float_t xlab2  = Hparam.xmax;
-   Float_t ylab1  = Hparam.ymin;
-   Float_t ylab2  = Hparam.ymax;
-   Float_t dangle = 10*3.141592/180; //Delta angle for Rapidity option
-   Float_t z1c = zmin;
-   Float_t z2c = zmax*kHMAX;
+   Int_t   nx      = Hparam.xlast - Hparam.xfirst;
+   Int_t   ny      = Hparam.ylast - Hparam.yfirst;
+   Double_t zmin   = Hparam.zmin;
+   Double_t zmax   = Hparam.zmax;
+   Double_t xlab1  = Hparam.xmin;
+   Double_t xlab2  = Hparam.xmax;
+   Double_t ylab1  = Hparam.ymin;
+   Double_t ylab2  = Hparam.ymax;
+   Double_t dangle = 10*3.141592/180; //Delta angle for Rapidity option
+   Double_t z1c = zmin;
+   Double_t z2c = zmax*kHMAX;
 
 
 //*-*- Compute the lego limits and instantiate a lego object
@@ -3012,7 +3018,7 @@ void THistPainter::PaintSurface()
       Warning("PaintSurface", "too many color levels, %d, reset to 8", ndivz);
       ndivz = 8;
    }
-   Float_t *funlevel = new Float_t[ndivz+1];
+   Double_t *funlevel = new Double_t[ndivz+1];
    Int_t *colorlevel = new Int_t[ndivz+1];
    Int_t lowcolor = fH->GetFillColor();
    Int_t theColor;
@@ -3035,9 +3041,9 @@ void THistPainter::PaintSurface()
       return;
    }
 
-   Float_t thedeg =  90 - gPad->GetTheta();
-   Float_t phideg = -90 - gPad->GetPhi();
-   Float_t psideg = view->GetPsi();
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
 //*-*- Set color/style for back box
@@ -3091,7 +3097,7 @@ void THistPainter::PaintSurface()
       fmax = fmin + (yligh1+0.1)*(qd+qs);
       Int_t nbcol = 28;
       icol1 = 201;
-      Float_t dcol = 0.5/Float_t(nbcol);
+      Double_t dcol = 0.5/Double_t(nbcol);
       TColor *colref = gROOT->GetColor(fH->GetFillColor());
       Float_t r,g,b,hue,light,satur;
       colref->GetRGB(r,g,b);
@@ -3215,7 +3221,7 @@ void THistPainter::PaintText()
    text.SetTextSize(0.02*fH->GetMarkerSize());
    text.TAttText::Modify();
 
-   Float_t x, y, z;
+   Double_t x, y, z;
    char value[50];
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
@@ -3248,8 +3254,8 @@ void THistPainter::PaintTitle()
       if (t0) t0->SetTitle(fH->GetTitle());
       return;
    }
-   Float_t ht = gStyle->GetTitleH();
-   Float_t wt = gStyle->GetTitleW();
+   Double_t ht = gStyle->GetTitleH();
+   Double_t wt = gStyle->GetTitleW();
    if (ht <= 0) ht = 0.05;
    if (wt <= 0) wt = TMath::Min(0.6, 0.05+0.015*nt);
 
@@ -3282,14 +3288,14 @@ void THistPainter::RecalculateRange()
    if (Hoption.Same) return;
 
 //*-*- Compute x,y range
-   Float_t xmin = Hparam.xmin;
-   Float_t xmax = Hparam.xmax;
-   Float_t ymin = Hparam.ymin;
-   Float_t ymax = Hparam.ymax;
-   Float_t dx   = xmax-xmin;
-   Float_t dy   = ymax-ymin;
-   Float_t dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
-   Float_t dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
+   Double_t xmin = Hparam.xmin;
+   Double_t xmax = Hparam.xmax;
+   Double_t ymin = Hparam.ymin;
+   Double_t ymax = Hparam.ymax;
+   Double_t dx   = xmax-xmin;
+   Double_t dy   = ymax-ymin;
+   Double_t dxr  = dx/(1 - gPad->GetLeftMargin()   - gPad->GetRightMargin());
+   Double_t dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
 
    // Range() could change the size of the pad pixmap and therefore should
    // be called before the other paint routines
@@ -3324,8 +3330,8 @@ Int_t THistPainter::TableInit()
    static const char *where = "TableInit";
 
    Int_t first, last;
-   Float_t YMARGIN= 0.05;
-   Float_t zmin, zmax;
+   Double_t YMARGIN= 0.05;
+   Double_t zmin, zmax;
    Int_t maximum = 0;
    Int_t minimum = 0;
    if (fH->GetMaximumStored() != -1111) maximum = 1;
@@ -3386,10 +3392,10 @@ Int_t THistPainter::TableInit()
 
 
 //*-*------------------  Compute Z axis parameters
-   Float_t BIGP = TMath::Power(10,32);
+   Double_t BIGP = TMath::Power(10,32);
    zmax = -BIGP;
    zmin = BIGP;
-   Float_t c1, e1;
+   Double_t c1, e1;
    Stat_t allchan = 0;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
@@ -3450,7 +3456,7 @@ Int_t THistPainter::TableInit()
 //*-*-----
    if (Hoption.Logz) {
       if (zmin <= 0) {
-         zmin = TMath::Min((Float_t)1, (Float_t)0.001*zmax);
+         zmin = TMath::Min((Double_t)1, (Double_t)0.001*zmax);
          fH->SetMinimum(zmin);
       }
       zmin = TMath::Log10(zmin);
