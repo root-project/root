@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.4 2004/08/09 23:45:26 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.5 2004/08/10 14:11:40 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -22,7 +22,8 @@
 class TGLWidget;
 class TGCanvas;
 class TArcBall;
-
+class TGMenuBar;
+class TGPopupMenu;
 
 class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame {
 
@@ -32,6 +33,10 @@ private:
    TGCanvas      *fCanvasWindow;
    TGLWidget     *fCanvasContainer;
    TGLayoutHints *fCanvasLayout;
+   TGLayoutHints *fMenuBarLayout;
+   TGLayoutHints *fMenuBarHelpLayout;
+   TGMenuBar     *fMenuBar;
+   TGPopupMenu   *fHelpMenu;
    TList          fGLObjects;
 
    Double_t       fXc;
@@ -65,7 +70,7 @@ private:
    void BuildGLList()const;
    // final overriders from TGMainFrame
    void CloseWindow();
-   //Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    //non-copyable class
    TViewerOpenGL(const TViewerOpenGL &);
    TViewerOpenGL & operator = (const TViewerOpenGL &);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.5 2004/08/10 08:54:12 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.6 2004/08/10 14:11:40 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include <vector>
 #include <memory>
 
+#include <TRootHelpDialog.h>
 #include <TViewerOpenGL.h>
 #include <TVirtualPad.h>
 #include <TVirtualGL.h>
@@ -23,8 +24,11 @@
 #include <TGCanvas.h>
 #include <Buttons.h>
 #include <TAtt3D.h>
+#include <TGMenu.h>
 #include <TROOT.h>
 #include <TMath.h>
+#include <HelpText.h>
+
 
 #include "TArcBall.h"
 
@@ -57,6 +61,19 @@ static Float_t colors[] = {
    20.f / 255, 184.f / 255, 184.f / 255,
    71.f / 255, 235.f / 255, 235.f / 255,
    117.f / 255, 240.f / 255, 240.f / 255
+};
+
+static const char gHelpViewerOpenGL[] = "\
+     PRESS \n\
+     \tw\t--- wireframe mode\n\
+     \tr\t--- hidden surface mode\n\
+     \tj\t--- zoom in\n\
+     \tk\t--- zoom out\n\
+     HOLD the left mouse button and MOVE mouse to ROTATE object\n\n";
+
+enum EGLViewerCommands{
+   kGLHelpAbout,
+   kGLHelpOnViewer
 };
 
 class TGLPrimitive : public TObject{
@@ -178,8 +195,6 @@ Int_t TGLFaceSet::CheckPoints(const Int_t * source, Int_t * dest) const
 }
 
 //______________________________________________________________________________
-
-//______________________________________________________________________________
 void TGLFaceSet::GLDraw(GLUtesselator * t_obj)const
 {
    //first, define the color :
@@ -222,23 +237,19 @@ private:
 public:
    TGLPolyLine(const TBuffer3D & init_buffer);
    void GLDraw(GLUtesselator * t_obj)const;
-   void GLDrawMarker(const Double_t * vertex)const;
 };
 
 //______________________________________________________________________________
-TGLPolyLine::TGLPolyLine(const TBuffer3D & /*init_buffer*/)
+TGLPolyLine::TGLPolyLine(const TBuffer3D & ib)
+                  :fVertices(ib.fPnts, ib.fPnts + ib.fNbPnts * 3)
 {
 }
 
 //______________________________________________________________________________
 void TGLPolyLine::GLDraw(GLUtesselator *)const
 {
+   gVirtualGL->PaintPolyLine(fVertices.size() / 3, const_cast<Double_t *>(&fVertices[0]));
 }
-
-//______________________________________________________________________________
-void TGLPolyLine::GLDrawMarker(const Double_t * /*vertex*/)const
-{
-} 
 
 class TGLWidget : public TGCompositeFrame {
 private:
@@ -310,19 +321,28 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
 //______________________________________________________________________________
 void TViewerOpenGL::CreateViewer()
 {
-   std::auto_ptr<TGCanvas>safe_ptr1(new TGCanvas(this, GetWidth()+4, GetHeight()+4, kSunkenFrame | kDoubleBorder));
+   fHelpMenu = new TGPopupMenu(fClient->GetRoot());
+   fHelpMenu->AddEntry("&About ROOT...", kGLHelpAbout);
+   fHelpMenu->AddSeparator();
+   fHelpMenu->AddEntry("Help on OpenGL Viewer...", kGLHelpOnViewer);
+   fHelpMenu->Associate(this);
+   
+   // Create menubar layout hints
+   fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
+   fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
 
-   fCanvasWindow = safe_ptr1.get();
+   // Create menubar
+   fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
+   fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
+   AddFrame(fMenuBar, fMenuBarLayout);
+
+   fCanvasWindow = new TGCanvas(this, GetWidth()+4, GetHeight()+4, kSunkenFrame | kDoubleBorder);
    InitGLWindow();
 
-   std::auto_ptr<TGLWidget>safe_ptr2(new TGLWidget(this, fGLWin, fCanvasWindow->GetViewPort()));
-
-   fCanvasContainer = safe_ptr2.get();
+   fCanvasContainer = new TGLWidget(this, fGLWin, fCanvasWindow->GetViewPort());
    fCanvasWindow->SetContainer(fCanvasContainer);
 
-   std::auto_ptr<TGLayoutHints> safe_ptr3(new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-
-   fCanvasLayout = safe_ptr3.get();
+   fCanvasLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    AddFrame(fCanvasWindow, fCanvasLayout);
    SetWindowName("OpenGL experimental viewer");
    SetClassHints("GLViewer", "GLViewer");
@@ -330,15 +350,16 @@ void TViewerOpenGL::CreateViewer()
    MapSubwindows();
    Resize(GetDefaultSize());
    Show();
-   safe_ptr1.release();
-   safe_ptr2.release();
-   safe_ptr3.release();
 }
 
 //______________________________________________________________________________
 TViewerOpenGL::~TViewerOpenGL()
 {
    DeleteContext();
+   delete fHelpMenu;
+   delete fMenuBar;
+   delete fMenuBarLayout;
+   delete fMenuBarHelpLayout;
    delete fArcBall;
    delete fCanvasContainer;
    delete fCanvasWindow;
@@ -521,9 +542,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
    gVirtualGL->EnableGL(kDEPTH_TEST);
    gVirtualGL->EnableGL(kCULL_FACE);
    gVirtualGL->CullFaceGL(kBACK);
- //  gVirtualGL->PolygonGLMode(kFRONT, kFILL);
- //  gVirtualGL->DisableGL(kCULL_FACE);
- //  gVirtualGL->PolygonGLMode(kFRONT_AND_BACK, kLINE); 
+   gVirtualGL->PolygonGLMode(kFRONT, kFILL);
    BuildGLList();
    DrawObjects();
 }
@@ -535,19 +554,20 @@ void TViewerOpenGL::UpdateScene(Option_t *)
 
    if(buff->fOption == buff->kOGL){
       UpdateRange(buff);
-      std::auto_ptr<TGLPrimitive>safe_ptr;
-      
+      TGLPrimitive * add_obj = 0;
       switch(buff->fType)
       {
       case buff->kLINE:
+         add_obj = new TGLPolyLine(*buff);
+	 break;
       case buff->kMARKER:
          break;
       default:
-         safe_ptr.reset(new TGLFaceSet(*buff));
-         fGLObjects.AddLast(safe_ptr.get());
-         safe_ptr.release();
+         add_obj = new TGLFaceSet(*buff);
          break;
       }
+      if(add_obj)
+         fGLObjects.AddLast(add_obj);
    }
 }
 
@@ -645,4 +665,41 @@ void TViewerOpenGL::BuildGLList()const
    }
    gVirtualGL->GLUDeleteTess(t_obj);
    gVirtualGL->EndGLList();
+}
+
+Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+{
+   switch (GET_MSG(msg)) {
+   case kC_COMMAND:
+      switch (GET_SUBMSG(msg)) {
+         case kCM_BUTTON:
+	 case kCM_MENU:
+	    switch (parm1) {
+               case kGLHelpAbout:
+               {
+                  char str[32];
+                  sprintf(str, "About ROOT %s...", gROOT->GetVersion());
+                  TRootHelpDialog * hd = new TRootHelpDialog(this, str, 600, 400);
+                  hd->SetText(gHelpAbout);
+                  hd->Popup();
+               }
+               break;
+               case kGLHelpOnViewer:
+	       {
+                  TRootHelpDialog * hd = new TRootHelpDialog(this, "Help on GL Viewer...", 600, 400);
+                  hd->SetText(gHelpViewerOpenGL);
+                  hd->Popup();
+                  break;
+               }
+	       default:
+	       break;
+	   }
+	   default:
+	   break;
+      }
+   default:
+   break;
+   }
+   
+   return kTRUE;
 }

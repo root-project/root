@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.6 2004/08/09 15:35:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.7 2004/08/09 22:11:00 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -140,6 +140,7 @@ public:
    virtual void NewModelView(Double_t *angles, Double_t *delta ) = 0;
    virtual void PaintCone(Float_t *vertex, Int_t ndiv, Int_t nstacks) = 0;
    virtual void PaintPolyLine(Int_t n, Float_t *p, Option_t *option) = 0;
+   virtual void PaintPolyLine(Int_t n, Double_t *p) = 0;
    virtual void PaintGLPointsObject(const TPoints3DABC *points, Option_t *option="") = 0;
    virtual void PaintBrik(Float_t vertex[24])  = 0;
    virtual void PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz) = 0;

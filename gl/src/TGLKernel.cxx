@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.12 2004/08/10 07:41:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.13 2004/08/10 07:56:40 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -653,6 +653,24 @@ void TGLKernel::PaintPolyLine(Int_t n, Float_t *p, Option_t *)
    for (int i=0; i < n; i++, line+=3) glVertex3fv(line);
    glEnd();
 }
+
+//______________________________________________________________________________
+void TGLKernel::PaintPolyLine(Int_t n, Double_t *p)
+{
+   //
+
+   if (n <= 0 || p == 0) return;
+   GLdouble *line = p;
+
+//    if (fRootLight)
+//           LightIndex(0);  //reset the original color
+
+   glBegin(GL_LINE_STRIP);
+
+   for (int i=0; i < n; i++, line+=3) glVertex3dv(line);
+   glEnd();
+}
+
 
 //______________________________________________________________________________
 void TGLKernel::PaintBrik(Float_t vertex[24])
