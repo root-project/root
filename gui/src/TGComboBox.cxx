@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.20 2004/07/07 09:23:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.21 2004/07/07 10:17:20 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -261,15 +261,16 @@ void TGComboBox::Select(Int_t id)
 {
    // Make the selected item visible in the combo box window.
 
-   TGLBEntry *e;
-
-   e = fListBox->Select(id);
-   if (e) {
-      if (fSelEntry) {
-         fSelEntry->Update(e);
-         Layout();
-         Selected(fWidgetId, id);
-         Selected(id);
+   if (id!=GetSelected()) {
+      TGLBEntry *e;
+      e = fListBox->Select(id);
+      if (e) {
+         if (fSelEntry) {
+            fSelEntry->Update(e);
+            Layout();
+            Selected(fWidgetId, id);
+            Selected(id);
+         }
       }
    }
 }
