@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.21 2004/09/03 12:28:46 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.22 2004/09/03 13:55:42 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -543,6 +543,7 @@ TGeoTranslation& TGeoTranslation::operator = (const TGeoMatrix &matrix)
 {
 // Assignment from a general matrix
    if (&matrix == this) return *this;
+   TGeoMatrix::operator=(matrix);
    SetTranslation(matrix);
    return *this;
 }   
@@ -726,6 +727,7 @@ TGeoRotation& TGeoRotation::operator = (const TGeoMatrix &other)
 {
 // Assignment from a general matrix
    if (&other == this) return *this;
+   TGeoMatrix::operator=(other);
    SetRotation(other);
    return *this;
 }
@@ -1582,6 +1584,7 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix *matrix)
    // assignment
    if (matrix == this) return *this;
    Clear();
+   TGeoMatrix::operator=(*matrix);
    if (matrix->IsIdentity()) return *this;
    if (matrix->IsTranslation()) {
       SetBit(kGeoTranslation);
@@ -1603,6 +1606,7 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix &matrix)
 {
    // assignment
    if (&matrix == this) return *this;
+   TGeoMatrix::operator=(matrix);
    if (matrix.IsIdentity()) return *this;
    if (matrix.IsTranslation()) {
       SetBit(kGeoTranslation);
