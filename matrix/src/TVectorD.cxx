@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.24 2003/02/05 15:22:42 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.25 2003/02/05 23:36:59 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -121,8 +121,8 @@ TVectorD::TVectorD(const TMatrixDColumn &mc) : TObject(mc)
 TVectorD::TVectorD(const TMatrixDDiag &md) : TObject(md)
 {
    if (md.fMatrix->IsValid()) {
-      Allocate(md.fMatrix->GetRowUpb());
-      *this = md;
+     Allocate(TMath::Min(md.fMatrix->GetNrows(),md.fMatrix->GetNcols()));
+     *this = md;
    } else
       Error("TVectorD(const TMatrixDDiag&)", "matrix is not initialized");
 }
