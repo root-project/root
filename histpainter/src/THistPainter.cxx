@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.96 2002/08/15 14:18:32 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.97 2002/08/16 10:54:11 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4734,6 +4734,7 @@ void THistPainter::PaintTitle()
 //    *-*-*-*-*-*-*-*-*-*Draw the histogram title*-*-*-*-*-*-*-*-*-*-*-*-*
 //                       ========================
    if (Hoption.Same) return;
+   if (fH->TestBit(TH1::kNoTitle)) return;
    Int_t nt = strlen(fH->GetTitle());
    TPaveText *title  = (TPaveText*)gPad->FindObject("title");
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {

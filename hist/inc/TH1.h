@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.32 2002/04/26 10:18:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.33 2002/07/15 10:42:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -107,7 +107,8 @@ public:
        kUserContour = BIT(10), // user specified contour levels
        kCanRebin    = BIT(11), // can rebin axis
        kLogX        = BIT(15), // X-axis in log scale
-       kIsZoomed    = BIT(16)  // bit set when zooming on Y axis
+       kIsZoomed    = BIT(16), // bit set when zooming on Y axis
+       kNoTitle     = BIT(17)  // don't draw the histogram title
     };
 
     TH1();
