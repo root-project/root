@@ -1,0 +1,8 @@
+NtpRecord.root
+*.log
+*.d
+*.so
+*.dll
+myTree.root 
+twodim_0.root
+twodim_99.root
