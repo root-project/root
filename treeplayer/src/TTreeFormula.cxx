@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.10 2000/06/14 12:45:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.11 2000/06/15 06:46:22 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -154,14 +154,14 @@ void TTreeFormula::DefineDimensions(const char *info, Int_t code, Int_t& virt_di
       if (scanindex==0) {
          fCumulSize[code][fNdimensions[code]] = -1;
          if ( fIndexes[code][fNdimensions[code]] < 0 ) {
-            fCumulUsedSize[virt_dim] = -1 * abs(fCumulUsedSize[virt_dim]);
+            fCumulUsedSize[virt_dim] = -1 * TMath::Abs(fCumulUsedSize[virt_dim]);
             virt_dim++;
          } 
       } else {
          fCumulSize[code][fNdimensions[code]] = size;
          if ( fIndexes[code][fNdimensions[code]] < 0 ) {
-            if ( abs(fCumulUsedSize[virt_dim])==1 
-                 || (size < abs(fCumulUsedSize[virt_dim]) ) ) {
+            if ( TMath::Abs(fCumulUsedSize[virt_dim])==1 
+                 || (size < TMath::Abs(fCumulUsedSize[virt_dim]) ) ) {
                neg = fCumulUsedSize[virt_dim] < 0;
                fCumulUsedSize[virt_dim] = size;
                if (neg) fCumulUsedSize[virt_dim] *= -1;
