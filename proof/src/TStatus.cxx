@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TStatus.cxx,v 1.1 2004/07/09 01:34:51 rdm Exp $
 // Author: Maarten Ballintijn   7/06/2004
 
 /*************************************************************************
@@ -65,7 +65,7 @@ Int_t TStatus::Merge(TCollection *list)
 }
 
 //______________________________________________________________________________
-void TStatus::Print(Option_t */*option*/) const
+void TStatus::Print(Option_t * /*option*/) const
 {
    // Standard print function.
 
