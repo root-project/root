@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.2 2002/10/22 07:43:12 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.3 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -207,6 +207,42 @@ Bool_t TGeoUnion::Contains(Double_t *point) const
    inside = fRight->Contains(&local[0]);
    return inside;
 }
+
+//_____________________________________________________________________________
+void TGeoUnion::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+{
+   norm[0] = norm[1] = 0.;
+   norm[2] = 1.;
+   Double_t local[3];
+   Double_t ldir[3], lnorm[3];
+   fLeftMat->MasterToLocal(point, local);
+   if (fLeft->Contains(local)) {
+      fLeftMat->MasterToLocalVect(dir, ldir);
+      fLeft->ComputeNormal(local,ldir,lnorm);
+      fLeftMat->LocalToMasterVect(lnorm, norm);
+      return;
+   }   
+   fRightMat->MasterToLocal(point, local);
+   if (fRight->Contains(local)) {
+      fRightMat->MasterToLocalVect(dir, ldir);
+      fRight->ComputeNormal(local,ldir,lnorm);
+      fLeftMat->LocalToMasterVect(lnorm, norm);
+      return;
+   }   
+   // Propagate forward/backward to see which of the components is intersected first
+   local[0] = point[0] + 1E-5*dir[0];
+   local[1] = point[1] + 1E-5*dir[1];
+   local[2] = point[2] + 1E-5*dir[2];
+
+   if (!Contains(local)) {
+      local[0] = point[0] - 1E-5*dir[0];
+      local[1] = point[1] - 1E-5*dir[1];
+      local[2] = point[2] - 1E-5*dir[2];
+      if (!Contains(local)) return;
+   }
+   ComputeNormal(local,dir,norm);   
+}
+
 //-----------------------------------------------------------------------------
 Int_t TGeoUnion::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
@@ -229,36 +265,41 @@ Double_t TGeoUnion::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    Bool_t inside1 = fLeft->Contains(&local[0]);
    if (inside1) {
       d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
-      safety = *safe;
+//      printf("d1=%g\n", d1);
+      if (safe) safety = *safe;
    }
    fRightMat->MasterToLocal(point, &local[0]);
-   Bool_t inside2 = fRight->Contains(&local[0]);;
+   Bool_t inside2 = fRight->Contains(&local[0]);
    if (inside2) {
       d2 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
-      safety = TMath::Min(safety, *safe);
+//      printf("d2=%g\n", d2);
+      if (safe) safety = TMath::Min(safety, *safe);
    }
    if (inside1 && inside2) {
-      snxt = TMath::Max(d1, d2);
+      snxt = TMath::Min(d1, d2);
       for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
       snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      *safe = safety;
+      if (safe) *safe = safety;
+//      printf("ToOut from both: %g\n", snxt);
       return snxt;
    }   
    if (inside1) {
       snxt = d1;
       for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
       snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      *safe = safety;
+      if (safe) *safe = safety;
+//      printf("ToOut from 1: %g\n", snxt);
       return snxt;
    }   
    if (inside2) {
       snxt = d2;
       for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
       snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      *safe = safety;
+      if (safe) *safe = safety;
+//      printf("ToOut from 2: %g\n", snxt);
       return snxt;
    }
-   return 0.;   
+   return 0;   
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoUnion::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
@@ -266,16 +307,16 @@ Double_t TGeoUnion::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
 {
 // Compute distance from a given point to inside.
    Double_t local[3], ldir[3], rdir[3];
-   Double_t d1, d2, safety, snxt;
+   Double_t d1, d2, safety=0, snxt;
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    d1 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
-   safety = *safe;
+   if (safe) safety = *safe;
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
-   *safe = TMath::Min(*safe, safety);
+   if (safe) *safe = TMath::Min(*safe, safety);
    return snxt;
 }
 //-----------------------------------------------------------------------------
@@ -350,6 +391,40 @@ void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Doub
    dz = 0.5*(zmax-zmin);
    origin[2] = 0.5*(zmin+zmax);
 }   
+
+//_____________________________________________________________________________
+void TGeoSubtraction::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+{
+   norm[0] = norm[1] = 0.;
+   norm[2] = 1.;
+   Double_t local[3], ldir[3], lnorm[3];
+   fRightMat->MasterToLocal(point,local);
+   if (fRight->Contains(local)) {
+      fRightMat->MasterToLocalVect(dir,ldir);
+      fRight->ComputeNormal(local,ldir, lnorm);
+      fRightMat->LocalToMasterVect(lnorm,norm);
+      return;
+   }   
+   fLeftMat->MasterToLocal(point,local);
+   if (!fLeft->Contains(local)) {
+      fLeftMat->MasterToLocalVect(dir,ldir);
+      fLeft->ComputeNormal(local,ldir, lnorm);
+      fLeftMat->LocalToMasterVect(lnorm,norm);
+      return;
+   }
+   // point is inside left shape, but not inside the right
+   local[0] = point[0]+1E-5*dir[0];
+   local[1] = point[1]+1E-5*dir[1];
+   local[2] = point[2]+1E-5*dir[2];
+   if (Contains(local)) {
+      local[0] = point[0]-1E-5*dir[0];
+      local[1] = point[1]-1E-5*dir[1];
+      local[2] = point[2]-1E-5*dir[2];
+      if (Contains(local)) return;
+   }  
+   ComputeNormal(local,dir,norm);
+}
+
 //-----------------------------------------------------------------------------
 Bool_t TGeoSubtraction::Contains(Double_t *point) const
 {
@@ -374,16 +449,16 @@ Double_t TGeoSubtraction::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
 {
 // Compute distance from a given point to outside.
    Double_t local[3], ldir[3], rdir[3];
-   Double_t d1, d2, safety, snxt=0.;
+   Double_t d1, d2, safety=0, snxt=0.;
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
-   safety = *safe;
+   if (safe) safety = *safe;
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
-   *safe = TMath::Min(*safe, safety);
+   if (safe) *safe = TMath::Min(*safe, safety);
    return snxt;
 }   
 //-----------------------------------------------------------------------------
@@ -405,7 +480,7 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       if (inside) {
          // propagate to outside of '-'
          d1 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
-	 safety = *safe;
+	      if (safe) safety = *safe;
          snxt += d1+epsil;
          for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
          // now master outside '-'; check if inside '+'
@@ -416,14 +491,14 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       // master outside '-' and outside '+' ;  find distances to both
       fLeftMat->MasterToLocal(&master[0], &local[0]);
       d2 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
-      safety = *safe;
+      if (safe) safety = *safe;
       if (d2>1E20) return TGeoShape::kBig;
       fRightMat->MasterToLocal(&master[0], &local[0]);
       d1 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
-      safety = TMath::Min(*safe, safety);
+      if (safe) safety = TMath::Min(*safe, safety);
       if (d2<d1) {
          snxt += d2+epsil;
-	 *safe = safety;
+	      if (safe) *safe = safety;
          return snxt;
       }   
       // propagate to '-'
@@ -554,6 +629,40 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
    dz = 0.5*(sort[isort[2]]-sort[isort[1]]);
    origin[2] = 0.5*(sort[isort[1]]+sort[isort[2]]);   
 }   
+
+//_____________________________________________________________________________
+void TGeoIntersection::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+{
+   Double_t local[3], ldir[3], lnorm[3];
+   norm[0] = norm[1] = 0.;
+   norm[2] = 1.;
+   fLeftMat->MasterToLocal(point,local);
+   if (!fLeft->Contains(local)) {
+      fLeftMat->MasterToLocalVect(dir,ldir);
+      fLeft->ComputeNormal(local,ldir,lnorm);
+      fLeftMat->LocalToMasterVect(lnorm,norm);
+      return;
+   }
+   fRightMat->MasterToLocal(point,local);
+   if (!fRight->Contains(local)) {
+      fRightMat->MasterToLocalVect(dir,ldir);
+      fRight->ComputeNormal(local,ldir,lnorm);
+      fRightMat->LocalToMasterVect(lnorm,norm);
+      return;
+   }
+   // point is inside intersection.
+   local[0] = point[0] + 1E-5*dir[0];   
+   local[1] = point[1] + 1E-5*dir[1];   
+   local[2] = point[2] + 1E-5*dir[2];
+   if (Contains(local)) {
+      local[0] = point[0] - 1E-5*dir[0];   
+      local[1] = point[1] - 1E-5*dir[1];   
+      local[2] = point[2] - 1E-5*dir[2];
+      if (Contains(local)) return;
+   }
+   ComputeNormal(local,dir,norm);   
+}
+
 //-----------------------------------------------------------------------------
 Bool_t TGeoIntersection::Contains(Double_t *point) const
 {
@@ -578,16 +687,16 @@ Double_t TGeoIntersection::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
 {
 // Compute distance from a given point to outside.
    Double_t local[3], ldir[3], rdir[3];
-   Double_t d1, d2, safety, snxt=0.;
+   Double_t d1, d2, safety=0, snxt=0.;
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
-   safety = *safe;
+   if (safe) safety = *safe;
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
-   *safe = TMath::Min(*safe, safety);
+   if (safe) *safe = TMath::Min(*safe, safety);
    return snxt;
 }   
 //-----------------------------------------------------------------------------
@@ -613,7 +722,7 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    inside = fRight->Contains(&local[0]);
    fLeftMat->MasterToLocal(point, &local[0]);
    d1 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
-   safety = *safe;
+   if (safe) safety = *safe;
    if (inside) {
       for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
       if (Contains(&master[0])) return d1;
@@ -622,7 +731,7 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    // point is neither in left nor right shapes
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
-   *safe = TMath::Min(safety, *safe);
+   if (safe) *safe = TMath::Min(safety, *safe);
    snxt += TMath::Max(d1, d2);
    if (snxt>1E20) return snxt;
    for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];

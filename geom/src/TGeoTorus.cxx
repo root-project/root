@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.2 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.3 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -138,7 +138,6 @@ void TGeoTorus::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
    Double_t phi = TMath::ATan2(point[1],point[0]);
-   if (phi<0) phi+=2*TMath::Pi();
    if (fDphi<360) {
       Double_t phi1 = fPhi1*kDegRad;
       Double_t phi2 = (fPhi1+fDphi)*kDegRad;
@@ -164,6 +163,7 @@ void TGeoTorus::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
       norm[i] = point[i] - r0[i];
       normsq += norm[i]*norm[i];
    }
+   
    normsq = TMath::Sqrt(normsq);
    norm[0] /= normsq;
    norm[1] /= normsq;
@@ -344,7 +344,7 @@ Double_t TGeoTorus::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_
    if (TMath::Abs(point[2]) <= fRmax) {
       rxy2 = point[0]*point[0]+point[1]*point[1];
       if ((rxy2>=(fR-fRmax)*(fR-fRmax)) && (rxy2<=(fR+fRmax)*(fR+fRmax))) {
-         if (inphi) inbring=kTRUE;
+         if (!hasphi || inphi) inbring=kTRUE;
       }
    }   
    

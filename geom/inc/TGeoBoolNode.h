@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.2 2002/12/03 16:01:38 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.3 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    virtual ~TGeoBoolNode();
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) = 0;
+   virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;
    virtual Bool_t    Contains(Double_t *point) const         = 0;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py) = 0;
    virtual Double_t  DistToOut(Double_t *point, Double_t *dir, Int_t iact=1,
@@ -92,6 +93,7 @@ public:
    virtual ~TGeoUnion();
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin);
+   virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t    Contains(Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
    virtual Double_t  DistToOut(Double_t *point, Double_t *dir, Int_t iact=1,
@@ -124,6 +126,7 @@ public:
    virtual ~TGeoIntersection();
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin);
+   virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t    Contains(Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
    virtual Double_t  DistToOut(Double_t *point, Double_t *dir, Int_t iact=1,
@@ -156,6 +159,7 @@ public:
    virtual ~TGeoSubtraction();
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin);
+   virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t    Contains(Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
    virtual Double_t  DistToOut(Double_t *point, Double_t *dir, Int_t iact=1,

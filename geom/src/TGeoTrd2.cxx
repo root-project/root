@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.19 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.20 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -262,7 +262,7 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    } else if (point[2]>fDz) {
       cn = dir[2];
       if (cn>=0) return kBig;
-      snxt = -(fDz-point[2])/cn;
+      snxt = (fDz-point[2])/cn;
       // find extrapolated X and Y
       xnew = point[0]+snxt*dir[0];
       if (TMath::Abs(xnew) < fDx2) {

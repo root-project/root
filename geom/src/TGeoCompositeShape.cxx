@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.12 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.13 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -209,6 +209,12 @@ void TGeoCompositeShape::ComputeBBox()
 // compute bounding box of the sphere
    if(fNode) fNode->ComputeBBox(fDX, fDY, fDZ, fOrigin);
 }   
+
+//_____________________________________________________________________________
+void TGeoCompositeShape::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+{
+   if (fNode) fNode->ComputeNormal(point,dir,norm);
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoCompositeShape::Contains(Double_t *point) const
