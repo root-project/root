@@ -259,7 +259,7 @@ freebsd4)
 macosx)
    # MacOS X with cc (GNU cc v2.95.2.)
    auxcflags=
-   auxlibs="-lm `[ -d /sw/lib ] && echo -L/sw/lib` -ldl"
+   auxlibs="-u _G__cpp_setup_initializerG__Tree -lm `[ -d /sw/lib ] && echo -L/sw/lib` -ldl"
    auxglibs=${auxlibs}
    ;;
 hiux)
@@ -472,7 +472,7 @@ while test $# -gt 0; do
          libs=${rootlibs}
       fi
       ### If we're on a win32 system, we need to change the -l prefix
-      ### into a .lib suffix, and expend the paths to a backslash
+      ### into a .lib suffix, and expand the paths to a backslash
       ### separated path.
       if test "$arch" = "win32"; then
          nlibs=`echo $libs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
