@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.33 2004/11/08 09:56:24 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.34 2004/11/25 12:10:01 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -239,11 +239,10 @@ Bool_t TGeoBBox::Contains(Double_t *point) const
 Double_t TGeoBBox::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the box
-   Double_t saf[6];
+   Double_t s,smin,saf[6];
    Double_t newpt[3];
-   memcpy(&newpt[0], point, 3*sizeof(Double_t));
    Int_t i;
-   for (i=0; i<3; i++) newpt[i]-=fOrigin[i];
+   for (i=0; i<3; i++) newpt[i] = point[i] - fOrigin[i];
    saf[0] = fDX+newpt[0];
    saf[1] = fDX-newpt[0];
    saf[2] = fDY+newpt[1];
@@ -251,18 +250,20 @@ Double_t TGeoBBox::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    saf[4] = fDZ+newpt[2];
    saf[5] = fDZ-newpt[2];
    if (iact<3 && safe) {
-   // compute safe distance
-      *safe = saf[TMath::LocMin(6, &saf[0])];
+      smin = saf[0];
+      // compute safe distance
+      for (i=1;i<6;i++) if (saf[i] < smin) smin = saf[i];
+      *safe = smin;
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to surface
-   Double_t s=0, smin=TGeoShape::Big();
+   smin=TGeoShape::Big();
    for (i=0; i<3; i++) {
       if (dir[i]!=0) {
          s = (dir[i]>0)?(saf[(i<<1)+1]/dir[i]):(-saf[i<<1]/dir[i]);
          if (s < smin) smin = s;
-	  }
+      }
    }
    return smin;
 }
@@ -274,17 +275,17 @@ Double_t TGeoBBox::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    Double_t saf[3];
    Double_t par[3];
    Double_t newpt[3];
-   memcpy(&newpt[0], point, 3*sizeof(Double_t));
    Int_t i;
-   for (i=0; i<3; i++) newpt[i]-=fOrigin[i];
+   for (i=0; i<3; i++) newpt[i] = point[i] - fOrigin[i];
    par[0] = fDX;
    par[1] = fDY;
    par[2] = fDZ;
-   for (i=0; i<3; i++)
-      saf[i] = TMath::Abs(newpt[i])-par[i];
+   for (i=0; i<3; i++) saf[i] = TMath::Abs(newpt[i])-par[i];
    if (iact<3 && safe) {
       // compute safe distance
-      *safe = saf[TMath::LocMax(3, saf)];
+      *safe = saf[0];
+      if (saf[1] < *safe) *safe = saf[1];
+      if (saf[2] < *safe) *safe = saf[2];
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }

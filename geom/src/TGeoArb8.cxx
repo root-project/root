@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.35 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.36 2004/12/05 08:19:08 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -831,7 +831,7 @@ Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
       }
       GetPlaneNormal(p1,p2,p3,norm);
       safe = (point[0]-p1[0])*norm[0]+(point[1]-p1[1])*norm[1]+(point[2]-p1[2])*norm[2];
-      if (in) return (-safe);
+      if (in) return (safe);
       return safe;
    }
    // The face is twisted
