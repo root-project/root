@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.2 2000/08/18 09:33:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.3 2000/11/21 20:50:05 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -312,7 +312,6 @@ void TEventList::Streamer(TBuffer &b)
          return;
       }
       //====process old versions before automatic schema evolution
-      b.ReadVersion(&R__s, &R__c);
       TNamed::Streamer(b);
       b >> fN;
       b >> fSize;
