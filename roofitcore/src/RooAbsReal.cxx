@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.58 2001/11/01 17:57:54 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.59 2001/11/01 22:52:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -35,6 +35,7 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooCustomizer.hh"
 #include "RooFitCore/RooAbsData.hh"
+#include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooScaledFunc.hh"
 #include "RooFitCore/RooDataProjBinding.hh"
 
@@ -733,8 +734,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
 
+  RooArgSet* projDataNeededVars(0) ;
   // Take out data-projected dependens from projectedVars
   if (projData) {
+    projDataNeededVars = (RooArgSet*) projectedVars.selectCommon(*projData->get()) ;
     projectedVars.remove(*projData->get(),kTRUE,kTRUE) ;
   }
 
@@ -770,9 +773,18 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
       branch->setOperMode(RooAbsArg::ADirty) ;
     }
     delete bIter ;
+
+    // If data set contains more columns than needed, make reduced copy first
+    RooDataSet* projDataSel((RooDataSet*)projData) ;
+    if (projDataNeededVars->getSize()<projData->get()->getSize()) {
+      projDataSel = (RooDataSet*) ((RooDataSet*)projData)->reduce(*projDataNeededVars) ;
+      cout << "RooAbsReal::plotOn(" << GetName() 
+	   << ") only the following components of the projection data will be used: " ; 
+      projDataNeededVars->Print("1") ;
+    }
         
-    RooDataProjBinding projBind(*projection,*projData,*plotVar) ;
-    ((RooAbsReal*)projection)->attachDataSet(*projData) ;
+    RooDataProjBinding projBind(*projection,*projDataSel,*plotVar) ;
+    ((RooAbsReal*)projection)->attachDataSet(*projDataSel) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);
     RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
 				   plotVar->getPlotMin(),plotVar->getPlotMax(),plotVar->getPlotBins()) ;
@@ -780,6 +792,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);
+
+    if (projDataSel!=projData) delete projDataSel ;
+    delete projDataNeededVars ;
        
   } else {
     
