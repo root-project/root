@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.10 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.11 2001/08/22 06:38:51 chcheng Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -11,7 +11,16 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION --
-// A RooCurve is a graphical representation of a real-valued function.
+// A RooCurve is a one-dimensional graphical representation of a real-valued function.
+// A curve is approximated by straight line segments with endpoints chosen to give
+// a "good" approximation to the true curve. The goodness of the approximation is
+// controlled by a precision and a resolution parameter. To view the points where
+// a function y(x) is actually evaluated to approximate a smooth curve, use:
+//
+//  RooPlot *p= y.plotOn(x.frame());
+//  p->getAttMarker("curve_y")->SetMarkerStyle(20);
+//  p->setDrawOptions("curve_y","PL");
+//  p->Draw();
 
 // #include "BaBar/BaBar.hh"
 
@@ -31,14 +40,14 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.10 2001/08/09 01:02:14 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.11 2001/08/22 06:38:51 chcheng Exp $";
 
 RooCurve::RooCurve() {
   initialize();
 }
 
 RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
-		   const RooArgSet *normVars, Double_t prec) {
+		   const RooArgSet *normVars, Double_t prec, Double_t resolution) {
   // Create a 1-dim curve of the value of the specified real-valued expression
   // as a function of x. Use the optional precision parameter to control
   // how precisely the smooth curve is rasterized. Use the optional argument set
@@ -105,7 +114,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
   assert(0 != funcPtr);
 
   // calculate the points to add to our curve
-  addPoints(*funcPtr,x.getPlotMin(),x.getPlotMax(),x.getPlotBins(),prec);
+  addPoints(*funcPtr,x.getPlotMin(),x.getPlotMax(),x.getPlotBins()+1,prec,resolution);
   initialize();
 
   // cleanup
@@ -115,11 +124,14 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
 }
 
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
-		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec) {
+		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution) {
   SetName(name);
   SetTitle(title);
-  addPoints(func,xlo,xhi,minPoints,prec);
+  addPoints(func,xlo,xhi,minPoints,prec,resolution);
   initialize();
+}
+
+RooCurve::~RooCurve() {
 }
 
 void RooCurve::initialize() {
@@ -132,40 +144,69 @@ void RooCurve::initialize() {
 }
 
 void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
-			 Int_t minPoints, Double_t prec) {
+			 Int_t minPoints, Double_t prec, Double_t resolution) {
   // Add points calculated with the specified function, over the range (xlo,xhi).
   // Add at least minPoints equally spaced points, and add sufficient points so that
-  // the maximum deviation from the final straight-line segements is prec*(ymax-ymin).
+  // the maximum deviation from the final straight-line segements is prec*(ymax-ymin),
+  // down to a minimum horizontal spacing of resolution*(xhi-xlo).
 
   // check the inputs
   if(!func.isValid()) {
     cout << fName << "::addPoints: input function is not valid" << endl;
     return;
   }
-  if(minPoints == 0 || xhi <= xlo) {
+  if(minPoints <= 0 || xhi <= xlo) {
     cout << fName << "::addPoints: bad input (nothing added)" << endl;
     return;
   }
-  // add the first point
-  Double_t x1,y1,x2= xlo,y2= func(&x2);
-  addPoint(x2,y2);
 
-  // loop over a grid with the minimum allowed number of points
-  Double_t dx= (xhi-xlo)/minPoints;
-  for(Int_t step= 1; step <= minPoints; step++) {
-    x1= x2;
-    y1= y2;
-    x2= xlo + step*dx;
-    y2= func(&x2);    
-    addRange(func,x1,x2,y1,y2,prec);
+  // Perform a coarse scan of the function to estimate its y range.
+  // Save the results so we do not have to re-evaluate at the scan points.
+  Double_t *yval= new Double_t[minPoints];
+  assert(0 != yval);
+  Double_t x,dx= (xhi-xlo)/(minPoints-1.);
+  for(Int_t step= 0; step < minPoints; step++) {
+    x= xlo + step*dx;
+    yval[step]= func(&x);
+    updateYAxisLimits(yval[step]);
   }
+
+  // store points of the coarse scan and calculate any refinements necessary
+  Double_t minDx= resolution*(xhi-xlo);
+  Double_t x1,x2= xlo;
+  addPoint(xlo,yval[0]);
+  for(Int_t step= 1; step < minPoints; step++) {
+    x1= x2;
+    x2= xlo + step*dx;
+    addRange(func,x1,x2,yval[step-1],yval[step],prec,minDx);
+  }
+
+  // cleanup
+  delete [] yval;
 }
 
-RooCurve::~RooCurve() {
-}
+void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
+			Double_t y1, Double_t y2, Double_t prec, Double_t minDx) {
+  // Fill the range (x1,x2) with points calculated using func(&x). No point will
+  // be added at x1, and a point will always be added at x2. The density of points
+  // will be calculated so that the maximum deviation from a straight line
+  // approximation is prec*(ymax-ymin) down to the specified minimum horizontal spacing.
 
-Double_t RooCurve::getFitRangeNorm() const {
-  return 1;
+  // calculate our value at the midpoint of this range
+  Double_t xmid= 0.5*(x1+x2);
+  Double_t ymid= func(&xmid);
+  // test if the midpoint is sufficiently close to a straight line across this interval
+  Double_t dy= ymid - 0.5*(y1+y2);
+  if((xmid - x1 >= minDx) && fabs(dy)>0 && fabs(dy) >= prec*(getYAxisMax()-getYAxisMin())) {
+    // fill in each subrange
+    updateYAxisLimits(ymid);
+    addRange(func,x1,xmid,y1,ymid,prec,minDx);
+    addRange(func,xmid,x2,ymid,y2,prec,minDx);
+  }
+  else {
+    // add the endpoint
+    addPoint(x2,y2);
+  }
 }
 
 void RooCurve::addPoint(Double_t x, Double_t y) {
@@ -173,34 +214,10 @@ void RooCurve::addPoint(Double_t x, Double_t y) {
 
   Int_t next= GetN();
   SetPoint(next, x, y);
-  updateYAxisLimits(y);
 }
 
-void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
-			Double_t y1, Double_t y2, Double_t prec) {
-  // Fill the range (x1,x2) with points calculated using func(&x). No point will
-  // be added at x1, and a point will always be added at x2. The density of points
-  // will be calculated so that the maximum deviation from a straight line
-  // approximation is prec*(ymax-ymin).
-
-  // update the Y Axis Limits
-  updateYAxisLimits(y1);
-  updateYAxisLimits(y2);
-
-  // calculate our value at the midpoint of this range
-  Double_t xmid= 0.5*(x1+x2);
-  Double_t ymid= func(&xmid);
-  // test if the midpoint is sufficiently close to a straight line across this interval
-  Double_t dy= ymid - 0.5*(y1+y2);
-  if(fabs(dy)>0 && fabs(dy) >= prec*(getYAxisMax()-getYAxisMin())) {
-    // fill in each subrange
-    addRange(func,x1,xmid,y1,ymid,prec);
-    addRange(func,xmid,x2,ymid,y2,prec);
-  }
-  else {
-    // add the endpoint
-    addPoint(x2,y2);
-  }
+Double_t RooCurve::getFitRangeNorm() const {
+  return 1;
 }
 
 void RooCurve::printToStream(ostream& os, PrintOption opt, TString indent) const {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.rdl,v 1.4 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooCurve.rdl,v 1.5 2001/08/03 21:44:57 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -24,9 +24,9 @@ class RooCurve : public TGraph, public RooPlotable {
 public:
   RooCurve();
   RooCurve(const RooAbsReal &func, RooRealVar &x, Double_t scaleFactor= 1,
-	   const RooArgSet *normVars= 0, Double_t prec= 1e-3);
+	   const RooArgSet *normVars= 0, Double_t prec= 1e-3, Double_t resolution= 1e-3);
   RooCurve(const char *name, const char *title, const RooAbsFunc &func, Double_t xlo,
-	   Double_t xhi, UInt_t minPoints, Double_t prec= 1e-3);
+	   Double_t xhi, UInt_t minPoints, Double_t prec= 1e-3, Double_t resolution= 1e-3);
   virtual ~RooCurve();
 
   void addPoint(Double_t x, Double_t y);
@@ -41,9 +41,9 @@ public:
 protected:
   void initialize();
   void addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
-		 Int_t minPoints, Double_t prec);
+		 Int_t minPoints, Double_t prec, Double_t resolution);
   void addRange(const RooAbsFunc& func, Double_t x1, Double_t x2, Double_t y1,
-		Double_t y2, Double_t prec);
+		Double_t y2, Double_t prec, Double_t minDx);
   ClassDef(RooCurve,1) // 1-dimensional smooth curve
 };
 
