@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.20 2001/09/25 16:04:14 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.21 2001/10/18 07:56:27 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -107,8 +107,8 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fTitleOffset = 1;
    fTitleSize   = fLabelSize;
    fChopt       = "";
-   fName        = " "; 
-   fTitle       = " ";
+   fName        = ""; 
+   fTitle       = "";
    fTimeFormat  = "";
    fFunctionName= "";
    fFunction    = 0;
@@ -137,8 +137,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fTitleOffset = 1;
    fTitleSize   = fLabelSize;
    fChopt       = chopt;
-   fName        = " ";
-   fTitle       = " ";
+   fName        = "";
+   fTitle       = "";
    fTimeFormat  = "";
    fFunctionName= "";
    fFunction    = 0;
@@ -212,8 +212,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fTitleOffset = 1;
    fTitleSize   = fLabelSize;
    fChopt       = chopt;
-   fName        = " ";
-   fTitle       = " ";
+   fName        = "";
+   fTitle       = "";
    fTimeFormat  = "";
 }
 
