@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.2 2004/02/18 20:31:36 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -320,13 +320,14 @@ TGedPatternSelector::TGedPatternSelector(const TGWindow *p) :
 {
    SetLayoutManager(new TGTileLayout(this, 1));
 
-   for (int i = 1; i <= 25; i++)
+   Int_t i;
+   for (i = 1; i <= 25; i++)
      fCe[i-1] = new TGedPatternFrame(this, 3000 + i);
 
    fCe[25] = new TGedPatternFrame(this, 0);
    fCe[26] = new TGedPatternFrame(this, 1001);
 
-   for (int i = 0; i < 27; i++)
+   for (i = 0; i < 27; i++)
       AddFrame(fCe[i], new TGLayoutHints(kLHintsNoHints));
 
    fMsgWindow  = p;

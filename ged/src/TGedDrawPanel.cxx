@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedDrawPanel.cxx,v 1.2 2004/02/18 20:31:36 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedDrawPanel.cxx,v 1.3 2004/02/18 22:39:52 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -106,6 +106,7 @@ TGedDrawPanel::~TGedDrawPanel()
 //______________________________________________________________________________
 void TGedDrawPanel::Build()
 {
+   Int_t i;
    TGGroupFrame *type = new TGGroupFrame(this, "type", kHorizontalFrame);
    AddFrame(type, new TGLayoutHints(kLHintsExpandX));
 
@@ -154,7 +155,7 @@ void TGedDrawPanel::Build()
    fType[11] = new TGRadioButton(t4, "cont3", kTypeCont3);
    t4->AddFrame(fType[11], new TGLayoutHints(kLHintsTop));
 
-   for (int i = 0; i < 12; i++) {
+   for (i = 0; i < 12; i++) {
       fType[i]->SetUserData( (void*) kType);
       fType[i]->Associate(this);
    }
@@ -177,7 +178,7 @@ void TGedDrawPanel::Build()
    fCoords[3] = new TGRadioButton(coords, "spheric", kCoordsSpheric);
    coords->AddFrame(fCoords[3], new TGLayoutHints(kLHintsTop));
 
-   for (int i = 0; i < 4; i++) {
+   for (i = 0; i < 4; i++) {
       fCoords[i]->SetUserData( (void*) kCoords);
       fCoords[i]->Associate(this);
    }
@@ -200,7 +201,7 @@ void TGedDrawPanel::Build()
    fErrors[4] = new TGRadioButton(errors, "E4: contour", kErrorsContour);
    errors->AddFrame(fErrors[4], new TGLayoutHints(kLHintsTop));
       
-   for (int i = 0; i < 5; i++) {
+   for (i = 0; i < 5; i++) {
       fErrors[i]->SetUserData( (void*) kErrors);
       fErrors[i]->Associate(this);
    }
