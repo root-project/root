@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.55 2004/04/24 16:48:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.56 2004/04/24 19:36:20 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -33,7 +33,19 @@ ClassImp(TMath)
 //______________________________________________________________________________
 #if defined(R__MAC) || defined(R__KCC)
 Double_t hypot(Double_t x, Double_t y) {
-   return sqrt(x*x+y*y);
+  Double_t ax = Abs(x), ay = Abs(y);
+  Double_t amax, amin;
+  if(ax > ay){
+    amax = ax;
+    amin = ay;
+  } else {
+    amin = ax;
+    amax = ay;
+  }
+  if(amin == 0.0) return amax;
+
+  Double_t f = amin/amax;
+  return amax*sqrt(1.0 + f*f);
 }
 #endif
 
@@ -59,7 +71,9 @@ Double_t TMath::Hypot(Double_t x, Double_t y)
 Double_t TMath::ASinH(Double_t x)
 {
 #if defined(WIN32) || defined(R__KCC)
-   return log(x+sqrt(x*x+1));
+   if(x==0.0) return 0.0;
+   Double_t ax = Abs(x);
+   return log(x+ax*sqrt(1.+1./(ax*ax)));
 #else
    return asinh(x);
 #endif
@@ -69,7 +83,9 @@ Double_t TMath::ASinH(Double_t x)
 Double_t TMath::ACosH(Double_t x)
 {
 #if defined(WIN32) || defined(R__KCC)
-   return log(x+sqrt(x*x-1));
+   if(x==0.0) return 0.0;
+   Double_t ax = Abs(x);
+   return log(x+ax*sqrt(1.-1./(ax*ax)));
 #else
    return acosh(x);
 #endif
@@ -560,15 +576,43 @@ Double_t TMath::Normalize(Double_t v[3])
 {
    // Normalize a vector v in place.
    // Returns the norm of the original vector.
+   // This implementation (thanks Kevin Lynch <krlynch@bu.edu>) is protected
+   // against possible overflows.
 
-    Double_t d = Sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
-    if (d != 0)
-    {
-      v[0] /= d;
-      v[1] /= d;
-      v[2] /= d;
-    }
-    return d;
+  // Find the largest element, and divide that one out.
+
+  Double_t av0 = Abs(v[0]), av1 = Abs(v[1]), av2 = Abs(v[2]);
+  
+  Double_t amax, foo, bar;
+  // 0 >= {1, 2}
+  if( av0 >= av1 && av0 >= av2 ) {
+    amax = av0;
+    foo = av1;
+    bar = av2;
+  } 
+  // 1 >= {0, 2}
+  else if (av1 >= av0 && av1 >= av2) {
+    amax = av1;
+    foo = av0;
+    bar = av2;
+  }
+  // 2 >= {0, 1}
+  else {
+    amax = av2;
+    foo = av0;
+    bar = av1;
+  }
+
+  if(amax == 0.0)
+    return 0.;
+
+  Double_t foofrac = foo/amax, barfrac = bar/amax;
+  Double_t d = amax * Sqrt(1.+foofrac*foofrac+barfrac*barfrac);
+  
+  v[0] /= d;
+  v[1] /= d;
+  v[2] /= d;
+  return d;
 }
 
 //______________________________________________________________________________
@@ -629,15 +673,27 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
   // (for the factorial), so for all integer arguments it is correct.
   // BUT for non-integer values it IS NOT equal to the Poisson distribution.
   // see TMath::PoissonI to get a non-smooth function.
+  // Note that for large values of par, it is better to call
+  //     TMath::Gaus(x,par,sqrt(par),kTRUE)
 //Begin_Html
 /*
 <img src="gif/Poisson.gif">
 */
 //End_Html
 
-   if (x > 0) return TMath::Power(par,x)/TMath::Gamma(x+1)/TMath::Exp(par);
-   if (x<0) return 0;
-   return TMath::Exp(-par);
+   if (x<0) 
+     return 0;
+   else if (x == 0.0) 
+     return 1./Exp(par);
+   else {
+     Double_t lnpoisson = x*log(par)-par-LnGamma(x+1.);
+     return Exp(lnpoisson);
+   }
+   // An alternative strategy is to transition to a Gaussian approximation for
+   // large values of par ... 
+   //   else {
+   //     return Gaus(x,par,Sqrt(par),kTRUE);
+   //   }
 }
 
 //______________________________________________________________________________
