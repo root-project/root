@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.6 2004/03/12 21:45:27 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.7 2004/04/15 06:41:49 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -267,7 +267,7 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
    fprintf(file, "} // close namespace ROOT\n\n");
 
    fprintf(file, "// Register the streamer (a typedef is used to avoid problem with macro parameters\n");
-   fprintf(file, "RootStlStreamer(%s,%s);\n", typedefName.c_str(), streamerName.c_str());
+   fprintf(file, "RootStlStreamer(%s,%s)\n", typedefName.c_str(), streamerName.c_str());
    fprintf(file, "\n");
 
 }

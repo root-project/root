@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.172 2004/07/03 09:34:30 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.173 2004/07/15 22:44:41 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1115,7 +1115,7 @@ G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
                    i++;
                    current = next;
                    next = &(arg[c+1]);
-                };
+                }
                 break;
       }
    }
@@ -1158,7 +1158,7 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
                    i++;
                    current = next;
                    next = &(arg[c+1]);
-                };
+                }
                 break;
       }
    }
@@ -3410,7 +3410,7 @@ void WriteShadowClass(G__ClassInfo &cl)
       fprintf(fp,"} ");
    }
    fprintf(fp,"\n");
-};
+}
 
 //______________________________________________________________________________
 void GenerateLinkdef(int *argc, char **argv, int iv)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.8 2004/04/15 06:41:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.9 2004/07/03 09:34:30 brun Exp $
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
 
@@ -59,6 +59,6 @@ namespace TClassEdit {
    int         STLArgs   (int kind);            //Min number of arguments without allocator
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);
    std::string ShortType (const char *typeDesc, int mode);
-};
+}
 
 #endif
