@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.25 2001/12/02 16:49:02 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.26 2001/12/18 15:12:24 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1182,6 +1182,7 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the WinNT access(2) function.
+   // Attention, bizarre convention of return value!!
 
    if (::_access(path, mode) == 0)
       return kFALSE;
@@ -1316,15 +1317,15 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    // skip leading blanks
    while (*patbuf == ' ')
       patbuf++;
-   
+
    // skip leading ':'
    while (*patbuf == ':')
       patbuf++;
-    
+
    // skip leading ';'
    while (*patbuf == ';')
       patbuf++;
-  
+
    // Transform a Unix list of directory into a Windows list
    // by changing the separator from ':' into ';'
    for (q = (char*)patbuf; *q; q++) {
@@ -1485,7 +1486,7 @@ const char *TWinNTSystem::GetDynamicPath()
 char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mode)
 {
    // Find location of file in a search path.
-   // User must delete returned string.
+   // User must delete returned string. Returns 0 in case file is not found.
 
    static char name[kMAXPATHLEN];
    char *lpFilePart = 0;

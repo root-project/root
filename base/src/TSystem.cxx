@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.28 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.29 2002/01/24 11:39:27 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -753,9 +753,10 @@ char *TSystem::ExpandPathName(const char *)
 }
 
 //______________________________________________________________________________
-Bool_t TSystem::AccessPathName(const char*, EAccessMode)
+Bool_t TSystem::AccessPathName(const char *, EAccessMode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
+   // Attention, bizarre convention of return value!!
 
    return kFALSE;
 }
@@ -827,6 +828,7 @@ int TSystem::Umask(Int_t)
 char *TSystem::Which(const char *, const char *, EAccessMode)
 {
    // Find location of file in a search path. User must delete returned string.
+   // Returns 0 in case file is not found.
 
    AbstractMethod("Which");
    return 0;
