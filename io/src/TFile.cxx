@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.92 2003/06/10 19:29:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.93 2003/06/12 06:46:49 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1936,7 +1936,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    } else
       f = new TFile(name, option, ftitle, compress);
 
-   if (f->IsZombie()) {
+   if (f && f->IsZombie()) {
       delete f;
       f = 0;
    }

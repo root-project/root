@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.4 2002/01/27 13:57:01 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.5 2002/07/16 13:59:19 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -52,6 +52,12 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
          return 0;
       serv = (TSQLServer *) h->ExecPlugin(3, db, uid, pw);
    }
+
+   if (serv && serv->IsZombie()) {
+      delete serv;
+      serv = 0;
+   }
+
    return serv;
 }
 
