@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.7 2001/06/02 17:22:05 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.8 2001/06/06 13:41:43 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -462,9 +462,9 @@ Int_t TThread::GetTime(ULong_t *absSec, ULong_t *absNanoSec)
    return fgThreadImp->GetTime(absSec, absNanoSec);
 }
 
-Int_t TThread::Lock() { return fgMainMutex->Lock(); }       // lock main mutex
-Int_t TThread::TryLock() { return fgMainMutex->TryLock(); } // lock main mutex
-Int_t TThread::UnLock() { return fgMainMutex->UnLock(); }   // unlock main mutex
+Int_t TThread::Lock()    { return (fgMainMutex ? fgMainMutex->Lock() : 0);}    // lock main mutex
+Int_t TThread::TryLock() { return (fgMainMutex ? fgMainMutex->TryLock(): 0); } // lock main mutex
+Int_t TThread::UnLock()  { return (fgMainMutex ? fgMainMutex->UnLock() :0); }  // unlock main mutex
 
 //______________________________________________________________________________
 ULong_t TThread::Call(void *p2f,void *arg)
