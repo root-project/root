@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.122 2005/03/18 15:15:33 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.123 2005/03/22 16:23:51 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2203,7 +2203,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       TString delim(" \t");
       TObjArray *tok = otool.Tokenize(delim);
       TString dylib = ((TObjString*)tok->At(0))->String();
-      if (dylib.EndsWith(".dylib")) {
+      if (dylib.EndsWith(".dylib") && !dylib.Contains("/libSystem.B.dylib")) {
          if (!linkedLibs.IsNull())
             linkedLibs += " ";
          linkedLibs += dylib;
