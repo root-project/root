@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.3 2000/05/31 07:49:13 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -907,6 +907,7 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
       fsum = (cu-fu);
       f   += fsum*fsum/eu;
    }
+
 //  make a better error estimate to be used in the next iterations
    if (gr->TestBit(TGraph::kFitInit)) {
       gr->ResetBit(TGraph::kFitInit);
@@ -932,18 +933,21 @@ void TGraph::InitGaus()
    static Double_t sqrtpi = 2.506628;
 
 //*-*- Compute mean value and RMS of the graph in the given range
+   Int_t np = 0;
    allcha = sumx = sumx2 = 0;
    for (bin=xfirst;bin<=xlast;bin++) {
       x       = fX[bin];
+      if (x < fX[xfirst] || x > fX[xlast]) continue;
+      np++;
       val     = fY[bin];
       sumx   += val*x;
       sumx2  += val*x*x;
       allcha += val;
    }
-   if (allcha == 0) return;
+   if (np == 0 || allcha == 0) return;
    mean = sumx/allcha;
    rms  = TMath::Sqrt(sumx2/allcha - mean*mean);
-   Float_t binwidx = TMath::Abs((fX[fNpoints-1] - fX[0])/fNpoints);
+   Float_t binwidx = TMath::Abs((fX[xlast] - fX[xfirst])/np);
    if (rms == 0) rms = 1;
    grF1->SetParameter(0,binwidx*allcha/(sqrtpi*rms));
    grF1->SetParameter(1,mean);
@@ -1010,16 +1014,18 @@ void TGraph::LeastSquareFit(Int_t n, Int_t m, Double_t *a)
        return;
     }
     if (m > idim || m > n) return;
-    b[0]  = Float_t(n);
     da[0] = zero;
     for (l = 2; l <= m; ++l) {
 	b[l-1]           = zero;
 	b[m + l*20 - 21] = zero;
 	da[l-1]          = zero;
     }
+    Int_t np = 0;
     for (k = xfirst; k <= xlast; ++k) {
 	xk     = fX[k];
-	yk     = fY[k];
+	if (xk < fX[xfirst] || xk > fX[xlast]) continue;
+        np++;
+        yk     = fY[k];
 	power  = one;
 	da[0] += yk;
 	for (l = 2; l <= m; ++l) {
@@ -1032,6 +1038,7 @@ void TGraph::LeastSquareFit(Int_t n, Int_t m, Double_t *a)
 	    b[m + l*20 - 21] += power;
 	}
     }
+    b[0]  = Float_t(np);
     for (i = 3; i <= m; ++i) {
 	for (k = i; k <= m; ++k) {
 	    b[k - 1 + (i-1)*20 - 21] = b[k + (i-2)*20 - 21];
@@ -1066,8 +1073,11 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
     n     = TMath::Abs(ndata);
     ifail = -2;
     xbar  = ybar = x2bar = xybar = 0;
+    Int_t np = 0;
     for (i = xfirst; i <= xlast; ++i) {
 	xk = fX[i];
+	if (xk < fX[xfirst] || xk > fX[xlast]) continue;
+        np++;
 	yk = fY[i];
 	if (ndata < 0) {
 	    if (yk <= 0) yk = 1e-9;
@@ -1078,11 +1088,12 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
 	x2bar += xk*xk;
 	xybar += xk*yk;
     }
-    fn    = Float_t(n);
+    fn    = Float_t(np);
     det   = fn*x2bar - xbar*xbar;
     ifail = -1;
     if (det <= 0) {
-       a0 = ybar/fn;
+       if (fn > 0) a0 = ybar/fn;
+       else        a0 = 0;
        a1 = 0;
        return;
     }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -15,6 +15,8 @@
 #include "TLatex.h"
 #include "TVirtualPad.h"
 #include "TArc.h"
+
+const Double_t kPI = TMath::Pi();
 
 ClassImp(TLatex)
 
@@ -357,6 +359,9 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
       Int_t OpParen         = 0 ;   // position of a "(){" operator (big parenthesis #(){arg})
       Int_t AbovePlace      = 0 ;   // true if subscripts must be written above and not after
       Int_t OpBox           = 0 ;   // position of #Box
+      Int_t Operp           = 0;    // position of #perp
+      Int_t OpOdot          = 0;    // position of #odot
+      Int_t Oparallel       = 0;    // position of #parallel
       Bool_t OpFound = kFALSE;
       Bool_t quote1 = kFALSE, quote2 = kFALSE ;
 
@@ -432,6 +437,15 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
          // detect other operators
          if (text[i]=='\\' || text[i]=='#' && !OpFound && NbBrackets==0 && NbCroch==0) {
 
+            if (length>i+8 ) {
+               Char_t buf[8];
+               strncpy(buf,&text[i+1],8);
+               if (!Oparallel && strncmp(buf,"parallel",8)==0) {
+                  Oparallel=1; OpFound = kTRUE;
+                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  continue;
+               }
+            }
             if (length>i+6) {
                Char_t buf[6];
                strncpy(buf,&text[i+1],6);
@@ -456,6 +470,20 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                }
                if (strncmp(buf,"font{",5)==0 || strncmp(buf,"font[",5)==0) {
                   OpFont=i; OpFound = kTRUE;
+                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  continue;
+               }
+            }
+            if (length>i+4 ) {
+               Char_t buf[4];
+               strncpy(buf,&text[i+1],4);
+               if (!OpOdot && strncmp(buf,"odot",4)==0) {
+                  OpOdot=1; OpFound = kTRUE;
+                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  continue;
+               }
+               if (!Operp && strncmp(buf,"perp",4)==0) {
+                  Operp=1; OpFound = kTRUE;
                   if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
                   continue;
                }
@@ -538,8 +566,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             fs1 = Anal1(spec,text,OpCloseCurly+1);
             fs2 = Anal1(spec,text+OpCloseCurly+1,length-OpCloseCurly-1);
             Savefs(&fs1);
-         }
-         else {
+         } else {
             fs1 = Readfs();
             Analyse(x+fs1.Width(),y,spec,text+OpCloseCurly+1,length-OpCloseCurly-1);
             Analyse(x,y,spec,text,OpCloseCurly+1);
@@ -579,8 +606,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             Savefs(&fs1);
             Savefs(&fs2);
             Savefs(&fs3);
-         }
-         else {
+         } else {
             fs3 = Readfs();
             fs2 = Readfs();
             fs1 = Readfs();
@@ -590,15 +616,13 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                if (OpPower<OpUnder) {
                   addH1 = -fs1.Dessus()*(fFactorPos)-fs2.Dessous();
                   addH2 = fs1.Dessous()+fs3.Dessus()*(fFactorPos);
-               }
-               else {
+               } else {
                 addH1 = fs1.Dessous()+fs2.Dessus()*(fFactorPos);
                 addH2 = -fs1.Dessus()*(fFactorPos)-fs3.Dessous();
                }
                Analyse(x+addW,y+addH2,specNewSize,text+max+1,length-max-1);
                Analyse(x+addW,y+addH1,specNewSize,text+min+1,max-min-1);
-            }
-            else {
+            } else {
                Float_t addW1, addW2, addH1, addH2;
                Float_t m = TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width()));
                pos = (m-fs1.Width())/2;
@@ -608,8 +632,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                   addH2 = fs1.Dessous()*prop+fs3.Dessus();
                   addW2 = (m-fs3.Width())/2;
  //                 if (AbovePlace == 1) addW1 = pos  ;
-               }
-               else {
+               } else {
                   addH1 = fs1.Dessous()*prop+fs2.Dessus();
                   addW1 = (m-fs2.Width())/2;
                   addH2 = -fs1.Dessus()*propU-fs3.Dessous();
@@ -624,8 +647,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             if (min >= 2 && strncmp(&text[min-2],"{}",2)==0) {
                sprintf(&text[min-2],"  ") ;
                Analyse(x+pos,y,spec,text,min-1);
-            }
-            else {
+            } else {
                Analyse(x+pos,y,spec,text,min);
             }
          }
@@ -635,19 +657,16 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                result = FormSize(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
                                  fs1.Dessus()*fFactorPos+fs2.Height(),
                                  fs1.Dessous()+fs3.Height()-fs3.Dessus()*(1-fFactorPos));
-            }
-            else {
+            } else {
                result = FormSize(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
                                  fs1.Dessus()*fFactorPos+fs3.Height(),
                                  fs1.Dessous()+fs2.Height()-fs2.Dessus()*(1-fFactorPos));
             }
-         }
-         else {
+         } else {
             if (OpPower<OpUnder) {
                result = FormSize(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
                                  fs1.Dessus()*propU+fs2.Height(),fs1.Dessous()*prop+fs3.Height());
-            }
-            else {
+            } else {
                result = FormSize(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
                                  fs1.Dessus()*propU+fs3.Height(),fs1.Dessous()*prop+fs2.Height());
             }
@@ -675,15 +694,13 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             fs2 = Anal1(specNewSize,text+OpPower+1,length-OpPower-1);
             Savefs(&fs1);
             Savefs(&fs2);
-         }
-         else {
+         } else {
             fs2 = Readfs();
             fs1 = Readfs();
             Int_t pos = 0;
             if (!AbovePlace){
                Analyse(x+fs1.Width()+xfpos,y-fs1.Dessus()*fFactorPos-fs2.Dessous(),specNewSize,text+OpPower+1,length-OpPower-1);
-            }
-            else {
+            } else {
                Int_t pos2=0;
                if (fs2.Width()>fs1.Width())
                    pos=Int_t((fs2.Width()-fs1.Width())/2);
@@ -695,8 +712,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             if (OpPower >= 2 && strncmp(&text[OpPower-2],"{}",2)==0) {
                sprintf(&text[OpPower-2],"  ") ;
                Analyse(x+pos,y,spec,text,OpPower-1);
-            }
-            else {
+            } else {
                Analyse(x+pos,y,spec,text,OpPower);
             }
          }
@@ -725,8 +741,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             fs2 = Anal1(specNewSize,text+OpUnder+1,length-OpUnder-1);
             Savefs(&fs1);
             Savefs(&fs2);
-         }
-         else {
+         } else {
             fs2 = Readfs();
             fs1 = Readfs();
             Int_t pos = 0;
@@ -744,8 +759,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             if (OpUnder >= 2 && strncmp(&text[OpUnder-2],"{}",2)==0) {
                sprintf(&text[OpUnder-2],"  ") ;
                Analyse(x+pos,y,spec,text,OpUnder-1);
-            }
-            else {
+            } else {
                Analyse(x+pos,y,spec,text,OpUnder);
             }
          }
@@ -759,8 +773,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
          Float_t square = GetHeight()*spec.size/2;
          if (!fShow) {
             fs1 = Anal1(spec,text+4,length-4);
-         }
-         else {
+         } else {
             fs1 = Analyse(x+square,y,spec,text+4,length-4);
             Float_t adjust = GetHeight()*spec.size/20;
             Float_t x1 = x+adjust ;
@@ -771,6 +784,54 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             DrawLine(x2,y1,x2,y2,spec);
             DrawLine(x2,y2,x1,y2,spec);
             DrawLine(x1,y2,x1,y1,spec);
+         }
+         result = fs1 + FormSize(square,square,0);
+      }
+      else if (OpOdot) {
+         Float_t square = GetHeight()*spec.size/2;
+         if (!fShow) {
+            fs1 = Anal1(spec,text+5,length-5);
+         } else {
+            fs1 = Analyse(x+1.3*square,y,spec,text+5,length-5);
+            Float_t adjust = GetHeight()*spec.size/20;
+            Float_t r1 = 0.62*square;
+            Float_t y1 = y-0.5*square-adjust;
+            DrawCircle(x+0.6*square,y1,r1,spec) ;
+            DrawCircle(x+0.6*square,y1,r1/100,spec) ;
+         }
+         result = fs1 + FormSize(square,square,0);
+      }
+      else if (Operp) {
+         Float_t square = GetHeight()*spec.size/2;
+         if (!fShow) {
+            fs1 = Anal1(spec,text+5,length-5);
+         } else {
+            fs1 = Analyse(x+1.0*square,y,spec,text+5,length-5);
+            Float_t x0 = x  + 0.50*square;
+            Float_t x1 = x0 - 0.45*square;
+            Float_t x2 = x0 + 0.45*square;
+            Float_t y1 = y;
+            Float_t y2 = y1 - 1.2*square;
+            DrawLine(x1,y1,x2,y1,spec);
+            DrawLine(x0,y1,x0,y2,spec);
+         }
+//         result = fs1 + FormSize(square,square,0);
+//         result = fs1 + FormSize(square,square,0);
+         result = fs1;
+//         result =  FormSize(0,0,0);
+      }
+      else if (Oparallel) {
+         Float_t square = GetHeight()*spec.size/2;
+         if (!fShow) {
+            fs1 = Anal1(spec,text+9,length-9);
+         } else {
+            fs1 = Analyse(x+0.5*square,y,spec,text+9,length-9);
+            Float_t x1 = x + 0.15*square;
+            Float_t x2 = x + 0.35*square;
+            Float_t y1 = y;
+            Float_t y2 = y1-1.3*square;
+            DrawLine(x1,y1,x1,y2,spec);
+            DrawLine(x2,y1,x2,y2,spec);
          }
          result = fs1 + FormSize(square,square,0);
       }
@@ -785,8 +846,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             fs1 = Anal1(NewSpec,&letter,1);
             fs2 = Anal1(spec,text+strlen(tab[OpGreek])+1,length-strlen(tab[OpGreek])-1);
             Savefs(&fs1);
-         }
-         else {
+         } else {
             fs1 = Readfs();
             Analyse(x+fs1.Width(),y,spec,text+strlen(tab[OpGreek])+1,length-strlen(tab[OpGreek])-1);
             Analyse(x,y-yoffset,NewSpec,&letter,1);
@@ -805,8 +865,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
 
          if (OpSpec==66 ) {
             NewSpec.size = spec.size*props;
-         }
-         else if (OpSpec==79) {
+         } else if (OpSpec==79) {
             NewSpec.size = spec.size*propi;
          }
          if (!fShow) {
@@ -816,8 +875,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
 
             fs2 = Anal1(spec,text+strlen(tab2[OpSpec])+1,length-strlen(tab2[OpSpec])-1);
             Savefs(&fs1);
-         }
-         else {
+         } else {
             fs1 = Readfs();
             Analyse(x+fs1.Width(),y,spec,text+strlen(tab2[OpSpec])+1,length-strlen(tab2[OpSpec])-1);
             if (OpSpec!=66 && OpSpec!=79)
@@ -832,8 +890,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
          if (!fShow) {
             fs1 = Anal1(spec,text+strlen(tab3[OpAbove])+1,length-strlen(tab3[OpAbove])-1);
             Savefs(&fs1);
-         }
-         else {
+         } else {
             fs1 = Readfs();
             Analyse(x,y,spec,text+strlen(tab3[OpAbove])+1,length-strlen(tab3[OpAbove])-1);
             Float_t sub = GetHeight()*spec.size/12;
@@ -904,8 +961,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
          if (!fShow) {
             fs1 = Anal1(spec,text+3,length-3);
             Savefs(&fs1);
-         }
-         else {
+         } else {
             fs1 = Readfs();
             Analyse(x+l2+l,y,spec,text+3,length-3);
             DrawLine(x+l2,y-fs1.Dessus(),x+l2,y+fs1.Dessous(),spec);
@@ -920,20 +976,18 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
       else if (OpParen) {  // operator #(){arg}
          Float_t l = GetHeight()*spec.size/4;
          Float_t radius2,radius1 , dw, l2 = l/2 ;
-         const Float_t PI = 3.141592 ;
          Float_t angle = 35 ;
          if (!fShow) {
             fs1 = Anal1(spec,text+3,length-3);
             Savefs(&fs1);
             radius2 = fs1.Height() ;
             radius1 = radius2  * 2 / 3;
-            dw = radius1*(1 - TMath::Cos(PI*angle/180)) ;
-         }
-         else {
+            dw = radius1*(1 - TMath::Cos(kPI*angle/180)) ;
+         } else {
             fs1 = Readfs();
             radius2 = fs1.Height() ;
             radius1 = radius2  * 2 / 3;
-            dw = radius1*(1 - TMath::Cos(PI*angle/180)) ;
+            dw = radius1*(1 - TMath::Cos(kPI*angle/180)) ;
             Float_t x1 = x+l2+radius1 ;
             Float_t x2 = x+5*l2+2*dw+fs1.Width()-radius1 ;
             Float_t y1 = y - (fs1.Dessus() - fs1.Dessous())/2. ;
@@ -950,8 +1004,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
          if (!fShow) {
             fs1 = Anal1(spec,text+3,length-3);
             Savefs(&fs1);
-         }
-         else {
+         } else {
             fs1 = Readfs();
             Analyse(x+l2+l,y,spec,text+3,length-3);
             DrawLine(x+l2,y-fs1.Dessus(),x+l2,y+fs1.Dessous(),spec);
@@ -970,8 +1023,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             ltip = TMath::Min(l8,l) ;
             l = ltip ;
             Savefs(&fs1);
-         }
-         else {
+         } else {
             fs1 = Readfs();
             Float_t y2 = y + (fs1.Dessous()-fs1.Dessus())/2 ;
             l8 = fs1.Height()/8 ;
@@ -1014,16 +1066,14 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             fs2 = Anal1(spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);
             Savefs(&fs1);
             Savefs(&fs2);
-         }
-         else {
+         } else {
             fs2 = Readfs();
             fs1 = Readfs();
             Float_t addW1,addW2;
             if (fs1.Width()<fs2.Width()) {
                addW1 = (fs2.Width()-fs1.Width())/2;
                addW2 = 0;
-            }
-            else {
+            } else {
                addW1 = 0;
                addW2 = (fs1.Width()-fs2.Width())/2;
             }
@@ -1046,14 +1096,12 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                Savefs(&fs2);
                result = FormSize(fs2.Width()+ GetHeight()*spec.size/10+TMath::Max(GetHeight()*spec.size/2,fs1.Width()),
                                  fs2.Dessus()+fs1.Height()+GetHeight()*spec.size/4,fs2.Dessous());
-            }
-            else {
+            } else {
                fs1 = Anal1(spec,text+OpSqrt+5,length-OpSqrt-5);
                Savefs(&fs1);
                result = FormSize(fs1.Width()+GetHeight()*spec.size/2,fs1.Dessus()+GetHeight()*spec.size/4,fs1.Dessous());
             }
-         }
-         else {
+         } else {
             if (OpSquareCurly>-1) { // ]{
                fs2 = Readfs();
                fs1 = Readfs();
@@ -1067,8 +1115,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                DrawLine(x,y1,x+pas,y2,spec);
                DrawLine(x+pas,y2,x+pas,y3,spec);
                DrawLine(x+pas,y3,x+pas2+fs2.Width(),y3,spec);
-            }
-            else {
+            } else {
                fs1 = Readfs();
                Float_t x1 = x+GetHeight()*spec.size*2/5 ;
                Float_t x2 = x+GetHeight()*spec.size/2+fs1.Width() ;
@@ -1102,8 +1149,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
          delete[] nb;
          if (!fShow) {
             result = Anal1(NewSpec,text+OpSquareCurly+1,length-OpSquareCurly-1);
-         }
-         else {
+         } else {
             Analyse(x,y,NewSpec,text+OpSquareCurly+1,length-OpSquareCurly-1);
          }
       }
@@ -1125,12 +1171,10 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
          delete[] nb;
          if (!fShow) {
             result = Anal1(NewSpec,text+OpSquareCurly+1,length-OpSquareCurly-1);
-         }
-         else {
+         } else {
             Analyse(x,y,NewSpec,text+OpSquareCurly+1,length-OpSquareCurly-1);
          }
-      }
-      else { // no operators found, it is a character string
+      } else { // no operators found, it is a character string
          SetTextSize(spec.size);
          SetTextAngle(spec.angle);
          SetTextColor(spec.color);
@@ -1182,7 +1226,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             // paint the Latex sub-expression per sub-expression
             Float_t Xorigin = (Float_t)gPad->XtoAbsPixel(fX);
             Float_t Yorigin = (Float_t)gPad->YtoAbsPixel(fY);
-            Float_t angle   = 3.141592*spec.angle/180.;
+            Float_t angle   = kPI*spec.angle/180.;
             Float_t X = gPad->AbsPixeltoX(Int_t((x-Xorigin)*TMath::Cos(angle)+(y-Yorigin)*TMath::Sin(angle)+Xorigin));
             Float_t Y = gPad->AbsPixeltoY(Int_t((x-Xorigin)*TMath::Sin(-angle)+(y-Yorigin)*TMath::Cos(angle)+Yorigin));
             gPad->PaintText(X,Y,text);
@@ -1214,8 +1258,8 @@ TLatex *TLatex::DrawLatex(Coord_t x, Coord_t y, const char *text)
 void TLatex::DrawLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2, TextSpec_t spec)
 {
 // Draw a line in a Latex formula
-      Float_t sinang  = TMath::Sin(spec.angle/180*3.141592);
-      Float_t cosang  = TMath::Cos(spec.angle/180*3.141592);
+      Float_t sinang  = TMath::Sin(spec.angle/180*kPI);
+      Float_t cosang  = TMath::Cos(spec.angle/180*kPI);
       Float_t Xorigin = (Float_t)gPad->XtoAbsPixel(fX);
       Float_t Yorigin = (Float_t)gPad->YtoAbsPixel(fY);
       Float_t X  = gPad->AbsPixeltoX(Int_t((x1-Xorigin)*cosang+(y1-Yorigin)*sinang+Xorigin));
@@ -1230,26 +1274,52 @@ void TLatex::DrawLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2, TextSpec_t
       TAttLine::Modify();
       gPad->PaintLine(X,Y,X2,Y2);
 }
+
+//______________________________________________________________________________
+void TLatex::DrawCircle(Float_t x1, Float_t y1, Float_t r, TextSpec_t spec )
+{
+// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
+
+   if (r < 1) r = 1;
+   Float_t sinang  = TMath::Sin(spec.angle/180*kPI);
+   Float_t cosang  = TMath::Cos(spec.angle/180*kPI);
+   Float_t Xorigin = (Float_t)gPad->XtoAbsPixel(fX);
+   Float_t Yorigin = (Float_t)gPad->YtoAbsPixel(fY);
+   
+   const Int_t np = 40;
+   Float_t dphi = 2*kPI/np;
+   Float_t x[np+3], y[np+3];
+   Float_t angle,dx,dy;
+   
+   SetLineColor(spec.color);
+   TAttLine::Modify();  //Change line attributes only if necessary
+
+   for (Int_t i=0;i<=np;i++) {
+      angle = Float_t(i)*dphi;
+      dx    = r*TMath::Cos(angle) +x1 -Xorigin;
+      dy    = r*TMath::Sin(angle) +y1 -Yorigin;
+      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+ dy*sinang +Xorigin));
+      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+ dy*cosang +Yorigin));
+   }
+   gPad->PaintPolyLine(np+1,x,y);
+
+}
+
 //______________________________________________________________________________
 void TLatex::DrawParenthesis(Float_t x1, Float_t y1, Float_t r1, Float_t r2,
                      Float_t  phimin, Float_t  phimax, TextSpec_t spec )
 {
 // Draw an arc of ellipse in a Latex formula (right or left parenthesis)
-   Float_t sinang  = TMath::Sin(spec.angle/180*3.141592);
-   Float_t cosang  = TMath::Cos(spec.angle/180*3.141592);
+
+   if (r1 < 1) r1 = 1;
+   if (r2 < 1) r2 = 1;
+   Float_t sinang  = TMath::Sin(spec.angle/180*kPI);
+   Float_t cosang  = TMath::Cos(spec.angle/180*kPI);
    Float_t Xorigin = (Float_t)gPad->XtoAbsPixel(fX);
    Float_t Yorigin = (Float_t)gPad->YtoAbsPixel(fY);
-   Float_t X  = gPad->AbsPixeltoX(Int_t((x1-Xorigin)*cosang+(y1-Yorigin)*sinang+Xorigin));
-   Float_t Y  = gPad->AbsPixeltoY(Int_t((x1-Xorigin)*-sinang+(y1-Yorigin)*cosang+Yorigin));
-   Float_t R1 = (Float_t)TMath::Abs( (gPad->AbsPixeltoX(Int_t(r1))- gPad->AbsPixeltoX(0)) ) ;
-   Float_t R2 = (Float_t)TMath::Abs( (gPad->AbsPixeltoY(Int_t(r2))- gPad->AbsPixeltoY(0)) ) ;
-
-   const Int_t np = 100;
-   const Float_t PI = 3.141592;
-   Float_t theta = spec.angle ;
-   Float_t dphi = (phimax-phimin)*PI/(180*np);
-   Float_t ct   = TMath::Cos(PI*theta/180);
-   Float_t st   = TMath::Sin(PI*theta/180);
+   
+   const Int_t np = 40;
+   Float_t dphi = (phimax-phimin)*kPI/(180*np);
    Float_t x[np+3], y[np+3];
    Float_t angle,dx,dy ;
 
@@ -1257,11 +1327,11 @@ void TLatex::DrawParenthesis(Float_t x1, Float_t y1, Float_t r1, Float_t r2,
    TAttLine::Modify();  //Change line attributes only if necessary
 
    for (Int_t i=0;i<=np;i++) {
-      angle = phimin*PI/180 + Float_t(i)*dphi;
-      dx    = R1*TMath::Cos(angle);
-      dy    = R2*TMath::Sin(angle);
-      x[i] = X + dx*ct - dy*st;
-      y[i] = Y + dx*st + dy*ct;
+      angle = phimin*kPI/180 + Float_t(i)*dphi;
+      dx    = r1*TMath::Cos(angle) +x1 -Xorigin;
+      dy    = r2*TMath::Sin(angle) +y1 -Yorigin;
+      x[i]  = fX+gPad->AbsPixeltoX(Int_t( dx*cosang+dy*sinang));
+      y[i]  = fY+gPad->AbsPixeltoY(Int_t(-dx*sinang+dy*cosang));
    }
    gPad->PaintPolyLine(np+1,x,y);
 
@@ -1336,8 +1406,7 @@ void TLatex::PaintLatex(Float_t x, Float_t y, Float_t angle, Float_t size, const
       if (fError != 0) {
          cout<<"*ERROR<TLatex>: "<<fError<<endl;
          cout<<"==> "<<text<<endl;
-      }
-      else {
+      } else {
          fShow = kTRUE;
          Float_t mul = 1;
          NewSpec.size = mul*size;
@@ -1530,15 +1599,13 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
             if ( nOfCurlyBracket) {
                nOfCurlyBracket-- ;
                i++ ;
-            }
-            else  { // extra }, add @ in front
+            } else  { // extra }, add @ in front
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
                nOfExtraCurly-- ;
             }
-         }
-         else {
+         } else {
             i++ ;
             buf[1] = 0 ;
          }
