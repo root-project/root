@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.7 2000/11/30 10:52:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.8 2001/03/07 16:49:17 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -348,9 +348,9 @@ Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma)
 }
 
 //______________________________________________________________________________
-Double_t TMath::Landau(Double_t x, Double_t mean, Double_t sigma)
+Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma)
 {
-   // The LANDAU function with mean and sigma.
+   // The LANDAU function with mpv(most probable value) and sigma.
    // This function has been adapted from the CERNLIB routine G110 denlan.
 
    Double_t p1[5] = {0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635,   0.001511162253};

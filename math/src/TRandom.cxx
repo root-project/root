@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.4 2000/09/29 07:12:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.5 2000/11/22 08:35:44 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 //   -Gaus(mean,sigma)
 //   -Rndm()
 //   -Uniform(x1)
-//   -Landau(mean,sigma)
+//   -Landau(mpv,sigma)
 //   -Poisson(mean)
 //   -Binomial(ntot,prob)
 //
@@ -257,10 +257,10 @@ UInt_t TRandom::Integer(UInt_t imax)
 }
 
 //______________________________________________________________________________
-Double_t TRandom::Landau(Double_t mean, Double_t sigma)
+Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
 {
 //  Generate a random number following a Landau distribution
-//  with average value mean and rms
+//  with mpv(most probable value) and sigma
 //  Converted by Rene Brun from CERNLIB routine ranlan(G110)
 
    Double_t f[982] = {

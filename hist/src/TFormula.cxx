@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.14 2001/02/14 07:45:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.15 2001/02/28 11:04:06 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1418,7 +1418,7 @@ Int_t TFormula::Compile(const char *expression)
      //*-*- if formula is a landau, set parameter names
      if (GetNumber() == 400) {
         SetParName(0,"Constant");
-        SetParName(1,"Mean");
+        SetParName(1,"MPV");
         SetParName(2,"Sigma");
      }
   }
