@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.8 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.9 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -92,8 +92,9 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    // Create an editor view, containing an TGEditorFrame and (optionally)
    // a horizontal and vertical scrollbar.
 
-   fWidgetId  = id;
-   fMsgWindow = p;
+   fWidgetId    = id;
+   fMsgWindow   = p;
+   fWidgetFlags = kWidgetWantFocus;
 
    SetLayoutManager(new TGHorizontalLayout(this));
 

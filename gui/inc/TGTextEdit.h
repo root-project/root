@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.8 2000/12/13 15:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.9 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -104,6 +104,7 @@ public:
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
+   virtual void   SetFocus();
 
    TGLongPosition GetCurrentPos() const { return fCurrent; }
    virtual Long_t ReturnLongestLineWidth();
@@ -114,6 +115,7 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
+   virtual Bool_t HandleFocusChange(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    virtual void   FindAgain() { Emit("FindAgain()"); }  //*SIGNAL*
