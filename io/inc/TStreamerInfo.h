@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.12 2001/01/18 09:37:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.13 2001/01/20 21:21:31 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -103,7 +103,7 @@ public:
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
    static void         Optimize(Bool_t opt=kTRUE);
     
-   ClassDef(TStreamerInfo,1)  //Streamer information for one class version
+   ClassDef(TStreamerInfo,2)  //Streamer information for one class version
 };
 
    

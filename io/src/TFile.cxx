@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.30 2001/01/26 16:37:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.31 2001/01/28 08:54:33 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1538,7 +1538,7 @@ void TFile::WriteStreamerInfo()
    while ((info = (TStreamerInfo*)next())) {
       Int_t uid = info->GetNumber();
       if (fClassIndex->fArray[uid]) list.Add(info);
-      if (gDebug > 1) printf(" -class: %s info saved\n",info->GetName());
+      if (gDebug > 0) printf(" -class: %s info number %d saved\n",info->GetName(),uid);
    }
    if (list.GetSize() == 0) return;
    fClassIndex->fArray[0] = 0;

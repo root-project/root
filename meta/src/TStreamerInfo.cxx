@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.33 2001/01/27 20:43:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.34 2001/01/28 08:54:33 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -286,7 +286,7 @@ void TStreamerInfo::Build()
 void TStreamerInfo::BuildCheck()
 {
    // check if the TStreamerInfo structure is already created
-   // called by TFile::ReadStreamerInfo
+   // called by TFile::ReadStreamerInfo 
 
    fClass = gROOT->GetClass(GetName());
    TObjArray *array;
@@ -310,11 +310,8 @@ void TStreamerInfo::BuildCheck()
    } else {
       fClass = new TClass(GetName(),fClassVersion,0,0,-1,-1);
       array = fClass->GetStreamerInfos();
-       //can do better later, in particular one must support the case
-       // when a shared lib is linked after opening a file containing
-       // the classes
    }
-   array->AddAt(this,fClassVersion);
+   array->AddAtAndExpand(this,fClassVersion);
    fgCount++;
    fNumber = fgCount;
    

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.13 2001/01/20 21:24:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.14 2001/01/27 20:43:57 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -168,7 +168,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       R__b >> fArrayDim;
       R__b.ReadStaticArray(fMaxIndex);
       fTypeName.Streamer(R__b);
-      R__b.CheckByteCount(R__s, R__c, TStreamerElement::IsA());
+      R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
       TStreamerElement::Class()->WriteBuffer(R__b,this);
    }
