@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.3 2003/09/26 13:26:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.4 2003/11/28 18:02:21 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand  17/09/2003
 
 /*************************************************************************
@@ -241,7 +241,7 @@ Bool_t TCastorFile::WriteBuffer(const char *buf, Int_t len)
       fWrittenTo = kTRUE;
    }
 
-   return kTRUE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
