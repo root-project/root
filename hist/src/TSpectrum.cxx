@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.2 2000/10/01 20:23:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.3 2000/10/05 06:56:38 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -552,6 +552,16 @@ Int_t TSpectrum::Search(TH1 *hin, Double_t sigma, Option_t *option)
 //   hin:       pointer to the histogram of source spectrum                //
 //   sigma:   sigma of searched peaks, for details we refer to manual      //
 //                                                                         //
+//   if option is not equal to "goff" (goff is the default), then          //
+//   a polymarker object is created and added to the list of functions of  //
+//   the histogram. The histogram is drawn with the specified option and   //
+//   the polymarker object drawn on top of the histogram.                  //
+//   The polymarker coordinates correspond to the npeaks peaks found in    //
+//   the histogram.                                                        //
+//   A pointer to the polymarker object can be retrieved later via:        //
+//    TList *functions = hin->GetListOfFunctions();                        //
+//    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
+//                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 
    if (hin == 0) return 0;
@@ -573,12 +583,13 @@ Int_t TSpectrum::Search(TH1 *hin, Double_t sigma, Option_t *option)
          fPositionY[i] = hin->GetBinContent(bin);
       }
       if (strstr(option,"goff")) return npeaks;
-      hin->Draw();
       TPolyMarker *pm = new TPolyMarker(npeaks,fPositionX, fPositionY);
+      hin->GetListOfFunctions()->Add(pm);
       pm->SetMarkerStyle(23);
       pm->SetMarkerColor(kRed);
       pm->SetMarkerSize(1.3);
-      pm->Draw();
+
+      hin->Draw(option);
       return npeaks;
    }
    return 0;
