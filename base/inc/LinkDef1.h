@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.2 2000/08/18 11:00:59 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -47,6 +47,12 @@
 #pragma link C++ function operator+(const TString&,const TString&);
 #pragma link C++ function operator+(const TString&,const char*);
 #pragma link C++ function operator+(const char*,const TString&);
+#pragma link C++ function operator+(const TString&,char);
+#pragma link C++ function operator+(const TString&,Long_t);
+#pragma link C++ function operator+(const TString&,ULong_t);
+#pragma link C++ function operator+(char,const TString&);
+#pragma link C++ function operator+(Long_t,const TString&);
+#pragma link C++ function operator+(ULong_t,const TString&);
 #pragma link C++ function operator==(const TString&,const TString&);
 #pragma link C++ function operator==(const TString&,const char*);
 #pragma link C++ function operator==(const char*,const TString&);

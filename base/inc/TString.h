@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -56,9 +56,7 @@ class ostream;
 #endif
 
 class TRegexp;
-class TString;
-class TStringLong;
-class TSubString;
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -83,7 +81,7 @@ private:
 
    Ssiz_t       Length() const   { return fNchars; }
    Ssiz_t       Capacity() const { return fCapacity; }
-   char         *Data() const    { return (char*)(this+1); }
+   char        *Data() const     { return (char*)(this+1); }
 
    char&        operator[](Ssiz_t i)       { return ((char*)(this+1))[i]; }
    char         operator[](Ssiz_t i) const { return ((char*)(this+1))[i]; }
@@ -160,6 +158,18 @@ class TString {
 friend class TSubString;
 friend class TStringRef;
 
+friend TString operator+(const TString& s1, const TString& s2);
+friend TString operator+(const TString& s,  const char *cs);
+friend TString operator+(const char *cs, const TString& s);
+friend TString operator+(const TString& s, char c);
+friend TString operator+(const TString& s, Long_t i);
+friend TString operator+(const TString& s, ULong_t i);
+friend TString operator+(char c, const TString& s);
+friend TString operator+(Long_t i, const TString& s);
+friend TString operator+(ULong_t i, const TString& s);
+friend Bool_t  operator==(const TString& s1, const TString& s2);
+friend Bool_t  operator==(const TString& s1, const char *s2);
+
 private:
    static Ssiz_t  fgInitialCapac;   // Initial allocation Capacity
    static Ssiz_t  fgResizeInc;      // Resizing increment
@@ -167,12 +177,6 @@ private:
 
    void           Clone();          // Make self a distinct copy
    void           Clone(Ssiz_t nc); // Make self a distinct copy w. capacity nc
-
-   friend TString operator+(const TString& s1, const TString& s2);
-   friend TString operator+(const TString& s,  const char *cs);
-   friend TString operator+(const char *cs, const TString& s);
-   friend Bool_t  operator==(const TString& s1, const TString& s2);
-   friend Bool_t  operator==(const TString& s1, const char *s2);
 
 protected:
    char          *fData;          // ref. counted data (TStringRef is in front)
@@ -221,17 +225,20 @@ public:
    TString&    operator=(const TSubString& s);
    TString&    operator+=(const char *s);        // Append string
    TString&    operator+=(const TString& s);
+   TString&    operator+=(char c);
+   TString&    operator+=(Long_t i);
+   TString&    operator+=(ULong_t i);
 
    // Indexing operators
-   char&         operator[](Ssiz_t n);         // Indexing with bounds checking
-   char&         operator()(Ssiz_t n);         // Indexing with optional bounds checking
+   char&         operator[](Ssiz_t i);         // Indexing with bounds checking
+   char&         operator()(Ssiz_t i);         // Indexing with optional bounds checking
    TSubString    operator()(Ssiz_t start, Ssiz_t len);   // Sub-string operator
    TSubString    operator()(const TRegexp& re);          // Match the RE
    TSubString    operator()(const TRegexp& re, Ssiz_t start);
    TSubString    SubString(const char *pat, Ssiz_t start = 0,
                            ECaseCompare cmp = kExact);
-   char                operator[](Ssiz_t) const;
-   char                operator()(Ssiz_t) const;
+   char          operator[](Ssiz_t i) const;
+   char          operator()(Ssiz_t i) const;
    TSubString    operator()(Ssiz_t start, Ssiz_t len) const;
    TSubString    operator()(const TRegexp& re) const;   // Match the RE
    TSubString    operator()(const TRegexp& re, Ssiz_t start) const;
@@ -260,8 +267,8 @@ public:
    Ssiz_t       First(char c) const          { return Pref()->First(c); }
    Ssiz_t       First(const char *cs) const  { return Pref()->First(cs); }
    unsigned     Hash(ECaseCompare cmp = kExact) const;
-   Ssiz_t       Index(const char *pat, Ssiz_t i = 0, ECaseCompare cmp = kExact)
-                      const;
+   Ssiz_t       Index(const char *pat, Ssiz_t i = 0,
+                      ECaseCompare cmp = kExact) const;
    Ssiz_t       Index(const TString& s, Ssiz_t i = 0,
                       ECaseCompare cmp = kExact) const;
    Ssiz_t       Index(const char *pat, Ssiz_t patlen, Ssiz_t i,
@@ -295,11 +302,11 @@ public:
    TString&     Replace(Ssiz_t pos, Ssiz_t n, const char *s, Ssiz_t ns);
    TString&     Replace(Ssiz_t pos, Ssiz_t n, const TString& s);
    TString&     Replace(Ssiz_t pos, Ssiz_t n1, const TString& s, Ssiz_t n2);
-   TString&     ReplaceAll(const TString& s1,const TString& s2); // Find&Replace all s1 with s2 if any
-   TString&     ReplaceAll(const TString& s1,const char *s2);    // Find&Replace all s1 with s2 if any
-   TString&     ReplaceAll(const    char *s1,const TString& s2); // Find&Replace all s1 with s2 if any
-   TString&     ReplaceAll(const char *s1,const char *s2);       // Find&Replace all s1 with s2 if any
-   TString&     ReplaceAll(const char *s1,Ssiz_t ls1, const char *s2,Ssiz_t ls2);  // Find&Replace all s1 with s2 if any
+   TString&     ReplaceAll(const TString& s1, const TString& s2); // Find&Replace all s1 with s2 if any
+   TString&     ReplaceAll(const TString& s1, const char *s2);    // Find&Replace all s1 with s2 if any
+   TString&     ReplaceAll(const    char *s1, const TString& s2); // Find&Replace all s1 with s2 if any
+   TString&     ReplaceAll(const char *s1, const char *s2);       // Find&Replace all s1 with s2 if any
+   TString&     ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2, Ssiz_t ls2);  // Find&Replace all s1 with s2 if any
    void         Resize(Ssiz_t n);                       // Truncate or add blanks as necessary
    TSubString   Strip(EStripType s = kTrailing, char c = ' ');
    void         ToLower();                              // Change self to lower-case
@@ -373,6 +380,15 @@ inline TString& TString::operator+=(const char* cs)
 
 inline TString& TString::operator+=(const TString& s)
 { return Append(s.Data(), s.Length()); }
+
+inline TString& TString::operator+=(char c)
+{ return Append(c); }
+
+inline TString& TString::operator+=(Long_t i)
+{ return operator+=(Form("%ld", i)); }
+
+inline TString& TString::operator+=(ULong_t i)
+{ return operator+=(Form("%lu", i)); }
 
 inline Bool_t TString::BeginsWith(const char* s, ECaseCompare cmp) const
 { return Index(s, strlen(s), (Ssiz_t)0, cmp) == 0; }

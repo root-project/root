@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.2 2000/08/21 16:44:36 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -844,6 +844,58 @@ TString operator+(const TString& s1, const TString& s2)
    // Use the special concatenation constructor.
 
    return TString(s1.Data(), s1.Length(), s2.Data(), s2.Length());
+}
+
+//______________________________________________________________________________
+TString operator+(const TString& s, char c)
+{
+   // Add char to string.
+
+   return TString(s.Data(), s.Length(), &c, 1);
+}
+
+//______________________________________________________________________________
+TString operator+(const TString& s, Long_t i)
+{
+   // Add integer to string.
+
+   const char *si = Form("%ld", i);
+   return TString(s.Data(), s.Length(), si, strlen(si));
+}
+
+//______________________________________________________________________________
+TString operator+(const TString& s, ULong_t i)
+{
+   // Add integer to string.
+
+   const char *si = Form("%lu", i);
+   return TString(s.Data(), s.Length(), si, strlen(si));
+}
+
+//______________________________________________________________________________
+TString operator+(char c, const TString& s)
+{
+   // Add string to integer.
+
+   return TString(&c, 1, s.Data(), s.Length());
+}
+
+//______________________________________________________________________________
+TString operator+(Long_t i, const TString& s)
+{
+   // Add string to integer.
+
+   const char *si = Form("%ld", i);
+   return TString(si, strlen(si), s.Data(), s.Length());
+}
+
+//______________________________________________________________________________
+TString operator+(ULong_t i, const TString& s)
+{
+   // Add string to integer.
+
+   const char *si = Form("%lu", i);
+   return TString(si, strlen(si), s.Data(), s.Length());
 }
 
 // -------------------- Static Member Functions ----------------------
