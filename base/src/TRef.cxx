@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.17 2002/07/09 21:15:39 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.18 2002/07/29 09:04:43 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -10,10 +10,10 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-// 
+//
 // TRef
 //
-// Persistent Reference link to a TObject 
+// Persistent Reference link to a TObject
 // A TRef is a lightweight object pointing to any TObject.
 // This object can be used instead of normal C++ pointers in case
 //  - the referenced object R and the pointer P are not written to the same file
@@ -27,8 +27,8 @@
 // However if the object event is split into several files or into several
 // branches of one or more Trees, normal C++ pointers cannot be used because
 // each I/O operation will write the referenced objects.
-// When a TRef is used to point to a TObject *robj. 
-//For example in a class with
+// When a TRef is used to point to a TObject *robj.
+// For example in a class with
 //     TRef  fRef;
 // one can do:
 //     fRef = robj;  //to set the pointer
@@ -63,7 +63,7 @@
 // in addition to the standard (fBits,fUniqueID) the pidf.
 // When this robj is read by TObject::Streamer, the pidf is read.
 // At this point, robj is entered into the table of objects of the TProcessID
-// corresponding to pidf. 
+// corresponding to pidf.
 //
 // WARNING: If MyClass is the class of the referenced object, The TObject
 //          part of MyClass must be Streamed. One should not
@@ -73,7 +73,7 @@
 // ------------
 // When an object is referenced (see TRef assignement operator or TRefArray::Add)
 // a unique identifier is computed and stored in both the fUniqueID of the
-// referenced and referencing object. This uniqueID is computed by incrementing 
+// referenced and referencing object. This uniqueID is computed by incrementing
 // by one the static global in TProcessID::fgNumber. fUniqueID is some sort of
 // serial object number in the current session. One can retrieve at any time
 // the current value of fgNumber by calling the static function TProcessID::GetObjectCount
@@ -113,13 +113,13 @@
 //    - a call to TExec::SetAction at any time.
 //      One can compute a pointer to an existing TExec with a name with:
 //        TExec *myExec = gROOT->GetExec(execName);
-//      myExec->SetAction(actionCommand); where 
+//      myExec->SetAction(actionCommand); where
 //      - actionCommand is a string containing a CINT instruction. Examples:
 //          myExec->SetAction("LoadHits()");
 //          myExec->SetAction(".x script.C");
 //
-//  When a TRef is dereferenced via TRef::GetObject, its TExec will be
-// automatically executed. In the function/script being executed, one or more 
+// When a TRef is dereferenced via TRef::GetObject, its TExec will be
+// automatically executed. In the function/script being executed, one or more
 // of the following actions can be executed:
 //  - load a file containing the referenced object. This function typically
 //    looks in the file catalog (GRID).
@@ -160,12 +160,12 @@
 // (For example, TFile and TDirectory have a TUUID)
 // The TRef fPID points directly to the single object TProcessUUID (deriving
 // from TProcessID) and managing the list of TUUIDs for a process.
-// The TRef kAsUUID bit is set and its fUniqueID is set to the fUniqueID
+// The TRef kHasUUID bit is set and its fUniqueID is set to the fUniqueID
 // of the referenced object.
 // When the TRef is streamed to a buffer, the corresponding TUUID is also
 // streamed with the TRef. When a TRef is read from a buffer, the corresponding
 // TUUID is also read and entered into the global list of TUUIDs (if not
-// already there). The TRef fUniqueID is set to the UIIDNumber.
+// already there). The TRef fUniqueID is set to the UUIDNumber.
 // see TProcessUUID for more details.
 //
 // Array of TRef
@@ -178,7 +178,7 @@
 // Example:
 // Suppose a TObjArray *mytracks containing a list of Track objects
 // Suppose a TRefArray *pions containing pointers to the pion tracks in mytracks.
-//   This list is created with statements like: pions->Add(track);
+// This list is created with statements like: pions->Add(track);
 // Suppose a TRefArray *muons containing pointers to the muon tracks in mytracks.
 // The 3 arrays mytracks,pions and muons may be written separately.
 //
@@ -203,7 +203,7 @@ ClassImp(TRef)
 //______________________________________________________________________________
 TRef::TRef(TObject *obj)
 {
-   // TRef copy ctor.
+   // Create a ref to obj.
 
    *this = obj;
    if (!obj) return;
@@ -220,13 +220,15 @@ TRef::TRef(TObject *obj)
 //______________________________________________________________________________
 TRef::TRef(const TRef &ref) : TObject(ref)
 {
+   // TRef copy ctor.
+
    *this = ref;
 }
 
 //______________________________________________________________________________
 void TRef::operator=(TObject *obj)
 {
-   // TRef assignment operator.
+   // Assign object to reference.
 
    UInt_t uid = 0;
    if (obj) {
@@ -267,8 +269,8 @@ TRef &TRef::operator=(const TRef &ref)
 //______________________________________________________________________________
 Bool_t operator==(const TRef &r1, const TRef &r2)
 {
-   // return kTRUE if r1 and r2 point to the same object
-   
+   // Return kTRUE if r1 and r2 point to the same object.
+
    if (r1.GetPID() == r2.GetPID() && r1.GetUniqueID() == r2.GetUniqueID()) return kTRUE;
    else return kFALSE;
 }
@@ -276,8 +278,8 @@ Bool_t operator==(const TRef &r1, const TRef &r2)
 //______________________________________________________________________________
 Bool_t operator!=(const TRef &r1, const TRef &r2)
 {
-   // return kTRUE if r1 and r2 do not point to the same object
-   
+   // Return kTRUE if r1 and r2 do not point to the same object.
+
    if (r1.GetPID() == r2.GetPID() && r1.GetUniqueID() == r2.GetUniqueID()) return kFALSE;
    else return kTRUE;
 }
@@ -285,11 +287,11 @@ Bool_t operator!=(const TRef &r1, const TRef &r2)
 //______________________________________________________________________________
 Int_t TRef::AddExec(const char *name)
 {
-   //if Exec with name does not exist in the list of Execs, it is created.
-   //returns the index of the Exec in the list
+   // If Exec with name does not exist in the list of Execs, it is created.
+   // returns the index of the Exec in the list.
 
    if (!fgExecs) fgExecs = new TObjArray(10);
-   
+
    TExec *exec = (TExec*)fgExecs->FindObject(name);
    if (!exec) {
        //we register this Exec to the list of Execs.
@@ -298,18 +300,18 @@ Int_t TRef::AddExec(const char *name)
    }
    return fgExecs->IndexOf(exec);
 }
-   
+
 //______________________________________________________________________________
 TObjArray *TRef::GetListOfExecs()
 {
-// Return a pointer to the static TObjArray holding the list of Execs
-   
+   // Return a pointer to the static TObjArray holding the list of Execs.
+
    if (!fgExecs) fgExecs = new TObjArray(10);
-   
+
    return fgExecs;
 }
-  
-   
+
+
 //______________________________________________________________________________
 TObject *TRef::GetObject() const
 {
@@ -320,7 +322,7 @@ TObject *TRef::GetObject() const
    UInt_t uid = GetUniqueID();
    //Try to find the object from the table of the corresponding PID
    TObject *obj = fPID->GetObjectWithID(uid);
-   
+
    //if object not found, then exec action if an action has been defined
    if (!obj) {
       //execid in the first 8 bits
@@ -338,22 +340,22 @@ TObject *TRef::GetObject() const
                ((TRef*)this)->SetUniqueID(uid);
                fPID->PutObjectWithID(obj,uid);
             } else {
-               //well may be the Exec has loaded the object 
+               //well may be the Exec has loaded the object
                obj = fPID->GetObjectWithID(uid);
-            }  
-         }  
+            }
+         }
       }
    }
-   
-   return obj; 
+
+   return obj;
 }
 
 //______________________________________________________________________________
 void TRef::SetAction(const char *name)
 {
-// Store the exec number (in the ROOT list of Execs)
-// into the fBits of this TRef
-   
+   // Store the exec number (in the ROOT list of Execs)
+   // into the fBits of this TRef.
+
    TExec *exec = (TExec*)fgExecs->FindObject(name);
    if (!exec) {
       Error("SetAction","Unknow TExec: %s",name);
@@ -366,14 +368,14 @@ void TRef::SetAction(const char *name)
 //______________________________________________________________________________
 void TRef::SetAction(TObject *parent)
 {
-// Find the action to be executed in the dictionary of the parent class
-// and store the corresponding exec number into fBits
-// This function searches a data member in the class of parent with an offset
-// corresponding to this.
-// If a comment "TEXEC:" is found in the comment field of the data member,
-// the function stores the exec identifier of the exec statement
-// following this keyword.
-      
+   // Find the action to be executed in the dictionary of the parent class
+   // and store the corresponding exec number into fBits.
+   // This function searches a data member in the class of parent with an
+   // offset corresponding to this.
+   // If a comment "TEXEC:" is found in the comment field of the data member,
+   // the function stores the exec identifier of the exec statement
+   // following this keyword.
+
    if (!parent) return;
    Int_t offset = (char*)this - (char*)parent;
    TClass *cl = parent->IsA();
@@ -388,14 +390,14 @@ void TRef::SetAction(TObject *parent)
       return;
    }
 }
-   
+
 //______________________________________________________________________________
 void TRef::SetObject(TObject *obj)
 {
-// static function to set the object found on the Action on Demand function. 
-// This function may be called by the user in the function called 
-// when a "EXEC:" keyword is specified in the data member field of the TRef.
-   
+   // Static function to set the object found on the Action on Demand function.
+   // This function may be called by the user in the function called
+   // when a "EXEC:" keyword is specified in the data member field of the TRef.
+
    fgObject = obj;
 }
 
@@ -417,7 +419,7 @@ void TRef::Streamer(TBuffer &R__b)
          SetUniqueID(number);
          if (gDebug > 1) {
             printf("Reading TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
-         }      
+         }
       } else {
          R__b >> pidf;
          fPID = TProcessID::ReadProcessID(pidf,file);
@@ -429,8 +431,8 @@ void TRef::Streamer(TBuffer &R__b)
          if (execid) SetBit(execid<<16);
          if (gDebug > 1) {
             printf("Reading TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
-         }      
-      }      
+         }
+      }
    } else {
       TObject::Streamer(R__b);
 
@@ -439,13 +441,13 @@ void TRef::Streamer(TBuffer &R__b)
          objs->String().Streamer(R__b);
          if (gDebug > 1) {
             printf("Writing TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
-         }      
+         }
       } else {
          pidf = TProcessID::WriteProcessID(fPID,file);
          R__b << pidf;
          if (gDebug > 1) {
             printf("Writing TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
-         }      
+         }
       }
    }
 }
