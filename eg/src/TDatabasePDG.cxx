@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.12 2001/05/17 06:45:55 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.13 2001/09/20 07:08:38 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TROOT.h"
@@ -379,7 +379,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
    // read list of particles from a file
    // if the particle list does not exist, it is created, otherwise
    // particles are added to the existing list
-   // See $ROOTSYS/tutorials/pdg.dat to see the file format
+   // See $ROOTSYS/etc/pdg_table.txt to see the file format
 
   if (fParticleList == 0) {
     fParticleList  = new THashList;
