@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.7 2001/03/08 14:44:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.9 2001/04/21 17:20:23 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -162,8 +162,11 @@ static char *CompressName(const char *method_name)
    char *s;
    s = str;
 
+   Bool_t quote = kFALSE;
    while (*tmp) {
-      if (*tmp != ' ')
+      if (*tmp == '\"')
+         quote = quote ? kFALSE : kTRUE;
+      if (*tmp != ' ' || quote)
          *s++ = *tmp;
       tmp++;
    }
@@ -455,7 +458,7 @@ TQObject::~TQObject()
    // TQObject Destructor.
    //    - delete all connections and signal list
 
-   Destroyed();   // emit "Destroyed()" signal
+//   Destroyed();   // emit "Destroyed()" signal
 
    TQConnectionList *list = 0;
 
