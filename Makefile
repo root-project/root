@@ -281,7 +281,6 @@ endif
 include build/dummy.d          # must be last include
 endif
 
-
 rootcint:       all-cint $(ROOTCINTTMP) $(ROOTCINT)
 
 rootlibs:       rootcint compiledata $(ALLLIBS)

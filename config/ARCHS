@@ -42,5 +42,4 @@ solarisegcs          for Solaris egcs 1.1.x
 solarisgcc           for Solaris gcc 2.8.1
 solariskcc           for Solaris KCC
 win32                for Win32 with VC++
-win32egcs            for Win32 with egcs (Cygwin)
 win32gdk             for Win32 with VC++ and gdk based GUI
