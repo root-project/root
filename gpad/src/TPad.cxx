@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.86 2002/09/25 16:15:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.87 2002/10/07 15:58:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3077,7 +3077,6 @@ void TPad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
       Int_t py1 = VtoPixel(v1);
       Int_t px2 = UtoPixel(u2);
       Int_t py2 = VtoPixel(v2);
-
       gVirtualX->DrawLine(px1, py1, px2, py2);
    }
 
@@ -3990,17 +3989,18 @@ void TPad::ResizePad(Option_t *option)
    Double_t pyrange = -fAbsHNDC*wh;
 
 //*-*- Linear X axis
+   Double_t rounding = 0.00005;
    Double_t xrange  = fX2 - fX1;
-   fXtoAbsPixelk = 0.5 + pxlow - pxrange*fX1/xrange;      //origin at left
-   fXtoPixelk = 0.5 +  -pxrange*fX1/xrange;
+   fXtoAbsPixelk = rounding + pxlow - pxrange*fX1/xrange;      //origin at left
+   fXtoPixelk = rounding +  -pxrange*fX1/xrange;
    fXtoPixel  = pxrange/xrange;
    fAbsPixeltoXk = fX1 - pxlow*xrange/pxrange;
    fPixeltoXk = fX1;
    fPixeltoX  = xrange/pxrange;
 //*-*- Linear Y axis
    Double_t yrange  = fY2 - fY1;
-   fYtoAbsPixelk = 0.5 + pylow - pyrange*fY1/yrange;      //origin at top
-   fYtoPixelk = 0.5 +  -pyrange - pyrange*fY1/yrange;
+   fYtoAbsPixelk = rounding + pylow - pyrange*fY1/yrange;      //origin at top
+   fYtoPixelk = rounding +  -pyrange - pyrange*fY1/yrange;
    fYtoPixel  = pyrange/yrange;
    fAbsPixeltoYk = fY1 - pylow*yrange/pyrange;
    fPixeltoYk = fY1;
@@ -4008,10 +4008,10 @@ void TPad::ResizePad(Option_t *option)
 
 //*-*- Coefficients to convert from pad NDC coordinates to pixel coordinates
 
-   fUtoAbsPixelk = 0.5 + pxlow;
-   fUtoPixelk = 0.0;
+   fUtoAbsPixelk = rounding + pxlow;
+   fUtoPixelk = rounding;
    fUtoPixel  = pxrange;
-   fVtoAbsPixelk = 0.5 + pylow;
+   fVtoAbsPixelk = rounding + pylow;
    fVtoPixelk = -pyrange;
    fVtoPixel  = pyrange;
 
