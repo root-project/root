@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.3 2000/09/29 07:51:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.4 2000/12/04 16:45:09 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -133,7 +133,10 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
       leaf->SetLeafCount(leafcount);
       Int_t arraydim = member->GetArrayDim();
       if (arraydim) {
-         Int_t maxindex = member->GetMaxIndex(arraydim-1);
+         Int_t maxindex=1;
+         while (arraydim) {
+            maxindex *= member->GetMaxIndex(--arraydim);
+         }
          leaf->SetLen(maxindex);
       }
       fBranches.Add(branch);
