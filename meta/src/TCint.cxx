@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.95 2005/01/03 16:42:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.96 2005/01/06 21:27:46 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -632,7 +632,7 @@ Bool_t TCint::CheckClassInfo(const char *name)
 
       *current = '\0';
       G__ClassInfo info(classname);
-      if (!info.IsLoaded()) {
+      if (!info.IsValid()) {
          delete [] classname;
          return kFALSE;
       }
