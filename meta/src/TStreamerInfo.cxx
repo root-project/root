@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.125 2002/04/01 17:19:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.126 2002/04/30 06:33:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1241,7 +1241,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kBits:              {UInt_t *val   = (UInt_t*)ladd;   printf("%d",*val);  break;}
 
          // array of basic types  array[8]
-      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   for(j=0;j<aleng;j++) printf("%c", val[j]); printf(" "); break; }
       case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
       case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
       case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   for(j=0;j<aleng;j++) printf("%ld ",val[j]); break;}
