@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.58 2004/04/16 20:53:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.59 2004/05/06 15:59:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -743,65 +743,14 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
       Error("Write","No file open");
       return 0;
    }
-   if (!gFile->IsWritable()) {
-      if (!gFile->TestBit(TFile::kWriteError)) {
-         // Do not print the error if the file already had a SysError.
-         Error("Write","File %s is not writable", gFile->GetName());
-      }
-      return 0;
-   }
-
-   TKey *key, *oldkey=0;
-   Int_t bsize = bufsize;
-   if (!bsize) bsize = gFile->GetBestBuffer();
-
-   const char *oname;
-   if (name && *name)
-      oname = name;
-   else
-      oname = GetName();
-
-   // Remove trailing blanks in object name
-   Int_t nch = strlen(oname);
-   char *newName = 0;
-   if (oname[nch-1] == ' ') {
-      newName = new char[nch+1];
-      strcpy(newName,oname);
-      for (Int_t i=0;i<nch;i++) {
-         if (newName[nch-i-1] != ' ') break;
-         newName[nch-i-1] = 0;
-      }
-      oname = newName;
-   }
-
-   if ((option & kOverwrite)) {
-      //One must use GetKey. FindObject would return the lowest cycle of the key!
-      //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
-      key = (TKey*)gDirectory->GetKey(oname);
-      if (key) {
-         key->Delete();
-         delete key;
-      }
-   }
-   if ((option & kWriteDelete)) {
-      oldkey = (TKey*)gDirectory->GetKey(oname);
-   }
-   key = new TKey(this, oname, bsize);
-   if (newName) delete [] newName;
-
-   if (!key->GetSeekKey()) {
-      gDirectory->GetListOfKeys()->Remove(key);
-      delete key;
-      return 0;
-   }
-   gFile->SumBuffer(key->GetObjlen());
-   Int_t nbytes = key->WriteFile(0);
-
-   if (oldkey) {
-      oldkey->Delete();
-      delete oldkey;
-   }
-
+   if (bufsize) gFile->SetBufferSize(bufsize);
+   TString opt = "";
+   if (option & kSingleKey)   opt += "SingleKey";
+   if (option & kOverwrite)   opt += "OverWrite";
+   if (option & kWriteDelete) opt += "WriteDelete";
+   
+   Int_t nbytes = gFile->WriteObject(this,name,opt.Data());
+   if (bufsize) gFile->SetBufferSize(0);
    return nbytes;
 }
 
