@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.8 2002/05/31 01:49:00 verkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.9 2002/06/09 00:24:55 stark Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -188,8 +188,8 @@ RooNonCPEigenDecay::~RooNonCPEigenDecay( void )
 
 Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const 
 {
-  // B0    : _tag  == +1 
-  // B0bar : _tag  == -1 
+  // B0    : _tag  == -1 
+  // B0bar : _tag  == +1 
   // rho+  : _rhoQ == +1
   // rho-  : _rhoQ == -1
   // the charge corrrection factor "_correctQ" serves to implement mis-charges
@@ -213,28 +213,28 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
     
     if (rhoQc == -1) 
 
-      return + ((1 - _acp)*a_sin_m*(1 - _wQ) + (1 + _acp)*a_sin_p*_wQ)*(1 - 2*_avgW)*_tag;
+      return - ((1 - _acp)*a_sin_m*(1 - _wQ) + (1 + _acp)*a_sin_p*_wQ)*(1 - 2*_avgW)*_tag;
 
     else if (rhoQc == +1)
 
-      return + ((1 + _acp)*a_sin_p*(1 - _wQ) + (1 - _acp)*a_sin_m*_wQ)*(1 - 2*_avgW)*_tag;
+      return - ((1 + _acp)*a_sin_p*(1 - _wQ) + (1 - _acp)*a_sin_m*_wQ)*(1 - 2*_avgW)*_tag;
 
     else 
-       return _tag*((a_sin_p + a_sin_m)/2)*(1 - 2*_avgW);
+       return - _tag*((a_sin_p + a_sin_m)/2)*(1 - 2*_avgW);
   }
 
   if (basisIndex == _basisCos) {
     
     if ( rhoQc == -1) 
 
-      return - ((1 - _acp)*a_cos_m*(1 - _wQ) + (1 + _acp)*a_cos_p*_wQ)*(1 - 2*_avgW)*_tag;
+      return + ((1 - _acp)*a_cos_m*(1 - _wQ) + (1 + _acp)*a_cos_p*_wQ)*(1 - 2*_avgW)*_tag;
 
     else if (rhoQc == +1)
 
-      return - ((1 + _acp)*a_cos_p*(1 - _wQ) + (1 - _acp)*a_cos_m*_wQ)*(1 - 2*_avgW)*_tag;
+      return + ((1 + _acp)*a_cos_p*(1 - _wQ) + (1 - _acp)*a_cos_m*_wQ)*(1 - 2*_avgW)*_tag;
 
     else 
-      return - _tag*((a_cos_p + a_cos_m)/2)*(1 - 2*_avgW);
+      return _tag*((a_cos_p + a_cos_m)/2)*(1 - 2*_avgW);
   }
 
   return 0;
@@ -279,11 +279,11 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 
     if (basisIndex == _basisSin)
 
-      return + ( (1 - _acp)*a_sin_m + (1 + _acp)*a_sin_p )*(1 - 2*_avgW)*_tag; 
+      return - ( (1 - _acp)*a_sin_m + (1 + _acp)*a_sin_p )*(1 - 2*_avgW)*_tag; 
 
     if (basisIndex == _basisCos)
 
-      return - ( (1 - _acp)*a_cos_m + (1 + _acp)*a_cos_p )*(1 - 2*_avgW)*_tag; 
+      return + ( (1 - _acp)*a_cos_m + (1 + _acp)*a_cos_p )*(1 - 2*_avgW)*_tag; 
 
     assert( kFALSE );
 
@@ -320,7 +320,7 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
     Double_t sumInt1 = RooRealIntegral( "sumInt1", "sum integral1", *this, 
 					RooArgSet( _t.arg(), _tag.arg(), _rhoQ.arg() )
 				      ).getVal();
-    _tag = 1;
+    _tag = -1;
     Double_t b0Int1 = RooRealIntegral( "mixInt1", "mix integral1", *this,
 				       RooArgSet( _t.arg(), _rhoQ.arg() )
 				     ).getVal();
@@ -358,7 +358,7 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
   while (kTRUE) {
 
     // B flavor and rho charge (we do not use the integrated weights)
-    _tag  = (RooRandom::uniform()<=0.5) ? 1 : -1;
+    _tag  = (RooRandom::uniform()<=0.5) ? -1 : +1;
     _rhoQ = (RooRandom::uniform()<=0.5) ? 1 : -1;
 
     // opposite charge?
