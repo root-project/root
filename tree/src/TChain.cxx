@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.24 2001/08/14 08:30:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.25 2001/09/22 10:43:34 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -733,7 +733,7 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    if (!fTree) return;
 
 // Clone Chain tree
-   file->cd();
+   //file->cd();  //in case a user wants to write in a file/subdir
    TTree *hnew = (TTree*)fTree->CloneTree(0);
    hnew->SetAutoSave(2000000000);
 
