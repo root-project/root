@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.137 2004/10/08 07:27:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.138 2004/10/26 08:08:35 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1091,7 +1091,7 @@ TObject *TROOT::GetFunction(const char *name) const
          util = (TVirtualUtilHist*)GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
       }
    }
-   util->InitStandardFunctions();
+   if (util) util->InitStandardFunctions();
 
    return fFunctions->FindObject(name);
 }
