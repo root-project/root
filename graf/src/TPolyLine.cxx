@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -38,8 +38,8 @@ TPolyLine::TPolyLine(Int_t n, Option_t *option)
 //*-*-*-**-*-*PolyLine normal constructor without initialisation*-*-*-*-*-*-*-*
 //*-*         ==================================================
    fN = n;
-   fX = new Float_t[fN];
-   fY = new Float_t[fN];
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
    fOption = option;
 }
 
@@ -50,8 +50,22 @@ TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 //*-*-*-*-*-*-*-*-*-*-*PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
    fN = n;
-   fX = new Float_t[fN];
-   fY = new Float_t[fN];
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
+   if (!x || !y) return;
+   for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
+   fOption = option;
+}
+
+//______________________________________________________________________________
+TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+      :TObject(), TAttLine(), TAttFill()
+{
+//*-*-*-*-*-*-*-*-*-*-*PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ===========================
+   fN = n;
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
    fOption = option;
@@ -82,8 +96,8 @@ void TPolyLine::Copy(TObject &obj)
    TAttLine::Copy(((TPolyLine&)obj));
    TAttFill::Copy(((TPolyLine&)obj));
    ((TPolyLine&)obj).fN = fN;
-   ((TPolyLine&)obj).fX = new Float_t[fN];
-   ((TPolyLine&)obj).fY = new Float_t[fN];
+   ((TPolyLine&)obj).fX = new Double_t[fN];
+   ((TPolyLine&)obj).fY = new Double_t[fN];
    for (Int_t i=0; i<fN;i++)  {((TPolyLine&)obj).fX[i] = fX[i]; ((TPolyLine&)obj).fY[i] = fY[i];}
    ((TPolyLine&)obj).fOption = fOption;
 }
@@ -132,14 +146,14 @@ void TPolyLine::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPolyLine::DrawPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+void TPolyLine::DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Draw this polyline with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
    TPolyLine *newpolyline = new TPolyLine();
    newpolyline->fN =n;
-   newpolyline->fX = new Float_t[fN];
-   newpolyline->fY = new Float_t[fN];
+   newpolyline->fX = new Double_t[fN];
+   newpolyline->fY = new Double_t[fN];
    for (Int_t i=0; i<fN;i++) { newpolyline->fX[i] = x[i]; newpolyline->fY[i] = y[i];}
    TAttLine::Copy(*newpolyline);
    TAttFill::Copy(*newpolyline);
@@ -162,7 +176,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //     until the button is released.
 //
    Int_t i, d;
-   Float_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
+   Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
    const Int_t kMaxDiff = 10;
    static Bool_t MIDDLE;
    static Int_t ipoint, pxp, pyp;
@@ -358,7 +372,7 @@ void TPolyLine::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPolyLine::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Draw this polyline with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -373,7 +387,7 @@ void TPolyLine::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPolyLine::PaintPolyLineNDC(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+void TPolyLine::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Draw this polyline with new coordinates in NDC*-*-*-*-*-*-*
 //*-*              ==============================================
@@ -399,7 +413,7 @@ void TPolyLine::SavePrimitive(ofstream &out, Option_t *)
 
    char quote = '"';
    out<<"   "<<endl;
-   out<<"   Float_t *dum = 0;"<<endl;
+   out<<"   Double_t *dum = 0;"<<endl;
    if (gROOT->ClassSaved(TPolyLine::Class())) {
        out<<"   ";
    } else {
@@ -417,7 +431,7 @@ void TPolyLine::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPolyLine::SetPoint(Int_t point, Float_t x, Float_t y)
+void TPolyLine::SetPoint(Int_t point, Double_t x, Double_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Initialize one point of the polyline*-*-*-*-*-*-*-*-*
 //*-*                    ====================================
@@ -427,15 +441,15 @@ void TPolyLine::SetPoint(Int_t point, Float_t x, Float_t y)
 }
 
 //______________________________________________________________________________
-void TPolyLine::SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+void TPolyLine::SetPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Set new values for this polyline*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
        fN =n;
        if (fX) delete [] fX;
        if (fY) delete [] fY;
-       fX = new Float_t[fN];
-       fY = new Float_t[fN];
+       fX = new Double_t[fN];
+       fY = new Double_t[fN];
        for (Int_t i=0; i<fN;i++) {
           if (x) fX[i] = x[i];
           if (y) fY[i] = y[i];
@@ -450,15 +464,26 @@ void TPolyLine::Streamer(TBuffer &b)
 //*-*              =========================================
    UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
       b >> fN;
-      fX = new Float_t[fN];
-      fY = new Float_t[fN];
-      b.ReadFastArray(fX,fN);
-      b.ReadFastArray(fY,fN);
+      fX = new Double_t[fN];
+      fY = new Double_t[fN];
+      if (R__v < 2) {
+         Float_t *x = new Float_t[fN];
+         Float_t *y = new Float_t[fN];
+         b.ReadFastArray(x,fN);
+         b.ReadFastArray(y,fN);
+         for (Int_t i=0;i<fN;i++) {
+            fX[i] = x[i];
+            fY[i] = y[i];
+         }
+      } else {
+         b.ReadFastArray(fX,fN);
+         b.ReadFastArray(fY,fN);
+      }
       fOption.Streamer(b);
       b.CheckByteCount(R__s, R__c, TPolyLine::IsA());
    } else {
