@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.68 2001/11/22 09:05:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.69 2001/12/02 16:15:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1548,7 +1548,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //*-*   Parameter 3 has boundaries [-10,-4] with initial value -8
 //*-*   Parameter 4 is fixed to 0
 //*-*   Parameter 5 is fixed to 100.
-//*-*   When the lower limit and upper limit are equal, teh parameter is fixed.
+//*-*   When the lower limit and upper limit are equal, the parameter is fixed.
 //*-*   However to fix a parameter to 0, one must call the FixParameter function.
 //*-*
 //*-*   Note that option "I" gives better results but is slower.
