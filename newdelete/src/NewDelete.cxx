@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.1 2002/03/07 01:48:32 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.2 2002/12/02 18:50:04 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
+#include <errno.h>
 
 #include "MemCheck.h"
 #include "TObjectTable.h"
@@ -308,8 +309,12 @@ void operator delete(void *ptr) R__THROW_NULL
       TMapFile *mf = TMapFile::WhichMapFile(RealStart(ptr));
       if (mf) {
          if (mf->IsWritable()) ::mfree(mf->GetMmallocDesc(), RealStart(ptr));
-      } else
-         ::free(RealStart(ptr));
+      } else {
+         do {
+            TSystem::ResetErrno();
+            ::free(RealStart(ptr));
+         } while (TSystem::GetErrno() == EINTR);
+      }
       if (TSystem::GetErrno() != 0)
          SysError(where, "free");
    }
