@@ -1827,7 +1827,7 @@ if test "x$enable_afs" = "xyes" || test "x$enable_krb5" = "xyes" ; then
     fi
 
     case $arch in
-	linux*) # Resolver lives in separate library
+	linux*|solarisCC5) # Resolver lives in separate library
 	    resolvlib="-lresolv"
 	    ;;
     esac

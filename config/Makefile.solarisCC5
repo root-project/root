@@ -43,7 +43,7 @@ SOFLAGS       = -G -ptr$(ROOTSYS)
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl -lresolv -lnsl -lsocket 
+SYSLIBS       = -lm -ldl -lnsl -lsocket
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -ltermcap -ldl
 
