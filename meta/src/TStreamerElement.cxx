@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.57 2003/05/27 00:39:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.58 2003/08/06 07:26:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1172,7 +1172,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
    if (sconst) {
       // the string "const" may be part of the classname!
       char *pconst = sconst-1;
-      if (*pconst == ' ' || *pconst == '<') sopen = sconst + 5;
+      if (*pconst == ' ' || *pconst == '<' || *pconst == '*' || *pconst == '\0') sopen = sconst + 5;
    }
    fSTLtype = 0;
    fCtype   = 0;
