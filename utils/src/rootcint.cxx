@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.116 2002/12/09 15:12:53 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.117 2002/12/10 02:52:07 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2880,10 +2880,8 @@ void WriteShadowClass(G__ClassInfo &cl)
          else
             fprintf(fp, " UNKNOWN inheritance ");
          string type_name = b.Fullname();
-         if ( type_name.find("::")!= string::npos )
-            fprintf(fp, "::%s", b.Fullname());
-         else
-            fprintf(fp, "%s", b.Fullname());
+         GetFullyQualifiedName(b,type_name);
+         fprintf(fp, "%s", type_name.c_str());
       }
       fprintf(fp, " {\n");
       fprintf(fp, "         public:\n");
