@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.4 2000/11/22 18:03:03 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.8 2000/11/28 09:05:07 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -647,7 +647,7 @@ void TTreeViewer::BuildInterface()
    fWidgets->Add(lo);
    fBFrame->AddFrame(fStatusBar, lo);
    //--- RESET button
-   TGTextButton* fReset = new TGTextButton(fBFrame,"RESET",kRESET);
+   fReset = new TGTextButton(fBFrame,"RESET",kRESET);
    fReset->SetToolTipText("Reset variable's fields and drawing options");
    fReset->Associate(this);
    lo = new TGLayoutHints(kLHintsTop | kLHintsRight, 2,2,2,2);
@@ -932,7 +932,7 @@ void TTreeViewer::ExecuteDraw()
       fBarH->SetState(kButtonUp);
       TH1 *hist = fTree->GetHistogram();
       if (hist) {
-	 cout << " Graphics option for current histogram changed to " << gopt << endl; 
+	 cout << " Graphics option for current histogram changed to " << gopt << endl;
          hist->Draw(gopt);
          gPad->Update();
          return;
@@ -942,7 +942,7 @@ void TTreeViewer::ExecuteDraw()
    sprintf(command, "tree->Draw(\"%s\",\"%s\",\"%s\", %i, %i);",
            varexp, cut, gopt, nentries, firstentry);
    if (fCounting) return;
-   fCounting = kTRUE;   
+   fCounting = kTRUE;
    fTree->SetTimerInterval(50);
    fTimer->TurnOn();
 //   fTree->Draw(varexp, cut, gopt, nentries, firstentry);
@@ -1049,7 +1049,7 @@ Bool_t TTreeViewer::HandleTimer(TTimer *timer)
 {
 // This function is called by the fTimer object
    if (fCounting) {
-      cout << "time\n";   
+      cout << "time\n";
    }
    timer->Reset();
    // functionality to be added
