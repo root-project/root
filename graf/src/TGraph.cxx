@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.70 2002/06/14 20:30:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.71 2002/07/12 10:22:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TVectorD.h"
 #include "Foption.h"
 #include "TRandom.h"
+#include "TPaveStats.h"
 #include "TVirtualFitter.h"
 #include "TVirtualPad.h"
 #include "TVirtualHistPainter.h"
@@ -334,9 +335,11 @@ TGraph::~TGraph()
 
    delete [] fX;
    delete [] fY;
-   if (!fFunctions) return;
-   fFunctions->Delete();
-   delete fFunctions;
+   if (fFunctions) { 
+      fFunctions->SetBit(kInvalidObject);
+      fFunctions->Delete(); 
+      delete fFunctions; 
+   }
    fFunctions = 0;
    delete fHistogram;
    fHistogram = 0;
@@ -410,7 +413,7 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t distance;
    if (fHistogram) {
       distance = fHistogram->DistancetoPrimitive(px,py);
-      if (distance <= 0) return distance;
+      if (distance <= 5) return distance;
    }
 
 //*-*- Somewhere on the graph points?
@@ -809,6 +812,25 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //    Double_t chi2 = myfunc->GetChisquare();
 //    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 //    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+//
+//   Fit Statistics
+//   ==============
+//  You can change the statistics box to display the fit parameters with
+//  the TStyle::SetOptFit(mode) method. This mode has four digits.
+//  mode = pcev  (default = 0111)
+//    v = 1;  print name/values of parameters
+//    e = 1;  print errors (if e=1, v must be 1)
+//    c = 1;  print Chisquare/Number of degress of freedom
+//    p = 1;  print Probability
+//
+//  For example: gStyle->SetOptFit(1011);
+//  prints the fit probability, parameter names/values, and errors.
+//  You can change the position of the statistics box with these lines
+//  (where g is a pointer to the TGraph):
+//
+//  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
+//  Root > st->SetX1NDC(newx1); //new x start position
+//  Root > st->SetX2NDC(newx2); //new x end position
 
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
@@ -977,7 +999,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //*-*- Print final values of parameters.
    if (!fitOption.Quiet) {
       if (fitOption.Errors) grFitter->PrintResults(4,amin);
-      else                grFitter->PrintResults(3,amin);
+      else                  grFitter->PrintResults(3,amin);
    }
    delete [] arglist;
 
@@ -1519,6 +1541,96 @@ void TGraph::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TGraph::PaintFit(TF1 *fit)
+{
+//  Paint "stats" box with the fit info
+   
+   Int_t dofit;
+   TPaveStats *stats  = 0;
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPaveStats::Class())) {
+         stats = (TPaveStats*)obj;
+         break;
+      }
+   }
+
+   if (stats) dofit  = stats->GetOptFit();
+   else       dofit  = gStyle->GetOptFit();
+   
+   if (!dofit) fit = 0;
+   if (dofit  == 1) dofit  =  111;
+   Int_t nlines = 0;
+   Int_t print_fval    = dofit%10;
+   Int_t print_ferrors = (dofit/10)%10;
+   Int_t print_fchi2   = (dofit/100)%10;
+   Int_t print_fprob   = (dofit/1000)%10;
+   Int_t nlinesf = print_fval + print_fchi2 + print_fprob;
+   if (fit) nlinesf += fit->GetNpar();
+   Bool_t done = kFALSE;
+   Double_t  statw  = 1.8*gStyle->GetStatW();
+   Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
+   if (stats) {
+      stats->Clear();
+      done = kTRUE;
+   } else {
+      stats  = new TPaveStats(
+               gStyle->GetStatX()-statw,
+               gStyle->GetStatY()-stath,
+               gStyle->GetStatX(),
+               gStyle->GetStatY(),"brNDC");
+
+      stats->SetParent(fFunctions);
+      stats->SetOptFit(dofit);
+      stats->SetOptStat(0);
+      stats->SetFillColor(gStyle->GetStatColor());
+      stats->SetFillStyle(gStyle->GetStatStyle());
+      stats->SetBorderSize(gStyle->GetStatBorderSize());
+      stats->SetTextFont(gStyle->GetStatFont());
+      if (gStyle->GetStatFont()%10 > 2)
+         stats->SetTextSize(gStyle->GetStatFontSize());
+      stats->SetFitFormat(gStyle->GetFitFormat());
+      stats->SetStatFormat(gStyle->GetStatFormat());
+      stats->SetName("stats");
+
+      stats->SetTextColor(gStyle->GetStatTextColor());
+      stats->SetTextAlign(12);
+      stats->SetBit(kCanDelete);
+      stats->SetBit(kMustCleanup);
+   }
+
+   char t[64];
+   char textstats[50];
+   Int_t ndf = fit->GetNDF();
+   sprintf(textstats,"#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
+   sprintf(t,textstats,(Float_t)fit->GetChisquare());
+   if (print_fchi2) stats->AddText(t);
+   if (print_fprob) {
+      sprintf(textstats,"Prob  = %s%s","%",stats->GetFitFormat());
+      sprintf(t,textstats,(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
+      stats->AddText(t);
+   }
+   if (print_fval || print_ferrors) {
+      for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
+         if (print_ferrors) {
+            sprintf(textstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
+            sprintf(t,textstats,(Float_t)fit->GetParameter(ipar)
+                            ,(Float_t)fit->GetParError(ipar));
+         } else {
+            sprintf(textstats,"%-8s = %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat());
+            sprintf(t,textstats,(Float_t)fit->GetParameter(ipar));
+         }
+         t[63] = 0;
+         stats->AddText(t);
+      }
+   }
+
+   if (!done) fFunctions->Add(stats);
+   stats->Paint();
+}
+
+//______________________________________________________________________________
 void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Control function to draw a graph*-*-*-*-*-*-*-*-*-*-*
@@ -1694,15 +1806,18 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
   TF1 *fit = 0;
   if (fFunctions) fit = (TF1*)fFunctions->First();
-  if (fit) {
-     if (fHistogram) {
-        TVirtualHistPainter::HistPainter(fHistogram)->PaintStat(0,fit);
-     } else {
-        TH1F *hfit = new TH1F("___0","",2,0,1);
-        TVirtualHistPainter::HistPainter(hfit)->PaintStat(0,fit);
-        delete hfit;
+  TObject *f;
+  if (fFunctions) {
+     TIter   next(fFunctions);
+     while ((f = (TObject*) next())) {
+        if (f->InheritsFrom(TF1::Class())) {
+           fit = (TF1*)f;
+           break;
+        }
      }
   }
+  if (fit) PaintFit(fit);
+  
   rwxmin   = gPad->GetUxmin();
   rwxmax   = gPad->GetUxmax();
   rwymin   = gPad->GetUymin();
@@ -2896,6 +3011,9 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
       out<<"   graph->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+      if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   ptstats->SetParent(graph->GetListOfFunctions());"<<endl;
+      }
    }
 
    if (!strstr(option,"multigraph")) {

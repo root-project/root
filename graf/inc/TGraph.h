@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.23 2002/04/27 07:49:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.24 2002/06/14 20:30:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -100,6 +100,7 @@ public:
         virtual void     LeastSquareFit(Int_t m, Double_t *a, Int_t first=0, Int_t last=0);
         virtual void     LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Int_t first, Int_t last);
         virtual void     Paint(Option_t *chopt="");
+        virtual void     PaintFit(TF1 *fit);
         virtual void     PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     Print(Option_t *chopt="") const;
