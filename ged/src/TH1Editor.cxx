@@ -1397,9 +1397,23 @@ void TH1Editor::DoBinLabel()
 {
    // Slot connected to the Bin Number Entry for the Rebin
    
-   fBinSlider->SetPosition((Int_t)(fBinNumberEntry->GetNumber()));
-// Write algorithm    
-
+   Int_t num = (Int_t)(fBinNumberEntry->GetNumber());
+   Int_t nx = 0;
+   if (fBinHist) nx = fBinHist->GetXaxis()->GetNbins();
+   else nx = fHist->GetXaxis()->GetNbins();
+   Int_t *div = Dividers(nx);
+   Int_t diff = TMath::Abs(num - div[1]);
+   Int_t c = 1;
+   for (Int_t i = 2; i <= div[0]; i++) {
+      if (TMath::Abs(num - div[i]) < diff) {
+         c = i; 
+	 diff = TMath::Abs(num - div[i]);
+      }
+   }
+   fBinNumberEntry->SetNumber(div[c]);
+   fBinSlider->SetPosition(div[0]-c+1);
+   DoBinMoved(div[0]-c+1);
+   Update();
 }
 
 //______________________________________________________________________________
