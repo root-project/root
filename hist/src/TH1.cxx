@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.59 2001/09/17 13:37:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.60 2001/09/25 15:36:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -518,6 +518,7 @@ void TH1::Build()
 //*-*-*-*-*-*-*-*-*-*Creates histogram basic data structure*-*-*-*-*-*-*-*-*-*
 //*-*                ======================================
 
+   fDirectory     = 0;
    fPainter       = 0;
    fIntegral      = 0;
    fEntries       = 0;
@@ -544,8 +545,8 @@ void TH1::Build()
        //  delete hold;
       }
       gDirectory->Append(this);
+      fDirectory = gDirectory;
    }
-   fDirectory = gDirectory;
    fFunctions = new TList;
 }
 
