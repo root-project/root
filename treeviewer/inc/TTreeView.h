@@ -165,7 +165,7 @@ public:
    Int_t        Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
    Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void         RemoveItem();					// *MENU*
-   void         SetTree(TTree* tree); 
+   void         SetTree(TTree* tree) {;} 
    void         SetTreeName(const char* treeName);              // *MENU*
    Bool_t       SwitchTree(Int_t index);
 
