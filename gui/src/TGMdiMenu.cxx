@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.2 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.3 2004/09/10 14:00:40 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -66,10 +66,14 @@ TGMdiMenuBar::TGMdiMenuBar(const TGWindow *p, int w, int h) :
 //______________________________________________________________________________
 TGMdiMenuBar::~TGMdiMenuBar()
 {
-   delete fLHint;
-   delete fLeftHint;
-   delete fRightHint;
-   delete fBarHint;
+   //
+
+   if (!MustCleanup()) {
+      delete fLHint;
+      delete fLeftHint;
+      delete fRightHint;
+      delete fBarHint;
+   }
 }
 
 //______________________________________________________________________________

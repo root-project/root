@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.10 2004/06/02 15:17:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.11 2004/08/12 10:58:48 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -121,8 +121,11 @@ TGStatusBar::~TGStatusBar()
 {
    // Delete status bar widget.
 
-   for (int i = 0; i < fNpart; i++)
-      delete fStatusPart[i];
+   if (!MustCleanup()) {
+      for (int i = 0; i < fNpart; i++) {
+         delete fStatusPart[i];
+      }
+   }
 
    delete [] fStatusPart;
    delete [] fParts;

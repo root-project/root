@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.7 2004/09/20 14:28:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.8 2004/09/21 11:29:17 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -136,8 +136,12 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
 //______________________________________________________________________________
 TGMdiDecorFrame::~TGMdiDecorFrame()
 {
-   delete fLHint;
-   delete fExpandHint;
+   //
+
+   if (!MustCleanup()) {
+      delete fLHint;
+      delete fExpandHint;
+   }
    delete fUpperHR;
    delete fLowerHR;
    delete fLeftVR;
@@ -335,10 +339,14 @@ TGMdiTitleBar::TGMdiTitleBar(const TGWindow *p, const TGWindow *mdiwin,
 //______________________________________________________________________________
 TGMdiTitleBar::~TGMdiTitleBar()
 {
-   delete fLHint;
-   delete fLeftHint;
-   delete fMiddleHint;
-   delete fRightHint;
+   //
+
+   if (!MustCleanup()) {
+      delete fLHint;
+      delete fLeftHint;
+      delete fMiddleHint;
+      delete fRightHint;
+   }
 }
 
 //______________________________________________________________________________
@@ -600,8 +608,12 @@ TGMdiButtons::TGMdiButtons(const TGWindow *p, const TGWindow *titlebar) :
 //______________________________________________________________________________
 TGMdiButtons::~TGMdiButtons()
 {
-   delete fDefaultHint;
-   delete fCloseHint;
+   //
+
+   if (!MustCleanup()) {
+      delete fDefaultHint;
+      delete fCloseHint;
+   }
 }
 
 //______________________________________________________________________________

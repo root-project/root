@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.16 2004/09/20 19:07:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.17 2004/09/20 19:11:54 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -245,14 +245,7 @@ TGTab::~TGTab()
    // Delete tab widget. This deletes the tab windows and the containers.
    // The tab string is deleted by the TGTabElement dtor.
 
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      delete el->fFrame;
-      // delete el->fLayout; // el->fLayout is NULL!
-   }
-
+   Cleanup();
    fRemoved->Delete();
    delete fRemoved;
 }

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.5 2004/10/19 17:13:28 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.6 2004/10/21 10:04:01 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -234,7 +234,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
 {
    // ctor
 
-   //SetCleanup(kDeepCleanup);
+   SetCleanup(kDeepCleanup);
    fEditDisabled = kTRUE;
    gGuiBuilder  = this;
 

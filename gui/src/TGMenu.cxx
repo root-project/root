@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.44 2004/08/03 14:31:09 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.45 2004/09/13 22:42:49 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -109,7 +109,9 @@ TGMenuBar::~TGMenuBar()
    TGMenuTitle    *t;
    Int_t           keycode;
 
-   fTrash->Delete();
+   if (!MustCleanup()) {
+      fTrash->Delete();
+   }
    delete fTrash;
 
    const TGMainFrame *main = (TGMainFrame *)GetMainFrame();
@@ -122,7 +124,7 @@ TGMenuBar::~TGMenuBar()
    }
 
    // delete TGMenuTitles
-   if (fTitles) fTitles->Delete();
+   if (fTitles && !MustCleanup()) fTitles->Delete();
    delete fTitles;
 }
 

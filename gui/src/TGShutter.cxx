@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.6 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.7 2004/09/10 13:34:07 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -43,7 +43,6 @@ TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    fClosingHadScrollbar = kFALSE;
    fTimer               = 0;
    fTrash               = new TList;
-   fTrash->SetOwner();
 }
 
 //______________________________________________________________________________
@@ -52,6 +51,8 @@ TGShutter::~TGShutter()
    // Cleanup shutter widget.
 
    if (fTimer) delete fTimer;
+
+   if (!MustCleanup()) fTrash->Delete();
    delete fTrash;
 }
 
