@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.43 2002/11/18 23:02:19 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.44 2002/12/03 17:37:25 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "Getline.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
+#include "Riostream.h"
 
 //#define G__OLDEXPAND
 
@@ -66,7 +67,6 @@
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
-#   include <dlfcn.h>
 #endif
 #if defined(R__ALPHA)
 #   include <sys/mount.h>
@@ -135,15 +135,13 @@
 #   elif !defined(__STDCPP__)
 #      include <cxxdl.h>
 #   endif
-    // print stack trace (HP undocumented internal call)
-    extern "C" void U_STACK_TRACE();
 #   if defined(hpux9)
-extern "C" {
-   extern void openlog(const char *, int, int);
-   extern void syslog(int, const char *, ...);
-   extern void closelog(void);
-   extern int setlogmask(int);
-}
+       extern "C" {
+          extern void openlog(const char *, int, int);
+          extern void syslog(int, const char *, ...);
+          extern void closelog(void);
+          extern int setlogmask(int);
+       }
 #   define HASNOT_INETATON
 #   endif
 #endif
@@ -195,6 +193,42 @@ extern "C" {
 #endif
 #ifndef UTMP_FILE
 #define UTMP_FILE "/etc/utmp"
+#endif
+
+// stack trace code
+#if defined(R__HPUX) && !defined(R__GNU)
+#   define HAVE_U_STACK_TRACE
+#endif
+#if defined(R__AIX)
+#   define HAVE_XL_TRBK
+#endif
+#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
+#   define HAVE_BACKTRACE_SYMBOLS_FD
+#   define HAVE_DLADDR
+#endif
+
+#ifdef HAVE_U_STACK_TRACE
+   // HP-UX stack walker (http://devresource.hp.com/STK/partner/unwind.pdf)
+   extern "C" void U_STACK_TRACE(void);
+#endif
+#ifdef HAVE_XL_TRBK
+   // AIX stack walker (from xlf FORTRAN 90 runtime).
+   extern "C" void xl__trbk(void);
+#endif
+#ifdef HAVE_BACKTRACE_SYMBOLS_FD
+#   include <execinfo.h>
+#endif
+#ifdef HAVE_DLADDR
+#   ifndef __USE_GNU
+#      define __USE_GNU
+#   endif
+#   include <dlfcn.h>
+#endif
+
+#ifdef HAVE_BACKTRACE_SYMBOLS_FD
+   // The maximum stack trace depth for systems where we request the
+   // stack depth separately (currently glibc-based systems).
+   static const int kMAX_BACKTRACE_DEPTH = 128;
 #endif
 
 static STRUCT_UTMP *gUtmpContents;
@@ -1217,10 +1251,246 @@ void TUnixSystem::StackTrace()
 {
    // Print a stack trace.
 
-#if defined(R__HPUX) && !defined(R__GNU)
-      Printf("");
-      U_STACK_TRACE();
-      Printf("");
+   if (!gEnv->GetValue("Root.Stacktrace", 1))
+      return;
+
+   cerr.flush ();
+   fflush (stderr);
+
+   int fd = STDERR_FILENO;
+
+#if defined(HAVE_U_STACK_TRACE) || defined(HAVE_XL_TRBK)   // hp-ux, aix
+/*
+   // FIXME: deal with inability to duplicate the file handle
+   int stderrfd = dup(STDERR_FILENO);
+   if (stderrfd == -1)
+      return;
+
+   int newfd = dup2(fd, STDERR_FILENO);
+   if (newfd == -1) {
+      close (stderrfd);
+      return;
+   }
+*/
+# if defined(HAVE_U_STACK_TRACE)                      // hp-ux
+   U_STACK_TRACE ();
+# elif defined(HAVE_XL_TRBK)                          // aix
+   xl__trbk ();
+# endif
+/*
+   fflush(stderr);
+   dup2(stderrfd, STDERR_FILENO);
+   close(newfd);
+*/
+#elif defined(HAVE_BACKTRACE_SYMBOLS_FD) && defined(HAVE_DLADDR)  // linux
+   // we could have used backtrace_symbols_fd, except its output
+   // format is pretty bad, so recode that here :-(
+
+   // take care of demangling
+   Bool_t demangle = kTRUE;
+   // check for c++filt (g++), iccfilt (icc) or eccfilt (ecc)
+#ifdef R__INTEL_COMPILER
+#ifdef __ia64__
+   const char *cppfilt = "eccfilt";
+#else
+   const char *cppfilt = "iccfilt";
+#endif
+#else
+   const char *cppfilt = "c++filt";
+#endif
+   char *filter = Which(Getenv("PATH"), cppfilt, kExecutePermission);
+   if (!filter)
+      demangle = kFALSE;
+   // open tmp file for mangled stack trace
+   char tmpf1[L_tmpnam];
+   ofstream file1;
+   if (demangle) {
+      tmpnam(tmpf1);
+      file1.open(tmpf1);
+      if (!file1) {
+         Error("StackTrace", "could not open file %s", tmpf1);
+         Unlink(tmpf1);
+         demangle = kFALSE;
+      }
+   }
+
+   char buffer[256];
+   void *trace[kMAX_BACKTRACE_DEPTH];
+   int  depth = backtrace(trace, kMAX_BACKTRACE_DEPTH);
+   for (int n = 0; n < depth; ++n) {
+      unsigned long addr = (unsigned long) trace[n];
+      Dl_info info;
+
+      if (dladdr(trace[n], &info) && info.dli_fname && info.dli_fname[0]) {
+         const char   *libname = info.dli_fname;
+         const char   *symname = (info.dli_sname && info.dli_sname[0]
+                                 ? info.dli_sname : "");
+         unsigned long symaddr = (unsigned long) info.dli_saddr;
+         bool          gte = (addr >= symaddr);
+         unsigned long diff = (gte ? addr - symaddr : symaddr - addr);
+         sprintf(buffer, " 0x%08lx %.100s %s 0x%lx [%.100s]\n",
+                 addr, symname, gte ? "+" : "-", diff, libname);
+      } else {
+         sprintf(buffer, " 0x%08lx <unknown function>\n", addr);
+      }
+
+      if (demangle)
+         file1 << buffer;
+      else
+         write(fd, buffer, ::strlen(buffer));
+   }
+
+   if (demangle) {
+      char tmpf2[L_tmpnam];
+      tmpnam(tmpf2);
+      file1.close();
+      sprintf(buffer, "%s < %s > %s", filter, tmpf1, tmpf2);
+      system(buffer);
+      ifstream file2(tmpf2);
+      TString line;
+      while (file2) {
+         line = "";
+         line.ReadString(file2);
+         write(fd, line.Data(), line.Length());
+      }
+      file2.close();
+      Unlink(tmpf1);
+      Unlink(tmpf2);
+      delete [] filter;
+   }
+
+#elif defined(PROG_PSTACK)                            // solaris
+# ifdef PROG_CXXFILT
+#  define CXXFILTER " | " PROG_CXXFILT
+# else
+#  define CXXFILTER
+# endif
+   // 64 should more than plenty for a space and a pid.
+   char buffer[sizeof(PROG_PSTACK) + 64 + 3 + sizeof(PROG_CXXFILT) + 64];
+   sprintf(buffer, "%s %lu%s 1>&%d", PROG_PSTACK, (unsigned long) getpid(),
+           "" CXXFILTER, fd);
+   buffer[sizeof (buffer)-1] = 0;
+   system(buffer);
+# undef CXXFILTER
+
+#elif defined(HAVE_EXCPT_H) && defined(HAVE_PDSC_H) && \
+                               defined(HAVE_RLD_INTERFACE_H) // tru64
+   // Tru64 stack walk.  Uses the exception handling library and the
+   // run-time linker's core functions (loader(5)).  FIXME: Tru64
+   // should have _RLD_DLADDR like IRIX below.  Verify and update.
+
+   char         buffer [128];
+   sigcontext   context;
+   int          rc = 0;
+
+   exc_capture_context (&context);
+   while (!rc && context.sc_pc) {
+      // FIXME: Elf32?
+      pdsc_crd *func, *base, *crd
+         = exc_remote_lookup_function_entry(0, 0, context.sc_pc, 0, &func, &base);
+      Elf32_Addr addr = PDSC_CRD_BEGIN_ADDRESS(base, func);
+      // const char *name = _rld_address_to_name(addr);
+      const char *name = "<unknown function>";
+      sprintf(buffer, " 0x%012lx %.100s + 0x%lx\n",
+              context.sc_pc, name, context.sc_pc - addr);
+      write(fd, buffer, ::strlen(buffer));
+      rc = exc_virtual_unwind(0, &context);
+   }
+
+#elif defined(HAVE_EXCEPTION_H) && defined(__sgi)     // irix
+   // IRIX stack walk -- like Tru64 but with a little different names.
+   // NB: The guard above is to protect against unrelated <exception.h>
+   //   provided by some compilers (e.g. KCC 4.0f).
+   // NB: libexc.h has trace_back_stack and trace_back_stack_and_print
+   //   but their output isn't pretty and nowhere as complete as ours.
+   char       buffer [340];
+   sigcontext context;
+
+   exc_setjmp(&context);
+   while (context.sc_pc >= 4) {
+      // Do two lookups, one using exception handling tables and
+      // another using _RLD_DLADDR, and use the one with a smaller
+      // offset.  For signal handlers we seem to get things wrong:
+      // _sigtramp's exception range is huge while based on Dl_info
+      // the offset is small -- but both supposedly describe the
+      // same thing.  Go figure.
+      char            *name = 0;
+      const char      *libname = 0;
+      const char      *symname = 0;
+      Elf32_Addr      offset = ~0L;
+
+      // Do the exception/dwarf lookup
+      Elf32_Addr      pc = context.sc_pc;
+      Dwarf_Fde       fde = find_fde_name(&pc, &name);
+      Dwarf_Addr      low_pc = context.sc_pc;
+      Dwarf_Unsigned  udummy;
+      Dwarf_Signed    sdummy;
+      Dwarf_Ptr       pdummy;
+      Dwarf_Off       odummy;
+      Dwarf_Error     err;
+
+      symname = name;
+
+      // Determine offset using exception descriptor range information.
+      if (dwarf_get_fde_range(fde, &low_pc, &udummy, &pdummy, &udummy,
+                              &odummy, &sdummy, &odummy, &err) == DW_DLV_OK)
+         offset = context.sc_pc - low_pc;
+
+      // Now do a dladdr() lookup.  If the found symbol has the same
+      // address, trust the more accurate offset from dladdr();
+      // ignore the looked up mangled symbol name and prefer the
+      // demangled name produced by find_fde_name().  If we find a
+      // smaller offset, trust the dynamic symbol as well.  Always
+      // trust the library name even if we can't match it with an
+      // exact symbol.
+      Elf32_Addr      addr = context.sc_pc;
+      Dl_info         info;
+
+      if (_rld_new_interface (_RLD_DLADDR, addr, &info)) {
+         if (info.dli_fname && info.dli_fname [0])
+            libname = info.dli_fname;
+
+         Elf32_Addr symaddr = (Elf32_Addr) info.dli_saddr;
+         if (symaddr == low_pc)
+            offset = addr - symaddr;
+         else if (info.dli_sname
+                  && info.dli_sname [0]
+                  && addr - symaddr < offset) {
+            offset = addr - symaddr;
+            symname = info.dli_sname;
+         }
+      }
+
+      // Print out the result
+      if (libname && symname)
+         write(fd, buffer, sprintf
+               (buffer, " 0x%012lx %.100s + 0x%lx [%.200s]\n",
+               addr, symname, offset, libname));
+      else if (symname)
+         write(fd, buffer, sprintf
+               (buffer, " 0x%012lx %.100s + 0x%lx\n",
+               addr, symname, offset));
+      else
+         write(fd, buffer, sprintf
+               (buffer, " 0x%012lx <unknown function>\n", addr));
+
+      // Free name from find_fde_name().
+      free(name);
+
+      // Check for termination.  exc_unwind() sets context.sc_pc to
+      // 0 or an error (< 4).  However it seems we can't unwind
+      // through signal stack frames though this is not mentioned in
+      // the docs; it seems that for those we need to check for
+      // changed pc after find_fde_name().  That seems to indicate
+      // end of the post-signal stack frame.  (FIXME: Figure out how
+      // to unwind through signal stack frame, e.g. perhaps using
+      // sigcontext_t's old pc?  Or perhaps we can keep on going
+      // down without doing the symbol lookup?)
+      if (pc != context.sc_pc)
+         break;
+
+      exc_unwind(&context, fde);
+   }
 #endif
 }
 

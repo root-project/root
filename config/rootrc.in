@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.34 2002/09/16 14:03:13 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.35 2002/10/25 00:44:53 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -36,6 +36,7 @@ Root.MemCheckFile:       memcheck.out
 
 # Global debug mode. When >0 turns on progressively more details debugging.
 Root.Debug:              0
+Root.Stacktrace:         yes
 
 # Settings for X11 behaviour.
 X11.Sync:                no
