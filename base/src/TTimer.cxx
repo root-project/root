@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.5 2001/04/28 16:31:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.6 2002/06/03 13:10:18 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -73,13 +73,14 @@ TSingleShotCleaner gSingleShotCleaner;  // single shot timer cleaner
 //______________________________________________________________________________
 TTimer::TTimer(Long_t ms, Bool_t mode) : fTime(ms)
 {
-   // Create timer that times out in ms milliseconds. If mode == kTRUE then
-   // the timer is synchronous else a-synchronous. The default is synchronous.
-   // Add a timer to the system eventloop by calling TurnOn().
-   // Set command to be executed from Notify() or set the object whose
-   // HandleTimer() method will be called via Notify(), derive from TTimer
-   // and override Notify() or connect slots to the signals Timeout(),
-   // TurnOn() and TurnOff().
+   // Create timer that times out in ms milliseconds. If milliSec is 0
+   // then the timeout will be the minimum timeout (see TSystem::ESysConstants,
+   // i.e. 10 ms). If mode == kTRUE then the timer is synchronous else
+   // a-synchronous. The default is synchronous. Add a timer to the system
+   // eventloop by calling TurnOn(). Set command to be executed from Notify()
+   // or set the object whose HandleTimer() method will be called via Notify(),
+   // derive from TTimer and override Notify() or connect slots to the
+   // signals Timeout(), TurnOn() and TurnOff().
 
    fObject  = 0;
    fCommand = "";

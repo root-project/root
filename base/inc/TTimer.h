@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.3 2000/11/10 02:28:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.4 2000/11/17 10:26:03 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -66,7 +66,7 @@ protected:
    TString   fCommand;   // interpreter command to be executed
 
 public:
-   TTimer(Long_t milliSec, Bool_t mode = kTRUE);
+   TTimer(Long_t milliSec = 0, Bool_t mode = kTRUE);
    TTimer(TObject *obj, Long_t milliSec, Bool_t mode = kTRUE);
    TTimer(const char *command, Long_t milliSec, Bool_t mode = kTRUE);
    virtual ~TTimer() { Remove(); }
