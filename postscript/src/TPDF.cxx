@@ -34,6 +34,7 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TStorage.h"
+#include "TText.h"
 #include "zlib.h"
 
 // To scale fonts to the same size as the old TT version
@@ -1411,7 +1412,13 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    // yy: y position of the text
    // chars: text to be drawn
 
+   const Double_t kDEGRAD = TMath::Pi()/180.;
    char str[8];
+   Double_t x = xx;
+   Double_t y = yy;
+
+   // Text color
+   SetColor(Int_t(fTextColor));
 
    // Start the text
    if (!fCompress) PrintStr("@");
@@ -1436,25 +1443,48 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    if( fontsize <= 0) return;
    WriteReal(fontsize);
    PrintStr(" Tf");
+   
+   // Text alignment
+   Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
+   Float_t tsizey = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(Int_t(tsize));
+   Int_t txalh = fTextAlign/10;
+   if (txalh < 1) txalh = 1; if (txalh > 3) txalh = 3;
+   Int_t txalv = fTextAlign%10;
+   if (txalv < 1) txalv = 1; if (txalv > 3) txalv = 3;
+   if( txalv == 3) {
+     y -= 0.8*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
+     x += 0.8*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
+   } else if( txalv == 2) {
+     y -= 0.4*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
+     x += 0.4*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
+   }
+   if (txalh > 1) {
+      TText t;
+      UInt_t w, h;
+      t.SetTextSize(fTextSize);
+      t.SetTextFont(fTextFont);
+      t.GetTextExtent(w, h, (char*)chars);
+      if(txalh == 2) x = x - gPad->AbsPixeltoX(w/2);
+      if(txalh == 3) x = x - gPad->AbsPixeltoX(w);
+   }
 
    // Text angle
    if(fTextAngle == 0) {
-      WriteReal(XtoPDF(xx));
-      WriteReal(YtoPDF(yy));
+      WriteReal(XtoPDF(x));
+      WriteReal(YtoPDF(y));
       PrintStr(" Td");
    } else if (fTextAngle == 90) {
       PrintStr(" 0 1 -1 0");
-      WriteReal(XtoPDF(xx));
-      WriteReal(YtoPDF(yy));
+      WriteReal(XtoPDF(x));
+      WriteReal(YtoPDF(y));
       PrintStr(" Tm");
    } else {
-      Double_t DegRad = TMath::Pi()/180.;
-      WriteReal(TMath::Cos(DegRad*fTextAngle));
-      WriteReal(TMath::Sin(DegRad*fTextAngle));
-      WriteReal(-TMath::Sin(DegRad*fTextAngle));
-      WriteReal(TMath::Cos(DegRad*fTextAngle));
-      WriteReal(XtoPDF(xx));
-      WriteReal(YtoPDF(yy));
+      WriteReal(TMath::Cos(kDEGRAD*fTextAngle));
+      WriteReal(TMath::Sin(kDEGRAD*fTextAngle));
+      WriteReal(-TMath::Sin(kDEGRAD*fTextAngle));
+      WriteReal(TMath::Cos(kDEGRAD*fTextAngle));
+      WriteReal(XtoPDF(x));
+      WriteReal(YtoPDF(y));
       PrintStr(" Tm");
    }
 
@@ -1462,12 +1492,14 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    PrintStr(" (");
    Int_t len=strlen(chars);
    for (Int_t i=0; i<len;i++) {
-      if (chars[i]=='(' || chars[i]==')') {
-         sprintf(str,"\\%c",chars[i]);
-      } else {
-         sprintf(str,"%c",chars[i]);
+      if (chars[i]!='\n') {
+         if (chars[i]=='(' || chars[i]==')') {
+            sprintf(str,"\\%c",chars[i]);
+         } else {
+            sprintf(str,"%c",chars[i]);
+         }
+         PrintStr(str);
       }
-      PrintStr(str);
    }
    PrintStr(") Tj ET");
    if (!fCompress) PrintStr("@");
