@@ -21,7 +21,11 @@ class TUsrHitBuffer:public TObject {
  public:
 //                                                                                                                                                                                                                                                             TUsrHitBuffer(){};
    TUsrHitBuffer(Int_t maxent = 10);
-   virtual ~TUsrHitBuffer() {}
+   virtual ~TUsrHitBuffer() {
+      cout << "~~~~~~dtor TUsrHitBuffer " << this << endl;
+      delete fHits;
+   }
+   
 
    TUsrHit *AddHit(Int_t ev);
    Int_t GetBufSize() { return fHits->GetSize();}
@@ -33,7 +37,6 @@ class TUsrHitBuffer:public TObject {
    Int_t fNofEntries;           // max number of entries
    Int_t fNofHits;              // current number of hits
    TClonesArray *fHits;         // array containing hit data
-   static TClonesArray *fgHits; // array containing hit data
 
    ClassDef(TUsrHitBuffer, 1)   // [Analyze] Hit buffer
 };
@@ -43,9 +46,10 @@ class TUsrHitBuffer:public TObject {
 class TMrbSubevent_Caen:public TObject {
 
  public:
-   TMrbSubevent_Caen() {}
+   TMrbSubevent_Caen() {cout << "ctor  TMrbSubevent_Caen" << this << endl;}
    virtual ~TMrbSubevent_Caen() {}
-
+   void Clear(Option_t *opt="") {fHitBuffer.Clear();};
+   TUsrHitBuffer * GetHitBuffer() {return &fHitBuffer;};
  protected:
 
    Int_t fTimeStamp;            // time stamp, same as fUniqueID
@@ -56,12 +60,30 @@ class TMrbSubevent_Caen:public TObject {
 
 //______________________________________________________
 
+class TUsrSevtData1:public TMrbSubevent_Caen {
+ public:
+   TUsrSevtData1() {SetEvent(0);}
+
+   virtual ~TUsrSevtData1() {}
+   void  SetEvent(Int_t ev);
+   Int_t GetPileup() {return fPileup; };
+   
+ protected:
+   TString fSevtName;           // subevent name
+   Int_t fMer;                  // data2.mer
+   Int_t fPileup;               // data2.mpileup
+
+   ClassDef(TUsrSevtData1, 1)   // [Analyze] Store CAEN data in hit buffer
+};
+//______________________________________________________
+
 class TUsrSevtData2:public TMrbSubevent_Caen {
  public:
    TUsrSevtData2() {SetEvent(0);}
 
    virtual ~TUsrSevtData2() {}
    void  SetEvent(Int_t ev);
+   Int_t GetPileup() {return fPileup; };
    
  protected:
    TString fSevtName;           // subevent name

@@ -1,12 +1,12 @@
 #include "TFile.h"
-#include "otto.h"
+#include "clonesA_Event.h"
 
 ClassImp(TUsrHit)
     ClassImp(TUsrHitBuffer)
+    ClassImp(TUsrSevtData1)
     ClassImp(TUsrSevtData2)
     ClassImp(TMrbSubevent_Caen)
 
-TClonesArray *TUsrHitBuffer::fgHits = 0;
 //______________________________________________________
    TUsrHit::TUsrHit(Int_t ev) {
    fEventNumber = ev;
@@ -20,8 +20,8 @@ TClonesArray *TUsrHitBuffer::fgHits = 0;
 TUsrHitBuffer::TUsrHitBuffer(Int_t maxent) {
    fNofEntries = maxent;
    fNofHits = 0;
-   if(!fgHits)fgHits = new TClonesArray("TUsrHit", fNofEntries);
-   fHits = fgHits;
+   fHits = new TClonesArray("TUsrHit", fNofEntries);
+   cout << "ctor TUsrHitBuffer " << this << endl;
 }
 
 //______________________________________________________
@@ -41,13 +41,28 @@ void TUsrHitBuffer::Clear(Option_t *) {
 
 //______________________________________________________
 
+void TUsrSevtData1::SetEvent(Int_t ev) {
+   Clear();
+   cout << "TUsrSevtData1: " << ev << endl;
+   fTimeStamp = 100+ev; //in TMrbSubevent_Caen
+   fSevtName  = "SubEvent_1_";
+   fSevtName += ev;
+   fMer       = 1100 + ev;
+   fPileup    = 2100 + ev;
+   for(Int_t i = 1; i <= ev+1; i++) {
+      fHitBuffer.AddHit(i);
+   }
+}
+//______________________________________________________
+
 void TUsrSevtData2::SetEvent(Int_t ev) {
    Clear();
+   cout << "TUsrSevtData2: " << ev << endl;
    fTimeStamp = 100+ev; //in TMrbSubevent_Caen
-   fSevtName  = "top";
+   fSevtName  = "SubEvent_2_";
    fSevtName += ev;
-   fMer       = 1000 + ev;
-   fPileup    = 2000 + ev;
+   fMer       = 21000 + ev;
+   fPileup    = 22000 + ev;
    for(Int_t i = 1; i <= ev+1; i++) {
       fHitBuffer.AddHit(i);
    }
