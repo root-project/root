@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.7 2002/06/12 17:56:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.9 2002/06/23 23:23:47 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -323,7 +323,7 @@ void TGFileDialog::CloseWindow()
    // Close file dialog.
 
    fFileInfo->fFilename = 0;
-   delete this;
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
@@ -350,12 +350,12 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                      fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                     fTbfname->GetString());
-                     delete this;
+                     DeleteWindow();
                      break;
 
                   case kIDF_CANCEL:
                      fFileInfo->fFilename = 0;
-                     delete this;
+                     DeleteWindow();
                      break;
 
                   case kIDF_CDUP:
@@ -437,7 +437,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      } else {
                         fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                        fTbfname->GetString());
-                        delete this;
+                        DeleteWindow();
                      }
                   }
                }
@@ -452,7 +452,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      } else {
                         fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                        fTbfname->GetString());
-                        delete this;
+                        DeleteWindow();
                      }
                   }
                }
@@ -479,7 +479,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                }
                fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                               fTbfname->GetString());
-               delete this;
+               DeleteWindow();
                break;
 
             default:

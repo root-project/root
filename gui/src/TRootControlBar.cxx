@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -142,5 +142,7 @@ void TRootControlBar::CloseWindow()
 {
    // Called when closed via window manager action.
 
-   delete this;
+   fControlBar->DetachControlBarImp();
+   delete fControlBar;    // avoid deleting TRootControlBar object now
+   DeleteWindow();        // but do it slightly delayed here
 }

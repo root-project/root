@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.3 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.4 2002/06/12 16:46:12 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -192,7 +192,7 @@ void TGSearchDialog::CloseWindow()
    // Close the dialog. On close the dialog will be deleted and cannot be
    // re-used.
 
-   delete this;
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
@@ -403,7 +403,7 @@ void TGPrintDialog::CloseWindow()
    // Close the dialog. On close the dialog will be deleted and cannot be
    // re-used.
 
-  delete this;
+  DeleteWindow();
 }
 
 //______________________________________________________________________________
@@ -551,7 +551,7 @@ void TGGotoDialog::CloseWindow()
    // Close the dialog. On close the dialog will be deleted and cannot be
    // re-used.
 
-   delete this;
+   DeleteWindow();
 }
 
 //______________________________________________________________________________

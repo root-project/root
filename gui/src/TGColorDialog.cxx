@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.3 2002/09/14 20:25:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.4 2002/09/16 07:53:48 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -1207,7 +1207,7 @@ void TGColorDialog::CloseWindow()
 {
    // Called when window is closed via window manager.
 
-   delete this;
+   DeleteWindow();
 }
 
 //________________________________________________________________________________

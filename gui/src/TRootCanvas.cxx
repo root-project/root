@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.11 2002/09/10 13:17:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.12 2002/09/10 14:58:13 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -388,7 +388,9 @@ void TRootCanvas::CloseWindow()
    gPad = 0;        // hide gPad from CINT
    gInterpreter->DeleteGlobal(fCanvas);
    gPad = savepad;  // restore gPad for ROOT
-   delete fCanvas;  // this in turn will delete this object
+   fCanvas->DetachCanvasImp();
+   delete fCanvas;  // avoid deleting TRootCanvas object now
+   DeleteWindow();  // but do it slightly delayed here
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.2 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.3 2002/01/23 15:48:05 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -306,7 +306,7 @@ void TGMsgBox::CloseWindow()
    // to kMBClose.
 
    if (fRetCode) *fRetCode = kMBClose;
-   delete this;
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
@@ -319,7 +319,7 @@ Bool_t TGMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kCM_BUTTON:
                if (fRetCode) *fRetCode = (Int_t) parm1;
-               delete this;
+               DeleteWindow();
                break;
 
             default:

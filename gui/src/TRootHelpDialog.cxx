@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.4 2000/07/11 10:16:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.5 2001/12/20 10:19:26 rdm Exp $
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************
@@ -100,7 +100,7 @@ void TRootHelpDialog::CloseWindow()
 {
    // Called when closed via window manager action.
 
-   delete this;
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
@@ -113,7 +113,7 @@ Bool_t TRootHelpDialog::ProcessMessage(Long_t msg, Long_t, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kCM_BUTTON:
                // Only one button and one action...
-               delete this;
+               DeleteWindow();
                break;
             default:
                break;

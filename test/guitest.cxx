@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.23 2002/06/04 07:59:43 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.24 2002/09/14 00:35:48 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1032,7 +1032,7 @@ void TestDialog::CloseWindow()
 {
    // Called when window is closed via the window manager.
 
-   delete this;
+   DeleteWindow();
 }
 
 Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
@@ -1307,7 +1307,7 @@ void TestMsgBox::CloseWindow()
 {
    // Close dialog in response to window manager close.
 
-   delete this;
+   DeleteWindow();
 }
 
 Bool_t TestMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
@@ -1475,7 +1475,7 @@ void TestSliders::CloseWindow()
 {
    // Called when window is closed via the window manager.
 
-   delete this;
+   DeleteWindow();
 }
 
 Bool_t TestSliders::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
@@ -1624,7 +1624,7 @@ TestShutter::~TestShutter()
 
 void TestShutter::CloseWindow()
 {
-   delete this;
+   DeleteWindow();
 }
 
 Bool_t TestShutter::ProcessMessage(Long_t, Long_t parm1, Long_t)
@@ -1720,7 +1720,7 @@ void TestProgress::CloseWindow()
 {
    // Called when window is closed via the window manager.
 
-   delete this;
+   DeleteWindow();
 }
 
 Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
@@ -1915,7 +1915,7 @@ EntryTestDlg::~EntryTestDlg()
 
 void EntryTestDlg::CloseWindow()
 {
-   delete this;
+   DeleteWindow();
 }
 
 void EntryTestDlg::SetLimits()
@@ -2065,7 +2065,7 @@ void Editor::CloseWindow()
 {
    // Called when closed via window manager action.
 
-   delete this;
+   DeleteWindow();
 }
 
 Bool_t Editor::ProcessMessage(Long_t msg, Long_t, Long_t)
@@ -2077,7 +2077,7 @@ Bool_t Editor::ProcessMessage(Long_t msg, Long_t, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kCM_BUTTON:
                // Only one button and one action...
-               delete this;
+               DeleteWindow();
                break;
             default:
                break;
@@ -2087,7 +2087,7 @@ Bool_t Editor::ProcessMessage(Long_t msg, Long_t, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kTXT_CLOSE:
                // close window
-               delete this;
+               DeleteWindow();
                break;
             case kTXT_OPEN:
                SetTitle();
