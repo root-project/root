@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.43 2004/01/10 10:52:29 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.44 2004/01/21 07:03:13 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -281,6 +281,22 @@ public: \
       R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
    }
 #define ClassImp(name) ClassImpUnique(name,default)
+#endif
+
+// Macro for Namespace
+
+#if defined(__CINT__)
+#define NamespaceImpUnique(name,key)
+#define NamespaceImp(name)
+#else
+#define NamespaceImpUnique(name,key) \
+   namespace ROOT { \
+      namespace name { TGenericClassInfo *GenerateInitInstance(); } \
+      static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
+         name::GenerateInitInstance()->SetImplFile(__FILE__, __LINE__); \
+      R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
+   }
+#define NamespaceImp(name) NamespaceImpUnique(name,default)
 #endif
 
 //---- ClassDefT macros for templates with one template argument ---------------

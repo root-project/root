@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.64 2004/07/30 07:23:19 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.65 2004/07/30 09:01:18 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -373,6 +373,11 @@ THtml::~THtml()
    fLen = 0;
 }
 
+//______________________________________________________________________________
+bool IsNamespace(TClass*cl) 
+{
+   return (cl->Property() & kIsNamespace);
+}
 
 //______________________________________________________________________________
 int CaseSensitiveSort(const void *name1, const void *name2)
@@ -420,44 +425,42 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 //
 //
 // Input: classPtr - pointer to the class
-
+   
    const char *tab = "<!--TAB-->";
    const char *tab2 = "<!--TAB2-->  ";
    const char *tab4 = "<!--TAB4-->    ";
    const char *tab6 = "<!--TAB6-->      ";
-
+   
    gROOT->GetListOfGlobals(kTRUE);
-
+   
    // create a filename
    char classname[1024];
    strcpy(classname, classPtr->GetName());
    NameSpace2FileName(classname);
-
+   
    char *tmp1 = gSystem->ExpandPathName(fOutputDir);
    char *tmp2 = gSystem->ConcatFileName(tmp1, classname);
-
+   
    char *filename = StrDup(tmp2, 6);
    strcat(filename, ".html");
-
-   if (tmp1)
-      delete[]tmp1;
-   if (tmp2)
-      delete[]tmp2;
+   
+   if (tmp1) delete[]tmp1;
+   if (tmp2) delete[]tmp2;
    tmp1 = tmp2 = 0;
 
    if (IsModified(classPtr, kSource) || force) {
-
+      
       // open class file
       ofstream classFile;
       classFile.open(filename, ios::out);
-
+      
       Bool_t classFlag = kFALSE;
-
-
+      
+      
       if (classFile.good()) {
-
+         
          Printf(formatStr, "", fCounter, filename);
-
+         
          // write a HTML header for the classFile file
          WriteHtmlHeader(classFile, classPtr->GetName(), classPtr);
 
@@ -491,14 +494,18 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
             classFile << "</td></tr></table>"
                       << endl;
          }
-
+         
          // make a link to the description
          classFile << "<!--BEGIN-->" << endl;
          classFile << "<center>" << endl;
          classFile << "<h1>" << classPtr->GetName() << "</h1>" << endl;
          classFile << "<hr width=300>" << endl;
-         classFile << "<!--SDL--><em><a href=\"#" << classPtr->GetName()
-             << ":description\">class description</a>";
+         classFile << "<!--SDL--><em><a href=\"#" << classPtr->GetName();
+         if (IsNamespace(classPtr)) {
+             classFile << ":description\">namespace description</a>";            
+         } else {
+             classFile << ":description\">class description</a>";
+         }
 
          // make a link to the '.cxx' file
          char *cClassFileName = StrDup(classPtr->GetName());
@@ -508,12 +515,13 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
              ".cxx.html\"";
          classFile << ">source file</a>";
 
-         // make a link to the inheritance tree (postscript)
-         classFile << " - <a href=\"" << cClassFileName << "_Tree.ps\"";
-         classFile << ">inheritance tree (.ps)</a>";
+         if (!IsNamespace(classPtr)) {
+            // make a link to the inheritance tree (postscript)
+            classFile << " - <a href=\"" << cClassFileName << "_Tree.ps\"";
+            classFile << ">inheritance tree (.ps)</a>";
+         }
 
-         if (cClassFileName != 0)
-            delete[]cClassFileName;
+         if (cClassFileName != 0) delete[]cClassFileName;
 
          classFile << "</em>" << endl;
          classFile << "<hr width=300>" << endl;
@@ -522,24 +530,24 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
          // make a link to the '.h' file
          classFile << "<h2>" << "class <a name=\"" << classPtr->
-             GetName() << "\" href=\"";
+            GetName() << "\" href=\"";
          classFile << GetFileName((const char *) classPtr->
                                   GetDeclFileName()) << "\"";
          classFile << ">" << classPtr->GetName() << "</a> ";
-
-
+         
+         
          // copy .h file to the Html output directory
          char *declf = GetSourceFileName(classPtr->GetDeclFileName());
          if (declf) {
             CopyHtmlFile(declf);
             delete[]declf;
          }
-
+         
          // make a loop on base classes
          Bool_t first = kTRUE;
          TBaseClass *inheritFrom;
          TIter nextBase(classPtr->GetListOfBases());
-
+         
          while ((inheritFrom = (TBaseClass *) nextBase())) {
             if (first) {
                classFile << ": ";
@@ -556,7 +564,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
             if (htmlFile) {
                classFile << "<a href=\"";
-
+               
                // make a link to the base class
                classFile << htmlFile;
                classFile << "\">";
@@ -570,9 +578,9 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
          classFile << "</h2>" << endl;
 
-
+         
          // create an html inheritance tree
-         ClassHtmlTree(classFile, classPtr);
+         if (!IsNamespace(classPtr)) ClassHtmlTree(classFile, classPtr);
     
 
          // make a loop on member functions
@@ -610,7 +618,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                mtype = 2;
 
             methodNames[mtype * 2 * nMethods + 2 * num[mtype]] =
-                method->GetName();
+               method->GetName();
 
             if (method->GetReturnTypeName())
                len = strlen(method->GetReturnTypeName());
@@ -632,20 +640,20 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
             if (classPtr && !strcmp(type, classPtr->GetName()))
                methodNames[mtype * 2 * nMethods + 2 * num[mtype]] =
-                   "A00000000";
+                  "A00000000";
 
             // if this is the destructor
             while ('~' ==
                    *methodNames[mtype * 2 * nMethods + 2 * num[mtype]])
                methodNames[mtype * 2 * nMethods + 2 * num[mtype]] =
-                   "A00000001";
-
+                  "A00000001";
+            
             methodNames[mtype * 2 * nMethods + 2 * num[mtype] + 1] =
-                (char *) method;
-
+               (char *) method;
+            
             num[mtype]++;
          }
-
+         
          const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
          if (classPtr->Property() & kIsAbstract) 
             classFile << "&nbsp;<br><b>" 
@@ -653,12 +661,17 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                       << tab4nbsp << "Look at the <a href=\""
                       << GetFileName((const char *) classPtr->GetDeclFileName())
                       << "\">header</a> to check for available constructors.</b><br>" << endl;
-
+         
          classFile << "<pre>" << endl;
 
          Int_t i, j;
 
-         for (j = 0; j < 3; j++) {
+         if (IsNamespace(classPtr)) {
+            j = 2;
+         } else {
+            j = 0;
+         }
+         for (; j < 3; j++) {
             if (num[j]) {
                  qsort(methodNames + j * 2 * nMethods, num[j],
                         2 * sizeof(methodNames), CaseInsensitiveSort);
@@ -681,49 +694,49 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
                for (i = 0; i < num[j]; i++) {
                   method =
-                      (TMethod *) methodNames[j * 2 * nMethods + 2 * i +
-                                              1];
+                     (TMethod *) methodNames[j * 2 * nMethods + 2 * i +
+                                             1];
 
                   if (method) {
                      Int_t w = 0;
-		     Bool_t isctor=false;
-		     Bool_t isdtor=false;
+                     Bool_t isctor=false;
+                     Bool_t isdtor=false;
                      if (method->GetReturnTypeName())
                         len = strlen(method->GetReturnTypeName());
                      else
                         len = 0;
-		     if (!strcmp(method->GetName(),classPtr->GetName()))
-			// it's a c'tor - Cint stores the class name as return type
-			isctor=true;
-		     if (!strcmp(Form("~%s",classPtr->GetName()),method->GetName()))
-			// it's a d'tor - Cint stores "void" as return type
-			isdtor=true;
-		     if (isctor || isdtor)
-			len=0;
-
+                     if (!strcmp(method->GetName(),classPtr->GetName()))
+                        // it's a c'tor - Cint stores the class name as return type
+                        isctor=true;
+                     if (!strcmp(Form("~%s",classPtr->GetName()),method->GetName()))
+                        // it's a d'tor - Cint stores "void" as return type
+                        isdtor=true;
+                     if (isctor || isdtor)
+                        len=0;
+                     
                      if (kIsVirtual & method->Property())
                         len += 8;
                      if (kIsStatic & method->Property())
                         len += 7;
-
+                     
                      classFile << tab6;
                      for (w = 0; w < (maxLen[j] - len); w++)
                         classFile << " ";
-
+                     
                      if (kIsVirtual & method->Property())
-			if (!isdtor)
-			   classFile << "virtual ";
-			else
-			   classFile << " virtual";
-
+                        if (!isdtor)
+                           classFile << "virtual ";
+                        else
+                           classFile << " virtual";
+                     
                      if (kIsStatic & method->Property())
                         classFile << "static ";
-
-		     if (!isctor && !isdtor){
-			strcpy(fLine, method->GetReturnTypeName());
-			ExpandKeywords(classFile, fLine, classPtr, classFlag);
-		     }
-
+                     
+                     if (!isctor && !isdtor){
+                        strcpy(fLine, method->GetReturnTypeName());
+                        ExpandKeywords(classFile, fLine, classPtr, classFlag);
+                     }
+                     
                      classFile << " " << tab << "<!--BOLD-->";
                      classFile << "<a href=\"#" << classPtr->GetName();
                      classFile << ":";
@@ -731,7 +744,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                      classFile << "\">";
                      ReplaceSpecialChars(classFile, method->GetName());
                      classFile << "</a><!--PLAIN-->";
-
+                     
                      strcpy(fLine, method->GetSignature());
                      ExpandKeywords(classFile, fLine, classPtr, classFlag);
                      classFile << endl;
@@ -739,7 +752,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                }
             }
          }
-
+         
          delete[]methodNames;
 
          classFile << "</pre>" << endl;

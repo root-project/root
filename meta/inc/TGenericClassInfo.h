@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.4 2002/11/11 16:23:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.5 2004/01/10 10:52:29 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -58,6 +58,11 @@ namespace ROOT {
                        const type_info &info, const TInitBehavior *action,
                        VoidFuncPtr_t dictionary, 
                        IsAFunc_t isa, Int_t pragmabits, Int_t sizof);
+
+      TGenericClassInfo(const char *fullClassname, Int_t version,
+                        const char *declFileName, Int_t declFileLine,
+                        const TInitBehavior *action,
+                        VoidFuncPtr_t dictionary, Int_t pragmabits);
 
       void Init(Int_t pragmabits);
       ~TGenericClassInfo();

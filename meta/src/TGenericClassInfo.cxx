@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.4 2002/11/11 16:23:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.5 2004/01/10 10:52:30 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -69,6 +69,24 @@ namespace ROOT {
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0), 
         fCollectionProxy(0), fSizeof(sizof)
    {
+      Init(pragmabits);
+   }
+
+   class fornamespace {}; // Dummy class to give a typeid to namespace 
+
+   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
+                                        const char *declFileName, Int_t declFileLine,
+                                        const TInitBehavior  *action,
+                                        VoidFuncPtr_t dictionary, Int_t pragmabits)
+      : fAction(action), fClass(0), fClassName(fullClassname),
+        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
+        fDictionary(dictionary), fInfo(typeid(fornamespace)), fIsA(0), fShowMembers(0),
+        fVersion(version),
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0), 
+        fCollectionProxy(0), fSizeof(0)
+   {
+      // Constructor for namespace
+
       Init(pragmabits);
    }
 

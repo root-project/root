@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.7 2004/02/18 07:28:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.8 2004/07/30 01:16:17 rdm Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -47,8 +47,8 @@ private:
    G__TypedefInfo   *fInfo;     //pointer to CINT typedef info
    Int_t             fSize;     //size of type
    EDataType         fType;     //type id
-   Long_t            fProperty;
-   TString           fTrueName;
+   Long_t            fProperty; //The property information for the (potential) underlying class
+   TString           fTrueName; //True name of the (potential) underlying class 
 
    void CheckInfo();
    void SetType(const char *name);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.73 2004/07/23 14:29:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.74 2004/07/25 16:19:59 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -13,8 +13,7 @@
 //                                                                      //
 // TMath                                                                //
 //                                                                      //
-// Encapsulate math routines (i.e. provide a kind of namespace).        //
-// For the time being avoid templates.                                  //
+// Encapsulate math routines.                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +30,14 @@
 
 const Int_t kWorkMax = 100;
 
-ClassImp(TMath)
+NamespaceImp(TMath)
+
+namespace TMath {
+
+   Double_t GamCf(Double_t a,Double_t x);
+   Double_t GamSer(Double_t a,Double_t x);
+
+}
 
 #if defined(_MSC_VER) && (_MSC_VER<1300)
 // Work around a problem in MSC++ 6 where it can not really handle
