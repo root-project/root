@@ -116,6 +116,7 @@ MAKEVERSION   = build/unix/makeversion.sh
 IMPORTCINT    = build/unix/importcint.sh
 MAKECOMPDATA  = build/unix/compiledata.sh
 MAKEMAKEINFO  = build/unix/makeinfo.sh
+MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 ifeq ($(ARCH),win32)
@@ -273,6 +274,9 @@ importcint: distclean-cint
 html:    $(ROOTEXE)
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
+
+changelog:
+	@$(MAKECHANGELOG)
 
 install:
 	@(inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
