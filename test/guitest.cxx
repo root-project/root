@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.44 2004/09/14 09:23:53 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.45 2004/09/14 10:51:33 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1283,7 +1283,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    fRedTextGC.SetForeground(red);
    //---------------------------------
 
-   int i, ax, ay;
+   int i;
 
    ChangeOptions((GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
