@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.4 2000/10/17 12:34:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.5 2002/02/23 16:05:11 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -272,7 +272,7 @@ TGCompositeFrame *TGTab::AddTab(const char *text)
 //______________________________________________________________________________
 void TGTab::RemoveTab(Int_t tabIndex)
 {
-   // Remove container and tabtab of tab with index tabIndex.
+   // Remove container and tab of tab with index tabIndex.
    // Does NOT remove the container contents!
 
    if (tabIndex < 0) return;
