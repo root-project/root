@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.30 2003/06/24 08:29:25 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.31 2003/07/16 06:31:43 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -5218,7 +5218,8 @@ L81:
     vsum = 0;
     for (i = 1; i <= fNpar; ++i) {
 	for (j = 1; j <= i; ++j) {
-	    d = fDirin[i-1]*fDirin[j-1] / delgam - fMIGRvg[i-1]*fMIGRvg[j-1] / gvg;
+	    if(delgam == 0 || gvg == 0) d = 0;
+            else d = fDirin[i-1]*fDirin[j-1] / delgam - fMIGRvg[i-1]*fMIGRvg[j-1] / gvg;
 	    dsum += TMath::Abs(d);
 	    ndex  = i*(i-1) / 2 + j;
 	    fVhmat[ndex-1] += d*2;
