@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.37 2002/01/18 15:06:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.38 2002/01/19 11:04:41 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -617,6 +617,19 @@ Int_t TChain::GetNbranches()
 
 
 //______________________________________________________________________________
+Double_t TChain::GetWeight() const
+{
+//  return the chain weight.
+//  by default, the weight is the weight of the current Tree in the TChain.
+//  However, if the weight has been set in TChain::SetWeight with
+//  the option "global", each Tree will use the same weight stored
+//  in TChain::fWeight.
+   
+   if (TestBit(kGlobalWeight)) return fWeight;
+   else                        return fTree->GetWeight();   
+}
+
+//______________________________________________________________________________
 Int_t TChain::LoadTree(Int_t entry)
 {
 //  The input argument entry is the entry serial number in the whole chain.
@@ -1041,6 +1054,32 @@ void TChain::SetPacketSize(Int_t size)
    TChainElement *element;
    while ((element = (TChainElement*)next())) {
       element->SetPacketSize(size);
+   }
+}
+
+//______________________________________________________________________________
+void TChain::SetWeight(Double_t w, Option_t *option)
+{
+//  Set chain weight.
+//  The weight is used by TTree::Draw to automatically weight each
+//  selected entry in the resulting histogram.
+//  For example the equivalent of
+//     chain.Draw("x","w")
+//  is
+//     chain.SetWeight(w,"global");
+//     chain.Draw("x");
+//
+//  By default the weight used will be the weight
+//  of each Tree in the TChain. However, one can force the individual
+//  weights to be ignored by specifying the option "global".
+//  In this case, the TChain global weight will be used for all Trees.
+   
+   fWeight = w;
+   TString opt = option;
+   opt.ToLower();
+   ResetBit(kGlobalWeight);
+   if (opt.Contains("global")) {
+      SetBit(kGlobalWeight);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.19 2002/01/18 15:06:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.20 2002/01/19 11:04:41 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -44,6 +44,10 @@ protected:
   static Int_t   fgMaxMergeSize;    //  Maximum size of a merged file
 
 public:
+    // TChain status bits
+    enum {
+       kGlobalWeight   = BIT(15)
+    };
     TChain();
     TChain(const char *name, const char *title="");
     virtual ~TChain();
@@ -80,6 +84,7 @@ public:
             Int_t     GetTreeNumber() const {return fTreeNumber;}
             Int_t    *GetTreeOffset() const {return fTreeOffset;}
             Int_t     GetTreeOffsetLen() const {return fTreeOffsetLen;}
+    virtual Double_t  GetWeight() const;
             Int_t     LoadTree(Int_t entry);
     virtual void      Loop(Option_t *option="",Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="") const;
@@ -93,6 +98,7 @@ public:
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
     static  void      SetMaxMergeSize(Int_t maxsize=1900000000);
     virtual void      SetPacketSize(Int_t size = 100);
+    virtual void      SetWeight(Double_t w=1, Option_t *option="");
 
     ClassDef(TChain,4)  //A chain of TTrees
 };
