@@ -118,6 +118,7 @@ distclean-<module>               deletes all in addition to the .o files also
 Porting to a new platform
 -------------------------
 
+- add <platform> option to config/ARCHS
 - make a new config/Makefile.<platform>
 - add platform case to the file config/root-config.in
 - add platform case to the file test/Makefile.in
