@@ -169,7 +169,7 @@ F77LDFLAGS   := $(LDFLAGS)
 endif
 
 ifeq ($(GCC_MAJOR),3)
-ifeq ($(GCC_MINOR),1)
+ifneq ($(findstring $(GCC_MINOR),1 2),)
 F77LDFLAGS   += -lfrtbegin
 endif
 endif
@@ -599,7 +599,8 @@ showbuild:
 	@echo "CPP                = $(CPP)"
 	@echo "LD                 = $(LD)"
 	@echo "F77LD              = $(F77LD)"
-	@echo "GCCVERS            = $(GCCVERS)"
+	@echo "GCC_MAJOR          = $(GCC_MAJOR)"
+	@echo "GCC_MINOR          = $(GCC_MINOR)"
 	@echo ""
 	@echo "CXXFLAGS           = $(CXXFLAGS)"
 	@echo "CINTCXXFLAGS       = $(CINTCXXFLAGS)"
@@ -609,6 +610,7 @@ showbuild:
 	@echo "EXTRA_CFLAGS       = $(EXTRA_CFLAGS)"
 	@echo "F77FLAGS           = $(F77FLAGS)"
 	@echo "LDFLAGS            = $(LDFLAGS)"
+	@echo "F77LDFLAGS         = $(F77LDFLAGS)"
 	@echo "EXTRA_LDFLAGS      = $(EXTRA_LDFLAGS)"
 	@echo "SOFLAGS            = $(SOFLAGS)"
 	@echo "SOEXT              = $(SOEXT)"
@@ -644,8 +646,11 @@ showbuild:
 	@echo "SRPINCDIR          = $(SRPINCDIR)"
 	@echo "SRPUTILLIB         = $(SRPUTILLIB)"
 	@echo "AFSDIR             = $(AFSDIR)"
+	@echo "SHADOWFLAGS        = $(SHADOWFLAGS)"
 	@echo ""
 	@echo "INSTALL            = $(INSTALL)"
+	@echo "INSTALLDATA        = $(INSTALLDATA)"
+	@echo "INSTALLDIR         = $(INSTALLDIR)"
 	@echo "MAKEDEP            = $(MAKEDEP)"
 	@echo "MAKELIB            = $(MAKELIB)"
 	@echo "MAKEDIST           = $(MAKEDIST)"
