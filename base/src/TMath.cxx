@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.17 2002/02/18 10:06:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.18 2002/02/18 10:19:12 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1460,8 +1460,9 @@ void TMath::BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2)
 //  Author:        Adrian Bevan                    bevan@slac.stanford.edu
 //  Copyright:     Liverpool University, July 2001
 
-  double localArr1[100];
-  int    localArr2[100];
+  if (Narr <= 0) return;
+  double *localArr1 = new double[Narr];
+  int    *localArr2 = new int[Narr];
   int iEl;
   int iEl2;
 
@@ -1487,6 +1488,8 @@ void TMath::BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2)
   for(iEl = 0; iEl < Narr; iEl++) {
     arr2[iEl] = localArr2[iEl];
   }
+  delete [] localArr2;
+  delete [] localArr1;
 }
 
 
@@ -1498,8 +1501,9 @@ void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
 //  Author:        Adrian Bevan                    bevan@slac.stanford.edu
 //  Copyright:     Liverpool University, July 2001
    
-  double localArr1[Narr];
-  int localArr2[Narr];
+  if (Narr <= 0) return;
+  double *localArr1 = new double[Narr];
+  int    *localArr2 = new int[Narr];
   int iEl;
   int iEl2;
 
@@ -1525,6 +1529,8 @@ void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
   for(iEl = 0; iEl < Narr; iEl++) {
     arr2[iEl] = localArr2[iEl];
   }
+  delete [] localArr2;
+  delete [] localArr1;
 }
 
 #ifdef OLD_HASH
