@@ -1,7 +1,7 @@
 The compression package "zlib" is part of the zip directory. The original tar 
 file can be downloaded from : http://www.zlib.org 
 
-Only the useful code as been extracted from this tar file. It consists of: 
+Only the useful code has been extracted from this tar file. It consists of: 
 
  zip/inc:
    crc32.h deflate.h inffast.h inffixed.h inflate.h
