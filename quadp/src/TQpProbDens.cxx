@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.56 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Mar 2004
 
 /*************************************************************************
@@ -152,7 +152,7 @@ void TQpProbDens::SeparateVars(TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVec
 }
 
 //______________________________________________________________________________
-void TQpProbDens::MakeRandomData(TQpDataDens *&data,TQpVar *&soln,Int_t nnzQ,Int_t nnzA,Int_t nnzC)
+void TQpProbDens::MakeRandomData(TQpDataDens *&data,TQpVar *&soln,Int_t /*nnzQ*/,Int_t /*nnzA*/,Int_t /*nnzC*/)
 {
   data = new TQpDataDens(fNx,fMy,fMz);
   soln = this->MakeVariables(data);

@@ -1,5 +1,5 @@
-// @(#)root/matrix:$Name:  $:$Id: TMehrotraSolver.h,v 1.4 2004/02/12 13:03:00 brun Exp $
-// Authors: Fons Rademakers, Eddy Offermann   Mar 2004
+// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.h,v 1.1 2004/05/24 12:04:27 brun Exp $
+// Author: Eddy Offermann   May 2004
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
