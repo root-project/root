@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.32 2001/02/15 21:18:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.33 2001/02/19 17:07:27 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -78,7 +78,7 @@ ClassImp(TGraph)
 //
 
 //______________________________________________________________________________
-TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
+TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Graph default constructor-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
@@ -94,7 +94,7 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 
 //______________________________________________________________________________
 TGraph::TGraph(Int_t n)
-       : TNamed("Graph","Graph"), TAttLine(), TAttFill(), TAttMarker()
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 // constructor with only the number of points set
 // the arrsys x and y will be set later
@@ -120,7 +120,7 @@ TGraph::TGraph(Int_t n)
 
 //______________________________________________________________________________
 TGraph::TGraph(Int_t n, Float_t *x, Float_t *y)
-       : TNamed("Graph","Graph"), TAttLine(), TAttFill(), TAttMarker()
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with floats-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
@@ -147,7 +147,7 @@ TGraph::TGraph(Int_t n, Float_t *x, Float_t *y)
 
 //______________________________________________________________________________
 TGraph::TGraph(Int_t n, Double_t *x, Double_t *y)
-       : TNamed("Graph","Graph"), TAttLine(), TAttFill(), TAttMarker()
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with doubles-*-*-*-*-*-*-*-*
 //*-*                  ========================

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.9 2000/12/15 12:05:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.10 2001/02/07 20:56:51 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -37,7 +37,6 @@ protected:
     Int_t       fNpoints;    //Number of points
     Double_t   *fX;          //[fNpoints] array of X points
     Double_t   *fY;          //[fNpoints] array of Y points
-    Option_t   *fOption;     //!Axis options
     TList      *fFunctions;  //Pointer to list of functions (fits and user)
     TH1F       *fHistogram;  //Pointer to histogram used for drawing axis
     Double_t    fMinimum;    //Minimum value for plotting along y
