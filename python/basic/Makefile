@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
 
 #Set the list of target to make while testing
-TEST_TARGETS += importErrorHandling
+TEST_TARGETS += importErrorHandling PyROOT_basictests
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -18,8 +18,7 @@ ifeq ($(FAIL),)
 endif
 
 
-
-copy: copy.clog
+PyROOT_basictests: PyROOT_basictests.log
 	$(TestDiff)
 
 importErrorHandling: importErrorHandling.log
