@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.23 2003/09/13 09:03:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.24 2003/10/08 16:36:14 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -469,6 +469,8 @@ void THStack::Paint(Option_t *option)
    }
    fHistogram->Paint(loption);
 
+   char *lsame = strstr(loption,"same");
+   if (lsame) strncpy(lsame,"    ",4);
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);
    if (strstr(loption,"lego")) return;
 
