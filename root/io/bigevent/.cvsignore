@@ -2,3 +2,5 @@
  EventDict* 
  Event.root 
 *.sln *.suo
+Event
+*.dylib

@@ -1,3 +1,3 @@
  *.dll *.def *.exp *.lib *.pdb *.log *.d 
  *.out 
- FooDict* file.root 
+ FooDict* file.root  *.dylib reader writer
