@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.47 2005/01/12 18:48:36 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.48 2005/01/13 10:24:10 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1589,7 +1589,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          switch (valign) {
             case 0: y -= fs.Dessous()*mul; break;
             case 1: break;
-            case 2: y += (fs.Dessus()-fs.Dessous())*mul/2.5; break;
+            case 2: y += (fs.Dessus()-fs.Dessous())*mul/1.5; break;
             case 3: y += fs.Dessus()*mul;  break;
          }
          switch (halign) {
