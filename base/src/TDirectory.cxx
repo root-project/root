@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.41 2004/01/19 07:55:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.42 2004/01/29 11:20:12 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -64,6 +64,7 @@ TDirectory::TDirectory() : TNamed()
    fList = 0;
    fKeys = 0;
    fWritable = kFALSE;
+   fBufferSize = 0;
 }
 
 //______________________________________________________________________________
@@ -107,6 +108,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
       Error("TDirectory","Invalid class name: %s",classname);
       return;
    }
+   fBufferSize  = 0;
    fWritable    = kTRUE;
    fSeekParent  = gFile->GetSeekDir();
    Int_t nbytes = TDirectory::Sizeof();
@@ -888,6 +890,18 @@ TObject *TDirectory::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
+Int_t TDirectory::GetBufferSize()
+{
+   // return the buffer size to create new TKeys.
+   // if the stored fBufferSize is null, the value returned is the average
+   // buffer size of objects in the file so far
+   
+   if (fBufferSize <= 0) return fFile->GetBestBuffer();
+   else                  return fBufferSize;
+}
+
+
+//______________________________________________________________________________
 TKey *TDirectory::GetKey(const char *name, Short_t cycle) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return pointer to key with name,cycle*-*-*-*-*-*-*-*
@@ -1261,6 +1275,16 @@ void TDirectory::SaveSelf(Bool_t force)
 }
 
 //______________________________________________________________________________
+void TDirectory::SetBufferSize(Int_t bufsize)
+{
+   // set the default buffer size when creating new TKeys
+   // see also TDirectory::GetBufferSize
+   
+   fBufferSize = bufsize;
+}
+
+
+//______________________________________________________________________________
 void TDirectory::SetWritable(Bool_t writable)
 {
 //  Set the new value of fWritable recursively
@@ -1387,6 +1411,189 @@ Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
    SaveSelf(kTRUE);   // force save itself
 
    cursav->cd();
+   return nbytes;
+}
+
+//______________________________________________________________________________
+Int_t TDirectory::WriteObject(const TObject *obj, const char *name, Option_t *option)
+{
+   // Write object obj to this directory
+   // The data structure corresponding to this object is serialized.
+   // The corresponding buffer is written to this directory
+   // with an associated key with name "name".
+   //
+   // Writing an object to a file involves the following steps:
+   //
+   //  -Creation of a support TKey object in the directory.
+   //   The TKey object creates a TBuffer object.
+   //
+   //  -The TBuffer object is filled via the class::Streamer function.
+   //
+   //  -If the file is compressed (default) a second buffer is created to
+   //   hold the compressed buffer.
+   //
+   //  -Reservation of the corresponding space in the file by looking
+   //   in the TFree list of free blocks of the file.
+   //
+   //  -The buffer is written to the file.
+   //
+   //  By default, the buffersize will be taken from the average buffer size
+   //  of all objects written to the current file so far.
+   //  Use TDirectory::SetBufferSize to force a given buffer size.
+   //
+   //  If a name is specified, it will be the name of the key.
+   //  If name is not given, the name of the key will be the name as returned
+   //  by obj->GetName().
+   //
+   //  The option can be a combination of:
+   //    "SingleKey", "Overwrite" or "WriteDelete"
+   //  Using the "Overwrite" option a previous key with the same name is
+   //  overwritten. The previous key is deleted before writing the new object.
+   //  Using the "WriteDelete" option a previous key with the same name is
+   //  deleted only after the new object has been written. This option
+   //  is safer than kOverwrite but it is slower.
+   //  The "SingleKey" option is only used by TCollection::Write() to write
+   //  a container with a single key instead of each object in the container
+   //  with its own key.
+   //
+   //  An object is read from this directory via TDirectory::Get.
+   //
+   //  The function returns the total number of bytes written to the directory.
+   //  It returns 0 if the object cannot be written.
+
+   if (!fFile->IsWritable()) {
+      if (!fFile->TestBit(TFile::kWriteError)) {
+         // Do not print the error if the file already had a SysError.
+         Error("WriteObject","Directory %s is not writable", fFile->GetName());
+      }
+      return 0;
+   }
+
+   TString opt = option;
+   opt.ToLower();
+   
+   TKey *key, *oldkey=0;
+   Int_t bsize = GetBufferSize();
+
+   const char *oname;
+   if (name && *name)
+      oname = name;
+   else
+      oname = obj->GetName();
+
+   // Remove trailing blanks in object name
+   Int_t nch = strlen(oname);
+   char *newName = 0;
+   if (oname[nch-1] == ' ') {
+      newName = new char[nch+1];
+      strcpy(newName,oname);
+      for (Int_t i=0;i<nch;i++) {
+         if (newName[nch-i-1] != ' ') break;
+         newName[nch-i-1] = 0;
+      }
+      oname = newName;
+   }
+
+   if (opt.Contains("overwite")) {
+      //One must use GetKey. FindObject would return the lowest cycle of the key!
+      //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
+      key = (TKey*)GetKey(oname);
+      if (key) {
+         key->Delete();
+         delete key;
+      }
+   }
+   if (opt.Contains("writedelete")) {
+      oldkey = (TKey*)GetKey(oname);
+   }
+   key = new TKey(obj, oname, bsize);
+   if (newName) delete [] newName;
+
+   if (!key->GetSeekKey()) {
+      fKeys->Remove(key);
+      delete key;
+      return 0;
+   }
+   fFile->SumBuffer(key->GetObjlen());
+   Int_t nbytes = key->WriteFile(0);
+
+   if (oldkey) {
+      oldkey->Delete();
+      delete oldkey;
+   }
+
+   return nbytes;
+}
+
+//______________________________________________________________________________
+Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option)
+{
+   // Write object of class with dictionary cl in this directory
+   // obj may not derive from TObject
+   // see TDirectory::WriteObject for comments
+
+   if (!fFile->IsWritable()) {
+      if (!fFile->TestBit(TFile::kWriteError)) {
+         // Do not print the error if the file already had a SysError.
+         Error("WriteObject","Directory %s is not writable", fFile->GetName());
+      }
+      return 0;
+   }
+
+   if (!obj || !cl) return 0;
+   TKey *key, *oldkey=0;
+   Int_t bsize = GetBufferSize();
+
+   TString opt = option;
+   opt.ToLower();
+
+   const char *oname;
+   if (name && *name)
+      oname = name;
+   else
+      oname = cl->GetName();
+
+   // Remove trailing blanks in object name
+   Int_t nch = strlen(oname);
+   char *newName = 0;
+   if (oname[nch-1] == ' ') {
+      newName = new char[nch+1];
+      strcpy(newName,oname);
+      for (Int_t i=0;i<nch;i++) {
+         if (newName[nch-i-1] != ' ') break;
+         newName[nch-i-1] = 0;
+      }
+      oname = newName;
+   }
+
+   if (opt.Contains("overwrite")) {
+      //One must use GetKey. FindObject would return the lowest cycle of the key!
+      //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
+      key = (TKey*)GetKey(oname);
+      if (key) {
+         key->Delete();
+         delete key;
+      }
+   }
+   if (opt.Contains("writedelete")) {
+      oldkey = (TKey*)GetKey(oname);
+   }
+   key = new TKey(obj, cl, oname, bsize);
+   if (newName) delete [] newName;
+
+   if (!key->GetSeekKey()) {
+      fKeys->Remove(key);
+      delete key;
+      return 0;
+   }
+   fFile->SumBuffer(key->GetObjlen());
+   Int_t nbytes = key->WriteFile(0);
+
+   if (oldkey) {
+      oldkey->Delete();
+      delete oldkey;
+   }
+
    return nbytes;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.15 2003/01/17 13:58:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.16 2003/12/30 13:16:50 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -47,6 +47,7 @@ protected:
    TDatime     fDatimeM;         //Date and time of last modification
    Int_t       fNbytesKeys;      //Number of bytes for the keys
    Int_t       fNbytesName;      //Number of bytes in TNamed at creation time
+   Int_t       fBufferSize;      //Default buffer size to create new TKeys
    Long64_t    fSeekDir;         //Location of directory on file
    Long64_t    fSeekParent;      //Location of parent directory on file
    Long64_t    fSeekKeys;        //Location of Keys record on file
@@ -89,6 +90,7 @@ public:
    virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *Get(const char *namecycle);
+   virtual Int_t       GetBufferSize();
    TDatime            &GetCreationDate() {return fDatimeC;}
    virtual TFile      *GetFile() const {return fFile;}
    virtual TKey       *GetKey(const char *name, Short_t cycle=9999) const;
@@ -117,11 +119,14 @@ public:
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
+   virtual void        SetBufferSize(Int_t bufsize);
    void                SetWritable(Bool_t writable=kTRUE);
    void                SetModified() {fModified = kTRUE;}
    void                SetMother(const TObject *mother) {fMother = (TObject*)mother;}
    virtual Int_t       Sizeof() const;
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
+   virtual Int_t       WriteObject(const TObject *obj, const char *name=0, Option_t *option="");
+   virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="");
    virtual void        WriteDirHeader();
    virtual void        WriteKeys();
 
