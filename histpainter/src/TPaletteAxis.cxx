@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.4 2003/01/06 08:14:20 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.5 2003/01/09 17:13:36 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -194,8 +194,8 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
    Double_t y1,y2,w1,w2,zc;
-   //if (Hoption.Logz) {
    if (gPad->GetLogz()) {
+      if (wmin <= 0 && wmax > 0) wmin = 0.001*wmax;
       wlmin = TMath::Log10(wmin);
       wlmax = TMath::Log10(wmax);
    }

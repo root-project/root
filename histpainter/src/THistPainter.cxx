@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.111 2002/12/05 10:24:15 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.112 2003/01/09 17:13:59 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3862,8 +3862,8 @@ void THistPainter::PaintPalette()
       if (xmax > x2) xmax = x2-0.01*xr;
       palette = new TPaletteAxis(xmin,ymin,xmax,ymax,fH);
       fFunctions->Add(palette);
+      palette->Paint();
    }
-   palette->Paint();
 }
 
 //______________________________________________________________________________
