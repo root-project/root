@@ -1,5 +1,5 @@
-Installion of ROOT from source
-==============================
+Installation of ROOT from source
+================================
 
 To install ROOT from source you first have to get the tar file
 containing the source. This tar file can be found in the usual
@@ -13,7 +13,7 @@ There are two main methods of installing ROOT from source.
 1) You have noting installed yet.
    - get the source tar file of the latest ROOT
    - unpack source tar file, this creates directory `root':
-        tar zxvf root_v2.25.01.Linux.2.2.16.tar.gz
+        tar zxvf root_v2.25.01.source.tar.gz
    - set ROOTSYS to the `root' directory:
         export ROOTSYS=<path>/root
    - now type the build commands:
@@ -37,7 +37,7 @@ There are two main methods of installing ROOT from source.
    (.dep) package.
    - get source tar file or latest ROOT
    - unpack source tar file, this creates directory `root':
-        tar zxvf root_v2.25.01.Linux.2.2.16.tar.gz
+        tar zxvf root_v2.25.01.source.tar.gz
    - set ROOTSYS to the `root' directory (only needed during installation):
         export ROOTSYS=<path>/root
    - now type the build commands:
@@ -49,8 +49,8 @@ There are two main methods of installing ROOT from source.
         root
 
 
-Installation Names
-==================
+Installation Location
+=====================
 
   By default, the system will be installed depending on the ROOTSYS
 environment variable. In that case the whole package will live under the
@@ -77,7 +77,7 @@ or as arguments to the ./configure script. For example:
 export ROOTBUILD=debug        # see $ROOTSYS/README/BUILDSYSTEM
 export CERNLIB=~/cernlib      # must contain libpacklib.a libkernlib.a
 export RFIO=~/shift-1.10.2.9/lib/libshift.a
-export TTF=~/ttf              # must contain fonts/ (and possibly include/ lib/)export OPENGL=~/Mesa-3.2      # must contain include/ lib/
+export TTF=~/ttf              # must contain fonts/ (and possibly include/ lib/)
 export OPENGL=~/Mesa-3.2      # must contain include/ lib/
 export SRP=~/src/srp-1.5.0    # must contain include/ lib/
 #export AFS=                   # must contain include/ lib/
