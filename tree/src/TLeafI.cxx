@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.12 2001/02/21 08:56:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.13 2001/04/16 19:15:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -145,15 +145,16 @@ void TLeafI::ReadBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
 //*-*                  ===========================================
 
-   if (fNdata == 1) {
+   if (!fLeafCount && fNdata == 1) {
       b >> fValue[0];
-   }else {
+   } else {
       if (fLeafCount) {
          Int_t len = Int_t(fLeafCount->GetValue());
          if (len > fLeafCount->GetMaximum()) {
             printf("ERROR leaf:%s, len=%d and max=%d\n",GetName(),len,fLeafCount->GetMaximum());
             len = fLeafCount->GetMaximum();
          }
+         fNdata = len*fLen;
          b.ReadFastArray(fValue,len*fLen);
       } else {
          b.ReadFastArray(fValue,fLen);
