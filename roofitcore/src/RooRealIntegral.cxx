@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.19 2001/06/30 01:33:14 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.20 2001/07/31 05:54:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -246,7 +246,10 @@ void RooRealIntegral::initNumIntegrator()
 {
   // (Re)Initialize numerical integration engine
 
-  if (_numIntEngine) delete _numIntEngine ;
+  if (0 != _numIntEngine) {
+    delete _numIntEngine ;
+    _numIntEngine= 0;
+  }
 
   // Initialize numerical integration part, if necessary 
   switch(_intList.GetSize()) {
@@ -274,7 +277,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _anaList("anaList",this,other._anaList),
   _jacList("jacList",this,other._jacList),
   _facList("facList",this,other._facList),
-  _operMode(other._operMode)
+  _operMode(other._operMode), _numIntEngine(0)
 {
   // Copy constructor
   initNumIntegrator() ;
@@ -326,7 +329,8 @@ Double_t RooRealIntegral::evaluate(const RooDataSet* dset) const
 
   case Unity:
     {
-      retVal =  1.0 ;
+      //retVal =  1.0 ;
+      retVal= _function;
       break ;
     }
   }
@@ -434,9 +438,8 @@ Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool
 void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
   // Print the state of this object to the specified output stream.
-
+  RooAbsReal::printToStream(os,Verbose,indent) ;
   if (opt==Verbose) {
-    RooAbsReal::printToStream(os,Verbose,indent) ;
     os << indent << "--- RooRealIntegral ---" << endl;
     os << indent << "  Integrates ";
     _function.arg().printToStream(os,Standard);
@@ -456,67 +459,6 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
     _facList.printToStream(os,Standard,deeper);
     return ;
   }
-
-  //Print object contents
-  os << indent << "RooRealIntegral: " << GetName() << " =" ;
-
-  RooAbsArg* arg ;
-  Bool_t first(kTRUE) ;
-
-  if (_facList.First()) {
-    TIterator* fIter = _facList.MakeIterator() ;
-    os << " Fac(" ;
-    while (arg=(RooAbsArg*)fIter->Next()) {
-      os << (first?"":",") << arg->GetName() ;
-      first=kFALSE ;
-    }
-    delete fIter ;
-    os << ")" ;
-  }
-
-  if (_sumList.First()) {
-    TIterator* sIter = _sumList.MakeIterator() ;
-    os << " Sum(" ;
-    while (arg=(RooAbsArg*)sIter->Next()) {
-      os << (first?"":",") << arg->GetName() ;
-      first=kFALSE ;
-    }
-    delete sIter ;
-    os << ")" ;
-  }
-
-  first=kTRUE ;
-  if (_intList.First()) {
-    TIterator* iIter = _intList.MakeIterator() ;
-    os << " NumInt(" ;
-    while (arg=(RooAbsArg*)iIter->Next()) {
-      os << (first?"":",") << arg->GetName() ;
-      first=kFALSE ;
-    }
-    delete iIter ;
-    os << ")" ;
-  }
-
-  first=kTRUE ;
-  if (_anaList.First()) {
-    TIterator* aIter = _anaList.MakeIterator() ;
-    os << " AnaInt(" ;
-    while (arg=(RooAbsArg*)aIter->Next()) {
-      os << (first?"":",") << arg->GetName() ;
-      if (((RooAbsPdf&)_function.arg()).forceAnalyticalInt(*arg)) os << "!" ;
-      first=kFALSE ;
-    }
-    delete aIter ;
-    os << ")" ;
-  }
-
-
-  os << " " << _function.arg().GetName() << " = " << getVal();
-  if(!_unit.IsNull()) os << ' ' << _unit;
-  os << " : \"" << fTitle << "\"" ;
-
-  printAttribList(os) ;
-  os << endl ;
 } 
 
 

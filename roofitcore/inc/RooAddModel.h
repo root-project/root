@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.rdl,v 1.1 2001/06/23 01:20:33 verkerke Exp $
+ *    File: $Id: RooAddModel.rdl,v 1.2 2001/07/31 05:54:17 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,7 +14,6 @@
 #define ROO_ADD_MODEL
 
 #include "RooFitCore/RooResolutionModel.hh"
-#include "RooFitCore/RooFastList.hh"
 #include "TList.h"
 
 class RooAddModel : public RooResolutionModel {

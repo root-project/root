@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.rdl,v 1.1 2001/05/31 21:21:36 david Exp $
+ *    File: $Id: RooAcceptReject.rdl,v 1.2 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,6 +26,9 @@ public:
   Bool_t isValid() const { return _isValid; }
   virtual ~RooAcceptReject();
 
+  inline void setVerbose(Bool_t verbose= kTRUE) { _verbose= verbose; }
+  inline Bool_t isVerbose() const { return _verbose; }
+
   void generateEvents(Int_t nEvents, RooDataSet &container);
 
   // ascii printing interface
@@ -46,6 +49,8 @@ protected:
   Double_t _maxFuncVal, _funcSum;
   UInt_t _sampleDim,_minTrials,_totalEvents,_eventsUsed;
   RooRealVar *_funcVal;
+
+  static const int _maxSampleDim, _minTrialsArray[];
 
   ClassDef(RooAcceptReject,0) // Context for generating a dataset from a PDF
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.2 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.3 2001/06/30 01:33:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,7 +29,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.2 2001/06/16 20:28:20 david Exp $";
+"$Id: RooAcceptReject.cc,v 1.3 2001/06/30 01:33:11 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -65,6 +65,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     found= (const RooAbsArg*)_cloneSet->FindObject(arg->GetName());
     if(found) {
       arg= found;
+      _sampleDim++;
     }
     else {
       // clone any variables we generate that we haven't cloned already
@@ -80,7 +81,6 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     else if(0 != realVar) {
       if(realVar->hasFitMin() && realVar->hasFitMax()) {
 	_realVars.add(*realVar);
-	if(found) _sampleDim++;
       }
       else {
 	cout << fName << "::" << ClassName() << ": cannot generate values for \""
@@ -100,11 +100,13 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     return;
   }
   // calculate the minimum number of trials needed to estimate our integral and max value
-  _minTrials= 1;
-  for(Int_t dim= 0; dim < _sampleDim && dim < 3; dim++) _minTrials*= 100;
-  if(_sampleDim > 3) {
+  if(_sampleDim > _maxSampleDim) {
+    _minTrials= _minTrialsArray[_maxSampleDim];
     cout << fName << "::" << ClassName() << ": WARNING: generating " << _sampleDim
 	 << " variables with accept-reject may not be accurate" << endl;
+  }
+  else {
+    _minTrials= _minTrialsArray[_sampleDim];
   }
   // print a verbose summary of our configuration, if requested
   if(_verbose) {
@@ -185,8 +187,9 @@ void RooAcceptReject::generateEvents(Int_t nEvents, RooDataSet &container) {
       // some more events to it.      
       cache.Reset();
       _eventsUsed= 0;
-      // calculate how many more events to generate using our best estimate of our efficiency
-      Int_t extra= (Int_t)((nEvents - generatedEvts)/eff() + 0.5);
+      // Calculate how many more events to generate using our best estimate of our efficiency.
+      // Always generate at least one more event so we don't get stuck.
+      Int_t extra= 1 + (Int_t)((nEvents - generatedEvts)/eff());
       if(_verbose) cout << "generating " << extra << " events into reset cache" << endl;
       Double_t oldMax(_maxFuncVal);
       while(extra--) addEvent(cache,nextCatVar,nextRealVar,funcVal);
@@ -255,3 +258,6 @@ void RooAcceptReject::addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterat
   if(_verbose) cout << "=== [" << _totalEvents << "] " << val << " (I = "
 		    << _funcSum/_totalEvents << ")" << endl;
 }
+
+const int RooAcceptReject::_maxSampleDim= 3,
+  RooAcceptReject::_minTrialsArray[]= { 0,1000,100000,10000000 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.3 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.4 2001/06/30 01:33:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,9 +29,10 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.3 2001/06/16 20:28:20 david Exp $";
+"$Id: RooGenContext.cc,v 1.4 2001/06/30 01:33:13 verkerke Exp $";
 
-RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype) :
+RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
+			     const RooDataSet *prototype) :
   TNamed(model), _origVars(&vars), _prototype(prototype), _cloneSet(0), _pdfClone(0),
   _acceptRejectFunc(0), _generator(0), _maxTrials(1000)
 {
@@ -49,9 +50,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, cons
   // Find the clone in the snapshot list
   _pdfClone = (RooAbsPdf*)_cloneSet->FindObject(model.GetName());
 
-  // Analyze the list of variables to generate.
+  // Analyze the list of variables to generate...
   _isValid= kTRUE;
-  RooArgSet datasetVars("datasetVars"),generateVars("generateVars"),directVars("directVars");
   TIterator *iterator= vars.MakeIterator();
   TIterator *servers= _pdfClone->serverIterator();
   const RooAbsArg *tmp(0),*arg(0);
@@ -151,7 +151,7 @@ RooGenContext::~RooGenContext() {
 
 RooDataSet *RooGenContext::generate(Int_t nEvents) const {
   // Generate the specified number of events with nEvents>0 and
-  // and return a dataset containing the generated events. With nEvents=0,
+  // and return a dataset containing the generated events. With nEvents<=0,
   // generate the number of events in the prototype dataset, if available,
   // or else the expected number of events, if non-zero. The returned
   // dataset belongs to the caller. Return zero in case of an error.

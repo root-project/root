@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.4 2001/05/16 07:41:08 verkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.5 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,10 +52,10 @@ void RooIntegrator1D::initialize()
 RooIntegrator1D::~RooIntegrator1D()
 {
   // Release integrator workspace
-  delete[] _h;
-  delete[] _s;
-  delete[] _c;
-  delete[] _d;
+  if(_h) delete[] _h;
+  if(_s) delete[] _s;
+  if(_c) delete[] _c;
+  if(_d) delete[] _d;
 }
 
 
