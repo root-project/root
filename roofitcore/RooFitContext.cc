@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.17 2001/08/15 23:38:44 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.18 2001/08/18 02:13:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -92,7 +92,7 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
   _floatParamList->Sort() ;
   _floatParamList->SetName("floatParamList") ;
 
-  _constParamList = paramList->selectByAttrib("Constant",kFALSE) ;
+  _constParamList = paramList->selectByAttrib("Constant",kTRUE) ;
   _constParamList->Sort() ;
   _constParamList->SetName("constParamList") ;
 
@@ -382,25 +382,29 @@ Bool_t RooFitContext::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
 
 
 
-const RooFitResult* RooFitContext::fit(Option_t *options) 
+const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions) 
 {
   // Setup and perform MINUIT fit of PDF to dataset
 
-  // Parse our options string
-  TString opts= options;
-  opts.ToLower();
-  Bool_t verbose       =!opts.Contains("q") ;
-  Bool_t migradOnly    = opts.Contains("m") ;
-  Bool_t estimateSteps = opts.Contains("s") ;
-  Bool_t performHesse  = opts.Contains("h") ;
-  Bool_t saveLog       = opts.Contains("l") ;
-  Bool_t profileTimer  = opts.Contains("t") ;
-         _extendedMode = opts.Contains("e") ;
-  Bool_t doOptPdf      = opts.Contains("o") ;
-  Bool_t doOptData     = opts.Contains("oo") ;
-  Bool_t doOptCache    = opts.Contains("ooo") ;
-  Bool_t doStrat0      = opts.Contains("0") ;
-  Bool_t doSaveResult  = opts.Contains("r") ;
+  // Parse our fit options string
+  TString fitOpts= fitOptions;
+  fitOpts.ToLower();
+  Bool_t verbose       =!fitOpts.Contains("q") ;
+  Bool_t migradOnly    = fitOpts.Contains("m") ;
+  Bool_t estimateSteps = fitOpts.Contains("s") ;
+  Bool_t performHesse  = fitOpts.Contains("h") ;
+  Bool_t saveLog       = fitOpts.Contains("l") ;
+  Bool_t profileTimer  = fitOpts.Contains("t") ;
+         _extendedMode = fitOpts.Contains("e") ;
+  Bool_t doStrat0      = fitOpts.Contains("0") ;
+  Bool_t doSaveResult  = fitOpts.Contains("r") ;
+
+  // Parse our optimizer options string
+  TString optOpts= optOptions;
+  optOpts.ToLower();
+  Bool_t doOptPdf      = optOpts.Contains("p") ;
+  Bool_t doOptData     = optOpts.Contains("d") ;
+  Bool_t doOptCache    = optOpts.Contains("c") ;
 
   // Create fit result container if so requested
   RooFitResult* fitRes(0) ;
@@ -458,7 +462,7 @@ const RooFitResult* RooFitContext::fit(Option_t *options)
   Double_t params[100], arglist[100];
 
   if (_theFitter) delete _theFitter ;
-  _theFitter = new TFitter(nPar) ;
+  _theFitter = new TFitter(nPar*2) ; //WVE Kludge, nPar*2 works around TMinuit memory allocation bug
   _theFitter->SetObjectFit(this) ;
 
   _theFitter->Clear();

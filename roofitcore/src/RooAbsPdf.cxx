@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.23 2001/08/09 01:02:13 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.24 2001/08/18 02:13:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -429,11 +429,11 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed) const
 
 
 
-const RooFitResult* RooAbsPdf::fitTo(RooDataSet& data, Option_t *options) 
+const RooFitResult* RooAbsPdf::fitTo(RooDataSet& data, Option_t *fitOpt, Option_t *optOpt) 
 {
   // Fit this PDF to given data set
   RooFitContext context(&data,this) ;
-  return context.fit(options) ;
+  return context.fit(fitOpt,optOpt) ;
 }
 
 

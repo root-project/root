@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooFitResult.cc,v 1.1 2001/08/18 02:13:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -11,15 +11,17 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
+
+#include <iomanip.h>
+#include "TMinuit.h"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
-#include "TMinuit.h"
 
 ClassImp(RooFitResult) 
 ;
 
-RooFitResult::RooFitResult() : _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _corrMatrix(0) 
+RooFitResult::RooFitResult() : _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0)
 {
 }
 
@@ -32,13 +34,13 @@ RooFitResult::~RooFitResult()
     _globalCorr->Delete() ;
     delete _globalCorr ;
   }
-  if (_corrMatrix) {
-    Int_t i ;
-    for (i=0 ; i<_initPars->GetSize() ; i++) {
-      delete _corrMatrix[i] ;      
-    }
-    delete[] _corrMatrix ;
+
+  TIterator* iter = _corrMatrix.MakeIterator() ;
+  RooArgSet* set ; 
+  while (set=(RooArgSet*)iter->Next()) {
+    set->Delete() ;
   }
+  delete iter ;
 }
 
 void RooFitResult::setConstParList(const RooArgSet& list) 
@@ -82,28 +84,59 @@ const RooArgSet* RooFitResult::correlation(const RooAbsArg& par) const
     cout << "RooFitResult::correlation: variable " << par.GetName() << " not a floating parameter in fit" << endl ;
     return 0 ;
   }    
-  return _corrMatrix[_initPars->IndexOf(arg)] ;
+  return (RooArgSet*)_corrMatrix.At(_initPars->IndexOf(arg)) ;
 }
 
 
 void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
-  os << "--- RooFitResult --- " << endl ;
-  os << " minNLL = " << _minNLL << endl ;
-  os << "    EDM = " << _edm << endl ;
+  os << endl 
+     << "  RooFitResult: minimized NLL value: " << _minNLL << ", estimated distance to minimum: " << _edm 
+     << endl 
+     << endl ;
 
-  os << " Constant parameters: " << endl ;
-  _constPars->printToStream(os,opt,indent) ;
+  Int_t i ;
+  if (opt>=Verbose) {
+    if (_constPars->GetSize()>0) {
+      os << "    Constant Parameter    Value     " << endl
+	 << "  --------------------  ------------" << endl ;
 
-  os << " Initial value of floating parameters: " << endl ;
-  _initPars->printToStream(os,opt,indent) ;
+      for (i=0 ; i<_constPars->GetSize() ; i++) {
+	os << "  " << setw(20) << ((RooAbsArg*)_constPars->At(i))->GetName()
+	   << "  " << setw(12) << Form("%12.4e",((RooRealVar*)_constPars->At(i))->getVal())
+	   << endl ;
+      }
 
-  os << " Final value of floating parameters: " << endl ;
-  _finalPars->printToStream(os,opt,indent) ;
+      os << endl ;
+    }
 
-  os << " Global correlation coefficients: " << endl ;
-  _globalCorr->printToStream(os,opt,indent) ;
 
+    os << "    Floating Parameter  InitialValue    FinalValue +/-  Error     GblCorr." << endl
+       << "  --------------------  ------------  --------------------------  --------" << endl ;
+
+    for (i=0 ; i<_finalPars->GetSize() ; i++) {
+      os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->At(i))->GetName() ;
+      os << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->At(i))->getVal())
+	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->At(i))->getVal())
+	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->At(i))->getError())
+	 << "  "    << setw(8)  << Form("%8.6f" ,((RooRealVar*)_globalCorr->At(i))->getVal())
+	 << endl ;
+    }
+
+  } else {
+    os << "    Floating Parameter    FinalValue +/-  Error   " << endl
+       << "  --------------------  --------------------------" << endl ;
+
+    for (i=0 ; i<_finalPars->GetSize() ; i++) {
+      os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->At(i))->GetName()
+	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->At(i))->getVal())
+	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->At(i))->getError())
+	 << endl ;
+    }
+  }
+  
+
+  os << endl ;
 }
 
 
@@ -126,17 +159,15 @@ void RooFitResult::fillCorrMatrix()
     delete _globalCorr ;
   }
 
-  if (_corrMatrix) {
-    Int_t i ;
-    for (i=0 ; i<_initPars->GetSize() ; i++) {
-      delete _corrMatrix[i] ;      
-    }
-    delete[] _corrMatrix ;
+  TIterator* iter = _corrMatrix.MakeIterator() ;
+  RooArgSet* set ; 
+  while (set=(RooArgSet*)iter->Next()) {
+    set->Delete() ;
   }
+  delete iter ;
 
   // Build holding arrays for correlation coefficients
   _globalCorr = new RooArgSet("globalCorrelations") ;
-  _corrMatrix = new pRooArgSet[_initPars->GetSize()] ;
   TIterator* vIter = _initPars->MakeIterator() ;
   RooAbsArg* arg ;
   Int_t idx(0) ;
@@ -153,7 +184,8 @@ void RooFitResult::fillCorrMatrix()
     TString name("C[") ;
     name.Append(arg->GetName()) ;
     name.Append(",*]") ;
-    _corrMatrix[idx] = new RooArgSet(name.Data()) ;
+    RooArgSet* corrMatrixRow = new RooArgSet(name.Data()) ;
+    _corrMatrix.Add(corrMatrixRow) ;
     TIterator* vIter2 = _initPars->MakeIterator() ;
     RooAbsArg* arg2 ;
     while(arg2=(RooAbsArg*)vIter2->Next()) {
@@ -167,7 +199,7 @@ void RooFitResult::fillCorrMatrix()
       cTitle.Append(arg->GetName()) ;
       cTitle.Append(" and ") ;
       cTitle.Append(arg2->GetName()) ;
-      _corrMatrix[idx]->add(*(new RooRealVar(cName.Data(),cTitle.Data(),0.))) ;      
+      corrMatrixRow->add(*(new RooRealVar(cName.Data(),cTitle.Data(),0.))) ;      
     }
     delete vIter2 ;
     idx++ ;
@@ -199,7 +231,7 @@ void RooFitResult::fillCorrMatrix()
 
     gcVal = (RooRealVar*) gcIter->Next() ;
     gcVal->setVal(gMinuit->fGlobcc[i-1]) ;
-    TIterator* cIter = _corrMatrix[i-1]->MakeIterator() ;
+    TIterator* cIter = ((RooArgSet*)_corrMatrix.At(i-1))->MakeIterator() ;
     for (it = 1; it <= nparm; ++it) {
       RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
       cVal->setVal(gMinuit->fMATUvline[it-1]) ;

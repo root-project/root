@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.20 2001/08/02 21:39:07 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.21 2001/08/18 02:13:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,7 +34,7 @@ public:
   inline RooAbsPdf() { }
   RooAbsPdf(const char *name, const char *title) ;
   RooAbsPdf(const char *name, const char *title, Double_t minVal, Double_t maxVal) ;
-  RooAbsPdf(const RooAbsPdf& other, const char* name=0);
+  // RooAbsPdf(const RooAbsPdf& other, const char* name=0);
   virtual ~RooAbsPdf();
 
   // Toy MC generation
@@ -56,7 +56,7 @@ public:
                         Double_t xmax= 0.99,Double_t ymax=0.95) { return 0 ; } 
 
   // Interactions with a dataset  
-  virtual const RooFitResult* fitTo(RooDataSet& data, Option_t *options = "") ;
+  virtual const RooFitResult* fitTo(RooDataSet& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
   Int_t fitTo(TH1F* hist, Option_t *options = "", Double_t *minValue= 0) { return 0 ; }
 
   // Function evaluation support
@@ -83,6 +83,8 @@ private:
   RooAbsPdf(const RooAbsPdf& other);
 
 protected:
+
+  RooAbsPdf(const RooAbsPdf& other, const char* name=0);
 
   friend class RooRealIntegral ;
   friend class RooFitContext ;

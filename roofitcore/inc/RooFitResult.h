@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooFitResult.rdl,v 1.1 2001/08/18 02:13:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -14,13 +14,14 @@
 #define ROO_FIT_RESULT
 
 #include <iostream.h>
+#include "TObject.h"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooPrintable.hh"
 
 class RooArgSet ;
 typedef RooArgSet* pRooArgSet ;
 
-class RooFitResult : public RooPrintable {
+class RooFitResult : public TObject, public RooPrintable {
 public:
 
   // Constructors, assignment etc.
@@ -45,6 +46,8 @@ public:
   const RooArgSet* correlation(const RooAbsArg& par) const ;
 
 protected:
+  
+  RooFitResult(const RooFitResult& other) ;
 
   friend class RooFitContext ;
   void setConstParList(const RooArgSet& list) ;
@@ -60,9 +63,10 @@ protected:
   RooArgSet* _initPars ;
   RooArgSet* _finalPars ;
   RooArgSet* _globalCorr ;
-  pRooArgSet* _corrMatrix ;
+  TList      _corrMatrix ;
+  //pRooArgSet* _corrMatrix ;
 
-  ClassDef(RooFitResult,0) // Iterator over all bins of a RooAbsArg
+  ClassDef(RooFitResult,1) // Container class for fit result
 };
 
 #endif

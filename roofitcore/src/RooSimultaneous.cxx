@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.7 2001/08/15 23:38:44 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.8 2001/08/18 02:13:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -46,11 +46,19 @@ RooSimultaneous::~RooSimultaneous()
 
 
 
-const RooFitResult* RooSimultaneous::fitTo(RooDataSet& data, Option_t *options) 
+const RooFitResult* RooSimultaneous::fitTo(RooDataSet& data, Option_t *fitOpt, Option_t *optOpt) 
 {
-  // Fit this PDF to given data set
+  TString opts = optOpt ;
+  opts.ToLower() ;
+
+  if (!opts.Contains("s")) {
+  // Fit this PDF to given data set using a regular fit context    
+    return RooAbsPdf::fitTo(data,fitOpt,optOpt) ;
+  } 
+
+  // Fit this PDF to given data set using a SimFit context
   RooSimFitContext context(&data,this) ;
-  return context.fit(options) ;
+  return context.fit(fitOpt,optOpt) ;  
 }
 
 

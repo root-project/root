@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.4 2001/08/02 21:39:12 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.5 2001/08/18 02:13:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,7 +35,7 @@ public:
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
-  virtual const RooFitResult* fitTo(RooDataSet& data, Option_t *options) ;
+  virtual const RooFitResult* fitTo(RooDataSet& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
   
 protected:
 
