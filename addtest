@@ -64,6 +64,10 @@ echo "	\$(TestDiff)" >> Makefile
 
 touch $1.ref
 
+echo ">" >> $1.ref
+echo "> Processing run$1.C..." >> $1.ref
+
+
 if [ ! -s $run$1.C ]; then
     echo "{"  > run$1.C
     echo "// Fill out the code of the actual test" >> run$1.C 
