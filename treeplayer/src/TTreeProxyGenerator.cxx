@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.7 2004/07/29 18:09:40 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.8 2004/08/23 19:27:33 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1508,6 +1508,10 @@ namespace ROOT {
 
       TString scriptfunc = fScript;
       Ssiz_t dot_pos = scriptfunc.Last('.');
+      if (dot_pos == kNPOS) {
+         Error("WriteProxy","User's script (%s) has no extension! Nothing will be written.",scriptfunc.Data());
+         return;
+      }
       scriptfunc.Replace( dot_pos, fScript.Length()-dot_pos, "");
       TString scriptHeader = scriptfunc;
       const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
@@ -1556,6 +1560,10 @@ namespace ROOT {
          hf = fopen(tmpfilename.Data(),"w");
       } else {
          hf = fopen(fHeaderFilename.Data(),"w");
+      }
+      if (hf == 0) {
+         Error("WriteProxy","Unable to open the file %s for writing.",fHeaderFilename.Data());
+         return;
       }
 
       TDatime td;

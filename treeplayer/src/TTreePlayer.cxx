@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.174 2004/11/15 15:17:16 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.175 2004/11/22 20:29:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -809,7 +809,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    // a TTreeFormula expression.
 
    TString possibleFilename = varexp0;
-   if ( possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
+   Ssiz_t dot_pos = possibleFilename.Last('.');
+   if ( dot_pos != kNPOS
+       && possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
        && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
        && possibleFilename.Index("Iteration$")<0
        && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
