@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.24 2004/07/06 16:34:31 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.25 2004/08/21 09:33:40 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -212,19 +212,21 @@ TTabCom::TTabCom()
 //______________________________________________________________________________
 void TTabCom::ClearClasses()
 {
-   if (!fpClasses)
-      return;
-   fpClasses->Delete(0);
-   delete fpClasses;
-   fpClasses = 0;
+   // Clear classes and namespace collections.
+
+   if (fpClasses) {
+      fpClasses->Delete(0);
+      delete fpClasses;
+      fpClasses = 0;
+   }
 
    // Since the namespace array is filled at the same time as fpClasses we
    // delete it at the same time.
-   if (!fpNamespaces)
-      return;
-   fpNamespaces->Delete(0);
-   delete fpNamespaces;
-   fpNamespaces = 0;
+   if (fpNamespaces) {
+      fpNamespaces->Delete(0);
+      delete fpNamespaces;
+      fpNamespaces = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -404,7 +406,7 @@ void TTabCom::RehashAll()
 }
 
 //______________________________________________________________________________
-const TSeqCol *TTabCom::GetListOfClasses(void)
+const TSeqCol *TTabCom::GetListOfClasses()
 {
    if (!fpClasses) {
       // generate a text list of classes on disk
@@ -432,7 +434,7 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
       TString line;
       while (file1) {
          line = "";
-         line.ReadLine(file1, kFALSE);	// kFALSE ==> don't skip whitespace
+         line.ReadLine(file1, kFALSE);  // kFALSE ==> don't skip whitespace
          line = line(23, 32000);
 // old way...
 //             if (line.Index("class") >= 0)
@@ -444,7 +446,7 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
 //             line = line("[^ ]*");
 // new way...
          int index;
-         Bool_t isanamespace = kFALSE;	// Flag used to check if we found a namespace name.
+         Bool_t isanamespace = kFALSE;  // Flag used to check if we found a namespace name.
          if (0);
          else if ((index = line.Index(" class ")) >= 0)
             line = line(1 + index + 6, 32000);
@@ -466,9 +468,9 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
          // If we find namespace names then add them to the fpNamespaces array and
          // not the classes array.
          if (isanamespace)
-            fpNamespaces->Add(new TObjString(line.Data()));
+            fpNamespaces->Add(new TObjString(line));
          else
-            fpClasses->Add(new TObjString(line.Data()));
+            fpClasses->Add(new TObjString(line));
       }
 
       // done with this file
@@ -657,10 +659,10 @@ const TSeqCol *TTabCom::GetListOfPragmas()
       fpPragmas->Add(new TObjString("preprocess "));
       fpPragmas->Add(new TObjString("preprocessor "));
       fpPragmas->Add(new TObjString("security level"));
-      // "setertti "  omitted. Ordinaly user should not use this statement
-      // "setstdio "  omitted. Ordinaly user should not use this statement
-      // "setstream " omitted. Ordinaly user should not use this statement
-      // "stub"       omitted. Ordinaly user should not use this statement
+      // "setertti "  omitted. Ordinary user should not use this statement
+      // "setstdio "  omitted. Ordinary user should not use this statement
+      // "setstream " omitted. Ordinary user should not use this statement
+      // "stub"       omitted. Ordinary user should not use this statement
 
    }
 
@@ -675,7 +677,6 @@ const TSeqCol *TTabCom::GetListOfSysIncFiles()
    }
 
    return fpSysIncFiles;
-
 }
 
 //______________________________________________________________________________
@@ -807,7 +808,7 @@ void TTabCom::AppendListOfFilesInDirectory(const char dirName[],
       return;
 
    // put each filename in the list
-   const char *tmp_ptr;         // gSystem->GetDirEntry() returns NULL when no more files.
+   const char *tmp_ptr;         // gSystem->GetDirEntry() returns 0 when no more files.
    TString fileName;
 
    while ((tmp_ptr = gSystem->GetDirEntry(dir))) {
@@ -940,7 +941,7 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
 #ifdef R__SSTREAM
       istringstream endings((char *) fignore);
 #else
-      istrstream endings((char *) fignore);	// do i need to make a copy first?
+      istrstream endings((char *) fignore);  // do i need to make a copy first?
 #endif
       TString ending;
 
@@ -950,14 +951,14 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
          if (s.EndsWith(ending))
             return kTRUE;
          else
-            ending.ReadToDelim(endings, kDelim);	// next
+            ending.ReadToDelim(endings, kDelim);  // next
       }
       return kFALSE;
    }
 }
 
 //______________________________________________________________________________
-TString TTabCom::GetSysIncludePath(void)
+TString TTabCom::GetSysIncludePath()
 {
    //[static utility function]/////////////////////////////
    //
@@ -1032,7 +1033,7 @@ TString TTabCom::GetSysIncludePath(void)
       if (!token.IsNull()) {
          if (path.Length() > 0)
             path.Append(":");
-         path.Append(token.Data() + 2);	// +2 skips "-I"
+         path.Append(token.Data() + 2);  // +2 skips "-I"
       }
    }
 
@@ -1090,7 +1091,7 @@ TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
 
    assert(path1 != 0);
 
-   TContainer *pList = new TContainer;	// maybe use RTTI here? (since its a static function)
+   TContainer *pList = new TContainer;  // maybe use RTTI here? (since its a static function)
 #ifdef R__SSTREAM
    istringstream path((char *) path1);
 #else
@@ -1169,7 +1170,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
          return;
       }
 
-      gErrorIgnoreLevel = old_level;	// resore
+      gErrorIgnoreLevel = old_level;  // restore
       old_level = kNotDefined;
    } else                       // set
    {
@@ -1276,7 +1277,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
          listOfFullPaths.Add(new TObjString(s4));
          IfDebug(cerr << "adding " << s5 << '\t' << s4 << endl);
       } else {
-         IfDebug(cerr << "considered " << s5 << '\t' << s4 << endl);
+//rdm         IfDebug(cerr << "considered " << s5 << '\t' << s4 << endl);
       }
    }
 
@@ -1309,7 +1310,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
          else if (className == "TMethod" || className == "TFunction") {
             TFunction *pFunc = (TFunction *) pObj;
             if (pFunc->GetNargsOpt() == pFunc->GetNargs())
-               appendage = "()";	// all args have default values
+               appendage = "()";  // all args have default values
             else
                appendage = "("; // user needs to supply some args
          } else if (className == "TDataMember") {
@@ -1348,7 +1349,6 @@ Int_t TTabCom::Complete(const TRegexp & re,
       } else {
          IfDebug(cerr << "more than 1 GoodString" << endl);
 
-//             if( partialMatch.Length() > (int)strlen(s3) )
          if (partialMatch.Length() > s3.Length())
             // this partial match is our (partial) completion.
          {
@@ -1382,7 +1382,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
    // ---------------------------------------
    {
       int i = strlen(fBuf);     // old EOL position is i
-      int L = strlen(match) - (loc - start);	// new EOL position will be i+L
+      int L = strlen(match) - (loc - start);  // new EOL position will be i+L
 
       // first check for overflow
       if (strlen(fBuf) + strlen(match) + 1 > BUF_SIZE) {
@@ -1422,7 +1422,7 @@ void TTabCom::CopyMatch(char dest[], const char localName[],
 {
    // [private]
 
-   // if "appendage" is NULL, no appendage is applied.
+   // if "appendage" is 0, no appendage is applied.
    //
    // if "appendage" is of the form "filenameXXX" then,
    // "filename" is ignored and "XXX" is taken to be the appendage,
@@ -1441,11 +1441,11 @@ void TTabCom::CopyMatch(char dest[], const char localName[],
    const int key_len = strlen(key);
 
    IfDebug(cerr << "CopyMatch()." << endl);
-   IfDebug(cerr << "localName: " << (localName ? localName : "NULL") <<
+   IfDebug(cerr << "localName: " << (localName ? localName : "0") <<
            endl);
-   IfDebug(cerr << "appendage: " << (appendage ? appendage : "NULL") <<
+   IfDebug(cerr << "appendage: " << (appendage ? appendage : "0") <<
            endl);
-   IfDebug(cerr << " fullName: " << (fullName ? fullName : "NULL") <<
+   IfDebug(cerr << " fullName: " << (fullName ? fullName : "0") <<
            endl);
 
 
@@ -1484,7 +1484,7 @@ TTabCom::EContext_t TTabCom::DetermineContext() const
                  << "context=" << context << " "
                  << "RegExp=" << fRegExp[context]
                  << endl);
-         return EContext_t(context);	//* RETURN *//
+         return EContext_t(context);  //* RETURN *//
       }
    }
 
@@ -1530,7 +1530,7 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
    // [private]
 
    if (newBase.BeginsWith("/"))
-      newBase = newBase.Strip(TString::kLeading, '/');
+      newBase.Remove(TString::kLeading, '/');
 #ifdef R__SSTREAM
    stringstream str;
 #else
@@ -1703,10 +1703,11 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
    case kCXX_ScopeMember:
       {
-         const EContext_t original_context = context;	// save this for later
+         const EContext_t original_context = context;  // save this for later
 
          TClass *pClass;
-         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");	// may be a class, object, or pointer
+         // may be a namespace, class, object, or pointer
+         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");
 
          IfDebug(cerr << endl);
          IfDebug(cerr << "name: " << '"' << name << '"' << endl);
@@ -1741,22 +1742,21 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          IfDebug(cerr << "prefix: " << '"' << prefix << '"' << endl);
          IfDebug(cerr << "preprefix: " << '"' << preprefix << '"' << endl);
 
-         // Sometimes, eg on startup of ROOT fpNamespaces might be NULL,
+         // Sometimes, eg on startup of ROOT fpNamespaces might be 0,
          // so create and fill the array.
-         if (fpNamespaces == NULL)
+         if (!fpNamespaces)
             RehashClasses();
 
          TString namesp = prefix;
          if (namesp.Length() >= 2)
-            namesp.Remove(namesp.Length() - 2, 2);	// Remove the '::' at the end of the string.
+            namesp.Remove(namesp.Length() - 2, 2);  // Remove the '::' at the end of the string.
          IfDebug(cerr << "namesp: " << '"' << namesp << '"' << endl);
 
          // Try find the namesp string in the list of namespaces. If its found then
          // we need to treat the different prefices a little differently:
          TObjString objstr(namesp);
-         TObjString *foundstr =
-             (TObjString *) fpNamespaces->FindObject(&objstr);
-         if (foundstr != NULL) {
+         TObjString *foundstr = (TObjString *)fpNamespaces->FindObject(&objstr);
+         if (foundstr) {
             TContainer *pList = new TContainer;
 
             // Add all classes to pList that contain the prefix, i.e. are in the
@@ -1779,6 +1779,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
                      delete ostr;
                }
             }
+
             // Add all the sub-namespaces in the specified namespace.
             for (i = 0; i < fpNamespaces->GetSize(); i++) {
                TString str =
@@ -1800,7 +1801,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             // add it to the pList. (I don't think the C++ spec allows for this
             // but do this anyway, cant harm).
             pClass = TryMakeClassFromClassName(preprefix + name);
-            if (pClass != NULL) {
+            if (pClass) {
                pList->AddAll(pClass->GetListOfAllPublicMethods());
                pList->AddAll(pClass->GetListOfAllPublicDataMembers());
             }
@@ -1808,7 +1809,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             pos = Complete("[^: ]*$", pList, "");
 
             delete pList;
-            if (pClass != NULL)
+            if (pClass)
                delete pClass;
          } else {
             pClass = MakeClassFromClassName(preprefix + name);
@@ -1836,10 +1837,10 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
    case kCXX_DirectMember:
    case kCXX_IndirectMember:
       {
-         const EContext_t original_context = context;	// save this for later
+         const EContext_t original_context = context;  // save this for later
 
          TClass *pClass;
-         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");	// may be a class, object, or pointer
+         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");  // may be a class, object, or pointer
 
          IfDebug(cerr << endl);
          IfDebug(cerr << "name: " << '"' << name << '"' << endl);
@@ -1887,7 +1888,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
    case kCXX_ScopeProto:
       {
-         const EContext_t original_context = context;	// save this for later
+         const EContext_t original_context = context;  // save this for later
 
          // get class
          TClass *pClass;
@@ -1938,8 +1939,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          // (normal member function)
          methodName = s3("[^:>\\.(]*($");
          methodName.Chop();
-//          methodName.Remove( TString::kTrailing, ' ' ); // fons: don't you think this would be nice?
-         methodName = methodName.Strip(TString::kTrailing, ' ');
+         methodName.Remove(TString::kTrailing, ' ');
 
          IfDebug(cerr << methodName << endl);
 
@@ -1987,7 +1987,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
    case kCXX_NewProto:
    case kCXX_ConstructorProto:
       {
-         const EContext_t original_context = context;	// save this for later
+         const EContext_t original_context = context;  // save this for later
 
          // get class
          TClass *pClass;
@@ -1995,8 +1995,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          if (context == kCXX_NewProto) {
             name = s3("[_a-zA-Z][_a-zA-Z0-9]* *($", 3);
             name.Chop();
-//                  name.Remove( TString::kTrailing, ' ' ); // fons: don't you think this would be nice?
-            name = name.Strip(TString::kTrailing, ' ');
+            name.Remove(TString::kTrailing, ' ');
             // "name" should now be the name of a class
          } else {
             name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");
@@ -2037,8 +2036,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             // (normal member function)
             methodName = s3("[^:>\\.(]*($");
             methodName.Chop();
-//                  methodName.Remove( TString::kTrailing, ' ' ); // fons: don't you think this would be nice?
-            methodName = methodName.Strip(TString::kTrailing, ' ');
+            methodName.Remove(TString::kTrailing, ' ');
          }
          IfDebug(cerr << methodName << endl);
 
@@ -2103,6 +2101,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
          const TSeqCol *pL2 = GetListOfClasses();
          if (pL2) pList->AddAll(pL2);
+
+         if (fpNamespaces) pList->AddAll(fpNamespaces); //rdm
          //
          const TSeqCol *pC1 = GetListOfGlobals();
          if (pC1) pList->AddAll(pC1);
@@ -2150,11 +2150,11 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
       }
       break;
 
-          /******************************************************************/
+      /******************************************************************/
       /*                                                                */
       /* default: should never happen                                   */
       /*                                                                */
-          /******************************************************************/
+      /******************************************************************/
    default:
       assert(0);
       break;
@@ -2164,7 +2164,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 }
 
 //______________________________________________________________________________
-void TTabCom::InitPatterns(void)
+void TTabCom::InitPatterns()
 {
    // [private]
 
@@ -2186,9 +2186,9 @@ void TTabCom::InitPatterns(void)
    SetPattern(kSYS_UserName, "~[_a-zA-Z0-9]*$");
    SetPattern(kSYS_EnvVar, "$[_a-zA-Z0-9]*$");
 
-   SetPattern(kCINT_stdout, "; *>>?.*$");	// stdout
-   SetPattern(kCINT_stderr, "; *2>>?.*$");	// stderr
-   SetPattern(kCINT_stdin, "; *<.*$");	// stdin
+   SetPattern(kCINT_stdout, "; *>>?.*$");  // stdout
+   SetPattern(kCINT_stderr, "; *2>>?.*$"); // stderr
+   SetPattern(kCINT_stdin, "; *<.*$");     // stdin
 
    SetPattern(kCINT_Edit, "^ *\\.E .*$");
    SetPattern(kCINT_Load, "^ *\\.L .*$");
@@ -2196,8 +2196,8 @@ void TTabCom::InitPatterns(void)
    SetPattern(kCINT_EXec, "^ *\\.X +[-0-9_a-zA-Z~$./]*$");
 
    SetPattern(kCINT_pragma, "^# *pragma +[_a-zA-Z0-9]*$");
-   SetPattern(kCINT_includeSYS, "^# *include *<[^>]*$");	// system files
-   SetPattern(kCINT_includePWD, "^# *include *\"[^\"]*$");	// local files
+   SetPattern(kCINT_includeSYS, "^# *include *<[^>]*$");   // system files
+   SetPattern(kCINT_includePWD, "^# *include *\"[^\"]*$"); // local files
 
    SetPattern(kCINT_cpp, "^# *[_a-zA-Z0-9]*$");
 
@@ -2241,7 +2241,9 @@ TClass *TTabCom::MakeClassFromClassName(const char className[]) const
    NoMsg(-1);
 
    // make sure "className" exists
-   if (pClass->Size() == 0) {
+   // if (pClass->Size() == 0) {   //namespace has 0 size
+   if (pClass->GetListOfAllPublicMethods()->GetSize() == 0 &&
+       pClass->GetListOfAllPublicDataMembers()->GetSize() == 0) {
       // i'm assuming this happens iff there was some error.
       // (misspelled the class name, for example)
       cerr << endl << "class " << dblquote(className) << " not defined." <<
@@ -2264,7 +2266,9 @@ TClass *TTabCom::TryMakeClassFromClassName(const char className[]) const
    NoMsg(-1);
 
    // make sure "className" exists
-   if (pClass->Size() == 0) {
+   // if (pClass->Size() == 0) {   //namespace has 0 size
+   if (pClass->GetListOfAllPublicMethods()->GetSize() == 0 &&
+       pClass->GetListOfAllPublicDataMembers()->GetSize() == 0) {
       return 0;
    }
 
@@ -2286,8 +2290,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    // need to make sure "varName" exists
    // because "DetermineClass()" prints clumsy error message otherwise.
-   Bool_t varName_exists = GetListOfGlobals()->Contains(varName) ||	// check in list of globals first.
-       (gROOT->FindObject(varName) != 0);	// then check CINT "shortcut #3"
+   Bool_t varName_exists = GetListOfGlobals()->Contains(varName) || // check in list of globals first.
+       (gROOT->FindObject(varName) != 0);  // then check CINT "shortcut #3"
 
    // not found...
    if (!varName_exists) {
