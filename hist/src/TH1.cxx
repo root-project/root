@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.15 2000/07/21 07:20:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.16 2000/07/21 13:10:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -68,15 +68,15 @@
 //*-*             |                |      TH1C   TH1S   TH1F  TH1D
 //*-*             |                |                           |
 //*-*             |                |                           |
-//*-*             |               TH2                        TProfile
+//*-*             |               TH2                      TProfile
 //*-*             |                |
 //*-*             |                |
-//*-*             |                ------------------------------
-//*-*             |                        |      |      |      |
-//*-*             |                       TH2C   TH2S   TH2F   TH2D
-//*-*             |
-//*-*            TH3
-//*-*             |
+//*-*             |                -----------------------------
+//*-*             |                        |      |      |     |
+//*-*             |                       TH2C   TH2S   TH2F  TH2D
+//*-*             |                                            |
+//*-*            TH3                                           |
+//*-*             |                                        TProfile2D
 //*-*             |
 //*-*             ------------------------------
 //*-*                     |      |      |      |
@@ -502,12 +502,16 @@ Double_t TH1::ComputeIntegral()
    fIntegral = new Double_t[nbins+2];
    ibin = 0;
    fIntegral[ibin] = 0;
+   Double_t dx,dy,dz;
    for (binz=1;binz<=nbinsz;binz++) {
+      dz = fZaxis.GetBinWidth(binz);
       for (biny=1;biny<=nbinsy;biny++) {
+         dy = fYaxis.GetBinWidth(biny);
          for (binx=1;binx<=nbinsx;binx++) {
+            dx = fXaxis.GetBinWidth(binx);
             ibin++;
             bin  = GetBin(binx, biny, binz);
-            fIntegral[ibin] = fIntegral[ibin-1] + GetBinContent(bin);
+            fIntegral[ibin] = fIntegral[ibin-1] + GetBinContent(bin)*dx*dy*dz;
          }
       }
    }
@@ -595,7 +599,7 @@ void TH1::Divide(TH1 *h1)
 //   compute Binomial errors.
 
    if (!h1) {
-      Error("Divide","Attempt to divide a non-existing histogram");
+      Error("Divide","Attempt to divide by a non-existing histogram");
       return;
    }
 
@@ -675,7 +679,7 @@ void TH1::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
    Bool_t binomial = kFALSE;
    if (opt.Contains("b")) binomial = kTRUE;
    if (!h1 || !h2) {
-      Error("Divide","Attempt to divide a non-existing histogram");
+      Error("Divide","Attempt to divide by a non-existing histogram");
       return;
    }
 
@@ -846,7 +850,7 @@ void TH1::Draw(Option_t *option)
       if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
       gPad->Clear();
    }
-   AppendPad(option);
+   AppendPad(opt.Data());
 }
 
 //______________________________________________________________________________
@@ -1066,8 +1070,9 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    integral[ibin] = 0;
    for (binx=1;binx<=nbinsx;binx++) {
       xv[0] = fXaxis.GetBinCenter(binx);
+//      xv[0] = fXaxis.GetBinUpEdge(binx);
       ibin++;
-      integral[ibin] = integral[ibin-1] + f1->Eval(xv[0]);
+      integral[ibin] = integral[ibin-1] + f1->Eval(xv[0])*fXaxis.GetBinWidth(binx);
    }
 
 //*-*- Normalize integral to 1
@@ -3068,12 +3073,12 @@ void TH1::SetContent(Stat_t *content)
 //______________________________________________________________________________
 Int_t TH1::GetContour(Double_t *levels)
 {
-//*-*-*-*-*-*-*-*Return contour values into array levels*-*-*-*-*-*-*-*-*-*
-//*-*            =======================================
-//*-*
-//*-*  The number of contour levels can be returned by TH1::GetContourLevel
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//  Return contour values into array levels if pointer levels is non zero
+//
+//  The function returns the number of contour levels.
+//  see GetContourLevel to return one contour only
+//
+
   Int_t nlevels = fContour.fN;
   if (levels) {
      if (nlevels == 0) {
@@ -3090,8 +3095,9 @@ Int_t TH1::GetContour(Double_t *levels)
 //______________________________________________________________________________
 Double_t TH1::GetContourLevel(Int_t level)
 {
-//*-*-*-*-*-*-*-*Return the number of contour levels*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            ===================================
+// Return value of contour number level
+// see GetContour to return the array of all contour levels
+   
   if (level <0 || level >= fContour.fN) return 0;
   Double_t zlevel = fContour.fArray[level];
   return zlevel;
@@ -3659,7 +3665,7 @@ TH1 *TH1C::DrawCopy(Option_t *option)
    TH1C *newth1 = (TH1C*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(option);
+   newth1->AppendPad(opt.Data());
    return newth1;
 }
 
@@ -3826,7 +3832,7 @@ TH1 *TH1S::DrawCopy(Option_t *option)
    TH1S *newth1 = (TH1S*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(option);
+   newth1->AppendPad(opt.Data());
    return newth1;
 }
 
@@ -3972,7 +3978,7 @@ TH1 *TH1F::DrawCopy(Option_t *option)
    TH1F *newth1 = (TH1F*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(option);
+   newth1->AppendPad(opt.Data());
    return newth1;
 }
 
@@ -4119,7 +4125,7 @@ TH1 *TH1D::DrawCopy(Option_t *option)
    TH1D *newth1 = (TH1D*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(option);
+   newth1->AppendPad(opt.Data());
    return newth1;
 }
 
