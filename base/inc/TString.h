@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.4 2000/11/27 10:39:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.5 2000/12/19 14:30:43 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -390,23 +390,23 @@ inline TString& TString::operator+=(const TString& s)
 inline TString& TString::operator+=(char c)
 { return Append(c); }
 
-inline TString& TString::operator+=(Short_t i)
-{ return operator+=((Long_t)i); }
-
-inline TString& TString::operator+=(UShort_t i)
-{ return operator+=((ULong_t) i); }
-
-inline TString& TString::operator+=(Int_t i)
-{ return operator+=((Long_t)i); }
-
-inline TString& TString::operator+=(UInt_t i)
-{ return operator+=((ULong_t) i); }
-
 inline TString& TString::operator+=(Long_t i)
 { return operator+=(Form("%ld", i)); }
 
 inline TString& TString::operator+=(ULong_t i)
 { return operator+=(Form("%lu", i)); }
+
+inline TString& TString::operator+=(Short_t i)
+{ return operator+=((Long_t) i); }
+
+inline TString& TString::operator+=(UShort_t i)
+{ return operator+=((ULong_t) i); }
+
+inline TString& TString::operator+=(Int_t i)
+{ return operator+=((Long_t) i); }
+
+inline TString& TString::operator+=(UInt_t i)
+{ return operator+=((ULong_t) i); }
 
 inline Bool_t TString::BeginsWith(const char* s, ECaseCompare cmp) const
 { return Index(s, strlen(s), (Ssiz_t)0, cmp) == 0; }
