@@ -208,6 +208,10 @@ N: Susan Kasahara
 E: schubert@physics.umn.edu
 D: many contributions to the debuging phase of the I/O system
 
+N: Anna Kreshuk
+E: akrechtc@mail.cern.ch
+D: contrinutions to TMath, TH1::Chi2Test, TFitter::GraphFitChisquare
+
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
 D: changes in rootcint to handle templates
