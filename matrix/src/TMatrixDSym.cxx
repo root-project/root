@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.3 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.4 2004/01/29 08:58:46 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -175,7 +175,7 @@ void TMatrixDSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_l
   fColLwb  = col_lwb;
   fNelems  = fNrows*fNcols;
   fIsOwner = kTRUE;
-  fTol     = TMath::Sqrt(DBL_EPSILON);
+  fTol     = DBL_EPSILON;
 
   fElements = New_m(fNelems);
   if (init)

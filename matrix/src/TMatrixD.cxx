@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.53 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.54 2004/01/28 07:39:18 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -111,7 +111,11 @@ TMatrixD::TMatrixD(EMatrixCreatorsOp1 op,const TMatrixD &prototype)
       Allocate(prototype.GetNrows(),prototype.GetNcols(),
                prototype.GetRowLwb(),prototype.GetColLwb(),1);
       *this = prototype;
+      // Since the user can not control the tolerance of this newly created matrix
+      // we put it to the smallest possible number 
+      const Double_t oldTol = this->SetTol(DBL_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       break;
     }
 
@@ -150,7 +154,9 @@ TMatrixD::TMatrixD(const TMatrixD &a,EMatrixCreatorsOp2 op,const TMatrixD &b)
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
+      const Double_t oldTol = this->SetTol(DBL_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       *this *= b;
       break;
     }
@@ -182,7 +188,9 @@ TMatrixD::TMatrixD(const TMatrixD &a,EMatrixCreatorsOp2 op,const TMatrixDSym &b)
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
+      const Double_t oldTol = this->SetTol(DBL_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       *this *= b;
       break;
     }
@@ -214,7 +222,9 @@ TMatrixD::TMatrixD(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixD &b)
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
+      const Double_t oldTol = this->SetTol(DBL_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       *this *= b;
       break;
     }
@@ -246,7 +256,9 @@ TMatrixD::TMatrixD(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixDSym 
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
+      const Double_t oldTol = this->SetTol(DBL_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       *this *= b;
       break;
     }
@@ -285,7 +297,7 @@ void TMatrixD::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
   fColLwb  = col_lwb;
   fNelems  = fNrows*fNcols;
   fIsOwner = kTRUE;
-  fTol     = TMath::Sqrt(DBL_EPSILON);
+  fTol     = DBL_EPSILON;
 
   fElements = New_m(fNelems);
   if (init)

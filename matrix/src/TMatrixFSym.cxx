@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.3 2004/01/29 08:58:46 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -167,7 +167,7 @@ void TMatrixFSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_l
   fColLwb  = col_lwb;
   fNelems  = fNrows*fNcols;
   fIsOwner = kTRUE;
-  fTol     = TMath::Sqrt(DBL_EPSILON);
+  fTol     = DBL_EPSILON;
 
   fElements = New_m(fNelems);
   if (init)
@@ -188,7 +188,7 @@ void TMatrixFSym::AtMultA(const TMatrixF &a,Int_t constr)
 #ifdef CBLAS
   const Float_t *ap = a.GetMatrixArray();
         Float_t *cp = this->GetMatrixArray();
-  cblas_dgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
+  cblas_sgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
                1.0,ap,a.GetNcols(),ap,a.GetNcols(),1.0,cp,fNcols);
 #else
   const Int_t nb     = a.GetNoElements();
@@ -235,7 +235,7 @@ void TMatrixFSym::AtMultA(const TMatrixFSym &a,Int_t constr)
         Float_t *cp1 = this->GetMatrixArray();
 
 #ifdef CBLAS
-  cblas_dsymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
+  cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                ap1,a.GetNcols(),bp1,a.GetNcols(),0.0,cp1,fNcols);
 #else
   const Float_t *ap2 = a.GetMatrixArray();

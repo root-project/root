@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.5 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.6 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -133,8 +133,8 @@ ClassImp(TDecompBase)
 TDecompBase::TDecompBase()
 {
   fStatus    = kInit;
-//  fTol       = TMath::Sqrt(std::numerical_limits<double>::epsilon());
-  fTol       = TMath::Sqrt(DBL_EPSILON);
+//  fTol       = std::numerical_limits<double>::epsilon();
+  fTol       = DBL_EPSILON;
   fDet1      = 0;
   fDet2      = 0;
   fCondition = 0;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.5 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.6 2004/01/28 07:39:18 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -111,7 +111,11 @@ TMatrixF::TMatrixF(EMatrixCreatorsOp1 op,const TMatrixF &prototype)
       Allocate(prototype.GetNrows(),prototype.GetNcols(),
                prototype.GetRowLwb(),prototype.GetColLwb(),1);
       *this = prototype;
+      // Since the user can not control the tolerance of this newly created matrix
+      // we put it to the smallest possible number 
+      const Float_t oldTol = this->SetTol(FLT_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       break;
     }
 
@@ -150,7 +154,9 @@ TMatrixF::TMatrixF(const TMatrixF &a,EMatrixCreatorsOp2 op,const TMatrixF &b)
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
+      const Float_t oldTol = this->SetTol(FLT_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       *this *= b;
       break;
     }
@@ -182,7 +188,9 @@ TMatrixF::TMatrixF(const TMatrixF &a,EMatrixCreatorsOp2 op,const TMatrixFSym &b)
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
+      const Float_t oldTol = this->SetTol(FLT_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       *this *= b;
       break;
     }
@@ -214,7 +222,9 @@ TMatrixF::TMatrixF(const TMatrixFSym &a,EMatrixCreatorsOp2 op,const TMatrixF &b)
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
+      const Float_t oldTol = this->SetTol(FLT_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       *this *= b;
       break;
     }
@@ -246,7 +256,9 @@ TMatrixF::TMatrixF(const TMatrixFSym &a,EMatrixCreatorsOp2 op,const TMatrixFSym 
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
+      const Float_t oldTol = this->SetTol(FLT_MIN);
       this->Invert();
+      this->SetTol(oldTol);
       *this *= b;
       break;
     }
@@ -285,7 +297,7 @@ void TMatrixF::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
   fColLwb  = col_lwb;
   fNelems  = fNrows*fNcols;
   fIsOwner = kTRUE;
-  fTol     = TMath::Sqrt(DBL_EPSILON);
+  fTol     = DBL_EPSILON;
 
   fElements = New_m(fNelems);
   if (init)
@@ -313,7 +325,7 @@ void TMatrixF::AMultB(const TMatrixF &a,const TMatrixF &b,Int_t constr)
   const Float_t *ap = a.GetMatrixArray();
   const Float_t *bp = b.GetMatrixArray();
         Float_t *cp = this->GetMatrixArray();
-  cblas_dgemm (CblasRowMajor,CblasNoTrans,CblasNoTrans,fNrows,fNcols,a.GetNcols(),
+  cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasNoTrans,fNrows,fNcols,a.GetNcols(),
                1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
 #else
   const Int_t na     = a.GetNoElements();
@@ -364,7 +376,7 @@ void TMatrixF::AMultB(const TMatrixFSym &a,const TMatrixF &b,Int_t constr)
         Float_t *cp1 = this->GetMatrixArray();
 
 #ifdef CBLAS
-  cblas_dsymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
+  cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                ap1,a.GetNcols(),bp1,b.GetNcols(),0.0,cp1,fNcols);
 #else
   const Float_t *ap2 = a.GetMatrixArray();
@@ -413,7 +425,7 @@ void TMatrixF::AMultB(const TMatrixF &a,const TMatrixFSym &b,Int_t constr)
 
 #ifdef CBLAS
   const Float_t *bp1 = b.GetMatrixArray();
-  cblas_dsymm (CblasRowMajor,CblasRight,CblasUpper,fNrows,fNcols,1.0,
+  cblas_ssymm (CblasRowMajor,CblasRight,CblasUpper,fNrows,fNcols,1.0,
                bp1,b.GetNcols(),ap1,a.GetNcols(),0.0,cp1,fNcols);
 #else
   const Float_t *ap2 = a.GetMatrixArray();
@@ -465,7 +477,7 @@ void TMatrixF::AMultB(const TMatrixFSym &a,const TMatrixFSym &b,Int_t constr)
         Float_t *cp1 = this->GetMatrixArray();
 
 #ifdef CBLAS
-  cblas_dsymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
+  cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                ap1,a.GetNcols(),bp1,b.GetNcols(),0.0,cp1,fNcols);
 #else
   const Float_t *ap2 = a.GetMatrixArray();
@@ -511,7 +523,7 @@ void TMatrixF::AtMultB(const TMatrixF &a,const TMatrixF &b,Int_t constr)
   const Float_t *ap = a.GetMatrixArray();
   const Float_t *bp = b.GetMatrixArray();
         Float_t *cp = this->GetMatrixArray();
-  cblas_dgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
+  cblas_sgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
                1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
 #else
   const Int_t nb     = b.GetNoElements();
@@ -561,7 +573,7 @@ void TMatrixF::AtMultB(const TMatrixF &a,const TMatrixFSym &b,Int_t constr)
   const Float_t *ap = a.GetMatrixArray();
   const Float_t *bp = b.GetMatrixArray();
         Float_t *cp = this->GetMatrixArray();
-  cblas_dgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
+  cblas_sgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
                1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
 #else
   const Float_t *ap2 = a.GetMatrixArray();
@@ -747,7 +759,7 @@ void TMatrixF::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source)
 Double_t TMatrixF::Determinant() const
 {
   const TMatrixD tmp(*this);
-  TDecompLU lu(tmp,(Double_t)fTol);
+  TDecompLU lu(tmp,fTol);
   Double_t d1,d2;
   lu.Det(d1,d2);
   return d1*TMath::Power(2.0,d2);
@@ -757,7 +769,7 @@ Double_t TMatrixF::Determinant() const
 void TMatrixF::Determinant(Double_t &d1,Double_t &d2) const
 {
   const TMatrixD tmp(*this);
-  TDecompLU lu(tmp,(Double_t)fTol);
+  TDecompLU lu(tmp,fTol);
   lu.Det(d1,d2);
 }
 
@@ -861,12 +873,12 @@ TMatrixF &TMatrixF::Invert(Double_t *det)
   TMatrixD tmp(*this);
   Double_t sign = 1.0;
   Int_t nrZeros = 0;
-  TDecompLU::DecomposeLU(tmp,index,sign,(Double_t)fTol,nrZeros);
+  TDecompLU::DecomposeLU(tmp,index,sign,fTol,nrZeros);
   if (det) {
     Double_t d1;
     Double_t d2;
     const TVectorD diagv = TMatrixDDiag_const(tmp);
-    TDecompBase::DiagProd(diagv,(Double_t)fTol,d1,d2);
+    TDecompBase::DiagProd(diagv,fTol,d1,d2);
     d1 *= sign;
     if (TMath::Abs(d2) > 52.0) {
       Error("Invert(Double_t *)","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
@@ -950,12 +962,12 @@ TMatrixF &TMatrixF::InvertFast(Double_t *det)
       TMatrixD tmp(*this);
       Double_t sign = 1.0;
       Int_t nrZeros;
-      TDecompLU::DecomposeLU(tmp,index,sign,(Double_t)fTol,nrZeros);
+      TDecompLU::DecomposeLU(tmp,index,sign,fTol,nrZeros);
       if (det) {
         Double_t d1;
         Double_t d2;
         const TVectorD diagv = TMatrixDDiag_const(tmp);
-        TDecompBase::DiagProd(diagv,(Double_t)fTol,d1,d2);
+        TDecompBase::DiagProd(diagv,fTol,d1,d2);
         d1 *= sign;
         if (TMath::Abs(d2) > 52.0) {
           Error("Invert(Double_t *)","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
@@ -964,7 +976,7 @@ TMatrixF &TMatrixF::InvertFast(Double_t *det)
           *det = d1*TMath::Power(2.0,d2);
       }
 
-      TDecompLU::InvertLU(tmp,index,(Double_t)fTol);
+      TDecompLU::InvertLU(tmp,index,fTol);
       *this = tmp;
 
       if (isAllocated)

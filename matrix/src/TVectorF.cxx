@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.6 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.7 2004/01/29 21:57:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -690,7 +690,7 @@ TVectorF &TVectorF::operator*=(const TMatrixF &a)
   const Float_t *mp = a.GetMatrixArray();     // Matrix row ptr
         Float_t *tp = this->GetMatrixArray(); // Target vector ptr
 #ifdef CBLAS
-  cblas_dgemv(CblasRowMajor,CblasNoTrans,a.GetNrows(),a.GetNcols(),1.0,mp,
+  cblas_sgemv(CblasRowMajor,CblasNoTrans,a.GetNrows(),a.GetNcols(),1.0,mp,
               a.GetNcols(),elements_old,1,0.0,tp,1);
 #else
   const Float_t * const tp_last = tp+fNrows;
@@ -733,7 +733,7 @@ TVectorF &TVectorF::operator*=(const TMatrixFSym &a)
   const Float_t *mp1 = a.GetMatrixArray(); // Matrix row ptr
         Float_t *tp1 = fElements;       // Target vector ptr
 #ifdef CBLAS
-  cblas_dsymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp1,
+  cblas_ssymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp1,
               fNrows,elements_old,1,0.0,tp1,1);
 #else
   const Float_t *mp2;
