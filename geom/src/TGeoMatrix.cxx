@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.8 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.9 2003/06/23 12:31:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -915,7 +915,7 @@ void TGeoCombiTrans::RegisterYourself()
    if (!IsRegistered() && gGeoManager) {
       gGeoManager->RegisterMatrix(this); 
       SetBit(kGeoRegistered);
-      fRotation->RegisterYourself();
+      if (fRotation) fRotation->RegisterYourself();
    }   
 }
 //-----------------------------------------------------------------------------
@@ -938,7 +938,7 @@ void TGeoCombiTrans::SetTranslation(Double_t *vect)
 const Double_t *TGeoCombiTrans::GetRotationMatrix() const
 {
 // get the rotation array
-   if (!fRotation) return 0;
+   if (!fRotation) return kIdentityMatrix;
    return fRotation->GetRotationMatrix();
 }
 //-----------------------------------------------------------------------------
@@ -994,7 +994,7 @@ void TGeoGenTrans::Clear(Option_t *)
 // clear the fields of this transformation
    memset(&fTranslation[0], 0, 3*sizeof(Double_t));
    memset(&fScale[0], 0, 3*sizeof(Double_t));
-   fRotation->Clear();
+   if (fRotation) fRotation->Clear();
 }
 //-----------------------------------------------------------------------------
 void TGeoGenTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
