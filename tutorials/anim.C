@@ -1,4 +1,9 @@
 //macro illustrating how to animate a picture using a Timer
+#include "TStyle.h"
+#include "TCanvas.h"
+#include "TF2.h"
+#include "TTimer.h"   
+
 Double_t pi;
 TF2 *f2;
 Float_t t = 0;
