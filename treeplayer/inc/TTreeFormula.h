@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.15 2001/06/01 07:05:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.16 2001/06/06 07:21:15 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -87,6 +87,11 @@ protected:
    void        DefineDimensions(const char *size, Int_t code, Int_t& virt_dim);
    virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
    Int_t       GetRealInstance(Int_t instance, Int_t codeindex);
+   
+   TLeaf*      GetLeafWithDatamember(const char* topchoice, const char* nextchice, UInt_t readentry) const;
+   Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, 
+                               const char* method,const char* params, 
+                               UInt_t readentry) const;
 public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);

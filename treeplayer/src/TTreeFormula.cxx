@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.66 2001/10/03 18:56:44 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.67 2001/10/04 05:50:15 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -204,6 +204,29 @@ public:
          return kTRUE;
       default:
          return kFALSE;
+      }
+   }
+
+   virtual Bool_t    IsInteger() const {
+      if (fNext) return fNext->IsInteger();
+      if (!fElement) return kFALSE;
+      switch (fElement->GetType()) {
+         // basic types
+      case kchar:
+      case kChar_t:
+      case kUChar_t:
+      case kShort_t:
+      case kUShort_t:
+      case kInt_t:
+      case kUInt_t:
+      case kLong_t:
+      case kULong_t:
+         return kTRUE;
+      case kFloat_t:
+      case kDouble_t:
+         return kFALSE;
+      default: 
+	 return kFALSE;
       }
    }
 
@@ -508,6 +531,7 @@ public:
    virtual Int_t     GetCounterValue(TLeaf* leaf);
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
 };
 
 //______________________________________________________________________________
@@ -554,6 +578,18 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
       index = instance;
       sub_instance = 0;
    }
+   TClonesArray *clones = (TClonesArray*)GetValuePointer(leaf);
+
+   // Note we take advantage of having only one physically variable
+   // dimension:
+   char * obj = (char*)clones->UncheckedAt(index);
+   return fNext->ReadValue(obj,sub_instance);
+}
+
+//______________________________________________________________________________
+void * TFormLeafInfoClones::GetValuePointer(TLeaf *leaf, Int_t instance = 0) {
+   // Return the pointer to the clonesArray
+  
    TClonesArray * clones;
    if (fTop) {
      if (leaf->InheritsFrom("TLeafObject") ) {
@@ -562,12 +598,9 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
         clones = (TClonesArray*)((TBranchElement*)leaf->GetBranch())->GetObject();
      }
    } else {
-     clones = (TClonesArray*)GetValuePointer(leaf);
+     clones = (TClonesArray*)TFormLeafInfo::GetValuePointer(leaf);
    }
-   // Note we take advantage of having only one physically variable
-   // dimension:
-   char * obj = (char*)clones->UncheckedAt(index);
-   return fNext->ReadValue(obj,sub_instance);
+   return clones;
 }
 
 //______________________________________________________________________________
@@ -636,12 +669,20 @@ public:
       }
    };
 
+   virtual Bool_t    IsInteger() const {
+      TMethodCall::EReturnType r = fMethod->ReturnType();
+      if (r == TMethodCall::kLong) {
+	return kTRUE;
+      } else return kFALSE;
+   }
+
    virtual Bool_t Update() {
       if (!TFormLeafInfo::Update()) return kFALSE;
       delete fMethod;
       fMethod = new TMethodCall(fClass, fMethodName, fParams);
       return kTRUE;
    }
+
    virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
       // Execute the method on the given address
 
@@ -1247,76 +1288,23 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             *params = 0; params++;
          } else params = (char *) ")";
 
+         if (branch && !leaf) {
+            // We have a branch but not a leaf.  We are likely to have found
+            // the top of splitted branch.
+            if (BranchHasMethod(0,branch,work,params,readentry)) {
+               //fprintf(stderr,"Does have a method %s for %s.\n",work,branch->GetName());
+            }
+         }
+         
          // What we have so far might be a member function of one of the
-         // leaves that are not splitted (for example "GetNtrack" for the Event class.
-         TClass * cl = 0;
+         // leaves that are not splitted (for example "GetNtrack" for the Event class).
          TIter next (fTree->GetIteratorOnAllLeaves());
          TLeaf *leafcur;
          while (!leaf && (leafcur = (TLeaf*)next())) {
-            // The following code is used somewhere else, we need to factor it out.
-            if (leafcur->InheritsFrom("TLeafObject") ) {
-               TLeafObject *lobj = (TLeafObject*)leafcur;
-               cl = lobj->GetClass();
-            } else if (leafcur->InheritsFrom("TLeafElement") ) {
-               TBranchElement *BranchEl = (TBranchElement *)leafcur->GetBranch();
-               Int_t type = BranchEl->GetStreamerType();
-               if (type==-1) {
-                  cl =  BranchEl->GetInfo()->GetClass();
-               } else if (type>60) {
-                  // Case of an object data member.  Here we allow for the
-                  // variable name to be ommitted.  Eg, for Event.root with split
-                  // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-                  cl =  BranchEl->GetInfo()->GetClass();
-                  TStreamerElement* element = (TStreamerElement*)
-                    cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
-                  cl = element->GetClassPointer();
-               }
+            if (BranchHasMethod(leafcur,leafcur->GetBranch(),work,params,readentry)) {
+               //fprintf(stderr,"Does have a method %s for %s found in leafcur %s.\n",work,leafcur->GetBranch()->GetName(),leafcur->GetName());
+               leaf = leafcur;
             }
-            if (cl == TClonesArray::Class()) {
-               // We might be try to call a method of the top class inside a
-               // TClonesArray.
-               TClonesArray * clones;
-               TBranch *branchcur = leafcur->GetBranch();
-               branchcur->GetEntry(readentry);
-               if (leafcur->InheritsFrom("TLeafObject") ) {
-                  clones = (TClonesArray*)((TLeafObject*)leafcur)->GetObject();
-               } else {
-                  if (branchcur==((TBranchElement*)branchcur)->GetMother() 
-                      || !leafcur->IsOnTerminalBranch() ) {
-                    clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
-                  } else {
-                    TBranch *branchcur = leafcur->GetBranch();
-                    branchcur->GetEntry(readentry);
-                    TClass * mother_cl;
-                    if (leafcur->IsA()==TLeafObject::Class()) {
-                      // in this case mother_cl is not really used
-                      mother_cl = cl;
-                    } else {
-                      mother_cl = ((TBranchElement*)branchcur)->GetInfo()->GetClass();
-                    }
-                    TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
-                    leafcur->GetBranch()->GetEntry(readentry);
-                    clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
-                    cl = clones->GetClass();
-                    delete clonesinfo;
-                  }
-               }
-               cl = clones->GetClass();
-            }
-            if (cl && cl->GetClassInfo() && cl->GetMethodAllAny(work)) {
-               // Let's try to see if the function we found belongs to the current
-               // class.  Note that this implementation currently can not work if
-               // one the argument is another leaf or data member of the object.
-               // (Anyway we do NOT support this case).
-               TMethodCall *method = new TMethodCall(cl, work, params);
-               if (method->GetMethod()) {
-                  // We have a method that works.
-                  // We will use it.
-                  leaf = leafcur;
-               }
-               delete method;
-            }
-            cl = 0;
          }
          if (!leaf) {
             // This actually not really any error, we probably received something
@@ -1359,6 +1347,16 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                // then we assume we are trying to drill down the branch and thus
                // do not check if the leaf (eventually found) is terminal
               
+               if (leaf==0) { 
+                  // Note we do not know (yet?) what (if anything) to do
+                  // for a TBranchObject branch.
+                  if (branch->InheritsFrom(TBranchElement::Class())
+                      && ((TBranchElement*)branch)->GetType() == 3) {
+                     // We have a TClonesArray branch.
+                     leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+                  }
+               }
+
                // we reset work
                current = &(work[0]);
             } else if (leaf || branch) {
@@ -1372,65 +1370,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             } else {
                // What we have so far might be a data member of one of the
                // leaves that are not splitted (for example "fNtrack" for the Event class.
-               TClass * cl = 0;
-               TIter next (fTree->GetIteratorOnAllLeaves());
-               TLeaf *leafcur;
-               while ((leafcur = (TLeaf*)next())) {
-                  // The following code is used somewhere else, we need to factor it out.
-                  if (leafcur->InheritsFrom("TLeafObject") &&
-                      leafcur->GetBranch()->GetListOfBranches()->Last()==0) {
-                     TLeafObject *lobj = (TLeafObject*)leafcur;
-                     cl = lobj->GetClass();
-                  } else if (leafcur->InheritsFrom("TLeafElement") && leafcur->IsOnTerminalBranch()) {
-                     TLeafElement * lElem = (TLeafElement*) leafcur;
-                     if (lElem->IsOnTerminalBranch()) {
-                        TBranchElement *BranchEl = (TBranchElement *)leafcur->GetBranch();
-                        Int_t type = BranchEl->GetStreamerType();
-                        if (type==-1) {
-                           cl =  BranchEl->GetInfo()->GetClass();
-                        } else if (type>60) {
-                           cl =  BranchEl->GetInfo()->GetClass();
-                           TStreamerElement* element = (TStreamerElement*)
-                             cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
-                           cl = element->GetClassPointer();
-                        }
-                     }
-                  }
-                  if (cl ==  TClonesArray::Class()) {
-                     // we have a unsplit TClonesArray leaves
-                     TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0);
-                     leafcur->GetBranch()->GetEntry(readentry);
-                     TClonesArray * clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
-                     cl = clones->GetClass();
-                     delete clonesinfo;
-                  }
-                  if (cl) {
-                     Int_t offset;
-                     TStreamerInfo* info =  cl->GetStreamerInfo();
-                     TStreamerElement* element = info?info->GetStreamerElement(first,offset):0;
-                     if (!element) {
-                        TIter next( cl->GetStreamerInfo()->GetElements() );
-                        TStreamerElement * curelem;
-                        while ((curelem = (TStreamerElement*)next())) {
-                           if (curelem->GetClassPointer() ==  TClonesArray::Class()) {
-                              Int_t clones_offset;
-                              cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
-                              TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
-                              TBranch *branch = leafcur->GetBranch();
-                              branch->GetEntry(readentry);
-                              TClonesArray * clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
-                              delete clonesinfo;
-                              TClass *sub_cl = clones->GetClass();
-                              element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
-                              if (element) break;
-                           } // if clones array
-                        } // loop on elements
-                     }
-                     if (element) break;
-                     else cl = 0;
-                  }
-               }
-               if (cl) {
+               TLeaf *leafcur = GetLeafWithDatamember(first,work,readentry);
+               if (leafcur) {
                   leaf = leafcur;
                   branch = leaf->GetBranch();
                   if (leaf->IsOnTerminalBranch()) {
@@ -1439,6 +1380,17 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                      //We need to put the delimiter back!
                      if (cname[i]=='.') strcat(right,".");
                   };
+               } else if (cname[i] == '.') {
+                  // If we have a branch that match a name preceded by a dot
+                  // then we assume we are trying to drill down the branch 
+                  // Let look if one of the top level branch has a branch with the name
+                  // we are looking for.
+                  TBranch *branchcur;
+                  TIter next( fTree->GetListOfBranches() );
+                  while(!branch && (branchcur=(TBranch*)next()) ) {
+                     branch = branchcur->FindBranch(first);
+                  }
+                  if (branch) current = &(work[0]);
                }
             }
          } else {  // correspond to if (leaf || branch) 
@@ -1737,29 +1689,57 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   TClonesArray * clones;
                   if (previnfo) clones = (TClonesArray*)previnfo->GetValuePointer(leaf,0);
                   else {
-                     TClass *mother_cl;
-                     if (leaf->IsA()==TLeafObject::Class()) {
-                        // in this case mother_cl is not really used
-                        mother_cl = cl;
-                     } else {
-                        mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
-                     }
+                     if (branch==((TBranchElement*)branch)->GetMother() 
+                         || !leaf->IsOnTerminalBranch() ) {
+                        TClass *mother_cl;
+                        if (leaf->IsA()==TLeafObject::Class()) {
+                           // in this case mother_cl is not really used
+                           mother_cl = cl;
+                        } else {
+                           mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
+                        }
 
-                     TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
-                     // The dimension needs to be handled!
-                     DefineDimensions(code,clonesinfo,virt_dim);
+                        TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0, 
+                                                                            &gFakeClonesElem,kTRUE);
+                        // The dimension needs to be handled!
+                        DefineDimensions(code,clonesinfo,virt_dim);
                      
-                     previnfo = clonesinfo;
-                     maininfo = clonesinfo;
+                        previnfo = clonesinfo;
+                        maininfo = clonesinfo;
                      
-                     clones = (TClonesArray*)clonesinfo->GetValuePointer(leaf,0);
+                        clones = (TClonesArray*)clonesinfo->GetValuePointer(leaf,0);
+                        //clones = *(TClonesArray**)((TBranchElement*)branch)->GetAddress();
+		     } else {       
+                        TClass *mother_cl;
+                        if (leaf->IsA()==TLeafObject::Class()) {
+                           // in this case mother_cl is not really used
+                           mother_cl = cl;
+                        } else {
+                           mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
+                        }
+
+                        TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
+                        // The dimension needs to be handled!
+                        DefineDimensions(code,clonesinfo,virt_dim);
+                     
+                        previnfo = clonesinfo;
+                        maininfo = clonesinfo;
+                     
+                        clones = (TClonesArray*)clonesinfo->GetValuePointer(leaf,0);
+                     }
                   }
                   TClass * inside_cl = clones->GetClass();      
                   if (1 || inside_cl) cl = inside_cl;
                      
                }
 
-               TMethodCall *method = new TMethodCall(cl, work, params);
+               TMethodCall *method;
+               if (cl->GetClassInfo()==0) {
+                  Error("TTreeFormula","Can not call method %s on class without dictionary (%s)!",
+                        right,cl->GetName());
+                  return -1;
+               }
+               method = new TMethodCall(cl, work, params);
                if (!method->GetMethod()) {
                   Error("TTreeFormula","Unknown method:%s",right);
                   return -1;
@@ -2067,6 +2047,177 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       return code;
    }
    return -1;
+}
+
+TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, 
+                                           const char* nextchoice,
+                                           UInt_t readentry) const {
+   // Return the leaf (if any) of the tree with contains an object containing
+   // a data member which has the name provided in the argument.
+
+   TClass * cl = 0;
+   TIter next (fTree->GetIteratorOnAllLeaves());
+   TLeaf *leafcur;
+   while ((leafcur = (TLeaf*)next())) {
+      // The following code is used somewhere else, we need to factor it out.
+
+      // Here since we are interested in data member, we want to consider on
+      // 'terminal' branch and leaf.
+      if (leafcur->InheritsFrom("TLeafObject") &&
+          leafcur->GetBranch()->GetListOfBranches()->Last()==0) {
+         TLeafObject *lobj = (TLeafObject*)leafcur;
+         cl = lobj->GetClass();
+      } else if (leafcur->InheritsFrom("TLeafElement") && leafcur->IsOnTerminalBranch()) {
+         TLeafElement * lElem = (TLeafElement*) leafcur;
+         if (lElem->IsOnTerminalBranch()) {
+            TBranchElement *BranchEl = (TBranchElement *)leafcur->GetBranch();
+            Int_t type = BranchEl->GetStreamerType();
+            if (type==-1) {
+               cl =  BranchEl->GetInfo()->GetClass();
+            } else if (type>60) {
+               // Case of an object data member.  Here we allow for the
+               // variable name to be ommitted.  Eg, for Event.root with split
+               // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
+               cl =  BranchEl->GetInfo()->GetClass();
+               TStreamerElement* element = (TStreamerElement*)
+                 cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
+               cl = element->GetClassPointer();
+            }
+         }
+         
+      }
+      if (cl ==  TClonesArray::Class()) {
+         // We have a unsplit TClonesArray leaves
+         // In this case we assume that cl is the class in which the TClonesArray
+         // belongs.
+         TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0);
+         leafcur->GetBranch()->GetEntry(readentry);
+         TClonesArray * clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
+         cl = clones->GetClass();
+         delete clonesinfo;
+      }
+      if (cl) {
+         // Now that we have the class, let's check if the topchoice is of its datamember
+         // or if the nextchoice is a datamember of one of its datamember.
+         Int_t offset;
+         TStreamerInfo* info =  cl->GetStreamerInfo();
+         TStreamerElement* element = info?info->GetStreamerElement(topchoice,offset):0;
+         if (!element) {
+            TIter next( cl->GetStreamerInfo()->GetElements() );
+            TStreamerElement * curelem;
+            while ((curelem = (TStreamerElement*)next())) {
+               if (curelem->GetClassPointer() ==  TClonesArray::Class()) {
+                  // In case of a TClonesArray we need to load the data and read the
+                  // clonesArray object before being able to look into the class inside.
+                  // We need to do that because we are never interested in the TClonesArray
+                  // itself but only in the object inside.
+                  Int_t clones_offset;
+                  cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
+                  TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
+                  TBranch *branch = leafcur->GetBranch();
+                  branch->GetEntry(readentry);
+                  TClonesArray * clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
+                  delete clonesinfo;
+                  TClass *sub_cl = clones->GetClass();
+                  
+                  // Now that we finally have the inside class, let's query it.
+                  element = sub_cl->GetStreamerInfo()->GetStreamerElement(nextchoice,offset);
+                  if (element) break;
+               } // if clones array
+            } // loop on elements
+         }
+         if (element) break;
+         else cl = 0;
+      }
+   }
+   if (cl) {
+      return leafcur;
+   } else {
+      return 0;
+   }
+
+}
+
+Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
+                                     TBranch * branch,
+                                     const char* method,
+                                     const char* params,
+                                     UInt_t readentry) const {
+   // Return the leaf (if any) of the tree with contains an object of a class
+   // having a method which has the name provided in the argument.
+   
+   TClass *cl = 0;
+   TLeafObject* lobj = 0;
+
+   // The following code is used somewhere else, we need to factor it out.
+   if (branch->InheritsFrom(TBranchObject::Class()) ) {
+
+      lobj = (TLeafObject*)branch->GetListOfLeaves()->At(0);
+      cl = lobj->GetClass();      
+
+   } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
+      TBranchElement *BranchEl = (TBranchElement *)branch;
+      Int_t type = BranchEl->GetStreamerType();
+      if (type==-1) {
+         cl =  BranchEl->GetInfo()->GetClass();
+      } else if (type>60) {
+         // Case of an object data member.  Here we allow for the
+         // variable name to be ommitted.  Eg, for Event.root with split
+         // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
+         cl =  BranchEl->GetInfo()->GetClass();
+         TStreamerElement* element = (TStreamerElement*)
+            cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
+         cl = element->GetClassPointer();
+      }
+   }
+   if (cl == TClonesArray::Class()) {
+      // We might be try to call a method of the top class inside a
+      // TClonesArray.
+      // Since the leaf was not terminal, we might have a splitted or
+      // unsplitted and/or top leaf/branch.
+      TClonesArray * clones = 0;
+      TBranch *branchcur = branch;
+      branchcur->GetEntry(readentry);
+      if (branch->InheritsFrom(TBranchObject::Class()) ) {
+         clones = (TClonesArray*)(lobj->GetObject());
+      } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
+         // We do not know exactly where the leaf of the TClonesArray is
+         // in the hierachy but we still need to get the correct class
+         // holder.
+         if (branchcur==((TBranchElement*)branchcur)->GetMother() 
+             || !leafcur || (!leafcur->IsOnTerminalBranch()) ) {
+            clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
+         }
+         if (clones==0) {
+            TBranch *branchcur = branch;
+            branchcur->GetEntry(readentry);
+            TClass * mother_cl;
+            mother_cl = ((TBranchElement*)branchcur)->GetInfo()->GetClass();
+
+            TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
+            // if (!leafcur) { leafcur = (TLeaf*)branch->GetListOfLeaves()->At(0); }
+            clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
+            // cl = clones->GetClass();
+            delete clonesinfo;
+         }
+      }
+      cl = clones->GetClass();
+   }
+   if (cl && cl->GetClassInfo() && cl->GetMethodAllAny(method)) {
+      // Let's try to see if the function we found belongs to the current
+      // class.  Note that this implementation currently can not work if
+      // one the argument is another leaf or data member of the object.
+      // (Anyway we do NOT support this case).
+      TMethodCall *methodcall = new TMethodCall(cl, method, params);
+      if (methodcall->GetMethod()) {
+         // We have a method that works.
+         // We will use it.
+         return kTRUE;
+      }
+      delete methodcall;
+   }
+   cl = 0;
+   return kFALSE;
 }
 
 Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
@@ -2709,6 +2860,11 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
 
    TLeaf *leaf = (TLeaf*)fLeaves.At(code);
    if (!leaf) return kFALSE;
+   TFormLeafInfo * info;
+   if (fLookupType[code]!=kDirect) {
+      info = GetLeafInfo(code);
+      return info->IsInteger();
+   }   
    if (!strcmp(leaf->GetTypeName(),"Int_t"))    return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"Short_t"))  return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UInt_t"))   return kTRUE;
