@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.54 2002/04/08 22:08:39 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.55 2002/04/10 20:59:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -53,7 +53,7 @@ static TVirtualFitter *_theFitter = 0;
 RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, 
 			     Bool_t cloneData, Bool_t clonePdf, Bool_t attachData, const RooArgSet* projDeps) :
   TNamed(*pdf), _origLeafNodeList("origLeafNodeList"), _extendedMode(kFALSE), _doOptCache(kFALSE),
-  _ownData(cloneData), _zombie(kFALSE), _projDeps(0)
+  _ownData(cloneData), _zombie(kFALSE), _projDeps(0), _verboseFit(kFALSE), _profileTimer(kFALSE)
 {
   // Constructor
 
@@ -84,7 +84,7 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
       if (!datReal) continue ;
 
       if (pdfReal->getFitMin()<(datReal->getFitMin()-1e-6)) {
-	cout << "RooFitContxt: ERROR minimum of PDF variable " << arg->GetName() 
+	cout << "RooFitContext: ERROR minimum of PDF variable " << arg->GetName() 
 	     << "(" << pdfReal->getFitMin() << ") is smaller than that of " 
 	     << arg->GetName() << " in the dataset (" << datReal->getFitMin() << ")" << endl ;
 	_zombie=kTRUE ;
@@ -92,7 +92,7 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
       }
 
       if (pdfReal->getFitMax()>(datReal->getFitMax()+1e-6)) {
-	cout << "RooFitContxt: ERROR maximum of PDF variable " << arg->GetName() 
+	cout << "RooFitContext: ERROR maximum of PDF variable " << arg->GetName() 
 	     << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
 	_zombie=kTRUE ;
 	return ;
@@ -779,7 +779,7 @@ Double_t RooFitContext::nLogLikelihood(Bool_t extended, Int_t nObserved) const
   for(Int_t index= 0; index<events; index++) {
     
     // get the data values for this event
-    _dataClone->get(index);
+    _dataClone->get(index) ;
     Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet); // WVE modified
 
     // If any event evaluates with zero probability, abort calculation

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.36 2002/04/03 23:37:26 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.37 2002/05/16 00:01:36 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -424,6 +424,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
     }
 
     // Multiply scale factor with fraction of events in current state of index
+    //cout << "wTable->getFrac(" << _indexCat.arg().getLabel() << ") = " << wTable->getFrac(_indexCat.arg().getLabel()) << endl ;
     RooPlot* retFrame =  RooAbsPdf::plotOn(frame,drawOptions,
 					   scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),
 					   stype,projDataTmp,projSet) ;

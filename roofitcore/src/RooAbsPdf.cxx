@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.65 2002/04/17 20:08:39 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.66 2002/05/31 01:05:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1037,7 +1037,8 @@ RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, co
 
 
 
-RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions, Double_t prec, Bool_t fixMinToZero) 
+RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, 
+			      Option_t* drawOptions, Double_t prec, Bool_t fixMinToZero) 
 {
   // Plot the negative log likelihood of ourself when applied on the given data set,
   // as function of the plot variable of the frame.
@@ -1065,7 +1066,7 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOp
   RooAbsRealLValue* cloneVar = (RooAbsRealLValue*) cloneList->find(plotVar->GetName()) ;
 
   // Create NLL binding object
-  RooNLLBinding nllVar(*clone,*data,*cloneVar) ;
+  RooNLLBinding nllVar(*clone,*data,*cloneVar,extended) ;
 
   // Construct name and title of curve
   TString name("curve_NLL[") ;

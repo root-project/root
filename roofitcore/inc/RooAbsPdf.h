@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.55 2002/04/17 20:08:40 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.56 2002/05/31 01:05:35 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -67,7 +67,13 @@ public:
 				   Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
 				   const RooAbsData* projData=0) const ;
 
-  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
+  inline RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
+			    Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
+    // Backward compatibility wrapper
+    return plotNLLOn(frame,data,kFALSE,drawOptions,prec,fixMinToZero) ;
+  }
+
+  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, Option_t* drawOptions="L", 
 			     Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
 
   virtual TH2F *plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, 
