@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.60 2004/08/05 10:06:13 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.61 2004/08/13 17:03:46 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1584,7 +1584,7 @@ void TGGroupFrame::SetTitle(const char *title)
 //______________________________________________________________________________
 FontStruct_t TGGroupFrame::GetDefaultFontStruct()
 {
-   if (!fgDefaultFont)
+   if (!fgDefaultFont && gClient)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
@@ -1592,7 +1592,7 @@ FontStruct_t TGGroupFrame::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGGroupFrame::GetDefaultGC()
 {
-   if (!fgDefaultGC)
+   if (!fgDefaultGC && gClient)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
 }
@@ -2035,7 +2035,7 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save a main frame widget as a C++ statement(s) on output stream out.
 
-   if (fParent!=gClient->GetDefaultRoot()) { // frame is embedded
+   if (fParent != gClient->GetDefaultRoot()) { // frame is embedded
       fOptions &= ~kMainFrame;
       TGCompositeFrame::SavePrimitive(out, option);
       fOptions |= kMainFrame;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.36 2004/06/17 10:54:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.37 2004/08/02 11:43:12 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -52,6 +52,13 @@
 // Global pointer to the TGClient object
 TGClient *gClient;
 
+// Initialize gClient in case of batch mode
+class TGClientInit {
+public:
+   TGClientInit() { if (gROOT->IsBatch()) new TGClient(); }
+};
+static TGClientInit gclient_init;
+
 
 //----- Graphics Input handler -------------------------------------------------
 //______________________________________________________________________________
@@ -76,7 +83,7 @@ ClassImp(TGClient)
 //______________________________________________________________________________
 TGClient::TGClient(const char *dpyName)
 {
-   // Create a connection with the display sever on host DpyName and setup
+   // Create a connection with the display sever on host dpyName and setup
    // the complete GUI system, i.e., graphics contexts, fonts, etc. for all
    // widgets.
 
@@ -104,7 +111,7 @@ TGClient::TGClient(const char *dpyName)
       return;
    }
 
-   if (fXfd >= 0) {
+   if (fXfd >= 0 && !gROOT->IsBatch()) {
       TGInputHandler *xi = new TGInputHandler(this, fXfd);
       if (fXfd) gSystem->AddFileHandler(xi);
       // X11 events are handled via gXDisplay->Notify() in
@@ -320,6 +327,9 @@ FontStruct_t TGClient::GetFontByName(const char *name, Bool_t fixedDefault) cons
    // The loaded font needs to be freed using TVirtualX::DeleteFont().
    // If fixedDefault is false the "fixed" font will not be substituted
    // as fallback when the asked for font does not exist.
+
+   if (gROOT->IsBatch())
+      return (FontStruct_t) -1;
 
    FontStruct_t font = gVirtualX->LoadQueryFont(name);
 

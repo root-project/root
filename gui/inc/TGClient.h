@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.16 2004/08/02 11:43:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.17 2004/08/13 17:03:46 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -88,30 +88,30 @@ public:
 
    const TGWindow *GetRoot() const;
    const TGWindow *GetDefaultRoot() const;
-   void      SetRoot(TGWindow *root = 0);
-   Bool_t    IsEditable() const { return fRoot != fDefaultRoot; }
-   TGWindow *GetWindowById(Window_t sw) const;
+   void            SetRoot(TGWindow *root = 0);
+   Bool_t          IsEditable() const { return fRoot != fDefaultRoot; }
+   TGWindow       *GetWindowById(Window_t sw) const;
 
    FontStruct_t GetFontByName(const char *name, Bool_t fixedDefault = kTRUE) const;
-   Bool_t  GetColorByName(const char *name, Pixel_t &pixel) const;
-   Pixel_t GetHilite(Pixel_t base_color) const;
-   Pixel_t GetShadow(Pixel_t base_color) const;
-   void    FreeColor(Pixel_t color) const;
-   void    ForceRedraw() { fForceRedraw = kTRUE; }
-   void    NeedRedraw(TGWindow *w);
-   void    RegisterWindow(TGWindow *w);
-   void    UnregisterWindow(TGWindow *w);
-   void    RegisterPopup(TGWindow *w);
-   void    UnregisterPopup(TGWindow *w);
-   void    AddUnknownWindowHandler(TGUnknownWindowHandler *h);
-   void    RemoveUnknownWindowHandler(TGUnknownWindowHandler *h);
-   void    AddIdleHandler(TGIdleHandler *h);
-   void    RemoveIdleHandler(TGIdleHandler *h);
-   Bool_t  HandleInput();
-   void    ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2);
-   void    WaitFor(TGWindow *w);
-   void    WaitForUnmap(TGWindow *w);
-   Bool_t  ProcessEventsFor(TGWindow *w);
+   Bool_t       GetColorByName(const char *name, Pixel_t &pixel) const;
+   Pixel_t      GetHilite(Pixel_t base_color) const;
+   Pixel_t      GetShadow(Pixel_t base_color) const;
+   void         FreeColor(Pixel_t color) const;
+   void         ForceRedraw() { fForceRedraw = kTRUE; }
+   void         NeedRedraw(TGWindow *w);
+   void         RegisterWindow(TGWindow *w);
+   void         UnregisterWindow(TGWindow *w);
+   void         RegisterPopup(TGWindow *w);
+   void         UnregisterPopup(TGWindow *w);
+   void         AddUnknownWindowHandler(TGUnknownWindowHandler *h);
+   void         RemoveUnknownWindowHandler(TGUnknownWindowHandler *h);
+   void         AddIdleHandler(TGIdleHandler *h);
+   void         RemoveIdleHandler(TGIdleHandler *h);
+   Bool_t       HandleInput();
+   void         ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2);
+   void         WaitFor(TGWindow *w);
+   void         WaitForUnmap(TGWindow *w);
+   Bool_t       ProcessEventsFor(TGWindow *w);
 
    const TGResourcePool *GetResourcePool() const { return fResourcePool; }
 
