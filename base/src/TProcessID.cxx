@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.13 2002/05/09 08:09:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.14 2002/05/18 08:43:29 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -41,12 +41,15 @@
 //
 // When a referenced object is deleted, its slot in fObjects is set to null.
 //
+// See also TProcessUUID: a specialized TProcessID to manage the single list
+// of TUUIDs.
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "TProcessID.h"
 #include "TROOT.h"
 #include "TFile.h"
-#include "TUUID.h"
+#include "TObjArray.h"
 
 TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
 TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
