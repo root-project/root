@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.4 2003/04/16 16:47:22 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.5 2004/09/21 18:46:18 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -237,7 +237,7 @@ Int_t TMySQLServer::Shutdown()
       Error("Shutdown", "not connected");
       return -1;
    }
-#if MYSQL_VERSION_ID < 40103
+#if MYSQL_VERSION_ID < 50001
    return mysql_shutdown(fMySQL);
 #else
    return mysql_shutdown(fMySQL,SHUTDOWN_DEFAULT);
