@@ -1,3 +1,4 @@
 *.def *.exp *.lib *.pdb *.log *Dict.*
  *.dll 
 FooDict.h
+reader writer file.root FooDict*
