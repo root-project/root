@@ -42,7 +42,7 @@ endif
 ifeq ($(ARCH),win32)
 CXXFLAGS += /TP /GX 
 LIBSFORLINK = $(LIBS)
-LDFLAGS := /link $(LDFLAGS) -debug
+CLDFLAGS := /link $(LDFLAGS) -debug
 SYSLIBS += msvcprt.lib 
 else
 LIBSFORLINK = 
@@ -78,7 +78,7 @@ clean: local_clean
 
 
 driver$(ExeSuf): main.cc mydict.cc
-	$(CXX)  $^ $(CXXFLAGS) $(LDFLAGS) $(LIBS) $(OutPutOpt)$@
+	$(CXX)  $^ $(CXXFLAGS) $(CLDFLAGS) $(LIBS) $(OutPutOpt)$@
 
 stuff:
 ifeq ($(ARCH),aix)
@@ -119,8 +119,17 @@ infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSY
 mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTSYS)/bin/rootcint
 	rootcint -f mydict.cc -c RootData.h RootCaloHit.h LinkDef.h
 
+ifeq ($(PLATFORM),win32)
+libIotest.so: main.$(ObjSuf) mydict.$(ObjSuf)
+	bindexplib $* $^ > libIotest.def
+	lib -nologo -MACHINE:IX86 $^ -def:libIotest.def \
+                  $(OutPutOpt)libIotest.lib
+	$(LD) $(SOFLAGS) $(LDFLAGS) $^ libIotest.exp $(LIBS) \
+                   $(OutPutOpt)$@
+else
 libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
 	$(CXX) -g -shared -o libIotest.so -DSHARED $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
+endif
 
 .cc.$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<

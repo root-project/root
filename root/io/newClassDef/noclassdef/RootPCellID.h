@@ -112,6 +112,32 @@ namespace Local {
 
 }
 
+class RootPCobject : public RootPCellID, public TObject {
+public:
+   RootPCobject() : RootPCellID("none",0),obj(0) {}
+   RootPCobject(int n) :  RootPCellID("obj1",n),obj(101) {}
+   int obj;
+   void Print() {
+     RootPCellID::Print();
+     std::cout  << "obj \t" << obj << std::endl;
+     //Dump();
+   }   
+   ClassDef(RootPCobject,1); // inherit second from TObject
+};
+
+class RootPCobject2 : public TObject, public RootPCellID {
+public:
+   RootPCobject2() : RootPCellID("none",0),obj(0) {}
+   RootPCobject2(int n) :  RootPCellID("obj2",n),obj(102) {}
+   int obj;
+   void Print() {
+     RootPCellID::Print();
+     std::cout  << "obj \t" << obj << std::endl;
+     //Dump();
+   }   
+   ClassDef(RootPCobject2,1); // inherit first from TObject
+};
+
 //inline Short_t GetClassVersion(RootPCellID*) { return 2; }
 // or template<> inline Short_t GetClassVersion<RootPCellID >(RootPCellID*) { return 2; }
 // or template<> inline Short_t GetClassVersion<RootPCellID >() { return 2; }

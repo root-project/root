@@ -25,4 +25,7 @@
 #pragma link C++ class Local::RootPCtop+;
 #pragma link C++ class Local::RootPCbottom+;
 
+#pragma link C++ class RootPCobject+;
+#pragma link C++ class RootPCobject2+;
+
 #endif

@@ -15,6 +15,7 @@ public:
           mycellnull=0;
           for(int i=0;i<4;i++) myArrFix[i]=0;
           myArrVar=0;
+          myobjp = myobj2p = 0;
         }
 	RootCaloHit(float e, float t, int val, 
                     const std::string& s, unsigned int id) : 
@@ -22,7 +23,9 @@ public:
            mycell(s, id), 
            index(0),
            myArrVar(0),
-           mynocell(7)
+           mynocell(7),
+           myobj(8),
+           myobj2(9)
            {
              mycellnull = 0;
              mycellfix = new RootPCfix(4) ;
@@ -42,11 +45,24 @@ public:
              myArrVar[0] = new RootPCvirt(0);
              myArrVar[1] = new RootPCfix(1);
 
+             myobjp = new RootPCobject(10);
+             myobj2p = new RootPCobject2(11);
+             TObject * p1 = (RootPCobject2*)myobj2p;
+             void * v1 = (void*)dynamic_cast<TObject* >(myobj2p);
+             fprintf(stderr,"myobj2p %p tobj %p void %p\n",
+                     myobj2p,p1,v1);
            }
 	virtual ~RootCaloHit() {
-           for(int i = 0; i<index; i++) delete myArrFix[i];
-           for(int i = 0; i<index; i++) delete myArrVar[i];
+           int i = 0;
+           for(i = 0; i<index; i++) delete myArrFix[i];
+           for(i = 0; i<index; i++) delete myArrVar[i];
            delete []myArrVar;
+           delete myobjp; myobjp = 0;
+             TObject * p1 = (RootPCobject2*)myobj2p;
+             void * v1 = (void*)dynamic_cast<TObject* >(myobj2p);
+             fprintf(stderr,"myobj2p %p tobj %p void %p\n",
+                     myobj2p,p1,v1);
+           delete myobj2p; myobj2p = 0;
         }
 
         void myPrint() {
@@ -61,6 +77,10 @@ public:
           for(i=0; i<3; i++) myArr[i].Print();
           for(i=0; i<4; i++) if (myArrFix[i]) myArrFix[i]->Print();
           if (myArrVar) for(i=0; i<index; i++) if (myArrVar[i]) myArrVar[i]->Print();
+          myobj.Print();
+          myobj2.Print();
+          if (myobjp) myobjp->Print();
+          if (myobj2p) myobj2p->Print();
           
         }
 protected:
@@ -78,6 +98,11 @@ public:
 	RootPCellID     *mycellfix; //
 	RootPCellID     *mycellvirt; //
 	RootPCellID     *mynocellp; //
+
+	RootPCobject     myobj;  //
+	RootPCobject2    myobj2;
+	RootPCellID     *myobjp; //
+	RootPCellID     *myobj2p;
 
 	ClassDef(RootCaloHit,1);
 }; 
