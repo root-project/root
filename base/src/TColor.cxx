@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -224,14 +224,15 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
    Float_t dr, dg, db, lr, lg, lb;
    Int_t nplanes = 16;
    if (gVirtualX) gVirtualX->GetPlanes(nplanes);
+   if (nplanes == 0) nplanes = 16;
 //*-*-----------Dark color
 //*-*           ==========
    HLStoRGB(fHue, 0.7*fLight, fSaturation, dr, dg, db);
    TColor *dark = gROOT->GetColor(100+color);
    if (dark) {
-       if (nplanes > 8)  dark->SetRGB(dr, dg, db);
-       else              dark->SetRGB(0.3,0.3,0.3);
-    }
+      if (nplanes > 8) dark->SetRGB(dr, dg, db);
+      else             dark->SetRGB(0.3,0.3,0.3);
+   }
 //*-*-----------Light color
 //*-*           ===========
    HLStoRGB(fHue, 1.2*fLight, fSaturation, lr, lg, lb);
