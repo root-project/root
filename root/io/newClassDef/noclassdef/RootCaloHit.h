@@ -1,5 +1,3 @@
-/* C++ header file: Objectivity/DB DDL version 6.0 Oct 2000 */
-
 #ifndef _ROOT_CALO_HIT_H
 #define _ROOT_CALO_HIT_H
 
@@ -16,6 +14,13 @@ public:
           for(int i=0;i<4;i++) myArrFix[i]=0;
           myArrVar=0;
           myobjp = myobj2p = 0;
+          myobjdp = 0;
+          myobj2dp = 0;
+          myobjSt = new RootPCobject(0);
+          myobj2St = new RootPCobject2(0);
+          mytobjp = mytobj2p = 0;
+          mytobjSt = new RootPCobject(0);
+          mytobj2St = new RootPCobject2(0);
         }
 	RootCaloHit(float e, float t, int val, 
                     const std::string& s, unsigned int id) : 
@@ -47,10 +52,24 @@ public:
 
              myobjp = new RootPCobject(10);
              myobj2p = new RootPCobject2(11);
-             TObject * p1 = (RootPCobject2*)myobj2p;
-             void * v1 = (void*)dynamic_cast<TObject* >(myobj2p);
-             fprintf(stderr,"myobj2p %p tobj %p void %p\n",
-                     myobj2p,p1,v1);
+             myobjSt = new RootPCobject(12);
+             myobj2St = new RootPCobject2(13);
+
+             mytobjp = new RootPCobject(14);
+             mytobj2p = new RootPCobject2(15);
+             mytobjSt = new RootPCobject(16);
+             mytobj2St = new RootPCobject2(17);
+
+             myobjdp = new RootPCobject(18);
+             myobj2dp = new RootPCobject2(19);
+
+             for(i=0;i<2;i++) {
+                RootPCobject  r1(20+2*i);
+                RootPCobject2 r2(21+2*i);
+                myobjarr[i] = r1;
+                myobjarr2[i]= r2;
+             }
+
            }
 	virtual ~RootCaloHit() {
            int i = 0;
@@ -58,11 +77,22 @@ public:
            for(i = 0; i<index; i++) delete myArrVar[i];
            delete []myArrVar;
            delete myobjp; myobjp = 0;
-             TObject * p1 = (RootPCobject2*)myobj2p;
-             void * v1 = (void*)dynamic_cast<TObject* >(myobj2p);
-             fprintf(stderr,"myobj2p %p tobj %p void %p\n",
-                     myobj2p,p1,v1);
            delete myobj2p; myobj2p = 0;
+
+           delete myobjp; myobjp = 0;
+           delete myobj2p; myobj2p = 0;
+
+           delete myobjdp; myobjp = 0;
+           delete myobj2dp; myobj2p = 0;
+
+           delete myobjSt; myobjSt = 0;
+           delete myobj2St; myobj2St = 0;
+
+           delete mytobjp; mytobjp = 0;
+           delete mytobj2p; mytobj2p = 0;
+
+           delete mytobjSt; mytobjSt = 0;
+           delete mytobj2St; mytobj2St = 0;
         }
 
         void myPrint() {
@@ -79,8 +109,25 @@ public:
           if (myArrVar) for(i=0; i<index; i++) if (myArrVar[i]) myArrVar[i]->Print();
           myobj.Print();
           myobj2.Print();
+
           if (myobjp) myobjp->Print();
           if (myobj2p) myobj2p->Print();
+
+          myobjSt->Print();
+          myobj2St->Print();
+
+          if (mytobjp) dynamic_cast<RootPCobject *>(mytobjp)->Print();
+          if (mytobj2p) dynamic_cast<RootPCobject2 *>(mytobj2p)->Print();
+          dynamic_cast<RootPCobject *>(mytobjSt)->Print();
+          dynamic_cast<RootPCobject2 *>(mytobj2St)->Print();
+
+          if (myobjdp) myobjdp->Print();
+          if (myobj2dp) myobj2dp->Print();
+
+          for(i=0;i<2;i++) {
+             myobjarr[i].Print();
+             myobjarr2[i].Print();
+          }
           
         }
 protected:
@@ -99,12 +146,44 @@ public:
 	RootPCellID     *mycellvirt; //
 	RootPCellID     *mynocellp; //
 
-	RootPCobject     myobj;  //
-	RootPCobject2    myobj2;
-	RootPCellID     *myobjp; //
+#ifndef BROKEN_MULTI
+	RootPCobject     myobj;    //
+	RootPCobject2    myobj2;   //
+	RootPCellID     *myobjp;   //
 	RootPCellID     *myobj2p;
+	RootPCobject    *myobjSt;  //->
+	RootPCobject2   *myobj2St; //->
+        TObject         *mytobjp;
+        TObject         *mytobj2p;
+        TObject         *mytobjSt; //->
+        TObject         *mytobj2St;//->
 
-	ClassDef(RootCaloHit,1);
+	RootPCobject    *myobjdp;  //
+	RootPCobject2   *myobj2dp; //
+
+        RootPCobject     myobjarr[2]; 
+        RootPCobject2    myobjarr2[2]; 
+#else
+	RootPCobject     myobj;    //!
+	RootPCobject2    myobj2;         //!     
+	RootPCellID     *myobjp;   //!
+	RootPCellID     *myobj2p;        //!
+	RootPCobject    *myobjSt;  //!->
+	RootPCobject2   *myobj2St;       //!->
+        TObject         *mytobjp;  //!
+        TObject         *mytobj2p;       //!
+        TObject         *mytobjSt;       //!->
+        TObject         *mytobj2St;      //!->
+
+	RootPCobject    *myobjdp;  //!
+	RootPCobject2   *myobj2dp;        //!
+
+        RootPCobject     myobjarr[2]; //!
+        RootPCobject2    myobjarr2[2];    //!
+#endif
+
+	ClassDef(RootCaloHit,1)
 }; 
 
 #endif /* !defined(_ROOT_CALO_HIT_H) */
+

@@ -14,6 +14,16 @@ mycell.id                     3
 mycell.base[4]                116         
 index                         2           
 *mycellnull                   ->0         
+myobj.obj                     101         
+myobj.id                      8           
+myobj.base[4]                 111         
+myobj.fUniqueID               0           object unique identifier
+myobj.fBits                   50331648    bit field status word
+myobj2.obj                    102         
+myobj2.fUniqueID              0           object unique identifier
+myobj2.fBits                  50331648    bit field status word
+myobj2.id                     9           
+myobj2.base[4]                111         
 fUniqueID                     0           object unique identifier
 fBits                         50331648    bit field status word
 base 	t e s t 
@@ -54,6 +64,54 @@ virt 	44
 base 	f i x 1 
 id 	1
 fix 	33
+base 	o b j 1 
+id 	8
+obj 	101
+base 	o b j 2 
+id 	9
+obj 	102
+base 	o b j 1 
+id 	10
+obj 	101
+base 	o b j 2 
+id 	11
+obj 	102
+base 	o b j 1 
+id 	12
+obj 	101
+base 	o b j 2 
+id 	13
+obj 	102
+base 	o b j 1 
+id 	14
+obj 	101
+base 	o b j 2 
+id 	15
+obj 	102
+base 	o b j 1 
+id 	16
+obj 	101
+base 	o b j 2 
+id 	17
+obj 	102
+base 	o b j 1 
+id 	18
+obj 	101
+base 	o b j 2 
+id 	19
+obj 	102
+base 	o b j 1 
+id 	20
+obj 	101
+base 	o b j 2 
+id 	21
+obj 	102
+base 	o b j 1 
+id 	22
+obj 	101
+base 	o b j 2 
+id 	23
+obj 	102
 
 Reading Hit
 ==>Dumping object, name=RootCaloHit, class=RootCaloHit
@@ -66,6 +124,16 @@ mycell.base[4]                116
 index                         2           
 *myArrVar                     ->0         ! WAITING on Vicktor's implementation [index]
 *mycellnull                   ->0         
+myobj.obj                     101         
+myobj.id                      8           
+myobj.base[4]                 111         
+myobj.fUniqueID               0           object unique identifier
+myobj.fBits                   50331648    bit field status word
+myobj2.obj                    102         
+myobj2.fUniqueID              0           object unique identifier
+myobj2.fBits                  50331648    bit field status word
+myobj2.id                     9           
+myobj2.base[4]                111         
 fUniqueID                     0           object unique identifier
 fBits                         50331648    bit field status word
 base 	t e s t 
@@ -99,6 +167,54 @@ templated 	66
 base 	t e m p 
 id 	3
 templated 	66
+base 	o b j 1 
+id 	8
+obj 	101
+base 	o b j 2 
+id 	9
+obj 	102
+base 	o b j 1 
+id 	10
+obj 	101
+base 	o b j 2 
+id 	11
+obj 	102
+base 	o b j 1 
+id 	12
+obj 	101
+base 	o b j 2 
+id 	13
+obj 	102
+base 	o b j 1 
+id 	14
+obj 	101
+base 	o b j 2 
+id 	15
+obj 	102
+base 	o b j 1 
+id 	16
+obj 	101
+base 	o b j 2 
+id 	17
+obj 	102
+base 	o b j 1 
+id 	18
+obj 	101
+base 	o b j 2 
+id 	19
+obj 	102
+base 	o b j 1 
+id 	20
+obj 	101
+base 	o b j 2 
+id 	21
+obj 	102
+base 	o b j 1 
+id 	22
+obj 	101
+base 	o b j 2 
+id 	23
+obj 	102
 
 Writing Data
 Warning in <TStreamerInfo::WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
@@ -112,6 +228,16 @@ mycell.id                     3
 mycell.base[4]                116         
 index                         2           
 *mycellnull                   ->0         
+myobj.obj                     101         
+myobj.id                      8           
+myobj.base[4]                 111         
+myobj.fUniqueID               0           object unique identifier
+myobj.fBits                   50331648    bit field status word
+myobj2.obj                    102         
+myobj2.fUniqueID              0           object unique identifier
+myobj2.fBits                  50331648    bit field status word
+myobj2.id                     9           
+myobj2.base[4]                111         
 fUniqueID                     0           object unique identifier
 fBits                         50331648    bit field status word
 base 	t e s t 
@@ -152,6 +278,54 @@ virt 	44
 base 	f i x 1 
 id 	1
 fix 	33
+base 	o b j 1 
+id 	8
+obj 	101
+base 	o b j 2 
+id 	9
+obj 	102
+base 	o b j 1 
+id 	10
+obj 	101
+base 	o b j 2 
+id 	11
+obj 	102
+base 	o b j 1 
+id 	12
+obj 	101
+base 	o b j 2 
+id 	13
+obj 	102
+base 	o b j 1 
+id 	14
+obj 	101
+base 	o b j 2 
+id 	15
+obj 	102
+base 	o b j 1 
+id 	16
+obj 	101
+base 	o b j 2 
+id 	17
+obj 	102
+base 	o b j 1 
+id 	18
+obj 	101
+base 	o b j 2 
+id 	19
+obj 	102
+base 	o b j 1 
+id 	20
+obj 	101
+base 	o b j 2 
+id 	21
+obj 	102
+base 	o b j 1 
+id 	22
+obj 	101
+base 	o b j 2 
+id 	23
+obj 	102
 
 Reading Data
 ==>Dumping object, name=RootCaloHit, class=RootCaloHit
@@ -164,6 +338,16 @@ mycell.base[4]                116
 index                         2           
 *myArrVar                     ->0         ! WAITING on Vicktor's implementation [index]
 *mycellnull                   ->0         
+myobj.obj                     101         
+myobj.id                      8           
+myobj.base[4]                 111         
+myobj.fUniqueID               0           object unique identifier
+myobj.fBits                   50331648    bit field status word
+myobj2.obj                    102         
+myobj2.fUniqueID              0           object unique identifier
+myobj2.fBits                  50331648    bit field status word
+myobj2.id                     9           
+myobj2.base[4]                111         
 fUniqueID                     0           object unique identifier
 fBits                         50331648    bit field status word
 base 	t e s t 
@@ -197,6 +381,54 @@ templated 	66
 base 	t e m p 
 id 	3
 templated 	66
+base 	o b j 1 
+id 	8
+obj 	101
+base 	o b j 2 
+id 	9
+obj 	102
+base 	o b j 1 
+id 	10
+obj 	101
+base 	o b j 2 
+id 	11
+obj 	102
+base 	o b j 1 
+id 	12
+obj 	101
+base 	o b j 2 
+id 	13
+obj 	102
+base 	o b j 1 
+id 	14
+obj 	101
+base 	o b j 2 
+id 	15
+obj 	102
+base 	o b j 1 
+id 	16
+obj 	101
+base 	o b j 2 
+id 	17
+obj 	102
+base 	o b j 1 
+id 	18
+obj 	101
+base 	o b j 2 
+id 	19
+obj 	102
+base 	o b j 1 
+id 	20
+obj 	101
+base 	o b j 2 
+id 	21
+obj 	102
+base 	o b j 1 
+id 	22
+obj 	101
+base 	o b j 2 
+id 	23
+obj 	102
 
 
 StreamerInfo for class: RootCaloHit, version=1
@@ -205,24 +437,52 @@ StreamerInfo for class: RootCaloHit, version=1
   float         time            offset= 16 type= 5                     
   int           itra            offset= 20 type= 3                     
   RootPCellID   mycell          offset= 24 type=62                     
-  RootPCellID   myArr[3]        offset= 36 type=82                     
-  RootPCtemp<int>*myArrFix[4]     offset= 72 type=69                     
-  int           index           offset= 88 type= 3                     
-  RootPCnodict  mynocell        offset= 96 type=62                     
-  RootPCellID*  mycellnull      offset=112 type=69                     
-  RootPCellID*  mycellfix       offset=116 type=69                     
-  RootPCellID*  mycellvirt      offset=120 type=69                     
-  RootPCellID*  mynocellp       offset=124 type=69                     
+  RootPCellID   myArr[3]        offset= 40 type=82                     
+  RootPCtemp<int>*myArrFix[4]     offset= 88 type=69                     
+  int           index           offset=104 type= 3                     
+  RootPCnodict  mynocell        offset=112 type=62                     
+  RootPCellID*  mycellnull      offset=132 type=69                     
+  RootPCellID*  mycellfix       offset=136 type=69                     
+  RootPCellID*  mycellvirt      offset=140 type=69                     
+  RootPCellID*  mynocellp       offset=144 type=69                     
+  RootPCobject  myobj           offset=148 type=61                     
+  RootPCobject2 myobj2          offset=180 type=61                     
+  RootPCellID*  myobjp          offset=212 type=69                     
+  RootPCellID*  myobj2p         offset=216 type=69                     
+  RootPCobject* myobjSt         offset=220 type=63 ->                  
+  RootPCobject2*myobj2St        offset=224 type=63 ->                  
+  TObject*      mytobjp         offset=228 type=64                     
+  TObject*      mytobj2p        offset=232 type=64                     
+  TObject*      mytobjSt        offset=236 type=63 ->                  
+  TObject*      mytobj2St       offset=240 type=63 ->                  
+  RootPCobject* myobjdp         offset=244 type=64                     
+  RootPCobject2*myobj2dp        offset=248 type=64                     
+  RootPCobject  myobjarr[2]     offset=252 type=81                     
+  RootPCobject2 myobjarr2[2]    offset=316 type=81                     
    i= 0, TObject         type= 66, offset=  0, len=1, method=0
    i= 1, energy          type=  5, offset= 12, len=1, method=0
    i= 2, time            type=  5, offset= 16, len=1, method=0
    i= 3, itra            type=  3, offset= 20, len=1, method=0
    i= 4, mycell          type= 62, offset= 24, len=1, method=0
-   i= 5, myArr           type= 82, offset= 36, len=3, method=0
-   i= 6, myArrFix        type= 69, offset= 72, len=4, method=0
-   i= 7, index           type=  3, offset= 88, len=1, method=0
-   i= 8, mynocell        type= 62, offset= 96, len=1, method=0
-   i= 9, mycellnull      type= 69, offset=112, len=1, method=0
-   i=10, mycellfix       type= 69, offset=116, len=1, method=0
-   i=11, mycellvirt      type= 69, offset=120, len=1, method=0
-   i=12, mynocellp       type= 69, offset=124, len=1, method=0
+   i= 5, myArr           type= 82, offset= 40, len=3, method=0
+   i= 6, myArrFix        type= 69, offset= 88, len=4, method=0
+   i= 7, index           type=  3, offset=104, len=1, method=0
+   i= 8, mynocell        type= 62, offset=112, len=1, method=0
+   i= 9, mycellnull      type= 69, offset=132, len=1, method=0
+   i=10, mycellfix       type= 69, offset=136, len=1, method=0
+   i=11, mycellvirt      type= 69, offset=140, len=1, method=0
+   i=12, mynocellp       type= 69, offset=144, len=1, method=0
+   i=13, myobj           type= 61, offset=148, len=1, method=134560836
+   i=14, myobj2          type= 61, offset=180, len=1, method=134560968
+   i=15, myobjp          type= 69, offset=212, len=1, method=0
+   i=16, myobj2p         type= 69, offset=216, len=1, method=0
+   i=17, myobjSt         type= 63, offset=220, len=1, method=134561084
+   i=18, myobj2St        type= 63, offset=224, len=1, method=134561216
+   i=19, mytobjp         type= 64, offset=228, len=1, method=134561336
+   i=20, mytobj2p        type= 64, offset=232, len=1, method=134561424
+   i=21, mytobjSt        type= 63, offset=236, len=1, method=134561512
+   i=22, mytobj2St       type= 63, offset=240, len=1, method=134561632
+   i=23, myobjdp         type= 64, offset=244, len=1, method=134561752
+   i=24, myobj2dp        type= 64, offset=248, len=1, method=134561868
+   i=25, myobjarr        type= 81, offset=252, len=2, method=134561956
+   i=26, myobjarr2       type= 81, offset=316, len=2, method=134562164

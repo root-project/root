@@ -21,7 +21,9 @@ public:
   
   RootPCellID(const std::string & b, unsigned int i):id(i) {
     for(int j=0;j<4;j++) base[j]=b[j];
-  }
+  }   
+  virtual ~RootPCellID() {};
+
   virtual void Print() {
     std::cout << "base \t";
     for(int j=0;j<4;j++) std::cout << base[j] << " ";
@@ -112,30 +114,48 @@ namespace Local {
 
 }
 
+
 class RootPCobject : public RootPCellID, public TObject {
 public:
    RootPCobject() : RootPCellID("none",0),obj(0) {}
    RootPCobject(int n) :  RootPCellID("obj1",n),obj(101) {}
+   virtual ~RootPCobject() {};
    int obj;
    void Print() {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
    }   
-   ClassDef(RootPCobject,1); // inherit second from TObject
+   ClassDef(RootPCobject,1) // inherit second from TObject
 };
 
 class RootPCobject2 : public TObject, public RootPCellID {
 public:
    RootPCobject2() : RootPCellID("none",0),obj(0) {}
    RootPCobject2(int n) :  RootPCellID("obj2",n),obj(102) {}
+   virtual ~RootPCobject2() {};
    int obj;
    void Print() {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
    }   
-   ClassDef(RootPCobject2,1); // inherit first from TObject
+   ClassDef(RootPCobject2,1) // inherit first from TObject
+};
+
+class RootPCmisClDef : public RootPCellID, public TObject  {
+ public:
+   RootPCmisClDef() : RootPCellID("none",0),obj(0) {}
+   RootPCmisClDef(int n) :  RootPCellID("miss",n),obj(103) {}
+   virtual ~RootPCmisClDef() {};
+   int obj;
+   void Print() {
+     RootPCellID::Print();
+     std::cout  << "obj \t" << obj << std::endl;
+     //Dump();
+   }   
+   // intentionally NOT putting the ClasDef
+
 };
 
 //inline Short_t GetClassVersion(RootPCellID*) { return 2; }
