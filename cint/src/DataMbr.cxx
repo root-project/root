@@ -316,9 +316,9 @@ int G__DataMemberInfo::Next()
 }
 ///////////////////////////////////////////////////////////////////////////
 #include <vector>
-#ifndef __hpux
+namespace std { }
 using namespace std;
-#endif
+
 int G__DataMemberInfo::Prev()
 {
   struct G__var_array *var;

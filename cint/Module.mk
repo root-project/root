@@ -36,6 +36,7 @@ CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sun5strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/gcc3strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif3.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/accstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/iccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/fakestrm.%,$(CINTS2))
@@ -64,7 +65,9 @@ CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),hpux)
 ifeq ($(ARCH),hpuxia64acc)
-CINTS2       += $(MODDIRS)/fakestrm.cxx
+CINTS2       += $(MODDIRS)/accstrm.cxx
+CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
+CINTS2       += $(MODDIRS)/longif3.cxx
 else
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
@@ -265,6 +268,9 @@ $(CINTDIRS)/gcc3strm.o: $(CINTDIRS)/gcc3strm.cxx
 
 $(CINTDIRS)/iccstrm.o: $(CINTDIRS)/iccstrm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/iccstrm -o $@ -c $<
+
+$(CINTDIRS)/accstrm.o: $(CINTDIRS)/accstrm.cxx
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/accstrm -o $@ -c $<
 
 $(CINTDIRS)/stdstrct.o: $(CINTDIRS)/stdstrct.c
 	$(CC) $(OPT) $(CINTCFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<

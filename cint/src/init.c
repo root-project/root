@@ -2244,6 +2244,9 @@ void G__platformMacro()
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
   sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
+#if __HP_aCC > 15000
+  sprintf(temp,"G__ANSIISOLIB=1"); G__add_macro(temp);
+#endif
 #endif
 #ifdef __SUNPRO_CC  /* Sun C++ compiler */
   sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);

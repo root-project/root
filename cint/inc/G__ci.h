@@ -1809,7 +1809,11 @@ typedef struct {
 /* #define G__VAARG_NOSUPPORT */
 
 #ifndef G__OLDIMPLEMENTATION1696
+#ifdef __ia64__ 
+#define G__VAARG_INC_COPY_N 8
+#else
 #define G__VAARG_INC_COPY_N 4
+#endif
 #define G__VAARG_PASS_BY_REFERENCE 8
 #endif
 

@@ -3403,7 +3403,7 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,",libp,%d",k);
 #elif defined(__hpux)
 	  int i;
-	  for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	  for(i=G__VAARG_SIZE/sizeof(long)-1;i>G__VAARG_SIZE/sizeof(long)-100;i--)	
 	    fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
 	  int i;
@@ -3535,7 +3535,7 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,",libp,%d",k);
 #elif defined(__hpux)
 	int i;
-	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	for(i=G__VAARG_SIZE/sizeof(long)-1;i>G__VAARG_SIZE/sizeof(long)-100;i--)	
 	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
 	int i;
@@ -4667,7 +4667,7 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,",libp,%d",k);
 #elif defined(__hpux)
 	int i;
-	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	for(i=G__VAARG_SIZE/sizeof(long)-1;i>G__VAARG_SIZE/sizeof(long)-100;i--)	
 	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
 	int i;
@@ -4751,7 +4751,7 @@ struct G__ifunc_table *ifunc;
       fprintf(fp,",libp,%d",k);
 #elif defined(__hpux)
 	int i;
-	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	for(i=G__VAARG_SIZE/sizeof(long)-1;i>G__VAARG_SIZE/sizeof(long)-100;i--)	
 	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
 	int i;
