@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.26 2003/11/18 23:09:13 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.27 2003/11/20 23:00:46 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -194,7 +194,6 @@ namespace ROOT {
 
 //--- Globals ------------------------------------------------------------------
 const char *kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
-const char kMethods[]      = "usrpwd srp    krb5   globus ssh    uidgid";
 const char kRootdPass[]    = ".rootdpass";
 const char kSRootdPass[]   = ".srootdpass";
 const char kDaemonRc[]     = ".rootdaemonrc"; // file containing daemon access rules
@@ -1833,8 +1832,7 @@ void RpdKrb5Auth(const char *sstr)
          data = new char[size+1];
 
          // Receive and decode encoded public key
-         int Nrec = -1;
-         Nrec = NetRecvRaw(data, size);
+         int Nrec = NetRecvRaw(data, size);
 
          if (gDebug > 3)
             ErrorInfo("RpdKrb5Auth: received %d ", Nrec);
@@ -3800,8 +3798,7 @@ int RpdRecvClientRSAKey()
       ErrorInfo("RpdRecvClientRSAKey: got len '%s' %d ", BufLen, Len);
 
    // Receive and decode encoded public key
-   int Nrec = -1;
-   Nrec = NetRecvRaw(gPubKey, Len);
+   NetRecvRaw(gPubKey, Len);
    rsa_decode(gPubKey, Len, gRSAPriKey.n, gRSAPriKey.e);
    if (gDebug > 2)
       ErrorInfo("RpdRecvClientRSAKey: Local: decoded string is %d bytes long ",
