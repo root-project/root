@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.1.1.2 2000/05/25 15:02:53 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.3 2000/08/09 08:41:22 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
 
-// $Id: TDataSet.h,v 1.1.1.2 2000/05/25 15:02:53 fisyak Exp $
+// $Id: TDataSet.h,v 1.3 2000/08/09 08:41:22 brun Exp $
 #ifndef ROOT_TDataSet
 #define ROOT_TDataSet
 
@@ -114,7 +114,7 @@ class TDataSet : public TNamed
     virtual TObject     *Clone();
     virtual void         Delete(Option_t *opt="");
     virtual TDataSet  *Find(const Char_t *path) const;
-    virtual TDataSet  *FindObject(const Char_t *name,const Char_t *path="",Option_t *opt="") const;
+    virtual TDataSet  *FindDataSet(const Char_t *name,const Char_t *path="",Option_t *opt="") const;
     virtual TDataSet  *FindByPath(const Char_t *path) const;
     virtual TDataSet  *FindByName(const Char_t *name,const Char_t *path="",Option_t *opt="") const;
     virtual TDataSet  *First() const;
@@ -141,7 +141,7 @@ class TDataSet : public TNamed
     virtual void         Shunt(TDataSet *newParent=0);
     virtual void         Sort();                        //Sort objects in lexical order
     virtual Bool_t       IsEmpty() const;
-    virtual Bool_t       IsFolder() {return kTRUE;}
+    virtual Bool_t       IsFolder() const {return kTRUE;}
     virtual Bool_t       IsLocked() const ;
     virtual Bool_t       IsMarked() const ;
     virtual Bool_t       IsThisDir(const Char_t *dirname,int len=-1,int ignorecase=0) const ;
