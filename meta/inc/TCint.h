@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.2 2000/09/05 09:21:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.3 2001/04/09 14:20:55 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -102,6 +102,8 @@ public:
    void    Execute(TObject *obj, TClass *cl, const char *method, const char *params);
    void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params);
    Int_t   ExecuteMacro(const char *filename);
+   Bool_t  IsErrorMessagesEnabled();
+   Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
    const char *TypeName(const char *typeDesc);
 
    static void *FindSpecialObject(char *name, G__ClassInfo *type, void **prevObj, void **assocPtr);

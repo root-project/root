@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.16 2001/05/02 20:44:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.17 2001/05/20 17:32:41 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -51,6 +51,11 @@ R__EXTERN int optind;
 #undef G__FPROTO_H
 #include "fproto.h"
 #include "Api.h"
+
+// Those are missing from the cint API files:
+extern int G__const_noerror;
+extern "C" int G__const_setnoerror();
+extern "C" int G__const_resetnoerror();
 
 extern "C" void G__clearfilebusy(int);
 
@@ -787,6 +792,26 @@ const char* TCint::GetSharedLibs()
    }
 
    return fSharedLibs;
+}
+
+//______________________________________________________________________________
+Bool_t TCint::IsErrorMessagesEnabled() 
+{
+	// If error message is disabled, the interpreter should be suppress its
+   // failure and warning messages from stdout.
+
+	return !G__const_noerror;
+}
+
+//______________________________________________________________________________
+Bool_t TCint::SetErrorMessages(Bool_t enable)
+{
+	// If error message are disabled, the interpreter should be suppress its
+   // failure and warning messages from stdout.
+
+	if (enable) G__const_resetnoerror();
+   else G__const_setnoerror();
+	return !G__const_noerror;
 }
 
 //______________________________________________________________________________

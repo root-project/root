@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.2 2001/04/09 14:20:55 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -88,6 +88,8 @@ public:
    virtual void     Execute(TObject *obj, TClass *cl, const char *method, const char *params) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params) = 0;
    virtual Int_t    ExecuteMacro(const char *filename) = 0;
+   virtual Bool_t   IsErrorMessagesEnabled() = 0;
+   virtual Bool_t   SetErrorMessages(Bool_t enable = kTRUE) = 0;
    virtual const char *TypeName(const char *s) = 0;
 
    ClassDef(TInterpreter,0)  //ABC defining interface to generic interpreter
