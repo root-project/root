@@ -38,7 +38,7 @@ CILIBS        = -lm -Wl,-E -ldld -lcurses
 # Fortran:
 F77           = fort77
 F77LD         = $(F77)
-F77FLAGS      = -K +ppu
+F77FLAGS      = -K +ppu +Z
 F77LDFLAGS    = -K +ppu $(OPT)
 F77LIBS       =
 
