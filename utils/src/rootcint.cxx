@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.141 2003/08/02 05:45:02 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.142 2003/08/05 21:17:27 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -6,12 +6,12 @@
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ * For the list of contributors see $ROOTSYS/README/rootcint.             *
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// rootcint                                                             //
+// CREDITS                                                             //
 //                                                                      //
 // This program generates the CINT dictionaries needed in order to      //
 // get access to your classes via the interpreter.                      //
@@ -1246,7 +1246,13 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
 
          case G__BIT_ISENUM:
             if (!R__t)  return 0;
-            fprintf(fp, "            R__b >> (Int_t&)%s;\n",R__t);
+            //             fprintf(fp, "            R__b >> (Int_t&)%s;\n",R__t);
+            // On some platforms enums and not 'Int_t' and casting to a reference to Int_t
+            // induces the silent creation of a temporary which is 'filled' __instead of__
+            // the desired enum.  So we need to take it one step at a time.
+            fprintf(fp, "            Int_t readtemp;\n");
+            fprintf(fp, "            R__b >> readtemp;\n");
+            fprintf(fp, "            %s = static_cast<%s>(readtemp);\n",R__t,tiName);
             break;
 
          case R__BIT_HASSTREAMER:
@@ -3077,6 +3083,12 @@ void WriteShadowClass(G__ClassInfo &cl)
       G__BaseClassInfo b(cl);
       bool first = true;
       while (b.Next()) {
+         if (  (b.Property() & G__BIT_ISVIRTUAL) &&
+              !(b.Property() & G__BIT_ISDIRECTINHERIT)) {
+            // CINT duplicates the remote virtual base class in the list scanned
+            // by G__BaseClassInfo, we need to skip them.
+            continue;
+         }
          if (first) {
             fprintf(fp, " : ");
             first = false;
