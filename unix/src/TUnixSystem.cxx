@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.27 2001/06/07 10:47:09 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.28 2001/06/22 16:10:23 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1974,10 +1974,12 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
       sigact.sa_handler = sighandler;
 #endif
       sigemptyset(&sigact.sa_mask);
-#if defined(SA_INTERRUPT)       // SunOS
-      sigact.sa_flags = SA_INTERRUPT;
-#else
       sigact.sa_flags = 0;
+#if defined(SA_INTERRUPT)       // SunOS
+      sigact.sa_flags |= SA_INTERRUPT;
+#endif
+#if defined(SA_RESTART)
+      sigact.sa_flags |= SA_RESTART;
 #endif
       if (sigaction(gSignalMap[sig].code, &sigact,
                     gSignalMap[sig].oldhandler) < 0)
