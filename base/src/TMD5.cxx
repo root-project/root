@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.5 2002/02/28 13:41:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.6 2002/03/07 02:04:31 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -76,27 +76,33 @@ TMD5::TMD5(const UChar_t *digest)
 //______________________________________________________________________________
 TMD5::TMD5(const TMD5 &md5)
 {
-   // MD5 copy ctor. THe md5 must have been finzalized.
-   // Special copy ctor avoids copying unnecessary temp arrays.
+   // MD5 copy ctor. Special copy ctor avoids copying unnecessary
+   // temp arrays when finalized.
 
-   if (!md5.fFinalized)
-      Error("TMD5", "object to be copied must be finalized");
+   if (!md5.fFinalized) {
+      memcpy(fBuf,  md5.fBuf,  4*sizeof(UInt_t));
+      memcpy(fBits, md5.fBits, 2*sizeof(UInt_t));
+      memcpy(fIn,   md5.fIn,   64);
+   }
 
    memcpy(fDigest, md5.fDigest, 16);
-   fFinalized = kTRUE;
+   fFinalized = md5.fFinalized;
 }
 
 //______________________________________________________________________________
 TMD5 &TMD5::operator=(const TMD5 &rhs)
 {
-   // MD5 assignment operator. The rhs must have been finalized.
-   // Special assignment operator avoids copying unnecessary temp arrays.
+   // MD5 assignment operator. Special assignment operator avoids
+   // copying unnecessary temp arrays when finalized.
 
    if (this != &rhs) {
-      if (!rhs.fFinalized)
-         Error("operator=", "object to be assigned must be finalized");
+      if (!rhs.fFinalized) {
+         memcpy(fBuf,  rhs.fBuf,  4*sizeof(UInt_t));
+         memcpy(fBits, rhs.fBits, 2*sizeof(UInt_t));
+         memcpy(fIn,   rhs.fIn,   64);
+      }
       memcpy(fDigest, rhs.fDigest, 16);
-      fFinalized = kTRUE;
+      fFinalized = rhs.fFinalized;
    }
    return *this;
 }
@@ -369,9 +375,9 @@ Bool_t operator==(const TMD5 &m1, const TMD5 &m2)
    // Make sure both are finalized.
    if (!m1.fFinalized || !m2.fFinalized) {
       if (!m1.fFinalized)
-         Error("operator==(const TMD5&, const TMD5&)", "arg1.Final() not yet called");
+         Error("TMD5::operator==(const TMD5&, const TMD5&)", "arg1.Final() not yet called");
       if (!m2.fFinalized)
-         Error("operator==(const TMD5&, const TMD5&)", "arg2.Final() not yet called");
+         Error("TMD5::operator==(const TMD5&, const TMD5&)", "arg2.Final() not yet called");
       return kFALSE;
    }
 
@@ -393,11 +399,11 @@ TMD5 *TMD5::FileChecksum(const char *file)
    Long_t id, size, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
       if (flags > 1) {
-         ::Error("FileChecksum", "%s not a regular file (%ld)", file, flags);
+         Error("TMD5::FileChecksum", "%s not a regular file (%ld)", file, flags);
          return 0;
       }
    } else {
-      ::Error("FileChecksum", "could not stat %s", file);
+      Error("TMD5::FileChecksum", "could not stat %s", file);
       return 0;
    }
 
@@ -407,7 +413,7 @@ TMD5 *TMD5::FileChecksum(const char *file)
    Int_t fd = open(file, O_RDONLY | O_BINARY);
 #endif
    if (fd < 0) {
-      ::Error("FileChecksum", "cannot open %s in read mode", file);
+      Error("TMD5::FileChecksum", "cannot open %s in read mode", file);
       return 0;
    }
 
@@ -425,7 +431,7 @@ TMD5 *TMD5::FileChecksum(const char *file)
       while ((siz = read(fd, buf, left)) < 0 && TSystem::GetErrno() == EINTR)
          TSystem::ResetErrno();
       if (siz < 0 || siz != left) {
-         ::Error("FileChecksum", "error reading from file %s", file);
+         Error("TMD5::FileChecksum", "error reading from file %s", file);
          close(fd);
          delete md5;
          return 0;

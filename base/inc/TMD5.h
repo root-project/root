@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.3 2002/02/28 13:41:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.4 2002/03/07 02:04:31 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #endif
 
 // forward declaration
+class TBuffer;
 class TMD5;
 Bool_t operator==(const TMD5 &m1, const TMD5 &m2);
 
@@ -74,6 +75,11 @@ public:
    ClassDef(TMD5,1)  // MD5 cryptographic hash functions with a 128 bit output
 };
 
+inline TBuffer &operator>>(TBuffer& buf, TMD5& md5)
+{ md5.Streamer(buf); return buf; }
+
+inline TBuffer &operator<<(TBuffer& buf, const TMD5& md5)
+{ ((TMD5&)md5).Streamer(buf); return buf; }
 
 inline Bool_t operator!=(const TMD5 &m1, const TMD5 &m2)
 { return !(m1 == m2); }
