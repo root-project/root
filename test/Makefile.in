@@ -13,7 +13,7 @@ ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
-OutPutOpt     = -o 
+OutPutOpt     = -o
 
 EVENTLIB      = $(EVENTSO)
 
@@ -82,9 +82,9 @@ endif
 ifeq ($(ARCH),solarisCC5)
 # Solaris CC 5.0
 CXX           = CC
-CXXFLAGS      = -O -KPIC -D__SunOS_5_6 -library=iostream,no%Cstd
+CXXFLAGS      = -O -KPIC
 LD            = CC
-LDFLAGS       = -O -library=iostream,no%Cstd -o
+LDFLAGS       = -O
 SOFLAGS       = -G
 endif
 
