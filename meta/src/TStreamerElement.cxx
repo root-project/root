@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.72 2005/01/12 07:50:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.73 2005/01/20 16:39:31 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -291,6 +291,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
          SetUniqueID(0);
          //check if element is a TRef or TRefArray
          GetExecID();
+         if (fType==11&&fTypeName=="Bool_t") fType = 18;
          return;
       }
       //====process old versions before automatic schema evolution
@@ -301,6 +302,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       R__b >> fArrayDim;
       R__b.ReadStaticArray(fMaxIndex);
       fTypeName.Streamer(R__b);
+      if (fType==11&&fTypeName=="Bool_t") fType = 18;
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
       TStreamerElement::Class()->WriteBuffer(R__b,this);
