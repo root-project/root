@@ -43,6 +43,7 @@ public:
    Int_t                    GetId()   const     {return fId;}
    Double_t                 GetParam(Int_t i) const {return fParams[i];}
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
+   void                     SetId(Int_t id)     {fId = id;}
    void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}   
   ClassDef(TGeoMedium, 1)              // tracking medium
