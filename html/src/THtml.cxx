@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.15 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.16 2002/01/24 11:39:29 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -386,7 +386,6 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 //
 // Input: classPtr - pointer to the class
 
-
    const char *tab = "<!--TAB-->";
    const char *tab2 = "<!--TAB2-->  ";
    const char *tab4 = "<!--TAB4-->    ";
@@ -574,9 +573,9 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
          Int_t i, j;
 
          for (j = 0; j < 3; j++) {
-            if (*(methodNames + j * 2 * nMethods)) {
-               qsort(methodNames + j * 2 * nMethods, num[j],
-                     2 * sizeof(methodNames), CaseInsensitiveSort);
+            if (num[j]) {
+                 qsort(methodNames + j * 2 * nMethods, num[j],
+                        2 * sizeof(methodNames), CaseInsensitiveSort);
 
                const char *ftitle = 0;
                switch (j) {
@@ -692,12 +691,16 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                   // Take in account the room the array index will occupy
 
                   Int_t dim = member->GetArrayDim();
-                  for (Int_t indx = 0; indx < dim; indx++) {
-                     len2 +=
-                         Int_t(TMath::Log10(member->GetMaxIndex(indx))) +
-                         3;
+                  Int_t indx = 0;
+                  Int_t maxidx;
+                  while (indx < dim) {
+                     maxidx = member->GetMaxIndex(indx);
+                     if (maxidx <= 0) 
+                        break;
+                     else
+                        len2 += (Int_t)TMath::Log10(maxidx) + 3;
+                     indx++;
                   }
-
                   maxLen1[mtype] =
                       maxLen1[mtype] > len1 ? maxLen1[mtype] : len1;
                   maxLen2[mtype] =
@@ -712,7 +715,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                classFile << "<pre>" << endl;
 
                for (j = 0; j < 3; j++) {
-                  if (memberArray[j * ndata]) {
+                  if (num[j]) {
                      const char *ftitle = 0;
                      switch (j) {
                      case 0:
@@ -2023,8 +2026,9 @@ void THtml::CreateListOfTypes()
       while ((type = (TDataType *) nextType())) {
          if (*type->GetTitle() && !strchr(type->GetName(), '(')) {
             typesList << "<b><a name=\"";
-            typesList << type->GetName();
-            typesList << "\">" << type->GetName();
+            ReplaceSpecialChars(typesList, type->GetName());
+            typesList << "\">";
+            ReplaceSpecialChars(typesList, type->GetName());
             typesList << "</a></b>";
 
             if (type->GetName())
@@ -2037,14 +2041,10 @@ void THtml::CreateListOfTypes()
             typesList << " ";
 
             typesList << "<a name=\"Title:";
-            typesList << type->GetTitle();
+            ReplaceSpecialChars(typesList, type->GetTitle());
             typesList << "\">";
-            char *tempstr = StrDup(type->GetTitle());
-            ReplaceSpecialChars(typesList, tempstr);
+            ReplaceSpecialChars(typesList, type->GetTitle());
             typesList << "</a>" << endl;
-
-            if (tempstr)
-               delete[]tempstr;
          }
       }
 
@@ -2541,7 +2541,7 @@ void THtml::ExpandPpLine(ofstream & out, char *line)
             Int_t len = ptrEnd - ptrStart;
             fileName = new char[len + 1];
             strncpy(fileName, ptrStart, len);
-
+            fileName[len]=0;
             char *tmpstr =
                 gSystem->Which(fSourceDir, fileName, kReadPermission);
             if (tmpstr) {
@@ -2713,8 +2713,8 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
       t++;
 
    TClass *cl = gROOT->GetClass(t, load);
-   delete[]name;
-   return cl;
+   delete [] name;
+   return (cl && cl->GetDeclFileName() && strlen(cl->GetDeclFileName())?cl:0);
 }
 
 
@@ -3544,9 +3544,17 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
 //______________________________________________________________________________
 void THtml::NameSpace2FileName(char *name)
 {
-   // Replace "::" in the namespace::classname string by "__" if necessary.
-
+   // Replace "::" in name by "__"
+   // Replace "<", ">", " ","," in name by "_"
    char *namesp = 0;
    while ((namesp = strstr(name, "::")) != 0)
       *namesp = *(namesp + 1) = '_';
+   while ((namesp = strstr(name, "<")) != 0)
+      *namesp = '_';
+   while ((namesp = strstr(name, ">")) != 0)
+      *namesp = '_';
+   while ((namesp = strstr(name, " ")) != 0)
+      *namesp = '_';
+   while ((namesp = strstr(name, ",")) != 0)
+      *namesp = '_';
 }
