@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.23 2003/06/17 15:19:55 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.24 2003/08/21 14:31:01 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,9 +10,16 @@
 
 #ifdef __CINT__
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+#ifndef G__KCC
+#include "cint/lib/dll_stl/str.h"
+#endif
+
+#pragma extra_include "vector";
+#pragma extra_include "string";
+#include <vector>
+
+#pragma link C++ class vector<string>;
+#pragma create TClass string;
 
 #pragma link C++ global gTQSender;
 #pragma link C++ global gTQSlotParams;

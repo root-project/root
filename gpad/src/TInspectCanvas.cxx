@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.7 2002/09/10 13:17:41 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.8 2002/09/10 13:36:32 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TGuiFactory.h"
 #include "TInspectCanvas.h"
 #include "TButton.h"
 #include "TClass.h"
@@ -21,6 +22,34 @@
 #include "TLatex.h"
 
 ClassImp(TInspectCanvas)
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TInspectorObject                                                       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TInspectorObject : public TObject
+{
+   // This class is designed to wrap a Foreign object in order to 
+   // inject it into the Browse sub-system.
+
+public: 
+
+   TInspectorObject(void *obj, TClass *cl) : fObj(obj),fClass(cl) {};
+  ~TInspectorObject(){;}
+
+   void   *GetObject() const { return fObj; };
+   void    Inspect() const {
+      gGuiFactory->CreateInspectorImp(this, 400, 200);
+   };
+   TClass *IsA() const { return fClass; }
+
+private:
+   void     *fObj;   //! pointer to the foreign object
+   TClass   *fClass; //! pointer to class of the foreign object
+
+};  
 
 //______________________________________________________________________________//*-*
 //*-*   A InspectCanvas is a canvas specialized to inspect Root objects.
@@ -96,6 +125,14 @@ void TInspectCanvas::InspectObject(TObject *obj)
 
    TClass *cl = obj->IsA();
    if (cl == 0) return;
+   TInspectorObject *proxy=0;
+   if (!cl->InheritsFrom(TObject::Class())) {
+      // This is possible only if obj is actually a TInspectorObject
+      // wrapping a non-TObject.
+      proxy = (TInspectorObject*)obj;
+      obj = (TObject*)proxy->GetObject();
+   }
+
    if (!cl->GetListOfRealData()) cl->BuildRealData(obj);
 
    // Count number of data members in order to resize the canvas
@@ -178,11 +215,19 @@ void TInspectCanvas::InspectObject(TObject *obj)
    ttitle.SetTextColor(2);
    ttitle.SetTextAlign(11);
    ttitle.DrawText(x1+0.2, y3+0.1, cl->GetName());
-   ttitle.SetTextColor(4);
-   sprintf(line,"%s:%d",obj->GetName(),obj->GetUniqueID());
-   ttitle.DrawText(xvalue+0.2, y3+0.1, line);
-   ttitle.SetTextColor(6);
-   ttitle.DrawText(xtitle+2, y3+0.1, obj->GetTitle());
+   if (proxy==0) {
+      ttitle.SetTextColor(4);
+      sprintf(line,"%s:%d",obj->GetName(),obj->GetUniqueID());
+      ttitle.DrawText(xvalue+0.2, y3+0.1, line);
+      ttitle.SetTextColor(6);
+      ttitle.DrawText(xtitle+2, y3+0.1, obj->GetTitle());
+   } else {
+      ttitle.SetTextColor(4);
+      sprintf(line,"%s:%d","Foreign object",0);
+      ttitle.DrawText(xvalue+0.2, y3+0.1, line);
+      ttitle.SetTextColor(6);
+      ttitle.DrawText(xtitle+2, y3+0.1, "no title given");      
+   }
    ttitle.SetTextSize(tsize);
    ttitle.SetTextColor(1);
    ttitle.SetTextFont(11);
@@ -217,12 +262,24 @@ void TInspectCanvas::InspectObject(TObject *obj)
          char **ppointer = (char**)(pointer);
          TLink *tlink = 0;
 
+         TClass *clm=0;
+         if (!membertype) {
+            clm = member->GetClass(); 
+         }
+
          if (member->IsaPointer()) {
             char **p3pointer = (char**)(*ppointer);
+            if (! clm->IsStartingWithTObject() ) {
+               //NOTE: memory leak!
+               p3pointer = (char**)new TInspectorObject(p3pointer,clm);
+            }
+            
             if (!p3pointer) {
                sprintf(&line[kvalue],"->0");
             } else if (!member->IsBasic()) {
-               if (pass == 1) tlink = new TLink(xvalue+0.1, ytext, p3pointer);
+               if (pass == 1) {
+                  tlink = new TLink(xvalue+0.1, ytext, p3pointer);
+               }
             } else if (membertype) {
                if (!strcmp(membertype->GetTypeName(), "char"))
                   sprintf(&line[kvalue], "%s", *ppointer);

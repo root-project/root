@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.30 2003/07/04 13:27:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.31 2003/12/25 17:55:20 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 
 class TFolder;
 class TStreamerInfo;
+class TVirtualCollectionProxy;
 
 class TBranchElement : public TBranch {
 
@@ -36,8 +37,9 @@ protected:
     TString             fClassName;     //Class name of referenced object
     TString             fParentName;    //Name of parent class
     TString             fClonesName;    //Name of class in TClonesArray (if any)
+TVirtualCollectionProxy*fCollProxy;     //! collection interface (if any)
     UInt_t              fCheckSum;      //CheckSum of class
-	Int_t               fClassVersion;  //Version number of class
+    Int_t               fClassVersion;  //Version number of class
     Int_t               fID;            //element serial number in fInfo
     Int_t               fType;          //branch type
     Int_t               fStreamerType;  //branch streamer type
@@ -48,6 +50,8 @@ protected:
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
     char               *fObject;        //!Pointer to object at *fAddress
     char               *fBranchPointer; //!Pointer to object for a master branch
+private:
+    TVirtualCollectionProxy *GetCollectionProxy();
 
             Int_t    GetDataMemberOffset(const TClass *cl, const char *name);
 
@@ -55,6 +59,7 @@ public:
     TBranchElement();
     TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, char *pointer, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t btype=0);
     TBranchElement(const char *name, TClonesArray *clones, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
+    TBranchElement(const char *name, TVirtualCollectionProxy *cont, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
     virtual ~TBranchElement();
 
     virtual Int_t    Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);

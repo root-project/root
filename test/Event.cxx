@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.24 2004/01/06 08:33:43 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.25 2004/01/06 15:51:52 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -140,8 +140,8 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   fMuons->Delete();
   
   Int_t nch = 15;
-  if (ev > 100)   nch += 3;
-  if (ev > 10000) nch += 3;
+  if (ev >= 100)   nch += 3;
+  if (ev >= 10000) nch += 3;
   if (fEventName) delete [] fEventName;
   fEventName = new char[nch];
   sprintf(fEventName,"Event%d_Run%d",ev,200);

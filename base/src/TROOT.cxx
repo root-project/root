@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.107 2003/11/13 15:25:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.108 2003/11/24 10:51:54 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -71,6 +71,7 @@
 #include "Gtypes.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TClassGenerator.h"
 #include "TDataType.h"
 #include "TFile.h"
@@ -107,6 +108,9 @@
 #include "TAuthDetails.h"
 #include "THostAuth.h"
 #include "TNetFile.h"
+
+#include <string>
+namespace std {} using namespace std;
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -249,7 +253,25 @@ namespace ROOT {
    };
 }
 
-TROOT      *gROOT;         // The ROOT of EVERYTHING
+
+Int_t         TROOT::fgDirLevel = 0;
+Bool_t        TROOT::fgRootInit = kFALSE;
+Bool_t        TROOT::fgMemCheck = kFALSE;
+VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
+
+// This local static object initializes the ROOT system
+namespace ROOT {
+   TROOT *GetROOT() { 
+      static TROOT root("root", "The ROOT of EVERYTHING");
+      return &root; 
+   }
+   TString &GetMacroPath() {
+      static TString macroPath;
+      return macroPath;
+   }
+}
+
+TROOT      *gROOT = ROOT::GetROOT();         // The ROOT of EVERYTHING
 TRandom    *gRandom;       // Global pointer to random generator
 
 // Global debug flag (set to != 0 to get debug output).
@@ -258,15 +280,7 @@ TRandom    *gRandom;       // Global pointer to random generator
 Int_t       gDebug;
 
 
-Int_t         TROOT::fgDirLevel = 0;
-Bool_t        TROOT::fgRootInit = kFALSE;
-Bool_t        TROOT::fgMemCheck = kFALSE;
-TString       TROOT::fgMacroPath;
-VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
 
-
-// This local static object initializes the ROOT system
-static TROOT root("root", "The ROOT of EVERYTHING");
 
 
 ClassImp(TROOT)
@@ -786,41 +800,69 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       //we may pass here in case of a dummy class created by TStreamerInfo
       load = kTRUE;
    } else {
-      TDataType *objType = GetType(name, load);
-      if (objType) {
-         const char *typdfName = objType->GetTypeName();
-         if (typdfName && strcmp(typdfName, name)) {
-            cl = GetClass(typdfName, load);
-            return cl;
+
+      if (! TClassEdit::IsSTLCont(name)) {
+         // If the name is actually an STL container we prefer the 
+         // short name rather than the true name (at least) in 
+         // a first try!
+         
+         TDataType *objType = GetType(name, load);
+         if (objType) {
+            const char *typdfName = objType->GetTypeName();
+            if (typdfName && strcmp(typdfName, name)) {
+               cl = GetClass(typdfName, load);
+               return cl;
+            }
          }
       }
    }
 
    if (!load) return 0;
 
-   VoidFuncPtr_t dict = TClassTable::GetDict(name);
-   if (dict) {
-      (dict)();
-      return GetClass(name);
-   }
-   if (cl) return cl;
+   TClass *loadedcl = LoadClass(name);
+   if (loadedcl) return loadedcl;
+   if (cl) return cl;  // If we found the class but we already have a dummy class use it.
 
-   TIter next(fClassGenerators);
-   TClassGenerator *gen;
-   while( (gen = (TClassGenerator*) next()) ) {
-      cl = gen->GetClass(name,load);
-      if (cl) return cl;
-   }
-
-   // Reject STL containers and string.
    static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-   if (!strcmp(name, "string")||!strcmp(name,full_string_name)) return 0;
-   if (strstr(name, "vector<")   || strstr(name, "list<") ||
-       strstr(name, "set<")      || strstr(name, "map<")  ||
-       strstr(name, "deque<")    || strstr(name, "multimap<") ||
-       strstr(name, "multiset<") || strstr(name, "::" ))
-      return 0;   //reject STL containers
+   if (strcmp(name,full_string_name)==0) { return gROOT->GetClass("string"); }
 
+   if (TClassEdit::IsSTLCont(name)) {
+
+      // We have not found the STL container yet.
+      // First we are going to look for a similar name but different 'default' template
+      // parameter (differences due to different STL implementation)
+
+      string defaultname( TClassEdit::ShortType( name, TClassEdit::kDropStlDefault )) ;
+      if (defaultname != name) {
+         cl = (TClass*)GetListOfClasses()->FindObject(defaultname.c_str());
+         if (!cl) cl = LoadClass(defaultname.c_str());
+      } 
+
+      if (cl==0) {
+
+         // now look for a typedef 
+         // well for now the typedefing in CINT has some issues
+         // for examples if we generated the dictionary for
+         //    set<string,someclass> then set<string> is typedef to it (instead of set<string,less<string> >)
+
+         TDataType *objType = GetType(name, load);
+         if (objType) {
+            const char *typedfName = objType->GetTypeName();
+            string defaultTypedefName(  TClassEdit::ShortType( typedfName, TClassEdit::kDropStlDefault ) );
+            
+            if (typedfName && strcmp(typedfName, name) && defaultTypedefName==name) {
+               cl = (TClass*)GetListOfClasses()->FindObject(typedfName);
+               if (!cl) cl = LoadClass(typedfName);
+            }
+         }
+      }
+      if (cl==0) {
+         // Create an Emulated class for this container.
+         cl = new TClass(name, GetVersionInt() / 100, 0, 0, -1, -1 );
+         cl->SetBit(TClass::kIsEmulation);
+      }
+      return cl;
+   }
    if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))
       return 0; // reject long longs
 
@@ -1257,6 +1299,32 @@ void TROOT::InitThreads()
    }
 }
 
+
+//______________________________________________________________________________
+TClass *TROOT::LoadClass(const char *classname) const
+{
+   // Helper function used by TROOT::GetClass
+   // This attempts to load the dictionary for 'classname' either from
+   // the TClassTable or from the list of generator.
+
+   // This function do not (and should not) attempts to check in the
+   // list of load classes or in the typedef.
+
+   VoidFuncPtr_t dict = TClassTable::GetDict(classname);
+   if (dict) {
+      (dict)();
+      return GetClass(classname);
+   }
+
+   TIter next(fClassGenerators);
+   TClassGenerator *gen;
+   while( (gen = (TClassGenerator*) next()) ) {
+      TClass *cl = gen->GetClass(classname,kTRUE);
+      if (cl) return cl;
+   }
+   return 0;
+}
+
 //______________________________________________________________________________
 Int_t TROOT::LoadClass(const char *classname, const char *libname,
                        Bool_t check)
@@ -1672,27 +1740,29 @@ const char *TROOT::GetMacroPath()
 {
    // Get macro search path. Static utility function.
 
-   if (fgMacroPath.Length() == 0) {
-      fgMacroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
-      if (fgMacroPath.Length() == 0)
+   TString &macroPath = ROOT::GetMacroPath();
+   
+   if (macroPath.Length() == 0) {
+      macroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
+      if (macroPath.Length() == 0)
 #if !defined (__VMS ) && !defined(WIN32)
    #ifdef ROOTMACRODIR
-         fgMacroPath = ".:" ROOTMACRODIR;
+         macroPath = ".:" ROOTMACRODIR;
    #else
-         fgMacroPath = TString(".:") + gRootDir + "/macros";
+         macroPath = TString(".:") + gRootDir + "/macros";
    #endif
 #elif !defined(__VMS)
    #ifdef ROOTMACRODIR
-         fgMacroPath = ".;" ROOTMACRODIR;
+         macroPath = ".;" ROOTMACRODIR;
    #else
-         fgMacroPath = TString(".;") + gRootDir + "/macros";
+         macroPath = TString(".;") + gRootDir + "/macros";
    #endif
 #else
-         fgMacroPath = TString(gRootDir) + "MACROS]";
+         macroPath = TString(gRootDir) + "MACROS]";
 #endif
    }
 
-   return fgMacroPath;
+   return macroPath;
 }
 
 //______________________________________________________________________________
@@ -1701,10 +1771,12 @@ void TROOT::SetMacroPath(const char *newpath)
    // Set or extend the macro search path. Static utility function.
    // If newpath=0 or "" reset to value specified in the rootrc file.
 
+   TString &macroPath = ROOT::GetMacroPath();
+
    if (!newpath || !*newpath)
-      fgMacroPath = "";
+      macroPath = "";
    else
-      fgMacroPath = newpath;
+      macroPath = newpath;
 }
 
 //______________________________________________________________________________

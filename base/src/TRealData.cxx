@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.2 2000/11/21 16:38:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.3 2000/11/22 20:57:26 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include "TRealData.h"
 #include "TDataMember.h"
 #include "TClass.h"
-
+#include "TStreamer.h"
 
 ClassImp(TRealData)
 
@@ -27,7 +27,7 @@ ClassImp(TRealData)
 //  object.Inspect or object.DrawClass are called.
 
 //______________________________________________________________________________
-TRealData::TRealData() : TObject()
+TRealData::TRealData() : TObject(), fStreamer(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*RealData default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ============================
@@ -35,9 +35,10 @@ TRealData::TRealData() : TObject()
    fIsObject = kFALSE;
 }
 
+
 //______________________________________________________________________________
 TRealData::TRealData(const char *name, Int_t offset, TDataMember *datamember)
-            : TObject()
+   : TObject(),fStreamer(0)
 {
 //*-*-*-*-*-*-*-*-*-*Constructor to define one persistent data member*-*-*-*-*
 //*-*                ================================================
@@ -46,7 +47,6 @@ TRealData::TRealData(const char *name, Int_t offset, TDataMember *datamember)
    fDataMember = datamember;
    fThisOffset = offset;
    fName = name;
-   fStreamer = 0;
    fIsObject = kFALSE;
 }
 
@@ -56,6 +56,7 @@ TRealData::~TRealData()
 //*-*-*-*-*-*-*-*-*-*-*RealData default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================
 
+   delete fStreamer;
 }
 
 //______________________________________________________________________________
@@ -67,3 +68,18 @@ void TRealData::WriteRealData(void *, char *&)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*
 }
+
+//______________________________________________________________________________
+void TRealData::AdoptStreamer(TMemberStreamer *str)
+{
+   //fDataMember->SetStreamer(str);
+   //delete fStreamer; 
+   fStreamer = str;
+}
+
+//______________________________________________________________________________
+TMemberStreamer *TRealData::GetStreamer() const
+{
+   return fStreamer; // return fDataMember->GetStreamer();
+}
+

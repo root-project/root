@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.56 2003/11/14 11:11:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.57 2003/12/30 13:16:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -206,7 +206,11 @@ public:
     virtual TObjArray       *GetListOfLeaves()   {return &fLeaves;}
     virtual TList    *GetListOfFriends() const  {return fFriends;}
     virtual TSeqCollection *GetListOfAliases() const {return fAliases;}
-    virtual Int_t     GetMakeClass() const {return fMakeClass;}
+    
+    // GetMakeClass is left non-virtual for efficiency reason.
+    // Making it virtual affects the performance of the I/O
+            Int_t     GetMakeClass() const {return fMakeClass;}
+
     virtual Int_t     GetMaxEntryLoop() const {return fMaxEntryLoop;}
     virtual Double_t  GetMaximum(const char *columname);
     static  Long64_t  GetMaxTreeSize();

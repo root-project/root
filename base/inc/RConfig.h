@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.58 2003/12/04 07:12:36 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.59 2003/12/30 20:43:46 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -51,6 +51,7 @@
 #   define ANSICPP
 #   define R__SEEK64
 #   define NEED_STRCASECMP
+#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #endif
 
 #ifdef __linux
@@ -145,6 +146,9 @@
 #   endif
 #   if defined(__mips64) || defined(_ABI64)
 #      define R__B64
+#   endif
+#   if !defined(__GNUC__) && !defined(__KCC) 
+#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
 #endif
 
@@ -375,6 +379,9 @@
 #   if _MSC_VER >= 1200
 #     define R__ANSISTREAM    /* ANSI C++ Standard Library conformant */
 #   endif
+#   if _MSC_VER < 1310
+#      define R__NO_CLASS_TEMPLATE_SPECIALIZATION
+#    endif
 #endif
 
 #ifdef __MWERKS__

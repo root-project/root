@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.30 2003/12/25 17:47:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.31 2004/01/03 09:41:16 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -58,6 +58,7 @@ protected:
    TBuffer(const TBuffer &);           // not implemented
    void operator=(const TBuffer &);    // not implemented
 
+   Int_t  CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
    void   CheckCount(UInt_t offset);
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
@@ -98,6 +99,7 @@ public:
    Int_t    Length() const { return (Int_t)(fBufCur - fBuffer); }
 
    Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
+   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
    void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
 
    Bool_t   IsReading() const { return (fMode & kWrite) == 0; }
@@ -170,6 +172,8 @@ public:
    void     ReadFastArray(Float_t   *f, Int_t n);
    void     ReadFastArray(Double_t  *d, Int_t n);
    void     ReadFastArrayDouble32(Double_t  *d, Int_t n);
+   void     ReadFastArray(void  *start , TClass *cl, Int_t n=1, TMemberStreamer *s=0);
+   void     ReadFastArray(void **startp, TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
    void     WriteArray(const Bool_t    *b, Int_t n);
    void     WriteArray(const Char_t    *c, Int_t n);
@@ -200,6 +204,8 @@ public:
    void     WriteFastArray(const Float_t   *f, Int_t n);
    void     WriteFastArray(const Double_t  *d, Int_t n);
    void     WriteFastArrayDouble32(const Double_t  *d, Int_t n);
+   void     WriteFastArray(void  *start,  TClass *cl, Int_t n=1, TMemberStreamer *s=0);
+   Int_t    WriteFastArray(void **startp, TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
    void     StreamObject(void *obj, const type_info &typeinfo);
    void     StreamObject(void *obj, const char *className);

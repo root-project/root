@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.21 2003/05/15 11:02:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.22 2003/06/23 22:18:37 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 
 #include "TClassTable.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TROOT.h"
 #include "TMath.h"
 #include "TString.h"
@@ -149,6 +150,20 @@ TClassTable::TClassTable()
 TClassTable::~TClassTable()
 {
    // TClassTable singleton is deleted in Terminate().
+   
+   // Try to avoid spurrious warning from memory leak checkers.
+   
+   for(Int_t i=0; i<fgSize; ++i) {
+      ClassRec_t *r = fgTable[i];
+      while (r) {
+         delete [] r->name;
+         ClassRec_t *next = r->next;
+         delete r;
+         r = next;
+      }
+   }
+   delete [] fgTable;
+   delete fgIdMap;
 }
 
 //______________________________________________________________________________
@@ -208,10 +223,13 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
    if (!gClassTable)
       gClassTable = new TClassTable;
 
-   // check if already in table, if so return
+  // check if already in table, if so return
    ClassRec_t *r = FindElement(cname, kTRUE);
    if (r->name) {
-      ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
+      if (TClassEdit::IsSTLCont(cname)==0) {
+         // Warn only for class that are not STL containers.
+         ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
+      }
       return;
    }
 

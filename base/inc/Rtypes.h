@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.41 2003/08/21 17:51:25 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.42 2003/12/26 18:38:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -82,7 +82,15 @@ typedef long long          Long64_t;  //Portable signed long integer 8 bytes
 typedef unsigned long long ULong64_t; //Portable unsigned long integer 8 bytes
 #endif
 
-typedef void         (*Streamer_t)(TBuffer&, void*, Int_t);
+// There is several streamer concepts.  
+class TClassStreamer;   // Streamer functor for a class
+class TMemberStreamer;  // Streamer functor for a data member
+typedef void         (*ClassStreamerFunc_t)(TBuffer&, void*);  // Streamer function for a class
+typedef void         (*MemberStreamerFunc_t)(TBuffer&, void*, Int_t); // Streamer function for a data member
+
+// This class is used to implement proxy around collection classes.
+class TVirtualCollectionProxy;
+
 typedef void         (*VoidFuncPtr_t)();  //pointer to void function
 
 
@@ -346,5 +354,17 @@ namespace ROOT { \
            GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
    R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber)); \
 }
+
+#if defined(__CINT__)
+#define RootStreamer(name,STREAMER) 
+#else
+#define RootStreamer(name,STREAMER)                                  \
+namespace ROOT {                                                     \
+   TGenericClassInfo *GenerateInitInstance(const name*);             \
+   static Short_t _R__UNIQUE_(R__dummyStreamer) =                    \
+           GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);  \
+   R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
+}
+#endif
 
 #endif

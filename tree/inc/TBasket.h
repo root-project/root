@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.8 2003/04/30 16:29:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.9 2003/12/30 13:16:51 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -39,7 +39,7 @@ class TBasket : public TKey {
 
 protected:
     Int_t       fBufferSize;      //fBuffer length in bytes
-    Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset
+    Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
     Int_t       fNevBuf;          //Number of entries in basket
     Int_t       fLast;            //Pointer to last used byte in basket
     Bool_t      fHeaderOnly;      //True when only the basket header must be read/written

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.15 2002/12/02 18:50:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.16 2002/12/09 15:12:53 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #endif
 
 #include "Api.h"
+#include "TClassEdit.h"
 
 namespace ROOT {
    inline void GenericShowMembers(const char *topClassName,
@@ -31,8 +32,10 @@ namespace ROOT {
       // To avoid a spurrious error message in case the data member is
       // transient and does not have a dictionary we check first.
       if (transientMember) {
-         G__ClassInfo b(topClassName);
-         if (!b.IsLoaded()) return;
+         if (!TClassEdit::IsSTLCont(topClassName)) {
+            G__ClassInfo b(topClassName);
+            if (!b.IsLoaded()) return;
+         }
       }
 
       TClass *top = gROOT->GetClass(topClassName);

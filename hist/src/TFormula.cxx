@@ -20,6 +20,7 @@
 #include "TFunction.h"
 #include "TMethodCall.h"
 #include "TObjString.h"
+#include "TError.h"
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -99,7 +100,7 @@ ClassImp(TFormula)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-
+#define IMPL 2
 //______________________________________________________________________________
 TFormula::TFormula(): TNamed()
 {
@@ -112,7 +113,9 @@ TFormula::TFormula(): TNamed()
    fNconst = 0;
    fNumber = 0;
    fExpr   = 0;
-   fOper   = 0;
+   fOper   = 0; fNoldOper = 0;
+   fActions= 0;
+   fActionParams= 0;
    fConst  = 0;
    fParams = 0;
    fNstring= 0;
@@ -132,7 +135,9 @@ TFormula::TFormula(const char *name,const char *expression) :TNamed(name,express
    fNconst = 0;
    fNumber = 0;
    fExpr   = 0;
-   fOper   = 0;
+   fOper   = 0; fNoldOper = 0;
+   fActions= 0;
+   fActionParams= 0;
    fConst  = 0;
    fParams = 0;
    fNstring= 0;
@@ -181,7 +186,9 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fNconst = 0;
    fNumber = 0;
    fExpr   = 0;
-   fOper   = 0;
+   fOper   = 0; fNoldOper = 0;
+   fActions= 0;
+   fActionParams= 0;
    fConst  = 0;
    fParams = 0;
    fNstring= 0;
@@ -347,7 +354,8 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
          }
 
          fExpr[fNoper] = method->GetMethod()->GetPrototype();
-         fOper[fNoper] = kFunctionCall + fFunctions.GetLast()*1000 + nargs;
+         fActions[fNoper] = kNewFunctionCall;
+         fActionParams[fNoper] = fFunctions.GetLast()*1000 + nargs;
          fNoper++;
 
          return true;
@@ -656,16 +664,17 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(0,ou-1);
         Analyze(ctemp.Data(),err,offset);
 
-        fExpr[fNoper] = "|| opt";
-        fOper[fNoper] = kBoolOptimize+2;
+        fExpr[fNoper] = "|| checkpoint";
+        fActions[fNoper] = kNewBoolOptimize;
+        fActionParams[fNoper] = 2;
         Int_t optloc = fNoper++;
 
         ctemp = chaine(ou+1,lchain-ou-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "||";
-        fOper[fNoper] = 61;
+        fActions[fNoper] = kOr;
 
-        fOper[optloc] += (fNoper-optloc) * 10;
+        fActionParams[optloc] += (fNoper-optloc) * 10;
         fNoper++;
       }
     } else if (et!=0) {
@@ -677,16 +686,17 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(0,et-1);
         Analyze(ctemp.Data(),err,offset);
 
-        fExpr[fNoper] = "&& opt";
-        fOper[fNoper] = kBoolOptimize+1;
+        fExpr[fNoper] = "&& checkpoint";
+        fActions[fNoper] = kNewBoolOptimize;
+        fActionParams[fNoper] = 1;
         Int_t optloc = fNoper++;
 
         ctemp = chaine(et+1,lchain-et-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "&&";
-        fOper[fNoper] = 60;
+        fActions[fNoper] = kAnd;
 
-        fOper[optloc] += (fNoper-optloc) * 10;
+        fActionParams[optloc] += (fNoper-optloc) * 10;
         fNoper++;
       }
     } else if (oux!=0) {
@@ -700,7 +710,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(oux,lchain-oux);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "|";
-        fOper[fNoper] = 79;
+        fActions[fNoper] = kBitOr;
         fNoper++;
       }
     } else if (etx!=0) {
@@ -714,7 +724,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(etx,lchain-etx);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "&";
-        fOper[fNoper] = 78;
+        fActions[fNoper] = kBitAnd;
         fNoper++;
       }
     } else if (petit != 0) {
@@ -728,7 +738,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(petit,lchain-petit);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "<";
-        fOper[fNoper] = 64;
+        fActions[fNoper] = kLess;
         fNoper++;
       }
     } else if (grand != 0) {
@@ -742,7 +752,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(grand,lchain-grand);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = ">";
-        fOper[fNoper] = 65;
+        fActions[fNoper] = kGreater;
         fNoper++;
       }
     } else if (peteg != 0) {
@@ -756,7 +766,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(peteg+1,lchain-peteg-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "<=";
-        fOper[fNoper] = 66;
+        fActions[fNoper] = kLessThan;
         fNoper++;
       }
     } else if (grdeg != 0) {
@@ -769,8 +779,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         Analyze(ctemp.Data(),err,offset);
         ctemp = chaine(grdeg+1,lchain-grdeg-1);
         Analyze(ctemp.Data(),err,offset);
-        fExpr[fNoper] = "=>";
-        fOper[fNoper] = 67;
+        fExpr[fNoper] = ">=";
+        fActions[fNoper] = kGreaterThan;
         fNoper++;
       }
     } else if (egal != 0) {
@@ -784,7 +794,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(egal+1,lchain-egal-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "==";
-        fOper[fNoper] = 62;
+        fActions[fNoper] = kEqual;
         fNoper++;
       }
     } else if (diff != 0) {
@@ -798,7 +808,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(diff+1,lchain-diff-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "!=";
-        fOper[fNoper] = 63;
+        fActions[fNoper] = kNotEqual;
         fNoper++;
       }
     } else
@@ -813,7 +823,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         ctemp = chaine(plus,lchain-plus);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "+";
-        fOper[fNoper] = 1;
+        fActions[fNoper] = kAdd;
         fNoper++;
       }
       
@@ -822,12 +832,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         if (moins == 1) {
           ctemp = chaine(moins,lchain-moins);
           Analyze(ctemp.Data(),err,offset);
-          fExpr[fNoper] = "-1";
-          fOper[fNoper] = 0;
-          fNoper++;
           fExpr[fNoper] = "-";
-          fOper[fNoper] = 3;
-          fNoper++;
+          fActions[fNoper] = kSignInv;
+          ++fNoper;
         } else {
           if (moins == lchain) {
              err=5;
@@ -838,7 +845,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             ctemp = chaine(moins,lchain-moins);
             Analyze(ctemp.Data(),err,offset);
             fExpr[fNoper] = "-";
-            fOper[fNoper] = 2;
+            fActions[fNoper] = kSubstract;
             fNoper++;
           }
         }
@@ -852,7 +859,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
           ctemp = chaine(modulo,lchain-modulo);
           Analyze(ctemp.Data(),err,offset);
           fExpr[fNoper] = "%";
-          fOper[fNoper] = 5;
+          fActions[fNoper] = kModulo;
           fNoper++;
         }
       } else if (rshift != 0) {
@@ -865,7 +872,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
           ctemp = chaine(rshift+1,lchain-rshift-1);
           Analyze(ctemp.Data(),err,offset);
           fExpr[fNoper] = ">>";
-          fOper[fNoper] = 81;
+          fActions[fNoper] = kRightShift;
           fNoper++;
         }
       } else if (lshift != 0) {
@@ -878,7 +885,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
           ctemp = chaine(lshift+1,lchain-lshift-1);
           Analyze(ctemp.Data(),err,offset);
           fExpr[fNoper] = ">>";
-          fOper[fNoper] = 80;
+          fActions[fNoper] = kLeftShift;
           fNoper++;
         }
       } else {
@@ -893,7 +900,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             ctemp = chaine(multi,lchain-multi);
             Analyze(ctemp.Data(),err,offset);
             fExpr[fNoper] = "*";
-            fOper[fNoper] = 3;
+            fActions[fNoper] = kMultiply;
             fNoper++;
           }
         } else {
@@ -908,7 +915,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               ctemp = chaine(divi,lchain-divi);
               Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "/";
-              fOper[fNoper] = 4;
+              fActions[fNoper] = kDivide;
               fNoper++;
             }
           } else {
@@ -927,7 +934,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                   ctemp = chaine(puiss,lchain-puiss);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "^";
-                  fOper[fNoper] = 20;
+                  fActions[fNoper] = kpow;
                   fNoper++;
                 }
               }
@@ -987,7 +994,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         if (vafConst == fConst[j] ) k= j;
                      }
                      if ( k < 0) {  k = fNconst; fNconst++; fConst[k] = vafConst; }
-                     fOper[fNoper] = kConstants + k;
+                     fActions[fNoper] = kNewConstant;
+                     fActionParams[fNoper] = k;
                      fNoper++;
                   }
                   if (err==30) err=0;
@@ -1017,16 +1025,14 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*- Note that DefinedVariable can be overloaded
   	             ctemp = chaine;
                 ctemp.ReplaceAll(escapedSlash, slash);
-                k = DefinedVariable(ctemp);
-                if (k >= 5000 && k < 10000) {
+                Int_t action;
+                k = DefinedVariable(ctemp,action);
+                if ( k >= 0 ) {
                   fExpr[fNoper] = ctemp;
-                  fOper[fNoper] = kVariable + k;
-                  fNstring++;
-                  fNoper++;
-                } else if ( k >= 0 ) {
-                  fExpr[fNoper] = ctemp;
-                  fOper[fNoper] = kVariable + k;
-                  if (k <kMAXFOUND && !fAlreadyFound.TestBitNumber(k)) {
+                  fActions[fNoper] = action; 
+                  fActionParams[fNoper] = k;
+                  if (action==kNewDefinedString) fNstring++;
+                  else if (k <kMAXFOUND && !fAlreadyFound.TestBitNumber(k)) {
                      fAlreadyFound.SetBitNumber(k);
                      fNval++;
                   }
@@ -1035,137 +1041,137 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                   ctemp = chaine(1,lchain-1);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "!";
-                  fOper[fNoper] = 68;
+                  fActions[fNoper] = kNot;
                   fNoper++;
                 } else if (chaine(0,1)=="\"" && chaine(chaine.Length()-1,1)=="\"") {
                   //*-* It is a string !!!
                   fExpr[fNoper] = chaine(1,chaine.Length()-2);
-                  fOper[fNoper] = kStrings;
+                  fActions[fNoper] = kStringConst;
                   fNoper++;
                 } else if (chaine(0,4) == "cos(") {
                   ctemp = chaine(3,lchain-3);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "cos";
-                  fOper[fNoper] = 10;
+                  fActions[fNoper] = kcos;
                   fNoper++;
                 } else if (chaine(0,4) == "sin(") {
                   ctemp = chaine(3,lchain-3);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "sin";
-                  fOper[fNoper] = 11;
+                  fActions[fNoper] = ksin;
                   fNoper++;
                 } else if (chaine(0,4) == "tan(") {
                   ctemp = chaine(3,lchain-3);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "tan";
-                  fOper[fNoper] = 12;
+                  fActions[fNoper] = ktan;
                   fNoper++;
                 } else if (chaine(0,5) == "acos(") {
                   ctemp = chaine(4,lchain-4);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "acos";
-                  fOper[fNoper] = 13;
+                  fActions[fNoper] = kacos;
                   fNoper++;
                 } else if (chaine(0,5) == "asin(") {
                   ctemp = chaine(4,lchain-4);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "asin";
-                  fOper[fNoper] = 14;
+                  fActions[fNoper] = kasin;
                   fNoper++;
                 } else if (chaine(0,5) == "atan(") {
                   ctemp = chaine(4,lchain-4);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "atan";
-                  fOper[fNoper] = 15;
+                  fActions[fNoper] = katan;
                   fNoper++;
                 } else if (chaine(0,5) == "cosh(") {
                   ctemp = chaine(4,lchain-4);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "cosh";
-                  fOper[fNoper] = 70;
+                  fActions[fNoper] = kcosh;
                   fNoper++;
                 } else if (chaine(0,5) == "sinh(") {
                   ctemp = chaine(4,lchain-4);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "sinh";
-                  fOper[fNoper] = 71;
-                  fNoper++;
+                  fActions[fNoper] = ksinh;
+                  fNoper++;;
                 } else if (chaine(0,5) == "tanh(") {
                   ctemp = chaine(4,lchain-4);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "tanh";
-                  fOper[fNoper] = 72;
-                  fNoper++;
+                  fActions[fNoper] = ktanh;
+                  fNoper++;;
                 } else if (chaine(0,6) == "acosh(") {
                   ctemp = chaine(5,lchain-5);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "acosh";
-                  fOper[fNoper] = 73;
-                  fNoper++;
+                  fActions[fNoper] = kacosh;
+                  fNoper++;;
                 } else if (chaine(0,6) == "asinh(") {
                   ctemp = chaine(5,lchain-5);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "asinh";
-                  fOper[fNoper] = 74;
-                  fNoper++;
+                  fActions[fNoper] = kasinh;
+                  fNoper++;;
                 } else if (chaine(0,6) == "atanh(") {
                   ctemp = chaine(5,lchain-5);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "atanh";
-                  fOper[fNoper] = 75;
-                  fNoper++;
+                  fActions[fNoper] = katanh;
+                  fNoper++;;
                 } else if (chaine(0,3) == "sq(") {
                   ctemp = chaine(2,lchain-2);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "sq";
-                  fOper[fNoper] = 21;
-                  fNoper++;
+                  fActions[fNoper] = ksq;
+                  fNoper++;;
                 } else if (chaine(0,4) == "log(") {
                   ctemp = chaine(3,lchain-3);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "log";
-                  fOper[fNoper] = 30;
-                  fNoper++;
+                  fActions[fNoper] = klog;
+                  fNoper++;;
                 } else if (chaine(0,6) == "log10(") {
                   ctemp = chaine(5,lchain-5);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "log10";
-                  fOper[fNoper] = 32;
-                  fNoper++;
+                  fActions[fNoper] = klog10;
+                  fNoper++;;
                 } else if (chaine(0,4) == "exp(") {
                   ctemp = chaine(3,lchain-3);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "exp";
-                  fOper[fNoper] = 31;
-                  fNoper++;
+                  fActions[fNoper] = kexp;
+                  fNoper++;;
                 } else if (chaine(0,4) == "abs(") {
                   ctemp = chaine(3,lchain-3);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "abs";
-                  fOper[fNoper] = 41;
-                  fNoper++;
+                  fActions[fNoper] = kabs;
+                  fNoper++;;
                 } else if (chaine(0,5) == "sign(") {
                   ctemp = chaine(4,lchain-4);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "sign";
-                  fOper[fNoper] = 42;
-                  fNoper++;
+                  fActions[fNoper] = ksign;
+                  fNoper++;;
                 } else if (chaine(0,4) == "int(") {
-                  ctemp = chaine(3,lchain-3);
-                  Analyze(ctemp.Data(),err,offset);
+                   ctemp = chaine(3,lchain-3);
+                   Analyze(ctemp.Data(),err,offset);
                    fExpr[fNoper] = "int";
-                  fOper[fNoper] = 43;
-                  fNoper++;
+                   fActions[fNoper] = kint;
+                   fNoper++;;
                 } else if (chaine(0,4) == "rndm") {
                    fExpr[fNoper] = "rndm";
-                  fOper[fNoper] = 50;
-                  fNoper++;
+                   fActions[fNoper] = krndm;
+                   fNoper++;;
                 } else if (chaine(0,5) == "sqrt(") {
-                  ctemp = chaine(4,lchain-4);
-                  Analyze(ctemp.Data(),err,offset);
-                  fExpr[fNoper] = "sqrt";
-                  fOper[fNoper] = 22;
-                  fNoper++;
+                   ctemp = chaine(4,lchain-4);
+                   Analyze(ctemp.Data(),err,offset);
+                   fExpr[fNoper] = "sqrt";
+                   fActions[fNoper] = ksqrt;
+                   fNoper++;;
 
 //*-*- Look for an exponential
 //*-*  =======================
@@ -1209,7 +1215,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = chaine1ST;
-                   fOper[fNoper] = 1001+100*inter2+offset;
+                   fActions[fNoper] = kexpo + inter2;
+                   fActionParams[fNoper] = offset;
                    if (inter2 == 5+offset && fNpar < 3+offset) fNpar = 3+offset;
                    if (fNpar < 2+offset) fNpar = 2+offset;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
@@ -1233,7 +1240,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                          sscanf(ctemp.Data(),"%d",&inter);
                          if (inter>=0) {
                             inter += offset;
-                            fOper[fNoper] = 1001+inter+100*inter2;
+                            fActions[fNoper] = kexpo + inter2;
+                            fActionParams[fNoper] = inter;
                             if (inter2 == 5) inter++;
                             if (inter+2>fNpar) fNpar = inter+2;
                             if (fNpar>=MAXPAR) err=7; // too many parameters
@@ -1286,7 +1294,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = chaine1ST;
-                   fOper[fNoper] = 2001+100*inter2+offset;
+                   fActions[fNoper] = kgaus + inter2;
+                   fActionParams[fNoper] = offset;
                    if (inter2 == 5+offset && fNpar < 5+offset) fNpar = 5+offset;
                    if (3+offset>fNpar) fNpar = 3+offset;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
@@ -1310,7 +1319,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                           sscanf(ctemp.Data(),"%d",&inter);
                           if (inter >= 0) {
                              inter += offset;
-                             fOper[fNoper] = 2001+inter+100*inter2;
+                             fActions[fNoper] = kgaus + inter2;
+                             fActionParams[fNoper] = inter;
                              if (inter2 == 5) inter += 2;
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
@@ -1363,7 +1373,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = chaine1ST;
-                   fOper[fNoper] = 4001+100*inter2+offset;
+                   fActions[fNoper] = klandau + inter2;
+                   fActionParams[fNoper] = offset;
                    if (inter2 == 5+offset && fNpar < 5+offset) fNpar = 5+offset;
                    if (3+offset>fNpar) fNpar = 3+offset;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
@@ -1387,7 +1398,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                           sscanf(ctemp.Data(),"%d",&inter);
                           if (inter >= 0) {
                              inter += offset;
-                             fOper[fNoper] = 4001+inter+100*inter2;
+                             fActions[fNoper] = klandau + inter2;
+                             fActionParams[fNoper] = inter;
                              if (inter2 == 5) inter += 2;
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
@@ -1456,7 +1468,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             }
             if (!err) {
               fExpr[fNoper] = chaine1ST;
-              fOper[fNoper] = 10000*inter2+n*100+inter+2;
+              fActions[fNoper] = kpol+inter2;
+              fActionParams[fNoper] = n*100+inter+2;
               if (inter+n+1>=fNpar) fNpar = inter + n + 2;
               if (fNpar>=MAXPAR) err=7; // too many parameters
               if (!err) {
@@ -1485,7 +1498,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               ctemp = chaine(virgule,lchain-virgule-1);
               Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "^";
-              fOper[fNoper] = 20;
+              fActions[fNoper] = kpow;
               fNoper++;
             }
 	 } else if (chaine(0,7) == "strstr(") {
@@ -1506,7 +1519,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               ctemp = chaine(virgule,lchain-virgule-1);
               Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "strstr";
-              fOper[fNoper] = 23;
+              fActions[fNoper] = kstrstr;
               fNoper++;
             }
           } else if (chaine(0,4) == "min(") {
@@ -1527,7 +1540,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               ctemp = chaine(virgule,lchain-virgule-1);
               Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "min";
-              fOper[fNoper] = 24;
+              fActions[fNoper] = kmin;
               fNoper++;
             }
           } else if (chaine(0,4) == "max(") {
@@ -1548,7 +1561,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               ctemp = chaine(virgule,lchain-virgule-1);
               Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "max";
-              fOper[fNoper] = 25;
+              fActions[fNoper] = kmax;
               fNoper++;
             }
 
@@ -1570,7 +1583,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               ctemp = chaine(virgule,lchain-virgule-1);
               Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "atan2";
-              fOper[fNoper] = 16;
+              fActions[fNoper] = katan2;
               fNoper++;
             }
           } else if (chaine(0,5) == "fmod(") {
@@ -1591,7 +1604,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
               ctemp = chaine(virgule,lchain-virgule-1);
               Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "fmod";
-              fOper[fNoper] = 17;
+              fActions[fNoper] = kfmod;
               fNoper++;
             }
           } else if (AnalyzeFunction(chaine,err,offset) || err) { // The '||err' is to grab an error coming from AnalyzeFunction
@@ -1615,13 +1628,14 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             }
             if (!err) {
               sscanf(ctemp.Data(),"%d",&valeur);
-              fOper[fNoper-1] = valeur + 101 + offset;
+              fActions[fNoper-1] = kParameter;
+              fActionParams[fNoper-1] = offset + valeur;
               fExpr[fNoper-1] = "[";
               fExpr[fNoper-1] = (fExpr[fNoper-1] + (long int)(valeur+offset)) + "]";
             }
           } else if (chaine == "pi") {
             fExpr[fNoper] = "pi";
-            fOper[fNoper] = 40;
+            fActions[fNoper] = kpi;
             fNoper++;
           }
           else {
@@ -1640,16 +1654,17 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //   Test  * si y existe :  que x existe
 //         * si z existe :  que x et y existent
 
-    nomb = 1;
-    for (i=1; i<=fNoper; i++) {
-       if (fOper[i-1] == 97 && nomb > 0) nomb *= -1;
-       if (fOper[i-1] == 98 && TMath::Abs(nomb) != 2) nomb *= 2;
-       if (fOper[i-1] == 99 && TMath::Abs(nomb) != 20 && TMath::Abs(nomb) != 10) nomb *= 10;
-    }
-    if (nomb == 10)  err = 10; //{variable z sans x et y }
-    if (nomb == 20)  err = 11; //{variables z et y sans x }
-    if (nomb == 2)   err = 12; //{variable y sans x }
-    if (nomb == -10) err = 13; //{variables z et x sans y }
+//     nomb = 1;
+//     for (i=1; i<=fNoper; i++) {
+//         if (fOper[i-1] == 97 && nomb > 0) nomb *= -1;
+//         if (fOper[i-1] == 98 && TMath::Abs(nomb) != 2) nomb *= 2;
+//         if (fOper[i-1] == 99 && TMath::Abs(nomb) != 20 && TMath::Abs(nomb) != 10) nomb *= 10;
+//     }
+//     if (nomb == 10)  err = 10; //{variable z sans x et y }
+//     if (nomb == 20)  err = 11; //{variables z et y sans x }
+//     if (nomb == 2)   err = 12; //{variable y sans x }
+//     if (nomb == -10) err = 13; //{variables z et x sans y }
+
     //*-*- Overflows
     if (fNoper>=MAXOP) err=6; // too many operators
 
@@ -1721,6 +1736,8 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
 
    if (fExpr)   { delete [] fExpr;   fExpr   = 0;}
    if (fOper)   { delete [] fOper;   fOper   = 0;}
+   if (fActions){ delete [] fActions;fActions= 0;}
+   if (fActionParams){ delete [] fActionParams;fActionParams = 0;}
    if (fConst)  { delete [] fConst;  fConst  = 0;}
    if (fParams) { delete [] fParams; fParams = 0;}
    if (fNames)  { delete [] fNames;  fNames  = 0;}
@@ -1779,7 +1796,8 @@ Int_t TFormula::Compile(const char *expression)
   MAXCONST= 100;
 
   fExpr   = new TString[MAXOP];
-  fOper   = new Int_t[MAXOP];
+  fActions= new Short_t[MAXOP];
+  fActionParams = new Short_t[MAXOP];
   fConst  = new Double_t[MAXCONST];
   fParams = new Double_t[MAXPAR];
   fNames  = new TString[MAXPAR];
@@ -1789,7 +1807,8 @@ Int_t TFormula::Compile(const char *expression)
   }
   for (i=0; i<MAXOP; i++) {
       fExpr[i] = "";
-      fOper[i] = 0;
+      fActions[i] = 0;
+      fActionParams[i] = 0;
   }
   for (i=0; i<MAXCONST; i++)
       fConst[i] = 0;
@@ -1861,37 +1880,34 @@ Int_t TFormula::Compile(const char *expression)
         SetParName(2,"Sigma");
      }
   }
-  if (fNpar <= 0) {
-     delete [] fParams; fParams=0;
-     delete [] fNames;  fNames = 0;
-  }
+
 
 //*-* replace 'normal' == or != by ==(string) or !=(string) if needed.
   Int_t is_it_string,last_string=0,before_last_string=0;
-  if (!fOper) fNoper = 0;
-   enum { kIsCharacter = BIT(12) };
+  if (!fActions) fNoper = 0;
+  enum { kIsCharacter = BIT(12) };
   for (i=0; i<fNoper; i++,
                       before_last_string = last_string,
                       last_string = is_it_string) {
      is_it_string = IsString(i);
      if (is_it_string) continue;
      if (last_string) {
-        if (fOper[i] == 62) {
+        if (fActions[i] == kEqual) {
            if (!before_last_string) {
               Error("Compile", "Both operands of the operator == have to be either numbers or strings");
               return -1;
            }
-           fOper[i] = 76;
+           fActions[i] = kStringEqual;
            SetBit(kIsCharacter);
-        } else if (fOper[i] == 63) {
+        } else if (fActions[i] == kNotEqual) {
            if (!before_last_string) {
               Error("Compile", "Both operands of the operator != have to be either numbers or strings");
               return -1;
            }
-           fOper[i] = 77;
+           fActions[i] = kStringNotEqual;
            SetBit(kIsCharacter);
         }
-        else if (fOper[i] == 23) {
+        else if (fActions[i] == kstrstr) {
            if (! (before_last_string && last_string) ) {
               Error("Compile", "strstr requires 2 string arguments");
               return -1;
@@ -1900,8 +1916,8 @@ Int_t TFormula::Compile(const char *expression)
         } else if (before_last_string) {
            // the i-2 element is a string not used in a string operation, let's down grade it
            // to a char array:
-           if (fOper[i-2]>=105000) {
-              fOper[i-2] -= 5000;
+           if (fActions[i-2]==kNewDefinedString) {
+              fActions[i-2] = kNewDefinedVariable;
               fNval++;
               fNstring--;
            }
@@ -1910,8 +1926,8 @@ Int_t TFormula::Compile(const char *expression)
      } else if (before_last_string) {
         // the i-2 element is a string not used in a string operation, let's down grade it
         // to a char array:
-        if (fOper[i-2]>=105000){
-           fOper[i-2] -= 5000;
+        if (fActions[i-2]==kNewDefinedString) {
+           fActions[i-2] = kNewDefinedVariable;
            fNval++;
            fNstring--;
         }
@@ -1919,6 +1935,7 @@ Int_t TFormula::Compile(const char *expression)
   }
 
   if (err) { fNdim = 0; return 1; }
+//   Convert(5);
   return 0;
 }
 
@@ -1938,7 +1955,8 @@ void TFormula::Copy(TObject &obj) const
    ((TFormula&)obj).fNumber = fNumber;
    ((TFormula&)obj).fNval   = fNval;
    ((TFormula&)obj).fExpr   = 0;
-   ((TFormula&)obj).fOper   = 0;
+   ((TFormula&)obj).fActions   = 0;
+   ((TFormula&)obj).fActionParams   = 0;
    ((TFormula&)obj).fConst  = 0;
    ((TFormula&)obj).fParams = 0;
    ((TFormula&)obj).fNames  = 0;
@@ -1947,10 +1965,13 @@ void TFormula::Copy(TObject &obj) const
       for (i=0; i<fNoper; i++)
          ((TFormula&)obj).fExpr[i] = "";
    }
-   if (fOper && fNoper) {
-      ((TFormula&)obj).fOper = new Int_t[fNoper];
-      for (i=0; i<fNoper; i++)
-         ((TFormula&)obj).fOper[i] = 0;
+   if (fActions && fNoper) {
+      ((TFormula&)obj).fActions = new Short_t[fNoper];
+      ((TFormula&)obj).fActionParams = new Short_t[fNoper];
+      for (i=0; i<fNoper; i++) {
+         ((TFormula&)obj).fActions[i] = 0;
+         ((TFormula&)obj).fActionParams[i] = 0;
+      }
    }
    if (fConst && fNconst) {
       ((TFormula&)obj).fConst = new Double_t[fNconst];
@@ -1968,10 +1989,19 @@ void TFormula::Copy(TObject &obj) const
          ((TFormula&)obj).fNames[i] = "";
    }
    for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExpr[i]   = fExpr[i];
-   for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOper[i]   = fOper[i];
+   for (i=0;i<fNoper;i++)  ((TFormula&)obj).fActions[i]   = fActions[i];
+   for (i=0;i<fNoper;i++)  ((TFormula&)obj).fActionParams[i]   = fActionParams[i];
    for (i=0;i<fNconst;i++) ((TFormula&)obj).fConst[i]  = fConst[i];
    for (i=0;i<fNpar;i++)   ((TFormula&)obj).fParams[i] = fParams[i];
    for (i=0;i<fNpar;i++)   ((TFormula&)obj).fNames[i]  = fNames[i];
+
+   ((TFormula&)obj).fOper   = 0;
+   if (fOper && fNoldOper) {
+      ((TFormula&)obj).fOper = new Int_t[fNoldOper];
+      for (i=0; i<fNoldOper; i++)
+         ((TFormula&)obj).fOper[i] = 0;
+   }
+   for (i=0;i<fNoldOper;i++)  ((TFormula&)obj).fOper[i]   = fOper[i];
 
    TIter next(&fFunctions);
    TObject *fobj;
@@ -2039,7 +2069,7 @@ Double_t TFormula::DefinedValue(Int_t)
 }
 
 //______________________________________________________________________________
-Int_t TFormula::DefinedVariable(TString &chaine)
+Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
 {
 //*-*-*-*-*-*Check if expression is in the list of defined variables*-*-*-*-*
 //*-*        =======================================================
@@ -2064,18 +2094,19 @@ Int_t TFormula::DefinedVariable(TString &chaine)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+  action = kNewVariable;
   if (chaine == "x") {
      if (fNdim < 1) fNdim = 1;
-     return 10000;
+     return 0; 
   } else if (chaine == "y") {
      if (fNdim < 2) fNdim = 2;
-     return 10001;
+     return 1;
   } else if (chaine == "z") {
      if (fNdim < 3) fNdim = 3;
-     return 10002;
+     return 2;
   } else if (chaine == "t") {
      if (fNdim < 4) fNdim = 4;
-     return 10003;
+     return 3;
   }
   return -1;
 }
@@ -2118,272 +2149,302 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-  Int_t i,j,pos,pos2,inter,inter2,int1,int2;
-  Float_t aresult;
-  Double_t tab[kMAXFOUND];
-  char *tab2[kMAXSTRINGFOUND];
-  Double_t param_calc[kMAXFOUND];
-  Double_t dexp,intermede,intermede1,intermede2;
-  char *string_calc[kMAXSTRINGFOUND];
-  Int_t precalculated = 0;
-  Int_t precalculated_str = 0;
+   Int_t i,j,pos,pos2; // ,inter,inter2,int1,int2;
+//    Float_t aresult;
+   Double_t tab[kMAXFOUND];
+   char *tab2[kMAXSTRINGFOUND];
+   Double_t param_calc[kMAXFOUND];
+//    Double_t dexp,intermede,intermede1,intermede2;
+   char *string_calc[kMAXSTRINGFOUND];
+   Int_t precalculated = 0;
+   Int_t precalculated_str = 0;
 
-  if (params) {
-     for (j=0;j<fNpar;j++) fParams[j] = params[j];
-  }
-  pos  = 0;
-  pos2 = 0;
-  for (i=0; i<fNoper; i++) {
-    Int_t action = fOper[i];
-//*-*- an external function call
-    if (action >= kFunctionCall) {
-       int fno   = (action-kFunctionCall) / 1000;
-       int nargs = (action-kFunctionCall) % 1000;
+   if (params) {
+      for (j=0;j<fNpar;j++) fParams[j] = params[j];
+   }
+   pos  = 0;
+   pos2 = 0;
 
-       // Retrieve the function
-       TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
+  for (i=0; i<fNoper; ++i) {
+//     if (fActions[i]==kParameter)  { pos++; tab[pos-1] = fParams[fActionParams[i]]; continue; }
+     switch(fActions[i]) {
 
-       // Set the arguments
-       TString args;
-       if (nargs) {
-          UInt_t argloc = pos-nargs;
-          for(j=0;j<nargs;j++,argloc++,pos--) {
-             if (TMath::IsNaN(tab[argloc])) {
-                // TString would add 'nan' this is not what we want
-                // so let's do somethign else
-                args += "(double)(0x8000000000000)";
-             } else {
-                args += tab[argloc];
-             }
-             args += ',';
-          }
-          args.Remove(args.Length()-1);
-       }
-       pos++;
-       Double_t ret;
-       method->Execute(args,ret);
-       tab[pos-1] = ret; // check for the correct conversion!
+        case kParameter:    { pos++; tab[pos-1] = fParams[fActionParams[i]]; continue; }
+        case kNewConstant:  { pos++; tab[pos-1] = fConst[fActionParams[i]]; continue; }
+        case kNewVariable:  { pos++; tab[pos-1] = x[fActionParams[i]]; continue; }
+        case kStringConst  : { pos2++;tab2[pos2-1] = (char*)fExpr[i].Data(); continue; }
 
-       continue;
-    }
-//*-*- boolean operation optimizer
-    if (action >= kBoolOptimize) {
-       Bool_t skip = kFALSE;
-       int op = (action-kBoolOptimize) % 10; // 1 is && , 2 is ||
-       
-       if (op == 1 && (!tab[pos-1]) ) { 
-          // &&: skip the right part if the left part is already false
-          
-          skip = kTRUE;
-          
-          // Preserve the existing behavior (i.e. the result of a&&b is
-          // either 0 or 1)
-          tab[pos-1] = 0;
-          
-       } else if (op == 2 && tab[pos-1] ) {  
-          // ||: skip the right part if the left part is already true
-          
-          skip = kTRUE;
-          
-          // Preserve the existing behavior (i.e. the result of a||b is
-          // either 0 or 1)
-          tab[pos-1] = 1;
-       }
-       
-       if (skip) {
-          int toskip = (action-kBoolOptimize) / 10;
-          i += toskip;
-       }
-       continue;
-    }
-//*-*- a variable
-    if (action >= kFormulaVar) {
-       pos++; tab[pos-1] = x[action-kFormulaVar];
-       continue;
-    }
-//*-*- a tree string
-    if (action >= 105000) {
-       if (!precalculated_str) {
-          precalculated_str=1;
-          for (j=0;j<fNstring;j++) string_calc[j]=DefinedString(j);
-       }
-       pos2++; tab2[pos2-1] = string_calc[action-105000];
-       continue;
-    }
-//*-*- a tree variable
-    if (action >= kVariable) {
-       if (!precalculated) {
-          precalculated = 1;
-          for(j=0;j<fNval;j++) param_calc[j]=DefinedValue(j);
-       }
-       pos++; tab[pos-1] = param_calc[action-kVariable];
-       continue;
-    }
-//*-*- String
-    if (action == kStrings) {
-       pos2++; tab2[pos2-1] = (char*)fExpr[i].Data();
-       continue;
-    }
-//*-*- numerical value
-    if (action >= kConstants) {
-       pos++; tab[pos-1] = fConst[action-kConstants];
-       continue;
-    }
-    if (action == 0) {
-      pos++;
-      sscanf((const char*)fExpr[i],"%g",&aresult);
-      tab[pos-1] = aresult;
-//*-*- basic operators and mathematical library
-    } else if (action < 100) {
-        switch(action) {
-          case   1 : pos--; tab[pos-1] += tab[pos]; break;
-          case   2 : pos--; tab[pos-1] -= tab[pos]; break;
-          case   3 : pos--; tab[pos-1] *= tab[pos]; break;
-          case   4 : pos--; if (tab[pos] == 0) tab[pos-1] = 0; //  division by 0
-                            else               tab[pos-1] /= tab[pos];
-                     break;
-          case   5 : {pos--; int1=Int_t(tab[pos-1]); int2=Int_t(tab[pos]); tab[pos-1] = Double_t(int1%int2); break;}
-          case  10 : tab[pos-1] = TMath::Cos(tab[pos-1]); break;
-          case  11 : tab[pos-1] = TMath::Sin(tab[pos-1]); break;
-          case  12 : if (TMath::Cos(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
+//         case kNumerical  : { pos++; sscanf((const char*)fExpr[i],"%g",&aresult);
+//                              tab[pos-1] = aresult; continue; }
+        case kAdd        : pos--; tab[pos-1] += tab[pos]; continue;
+        case kSubstract  : pos--; tab[pos-1] -= tab[pos]; continue;
+        case kMultiply   : pos--; tab[pos-1] *= tab[pos]; continue;
+        case kDivide     : pos--; if (tab[pos] == 0) tab[pos-1] = 0; //  division by 0
+                                  else               tab[pos-1] /= tab[pos];
+                           continue;
+        case kModulo     : {pos--; Int_t int1=Int_t(tab[pos-1]); Int_t int2=Int_t(tab[pos]); tab[pos-1] = Double_t(int1%int2); continue;}
+
+        case kcos  : tab[pos-1] = TMath::Cos(tab[pos-1]); continue;
+        case ksin  : tab[pos-1] = TMath::Sin(tab[pos-1]); continue;
+        case ktan  : if (TMath::Cos(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
                      else tab[pos-1] = TMath::Tan(tab[pos-1]);
-                     break;
-          case  13 : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
-                     else tab[pos-1] = TMath::ACos(tab[pos-1]);
-                     break;
-          case  14 : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
+                     continue;
+        case kacos : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
+                           else tab[pos-1] = TMath::ACos(tab[pos-1]);
+                           continue;
+        case kasin : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
                      else tab[pos-1] = TMath::ASin(tab[pos-1]);
-                     break;
-          case  15 : tab[pos-1] = TMath::ATan(tab[pos-1]); break;
-          case  70 : tab[pos-1] = TMath::CosH(tab[pos-1]); break;
-          case  71 : tab[pos-1] = TMath::SinH(tab[pos-1]); break;
-          case  72 : if (TMath::CosH(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
+                     continue;
+        case katan : tab[pos-1] = TMath::ATan(tab[pos-1]); continue;
+        case kcosh : tab[pos-1] = TMath::CosH(tab[pos-1]); continue;
+        case ksinh : tab[pos-1] = TMath::SinH(tab[pos-1]); continue;
+        case ktanh : if (TMath::CosH(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
                      else tab[pos-1] = TMath::TanH(tab[pos-1]);
-                     break;
-          case  73 : if (tab[pos-1] < 1) {tab[pos-1] = 0;} //  indetermination
+                     continue;
+        case kacosh: if (tab[pos-1] < 1) {tab[pos-1] = 0;} //  indetermination
                      else tab[pos-1] = TMath::ACosH(tab[pos-1]);
-                     break;
-          case  74 : tab[pos-1] = TMath::ASinH(tab[pos-1]); break;
-          case  75 : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
-                     else tab[pos-1] = TMath::ATanH(tab[pos-1]); break;
-          case  16 : pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); break;
-          case  17 : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); break;
-          case  20 : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); break;
-          case  21 : tab[pos-1] = tab[pos-1]*tab[pos-1]; break;
-          case  22 : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); break;
-          case  23 : pos2 -= 2; pos++;if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  24 : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); break;
-          case  25 : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); break;
-          case  30 : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log(tab[pos-1]);
+                     continue;
+        case kasinh: tab[pos-1] = TMath::ASinH(tab[pos-1]); continue;
+        case katanh: if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
+                     else tab[pos-1] = TMath::ATanH(tab[pos-1]); continue;
+        case katan2: pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); continue;
+
+        case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
+        case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
+        case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
+        case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
+
+        case kstrstr : pos2 -= 2; pos++;if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
+                                        else tab[pos-1]=0; continue;
+
+        case kmin : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); continue;
+        case kmax : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); continue;
+
+        case klog  : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log(tab[pos-1]);
                      else {tab[pos-1] = 0;} //{indetermination }
-                     break;
-          case  31 : dexp = tab[pos-1];
-                     if (dexp < -700) {tab[pos-1] = 0; break;}
-                     if (dexp >  700) {tab[pos-1] = TMath::Exp(700); break;}
-                     tab[pos-1] = TMath::Exp(dexp); break;
-          case  32 : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log10(tab[pos-1]);
+                     continue;
+        case kexp  : { Double_t dexp = tab[pos-1];
+                       if (dexp < -700) {tab[pos-1] = 0; continue;}
+                       if (dexp >  700) {tab[pos-1] = TMath::Exp(700); continue;}
+                       tab[pos-1] = TMath::Exp(dexp); continue;  }
+        case klog10: if (tab[pos-1] > 0) tab[pos-1] = TMath::Log10(tab[pos-1]);
                      else {tab[pos-1] = 0;} //{indetermination }
-                     break;
-          case  40 : pos++; tab[pos-1] = TMath::ACos(-1); break;
-          case  41 : tab[pos-1] = TMath::Abs(tab[pos-1]); break;
-          case  42 : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; break;
-          case  43 : tab[pos-1] = Double_t(Int_t(tab[pos-1])); break;
-          case  50 : pos++; tab[pos-1] = gRandom->Rndm(1); break;
-          case  60 : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  61 : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  62 : pos--; if (tab[pos-1] == tab[pos]) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  63 : pos--; if (tab[pos-1] != tab[pos]) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  64 : pos--; if (tab[pos-1] < tab[pos]) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  65 : pos--; if (tab[pos-1] > tab[pos]) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  66 : pos--; if (tab[pos-1]<=tab[pos]) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  67 : pos--; if (tab[pos-1]>=tab[pos]) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  68 : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; break;
-          case  76 : pos2 -= 2; pos++; if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  77 : pos2 -= 2; pos++;if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-          case  78 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); break;
-          case  79 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); break;
-          case  80 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); break;
-          case  81 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); break;
-       }
-//*-*- Parameter substitution
-    } else if (action > 100 && action < 200) {
-          pos++;
-          tab[pos-1] = fParams[action - 101];
-//*-*- Polynomial
-    } else if (action > 10000 && action < kConstants) {
-          pos++;
-          tab[pos-1] = 0;intermede = 1;
-          inter2= action/10000; //arrondit
-          inter = action/100-100*inter2; //arrondit
-          int1=action-inter2*10000-inter*100-1; // aucune simplification ! (sic)
-          int2=inter2-1;
-          for (j=0 ;j<inter+1;j++) {
-              tab[pos-1] += intermede*fParams[j+int1];
-              intermede *= x[int2];
-          }
-//*-*- expo or xexpo or yexpo or zexpo
-    } else if (action > 1000 && action < 1500) {
-          pos++;
-          inter=action/100-10;
-          int1=action-inter*100-1000;
-          tab[pos-1] = TMath::Exp(fParams[int1-1]+fParams[int1]*x[inter]);
-//*-*- xyexpo
-    } else if (action > 1500 && action < 1600) {
-          pos++;
-          int1=action-1499;
-          tab[pos-1] = TMath::Exp(fParams[int1-2]+fParams[int1-1]*x[0]+fParams[int1]*x[1]);
-//*-*- gaus, xgaus, ygaus or zgaus
-    } else if (action > 2000 && action < 2500) {
-          pos++;
-          inter=action/100-20;
-          int1=action-inter*100;
-          if (fParams[int1-1999] == 0) {
-             intermede2=1e10;
-          } else {
-             intermede2=Double_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
-          }
-          tab[pos-1] = fParams[int1-2001]*TMath::Exp(-0.5*intermede2*intermede2);
-//*-*- xygaus
-    } else if (action > 2500 && action < 2600) {
-          pos++;
-          if (fParams[action-2499] == 0) {
-             intermede1=1e10;
-          } else {
-             intermede1=Double_t((x[0]-fParams[action-2500])/fParams[action-2499]);
-          }
-          if (fParams[action-2497] == 0) {
-             intermede2=1e10;
-          } else {
-             intermede2=Double_t((x[1]-fParams[action-2498])/fParams[action-2497]);
-          }
-          tab[pos-1] = fParams[action-2501]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
-//*-*- landau, xlandau, ylandau or zlandau
-    } else if (action > 4000 && action < 4500) {
-          pos++;
-          inter=action/100-40;
-          int1=action-inter*100;
-          tab[pos-1] = fParams[int1-4001]*TMath::Landau(x[inter],fParams[int1-4000],fParams[int1-3999]);
-//*-*- xylandau
-    } else if (action > 4500 && action < 4600) {
-          pos++;
-          intermede1=TMath::Landau(x[0], fParams[action-4500], fParams[action-4499]);
-          intermede2=TMath::Landau(x[1], fParams[action-4498], fParams[action-4497]);
-          tab[pos-1] = fParams[action-4501]*intermede1*intermede2;
-    }
-  }
-  Double_t result = tab[0];
-  return result;
+                     continue;
+
+        case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
+
+        case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
+        case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; continue;
+        case kint  : tab[pos-1] = Double_t(Int_t(tab[pos-1])); continue;
+
+        case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
+
+        case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
+
+        case kAnd  : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
+                            else tab[pos-1]=0; continue;
+        case kOr   : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
+                            else tab[pos-1]=0; continue;
+        case kEqual: pos--; if (tab[pos-1] == tab[pos]) tab[pos-1]=1;
+                            else tab[pos-1]=0; continue;
+        case kNotEqual : pos--; if (tab[pos-1] != tab[pos]) tab[pos-1]=1;
+                               else tab[pos-1]=0; continue;
+        case kLess     : pos--; if (tab[pos-1] < tab[pos]) tab[pos-1]=1;
+                                else tab[pos-1]=0; continue;
+        case kGreater  : pos--; if (tab[pos-1] > tab[pos]) tab[pos-1]=1;
+                                else tab[pos-1]=0; continue;
+
+        case kLessThan: pos--; if (tab[pos-1]<=tab[pos]) tab[pos-1]=1;
+                               else tab[pos-1]=0; continue;
+        case kGreaterThan: pos--; if (tab[pos-1]>=tab[pos]) tab[pos-1]=1;
+                                  else tab[pos-1]=0; continue;
+        case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; continue;
+
+        case kStringEqual : pos2 -= 2; pos++; if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+                                              else tab[pos-1]=0; continue;
+        case kStringNotEqual: pos2 -= 2; pos++;if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+                                               else tab[pos-1]=0; continue;
+
+        case kBitAnd : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
+        case kBitOr  : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
+        case kLeftShift : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); continue;
+        case kRightShift: pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); continue;
+
+        case kNewBoolOptimize: {
+           // boolean operation optimizer
+
+           int param = fActionParams[i];
+           Bool_t skip = kFALSE;
+           int op = param % 10; // 1 is && , 2 is ||
+       
+           if (op == 1 && (!tab[pos-1]) ) { 
+              // &&: skip the right part if the left part is already false
+          
+              skip = kTRUE;
+          
+              // Preserve the existing behavior (i.e. the result of a&&b is
+              // either 0 or 1)
+              tab[pos-1] = 0;
+              
+           } else if (op == 2 && tab[pos-1] ) {  
+              // ||: skip the right part if the left part is already true
+              
+              skip = kTRUE;
+              
+              // Preserve the existing behavior (i.e. the result of a||b is
+              // either 0 or 1)
+              tab[pos-1] = 1;
+           }
+           
+           if (skip) {
+              int toskip = param / 10;
+              i += toskip;
+           }
+           continue;
+        }
+
+     }
+
+     switch(fActions[i]) {
+
+        #define R__EXPO(var)                                                 \
+        {                                                                    \
+           pos++; int param = fActionParams[i];                              \
+           tab[pos-1] = TMath::Exp(fParams[param-1]+fParams[param]*x[var]);  \
+           continue;                                                         \
+        }
+        // case kexpo: 
+        case kxexpo: R__EXPO(0);
+        case kyexpo: R__EXPO(1);
+        case kzexpo: R__EXPO(2);
+        case kxyexpo:{  pos++; int param = fActionParams[i];
+                        tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[0]+fParams[param+2]*x[1]);
+                        continue;  }
+
+        #define R__GAUS(var)                                                    \
+        {                                                                       \
+           pos++; int param = fActionParams[i]; Double_t intermede2;            \
+           if (fParams[param+2] == 0) {                                         \
+              intermede2=1e10;                                                  \
+           } else {                                                             \
+              intermede2=Double_t((x[var]-fParams[param+1])/fParams[param+2]);  \
+           }                                                                    \
+           tab[pos-1] = fParams[param]*TMath::Exp(-0.5*intermede2*intermede2);  \
+           continue;                                                            \
+        }
+
+        // case kgaus:
+        case kxgaux: R__GAUS(0);
+        case kygaus: R__GAUS(1);
+        case kzgaus: R__GAUS(2);
+        case kxygaus: { pos++; int param = fActionParams[i];
+                        Double_t intermede1;
+                        if (fParams[param+2] == 0) {
+                           intermede1=1e10;
+                        } else {
+                           intermede1=Double_t((x[0]-fParams[param+1])/fParams[param+2]);
+                        }
+                        Double_t intermede2;           
+                        if (fParams[param+4] == 0) {
+                           intermede2=1e10;
+                        } else {
+                           intermede2=Double_t((x[1]-fParams[param+3])/fParams[param+4]);
+                        }
+                        tab[pos-1] = fParams[param]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
+                        continue; }
+
+        #define R__LANDAU(var)                                                                  \
+        {                                                                                       \
+           pos++; int param = fActionParams[i];                                                 \
+           tab[pos-1] = fParams[param]*TMath::Landau(x[var],fParams[param+1],fParams[param+2]); \
+           continue;                                                                            \
+        }
+        // case klandau:  
+        case kxlandau: R__LANDAU(0);
+        case kylandau: R__LANDAU(1);
+        case kzlandau: R__LANDAU(2);
+        case kxylandau: { pos++; int param = fActionParams[i];
+                          Double_t intermede1=TMath::Landau(x[0], fParams[param+1], fParams[param+2]);
+                          Double_t intermede2=TMath::Landau(x[1], fParams[param+2], fParams[param+3]);
+                          tab[pos-1] = fParams[param]*intermede1*intermede2;
+                          continue;
+        }
+
+        #define R__POLY(var)                                                  \
+        {                                                                     \
+           pos++; int param = fActionParams[i];                               \
+           tab[pos-1] = 0; Double_t intermede = 1;                            \
+           Int_t inter = param/100; /* arrondit */                            \
+           Int_t int1= param-inter*100-1; /* aucune simplification ! (sic) */ \
+           for (j=0 ;j<inter+1;j++) {                                         \
+              tab[pos-1] += intermede*fParams[j+int1];                        \
+              intermede *= x[var];                                            \
+           }                                                                  \
+           continue;                                                          \
+        }
+        // case kpol:    
+        case kxpol: R__POLY(0);
+        case kypol: R__POLY(1);
+        case kzpol: R__POLY(2);
+
+        case kNewDefinedVariable : {
+           if (!precalculated) {
+              precalculated = 1;
+              for(j=0;j<fNval;j++) param_calc[j]=DefinedValue(j);
+           }
+           pos++; tab[pos-1] = param_calc[fActionParams[i]];
+           continue;
+        }
+
+        case kNewDefinedString : {
+           int param = fActionParams[i];
+           if (!precalculated_str) {
+              precalculated_str=1;
+              for (j=0;j<fNstring;j++) string_calc[j]=DefinedString(j);
+           }
+           pos2++; tab2[pos2-1] = string_calc[param];
+           continue;
+        }
+
+        case kNewFunctionCall: {
+           // an external function call
+
+           int param = fActionParams[i];
+           int fno   = param / 1000;
+           int nargs = param % 1000;
+
+           // Retrieve the function
+           TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
+           
+           // Set the arguments
+           TString args;
+           if (nargs) {
+              UInt_t argloc = pos-nargs;
+              for(j=0;j<nargs;j++,argloc++,pos--) {
+                 if (TMath::IsNaN(tab[argloc])) {
+                    // TString would add 'nan' this is not what we want
+                    // so let's do somethign else
+                    args += "(double)(0x8000000000000)";
+                 } else {
+                    args += tab[argloc];
+                 }
+                 args += ',';
+              }
+              args.Remove(args.Length()-1);
+           }
+           pos++;
+           Double_t ret;
+           method->Execute(args,ret);
+           tab[pos-1] = ret; // check for the correct conversion!
+           
+           continue;
+        };
+     }
+     Assert(0);
+  }  
+  Double_t result0 = tab[0];
+  return result0;
+
 }
 
 //------------------------------------------------------------------------------
@@ -2409,22 +2470,22 @@ TString TFormula::GetExpFormula() const
       Int_t optype;
       Int_t j;
       for(Int_t i=0;i<fNoper;i++){
-         optype=GetOperType(fOper[i]);
+         optype=fActions[i]; // GetOperType(fOper[i]);
 
          // Boolean optimization breakpoint
-         if (optype==-3) {
+         if (optype==kNewBoolOptimize) { // -3) {
             continue;
          }
 
          //Sign inversion
-         if (optype==-100) {
+         if (optype==kSignInv) { // -1) {
             tab[spos-1]="-"+tab[spos-1];
-            i++;
+            // i++;
             continue;
          }
 
          //Simple name (paramteter,pol0,landau, etc)
-         if (optype>=0) {
+         if (kexpo<=optype && optype<=kzpol) { // >=0) {
             tab[spos]=fExpr[i];
             ismulti[spos]=kFALSE;
             spos++;
@@ -2432,7 +2493,11 @@ TString TFormula::GetExpFormula() const
          }
 
          //Basic operators (+,-,*,/,==,^,etc)
-         if(optype==-20 && spos>=2){
+         if(((optype>0 && optype<6) ||
+             optype==20 ||
+             (optype>59 && optype<82))
+            && spos>=2) {
+          // if(optype==-20 && spos>=2){
             if(ismulti[spos-2]){
                tab[spos-2]="("+tab[spos-2]+")";
             }
@@ -2447,14 +2512,29 @@ TString TFormula::GetExpFormula() const
          }
 
          //Functions
-         if (optype<0 && (spos+optype>=0)) {
-            tab[spos+optype]=fExpr[i]+("("+tab[spos+optype]);
+         int offset = 0;
+         if((optype>9 && optype<16) ||
+            (optype>20 && optype<23) ||
+            (optype>29 && optype<34) ||
+            (optype>40 && optype<44) ||
+            (optype>69 && optype<76)) {
+            //Functions with the format func(x)
+            offset = -1;
+         }
+
+         if(optype>15 && optype<20 ||
+            optype>22 && optype<26) {
+            //Functions with the format func(x,y)
+            offset = -2;
+         }
+         if (offset<0 && (spos+optype>=0)) {
+            tab[spos+offset]=fExpr[i]+("("+tab[spos+offset]);
             for (j=optype+1; j<0; j++){
-               tab[spos+optype]+=","+tab[spos+j];
+               tab[spos+offset]+=","+tab[spos+j];
             }
-            tab[spos+optype]+=")";
-            ismulti[spos+optype]=kFALSE;
-            spos+=optype+1;
+            tab[spos+offset]+=")";
+            ismulti[spos+offset]=kFALSE;
+            spos+=offset+1;
             continue;
          }
       }
@@ -2470,26 +2550,29 @@ TString TFormula::GetExpFormula() const
 }
 
 //------------------------------------------------------------------------------
-Int_t TFormula::GetOperType(Int_t oper) const
+Int_t TFormula::GetOperType(Int_t /* oper */) const
 {
-  if(oper==0) return -100;        //Sign inversion
+   Assert(0);
+   return 0;
 
-  if(oper>999 && oper<kConstants) return oper%((int)(oper/100)*100);  //pol0(1), landau(1), ...
+//   if(oper==0) return -100;        //Sign inversion
 
-  if((oper>0 && oper<6) ||
-     oper==20 ||
-     (oper>59 && oper<82)) return -20;  //Operators without the format func(x,y,...)
+//   if(oper>999 && oper<kConstants) return oper%((int)(oper/100)*100);  //pol0(1), landau(1), ...
 
-  if((oper>9 && oper<16) ||
-     (oper>20 && oper<23) ||
-     (oper>29 && oper<34) ||
-     (oper>40 && oper<44) ||
-     (oper>69 && oper<76)) return -1;  //Functions with the format func(x)
+//   if((oper>0 && oper<6) ||
+//      oper==20 ||
+//      (oper>59 && oper<82)) return -20;  //Operators without the format func(x,y,...)
 
-  if(oper>15 && oper<20 ||
-     oper>22 && oper<26) return -2;    //Functions with the format func(x,y)
+//   if((oper>9 && oper<16) ||
+//      (oper>20 && oper<23) ||
+//      (oper>29 && oper<34) ||
+//      (oper>40 && oper<44) ||
+//      (oper>69 && oper<76)) return -1;  //Functions with the format func(x)
 
-  if(kBoolOptimize<oper && oper<kFunctionCall) return -3;
+//   if(oper>15 && oper<20 ||
+//      oper>22 && oper<26) return -2;    //Functions with the format func(x,y)
+
+//   if(kBoolOptimize<oper && oper<kFunctionCall) return -3;
   
   return 0;
 
@@ -2549,7 +2632,7 @@ Bool_t TFormula::IsString(Int_t oper) const
    // return true if the expression at the index 'oper' is to be treated as 
    // as string
 
-   return fOper[oper] == kStrings;
+   return fActions[oper] == kStringConst;
 }
 
 //______________________________________________________________________________
@@ -2560,7 +2643,8 @@ void TFormula::Print(Option_t *) const
    Int_t i;
    Printf(" %20s : %s Ndim= %d, Npar= %d, Noper= %d",GetName(),GetTitle(), fNdim,fNpar,fNoper);
    for (i=0;i<fNoper;i++) {
-      Printf(" fExpr[%d] = %s  fOper = %d",i,(const char*)fExpr[i],fOper[i]);
+      Printf(" fExpr[%d] = %s  fActions = %d fActionParams = %d ",
+             i,(const char*)fExpr[i],fActions[i],fActionParams[i]);
    }
    if (!fNames) return;
    if (!fParams) return;
@@ -2667,12 +2751,20 @@ void TFormula::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 3) {
+         if (v<6) {
+            fNoldOper = MAXOP;
+            fOper = new Int_t[MAXOP];
+            for (int i=0; i<MAXOP; i++) fOper[i] = 0;
+         }
          TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
 
          // We need to reinstate (if possible) the TMethodCall.
          if (fFunctions.GetLast()>=0) {
             Compile();
+         } else if (v<6) {
+            Convert(v,fOper);
+            delete [] fOper; fOper = 0; fNoldOper = 0;
          }
          return;
       }
@@ -2683,6 +2775,7 @@ void TFormula::Streamer(TBuffer &b)
       if (v > 1) b >> fNval;
       if (v > 2) b >> fNstring;
       fNpar   = b.ReadArray(fParams);
+      fOper = new Int_t[MAXOP];
       fNoper  = b.ReadArray(fOper);
       fNconst = b.ReadArray(fConst);
       if (fNoper) {
@@ -2697,9 +2790,161 @@ void TFormula::Streamer(TBuffer &b)
       if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
       gROOT->GetListOfFunctions()->Add(this);
       b.CheckByteCount(R__s, R__c, TFormula::IsA());
+
+      if (fActions==0) fActions = new Short_t[MAXOP];
+      if (fActionParams==0) fActionParams = new Short_t[MAXOP];
+      Convert(v,fOper);
+      delete [] fOper; fOper = 0; fNoldOper = 0;
       //====end of old versions
 
    } else {
       TFormula::Class()->WriteBuffer(b,this);
    }
+}
+
+void TFormula::Convert(UInt_t /* fromVersion */, Int_t *oldOper) 
+{
+   // Convert the fOper of a TFormula version fromVersion to the current in memory version
+
+   Assert(oldOper==fOper); // the argument is only for derived class and has to match fOper
+   
+   enum {
+      kOldexpo         =  1000,
+      kOldgaus         =  2000,
+      kOldlandau       =  4000,
+      kOldxylandau     =  4500,
+      kOldConstants    =  50000,
+      kOldStrings      =  80000,
+      kOldVariable     = 100000,
+      kOldTreeString   = 105000,
+      kOldFormulaVar   = 110000,
+      kOldBoolOptimize = 120000, 
+      kOldFunctionCall = 200000
+   };
+   int i,j;
+
+   for (i=0,j=0; i<fNoper; ++i,++j) {
+      Int_t action = fOper[i];
+
+      if ( action == 0) {
+         // Sign Inversion
+
+         fActions[j] = kSignInv;
+
+         Float_t aresult = 99.99;
+         sscanf((const char*)fExpr[i],"%g",&aresult);
+         Assert((aresult+1)<0.001);
+
+         ++i; // skip the implied multiplication.
+
+      } else  if ( action < 100 ) {
+         // basic operators and mathematical library
+
+         fActions[j] = action;
+
+      } else if (action >= kOldFunctionCall) {
+         // Funtion call
+
+         fActions[j] = kNewFunctionCall;
+         fActionParams[j] = action-kOldFunctionCall;
+
+      } else if (action >= kOldBoolOptimize) {
+         // boolean operation optimizer
+
+         fActions[j] = kNewBoolOptimize;
+         fActionParams[j] = action-kOldBoolOptimize;
+            
+      } else if (action >= kOldFormulaVar) {
+         // a variable
+
+         fActions[j] = kNewVariable;
+         fActionParams[j] = action-kOldFormulaVar;
+
+      } else if (action >= kOldTreeString) {
+         // a tree string
+
+         fActions[j] = kNewDefinedString;
+         fActionParams[j] = action-kOldTreeString;
+
+      } else if (action >= kOldVariable) {
+         // a tree variable
+
+         fActions[j] = kNewDefinedVariable;
+         fActionParams[j] = action-kOldVariable;
+
+      } else if (action == kOldStrings) {
+         // String
+
+         fActions[j] = kStringConst;
+
+      } else if (action >= kOldConstants) {
+         // numerical value
+
+         fActions[j] = kNewConstant;
+         fActionParams[j] = action-kOldConstants;
+
+      } else if (action > 10000 && action < kOldConstants) {
+         // Polynomial
+
+         int var = action/10000; //arrondit
+         fActions[j] = kpol + (var-1);
+         fActionParams[j] = action - var*10000;
+
+      } else if (action >= 4600) {
+         
+         Error("Convert","Unsupported value %d",action);
+
+      } else if (action > kOldxylandau) {
+         // xylandau
+
+         fActions[j] = kxylandau;
+         fActionParams[j] = action - (kOldxylandau+1);
+
+      } else if (action > kOldlandau) {
+         // landau, xlandau, ylandau or zlandau
+         
+         fActions[j] = klandau;
+         int var = action/100-40;
+         if (var) fActions[j] += var;
+         fActionParams[j] = action - var*100 - (kOldlandau+1);
+
+      } else if (action > 2500 && action < 2600) {
+         // xygaus
+        
+         fActions[j] = kxygaus;
+         fActionParams[j] = action-2501;
+
+      }  else if (action > 2000 && action < 2500) {
+         //  gaus, xgaus, ygaus or zgaus
+
+         fActions[j] = kgaus;
+         int var = action/100-20;
+         if (var) fActions[j] += var;
+         fActionParams[j] = action - var*100 - (kOldgaus+1);
+
+      } else if (action > 1500 && action < 1600) {
+         // xyexpo
+         
+         fActions[j] = kxyexpo;
+         fActionParams[j] = action-1501;
+
+      } else if (action > 1000 && action < 1500) { 
+         // expo or xexpo or yexpo or zexpo
+
+         fActions[j] = kexpo;
+         int var = action/100-10;
+         if (var) fActions[j] += var;
+         fActionParams[j] = action - var*100 - (kOldexpo+1);
+
+      } if (action > 100 && action < 200) {
+         // Parameter substitution
+
+         fActions[j] = kParameter;
+         fActionParams[j] = action - 101;
+      }
+   }
+   if (i!=j) {
+      fNoper -= (i-j);
+   }
+
 }

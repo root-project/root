@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.11 2003/06/25 18:06:45 rdm Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.12 2003/11/24 10:51:55 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,9 +10,10 @@
 
 #ifdef __CINT__
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+#pragma link C++ nestedtypedefs;
+#pragma link C++ nestedclasses;
+
+#pragma link C++ namespace ROOT;
 
 #pragma link C++ enum EProperty;
 

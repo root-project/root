@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.21 2003/12/04 00:00:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.22 2003/12/04 03:08:52 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -882,7 +882,8 @@ void TString::Streamer(TBuffer &b)
          nbig = nwh;
       Pref()->UnLink();
       fData = TStringRef::GetRep(nbig,nbig)->Data();
-      for (int i = 0; i < nbig; i++) b >> fData[i];
+      b.ReadFastArray(fData,nbig);
+      //for (int i = 0; i < nbig; i++) b >> fData[i];
    } else {
       nbig = Length();
       if (nbig > 254) {
@@ -893,7 +894,8 @@ void TString::Streamer(TBuffer &b)
          nwh = UChar_t(nbig);
          b << nwh;
       }
-      for (int i = 0; i < nbig; i++) b << fData[i];
+      b.WriteFastArray(fData,nbig);
+      //for (int i = 0; i < nbig; i++) b << fData[i];
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.5 2000/12/02 16:26:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.6 2002/11/24 14:07:33 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -34,24 +34,28 @@ class TDataMember;
 class TRealData : public TObject {
 
 private:
-   TDataMember *fDataMember;         //pointer to data member descriptor
-   Int_t        fThisOffset;         //offset with the THIS object pointer
-   TString      fName;               //Concatenated names of this realdata
-   Streamer_t   fStreamer;           //!pointer to STL Streamer function
-   Bool_t       fIsObject;           //!true if member is an object
-      
+   TDataMember     *fDataMember;     //pointer to data member descriptor
+   Int_t            fThisOffset;     //offset with the THIS object pointer
+   TString          fName;           //Concatenated names of this realdata
+   TMemberStreamer *fStreamer;       //Object to stream the data member.
+   Bool_t           fIsObject;       //true if member is an object
+   
+   TRealData(const TRealData& rhs);  // Copying TRealData in not allowed.
+   TRealData& operator=(const TRealData& rhs);  // Copying TRealData in not allowed.
+
 public:
    TRealData();
    TRealData(const char *name, Int_t offset, TDataMember *datamember);
    virtual     ~TRealData();
+
+   void                AdoptStreamer(TMemberStreamer *p);
    virtual const char *GetName() const {return fName.Data();}
-   TDataMember *GetDataMember() const {return fDataMember;}
-   Streamer_t   GetStreamer() const {return fStreamer;}
-   Int_t        GetThisOffset() const {return fThisOffset;}
-   Bool_t       IsObject() const {return fIsObject;}
-   void         SetIsObject(Bool_t isObject) {fIsObject=isObject;}
-   void         SetStreamer(Streamer_t p) {fStreamer = p;}
-   void         WriteRealData(void *pointer, char *&buffer);
+   TDataMember        *GetDataMember() const {return fDataMember;}
+   TMemberStreamer    *GetStreamer() const; 
+   Int_t               GetThisOffset() const {return fThisOffset;}
+   Bool_t              IsObject() const {return fIsObject;}
+   void                SetIsObject(Bool_t isObject) {fIsObject=isObject;}
+   void                WriteRealData(void *pointer, char *&buffer);
 
    ClassDef(TRealData,0)  //Description of persistent data members
 };

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.8 2002/09/18 13:12:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.9 2003/01/20 15:33:35 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -57,12 +57,30 @@ public:
    TBrowser(const char *name="Browser", const char *title="ROOT Object Browser");
    TBrowser(const char *name, const char *title, UInt_t width, UInt_t height);
    TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+
    TBrowser(const char *name, TObject *obj, const char *title="ROOT Object Browser");
    TBrowser(const char *name, TObject *obj, const char *title, UInt_t width, UInt_t height);
    TBrowser(const char *name, TObject *obj, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+
+   TBrowser(const char *name, void *obj, TClass *cl, const char *objname="", const char *title="ROOT Foreign Browser");
+   TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, UInt_t width, UInt_t height);
+   TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+
+   // In a world with only standard C++ compliant compilers, we could also add:
+   // template <class T>  TBrowser(const char *name, T *obj, const char *objname="", const char *title="ROOT Foreign Browser") :
+   //       : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
+   //            fNeedRefresh(kFALSE)
+   // {
+   //    Create a new browser with a name, title, width and height for TObject *obj.
+   //
+   //    fImp = gGuiFactory->CreateBrowserImp(this, title, width, height);
+   //    Create(new TBrowserObject(obj,gROOT->GetClass(typeid(T)),objname));
+   // }
+
    virtual ~TBrowser();
 
-   void          Add(TObject *obj, const char *name = 0);
+   void          Add(TObject *obj,             const char *name = 0);
+   void          Add(void    *obj, TClass *cl, const char *name = 0);
    virtual void  Create(TObject *obj = 0);      // Create this Browser
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }

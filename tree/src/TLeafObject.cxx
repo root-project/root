@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.13 2001/06/22 16:10:21 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.14 2001/07/19 16:42:37 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -79,7 +79,8 @@ void TLeafObject::FillBasket(TBuffer &b)
         object->SetBit(kInvalidObject);
         object->SetUniqueID(123456789);
         object->Streamer(b);
-        delete object;
+        if (fClass->Property() & kIsAbstract) delete object;
+        else                                  fClass->Destructor(object);
      } else {
         Error("FillBasket","Attempt to write a NULL object in leaf:%s",GetName());
      }
@@ -159,7 +160,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
       }
       object = (TObject*)(*fObjAddress);
       if (fBranch->IsAutoDelete()) {
-         delete object;
+         fClass->Destructor(object);
          object = (TObject *)fClass->New();
       }
       if (!object) return;
@@ -167,7 +168,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
       if (fClass->GetClassInfo()) {
          object->Streamer(b);
       } else {
-         //fake class has no Streamer
+         //emulated class has no Streamer
          if (!TestBit(kWarn)) {
             Warning("ReadBasket","%s::Streamer not available, using TClass::ReadBuffer instead",fClass->GetName());
             SetBit(kWarn);
@@ -178,7 +179,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
       // we must delete it
       if (object->TestBit(kInvalidObject)) {
          if (object->GetUniqueID() == 123456789) {
-            delete object;
+            fClass->Destructor(object);
             object = 0;
          }
       }

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.133 2003/12/30 16:32:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.134 2004/01/03 14:26:48 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -306,7 +306,7 @@ public:
       case kDouble32_t:
          return kFALSE;
       default:
-	 return kFALSE;
+         return kFALSE;
       }
    }
 
@@ -356,7 +356,7 @@ public:
 
    virtual Bool_t    Update() {
       // We reloading all cached information in case the underlying class
-      // information has changed (for example when changing from the 'fake'
+      // information has changed (for example when changing from the 'emulated'
       // class to the real class.
 
       if (fClass) {
@@ -483,7 +483,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case kULong_t:
       case kFloat_t:
       case kDouble_t:
-	  case kDouble32_t:
+          case kDouble32_t:
       case kchar:
       case TStreamerInfo::kCounter:
                       return (Int_t*)(thisobj+fOffset);
@@ -1052,7 +1052,7 @@ public:
    virtual Bool_t    IsInteger() const {
       TMethodCall::EReturnType r = fMethod->ReturnType();
       if (r == TMethodCall::kLong) {
-	return kTRUE;
+        return kTRUE;
       } else return kFALSE;
    }
 
@@ -1470,8 +1470,9 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    SetName(name);
 
    for (i=0;i<fNoper;i++) {
-      if (fOper[i] >= 105000 && fOper[i]<110000) {
-         Int_t string_code = fOper[i]-105000;
+      if (fActions[i]==kNewDefinedString) {
+//       if (fOper[i] >= 105000 && fOper[i]<110000) {
+          Int_t string_code = fActionParams[i]; // Oper[i]-105000;
          TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(string_code);
          if (!leafc) continue;
 
@@ -1495,11 +1496,11 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
          continue;
       }
    }
-   if (fNoper==1 && fOper[0]==kAliasString) {
+   if (fNoper==1 && fActions[0]==kNewAliasString) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       Assert(subform);
       if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
-   } else if (fNoper==2 && fOper[0]==kAlternateString) {
+   } else if (fNoper==2 && fActions[0]==kNewAlternateString) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       Assert(subform);
       if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
@@ -1540,6 +1541,7 @@ TTreeFormula::~TTreeFormula()
    }
    fLeafNames.Delete();
    fDataMembers.Delete();
+   fMethods.Delete();
    fAliases.Delete();
    if (fLookupType) delete [] fLookupType;
    for (int j=0; j<fNcodes; j++) {
@@ -1783,7 +1785,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
 }
 
 //______________________________________________________________________________
-Int_t TTreeFormula::DefinedVariable(TString &name)
+Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 {
 //*-*-*-*-*-*Check if name is in the list of Tree/Branch leaves*-*-*-*-*
 //*-*        ==================================================
@@ -1812,7 +1814,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 //      - Branch_Name[index1].Leaf_Name[index2]
 //      - Leaf_name[index].Action().OtherAction(param)
 //      - Leaf_name[index].Action()[val].OtherAction(param)
-
+   
+   action = kNewDefinedVariable;
    if (!fTree) return -1;
    // Later on we will need to read one entry, let's make sure
    // it is a real entry.
@@ -1904,7 +1907,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          
          // Should check whether we have strings.
 
-         char isstring = 0;
+         short isstring = 0;
          if (primary->IsString()) {
             if (!alternate->IsString()) {
                Error("DefinedVariable","The 2nd arguments in %s has to return the same type as the 1st argument (string)!",
@@ -1920,11 +1923,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          
          fAliases.AddAtAndExpand(primary,fNoper);
          fExpr[fNoper] = "";
-         fOper[fNoper] = (Int_t)kAlternate + isstring; // if isstring=1 then it is kAlternateString
+         // fOper[fNoper] = (Int_t)kAlternate + isstring; // if isstring=1 then it is kAlternateString
+         fActions[fNoper] = (Int_t)kNewAlternate + isstring; // if isstring=1 then it is kAlternateString
          ++fNoper;
          
          fAliases.AddAtAndExpand(alternate,fNoper);
-         return (Int_t)kAlias + isstring - (Int_t)kVariable; // need to compensate for the TFormula induced offset
+         action = (Int_t)kNewAlias + isstring;
+         return 0;
       }
    }
 
@@ -2226,9 +2231,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          fAliases.AddAtAndExpand(subform,fNoper);
          
          if (subform->IsString()) {
-            return kAliasString - kVariable; // need to compensate for the TFormula induced offset
+            action = kNewAliasString;
+            return 0;
          } else {
-            return kAlias - kVariable; // need to compensate for the TFormula induced offset
+            action = kNewAlias;
+            return 0;
          }
       }
    }
@@ -2870,7 +2877,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                fLookupType[code]=kDataMember;
             }
          }
-         return 5000+code;
+         action = kNewDefinedString;
+         return code;
       }
       return code;
    }
@@ -3332,6 +3340,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
             }
          } // if (max_dim-1>0)
       } // if (max_dim)
+
       return real_instance;
 }
 
@@ -3445,6 +3454,49 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    return stringStack[0];
 }
 
+#define TT_EVAL_INIT                                                                            \
+   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);                                                \
+                                                                                                \
+   const Int_t real_instance = GetRealInstance(instance,0);                                     \
+                                                                                                \
+   /* Since the only operation in this formula is reading this branch,                          \
+      we are guaranteed that this function is first called with instance==0 and                 \
+      hence we are guaranteed that the branch is always properly read */                        \
+   if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());    \
+   else if (real_instance>fNdata[0]) return 0;                                                  \
+                                                                                                \
+   if (fAxis) {                                                                                 \
+      char * label;                                                                             \
+      /* This portion is a duplicate (for speed reason) of the code                             \
+         located  in the main for loop at "a tree string" (and in EvalStringInstance) */        \
+      if (fLookupType[0]==kDirect) {                                                            \
+         label = (char*)leaf->GetValuePointer();                                                \
+      } else {                                                                                  \
+         label = (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);                                \
+      }                                                                                         \
+      Int_t bin = fAxis->FindBin(label);                                                        \
+      return bin-0.5;                                                                           \
+   } 
+
+#define TT_EVAL_INIT_LOOP                                                                       \
+   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(code);                                             \
+                                                                                                \
+   /* Now let calculate what physical instance we really need.  */                              \
+   const Int_t real_instance = GetRealInstance(instance,code);                                  \
+                                                                                                \
+   if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());    \
+   else {                                                                                       \
+      /* In the cases where we are behind (i.e. right of) a potential boolean optimization      \
+         this tree variable reading may have not been executed with instance==0 which would     \
+         result in the branch being potentially not read in. */                                 \
+      if (haveSeenBooleanOptimization) {                                                        \
+         TBranch *br = leaf->GetBranch();                                                       \
+         Int_t treeEntry = br->GetTree()->GetReadEntry();                                       \
+         if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                        \
+      }                                                                                         \
+      if (real_instance>fNdata[code]) return 0;                                                 \
+   }
+                
 //______________________________________________________________________________
 Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 {
@@ -3452,15 +3504,29 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
 //*-*                  =========================
 //
 
-   const Int_t kMAXSTRINGFOUND = 10;
-   Int_t i,j,pos,pos2,int1,int2,real_instance;
-   Float_t aresult;
-   Double_t tab[kMAXFOUND];
-   Double_t dexp;
-   const char *stringStackLocal[kMAXSTRINGFOUND];
-   const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
+// Note that the redundance and structure in this code is tailored to improve
+// efficiencies.
+
 
    if (fNoper == 1 && fNcodes > 0) {
+
+      switch (fLookupType[0]) {
+         case kDirect:     { 
+            TT_EVAL_INIT;
+
+            // TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
+            Double_t result = leaf->GetValue(real_instance); 
+            return result;
+         }
+         case kMethod:     { TT_EVAL_INIT; return GetValueFromMethod(0,leaf);  }
+         case kDataMember: { TT_EVAL_INIT; return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance); }
+         case kIndexOfEntry: return fTree->GetReadEntry();
+         case kEntries:      return fTree->GetEntries();
+         case kLength:       return fManager->fNdata;
+         case kIteration:    return instance;
+          
+         case -1: break; 
+      }
       switch (fCodes[0]) {
          case -2: {
             TCutG *gcut = (TCutG*)fMethods.At(0);
@@ -3475,381 +3541,343 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
             return fx->EvalInstance(instance);
          }
-      }
-//       if (fOper[0]==kAlias) {
-//          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
-//          Assert(subform);
-//          return subform->EvalInstance(instance);
-//       }
-//       if (fOper[0]==kAliasString) {
-//          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
-//          Assert(subform);
-//          if (fAxis) ... 
-//          return subform->EvalInstance(instance);
-//       }
-      switch (fLookupType[0]) {
-        case kIndexOfEntry: return fTree->GetReadEntry();
-        case kEntries:      return fTree->GetEntries();
-        case kLength:       return fManager->fNdata;
-        case kIteration:    return instance;
-      }
-
-      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
-
-      real_instance = GetRealInstance(instance,0);
-
-      // Since the only operation in this formula is reading this branch,
-      // we are guaranteed that this function is first called with instance==0 and
-      // hence we are guaranteed that the branch is always properly read
-      if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
-      else if (real_instance>fNdata[0]) return 0;
-     
-      if (fAxis) {
-         char * label;
-         // This portion is a duplicate (for speed reason) of the code
-         // located  in the main for loop at "a tree string" (and in EvalStringInstance)
-         if (fLookupType[0]==kDirect) {
-            label = (char*)leaf->GetValuePointer();
-         } else {
-            label = (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);
-         }
-         Int_t bin = fAxis->FindBin(label);
-         return bin-0.5;
-      }
-      switch(fLookupType[0]) {
-         case kDirect: return leaf->GetValue(real_instance);
-         case kMethod: return GetValueFromMethod(0,leaf);
-         case kDataMember: return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance);
          default: return 0;
       }
    }
 
+
+   Double_t tab[kMAXFOUND];
+   const Int_t kMAXSTRINGFOUND = 10;
+   const char *stringStackLocal[kMAXSTRINGFOUND];
+   const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
    Bool_t haveSeenBooleanOptimization = kFALSE;
-   pos  = 0;
-   pos2 = 0;
-   for (i=0; i<fNoper; i++) {
-      Int_t action = fOper[i];
 
-//*-*- an external function call
-      if (action >= kFunctionCall) {
-         int fno   = (action-kFunctionCall) / 1000;
-         int nargs = (action-kFunctionCall) % 1000;
+   Int_t pos  = 0;
+   Int_t pos2 = 0;
 
-         // Retrieve the function
-         TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
+   for (Int_t i=0; i<fNoper ; ++i) { 
+
+      const Int_t newaction = fActions[i];
+      
+      if (newaction<kNewDefinedVariable) {
+         // TFormula operands.
+
+         // one of the most used cases
+         if (newaction==kNewConstant) { pos++; tab[pos-1] = fConst[fActionParams[i]]; continue; }
          
-         // Set the arguments
-         TString args;
-         if (nargs) {
-            UInt_t argloc = pos-nargs;
-            for(j=0;j<nargs;j++,argloc++,pos--) {
-               if (TMath::IsNaN(tab[argloc])) {
-                  // TString would add 'nan' this is not what we want 
-                  // so let's do somethign else
-                  args += "(double)(0x8000000000000)";
-               } else {
-                  args += tab[argloc];
+         switch(newaction) {
+
+            case kEnd        : return tab[0];
+            case kAdd        : pos--; tab[pos-1] += tab[pos]; continue;
+            case kSubstract  : pos--; tab[pos-1] -= tab[pos]; continue;
+            case kMultiply   : pos--; tab[pos-1] *= tab[pos]; continue;
+            case kDivide     : pos--; if (tab[pos] == 0) tab[pos-1] = 0; //  division by 0
+                                      else               tab[pos-1] /= tab[pos];
+                                      continue;
+            case kModulo     : {pos--; Int_t int1((Int_t)tab[pos-1]); Int_t int2((Int_t)tab[pos]); tab[pos-1] = Double_t(int1%int2); continue;}
+
+            case kcos  : tab[pos-1] = TMath::Cos(tab[pos-1]); continue;
+            case ksin  : tab[pos-1] = TMath::Sin(tab[pos-1]); continue;
+            case ktan  : if (TMath::Cos(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
+                         else tab[pos-1] = TMath::Tan(tab[pos-1]);
+                         continue;
+            case kacos : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
+                         else tab[pos-1] = TMath::ACos(tab[pos-1]);
+                         continue;
+            case kasin : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
+                         else tab[pos-1] = TMath::ASin(tab[pos-1]);
+                         continue;
+            case katan : tab[pos-1] = TMath::ATan(tab[pos-1]); continue;
+            case kcosh : tab[pos-1] = TMath::CosH(tab[pos-1]); continue;
+            case ksinh : tab[pos-1] = TMath::SinH(tab[pos-1]); continue;
+            case ktanh : if (TMath::CosH(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
+                         else tab[pos-1] = TMath::TanH(tab[pos-1]);
+                         continue;
+            case kacosh: if (tab[pos-1] < 1) {tab[pos-1] = 0;} //  indetermination
+                         else tab[pos-1] = TMath::ACosH(tab[pos-1]);
+                         continue;
+            case kasinh: tab[pos-1] = TMath::ASinH(tab[pos-1]); continue;
+            case katanh: if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
+                     else tab[pos-1] = TMath::ATanH(tab[pos-1]); continue;
+            case katan2: pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); continue;
+
+            case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
+            case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
+            case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
+            case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
+
+            case kstrstr : pos2 -= 2; pos++;if (strstr(stringStack[pos2],stringStack[pos2+1])) tab[pos-1]=1;
+                                        else tab[pos-1]=0; continue;
+
+            case kmin : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); continue;
+            case kmax : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); continue;
+
+            case klog  : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log(tab[pos-1]);
+                         else {tab[pos-1] = 0;} //{indetermination }
+                          continue;
+            case kexp  : { Double_t dexp = tab[pos-1];
+                           if (dexp < -700) {tab[pos-1] = 0; continue;}
+                           if (dexp >  700) {tab[pos-1] = TMath::Exp(700); continue;}
+                           tab[pos-1] = TMath::Exp(dexp); continue;
+                         }
+            case klog10: if (tab[pos-1] > 0) tab[pos-1] = TMath::Log10(tab[pos-1]);
+                         else {tab[pos-1] = 0;} //{indetermination }
+                         continue;
+
+            case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
+
+            case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
+            case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; continue;
+            case kint  : tab[pos-1] = Double_t(Int_t(tab[pos-1])); continue;
+            case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
+            case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
+
+            case kAnd  : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
+                                else tab[pos-1]=0; continue;
+            case kOr   : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
+                                else tab[pos-1]=0; continue;
+
+            case kEqual      : pos--; tab[pos-1] = (tab[pos-1] == tab[pos]) ? 1 : 0; continue;
+            case kNotEqual   : pos--; tab[pos-1] = (tab[pos-1] != tab[pos]) ? 1 : 0; continue;
+            case kLess       : pos--; tab[pos-1] = (tab[pos-1] <  tab[pos]) ? 1 : 0; continue;
+            case kGreater    : pos--; tab[pos-1] = (tab[pos-1] >  tab[pos]) ? 1 : 0; continue;
+            case kLessThan   : pos--; tab[pos-1] = (tab[pos-1] <= tab[pos]) ? 1 : 0; continue;
+            case kGreaterThan: pos--; tab[pos-1] = (tab[pos-1] >= tab[pos]) ? 1 : 0; continue;
+            case kNot        :        tab[pos-1] = (tab[pos-1] !=        0) ? 0 : 1; continue;
+
+            case kStringEqual : pos2 -= 2; pos++; if (!strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
+                                                  else tab[pos-1]=0; continue;
+            case kStringNotEqual: pos2 -= 2; pos++;if (strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
+                                                   else tab[pos-1]=0; continue;
+
+            case kBitAnd    : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
+            case kBitOr     : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
+            case kLeftShift : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); continue;
+            case kRightShift: pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); continue;
+               
+            case kStringConst: {
+               // String
+               pos2++; stringStack[pos2-1] = (char*)fExpr[i].Data();
+               continue;
+            }
+
+            case kNewBoolOptimize: {
+               // boolean operation optimizer
+               
+               int param = fActionParams[i];
+               Bool_t skip = kFALSE;
+               int op = param % 10; // 1 is && , 2 is ||
+               
+               if (op == 1 && (!tab[pos-1]) ) { 
+                  // &&: skip the right part if the left part is already false
+                  
+                  skip = kTRUE;
+                  
+                  // Preserve the existing behavior (i.e. the result of a&&b is
+                  // either 0 or 1)
+                  tab[pos-1] = 0;
+                  
+               } else if (op == 2 && tab[pos-1] ) {  
+                  // ||: skip the right part if the left part is already true
+                  
+                  skip = kTRUE;
+                  
+                  // Preserve the existing behavior (i.e. the result of a||b is
+                  // either 0 or 1)
+                  tab[pos-1] = 1;
                }
-               args += ',';
-            }
-            args.Remove(args.Length()-1);
-         }
-         pos++;
-         Double_t ret;
-         method->Execute(args,ret);
-         tab[pos-1] = ret; // check for the correct conversion!
-         
-         continue;
-      }
-//*-*- boolean operation optimizer
-      if (action >= kBoolOptimize) {
-         Bool_t skip = kFALSE;
-         int op = (action-kBoolOptimize) % 10; // 1 is && , 2 is ||
-
-         if (op == 1 && (!tab[pos-1]) ) { 
-            // &&: skip the right part if the left part is already false
-
-            skip = kTRUE;
-
-            // Preserve the existing behavior (i.e. the result of a&&b is
-            // either 0 or 1)
-            tab[pos-1] = 0;
-            
-         } else if (op == 2 && tab[pos-1] ) {  
-            // ||: skip the right part if the left part is already true
-            
-            skip = kTRUE;
-
-            // Preserve the existing behavior (i.e. the result of a||b is
-            // either 0 or 1)
-            tab[pos-1] = 1;
-         }
-         
-         if (skip) {
-            int toskip = (action-kBoolOptimize) / 10;
-            i += toskip;
-         }
-         haveSeenBooleanOptimization = kTRUE;
-         continue;
-      }
-      switch (action) {
-
-//*-*- a TTree Variable Alias (i.e. a sub-TTreeFormula)
-         case kAlias: {
-            int aliasN = i;
-            TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
-            Assert(subform);
-            
-            Double_t param = subform->EvalInstance(instance);
-            
-            tab[pos] = param; pos++;
-            continue;
-         }
-//*-*- a TTree Variable Alias String (i.e. a sub-TTreeFormula)
-         case kAliasString: {
-            int aliasN = i;
-            TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
-            Assert(subform);
-            
-            pos2++;
-            stringStack[pos2-1] = subform->EvalStringInstance(instance);
-            continue;
-         }
-//*-*- a TTree Variable Alternate (i.e. a sub-TTreeFormula)
-         case kAlternate: {
-            int alternateN = i;
-            TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
-            
-            // First check whether we are in range for the primary formula
-            if (instance < primary->GetNdata()) {
                
-               Double_t param = primary->EvalInstance(instance);
-               
-               ++i; // skip the alternate value.
-               
-               tab[pos] = param; pos++;
-            } else {
-               // The primary is not in rancge, we will calculate the alternate value
-               // via the next operation (which will be a kAlias).
-            
-               // intentional no operations
+               if (skip) {
+                  int toskip = param / 10;
+                  i += toskip;
+               }
+               haveSeenBooleanOptimization = kTRUE;
+               continue;
             }
-            continue;
-         }
-         case kAlternateString: {
-            int alternateN = i;
-            TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
-            
-            // First check whether we are in range for the primary formula
-            if (instance < primary->GetNdata()) {
+
+            case kNewFunctionCall: {
+               // an external function call
                
-               pos2++;
-               stringStack[pos2-1] = primary->EvalStringInstance(instance);
+               int param = fActionParams[i];
+               int fno   = param / 1000;
+               int nargs = param % 1000;
                
-               ++i; // skip the alternate value.
+               // Retrieve the function
+               TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
                
-            } else {
-               // The primary is not in rancge, we will calculate the alternate value
-               // via the next operation (which will be a kAlias).
-            
-               // intentional no operations
-            }
-            continue;
-         }
-      }
-//*-*- a tree string
-      if (action >= 105000) {
-         Int_t string_code = action-105000;
-         TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(string_code);
-
-         // Now let calculate what physical instance we really need.
-         real_instance = GetRealInstance(instance,string_code);
-
-         if (!instance) leafc->GetBranch()->GetEntry(leafc->GetBranch()->GetTree()->GetReadEntry());
-         else {
-            // In the cases where we are beind (i.e. right of) a potential boolean optimization
-            // this tree variable reading may have not been executed with instance==0 which would
-            // result in the branch being potentially not read in.
-            if (haveSeenBooleanOptimization) {
-               TBranch *br = leafc->GetBranch();
-               Int_t treeEntry = br->GetTree()->GetReadEntry();
-                if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
-            }
-            if (real_instance>fNdata[string_code]) return 0;
-         }
-         pos2++;
-         if (fLookupType[string_code]==kDirect) {
-            stringStack[pos2-1] = (char*)leafc->GetValuePointer();
-         } else {
-            stringStack[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,real_instance);
-         }
-         continue;
-      }
-//*-*- a tree variable
-      if (action >= kVariable) {
-         Int_t code = action-kVariable;
-         Double_t param;
-
-         switch (fCodes[code]) {
-            case -2: {
-               TCutG *gcut = (TCutG*)fMethods.At(code);
-               TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
-               TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-               Double_t xcut = fx->EvalInstance(instance);
-               Double_t ycut = fy->EvalInstance(instance);
-               param = gcut->IsInside(xcut,ycut);
-               break;
-            }
-            case -1: {
-               TCutG *gcut = (TCutG*)fMethods.At(code);
-               TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
-               param = fx->EvalInstance(instance);
-               break;
-            }
-            default: {
-               switch (fLookupType[code]) {
-                  case kIndexOfEntry: param = fTree->GetReadEntry(); break;
-                  case kEntries:      param = fTree->GetEntries(); break;
-                  case kLength:       param = fManager->fNdata; break;
-                  case kIteration:    param = instance; break;
-                  case kDirect:
-                  case kMethod:
-                  case kDataMember:
-                  default: {
-                     TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(code);
-
-                     // Now let calculate what physical instance we really need.
-                     real_instance = GetRealInstance(instance,code);
-
-                     if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
-                     else {
-                        // In the cases where we are beind (i.e. right of) a potential boolean optimization
-                        // this tree variable reading may have not been executed with instance==0 which would
-                        // result in the branch being potentially not read in.
-                        if (haveSeenBooleanOptimization) {
-                           TBranch *br = leaf->GetBranch();
-                           Int_t treeEntry = br->GetTree()->GetReadEntry();
-                            if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
-                        }
-                        if (real_instance>fNdata[code]) return 0;
+               // Set the arguments
+               TString args;
+               if (nargs) {
+                  UInt_t argloc = pos-nargs;
+                  for(Int_t j=0;j<nargs;j++,argloc++,pos--) {
+                     if (TMath::IsNaN(tab[argloc])) {
+                        // TString would add 'nan' this is not what we want 
+                        // so let's do somethign else
+                        args += "(double)(0x8000000000000)";
+                     } else {
+                        args += tab[argloc];
                      }
-
-                     switch(fLookupType[code]) {
-                        case kDirect: param = leaf->GetValue(real_instance); break;
-                        case kMethod: param = GetValueFromMethod(code,leaf); break;
-                        case kDataMember: param = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
-                                         GetValue(leaf,real_instance); break;
-                        default: param = 0;
-                    }
+                     args += ',';
                   }
+                  args.Remove(args.Length()-1);
                }
+               pos++;
+               Double_t ret;
+               method->Execute(args,ret);
+               tab[pos-1] = ret; // check for the correct conversion!
+           
+               continue;
             }
+
+//         case kParameter:    { pos++; tab[pos-1] = fParams[fActionParams[i]]; continue; }
          }
-         tab[pos] = param; pos++;
-         continue;
-      }
-//*-*- String
-      if (action == kStrings) {
-         pos2++; stringStack[pos2-1] = (char*)fExpr[i].Data();
-         continue;
-      }
-//*-*- numerical value
-      if (action >= kConstants) {
-         pos++; tab[pos-1] = fConst[action-kConstants];
-         continue;
-      }
-      if (action == 0) {
-         pos++;
-         sscanf((const char*)fExpr[i],"%g",&aresult);
-         tab[pos-1] = aresult;
-//*-*- basic operators and mathematical library
-      } else if (action < 100) {
-         switch(action) {
-            case   1 : pos--; tab[pos-1] += tab[pos]; break;
-            case   2 : pos--; tab[pos-1] -= tab[pos]; break;
-            case   3 : pos--; tab[pos-1] *= tab[pos]; break;
-            case   4 : pos--; if (tab[pos] == 0) tab[pos-1] = 0; //  division by 0
-                              else               tab[pos-1] /= tab[pos];
-                       break;
-            case   5 : {pos--; int1=Int_t(tab[pos-1]); int2=Int_t(tab[pos]); tab[pos-1] = Double_t(int1%int2); break;}
-            case  10 : tab[pos-1] = TMath::Cos(tab[pos-1]); break;
-            case  11 : tab[pos-1] = TMath::Sin(tab[pos-1]); break;
-            case  12 : if (TMath::Cos(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
-                       else tab[pos-1] = TMath::Tan(tab[pos-1]);
-                       break;
-            case  13 : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
-                       else tab[pos-1] = TMath::ACos(tab[pos-1]);
-                       break;
-            case  14 : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
-                       else tab[pos-1] = TMath::ASin(tab[pos-1]);
-                       break;
-            case  15 : tab[pos-1] = TMath::ATan(tab[pos-1]); break;
-            case  70 : tab[pos-1] = TMath::CosH(tab[pos-1]); break;
-            case  71 : tab[pos-1] = TMath::SinH(tab[pos-1]); break;
-            case  72 : if (TMath::CosH(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
-                       else tab[pos-1] = TMath::TanH(tab[pos-1]);
-                       break;
-            case  73 : if (tab[pos-1] < 1) {tab[pos-1] = 0;} //  indetermination
-                       else tab[pos-1] = TMath::ACosH(tab[pos-1]);
-                       break;
-            case  74 : tab[pos-1] = TMath::ASinH(tab[pos-1]); break;
-            case  75 : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
-                       else tab[pos-1] = TMath::ATanH(tab[pos-1]); break;
-            case  16 : pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); break;
-            case  17 : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); break;
-            case  20 : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); break;
-            case  21 : tab[pos-1] = tab[pos-1]*tab[pos-1]; break;
-            case  22 : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); break;
-            case  23 : pos2 -= 2; pos++;if (stringStack[pos2] && 
-                                            strstr(stringStack[pos2],stringStack[pos2+1])) tab[pos-1]=1;
-                            else tab[pos-1]=0; break;
-            case  24 : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); break;
-            case  25 : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); break;
-            case  30 : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log(tab[pos-1]);
-                       else {tab[pos-1] = 0;} //{indetermination }
-                       break;
-            case  31 : dexp = tab[pos-1];
-                       if (dexp < -700) {tab[pos-1] = 0; break;}
-                       if (dexp >  700) {tab[pos-1] = TMath::Exp(700); break;}
-                       tab[pos-1] = TMath::Exp(dexp); break;
-            case  32 : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log10(tab[pos-1]);
-                       else {tab[pos-1] = 0;} //{indetermination }
-                       break;
-            case  40 : pos++; tab[pos-1] = TMath::ACos(-1); break;
-            case  41 : tab[pos-1] = TMath::Abs(tab[pos-1]); break;
-            case  42 : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; break;
-            case  43 : tab[pos-1] = Double_t(Int_t(tab[pos-1])); break;
-            case  50 : pos++; tab[pos-1] = gRandom->Rndm(1); break;
-            case  60 : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  61 : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  62 : pos--; if (tab[pos-1] == tab[pos]) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  63 : pos--; if (tab[pos-1] != tab[pos]) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  64 : pos--; if (tab[pos-1] < tab[pos]) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  65 : pos--; if (tab[pos-1] > tab[pos]) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  66 : pos--; if (tab[pos-1]<=tab[pos]) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  67 : pos--; if (tab[pos-1]>=tab[pos]) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  68 : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; break;
-            case  76 : pos2 -= 2; pos++; if (!strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  77 : pos2 -= 2; pos++;if (strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
-                              else tab[pos-1]=0; break;
-            case  78 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); break;
-            case  79 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); break;
-            case  80 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); break;
-            case  81 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); break;
+
+      } else {
+         // TTreeFormula operands.
+
+         // a tree variable (the most used case).
+
+         if (newaction == kNewDefinedVariable) {
+
+            const Int_t code = fActionParams[i]; 
+            const Int_t lookupType = fLookupType[code];
+            switch (lookupType) {
+               case kIndexOfEntry: tab[pos++] = fTree->GetReadEntry(); continue;
+               case kEntries:      tab[pos++] = fTree->GetEntries(); continue;
+               case kLength:       tab[pos++] = fManager->fNdata; continue;
+               case kIteration:    tab[pos++] = instance; continue;
+
+               case kDirect:     { TT_EVAL_INIT_LOOP; tab[pos++] = leaf->GetValue(real_instance); continue; }
+               case kMethod:     { TT_EVAL_INIT_LOOP; tab[pos++] = GetValueFromMethod(code,leaf); continue; }
+               case kDataMember: { TT_EVAL_INIT_LOOP; tab[pos++] = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
+                                          GetValue(leaf,real_instance); continue; }
+               case -1: break;
+               default: tab[pos++] = 0; continue;
+            }
+            switch (fCodes[code]) {
+               case -2: {
+                  TCutG *gcut = (TCutG*)fMethods.At(code);
+                  TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+                  TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+                  Double_t xcut = fx->EvalInstance(instance);
+                  Double_t ycut = fy->EvalInstance(instance);
+                  tab[pos++] = gcut->IsInside(xcut,ycut);
+                  continue;
+               }
+               case -1: {
+                  TCutG *gcut = (TCutG*)fMethods.At(code);
+                  TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+                  tab[pos++] = fx->EvalInstance(instance);
+                  continue;
+               }
+               default: {
+                  tab[pos++] = 0;
+                  continue;
+               }
+            } 
+         }
+         switch(newaction) {
+
+            // a TTree Variable Alias (i.e. a sub-TTreeFormula)
+            case kNewAlias: {
+               int aliasN = i;
+               TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
+               Assert(subform);
+              
+               Double_t param = subform->EvalInstance(instance);
+              
+               tab[pos] = param; pos++;
+               continue;
+            }
+            // a TTree Variable Alias String (i.e. a sub-TTreeFormula)
+            case kNewAliasString: {
+               int aliasN = i;
+               TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
+               Assert(subform);
+              
+               pos2++;
+               stringStack[pos2-1] = subform->EvalStringInstance(instance);
+               continue;
+            }
+            // a TTree Variable Alternate (i.e. a sub-TTreeFormula)
+            case kNewAlternate: {
+               int alternateN = i;
+               TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+            
+               // First check whether we are in range for the primary formula
+               if (instance < primary->GetNdata()) {
+               
+                  Double_t param = primary->EvalInstance(instance);
+               
+                  ++i; // skip the alternate value.
+               
+                  tab[pos] = param; pos++;
+               } else {
+                  // The primary is not in rancge, we will calculate the alternate value
+                  // via the next operation (which will be a intentional).
+            
+                  // kNewAlias no operations
+               }
+               continue;
+            }
+            case kNewAlternateString: {
+               int alternateN = i;
+               TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+            
+               // First check whether we are in range for the primary formula
+               if (instance < primary->GetNdata()) {
+               
+                  pos2++;
+                  stringStack[pos2-1] = primary->EvalStringInstance(instance);
+               
+                  ++i; // skip the alternate value.
+               
+               } else {
+                  // The primary is not in rancge, we will calculate the alternate value
+                  // via the next operation (which will be a kNewAlias).
+            
+                  // intentional no operations
+               }
+               continue;
+            }
+
+            // a tree string
+            case kNewDefinedString: {
+               Int_t string_code = fActionParams[i]; // action-105000;
+               TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(string_code);
+
+               // Now let calculate what physical instance we really need.
+               const Int_t real_instance = GetRealInstance(instance,string_code);
+               
+               if (!instance) leafc->GetBranch()->GetEntry(leafc->GetBranch()->GetTree()->GetReadEntry());
+               else {
+                  // In the cases where we are beind (i.e. right of) a potential boolean optimization
+                  // this tree variable reading may have not been executed with instance==0 which would
+                  // result in the branch being potentially not read in.
+                  if (haveSeenBooleanOptimization) {
+                     TBranch *br = leafc->GetBranch();
+                     Int_t treeEntry = br->GetTree()->GetReadEntry();
+                     if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
+                  }
+                  if (real_instance>fNdata[string_code]) return 0;
+               }
+               pos2++;
+               if (fLookupType[string_code]==kDirect) {
+                  stringStack[pos2-1] = (char*)leafc->GetValuePointer();
+               } else {
+                  stringStack[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,real_instance);
+               }
+               continue;
+            }
+
          }
       }
-    }
-    Double_t result = tab[0];
-    return result;
+
+      Assert(i<fNoper);
+   }
+   
+   Double_t result = tab[0];
+   return result;
 }
 
 //______________________________________________________________________________
@@ -3991,7 +4019,7 @@ Bool_t TTreeFormula::IsInteger() const
    // When a leaf is of type integer, the generated histogram is forced
    // to have an integer bin width
 
-   if (fNoper==2 && fOper[0]==kAlternate) {
+   if (fNoper==2 && fActions[0]==kNewAlternate) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       Assert(subform);
       return subform->IsInteger();
@@ -3999,7 +4027,7 @@ Bool_t TTreeFormula::IsInteger() const
 
    if (fNoper > 1) return kFALSE;
 
-   if (fOper[0]==kAlias) {
+   if (fActions[0]==kNewAlias) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       Assert(subform);
       return subform->IsInteger();
@@ -4075,9 +4103,10 @@ Bool_t TTreeFormula::IsString(Int_t oper) const
    // as string
 
    if (TFormula::IsString(oper)) return kTRUE;
-   if (fOper[oper]>=105000 && fOper[oper]<110000) return kTRUE;
-   if (fOper[oper]==kAliasString) return kTRUE;
-   if (fOper[oper]==kAlternateString) return kTRUE;
+   if (fActions[oper]==kNewDefinedString) return kTRUE;
+//    if (fOper[oper]>=105000 && fOper[oper]<110000) return kTRUE;
+   if (fActions[oper]==kNewAliasString) return kTRUE;
+   if (fActions[oper]==kNewAlternateString) return kTRUE;
    return kFALSE;
 }
 
@@ -4218,11 +4247,11 @@ void TTreeFormula::SetAxis(TAxis *axis)
    if (!axis) {fAxis = 0; return;}
    if (TestBit(kIsCharacter)) {
       fAxis = axis;
-      if (fNoper==1 && fOper[0]==kAliasString){
+      if (fNoper==1 && fActions[0]==kNewAliasString){
          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
          Assert(subform); 
          subform->SetAxis(axis);
-      } else if (fNoper==2 && fOper[0]==kAlternateString){
+      } else if (fNoper==2 && fActions[0]==kNewAlternateString){
          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
          Assert(subform); 
          subform->SetAxis(axis);
@@ -4302,11 +4331,11 @@ void TTreeFormula::UpdateFormulaLeaves()
       }
    }
    for(Int_t k=0;k<fNoper;k++) {
-      switch(fOper[k]) {
-         case kAlias:
-         case kAliasString:
-         case kAlternate:
-         case kAlternateString:  {
+      switch(fActions[k]) {
+         case kNewAlias:
+         case kNewAliasString:
+         case kNewAlternate:
+         case kNewAlternateString:  {
             TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
             Assert(subform);
             subform->UpdateFormulaLeaves();
@@ -4340,7 +4369,8 @@ void TTreeFormula::ResetDimensions() {
          fNdimensions[last_code] = 0;
       }
 
-      if (fOper[info->fOper]>=105000 && fOper[info->fOper]<110000) {
+      if (fActions[info->fOper]==kNewDefinedString) {
+      // if (fOper[info->fOper]>=105000 && fOper[info->fOper]<110000) {
 
 
          // We have a string used as a string (and not an array of number)
@@ -4366,7 +4396,7 @@ void TTreeFormula::ResetDimensions() {
 
    fMultiplicity = 0;
    for(i=0;i<fNoper;i++) {
-      if (fOper[i]==kAlias || fOper[i]==kAliasString) {
+      if (fActions[i]==kNewAlias || fActions[i]==kNewAliasString) {
          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(i));
          Assert(subform);
          switch(subform->GetMultiplicity()) {
@@ -4379,7 +4409,8 @@ void TTreeFormula::ResetDimensions() {
          // will be called a little latter
          continue;
       }
-      if (fOper[i] >= 105000 && fOper[i]<110000) {
+      if (fActions[i]==kNewDefinedString) {
+      //if (fOper[i] >= 105000 && fOper[i]<110000) {
          // We have a string used as a string
 
          // This dormant portion of code would be used if (when?) we allow the histogramming
@@ -4676,4 +4707,31 @@ Bool_t TTreeFormula::LoadCurrentDim() {
 
 
 
+}
+
+void TTreeFormula::Convert(UInt_t oldversion, Int_t *oldOper) 
+{
+   // Convert the fOper of a TTTreeFormula version fromVersion to the current in memory version
+
+   enum { kOldAlias           = /*TFormula::kVariable*/ 100000+10000+1,
+          kOldAliasString     = kOldAlias+1,
+          kOldAlternate       = kOldAlias+2,
+          kOldAlternateString = kOldAliasString+2
+   };
+
+   TFormula::Convert(oldversion,oldOper);
+
+   for (int i=0,offset=0; i<fNoper; i++) {
+      Int_t action = oldOper[i+offset];
+
+      switch (action) {
+         case 0: ++offset; break; // skip the multiplication implied by the sign inversion
+
+         case kOldAlias:            fActions[i] = kNewAlias; break;
+         case kOldAliasString:      fActions[i] = kNewAliasString; break;
+         case kOldAlternate:        fActions[i] = kNewAlternate; break;
+         case kOldAlternateString:  fActions[i] = kNewAlternateString; break;
+      }
+   }
+   
 }

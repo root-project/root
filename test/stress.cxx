@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.51 2004/01/06 16:24:27 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.52 2004/01/07 10:02:28 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@
 //******************************************************************
 //*  ROOTMARKS = 600.1   *  Root3.05/02   20030131/1208
 //******************************************************************
-//
+// 
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
@@ -94,7 +94,7 @@
 #include <TClassTable.h>
 #include "Event.h"
 
-   void stress(Int_t nevent, Int_t style);
+   void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );
    void stress1();
    void stress2();
    void stress3();
@@ -103,7 +103,7 @@
    void stress6();
    void stress7();
    void stress8(Int_t nevent);
-   void stress9tree(TTree *tree);
+   void stress9tree(TTree *tree, Int_t realTestNum);
    void stress9();
    void stress10();
    void stress11();
@@ -114,6 +114,7 @@
    void stress16();
    void cleanup();
 
+int gPrintSubBench = 0;
 
 int main(int argc, char **argv)
 {
@@ -122,8 +123,12 @@ int main(int argc, char **argv)
    Int_t nevent = 1000;      // by default create 1000 events
    if (argc > 1)  nevent = atoi(argv[1]);
    Int_t style  = 1;        // by default the new branch style
-   if (argc > 2)  style  = atoi(argv[2]);
-   stress(nevent, style);
+   if (argc > 2) style  = atoi(argv[2]);
+   Int_t printSubBench = kFALSE;
+   if (argc > 3) printSubBench = atoi(argv[3]);
+   Int_t portion = 65535;
+   if (argc > 4) portion  = atoi(argv[4]);
+   stress(nevent, style, printSubBench, portion);
    return 0;
 }
 
@@ -136,9 +141,12 @@ class TTree;
 
 Double_t ntotin=0, ntotout=0;
 
-void stress(Int_t nevent, Int_t style = 1)
+void stress(Int_t nevent, Int_t style = 1, 
+            Int_t printSubBenchmark = kFALSE, UInt_t portion = 65535)
 {
    //Main control function invoking all test programs
+   
+   gPrintSubBench = printSubBenchmark;
    
    if (nevent < 11) nevent = 11; // must have at least 10 events
    //Delete all possible objects in memory (to execute stress several times)
@@ -153,22 +161,22 @@ void stress(Int_t nevent, Int_t style = 1)
 
    //Run the standard test suite
    gBenchmark->Start("stress");
-   stress1();
-   stress2();
-   stress3();
-   stress4();
-   stress5();
-   stress6();
-   stress7();
-   stress8(nevent);
-   stress9();
-   stress10();
-   stress11();
-   stress12(12);
-   stress13();
-   stress14();
-   stress15();
-   stress16();
+   if (portion&1) stress1();
+   if (portion&2) stress2();
+   if (portion&4) stress3();
+   if (portion&8) stress4();
+   if (portion&16) stress5();
+   if (portion&32) stress6();
+   if (portion&64) stress7();
+   if (portion&128) stress8(nevent);
+   if (portion&256) stress9();
+   if (portion&512) stress10();
+   if (portion&1024) stress11();
+   if (portion&2048) stress12(12);
+   if (portion&4096) stress13();
+   if (portion&8192) stress14();
+   if (portion&16384) stress15();
+   if (portion&32768) stress16();
    gBenchmark->Stop("stress");
 
    cleanup();
@@ -301,6 +309,7 @@ void stress1()
       printf("failed\n");
       printf("%-8s hdiff=%g, pdifftot=%g, rint=%g\n"," ",hdiff,pdifftot,rint);
    }
+   if (gPrintSubBench) { printf("Test  1 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
    //Save all objects in a Root file (will be checked by stress2)
    TFile local("stress.root","recreate");
    f1form->Write();
@@ -328,6 +337,7 @@ void stress2()
       printf("failed\n");
       printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
    }
+   if (gPrintSubBench) { printf("Test  2 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -358,6 +368,7 @@ void stress3()
       printf("failed\n");
       printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
    }
+   if (gPrintSubBench) { printf("Test  3 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -403,6 +414,7 @@ void stress4()
       printf("failed\n");
       printf("%-8s dp0=%g, dp5=%g, dp10=%g\n"," ",dp0,dp5,dp10);
    }
+   if (gPrintSubBench) { printf("Test  4 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -464,6 +476,7 @@ void stress5()
       printf("failed\n");
       printf("%-8s nlines in stress.ps file = %d\n"," ",nlines);
    }
+   if (gPrintSubBench) { printf("Test  5 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -548,6 +561,7 @@ void stress6()
       printf("failed\n");
       printf("%-8s nentries=%d, diffmean=%g, diffrms=%g\n"," ",nentries,diffmean,diffrms);
    }
+   if (gPrintSubBench) { printf("Test  6 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -690,6 +704,7 @@ void stress7()
       printf("%-8s pxmean0=%g, pxmean2=%g, pxrms0=%g\n"," ",pxmean0,pxmean2,pxrms0);
       printf("%-8s pxrms2=%g, compsum=%g, npxpy=%d\n"," ",pxrms2,compsum,npxpy);
    }
+   if (gPrintSubBench) { printf("Test  7 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -801,6 +816,7 @@ void stress8(Int_t nevent)
       printf("%-8s nbw0=%d, nbr0=%d, nbw1=%d\n"," ",nbw0,nbr0,nbw1);
       printf("%-8s nbr1=%d, nbw2=%d, nbr2=%d\n"," ",nbr1,nbw2,nbr2);
    }
+   if (gPrintSubBench) { printf("Test  8 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -825,7 +841,7 @@ Int_t HistCompare(TH1 *h1, TH1 *h2)
 }
 
 //_______________________________________________________________
-void stress9tree(TTree *tree)
+void stress9tree(TTree *tree, Int_t realTestNum)
 {
 // Test selections via TreeFormula
 // tree is a TTree when called by stress9
@@ -876,6 +892,8 @@ void stress9tree(TTree *tree)
    tree->Draw("fMatrix[][2]  - fVertex[][]>>hRowMatOper","","goff");
    tree->Draw("fMatrix[][2]  - fVertex[5][]>>hMatchDiffOper","","goff");
    tree->Draw("fMatrix[][]   - fVertex[][]>>hFullOper2","","goff");
+
+   if (gPrintSubBench) { printf("\n"); printf("Test %2dD: ",realTestNum); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 
    ntotin  += TFile::GetFileBytesRead() -nrsave;
 
@@ -1064,6 +1082,14 @@ void stress9tree(TTree *tree)
    Event::Reset();
    ntotin += nbin;
 
+   if (gPrintSubBench) { 
+      printf("Test %2dC: ",realTestNum); 
+      gBenchmark->Show("stress");gBenchmark->Start("stress");
+      // Since we disturbed the flow (due to the double benchmark printing),
+      // let's repeat the header!
+      printf("Test %2d : ",realTestNum);
+   }
+   
    Bool_t OK = kTRUE;
    if (cNtrack || cNseg   || cTemp  || cHmean || cPx    || cPy     || cPz) OK = kFALSE;
    if (cRandom || cMass2  || cBx    || cBy    || cXfirst|| cYfirst || cZfirst) OK = kFALSE;
@@ -1097,7 +1123,7 @@ void stress9()
    TFile *hfile = new TFile("Event.root");
    TTree *tree = (TTree*)hfile->Get("T");
 
-   stress9tree(tree);
+   stress9tree(tree,9);
 
    // Save test9 histograms
    TFile f("stress_test9.root","recreate");
@@ -1172,6 +1198,7 @@ void stress10()
       printf("failed\n");
       printf("%-8s nbin=%d, nbout=%d, nev=%d, ntot=%d\n"," ",nbin,nbout,nev,ntot);
    }
+   if (gPrintSubBench) { printf("Test 10 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -1195,7 +1222,7 @@ void stress11()
       chain->Add(filename);
    }
 
-   stress9tree(chain);
+   stress9tree(chain,11);
 
    // Save test11 histograms
    delete chain;
@@ -1237,6 +1264,7 @@ void stress12(Int_t testid)
       printf("failed\n");
       printf("%-8s ngood=%d\n"," ",ngood);
    }
+   if (gPrintSubBench) { printf("Test 12 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -1279,6 +1307,7 @@ void stress13()
    else    {
       printf("failed\n");
    }
+   if (gPrintSubBench) { printf("Test 13 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 //_______________________________________________________________
@@ -1354,6 +1383,7 @@ void stress15()
       printf("failed\n");
       printf("%-8s cNtrack=%d, cHmean=%d\n"," ",cNtrack,cHmean);
    }
+   if (gPrintSubBench) { printf("Test 15 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 void stress16()
@@ -1473,6 +1503,7 @@ void stress16()
       printf("failed\n");
       printf("%-8s nlines in stress_lhcb.ps file = %d\n"," ",nlines);
    }
+   if (gPrintSubBench) { printf("Test 16 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 void cleanup()

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.76 2003/12/01 07:15:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.77 2003/12/30 13:16:50 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1444,6 +1444,11 @@ int TSystem::GetSockOpt(int, int, int*)
 
 //---- Script Compiler ---------------------------------------------------------
 
+void AssignAndDelete(TString& target, char *tobedeleted) {
+   target = tobedeleted;
+   delete [] tobedeleted;
+}
+
 //______________________________________________________________________________
 int TSystem::CompileMacro(const char *filename, Option_t * opt,
                           const char *library_specified,
@@ -1583,14 +1588,14 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString build_loc = GetBuildDir();
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
    if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
-      build_loc = ConcatFileName( WorkingDirectory(), build_loc );
+      AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
    }
 
    // ======= Get the right file names for the dictionnary and the shared library
    TString library = filename;
    ExpandPathName( library );
    if (! IsAbsoluteFileName(library) ) {
-      library = ConcatFileName( WorkingDirectory(), library );
+      AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
    }
    TString filename_fullpath = library;
 
@@ -1623,7 +1628,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       library = library_specified;
       ExpandPathName( library );
       if (! IsAbsoluteFileName(library) ) {
-         library = ConcatFileName( WorkingDirectory(), library );
+         AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
       }
       library = TString(library) + "." + fSoExt;
    }
@@ -1649,8 +1654,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       pos = lib_location.Index( disk_finder );
       if (pos==0) lib_location.Remove(pos,3);
 
-      library = ConcatFileName( build_loc, library);
-      build_loc = ConcatFileName( build_loc, lib_location);
+      AssignAndDelete( library, ConcatFileName( build_loc, library) );
+      AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
 
       if (gSystem->AccessPathName(build_loc,kWritePermission)) {
          mkdir(build_loc, true);
@@ -1667,7 +1672,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
       if ( G__unloadfile( (char*) filename ) != 0 ) {
          // We can not unload it.
-         return(G__LOADFILE_FAILURE);
+         return kFALSE; 
       }
    }
 
@@ -1681,7 +1686,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       while( len != 0 ) {
          TString sub = includes(pos,len);
          sub.Remove(0,2); // Remove -I
-         sub = ConcatFileName( WorkingDirectory(), sub );
+         AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
@@ -1730,7 +1735,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       // Generate the dependency filename
       TString depdir = build_loc;
       if (!canWrite) depdir = emergency_loc;
-      TString depfilename = ConcatFileName(depdir, BaseName(libname_noext));
+      TString depfilename;
+      AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
       depfilename += "_" + extension + ".d";
       TString bakdepfilename = depfilename + ".bak";
 
@@ -1739,7 +1745,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 #ifndef WIN32
       const char * stderrfile = "/dev/null";
 #else
-      TString stderrfile = ConcatFileName(build_loc,"stderr.tmp");
+      TString stderrfile; 
+      AssignAndDelete( stderrfile, ConcatFileName(build_loc,"stderr.tmp") );
 #endif
 
       if ( (gSystem->GetPathInfo( library, 0, 0, 0, &lib_time ) != 0)
@@ -1903,7 +1910,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
                 build_loc.Data());
       if (emergency_loc == build_dir ) {
          ::Error("ACLiC","%s is the last resort location (i.e. temp location)",build_loc.Data());
-         return(G__LOADFILE_FAILURE);
+         return kFALSE; 
       }
       ::Warning("ACLiC","Output will be written to %s",
                 emergency_loc.Data());
@@ -1927,7 +1934,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       dict.ReplaceAll( forbidden_chars[ic],"_" );
    }
    if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
-   dict = ConcatFileName( build_loc, dict );
+   AssignAndDelete( dict, ConcatFileName( build_loc, dict ) );
    TString dicth = dict;
    TString dictObj = dict;
    dict += "cxx"; //no need to keep the extention of the original file, any extension will do
@@ -1936,7 +1943,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
    // ======= Generate a linkdef file
 
-   TString linkdef = ConcatFileName( build_loc, BaseName( tmpnam(0) ) );
+   TString linkdef;
+   AssignAndDelete( linkdef, ConcatFileName( build_loc, BaseName( tmpnam(0) ) ) );
    linkdef += "linkdef.h";
    ofstream linkdefFile( linkdef, ios::out );
    linkdefFile << "// File Automatically generated by the ROOT Script Compiler "
@@ -2018,7 +2026,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    else cmd.ReplaceAll("$Opt",fFlagsOpt);
 
    TString testcmd = fMakeExe;
-   TString fakeMain =  ConcatFileName( build_loc, BaseName( tmpnam(0) ) );
+   TString fakeMain;
+   AssignAndDelete( fakeMain, ConcatFileName( build_loc, BaseName( tmpnam(0) ) ) );
    fakeMain += extension;
    ofstream fakeMainFile( fakeMain, ios::out );
    fakeMainFile << "// File Automatically generated by the ROOT Script Compiler "
@@ -2033,7 +2042,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // however compilation would fail if a main is already there
    // (like stress.cxx)
    // dict.Append(" ").Append(fakeMain);
-   TString exec =  ConcatFileName( build_loc, BaseName( tmpnam(0) ) );
+   TString exec;
+   AssignAndDelete( exec, ConcatFileName( build_loc, BaseName( tmpnam(0) ) ) );
    testcmd.ReplaceAll("$SourceFiles",dict);
    testcmd.ReplaceAll("$ObjectFiles",dictObj);
    testcmd.ReplaceAll("$IncludePath",includes);

@@ -1226,24 +1226,13 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   }
                   // Handle Help menu items...
                   case kHelpAbout:
+                     // coming soon
                      {
-#ifdef R__UNIX
-                        TString rootx;
-# ifdef ROOTBINDIR
-                        rootx = ROOTBINDIR;
-# else
-                        rootx = gSystem->Getenv("ROOTSYS");
-                        if (!rootx.IsNull()) rootx += "/bin";
-# endif
-                        rootx += "/root -a &";
-                        gSystem->Exec(rootx);
-#else
                         char str[32];
                         sprintf(str, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
-#endif
                      }
                      break;
                   case kHelpOnCanvas:
@@ -1384,8 +1373,17 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
                         TObject *obj = (TObject *)item->GetUserData();
                         if (obj) {
-                           if (obj->IsA() == TKey::Class())
-                              obj = gROOT->FindObject((char *) obj->GetName());
+                           if (obj->IsA() == TKey::Class()) {
+                              TKey *key = (TKey*)obj;
+                              TClass *cl = gROOT->GetClass(key->GetClassName());
+                              void *add = gROOT->FindObject((char *) key->GetName());
+                              if (cl->IsTObject()) {
+                                 obj = (TObject*)add; // cl->DynamicCast(TObject::Class(),startadd);
+                              } else {
+                                 Fatal("ProcessMessage","do not support non TObject (like %s) yet",
+                                       cl->GetName());
+                              }
+                           }
                            fBrowser->GetContextMenu()->Popup(x, y, obj);
                         }
                      }

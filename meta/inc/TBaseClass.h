@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.6 2002/08/09 19:26:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.7 2002/11/26 10:24:09 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -39,7 +39,7 @@ class TBaseClass : public TDictionary {
 private:
    G__BaseClassInfo  *fInfo;      //pointer to CINT base class info
    TClass            *fClassPtr;  //pointer to the base class TClass
-   TClass            *fClass;     //pointer to class
+   TClass            *fClass;     //pointer to parent class
 
 public:
    TBaseClass(G__BaseClassInfo *info = 0, TClass *cl = 0);

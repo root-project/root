@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.152 2003/12/18 13:21:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.153 2003/12/19 09:31:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1112,8 +1112,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (branch->IsA() == TBranchElement::Class()) {
          bre = (TBranchElement*)branch;
-         if (bre->GetType() != 3 && bre->GetStreamerType() <= 0 && bre->GetListOfBranches()->GetEntriesFast()) leafStatus[l] = 0;
-         if (bre->GetType() == 3) {
+         if (bre->GetType() != 3 && bre->GetType() != 4 
+             && bre->GetStreamerType() <= 0 && bre->GetListOfBranches()->GetEntriesFast()) {
+            leafStatus[l] = 0;
+         }
+         if (bre->GetType() == 3 || bre->GetType() == 4) {
             fprintf(fp,"   %-15s %s_;\n","Int_t", branchname);
             continue;
          }
@@ -1444,6 +1447,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (branch->IsA() == TBranchElement::Class()) {
          if (((TBranchElement*)branch)->GetType() == 3) len =1;
+         if (((TBranchElement*)branch)->GetType() == 4) len =1;
       }
       if (leafcount) len = leafcount->GetMaximum()+1;
       if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\",%s);\n",branch->GetName(),branchname);

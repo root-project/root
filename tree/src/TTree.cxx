@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.175 2003/12/30 18:17:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.176 2004/01/08 14:54:06 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -266,6 +266,7 @@
 #include "TEventList.h"
 #include "TBranchElement.h"
 #include "TBranchObject.h"
+#include "TClassEdit.h"
 #include "TLeafObject.h"
 #include "TLeaf.h"
 #include "TLeafB.h"
@@ -296,6 +297,7 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TFriendElement.h"
+#include "TVirtualCollectionProxy.h"
 #include "TVirtualFitter.h"
 #include "TCut.h"
 #include "Api.h"
@@ -1255,7 +1257,31 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          return branch;
       }
    }
+//		Now look vector<> or list<>
+   TString inclass;
+   int stlcont = TClassEdit::IsSTLCont(classname);
 
+   if (stlcont>=1 && stlcont<=2 ) {
+      inclass = TClassEdit::ShortType(classname,1+2+4).c_str();
+      TClass *inklass = gROOT->GetClass(inclass.Data());
+      if (!inklass) {
+         Error("Bronch","%s with no class defined in branch: %s",classname,name);
+         return 0;
+      }
+      G__ClassInfo* classinfo = inklass->GetClassInfo();
+      if (!classinfo) {
+         Error("Bronch","%s with no dictionary defined in branch: %s",classname,name);
+         return 0;
+      }
+      if (splitlevel > 0) {
+         if (classinfo->RootFlag() & 1)
+            Warning("Bronch","Using split mode on a class: %s with a custom Streamer",inclass.Data());
+      } else {
+         TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
+         fBranches.Add(branch);
+         return branch;
+      }
+   }
    Bool_t hasCustomStreamer = kFALSE;
    if (!cl->GetClassInfo()) {
       Error("Bronch","Cannot find dictionary for class: %s",classname);
@@ -1273,6 +1299,15 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    //====> special case of TClonesArray
    if(cl == TClonesArray::Class()) {
       TBranchElement *branch = new TBranchElement(name,(TClonesArray*)objadd,bufsize,splitlevel);
+      fBranches.Add(branch);
+      branch->SetAddress(add);
+      return branch;
+   }
+   //====>
+   //====> special case of vector<...> or list<...>
+   if(stlcont>=1 && stlcont<=2) {
+      TVirtualCollectionProxy *collProxy = cl->GetCollectionProxy()->Generate(); // TSTLCont  *tstl = new TSTLCont(classname,(void*)objadd);
+      TBranchElement *branch = new TBranchElement(name,collProxy,bufsize,splitlevel);
       fBranches.Add(branch);
       branch->SetAddress(add);
       return branch;
@@ -3622,7 +3657,9 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
-      if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
+      if (strcmp(bname,"*")) { //Regexp gives wrong result for [] in name
+        if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
+      }
       nb++;
       if (status) branch->ResetBit(kDoNotProcess);
       else        branch->SetBit(kDoNotProcess);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.21 2003/06/30 15:45:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.22 2003/12/11 23:30:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -47,7 +47,12 @@ protected:
    Int_t      fNval;            //Number of different variables in expression
    Int_t      fNstring;         //Number of different constants character strings
    TString   *fExpr;            //[fNoper] List of expressions
-   Int_t     *fOper;            //[fNoper] List of operators
+private:
+   Int_t      fNoldOper;        //Helper size to be backward compatible
+   Int_t     *fOper;            //[fNoldOper] List of operators
+protected:
+   Short_t   *fActions;         //[fNoper] List of operators
+   Short_t   *fActionParams;    //[fNoper] List of operators
    Double_t  *fConst;           //[fNconst] Array of fNconst formula constants
    Double_t  *fParams;          //[fNpar] Array of fNpar parameters
    TString   *fNames;           //[fNpar] Array of parameter names
@@ -59,6 +64,67 @@ protected:
            Int_t   GetOperType(Int_t oper) const;
    virtual Bool_t  IsString(Int_t oper) const;
 
+   virtual void    Convert(UInt_t fromVersion, Int_t *oldOper);
+
+   // Version 6 and above actions
+   enum {
+      kEnd      = 0,
+      kAdd      = 1, kSubstract = 2, 
+      kMultiply = 3, kDivide    = 4,
+      kModulo   = 5, 
+
+      kcos      = 10, ksin  = 11 , ktan  = 12, 
+      kacos     = 13, kasin = 14 , katan = 15, 
+      katan2    = 16,
+      kfmod     = 17, 
+
+      kpow      = 20, ksq = 21, ksqrt     = 22, 
+
+      kstrstr   = 23,
+
+      kmin      = 24, kmax = 25,
+
+      klog      = 30, kexp = 31, klog10 = 32,
+      
+      kpi     = 40,
+
+      kabs    = 41 , ksign= 42, 
+      kint    = 43 , 
+      kSignInv= 44 ,
+      krndm   = 50 ,
+
+      kAnd      = 60, kOr          = 61,
+      kEqual    = 62, kNotEqual    = 63,
+      kLess     = 64, kGreater     = 65,
+      kLessThan = 66, kGreaterThan = 67,
+      kNot      = 68,
+
+      kcosh   = 70 , ksinh  = 71, ktanh  = 72,
+      kacosh  = 73 , kasinh = 74, katanh = 75,
+
+      kStringEqual = 76, kStringNotEqual = 77,
+
+      kBitAnd    = 78, kBitOr     = 79,
+      kLeftShift = 80, kRightShift = 81,
+      
+      kexpo   = 100 , kxexpo   = 100, kyexpo   = 101, kzexpo   = 102, kxyexpo   = 105,
+      kgaus   = 110 , kxgaux   = 110, kygaus   = 111, kzgaus   = 112, kxygaus   = 115,
+      klandau = 120 , kxlandau = 120, kylandau = 121, kzlandau = 122, kxylandau = 125,
+      kpol    = 130 , kxpol    = 130, kypol    = 131, kzpol    = 132,
+
+      kParameter       = 140,
+      kNewConstant     = 141,
+      kNewBoolOptimize = 142,
+      kStringConst     = 143,
+      kNewVariable     = 144,
+      kNewFunctionCall = 145,
+
+      kNewDefinedVariable = 150,
+      kNewDefinedString   = 151
+
+   };
+
+#if 0
    enum {
       kConstants    =  50000,
       kStrings      =  80000,
@@ -67,6 +133,7 @@ protected:
       kBoolOptimize = 120000, 
       kFunctionCall = 200000
    };
+#endif
 
 public:
    // TFormula status bits
@@ -74,7 +141,6 @@ public:
       kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction
       kInitialized   = BIT(12)   // set to true once the formula has been 'compiled'
    };
-
  
               TFormula();
               TFormula(const char *name,const char *formula);
@@ -90,7 +156,7 @@ public:
    virtual void        Clear(Option_t *option="");
    virtual char       *DefinedString(Int_t code);
    virtual Double_t    DefinedValue(Int_t code);
-   virtual Int_t       DefinedVariable(TString &variable);
+   virtual Int_t       DefinedVariable(TString &variable,Int_t &action);
    virtual Double_t    Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0);
    virtual Double_t    EvalPar(const Double_t *x, const Double_t *params=0);
    virtual Int_t       GetNdim() const {return fNdim;}
@@ -118,7 +184,7 @@ public:
                                    *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
    virtual void        Update() {;}
 
-   ClassDef(TFormula,5)  //The formula base class  f(x,y,z,par)
+   ClassDef(TFormula,6)  //The formula base class  f(x,y,z,par)
 };
 
 #endif

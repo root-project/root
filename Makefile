@@ -39,7 +39,7 @@ endif
 
 ##### Modules to build #####
 
-MODULES       = build cint utils base cont meta net zip clib matrix newdelete \
+MODULES       = build cint metautils utils base cont meta net zip clib matrix newdelete \
                 hist tree freetype graf g3d gpad gui minuit histpainter proof \
                 treeplayer treeviewer physics postscript rint html eg geom \
                 geompainter vmc fumili mlp
@@ -232,8 +232,8 @@ ROOTRC        = etc/system.rootrc
 
 ##### libCore #####
 
-COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO)
+COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO) $(METAUTILSO)
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) $(METAUTILSDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
@@ -535,8 +535,10 @@ install: all
 	   echo "Installing misc docs in  $(DESTDIR)$(DOCDIR)" ; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
-	   $(INSTALLDATA) README/*              $(DESTDIR)$(DOCDIR); \
-	   rm -rf $(DESTDIR)$(DOCDIR)/CVS; \
+	   $(INSTALLDATA) README/README         $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) README/README.PROOF   $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) README/ChangeLog-2-24 $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) README/CREDITS        $(DESTDIR)$(DOCDIR); \
 	   echo "Installing tutorials in $(DESTDIR)$(TUTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TUTDIR); \
 	   $(INSTALLDATA) tutorials/*           $(DESTDIR)$(TUTDIR); \

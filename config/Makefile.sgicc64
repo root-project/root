@@ -17,10 +17,10 @@ endif
 # Compiler:
 CXX           = CC
 CC            = cc
-CXXFLAGS      = -64 -LANG:std -signed -DIRIX64 -DSGI_REL=62 $(EXTRA_CXXFLAGS) \
-                -I/usr/include/CC.sgi
+CXXFLAGS      = -64 -ptused -LANG:std -signed -DIRIX64 -DSGI_REL=62 $(EXTRA_CXXFLAGS) \
+                -I/usr/include/CC.sgi -woff 1107,3505
 CFLAGS        = -64 -signed -DIRIX64 $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -64 -LANG:std -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX \
+CINTCXXFLAGS  = -64 -ptused -LANG:std -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX \
                 -DG__OSFDLL -I/usr/include/CC.sgi -DG__SHAREDLIB \
                 -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS) \
                 -DG__64BIT
@@ -30,7 +30,7 @@ CINTCFLAGS    = -64 -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
 
 # Linker:
 LD            = $(CXX)
-LDFLAGS       = -64 $(OPT) $(EXTRA_LDFLAGS)
+LDFLAGS       = -64 -ptused -LANG:std -FE:template_in_elf_section $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared
 SOEXT         = so
 

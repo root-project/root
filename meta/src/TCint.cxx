@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.66 2003/09/30 13:41:22 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.67 2003/12/12 10:24:02 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -540,6 +540,10 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
          G__ClassInfo info(classname);
          if (!info.IsLoaded()) {
             delete [] classname;
+            if (cl->fClassInfo && reload) {
+               delete cl->fClassInfo;
+               cl->fClassInfo = 0;
+            }
             return;
          }
          *current = ':';
@@ -547,24 +551,28 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
       }
       delete [] classname;
 
-      cl->fClassInfo = new G__ClassInfo(cl->GetName());
+      delete cl->fClassInfo; cl->fClassInfo = 0;
+      if (CheckClassInfo(cl->GetName())) {
 
-      // In case a class contains an external enum, the enum will be seen as a
-      // class. We must detect this special case and make the class a Zombie.
-      // Here we assume that a class has at least one method.
-      // We can NOT call TClass::Property from here, because this method
-      // assumes that the TClass is well formed to do a lot of information
-      // caching. The method SetClassInfo (i.e. here) is usually called during
-      // the building phase of the TClass, hence it is NOT well formed yet.
-      if (cl->fClassInfo->IsValid() &&
-          !(cl->fClassInfo->Property() & (kIsClass|kIsStruct))) {
-         cl->MakeZombie();
-      }
+         cl->fClassInfo = new G__ClassInfo(cl->GetName());
 
-      if (!cl->fClassInfo->IsLoaded()) {
-         // this happens when no CINT dictionary is available
-         delete cl->fClassInfo;
-         cl->fClassInfo = 0;
+         // In case a class contains an external enum, the enum will be seen as a
+         // class. We must detect this special case and make the class a Zombie.
+         // Here we assume that a class has at least one method.
+         // We can NOT call TClass::Property from here, because this method
+         // assumes that the TClass is well formed to do a lot of information
+         // caching. The method SetClassInfo (i.e. here) is usually called during
+         // the building phase of the TClass, hence it is NOT well formed yet.
+         if (cl->fClassInfo->IsValid() &&
+             !(cl->fClassInfo->Property() & (kIsClass|kIsStruct))) {
+            cl->MakeZombie();
+         }
+         
+         if (!cl->fClassInfo->IsLoaded()) {
+            // this happens when no CINT dictionary is available
+            delete cl->fClassInfo;
+            cl->fClassInfo = 0;
+         }
       }
    }
 }
@@ -577,6 +585,8 @@ Bool_t TCint::CheckClassInfo(const char *name)
 
    Int_t tagnum = G__defined_tagname(name, 2);
    if (tagnum >= 0) return kTRUE;
+   G__TypedefInfo t(name);
+   if (t.IsValid() && !(t.Property()&G__BIT_ISFUNDAMENTAL)) return kTRUE;
    return kFALSE;
 }
 
@@ -775,11 +785,17 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
    long        offset;
    G__CallFunc func;
 
+   // If the actuall class of this object inherit 2nd (or more) from TObject,
+   // 'obj' is unlikely to be the start of the object (as described by IsA()),
+   // hence gInterpreter->Execute will improperly correct the offset.
+
+   void *addr = cl->DynamicCast( TObject::Class(), obj, kFALSE);
+
    // set pointer to interface method and arguments
    func.SetFunc(cl->GetClassInfo(), method, params, &offset);
 
    // call function
-   address = (void*)((Long_t)obj + offset);
+   address = (void*)((Long_t)addr + offset);
    func.Exec(address);
    if (error) *error = G__lasterror();
 }

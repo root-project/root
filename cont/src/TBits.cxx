@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.12 2004/01/06 08:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.13 2004/01/06 16:49:01 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -59,8 +59,12 @@ TBits& TBits::operator=(const TBits& rhs)
       fNbits   = rhs.fNbits;
       fNbytes  = rhs.fNbytes;
       delete [] fAllBits;
-      fAllBits = new UChar_t[fNbytes];
-      memcpy(fAllBits,rhs.fAllBits,fNbytes);
+      if (fNbytes != 0) {
+         fAllBits = new UChar_t[fNbytes];
+         memcpy(fAllBits,rhs.fAllBits,fNbytes);
+      } else {
+         fAllBits = 0;
+      }
    }
    return *this;
 }

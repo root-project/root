@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.69 2004/01/06 07:30:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.70 2004/01/07 14:00:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -913,9 +913,11 @@ TBranch *TBranch::GetSubBranch(const TBranch *br) const
 // return null if br is not in this branch hierarchy.
 
    if (br == this) return (TBranch*)this;
-   TIter next(((TBranch*)this)->GetListOfBranches());
-   TBranch *branch;
-   while ((branch = (TBranch*)next())) {
+
+   Int_t len = fBranches.GetLast();
+   for(Int_t i = 0; i <= len; ++i) {
+      TBranch *branch = dynamic_cast<TBranch*>(fBranches.UncheckedAt( i ));
+      if (branch == 0) continue;
       if (branch == br) return (TBranch*)this;
       TBranch *br2 = branch->GetSubBranch(br);
       if (br2) return branch;
@@ -1423,9 +1425,14 @@ void TBranch::Streamer(TBuffer &b)
       Char_t isBigFile = 1;
       if (fTree->GetCurrentFile() && fTree->GetCurrentFile()->GetEND() > TFile::kStartBigFile) isBigFile = 2;
       b << isBigFile;
-      for (Int_t i=0;i<fMaxBaskets;i++) {
-         if (isBigFile == 2 ) b << fBasketSeek[i];
-         else                 b << (Int_t)fBasketSeek[i];
+      if (isBigFile == 2 ) {
+         for (Int_t i=0;i<fMaxBaskets;i++) {
+            b << fBasketSeek[i];
+         }
+      } else {
+         for (Int_t i=0;i<fMaxBaskets;i++) {
+            b << (Int_t)fBasketSeek[i];
+         }
       }
       fFileName.Streamer(b);
       b.SetByteCount(R__c, kTRUE);

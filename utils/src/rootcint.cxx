@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.146 2003/12/05 01:44:00 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.147 2004/01/03 09:42:30 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -245,12 +245,17 @@ const char *help =
 
 #include <time.h>
 #include <string>
+#include <vector>
 
 namespace std {}
 using namespace std;
 
 //#include <fstream>
 //#include <strstream>
+
+#include "TClassEdit.h"
+#include "RStl.h"
+using namespace ROOT;
 
 const char *autoldtmpl = "G__auto%dLinkDef.h";
 char autold[64];
@@ -259,6 +264,35 @@ enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
 FILE *fp;
 char *StrDup(const char *str);
+
+char FunNames[10000]={0};
+// static int check = 0;
+//______________________________________________________________________________
+void SetFun (const char *fname)
+{
+   
+//    fprintf(stderr,"registering fun %s\n",fname);
+
+   strcat(FunNames," ");
+   strcat(FunNames,fname);
+   strcat(FunNames," ");
+}
+//______________________________________________________________________________
+const char *GetFun(const char *fname)
+{
+  char buf[100];
+  buf[0]=0;
+  
+//   if (!check) fprintf(stderr,"%s\n",FunNames);
+  strcat(buf," ");
+  strcat(buf,fname);
+  strcat(buf," ");
+//   fprintf(stderr,"look for function for %s and will find %p\n",
+//           fname,strstr(FunNames,buf));
+  return strstr(FunNames,buf);
+}
+
+//______________________________________________________________________________
 
 #ifndef ROOT_Varargs
 #include "Varargs.h"
@@ -937,13 +971,14 @@ bool NeedDestructor(G__ClassInfo& cl)
   */
 }
 
-
-
 //______________________________________________________________________________
 bool NeedShadowClass(G__ClassInfo& cl)
 {
-  return (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
-            && strncmp(cl.FileName(),"prec_stl",8)!=0 )
+   if (TClassEdit::IsSTLCont(cl.Name()) != 0 ) return false;
+   if (strcmp(cl.Name(),"string") == 0 ) return false;
+
+   return (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
+           && strncmp(cl.FileName(),"prec_stl",8)!=0 )
       || (cl.HasMethod("ShowMembers") && cl.IsTmplt());
 }
 
@@ -975,24 +1010,103 @@ const char *GetFullShadowName(G__ClassInfo &cl)
    return shadowName.c_str();
 }
 
+// //______________________________________________________________________________
+// // It is a copy of TSTLCont::IsSTLCont, all modification must be done
+// // in it and then copy to here (VP)
+// int IsSTLCont(const char *ty,int testAlloc,int *ppos)
+// {
+// //  ty: 	type name like: vector<list<classA,allocator>,allocator>
+// //  testAlloc:	1=test allocator, if it is not default result is negative
+// //  ppos:	internal use, supposed to be zero in user call
+// //  result:     0=not stl container
+// //              abs(result): code of container 1=vector,2=list,3=deque,4=map
+// //                           5=multimap,6=set,7=multiset
+// //              +ve: it is vector or list with default allocator to any depth
+// //                   like vector<list<vector<int>>>
+// //		-ve: if other then vector or int, or non default allocator
+// //       	     like vector<deque<int>> has answer -1
+// ////////////////////////////////////////////////////////////////////////////////
+
+//   static const char stls[] = {
+//   " vector   list     deque    map      multimap set      multiset "};
+// // 12345678 12345678 12345678 12345678 12345678 12345678 12345678  // 
+//   static const char alls[] =
+//   {" alloc __default_alloc_template<true,0> __malloc_alloc_template<0>"};
+// //  0 = start
+// //  1 = in class
+// //  
+
+//   char *c,buf[512]; buf[0] = ' ';
+//   int qwe=-1;
+//   if (!ppos) ppos = &qwe;
+//   int &pos = *ppos;
+//   int sta  =  pos+1;
+//   int kase=0,levl=0,stl=0,cnt=0,ztl,i,j;
+
+//   while(ty[++pos]) {
+//      switch(ty[pos]+kase) {
+     
+//         case ' ':
+// 	case ' '+1000: break;
+
+//         case '<':
+//            if (++levl>1) break;
+//            for(i=sta,j=1;i<pos;i++){if (ty[i]!=' ') buf[j++]=ty[i];}
+//            buf[j]=' '; buf[j+1]=0;
+//            c = strstr(stls,buf);        
+//            if (!c) { kase = 1000; pos--; break;}
+//            stl = (c-stls)/9+1;
+//            if (stl > 2) 	return -stl;
+//            ztl = IsSTLCont(ty,testAlloc,ppos);
+//            if (ztl < 0) 	return -stl;
+//            if (!ty[pos])       	return  stl;
+//            kase = 1000; 
+//            break;
+
+//         case ',':
+//            kase = 1000; pos--;	break;
+
+//         case '>': 
+//            if (--levl>=0) 	break;
+//            pos--;		return stl;
+
+//         case '<'+1000:
+//            levl++;		break;
+
+//         case ','+1000:
+//            if(levl) 		break;
+//            cnt++; sta = pos+1;	break;
+
+//         case '>'+1000:
+//            if(--levl>=0) 	break;
+//            if (++cnt==2 && testAlloc) {
+//              for(i=sta,j=1;i<pos;i++){if (ty[i]!=' ') buf[j++]=ty[i];}
+//              buf[j]=' '; buf[j+1]=0;
+//              c = strstr(alls,buf);        
+//              if (!c) stl = -1000;
+//            }
+//            pos--; 		return stl;
+//         default:;
+//      }// end switch
+          
+//   } // end loop
+//   				return stl;
+// }   
+
 //______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
 {
    // Is this an STL container?
 
-   const char *s = m.Type()->TmpltName();
+   const char *s = m.Type()->TrueName();
    if (!s) return kNone;
-   char type[kMaxLen];
-   strcpy(type, s);
 
-   if (!strcmp(type, "vector"))   return kVector;
-   if (!strcmp(type, "list"))     return kList;
-   if (!strcmp(type, "deque"))    return kDeque;
-   if (!strcmp(type, "map"))      return kMap;
-   if (!strcmp(type, "multimap")) return kMultimap;
-   if (!strcmp(type, "set"))      return kSet;
-   if (!strcmp(type, "multiset")) return kMultiset;
-   return kNone;
+   string type(s);
+   int k = (-TClassEdit::IsSTLCont(type.c_str(),1));
+
+//    if (k) printf(" %s==%d\n",type.c_str(),k);
+   
+   return k;
 }
 
 //______________________________________________________________________________
@@ -1002,17 +1116,11 @@ int IsSTLContainer(G__BaseClassInfo &m)
 
    const char *s = m.Name();
    if (!s) return kNone;
-   char type[kMaxLen];
-   strcpy(type, s);
 
-   if (!strncmp(type, "vector",6))   return kVector;
-   if (!strncmp(type, "list",4))     return kList;
-   if (!strncmp(type, "deque",5))    return kDeque;
-   if (!strncmp(type, "map",3))      return kMap;
-   if (!strncmp(type, "multimap",8)) return kMultimap;
-   if (!strncmp(type, "set",3))      return kSet;
-   if (!strncmp(type, "multiset",8)) return kMultiset;
-   return kNone;
+   string type(s);
+   int k = ( -TClassEdit::IsSTLCont(type.c_str(),1));
+//   if (k) printf(" %s==%d\n",type.c_str(),k);
+   return k;
 }
 
 //______________________________________________________________________________
@@ -1022,15 +1130,22 @@ int IsStreamable(G__DataMemberInfo &m)
 
    const char* mTypeName = ShortTypeName(m.Type()->Name());
 
+
    if ((m.Property() & G__BIT_ISSTATIC) ||
          strncmp(m.Title(), "!", 1) == 0        ||
          strcmp(m.Name(), "G__virtualinfo") == 0) return 0;
+
    if (((m.Type())->Property() & G__BIT_ISFUNDAMENTAL) ||
        ((m.Type())->Property() & G__BIT_ISENUM)) return 0;
 
    if (m.Property() & G__BIT_ISREFERENCE) return 0;
-   if (IsSTLContainer(m)) return 1;
-   if (!strcmp(mTypeName, "string")) return 1;
+
+   if (IsSTLContainer(m)) {
+      return 1;
+   }
+
+   if (!strcmp(mTypeName, "string") || !strcmp(mTypeName, "string*")) return 1;
+
    if ((m.Type())->HasMethod("Streamer")) {
       if (!(m.Type())->HasMethod("Class_Version")) return 1;
       int version = GetClassVersion(*m.Type());
@@ -1128,52 +1243,64 @@ void WriteAuxFunctions(G__ClassInfo &cl)
    //    operator delete
    //    operator delete[]
 
+   string classname( RStl::DropDefaultArg( cl.Fullname() ) );
+   string mappedname = G__map_cpp_name((char*)classname.c_str());
+
+   if (    TClassEdit::IsSTLCont( classname.c_str() ) == 0 
+        && classname != "string" ) {
+
+      // Prefix the full class name with '::' except for the STL
+      // containers and std::string.  This is to request the
+      // real class instead of the class in the namespace ROOT::Shadow
+      classname.insert(0,"::");
+   }
+
    fprintf(fp, "namespace ROOT {\n");
 
    fprintf(fp, "   // Return the actual TClass for the object argument\n");
-   fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
+   fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",mappedname.c_str());
    if (!cl.HasMethod("IsA")) {
-      fprintf(fp, "      return gROOT->GetClass(typeid(*(::%s*)obj));\n",cl.Fullname());
+      fprintf(fp, "      return GetROOT()->GetClass(typeid(*(%s*)obj));\n",classname.c_str());
    } else {
-      fprintf(fp, "      return ((::%s*)obj)->IsA();\n",cl.Fullname());
+      fprintf(fp, "      return ((%s*)obj)->IsA();\n",classname.c_str());
    }
    fprintf(fp, "   }\n");
 
    if (HasDefaultConstructor(cl)) {
       // write the constructor wrapper only for concrete classes
       fprintf(fp, "   // Wrappers around operator new\n");
-      fprintf(fp, "   void *new_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "   void *new_%s(void *p) {\n",mappedname.c_str());
       fprintf(fp, "      return  p ? ");
       if (HasCustomOperatorNewPlacement(cl)) {
-        fprintf(fp, "new(p) ::%s : ",cl.Fullname());
+        fprintf(fp, "new(p) %s : ",classname.c_str());
       } else {
-        fprintf(fp, "::new((ROOT::TOperatorNewHelper*)p) ::%s : ",cl.Fullname());
+        fprintf(fp, "::new((ROOT::TOperatorNewHelper*)p) %s : ",classname.c_str());
       }
-      fprintf(fp, "new ::%s;\n",cl.Fullname());
+      fprintf(fp, "new %s;\n",classname.c_str());
       fprintf(fp, "   }\n");
 
-      fprintf(fp, "   void *newArray_%s(Long_t size) {\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "      return new ::%s[size];\n",cl.Fullname());
+      fprintf(fp, "   void *newArray_%s(Long_t size) {\n",mappedname.c_str());
+      fprintf(fp, "      return new %s[size];\n",classname.c_str());
       fprintf(fp, "   }\n");
    }
 
    if (NeedDestructor(cl)) {
       fprintf(fp, "   // Wrapper around operator delete\n");
-      fprintf(fp, "   void delete_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "      delete ((::%s*)p);\n",cl.Fullname());
+      fprintf(fp, "   void delete_%s(void *p) {\n",mappedname.c_str());
+      fprintf(fp, "      delete ((%s*)p);\n",classname.c_str());
       fprintf(fp, "   }\n");
 
-      fprintf(fp, "   void deleteArray_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "      delete [] ((::%s*)p);\n",cl.Fullname());
+      fprintf(fp, "   void deleteArray_%s(void *p) {\n",mappedname.c_str());
+      fprintf(fp, "      delete [] ((%s*)p);\n",classname.c_str());
       fprintf(fp, "   }\n");
 
-      fprintf(fp, "   void destruct_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "      typedef ::%s current_t;\n",cl.Fullname());
+      fprintf(fp, "   void destruct_%s(void *p) {\n",mappedname.c_str());
+      fprintf(fp, "      typedef %s current_t;\n",classname.c_str());
       fprintf(fp, "      ((current_t*)p)->~current_t();\n");
       fprintf(fp, "   }\n");
    }
 
-   fprintf(fp, "} // end of namespace ROOT for class %s\n\n",cl.Fullname());
+   fprintf(fp, "} // end of namespace ROOT for class %s\n\n",classname.c_str());
 }
 
 //______________________________________________________________________________
@@ -1228,6 +1355,8 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
    if (strcmp("string" ,tiName)==0) kase |= R__BIT_ISSTRING;
    if (strcmp("string*",tiName)==0) kase |= R__BIT_ISSTRING;
    if (isStre)                      kase |= R__BIT_HASSTREAMER;
+
+//    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
 
    if (rwmode == 0 ) {  //Read mode
 
@@ -1351,7 +1480,8 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
    // was an STL container and if Streamer code has been created, 0 otherwise.
 
    int stltype = IsSTLContainer(m);
-   if (!m.Type()->IsTmplt() || !stltype) return 0;
+   if (stltype!=0) RStl::inst().GenerateTClassFor( m.Type()->Name() );
+   if (!m.Type()->IsTmplt() || stltype<=0) return 0;
 
    int isArr = 0;
    int len = 1;
@@ -1360,8 +1490,11 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
    }
 
-   string stlType;
-   stlType = ShortTypeName(m.Type()->Name());
+   // string stlType( RStl::DropDefaultArg( m.Type()->Name() ) ); 
+//    string stlType( TClassEdit::ShortType(m.Type()->Name(),
+//                                          TClassEdit::kDropTrailStar|
+//                                          TClassEdit::kDropStlDefault) );
+   string stlType( ShortTypeName(m.Type()->Name()) );
    string stlName;
    stlName = ShortTypeName(m.Name());
 
@@ -1426,8 +1559,22 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 
       fprintf(fp, "         R__stl.clear();\n");
 
-      if (tcl1) fprintf(fp, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1.c_str());
-      if (tcl2) fprintf(fp, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2.c_str());
+      if (tcl1) {
+         fprintf(fp, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1.c_str());
+         fprintf(fp, "         if (R__tcl1==0) {\n");
+         fprintf(fp, "            Error(\"%s streamer\",\"Missing the TClass object for %s!\");\n",
+                 stlName.c_str(), fulName1.c_str());
+         fprintf(fp, "            return;\n");
+         fprintf(fp, "         }\n");
+      }
+      if (tcl2) {
+         fprintf(fp, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2.c_str());
+         fprintf(fp, "         if (R__tcl2==0) {\n");
+         fprintf(fp, "            Error(\"%s streamer\",\"Missing the TClass object for %s!\");\n",
+                 stlName.c_str(), fulName2.c_str());
+         fprintf(fp, "            return;\n");
+         fprintf(fp, "         }\n");
+      }
 
       fprintf(fp, "         int R__i, R__n;\n");
       fprintf(fp, "         R__b >> R__n;\n");
@@ -1491,8 +1638,23 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       fprintf(fp, "         R__b << R__n;\n");
       fprintf(fp, "         if(R__n) {\n");
 
-      if (tcl1) fprintf(fp, "            TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1.c_str());
-      if (tcl2) fprintf(fp, "            TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2.c_str());
+      if (tcl1) {
+         fprintf(fp, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1.c_str());
+         fprintf(fp, "         if (R__tcl1==0) {\n");
+         fprintf(fp, "            Error(\"%s streamer\",\"Missing the TClass object for %s!\");\n",
+                 stlName.c_str(), fulName1.c_str());
+         fprintf(fp, "            return;\n");
+         fprintf(fp, "         }\n");
+      }
+      if (tcl2) {
+         fprintf(fp, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2.c_str());
+         fprintf(fp, "         if (R__tcl2==0) {\n");
+         fprintf(fp, "            Error(\"%s streamer\",\"Missing the TClass object for %s!\");\n",
+                 stlName.c_str(), fulName2.c_str());
+         fprintf(fp, "            return;\n");
+         fprintf(fp, "         }\n");
+      }
+
       fprintf(fp, "            %s::iterator R__k;\n", stlType.c_str());
       fprintf(fp, "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {\n");
       if (stltype == kMap || stltype == kMultimap) {
@@ -1552,7 +1714,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
    // was an STL container and if Streamer code has been created, 0 otherwise.
 
    int stltype = IsSTLContainer(m);
-   if (m.IsTmplt() && stltype) {
+   if (m.IsTmplt() && stltype>0) {
       char ss[kMaxLen];strcpy(ss,TemplateArg(m).Name());char *s=ss;
 
       if (rwmode == 0) {
@@ -1860,22 +2022,29 @@ void WriteClassInit(G__ClassInfo &cl)
 {
    // Write the code to initialize the class name and the initialization object.
 
+   string classname = RStl::DropDefaultArg( cl.Fullname() );
+      // TClassEdit::ShortType( cl.Fullname(),
+      //                                       TClassEdit::kRemoveDefaultAlloc );
+   string mappedname = G__map_cpp_name((char*)classname.c_str());
+
+   int stl = TClassEdit::IsSTLCont(classname.c_str());
+
    fprintf(fp, "namespace ROOT {\n");
    fprintf(fp, "   void %s_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent);\n",
-           G__map_cpp_name((char *)cl.Fullname()));
+           mappedname.c_str() );
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
-      fprintf(fp, "   void %s_Dictionary();\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "   void %s_Dictionary();\n",mappedname.c_str());
 
-   fprintf(fp, "   TClass *%s_IsA(const void*);\n",G__map_cpp_name((char *)cl.Fullname()));
+   fprintf(fp, "   TClass *%s_IsA(const void*);\n",mappedname.c_str());
    if (HasDefaultConstructor(cl)) {
-      fprintf(fp, "   void *new_%s(void *p = 0);\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "   void *newArray_%s(Long_t size);\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "   void *new_%s(void *p = 0);\n",mappedname.c_str());
+      fprintf(fp, "   void *newArray_%s(Long_t size);\n",mappedname.c_str());
    }
    if (NeedDestructor(cl)) {
-      fprintf(fp, "   void delete_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "   void deleteArray_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "   void destruct_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "   void delete_%s(void *p);\n",mappedname.c_str());
+      fprintf(fp, "   void deleteArray_%s(void *p);\n",mappedname.c_str());
+      fprintf(fp, "   void destruct_%s(void *p);\n",mappedname.c_str());
    }
    fprintf(fp, "\n");
 
@@ -1890,36 +2059,41 @@ void WriteClassInit(G__ClassInfo &cl)
            cl.Fullname(), cl.Fullname() );
    fprintf(fp, "#else\n");
    fprintf(fp, "   template <> ROOT::TGenericClassInfo *GenerateInitInstance< %s >(const %s*)\n   {\n",
-           cl.Fullname(), cl.Fullname() );
+           classname.c_str(), classname.c_str() );
    fprintf(fp, "#endif\n");
 #endif
    fprintf(fp, "   TGenericClassInfo *GenerateInitInstance(const %s*)\n   {\n",
-           cl.Fullname());
+           classname.c_str());
 
    if (NeedShadowClass(cl)) {
       fprintf(fp, "      // Make sure the shadow class has the right sizeof\n");
-      fprintf(fp, "      Assert(sizeof(::%s)", cl.Fullname() );
+      fprintf(fp, "      Assert(sizeof(::%s)", classname.c_str() );
       fprintf(fp, " == sizeof(%s));\n", GetFullShadowName(cl));
    }
 
-   fprintf(fp, "      %s *ptr = 0;\n",cl.Fullname());
+   fprintf(fp, "      %s *ptr = 0;\n",classname.c_str());
 
-   //fprintf(fp, "      static ROOT::ClassInfo< %s > \n",cl.Fullname());
+   //fprintf(fp, "      static ROOT::ClassInfo< %s > \n",classname.c_str());
    fprintf(fp, "      static ROOT::TGenericClassInfo \n");
 
-   fprintf(fp, "         instance(\"%s\", ",cl.Fullname());
+   fprintf(fp, "         instance(\"%s\", ",classname.c_str());
+
    if (cl.HasMethod("Class_Version")) {
-      fprintf(fp, "%s::Class_Version(), ",cl.Fullname());
+      fprintf(fp, "%s::Class_Version(), ",classname.c_str());
+   } else if (stl) {
+
+      fprintf(fp, "GetROOT()->GetVersionInt() / 100, ");
+
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
       // Need to find out if the operator>> is actually defined for this class.
       G__ClassInfo gcl;
       long offset;
       const char *VersionFunc = "GetClassVersion";
-      char *funcname= new char[strlen(cl.Fullname())+strlen(VersionFunc)+5];
-      sprintf(funcname,"%s<%s >",VersionFunc,cl.Fullname());
-      char *proto = new char[strlen(cl.Fullname())+ 10 ];
-      sprintf(proto,"%s*",cl.Fullname());
+      char *funcname= new char[strlen(classname.c_str())+strlen(VersionFunc)+5];
+      sprintf(funcname,"%s<%s >",VersionFunc,classname.c_str());
+      char *proto = new char[strlen(classname.c_str())+ 10 ];
+      sprintf(proto,"%s*",classname.c_str());
       G__MethodInfo methodinfo = gcl.GetMethod(VersionFunc,proto,&offset);
       delete [] funcname;
       delete [] proto;
@@ -1929,54 +2103,59 @@ void WriteClassInit(G__ClassInfo &cl)
           strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
 
          // GetClassVersion was defined in the header file.
-         //fprintf(fp, "GetClassVersion((%s *)0x0), ",cl.Fullname());
-         fprintf(fp, "GetClassVersion<%s >(), ",cl.Fullname());
+         //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
+         fprintf(fp, "GetClassVersion<%s >(), ",classname.c_str());
       }
       //static char temporary[1024];
-      //sprintf(temporary,"GetClassVersion<%s>( (%s *) 0x0 )",cl.Fullname(),cl.Fullname());
-      //fprintf(stderr,"DEBUG: %s has value %d\n",cl.Fullname(),(int)G__int(G__calc(temporary)));
+      //sprintf(temporary,"GetClassVersion<%s>( (%s *) 0x0 )",classname.c_str(),classname.c_str());
+      //fprintf(stderr,"DEBUG: %s has value %d\n",classname.c_str(),(int)G__int(G__calc(temporary)));
    }
+
    char *filename = (char*)cl.FileName();
    for (unsigned int i=0; i<strlen(filename); i++) {
      if (filename[i]=='\\') filename[i]='/';
    }
    fprintf(fp, "\"%s\", %d,\n", filename,cl.LineNumber());
-   fprintf(fp, "                  typeid(%s), DefineBehavior(ptr, ptr),\n",cl.Fullname());
-   //   fprintf(fp, "                  (ROOT::ClassInfo< %s >::ShowMembersFunc_t)&ROOT::ShowMembers,%d);\n", cl.Fullname(),cl.RootFlag());
+   fprintf(fp, "                  typeid(%s), DefineBehavior(ptr, ptr),\n",classname.c_str());
+   //   fprintf(fp, "                  (ROOT::ClassInfo< %s >::ShowMembersFunc_t)&ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
    fprintf(fp, "                  ");
    if (!NeedShadowClass(cl)) {
       if (!cl.HasMethod("ShowMembers")) fprintf(fp, "0, ");
    } else {
-      fprintf(fp, "(void*)&%s_ShowMembers, ",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "(void*)&%s_ShowMembers, ",mappedname.c_str());
    }
 
    if (cl.HasMethod("Dictionary") && !cl.IsTmplt()) {
-      fprintf(fp, "&::%s::Dictionary, ",cl.Fullname());
+      fprintf(fp, "&::%s::Dictionary, ",classname.c_str());
    } else {
-      fprintf(fp, "&%s_Dictionary, ",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "&%s_Dictionary, ",mappedname.c_str());
    }
 
-   fprintf(fp, "&%s_IsA, ", G__map_cpp_name((char *)cl.Fullname()));
-   fprintf(fp, "%d);\n", cl.RootFlag());
+   fprintf(fp, "&%s_IsA, ", mappedname.c_str());
+   fprintf(fp, "%d,\n", cl.RootFlag());
+   fprintf(fp, "                  sizeof(%s) );\n", classname.c_str());
    if (HasDefaultConstructor(cl)) {
-      fprintf(fp, "      instance.SetNew(&new_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "      instance.SetNewArray(&newArray_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "      instance.SetNew(&new_%s);\n",mappedname.c_str());
+      fprintf(fp, "      instance.SetNewArray(&newArray_%s);\n",mappedname.c_str());
    }
    if (NeedDestructor(cl)) {
-     fprintf(fp, "      instance.SetDelete(&delete_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
-     fprintf(fp, "      instance.SetDeleteArray(&deleteArray_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
-     fprintf(fp, "      instance.SetDestructor(&destruct_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
+     fprintf(fp, "      instance.SetDelete(&delete_%s);\n",mappedname.c_str());
+     fprintf(fp, "      instance.SetDeleteArray(&deleteArray_%s);\n",mappedname.c_str());
+     fprintf(fp, "      instance.SetDestructor(&destruct_%s);\n",mappedname.c_str());
+   }
+   if (stl==1 || stl==-1) {
+      fprintf(fp, "      instance.AdoptCollectionProxy(new ROOT::TVectorProxy<%s >);\n",classname.c_str());
    }
    fprintf(fp, "      return &instance;\n");
    fprintf(fp, "   }\n");
    fprintf(fp, "   // Static variable to force the class initialization\n");
    // must be one long line otherwise R__UseDummy does not work
-   fprintf(fp, "   static ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance((const %s*)0x0); R__UseDummy(_R__UNIQUE_(Init));\n", cl.Fullname());
+   fprintf(fp, "   static ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance((const %s*)0x0); R__UseDummy(_R__UNIQUE_(Init));\n", classname.c_str());
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       fprintf(fp, "\n   // Dictionary for non-ClassDef classes\n");
-      fprintf(fp, "   void %s_Dictionary() {\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "      ROOT::GenerateInitInstance((const %s*)0x0)->GetClass();\n",cl.Fullname());
+      fprintf(fp, "   void %s_Dictionary() {\n",mappedname.c_str());
+      fprintf(fp, "      ROOT::GenerateInitInstance((const %s*)0x0)->GetClass();\n",classname.c_str());
       fprintf(fp, "   }\n\n");
    }
 
@@ -2375,9 +2554,17 @@ void WriteStreamer(G__ClassInfo &cl)
 //______________________________________________________________________________
 void WriteAutoStreamer(G__ClassInfo &cl)
 {
+
    // Write Streamer() method suitable for automatic schema evolution.
 
    int add_template_keyword = NeedTemplateKeyword(cl);
+
+   G__BaseClassInfo base(cl);
+   while (base.Next()) {
+      if (IsSTLContainer(base)) {
+         RStl::inst().GenerateTClassFor( base.Name() );
+      }
+   }
 
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
@@ -2387,17 +2574,17 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    fprintf(fp, "   if (R__b.IsReading()) {\n");
    fprintf(fp, "      %s::Class()->ReadBuffer(R__b, this);\n", cl.Fullname());
    G__BaseClassInfo br(cl);
-   while (br.Next())
-      if (IsSTLContainer(br)) {
-         STLBaseStreamer(br,0);
-      }
+//VP   while (br.Next())            
+//VP      if (IsSTLContainer(br)) {
+//VP         STLBaseStreamer(br,0); 	//Redundant, already done in ReadBuffer
+//VP      }
    fprintf(fp, "   } else {\n");
    fprintf(fp, "      %s::Class()->WriteBuffer(R__b, this);\n", cl.Fullname());
    G__BaseClassInfo bw(cl);
-   while (bw.Next())
-      if (IsSTLContainer(bw)) {
-         STLBaseStreamer(bw,1);
-      }
+//VP   while (bw.Next())		//Redundant, already done in WriteBuffer
+//VP      if (IsSTLContainer(bw)) {
+//VP         STLBaseStreamer(bw,1);
+//VP      }
    fprintf(fp, "   }\n");
    fprintf(fp, "}\n\n");
 }
@@ -2433,7 +2620,7 @@ void WritePointersSTL(G__ClassInfo &cl)
 {
    // Write interface function for STL members
 
-   char a[80];
+   char a[80],fun[80];
    char clName[G__LONGLINE];
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion( cl);
@@ -2442,7 +2629,10 @@ void WritePointersSTL(G__ClassInfo &cl)
 
    G__DataMemberInfo m(cl);
 
+
+
    while (m.Next()) {
+
       if ((m.Property() & G__BIT_ISSTATIC)) continue;
       int pCounter = 0;
       if (m.Property() & G__BIT_ISPOINTER) {
@@ -2459,31 +2649,52 @@ void WritePointersSTL(G__ClassInfo &cl)
          }
       }
 
+      sprintf(fun,"R__%s_%s",clName,m.Name());
+
       //member is a string
-      const char*shortTypeName = ShortTypeName(m.Type()->Name());
-      if (!strcmp(shortTypeName, "string")) {
-         // remove all 'const' keyword.
-         string mTypeName = GetNonConstTypeName(m).c_str();
-         fprintf(fp, "//_______________________________________");
-         fprintf(fp, "_______________________________________\n");
-         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *R__p, int)\n",clName,m.Name());
-         fprintf(fp, "{\n");
-         if (m.Property() & G__BIT_ISPOINTER) {
-            //fprintf(fp, "   %s %s = (%s)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
-            fprintf(fp, "   %s* %s = (%s*)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
-         } else {
-            fprintf(fp, "   %s &%s = *(%s *)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
+      {
+         const char*shortTypeName = ShortTypeName(m.Type()->Name());
+         if (!strcmp(shortTypeName, "string")) {
+            continue;
          }
-         fprintf(fp, "   if (R__b.IsReading()) {\n");
-         STLStringStreamer(m,0);
-         fprintf(fp, "   } else {\n");
-         STLStringStreamer(m,1);
-         fprintf(fp, "   }\n");
-         fprintf(fp, "}\n\n");
-         continue;
       }
 
+//       if (!strcmp(shortTypeName, "string")) {
+//          // remove all 'const' keyword.
+//          string mTypeName = GetNonConstTypeName(m).c_str();
+//          fprintf(fp, "//_______________________________________");
+//          fprintf(fp, "_______________________________________\n");
+//          SetFun(fun);
+//          fprintf(fp, "void %s(TBuffer &R__b, void *R__p, int)\n",fun);
+//          fprintf(fp, "{\n");
+//          if (m.Property() & G__BIT_ISPOINTER) {
+//             //fprintf(fp, "   %s %s = (%s)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+//            fprintf(fp, "   %s* %s = (%s*)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
+//          } else {
+//             fprintf(fp, "   %s &%s = *(%s *)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
+//          }
+//          fprintf(fp, "   if (R__b.IsReading()) {\n");
+//          STLStringStreamer(m,0);
+//          fprintf(fp, "   } else {\n");
+//          STLStringStreamer(m,1);
+//          fprintf(fp, "   }\n");
+//          fprintf(fp, "}\n\n");
+//          continue;
+//       }
+
       if (!IsStreamable(m)) continue;
+
+      int k = IsSTLContainer(m);
+      if (k!=0) RStl::inst().GenerateTClassFor( m.Type()->Name() );
+      if (k<0) continue;
+      else if (k>0) continue; // do not generate the member streamer for STL containers anymore.
+
+      // Check whether we need a streamer function.
+      // For now we use it only for variable size array of objects (well maybe ... it is not really tested!)
+      if (!pCounter) continue;      
+
+      sprintf(fun,"R__%s_%s",clName,m.Name());
+      SetFun(fun);
 
       fprintf(fp, "//_______________________________________");
       fprintf(fp, "_______________________________________\n");
@@ -2641,7 +2852,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    // Inspect data members
    G__DataMemberInfo m(cl);
    char cdim[12], cvar[64];
-   char clName[G__LONGLINE];
+   char clName[G__LONGLINE],fun[80];
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion(cl);
    int clflag = 1;
@@ -2654,6 +2865,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       //  - static members
       //  - the member G__virtualinfo inserted by the CINT RTTI system
 
+      sprintf(fun,"R__%s_%s",clName,m.Name());
       if (!(m.Property() & G__BIT_ISSTATIC) &&
           strcmp(m.Name(), "G__virtualinfo")) {
 
@@ -2692,11 +2904,13 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                if (m.Property() & G__BIT_ISPOINTER) {
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"*%s\", &%s%s);\n",
                        m.Name(), prefix, m.Name());
-                  if (clflag && IsStreamable(m)) fprintf(fp, "   R__cl->SetStreamer(\"*%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
+                  if (clflag && IsStreamable(m) && GetFun(fun))
+                     fprintf(fp, "   R__cl->SetMemberStreamer(\"*%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
                } else {
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n",
                           m.Name(), prefix, m.Name());
-                  if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
+                  if (clflag && IsStreamable(m) && GetFun(fun))
+                     fprintf(fp, "      R__cl->SetMemberStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
                }
                continue;
             }
@@ -2710,11 +2924,13 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                }
                fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n", cvar,
                        prefix, m.Name());
-               if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", cvar, clName, m.Name());
+               if (clflag && IsStreamable(m) && GetFun(fun))
+                  fprintf(fp, "      R__cl->SetMemberStreamer(\"%s\",R__%s_%s);\n", cvar, clName, m.Name());
             } else if (m.Property() & G__BIT_ISPOINTER) {
                fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"*%s\", &%s%s);\n",
                        m.Name(), prefix, m.Name());
-               if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"*%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
+               if (clflag && IsStreamable(m) && GetFun(fun))
+                  fprintf(fp, "      R__cl->SetMemberStreamer(\"*%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
             } else if (m.Property() & G__BIT_ISARRAY) {
                sprintf(cvar, "%s", m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
@@ -2723,7 +2939,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                }
                fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", %s%s);\n",
                        cvar, prefix, m.Name());
-               if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", cvar, clName, m.Name());
+               if (clflag && IsStreamable(m) && GetFun(fun))
+                  fprintf(fp, "      R__cl->SetMemberStreamer(\"%s\",R__%s_%s);\n", cvar, clName, m.Name());
             } else if (m.Property() & G__BIT_ISREFERENCE) {
                // For reference we do not know what do not ... let's do nothing (hopefully the referenced objects is saved somewhere else!
 
@@ -2731,9 +2948,11 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                if ((m.Type())->HasMethod("ShowMembers")) {
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n",
                           m.Name(), prefix, m.Name());
-                  fprintf(fp, "      %s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
-                          GetNonConstMemberName(m,prefix).c_str(), m.Name());
-                  if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
+                  fprintf(fp, "      %s%s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
+                          prefix,m.Name(), m.Name());
+                  if (clflag && IsStreamable(m) && GetFun(fun))
+                     //fprintf(fp, "      R__cl->SetMemberStreamer(strcat(R__parent,\"%s\"),R__%s_%s); R__parent[R__ncp] = 0;\n", m.Name(), clName, m.Name());
+                     fprintf(fp, "      R__cl->SetMemberStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
                } else {
                   // NOTE: something to be added here!
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", (void*)&%s%s);\n",
@@ -2747,11 +2966,17 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   if (strlen(m.Type()->Name()) &&
                       strcmp(compareName,m.Type()->Name())!=0 ) {
                      // Filter out the unamed type from with a the class.
+
+                     string typeWithDefaultStlName( RStl::DropDefaultArg(m.Type()->Name()) );
+                     //TClassEdit::ShortType(m.Type()->Name(),TClassEdit::kRemoveDefaultAlloc) );
+                     string typeName( m.Type()->Name());
+
                      fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", (void*)&%s%s, R__insp, strcat(R__parent,\"%s.\"),%s);\n"
                                  "      R__parent[R__ncp] = 0;\n",
-                                 m.Type()->Name(), prefix, m.Name(), m.Name(),!strncmp(m.Title(), "!", 1)?"true":"false");
+                                 typeName.c_str(), prefix, m.Name(), m.Name(),!strncmp(m.Title(), "!", 1)?"true":"false");
                   }
-                  if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
+                  if (clflag && IsStreamable(m) && GetFun(fun))
+                     fprintf(fp, "      R__cl->SetMemberStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
 
                }
             }
@@ -2786,12 +3011,16 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          // same result as the dynamic_cast but has the advantage (for us) of
          // being able to apply the case even if the parent is inherited from
          // privately.
+
+         //string baseclassWithDefaultStlName( m.Type()->Name()); //  RStl::DropDefaultArg(m.Type()->Name()) );
+         //string baseclassWithDefaultStlName( TClassEdit::ShortType(baseclass.c_str(),
+         //                                                          TClassEdit::kRemoveDefaultAlloc) );
          if (outside) {
             fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", ( ::%s * )( (::%s*) obj ), R__insp, R__parent, false);\n",
                     baseclass.c_str(), baseclass.c_str(), cl.Fullname());
          } else {
             fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", ( ::%s *) (this ), R__insp, R__parent, false);\n",
-                     baseclass.c_str(),  baseclass.c_str());
+                    baseclass.c_str(),  baseclass.c_str());
          }
       }
    }
@@ -2858,9 +3087,14 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
 }
 
 //______________________________________________________________________________
-void WriteClassCode(G__ClassInfo &cl)
+void WriteClassCode(G__ClassInfo &cl, bool force = false)
 {
-   if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
+   if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && (force || cl.Linkage() == G__CPPLINK) ) {
+
+      if ( TClassEdit::IsSTLCont(cl.Name()) ) {
+         RStl::inst().GenerateTClassFor( cl.Name() );
+         return;
+      }
 
       if (cl.HasMethod("Streamer")) {
          //WriteStreamerBases(cl);
@@ -3830,6 +4064,7 @@ int main(int argc, char **argv)
    fprintf(fp, "// Since CINT ignores the std namespace, we need to do so in this file.\n");
    fprintf(fp, "namespace std {} using namespace std;\n\n");
    fprintf(fp, "#include \"RtypesImp.h\"\n\n");
+   fprintf(fp, "#include \"TVectorProxy.h\"\n\n");
 
    // Loop over all command line arguments and write include statements.
    // Skip options and any LinkDef.h.
@@ -3843,9 +4078,23 @@ int main(int argc, char **argv)
       fprintf(fp, "\n");
    }
 
-   // Loop over all classes and create Streamer() & Showmembers() methods
-   G__ClassInfo cl;
 
+   //
+   // We will loop over all the classes several times.
+   // In order we will call
+   //
+   //     WriteShadowClass
+   //     WriteClassInit (code to create the TGenericClassInfo)
+   //     check for constructor and operator input
+   //     WriteClassFunctions (declared in ClassDef)
+   //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
+   //
+   
+   //
+   // Loop over all classes and write the Shadow class if needed
+   //
+
+   G__ClassInfo cl;
 
    fprintf(fp, "namespace ROOT {\n   namespace Shadow {\n");
    cl.Init();
@@ -3857,11 +4106,20 @@ int main(int argc, char **argv)
    }
    fprintf(fp, "   } // Of namespace ROOT::Shadow\n} // Of namespace ROOT\n\n");
 
+   //
+   // Loop over all classes and create Streamer() & Showmembers() methods
+   //
+
    cl.Init();
    while (cl.Next()) {
       if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
-         // Write Code for initialization object
-         WriteClassInit(cl);
+
+         // Write Code for initialization object (except for STL containers)
+         if ( TClassEdit::IsSTLCont(cl.Name()) ) {
+            RStl::inst().GenerateTClassFor( cl.Name() );
+         } else {
+            WriteClassInit(cl);
+         }
       }
    }
 
@@ -3919,10 +4177,12 @@ int main(int argc, char **argv)
       if (ifl) remove(argv[ifl]);
       exit(1);
    }
-
+   
+   //
    // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
    // first to allow template specialisation to occur before template
    // instantiation (STK)
+   //
    cl.Init();
    while (cl.Next()) {
       if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
@@ -3932,17 +4192,24 @@ int main(int argc, char **argv)
          }
       }
    }
+
    // Keep track of classes processed by reading Linkdef file.
    // When all classes in LinkDef are done, loop over all classes known
    // to CINT output the ones that were not in the LinkDef. This can happen
    // in case "#pragma link C++ defined_in" is used.
-   const int kMaxClasses = 2000;
-   char *clProcessed[kMaxClasses];
+   //const int kMaxClasses = 2000;
+   //char *clProcessed[kMaxClasses];
+   vector<string> clProcessed;
    int   ncls = 0;
 
    // Read LinkDef file and process valid entries (STK)
    char line[256];
+   char cline[256];
    while (fgets(line, 256, fpld)) {
+
+      bool skip = true;
+      bool force = false;
+      strcpy(cline,line);
 
       // Check if the line contains a "#pragma link C++ class" specification,
       // if so, process the class (STK)
@@ -3950,6 +4217,20 @@ int main(int argc, char **argv)
           (strcmp(strtok(0, " "), "link") == 0) &&
           (strcmp(strtok(0, " "), "C++") == 0) &&
           (strcmp(strtok(0, " " ), "class") == 0)) {
+
+         skip = false;
+         force = false;
+
+      } else if ((strcmp(strtok(cline, " "), "#pragma") == 0) &&
+                 (strcmp(strtok(0, " "), "create") == 0) &&
+                 (strcmp(strtok(0, " "), "TClass") == 0)) {
+ 
+         skip = false;
+         force = true;
+ 
+      }
+
+      if (!skip) {
 
          // Create G__ClassInfo object for this class and process. Be
          // careful with the hardcoded string of trailing options in case
@@ -3962,14 +4243,19 @@ int main(int argc, char **argv)
          request = Compress(request); //no space between tmpl arguments allowed
          G__ClassInfo cl(request);
          if (cl.IsValid())
-            clProcessed[ncls] = StrDup(cl.Fullname());
+            clProcessed.push_back(cl.Fullname()); // [ncls] = StrDup
          else
-            clProcessed[ncls] = StrDup(request);
-//fprintf(stderr,"DEBUG: request==%s processed==%s\n",request,clProcessed[ncls]);
+            clProcessed.push_back(request); // [ncls] = StrDup
+//fprintf(stderr,"DEBUG: request==%s processed==%s\n",request,clProcessed[ncls].c_str());
          ncls++;
          delete [] request;
 
-         WriteClassCode(cl);
+         if (force) {
+            if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() != G__CPPLINK) {
+               WriteClassInit(cl);
+            }
+         }
+         WriteClassCode(cl,force);
       }
    }
 
@@ -3984,15 +4270,20 @@ int main(int argc, char **argv)
       if (!strncmp(cl.Fullname(), "R__Init", 7) ||
            strstr(cl.Fullname(), "::R__Init"))
          continue;
-      for (i = 0; i < ncls; i++)
-         if (!strcmp(clProcessed[i], cl.Fullname())) {
+      string fullname( cl.Fullname() );
+      for (i = 0; i < ncls; i++) {
+         if ( clProcessed[i] == fullname ) {
             nxt++;
             break;
          }
+      }
       if (nxt) continue;
 
       WriteClassCode(cl);
    }
+
+   RStl::inst().WriteStreamer(fp);
+   RStl::inst().WriteClassInit(fp);
 
    fclose(fp);
    fclose(fpld);

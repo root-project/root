@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.35 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.36 2003/11/24 10:51:54 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -60,7 +60,6 @@ friend class TCint;
 private:
    Int_t           fLineIsProcessing;     //To synchronize multi-threads
 
-   static TString  fgMacroPath;           //Macro search path
    static Int_t    fgDirLevel;            //Indentation level for ls()
    static Bool_t   fgRootInit;            //Singleton initialization flag
    static Bool_t   fgMemCheck;            //Turn on memory leak checker
@@ -120,9 +119,10 @@ protected:
    static VoidFuncPtr_t fgMakeDefCanvas;  //Pointer to default canvas constructor
 
                    TROOT();               //Only used by Dictionary
+   void            AuthCleanup();         //Cleanup remote auth info
    void            InitSystem();          //Operating System interface
    void            InitThreads();         //Initialize threads library
-   void            AuthCleanup();         //Cleanup remote auth info
+   TClass         *LoadClass(const char *name) const;
 
    void           *operator new(size_t l) { return TObject::operator new(l); }
 
@@ -250,6 +250,8 @@ public:
 
 
 R__EXTERN TROOT  *gROOT;
-
+namespace ROOT {
+   TROOT* GetROOT();
+}
 #endif
 
