@@ -1,5 +1,5 @@
 CLEAN_TARGETS += *.so *.root $(ALL_LIBRARIES) *.log
-TEST_TARGETS += ClassConv ConvArray
+TEST_TARGETS += ClassConv ConvArray typedef
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
