@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.12 2001/05/03 15:07:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.13 2001/06/22 09:48:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
          Int_t      GetNdim() const {return fNdim;}
          Int_t      GetNpar() const {return fNpar;}
          Int_t      GetNumber() const {return fNumber;}
- Double_t           GetParameter(Int_t ipar) const {return fParams[ipar];}
+ Double_t           GetParameter(Int_t ipar) const;
  Double_t           GetParameter(const char *name) const;
  virtual Double_t  *GetParameters() const {return fParams;}
  virtual void       GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
@@ -83,7 +83,7 @@ public:
  virtual void       SetParameters(const Double_t *params);
  virtual void       SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0
                        ,Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,Double_t p9=0,Double_t p10=0); // *MENU*
- virtual void       SetParName(Int_t ipar, const char *name) {fNames[ipar] = name;}
+ virtual void       SetParName(Int_t ipar, const char *name);
  virtual void       SetParNames(const char *name0="p0",const char *name1="p1",const char
                             *name2="p2",const char *name3="p3",const char
                             *name4="p4", const char *name5="p5",const char *name6="p6",const char *name7="p7",const char

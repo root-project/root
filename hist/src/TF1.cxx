@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.29 2001/12/10 21:10:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.30 2001/12/23 09:07:59 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -803,6 +803,15 @@ char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    sprintf(info,"(x=%g, f=%g)",x,((TF1*)this)->Eval(x));
    return info;
+}
+
+//______________________________________________________________________________
+Double_t TF1::GetParError(Int_t ipar) const
+{
+   //return value of parameter number ipar
+
+   if (ipar < 0 || ipar > fNpar-1) return 0;
+   return fParErrors[ipar];
 }
 
 //______________________________________________________________________________
@@ -1753,6 +1762,15 @@ void TF1::SetNpx(Int_t npx)
    Update();
 }
 
+//______________________________________________________________________________
+void TF1::SetParError(Int_t ipar, Double_t error)
+{
+// set error for parameter number ipar
+
+   if (ipar < 0 || ipar > fNpar-1) return;
+   fParErrors[ipar] = error;
+}
+   
 //______________________________________________________________________________
 void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
 {

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.25 2001/09/19 13:26:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.26 2001/12/04 21:52:31 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1865,6 +1865,15 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 }
 
 //______________________________________________________________________________
+Double_t TFormula::GetParameter(Int_t ipar) const
+{
+  //return value of parameter number ipar
+
+  if (ipar <0 && ipar >= fNpar) return 0;
+  return fParams[ipar];
+}
+
+//______________________________________________________________________________
 Double_t TFormula::GetParameter(const char *parName) const
 {
   //return value of parameter named parName
@@ -1972,6 +1981,15 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
    if (fNpar > 9) fParams[9] = p9;
    if (fNpar >10) fParams[10]= p10;
    Update();
+}
+
+//______________________________________________________________________________
+void TFormula::SetParName(Int_t ipar, const char *name)
+{
+// Set name of parameter number ipar
+   
+   if (ipar <0 || ipar >= fNpar) return;
+   fNames[ipar] = name;
 }
 
 //______________________________________________________________________________
