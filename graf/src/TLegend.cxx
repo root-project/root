@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.5 2000/09/08 16:05:21 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.6 2000/12/13 15:13:50 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -391,30 +391,29 @@ void TLegend::PaintPrimitives()
     // Draw fill pattern (in a box)
 
     if ( opt.Contains("f") && entry->GetObject()->InheritsFrom(TAttFill::Class())) {
-      Color_t fcolor = entry->GetFillColor();
-      Style_t fstyle = entry->GetFillStyle();
       char cmd[50];
-//      if ( fcolor == 0 ) {
-        sprintf(cmd,"((%s*)0x%lx)->GetFillColor();",
-                entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
-        entry->Execute("SetFillColor",cmd);
-//      }
-//      if ( fstyle == 0 ) {
-        sprintf(cmd,"((%s*)0x%lx)->GetFillStyle();",
-                entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
-        entry->Execute("SetFillStyle",cmd);
-//      }
+      sprintf(cmd,"((%s*)0x%lx)->GetFillColor();",
+              entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
+      entry->Execute("SetFillColor",cmd);
+      sprintf(cmd,"((%s*)0x%lx)->GetFillStyle();",
+              entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
+      entry->Execute("SetFillStyle",cmd);
 
       // box total height is yspace*0.7
       Double_t boxwidth = yspace*
         (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
       if ( boxwidth > margin ) boxwidth = margin;
-      TBox entrybox(xsym - boxwidth*0.35, ysym - yspace*0.35,
-                    xsym + boxwidth*0.35, ysym + yspace*0.35);
-      entry->TAttFill::Copy(entrybox);
-      entrybox.Paint();
-      entry->SetFillColor(fcolor);
-      entry->SetFillStyle(fstyle);
+      entry->TAttFill::Modify();
+      Double_t xf[4],yf[4];
+      xf[0] = xsym - boxwidth*0.35;
+      yf[0] = ysym - yspace*0.35;
+      xf[1] = xsym + boxwidth*0.35;
+      yf[1] = yf[0];
+      xf[2] = xf[1];
+      yf[2] = ysym + yspace*0.35;
+      xf[3] = xf[0];
+      yf[3] = yf[2];
+      gPad->PaintFillArea(4,xf,yf);
     }
 
     // Draw line
@@ -425,21 +424,15 @@ void TLegend::PaintPrimitives()
       Style_t lstyle = entry->GetLineStyle();
       Width_t lwidth = entry->GetLineWidth();
       char cmd[50];
-//      if ( lcolor == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineColor();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineColor",cmd);
-//      }
-//      if ( lstyle == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineStyle();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineStyle",cmd);
-//      }
-//      if ( lwidth == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineWidth();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineWidth",cmd);
-//      }
 
       // line total length (in x) is margin*0.8
       TLine entryline( xsym - margin*0.4, ysym, xsym + margin*0.4, ysym );
@@ -449,6 +442,7 @@ void TLegend::PaintPrimitives()
         // box total height is yspace*0.7
         Double_t boxwidth = yspace*
           (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
+        if ( boxwidth > margin ) boxwidth = margin;
 
         entryline.PaintLine( xsym - boxwidth*0.35, ysym + yspace*0.35,
                              xsym + boxwidth*0.35, ysym + yspace*0.35);
@@ -473,21 +467,15 @@ void TLegend::PaintPrimitives()
       Style_t mstyle = entry->GetMarkerStyle();
       Size_t msize = entry->GetMarkerSize();
       char cmd[50];
-//      if ( mcolor == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerColor();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerColor",cmd);
-//      }
-//      if ( mstyle == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerStyle();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerStyle",cmd);
-//      }
-//      if ( msize == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerSize();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerSize",cmd);
-//      }
 
       TMarker entrymarker( xsym, ysym, 0 );
       entry->TAttMarker::Copy(entrymarker);
