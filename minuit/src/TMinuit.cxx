@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.27 2003/05/09 11:16:17 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.28 2003/05/14 20:58:22 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -101,8 +101,7 @@ MINUIT does a transformation of the error matrix (and the ``parabolic''
 parameter errors) when there are parameter limits. Users should however
 realize that the transformation is only a linear approximation, and that
 it cannot give a meaningful result if one or more parameters is very close
-to a limit, where partial P   /partial P    #0. Therefore, it is
-                           ext          int
+to a limit, where partial Pext /partial Pint  #0. Therefore, it is
 recommended that:
 <P>
 <OL>
@@ -140,14 +139,14 @@ that MINUIT prints a warning to this effect when it prints
 the parameter values.
 
 The minimizer can become blocked at a limit, because at a limit the
-derivative seen by the minimizer partial F/partial P    is zero no matter
-                                                    int
-what the real derivative partial F/partial P    is.
-                                            ext
+derivative seen by the minimizer partial F/partial Pint  is zero no matter
+what the real derivative partial F/partial Pext  is.
 <P>
 <P>
+<PRE>
 ((partial F)/(partial P   ))= ((partial F)/(partial P   ))((partial P    )/(partial P   )) =((partial F)/(partial P    ))= 0
                        int                           ext             ext             int                           ext
+</PRE>
 <P>
 <P>
 <H4>Getting the right parameter errors with limits.</H4>
