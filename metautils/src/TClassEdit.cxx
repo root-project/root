@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.9 2004/02/18 07:28:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.10 2004/03/12 21:45:27 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -190,10 +190,11 @@ string TClassEdit::GetLong64_Name(const string& original)
 }
 
 //______________________________________________________________________________
-int TClassEdit::GetSplit(const char *type, vector<string>& output)
+int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLoc)
 {
    ///////////////////////////////////////////////////////////////////////////
    //  Stores in output (after emptying it) the splited type.
+   //  Stores the location of the tail (nested names) in tailloc (0 indicates no tail).
    //  Return the number of elements stored.
    //
    //  First in list is the template name or is empty
@@ -204,6 +205,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output)
    int keepConst = 0;
    int keepInnerConst = 1;
 
+   nestedLoc = 0;
    output.clear();
    if (strlen(type)==0) return 0;
 
@@ -235,6 +237,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output)
       if (*(c+1)==':') {
          // we have a name specified inside the class/namespace
          // For now we keep it in one piece
+         nestedLoc = output.size();
          output.push_back((c+1));
       }
    }
@@ -327,22 +330,25 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    string full = CleanType(typeDesc, 1);
    string answ;
    int tailLoc=0;
+   int nestedLoc=0; // location of the tail (if set to >0)
 
    // get list of all arguments
    vector<string> arglist;
-   int narg = GetSplit(full.c_str(),arglist);
+   int narg = GetSplit(full.c_str(),arglist,nestedLoc);
 
    if (narg==0) return typeDesc;
 
-//      fprintf(stderr,"calling ShortType %d for %s with narg %d\n",imode,typeDesc,narg);
+//      fprintf(stderr,"calling ShortType %d for %s with narg %d\n",mode,typeDesc,narg);
 //      {for (int i=0;i<narg;i++) fprintf(stderr,"calling ShortType %d for %s with %d %s \n",
-//                                        imode,typeDesc,i,arglist[i].c_str());
+//                                        mode,typeDesc,i,arglist[i].c_str());
 //      }
    if (arglist[narg-1][0]=='*') {
       if ((mode&1)==0) tailLoc = narg-1;
       narg--;
    }
    mode &= (~1);
+
+   if (nestedLoc) narg--;
 
 //    fprintf(stderr,"calling ShortType %d for %s with narg %d tail %d\n",imode,typeDesc,narg,tailLoc);
 
@@ -448,6 +454,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
          answ += '>';
       }
    }
+   if (nestedLoc) answ += arglist[nestedLoc];
    if (tailLoc) answ += arglist[tailLoc];
 
 //     fprintf(stderr,"2. mode %d reduce \"%s\" into \"%s\"\n",
@@ -475,11 +482,12 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
    string full = ShortType(ty,k);
 
    vector<string> arglist;
-   int numb = GetSplit(full.c_str(),arglist);
+   int nestedLoc=0;
+   int numb = GetSplit(full.c_str(),arglist,nestedLoc);
 
    if ( arglist[0].length()>0 && arglist[numb-1][0]=='*' ) numb--;
-   
-   if ( arglist[numb-1][0]==':' ) {
+
+   if ( nestedLoc ) {
       // we have a nested name
       return 0;
    }
@@ -521,8 +529,9 @@ bool TClassEdit::IsStdClass(const char *classname)
 
 //______________________________________________________________________________
 bool TClassEdit::IsVectorBool(const char *name) {
+   int nestedLoc=0;
    vector<string> splitName;
-   TClassEdit::GetSplit(name,splitName);
+   TClassEdit::GetSplit(name,splitName,nestedLoc);
 
    return ( TClassEdit::STLKind( splitName[0].c_str() ) == TClassEdit::kVector)
       && ( splitName[1] == "bool" || splitName[1]=="Bool_t");
@@ -562,7 +571,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
 
       if ( strchr(tname,':')!=0 ) {
          // We have a namespace an we have to check it first :(
-         
+
          int slen = strlen(tname);
          for(int k=0;k<slen;++k) {
             if (tname[k]==':') {
@@ -590,7 +599,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
          if (t.IsValid()) return t.TrueName();
       }
       return tname;
-   } 
+   }
 
    int len = strlen(tname);
    string input(tname);

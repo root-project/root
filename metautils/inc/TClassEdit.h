@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.6 2004/01/31 08:59:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.7 2004/03/12 21:45:27 brun Exp $
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
 
@@ -23,7 +23,7 @@ namespace std {
 
 namespace TClassEdit {
 
-   typedef enum { 
+   typedef enum {
       kDropTrailStar    = 1<<0,
       kDropDefaultAlloc = 1<<1,
       kDropAlloc        = 1<<2,
@@ -33,7 +33,7 @@ namespace TClassEdit {
       kDropComparator   = 1<<6  /* if the class has a comparator, drops BOTH the comparator and the Allocator */
    } EModType;
 
-   typedef enum { 
+   typedef enum {
       kNone     = 0,
       kVector   = 1,
       kList     = 2,
@@ -45,7 +45,7 @@ namespace TClassEdit {
       kEnd      = 8
    } ESTLType;
 
-          
+
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
    bool        IsDefAlloc(const char *alloc, const char *classname);
    bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);
@@ -54,7 +54,7 @@ namespace TClassEdit {
    bool        IsStdClass(const char *type);
    bool        IsVectorBool(const char *name);
    std::string GetLong64_Name(const std::string& original);
-   int         GetSplit  (const char *type, std::vector<std::string> &output);
+   int         GetSplit  (const char *type, std::vector<std::string> &output, int &nestedLoc);
    int         STLKind   (const char *type);    //Kind of stl container
    int         STLArgs   (int kind);            //Min number of arguments without allocator
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);

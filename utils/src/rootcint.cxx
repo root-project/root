@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.161 2004/03/16 20:25:12 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.162 2004/04/06 22:55:36 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2606,8 +2606,8 @@ void WritePointersSTL(G__ClassInfo &cl)
 
       int k = IsSTLContainer(m);
       if (k!=0) {
-//          fprintf(stderr,"Add %s which is also %s\n",
-//                  m.Type()->Name(), m.Type()->TrueName() );
+//          fprintf(stderr,"Add %s which is also",m.Type()->Name());
+//          fprintf(stderr," %s\n",m.Type()->TrueName() );
          RStl::inst().GenerateTClassFor( m.Type()->Name() );
       }
       if (k<0) continue;

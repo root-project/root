@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.5 2004/02/11 17:00:07 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.6 2004/03/12 21:45:27 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -59,11 +59,12 @@ void ROOT::RStl::GenerateTClassFor(const string& stlclassname) {
    string registername( TClassEdit::ShortType(cl.Name(),
                                               TClassEdit::kDropStlDefault ) );
 
-//     fprintf(stderr,"registering %s as %s\n",
-//             stlclassname.c_str(), registername.c_str());
+//      fprintf(stderr,"registering %s as %s %s\n",
+//              stlclassname.c_str(), cl.Name(), registername.c_str());
 
+   int nestedLoc=0;
    vector<string> splitName;
-   TClassEdit::GetSplit(registername.c_str(),splitName);
+   TClassEdit::GetSplit(registername.c_str(),splitName,nestedLoc);
 
    if ( TClassEdit::STLKind( splitName[0].c_str() ) == TClassEdit::kVector ) {
       if ( splitName[1] == "bool" || splitName[1]=="Bool_t") {
@@ -133,8 +134,9 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
    streamerName += G__map_cpp_name((char *)shortTypeName.c_str());
    string typedefName = G__map_cpp_name((char *)shortTypeName.c_str());
 
+   int nestedLoc=0;
    vector<string> splitName;
-   TClassEdit::GetSplit(shortTypeName.c_str(),splitName);
+   TClassEdit::GetSplit(shortTypeName.c_str(),splitName,nestedLoc);
 
    int stltype = TClassEdit::STLKind(splitName[0].c_str());
 
