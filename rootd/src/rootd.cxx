@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.80 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.81 2004/02/26 20:42:20 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -334,7 +334,7 @@ enum { kBinary, kAscii };
 
 double  gBytesRead               = 0;
 double  gBytesWritten            = 0;
-char    gConfDir[kMAXPATHLEN]    = { 0 };  // Needed to localize root stuff 
+char    gConfDir[kMAXPATHLEN]    = { 0 };  // Needed to localize root stuff
 int     gDebug                   = 0;
 int     gDownloaded              = 0;
 int     gFd                      = -1;
@@ -577,10 +577,11 @@ int RootdCheckTab(int mode)
    // opened safely, otherwise 0.
    //
    // The format of the file is:
-   // filename inode mode username pid
-   // where inode is the unique file ref number, mode is either "read"
-   // or "write", username the user who has the file open and pid is the
-   // pid of the rootd having the file open.
+   // filename device inode mode username pid
+   // where device is the unique file system id, inode is the unique file
+   // ref number, mode is either "read" or "write", username the user
+   // who has the file open and pid is the pid of the rootd having the
+   // file open.
 
    // Open rootdtab file. Try first /usr/tmp and then /tmp.
    // The lockf() call can fail if the directory is NFS mounted
@@ -628,11 +629,15 @@ again:
    fstat(fid, &sbuf);
    size_t siz = sbuf.st_size;
 
+   dev_t device;
    ino_t inode;
-   if (stat(gFile, &sbuf) == -1)
-      inode = 0;
-   else
-      inode = sbuf.st_ino;
+   if (stat(gFile, &sbuf) == -1) {
+      device = 0;
+      inode  = 0;
+   } else {
+      device = sbuf.st_dev;
+      inode  = sbuf.st_ino;
+   }
 
    char msg[kMAXPATHLEN];
    const char *smode = (mode == 1) ? "write" : "read";
@@ -652,10 +657,10 @@ again:
          n++;
          char user[64], gmode[32];
          int  pid;
-         unsigned long ino;
-         sscanf(s, "%s %lu %s %s %d", msg, &ino, gmode, user, &pid);
+         unsigned long dev, ino;
+         sscanf(s, "%s %lu %lu %s %s %d", msg, &dev, &ino, gmode, user, &pid);
          if (kill(pid, 0) == -1 && GetErrno() == ESRCH) {
-            ErrorInfo("RootdCheckTab: remove stale lock (%s %u %s %s %d)\n", msg, ino, gmode, user, pid);
+            ErrorInfo("RootdCheckTab: remove stale lock (%s %lu %lu %s %s %d)\n", msg, dev, ino, gmode, user, pid);
             if (n >= flast) {
                siz = int(s - fbuf);
                changed = 1;
@@ -668,7 +673,7 @@ again:
             }
             flast = fbuf + siz;
             changed = 1;
-         } else if (ino == inode) {
+         } else if (dev == device && ino == inode) {
             if (mode == 1)
                result = 0;
             else if (!strcmp(gmode, "write"))
@@ -688,8 +693,9 @@ again:
    }
 
    if (result && !noupdate) {
+      unsigned long dev = device;
       unsigned long ino = inode;
-      sprintf(msg, "%s %lu %s %s %d\n", gFile, ino, smode, gUser, (int) getpid());
+      sprintf(msg, "%s %lu %lu %s %s %d\n", gFile, dev, ino, smode, gUser, (int) getpid());
       write(fid, msg, strlen(msg));
    }
 
@@ -747,7 +753,8 @@ again:
    size_t siz = sbuf.st_size;
 
    stat(gFile, &sbuf);
-   ino_t inode = sbuf.st_ino;
+   dev_t device = sbuf.st_dev;
+   ino_t inode  = sbuf.st_ino;
 
    if (siz > 0) {
       int changed = 0;
@@ -764,14 +771,14 @@ again:
          n++;
          char msg[kMAXPATHLEN], user[64], gmode[32];
          int  pid, stale = 0;
-         unsigned int ino;
-         sscanf(s, "%s %u %s %s %d", msg, &ino, gmode, user, &pid);
+         unsigned long dev, ino;
+         sscanf(s, "%s %lu %lu %s %s %d", msg, &dev, &ino, gmode, user, &pid);
          if (kill(pid, 0) == -1 && GetErrno() == ESRCH) {
             stale = 1;
-            ErrorInfo("Remove Stale Lock (%s %u %s %s %d)\n", msg, ino, gmode, user, pid);
+            ErrorInfo("Remove Stale Lock (%s %lu %lu %s %s %d)\n", msg, dev, ino, gmode, user, pid);
          }
          if (stale || (!force && mypid == pid) ||
-             (force && inode == ino && !strcmp(gUser, user))) {
+             (force && device == dev && inode == ino && !strcmp(gUser, user))) {
             if (n >= flast) {
                siz = int(s - fbuf);
                changed = 1;
@@ -1089,8 +1096,8 @@ void RootdOpen(const char *msg)
 
    struct stat sbuf;
    fstat(gFd, &sbuf);
-   unsigned long dev = (unsigned long) sbuf.st_dev;
-   unsigned long ino = (unsigned long) sbuf.st_ino;
+   unsigned long dev = sbuf.st_dev;
+   unsigned long ino = sbuf.st_ino;
 
    if (gDebug > 0)
       ErrorInfo("RootdOpen: file %s opened in mode %s", gFile, gOption);
@@ -1811,7 +1818,7 @@ void RootdLoop()
       ;
 #endif
 
-   // Check if we will go for parallel sockets 
+   // Check if we will go for parallel sockets
    // (in early days was done before entering main loop)
    if (gClientProtocol > 9)
       RootdParallel();
@@ -2135,14 +2142,14 @@ int main(int argc, char **argv)
             strcpy(gConfDir, getenv("ROOTSYS"));
             sprintf(gExecDir, "%s/bin", gConfDir);
             sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
-            if (gDebug > 0) 
+            if (gDebug > 0)
                ErrorInfo("main: no config directory specified using"
                          " ROOTSYS (%s)", gConfDir);
          } else {
             if (!gInetdFlag)
-               fprintf(stderr, 
+               fprintf(stderr,
                        "rootd: no config directory specified\n");
-            Error(ErrFatal, kErrFatal, 
+            Error(ErrFatal, kErrFatal,
                        "main: no config directory specified");
          }
       }
