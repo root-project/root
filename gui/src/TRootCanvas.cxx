@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.13 2002/09/18 12:22:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.14 2002/09/18 13:12:59 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -382,7 +382,7 @@ void TRootCanvas::Close()
 //______________________________________________________________________________
 void TRootCanvas::ReallyDelete()
 {
-   // Really delete the canvas and the this GUI.
+   // Really delete the canvas and this GUI.
 
    TVirtualPad *savepad = gPad;
    gPad = 0;        // hide gPad from CINT
