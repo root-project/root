@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.21 2003/06/02 15:19:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.22 2003/07/01 11:40:15 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1582,7 +1582,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
          dirname[s-p] = 0;
       }
       item = FindChildByName(item, dirname);
-      if (!item || !s) return item;
+      if (item || !s) return item;
       p = ++s;
    }
    return 0;
