@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataProjBinding.cc,v 1.6 2002/09/05 04:33:22 verkerke Exp $
+ *    File: $Id: RooDataProjBinding.cc,v 1.7 2002/09/30 00:57:28 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -78,7 +78,7 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
   assert(isValid());
   loadValues(xvector);    
 
-  RooAbsArg::setDirtyInhibit(kTRUE) ;
+  //RooAbsArg::setDirtyInhibit(kTRUE) ;
 
   Double_t result(0) ;
   Double_t wgtSum(0) ;  
@@ -128,7 +128,7 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
     }
   }
 
-  RooAbsArg::setDirtyInhibit(kFALSE) ;
+  //RooAbsArg::setDirtyInhibit(kFALSE) ;
 
   if (wgtSum==0) return 0 ;
   return result / wgtSum ;
