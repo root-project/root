@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.17 2002/04/08 20:20:44 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.18 2002/06/28 22:02:40 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -784,7 +784,28 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	    char *tokptr(0) ;
 	    Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
 	    char *paramName = strtok_r(token,",",&tokptr) ;
+
+	    // Check for fractional split option 'param_name[remainder_state]'
+	    char *tokptr2(0) ;
+	    char *remainderState = 0 ;
+	    if (paramName && strtok_r(paramName,"[",&tokptr2)) {
+	      remainderState = strtok_r(0,"]",&tokptr2) ;
+	    }
+
 	    while(paramName) {
+
+	      // If fractional split is specified, check that remainder state is a valid state of this split cat
+	      if (remainderState) {
+		if (!splitCat->lookupType(remainderState)) {
+		  cout << "RooSimPdfBuilder::buildPdf: ERROR fraction split of parameter " 
+		       << paramName << " has invalid remainder state name: " << remainderState << endl ;
+		  delete paramList ;
+		  customizerList.Delete() ;
+		  splitStateList.Delete() ;
+		  return 0 ;
+		}
+	      }	      
+
 	      RooAbsArg* param = paramList->find(paramName) ;
 	      if (!param) {
 		cout << "RooSimPdfBuilder::buildPdf: ERROR " << paramName 
@@ -795,7 +816,66 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		return 0 ;
 	      }
 	      splitParamList.add(*param) ;
+	      
+	      // Build split leaf of fraction splits here
+	      if (remainderState) {
+
+		// Check if we are splitting a real-valued parameter
+		if (!dynamic_cast<RooAbsReal*>(param)) {
+		  cout << "RooSimPdfBuilder::buildPdf: ERROR fraction split requested of non-real valued parameter " 
+		       << param->GetName() << endl ;
+		  delete paramList ;
+		  customizerList.Delete() ;
+		  splitStateList.Delete() ;
+		  return 0 ;
+		}
+
+		TIterator* iter = splitCat->typeIterator() ;
+		RooCatType* type ;
+		RooArgList fracLeafList ;
+		TString formExpr("1") ;
+		Int_t i(0) ;
+		while(type=(RooCatType*)iter->Next()) {
+
+		  // Skip remainder state
+		  if (!TString(type->GetName()).CompareTo(remainderState)) continue ;
+		  
+		  // Construct name of split leaf
+		  TString splitLeafName(param->GetName()) ;
+		  splitLeafName.Append("_") ;
+		  splitLeafName.Append(type->GetName()) ;
+		  
+		  // Check if split leaf already exists
+		  RooAbsArg* splitLeaf = _splitNodeList.find(splitLeafName) ;
+		  if (!splitLeaf) {
+		    // If not create it now
+		    splitLeaf = (RooAbsArg*) param->clone(splitLeafName) ;
+		    _splitNodeList.addOwned(*splitLeaf) ;
+		  }
+		  fracLeafList.add(*splitLeaf) ;
+		  formExpr.Append(Form("-@%d",i++)) ;
+		}
+		delete iter ;		
+
+		// Construct RooFormulaVar expresssing remainder of fraction		
+		TString remLeafName(param->GetName()) ;
+		remLeafName.Append("_") ;
+		remLeafName.Append(remainderState) ;
+
+		// Check if no specialization was already specified for remainder state
+		if (!_splitNodeList.find(remLeafName)) {
+		  RooAbsArg* remLeaf = new RooFormulaVar(remLeafName,formExpr,fracLeafList) ;
+		  _splitNodeList.addOwned(*remLeaf) ;
+		  cout << "RooSimPdfBuilder::buildPdf: creating remainder fraction formula for " << remainderState 
+		       << " specialization of split parameter " << param->GetName() << endl ;
+		}
+	      }
+
+	      // Parse next parameter name
 	      paramName = strtok_r(0,",",&tokptr) ;
+	      if (paramName && strtok_r(paramName,"[",&tokptr2)) {
+		remainderState = strtok_r(0,"]",&tokptr2) ;
+	      }
 	    }
 
 	    // Add the rule to the appropriate customizer ;
