@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.41 2001/06/08 06:45:47 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.42 2001/06/22 09:50:02 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -759,7 +759,7 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
    }
    grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
    grF1->SetChisquare(amin);
-   grF1->SetNDF(grF1->GetNumberFitPoints()-npar-nfixed);
+   grF1->SetNDF(grF1->GetNumberFitPoints()-npar+nfixed);
 
 //*-*- Print final values of parameters.
    if (!fitOption.Quiet) {
