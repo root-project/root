@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.19 2002/12/09 14:03:36 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.20 2003/01/14 15:44:56 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1179,8 +1179,8 @@ void TestDialog::HandleButtons(Int_t id)
                // since RemoveTab() will Destroy the container
                // window, which in turn will destroy the embedded
                // canvas windows.
-               SafeDelete(fEc1);
-               SafeDelete(fEc2);
+               delete fEc1; fEc1 = 0;
+               delete fEc2; fEc2 = 0;
             }
             fTab->RemoveTab(0);
             fTab->Layout();
