@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.111 2002/11/27 21:54:56 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.112 2002/12/04 17:59:46 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -566,6 +566,7 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
 }
 
 bool HasCustomOperatorNew(G__ClassInfo& cl);
+bool HasCustomOperatorNewPlacement(G__ClassInfo& cl);
 bool HasDefaultConstructor(G__ClassInfo& cl);
 bool NeedConstructor(G__ClassInfo& cl);
 
@@ -587,7 +588,7 @@ bool HasCustomOperatorNew(G__ClassInfo& cl)
       custom = true;
    }
 
-   // in nested space:
+   // in nesting space:
    gcl = cl.EnclosingSpace();
    methodinfo = gcl.GetMethod(name,proto,&offset);
    if  (methodinfo.IsValid()) {
@@ -598,6 +599,57 @@ bool HasCustomOperatorNew(G__ClassInfo& cl)
    methodinfo = cl.GetMethod(name,proto,&offset);
    if  (methodinfo.IsValid()) {
       custom = true;
+   }
+
+   return custom;
+}
+
+//______________________________________________________________________________
+bool HasCustomOperatorNewPlacement(G__ClassInfo& cl)
+{
+   // return true if we can find a custom operator new
+ 
+   // Look for a custom operator new
+   bool custom = false;
+   G__ClassInfo gcl;
+   long offset;
+   const char *name = "operator new";
+   const char *proto = "size_t";
+   const char *protoPlacement = "size_t,void*";
+
+   // first in the global namespace:
+   G__MethodInfo methodinfo = gcl.GetMethod(name,proto,&offset);
+   G__MethodInfo methodinfoPlacement = gcl.GetMethod(name,protoPlacement,&offset);
+   if  (methodinfoPlacement.IsValid()) {
+      // We have a custom new placement in the global namespace
+      custom = true;
+   }
+
+   // in nesting space:
+   gcl = cl.EnclosingSpace();
+   methodinfo = gcl.GetMethod(name,proto,&offset);
+   methodinfoPlacement = gcl.GetMethod(name,protoPlacement,&offset);
+   if  (methodinfoPlacement.IsValid()) {
+      custom = true;
+   }
+
+   // in class 
+   methodinfo = cl.GetMethod(name,proto,&offset);
+   methodinfoPlacement = cl.GetMethod(name,protoPlacement,&offset);
+   if  (methodinfoPlacement.IsValid()) {
+      // We have a custom operator new with placement in the class
+      // hierarchy.  We still need to check that it has not been 
+      // overloaded by a simple operator new.
+      
+      G__ClassInfo clNew(methodinfo.ifunc()->tagnum);
+      G__ClassInfo clPlacement(methodinfoPlacement.ifunc()->tagnum);
+
+      if (clNew.IsBase(clPlacement)) {
+         // the operator new hides the operator new with placement
+         custom = false;
+      } else {
+         custom = true;
+      }
    }
 
    return custom;
@@ -921,11 +973,13 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       // write the constructor wrapper only for concrete classes
       fprintf(fp, "   // Wrappers around operator new\n");
       fprintf(fp, "   void *new_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
-      if (HasCustomOperatorNew(cl)) {
-        fprintf(fp, "      return  p ? new(p) ::%s : new ::%s;\n",cl.Fullname(),cl.Fullname());
+      fprintf(fp, "      return  p ? ");
+      if (HasCustomOperatorNewPlacement(cl)) {
+        fprintf(fp, "new(p) ::%s : ",cl.Fullname());
       } else {
-        fprintf(fp, "      return  p ? new((ROOT::TOperatorNewHelper*)p) ::%s : new ::%s;\n",cl.Fullname(),cl.Fullname());
+        fprintf(fp, "::new((ROOT::TOperatorNewHelper*)p) ::%s : ",cl.Fullname());
       }
+      fprintf(fp, "new ::%s;\n",cl.Fullname());
       fprintf(fp, "   }\n");
       
       fprintf(fp, "   void *newArray_%s(Long_t size) {\n",G__map_cpp_name((char *)cl.Fullname()));
