@@ -67,7 +67,7 @@ $(XROOTDA): $(XROOTDSRCS)
 		solaris*:*)      xopt="--ccflavour=sunCC  --use-xrd-strlcpy";; \
                 *)               xopt="";; \
 		esac; \
-		if [ "x$$KRB5LIB" = "x" ] ; then \
+		if [ "x$(KRB5LIB)" = "x" ] ; then \
 		   xopt="$$xopt --disable-krb4 --disable-krb5"; \
 		fi; \
 		xopt="$$xopt --enable-echo --no-arch-subdirs"; \
