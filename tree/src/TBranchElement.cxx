@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.158 2004/11/19 11:39:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.159 2004/11/19 20:08:58 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2543,7 +2543,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
          } else if (elem->IsA() == TStreamerSTL::Class() && !elem->IsaPointer()) {
             // here all STL classes are handled
             Int_t subSplitlevel = splitlevel-1;
-            if (elem->CannotSplit()) {
+            if (btype == 31 || btype == 41 || elem->CannotSplit()) {
                subSplitlevel = 0;
             }
             char* pointer = fBranchPointer + offset;
