@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.120 2002/12/17 07:00:30 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.121 2002/12/17 16:15:00 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2813,7 +2813,8 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
 
       }
 
-   } else if (type.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT))  {
+   } else if (type.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT
+                                 |G__BIT_ISENUM|G__BIT_ISUNION))  {
 
       GetFullyQualifiedName(type.TrueName(),fullyQualifiedName);
 
@@ -3009,7 +3010,8 @@ void WriteShadowClass(G__ClassInfo &cl)
          string type_name = GetNonConstTypeName(d,true); // .Type()->Name();
 
          if ((d.Type()->Property() & G__BIT_ISENUM) &&
-             (type_name.length()==0 || type_name=="enum") || type_name.find("::")==type_name.length()-2 ) {
+             (type_name.length()==0 || type_name=="enum") || 
+              type_name.find("::")==type_name.length()-2 ) {
             // We have unamed enums, let's fake it:
             fprintf(fp,"         enum {kDummy} %s", d.Name());
          }// if (d.Property() & G__BIT_ISREFERENCE) {
