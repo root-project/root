@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.5 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.6 2003/08/11 12:51:31 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -57,19 +57,27 @@ TGProgressBar::TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
 //______________________________________________________________________________
 void TGProgressBar::SetRange(Float_t min, Float_t max)
 {
-   // Set min and max of progress bar. Must be called before position is set.
+   // Set min and max of progress bar.
 
    if (min >= max) {
       Error("SetRange", "max must be > min");
       return;
    }
-   if (fPos > 0) {
-      Error("SetRange", "must be called before position is incremented");
-      return;
-   }
+
+   Bool_t draw = kFALSE;
+   if (fPos > fMin) {
+      // already in progress... rescale
+      if (fPos < min) fPos = min;
+      if (fPos > max) fPos = max;
+      draw = kTRUE;
+   } else
+      fPos = min;
 
    fMin = min;
    fMax = max;
+
+   if (draw)
+      DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -148,7 +156,6 @@ void TGProgressBar::SetBarColor(const char *color)
 
    fClient->NeedRedraw(this);
 }
-
 
 //______________________________________________________________________________
 FontStruct_t TGProgressBar::GetDefaultFontStruct()
