@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.181 2004/07/30 19:09:52 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.182 2004/07/30 20:25:29 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2292,7 +2292,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
           strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
          fprintf(fp, "GetClassVersion<%s >(), ",classname.c_str());
       } else {
-         fprintf(fp, "0 /*version*/);
+         fprintf(fp, "0 /*version*/, ");
       }
    }
 
