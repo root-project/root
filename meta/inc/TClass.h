@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.27 2002/11/11 16:23:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.28 2002/11/15 14:40:05 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -114,6 +114,7 @@ public:
    void               AddImplFile(const char *filename, int line);
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0);
+   void               BuildRealDataFake(const char *name, Int_t offset, TClass *cl);
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    Int_t              Compare(const TObject *obj) const;
    void               Draw(Option_t *option="");
@@ -122,7 +123,8 @@ public:
    char              *EscapeChars(char * text) const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
    Version_t          GetClassVersion() const { ((TClass*)this)->fVersionUsed = kTRUE; return fClassVersion; }
-   TDataMember       *GetDataMember(const char *datamember);
+   TDataMember       *GetDataMember(const char *datamember) const;
+   Int_t              GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const { return fDeclFileName; }
    Short_t            GetDeclFileLine() const { return fDeclFileLine; }
    ROOT::DelFunc_t    GetDelete() const;

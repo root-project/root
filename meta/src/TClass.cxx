@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.93 2002/11/15 14:40:06 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.94 2002/11/15 16:02:02 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -519,8 +519,11 @@ void TClass::BuildRealData(void *pointer)
 
    fRealData = new TList;
 
-   if (!fClassInfo) return;
-
+   if (!fClassInfo) {
+      BuildRealDataFake("",0,this);
+      return;
+   }
+   
    TObject *realDataObject = (TObject*)pointer;
 
    if ((!pointer) && (Property() & kIsAbstract)) return;
@@ -611,6 +614,32 @@ void TClass::BuildRealData(void *pointer)
       } else {
          Destructor(realDataObject);
          //::operator delete(realDataObject);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TClass::BuildRealDataFake(const char *name, Int_t offset, TClass *cl)
+{
+   // Build the list of real data for a fake class
+   
+   TIter next(GetStreamerInfo()->GetElements());
+   TStreamerElement *element;
+   while ((element = (TStreamerElement*)next())) {
+      Int_t etype   = element->GetType();
+      Int_t eoffset = element->GetOffset();
+      TClass *cle   = element->GetClassPointer();
+      if (etype == TStreamerInfo::kTObject || etype == TStreamerInfo::kTNamed || etype == TStreamerInfo::kBase) {
+         //base class
+         cle->BuildRealDataFake(name,offset+eoffset,cl);
+      } else if (etype == TStreamerInfo::kObject || etype == TStreamerInfo::kAny) {
+         //member class
+         cle->BuildRealDataFake(Form("%s%s.",name,element->GetName()),offset+eoffset,cl);
+      } else {
+         //others
+         TRealData *rd = new TRealData(Form("%s%s",name,element->GetName()),offset+eoffset,0);
+         if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%d\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
+         cl->GetListOfRealData()->Add(rd);
       }
    }
 }
@@ -861,7 +890,7 @@ TClass *TClass::GetBaseDataMember(const char *datamember)
 }
 
 //______________________________________________________________________________
-TDataMember *TClass::GetDataMember(const char *datamember)
+TDataMember *TClass::GetDataMember(const char *datamember) const
 {
    // Return pointer to datamember object with name "datamember".
 
@@ -882,6 +911,26 @@ TDataMember *TClass::GetDataMember(const char *datamember)
          return dm;
    return 0;
 }
+
+//______________________________________________________________________________
+Int_t TClass::GetDataMemberOffset(const char *name) const
+{
+   // return offset for member name. name can be a data member in
+   // the class itself, one of its base classes, or one member in
+   // one of the aggregated classes.
+   //
+   // In case of a fake class, the list of fake TRealData is built
+
+   if (!fRealData) ((TClass*)this)->BuildRealData();
+
+   TRealData *rd = (TRealData*)fRealData->FindObject(name);
+   if (rd) return rd->GetThisOffset();
+
+   //may be member is a pointer
+   rd = (TRealData*)fRealData->FindObject(Form("*%s",name));
+   if (rd) return rd->GetThisOffset();
+   return 0; 
+}  
 
 //______________________________________________________________________________
 TList *TClass::GetListOfBases()
