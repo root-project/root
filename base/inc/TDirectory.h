@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.20 2004/06/02 17:03:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.21 2004/06/03 21:05:24 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -132,7 +132,11 @@ public:
    void                SetMother(const TObject *mother) {fMother = (TObject*)mother;}
    virtual Int_t       Sizeof() const;
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
+#ifndef R__BAD_OVERLOAD_RESOLUTION_WITH_TEMPLATE
    virtual Int_t       WriteObject(const TObject *obj, const char *name=0, Option_t *option="");
+#else
+           Int_t       WriteObject(const TObject *obj) { return WriteObject(obj,obj->GetName()); };
+#endif
    template <class T> Int_t WriteObject(const T* obj, const char* name, Option_t *option="") // See TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
       {
          return WriteObjectAny(obj,TClass::GetClass(typeid(T)),name,option);
