@@ -5,8 +5,6 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
-override SUBDIRS = $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
-
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
@@ -25,7 +23,7 @@ unevenFriend: unevenFriend.out
 unevenFriend.out:  unevenFriend.C unevenFriend.ref
 	$(CMDECHO) root.exe -q -l -b unevenFriend.C > unevenFriend.out
 
-ifeq ($(shell root-config --arch),win32)
+ifeq ($(ARCH),win32)
 ROOTFILE = $(shell cygpath -u '$(ROOTSYS)/test/Event.root')
 ROOTDIR = $(shell cygpath -u '$(ROOTSYS)')
 else
@@ -40,10 +38,10 @@ $(ROOTFILE): $(ROOTSYS)/test/Event.h
 		./Event 10 1 9 1; \
 	) 2>&1 > createfile.out
 
-Event.root: $(ROOTDIR)/test/Event.root
+Event.root: $(ROOTFILE)
 	$(CMDECHO) cp $(ROOTFILE) .
 
-Event2.root: $(ROOTDIR)/test/Event.root
+Event2.root: $(ROOTFILE)
 	$(CMDECHO) cp $(ROOTFILE) Event2.root
 
 ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
