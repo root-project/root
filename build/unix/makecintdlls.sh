@@ -24,6 +24,7 @@ if [ $PLATFORM != "clean" ]; then
 fi
 if [ $PLATFORM = "macosx" ]; then
    SOEXT=so
+   AUXCXXFLAGS=-fno-inline
 fi
 
 
@@ -161,7 +162,7 @@ rm -f $CINTDIRS/*.$SOEXT
 $CINT -w1 -zstring -n$STLDIR/G__cpp_string.cxx -D__MAKECINT__ \
    -DG__MAKECINT -I$STLDIR -c-1 -A -Z0 $STLDIR/str.h
 $CXX $OPT $CINTCXXFLAGS -I. -I$STLDIR $FAVOR_SYSINC -o $STLDIR/G__cpp_string.o \
-   -c $STLDIR/G__cpp_string.cxx
+   -c $STLDIR/G__cpp_string.cxx $AUXCXXFLAGS
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" string.$SOEXT \
    $CINTDIRS/string.$SOEXT $STLDIR/G__cpp_string.o
 rename $CINTDIRS/string
