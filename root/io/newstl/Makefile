@@ -23,7 +23,7 @@ endif
 
 VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
 ifeq ($(PLATFORM),win32)
-LPWD := $(shell echo `pwd -P | sed -e 's/[a-zA-Z]://' -e 's?/cygdrive/[a-zA-Z]??' ` )
+LPWD := $(shell echo `cygpath -m $$PWD | sed -e 's/[a-zA-Z]://' -e 's?/cygdrive/[a-zA-Z]??' ` )
 else
 LPWD := $(shell echo `pwd -P`)
 endif
@@ -118,11 +118,13 @@ $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
 
 $(HELPER_DLL) : TestHelpers.C 
 	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
-	$(CMDECHO)touch $@
+
+#	$(CMDECHO)touch $@
 
 $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
 	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllSuf),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
-	$(CMDECHO)touch $@
+
+#	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
 
 stlIoTest.log: $(DIRECTORIES) $(TEST_DLL)
