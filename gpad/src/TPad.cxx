@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.87 2002/10/07 15:58:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.88 2002/10/13 07:29:17 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3116,13 +3116,8 @@ void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
 //*-*-*-*-*-*-*-*-*Paint 3-D line in the CurrentPad*-*-*-*-*-*-*-*-*-*-*
 //*-*              ================================
 
-   if (!fView) return;
-
-//*-*- convert from 3-D to 2-D pad coordinate system
-   Double_t xpad[6];
-   fView->WCtoNDC(p1, &xpad[0]);
-   fView->WCtoNDC(p2, &xpad[3]);
-   PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
+   //take into account perspective view
+   if (fView) fView->PaintLine(p1,p2);
 }
 
 //______________________________________________________________________________
