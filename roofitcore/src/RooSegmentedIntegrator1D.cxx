@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.1 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -100,18 +100,15 @@ Bool_t RooSegmentedIntegrator1D::initialize()
 
   Int_t i ;
 
-  cout << "RooSegI1D::init()" << " _xmin = " << _xmin << " _xmax = " << _xmax << " nseg = " << _nseg << endl ;
   Double_t segSize = (_xmax - _xmin) / _nseg ;
 
   // Adjust integrator configurations for reduced intervals
-  // _config.setEpsilonRel1D(_config.epsilonRel1D()/sqrt(_nseg)) ;
+  _config.setEpsilonRel1D(_config.epsilonRel1D()/sqrt(_nseg)) ;
   _config.setEpsilonAbs1D(_config.epsilonAbs1D()/sqrt(_nseg)) ;
     
   for (i=0 ; i<_nseg ; i++) {
-    cout << " calling ctor " << endl ;
     _array[i] = new RooIntegrator1D(*_function,_xmin+i*segSize,_xmin+(i+1)*segSize,_config) ;
   }
-  cout << " done " << endl ;
 
 }
 
