@@ -1,0 +1,19 @@
+Source: root
+Section: non-free/science
+Priority: optional
+Maintainer: Christian Holm Christensen <cholm@nbi.dk>
+Build-Depends: debhelper (>= 4.1.16), fakeroot, libssl-dev, comerr-dev, libxpm4-dev, libfreetype6-dev@builddepends@
+Standards-Version: 3.6.1
+
+Package: root
+Architecture: all
+Depends: @pkglist@
+Description: Meta package to install all ROOT packages
+ This package is a meta package to ensure the installation of all
+ possible ROOT packages on this system. 
+ .
+ See also the root-bin package for a more extensive desription of 
+ the ROOT system.
+ .
+ ROOT web-site: http://root.cern.ch
+

@@ -1,0 +1,12 @@
+Package: root-plugin-dcache
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: dCache plugin for ROOT
+ This package contains the dCache plug-in for ROOT, that allows
+ transparent access to files data via a dCache server. Given a path
+ which doesn't belong to the dCache managed filesystem, it falls back
+ to the ordinary TFile behaviour.
+ .
+ ROOT web-site: http://root.cern.ch
+ dCache web-site: http://www.dcache.org
+

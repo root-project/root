@@ -1,0 +1,13 @@
+Package: libroot-dev
+Section: non-free/libdevel
+Architecture: any
+Depends: ${shlibs:Depends}
+Suggests: root-bin
+Conflicts: root-star
+Description: Header files for ROOT
+ This package contains header files (Class declarations) for the ROOT
+ class libraries. Please refer the package documentation for root-lib
+ and root-bin.
+ .
+ ROOT web-site: http://root.cern.ch
+

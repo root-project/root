@@ -1,0 +1,49 @@
+This package was debianized by Christian Holm Christensen <cholm@nbi.dk> on
+Mon, 21 Feb 2005 16:28:37 +0100.
+
+It was downloaded from :pserver:cvs@root.cern.ch:/user/cvs
+(anonymous CVS access to main repository - password is "cvs")
+
+Copyright:
+
+Upstream Authors: Masaharu Goto (gotom@hanno.jp) and the ROOT Team
+consiting of Rene Brun  <Rene.Brun@cern.ch> and Fons Rademarkers
+<Fons.Rademarkers@cern.ch> 
+
+License:
+
+* License condition described in this README file overrides other 
+  descriptions if there is any difference.
+
+* Copyright of Cint and associated tools are owned by Agilent Technologies
+  Japan Company and the author. 
+
+* Source code, binary executable or library of Cint and associated tools 
+  can be used, modified and distributed with no royalty for any purpose 
+  provided that the copyright notice appear in all copies and that both 
+  that copyright notice and this permission notice appear in supporting 
+  documentation. Registration is recommended for commercial use (=Selling
+  a software that uses cint as a component). Send e-mail to the author 
+  (gotom@hanno.jp) with your name, e-mail address, institute, 
+  purpose of using cint and computer platform.
+
+* If a modification is made on any of the source or documentation, it has
+  to be clearly documented and expressed.
+
+* Agilent Technologies Japan and the Author make no representations 
+  about the suitability of this software for any purpose.  It is provided 
+  "as is" without express or implied warranty.
+
+* Above condition overrides other license condition described in source code 
+  and other documentation if there is conflict. It applies and will not be 
+  changed for this revision of CINT package. 
+
+* readline, glob and malloc directories contain files associated with GNU 
+  readline library which is copylefted by GNU project. Refer to General
+  Public License(GPL). Cint and the GNU readline are completely separate 
+  software packages which can work independently.
+
+* For copyright notice and licensing of AIX dlfcn, please read 
+  platform/aixdlfcn/README.
+
+

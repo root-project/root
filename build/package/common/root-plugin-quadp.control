@@ -1,0 +1,11 @@
+Package: root-plugin-quadp
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: QuadP plugin for ROOT
+ This package contains the QuadP plug-in for ROOT.  This provides the
+ user a framework in which to do Quadratic Programming.  The quadratic
+ programming problem involves minimization of a quadratic function
+ subject to linear constraints.
+ .
+ ROOT web-site: http://root.cern.ch
+

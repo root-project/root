@@ -1,0 +1,14 @@
+Package: root-plugin-clarens
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Clarens plugin for ROOT
+ This package contains the Clarens plug-in for ROOT, for use in a GRID
+ enabled analysis environment.
+ .
+ The Clarens Grid-Enabled Web Services Framework is an open source,
+ secure, high-performance  "portal" for ubiquitous access to data and
+ computational resources provided by computing grids.
+ .
+ ROOT web-site: http://root.cern.ch
+ Clarens web-site: http://clarens.sourceforge.net
+

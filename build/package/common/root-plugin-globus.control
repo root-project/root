@@ -1,0 +1,10 @@
+Package: root-plugin-globus
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Globus plugin for ROOT
+ This package contains the Globus plug-in for ROOT, that allows
+ authentification and authorization against globus.
+ .
+ ROOT web-site: http://root.cern.ch
+ globus web-site: http://www.globus.org
+

@@ -1,0 +1,153 @@
+#! /bin/sh
+#
+# skeleton	Written by Miquel van Smoorenburg <miquels@cistron.nl>.
+#		Modified for Debian 
+#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
+#
+# Version:	@(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
+#
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+XDAEMON=@prefix@/bin/xrootd
+XDAEMON=@prefix@/bin/olbd
+XNAME=xrootd
+ONAME=olbd
+XDESC="Extendend ROOT file server"
+ODESC="Open Load Balancer server"
+USER=rootd
+test -x $DAEMON || exit 0
+
+# Include root defaults if available
+if [ -f @sysconfdir@/default/root-rootd ] ; then
+	. @sysconfdir@/default/root-rootd
+fi
+
+enable_xrootd=`echo $ENABLE_XROOTD | tr '[:upper:]' '[:lower:]'`
+enable_olbd=`echo $ENABLE_OLBD| tr '[:upper:]' '[:lower:]'`
+
+# xrood options 
+if test "x$XROOTD_CONFIG_FILE" != "x" ; then 
+    XDAEMON_OPTS="$XDAEMON_OPTS -c $XROOTD_CONFIG_FILE" 
+fi
+if test "x$XROOTD_LOG_FILE" != "x" ; then 
+    XDAEMON_OPTS="$XDAEMON_OPTS -l $XROOTD_LOG_FILE" 
+fi
+if test "x$XROOTD_PORT" != "x" ; then 
+    XDAEMON_OPTS="$XDAEMON_OPTS -p $XROOTD_PORT" 
+fi
+if test "x$XROOTD_REDIRECTOR" != "xyes" ; then 
+    XDAEMON_OPTS="$XDAEMON_OPTS -r" 
+fi
+if test "x$XROOTD_BASEDIR" != "xyes" ; then 
+    XDAEMON_OPTS="$XDAEMON_OPTS $XROOTD_BASEDIR" 
+fi
+
+# olbd options 
+if test "x$OLBD_CONFIG_FILE" != "x" ; then 
+    ODEAMON_OPTS="$ODEAMON_OPTS -c $OLBD_CONFIG_FILE" 
+fi
+if test "x$OLBD_LOG_FILE" != "x" ; then 
+    ODEAMON_OPTS="$ODEAMON_OPTS -l $OLBD_LOG_FILE" 
+fi
+if test "x$OLBD_PORT" != "x" ; then 
+    ODEAMON_OPTS="$ODEAMON_OPTS -p $OLBD_PORT" 
+fi
+if test "x$OLBD_REDIRECTOR" != "xyes" ; then 
+    ODEAMON_OPTS="$ODEAMON_OPTS -r" 
+fi
+
+# User 
+if test "x$XROOTD_USER" = "xroot" ; then 
+    :
+elif test "x$XROOTD_USER" != "x" ; then 
+    USER=XROOTD_USER
+fi
+
+case $enable_rootd:$enable_olbd in 
+    yes:*) ;;
+    *:yes) ;;
+    *) exit 0;;
+esac
+
+set -e
+
+startitx ()
+{
+    start-stop-daemon --make-pidfile --chuid $USER --start --quiet \
+	--pidfile /var/run/$XNAME.pid --exec $XDAEMON \
+	--background -- $XDAEMON_OPTS
+}
+startito ()
+{
+    start-stop-daemon --make-pidfile --chuid $USER --start --quiet \
+	--pidfile /var/run/$XNAME.pid --exec $ODAEMON \
+	---background - $ODAEMON_OPTS
+}
+
+stopitx() 
+{
+    start-stop-daemon --user $USER --stop --quiet --pidfile \
+	/var/run/$XNAME.pid --exec $XDAEMON 
+}
+stopito()
+{
+    start-stop-daemon --user $USER --stop --quiet --pidfile \
+	/var/run/$ONAME.pid --exec $ODAEMON 
+}
+case "$1" in
+  start)
+	if test "x$enable_xrootd" = "xyes" ; then 
+	    echo -n "Starting $XDESC: "
+	    startitx
+	    echo "$XNAME."
+	fi
+	if test "x$enable_olbd" = "xyes" ; then 
+	    echo -n "Starting $ODESC: "
+	    startito
+	    echo "$ONAME."
+	fi
+
+	;;
+  stop)
+	if test "x$enable_xrootd" = "xyes" ; then 
+	    echo -n "Stopping $XDESC: "
+	    stopitx
+	    echo "$XNAME."
+	fi
+	if test "x$enable_olbd" = "xyes" ; then 
+	    echo -n "Stopping $ODESC: "
+	    stopito
+	    echo "$ONAME."
+	fi
+	;;
+  restart|force-reload)
+	#
+	#	If the "reload" option is implemented, move the "force-reload"
+	#	option to the "reload" entry above. If not, "force-reload" is
+	#	just the same as "restart".
+	#
+	if test "x$enable_xrootd" = "xyes" ; then 
+	    echo -n "Restarting $XDESC: "
+	    stopitx
+	    startitx
+	    echo "$XNAME."
+	fi
+	if test "x$enable_olbd" = "xyes" ; then 
+	    echo -n "Restarting $ODESC: "
+	    stopito
+	    startito
+	    echo "$ONAME."
+	fi
+	;;
+  *)
+	N=@sysconfdir@/init.d/$XNAME
+	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
+#
+# EOF
+#

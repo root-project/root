@@ -1,0 +1,13 @@
+@prefix@/share/aclocal/root.m4
+@prefix@/share/emacs/site-lisp/root-help.el
+@prefix@/include/root/compiledata.h
+@prefix@/include/root/rmain.cxx
+@prefix@/bin/rootcint
+@prefix@/bin/root-config
+@prefix@/bin/memprobe
+@prefix@/bin/rmkdepend
+@prefix@/share/man/man1/rootcint.1
+@prefix@/share/man/man1/root-config.1
+@prefix@/share/man/man1/memprobe.1
+@prefix@/share/man/man1/rmkdepend.1
+@sysconfdir@/root/system.rootmap

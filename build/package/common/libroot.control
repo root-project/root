@@ -1,0 +1,20 @@
+Package: libroot
+Section: non-free/libs
+Architecture: any
+Depends: root-ttf, ${shlibs:Depends}
+Recommends: root-bin, libroot-dev 
+Conflicts: root-star
+Description: Numerical data analysis framework - shared runtime libraries
+ This package contains the shared libraries used by the ROOT
+ system. The libraries contain numerous C++ class definitions for
+ various purposes, some of which are:
+    * System abstraction
+    * Thin Thread API
+    * Histograming
+    * Persistent objects
+    * GUI API
+ and many many others. Refer also to the class description of
+ root-bin.
+ .
+ ROOT web-site: http://root.cern.ch
+

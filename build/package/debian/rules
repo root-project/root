@@ -1,0 +1,235 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+#
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+#
+# Modified to make a template file for a multi-binary package with separated
+# build-arch and build-indep targets  by Bill Allombert 2001
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+
+PREFIX		= /usr
+SYSCONFDIR	= /etc
+PKGDOCDIR	= /usr/share/doc/root
+CONFOPTIONS	:=--enable-table				\
+		  --enable-ruby					\
+		  --enable-qt					\
+		  --enable-pythia				\
+		  --enable-xrootd				\
+		  --enable-shared				\
+		  --enable-soversion				\
+		  --enable-explicitlink				\
+		  --disable-rpath				\
+		  --disable-afs					\
+		  --disable-srp					\
+		  --disable-builtin-freetype			\
+		  --disable-builtin-afterimage
+VERSION		= $(shell cat build/version_number | tr '/' '.')
+PKGLIST		:= $(shell ./configure --pkglist $(CONFOPTIONS) | sed -n 's/packages: //p')
+BUILDDEP	:= $(shell ./build/package/lib/makebuilddepend.sh $(PKGLIST))
+TEMPLATES	:= $(wildcard debian/*.in)
+SPKGLIST	:= $(filter-out root-doc ttf-root ttf-root-installer,$(PKGLIST))
+IPKGLIST	:= root-doc ttf-root ttf-root-installer root
+DPKGLIST	:= $(SPKGLIST:%=%,) root-doc, root-ttf
+#root-plugins root-extra-plugins
+SPKGOPTS	:= $(SPKGLIST:%=-p%) 
+IPKGOPTS	:= $(IPKGLIST:%=-p%) 
+PKGOPTS		:= $(IPKGOPTS) $(SPKGOPTS)
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CONFOPTONS+=--build=debug
+endif
+
+debian/%:debian/%.in 
+	@echo "Making $@ from $< "
+	@sed -e 's,@prefix@,$(PREFIX),g' \
+		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
+		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
+		-e 's/@builddepends@/$(BUILDDEP)/' < $< > $@ 
+
+debian/control:debian/control.in
+	@echo "Making $@ (special)"
+	@sed -e 's,@prefix@,$(PREFIX),g' \
+		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
+		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
+		-e 's/@builddepends@/$(BUILDDEP)/' \
+		-e 's/@pkglist@/$(DPKGLIST)/' < $< > $@.tmp
+	@for p in $(PKGLIST) ; do \
+	  if test -f build/package/common/$$p.control ; then \
+	    echo "Adding package $$p to control file" ; \
+	    cat build/package/common/$$p.control >> $@.tmp ; fi ; done 
+	@mv $@.tmp $@
+
+configure-stamp:$(TEMPLATES:%.in=%) config.status
+config.status: configure 
+	dh_testdir
+	# Add here commands to configure the package.
+	./configure --prefix=$(PREFIX) 				\
+		    --mandir=$(PREFIX)/share/man/man1		\
+		    --docdir=$(PKGDOCDIR)			\
+		    --cintincdir=$(PREFIX)/lib/root/cint	\
+		    --etcdir=$(SYSCONFDIR)/root			\
+		    --with-sys-iconpath=$(PREFIX)/share/pixmaps	\
+		    $(CONFOPTIONS)
+	touch configure-stamp
+
+#         --fontdir=%_datadir/root/fonts/truetype
+#Architecture 
+build: build-arch build-indep
+
+build-arch: build-arch-stamp
+build-arch-stamp:  configure-stamp
+
+	# Add here commands to compile the arch part of the package.
+	$(MAKE) 
+	$(MAKE) cintdlls
+	touch build-arch-stamp
+
+build-indep: build-indep-stamp
+build-indep-stamp:  configure-stamp
+
+	# Add here commands to compile the indep part of the package.
+	#$(MAKE) doc
+	touch build-indep-stamp
+
+clean:  $(TEMPLATES:%.in=%)
+	dh_testdir
+	dh_testroot
+	rm -f build-arch-stamp build-indep-stamp config.status configure-stamp
+
+	# Add here commands to clean up after the build process.
+	-$(MAKE) distclean 
+	build/unix/makecintdlls.sh clean
+	rm -rf bin lib include 		\
+		system.rootrc 		\
+		config/Makefile.config 	\
+		test/Makefile 		\
+		README/Changelog 	\
+		etc/system.rootrc 	\
+		etc/system.rootauthrc 	\
+		etc/system.rootdaemonrc \
+		etc/root.mimes 		\
+	   	build/misc/root-help.el	\
+		debian/*.files 		\
+		debian/*.install	\
+		debian/shlibs.local	\
+		freetype/src/freetype-2.1.3
+	dh_clean 
+
+pkglists:
+	build/package/lib/makelists.sh debian \
+		$(VERSION) $(PREFIX) $(SYSCONFDIR) $(PKGDOCDIR)
+
+install: install-indep install-arch
+install-indep: 
+	dh_testdir
+	dh_testroot
+	dh_clean -k -i -Xdebian/tmp
+	dh_installdirs -i
+
+	# Add here commands to install the indep part of the package into
+	# debian/<package>-doc.
+	#INSTALLDOC#
+
+	dh_install $(IPKGOPTS) --sourcedir=debian/tmp
+
+install-arch: 
+	dh_testdir
+	dh_testroot
+	dh_clean -k -s -Xdebian/tmp
+	dh_installdirs -s
+
+	# Add here commands to install the arch part of the package into 
+	# debian/tmp.
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+
+	 # Remove the CVS directories if present
+	find debian/tmp -name "CVS" | xargs rm -fr
+	find debian/tmp -name ".cvsignore" | xargs rm -fr
+
+	./debian/rules pkglists
+
+	dh_install --list-missing \
+		--sourcedir=debian/tmp $(SPKGOPTS) \
+		-Xetc/root/rootd \
+		-Xusr/include/root/config.h \
+		-Xusr/share/man/man1/rlibmap.1 
+
+	# Fix some permissions 
+	find debian/root-bin/usr/share/root/icons \
+		-perm 0755 -and -not -type d | xargs chmod a-x 
+	find debian/root-cint/usr/lib/root/cint \
+		-perm 755 -and -not -type d | xargs chmod a-x 
+	chmod a+x debian/root-cint/usr/lib/root/cint/lib/pthread/setup
+	chmod a+x debian/root-cint/usr/lib/root/cint/include/makehpib
+	-chmod a-x debian/root-plugin-python/usr/lib/root/ROOT.py
+
+
+	# This is for alternatives registration, if one want's to install
+        # Richard Kreckels cint package next to ROOT
+	mv debian/root-cint/usr/bin/cint \
+		debian/root-cint/usr/bin/cint.root
+	mv debian/root-cint/usr/bin/makecint \
+		debian/root-cint/usr/bin/makecint.root
+	mv debian/root-cint/usr/share/man/man1/cint.1 \
+		debian/root-cint/usr/share/man/man1/cint.root.1
+	mv debian/root-cint/usr/share/man/man1/makecint.1 \
+		debian/root-cint/usr/share/man/man1/makecint.root.1
+
+# Must not depend on anything. This is to be called by
+# binary-arch/binary-indep
+# in another 'make' thread.
+binary-common:
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs 
+	dh_installdocs
+	dh_installexamples
+	dh_installmenu
+	dh_installdebconf	
+#	dh_installlogrotate	
+#	dh_installemacsen
+#	dh_installpam
+	dh_installmime
+	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+	dh_installman
+	dh_link
+	dh_strip
+	dh_compress -Xusr/share/doc/root/test -Xusr/share/doc/root/tutorials
+	dh_fixperms
+#	dh_perl
+	dh_python
+	dh_makeshlibs -V
+	dh_installdeb
+#	dh_shlibdeps $(PKGLIST:%=-L%) $(PKGLIST:%=-ldebian/%/usr/lib/root)
+	dh_shlibdeps $(SPKGLIST:%=-L%) -l$(shell echo $(SPKGLIST:%=debian/%/usr/lib/root) | tr ' ' ':')
+	dh_gencontrol
+	dh_md5sums
+# Build architecture independant packages using the common target.
+binary-indep: build-indep install-indep
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+	dh_builddeb $(IPKGOPTS)
+
+# Build architecture dependant packages using the common target.
+binary-arch: build-arch install-arch
+	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
+	dh_builddeb $(SPKGOPTS)
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-indep binary-arch binary install install-indep install-arch 

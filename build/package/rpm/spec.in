@@ -1,0 +1,119 @@
+#!/usr/bin/rpm
+######################################################################
+#
+# Preamble 
+#
+# Macro definitions
+%define ver    		@version@
+%define rel    		1
+%define _prefix         /usr
+%define _sysconfdir     /etc
+%define _defaultdocdir  %_prefix/share/doc/root-%ver
+
+######################################################################
+#
+# Header 
+#
+Name:         root
+Version:      %{ver}
+Release:      %{rel}
+Copyright:    ROOT Software Terms and Conditions (see package)
+Packager:     Christian Holm Christensen <cholm@nbi.dk>
+Distribution: Applications/Physics
+Vendor:       ROOT Team
+URL:          http://root.cern.ch
+Source:       ftp://root.cern.ch/root/root-v%{ver}.source.tar.gz
+Group:        Applications/Physics
+BuildRoot:    /tmp/rootrpm
+Summary:      Numerical data analysis framework (OO)
+BuildRequires: XFree86-devel@builddepends@
+Requires:     @pkglist@
+#
+# Over all description - not used, but required
+#
+%description
+This package is a meta package to ensure the installation of all
+possible ROOT packages on this system. 
+
+ROOT web-site: http://root.cern.ch
+
+%files 
+%{_defaultdocdir}/README
+
+######################################################################
+#
+# Package building section 
+#
+# Prepare sources - make package output dir (e.g. ../i686)
+%prep
+%setup -n %{name}
+
+#---------------------------------------------------------------------
+# The actual build
+#
+# Configure the ROOT source tree. You may want to disable some
+# features here, though it is STRONGLY DEPRECIATED. 
+#
+#
+%build
+./configure --enable-table				\
+	    --enable-ruby				\
+	    --enable-qt					\
+	    --enable-pythia				\
+	    --enable-xrootd				\
+	    --enable-shared				\
+	    --enable-soversion				\
+	    --enable-explicitlink			\
+	    --disable-rpath				\
+	    --disable-afs				\
+	    --disable-srp				\
+	    --disable-builtin-freetype			\
+	    --disable-builtin-afterimage		\
+	    --prefix=%_prefix 				\
+	    --mandir=%_prefix/share/man/man1		\
+	    --docdir=%_defaultdocdir			\
+	    --cintincdir=%_prefix/lib/root/cint		\
+	    --etcdir=%_sysconfdir/root			\
+            --with-sys-iconpath=%_datadir/pixmaps 	
+make 
+
+#---------------------------------------------------------------------
+# The installation 
+#
+# We install in `pwd`/build/package/rpm so that we do not disturb
+# the system, and so that non-priviliged user may build the packages. 
+#
+%install
+rm -rf ${RPM_BUILD_ROOT}
+make install DESTDIR=${RPM_BUILD_ROOT}
+find ${RPM_BUILD_ROOT} -name "CVS" | xargs rm -fr 
+mkdir -p rpm
+mkdir -p ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d
+sed -e "s,/usr/local,%_prefix,g" \
+    < rootd/misc/rootd.rc.d > \
+    ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/rootd
+build/package/lib/makelists.sh rpm %ver %_prefix %_sysconfdir %_defaultdocdir
+echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
+    >> rpm/root-rootd.install
+for i in rpm/*.install ; do 
+    if test ! -f $i ; then continue ; fi
+    echo "Fixing $i"
+    sed -e 's/\.1$/.1.gz/' \
+	-e "s,%_sysconfdir,%config %_sysconfdir," \
+	-e "s,%_defaultdocdir,%doc %_defaultdocdir," \
+	< $i > $i.tmp
+    mv $i.tmp $i
+done
+rm -f ${RPM_BUILD_ROOT}%{_sysconfdir}/root/rootd		\
+      ${RPM_BUILD_ROOT}%{_prefix}/include/root/config.h		\
+      ${RPM_BUILD_ROOT}%{_prefix}/lib/root/libAfterImage.a	\
+      ${RPM_BUILD_ROOT}%{_prefix}/share/man/man1/rlibmap.1
+
+
+######################################################################
+#
+# Sub packages
+#
+
+
+

@@ -1,0 +1,14 @@
+Package: root-proofd
+Architecture: any
+Depends: ${shlibs:Depends}
+Recommends: root-bin, libroot-dev, root-file-server | root-rootd
+Description: Parallel ROOt Facility - distributed, parallel computing
+ This package contains the PROOF server.  prootd is the core daemon of
+ the PROOF (Parallel ROOt Facility) system for distributed parallel
+ computing. Installing this package on a machine, makes it possible
+ for the machine to participate in a parallel computing farm (cluster
+ or via the Internet), either as a master or a slave, using a
+ transparent interface.
+ .
+ ROOT web-site: http://root.cern.ch
+

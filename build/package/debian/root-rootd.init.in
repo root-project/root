@@ -1,0 +1,107 @@
+#! /bin/sh
+#
+# skeleton	Written by Miquel van Smoorenburg <miquels@cistron.nl>.
+#		Modified for Debian 
+#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
+#
+# Version:	@(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
+#
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=@prefix@/bin/rootd
+NAME=rootd
+DESC="ROOT file server"
+USER=rootd
+test -x $DAEMON || exit 0
+
+# Include root defaults if available
+if [ -f @sysconfdir@/default/root-rootd ] ; then
+	. @sysconfdir@/default/root-rootd
+fi
+
+if test ! "x$ROOTD_USER" = "x" ; then 
+    USER=$ROOTD_USER
+fi
+if test "x$ROOTD_PORT" = "x" ; then 
+    DAEMON_OPTS="-p $ROOTD_PORT"
+fi
+if test "x$SSH_PORT" = "x" ; then 
+    DAEMON_OPTS="-s $SSH_PORT"
+fi
+
+if test -f /var/run/inetd.pid ; then 
+    # Inetd is running
+    if `grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1` ; then 
+	# ROOTD is controlled by inetd. 
+	ENABLE_ROOTD=no
+    fi
+fi
+if test -f /var/run/xinetd.pid ; then 
+    # Inetd is running
+    if `grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1` || \
+	test -f /etc/xinetd/rootd || test -f /etc/xinetd/root-rootd; then 
+	# ROOTD is controlled by xinetd. 
+	ENABLE_ROOTD=no
+    fi
+fi
+
+
+case `echo $ENABLE_ROOTD | tr '[:upper:]' '[:lower:]'` in 
+    yes) ;;
+    *) exit 0;;
+esac
+
+set -e
+
+	
+startit() 
+{
+    o=`start-stop-daemon --chuid $USER --start --quiet --pidfile \
+	/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS`
+    eval $o
+    echo $ROOTD_PID > /var/run/$NAME.pid
+}
+
+stopit() 
+{
+    start-stop-daemon --user $USER --stop --quiet --pidfile \
+	/var/run/$NAME.pid --exec $DAEMON
+    rm -f /var/run/$NAME.pid
+}
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: "
+	startit 
+	echo "$NAME."
+	;;
+  stop)
+	echo -n "Stopping $DESC: "
+	stopit
+	echo "$NAME."
+	;;
+  restart|force-reload)
+	#
+	#	If the "reload" option is implemented, move the "force-reload"
+	#	option to the "reload" entry above. If not, "force-reload" is
+	#	just the same as "restart".
+	#
+	echo -n "Restarting $DESC: "
+	stopit
+	sleep 1
+	startit
+	echo "$NAME."
+
+	;;
+  *)
+	N=@sysconfdir@/init.d/$NAME
+	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
+#
+# EOF
+#

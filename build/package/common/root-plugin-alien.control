@@ -1,0 +1,9 @@
+Package: root-plugin-alien
+Architecture: any
+Description: AliEn plugin for ROOT
+ This package contains the AliEn plug-in for ROOT, which provides an
+ interface to the AliEN GRID facility.
+ .
+ ROOT web-site: http://root.cern.ch
+ AliEN web-site: http://alien.cern.ch
+

@@ -1,0 +1,353 @@
+root for Debian
+---------------
+
+Abstract:
+=========
+This document outlines the contents, design, and considerations that
+went into making the ROOT packages for Debian and Redhat.  First part
+is of general interest, while the second part is for people who'd like
+to know the full story (needed if you want to build the packages your
+self or do fixes).
+
+Introduction:
+=============
+These are the Debian GNU/Linux and Redhat packages of ROOT, the
+analysis frame work written in C++.
+
+The core packages are:
+
+* root-cint             Almost bare CINT, the C/C++ interpretor
+* libroot               Basic ROOT libraries
+* root-bin              The interactive interface and utilities
+* libroot-dev           The header files for the ROOT libraries
+* root-doc              Examples and tutorials
+
+A few `server' packages are available 
+
+* root-rootd            Remote fileserver 
+* root-proofd           PROOF environment
+* root-xrootd		Extendend ROOT Remote File server
+
+Further more, there's a number of plugin packages.  Which exactly are
+built depends on your system. 
+
+* root-plugin-alien     AliEN interface (*)
+* root-plugin-asimage   AfterStep image manipulation plugin
+* root-plugin-castor    Interface to CASTOR managed tape robots
+* root-plugin-chirp     Access files via the Chirp protocol
+* root-plugin-clarens   Grid-Enabled Web Services
+* root-plugin-dcache    Access to files data via a dCache server
+* root-plugin-fumuli    Alternative fitting algorithm for ROOT (**)
+* root-plugin-globus    Authentication and authorisation against Globus(*)
+* root-plugin-gl        OpenGL support using Mesa (or XFree)
+* root-plugin-hbook     Conversion tools from HBOOK to ROOT files
+* root-plugin-ldap      Interface to LDAP 
+* root-plugin-minuit    Fitting algorithm for ROOT (**)
+* root-plugin-mlp	Multi-Layer-Perceptron Neural Net (**)
+* root-plugin-mysql     MySQL client for ROOT
+* root-plugin-netx      Client for XRootd server (**)
+* root-plugin-oracle    Oracle client for ROOT
+* root-plugin-peac      Proof Enabled Analysis Center plugin
+* root-plugin-pqsql     PostGreSQL client for ROOT
+* root-plugin-proof     PROOF Client (**)
+* root-plugin-pythia5   Wrapper for Pythia event generator (version 5)
+* root-plugin-pythia6   Wrapper for Pythia event generator (version 6)
+* root-plugin-python    Python interface to ROOT
+* root-plugin-qt        ROOT GUIs using QT
+* root-plugin-qaudp     Quadratic Programming plugin 
+* root-plugin-ruby      Ruby interface to ROOT
+* root-plugin-sapdb     SapDB client for ROOT
+* root-plugin-venus     Wrapper for Venus event generator
+* root-plugin-xml       XML plugin for ROOT
+
+(*)  Note that these packages have not been tested. 
+(**) These packages can always be build, as they do not depend on
+     external packages.   As such, they can be considered part of an 
+     extended `base' system. 
+
+The packages are structured like this, to allow maximum modularity and
+flexibility for the user.
+
+The latest Debian GNU/Linux packages should be available from [1], and
+a back catalogue as well as latest build should be available from the
+ROOT web-site [2].
+
+It is hoped that these packages will eventually be part of some Debian
+GNU/Linux and Redhat distributions.  Current licensing issues
+prohibits the packages from entering the "main" distribution of Debian
+GNU/Linux - The ROOT team doesn't allow derived work to be
+redistributed with the prior explicit consent of the ROOT team; in any
+other respect, ROOT is truly OpenSource. However, these packages will
+probably go into "non-free".  Redhat may not have any such policy.
+
+The current license of ROOT in fact means, that if you built the
+Redhat or Debian GNU/Linux packages, you may not redistribute those
+without the prior consent of the ROOT team.  The maintainers of the
+Debian GNU/Linux and Redhat packages has such a consent and may
+therefore redistribute packages.  So, in short, if you got a Redhat or
+Debian GNU/Linux ROOT package set from someone other than the ROOT
+team or the maintainers you are in violation with the License!
+
+[1] http://cholm.home.cern.ch/cholm
+[2] http://root.cern.ch
+
+Original Sources:
+=================
+The packaging scripts for both Debian GNU/Linux and Redhat - those
+normally found in "<source dir>/debian" or as a separate "spec" file -
+are a part of the of the ROOT source tree, hence no patches has been
+applied to build the packages.  In fact, the ROOT team maintainer and
+the maintainers of the packages has worked closely together on making
+ROOT packages for Debian GNU/Linux and Redhat as easy as possible.
+This cooperate work has made many improvements to both the packages,
+as well as for the ROOT system itself.
+
+The sources for ROOT are available via anonymous CVS from
+
+    Repository:   :pserver:cvs@root.cern.ch:/user/cvs
+    Password:     cvs
+
+For more availability of ROOT, including other OSs then Linux - IBM
+AIX, HP Unix, Digital Unix on Alpha, FreeBSD, Windows, and many others
+- please refer to [2].
+
+
+Parallel Redhat and Debian GNU/Linux Packages:
+==============================================
+These packages was developed in parallel on both Debian GNU/Linux and
+Redhat, so that a coherent outlook could be maintained over the two
+Linux distributions.
+
+Documentation, Mailing list and Questions:
+==========================================
+No documentation package is made.  This is because the documentation
+is vast and not particularly manageable in a package.  Instead, please
+refer to the ROOT web-site [2].  There you'll find reference pages for
+every class in ROOT [3], as well as a printable Users guide
+[4]. There's a mailing list for ROOT issues at [5], and an archive is
+available via the main ROOT web page [6].
+
+Do not mail directly to the maintainer with questions on ROOT.
+Instead mail questions to [5] - The maintainer is on that list and
+will happily answer questions in that forum.
+
+[3] http://root.cern.ch/root/html/ClassIndex.html
+[4] http://root.cern.ch/root/UsersGuide.html
+[5] mailto:roottalk@root.cern.ch
+[6] http://root.cern.ch/root/AboutRootTalk.html
+
+
+Pure CINT and ROOT's CINT:
+==========================
+To facilitate a parallel installation of a Pure CINT on a Debian
+GNU/Linux system, the `root-cint' package exploits the "alternatives"
+feature of dpkg.  Since most ROOT users never use then Pure CINT
+programs "cint" and "makecint" is is reasonably safe to have a Pure
+CINT installation next to ROOT.  A Debian GNU/Linux package of CINT is
+being maintained by Richard B. Kreckel.
+
+I (Christian Holm) know of no such system on Redhat so no attempt to
+provide a similar mechanism has been tried.  If anyone should know
+about such a system, please let us know.
+
+Building the Package:
+=====================
+The basic process of building the RPM and Debian packages is given in
+README/INSTALL; here we'll go into the details.
+
+Basic configuration:
+--------------------
+The source tree is configured with
+
+  ./configure \
+		--prefix=<prefix>				\
+		--etcdir=<etcdir> 				\
+		--enable-table					\
+		--enable-shared 				\
+		--enable-soversion				\
+		--disable-afs 					\
+		--disable-srp 					\
+		--with-sys-iconpath=/usr/share/pixmaps		\
+		--with-ttf-fontdir=/usr/share/fonts/truetype
+
+* 3rd party libraries:
+  The packages will use third-party shared libraries when ever
+  possible.  This is noted in the below items.
+
+* TrueType Font Support:
+  Note, that if you want to have system wide TrueType Font support,
+  you can install the fonts into the directory
+
+    @prefix@/share/fonts/truetype
+
+  It's possible for individual users to override this path, using the
+  lines
+
+    # Path where to look for TrueType fonts
+    Unix.*.Root.UseTTFonts:     true
+    Unix.*.Root.TTFontPath:     <ttffontdir>
+
+  in thier "~/.rootrc", where <ttffontdir> is the path to the TrueType
+  Fonts.
+
+  The currently supported TrueType Fonts in ROOT are:
+
+      #   Descriptive name            file
+    -----------------------------------------------
+      1 : times-medium-i-normal       timesi.ttf
+      2 : times-bold-r-normal         timesbd.ttf
+      3 : times-bold-i-normal         timesi.ttf
+      4 : helvetica-medium-r-normal   arial.ttf
+      5 : helvetica-medium-o-normal   ariali.ttf
+      6 : helvetica-bold-r-normal     arialbd.ttf
+      7 : helvetica-bold-o-normal     arialbi.ttf
+      8 : courier-medium-r-normal     cour.ttf
+      9 : courier-medium-o-normal     couri.ttf
+     10 : courier-bold-r-normal       courbd.ttf
+     11 : courier-bold-o-normal       courbi.ttf
+     12 : symbol-medium-r-normal      symbol.ttf
+     13 : times-medium-r-normal       times.ttf
+     14 :                             wingding.ttf
+
+  Please note, that these fonts are copyright of Microsoft, under
+  a restrictive license.  In a nut shell, this license prohibits
+  the maintainer from including them in the packages, since it will
+  violate other license issues, and make ROOT less close to being
+  OpenSource.  For now, we must endure.
+
+* Version number in soname:
+  Debian GNU/Linux (indirectly) mandates that any shared library shall
+  have the major version number the soname, so that the packaging
+  system ("dpkg"/"apt") may resolve conflicts, dependencies, etc.
+  Hence, the ROOT libraries are build with the major version number in
+  the`soname.  Redhat does not have such a strict policy, but it is
+  generally a good idea to set version numbers in sonames (the shared
+  library's internal identifier) so that the runtime environment may
+  resolve conflicts etc. cleanly.
+
+
+Features:
+---------
+The number of features that is compiled in and how many packages are
+made depend upon the system you're building the packages.  The
+possible feature packages are
+
+Adding a new package:
+=====================
+From time to time, ROOT accepts new `modules' or plugins, in the ROOT
+source tree.   Here's a description of how to make a new package that 
+contains that new module.   Let's assume that the new plugin is called
+`foo', and that the source code is in `foo/{src,inc}'.  
+
+1: Open `configure' and add the line 
+
+     test "x$enable_foo"  = "xyes"   && pkglist="$pkglist root-plugin-foo"
+     
+   Near where it says `Debian or Red Hat Package list'
+
+2: Create the file `root-plugin-foo.control' in
+   `build/package/common/'.  This file is really a Debian GNU/Linux
+   control file snippet (the RPM stuff get information from there), so
+   anything that's valid in a Debian control file is valid there too.  
+   The file should look something like 
+
+     Package: root-plugin-foo
+     Architecture: any
+     Depends: ${shlibs:Depends}, ${misc:Depends}
+     Enhances: libroot
+     Description: Foo plugin for ROOT
+      This package contains the Foo plug-in for ROOT. This package
+      provide a plug-in to ... in ROOT
+      .
+      ROOT web-site: http://root.cern.ch
+      Foo web-site: http://www.foo.org 
+
+   Please note, that the file _must_ end in 2 (two) newlines.  Also,
+   blank lines (except for the final two lines) are not allowed.  In
+   stead put a `.' in 2nd column, as shown above. 
+
+3: If the plugin requires some development files (libraries and
+   headers) to be available on the system, find out which Debian and
+   RedHat packages these are in.  Suppose you need the library
+   `libfoo' and the header `foo.h', then try 
+
+     dpkg -S libfoo.so foo.h                       # Debian
+     rpm -qf /usr/lib/libfoo.so /usr/include/foo.h # RedHat
+
+  Then edit the file `build/package/lib/makebuilddepend.sh'
+  accordingly.  Suppose libfoo.so and foo.h is in the Debian package
+  libfoo-dev and RedHat package foo-devel, add the two lines 
+
+    *foo)    echo -n ", foo-devel" ;; 
+    
+  and 
+
+    *foo)    echo -n ", libfoo-dev" ;; 
+
+   at the appropriate places in that shell script. 
+
+4: That should be it for most packages.   However, if your plugin
+   needs some extra files that is not listed in the variables 
+   `ALLLIBS', `ALLHDRS', or `ALLEXECS' in the `foo/Module.mk' file,
+   then you need to add the file
+   `build/package/common/root-plugin-foo.install.in'.   Suppose the
+   package needs the files `/etc/root/system.foorc' and
+   `/usr/share/root/foo/Init.C', then the file should contain lines
+   like 
+
+     @sysconfdir@/root/system.foorc 
+     @prefix@/share/root/foo/Init.C 
+
+   Also, if your plugin needs special stuff to be done before and/or
+   after installation and/or removal, you need to add the appropriate
+   shell script snippets in one or more of the following pairs of
+   files in `build/package/'
+
+     debian/root-plugin-foo.preinst.in  and rpm/root-plugin-foo.pre
+     debian/root-plugin-foo.postinst.in and rpm/root-plugin-foo.post
+     debian/root-plugin-foo.prerm.in    and rpm/root-plugin-foo.preun
+     debian/root-plugin-foo.postrm.in   and rpm/root-plugin-foo.postun
+
+  Please look in the existing files for more information. 
+
+
+Package Bugs, etc.:
+===================
+Debian GNU/Linux wants the <library>.so symbolic links in the
+development packages, but unfortunately that is not possible.  The
+ROOT libraries loads some libraries dynamically, and at the moment,
+the library file must end in one of ".so", ".a", ".sl", or ".dll", so
+the <library>.so files _must_ be in the binary packages.  If the ROOT
+team would change that behaviour of "TSystem::Load()", then we could
+separate out the development symbolic links.
+
+Since this package is not in any Debian GNU/Linux distribution, the
+regular Debian GNU/Linux bug tracking system cannot be used.
+Therefore, please send bug reports to the Debian GNU/Linux package
+maintainer <cholm@nbi.dk>.
+
+Thanks:
+=======
+Many MANY thanks to the ROOT team - Rene Brun and Fons Rademarkers -
+for a great piece of software.  Especially thanks to Fons Rademarkers
+for putting up with a lot of emails from me (Christian Holm) during
+the initial development.
+
+Many thanks to Masaharu Goto for CINT, inspirrering correspondence,
+advice, and patience (loads of emails from me).
+
+Also many thanks to all the contributors of ROOT, for making it
+great.
+
+Thanks to Anders Waananen for putting the Redhat package together,
+many suggestions and inspirrational talks.
+
+Thanks to Richard B. Kreckel the CINT Debian GNU/Linux package
+maintainer, for inspirring correspondence, advice, and great
+cooperation.
+
+Thanks to Brett Viren for alpha and beta testing of the Debian
+GNU/Linux packages.
+
+ -- Anders Waananen <waananen@nbi.dk>, Fri,  16 Mar 2001 12:45:54 +0100
+ -- Christian Holm Christensen <cholm@nbi.dk>, Mon, 21 Feb 2005 16:28:37 +0100

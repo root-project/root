@@ -1,0 +1,8 @@
+Package: root-plugin-ruby
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Ruby plugin for ROOT
+ This package contains the Ruby plug-in for ROOT.
+ .
+ ROOT web-site: http://root.cern.ch
+

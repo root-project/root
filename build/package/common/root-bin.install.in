@@ -1,0 +1,10 @@
+@prefix@/share/root/macros/Dialogs.C
+@prefix@/share/root/icons/
+@prefix@/bin/ssh2rpd
+@prefix@/bin/root.exe
+@prefix@/bin/rootn.exe
+@prefix@/bin/hadd
+@prefix@/share/man/man1/ssh2rpd.1
+@prefix@/share/man/man1/root.exe.1
+@prefix@/share/man/man1/rootn.exe.1
+@prefix@/share/man/man1/hadd.1

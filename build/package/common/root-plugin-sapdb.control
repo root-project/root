@@ -1,0 +1,12 @@
+Package: root-plugin-sapdb
+Architecture: any
+Depends: sapdb-callif, ${shlibs:Depends}
+Provides: root-db-client
+Description: SapDB client plugin for ROOT
+ This package contains the sapdb plug-in for ROOT. This package
+ provide a thin client (interface) to SapDB servers. Using this
+ client, one can obtain information from a SapDB database into the
+ ROOT environment.
+ .
+ ROOT web-site: http://root.cern.ch
+

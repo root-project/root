@@ -1,0 +1,55 @@
+#!/usr/bin/make -f 
+#
+#
+LPATH	= $(PREFIX)/lib/root
+IPATH	= $(PREFIX)/include/root
+BPATH	= $(PREFIX)/bin
+MPATH   = $(PREFIX)/share/man/man1
+SOEXT	= so
+MAJOR   = $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
+MINOR   = $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
+
+ifneq ($(DIRS),)
+include $(foreach i, $(DIRS), $(i)/Module.mk)
+include config/Makefile.config 
+endif
+ifneq ($(DEV),)
+PKGHDRS:=$(shell echo $(ALLHDRS) | sed -e 's,[^ ]*inc/,include/,g' -e 's,include/,usr/include/root/,g')
+endif
+ifneq ($(PKG),)
+PKGLIBS=$(ALLLIBS:%.so=%.so*)
+PKGBINS=$(ALLEXECS:bin/%=usr/bin/%)
+endif
+
+all:	liblist devlist binlist
+
+ifneq ($(LIB),)
+PKGLIBS	:= $(ALLLIBS) $(ALLLIBS:%.so=%.so.$(MAJOR)) \
+	   $(ALLLIBS:%.so=%.so.$(MAJOR).$(MINOR))
+liblist:
+	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(LIB).install
+else
+liblist:
+endif
+
+ifneq ($(DEV),)
+PKGHDRS	:= $(ALLHDRS:include/%=$(IPATH)/%) 
+devlist:
+	@for f in $(PKGHDRS)  ; do echo $$f ; done >> $(OUT)/$(DEV).install
+else
+devlist:
+endif
+
+ifneq ($(BIN),)
+PKGEXECS:= $(ALLEXECS:bin/%=$(BPATH)/%) 
+PKGMANS := $(ALLEXECS:bin/%=$(MPATH)/%.1) 
+binlist:
+	@for f in $(PKGEXECS)  ; do echo $$f ; done >> $(OUT)/$(BIN).install
+	@for f in $(PKGMANS)  ; do echo $$f ; done >> $(OUT)/$(BIN).install
+else
+binlist:
+endif
+
+#
+# EOF
+#

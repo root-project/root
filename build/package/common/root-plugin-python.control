@@ -1,0 +1,9 @@
+Package: root-plugin-python
+Architecture: any
+Depends: ${shlibs:Depends}, ${python:Depends}
+Description: Python plugin for ROOT
+ This package contains the python plug-in for ROOT.  This package
+ provide a Python interface to ROOT.
+ .
+ ROOT web-site: http://root.cern.ch
+

@@ -1,0 +1,12 @@
+Package: ttf-root
+Architecture: all
+Section: non-free/x11
+Provides: root-ttf
+Conflicts: ttf-root-installer
+Description: True type fonts for ROOT
+ This package contains the True Type Fonts (TTF) used by ROOT.  These
+ fonts are provided by Microsoft.  Note, that you may not redistribute
+ this package, and other such things.
+ .
+ ROOT web-site: http://root.cern.ch
+

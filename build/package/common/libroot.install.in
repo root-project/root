@@ -1,0 +1,5 @@
+@sysconfdir@/root/pdg_table.txt
+@sysconfdir@/root/system.rootrc
+@sysconfdir@/root/root.mimes
+@sysconfdir@/root/system.rootauthrc
+@prefix@/lib/root/lib*Dict.so*

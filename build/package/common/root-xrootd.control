@@ -1,0 +1,11 @@
+Package: root-xrootd
+Architecture: any
+Depends: ${shlibs:Depends}
+Provides: root-file-server
+Description: Extented ROOT file server
+ This package contains the xrootd server for ROOT, the eXtended
+ Request Daemon (xrd) and associated software.
+ .
+ ROOT web-site: http://root.cern.ch
+ XRootd web-site: http://xrootd.slac.stanford.edu
+

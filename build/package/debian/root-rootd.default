@@ -1,0 +1,75 @@
+# Defaults for rootd initscript
+# sourced by /etc/init.d/rootd
+# installed at /etc/default/rootd by the maintainer scripts
+#
+# Please refer to the rootd(1) man(1) page for more information on 
+# command line parameters. 
+#
+# This is a POSIX shell fragment
+#
+# If this is set to `yes', then the server is started.  
+# Anything else disables the server
+#
+# Note, that you can not run rootd via both inetd and SYSV init; at
+# least not  if they are both using the same port (per default both
+# use 1094).  So either disable the inetd or the SYSV init rootd, or
+# specify separate ports. 
+ENABLE_ROOTD=yes
+
+# User to run as (default is `rootd')
+ROOTD_USER=rootd
+
+# Port (range to listen to)
+#        specifies the port number to listen on. Use port-port2 to
+#        find the first available port in the indicated range. Use 0-N
+#        for range relative to default service port. (default is 1094)
+ROOTD_PORT=
+
+# SSH port
+#        specifies the port number for the sshd daemon used for
+#        authentication (default is 22).
+SSH_PORT=
+
+# Additional options that are passed to the Daemon.
+#
+# -b <tcpwindowsize>
+#        specifies the tcp window size in bytes (e.g. see
+#        http://www.psc.edu/networking/perf_tune.html). Default is
+#        65535.  Only change default for pipes with a high
+#        bandwidth*delay prod- uct.
+#
+# -d <level>
+#        level of debug info written to syslogd 0 = no debug
+#        (default), 1 = minimum, 2 = medium, 3 = maximum.
+#
+# -D <rootdaemonrc>
+#        read access rules from file <rootdaemonrc>.  By default
+#        <root_etc_dir>/system.rootdaemonrc is used for access rules;
+#        for privately started daemons $HOME/.rootdaemonrc (if
+#        present) is read first.
+#
+# -f     
+#        run in the foreground (output on the window); useful for
+#        debugging purposes.
+#
+# -noauth
+#        do not require client authentication
+#
+# -r     files can only be opened in read-only mode
+#
+#
+# -T <tmpdir>
+#        specifies the directory path to be used to place temporary
+#        files; default is /usr/tmp. Useful when running with limited
+#        privileges.
+#
+# -w     
+#        do not check /etc/hosts.equiv, $HOME/.rhosts for
+#        password-based authentication; by default these files are
+#        checked first by calling ruserok(...); if this option is
+#        specified a password is always required.
+DAEMON_OPTS=
+
+#
+# EOF
+#

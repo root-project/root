@@ -1,0 +1,9 @@
+Package: root-doc
+Architecture: all
+Suggests: root-bin
+Description: Tutorial and test suit for the ROOT system
+ This package contains the tutorial scripts and test suit for the ROOT
+ system.
+ .
+ ROOT web-site: http://root.cern.ch
+

@@ -1,0 +1,15 @@
+Package: root-cint
+Architecture: any
+Depends: ${shlibs:Depends}
+Recommends: libroot 
+Suggests: root-bin, libroot-dev 
+Description: ROOT version of the C/C++ interpreter
+ This package contains the the C/C++ interpreter CINT customized for 
+ ROOT.  The interpreter allows for fast prototyping of the macros since
+ it removes the time consuming compile/link cycle. It also provides a
+ good environment to learn C++. If more performance is needed the
+ interactively developed macros can be compiled using a C++ compiler.
+ .
+ ROOT web-site: http://root.cern.ch
+ CINT web-site: http://root.cern.ch/Cint
+

@@ -1,0 +1,9 @@
+Package: root-plugin-krb5
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Kerberos (version 5) plugin for ROOT
+ This package contains the Kerberos (version 5) plug-in for ROOT, that
+ allows authentication and authorisation using Kerberos tokens.
+ .
+ ROOT web-site: http://root.cern.ch
+

@@ -1,0 +1,9 @@
+Package: root-plugin-hbook
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Hbook plugin for ROOT
+ This package contains the Hbook plug-in for ROOT, allowing you to
+ access legacy Hbook files (NTuples and Histograms from PAW).
+ .
+ ROOT web-site: http://root.cern.ch
+

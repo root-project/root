@@ -1,0 +1,9 @@
+Package: root-plugin-xml
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: XML reader plugin for ROOT
+ This package contains the XML reader plug-in for ROOT.   This package
+ provide a plug-in to parse XML files with ROOT.
+ .
+ ROOT web-site: http://root.cern.ch
+

@@ -1,0 +1,3 @@
+@prefix@/share/root/proof/
+@prefix@/bin/proofserv
+@prefix@/share/man/man1/proofserv.1

@@ -1,0 +1,9 @@
+Package: root-plugin-ldap
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Ldap plugin for ROOT
+ This package contains the Ldap plug-in for ROOT.  This gives you
+ access to Ldap directories via ROOT.
+ .
+ ROOT web-site: http://root.cern.ch
+

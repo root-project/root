@@ -1,0 +1,15 @@
+Package: root-plugin-peac
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: PEAC plugin for ROOT
+ This package contains the PEAC (Proof Enabled Analysis Center)
+ plug-in for ROOT.
+ .
+ PEAC is an interactive distributed analysis framework that uses
+ Clarens as a "glue" protocol to advertise and communicate amongst
+ SAM, Global Manager (GM), Local Manager (LM), DCache, and PROOF
+ services.
+ .
+ ROOT web-site: http://root.cern.ch
+ PEAC web-site: http://physics.ucsd.edu/~schsu/project/peac.html
+

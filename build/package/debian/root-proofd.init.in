@@ -1,0 +1,90 @@
+#! /bin/sh
+#
+# skeleton	Written by Miquel van Smoorenburg <miquels@cistron.nl>.
+#		Modified for Debian 
+#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
+#
+# Version:	@(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
+#
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=@prefix@/bin/proofd
+NAME=proofd
+DESC="Parallel ROOt Facility Server"
+
+test -x $DAEMON || exit 0
+
+# Include root defaults if available
+if [ -f @sysconfdir@/default/root-proofd ] ; then
+	. @sysconfdir@/default/root-proofd
+fi
+
+if test -f /var/run/inetd.pid ; then 
+    # Inetd is running
+    if `grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1` ; then 
+	# PROOFD is controlled by inetd. 
+	ENABLE_PROOFD=no
+    fi
+fi
+if test -f /var/run/xinetd.pid ; then 
+    # Inetd is running
+    if `grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1` || \
+	test -f /etc/xinetd/proofd || test -f /etc/xinetd/root-proofd; then 
+	# PROOFD is controlled by xinetd. 
+	ENABLE_PROOFD=no
+    fi
+fi
+
+case `echo $ENABLE_PROOFD | tr '[:upper:]' '[:lower:]'` in 
+    yes) ;;
+    *) exit 0;;
+esac
+
+set -e
+
+startit ()
+{
+    start-stop-daemon --make-pidfile --start --quiet --pidfile \
+	/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS $PROOF_DIR
+}
+stopit ()
+{
+    start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+	--exec $DAEMON $REDIR
+}
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: "
+	startit 
+	echo "$NAME."
+	;;
+  stop)
+	echo -n "Stopping $DESC: "
+	stopit
+	echo "$NAME."
+	;;
+  restart|force-reload)
+	#
+	#	If the "reload" option is implemented, move the "force-reload"
+	#	option to the "reload" entry above. If not, "force-reload" is
+	#	just the same as "restart".
+	#
+	echo -n "Restarting $DESC: "
+	stopit
+	sleep 1
+	startit
+	echo "$NAME."
+	;;
+  *)
+	N=@sysconfdir@/init.d/$NAME
+	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
+#
+# EOF
+#

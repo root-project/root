@@ -1,0 +1,10 @@
+Package: root-plugin-minuit
+Architecture: any
+Depends: ${shlibs:Depends}
+Provides: root-fitter
+Description: Minuit plugin for ROOT
+ This package contains the MINUIT plug-in for ROOT.  This provides an
+ fitting algorithm for ROOT.
+ .
+ ROOT web-site: http://root.cern.ch
+

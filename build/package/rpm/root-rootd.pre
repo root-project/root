@@ -1,0 +1,56 @@
+#---------------------------------------------------------------------
+# Pre installation - only body
+#
+# Now we have to ensure the following state:
+#   /etc/passwd: rootd:x:Anonymous rootd:/var/spool/rootd:/bin/false
+#   /etc/group:  rootd:x:72:rootd
+#
+if ! grep -q ^rootd: /etc/group; then 
+  groupadd rootd 
+fi
+if ! grep -q ^rootd: /etc/passwd; then 
+  useradd -c "Anonymous rootd" -d "/var/spool/rootd" -s /bin/false \
+   -g rootd rootd 
+fi
+
+#
+# Make home directory 
+#
+if [ ! -d /var/spool/rootd ] ; then 
+  mkdir -p /var/spool/rootd
+fi
+
+#
+# If user already exist, modify it. 
+#
+usermod -c "Anonymous rootd"  rootd
+usermod -d /var/spool/rootd   rootd
+usermod -g rootd              rootd
+usermod -s /bin/false         rootd
+
+
+# Since the home directory was created before putting the user
+# into the rootd group and moreover we cannot guarantee that
+# the permissions were correctly *before* calling this script,
+# we fix them now. 
+#echo 
+#echo "SECURITY: Fixing permission of /var/spool/rootd !"
+#echo "(I.e. replacing GIDs other than root and rootd with rootd.)"
+#echo
+chown rootd.rootd /var/spool/rootd
+find /var/spool/rootd \
+    -not \( -group root -or -group rootd \) \
+    -exec chgrp rootd {} \;
+
+# Create the tmp and pub directories in /var/spool/rootd and
+# make them world read- and writeable. 
+if [ ! -d /var/spool/rootd/tmp ] ; then 
+  mkdir -p /var/spool/rootd/tmp
+  chmod 777 /var/spool/rootd/tmp
+fi
+if [ ! -d /var/spool/rootd/pub ] ; then 
+    mkdir -p /var/spool/rootd/pub
+    chmod 777 /var/spool/rootd/pub
+fi
+
+# end of script

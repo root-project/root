@@ -1,0 +1,9 @@
+Package: root-plugin-netx
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: NetX plugin for ROOT
+ This package contains the NetX plug-in for ROOT.  Client for the
+ XRootd server.
+ .
+ ROOT web-site: http://root.cern.ch
+
