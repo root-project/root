@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.3 2000/07/24 18:21:50 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.4 2001/01/07 15:30:11 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -40,7 +40,7 @@ extern "C" {
    int rfio_access(char *filepath, int mode);
    int rfio_unlink(char *filepath);
    int rfio_parse(char *name, char **host, char **path);
-   int frio_fstat(int s, struct stat *statbuf);
+   int rfio_fstat(int s, struct stat *statbuf);
 };
 
 
