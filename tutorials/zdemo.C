@@ -308,9 +308,9 @@ void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t 
      PT[I]=PTMIN+I*DELP;
      PTOT = PT[I]/sin(THET);
 
-     ETOT = sqrt(M1**2 + PTOT**2);
-     PB1  = sqrt(EB1**2 - MB1**2);
-     PB2  = sqrt(EB2**2 - MB2**2);
+     ETOT = sqrt(M1*M1 + PTOT*PTOT);
+     PB1  = sqrt(EB1*EB1 - MB1*MB1);
+     PB2  = sqrt(EB2*EB2 - MB2*MB2);
      P2P3 = EB2*ETOT+PB2*PTOT*cos(THET);
      P1P2 = EB2*EB1+PB2*PB1;
      P1P3 = EB1*ETOT-PB1*PTOT*cos(THET);
@@ -320,18 +320,18 @@ void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t 
      Y1 = X1+sqrt(X1*X2*(1.-X1)/(1.-X2));
      Y2 = X2+sqrt(X1*X2*(1.-X2)/(1.-X1));
 
-     S    = (MB1**2)+2.*P1P2+(MB2**2);
-     SMIN = 4.*((MB1**2)*(X1**2) +2.*X1*X2*P1P2+(MB2**2)*(X2**2));
-     SX1  = 4.*( 2*(MB1**2)*X1+2*X2*P1P2);
-     SX2  = 4.*( 2*(MB2**2)*X2+2*X1*P1P2);
+     S    = (MB1*MB1)+2.*P1P2+(MB2*MB2);
+     SMIN = 4.*((MB1*MB1)*(X1*X1) +2.*X1*X2*P1P2+(MB2*MB2)*(X2*X2));
+     SX1  = 4.*( 2*(MB1*MB1)*X1+2*X2*P1P2);
+     SX2  = 4.*( 2*(MB2*MB2)*X2+2*X1*P1P2);
      SX1X2= 4.*(2*P1P2);
-     DELM = ( (1.-Y1)*(1.-Y2) )**ALX;
+     DELM = pow((1.-Y1)*(1.-Y2),ALX);
 
-     Z[I] = sqrt(SMIN)/DELM/(DNDETA**BETA);
+     Z[I] = sqrt(SMIN)/DELM/pow(DNDETA,BETA);
 
      Y1X1  = 1. +X2*(1-2.*X1)/(2.*(Y1-X1)*(1.-X2));
-     Y1X2  =     X1*(1-X1)/(2.*(Y1-X1)*(1.-X2)**2);
-     Y2X1  =     X2*(1-X2)/(2.*(Y2-X2)*(1.-X1)**2);
+     Y1X2  =     X1*(1-X1)/(2.*(Y1-X1)*(1.-X2)*(1.-X2));
+     Y2X1  =     X2*(1-X2)/(2.*(Y2-X2)*(1.-X1)*(1.-X1));
      Y2X2  = 1. +X1*(1-2.*X2)/(2.*(Y2-X2)*(1.-X1));
      Y2X1X2= Y2X1*( (1.-2.*X2)/(X2*(1-X2)) -( Y2X2-1.)/(Y2-X2));
      Y1X1X2= Y1X2*( (1.-2.*X1)/(X1*(1-X1)) -( Y1X1-1.)/(Y1-X1));
@@ -343,7 +343,7 @@ void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t 
 
      H1=ZX1*ZX2;
 
-     HZ[I]=KF1/(Z[I]**KF2);
+     HZ[I]=KF1/pow(Z[I],KF2);
      INVSIG[I]=(HZ[I]*H1*16.)/S;
 
   }
