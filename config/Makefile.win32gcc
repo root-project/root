@@ -53,4 +53,3 @@ F77FLAGS      =
 F77LIBS       = -lg2c
 
 # Extras
-ASEXTRALIB    = -lGraf -lGpad -lGui -lHist -lX11 -ljpeg -ltiff

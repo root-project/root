@@ -1141,9 +1141,21 @@ fi
 if test ! "x$enable_asimage" = "xno" ; then
     asextralib=""
     asextralibdir=""
-    for i in libjpeg libpng libtiff libungif ; do
+    found_libz=""
+    found_dirz=""
+    # libz must be before libpng, if libz is not found don't
+    # add libpng which needs libz
+    for i in libjpeg libtiff libungif libz libpng ; do
         check_library $i "no" "" \
             $ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/lib /opt/lib
+        if test "x$i" = "xlibz" ; then
+            found_libz=$found_lib
+            found_dirz=$found_dir
+            continue;
+        fi
+        if test "x$i" = "xlibpng" && test "x$found_libz" = "x" ; then
+            break;
+        fi
         asextralib="$asextralib $found_lib"
         asextralibdir="$asextralibdir $found_dir"
     done
@@ -1152,7 +1164,8 @@ if test ! "x$enable_asimage" = "xno" ; then
         asextralibdir=""
         enable_asimage="no"
     else
-        asextralib="$asextralib -lz"   # needed by libpng
+        asextralib="$asextralib $found_libz"
+        asextralibdir="$asextralibdir $found_dirz"
     fi
 fi
 
