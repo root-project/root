@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.72 2005/01/27 17:07:08 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.73 2005/02/11 18:40:08 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -97,6 +97,7 @@
 //                     authentication if different from globus default  //
 //                     (/etc/grid-security/gridmap); (re)defines the    //
 //                     GRIDMAP environment variable.                    //
+//   -h                print usage message                              //
 //   -i                says we were started by inetd                    //
 //   -noauth           do not require client authentication             //
 //   -p port#          specifies a different port to listen on          //
@@ -576,6 +577,39 @@ void ProofdExec()
    NetSend(msg.c_str());
 }
 
+
+//______________________________________________________________________________
+void Usage(const char* name, int rc)
+{
+   fprintf(stderr, "\nUsage: %s [options] [rootsys-dir]\n", name);
+   fprintf(stderr, "\nOptions:\n");
+   fprintf(stderr, "\t-A [<rootauthrc>] Use $HOME/.rootauthrc or specified file\n");
+   fprintf(stderr, "\t                  (see documentation)\n");
+   fprintf(stderr, "\t-b tcpwindowsize  Specify the tcp window size in bytes\n");
+#ifdef R__GLBS
+   fprintf(stderr, "\t-C hostcertfile   Specify the location of the Globus host certificate\n");
+#endif
+   fprintf(stderr, "\t-d level          set debug level [0..3]\n");
+   fprintf(stderr, "\t-D rootdaemonrc   Use alternate rootdaemonrc file\n");
+   fprintf(stderr, "\t                  (see documentation)\n");
+   fprintf(stderr, "\t-E                Ignored for backward compatibility\n");
+   fprintf(stderr, "\t-f                Run in foreground\n");
+#ifdef R__GLBS
+   fprintf(stderr, "\t-G gridmapfile    Specify the location of th Globus gridmap\n");
+#endif
+   fprintf(stderr, "\t-i                Running from inetd\n");
+   fprintf(stderr, "\t-noauth           Do not require client authentication\n");
+   fprintf(stderr, "\t-p port#          Specify a different port to listen on\n");
+   fprintf(stderr, "\t-s sshd_port#     Specify the port for the sshd daemon\n");
+#ifdef R__KRB5
+   fprintf(stderr, "\t-S keytabfile     Use an alternate keytab file\n");
+#endif
+   fprintf(stderr, "\t-T <tmpdir>       Use an alternate temp dir\n");
+   fprintf(stderr, "\t-w                Do not check /etc/hosts.equiv and $HOME/.rhosts\n");
+
+   exit(rc);
+}
+
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
@@ -595,6 +629,7 @@ int main(int argc, char **argv)
    std::string gridmap = "";
    std::string hostcertconf = "";
 #endif
+   char *progname = argv[0];
 
    // Init error handlers
    RpdSetErrorHandler(Err, ErrSys, ErrFatal);
@@ -602,7 +637,7 @@ int main(int argc, char **argv)
    // Init syslog
    ErrorInit(argv[0]);
 
-   // Output to syslog ... 
+   // Output to syslog ...
    RpdSetSysLogFlag(1);
 
    // ... unless we are running in the foreground and we are
@@ -703,6 +738,10 @@ int main(int argc, char **argv)
                gridmap = std::string(*++argv);
                break;
 #endif
+            case 'h':
+               Usage(progname, 0);
+               break;
+
             case 'i':
                if (foregroundflag) {
                   Error(ErrFatal,-1,"-i and -f options are incompatible");
@@ -778,7 +817,9 @@ int main(int argc, char **argv)
                break;
 
             default:
-               Error(ErrFatal, -1, "unknown command line option: %c", *s);
+               if (!foregroundflag) fprintf(stderr, "\nUnknown command line option: %c\n", *s);
+               Error(0, -1, "unknown command line option: %c", *s);
+               Usage(progname, 1);
          }
 
    // dir for temporary files
