@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.121 2004/04/29 09:58:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.122 2004/05/10 08:03:54 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -178,16 +178,16 @@ static void CleanUpROOTAtExit()
 
 //______________________________________________________________________________
 namespace ROOT {
-   // #define R__USE_STD_MAP
+#define R__USE_STD_MAP
    class TMapTypeToTClass {
 #if defined R__USE_STD_MAP
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
    public:
 #ifdef R__GLOBALSTL
-      typedef map<string,TClass*> IdMap_t;
+      typedef map<string,TClass*>                 IdMap_t;
 #else
-      typedef std::map<std::string,TClass*> IdMap_t;
+      typedef std::map<std::string,TClass*>       IdMap_t;
 #endif
       typedef IdMap_t::key_type                   key_type;
       typedef IdMap_t::const_iterator             const_iterator;
@@ -203,47 +203,35 @@ namespace ROOT {
       IdMap_t fMap;
 
    public:
-
       void Add(const key_type &key, mapped_type &obj) {
          fMap[key] = obj;
       }
-
       mapped_type Find(const key_type &key) const {
-
          IdMap_t::const_iterator iter = fMap.find(key);
          mapped_type cl = 0;
          if (iter != fMap.end()) cl = iter->second;
          return cl;
       }
-
       void Remove(const key_type &key) { fMap.erase(key); }
-
-      void printall() {
-         cerr << "Printing the typeinfo map in TROOT\n";
-         for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++ ) {
-            cerr << "Key: " << iter->first.c_str()
-                 << " points to " << iter->second << endl;
-         }
-      }
 #else
    private:
       TMap fMap;
+
    public:
-      void Add(const char* key, TClass *&obj) {
+      void Add(const char *key, TClass *&obj) {
          TObjString *realkey = new TObjString(key);
          fMap.Add(realkey, obj);
       }
-      TClass* Find(const char* key) const {
-         const TPair* a = (const TPair *)fMap.FindObject(key);
+      TClass* Find(const char *key) const {
+         const TPair *a = (const TPair *)fMap.FindObject(key);
          if (a) return (TClass*) a->Value();
          return 0;
       }
-      void Remove(const char* key) {
+      void Remove(const char *key) {
          TObjString realkey(key);
          TObject *actual = fMap.Remove(&realkey);
          delete actual;
       }
-
 #endif
    };
 }
@@ -266,12 +254,13 @@ namespace ROOT {
    }
 }
 
-TROOT      *gROOT = ROOT::GetROOT();         // The ROOT of EVERYTHING
-TRandom    *gRandom;       // Global pointer to random generator
+TROOT      *gROOT = ROOT::GetROOT();     // The ROOT of EVERYTHING
+TRandom    *gRandom;                     // Global pointer to random generator
 
-// Global debug flag (set to != 0 to get debug output).
-// Can be set either via interpreter (gDebug is exported to CINT),
-// or via debugger. If set to > 4 X11 graphics will be in synchronous mode.
+// Global debug flag (set to > 0 to get debug output).
+// Can be set either via the interpreter (gDebug is exported to CINT),
+// via the rootrc resouce "Root.Debug", via the shell environment variable
+// ROOTDEBUG, or via the debugger.
 Int_t       gDebug;
 
 
@@ -1344,6 +1333,13 @@ void TROOT::InitSystem()
       gEnv = new TEnv(".rootrc");
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
+
+      const char *sdeb;
+      if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
+         gDebug = atoi(sdeb);
+
+      if (gDebug > 0 && isatty(2))
+         fprintf(stderr, "Info in <TROOT::InitSystem>: running with gDebug = %d\n", gDebug);
 
       if (gEnv->GetValue("Root.MemStat", 0))
          TStorage::EnableStatistics();
