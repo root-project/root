@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.87 2002/01/26 21:07:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.88 2002/01/29 17:33:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1390,6 +1390,7 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
    if (!gROOT->IsBatch() && interval)
       timer = new TProcessEventTimer(interval);
 
+   Double_t treeWeight = fTree->GetWeight();
    npoints = 0;
    if (!fV1 && fVar1)   fV1 = new Double_t[fTree->GetEstimate()];
    if (!fV2 && fVar2)   fV2 = new Double_t[fTree->GetEstimate()];
@@ -1406,9 +1407,9 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
          if (localEntry < 0) break;
          if (fSelect) {
             if (force && fSelect->GetNdata()<=0) continue;
-            fW[fNfill] = fSelect->EvalInstance(0);
+            fW[fNfill] = treeWeight*fSelect->EvalInstance(0);
             if (!fW[fNfill]) continue;
-         } else fW[fNfill] = 1;
+         } else fW[fNfill] = treeWeight;
          if (fVar1) {
             if (force && fVar1->GetNdata()<=0) continue;
             fV1[fNfill] = fVar1->EvalInstance(0);
@@ -1470,9 +1471,9 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
 
       // Calculate the first values
       if (fSelect) {
-         fW[fNfill] = fSelect->EvalInstance(0);
+         fW[fNfill] = treeWeight*fSelect->EvalInstance(0);
          if (!fW[fNfill]  && !SelectMultiple) continue;
-      } else fW[fNfill] = 1;
+      } else fW[fNfill] = treeWeight;
       if (fVar1) {
          fV1[fNfill] = fVar1->EvalInstance(0);
          if (fVar2) {
@@ -1489,11 +1490,11 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
             fNfill = 0;
          }
       }
-      ww = 1;
+      ww = treeWeight;
 
       for (i=1;i<ndata;i++) {
          if (SelectMultiple) {
-            ww = fSelect->EvalInstance(i);
+            ww = treeWeight*fSelect->EvalInstance(i);
             if (ww == 0) continue;
          }
          if (fVar1) {
