@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:$:$Id:$
+// @(#)root/treeviewer:$Name:  $:$Id: TGTreeLVC.cxx,v 1.4 2000/11/22 16:27:44 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include "TGTreeLVC.h"
-#include "TTreeView.h"
+#include "TTreeViewer.h"
 #include "TGPicture.h"
 #include "TGLabel.h"
 #include "TGButton.h"

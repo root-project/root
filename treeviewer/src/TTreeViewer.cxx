@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeView.cxx,v 1.5 2000/11/22 16:27:44 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.3 2000/11/22 17:59:18 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -140,7 +140,7 @@
 
 #include <iostream.h>
 
-#include "TTreeView.h"
+#include "TTreeViewer.h"
 #include "HelpTextTV.h"
 #include "TGTreeLVC.h"
 
