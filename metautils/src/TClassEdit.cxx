@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.10 2004/03/12 21:45:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.11 2004/04/15 06:41:49 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -463,32 +463,33 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
 }
 
 //______________________________________________________________________________
-int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
+int TClassEdit::IsSTLCont(const char *type,int testAlloc)
 {
-   //  ty:  type name like: vector<list<classA,allocator>,allocator>
-   //  testAlloc: 1=test allocator, if it is not default result is negative
-   //  result:     0=not stl container
-   //              abs(result): code of container 1=vector,2=list,3=deque,4=map
+   //  type     : type name: vector<list<classA,allocator>,allocator>
+   //  testAlloc: if true, we test allocator, if it is not default result is negative
+   //  result:    0          : not stl container
+   //             abs(result): code of container 1=vector,2=list,3=deque,4=map
    //                           5=multimap,6=set,7=multiset
-   //              +ve: it is vector or list with default allocator to any depth
+   //             positive val: we have a vector or list with default allocator to any depth
    //                   like vector<list<vector<int>>>
-   //  -ve: if other then vector or int, or non default allocator
-   //             like vector<deque<int>> has answer -1
+   //             negative val: STL container other than vector or int, or non default allocator
+   //                           For example: vector<deque<int>> has answer -1
    ////////////////////////////////////////////////////////////////////////////////
 
-   if (strchr(ty,'<')==0) return 0;
+   if (strchr(type,'<')==0) return 0;
 
-   int k = (testAlloc) ? 2:0;
-   string full = ShortType(ty,k);
+   int mode = (testAlloc) ? 2 : 0;
+   string fullname = ShortType(type,mode);
 
    vector<string> arglist;
    int nestedLoc=0;
-   int numb = GetSplit(full.c_str(),arglist,nestedLoc);
+   int numb = GetSplit(fullname.c_str(),arglist,nestedLoc);
 
    if ( arglist[0].length()>0 && arglist[numb-1][0]=='*' ) numb--;
 
    if ( nestedLoc ) {
-      // we have a nested name
+      // The type has been defined inside another namespace and/or class
+      // this couldn't possibly be an STL container
       return 0;
    }
 
@@ -496,18 +497,24 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
 
    if (kind==kVector || kind==kList ) {
 
-      if (testAlloc && numb-1 > STLArgs(kind)) {
+      if (testAlloc && (numb-1 > STLArgs(kind)) ) {
+
+         // We have a non default allocator,
+         // let's return a negative value.
 
          kind = -kind;
 
       } else {
 
-         k = IsSTLCont(arglist[1].c_str(),testAlloc);
+         // We has a default allocator, let's continue to
+         // look inside the argument list.
+         int k = IsSTLCont(arglist[1].c_str(),testAlloc);
          if (k<0) kind = -kind;
 
       }
    }
 
+   // We return a negative value for anything which is not a vector or a list.
    if(kind>2) kind = - kind;
    return kind;
 }

@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.162 2004/04/06 22:55:36 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.163 2004/04/15 06:41:49 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1008,8 +1008,8 @@ int IsSTLContainer(G__DataMemberInfo &m)
    if (!s) return kNone;
 
    string type(s);
-   int k = (-TClassEdit::IsSTLCont(type.c_str(),1));
-
+   int k = TClassEdit::IsSTLCont(type.c_str(),1);
+   
 //    if (k) printf(" %s==%d\n",type.c_str(),k);
 
    return k;
@@ -1024,7 +1024,7 @@ int IsSTLContainer(G__BaseClassInfo &m)
    if (!s) return kNone;
 
    string type(s);
-   int k = ( -TClassEdit::IsSTLCont(type.c_str(),1));
+   int k = TClassEdit::IsSTLCont(type.c_str(),1);
 //   if (k) printf(" %s==%d\n",type.c_str(),k);
    return k;
 }
@@ -1392,10 +1392,10 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
    // Create Streamer code for an STL container. Returns 1 if data member
    // was an STL container and if Streamer code has been created, 0 otherwise.
 
-   int stltype = IsSTLContainer(m);
+   int stltype = abs(IsSTLContainer(m));
    if (stltype!=0) {
-//       fprintf(stderr,"Add %s which is also %s\n",
-//               m.Type()->Name(), m.Type()->TrueName() );
+//        fprintf(stderr,"Add %s (%d) which is also %s\n",
+//                m.Type()->Name(), stltype, m.Type()->TrueName() );
       RStl::inst().GenerateTClassFor( m.Type()->Name() );
    }
    if (!m.Type()->IsTmplt() || stltype<=0) return 0;
@@ -1630,7 +1630,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
    // Create Streamer code for an STL base class. Returns 1 if base class
    // was an STL container and if Streamer code has been created, 0 otherwise.
 
-   int stltype = IsSTLContainer(m);
+   int stltype = abs(IsSTLContainer(m));
    if (m.IsTmplt() && stltype>0) {
       char ss[kMaxLen];strcpy(ss,TemplateArg(m).Name());char *s=ss;
 
