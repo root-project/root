@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.75 2001/12/18 18:02:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.76 2001/12/21 21:19:54 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TBranchElement.h"
 #include "TLeafElement.h"
 #include "TArrayI.h"
+#include "TAxis.h"
 #include "TError.h"
 
 #include <stdio.h>
@@ -984,6 +985,7 @@ TTreeFormula::TTreeFormula(): TFormula(),fMultiVarDim(kFALSE)
    fLookupType = 0;
    fNindex     = 0;
    fNcodes     = 0;
+   fAxis       = 0;
 }
 
 //______________________________________________________________________________
@@ -999,6 +1001,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    fLookupType   = new Int_t[fNindex];
    fNcodes       = 0;
    fMultiplicity = 0;
+   fAxis         = 0;
    Int_t i,j,k;
 
    for (j=0; j<kMAXCODES; j++) {
@@ -1064,8 +1067,10 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       //if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
       //if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
       //      if (IsString(i)) SetBit(kIsCharacter);
-      if (fOper[i] >= 105000) {
+      if (fNcodes == 1 && fOper[i] >= 105000) {
          // We have a string used as a string
+         if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
+         if (leaf->InheritsFrom("TLeafElement")) SetBit(kIsCharacter);
         //fCumulSizes[i][fNdimensions[i]-1] = 1;
         //fUsedSizes[fNdimensions[i]-1] = -TMath::Abs(fUsedSizes[fNdimensions[i]-1]);
         //fUsedSizes[0] = - TMath::Abs( fUsedSizes[0]);
@@ -2588,6 +2593,10 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 
       if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
       else if (real_instance>fNdata[0]) return 0;
+      if (fAxis) {
+         Int_t bin = fAxis->FindBin((char*)leaf->GetValuePointer());
+         return bin-0.5;
+      }
       switch(fLookupType[0]) {
          case kDirect: return leaf->GetValue(real_instance);
          case kMethod: return GetValueFromMethod(0,leaf);
@@ -3055,6 +3064,7 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
 
    TLeaf *leaf = (TLeaf*)fLeaves.At(code);
    if (!leaf) return kFALSE;
+   if (fAxis)                                   return kTRUE;
    TFormLeafInfo * info;
    if (fLookupType[code]!=kDirect) {
       info = GetLeafInfo(code);
