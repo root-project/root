@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.6 2003/06/05 11:33:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.7 2004/04/20 19:35:17 brun Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
                                            Long64_t first,
                                            Long64_t entries)
 {
-   // Create proof processing progress dialog.
+   // Create PROOF processing progress dialog.
 
    fProof         = proof;
    fFiles         = files;
@@ -220,7 +220,6 @@ TProofProgressDialog::~TProofProgressDialog()
                          "Progress(Long64_t,Long64_t)");
 
    fDialog->Cleanup();
-   fDialog->SetBit(kMustCleanup);
    delete fDialog;
 }
 
@@ -244,7 +243,7 @@ void TProofProgressDialog::DoClose()
 //______________________________________________________________________________
 void TProofProgressDialog::DoKeep(Bool_t)
 {
-   // Handle keep toggle button
+   // Handle keep toggle button.
 
    fgKeep = !fgKeep;
 }

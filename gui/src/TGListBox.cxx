@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.20 2004/04/15 10:13:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.21 2004/04/21 08:36:30 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -227,7 +227,7 @@ TGLineLBEntry::~TGLineLBEntry()
 //______________________________________________________________________________
 void  TGLineLBEntry::Update(TGLBEntry *e)
 {
-   //
+   // Update line style listbox entry.
 
    TGTextLBEntry::Update(e);
    fLineGC = ((TGLineLBEntry *)e)->GetLineGC();
@@ -236,7 +236,7 @@ void  TGLineLBEntry::Update(TGLBEntry *e)
 //______________________________________________________________________________
 void TGLineLBEntry::SetLineStyle(Style_t linestyle)
 {
-   // The linestyle corresponds to TPad line style
+   // The linstyle corresponds to TPad line style
 
    static const char* dashed = "\x5\x5";
    static const char* dotted= "\x1\x3";
@@ -273,15 +273,15 @@ void TGLineLBEntry::SetLineWidth(Int_t width)
 //______________________________________________________________________________
 void TGLineLBEntry::DoRedraw()
 {
-   // Redraw text listbox entry.
+   // Redraw line style listbox entry.
 
    TGTextLBEntry::DoRedraw();
 
    if (fActive) {
-      gVirtualX->SetForeground(fLineGC->GetGC(), 
+      gVirtualX->SetForeground(fLineGC->GetGC(),
                                fClient->GetResourcePool()->GetSelectedFgndColor());
    } else {
-      gVirtualX->SetForeground(fLineGC->GetGC(), 
+      gVirtualX->SetForeground(fLineGC->GetGC(),
                                fClient->GetResourcePool()->GetBlackColor());
    }
    gVirtualX->DrawLine(fId, fLineGC->GetGC(), fTWidth + 5, fHeight/2,
