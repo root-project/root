@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.8 2001/03/06 10:06:37 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.9 2001/03/08 13:44:52 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TROOT.h"
@@ -18,12 +18,12 @@
 //
 //  Particle database manager class
 //
-//  This manager creates a list of particles which by default is 
-//  initialised from with the constants used by PYTHIA6 (plus some 
-//  other particles added). See definition and the format of the default 
-//  particle list in $ROOTSYS/eg/src/pdg_table.txt
+//  This manager creates a list of particles which by default is
+//  initialised from with the constants used by PYTHIA6 (plus some
+//  other particles added). See definition and the format of the default
+//  particle list in $ROOTSYS/etc/pdg_table.txt
 //
-//  there are 2 ways of redefining the name of the file containing the 
+//  there are 2 ways of redefining the name of the file containing the
 //  particle properties
 //
 //  1. one can define the name in .rootrc file:
@@ -80,8 +80,8 @@ TDatabasePDG::~TDatabasePDG()
 TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
 					Double_t mass, Bool_t stable,
 					Double_t width, Double_t charge,
-					const char* ParticleClass, 
-					Int_t PDGcode, 
+					const char* ParticleClass,
+					Int_t PDGcode,
 					Int_t Anti,
 					Int_t TrackingCode)
 {
@@ -102,7 +102,7 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
   }
 
   TParticlePDG* p = new TParticlePDG(name, title, mass, stable, width,
-				     charge, ParticleClass, PDGcode, Anti, 
+				     charge, ParticleClass, PDGcode, Anti,
 				     TrackingCode);
   fParticleList->Add(p);
 
@@ -119,7 +119,7 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
 }
 
 //______________________________________________________________________________
-TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode) 
+TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
 {
   // assuming particle has already been defined
 
@@ -134,8 +134,8 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
   TParticlePDG* p = GetParticle(pdg_code);
 
   TParticlePDG* ap = AddParticle(Name,
-				 Name, 
-				 p->Mass(), 
+				 Name,
+				 p->Mass(),
 				 1,
 				 p->Width(),
 				 -p->Charge(),
@@ -377,11 +377,11 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
     fListOfClasses = new TObjArray;
   }
 
-  char         default_name[200];
+  char         default_name[1024];
   const char*  fn;
 
   if (FileName == "") {
-    sprintf(default_name,"%s/eg/src/pdg_table.txt",gSystem->Getenv("ROOTSYS"));
+    sprintf(default_name,"%s/etc/pdg_table.txt",gSystem->Getenv("ROOTSYS"));
     fn = gEnv->GetValue("Root.DatabasePDG",default_name);
   }
   else {
@@ -432,7 +432,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 	fscanf(file,"%i",&nch);
 				// nothing more on this line
 	fgets(c,200,file);
-	
+
 
 				// create particle
 
@@ -453,7 +453,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 	  while ( ((c[0]=getc(file)) != EOF) && (ich <nch)) {
 	    if (c[0] != '#') {
 	      ungetc(c[0],file);
-	      
+
 	      fscanf(file,"%i",&idecay);
 	      fscanf(file,"%i",&decay_type);
 	      fscanf(file,"%le",&branching_ratio);
@@ -493,14 +493,14 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
       nch = ap->NDecayChannels();
       for (int ich=0; ich<nch; ich++) {
 	TDecayChannel* dc = ap->DecayChannel(ich);
-	ndau = dc->NDaughters(); 
+	ndau = dc->NDaughters();
 	for (int i=0; i<ndau; i++) {
 					// conserve CPT
 
 	  code[i] = dc->DaughterPdgCode(i);
 	  daughter = GetParticle(code[i]);
 	  if (daughter->AntiParticle()) {
-					// this particle does have an 
+					// this particle does have an
 					// antiparticle
 	    code[i] = -code[i];
 	  }
