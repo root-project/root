@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.10 2002/09/29 20:24:33 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.11 2002/10/22 12:10:01 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -80,8 +80,9 @@ char idname[128];
 int nentries;
 char chtitl[128];
 int ncx,ncy,nwt,idb;
-int lcont, lcid, lcdir;
+int lcont, lcid, lcdir, ltab;
 float xmin,xmax,ymin,ymax;
+const Int_t kNRH  = 6;
 const Int_t kMIN1 = 7;
 const Int_t kMAX1 = 8;
 
@@ -433,6 +434,16 @@ TObject *THbookFile::Get(Int_t idd)
   }
   
   int i999 = 999;
+  // must delete any previous object with the same ID !!
+  lcdir = hcbook[6];
+  ltab  = hcbook[9];
+  for (Int_t i=1;i<=iq[lcdir+kNRH];i++) {
+     if (iq[ltab+i] == id) {
+        printf("WARNING, previous ID=%d is replaced\n",id);
+        hdelet(id);
+        break;
+     }
+  }
   hrin(id,i999,0);
   if (quest[0]) {
      printf("Error cannot read ID = %d\n",id);
@@ -645,8 +656,8 @@ TObject *THbookFile::ConvertCWN(Int_t id)
   tree->SetHbookFile(this);
   tree->SetType(1);
 
-  static char *bigbuf = tree->MakeX(500000);
-
+  char *bigbuf = tree->MakeX(500000);
+  
   gTree = tree;
 #ifndef WIN32
   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
@@ -743,8 +754,8 @@ TObject *THbookFile::ConvertCWN(Int_t id)
   delete [] lenbool;
   delete [] boolarr;
   delete [] chtag_out;
-
-     return tree;
+  
+  return tree;
 }
 
 //______________________________________________________________________________
