@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.7 2000/11/10 11:36:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.8 2000/11/21 20:33:01 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1817,7 +1817,7 @@ void TFormula::SetParameters(Double_t *params)
 
 //______________________________________________________________________________
 void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Double_t p4
-                       ,Double_t p5,Double_t p6,Double_t p7,Double_t p8,Double_t p9)
+                       ,Double_t p5,Double_t p6,Double_t p7,Double_t p8,Double_t p9,Double_t p10)
 {
 //*-*-*-*-*-*-*-*Initialize up to 10 parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ==============================
@@ -1832,12 +1832,13 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
    if (fNpar > 7) fParams[7] = p7;
    if (fNpar > 8) fParams[8] = p8;
    if (fNpar > 9) fParams[9] = p9;
+   if (fNpar >10) fParams[10]= p10;
    Update();
 }
 
 //______________________________________________________________________________
 void TFormula::SetParNames(const char*name0,const char*name1,const char*name2,const char*name3,const char*name4,
-                     const char*name5,const char*name6,const char*name7,const char*name8,const char*name9)
+                     const char*name5,const char*name6,const char*name7,const char*name8,const char*name9,const char*name10)
 {
 //*-*-*-*-*-*-*-*-*-*Set up to 10 parameter names*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ============================
@@ -1852,6 +1853,7 @@ void TFormula::SetParNames(const char*name0,const char*name1,const char*name2,co
    if (fNpar > 7) fNames[7] = name7;
    if (fNpar > 8) fNames[8] = name8;
    if (fNpar > 9) fNames[9] = name9;
+   if (fNpar >10) fNames[10]= name10;
 }
 
 //_______________________________________________________________________

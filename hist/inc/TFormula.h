@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.3 2000/08/11 20:10:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.4 2000/11/21 20:29:46 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -72,12 +72,12 @@ public:
  virtual void       SetParameter(Int_t ipar, Double_t parvalue);
  virtual void       SetParameters(Double_t *params);
  virtual void       SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0
-                       ,Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,Double_t p9=0); // *MENU*
+                       ,Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,Double_t p9=0,Double_t p10=0); // *MENU*
  virtual void       SetParName(Int_t ipar, const char *name) {fNames[ipar] = name;}
  virtual void       SetParNames(const char *name0="p0",const char *name1="p1",const char
                             *name2="p2",const char *name3="p3",const char
                             *name4="p4", const char *name5="p5",const char *name6="p6",const char *name7="p7",const char
-                            *name8="p8",const char *name9="p9"); // *MENU*
+                            *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
  virtual void       Update() {;}
 
  ClassDef(TFormula,4)  //The formula base class  f(x,y,z,par)
