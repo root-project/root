@@ -230,10 +230,10 @@ struct G__ifunc_table *ifunc;
       if(fname && strcmp(fname,ifunc->funcname[i])!=0) continue;
       
       if(
-#ifdef G__OLDIMPLEMENTATION1706_DEBUG
+#ifndef G__OLDIMPLEMENTATION2044
 	 ifunc->hash[i] &&
 #endif
-	 ifunc->access[i]&access) {
+	 (ifunc->access[i]&access)) {
 	
 	/* print out file name and line number */
 	if(ifunc->pentry[i]->filenum>=0) {

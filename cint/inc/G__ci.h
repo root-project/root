@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150132
-#define G__CINTVERSIONSTR  "5.15.132, Apr 12 2004"
+#define G__CINTVERSION      50150133
+#define G__CINTVERSIONSTR  "5.15.133, Apr 18 2004"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -2037,6 +2037,9 @@ extern G__EXPORT short* G__Shortref G__P((G__value *buf));
 extern G__EXPORT int* G__Intref G__P((G__value *buf));
 extern G__EXPORT long* G__Longref G__P((G__value *buf));
 extern G__EXPORT unsigned char* G__UCharref G__P((G__value *buf));
+#ifndef G__OLDIMPLEMENTATION2047
+extern G__EXPORT unsigned char* G__Boolref G__P((G__value *buf));
+#endif
 extern G__EXPORT unsigned short* G__UShortref G__P((G__value *buf));
 extern G__EXPORT unsigned int* G__UIntref G__P((G__value *buf));
 extern G__EXPORT unsigned long* G__ULongref G__P((G__value *buf));

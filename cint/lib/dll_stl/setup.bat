@@ -94,7 +94,7 @@ move Release\stdexcept.dll ..\..\stl\stdexcept.dll
 
 makecint -mk Makeclimits -dl climits.dll -H clim.h -cint -Z1
 nmake -f Makeclimits CFG="climits - Win32 Release"
-move climits.dll ..\..\stl\climits.dll
+move Release\climits.dll ..\..\stl\climits.dll
 
 rem del Release\*
 rem rmdir Release

@@ -565,7 +565,7 @@ struct char_traits {
     static const char_type* find (const char_type* s,int n,const char_type& a);
     static char_type  *copy(char_type *dst,const char_type *src, size_t n);
     static char_type* move (char_type* s1, const char_type* s2, size_t n);
-    static char_type* assign (char_type* s, size_t n, const char_type& a);
+    static char_type* assign (char_type* s, size_t n, const char_type a);
 };
 
 struct char_traits<char> {
@@ -590,7 +590,7 @@ struct char_traits<char> {
     static size_t            length(const char_type *s);
     static char_type  *copy(char_type *dst,const char_type *src, size_t n);
     static char_type * move (char_type* s1, const char_type* s2, size_t n);
-    static char_type* assign (char_type* s, size_t n, const char_type& a);
+    static char_type* assign (char_type* s, size_t n, const char_type a);
 };
 
 //typedef basic_istream<char> >                   istream;

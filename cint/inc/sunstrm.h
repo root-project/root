@@ -27,6 +27,7 @@ extern void G__set_cpp_environmentG__stream();
 #include "iostrm.h"
 #include "fstrm.h"
 #include "sstrm.h"
+#include "linkdef.h"
 
 #ifndef G__MEMFUNCBODY
 #endif
@@ -52,8 +53,6 @@ extern G__linked_taginfo G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEcharg
 extern G__linked_taginfo G__G__streamLN_basic_fstreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_string;
-extern G__linked_taginfo G__G__streamLN_allocatorlEchargR;
-extern G__linked_taginfo G__G__streamLN_allocatorlEwchar_tgR;
 extern G__linked_taginfo G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
@@ -72,8 +71,6 @@ typedef basic_ifstream<char,char_traits<char> > G__basic_ifstreamlEcharcOchar_tr
 typedef basic_ofstream<char,char_traits<char> > G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR;
 typedef basic_fstream<char,char_traits<char> > G__basic_fstreamlEcharcOchar_traitslEchargRsPgR;
 typedef basic_iostream<char,char_traits<char> > G__basic_iostreamlEcharcOchar_traitslEchargRsPgR;
-typedef allocator<char> G__allocatorlEchargR;
-typedef allocator<wchar_t> G__allocatorlEwchar_tgR;
 typedef basic_stringbuf<char,char_traits<char>,allocator<char> > G__basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 typedef basic_istringstream<char,char_traits<char>,allocator<char> > G__basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 typedef basic_ostringstream<char,char_traits<char>,allocator<char> > G__basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;

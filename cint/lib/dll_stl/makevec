@@ -74,7 +74,7 @@ INPUTMODELOCK = off
 IPATH      = $(SYSIPATH) 
 MACRO      = $(SYSMACRO)\
 		-DG__NOALGORITHM 
-CINTSYSDIR = /cygdrive/c/usr/src/cint
+CINTSYSDIR = /cygdrive/d/gotom/src/cint
 CINTIPATH  = -I$(CINTSYSDIR)
 OBJECT     = vector.dll
 OPTION     = $(CCDLLOPT)

@@ -18,6 +18,8 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
+#define G__OLDIMPLEMENTATION2047
+#define G__OLDIMPLEMENTATION2044 /* Problem with t980.cxx */
 
 
 #include "common.h"
@@ -3492,6 +3494,9 @@ static int G__isprivateconstructorifunc(tagnum,iscopy)
 int tagnum;
 int iscopy;
 {
+#ifndef G__OLDIMPLEMENTATION2044
+  int isctor=0;
+#endif
   struct G__ifunc_table *ifunc;
   int ifn;
   ifunc=G__struct.memfunc[tagnum];
@@ -3501,21 +3506,48 @@ int iscopy;
 	if(iscopy) { /* Check copy constructor */
 	  if((1<=ifunc->para_nu[ifn]&&'u'==ifunc->para_type[ifn][0]&&
 	      tagnum==ifunc->para_p_tagtable[ifn][0]) &&
-	     (1==ifunc->para_nu[ifn]||ifunc->para_default[ifn][1])&&
-	     G__PRIVATE==ifunc->access[ifn])
+	     (1==ifunc->para_nu[ifn]||ifunc->para_default[ifn][1])
+#ifdef G__OLDIMPLEMENTATION2044
+	     && G__PRIVATE==ifunc->access[ifn]
+#endif
+	     ) {
+#ifndef G__OLDIMPLEMENTATION2044
+	    if(G__PRIVATE==ifunc->access[ifn]) return(1);
+	    else isctor=1;
+#else
 	    return(1);
+#endif
+	  }
 	}
 	else { /* Check default constructor */
-	  if((0==ifunc->para_nu[ifn]||ifunc->para_default[ifn][0])&&
-	     G__PRIVATE==ifunc->access[ifn])
+	  if((0==ifunc->para_nu[ifn]||ifunc->para_default[ifn][0])
+#ifdef G__OLDIMPLEMENTATION2044
+	     && G__PRIVATE==ifunc->access[ifn]
+#endif
+	     ) {
+#ifndef G__OLDIMPLEMENTATION2044
+	    if(G__PRIVATE==ifunc->access[ifn]) return(1);
+	    else isctor=1;
+#else
 	    return(1);
+#endif
+	  }
 #ifndef G__OLDIMPLEMENTATION1652
 	  /* Following solution may not be perfect */
 	  if((1<=ifunc->para_nu[ifn]&&'u'==ifunc->para_type[ifn][0]&&
 	      tagnum==ifunc->para_p_tagtable[ifn][0]) &&
 	     (1==ifunc->para_nu[ifn]||ifunc->para_default[ifn][1])
-	     &&G__PRIVATE==ifunc->access[ifn])
+#ifdef G__OLDIMPLEMENTATION2044
+	     &&G__PRIVATE==ifunc->access[ifn]
+#endif
+	     ) {
+#ifndef G__OLDIMPLEMENTATION2044
+	    if(G__PRIVATE==ifunc->access[ifn]) return(1);
+	    else isctor=1;
+#else
 	    return(1);
+#endif
+	  }
 #endif
 	}
       }
@@ -3528,6 +3560,9 @@ int iscopy;
     }
     ifunc=ifunc->next;
   } while(ifunc);
+#ifndef G__OLDIMPLEMENTATION2044
+  if(G__struct.iscpplink[tagnum]==G__CPPLINK && !isctor) return(1);
+#endif
   return(0);
 }
 
@@ -3634,6 +3669,9 @@ int iscopy;
 static int G__isprivatedestructorifunc(tagnum)
 int tagnum;
 {
+#ifndef G__OLDIMPLEMENTATION2044
+  int isdtor=0;
+#endif
   char *dtorname;
   struct G__ifunc_table *ifunc;
   int ifn;
@@ -3648,6 +3686,9 @@ int tagnum;
 	  free((void*)dtorname);
 	  return(1);
 	}
+#ifndef G__OLDIMPLEMENTATION2044
+	else isdtor=1;
+#endif
       }
       else if(strcmp("operator delete",ifunc->funcname[ifn])==0) {
 	if(G__PRIVATE==ifunc->access[ifn]||G__PROTECTED==ifunc->access[ifn]) {
@@ -3659,6 +3700,9 @@ int tagnum;
     ifunc=ifunc->next;
   } while(ifunc);
   free((void*)dtorname);
+#ifndef G__OLDIMPLEMENTATION2044
+  if(G__struct.iscpplink[tagnum]==G__CPPLINK && !isdtor) return(1);
+#endif
   return(0);
 }
 
@@ -3757,12 +3801,27 @@ int tagnum;
 static int G__isprivateassignoprifunc(tagnum)
 int tagnum;
 {
+#ifndef G__OLDIMPLEMENTATION2044
+  int isassign=0;
+#endif
   struct G__ifunc_table *ifunc;
   int ifn;
   ifunc=G__struct.memfunc[tagnum];
   do {
     for(ifn=0;ifn<ifunc->allifunc;ifn++) {
       if(strcmp("operator=",ifunc->funcname[ifn])==0) {
+#ifndef G__OLDIMPLEMENTATION2044
+	if('u'==ifunc->para_type[ifn][0] 
+	   && tagnum==ifunc->para_p_tagtable[ifn][0]) {
+	  if((G__PRIVATE==ifunc->access[ifn]||
+	      G__PROTECTED==ifunc->access[ifn])) {
+	     return(1);
+	  }	
+	  else {
+	    isassign=1;
+	  }
+	}
+#else
 	if((G__PRIVATE==ifunc->access[ifn]||G__PROTECTED==ifunc->access[ifn])
 #ifndef G__OLDIMPLEMENTATION2036
 	   && 'u'==ifunc->para_type[ifn][0] 
@@ -3771,10 +3830,14 @@ int tagnum;
 	    ) {
 	  return(1);
 	}
+#endif
       }
     }
     ifunc=ifunc->next;
   } while(ifunc);
+#ifndef G__OLDIMPLEMENTATION2044
+  if(G__struct.iscpplink[tagnum]==G__CPPLINK && !isassign) return(1);
+#endif
   return(0);
 }
 
@@ -4997,7 +5060,12 @@ int k;
 	  fprintf(fp,"*(%s*)G__ULongref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
 	  break;
-#ifndef G__OLDIMPLEMENTATION1604
+#if !defined(G__OLDIMPLEMENTATION2047)
+        case 'g':
+	  fprintf(fp,"*(%s*)G__Boolref(&libp->para[%d])"
+		  ,G__type2string(type,tagnum,typenum,0,0),k);
+	  break;
+#elif !defined(G__OLDIMPLEMENTATION1604)
         case 'g':
 	  fprintf(fp,"*(%s*)G__UCharref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
@@ -6165,6 +6233,25 @@ FILE *fp;
   fprintf(fp,"***********************************************************/\n");
 }
 
+#ifndef G__OLDIMPLEMENTATION2045
+/**************************************************************************
+* G__isprivatectordtorassgn()
+*
+**************************************************************************/
+int G__isprivatectordtorassgn(tagnum,ifunc,ifn)
+int tagnum;
+struct G__ifunc_table *ifunc;
+int ifn;
+{
+  /* if(G__PRIVATE!=ifunc->access[ifn]) return(0); */
+  if(G__PUBLIC==ifunc->access[ifn]) return(0);
+  if('~'==ifunc->funcname[ifn][0]) return(1);
+  if(strcmp(ifunc->funcname[ifn],G__struct.name[tagnum])==0) return(1);
+  if(strcmp(ifunc->funcname[ifn],"operator=")==0) return(1);
+  return(0);
+}
+#endif
+
 
 /**************************************************************************
 * G__cpplink_memfunc()
@@ -6188,6 +6275,9 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION898
   int virtualdtorflag;
 #endif
+#ifndef G__OLDIMPLEMENTATION2045
+  int dtoraccess=G__PUBLIC;
+#endif
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Member function information setup for each class\n");
@@ -6199,6 +6289,9 @@ FILE *fp;
   }
 
   for(i=0;i<G__struct.alltag;i++) {
+#ifndef G__OLDIMPLEMENTATION2045
+    dtoraccess=G__PUBLIC;
+#endif
     if((G__CPPLINK==G__struct.globalcomp[i]
 #ifndef G__OLDIMPLEMENTATION1730
 	|| G__ONLYMETHODLINK==G__struct.globalcomp[i]
@@ -6251,6 +6344,9 @@ FILE *fp;
       while(ifunc) {
 	for(j=0;j<ifunc->allifunc;j++) {
 	  if((G__PUBLIC==ifunc->access[j]) || G__precomp_private
+#ifndef G__OLDIMPLEMENTATION2045
+	     || G__isprivatectordtorassgn(i,ifunc,j)
+#endif
 #ifndef G__OLDIMPLEMENTATION1334
 #ifndef G__OLDIMPLEMENTATION1483
 	     || (G__PROTECTED==ifunc->access[j]&&
@@ -6311,6 +6407,9 @@ FILE *fp;
 	    }
 	    else if('~'==ifunc->funcname[j][0]) {
 	      /* if(ifunc->isvirtual[j]) isvirtualdestructor=1; */
+#ifndef G__OLDIMPLEMENTATION2045
+	      dtoraccess = ifunc->access[j];
+#endif
 #ifndef G__OLDIMPLEMENTATION898
 	      virtualdtorflag= ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2;
 #endif
@@ -6474,6 +6573,9 @@ FILE *fp;
 #endif
 #ifndef G__OLDIMPLEMENTATION1292
 	       && G__PUBLIC==ifunc->access[j]
+#endif
+#ifndef G__OLDIMPLEMENTATION2046
+	       && G__MACROLINK!=ifunc->globalcomp[j]
 #endif
 	       ) {
 #ifndef G__OLDIMPLEMENTATION1993
@@ -6667,20 +6769,37 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1054
 	  if('n'==G__struct.type[i]) isdestructor=1;
 #endif
-	  if(0==isdestructor) {
+	  if(
+#ifndef G__OLDIMPLEMENTATION2045
+	     1
+#else
+	     0==isdestructor
+#endif
+	     ) {
 	    sprintf(funcname,"~%s",G__struct.name[i]);
 	    G__hash(funcname,hash,k);
 	    fprintf(fp,"   // automatic destructor\n");
 	    fprintf(fp,"   G__memfunc_setup(");
 	    fprintf(fp,"\"%s\",%d,",funcname,hash);
+#ifndef G__OLDIMPLEMENTATION2045
+	    if(0==isdestructor) 
+	      fprintf(fp,"%s,",G__map_cpp_funcname(i ,funcname ,j,page));
+	    else 
+	      fprintf(fp,"(G__InterfaceMethod)NULL,");
+#else
 	    fprintf(fp,"%s,",G__map_cpp_funcname(i ,funcname ,j,page));
+#endif
 	    fprintf(fp,"(int)('y'),");
 	    fprintf(fp,"-1,"); /* tagnum */
 	    fprintf(fp,"-1,"); /* typenum */
 	    fprintf(fp,"0,"); /* reftype */
 	    fprintf(fp,"0,"); /* para_nu */
 	    fprintf(fp,"1,"); /* ansi */
+#ifndef G__OLDIMPLEMENTATION2045
+	    fprintf(fp,"%d,0",dtoraccess);
+#else
 	    fprintf(fp,"%d,0",G__PUBLIC);
+#endif
 #ifdef G__TRUEP2F
 	    fprintf(fp,",\"\",(char*)NULL,(void*)NULL,%d);\n"
 #ifndef G__OLDIMPLEMENTATION898
@@ -6691,7 +6810,11 @@ FILE *fp;
 #else
 	    fprintf(fp,",\"\",(char*)NULL);\n");
 #endif
+#ifndef G__OLDIMPLEMENTATION2045
+	    if(0==isdestructor) ++j;
+#else
 	    ++j;
+#endif
 	    if(j==G__MAXIFUNC) {
 	      j=0;
 	      ++page;
@@ -10320,6 +10443,23 @@ G__value *buf;
     buf->obj.uch = (unsigned char)buf->obj.i; 
   return(&buf->obj.uch);
 }
+
+#ifndef G__OLDIMPLEMENTATION2047
+/**************************************************************************
+* G__UBoolref()
+**************************************************************************/
+unsigned char* G__Boolref(buf)
+G__value *buf;
+{
+  if('g'==buf->type && buf->ref) 
+    return((unsigned char*)buf->ref);
+  else if('d'==buf->type || 'f'==buf->type) 
+    buf->obj.uch = (unsigned char)buf->obj.d;
+  else 
+    buf->obj.uch = (unsigned char)buf->obj.i; 
+  return(&buf->obj.uch);
+}
+#endif
 
 /**************************************************************************
 * G__UShortref()

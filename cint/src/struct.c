@@ -426,7 +426,11 @@ int tagnum;
     libname = G__struct.libname[tagnum];
     /* G__struct.type[tagnum]=0; */
     if(G__p_class_autoloading) {
-      return((*G__p_class_autoloading)(G__struct.name[tagnum],libname));
+      int res;
+      G__enable_autoloading = 0;
+      res = (*G__p_class_autoloading)(G__struct.name[tagnum],libname);
+      G__enable_autoloading = 1;
+      return(res);
     }
     else if(libname) {
       G__enable_autoloading = 0;
