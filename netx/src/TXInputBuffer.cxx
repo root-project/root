@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.cxx,v 1.3 2005/01/05 01:20:11 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.cxx,v 1.4 2005/01/05 01:55:13 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -156,7 +156,7 @@ TXMessage *TXInputBuffer::GetMsg(Short_t streamid, Int_t secstimeout)
             // If not, wait for the next (remember: the mtx is
             // unlocked internally).
             if (!res) {
-               cr = cv->TimedWaitRelative(2);
+               cr = cv->TimedWaitRelative(2000);
             }
          }
 
