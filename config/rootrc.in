@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.44 2003/04/24 19:18:23 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.45 2003/05/05 16:41:09 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -45,6 +45,9 @@ X11.FindBestVisual:      yes
 # Default editor
 Unix.*.Editor:           vi
 WinNT.*.Editor:          notepad
+
+# Default Fitter (current choices are Minuit and Fumili)
+Root.Fitter:             Minuit
 
 # Specify list of file endings which TTabCom (TAB completion) should ignore.
 #TabCom.FileIgnore:       .cpp:.h:.cmz
