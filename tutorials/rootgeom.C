@@ -124,6 +124,6 @@ void rootgeom()
    //--- draw the ROOT box
    geom->SetVisLevel(4);
    top->Draw();
-   if (gPad) gPad->x3d();
+   if (gPad && !gROOT->IsBatch()) gPad->x3d();
 }   
    
