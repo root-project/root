@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealProxy.rdl,v 1.11 2001/10/01 23:55:00 verkerke Exp $
+ *    File: $Id: RooRealProxy.rdl,v 1.12 2001/10/03 16:16:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,7 +47,7 @@ protected:
 public:
 
   // LValue operations 
-  RooRealProxy& operator=(Double_t& value) { lvptr()->setVal(value) ; return *this ; }
+  RooRealProxy& operator=(const Double_t& value) { lvptr()->setVal(value) ; return *this ; }
   Double_t min() const { return lvptr()->getFitMin() ; }
   Double_t max() const { return lvptr()->getFitMax() ; }
 
