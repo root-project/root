@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.66 2001/04/27 19:06:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.67 2001/05/08 20:28:11 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -26,6 +26,11 @@
 #include "TBuffer.h"
 #include "TFile.h"
 #include "TArrayC.h"
+#include "TArrayI.h"
+#include "TArrayF.h"
+#include "TArrayD.h"
+#include "TArrayS.h"
+#include "TArrayL.h"
 #include "TError.h"
 
 Int_t   TStreamerInfo::fgCount = 0;
@@ -1066,7 +1071,7 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[k]);}
       case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[k]);}
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[k]);}
-         // array counter //[n]
+         // array counter //[n] 
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
    }
    return 0;
@@ -1729,8 +1734,30 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             if (gDebug > 0) printf("WARNING, Streamer is null\n");
-                            //if (!element->GetClassPointer()->InheritsFrom(TObject::Class())) break;
-                            element->GetClassPointer()->ReadBuffer(b,pointer+fOffset[i]);
+                            //Note that this does not work if the class has a custom Streamer
+                            //with no bytecount
+                            TClass *cle = element->GetClassPointer();
+                            if (cle->InheritsFrom(TArray::Class())) {
+                               //special case (frequent) with TArray classes
+                               //The TArray Streamers not compatible with ReadBuffer
+                               // (no byte count)
+                               if (strchr(element->GetTypeName(),'*')) {
+                                  if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+fOffset[i]); b >> *ar; break;}
+                                  if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+fOffset[i]); b >> *ar; break;}
+                                  if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+fOffset[i]); b >> *ar; break;}
+                                  if (cle == TArrayD::Class()) {TArrayD **ar = (TArrayD**)(pointer+fOffset[i]); b >> *ar; break;}
+                                  if (cle == TArrayS::Class()) {TArrayS **ar = (TArrayS**)(pointer+fOffset[i]); b >> *ar; break;}
+                                  if (cle == TArrayL::Class()) {TArrayL **ar = (TArrayL**)(pointer+fOffset[i]); b >> *ar; break;}
+                               } else {
+                                  if (cle == TArrayI::Class()) {TArrayI *ar = (TArrayI*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayF::Class()) {TArrayF *ar = (TArrayF*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayC::Class()) {TArrayC *ar = (TArrayC*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayD::Class()) {TArrayD *ar = (TArrayD*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayS::Class()) {TArrayS *ar = (TArrayS*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                               }
+                            }
+                           cle->ReadBuffer(b,pointer+fOffset[i]);
                             break;
                          }
                          (*pstreamer)(b,pointer+fOffset[i],0);
