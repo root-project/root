@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.3 2004/07/27 12:21:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.4 2005/01/05 22:22:13 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -55,7 +55,7 @@ namespace ROOT {
    {
       Assert( strcmp(fInfo->GetName(), type)==0 );
       NameToSymbol();
-      if (fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
+      if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
 
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *branchname) :
@@ -70,7 +70,7 @@ namespace ROOT {
    {
       // Constructor for a branch constructed from a leaf list.
       NameToSymbol();
-      if (fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
+      if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
 
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TStreamerInfo *info, 
@@ -88,7 +88,7 @@ namespace ROOT {
    {
       Assert( strcmp(fInfo->GetName(), type)==0 );
       NameToSymbol();
-      if (fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
+      if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
 
    const char* TBranchProxyClassDescriptor::GetBranchName() const {
@@ -140,10 +140,10 @@ namespace ROOT {
             TString rightname(  othdesc->GetBranchName() );
 
             if (leftname.Index(GetBranchName())==0) leftname.Remove( 0,strlen(GetBranchName()));
-            if (leftname[0]=='.') leftname.Remove(0,1);
+            if (leftname.Length() && leftname[0]=='.') leftname.Remove(0,1);
             if (rightname.Index(other->GetBranchName())==0) rightname.Remove(0,strlen(other->GetBranchName()));
-            if (rightname[0]=='.') rightname.Remove(0,1);
-            if ( leftname != rightname ) return kFALSE;
+            if (rightname.Length() && rightname[0]=='.') rightname.Remove(0,1);
+            if (leftname != rightname ) return kFALSE;
          }
       }
       return true;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.10 2005/01/05 22:22:13 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.11 2005/01/19 18:30:58 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -662,12 +662,24 @@ namespace ROOT {
             dataMemberName.Remove(0,strlen( topdesc->GetSubBranchPrefix() )+1);
          }
          pos = dataMemberName.Index(".");
-         if (pos != -1 &&             
-             strncmp( mom->GetName(), 
-                      dataMemberName.Data(), 
-                      strlen(mom->GetName()) ) ==0 ) {
-            brprefix += dataMemberName(0,pos+1);
-            dataMemberName.Remove(0,strlen(mom->GetName())+1);
+         if (pos != -1) {        
+            if (strncmp( mom->GetName(), 
+                         dataMemberName.Data(), 
+                         strlen(mom->GetName()) ) ==0 ) 
+            {
+               brprefix += dataMemberName(0,pos+1);
+               dataMemberName.Remove(0,strlen(mom->GetName())+1);
+            } else {
+               TBranch *momSmom = (TBranchElement*)mom->GetMother()->GetSubBranch(mom);
+               if (momSmom != mom && momSmom != branch->GetMother() &&
+                  strncmp( momSmom->GetName(), 
+                  dataMemberName.Data(), 
+                  strlen(momSmom->GetName()) ) ==0 ) 
+               {
+                  brprefix += dataMemberName(0,pos+1);
+                  dataMemberName.Remove(0,strlen(momSmom->GetName())+1);
+               }
+            }
          }
          TBranch *topmother = branch->GetMother();
          if ( strncmp( topmother->GetName(), 
