@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.5 2003/01/22 11:23:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.6 2003/05/12 16:44:08 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -68,6 +68,11 @@ TGApplication::TGApplication(const char *appClassName,
 
    if (!fDisplay) gSystem->SetDisplay();
    fClient = new TGClient(fDisplay);
+
+   if (fClient->IsZombie()) {
+      Error("TGApplication", "cannot switch to batch mode, exiting...");
+      gSystem->Exit(1);
+   }
 
 #if !defined(R__WIN32) || defined(GDK_WIN32)
    if (strcmp(appClassName, "proofserv")) {

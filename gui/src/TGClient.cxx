@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.24 2003/08/06 20:25:04 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.25 2003/08/06 23:42:39 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -90,21 +90,15 @@ TGClient::TGClient(const char *dpyName)
       return;
    }
 
-   // Initialize internal window list. Use a THashList for fast
-   // finding of windows based on window id (see GetWindowById()).
-
-   fWlist = new THashList(200);
-   fPlist = new TList;
-   fUWHandlers = 0;
-
-  // Set DISPLAY based on utmp (only if DISPLAY is not yet set).
+   // Set DISPLAY based on utmp (only if DISPLAY is not yet set).
    gSystem->SetDisplay();
 
    // Open the connection to the display
    if ((fXfd = gVirtualX->OpenDisplay(dpyName)) < 0) {
-      Error("TGClient", "can't open display \"%s\", bombing...",
+      Error("TGClient", "can't open display \"%s\", switching to batch mode...",
             gVirtualX->DisplayName(dpyName));
-      gSystem->Exit(1);
+      MakeZombie();
+      return;
    }
    if (fXfd >= 0) {
       TGInputHandler *xi = new TGInputHandler(this, fXfd);
@@ -117,6 +111,15 @@ TGClient::TGClient(const char *dpyName)
       // TFileHandler::ReadNotify()).
       gXDisplay = xi;
    }
+
+   // Initialize internal window list. Use a THashList for fast
+   // finding of windows based on window id (see GetWindowById()).
+
+   fWlist = new THashList(200);
+   fPlist = new TList;
+   fUWHandlers = 0;
+
+   // Create root window
 
    fRoot = new TGFrame(this, gVirtualX->GetDefaultRootWindow());
 
@@ -422,6 +425,9 @@ TGWindow *TGClient::GetWindowById(Window_t wid) const
 TGClient::~TGClient()
 {
    // Closing down client: cleanup and close X connection.
+
+   if (IsZombie())
+      return;
 
    if (fWlist)
       fWlist->Delete("slow");

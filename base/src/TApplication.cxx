@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.46 2003/07/07 14:51:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.47 2003/07/08 15:42:25 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -151,6 +151,10 @@ TApplication::TApplication(const char *appClassName,
 
    // Create WM dependent application environment
    fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
+   if (!fAppImp) {
+      MakeBatch();
+      fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
+   }
 
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
@@ -267,13 +271,7 @@ void TApplication::GetOptions(int *argc, char **argv)
          fprintf(stderr, "\n");
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
-         gROOT->SetBatch();
-         if (gGuiFactory != gBatchGuiFactory) delete gGuiFactory;
-         gGuiFactory = gBatchGuiFactory;
-#ifndef R__WIN32
-         if (gVirtualX != gGXBatch) delete gVirtualX;
-#endif
-         gVirtualX = gGXBatch;
+         MakeBatch();
          argv[i] = 0;
 #if 0
       } else if (!strcmp(argv[i], "-x")) {
@@ -553,6 +551,20 @@ void TApplication::LoadGraphicsLibs()
          return;
       gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
    }
+}
+
+//______________________________________________________________________________
+void TApplication::MakeBatch()
+{
+   // Switch to batch mode.
+
+   gROOT->SetBatch();
+   if (gGuiFactory != gBatchGuiFactory) delete gGuiFactory;
+   gGuiFactory = gBatchGuiFactory;
+#ifndef R__WIN32
+   if (gVirtualX != gGXBatch) delete gVirtualX;
+#endif
+   gVirtualX = gGXBatch;
 }
 
 //______________________________________________________________________________
