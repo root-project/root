@@ -118,88 +118,7 @@ SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w
     fTab = new TGTab(this, 300, 300);
     fL3 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 10, 10, 10, 10);
 
-    TGCompositeFrame *tf = fTab->AddTab("Target properties");
-    tf->SetLayoutManager(new TGHorizontalLayout(tf));
-
-    fF1 = new TGGroupFrame(tf, "Material", kVerticalFrame);
-    tf->AddFrame(fF1, fL3);
-    fF1->SetLayoutManager(new TGMatrixLayout(fF1, 0, 1, 10));
-
-    fF1->AddFrame(fRad1 = new TGRadioButton(fF1, "Polystyrene", 81));
-    fF1->AddFrame(fRad2 = new TGRadioButton(fF1, "Bismuth germanate", 82));
-    fF1->AddFrame(fRad3 = new TGRadioButton(fF1, "Cesium iodide", 83));
-    fF1->AddFrame(fRad4 = new TGRadioButton(fF1, "Sodium iodide ", 84));
-    fRad1->SetToolTipText("Polystyrene ");
-    fRad2->SetToolTipText("Bismuth germanate (BGO)");
-    fRad3->SetToolTipText("Cesium iodide (CsI)");
-    fRad4->SetToolTipText("Sodium iodide (NaI)");
-
-    fRad1->Associate(this);
-    fRad2->Associate(this);
-    fRad3->Associate(this);
-    fRad4->Associate(this);
-    switch(gRootShower->fMaterial) {
-        case Polystyrene:
-            fRad1->SetState(kButtonDown);
-            fRad2->SetState(kButtonUp);
-            fRad3->SetState(kButtonUp);
-            fRad4->SetState(kButtonUp);
-            break;
-        case BGO:
-            fRad1->SetState(kButtonUp);
-            fRad2->SetState(kButtonDown);
-            fRad3->SetState(kButtonUp);
-            fRad4->SetState(kButtonUp);
-            break;
-        case CsI:
-            fRad1->SetState(kButtonUp);
-            fRad2->SetState(kButtonUp);
-            fRad3->SetState(kButtonDown);
-            fRad4->SetState(kButtonUp);
-            break;
-        case NaI:
-            fRad1->SetState(kButtonUp);
-            fRad2->SetState(kButtonUp);
-            fRad3->SetState(kButtonUp);
-            fRad4->SetState(kButtonDown);
-            break;
-        default:
-            fRad1->SetState(kButtonUp);
-            fRad2->SetState(kButtonUp);
-            fRad3->SetState(kButtonDown);
-            fRad4->SetState(kButtonUp);
-            break;
-    }
-
-    fF1->Resize(fF1->GetDefaultSize());
-
-    // another matrix with text and buttons
-    fF2 = new TGGroupFrame(tf, "Dimensions", kVerticalFrame);
-    fF2->SetTitlePos(TGGroupFrame::kRight); // right aligned
-    tf->AddFrame(fF2, fL3);
-
-    fF2->SetLayoutManager(new TGMatrixLayout(fF2, 0, 2, 10));
-
-    fF2->AddFrame(new TGLabel(fF2, "X [cm]"));
-    fF2->AddFrame(fTxt1 = new TGTextEntry(fF2, new TGTextBuffer(100), Id1));
-    fF2->AddFrame(new TGLabel(fF2, "Y [cm]"));
-    fF2->AddFrame(fTxt2 = new TGTextEntry(fF2, new TGTextBuffer(100), Id2));
-    fF2->AddFrame(new TGLabel(fF2, "Z [cm]"));
-    fF2->AddFrame(fTxt3 = new TGTextEntry(fF2, new TGTextBuffer(100), Id3));
-    fTxt1->Associate(this);
-    fTxt2->Associate(this);
-    fTxt3->Associate(this);
-    fTxt1->Resize(60, fTxt1->GetDefaultHeight());
-    fTxt2->Resize(60, fTxt2->GetDefaultHeight());
-    fTxt3->Resize(60, fTxt3->GetDefaultHeight());
-    sprintf(tmp,"%1.3f",gRootShower->fDimX);
-    fTxt1->SetText(tmp);
-    sprintf(tmp,"%1.3f",gRootShower->fDimY);
-    fTxt2->SetText(tmp);
-    sprintf(tmp,"%1.3f",gRootShower->fDimZ);
-    fTxt3->SetText(tmp);
-
-    tf = fTab->AddTab("Physics settings");
+    TGCompositeFrame *tf = fTab->AddTab("Physics settings");
     tf->SetLayoutManager(new TGHorizontalLayout(tf));
 
     fF3 = new TGGroupFrame(tf, "Particle", kVerticalFrame);
@@ -242,7 +161,7 @@ SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w
     MapSubwindows();
     Resize(GetDefaultSize());
 
-    fF2->Resize(fF2->GetDefaultWidth(),fF1->GetDefaultHeight());
+//    fF2->Resize(fF2->GetDefaultWidth(),fF1->GetDefaultHeight());
     fF4->Resize(fF4->GetDefaultWidth(),fF3->GetDefaultHeight());
 
     for (i = 0; choice_def[i].pdg_name; i++) {
@@ -288,18 +207,9 @@ SettingsDialog::~SettingsDialog()
     delete fCancelButton;
     delete fHelpButton;
     delete fFrame1;
-    delete fRad1; 
-    delete fRad2;
-    delete fRad3; 
-    delete fRad4;
     delete fListBox;
-    delete fF1; 
-    delete fF2; 
     delete fF3; 
     delete fF4;
-    delete fTxt1; 
-    delete fTxt2; 
-    delete fTxt3;
     delete fTxt4; 
     delete fTxt5;
     delete fTab;
@@ -342,20 +252,10 @@ Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                          break;
                      }
                      gRootShower->fFirstParticle = choice_def[Selection].pdg_code;
-                     buf_tmp = fTxt1->GetBuffer()->GetString();
-                     gRootShower->fDimX = atof(buf_tmp);
-                     buf_tmp = fTxt2->GetBuffer()->GetString();
-                     gRootShower->fDimY = atof(buf_tmp);
-                     buf_tmp = fTxt3->GetBuffer()->GetString();
-                     gRootShower->fDimZ = atof(buf_tmp);
                      buf_tmp = fTxt4->GetBuffer()->GetString();
                      gRootShower->fE0 = atof(buf_tmp);
                      buf_tmp = fTxt5->GetBuffer()->GetString();
                      gRootShower->fB = atof(buf_tmp);
-                     if(fRad1->GetState() != kButtonUp) gRootShower->fMaterial = Polystyrene;
-                     if(fRad2->GetState() != kButtonUp) gRootShower->fMaterial = BGO;
-                     if(fRad3->GetState() != kButtonUp) gRootShower->fMaterial = CsI;
-                     if(fRad4->GetState() != kButtonUp) gRootShower->fMaterial = NaI;
                      gRootShower->SettingsModified();
                   case 2:
                      CloseWindow();
@@ -370,30 +270,6 @@ Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                }
                break;
-            case kCM_RADIOBUTTON:
-               switch (parm1) {
-                  case 81:
-                     fRad2->SetState(kButtonUp);
-                     fRad3->SetState(kButtonUp);
-                     fRad4->SetState(kButtonUp);
-                     break;
-                  case 82:
-                     fRad1->SetState(kButtonUp);
-                     fRad3->SetState(kButtonUp);
-                     fRad4->SetState(kButtonUp);
-                     break;
-                  case 83:
-                     fRad1->SetState(kButtonUp);
-                     fRad2->SetState(kButtonUp);
-                     fRad4->SetState(kButtonUp);
-                     break;
-                  case 84:
-                     fRad1->SetState(kButtonUp);
-                     fRad2->SetState(kButtonUp);
-                     fRad3->SetState(kButtonUp);
-                     break;
-               }
-               break;
             case kCM_TAB:
                break;
             default:
@@ -404,15 +280,6 @@ Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kTE_ENTER:
                switch (parm1) {
-                  case Id1:
-                     fTxt2->SetFocus();
-                     break;
-                  case Id2:
-                     fTxt3->SetFocus();
-                     break;
-                  case Id3:
-                     fTxt1->SetFocus();
-                     break;
                   case Id4:
                      fTxt5->SetFocus();
                      break;
@@ -423,15 +290,6 @@ Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                break;
             case kTE_TAB:
                switch (parm1) {
-                  case Id1:
-                     fTxt2->SetFocus();
-                     break;
-                  case Id2:
-                     fTxt3->SetFocus();
-                     break;
-                  case Id3:
-                     fTxt1->SetFocus();
-                     break;
                   case Id4:
                      fTxt5->SetFocus();
                      break;

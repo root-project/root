@@ -43,10 +43,8 @@
 #include "RSHelpText.h"
 #include "MyEvent.h"
 
-#include <TGeometry.h>
-#include <TBRIK.h>
-#include <TMixture.h>
-#include <TNode.h>
+#include <TGeoManager.h>
+#include <TGeoTrack.h>
 #include <TView.h>
 #include <TGToolBar.h>
 
@@ -132,6 +130,7 @@ TGListTree      *gEventListTree; // event selection TGListTree
 TGListTreeItem  *gBaseLTI;
 TGListTreeItem  *gTmpLTI;
 TGListTreeItem  *gLTI[MAX_PARTICLE];
+TGeoTrack       *gTrack;
 
 const TGPicture *bpic, *bspic;
 const TGPicture *lpic, *lspic;
@@ -184,17 +183,9 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fFirstParticle = fRootShowerEnv->GetValue("RootShower.fFirstParticle", PHOTON);
     fE0            = fRootShowerEnv->GetValue("RootShower.fE0", 10.0);
     fB             = fRootShowerEnv->GetValue("RootShower.fB", 20.000);
-    fMaterial      = fRootShowerEnv->GetValue("RootShower.fMaterial", Polystyrene);
-    fDimX          = fRootShowerEnv->GetValue("RootShower.fDimX", 100.0);
-    fDimY          = fRootShowerEnv->GetValue("RootShower.fDimY", 200.0);
-    fDimZ          = fRootShowerEnv->GetValue("RootShower.fDimZ", 100.0);
     fPicNumber     = fRootShowerEnv->GetValue("RootShower.fPicNumber", 24);
     fPicDelay      = fRootShowerEnv->GetValue("RootShower.fPicDelay", 100);
     fPicReset      = fRootShowerEnv->GetValue("RootShower.fPicReset", 1);
-
-    fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
-    fMaxV /= 2.0;
-    fMinV = -1.0 * fMaxV;
 
     fEventNr = 0;
     fNRun    = 0;
@@ -314,18 +305,6 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fEmbeddedCanvas2->GetCanvas()->SetBorderMode(0);
     cB = fEmbeddedCanvas2->GetCanvas();
     cB->SetFillColor(1);
-    cB->cd();
-    fSelection = new TGeometry("selection","selection");
-    fSelection->cd();
-    sel_detect = new TBRIK("sel_detect","sel_detect","void",fDimX/2.0,fDimY/2.0,fDimZ/2.0);
-    sel_detect->SetLineColor(7);
-    sel_node = new TNode("SEL_NODE","SEL_NODE","sel_detect");
-    sel_node->cd();
-    fSelection->Draw();
-    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
-    cB->GetView()->SetPerspective();
-    cB->GetView()->SideView();
-    cB->Update();
 
     // Create Display Canvas Tab (where the histogram is displayed)
     TGCompositeFrame *tFrame3 = fDisplayFrame->AddTab("Statistics");
@@ -383,10 +362,11 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     SetIconName("Root Shower Event Display");
     MapSubwindows();
     Resize(GetDefaultSize()); // this is used here to init layout algoritme
-    this->Move(fgDefaultXPosition, fgDefaultYPosition);
+//    this->Move(fgDefaultXPosition, fgDefaultYPosition);
     MapWindow();
     fEvent = new MyEvent();
-    fEvent->Init(0, fFirstParticle, fE0, fB, fMaterial, fDimX, fDimY, fDimZ);
+    fEvent->GetDetector()->Init();
+    fEvent->Init(0, fFirstParticle, fE0, fB);
     Initialize(1);
     gROOT->GetListOfBrowsables()->Add(fEvent,"RootShower Event");
     gSystem->Load("libTreeViewer");
@@ -563,10 +543,6 @@ void RootShower::CloseWindow()
             fRootShowerEnv->SetValue("RootShower.fFirstParticle",fFirstParticle);
             fRootShowerEnv->SetValue("RootShower.fE0",fE0);
             fRootShowerEnv->SetValue("RootShower.fB",fB);
-            fRootShowerEnv->SetValue("RootShower.fMaterial",fMaterial);
-            fRootShowerEnv->SetValue("RootShower.fDimX",fDimX);
-            fRootShowerEnv->SetValue("RootShower.fDimY",fDimY);
-            fRootShowerEnv->SetValue("RootShower.fDimZ",fDimZ);
             fRootShowerEnv->SaveLevel(kEnvLocal);
             cout << " Saving stuff .... " << endl;
 #ifdef R__WIN32
@@ -732,7 +708,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if(fIsRunning) break;
                         new SettingsDialog(fClient->GetRoot(), this, 400, 200);
                         if(fSettingsModified) {
-                            fEvent->Init(0, fFirstParticle, fE0, fB, fMaterial, fDimX, fDimY, fDimZ);
+                            fEvent->Init(0, fFirstParticle, fE0, fB);
                             Initialize(0);
                             gRootShower->Modified();
                             gRootShower->SettingsModified(kFALSE);
@@ -743,10 +719,6 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         fRootShowerEnv->SetValue("RootShower.fFirstParticle",fFirstParticle);
                         fRootShowerEnv->SetValue("RootShower.fE0",fE0);
                         fRootShowerEnv->SetValue("RootShower.fB",fB);
-                        fRootShowerEnv->SetValue("RootShower.fMaterial",fMaterial);
-                        fRootShowerEnv->SetValue("RootShower.fDimX",fDimX);
-                        fRootShowerEnv->SetValue("RootShower.fDimY",fDimY);
-                        fRootShowerEnv->SetValue("RootShower.fDimZ",fDimZ);
                         fRootShowerEnv->SaveLevel(kEnvLocal);
 #ifdef R__WIN32
                         gSystem->Exec("del .rootshowerrc");
@@ -893,22 +865,11 @@ void RootShower::Initialize(Int_t set_angles)
     fEventListTree->DeleteChildren(fCurListItem);
     fClient->NeedRedraw(fEventListTree);
 
-    fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
-    fMaxV /= 2.0;
-    fMinV = -1.0 * fMaxV;
-
     cB->cd();
     cB->SetFillColor(1);
     cB->Clear();
-    fSelection->cd();
-    delete sel_node;
-    delete sel_detect;
-    sel_detect = new TBRIK("sel_detect","sel_detect","void",fDimX/2.0,fDimY/2.0,fDimZ/2.0);
-    sel_detect->SetLineColor(7);
-    sel_node = new TNode("SEL_NODE","SEL_NODE","sel_detect");
-    sel_node->cd();
-    fSelection->Draw();
-    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
+    gGeoManager->GetTopVolume()->Draw();
+
     cB->GetView()->SetPerspective();
     if(set_angles)
         cB->GetView()->SideView();
@@ -918,8 +879,7 @@ void RootShower::Initialize(Int_t set_angles)
     cA->cd();
     cA->SetFillColor(1);
     cA->Clear();
-    fEvent->GetDetector()->GetGeometry()->Draw();
-    cA->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
+    gGeoManager->GetTopVolume()->Draw();
     cA->GetView()->SetPerspective();
     if(set_angles)
         cA->GetView()->SideView();
@@ -937,7 +897,6 @@ void RootShower::produce()
 
     // Check if some Event parameters have changed
     if((fEvent->GetHeader()->GetDate() != fEventTime) ||
-       (fEvent->GetDetector()->GetMaterial() != fMaterial) ||
        (fEvent->GetHeader()->GetPrimary() != fFirstParticle) ||
        (fEvent->GetHeader()->GetEnergy() != fE0) ||
        (fEvent->GetB() != fB)) {
@@ -945,9 +904,8 @@ void RootShower::produce()
         fNRun = 0;
     }
     fEvent->SetHeader(fEventNr, fNRun++, fEventTime, fFirstParticle, fE0);
-    fEvent->Init(0, fFirstParticle, fE0, fB, fMaterial, fDimX, fDimY, fDimZ);
+    fEvent->Init(0, fFirstParticle, fE0, fB);
 
-    fEvent->GetDetector()->GetGeometry()->cd();
     Interrupt(kFALSE);
     old_num = -1;
     // loop events until user interrupt or until all particles are dead
@@ -998,6 +956,9 @@ void RootShower::OnShowerProduce()
     produce();
     Interrupt(kFALSE);
     gifindex = 0;
+    if(!fShowProcess) {
+        gGeoManager->DrawTracks();
+    }
     for(i=0;i<=fEvent->GetTotal();i++) {
         gSystem->ProcessEvents();  // handle GUI events
         if(IsInterrupted()) break;
@@ -1023,10 +984,11 @@ void RootShower::OnShowerProduce()
            (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
             // Fill histogram for particle's energy loss
             fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
-            fEvent->GetTrack(i)->Draw();
             // show track by track if "show process" has been choosen
             // into the menu
             if(fShowProcess) {
+                gTrack = (TGeoTrack *)gGeoManager->GetTrackOfId(i);
+                gTrack->Draw();
                 cA->Modified();
                 cA->Update();
                 // create one gif image by step if "Animated GIF"
@@ -1040,6 +1002,7 @@ void RootShower::OnShowerProduce()
         }
     }
     AppendPad();
+    cA->GetView()->SetPerspective();
     cA->cd();
     cA->Modified();
     cA->Update();
@@ -1093,12 +1056,10 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
     cB->Clear();
     cB->cd();
     // draw geometry
-    fSelection->Draw();
-    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
+    gGeoManager->GetTopVolume()->Draw();
     cB->GetView()->SetPerspective();
     cB->cd();
     cB->Update();
-    fSelection->cd();
     retval = -1;
     for(i=0;i<=fEvent->GetTotal();i++) {
         if(gLTI[i] == item) {
@@ -1114,8 +1075,10 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_E) &&
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_MUON) &&
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
-        fEvent->GetTrack(retval)->Draw();
+        gTrack = (TGeoTrack *)gGeoManager->GetTrackOfId(retval);
+        gTrack->Draw();
     }
+    cB->GetView()->SetPerspective();
     cB->cd();
     cB->Modified();
     cB->Update();
@@ -1127,13 +1090,14 @@ void RootShower::OnOpenFile(const Char_t *filename)
     // Opens a root file into which a previous event
     // has been saved.
     Char_t   strtmp[80];
+    char  geofilename[128];
     Int_t  i;
     TFile *f = new TFile(filename);
     TTree *tree;
     TBranch *branch;
     fStatusBar->SetText("",1);
 
-    fEvent->Init(0, fFirstParticle, fE0, fB, fMaterial, fDimX, fDimY, fDimZ);
+    fEvent->Init(0, fFirstParticle, fE0, fB);
     fHisto_dEdX->Reset();
     tree = (TTree *)f->Get("RootShower");
     if(tree == NULL) return;
@@ -1141,10 +1105,15 @@ void RootShower::OnOpenFile(const Char_t *filename)
     branch->SetAddress(&fEvent);
     tree->GetEntry(0, 1);
     f->Close();
+
     // take back detector dimensions for selection geometry
-    fEvent->GetDetector()->GetDimensions(&fDimX, &fDimY, &fDimZ);
+    strncpy(geofilename,filename, strlen(filename)-5);
+    geofilename[strlen(filename)-5] = '\0';
+    strcat(geofilename, ".geom");
+    gGeoManager->Import(geofilename, "detector");
     Initialize(1);
 
+    gGeoManager->DrawTracks();
     for(i=0;i<=fEvent->GetTotal();i++) {
         gTmpLTI = gEventListTree->AddItem(gBaseLTI, fEvent->GetParticle(i)->GetName());
         sprintf(strtmp,"%1.2f GeV",fEvent->GetParticle(i)->Energy());
@@ -1171,7 +1140,6 @@ void RootShower::OnOpenFile(const Char_t *filename)
            (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
             // Fill histogram for particle's energy loss
             fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
-            fEvent->GetTrack(i)->Draw();
         }
     }
     // Reparent each list tree item regarding the
@@ -1225,7 +1193,11 @@ void RootShower::OnSaveFile(const Char_t *filename)
 {
     // Saves current event into a Root file
     TFile *hfile;
+    char  geofilename[128];
 
+    strncpy(geofilename,filename, strlen(filename)-5);
+    geofilename[strlen(filename)-5] = '\0';
+    strcat(geofilename, ".geom");
     hfile = new TFile(filename,"RECREATE","Root Shower file");
     hfile->SetCompressionLevel(9);
 
@@ -1235,6 +1207,7 @@ void RootShower::OnSaveFile(const Char_t *filename)
     hTree->Write();
     hTree->Print();
     hfile->Close();
+    gGeoManager->Export(geofilename, "detector");
 }
 
 //______________________________________________________________________________
@@ -1251,8 +1224,6 @@ void RootShower::ShowInfos()
     fEvent->GetDetector()->GetDimensions(&dimx, &dimy, &dimz);
 
     sprintf(Msg, "  Some information about the current shower\n");
-    sprintf(Msg, "%s  Target material ...... : %s\n", Msg,
-            fEvent->GetDetector()->GetMaterialName());
     sprintf(Msg, "%s  Dimensions of the target\n", Msg);
     sprintf(Msg, "%s  X .................... : %1.2e [cm]    \n", Msg, dimx);
     sprintf(Msg, "%s  Y .................... : %1.2e [cm]    \n", Msg, dimy);
@@ -1299,7 +1270,8 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
     if(fEvent->GetTotal() <= 0) return 0;
     // Browse every track and get related particle infos.
     for(i=0;i<fEvent->GetTotal();i++) {
-        dist = fEvent->GetTrack(i)->DistancetoPrimitive(px, py);
+        gTrack = (TGeoTrack *)gGeoManager->GetTrackOfId(i);
+        if(gTrack) dist = gTrack->DistancetoPrimitive(px, py);
         if (dist < 2) {
             gPad->SetSelected((TObject*)fEvent->GetParticle(i));
             fStatusBar->SetText(fEvent->GetParticle(i)->GetObjectInfo(px, py),1);
@@ -1308,6 +1280,7 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
         }
     }
     gPad->SetSelected((TObject*)gPad->GetView());
+    return gPad->GetView()->DistancetoPrimitive(px,py);
     return 0;
 }
 

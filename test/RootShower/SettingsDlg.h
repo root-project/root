@@ -41,13 +41,11 @@ class SettingsDialog : public TGTransientFrame {
 private:
 
     TGCompositeFrame    *fFrame1;
-    TGGroupFrame        *fF1, *fF2, *fF3, *fF4;
+    TGGroupFrame        *fF1, *fF3, *fF4;
     TGButton            *fOkButton, *fCancelButton, *fHelpButton;
-    TGButton            *fRad1, *fRad2, *fRad3, *fRad4;
     TGCheckButton       *fCheck1;
     TGListBox           *fListBox;
     TGTab               *fTab;
-    TGTextEntry         *fTxt1, *fTxt2, *fTxt3;
     TGTextEntry         *fTxt4, *fTxt5;
     TGLayoutHints       *fL1, *fL2, *fL3;
     Int_t                fFirstEntry;

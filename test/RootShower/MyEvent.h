@@ -63,19 +63,16 @@ private:
     Int_t           fTotalParticles;    // Total number of particles
     Int_t           fLast;              // Index of last particle
     Int_t           fAliveParticles;    // Number of still alive particles
-    Int_t           fNtrack;            // Number of tracks
     Int_t           fNparticles;        // Number of particles
-    Int_t           fNseg;              // Number of track segments
+    Int_t           fMatter;
     EventHeader     fEvtHdr;            // Event header
     Double_t        fB;                 // Magnetic field
     Double_t        E_thresh[10];       // Energy threshold for coloring tracks
-    TObjArray      *fTracks;            // ->array with all tracks
     TClonesArray   *fParticles;         // ->array with all particles
     TRef            fLastTrack;         // reference pointer to last track
     TRef            fLastParticle;      // reference pointer to last particle
     MyDetector      fDetector;          // Detector
 
-    static TObjArray    *fgTracks;
     static TClonesArray *fgParticles;
 
 public :
@@ -83,32 +80,23 @@ public :
     MyEvent();
     virtual ~MyEvent();
     void            Clear(Option_t *option ="");
-    static void     Reset(Option_t *option ="");
-    void            Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0,
-                         Int_t mat, Double_t dimx, Double_t dimy, Double_t dimz);
-    void            CreateDetector(Int_t, Double_t, Double_t, Double_t);
+    void            Reset(Option_t *option ="");
+    void            Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0);
     void            SetB(Double_t newB) { fB = newB; }
-    void            SetNseg(Int_t n) { fNseg = n; }
-    void            SetNtrack(Int_t n) { fNtrack = n; }
     void            SetHeader(Int_t, Int_t, TDatime, Int_t, Double_t);
-    TPolyLine3D    *AddTrack(const TVector3 &, Int_t);
-    TPolyLine3D    *AddTrack(Double_t, Double_t, Double_t, Int_t);
+    void            AddTrack(Int_t, Int_t);
     MyParticle     *AddParticle(Int_t, Int_t, const TVector3 &, const TVector3 &);
 
     Int_t           Id() { return fId; }
-    Int_t           GetNtrack() const { return fNtrack; }
     Int_t           GetNparticles() const { return fNparticles; }
-    Int_t           GetNseg() const { return fNseg; }
     Int_t           GetNAlives() { return fAliveParticles; }
     Int_t           GetTotal() { return fTotalParticles; }
     Int_t           GetLast() { return fLast; }
     Double_t        GetB() { return fB; }
     MyDetector     *GetDetector() { return &fDetector; }
     EventHeader    *GetHeader() { return &fEvtHdr; }
-    TObjArray      *GetTracks() const {return fTracks;}
     TClonesArray   *GetParticles() { return fParticles; }
     MyParticle     *GetLastParticle() const {return (MyParticle*)fLastParticle.GetObject();}
-    TPolyLine3D    *GetTrack(Int_t at) const {return (TPolyLine3D*)fTracks->At(at);}
     MyParticle     *GetParticle(Int_t at) const {return (MyParticle*)fParticles->At(at);}
 
     void            DeleteParticle(Int_t);
@@ -126,6 +114,7 @@ public :
     Int_t           Particle_color(Int_t);
     Int_t           CheckDecayTime(Int_t id);
     Int_t           Decay(Int_t id);
+    void            CheckMatter(Int_t id);
 
     ClassDef(MyEvent,1)  //Event structure
 };

@@ -40,9 +40,6 @@ class TPad;
 class MyEvent;
 class TEnv;
 class TTimer;
-class TGeometry;
-class TBRIK;
-class TNode;
 class TH1F;
 class TGToolBar;
 
@@ -144,9 +141,7 @@ private:
     TCanvas            *cA;
     TCanvas            *cB;
     TCanvas            *cC;
-    TGeometry          *fSelection;
-    TBRIK              *sel_detect;
-    TNode              *sel_node;
+    
     MyEvent            *fEvent;
     TPad               *padC;
     
@@ -154,10 +149,7 @@ private:
 
 protected:
 
-    Int_t               fMaterial;
     Int_t               fFirstParticle;
-    Double_t            fDimX,fDimY,fDimZ;
-    Double_t            fMaxV,fMinV;
     Double_t            fE0;
     Double_t            fB;
 

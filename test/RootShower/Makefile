@@ -451,14 +451,15 @@ ExeSuf        = .exe
 DllSuf        = dll
 OutPutOpt     = -out:
 CXX           = cl
-CXXOPT        = -O
-#CXXOPT        = -Z7
+#CXXOPT        = -O
+CXXOPT        = -Z7
 CXXFLAGS      = $(CXXOPT) -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -nologo \
                 -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
 LD            = link
-LDOPT         = -opt:ref
-#LDOPT         = -debug
-LDFLAGS       = $(LDOPT) -pdb:none -nologo -nodefaultlib -incremental:no
+#LDOPT         = -opt:ref
+LDOPT         = -debug
+LDFLAGS       = $(LDOPT) -pdb:none -nologo -nodefaultlib -incremental:no \
+                /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup
 SOFLAGS       = -DLL
 SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib ws2_32.lib mswsock.lib \
                 advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \
@@ -506,10 +507,10 @@ all:            $(PROGRAMS)
 
 $(ROOTSHOWER):  $(ROOTSHOWERO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(GLIBS) ../../lib/libEG.lib \
-		   ../../lib/libHtml.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(GLIBS) ../root/lib/libEG.lib \
+		   ../root/lib/libHtml.lib ../root/lib/libGeom.lib $(OutPutOpt)$@
 else
-		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lHtml $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lHtml -lGeom $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
@@ -522,7 +523,7 @@ clean:
 
 distclean:      clean
 		@rm -f $(PROGRAMS) *Dict.* *.def *.exp \
-		   *.root *.ps *.so .def so_locations
+		   *.geom *.root *.ps *.so .def so_locations
 		@rm -rf cxx_repository
 
 ###
