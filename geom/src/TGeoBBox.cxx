@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.18 2003/02/18 15:37:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.19 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -109,7 +109,8 @@ Bool_t TGeoBBox::CouldBeCrossed(Double_t *point, Double_t *dir) const
    Double_t doct = dx*dir[0]+dy*dir[1]+dz*dir[2];
    // leaving ray
    if (doct<=0) return kFALSE;
-   if ((doct*doct)<=(do2-rmax2)) return kTRUE;
+   Double_t dirnorm=dir[0]*dir[0]+dir[1]*dir[1]+dir[2]*dir[2];   
+   if ((doct*doct)>=(do2-rmax2)*dirnorm) return kTRUE;
    return kFALSE;
 }
 //-----------------------------------------------------------------------------
