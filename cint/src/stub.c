@@ -452,10 +452,11 @@ FILE *fp;
       while(ifunc) {
 	for(j=0;j<ifunc->allifunc;j++) {
 	  
-	  if(-1==ifunc->pentry[j]->line_number
+	  if(
 #ifndef G__OLDIMPLEMENTATION2039
-	     &&ifunc->hash[j]!=0 
+	     ifunc->hash[j]!=0 &&
 #endif
+             -1==ifunc->pentry[j]->line_number
 	     &&0==ifunc->ispurevirtual[j] && ifunc->hash[j] &&
 	     (G__CPPSTUB==ifunc->globalcomp[j]||
 	      G__CSTUB==ifunc->globalcomp[j])) {

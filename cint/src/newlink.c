@@ -2830,8 +2830,8 @@ FILE *hfp;
 	    }
 #ifndef G__OLDIMPLEMENTATION2039
 	    else if('\0'==ifunc->funcname[j][0] && j==0) {
-	      // this must be the place holder for the destructor.
-	      // let's skip it!
+	      /* this must be the place holder for the destructor.
+	         let's skip it! */
 	      continue;
 	    }
 #endif
@@ -2852,7 +2852,8 @@ FILE *hfp;
 	  else { /* if PROTECTED or PRIVATE */
 	    if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
 	      ++isconstructor;
-	      if('u'==ifunc->para_type[j][0]&&i==ifunc->para_p_tagtable[j][0]&&
+	      if(ifunc->para_nu[j]>0&&
+             'u'==ifunc->para_type[j][0]&&i==ifunc->para_p_tagtable[j][0]&&
 		 G__PARAREFERENCE==ifunc->para_reftype[j][0]&&
 		 (1==ifunc->para_nu[j]||ifunc->para_default[j][1])) {
 		++iscopyconstructor;
