@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.1 2000/06/16 15:15:47 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.2 2000/10/10 11:13:58 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -67,10 +67,10 @@ friend class TMatrixDColumn;
 friend class TMatrixDDiag;
 
 protected:
+   Int_t     fNmem;             //! number of rows in allocated memory (>=fNrows)
    Int_t     fNrows;            // number of rows
-   Int_t     fNmem;             // number of rows in allocated memory (>=fNrows)
    Int_t     fRowLwb;           // lower bound of the row index
-   Double_t *fElements;         // elements themselves
+   Double_t *fElements;         //[fNrows] elements themselves
 
    void Allocate(Int_t nrows, Int_t row_lwb = 0);
    void Invalidate() { fNrows = -1; fElements = 0; }
@@ -143,7 +143,7 @@ public:
    friend void Compare(const TVectorD &im1, const TVectorD &im2);
    friend Bool_t AreCompatible(const TVectorD &v1, const TVectorD &v2);
 
-   ClassDef(TVectorD,1)  // Vector class with double precision
+   ClassDef(TVectorD,2)  // Vector class with double precision
 };
 
 
