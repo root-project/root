@@ -962,8 +962,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                         TVirtualCollectionProxy::TPushPop helper( proxy, obj );
                         Int_t nobjects;
                         b >> nobjects;
-                        proxy->Resize(nobjects,true);
+                        void* env = proxy->Allocate(nobjects,true);
                         subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                        proxy->Commit(env);
                      }
                   }
                   b.CheckByteCount(start,count,aElement->GetFullName());
