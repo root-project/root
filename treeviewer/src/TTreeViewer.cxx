@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.38 2003/11/25 13:17:33 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.39 2004/01/08 23:07:40 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -164,6 +164,7 @@
 
 #include "Riostream.h"
 #include "TTreeViewer.h"
+#include "HelpText.h"
 #include "HelpTextTV.h"
 #include "TTVLVContainer.h"
 #include "TTVSession.h"
