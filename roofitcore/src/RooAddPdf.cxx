@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.5 2001/08/02 21:39:08 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.6 2001/08/23 01:21:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,7 +38,8 @@ ClassImp(RooAddPdf)
 ;
 
 
-RooAddPdf::RooAddPdf(const char *name, const char *title)
+RooAddPdf::RooAddPdf(const char *name, const char *title) :
+  RooAbsPdf(name,title)
 {
   // Dummy constructor 
 }

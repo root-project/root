@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.23 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.24 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -118,7 +118,7 @@ RooArgSet& RooFormula::actualDependents() const
 
   // (formula might not use all given input parameters)
   static RooArgSet set("actualDependents") ;
-  set.Clear() ;
+  set.removeAll();
   int i ;
   for (i=0 ; i<_useList.GetEntries() ; i++) {
     set.add((RooAbsArg&)*_useList.At(i),kTRUE) ;
@@ -206,15 +206,19 @@ RooFormula::DefinedValue(Int_t code) {
   // Return current value for variable indicated by internal reference code
   if (code>=_useList.GetEntries()) return 0 ;
   RooAbsArg* arg=(RooAbsArg*)_useList.At(code) ;
-  TString& label=((TObjString*)_labelList.At(code))->String() ;
 
-  if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
-    return ((RooAbsReal*)arg)->getVal(_nset) ;
-  } else if (arg->IsA()->InheritsFrom(RooAbsCategory::Class())) {
-    if (label.IsNull()) {
-      return ((RooAbsCategory*)_useList.At(code))->getIndex() ;
-    } else {
-      return ((RooAbsCategory*)_useList.At(code))->lookupType(label)->getVal() ;
+  const RooAbsReal *absReal= dynamic_cast<const RooAbsReal*>(arg);
+  if(0 != absReal) {
+    return absReal->getVal(_nset) ;
+  } else {
+    const RooAbsCategory *absCat= dynamic_cast<const RooAbsCategory*>(arg);
+    if(0 != absCat) {
+      TString& label=((TObjString*)_labelList.At(code))->String() ;
+      if (label.IsNull()) {
+	return absCat->getIndex() ;
+      } else {
+	return absCat->lookupType(label)->getVal() ; // DK: why not call getVal(_nset) here also?
+      }
     }
   }
   assert(0) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.35 2001/08/24 22:11:56 bevan Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.36 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -394,12 +394,12 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   RooAbsReal *clone= (RooAbsReal*) cloneList->find(GetName()) ;
 
   // redirect our clone to use the plot variable
-  RooArgSet args(*realVar);
-  clone->recursiveRedirectServers(args);
+  RooArgSet plotSet(*realVar);
+  clone->recursiveRedirectServers(plotSet);
 
   // normalize ourself to any previous contents in the frame
   if(frame->getFitRangeNorm() > 0) scaleFactor*= frame->getFitRangeNorm();
-  frame->updateNormVars(RooArgSet(*realVar));
+  frame->updateNormVars(plotSet);
 
   // create a new curve of our function using the clone to do the evaluations
   RooCurve* curve= new RooCurve(*clone,*realVar,scaleFactor,frame->getNormVars());

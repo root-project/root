@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.21 2001/08/24 17:28:40 david Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.22 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -120,6 +120,7 @@ protected:
 
 private:
 
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // !!! temporary kludges that export ArgSet list semantics !!!
   inline Int_t IndexOf(const TObject* obj) const { return _list.IndexOf(obj); }
   inline TObject* At(Int_t idx) const { return _list.At(idx); }
@@ -134,6 +135,7 @@ private:
   friend class RooPdfCustomizer;     // needs Sort()
   friend class RooRealBinding;       // needs At()
   friend class RooBRArrayPdf;        // needs At()
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ClassDef(RooArgSet,1) // Set of RooAbsArg objects
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.45 2001/08/23 01:21:44 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.46 2001/08/23 23:43:41 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -754,7 +754,7 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
   // Register an RooSetProxy in the proxy list. This function is called by owned
   // proxies upon creation. After registration, this arg wil forward pointer
   // changes from serverRedirects and updates in cached normalization sets
-  // to the proxies immediately after they occur. 
+  // to the proxies immediately after they occur.
 
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
