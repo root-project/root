@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.6 2001/10/22 14:26:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.7 2002/01/20 10:22:43 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -79,7 +79,7 @@ TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_
 }
 
 //______________________________________________________________________________
-TEventList::TEventList(const TEventList &list)
+TEventList::TEventList(const TEventList &list) : TNamed(list)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Copy constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ================

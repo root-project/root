@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.9 2001/11/16 02:47:36 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.10 2002/05/08 20:10:34 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -959,7 +959,7 @@ TVector &TVector::operator=(const TVector &source)
    return *this;
 }
 
-TVector::TVector(const TVector &another)
+TVector::TVector(const TVector &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.24 2002/04/09 07:15:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.25 2002/05/11 16:34:46 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -221,7 +221,7 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 }
 
 //______________________________________________________________________________
-TProfile::TProfile(const TProfile &profile)
+TProfile::TProfile(const TProfile &profile) : TH1D(profile)
 {
    ((TProfile&)profile).Copy(*this);
 }
