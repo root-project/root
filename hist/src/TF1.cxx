@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.35 2002/04/03 13:33:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.36 2002/04/10 17:20:43 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -838,8 +838,7 @@ Double_t TF1::GetProb() const
    
    Int_t ndf = fNpfits - fNpar;
    if (ndf <= 0) return 0;
-   Double_t chi2 = fChisquare/ndf;
-   return TMath::Prob(chi2,ndf); //must use the normalized chisqaure
+   return TMath::Prob(fChisquare,ndf);
 }
    
 //______________________________________________________________________________
