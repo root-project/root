@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.6 2003/01/27 20:41:37 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -314,7 +314,7 @@ TVolumeView::TVolumeView(TVolumeView &viewNode):
 
 //_____________________________________________________________________________
 TVolumeView::TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionId, TVolume *topNode,
-                         const Char_t *thisNodePath, const Char_t *matrixName, const Int_t matrixType)
+                         const Char_t *thisNodePath, const Char_t *matrixName, Int_t matrixType)
             // : fListOfAttributes(0)
 {
   // Special ctor to back TVolumeView::SavePrimitive() method
