@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGenContext.cc,v 1.33 2002/09/05 04:33:28 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -163,9 +163,13 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     otherAndProto.add(*protoDeps) ;
     delete protoDeps ;
 
-    RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,0,_verbose) ;
-    Double_t max = maxFinder.getFuncMax() ;
-    _maxVar = new RooRealVar("funcMax","function maximum",max) ;
+    if (_otherVars.getSize()>0) {      
+      // Calculate maximum in other+proto space if there are any accept/reject generated observables
+      RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,0,_verbose) ;
+      Double_t max = maxFinder.getFuncMax() ;
+      _maxVar = new RooRealVar("funcMax","function maximum",max) ;
+    }
+    
   }
 
   _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,_maxVar,_verbose);
