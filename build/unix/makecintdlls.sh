@@ -40,6 +40,7 @@ clean() {
    rm -f $CINTDIRI/stdfunc.dll
    rm -f $CINTDIRI/stdcxxfunc.dll
    rm -f $CINTDIRI/posix.dll
+   rm -f $CINTDIRI/systypes.h
    rm -f $CINTDIRI/sys/types.h
    rm -f $CINTDIRI/sys/ipc.dll
    rm -f $CINTDIRS/string.dll

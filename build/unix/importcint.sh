@@ -70,6 +70,8 @@ rm -f $SRCT/dmyinit.c
 rm -f $INCLT/done
 rm -f $INCLT/error
 rm -f $INCLT/iosenum.*
+rm -f $INCLT/systypes.h
+rm -f $INCLT/sys/types.h
 
 # copy man pages directly to man directory
 cp $ORG/doc/man1/cint.1 man/man1/
