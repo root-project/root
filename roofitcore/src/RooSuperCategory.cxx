@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.12 2001/09/17 18:48:17 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.13 2001/10/08 05:20:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -158,7 +158,6 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
   // Set the value of the super category by specifying the state object
   // Indirectly sets the values of the input categories
 
-  // WVE: must adapt parser to understand composite super categories
   char buf[1024] ;
   strcpy(buf,type->GetName()) ;
 
@@ -166,11 +165,34 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
   RooAbsCategoryLValue* arg ;
   Bool_t error(kFALSE) ;
 
-  // Parse composite label and set label of components to their values
-  char* ptr = strtok(buf+1,";}") ;
+  // Parse composite label and set label of components to their values  
+  char* ptr=buf+1 ;
+  char* token = ptr ;
   while (arg=(RooAbsCategoryLValue*)iter->Next()) {
-    error |= arg->setLabel(ptr) ;
-    ptr = strtok(0,";}") ;
+
+    // Delimit name token for this category
+    if (*ptr=='{') {
+      // Token is composite itself, terminate at matching '}'
+      Int_t nBrak(1) ;
+      while(*(++ptr)) {
+	if (nBrak==0) {
+	  *ptr = 0 ;
+	  break ;
+	}
+	if (*ptr=='{') {
+	  nBrak++ ;
+	} else if (*ptr=='}') {
+	  nBrak-- ;
+	}
+      }	
+    } else {
+      // Simple token, terminate at next semi-colon
+      ptr = strtok(ptr,";}") ;
+      ptr += strlen(ptr) ;
+    }
+
+    error |= arg->setLabel(token) ;
+    token = ++ptr ;
   }
   
   delete iter ;

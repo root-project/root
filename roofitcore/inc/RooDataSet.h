@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.35 2001/10/12 01:48:45 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.36 2001/10/21 22:57:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -66,7 +66,7 @@ protected:
 
   friend class RooProdGenContext ;
   Bool_t merge(const TList& data) ;
-  TDirectory* _dir ;
+  TDirectory* _dir ; //!
   
   // Cache copy feature is not publicly accessible
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
