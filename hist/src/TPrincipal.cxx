@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.5 2000/08/15 08:44:15 brun Exp $
-// $Date: 2000/08/15 08:44:15 $
+// $Id: TPrincipal.cxx,v 1.6 2000/08/15 09:00:43 brun Exp $
+// $Date: 2000/08/15 09:00:43 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -1606,8 +1606,8 @@ TPrincipal::MakeRealCode(const Char_t* filename, const Char_t* classname,
   // The options are: NONE so far
 
   Bool_t  isMethod = (classname[0] == '\0' ? kFALSE : kTRUE);
-  Char_t* prefix   = (isMethod ? Form("%s::", classname) : "");
-  Char_t* cv_qual  = (isMethod ? "" : "static ");
+  const Char_t* prefix   = (isMethod ? Form("%s::", classname) : "");
+  const Char_t* cv_qual  = (isMethod ? "" : "static ");
 
   ofstream outFile(filename,ios::out|ios::trunc); 
   if (!outFile) {
