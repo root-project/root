@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.123 2003/02/22 16:21:11 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.124 2003/02/24 10:33:06 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4637,7 +4637,7 @@ void THistPainter::PaintTable(Option_t *option)
       delete fFunctions->FindObject("palette");      
    }
    
-   if (fH->GetEntries() >= 0) {
+   if (fH->GetEntries() != 0) {
       if (Hoption.Scat)    PaintScatterPlot(option);
       if (Hoption.Arrow)   PaintArrows(option);
       if (Hoption.Box)     PaintBoxes(option);
