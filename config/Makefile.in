@@ -54,6 +54,10 @@ OPENIVINCDIR   := @openivincdir@
 CERNLIBDIR     := @cernlibdir@
 CERNLIBS       := @cernlibs@
 
+LDAPLIBDIR     := @ldaplibdir@
+LDAPCLILIB     := @ldaplib@
+LDAPINCDIR     := @ldapincdir@
+
 MYSQLLIBDIR    := @mysqllibdir@
 MYSQLCLILIB    := @mysqllib@
 MYSQLINCDIR    := @mysqlincdir@

@@ -113,6 +113,11 @@ endif
 ifneq ($(KRB5LIB),)
 MODULES      += krb5auth
 endif
+ifneq ($(LDAPINCDIR),)
+ifneq ($(LDAPCLILIB),)
+MODULES      += ldap
+endif
+endif
 ifneq ($(CERNLIBS),)
 MODULES      += hbook
 endif
@@ -120,7 +125,7 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
                 pythia6 venus table mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd dcache hbook alien asimage
+                rootd proofd dcache hbook alien asimage ldap
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
@@ -306,7 +311,7 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)"
 
 
-$(MAKEINFO): config/Makefile.$(ARCH)
+$(MAKEINFO): config/Makefile.$(ARCH) $(MAKEMAKEINFO)
 	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
 
 build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
@@ -645,6 +650,8 @@ showbuild:
 	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
 	@echo "SRPINCDIR          = $(SRPINCDIR)"
 	@echo "SRPUTILLIB         = $(SRPUTILLIB)"
+	@echo "LDAPINCDIR         = $(LDAPINCDIR)"
+	@echo "LDAPCLILIB         = $(LDAPCLILIB)"
 	@echo "AFSDIR             = $(AFSDIR)"
 	@echo "SHADOWFLAGS        = $(SHADOWFLAGS)"
 	@echo ""

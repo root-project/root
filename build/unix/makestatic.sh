@@ -21,7 +21,7 @@ rm -f $ROOTALIB $ROOTAEXE $PROOFAEXE
 
 excl="main proofd rootd rootx pythia pythia6 venus mysql pgsql rfio sapdb \
       hbook newdelete table utils srputils krb5auth dcache x11ttf \
-      geom geompainter alien"
+      geom geompainter alien asimage ldap"
 
 objs=""
 gobjs=""

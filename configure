@@ -25,6 +25,7 @@ enable_asimage=yes
 enable_cern=yes
 enable_dcache=yes
 enable_krb5=yes
+enable_ldap=yes
 enable_mysql=yes
 enable_opengl=yes
 enable_openiv=yes
@@ -49,7 +50,7 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
          enable_srp enable_table enable_thread enable_ttf enable_venus \
-         enable_krb5 enable_exceptions enable_openiv enable_alien \
+         enable_krb5 enable_ldap enable_exceptions enable_openiv enable_alien \
          enable_asimage"
 
 
@@ -357,6 +358,7 @@ enable/disable options, prefix with either --enable- or --disable-
    cern            CERNLIB usage, build h2root and g2root
    dcache          dCache support, requires libdcap from DESY
    krb5            Kerberos5 support, requires Kerberos libs
+   ldap            LDAP support, requires (Open)LDAP libs
    mysql           MySQL support, requires libmysqlclient
    opengl          OpenGL support, requires libGL and libGLU
    openiv          OpenInventor support, requires libInventor and libInventorXt
@@ -384,6 +386,8 @@ with options, prefix with --with-, enables corresponding support
    dcap-incdir     dCache support, location of dcap.h
    dcap-libdir     dCache support, location of libdcap
    krb5            Kerberos5 support, location of Kerberos distribution
+   ldap-incdir     LDAP support, location of ldap.h
+   ldap-libdir     LDAP support, location of libldap
    mysql-incdir    MySQL support, location of mysql.h
    mysql-libdir    MySQL support, location of libmysqlclient
    opengl-incdir   OpenGL support, location of GL/gl.h
@@ -477,6 +481,8 @@ if test $# -gt 0 ; then
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
+      --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
+      --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
@@ -1119,6 +1125,49 @@ fi
 
 ######################################################################
 #
+### echo %%% LDAP Support - Third party libraries
+#
+# (See openldap.org)
+#
+# If the user has set the flags "--disable-ldap", we don't check for
+# LDAP at all.
+#
+if test ! "x$enable_ldap" = "xno"; then
+# Check for ldap include and library
+    check_header "ldap.h" "$ldapincdir" $LDAP $LDAP/include \
+	/usr/include /usr/local/include /usr/local/ldap/include \
+        /usr/include/ldap /usr/include/openldap /usr/ldap/include \
+        /usr/local/include/ldap /usr/local/include/openldap \
+	/usr/ldap /usr/local/ldap /opt/ldap /opt/ldap/include
+    ldapinc=$found_hdr
+    ldapincdir=$found_dir
+
+    ldaplib=""
+    ldaplibdir=""
+
+    for i in libldap liblber ; do
+        check_library $i "$enable_shared" "" $ldaplibdir \
+            $LDAP $LDAP/lib /usr/local/ldap/lib /usr/local/lib \
+            /usr/lib/ldap /usr/local/lib/ldap /usr/ldap/lib /usr/lib \
+            /usr/ldap /usr/local/ldap /opt/ldap /opt/ldap/lib
+        if test "x$found_lib" = "x" ; then
+            ldaplib=""
+            ldaplibdir=""
+            enable_ldap="no"
+            break
+        fi
+        ldaplib="$ldaplib $found_lib"
+        ldaplibdir="$ldaplibdir $found_dir"
+    done
+
+    if test "x$ldapincdir" = "x" || test "x$ldaplib" = "x"; then
+        enable_ldap="no"
+    fi
+fi
+
+
+######################################################################
+#
 ### echo %%% SRP Support - Third party libraries
 #
 # (see  http://srp.stanford.edu/srp)
@@ -1276,11 +1325,12 @@ if test ! "x$enable_krb5" = "xno" ; then
     krb5inc=$found_hdr
     krb5incdir=$found_dir
 
+    krb5libdirs="/usr/athena/lib /usr/local/athena/lib /usr/kerberos/lib \
+                 /usr/krb5/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
+
     # check whether using MIT krb5
     krb5mit=yes
-    check_library libk5crypto "no" "$krb5libdirorg" /usr/athena/lib \
-	    /usr/local/athena/lib /usr/kerberos/lib /usr/krb5/lib \
-  	    /usr/local/kerberos/lib /usr/lib /usr/local/lib
+    check_library libk5crypto "no" "$krb5libdirorg" $krb5libdirs
     if test "x$found_lib" = "x" ; then
 	krb5mit=no
     fi
@@ -1290,9 +1340,7 @@ if test ! "x$enable_krb5" = "xno" ; then
 
     if test $krb5mit = yes ; then
 	for i in libkrb5 libcom_err libss libk5crypto; do
-	    check_library $i "no" "$krb5libdirorg" /usr/athena/lib \
-		/usr/local/athena/lib /usr/kerberos/lib /usr/krb5/lib \
-		/usr/local/kerberos/lib /usr/lib /usr/local/lib
+	    check_library $i "no" "$krb5libdirorg" $krb5libdirs
 	    if test "x$found_lib" = "x" ; then
 		krb5lib=""
 		krb5libdir=""
@@ -1304,9 +1352,7 @@ if test ! "x$enable_krb5" = "xno" ; then
 	done
     else
 	for i in libkrb5 libcom_err libcrypto ; do
-	    check_library $i "no" "$krb5libdirorg" /usr/athena/lib \
-		/usr/local/athena/lib /usr/kerberos/lib /usr/krb5/lib \
-		/usr/local/kerberos/lib /usr/lib /usr/local/lib
+	    check_library $i "no" "$krb5libdirorg" $krb5libdirs
 	    if test "x$found_lib" = "x" ; then
 		krb5lib=""
 		krb5libdir=""
@@ -1558,6 +1604,9 @@ sed \
     -e "s|@krb5incdir@|$krb5incdir|"        \
     -e "s|@krb5lib@|$krb5lib|"              \
     -e "s|@krb5libdir@|$krb5libdir|"        \
+    -e "s|@ldapincdir@|$ldapincdir|"        \
+    -e "s|@ldaplib@|$ldaplib|"              \
+    -e "s|@ldaplibdir@|$ldaplibdir|"        \
     -e "s|@ldflags@||"                      \
     -e "s|@libdir@|$libdir|"                \
     -e "s|@macrodir@|$macrodir|"            \
