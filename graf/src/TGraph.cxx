@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.118 2004/01/06 17:39:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.119 2004/01/16 13:32:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -209,6 +209,29 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
    for (Int_t i=0;i<n;i++) {
       fX[i] = x[i];
       fY[i] = y[i];
+   }
+}
+
+//______________________________________________________________________________
+TGraph::TGraph(const TGraph &gr)
+       : TNamed(gr), TAttLine(gr), TAttFill(gr), TAttMarker(gr)
+{
+   // Copy constructor for this graph
+   
+   fNpoints = gr.fNpoints;
+   if (fFunctions) fFunctions = (TList*)fFunctions->Clone();
+   else fFunctions = new TList;
+   fHistogram = 0;
+   fMinimum = gr.fMinimum;
+   fMaximum = gr.fMaximum;
+   fX = 0;
+   fY = 0;
+   if (fNpoints ==0) return;
+   fX = new Double_t[fNpoints];
+   fY = new Double_t[fNpoints];
+   for (Int_t i=0;i<fNpoints;i++) {
+      fX[i] = gr.fX[i];
+      fY[i] = gr.fY[i];
    }
 }
 

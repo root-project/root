@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.1 2003/06/30 09:21:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.2 2004/02/13 14:26:59 rdm Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
 			 const Double_t *eyl=0, const Double_t *eyh=0,
 			 const Double_t *exld=0, const Double_t *exhd=0,
 			 const Double_t *eyld=0, const Double_t *eyhd=0);
+        TGraphBentErrors(const TGraphBentErrors &gr);
         virtual ~TGraphBentErrors();
         virtual void    Apply(TF1 *f);
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin,

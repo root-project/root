@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.13 2002/07/15 16:23:39 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.14 2002/10/10 17:09:58 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -75,6 +75,18 @@ TCutG::TCutG() : TGraph()
 
    fObjectX  = 0;
    fObjectY  = 0;
+}
+
+//______________________________________________________________________________
+TCutG::TCutG(const TCutG &cutg)
+      :TGraph(cutg)
+{
+   // TCutG copy constructor
+   
+   fVarX    = cutg.fVarX;
+   fVarY    = cutg.fVarY;
+   fObjectX = cutg.fObjectX;
+   fObjectY = cutg.fObjectY;
 }
 
 //______________________________________________________________________________

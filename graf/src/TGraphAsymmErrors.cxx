@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.27 2003/04/01 17:44:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.28 2003/04/10 20:12:22 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -72,6 +72,26 @@ TGraphAsymmErrors::TGraphAsymmErrors(): TGraph()
    fEYhigh      = 0;
 }
 
+
+//______________________________________________________________________________
+TGraphAsymmErrors::TGraphAsymmErrors(const TGraphAsymmErrors &gr)
+       : TGraph(gr)
+{
+// TGraphAsymmErrors copy constructor 
+   
+   fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
+   if (fNpoints == 0) return;
+   fEXlow  = new Double_t[fNpoints];
+   fEYlow  = new Double_t[fNpoints];
+   fEXhigh = new Double_t[fNpoints];
+   fEYhigh = new Double_t[fNpoints];
+   for (Int_t i=0;i<fNpoints;i++) {
+      fEXlow[i]  = gr.fEXlow[i];
+      fEYlow[i]  = gr.fEYlow[i];
+      fEXhigh[i] = gr.fEXhigh[i];
+      fEYhigh[i] = gr.fEYhigh[i];
+   }
+}
 
 //______________________________________________________________________________
 TGraphAsymmErrors::TGraphAsymmErrors(Int_t n)

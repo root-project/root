@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.32 2003/04/10 20:12:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.33 2003/04/15 09:51:39 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -142,6 +142,22 @@ TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const 
       else    fEX[i] = 0;
       if (ey) fEY[i] = ey[i];
       else    fEY[i] = 0;
+   }
+}
+
+//______________________________________________________________________________
+TGraphErrors::TGraphErrors(const TGraphErrors &gr)
+       : TGraph(gr)
+{
+// TGraphErrors copy constructor 
+   
+   fEX = fEY = 0;
+   if (fNpoints == 0) return;
+   fEX = new Double_t[fNpoints];
+   fEY = new Double_t[fNpoints];
+   for (Int_t i=0;i<fNpoints;i++) {
+      fEX[i] = gr.fEX[i];
+      fEY[i] = gr.fEY[i];
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.1 2003/06/30 09:21:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.2 2004/02/13 14:26:59 rdm Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -73,6 +73,36 @@ TGraphBentErrors::TGraphBentErrors(): TGraph()
    fEYhighd      = 0;
 }
 
+
+
+//______________________________________________________________________________
+TGraphBentErrors::TGraphBentErrors(const TGraphBentErrors &gr)
+       : TGraph(gr)
+{
+// TGraphBentErrors copy constructor 
+   
+   fEXlow  = fEYlow  = fEXhigh  = fEYhigh = 0;
+   fEXlowd = fEYlowd = fEXhighd = fEYhighd = 0;
+   if (fNpoints == 0) return;
+   fEXlow   = new Double_t[fNpoints];
+   fEYlow   = new Double_t[fNpoints];
+   fEXhigh  = new Double_t[fNpoints];
+   fEYhigh  = new Double_t[fNpoints];
+   fEXlowd  = new Double_t[fNpoints];
+   fEYlowd  = new Double_t[fNpoints];
+   fEXhighd = new Double_t[fNpoints];
+   fEYhighd = new Double_t[fNpoints];
+   for (Int_t i=0;i<fNpoints;i++) {
+      fEXlow[i]   = gr.fEXlow[i];
+      fEYlow[i]   = gr.fEYlow[i];
+      fEXhigh[i]  = gr.fEXhigh[i];
+      fEYhigh[i]  = gr.fEYhigh[i];
+      fEXlowd[i]  = gr.fEXlowd[i];
+      fEYlowd[i]  = gr.fEYlowd[i];
+      fEXhighd[i] = gr.fEXhighd[i];
+      fEYhighd[i] = gr.fEYhighd[i];
+   }
+}
 
 //_____________________________________________________________________________
 TGraphBentErrors::TGraphBentErrors(Int_t n)

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.4 2001/02/28 11:04:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.5 2002/03/15 22:11:47 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -34,6 +34,7 @@ protected:
 
 public:
    TCutG();
+   TCutG(const TCutG &cutg);
    TCutG(const char *name, Int_t n);
    TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y);
    TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y);
