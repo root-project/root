@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.38 2001/05/18 16:42:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.39 2001/05/18 16:56:31 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -650,7 +650,8 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
 
-   if (!GetListOfClasses()) return 0;
+   if (!name || !strlen(name)) return 0;
+   if (!GetListOfClasses())    return 0;
 
    TClass *cl = (TClass*)GetListOfClasses()->FindObject(name);
    if (cl) {
@@ -687,8 +688,11 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       return 0;   //reject STL containers
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   if (gInterpreter->CheckClassInfo(name))
-      return new TClass(name, 1, 0, 0, -1, -1);
+   if (gInterpreter->CheckClassInfo(name)) {
+      TClass *ncl = new TClass(name, 1, 0, 0, -1, -1);
+      if (!ncl->IsZombie()) return ncl;
+      delete ncl;
+   }
    return 0;
 }
 
