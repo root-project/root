@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.3 2001/09/26 09:13:03 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.4 2001/09/26 09:19:02 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -81,13 +81,13 @@ void TStackInfo::Init(int stacksize, void **stackptrs)
 }
 
 //______________________________________________________________________________
-int TStackInfo::HashStack(unsigned int size, void **ptr)
+ULong_t TStackInfo::HashStack(unsigned int size, void **ptr)
 {
    // Hash stack information.
 
-   int hash = 0;
+   ULong_t hash = 0;
    for (unsigned int i = 0; i < size; i++)
-      hash ^= int(TMath::Hash(&ptr[i], sizeof(void*)));
+      hash ^= TMath::Hash(&ptr[i], sizeof(void*));
    return hash;
 }
 
@@ -175,7 +175,7 @@ TStackInfo *TStackTable::AddInfo(int size, void **stackptrs)
    fNext = (char *) info->Next();
 
    //add info to hash table
-   int hash = info->Hash() % fHashSize;
+   int hash = int(info->Hash() % fHashSize);
    TStackInfo *info2 = fHashTable[hash];
    if (info2 == 0) {
       fHashTable[hash] = info;
@@ -193,7 +193,7 @@ TStackInfo *TStackTable::FindInfo(int size, void **stackptrs)
 {
    // Try to find stack info in hash table if doesn't find it will add it.
 
-   int hash = TStackInfo::HashStack(size, (void **) stackptrs) % fHashSize;
+   int hash = int(TStackInfo::HashStack(size, (void **) stackptrs) % fHashSize);
    TStackInfo *info = fHashTable[hash];
    if (info == 0) {
       info = AddInfo(size, stackptrs);
@@ -301,7 +301,7 @@ void TMemHashTable::RehashLeak(int newSize)
          }
       free(branch->fLeaks);
       free(branch);
-   }                            //loop over all old branches and rehash information
+   }                 //loop over all old branches and rehash information
    free(fgLeak);
    fgLeak = newLeak;
    fgSize = newSize;

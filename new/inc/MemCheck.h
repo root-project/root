@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.1 2001/09/25 16:07:59 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.2 2001/09/25 17:37:24 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -69,15 +69,15 @@ public:
    TStackInfo *fNextHash;         //index-pointer to the next info for given hash value
 
 public:
-   void   Init(Int_t stacksize, void **stackptrs); //initialization
-   void   Inc(Int_t memSize);  //increment counters -when memory allocated
-   void   Dec(Int_t memSize);  //decrement counters -when memory deallocated
-   Int_t  Hash();
-   Int_t  IsEqual(UInt_t size, void **ptr);
-   void  *StackAt(UInt_t i);
+   void     Init(Int_t stacksize, void **stackptrs); //initialization
+   void     Inc(Int_t memSize);  //increment counters -when memory allocated
+   void     Dec(Int_t memSize);  //decrement counters -when memory deallocated
+   ULong_t  Hash();
+   Int_t    IsEqual(UInt_t size, void **ptr);
+   void    *StackAt(UInt_t i);
    TStackInfo *Next();    //index of the next entries
 
-   static Int_t HashStack(UInt_t size, void **ptr);
+   static ULong_t HashStack(UInt_t size, void **ptr);
 };
 
 
@@ -156,7 +156,7 @@ inline void TStackInfo::Dec(int memSize)
    fAllocSize  -= memSize;
 }
 
-inline Int_t TStackInfo::Hash()
+inline ULong_t TStackInfo::Hash()
 {
    return HashStack(fSize, (void**)&(this[1]));
 }
