@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.4 2000/10/19 17:28:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.5 2000/12/26 14:24:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -65,7 +65,7 @@ ClassImp(TAttText)
 //*-*  are used. The fonts have a minimum (4)  and maximum (37) size in pixels.
 //*-*  These fonts are fast and are of good quality. Their size varies with
 //*-*  large steps and they cannot be rotated.
-//*-*  Precision 1 and 2 fonts have a different behaviour depending if the 
+//*-*  Precision 1 and 2 fonts have a different behaviour depending if the
 //*-*  True Type Fonts are used or not. If TTF are used, you always get
 //*-*  very good quality scalable and rotatable fonts. However TTF are slow.
 //*-*  Precision 1 and 2 fonts have a different behaviour for Postscript
@@ -266,7 +266,7 @@ again:
          Float_t mgn = x11factor[ifpx11-1]*rsize/Float_t(ihh);
          if (mgn > 100) mgn = 100;
          if (mgn <0)    mgn = 1;
-         if (fTextFont%10 == 0) mgn = 1;
+         if (fTextFont%10 == 0 || fTextFont%10 > 2) mgn = 1;
          gVirtualX->SetTextMagnitude(mgn);
          gVirtualX->DrawText(0,0,0,-1.,0,TVirtualX::kClear);
          gVirtualX->SetTextFont(fTextFont);
