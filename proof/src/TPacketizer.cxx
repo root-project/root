@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.23 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.24 2005/03/17 10:43:30 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -746,11 +746,13 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 }
 
 //______________________________________________________________________________
-void TPacketizer::SplitEventList(TDSet *dset) {
+void TPacketizer::SplitEventList(TDSet *dset) 
+{
+   // Splits the eventlist into parts for each file.
+   // Each part is assigned to the apropriate TDSetElement.
 
    TEventList *mainList = dset->GetEventList();
-   if (!mainList)
-      return;
+   Assert(mainList);
 
    TIter next(dset->GetListOfElements());
    TDSetElement *el, *prev;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.9 2004/06/13 16:26:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.10 2004/06/25 17:27:09 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -80,7 +80,7 @@ private:
 
    void           Reset();
    void           ValidateFiles(TDSet *dset, TList *slaves);
-
+   void           SplitEventList(TDSet *dset);
 
 public:
    TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,

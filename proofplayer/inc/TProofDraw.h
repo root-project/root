@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.7 2005/03/18 22:41:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.8 2005/03/24 16:32:28 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -26,6 +26,10 @@
 #include "TTreeDrawArgsParser.h"
 #endif
 
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
+
 class TTree;
 class TTreeFormulaManager;
 class TTreeFormula;
@@ -37,7 +41,7 @@ class TProfile2D;
 class TProofVarArray;
 class TGraph;
 class TPolyMarker3D;
-
+class TCollection;
 class TProofDraw : public TSelector {
 
 protected:
@@ -184,15 +188,37 @@ public:
    ClassDef(TProofDrawPolyMarker3D,0)  //Tree drawing selector for PROOF
 };
 
+template <typename T>
+class TProofVectorContainer : public TNamed {
+   // Owns an std::vector<T>. 
+   // Implements Merge(TCollection*) which merges vectors holded 
+   // by all the TProofVectorContainers in the collection.
+protected:
+   std::vector<T> *fVector;
+public:
+   TProofVectorContainer<T>(std::vector<T>* anVector) : fVector(anVector) { };
+   TProofVectorContainer<T>() : fVector(0) { };
+   ~TProofVectorContainer<T>() { delete fVector; }
+   std::vector<T>* GetVector() const { return fVector; }
+   Long64_t Merge(TCollection* list);
+   ClassDef(TProofVectorContainer,1)
+};
 
 class TProofDrawListOfGraphs : public TProofDraw {
 
 protected:
-   TProofVarArray     *fScatterPlot;
+   struct Point3D_t {
+   public:
+      Double_t fX, fY, fZ;
+      Point3D_t(Double_t x, Double_t y, Double_t z) : fX(x), fY(y), fZ(z) { }
+      Point3D_t() : fX(0), fY(0), fZ(0) { }
+   };
+
+   TProofVectorContainer<Point3D_t> *fPoints;
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:
-   TProofDrawListOfGraphs() : fScatterPlot(0) { }
+   TProofDrawListOfGraphs() : fPoints(0) { }
    virtual void        SlaveBegin(TTree *);
    virtual void        Terminate();
 
@@ -203,11 +229,18 @@ public:
 class TProofDrawListOfPolyMarkers3D : public TProofDraw {
 
 protected:
-   TProofVarArray       *fScatterPlot;
+   struct Point4D_t {
+   public:
+      Double_t fX, fY, fZ, fT;
+      Point4D_t(Double_t x, Double_t y, Double_t z, Double_t t) : fX(x), fY(y), fZ(z), fT(t) { }
+      Point4D_t() : fX(0), fY(0), fZ(0), fT(0) { }
+   };
+
+   TProofVectorContainer<Point4D_t> *fPoints;
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:
-   TProofDrawListOfPolyMarkers3D() : fScatterPlot(0) { }
+   TProofDrawListOfPolyMarkers3D() : fPoints(0) { }
    virtual void        SlaveBegin(TTree *);
    virtual void        Terminate();
 

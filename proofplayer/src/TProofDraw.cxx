@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.13 2005/03/23 12:41:01 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.14 2005/03/24 16:32:28 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,6 @@
 #include "THLimitsFinder.h"
 #include "TView.h"
 #include "TStyle.h"
-#include <algorithm>
 
 ClassImp(TProofDraw)
 
@@ -1433,12 +1432,13 @@ void TProofDrawListOfGraphs::SlaveBegin(TTree *tree)
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
    Assert(fTreeDrawArgsParser.GetDimension() == 3);
 
-   SafeDelete(fScatterPlot);
+   SafeDelete(fPoints);
+
    fDimension = 3;
 
-   fScatterPlot = new TProofVarArray(3);
-   fScatterPlot->SetName("PROOF_SCATTERPLOT");
-   fOutput->Add(fScatterPlot);      // release ownership
+   fPoints = new TProofVectorContainer<Point3D_t>(new std::vector<Point3D_t>);
+   fPoints->SetName("PROOF_SCATTERPLOT");
+   fOutput->Add(fPoints);      // release ownership (? FIXME)
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -1450,7 +1450,7 @@ void TProofDrawListOfGraphs::DoFill(Long64_t , Double_t , const Double_t *v)
 {
    // Fills the scatter plot with the given values.
 
-   fScatterPlot->Fill(v[2], v[1], v[0]);
+   fPoints->GetVector()->push_back(Point3D_t(v[2], v[1], v[0]));
 }
 
 
@@ -1464,9 +1464,12 @@ void TProofDrawListOfGraphs::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofVarArray*) fOutput->FindObject("PROOF_SCATTERPLOT");
-   if (fScatterPlot) {
-      SetStatus((Int_t) fScatterPlot->GetEntries());
+   fPoints = dynamic_cast<TProofVectorContainer<Point3D_t>*>
+               (fOutput->FindObject("PROOF_SCATTERPLOT"));
+   if (fPoints) {
+      std::vector<Point3D_t> *points = fPoints->GetVector();
+      Assert(points);
+      SetStatus((Int_t) points->size());
       TH2F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
       if ( (hist = dynamic_cast<TH2F*> (orig)) == 0 ) {
@@ -1499,16 +1502,25 @@ void TProofDrawListOfGraphs::Terminate(void)
       Double_t rmin[3], rmax[3];
 
       // FIXME take rmin and rmax from the old histogram
-      rmin[0] = fScatterPlot->Min(1);
-      rmax[0] = fScatterPlot->Max(1);
-      rmin[1] = fScatterPlot->Min(2);
-      rmax[1] = fScatterPlot->Max(2);
-      rmin[2] = fScatterPlot->Min(3);
-      rmax[2] = fScatterPlot->Max(3);
-      // in this case we don't care about user-specified limits
-      if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
-                        rmin[1], rmax[1], rmin[2], rmax[2]);
+      rmin[0] = rmax[0] = rmin[1] = rmax[1] = rmin[2] = rmax[2] = 0;
+      if (points->size() > 0) {
+         rmin[0] = rmax[0] = (*points)[0].fX;
+         rmin[1] = rmax[1] = (*points)[0].fY;
+         rmin[2] = rmax[2] = (*points)[0].fZ;
+         
+         for (vector<Point3D_t>::const_iterator i = points->begin() + 1; i < points->end(); ++i) {
+            if (rmax[0] < i->fX) rmax[0] = i->fX;
+            if (rmax[1] < i->fY) rmax[1] = i->fY;
+            if (rmax[2] < i->fZ) rmax[2] = i->fZ;
+            if (rmin[0] > i->fX) rmin[0] = i->fX;
+            if (rmin[1] > i->fY) rmin[1] = i->fY;
+            if (rmin[2] > i->fZ) rmin[2] = i->fZ;
+         }
+         // in this case we don't care about user-specified limits
+         if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
+            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
+                           rmin[1], rmax[1], rmin[2], rmax[2]);
+         }
       }
 
       Int_t ncolors  = gStyle->GetNumberOfColors();
@@ -1529,12 +1541,13 @@ void TProofDrawListOfGraphs::Terminate(void)
          }
       }
       // Fill the graphs acording to the color
-      for (int i=0;i<fScatterPlot->GetEntries();i++) {
-         col = Int_t((ncolors-1)*((fScatterPlot->GetX(i)-rmin[0])/(rmax[0]-rmin[0])));
+      for (vector<Point3D_t>::const_iterator i = points->begin();
+           i < points->end(); ++i) {
+         col = Int_t((ncolors-1)*((i->fX-rmin[0])/(rmax[0]-rmin[0])));
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
          gr = (TGraph*)grs->UncheckedAt(col);
-         if (gr) gr->SetPoint(gr->GetN(), fScatterPlot->GetY(i), fScatterPlot->GetZ(i));
+         if (gr) gr->SetPoint(gr->GetN(), i->fY, i->fZ);
       }
       // Remove potential empty graphs
       for (col=0;col<ncolors;col++) {
@@ -1545,6 +1558,8 @@ void TProofDrawListOfGraphs::Terminate(void)
          hist->Draw(fOption.Data());
          gPad->Update();
       }
+      fOutput->Remove(fPoints);
+      SafeDelete(fPoints);
    }
 }
 
@@ -1564,12 +1579,13 @@ void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
    Assert(fTreeDrawArgsParser.GetDimension() == 4);
 
-   SafeDelete(fScatterPlot);
+   SafeDelete(fPoints);
+                                                                                                        
    fDimension = 4;
-
-   fScatterPlot = new TProofVarArray(4);
-   fScatterPlot->SetName("PROOF_SCATTERPLOT");
-   fOutput->Add(fScatterPlot);      // release ownership
+                                                                                                        
+   fPoints = new TProofVectorContainer<Point4D_t>(new std::vector<Point4D_t>);
+   fPoints->SetName("PROOF_SCATTERPLOT");
+   fOutput->Add(fPoints);      // release ownership (? FIXME)
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -1581,8 +1597,9 @@ void TProofDrawListOfPolyMarkers3D::DoFill(Long64_t , Double_t , const Double_t 
 {
    // Fills the scatter plot with the given values.
 
-   fScatterPlot->Fill(v[3], v[2], v[1], v[0]);
+   fPoints->GetVector()->push_back(Point4D_t(v[3], v[2], v[1], v[0]));
 }
+
 
 
 //______________________________________________________________________________
@@ -1595,9 +1612,12 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofVarArray*) fOutput->FindObject("PROOF_SCATTERPLOT");
-   if (fScatterPlot) {
-      SetStatus((Int_t) fScatterPlot->GetEntries());
+   fPoints = dynamic_cast<TProofVectorContainer<Point4D_t>*>
+               (fOutput->FindObject("PROOF_SCATTERPLOT"));
+   if (fPoints) {
+      std::vector<Point4D_t> *points = fPoints->GetVector();
+      Assert(points);
+      SetStatus((Int_t) points->size());
       TH3F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
       if ( (hist = dynamic_cast<TH3F*> (orig)) == 0 || fTreeDrawArgsParser.GetNoParameters() != 0) {
@@ -1637,18 +1657,30 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
       }
       Double_t rmin[4], rmax[4];
 
+
       // FIXME take rmin and rmax from the old histogram
-      if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
-         rmin[0] = fScatterPlot->Min(1);
-         rmax[0] = fScatterPlot->Max(1);
-         rmin[1] = fScatterPlot->Min(2);
-         rmax[1] = fScatterPlot->Max(2);
-         rmin[2] = fScatterPlot->Min(3);
-         rmax[2] = fScatterPlot->Max(3);
-         rmin[3] = fScatterPlot->Min(4);
-         rmax[3] = fScatterPlot->Max(4);
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
-                           rmin[1], rmax[1], rmin[2], rmax[2], rmin[3], rmax[3]);
+      rmin[0] = rmax[0] = rmin[1] = rmax[1] = rmin[2] = rmax[2] = 0;
+      if (points->size() > 0) {
+         rmin[0] = rmax[0] = (*points)[0].fX;
+         rmin[1] = rmax[1] = (*points)[0].fY;
+         rmin[2] = rmax[2] = (*points)[0].fZ;
+         rmin[3] = rmax[3] = (*points)[0].fT;
+
+         for (vector<Point4D_t>::const_iterator i = points->begin() + 1; i < points->end(); ++i) {
+            if (rmax[0] < i->fX) rmax[0] = i->fX;
+            if (rmax[1] < i->fY) rmax[1] = i->fY;
+            if (rmax[2] < i->fZ) rmax[2] = i->fZ;
+            if (rmax[3] < i->fT) rmax[3] = i->fT;
+            if (rmin[0] > i->fX) rmin[0] = i->fX;
+            if (rmin[1] > i->fY) rmin[1] = i->fY;
+            if (rmin[2] > i->fZ) rmin[2] = i->fZ;
+            if (rmin[3] > i->fT) rmin[3] = i->fT;
+         }
+         // in this case we don't care about user-specified limits
+         if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
+            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
+                              rmin[1], rmax[1], rmin[2], rmax[2], rmin[3], rmax[3]);
+         }
       }
       Int_t ncolors  = gStyle->GetNumberOfColors();
       TObjArray *pms = (TObjArray*)hist->GetListOfFunctions()->FindObject("polymarkers");
@@ -1667,20 +1699,46 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
             pms->AddAt(pm3d,col);
          }
       }
-      for (Int_t i=0;i<fScatterPlot->GetEntries();i++) {
-         col = Int_t(fScatterPlot->GetX(i));
+      for (vector<Point4D_t>::const_iterator i = points->begin();
+            i < points->end(); ++i) {
+         col = Int_t(i->fX);
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
          pm3d = (TPolyMarker3D*)pms->UncheckedAt(col);
-         pm3d->SetPoint(pm3d->GetLastPoint()+1,
-            fScatterPlot->GetY(i),
-            fScatterPlot->GetZ(i),
-            fScatterPlot->GetT(i));
+         pm3d->SetPoint(pm3d->GetLastPoint()+1, i->fY, i->fZ, i->fT);
       }
       if (fTreeDrawArgsParser.GetShouldDraw()) {
          hist->Draw(fOption.Data());
          gPad->Update();
       }
+      fOutput->Remove(fPoints);
+      SafeDelete(fPoints);
    }
 }
+
+//______________________________________________________________________________
+template <typename T>
+Long64_t TProofVectorContainer<T>::Merge(TCollection* list)
+{
+   // Adds all vectors holded by all TProofVectorContainers in the collection
+   // the vector holded by this TProofVectorContainer.
+   // Returns the total number of poins in the result or -1 in case of an error.
+
+   TIter next(list);
+
+   std::back_insert_iterator<std::vector<T> > ii(*fVector);
+   while (TObject* o = next()) {
+      TProofVectorContainer<T> *vh = dynamic_cast<TProofVectorContainer<T>*> (o);
+      if (!vh) {
+         Error("Merge",
+             "Cannot merge - an object which doesn't inherit from TProofVectorContainer<T> found in the list");
+         return -1;
+      }
+      std::copy(vh->GetVector()->begin(), vh->GetVector()->end(), ii);
+   }
+   return fVector->size();
+}
+
+template class TProofVectorContainer<TProofDrawListOfGraphs::Point3D_t>;
+template class TProofVectorContainer<TProofDrawListOfPolyMarkers3D::Point4D_t>;
 
