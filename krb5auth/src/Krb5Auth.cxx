@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.17 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.18 2004/03/23 00:12:41 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -60,8 +60,8 @@
 
 Int_t Krb5Authenticate(TAuthenticate *, TString &, TString &, Int_t);
 
-void  Krb5InitCred(char *ClientPrincipal);
-Int_t Krb5CheckCred(krb5_context, krb5_ccache, krb5_principal, TDatime &);
+void  Krb5InitCred(const char *ClientPrincipal);
+Int_t Krb5CheckCred(krb5_context, krb5_ccache, TString, TDatime &);
 Int_t Krb5CheckSecCtx(const char *, TSecContext *);
 
 class Krb5AuthInit {
@@ -105,7 +105,8 @@ struct TKrb5CleanUp {
 
 
 //______________________________________________________________________________
-Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t version)
+Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
+                       Int_t version)
 {
    // Kerberos v5 authentication code. Returns 0 in case authentication
    // failed, 1 in case of success and 2 in case remote does not support
@@ -129,7 +130,6 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    Int_t Nsen = 0, Nrec = 0;
 
    TString targetUser(user);
-//   TString targetUser("ganis");
 
    // first check if protocol version supports kerberos, krb5 support
    // was introduced in rootd version 6
@@ -172,7 +172,39 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    // get our principal from the cache
    krb5_principal client;
-   char *ClientPrincipal = StrDup(TAuthenticate::GetDefaultUser());
+   TString Principal = TString(TAuthenticate::GetKrb5Principal());
+   //
+   // if not defined or incomplete, complete with defaults
+   if (!Principal.Length() || !Principal.Contains("@")) {
+      if (gDebug > 3)
+         Info("Krb5Authenticate", 
+              "incomplete principal: complete using defaults");
+      krb5_principal default_princ;
+      if ((retval = krb5_parse_name(context, TAuthenticate::GetDefaultUser(),
+                                    &default_princ))) {
+            Error("Krb5Authenticate","failed <krb5_parse_name>: %s\n",
+                  error_message(retval));
+            return -1;
+      }
+      char *default_name;
+      if ((retval = krb5_unparse_name(context, default_princ, &default_name))) {
+            Error("Krb5Authenticate","failed <krb5_unparse_name>: %s\n",
+                  error_message(retval));
+            krb5_free_principal(context,default_princ);
+            return -1;
+      }
+      if (!Principal.Length())
+         Principal = TString(default_name);
+      else if (!Principal.Contains("@")) {
+         TString Realm = TString(default_name);
+         Realm.Remove(0,Realm.Index("@"));
+         Principal.Append(Realm);
+      }
+      free(default_name);      
+      krb5_free_principal(context,default_princ);
+   }
+   if (gDebug > 3)
+      Info("Krb5Authenticate", "using principal: %s", Principal.Data());
 
    if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
 
@@ -181,8 +213,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          if (gDebug > 1)
             Info("Krb5Authenticate",
                  "valid credentials not found: try initializing (Principal: %s)",
-                 ClientPrincipal);
-         Krb5InitCred(ClientPrincipal);
+                 Principal.Data());
+         Krb5InitCred(Principal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
                   error_message(retval));
@@ -194,25 +226,46 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          return -1;
       }
    }
+
+   // We must check that the principal for which we have a cached ticket
+   // is the one that we want
+   TString TmpPP = 
+      TString(Form("%.*s@%.*s",client->data->length, client->data->data, 
+                               client->realm.length, client->realm.data));
+   if (Principal != TmpPP) {
+      if (gDebug > 3)
+         Info("Krb5Authenticate",
+              "got credentials for wrong principal %s - try initializing"
+              " (Principal: %s)",
+              TmpPP.Data(), Principal.Data());
+      Krb5InitCred(Principal);
+      if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
+         Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
+               error_message(retval));
+         return -1;
+      }
+
+   }
+
    cleanup.client = client;
 
    TDatime ExpDate;
-   if (Krb5CheckCred(context,ccdef,client,ExpDate) != 1) {
+   if (Krb5CheckCred(context,ccdef,Principal,ExpDate) != 1) {
 
       if (isatty(0) && isatty(1)) {
 
          if (gDebug >2)
             Info("Krb5Authenticate",
-                 "credentials found have expired: try initializing (Principal: %s)",
-                  ClientPrincipal);
-         Krb5InitCred(ClientPrincipal);
+                 "credentials found have expired: try initializing"
+                 " (Principal: %s)", Principal.Data());
+         Krb5InitCred(Principal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
                   error_message(retval));
             return -1;
          }
          // Check credentials and get expiration time
-         if (Krb5CheckCred(context,ccdef,client,ExpDate) != 1)
+         if (Krb5CheckCred(context,ccdef,Principal,ExpDate) != 1)
             return -1;
       } else {
          Warning("Krb5Authenticate",
@@ -220,7 +273,6 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          return -1;
       }
    }
-   if (ClientPrincipal) delete[] ClientPrincipal;
    cleanup.client = client;
 
    // Get a normal string for user
@@ -237,9 +289,11 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    if (version > 1) {
 
+#if 0
       // To check sec context
       TString Principal(Form("%.*s@%.*s", client->data->length,
           client->data->data, client->realm.length, client->realm.data));
+#endif
 
       // Check ReUse
       ReUse  = TAuthenticate::GetAuthReUse();
@@ -327,17 +381,17 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    // get service principal from service and host names --
    // hard coding of service names avoids having the have these
    // services in the local /etc/services file
-   const char *service = "host";
+   TString service = TString("host");
 
    TString serv_host(sock->GetInetAddress().GetHostName());
    krb5_principal server;
 
    if (gDebug > 3)
       Info("Krb5Authenticate","serv_host: %s service: %s",
-           serv_host.Data(),service);
+           serv_host.Data(),service.Data());
 
    if ((retval = krb5_sname_to_principal(context, serv_host.Data(),
-                 service, KRB5_NT_SRV_HST, &server))) {
+                 service.Data(), KRB5_NT_SRV_HST, &server))) {
 
       Error("Krb5Authenticate","failed <krb5_sname_to_principal>: %s\n",
              error_message(retval));
@@ -472,10 +526,19 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    // returns user@realm
    type = kMESS_STRING;
    Nrec = sock->Recv(answer, 100, type);
+
+   if (type == kROOTD_ERR) {
+      if (gDebug > 0)
+         TAuthenticate::AuthError("Krb5Authenticate", kErrNoHome);
+      return 0;
+   }
+
    if (Nrec <= 0) {
       Error("Krb5Authenticate","Receiving <user@realm>");
       return 0;
    }
+   if (gDebug > 3)
+      Info("Krb5Auth","%s",answer);
 
    if (version > 1) {
 
@@ -573,7 +636,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 }
 
 //______________________________________________________________________________
-void Krb5InitCred(char *ClientPrincipal)
+void Krb5InitCred(const char *ClientPrincipal)
 {
    // Checks if there are valid credentials in the cache.
    // If not, tries to initialise them.
@@ -599,7 +662,7 @@ void Krb5InitCred(char *ClientPrincipal)
 
 //______________________________________________________________________________
 Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, 
-                    krb5_principal Principal, TDatime &ExpDate)
+                    TString Principal, TDatime &ExpDate)
 {
    // Checks if there are valid credentials.
 
@@ -607,10 +670,12 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc,
    Int_t Now = time(0);
    Int_t Valid = -1;
 
+   TString PData = Principal;
+   TString PRealm = Principal;
+   PData.Resize(PData.Index("@"));
+   PRealm.Remove(0,PRealm.Index("@")+1);
    if (gDebug > 2)
-      Info("Krb5CheckCred","enter: principal '%.*s@%.*s'",
-            Principal->data->length, Principal->data->data,
-            Principal->realm.length, Principal->realm.data);
+      Info("Krb5CheckCred","enter: principal '%s'",Principal.Data());
 
    // Init to now
    ExpDate = TDatime();
@@ -629,24 +694,24 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc,
       if (gDebug > 3) {
          Info("Krb5CheckCred","Creds.server->length: %d",
                Creds.server->length);
-         Info("Krb5CheckCred","Realms data: '%.*s' '%.*s'",
+         Info("Krb5CheckCred","Realms data: '%.*s' '%s'",
                Creds.server->realm.length, Creds.server->realm.data,
-               Principal->realm.length, Principal->realm.data);
+               PRealm.Data());
          Info("Krb5CheckCred","Srv data[0]: '%.*s' ",
                Creds.server->data[0].length, Creds.server->data[0].data);
-         Info("Krb5CheckCred","Data data: '%.*s' '%.*s'",
+         Info("Krb5CheckCred","Data data: '%.*s' '%s'",
                Creds.server->data[1].length, Creds.server->data[1].data,
-               Principal->realm.length, Principal->realm.data);
+               PRealm.Data());
          Info("Krb5CheckCred","Endtime: %d ",Creds.times.endtime);
       }
 
       if (Creds.server->length == 2 &&
          !strncmp(Creds.server->realm.data,
-                  Principal->realm.data,Creds.server->realm.length) &&
+                  PRealm.Data(),Creds.server->realm.length) &&
          !strncmp((char *)Creds.server->data[0].data,
                   "krbtgt",Creds.server->data[0].length) &&
          !strncmp((char *)Creds.server->data[1].data,
-                  Principal->realm.data,Creds.server->data[1].length)) {
+                  PRealm.Data(),Creds.server->data[1].length)) {
          // Check expiration time
          Valid = (Creds.times.endtime >= Now) ? 1 : 0;
          // Return expiration time
