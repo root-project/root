@@ -39,8 +39,8 @@
 	--disable-rpath                                 \
         --disable-afs 					\
         --disable-srp 					\
-        --with-sys-iconpath=/usr/share/pixmaps 		\
-        --fontdir=@prefix@/share/fonts/truetype
+        --with-sys-iconpath=%_datadir/pixmaps 		\
+        --fontdir=%_datadir/root/fonts/truetype
 make 
 
 #---------------------------------------------------------------------
