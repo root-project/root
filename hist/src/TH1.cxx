@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.104 2002/07/15 14:59:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.105 2002/07/16 17:49:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1712,7 +1712,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //      if parmin>=parmax, the parameter is fixed
 //      Note that you are not forced to fix the limits for all parameters.
 //      For example, if you fit a function with 6 parameters, you can do:
-//        func->SetParameters(0,3.1,1.e-6,-1.5,0,100);
+//        func->SetParameters(0,3.1,1.e-6,-8,0,100);
 //        func->SetParLimits(3,-10,-4);
 //        func->FixParameter(4,0);
 //        func->SetParLimits(5, 1,1);
