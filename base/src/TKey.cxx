@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.26 2002/11/11 11:27:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.27 2002/11/11 14:45:10 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -371,18 +371,20 @@ ULong_t TKey::Hash() const
 //______________________________________________________________________________
 Bool_t TKey::IsFolder() const
 {
-    Bool_t ret = kFALSE;
+   // Check if object referenced by the key is a folder.
 
-    TClass *classPtr = gROOT->GetClass( (const char * ) fClassName );
-    if( classPtr && classPtr->GetClassInfo()) {
-       TObject *obj = ( TObject * ) classPtr->New();
-       if( obj ) {
-           ret = obj->IsFolder();
-           delete obj;
-       }
-    }
+   Bool_t ret = kFALSE;
 
-    return( ret );
+   TClass *classPtr = gROOT->GetClass((const char *) fClassName);
+   if (classPtr && classPtr->GetClassInfo()) {
+      TObject *obj = (TObject *) classPtr->New(TClass::kDummyNew);
+      if (obj) {
+         ret = obj->IsFolder();
+         delete obj;
+      }
+   }
+
+   return ret;
 }
 
 //______________________________________________________________________________
