@@ -28,20 +28,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef WIN32
-#ifndef R__LYNXOS
-#include <sys/stat.h>
-#endif
-#include <pwd.h>
-#ifndef __VMS
-#include <grp.h>
-#endif
-#endif
-
-#ifdef GDK_WIN32
-#include <sys/stat.h>
-#endif
-
 #include "TGFSContainer.h"
 #include "TGPicture.h"
 #include "TGMsgBox.h"
@@ -50,6 +36,21 @@
 #include "TList.h"
 #include "TSystem.h"
 #include "Riostream.h"
+
+#ifndef R__LYNXOS
+#include <sys/stat.h>
+#endif
+#ifndef WIN32
+#include <pwd.h>
+#include <grp.h>
+#else
+#define lstat(name, sbuf) _stat(name, sbuf)
+#define S_ISLNK(mode) mode & _S_IFCHR
+#define S_ISDIR(type) type & _S_IFDIR
+#define S_ISREG(type) type & _S_IFREG
+#define S_IXUSR _S_IEXEC
+#define stat _stat
+#endif
 
 
 ClassImp(TGFileContainer)
@@ -113,7 +114,6 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 
         //--- use posix macros
 
-#ifndef WIN32
         if (S_ISDIR(type1)) type1 = 1;
         #if defined(S_IFLNK)
         else if ((type1 & S_IFMT) == S_IFLNK) type1 = 2;
@@ -121,7 +121,9 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
         #if defined(S_IFSOCK)
         else if ((type1 & S_IFMT) == S_IFSOCK) type1 = 3;
         #endif
+        #if defined(S_ISFIFO)
         else if (S_ISFIFO(type1)) type1 = 4;
+        #endif
         else if (S_ISREG(type1) && (type1 & S_IXUSR)) type1 = 5;
         else type1 = 6;
 
@@ -132,22 +134,12 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
         #if defined(S_IFSOCK)
         else if ((type2 & S_IFMT) == S_IFSOCK) type2 = 3;
         #endif
+        #if defined(S_ISFIFO)
         else if (S_ISFIFO(type2)) type2 = 4;
+        #endif
         else if (S_ISREG(type2) && (type2 & S_IXUSR)) type2 = 5;
         else type2 = 6;
-#else
-#ifndef GDK_WIN32
-        Error("Compare", "not yet implemented for Win32");
-#else
-        if (type1 & _S_IFDIR) type1 = 1;
-        else if ((type1 & _S_IFREG) && (type1 & S_IEXEC)) type1 = 5;
-        else type1 = 6;
 
-        if (type2 & _S_IFDIR) type2 = 1;
-        else if ((type2 & _S_IFREG) && (type2 & S_IEXEC)) type2 = 5;
-        else type2 = 6;
-#endif
-#endif
         if (type1 < type2) return -1;
         if (type1 > type2) return 1;
         return strcmp(f1->GetItemName()->GetString(), f2->GetItemName()->GetString());
@@ -253,7 +245,6 @@ TGFileItem::TGFileItem(const TGWindow *p,
    }
    fSubnames[1] = new TGString(tmp);
 
-#ifndef R__VMS
    {
       struct group *grp;
       struct passwd *pwd;
@@ -274,9 +265,6 @@ TGFileItem::TGFileItem(const TGWindow *p,
          fSubnames[3] = new TGString(tmp);
       }
    }
-#else
-   //***NEED TO FIND A ROUTINE IN VMS THAT DOES THE SAME THING AS GETPWUID
-#endif
 
    fSubnames[4] = 0;
 
@@ -288,9 +276,6 @@ TGFileItem::TGFileItem(const TGWindow *p,
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
-#else
-#ifndef GDK_WIN32
-   Error("TGFileItem", "not yet implemented for Win32");
 #else
    char *temp;
    sprintf(tmp, "%c%c%c%c",
@@ -319,11 +304,21 @@ TGFileItem::TGFileItem(const TGWindow *p,
       sprintf(tmp, "%ld", bsize);
    }
    fSubnames[1] = new TGString(tmp);
-   if (temp = getenv("USERNAME"))
-        fSubnames[2] = new TGString(temp);
-   else
-        fSubnames[2] = new TGString("user");
-   fSubnames[3] = new TGString("group");
+   {
+      struct UserGroup_t *user_group;
+      char   tmp[256];
+      user_group = gSystem->GetUserInfo("");
+      if (user_group) {
+         fSubnames[2] = new TGString(user_group->fUser);
+         fSubnames[3] = new TGString(user_group->fGroup);
+      } else {
+         if (temp = getenv("USERNAME"))
+            fSubnames[2] = new TGString(temp);
+         else
+            fSubnames[2] = new TGString("user");
+         fSubnames[3] = new TGString("group");
+      }
+   }
    fSubnames[4] = 0;
 
    int i;
@@ -334,7 +329,6 @@ TGFileItem::TGFileItem(const TGWindow *p,
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
-#endif
 #endif
 }
 
@@ -472,21 +466,10 @@ Bool_t TGFileContainer::HandleTimer(TTimer *)
    // Refresh container contents. Check every 5 seconds to see if the
    // directory modification date has changed.
 
-#ifndef WIN32
    struct stat sbuf;
 
    if (stat(fDirectory.Data(), &sbuf) == 0)
       if (fMtime != (ULong_t)sbuf.st_mtime) DisplayDirectory();
-#else
-#ifndef GDK_WIN32
-   Error("HandleTImer", "not yet implemented for Win32");
-#else
-   struct stat sbuf;
-
-   if (stat(fDirectory.Data(), &sbuf) == 0)
-      if (fMtime != (ULong_t)sbuf.st_mtime) DisplayDirectory();
-#endif
-#endif
 
    return kTRUE;
 }
@@ -523,23 +506,11 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
    *pic = fClient->GetMimeTypeList()->GetIcon(name, small);
    if (*pic == 0) {
       *pic = small ? fDoc_t : fDoc_s;
-#ifndef WIN32
       if (S_ISREG(file_type) && (file_type) & S_IXUSR)
          *pic = small ? fApp_t : fApp_s;
       if (S_ISDIR(file_type))
          *pic = small ? fFolder_t : fFolder_s;
-#else
-#ifndef GDK_WIN32
-      Error("GetFilePictures", "not yet implemented for Win32");
-#else
-      if ((file_type & _S_IFREG) && (file_type & _S_IEXEC))
-         *pic = small ? fApp_t : fApp_s;
-      if (file_type & _S_IFDIR)
-         *pic = small ? fFolder_t : fFolder_s;
-#endif
-#endif
    }
-
    if (is_link)
       *lpic = small ? fSlink_t : fSlink_s;
    else
@@ -587,18 +558,8 @@ void TGFileContainer::CreateFileList()
    TString savdir = gSystem->WorkingDirectory();
    if (!gSystem->ChangeDirectory(fDirectory.Data())) return;
 
-#ifndef WIN32
    struct stat sbuf;
    if (stat(".", &sbuf) == 0) fMtime = sbuf.st_mtime;
-#else
-#ifndef GDK_WIN32
-   Error("CreateFileList", "not yet implemented for Win32");
-   return;
-#else
-   struct stat sbuf;
-   if (stat(".", &sbuf) == 0) fMtime = sbuf.st_mtime;
-#endif
-#endif
 
    void *dirp;
    if ((dirp = gSystem->OpenDirectory(".")) == 0) {
@@ -628,23 +589,13 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
    TGFileItem *item = 0;
    const TGPicture *pic, *lpic, *spic, *slpic;
 
-#ifndef WIN32
    struct stat sbuf;
-#else
-#ifndef GDK_WIN32
-   Error("AddFile", "not yet implemented for Win32");
-   return item;
-#else
-   struct stat sbuf;
-#endif
-#endif
 
    type = 0;
    size = 0;
    uid  = 0;
    gid  = 0;
-#ifndef WIN32
-#ifndef R__VMS
+
    is_link = kFALSE;
    if (lstat(name, &sbuf) == 0) {
       is_link = S_ISLNK(sbuf.st_mode);
@@ -678,44 +629,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
       AddItem(item);
       fTotal++;
    }
-#endif
-#else
-#ifdef GDK_WIN32
-   is_link = kFALSE;
-   if (stat(name, &sbuf) == 0) {
-      is_link = kFALSE;
-      type = sbuf.st_mode;
-      size = sbuf.st_size;
-      uid = sbuf.st_uid;
-      gid = sbuf.st_gid;
-      if (is_link) {
-         if (stat(name, &sbuf) == 0) {
-            type = sbuf.st_mode;
-            size = sbuf.st_size;
-         }
-      }
-   } else {
-      char msg[256];
 
-      sprintf(msg, "Can't read file attributes of \"%s\": %s.",
-              name, gSystem->GetError());
-      new TGMsgBox(fClient->GetDefaultRoot(), GetMainFrame(),
-                   "Error", msg, kMBIconStop, kMBOk);
-      return item;
-   }
-
-   filename = name;
-   if ((type & _S_IFDIR) || fFilter == 0 ||
-       (fFilter && filename.Index(*fFilter) != kNPOS)) {
-      GetFilePictures(&pic, &lpic, type, is_link, name, kFALSE);
-      GetFilePictures(&spic, &slpic, type, is_link, name, kTRUE);
-      item = new TGFileItem(this, pic, lpic, spic, slpic, new TGString(name),
-                            type, size, uid, gid, fViewMode);
-      AddItem(item);
-      fTotal++;
-   }
-#endif
-#endif
    return item;
 }
 
