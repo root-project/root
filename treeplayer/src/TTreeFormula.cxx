@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.120 2003/06/25 07:16:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.121 2003/06/30 15:45:52 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3693,7 +3693,6 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
          default:
            return kFALSE;
       }      
-      return kFALSE;
    }
    if (fAxis) return kTRUE;
    TFormLeafInfo * info;

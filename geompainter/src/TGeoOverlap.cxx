@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.3 2003/02/12 17:20:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.4 2003/02/13 11:04:19 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************
@@ -87,7 +87,6 @@ Int_t TGeoOverlap::Compare(const TObject *obj) const
       if (other->IsExtrusion()) return 1;
       return (fOverlap<=other->GetOverlap())?1:-1;
    }
-   return 0;   
 }
 
 //______________________________________________________________________________
