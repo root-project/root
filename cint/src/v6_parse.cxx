@@ -3614,6 +3614,7 @@ G__value G__exec_statement()
 	  }
 #ifndef G__OLDIMPLEMENTATION949
           else {
+            int namespace_tagnum;
 #ifdef G__NEVER 
 	    /* This part given by Scott Snyder causes problem on Redhat4.2
 	     * Linux 2.0.30  gcc -O. If optimizer is turned off, everything
@@ -3628,7 +3629,12 @@ G__value G__exec_statement()
             if (iout >= 2 &&
                 statement[iout-1] == ':' && statement[iout-2] == ':') {
               spaceflag = 0;
-	    }
+            }
+            /* Allow for spaces before a scope operator. */
+            namespace_tagnum = G__defined_tagname(statement,2);
+            if ((namespace_tagnum!=-1) && (G__struct.type[namespace_tagnum]=='n')) {
+              spaceflag = 0;	    
+            }
           }
 #endif
 	  ++spaceflag;
