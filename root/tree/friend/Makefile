@@ -1,6 +1,6 @@
 
 all: tests
-test: tests ChainFriend 
+test: tests ChainFriend ChainFriendStatus
 
 override SUBDIRS =  
 
@@ -41,6 +41,9 @@ Event2.root: $(ROOTDIR)/test/Event.root
 
 ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
 	$(CMDECHO) root.exe -q -b -l Run.C > run.out 2>&1
+
+ChainFriendStatus: testFriend4.cc
+	$(CMDECHO) root.exe -q -b -l testFriend4.cc > ChainFriendStatus.log 
 
 main: main.C fooDict.C barDict.C foo.C bar.C
 	$(CMDECHO) g++ -g -o $@ $^ -I. `root-config --cflags --libs` -lTreePlayer -lProof
