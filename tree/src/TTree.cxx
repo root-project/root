@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.155 2003/07/27 15:39:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.156 2003/08/04 20:04:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1560,6 +1560,7 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
    if (nentries < 0) nentries = Int_t(fEntries);
    if (nentries > fEntries) nentries = Int_t(fEntries);
    for (i=0;i<nentries;i++) {
+      if (LoadTree(i) < 0) break;
       GetEntry(i);
       newtree->Fill();
    }
