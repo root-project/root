@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.20 2004/04/28 11:45:47 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.21 2004/05/08 13:40:18 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -63,7 +63,7 @@ Int_t Krb5Authenticate(TAuthenticate *, TString &, TString &, Int_t);
 
 static void  Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc = kFALSE);
 static Int_t Krb5CheckCred(krb5_context, krb5_ccache, TString, TDatime &);
-Int_t Krb5CheckSecCtx(const char *, TSecContext *);
+static Int_t Krb5CheckSecCtx(const char *, TSecContext *);
 
 class Krb5AuthInit {
 public:
@@ -189,7 +189,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
    // but only if interactive
    if (!Principal.Length() || !Principal.Contains("@")) {
       if (gDebug > 3)
-         Info("Krb5Authenticate", 
+         Info("Krb5Authenticate",
               "incomplete principal: complete using defaults");
       krb5_principal default_princ;
 
@@ -229,12 +229,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
    }
    // Notify
-   if (gDebug > 3) 
+   if (gDebug > 3)
       if (GotPrincipal)
-         Info("Krb5Authenticate", 
+         Info("Krb5Authenticate",
               "user requested principal: %s", Principal.Data());
       else
-         Info("Krb5Authenticate", 
+         Info("Krb5Authenticate",
               "default principal: %s", Principal.Data());
 
    if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
@@ -258,14 +258,14 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
    }
 
-   // If a principal was specified by the user, we must check that the 
+   // If a principal was specified by the user, we must check that the
    // principal for which we have a cached ticket is the one that we want
-   TString TicketPrincipal = 
-      TString(Form("%.*s@%.*s",client->data->length, client->data->data, 
+   TString TicketPrincipal =
+      TString(Form("%.*s@%.*s",client->data->length, client->data->data,
                                client->realm.length, client->realm.data));
    if (GotPrincipal) {
 
-      // If interactive require the ticket principal to be the same as the 
+      // If interactive require the ticket principal to be the same as the
       // required or default one
       if (isatty(0) && isatty(1) && Principal != TicketPrincipal) {
          if (gDebug > 3)
@@ -279,9 +279,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
                   error_message(retval));
             return -1;
          }
-         // This may have changed 
-         TString TicketPrincipal = 
-             TString(Form("%.*s@%.*s",client->data->length, client->data->data, 
+         // This may have changed
+         TString TicketPrincipal =
+             TString(Form("%.*s@%.*s",client->data->length, client->data->data,
                                       client->realm.length, client->realm.data));
       }
    }
@@ -321,9 +321,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
    }
    cleanup.client = client;
 
-   // At this point we know which is the principal we will be using 
+   // At this point we know which is the principal we will be using
    if (gDebug > 3)
-      Info("Krb5Authenticate", 
+      Info("Krb5Authenticate",
            "using valid ticket for principal: %s", TicketPrincipal.Data());
 
    // Get a normal string for user
@@ -331,7 +331,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
    if (gDebug > 3) {
       Info("Krb5Authenticate", "cc_get_principal: client: %.*s %.*s",
-           client->data->length, client->data->data, 
+           client->data->length, client->data->data,
            client->realm.length, client->realm.data);
    }
 
@@ -446,7 +446,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
    if (gDebug > 3) {
       Info("Krb5Authenticate","sname_to_principal: server: %.*s %.*s",
-           server->data->length, server->data->data, 
+           server->data->length, server->data->data,
            server->realm.length, server->realm.data);
    }
 
@@ -520,15 +520,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
          krb5_data outdata;
          outdata.data = 0;
-         
+
          retval = krb5_auth_con_genaddrs(context, auth_context,
                        sockd, KRB5_AUTH_CONTEXT_GENERATE_LOCAL_FULL_ADDR);
-         
+
          if (retval) {
             Error("Krb5Authenticate","failed auth_con_genaddrs is: %s\n",
                   error_message(retval));
          }
-         
+
          retval = krb5_fwd_tgt_creds(context,auth_context, 0 /*host*/,
                                      client, server, ccdef, true,
                                      &outdata);
@@ -537,15 +537,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
                   error_message(retval));
             return 0;
          }
-         
+
          cleanup.data = outdata.data;
-         
+
          if (gDebug > 3)
             Info("Krb5Authenticate",
                  "Sending kerberos forward ticket to %s %p %d [%d,%d,%d,...]",
                  serv_host.Data(),outdata.data,outdata.length,
                  outdata.data[0],outdata.data[1],outdata.data[2]);
-         
+
          // Send length first
          char BufLen[20];
          sprintf(BufLen, "%d",outdata.length);
@@ -554,14 +554,14 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
             Error("Krb5Authenticate","Sending <BufLen>");
             return 0;
          }
-         
+
          // Send Key. second ...
          Nsen = sock->SendRaw(outdata.data, outdata.length);
          if (Nsen <= 0) {
             Error("Krb5Authenticate","Sending <Key>");
             return 0;
          }
-         
+
          if (gDebug>3)
             Info("Krb5Authenticate",
                  "For kerberos forward ticket sent %d bytes (expected %d)",
@@ -653,8 +653,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
 
       // Create SecContext object
-      TSecContext *ctx = 
-         auth->GetHostAuth()->CreateSecContext((const char *)lUser, 
+      TSecContext *ctx =
+         auth->GetHostAuth()->CreateSecContext((const char *)lUser,
              auth->GetRemoteHost(), (Int_t)TAuthenticate::kKrb5, OffSet,
              Details, (const char *)Token, ExpDate, 0, RSAKey);
       // Transmit it to TAuthenticate
@@ -712,7 +712,7 @@ void Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc)
    else
       Cmd = Form("%s -f %s",R__KRB5INIT,Principal.Data());
 
-   if (gDebug > 2) 
+   if (gDebug > 2)
       Info("Krb5InitCred","executing: %s",Cmd.Data());
    Int_t rc = gSystem->Exec(Cmd);
    if (rc)
@@ -721,7 +721,7 @@ void Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc)
 }
 
 //______________________________________________________________________________
-Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, 
+Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc,
                     TString Principal, TDatime &ExpDate)
 {
    // Checks if there are valid credentials.
@@ -742,7 +742,7 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc,
 
    krb5_cc_cursor Cur;
    if ((retval = krb5_cc_start_seq_get(kCont, Cc, &Cur))) {
-      if (gDebug > 2) 
+      if (gDebug > 2)
          Error("Krb5Authenticate","failed <krb5_cc_start_seq_get>: %s\n",
                 error_message(retval));
       return 0;
@@ -788,8 +788,8 @@ Int_t Krb5CheckSecCtx(const char *Principal, TSecContext *Ctx)
    // Krb5 version of CheckSecCtx to be passed to TAuthenticate::AuthExists
    // Check if Principal is matches the one used to instantiate Ctx
    // Returns: 1 if ok, 0 if not
-   // Deactivates Ctx is not valid 
- 
+   // Deactivates Ctx is not valid
+
    Int_t rc = 0;
 
    if (Ctx->IsActive()) {
