@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.4 2000/12/04 16:45:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.5 2000/12/09 14:30:08 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -212,8 +212,10 @@ Int_t TBranchClones::GetEntry(Int_t entry, Int_t getall)
    Int_t nbytes = fBranchCount->GetEntry(entry);
    TLeaf *leafcount = (TLeaf*)fBranchCount->GetListOfLeaves()->UncheckedAt(0);
    fN = Int_t(leafcount->GetValue());
-   if (fN <= 0) return 0;
-
+   if (fN <= 0) {
+      if (fList) fList->Clear();
+      return 0;
+   }
    TBranch *branch;
    Int_t nbranches = fBranches.GetEntriesFast();
 
