@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.5 2000/09/08 07:38:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.6 2000/09/11 06:19:57 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -24,12 +24,10 @@
 // modularity of an application, minimizing the class relationship problem
 // that penalizes large applications.
 //
-// If we assume a sets of tasks T1, T2, T3, T4, etc (could be TTask objects),
-// each task may be one or more classes with strong relationships in the
-// form of data member pointers. This is an efficient way of communication.
-// However, one has interest to minimize direct coupling between tasks
+// Pointers are efficient to communicate between classes.
+// However, one has interest to minimize direct coupling between classes
 // in the form of direct pointers. One better uses the naming and search
-// service provided by the Root folders hierarchy. This makes the tasks
+// service provided by the Root folders hierarchy. This makes the classes
 // loosely coupled and also greatly facilitates I/O operations.
 // In a client/server environment, this mechanism facilitates the access
 // to any kind of object in //root stores running on different processes.
@@ -62,8 +60,8 @@
 // The above statement can be abbreviated to:
 //   TFile *myFile = (TFile*)gROOT->FindObject("/Files/myFile.root");
 // or even to:
-//   TFile *myFile = (TFile*)gROOT->FindObject("myFile.root");
-// In this last case, the TROOT::FindObject function will scan the folder hierarchy
+//   TFile *myFile = (TFile*)gROOT->FindObjectAny("myFile.root");
+// In this last case, the TROOT::FindObjectAny function will scan the folder hierarchy
 // starting at //root and will return the first object named "myFile.root".
 //
 // Because a string-based search mechanism is expensive, it is recommended
