@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.3 2004/01/26 14:09:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.4 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -63,7 +63,11 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
   fEigenValuesRe.ResizeTo(nRows);
   fEigenValuesIm.ResizeTo(nRows);
 
-  TVectorD     ortho(nRows);
+  TVectorD ortho;
+  Double_t work[kWorkMax];
+  if (nRows > kWorkMax) ortho.ResizeTo(nRows);
+  else                  ortho.Adopt(nRows,work);
+
   TMatrixD H = a;
 
   // Reduce to Hessenberg form.

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.4 2004/01/26 14:09:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.5 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -38,7 +38,12 @@ TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSym &a)
   fEigenValues.ResizeTo(nRows);
 
   fEigenVectors = a;
-  TVectorD offDiag(nRows);
+
+  TVectorD offDiag;
+  Double_t work[kWorkMax];
+  if (nRows > kWorkMax) offDiag.ResizeTo(nRows);
+  else                  offDiag.Adopt(nRows,work);
+
   // Tridiagonalize matrix
   MakeTridiagonal(fEigenVectors,fEigenValues,offDiag);
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.2 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.3 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -41,6 +41,8 @@ protected :
   virtual const TMatrixD &GetDecompMatrix() const { return fU; }
 
 public :
+
+  enum {kWorkMax = 100}; // size of work array
 
   TDecompSVD() {}
   TDecompSVD(const TMatrixD &m,Double_t tol = 0.0);

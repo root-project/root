@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -36,6 +36,8 @@ protected :
   TVectorD     fEigenValuesIm;  // Eigen-values
 
 public :
+
+  enum {kWorkMax = 100}; // size of work array
 
   TMatrixDEigen() {};
   TMatrixDEigen(const TMatrixD &a);

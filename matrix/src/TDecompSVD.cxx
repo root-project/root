@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.6 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.7 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -74,7 +74,10 @@ Int_t TDecompSVD::Decompose(const TMatrixDBase &a)
   fU.UnitMatrix();
   memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
 
-  TVectorD offDiag(nCol);
+  TVectorD offDiag;
+  Double_t work[kWorkMax];
+  if (nCol > kWorkMax) offDiag.ResizeTo(nCol);
+  else                 offDiag.Adopt(nCol,work);
 
   // step 1: bidiagonalization of A
   if (!Bidiagonalize(fV,fU,fSig,offDiag))

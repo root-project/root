@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.3 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.4 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -80,7 +80,10 @@ Int_t TDecompQRH::Decompose(const TMatrixDBase &a)
     fUp.ResizeTo(nCol);
   }
 
-  TVectorD diagR(nCol);
+  TVectorD diagR;
+  Double_t work[kWorkMax];
+  if (nCol > kWorkMax) diagR.ResizeTo(nCol);
+  else                 diagR.Adopt(nCol,work);
 
   if (QRH(fQ,diagR,fUp,fW,fTol)) {
     for (Int_t i = 0; i < nRow; i++) {
