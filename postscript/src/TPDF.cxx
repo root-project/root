@@ -963,13 +963,15 @@ void TPDF::NewPage()
    PrintStr(" 0 R");
    PrintStr("@");
 
-   Double_t xlow=0, ylow=0;
+   Double_t xlow=0, ylow=0, xup=1, yup=1;
    if (gPad) {
       xlow = gPad->GetAbsXlowNDC();
+      xup  = xlow + gPad->GetAbsWNDC();
       ylow = gPad->GetAbsYlowNDC();
+      yup  = ylow + gPad->GetAbsHNDC();
    }
-   PrintStr("/MediaBox [");
 
+   PrintStr("/MediaBox [");
    Double_t width, height;
    switch (fPageFormat) {
       case 100 :
@@ -988,11 +990,31 @@ void TPDF::NewPage()
          width  = 21.0*TMath::Power(TMath::Sqrt(2.), 4-fPageFormat);
          height = 29.7*TMath::Power(TMath::Sqrt(2.), 4-fPageFormat);
    };
-
    WriteReal(CMtoPDF(fXsize*xlow));
    WriteReal(CMtoPDF(fYsize*ylow));
    WriteReal(CMtoPDF(width));
    WriteReal(CMtoPDF(height));
+   PrintStr("]");
+   PrintStr("@");
+
+   Double_t xmargin = CMtoPDF(0.7);
+   Double_t ymargin = 0;
+   if (fPageOrientation == 1) ymargin = CMtoPDF(TMath::Sqrt(2.)*0.7);
+   if (fPageOrientation == 2) ymargin = CMtoPDF(height)-CMtoPDF(0.7);
+
+   PrintStr("/CropBox [");
+   if (fPageOrientation == 1) {
+      WriteReal(xmargin);
+      WriteReal(ymargin);
+      WriteReal(xmargin+CMtoPDF(fXsize*xup));
+      WriteReal(ymargin+CMtoPDF(fYsize*yup));
+   }
+   if (fPageOrientation == 2) {
+      WriteReal(xmargin);
+      WriteReal(CMtoPDF(height)-CMtoPDF(fXsize*xup)-xmargin);
+      WriteReal(xmargin+CMtoPDF(fYsize*yup));
+      WriteReal(CMtoPDF(height)-xmargin);
+   }
    PrintStr("]");
    PrintStr("@");
 
@@ -1020,19 +1042,11 @@ void TPDF::NewPage()
    fStartStream = fNByte;
    fCompress = kTRUE;
 
-   if (fPageOrientation == 1) {
-      PrintStr("1 0 0 1");
-      WriteReal(CMtoPDF(0.7));
-      WriteReal(CMtoPDF(TMath::Sqrt(2.)*0.7));
-      PrintStr(" cm");
-   }
-   if (fPageOrientation == 2) {
-      PrintStr(" 1 0 0 1");
-      WriteReal(CMtoPDF(0.7));
-      WriteReal(CMtoPDF(height)-CMtoPDF(0.7));
-      PrintStr(" cm");
-      PrintStr(" 0 -1 1 0 0 0 cm");
-   }
+   PrintStr("1 0 0 1");
+   WriteReal(xmargin);
+   WriteReal(ymargin);
+   PrintStr(" cm");
+   if (fPageOrientation == 2) PrintStr(" 0 -1 1 0 0 0 cm");
 }
 
 
