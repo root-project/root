@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.7 2003/05/05 09:36:27 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.8 2003/07/10 11:19:49 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    }
 
    TString stmp;
-   char *fname;
+   const char *fname;
 
    if (!strncmp(path, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
       // Ugh, no PNFS support
@@ -78,10 +78,11 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
       fname = path;
    } else {
       // Metadata provided by PNFS
-      if ((fname = gSystem->ExpandPathName(path))) {
-         stmp = fname;
-         delete [] fname;
-         fname = (char *)stmp.Data();
+      char *tname;
+      if ((tname = gSystem->ExpandPathName(path))) {
+         stmp = tname;
+         delete [] tname;
+         fname = stmp.Data();
       } else {
          Error("TDCacheFile", "error expanding path %s", path);
          goto zombie;
