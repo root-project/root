@@ -269,9 +269,11 @@ fi
 echo $openglincdir
 
 echo $ac_n "Checking for libGL.a... $ac_c"
-opengllibdirs="$OPENGL $OPENGL/lib /usr/lib /usr/local/lib /usr/lib/Mesa \
-              /usr/local/lib/Mesa /usr/Mesa/lib /usr/local/Mesa/lib \
-              /usr/Mesa /usr/local/Mesa /opt/Mesa /opt/Mesa/lib"
+opengllibdirs="$OPENGL $OPENGL/lib /usr/lib /usr/local/lib /usr/lib/X11 \
+              /usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
+              /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
+              /usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
+              /opt/Mesa/lib"
 
 if [ -z "$opengllibdir" ]; then
    opengllibdir=NO
