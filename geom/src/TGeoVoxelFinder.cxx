@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.15 2003/01/13 16:01:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.16 2003/01/23 14:25:37 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -270,12 +270,10 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 //   printf("xmin=%g  xmax=%g\n", xmin, xmax);
 //   printf("ymin=%g  ymax=%g\n", ymin, ymax);
 //   printf("zmin=%g  zmax=%g\n", zmin, zmax);
-   Bool_t in = kFALSE;
    //TGeoNode *node1;
    // loop on brothers
    for (Int_t ib=0; ib<nd; ib++) {
       if (ib == inode) continue; // everyone overlaps with itself
-      in = kFALSE;
       //node1 = fVolume->GetNode(ib);
       xmin1 = fBoxes[6*ib+3] - fBoxes[6*ib];
       xmax1 = fBoxes[6*ib+3] + fBoxes[6*ib];
