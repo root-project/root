@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.81 2004/03/16 06:18:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.82 2004/04/27 13:15:43 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -977,6 +977,11 @@ int TCint::AutoLoadCallback(const char *cls, const char *lib)
    // and 1 in case if success.
 
    if (!gROOT) return 0;
+
+   // calls to load libCore might come in the very beginning when libCore
+   // dictionary is not fully loaded yet, ignore it since libCore is always
+   // loaded
+   if (strstr(lib, "libCore")) return 1;
 
    if (gROOT->LoadClass(cls, lib) == 0) {
       if (gDebug > 0)
