@@ -198,7 +198,7 @@ namespace ROOT {
       }
       
       // protected:
-      virtual  void *GetStart(int i=0) {
+      virtual  void *GetStart(int /*i*/=0) {
          // return the address of the start of the object being proxied. Assumes
          // that setup() has been called.
          
@@ -526,12 +526,17 @@ namespace ROOT {
       }
 
       TClaArray2Proxy() : TProxy() {}
-      TClaArray2Proxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
-      TClaArray2Proxy(TProxyDirector *director, const char *top, const char *name) : 
-         TProxy(director,top,name) {};
-      TClaArray2Proxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
-         TProxy(director,top,name,data) {};
-      TClaArray2Proxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
+      TClaArray2Proxy(TProxyDirector *director, const char *name) 
+        : TProxy(director,name) {};
+      TClaArray2Proxy(TProxyDirector *director, const char *top, 
+                      const char *name) 
+        : TProxy(director,top,name) {};
+      TClaArray2Proxy(TProxyDirector *director, const char *top, 
+                      const char *name, const char *data) 
+        : TProxy(director,top,name,data) {};
+      TClaArray2Proxy(TProxyDirector *director, TProxy *parent, 
+                      const char *name) 
+        : TProxy(director,parent, name) {};
       ~TClaArray2Proxy() {};
 
       const array_t &at(int i) {
@@ -542,7 +547,7 @@ namespace ROOT {
          if (fWhere==0) return &default_val;
      
          T *temp = (T*)GetClaStart(i);
-         if (temp) return (array_t)temp;
+         if (temp) return *temp;
          else return default_val;
 
          // T *temp = *(T**)location;
@@ -631,14 +636,14 @@ namespace ROOT {
 
 #endif // TPROXY_H
 
-#ifdef __MAKECINT__
-#pragma link C++ class TClaImpProxy<unsigned int>;
+/*  #ifdef __MAKECINT__ */
+/*  #pragma link C++ class TClaImpProxy<unsigned int>; */
 
 
 
-#pragma link C++ class TClaArrayProxy<int>;
-#pragma link C++ class TClaArrayProxy<Float_t>;
-#pragma link C++ class TClaArrayProxy<double>;
+/*  #pragma link C++ class TClaArrayProxy<int>; */
+/*  #pragma link C++ class TClaArrayProxy<Float_t>; */
+/*  #pragma link C++ class TClaArrayProxy<double>; */
 
-#endif
+/*  #endif */
 

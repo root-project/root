@@ -242,7 +242,7 @@ public:
    Bool_t IsClones() const { return fIsClones!=kOut; }
    UInt_t GetIsClones() const { return fIsClones; }
 
-   void OutputDecl(FILE *hf, int offset, UInt_t maxVarname){
+   void OutputDecl(FILE *hf, int offset, UInt_t /* maxVarname */){
       // Output the declaration and implementation of this emulation class
 
       TProxyDescriptor *desc;
@@ -437,7 +437,7 @@ public:
 
    UInt_t AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDescriptor *desc);
    UInt_t AnalyzeOldBranch(TBranch *branch, UInt_t level, TProxyClassDescriptor *desc);
-   UInt_t TGenerateProxy::AnalyzeOldLeaf(TLeaf *leaf, UInt_t level, TProxyClassDescriptor *topdesc);
+   UInt_t AnalyzeOldLeaf(TLeaf *leaf, UInt_t level, TProxyClassDescriptor *topdesc);
    void   AnalyzeElement(TBranch *branch, TStreamerElement *element, UInt_t level, TProxyClassDescriptor *desc, const char* path);
    void   AnalyzeTree();
    void   WriteProxy();
@@ -561,7 +561,7 @@ TGenerateProxy::TGenerateProxy(TTree* tree, const char *script, const char *cuts
    WriteProxy();
 }
 
-Bool_t TGenerateProxy::NeedToEmulate(TClass *cl, UInt_t level) {
+Bool_t TGenerateProxy::NeedToEmulate(TClass *cl, UInt_t /* level */) {
    // Return true if we should create a nested class representing this class
 
    return cl->TestBit(TClass::kIsEmulation);
@@ -701,6 +701,7 @@ UInt_t TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassD
             case TStreamerInfo::kLong:  { type = "T" + middle + "LongProxy"; break; } 
             case TStreamerInfo::kFloat: { type = "T" + middle + "FloatProxy"; break; } 
             case TStreamerInfo::kDouble:{ type = "T" + middle + "DoubleProxy"; break; } 
+            case TStreamerInfo::kDouble32:{ type = "T" + middle + "DoubleProxy"; break; } 
             case TStreamerInfo::kUChar: { type = "T" + middle + "UCharProxy"; break; } 
             case TStreamerInfo::kUShort:{ type = "T" + middle + "UShortProxy"; break; } 
             case TStreamerInfo::kUInt:  { type = "T" + middle + "UIntProxy"; break; } 
@@ -716,6 +717,7 @@ UInt_t TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassD
             case TStreamerInfo::kOffsetL + TStreamerInfo::kLong:  { type = GetArrayType(element,"Long",container ); break; } 
             case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat: { type = GetArrayType(element,"Float",container ); break; } 
             case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble:{ type = GetArrayType(element,"Double",container ); break; } 
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32:{ type = GetArrayType(element,"Double",container ); break; } 
             case TStreamerInfo::kOffsetL + TStreamerInfo::kUChar: { type = GetArrayType(element,"UChar",container ); break; } 
             case TStreamerInfo::kOffsetL + TStreamerInfo::kUShort:{ type = GetArrayType(element,"UShort",container ); break; } 
             case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt:  { type = GetArrayType(element,"UInt",container ); break; } 
@@ -729,6 +731,7 @@ UInt_t TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassD
             case TStreamerInfo::kOffsetP + TStreamerInfo::kLong:  { type = GetArrayType(element,"Long",container ); break; } 
             case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat: { type = GetArrayType(element,"Float",container ); break; } 
             case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble:{ type = GetArrayType(element,"Double",container ); break; } 
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32:{ type = GetArrayType(element,"Double",container ); break; } 
             case TStreamerInfo::kOffsetP + TStreamerInfo::kUChar: { type = GetArrayType(element,"UChar",container ); break; } 
             case TStreamerInfo::kOffsetP + TStreamerInfo::kUShort:{ type = GetArrayType(element,"UShort",container ); break; } 
             case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:  { type = GetArrayType(element,"UInt",container ); break; } 
@@ -805,7 +808,7 @@ UInt_t TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassD
             }
             
             default:
-               fprintf(stderr,"Unsupported type for %s\n",branch->GetName());
+               fprintf(stderr,"Unsupported type for %s (%d)\n",branch->GetName(),element->GetType());
                 
          }
 
@@ -985,7 +988,7 @@ UInt_t TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassD
    return extraLookedAt;
 }
 
-UInt_t TGenerateProxy::AnalyzeOldLeaf(TLeaf *leaf, UInt_t level, TProxyClassDescriptor *topdesc) 
+UInt_t TGenerateProxy::AnalyzeOldLeaf(TLeaf *leaf, UInt_t /* level */, TProxyClassDescriptor *topdesc) 
 {
    // Analyze the leaf and populate the TGenerateProxy or the topdesc with
    // its findings.  
@@ -1549,6 +1552,9 @@ void TGenerateProxy::WriteProxy() {
    fprintf(hf,"#include <TProxy.h>\n");
    fprintf(hf,"#include <TProxyDirector.h>\n");
    fprintf(hf,"#include <TProxyTemplate.h>\n");
+   fprintf(hf,"#if defined(__CINT__) && !defined(__MAKECINT__)\n");
+   fprintf(hf,"   #define ROOT_Rtypes\n");
+   fprintf(hf,"#endif\n");
    fprintf(hf,"using namespace ROOT;\n");       // questionable
    fprintf(hf,"\n\n");
 
@@ -1724,7 +1730,7 @@ void TGenerateProxy::WriteProxy() {
    fprintf(hf,"   // Read branches not processed in ProcessCut() and fill histograms.\n");
    fprintf(hf,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
 
-   fprintf(hf,"   fDirector.fEntry = entry;\n");
+   fprintf(hf,"   fDirector.SetReadEntry(entry);\n");
    if (cutfilename) {
       fprintf(hf,"   if (%s()) htemp->Fill(%s());\n",cutscriptfunc.Data(),scriptfunc.Data());
    } else {
@@ -1775,6 +1781,7 @@ Int_t draw(TTree *tree, const char *filename, const char *cutfilename = "", Opti
    selname = gp.GetFilename();
    selname.Append(aclicMode);
    
+   fprintf(stderr,"will process %s\n",selname.Data());
    Int_t result = tree->Process(selname,option,nentries,firstentry);
    
    // could delete the file selname+".h"

@@ -1,7 +1,7 @@
 {
 fprintf(stdout,"loading libraries and script needed for the new TTree::Draw\n");
-// gROOT->ProcessLine(".L TProxyDirector.cxx+");
 gROOT->ProcessLine(".L TProxy.cxx+");
+gROOT->ProcessLine(".L TProxyDirector.cxx+");
 gSystem->Load("libTreePlayer");
 gROOT->ProcessLine(".L GenerateProxy.C+");
 #include <string>

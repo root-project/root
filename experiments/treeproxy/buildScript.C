@@ -1,4 +1,5 @@
 {
+if (TClass::GetDict("TTreeFormula")==0) gSystem->Load("libTreePlayer");
 new TFile("Event.new.split9.root");
 //new TFile("Event.new.split2.root");
 //new TFile("Event.new.split1.root");
