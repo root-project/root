@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.6 2001/12/09 17:36:25 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.7 2002/03/21 16:15:43 rdm Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1651,7 +1651,7 @@ void TLego::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntmax, Int_t &nt, 
 
 //*-*-          D X   . G T .   D Y
 
-    dt = 1 / (dx + 1);
+    dt = 1./ (Double_t)(dx + 1.);
     ddtt = dt*(float).5;
     tcur = -(Double_t)dt;
     tt = (Double_t) (-(dx + dy2));
@@ -1690,7 +1690,7 @@ L110:
 //*-*-          D Y   . G T .   D X
 
 L200:
-    dt = 1 / (dy + 1);
+    dt = 1. / (Double_t)(dy + 1.);
     ddtt = dt*(float).5;
     tcur = -(Double_t)dt;
     tt = (Double_t) (-(dy + dx2));
@@ -1729,7 +1729,7 @@ L210:
 
 L300:
     if (nt == 0) return;
-    dt *= 11;
+    dt *= 1.1;
     if (t[3] <= dt) t[3] = 0;
     if (t[2*nt + 2] >= 1 - dt) t[2*nt + 2] = 1;
     if (ifinve == 0) return;
@@ -2006,7 +2006,7 @@ void TLego::InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
     }
     j = 30;
     for (nb = 2; nb <= 30; ++nb) {
-	for (ib = 1; ib < 30 - nb; ++ib) {
+	for (ib = 1; ib <= 30 - nb + 1; ++ib) {
 	    k = 0;
 	    for (i = ib; i <= ib + nb - 1; ++i) k = k | fMask[i - 1];
 	    ++j;
