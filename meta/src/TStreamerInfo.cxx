@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.139 2002/08/07 06:44:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.140 2002/08/09 19:26:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -3035,7 +3035,9 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
                        if ((*x & kIsReferenced) != 0) {
-                          UShort_t pidf = TProcessID::WriteProcessID(0,(TFile *)b.GetParent());
+                         TObject *obj = (TObject*)pointer;
+                         TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID());
+                          UShort_t pidf = TProcessID::WriteProcessID(pid,(TFile *)b.GetParent());
                           b << pidf;
                        }
                        break;
@@ -3380,7 +3382,9 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                   pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
                   UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
                   if ((*x & kIsReferenced) != 0) {
-                      UShort_t pidf = TProcessID::WriteProcessID(0,(TFile *)b.GetParent());
+                      TObject *obj = (TObject*)pointer;
+                      TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID());
+                      UShort_t pidf = TProcessID::WriteProcessID(pid,(TFile *)b.GetParent());
                       b << pidf;
                    }
                }
