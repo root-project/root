@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.2 2000/06/13 10:58:50 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -318,6 +318,10 @@ void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
    for (Int_t i=0;i<fNpoints;i++) {
       out<<"   grae->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
       out<<"   grae->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]<<","<<fEYlow[i]<<","<<fEYhigh[i]<<");"<<endl;
+   }
+   if (strstr(option,"multigraph")) {
+      out<<"   multigraph->Add(grae);"<<endl;
+      return;
    }
    out<<"   grae->Draw("
       <<quote<<option<<quote<<");"<<endl;

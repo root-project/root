@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.2 2000/06/13 10:58:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.3 2000/08/31 17:05:44 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -292,6 +292,10 @@ void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
    for (Int_t i=0;i<fNpoints;i++) {
       out<<"   gre->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
       out<<"   gre->SetPointError("<<i<<","<<fEX[i]<<","<<fEY[i]<<");"<<endl;
+   }
+   if (strstr(option,"multigraph")) {
+      out<<"   multigraph->Add(gre);"<<endl;
+      return;
    }
    out<<"   gre->Draw("
       <<quote<<option<<quote<<");"<<endl;
