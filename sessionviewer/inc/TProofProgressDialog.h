@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.1 2003/04/04 00:40:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.2 2003/04/11 11:48:11 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -65,6 +65,8 @@ public:
    void DoClose();
    void DoKeep(Bool_t on);
    void DoStop();
+
+   ClassDef(TProofProgressDialog,0)  //PROOF progress dialog
 };
 
 #endif

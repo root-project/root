@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.7 2004/04/20 19:35:17 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.8 2004/04/21 10:13:51 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -28,6 +28,8 @@
 
 Bool_t TProofProgressDialog::fgKeep = kTRUE;
 
+
+ClassImp(TProofProgressDialog)
 
 //______________________________________________________________________________
 TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
