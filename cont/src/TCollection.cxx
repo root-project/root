@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.9 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.10 2000/12/13 15:56:17 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -194,7 +194,7 @@ Bool_t  TCollection::IsArgNull(const char *where, const TObject *obj) const
 }
 
 //______________________________________________________________________________
-void TCollection::ls(Option_t *option)
+void TCollection::ls(Option_t *option) const
 {
    // List (ls) all objects in this collection.
 
@@ -211,7 +211,7 @@ void TCollection::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TCollection::Print(Option_t *option)
+void TCollection::Print(Option_t *option) const
 {
    // Print all objects in this collection.
 

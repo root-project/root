@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.3 2000/09/08 16:11:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.4 2000/12/13 15:13:46 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -86,8 +86,8 @@ public:
    Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);
    const char           *GetName() const { return fKey->GetName(); }
-   ULong_t               Hash() { return fKey->Hash(); }
-   Bool_t                IsEqual(TObject *obj) { return fKey->IsEqual(obj); }
+   ULong_t               Hash() const { return fKey->Hash(); }
+   Bool_t                IsEqual(TObject *obj) const { return fKey->IsEqual(obj); }
    TObject              *Key() const { return fKey; }
    TObject              *Value() const { return fValue; }
 };

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.2 2000/11/02 18:17:54 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.3 2000/12/13 15:56:17 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -58,7 +58,7 @@ TClassTable::~TClassTable()
 }
 
 //______________________________________________________________________________
-void TClassTable::Print(Option_t *)
+void TClassTable::Print(Option_t *) const
 {
    // Print the class table.
 
