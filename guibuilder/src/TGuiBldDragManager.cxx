@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.22 2004/10/14 10:09:30 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.23 2004/10/15 15:36:41 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -51,18 +51,19 @@ static Window_t GetWindowFromPoint(Int_t x, Int_t y)
    // returns a window located at point x,y (screen coordinates)
 
    Window_t src, dst, child;
+   Window_t ret = 0;
    Int_t xx = x;
    Int_t yy = y;
 
    dst = src = child = gVirtualX->GetDefaultRootWindow();
 
-   while (1) {
+   while (child) {
       src = dst;
       dst = child;
       gVirtualX->TranslateCoordinates(src, dst, xx, yy, xx, yy, child);
-      if (!child) return dst;
+      ret = dst;
    }
-   return 0;
+   return ret;
 }
 
 
@@ -816,20 +817,23 @@ Bool_t TGuiBldDragManager::IsSelectedVisible()
    Window_t w = gVirtualX->GetDefaultRootWindow();
    Window_t src, dst, child;
    Int_t x, y;
+   Bool_t ret = kFALSE;
 
    gVirtualX->TranslateCoordinates(fPimpl->fGrab->GetId(), w,
                                    fPimpl->fGrab->GetWidth()/2,
                                    fPimpl->fGrab->GetHeight()/2, x, y, child);
    dst = src = child = w;
 
-   while (1) {
+   while (child) {
       src = dst;
       dst = child;
       gVirtualX->TranslateCoordinates(src, dst, x, y, x, y, child);
-      if (!child) return kFALSE;
-      if (child == fPimpl->fGrab->GetId()) return kTRUE;
+      if (child == fPimpl->fGrab->GetId()) {
+         ret = kTRUE;
+         break;
+      }
    }
-   return kFALSE;
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -1187,7 +1191,6 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
 
       case kExpose:
          return HandleExpose(event);
-         break;
 
       case kConfigureNotify:
          while (gVirtualX->CheckEvent(fId, kConfigureNotify, *event))
@@ -1348,7 +1351,6 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
    static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
                                             "All files",   "*",
                                             0,             0 };
-   Int_t  n;
    char   tmp[10];
    UInt_t keysym;
    Bool_t ret = kFALSE;
@@ -1369,7 +1371,6 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
    fi.fIniDir    = StrDup(dir);
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
-   n = strlen(tmp);
 
    if (event->fState & kKeyControlMask) {
 
