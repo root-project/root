@@ -312,7 +312,11 @@ int G__ignore_catch()
     G__asm_inst[G__asm_cp]=G__CATCH;
     G__asm_inst[G__asm_cp+1]=G__ifile.filenum;
     G__asm_inst[G__asm_cp+2]=G__ifile.line_number;
+#if defined(G__NONSCALARFPOS2)
+    G__asm_inst[G__asm_cp+3]=(long)fpos1.__pos;
+#else
     G__asm_inst[G__asm_cp+3]=(long)fpos1;
+#endif
     G__inc_cp_asm(5,0);
     G__fignorestream("(");
   }

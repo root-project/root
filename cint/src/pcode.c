@@ -9918,7 +9918,12 @@ int isthrow;
 	fpos_t store_pos;
 	struct G__input_file store_ifile = G__ifile;
 	char statement[G__LONGLINE];
+#if defined(G__NONSCALARFPOS2)
+	fpos_t pos;
+	pos.__pos = (off_t)G__asm_inst[pc+3];
+#else
 	fpos_t pos = (fpos_t)G__asm_inst[pc+3];
+#endif
 	fgetpos(G__ifile.fp,&store_pos);
 	G__ifile.filenum = G__asm_inst[pc+1];
 	G__ifile.line_number = G__asm_inst[pc+2];

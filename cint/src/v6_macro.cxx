@@ -513,8 +513,11 @@ int *done;
   callfuncmacro = &deffuncmacro->callfuncmacro;
   while(callfuncmacro->next) {
 #ifndef G__OLDIMPLEMENTATION1179
-#ifdef G__NONSCALARFPOS
+#if defined(G__NONSCALARFPOS)
     if(G__ifile.line_number == callfuncmacro->line &&
+       G__ifile.filenum == callfuncmacro->call_filenum) {
+#elif defined(G__NONSCALARFPOS2)
+    if(call_pos.__pos == callfuncmacro->call_pos.__pos &&
        G__ifile.filenum == callfuncmacro->call_filenum) {
 #else
     if(call_pos == callfuncmacro->call_pos &&
@@ -891,8 +894,11 @@ int G__execfuncmacro_noexec (char* macroname)
   callfuncmacro = &deffuncmacro->callfuncmacro;
   while(callfuncmacro->next) {
 #ifndef G__OLDIMPLEMENTATION1179
-#ifdef G__NONSCALARFPOS
+#if defined(G__NONSCALARFPOS)
     if(G__ifile.line_number == callfuncmacro->line &&
+       G__ifile.filenum == callfuncmacro->call_filenum)
+#elif defined(G__NONSCALARFPOS2)
+    if(call_pos.__pos == callfuncmacro->call_pos.__pos &&
        G__ifile.filenum == callfuncmacro->call_filenum)
 #else
     if(call_pos == callfuncmacro->call_pos &&

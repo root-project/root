@@ -494,7 +494,11 @@ long G__MethodInfo::FilePosition()
     ifunc = (struct G__ifunc_table*)handle;
 #endif
     if(ifunc->pentry[index]->filenum>=0) {
+#if defined(G__NONSCALARFPOS2)
+      return((long)ifunc->pentry[index]->pos.__pos);
+#else
       return((long)ifunc->pentry[index]->pos);
+#endif
     }
     else {
       return(invalid);

@@ -170,6 +170,13 @@
 #endif
 #endif
 
+#if defined(__linux)
+#   include <features.h>
+#   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2
+#      define G__NONSCALARFPOS2
+#   endif
+#endif
+
 #ifdef __CINT__
 #undef G__WIN32
 #endif

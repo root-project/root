@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.2 2000/06/28 14:32:53 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -289,8 +289,9 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 
 //---- Trig and other functions ------------------------------------------------
 
-#if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50)
-// in AIX and MAC math functions are defined inline so we have to include them here
+#if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50) || \
+    defined(R__USESTHROW)
+// math functions are defined inline so we have to include them here
 #   include <math.h>
 #else
 // don't want to include complete <math.h>

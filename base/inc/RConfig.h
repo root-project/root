@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.4 2000/06/16 17:05:19 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.5 2000/09/30 11:40:18 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -54,7 +54,7 @@
 #      define R__VMS
 #      define cxxbug
 #      define NEED_STRCASECMP
-#      define G__NONSCALARFPOS
+#      define R__NONSCALARFPOS
 #   endif
 #endif
 
@@ -89,6 +89,19 @@
 #   define NEED_SIGJMP
 #   ifdef IRIX64
 #      define R__SGI64
+#   endif
+#endif
+
+#if defined(__linux)
+#   include <features.h>
+#   if __GNU_LIBRARY__ == 6
+#      ifndef R__GLIBC
+#         define R__GLIBC
+#      endif
+#   endif
+#   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2
+#      define R__NONSCALARFPOS2
+#      define R__USESTHROW
 #   endif
 #endif
 
