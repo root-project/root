@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.11 2001/03/08 13:47:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.12 2001/05/03 15:07:28 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -51,6 +51,10 @@ protected:
   TBits     fAlreadyFound;    //! cache for information
 
 public:
+    // TFormula status bits
+    enum {
+       kNotGlobal     = BIT(10)  // don't store in gROOT->GetListOfFunction
+    };
            TFormula();
            TFormula(const char *name,const char *formula);
            TFormula(const TFormula &formula);

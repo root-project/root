@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.20 2001/06/14 20:32:48 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.21 2001/06/22 07:11:12 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1951,7 +1951,7 @@ void TFormula::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 3) {
          TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
-         gROOT->GetListOfFunctions()->Add(this);
+         if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
          return;
       }
       //====process old versions before automatic schema evolution
