@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.144 2003/11/26 21:48:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.145 2003/12/13 09:25:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -262,6 +262,7 @@
 #include "THLimitsFinder.h"
 #include "TSelectorDraw.h"
 #include "TPluginManager.h"
+#include "TObjString.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -975,6 +976,34 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    Int_t len, lenb,l;
    char blen[128];
    char *bname;
+   Int_t *leaflen = new Int_t[nleaves];
+   TObjArray *leafs = new TObjArray(nleaves);
+   for (l=0;l<nleaves;l++) {
+	   TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+	   leafs->AddAt(new TObjString(leaf->GetName()),l);
+	   leaflen[l] = leaf->GetMaximum();
+	}
+   if (ischain) {
+      // In case of a chain, one must find the maximum dimension of each leaf
+      // One must be careful and not assume that all Trees in the chain
+      // have the same leaves and in the same order!
+	   TChain *chain = (TChain*)fTree;
+	   Int_t ntrees = chain->GetNtrees();
+	   for (Int_t file=0;file<ntrees;file++) {
+		   Int_t first = chain->GetTreeOffset()[file];
+		   chain->LoadTree(first);
+		   for (l=0;l<nleaves;l++) {
+			   TObjString *obj = (TObjString*)leafs->At(l);
+			   TLeaf *leaf = chain->GetLeaf(obj->GetName());
+			   if (leaf) {
+				   leaflen[l] = TMath::Max(leaflen[l],leaf->GetMaximum());
+				}
+			}
+		}
+		chain->LoadTree(0);
+	}
+			   
+   leaves = fTree->GetListOfLeaves();
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       strcpy(blen,leaf->GetName());
@@ -983,12 +1012,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       lenb = strlen(blen);
       if (blen[lenb-1] == '_') {
          blen[lenb-1] = 0;
-         len = leaf->GetMaximum();
+         len = leaflen[l];
          if (len <= 0) len = 1;
          fprintf(fp,"   const Int_t kMax%s = %d;\n",blen,len);
       }
    }
-
+   delete [] leaflen;
+   leafs->Delete();
+   delete leafs;
 
 // second loop on all leaves to generate type declarations
    fprintf(fp,"\n");
