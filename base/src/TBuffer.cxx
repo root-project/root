@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.65 2004/03/26 16:43:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.66 2004/05/10 12:08:37 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2094,7 +2094,7 @@ Int_t TBuffer::WriteObjectAny(const void *obj, const TClass *ptrClass)
    // Write object to I/O buffer.
    // This function assumes that the value in 'obj' is the value stored in
    // a pointer to a "ptrClass". The actual type of the object pointed to
-   // can be any class derieved from "ptrClass".
+   // can be any class derived from "ptrClass".
    // Return:
    //  0: failure (not used yet)
    //  1: success
