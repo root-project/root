@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.13 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.14 2003/11/25 15:57:34 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -283,7 +283,8 @@ TGFileItem::TGFileItem(const TGWindow *p,
    int i;
    for (i = 0; fSubnames[i] != 0; ++i)
       ;
-   fCtw = new int[i];
+   fCtw = new int[i+1];
+   fCtw[i] = 0;
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
@@ -328,7 +329,8 @@ TGFileItem::TGFileItem(const TGWindow *p,
    int i;
    for (i = 0; fSubnames[i] != 0; ++i)
       ;
-   fCtw = new int[i];
+   fCtw = new int[i+1];
+   fCtw[i] = 0;
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.21 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.22 2003/11/07 22:47:53 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -96,10 +96,12 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
       Int_t i;
       for (i = 0; fSubnames[i] != 0; ++i)
          ;
-      fCtw = new int[i];
-      for (i = 0; fSubnames[i] != 0; ++i)
+      fCtw = new int[i+1];
+      fCtw[i] = 0;
+      for (i = 0; fSubnames[i] != 0; ++i) {
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
+      }
    } else {
       fCtw = 0;
    }
@@ -161,10 +163,12 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
       Int_t i;
       for (i = 0; fSubnames[i] != 0; ++i)
          ;
-      fCtw = new int[i];
-      for (i = 0; fSubnames[i] != 0; ++i)
+      fCtw = new int[i+1];
+      fCtw[i] = 0;
+      for (i = 0; fSubnames[i] != 0; ++i) {
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
+      }
    } else {
       fCtw = 0;
    }
@@ -240,6 +244,7 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
    fSubnames[ncol] = 0;
 
    fCtw = new int[ncol];
+   fCtw[ncol-1] = 0; 
 
    for (int i = 0; i<ncol; i++) {
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
@@ -347,6 +352,8 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
                lx = (fCpos[i] + fCpos[i+1] - fCtw[i]) >> 1;
             else // default to TEXT_LEFT
                lx = fCpos[i] + 2;
+
+            if (x+lx<0) break; // quick fix for mess in name
             fSubnames[i]->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
          }
       }
@@ -801,8 +808,10 @@ void TGListView::Layout()
       h = fColHeader[0]->GetDefaultHeight()-4;
       for (i = 0; i < fNColumns-1; ++i) {
          w = fColHeader[i]->GetDefaultWidth()+20;
+
          if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
          if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
+
          fColHeader[i]->MoveResize(xl, fBorderWidth, w, h);
          fColHeader[i]->MapWindow();
          xl += w;
@@ -819,6 +828,8 @@ void TGListView::Layout()
         fColHeader[i]->UnmapWindow();
    }
 
+   TGLayoutManager *lm = container->GetLayoutManager();
+   lm->SetDefaultWidth(xl);
    TGCanvas::Layout();
 
    if (fViewMode == kLVDetails) {

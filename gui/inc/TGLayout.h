@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.5 2003/05/01 17:26:16 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.6 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -111,6 +111,8 @@ class TGLayoutManager : public TObject {
 public:
    virtual void Layout() = 0;
    virtual TGDimension GetDefaultSize() const = 0;
+   virtual void SetDefaultWidth(UInt_t /* w */) {}
+   virtual void SetDefaultHeight(UInt_t /* h */) {}
 
    ClassDef(TGLayoutManager,0)  // Layout manager abstract base class
 };
@@ -251,12 +253,15 @@ public:
 };
 
 class TGListDetailsLayout : public TGTileLayout {
+private:
+   UInt_t fWidth;
 public:
    TGListDetailsLayout(TGCompositeFrame *main, Int_t sep = 0) :
-      TGTileLayout(main, sep) { }
+      TGTileLayout(main, sep) { fWidth= 0; }
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
+   virtual void SetDefaultWidth(UInt_t w) { fWidth = w; }
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGListDetailsLayout,0)  // Layout manager for TGListView details

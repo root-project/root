@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.4 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.5 2003/12/02 00:08:41 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -785,7 +785,7 @@ TGDimension TGListDetailsLayout::GetDefaultSize() const
       }
    }
 
-   return TGDimension(max_osize.fWidth, y);
+   return TGDimension( fWidth ? fWidth : max_osize.fWidth, y);
 }
 
 // ________________________________________________________________________
