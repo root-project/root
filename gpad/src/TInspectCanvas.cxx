@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TInspectCanvas::TInspectCanvas() : TCanvas()
 
 //_____________________________________________________________________________
 TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
-            : TCanvas("inspect","The Canvas inspector",ww,wh)
+            : TCanvas("inspect","ROOT Object Inspector",ww,wh)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*InspectCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================
