@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.22 2001/12/04 14:40:20 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.23 2001/12/11 07:25:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,10 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.23  2001/12/11 07:25:09  brun
+// Fix a bug in TTable copy constructor. Must call the base class (TSataSet)
+// copy constructor. (from Valery)
+//
 // Revision 1.22  2001/12/04 14:40:20  brun
 // delete #include <float.h>. Now included in Tmath.h
 //
@@ -168,6 +172,7 @@
 #include "TView.h"
 #include "TGaxis.h"
 #include "TPolyMarker3D.h"
+#include "THLimitsFinder.h"
 
 TH1 *gCurrentTableHist = 0;
 
@@ -720,7 +725,7 @@ static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &
    if (umin < 0 && xmin >= 0) umin = 0;
    if (umax > 0 && xmax <= 0) umax = 0;
 
-   TGaxis::Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth,"");
+   THLimitsFinder::Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth,"");
 
    if (binwidth <= 0 || binwidth > 1.e+39) {
       xmin = -1;
