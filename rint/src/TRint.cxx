@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.17 2002/11/18 23:02:19 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.18 2003/01/22 11:23:03 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -124,9 +124,7 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
       PrintLogo();
 
    // Everybody expects iostream to be available, so load it...
-#ifndef WIN32
    ProcessLine("#include <iostream>",kTRUE);
-#endif
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>",kTRUE);
 
