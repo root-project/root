@@ -1,5 +1,5 @@
 TEST_TARGETS += constTest constCharTest
-CLEAN_TARGET += $(ALL_LIBRARIES) output
+CLEAN_TARGETS += $(ALL_LIBRARIES) output *.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')

@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += *.o MyDict*
+CLEAN_TARGETS += *.o MyDict* $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
 TEST_TARGETS += stldictTest
