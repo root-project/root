@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.55 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.56 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -2739,13 +2739,15 @@ void TGeoCtub::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   rmin = " << fRmin << ";" << endl;
    out << "   rmax = " << fRmax << ";" << endl;
    out << "   dz   = " << fDz << ";" << endl;
+   out << "   phi1 = " << fPhi1 << ";" << endl;
+   out << "   phi2 = " << fPhi2 << ";" << endl;   
    out << "   lx   = " << fNlow[0] << ";" << endl;
    out << "   ly   = " << fNlow[1] << ";" << endl;
    out << "   lz   = " << fNlow[2] << ";" << endl;
-   out << "   tx   = " << fNlow[0] << ";" << endl;
-   out << "   ty   = " << fNlow[1] << ";" << endl;
-   out << "   tz   = " << fNlow[2] << ";" << endl;
-   out << "   pShape = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,lx,ly,lz,tx,ty,tz);" << endl;
+   out << "   tx   = " << fNhigh[0] << ";" << endl;
+   out << "   ty   = " << fNhigh[1] << ";" << endl;
+   out << "   tz   = " << fNhigh[2] << ";" << endl;
+   out << "   pShape = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
 }
 

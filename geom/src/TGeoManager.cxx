@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.106 2005/01/14 12:10:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.107 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2771,6 +2771,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    fStep = TGeoShape::Big();
 //   fNextNode = 0;
    Bool_t computeGlobal = kFALSE;
+   fIsOnBoundary = kFALSE;
    if (stepmax<1E20) {
       if (stepmax <= 0) {
          stepmax = - stepmax;
