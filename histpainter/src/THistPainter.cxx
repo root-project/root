@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.176 2004/06/04 16:28:08 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.177 2004/06/24 16:57:13 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3393,8 +3393,9 @@ Int_t THistPainter::PaintInit()
 //         or to ymin - margin if <0.
 //    ----
    if (!minimum) {
-      if (ymin >= 0) ymin = 0;
-      else           ymin -= YMARGIN*(ymax-ymin);
+      Double_t dymin = YMARGIN*(ymax-ymin);
+      if (ymin >= 0 && (ymin-dymin <= 0)) ymin  = 0;
+      else                                ymin -= dymin;
    }
 //    ----
 //         final adjustment of YMAXI for linear scale (if not option "Same"):
