@@ -691,6 +691,14 @@ if test ! "x$enable_mysql" = "xno"; then
     mysqllib=$found_lib
     mysqllibdir=$found_dir
 
+    # on linux, but maybe also other systems, explicitely add libz
+    # (formally only needed when linking against the static libmysqlclient.a)
+    if test ! "x$mysqllib" = "x" ; then
+	case $arch in
+	    linux*) mysqllib="$mysqllib -lz" ;;
+	esac
+    fi
+
     if test "x$mysqlincdir" = "x" || test "x$mysqllib" = "x"; then
         enable_mysql="no"
     fi
