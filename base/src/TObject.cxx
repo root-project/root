@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.44 2002/09/09 20:13:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.45 2002/10/02 19:14:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -310,6 +310,7 @@ TObject *TObject::Clone(const char *) const
    buffer->MapObject(newobj);  //register obj in map to handle self reference
    newobj->Streamer(*buffer);
    newobj->ResetBit(kIsReferenced);
+   newobj->ResetBit(kCanDelete);
    gFile = filsav;
 
    delete buffer;
