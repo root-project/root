@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.5 2004/04/06 21:06:13 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.6 2004/04/22 16:28:28 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TGedPropertyFrame.h"
 #include "TGedToolBox.h"
 #include "TList.h"
@@ -44,6 +45,7 @@ TGedPropertyFrame::TGedPropertyFrame(const TGWindow *p, TCanvas* canvas) :
       TGCompositeFrame(p, 110, 20, 0)
 {
    Build();
+   gROOT->GetListOfCleanups()->Add(this);
    if (canvas)
       ConnectToCanvas(canvas);
 }
@@ -51,6 +53,7 @@ TGedPropertyFrame::TGedPropertyFrame(const TGWindow *p, TCanvas* canvas) :
 //______________________________________________________________________________
 TGedPropertyFrame::~TGedPropertyFrame()
 {
+   gROOT->GetListOfCleanups()->Remove(this);
    Cleanup();
 }
 
@@ -146,3 +149,14 @@ Bool_t TGedPropertyFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 */
    return kTRUE;
 }
+
+//______________________________________________________________________________
+void TGedPropertyFrame::RecursiveRemove(TObject* obj)
+{
+   // Remove references to fModel in case the fModel is being deleted
+   // Deactivate attribute frames if they point to obj
+
+   if (fModel != obj) return;
+   SetModel((TPad*)fPad,0,0);
+}
+

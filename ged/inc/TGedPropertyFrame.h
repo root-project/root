@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGedPropertyFrame.h,v 1.2 2004/02/27 01:03:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGedPropertyFrame.h,v 1.3 2004/04/22 16:28:28 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   15/07/2003
 
 /*************************************************************************
@@ -48,6 +48,7 @@ public:
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
    virtual void   ConnectToCanvas(TCanvas *c);
+   virtual void   RecursiveRemove(TObject *obj);
    virtual void   SetModel(TPad *pad, TObject *obj, Int_t event);
 
    ClassDef(TGedPropertyFrame,0) //property frame
