@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.6 2001/05/09 13:28:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.7 2001/07/17 09:06:55 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -121,7 +121,7 @@ void TColor::Copy(TObject &obj)
 {
    // Copy this color to obj.
 
-   TObject::Copy(obj);
+   TNamed::Copy((TNamed&)obj);
    ((TColor&)obj).fRed   = fRed;
    ((TColor&)obj).fGreen = fGreen;
    ((TColor&)obj).fBlue  = fBlue;
