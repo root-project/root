@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.56 2003/09/27 19:08:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.57 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1182,7 +1182,7 @@ void TProof::Print(Option_t *option) const
       Printf("Total MB's processed:     %.2f", float(GetBytesRead())/(1024*1024));
       Printf("Total real time used (s): %.3f", GetRealTime());
       Printf("Total CPU time used (s):  %.3f", GetCpuTime());
-      if (GetNumberOfSlaves()) {
+      if (TString(option).Contains("a") && GetNumberOfSlaves()) {
          Printf("List of slaves:");
          fSlaves->ForEach(TSlave,Print)(option);
       }
