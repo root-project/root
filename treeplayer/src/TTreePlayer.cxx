@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.102 2002/07/27 11:08:51 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.103 2002/08/01 21:33:48 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3386,7 +3386,10 @@ void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t
 {
 // The fit function used by the unbinned likelihood fit.
 
+  Double_t x[3];
   TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
+  fitfunc->InitArgs(x,par);
+  
   Int_t n = gTree->GetSelectedRows();
   Double_t  *data1 = gTree->GetV1();
   Double_t  *data2 = gTree->GetV2();
@@ -3396,7 +3399,6 @@ void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t
   Double_t logL = 0.0, prob;
   Double_t sum = fitfunc->GetChisquare();
 
-  Double_t x[3];
   for(Int_t i = 0; i < n; i++) {
     x[0] = data1[i];
     if (data2) x[1] = data2[i];
