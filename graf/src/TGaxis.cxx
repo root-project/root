@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.6 2000/09/01 07:02:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.7 2000/11/09 10:50:54 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1539,7 +1539,6 @@ void TGaxis::Optimize(Double_t A1,  Double_t A2,  Int_t nold
    ntemp = TMath::Max(nold,2);
    if (ntemp < 1) ntemp = 1;
 
-
 L20:
    awidth = (AH-AL)/Double_t(ntemp);
    if (awidth >= FLT_MAX) goto LOK;  //in float.h
@@ -1585,6 +1584,7 @@ L20:
    }
    if (awidth <= 1 && (!OptionTime || timemulti==1) ) jlog--;
    sigfig = awidth*TMath::Power(10,-jlog);
+
 //*-*-      Round mantissa
 
    switch (roundmode) {
@@ -1619,7 +1619,7 @@ L20:
          else                     siground = 7;
          break;
       default :
-
+      
 //*-*-      Round mantissa up to 1, 2, 2.5, 5, or 10 in case of decimal number
          if      (sigfig <= 1)    siground = 1;
          else if (sigfig <= 2)    siground = 2;
@@ -1637,6 +1637,11 @@ L20:
 
 L90:
    alb  = AL/BinWidth;
+   if (TMath::Abs(alb) > 1e9) {
+      BinLow  = AL;
+      BinHigh = AH;
+      return;
+   }
    lwid   = Int_t(alb);
    if (alb < 0) lwid--;
    BinLow     = BinWidth*Double_t(lwid);
@@ -1721,7 +1726,7 @@ void TGaxis::AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
 }
 
 //______________________________________________________________________________
-void TGaxis::LabelsLimits(char *label, Int_t &first, Int_t &last)
+void TGaxis::LabelsLimits(const char *label, Int_t &first, Int_t &last)
 {
 //*-*-*-*-*-*-*-*-*Find first and last character of a label*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
@@ -1791,7 +1796,7 @@ void TGaxis::SetFunction(const char *funcname)
 }
 
 //______________________________________________________________________________
-void TGaxis::SetName(char *name)
+void TGaxis::SetName(const char *name)
 {
 //*-*-*-*-*-*-*-*-*-*-*Change the name of the axis*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ============================
@@ -1846,9 +1851,14 @@ void TGaxis::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGaxis.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 3) {
+         TGaxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TLine::Streamer(R__b);
       TAttText::Streamer(R__b);
       R__b >> fNdiv;
@@ -1873,26 +1883,9 @@ void TGaxis::Streamer(TBuffer &R__b)
          fFunction = (TF1*)gROOT->GetFunction(fFunctionName.Data());
       }
       R__b.CheckByteCount(R__s, R__c, TGaxis::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TGaxis::IsA(), kTRUE);
-      TLine::Streamer(R__b);
-      TAttText::Streamer(R__b);
-      R__b << fNdiv;
-      R__b << fWmin;
-      R__b << fWmax;
-      R__b << fGridLength;
-      R__b << fTickSize;
-      R__b << fLabelOffset;
-      R__b << fLabelSize;
-      R__b << fTitleOffset;
-      R__b << fTitleSize;
-      R__b << fLabelFont;
-      R__b << fLabelColor;
-      fChopt.Streamer(R__b);
-      fName.Streamer(R__b);
-      fTitle.Streamer(R__b);
-      fTimeFormat.Streamer(R__b);
-      fFunctionName.Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TGaxis::Class()->WriteBuffer(R__b,this);
    }
 }
