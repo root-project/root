@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.h,v 1.1 2002/05/20 15:10:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.h,v 1.2 2003/11/04 22:03:25 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
    
 #ifndef ROOT_TFractionFitter

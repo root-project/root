@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.7 2002/07/16 20:30:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.8 2002/08/13 21:17:58 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -42,6 +42,7 @@ public:
    virtual void       DrawPanel() = 0;
    virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
    virtual void       FitPanel() = 0;
+   virtual TList     *GetContourList(Double_t contour) const = 0;
    virtual char      *GetObjectInfo(Int_t px, Int_t py) const = 0;
    virtual TList     *GetStack() const = 0;
    virtual void       Paint(Option_t *option="") = 0;

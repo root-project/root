@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.19 2003/11/13 17:08:24 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.20 2004/01/23 23:30:31 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -62,6 +62,7 @@ public:
     virtual void       DrawPanel();
     virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual void       FitPanel();
+    virtual TList     *GetContourList(Double_t contour) const;
     virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
     virtual TList     *GetStack() const {return fStack;}
     virtual Bool_t     IsInside(Int_t x, Int_t y);

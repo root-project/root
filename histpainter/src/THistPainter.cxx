@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.157 2003/12/01 07:16:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.158 2004/01/23 23:30:31 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -400,6 +400,23 @@ void THistPainter::FitPanel()
       }
    }
    util->FitPanel();
+}
+
+//______________________________________________________________________________
+TList *THistPainter::GetContourList(Double_t contour) const
+{
+   // Get a contour (as a list of TGraphs) using the Delaunay triangulation
+
+   TGraphDelaunay *dt;
+
+   // Check if fH contains a TGraphDelaunay
+   TList *hl = fH->GetListOfFunctions();
+   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+   if (!dt) return 0;
+
+   if (!fGraphPainter) ((THistPainter*)this)->fGraphPainter = new TGraphPainter(dt);
+
+   return fGraphPainter->GetContourList(contour);
 }
 
 //______________________________________________________________________________

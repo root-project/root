@@ -33,8 +33,8 @@
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
-#ifndef ROOT_TGraph
-#include "TGraph.h"
+#ifndef ROOT_TVirtualHistPainter
+#include "TVirtualHistPainter.h"
 #endif
 
 class TView;
@@ -58,6 +58,7 @@ protected:
    TList      *fFunctions;   // Pointer to list of functions (fits and user)
    TH2D       *fHistogram;   //!2D histogram of z values linearly interpolated
    TDirectory *fDirectory;   //!Pointer to directory holding this 2D graph
+   TVirtualHistPainter *fPainter;  //!pointer to histogram painter
    
    void     Build(Int_t n);
 

@@ -25,12 +25,6 @@
 #ifndef ROOT_TNamed 
 #include "TNamed.h"  
 #endif
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
-#ifndef ROOT_TGraph
-#include "TGraph.h"
-#endif
 #ifndef ROOT_TGraph2D
 #include "TGraph2D.h"
 #endif
@@ -84,7 +78,6 @@ public:
 
    Double_t  ComputeZ(Double_t x, Double_t y);
    void      FindAllTriangles();
-   TList    *GetContourList(Double_t contour);
    TGraph2D *GetGraph2D() const {return fGraph2D;}
    Double_t  GetMarginBinsContent() const {return fZout;}
    Int_t     GetNdt() const {return fNdt;}

@@ -158,6 +158,7 @@ TGraph2D::TGraph2D()
    fX         = 0;
    fY         = 0;
    fZ         = 0;
+   fPainter   = 0;
    fFunctions = new TList;
 }
 
@@ -349,6 +350,7 @@ TGraph2D::~TGraph2D()
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
       fDirectory->GetList()->Remove(this);
    }
+   if (fPainter)  delete fPainter;
    fX         = 0;
    fY         = 0;
    fZ         = 0;
@@ -399,6 +401,7 @@ void TGraph2D::Build(Int_t n)
    fY         = new Double_t[fSize];
    fZ         = new Double_t[fSize];
    fFunctions = new TList;
+   fPainter   = 0;
 
    Bool_t add = TH1::AddDirectoryStatus();
    if (add && gDirectory) {
@@ -820,14 +823,11 @@ TList *TGraph2D::GetContourList(Double_t contour)
       return 0;
    }
 
-   TGraphDelaunay *dt;
-
    if(!fHistogram) GetHistogram("empty");
-
-   TList *hl = fHistogram->GetListOfFunctions();
-   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
    
-   return dt->GetContourList(contour);
+   if (!fPainter) fPainter = fHistogram->GetPainter();
+
+   return fPainter->GetContourList(contour);
 }
 
 

@@ -24,7 +24,12 @@
 #ifndef ROOT_TGraph2D
 #include "TGraph2D.h"
 #endif
-
+#ifndef ROOT_TGraph
+#include "TGraph.h"
+#endif
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
 #ifndef ROOT_TGraphDelaunay
 #include "TGraphDelaunay.h"
 #endif
@@ -59,6 +64,7 @@ protected:
    TGraphDelaunay *fDelaunay; // Pointer to the TGraphDelaunay to be painted
    TGraph2D *fGraph2D;        // Pointer to the TGraph2D in fDelaunay
 
+   void     FindTriangles();
    void     PaintLevels(Int_t *T, Double_t *x, Double_t *y, Int_t nblev=0, Double_t *glev=0);
    void     PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y);
 
@@ -69,10 +75,11 @@ public:
 
    virtual ~TGraphPainter();
 
-   void Paint(Option_t *option);
-   void PaintTriangles(Option_t *option);
-   void PaintPolyMarker(Option_t *option);
-   void PaintContour(Option_t *option);
+   TList *GetContourList(Double_t contour);
+   void   Paint(Option_t *option);
+   void   PaintTriangles(Option_t *option);
+   void   PaintPolyMarker(Option_t *option);
+   void   PaintContour(Option_t *option);
 
    ClassDef(TGraphPainter,1)  // TGraph painter
 };

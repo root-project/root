@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.4 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.5 2003/11/04 22:03:25 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 // with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
