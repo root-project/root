@@ -53,7 +53,7 @@ else
 				fi; \
 			fi; \
 			cd $(FREETYPEVERS); \
-			GNUMAKE=$(MAKE) ./configure CFLAGS=-O2; \
+			GNUMAKE=$(MAKE) ./configure --with-pic CFLAGS=-O2; \
 			$(MAKE); \
 		fi)
 endif
