@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.28 2001/12/02 16:22:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.29 2001/12/10 21:10:04 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -575,7 +575,7 @@ Int_t TF1::DistancetoPrimitive(Int_t px, Int_t py)
 
    if (!fHistogram) return 9999;
    Int_t distance = fHistogram->DistancetoPrimitive(px,py);
-   if (distance <= 0) return distance;
+   if (distance <= 1) return distance;
 
    Double_t xx[1];
    Double_t x    = gPad->AbsPixeltoX(px);
