@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.54 2003/06/24 12:37:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.55 2003/06/25 14:30:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -779,6 +779,7 @@ void TGeoManager::Matrix(Int_t index, Double_t theta1, Double_t phi1,
    sprintf(name,"rot%d",index);
    TGeoRotation * rot = new TGeoRotation(name,theta1,phi1,theta2,phi2,theta3,phi3);
    rot->SetUniqueID(index);
+   rot->RegisterYourself();
 }
 
 //_____________________________________________________________________________
