@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.6 2000/12/13 16:58:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.7 2001/03/08 14:44:11 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -599,9 +599,12 @@ void TQObject::Emit(const char *signal_name)
    // Example:
    //          theButton->Emit("Clicked()");
 
+   if (!fListOfSignals)
+      return;
+
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if (!slist)
       return;
 
    gTQSender = GetSender();
@@ -653,9 +656,12 @@ void TQObject::Emit(const char *signal_name, Long_t param)
    // Example:
    //          theButton->Emit("Clicked(int)",id)
 
+   if (!fListOfSignals)
+      return;
+
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if (!slist)
       return;
 
    gTQSender = GetSender();
@@ -705,9 +711,12 @@ void TQObject::Emit(const char *signal_name, Double_t param)
 {
    // Activate signal with single parameter.
 
+   if (!fListOfSignals)
+      return;
+
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if (!slist)
       return;
 
    gTQSender = GetSender();
@@ -760,9 +769,12 @@ void TQObject::Emit(const char *signal_name, const char *params)
    // Example:
    //          myObject->Emit("Error(char*)","Fatal error");
 
+   if (!fListOfSignals)
+      return;
+
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if (!slist)
       return;
 
    gTQSender = GetSender();
@@ -826,9 +838,12 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
    //
    //    processor->Emit("Evaluated(Float_t,Float_t)",args);
 
+   if (!fListOfSignals)
+      return;
+
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if (!slist)
       return;
 
    gTQSender = GetSender();

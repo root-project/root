@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.6 2000/12/12 18:23:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.7 2001/03/28 16:49:01 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -187,7 +187,7 @@ public:
            Int_t dl = 0, Int_t il = 0) :
            TQObject(), TClass(name, cversion, dfil, ifil, dl, il) { }
 
-   virtual ~TQClass() { }
+   virtual ~TQClass() { Disconnect(); }
 
    ClassDef(TQClass,0)  // Class with connections
 };
