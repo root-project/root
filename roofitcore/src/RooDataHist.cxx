@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.18 2002/03/07 23:26:48 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.19 2002/03/12 21:13:02 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -552,6 +552,11 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
   if (cutVar) {
     // Deep clone cutVar and attach clone to this dataset
     tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
+    if (!tmp) {
+      cout << "RooDataHist::add(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
+      return ;
+    }
+
     cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
     cloneVar->attachDataSet(dset) ;
     cloneVar->Print("v") ;
@@ -587,7 +592,7 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
   for (i=0 ; i<_arrSize ; i++) {
     
     Double_t binVolume = correctForBinSize ? _binv[i] : 1.0 ;
-    total += _wgt[i]*binVolume ;
+    total += _wgt[i]/binVolume ;
   }
 
   return total ;
@@ -595,8 +600,6 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
 
 
 
-
-// wve -- correct for individual bin sizes
 Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize)
 {
   // Return the sum of the weights of a multi-dimensional slice of the histogram
@@ -648,7 +651,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     
     if (!skip) {
       Double_t binVolume = correctForBinSize ? _binv[ibin] : 1.0 ;
-      total += _wgt[ibin]*binVolume ;
+      total += _wgt[ibin]/binVolume ;
     }
   }
   delete ssIter ;
