@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.164 2004/02/16 15:53:02 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.165 2004/03/18 21:35:36 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -609,6 +609,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '3') { Hoption.Surf = 13; l[4] = ' '; }
       if (l[4] == '4') { Hoption.Surf = 14; l[4] = ' '; }
       if (l[4] == '5') { Hoption.Surf = 15; l[4] = ' '; }
+      if (l[4] == '6') { Hoption.Surf = 16; l[4] = ' '; }
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
@@ -2079,8 +2080,23 @@ void THistPainter::PaintContour(Option_t *option)
       gPad->SetPhi(phisave);
       gPad->SetTheta(thesave);
       gPad->GetView()->SetBit(kCannotRotate); //tested in ExecuteEvent
-//      if (Hoption.Zscale) PaintPalette();
       return;
+   }
+
+   if (Hoption.Same) {
+      // If the contour is painted on a 3d plot, the contour lines are
+      // paint in 3d too.
+      TObject *obj;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((obj=next())) {
+         if (strstr(obj->GetDrawOption(),"surf") ||
+             strstr(obj->GetDrawOption(),"lego") ||
+             strstr(obj->GetDrawOption(),"tri")) {
+               Hoption.Surf = 16;
+               PaintSurface(option);
+               return;
+         }
+      }
    }
 
    if (Hoption.Contour == 15) {
@@ -4604,7 +4620,7 @@ void THistPainter::PaintSurface(Option_t *)
 // The surface is not drawn in this case. 
    } else {
 //     Draw the surface
-      if (Hoption.Surf == 11 || Hoption.Surf == 12) {
+      if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 16) {
          DefineColorLevels(ndivz);
       } else {
          fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
@@ -4626,12 +4642,14 @@ void THistPainter::PaintSurface(Option_t *)
          if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       } else {
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
-         if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfaceCartesian(90,nx,ny,"FB");
+         if (Hoption.Surf == 16) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove3);
+         if (Hoption.Surf ==  1 || Hoption.Surf == 13 || Hoption.Surf == 16) fLego->SurfaceCartesian(90,nx,ny,"FB");
          if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceCartesian(90,nx,ny,"BF");
       }
    }
 
-   if (Hoption.Surf == 1 || Hoption.Surf == 13) {
+   if ((!Hoption.Same) && 
+       (Hoption.Surf == 1 || Hoption.Surf == 13 || Hoption.Surf == 16)) {
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);

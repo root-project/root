@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.10 2003/05/13 14:59:36 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.11 2003/06/06 15:32:37 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -532,8 +532,8 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
     Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
 
 
-	TView *view = gPad->GetView();   //Get current view
-	if(!view) return;                //Check if `view` is valid!
+    TView *view = gPad->GetView();   //Get current view
+    if(!view) return;                //Check if `view` is valid!
 
 
 //*-*-          C O P Y   P O I N T S   T O   A R R A Y
@@ -604,6 +604,81 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
 	if (i == np) i2 = 1;
 	ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
     }
+}
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
+                                         Int_t *iface, Double_t *tt)
+{
+//*-*-*-*-*-*Draw face - 3rd variant for "MOVING SCREEN" algorithm -*-*-*-*
+//*-*        =====================================================        *
+//*-*                                                                     *
+//*-*    Function: Draw face - 1st variant for "MOVING SCREEN" algorithm  *
+//*-*              (draw level lines only)                                *
+//*-*                                                                     *
+//*-*    References: FindLevelLines, WCtoNDC,                             *
+//*-*                FindVisibleDraw, ModifyScreen                        *
+//*-*                                                                     *
+//*-*    Input: ICODES(*) - set of codes for the line (not used)          *
+//*-*             ICODES(1) - IX                                          *
+//*-*             ICODES(2) - IY                                          *
+//*-*           XYZ(3,*)  - coordinates of nodes                          *
+//*-*           NP        - number of nodes                               *
+//*-*           IFACE(NP) - face                                          *
+//*-*           TT(NP)    - additional function defined on this face      *
+//*-*                       (not used in this routine)                    *
+//*-*                                                                     *
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   Double_t xdel, ydel;
+   Int_t i, k, i1, i2, il, it;
+   Double_t x[2], y[2];
+   Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
+
+   TView *view = gPad->GetView();
+   if(!view) return;
+
+   // Parameter adjustments (ftoc)
+   --tt;
+   --iface;
+   xyz -= 4;
+   --icodes;
+
+   // Copy points to array
+   for (i = 1; i <= np; ++i) {
+      k = iface[i];
+      p3[i*3 - 3] = xyz[k*3 + 1];
+      p3[i*3 - 2] = xyz[k*3 + 2];
+      p3[i*3 - 1] = xyz[k*3 + 3];
+   }
+
+   // Find level lines
+   FindLevelLines(np, p3, &tt[1]);
+
+   // Draw level lines
+   TAttLine::Modify();
+   for (il = 1; il <= fNlines; ++il) {
+      FindVisibleDraw(&fPlines[(2*il + 1)*3 - 9], &fPlines[(2*il + 2)*3 - 9]);
+      view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
+      view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
+      xdel = p2[0] - p1[0];
+      ydel = p2[1] - p1[1];
+      for (it = 1; it <= fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it - 2];
+         y[0] = p1[1] + ydel*fT[2*it - 2];
+         x[1] = p1[0] + xdel*fT[2*it - 1];
+         y[1] = p1[1] + ydel*fT[2*it - 1];
+         gPad->PaintPolyLine(2, x, y);
+      }
+   }
+
+   // Modify screen
+   for (i = 1; i <= np; ++i) {
+      i1 = i;
+      i2 = i + 1;
+      if (i == np) i2 = 1;
+      ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+   }
 }
 
 //______________________________________________________________________________
