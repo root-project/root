@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -49,7 +49,6 @@ public:
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;} //MayNotUse
    virtual Int_t   Fill(Axis_t x, Axis_t y);
-   virtual Int_t   Fill(Axis_t x, Stat_t y) {return Fill(x, (Axis_t)y);}
    virtual Int_t   Fill(Axis_t x, Axis_t y, Stat_t w);
    virtual void    FillN(Int_t, Axis_t *, Double_t *, Int_t) {;} //MayNotUse
    virtual void    FillN(Int_t ntimes, Axis_t *x, Axis_t *y, Double_t *w, Int_t stride=1);

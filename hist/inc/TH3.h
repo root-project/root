@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -43,7 +43,6 @@ public:
    virtual ~TH3();
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;}        //MayNotUse
-           Int_t   Fill(Axis_t,Axis_t) {return -1;} //MayNotUse
            Int_t   Fill(Axis_t,Stat_t) {return -1;} //MayNotUse
    virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z);
    virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
