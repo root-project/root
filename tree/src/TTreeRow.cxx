@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeRow.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeRow.cxx,v 1.2 2001/12/08 15:21:16 brun Exp $
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************
@@ -147,7 +147,7 @@ const char *TTreeRow::GetField(Int_t field)
    if (fOriginal)
       return fOriginal->GetField(field);
 
-   if (field > 0) return fRow +fFields[field-1] +1;
+   if (field > 0) return fRow +fFields[field-1];
    else           return fRow;
 }
 
@@ -156,7 +156,7 @@ void TTreeRow::SetRow(const Int_t *fields, const char *row)
 {
    if (!fColumnCount) return;
    if (fFields) delete [] fFields;
-   Int_t nch    = fields[fColumnCount-1] -1;
+   Int_t nch    = fields[fColumnCount-1];
    fFields      = new Int_t[fColumnCount];
    fOriginal    = 0;
    fRow         = new char[nch];
