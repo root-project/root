@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.38 2003/05/12 22:16:37 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.39 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -670,7 +670,8 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
       RooAbsArg* arg ;
       RooAbsCollection* newPdfServerList = newServerList.selectCommon(_pdfList) ;
       while(arg=(RooAbsArg*)iter->Next()) {
-	ret |= arg->recursiveRedirectServers(*newPdfServerList,mustReplaceAll,nameChange) ;
+	ret |= arg->recursiveRedirectServers(*newPdfServerList,kFALSE,nameChange) ;
+	ret |= arg->redirectServers(newServerList,mustReplaceAll,nameChange) ;
       }
       delete iter ;
       delete newPdfServerList ;
