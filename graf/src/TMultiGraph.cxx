@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.13 2004/05/26 06:26:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.14 2004/06/18 10:46:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -381,11 +381,18 @@ void TMultiGraph::SavePrimitive(ofstream &out, Option_t *option)
    out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<endl;
    out<<"   multigraph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
 
-   TGraph *g;
    if (fGraphs) {
-     TIter   next(fGraphs);
-     while ((g = (TGraph*) next())) {
-       g->SavePrimitive(out,"multigraph");
+      TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
+      TObject *g;
+
+      while (lnk) {
+         g = lnk->GetObject();
+         g->SavePrimitive(out,"multigraph");
+
+         out<<"   multigraph->Add(graph,"<<quote<<lnk->GetOption()<<quote<<");"<<endl;
+
+         lnk = (TObjOptLink*)lnk->Next();
+
      }
    }
    out<<"   multigraph->Draw("
