@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.3 2001/01/18 09:42:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.4 2001/01/25 15:02:29 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -32,12 +32,12 @@ class TBranchElement : public TBranch {
 protected:
     enum { kWarn = BIT(12) };
 
-    TString             fClassName;    //Class name of referenced object
-    Int_t               fClassVersion; //Version number of class
-    Int_t               fID;           //element serial number in fInfo
-    Int_t               fType;         //type of data in branch
-    Int_t               fCounter;      //Number of entries in TClonesArray or STL vector
-    TStreamerInfo      *fInfo;         //!Pointer to StreamerInfo
+    TString             fClassName;     //Class name of referenced object
+    Int_t               fClassVersion;  //Version number of class
+    Int_t               fID;            //element serial number in fInfo
+    Int_t               fType;          //branch type
+    Int_t               fStreamerType;  //branch streamer type
+    TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
     
 public:
     TBranchElement();
@@ -46,18 +46,23 @@ public:
 
     virtual void    Browse(TBrowser *b);
     virtual Int_t   Fill();
-    virtual Int_t   GetCounter() {return fCounter;}
+    virtual void    FillLeaves(TBuffer &b);
+    virtual const char  *GetClassName() const {return fClassName.Data();}
     virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
     virtual Int_t   GetID() {return fID;}
     TStreamerInfo  *GetInfo() const {return fInfo;}
     virtual Int_t   GetType() {return fType;}
+    virtual Int_t   GetStreamerType() {return fStreamerType;}
     Bool_t          IsFolder() const;
     virtual void    Print(Option_t *option="") const;
+    virtual void    ReadLeaves(TBuffer &b);
     virtual void    Reset(Option_t *option="");
     virtual void    SetAddress(void *addobj);
     virtual void    SetAutoDelete(Bool_t autodel=kTRUE);
     virtual void    SetBasketSize(Int_t buffsize);
-    virtual Int_t   Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel);
+    virtual void    SetClassName(const char *name) {fClassName=name;}
+    virtual void    SetType(Int_t btype) {fType=btype;}
+    virtual Int_t   Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype);
 
     ClassDef(TBranchElement,1)  //Branch in case of an object
 };

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.49 2001/01/29 09:17:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.50 2001/02/02 16:31:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -739,46 +739,43 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       Error("Bronch","Cannot find class:%s",classname);
       return 0;
    }
-   TBranch *branch;
-   if (splitlevel == 0) {
-      branch = new TBranchObject(name,classname,add,bufsize,0);
-      fBranches.Add(branch);
-      return branch;
-   }
-
    Bool_t delobj = kFALSE;
    TObject **ppointer = (TObject**)add;
    TObject *objadd = *ppointer;
-   if (!objadd && cl) {
+   if (!objadd) {
       objadd = (TObject*)cl->New();
       *ppointer = objadd;
       delobj = kTRUE;
    }
    
    //build the StreamerInfo if first time for the class
-   TStreamerInfo::Optimize(kFALSE);
+   if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *sinfo = BuildStreamerInfo(cl,objadd);
 
    // create a dummy top level  branch object
-   TBranchElement *bre = new TBranchElement(name,sinfo,-1,(char*)objadd,bufsize,0);
-   fBranches.Add(bre);
-   TObjArray *blist = bre->GetListOfBranches();   
-   
-//*-*- Loop on all public data members of the class and its base classes
-   TIter next(sinfo->GetElements());
-   TStreamerElement *element;
-   Int_t id = 0;
-   while ((element = (TStreamerElement*)next())) {
-      char *pointer = (char*)objadd + element->GetOffset();
-      TBranchElement *bre = new TBranchElement(element->GetName(),sinfo,id,pointer,bufsize,splitlevel-1);
-      blist->Add(bre);
-      id++;
+   Int_t id = -1;
+   if (splitlevel > 0) id = -2;
+   TBranchElement *branch = new TBranchElement(name,sinfo,id,(char*)objadd,bufsize,0);
+   fBranches.Add(branch);
+   if (splitlevel > 0) {
+      
+      // Loop on all public data members of the class and its base classes
+      TObjArray *blist = branch->GetListOfBranches();   
+      TIter next(sinfo->GetElements());
+      TStreamerElement *element;
+      id = 0;
+      while ((element = (TStreamerElement*)next())) {
+         char *pointer = (char*)objadd + element->GetOffset();
+         TBranchElement *bre = new TBranchElement(element->GetFullName(),sinfo,id,pointer,bufsize,splitlevel-1);
+         blist->Add(bre);
+         id++;
+      }
    }
          
-   bre->SetAddress(add);
+   branch->SetAddress(add);
    
    if (delobj) delete objadd;
-   return bre;
+   return branch;
 }
 
 
