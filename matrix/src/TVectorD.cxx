@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.42 2004/03/24 15:56:39 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.43 2004/04/15 09:21:51 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 // Unless otherwise specified, vector indices always start with 0,      //
 // spanning up to the specified limit-1.                                //
 //                                                                      //
-// For (n) vectors where n < kSizeMax (5 currently) storage space is    //
+// For (n) vectors where n <= kSizeMax (5 currently) storage space is   //
 // available on the stack, thus avoiding expensive allocation/          //
 // deallocation of heap space . However, this introduces of course      //
 // kSizeMax overhead for each vector object . If this is an issue       //
@@ -39,7 +39,7 @@
 ClassImp(TVectorD)
 
 //______________________________________________________________________________
-void TVectorD::Delete_m(Int_t size,Double_t*& m)
+void TVectorD::Delete_m(Int_t size,Double_t *&m)
 {
   if (m) {
     if (size > kSizeMax)
@@ -229,12 +229,11 @@ void TVectorD::ResizeTo(Int_t lwb,Int_t upb)
     const Int_t  rowLwb_old   = fRowLwb;
 
     Allocate(new_nrows,lwb);
+    Assert(IsValid());
     if (fNrows > kSizeMax || nrows_old > kSizeMax)
       memset(GetMatrixArray(),0,fNrows*sizeof(Double_t));
     else if (fNrows > nrows_old)
       memset(GetMatrixArray()+nrows_old,0,(fNrows-nrows_old)*sizeof(Double_t));
-
-    Assert(IsValid());
 
     // Copy overlap
     const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old);
@@ -684,6 +683,36 @@ TVectorD &TVectorD::operator=(const TMatrixDDiag_const &md)
 }
 
 //______________________________________________________________________________
+TVectorD &TVectorD::operator=(const TMatrixDSparseRow_const &mr)
+{
+  // Assign a sparse matrix row to a vector. The matrix row is implicitly transposed
+  // to allow the assignment in the strict sense.
+
+  Assert(IsValid());
+  const TMatrixDBase *mt = mr.GetMatrix();
+  Assert(mt->IsValid());
+
+  if (mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
+    Error("operator=(const TMatrixDSparseRow_const &)","vector and row not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  const Int_t nIndex = mr.GetNindex();
+  const Double_t * const prData = mr.GetDataPtr();          // Row Data ptr
+  const Int_t    * const prCol  = mr.GetColPtr();           // Col ptr
+        Double_t * const pvData = this->GetMatrixArray();   // Vector ptr
+
+  memset(pvData,0,fNrows*sizeof(Double_t));
+  for (Int_t index = 0; index < nIndex; index++) {
+    const Int_t icol = prCol[index];
+    pvData[icol] = prData[index];
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
 TVectorD &TVectorD::operator=(Double_t val)
 {
   // Assign val to every element of the vector.
@@ -833,6 +862,67 @@ TVectorD &TVectorD::operator*=(const TMatrixD &a)
   }
   Assert(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
+
+  if (nrows_old <= kSizeMax)
+    delete [] elements_old;
+  else
+    Delete_m(nrows_old,elements_old);
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator*=(const TMatrixDSparse &a)
+{
+  // "Inplace" multiplication target = A*target. A needn't be a square one
+  // If target has to be resized, it should own the storage: fIsOwner = kTRUE
+
+  Assert(IsValid());
+  Assert(a.IsValid());
+
+  if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
+    Error("operator*=(const TMatrixDSparse &)","vector and matrix incompatible");
+    Invalidate();
+    return *this;
+  }
+
+  if ((fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb()) && !fIsOwner) {
+    Error("operator*=(const TMatrixDSparse &)","vector has to be resized but not owner");
+    Invalidate();
+    return *this;
+  }
+
+  const Int_t nrows_old = fNrows;
+  Double_t *elements_old;
+  if (nrows_old <= kSizeMax) {
+    elements_old = new Double_t[nrows_old];
+    memcpy(elements_old,fElements,nrows_old*sizeof(Double_t));
+  }
+  else
+    elements_old = fElements;
+
+  fRowLwb = a.GetRowLwb();
+  Assert((fNrows = a.GetNrows()) > 0);
+
+  Allocate(fNrows,fRowLwb);
+
+  const Int_t    * const pRowIndex = a.GetRowIndexArray();                               
+  const Int_t    * const pColIndex = a.GetColIndexArray();
+  const Double_t * const mp        = a.GetMatrixArray();     // Matrix row ptr
+
+  const Double_t * const sp = elements_old;
+        Double_t *       tp = this->GetMatrixArray(); // Target vector ptr
+
+  for (Int_t irow = 0; irow < fNrows; irow++) {
+    const Int_t sIndex = pRowIndex[irow]; 
+    const Int_t eIndex = pRowIndex[irow+1];   
+    Double_t sum = 0.0;
+    for (Int_t index = sIndex; index < eIndex; index++) {
+      const Int_t icol = pColIndex[index];
+      sum += mp[index]*sp[icol];
+    }
+    tp[irow] = sum;
+  }
 
   if (nrows_old <= kSizeMax)
     delete [] elements_old;
@@ -1048,6 +1138,24 @@ void TVectorD::AddSomeConstant(Double_t val,const TVectorD &select)
   }
 }
 
+extern Double_t Drand(Double_t &ix);
+
+//______________________________________________________________________________
+void TVectorD::Randomize(Double_t alpha,Double_t beta,Double_t &seed)
+{
+  // randomize vector elements value
+   
+  Assert(IsValid());
+   
+  const Double_t scale = beta-alpha;
+  const Double_t shift = alpha/scale;
+
+        Double_t *       ep = GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)  
+    *ep++ = scale*(Drand(seed)+shift);
+}
+
 //______________________________________________________________________________
 TVectorD &TVectorD::Apply(const TElementActionD &action)
 {
@@ -1097,13 +1205,13 @@ void TVectorD::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TVectorD::Print(Option_t *) const
+void TVectorD::Print(Option_t *flag) const
 {
   // Print the vector as a list of elements.
 
   Assert(IsValid());
 
-  printf("\nVector %d is as follows",fNrows);
+  printf("\nVector (%d) %s is as follows",fNrows,flag);
 
   printf("\n\n     |   %6d  |", 1);
   printf("\n%s\n", "------------------");
@@ -1171,6 +1279,14 @@ TVectorD operator*(const TMatrixD &a,const TVectorD &source)
 
 //______________________________________________________________________________
 TVectorD operator*(const TMatrixDSym &a,const TVectorD &source)
+{
+  TVectorD target = source;
+  target *= a;
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD operator*(const TMatrixDSparse &a,const TVectorD &source)
 {
   TVectorD target = source;
   target *= a;
@@ -1480,16 +1596,16 @@ Bool_t AreCompatible(const TVectorD &v1,const TVectorF &v2,Int_t verbose)
     if (verbose)
       ::Error("AreCompatible", "vector 2 not initialized");
     return kFALSE;
-  } 
-    
+  }
+
   if (v1.GetNrows() != v2.GetNrows() || v1.GetLwb() != v2.GetLwb()) {
     if (verbose)
       ::Error("AreCompatible", "vectors 1 and 2 not compatible");
-    return kFALSE;       
+    return kFALSE;
   }
-        
-   return kTRUE; 
-} 
+
+   return kTRUE;
+}
 
 //______________________________________________________________________________
 void Compare(const TVectorD &v1,const TVectorD &v2)

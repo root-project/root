@@ -113,7 +113,7 @@ TDecompQRH::TDecompQRH(const TDecompQRH &another) : TDecompBase(another)
 }
 
 //______________________________________________________________________________
-Int_t TDecompQRH::Decompose()
+Bool_t TDecompQRH::Decompose()
 {
 // QR decomposition of matrix a by Householder transformations,
 //  see Golub & Loan first edition p41 & Sec 6.2.

@@ -99,7 +99,7 @@ TDecompSVD::TDecompSVD(const TDecompSVD &another): TDecompBase(another)
 }
 
 //______________________________________________________________________________
-Int_t TDecompSVD::Decompose()
+Bool_t TDecompSVD::Decompose()
 {
   if ( !( fStatus & kMatrixSet ) )
     return kFALSE;

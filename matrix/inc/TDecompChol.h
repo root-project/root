@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.4 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.6 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -29,7 +29,7 @@ protected :
   TMatrixD fA; // storage for the matrix to be decomposed
   TMatrixD fU; // decomposed matrix fU so that a = fU^T fU
 
-  virtual const TMatrixD &GetDecompMatrix() const { return fU; }
+  virtual const TMatrixDBase &GetDecompMatrix() const { return fU; }
 
 public :
 
@@ -48,7 +48,7 @@ public :
 
   virtual       void      SetMatrix (const TMatrixDSym &a);
 
-  virtual Int_t    Decompose  ();
+  virtual Bool_t   Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   Solve      (      TMatrixDColumn &b);

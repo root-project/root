@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.7 2004/04/15 09:21:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.8 2004/04/20 06:31:51 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -157,7 +157,8 @@ TMatrixDSym::TMatrixDSym(const TMatrixDSymLazy &lazy_constructor)
 }
 
 //______________________________________________________________________________
-void TMatrixDSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,Int_t init)
+void TMatrixDSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
+                           Int_t init,Int_t /*nr_nonzeros*/)
 {
   // Allocate new matrix. Arguments are number of rows, columns, row
   // lowerbound (0 default) and column lowerbound (0 default).
@@ -365,13 +366,13 @@ TMatrixDSym TMatrixDSym::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) co
 
 //______________________________________________________________________________
 void TMatrixDSym::SetSub(Int_t row_lwb,const TMatrixDSym &source)
-{
+{ 
   // Insert matrix source starting at [row_lwb][row_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source][row_lwb..row_lwb+nrows_source];
-
+    
   Assert(IsValid());
   Assert(source.IsValid());
-
+    
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("SetSub","row_lwb outof bounds");
     return;
@@ -381,10 +382,10 @@ void TMatrixDSym::SetSub(Int_t row_lwb,const TMatrixDSym &source)
     Error("SetSub","source matrix too large");
     return;
   }
-
+  
   const Double_t *bp = source.GetMatrixArray();
         Double_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
-
+      
   for (Int_t irow = 0; irow < nRows_source; irow++) {
     Double_t *ap_sub = ap;
     for (Int_t icol = 0; icol < nRows_source; icol++) {
@@ -392,6 +393,104 @@ void TMatrixDSym::SetSub(Int_t row_lwb,const TMatrixDSym &source)
     }
     ap += fNrows;
   }
+}
+
+//______________________________________________________________________________
+void TMatrixDSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source)
+{
+  // Insert matrix source starting at [row_lwb][col_lwb] in a symmetric fashion, thereby overwriting the part
+  // [row_lwb..row_lwb+nrows_source][row_lwb..row_lwb+nrows_source];
+
+  Assert(IsValid());
+  Assert(source.IsValid());
+
+  if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
+    Error("SetSub","row_lwb out of bounds");
+    return;
+  }
+  if (col_lwb < fColLwb || col_lwb > fColLwb+fNcols-1) {
+    Error("SetSub","col_lwb out of bounds");
+    return;
+  }
+  const Int_t nRows_source = source.GetNrows();
+  const Int_t nCols_source = source.GetNcols();
+
+  if (row_lwb+nRows_source > fRowLwb+fNrows || col_lwb+nCols_source > fRowLwb+fNrows) {
+    Error("SetSub","source matrix too large");
+    return;
+  }
+  if (col_lwb+nCols_source > fRowLwb+fNrows || row_lwb+nRows_source > fRowLwb+fNrows) {
+    Error("SetSub","source matrix too large");
+    return;
+  }
+  
+  const Int_t rowlwb_s = source.GetRowLwb();
+  const Int_t collwb_s = source.GetColLwb();
+  if (row_lwb >= col_lwb) {
+    // lower triangle
+    for (Int_t irow = 0; irow < nRows_source; irow++) {
+      for (Int_t icol = 0; col_lwb+icol <= row_lwb+irow &&
+                             icol < nCols_source; icol++) {
+        (*this)(row_lwb+irow-fRowLwb,col_lwb+icol-fRowLwb) = source(irow+rowlwb_s,icol+collwb_s);
+      }
+    }
+
+    // upper triangle
+    for (Int_t irow = 0; irow < nCols_source; irow++) {
+      for (Int_t icol = nRows_source-1; row_lwb+icol > irow+col_lwb &&
+                              icol >= 0; icol--) {
+        (*this)(col_lwb+irow-fRowLwb,row_lwb+icol-fRowLwb) = source(icol+rowlwb_s,irow+collwb_s);
+      }
+    }
+  } else {
+
+  }
+
+}
+
+//______________________________________________________________________________
+void TMatrixDSym::SetMatrixArray(const Double_t *data,Option_t *option)
+{
+  TMatrixDBase::SetMatrixArray(data,option);
+  if (!this->IsSymmetric()) {
+    Error("SetMatrixArray","Matrix is not symmetric after Set");
+    Invalidate(); 
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSym::Shift(Int_t row_shift,Int_t col_shift)
+{
+  if (row_shift != col_shift) {
+    Error("Shift","row_shift != col_shift");
+    Invalidate(); 
+  }
+  TMatrixDBase::Shift(row_shift,col_shift);
+}
+
+//______________________________________________________________________________
+void TMatrixDSym::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
+{
+  if (nrows != ncols) {
+    Error("ResizeTo","nrows != ncols");
+    Invalidate(); 
+  }
+  TMatrixDBase::ResizeTo(nrows,ncols);
+}
+
+//______________________________________________________________________________
+void TMatrixDSym::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                           Int_t /*nr_nonzeros*/)
+{
+  if (row_lwb != col_lwb) {
+    Error("ResizeTo","row_lwb != col_lwb");
+    Invalidate(); 
+  }
+  if (row_upb != col_upb) {
+    Error("ResizeTo","row_upb != col_upb");
+    Invalidate(); 
+  }
+  TMatrixDBase::ResizeTo(row_lwb,row_upb,col_lwb,col_upb);
 }
 
 //______________________________________________________________________________
@@ -410,80 +509,6 @@ void TMatrixDSym::Determinant(Double_t &d1,Double_t &d2) const
   const TMatrixD &tmp = *this;
   TDecompLU lu(tmp,fTol);
   lu.Det(d1,d2);
-}
-
-//______________________________________________________________________________
-TMatrixDSym &TMatrixDSym::Zero()
-{
-  Assert(IsValid());
-  memset(this->GetMatrixArray(),0,fNelems*sizeof(Double_t));
-
-  return *this;
-}
-
-//______________________________________________________________________________
-TMatrixDSym &TMatrixDSym::Abs()
-{
-  // Take an absolute value of a matrix, i.e. apply Abs() to each element.
-
-  Assert(IsValid());
-
-  Double_t *ep = this->GetMatrixArray();
-  const Double_t * const ep_last = ep+fNelems;
-  while (ep < ep_last)
-    *ep++ = TMath::Abs(*ep);
-
-  return *this;
-}
-
-//______________________________________________________________________________
-TMatrixDSym &TMatrixDSym::Sqr()
-{
-  // Square each element of the matrix.
-
-  Assert(IsValid());
-
-  Double_t *ep = this->GetMatrixArray();
-  const Double_t * const ep_last = ep+fNelems;
-  while (ep < ep_last)
-    *ep++ = (*ep) * (*ep);
-
-  return *this;
-}
-
-//______________________________________________________________________________
-TMatrixDSym &TMatrixDSym::Sqrt()
-{
-  // Take square root of all elements.
-
-  Assert(IsValid());
-
-  Double_t *ep = this->GetMatrixArray();
-  const Double_t * const ep_last = ep+fNelems;
-  while (ep < ep_last) {
-    Assert(*ep >= 0);
-    *ep++ = TMath::Sqrt(*ep);
-  }
-
-  return *this;
-}
-
-//______________________________________________________________________________
-TMatrixDSym &TMatrixDSym::UnitMatrix()
-{
-  // Make a unit matrix (matrix need not be a square one).
-
-  Assert(IsValid());
-
-  Double_t *ep = this->GetMatrixArray();
-  const Double_t * const ep_last = ep+fNelems;
-  memset(ep,0,fNelems*sizeof(Double_t));
-  while (ep < ep_last) {
-    *ep = 1.0;
-    ep += fNcols+1;
-  }
-
-  return *this;
 }
 
 //______________________________________________________________________________
@@ -506,48 +531,6 @@ TMatrixDSym &TMatrixDSym::Transpose(const TMatrixDSym &source)
 }
 
 //______________________________________________________________________________
-TMatrixDSym &TMatrixDSym::NormByDiag(const TVectorD &v,Option_t *option)
-{
-  // b(i,j) = a(i,j)/sqrt(abs*(v(i)*v(j)))
-
-  Assert(IsValid());
-  Assert(v.IsValid());
-
-  const Int_t nMax = TMath::Max(fNrows,fNcols);
-  if (v.GetNoElements() < nMax) {
-    Error("NormByDiag","vector shorter than matrix diagonal");
-    Invalidate();
-    return *this;
-  }
-
-  TString opt(option);
-  opt.ToUpper();
-  const Int_t divide = (opt.Contains("D")) ? 1 : 0;
-
-  const Double_t *pV = v.GetMatrixArray();
-        Double_t *mp = this->GetMatrixArray();
-
-  if (divide) {
-    for (Int_t irow = 0; irow < fNrows; irow++) {
-      for (Int_t icol = 0; icol < fNcols; icol++) {
-        const Double_t val = TMath::Sqrt(TMath::Abs(pV[irow]*pV[icol]));
-        Assert(val != 0.0);
-        *mp++ /= val;
-      }
-    }
-  } else {
-    for (Int_t irow = 0; irow < fNrows; irow++) {
-      for (Int_t icol = 0; icol < fNcols; icol++) {
-        const Double_t val = TMath::Sqrt(TMath::Abs(pV[irow]*pV[icol]));
-        *mp++ *= val;
-      }
-    }
-  }
-
-  return *this;
-}
-
-//______________________________________________________________________________
 TMatrixDSym &TMatrixDSym::operator=(const TMatrixDSym &source)
 {
   if (!AreCompatible(*this,source)) {
@@ -559,7 +542,6 @@ TMatrixDSym &TMatrixDSym::operator=(const TMatrixDSym &source)
   if (this != &source) {
     TObject::operator=(source);
     memcpy(this->GetMatrixArray(),source.fElements,fNelems*sizeof(Double_t));
-    fTol = source.GetTol();
   }
   return *this;
 }
@@ -772,25 +754,79 @@ TMatrixDSym &TMatrixDSym::Apply(const TElementPosActionD &action)
 }
 
 //______________________________________________________________________________
+void TMatrixDSym::Randomize(Double_t alpha,Double_t beta,Double_t &seed)
+{
+  // randomize matrix element values but keep matrix symmetric
+
+  Assert(IsValid());
+
+  if (fNrows != fNcols || fRowLwb != fColLwb) {
+    Error("Randomize(Double_t,Double_t,Double_t &","matrix should be square");
+    return;
+  }
+
+  const Double_t scale = beta-alpha;
+  const Double_t shift = alpha/scale;
+
+  Double_t *ep = GetMatrixArray();
+  for (Int_t i = 0; i < fNrows; i++) {
+    const Int_t off = i*fNcols;
+    for (Int_t j = 0; j <= i; j++) {
+      ep[off+j] = scale*(Drand(seed)+shift);
+      if (i != j) {
+        ep[j*fNcols+i] = ep[off+j];
+      }
+    }
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSym::RandomizePD(Double_t alpha,Double_t beta,Double_t &seed)
+{
+  // randomize matrix element values but keep matrix symmetric positive definite
+
+  Assert(IsValid());
+
+  if (fNrows != fNcols || fRowLwb != fColLwb) {
+    Error("RandomizeSym(Double_t,Double_t,Double_t &","matrix should be square");
+    return;
+  }
+
+  const Double_t scale = beta-alpha;
+  const Double_t shift = alpha/scale;
+
+  Double_t *ep = GetMatrixArray();
+  Int_t i;
+  for (i = 0; i < fNrows; i++) {
+    const Int_t off = i*fNcols;
+    for (Int_t j = 0; j <= i; j++)
+      ep[off+j] = scale*(Drand(seed)+shift);
+  }
+
+  for (i = fNrows-1; i >= 0; i--) {
+    const Int_t off1 = i*fNcols;
+    for (Int_t j = i; j >= 0; j--) {
+      const Int_t off2 = j*fNcols;
+      ep[off1+j] *= ep[off2+j];
+      for (Int_t k = j-1; k >= 0; k--) {
+        ep[off1+j] += ep[off1+k]*ep[off2+k];
+      }
+      if (i != j)
+        ep[off2+i] = ep[off1+j];
+    }
+  }
+}
+
+//______________________________________________________________________________
 const TMatrixD TMatrixDSym::EigenVectors(TVectorD &eigenValues) const
 {
   // Return a matrix containing the eigen-vectors ordered by descending eigen-values.
   // For full functionality use TMatrixDSymEigen .
-
+  
   TMatrixDSymEigen eigen(*this);
   eigenValues = eigen.GetEigenValues();
   return eigen.GetEigenVectors();
-}
-
-//______________________________________________________________________________
-Bool_t operator==(const TMatrixDSym &m1,const TMatrixDSym &m2)
-{
-  // Check to see if two matrices are identical.
-
-  if (!AreCompatible(m1,m2)) return kFALSE;
-  return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),
-                 m1.GetNoElements()*sizeof(Double_t)) == 0);
-}
+} 
 
 //______________________________________________________________________________
 TMatrixDSym operator+(const TMatrixDSym &source1,const TMatrixDSym &source2)
@@ -810,6 +846,14 @@ TMatrixDSym operator-(const TMatrixDSym &source1,const TMatrixDSym &source2)
 
 //______________________________________________________________________________
 TMatrixDSym operator*(Double_t val,const TMatrixDSym &source)
+{
+  TMatrixDSym target(source);
+  target *= val;
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator*(const TMatrixDSym &source,Double_t val)
 {
   TMatrixDSym target(source);
   target *= val;

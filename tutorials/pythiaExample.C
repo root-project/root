@@ -53,7 +53,7 @@
 //
 //____________________________________________________________________ 
 //  
-// $Id: pythiaExample.C,v 1.3 2002/11/29 15:28:36 brun Exp $ 
+// $Id: pythiaExample.C,v 1.4 2003/01/24 09:49:59 brun Exp $ 
 // Author: Christian Holm Christensen <cholm@hilux15.nbi.dk>
 // Update: 2002-08-16 16:40:27+0200
 // Copyright: 2002 (C) Christian Holm Christensen
@@ -206,7 +206,7 @@ int showEventSample()
   
   char expression[64];
   sprintf(expression,"T #approx %5.1f", -1000 / func->GetParameter(1));
-  TLatex* latex = new TLatex(1.5, -4, expression);
+  TLatex* latex = new TLatex(1.5, 1e-4, expression);
   latex->SetTextSize(.1);
   latex->SetTextColor(4);
   latex->Draw();

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.5 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.7 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -34,7 +34,7 @@ protected :
 
   static Bool_t QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Double_t tol);
 
-  virtual const TMatrixD &GetDecompMatrix() const { return fR; }
+  virtual const TMatrixDBase &GetDecompMatrix() const { return fR; }
 
 public :
 
@@ -60,7 +60,7 @@ public :
 
   virtual       void      SetMatrix(const TMatrixD &a);
 
-  virtual Int_t    Decompose  ();
+  virtual Bool_t   Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   Solve      (      TMatrixDColumn &b);

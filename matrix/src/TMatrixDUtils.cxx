@@ -21,6 +21,7 @@
 //   TMatrixDColumn_const    TMatrixDColumn                             //
 //   TMatrixDDiag_const      TMatrixDDiag                               //
 //   TMatrixDFlat_const      TMatrixDFlat                               //
+//   TMatrixDSparseRow_const TMatrixDSparseRow                          //
 //                                                                      //
 //   TElementActionD                                                    //
 //   TElementPosActionD                                                 //
@@ -30,12 +31,13 @@
 #include "TMatrixDBase.h"
 
 //______________________________________________________________________________
-TMatrixDRow_const::TMatrixDRow_const(const TMatrixDBase &matrix,Int_t row)
+TMatrixDRow_const::TMatrixDRow_const(const TMatrixD &matrix,Int_t row)
 {
   Assert(matrix.IsValid());
+
   fRowInd = row-matrix.GetRowLwb();
   if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
-    Error("TMatrixDRow_const(const TMatrixDBase &,Int_t)","row index out of bounds");
+    Error("TMatrixDRow_const(const TMatrixD &,Int_t)","row index out of bounds");
     return;
   }
 
@@ -45,7 +47,29 @@ TMatrixDRow_const::TMatrixDRow_const(const TMatrixDBase &matrix,Int_t row)
 }
 
 //______________________________________________________________________________
-TMatrixDRow::TMatrixDRow(TMatrixDBase &matrix,Int_t row)
+TMatrixDRow_const::TMatrixDRow_const(const TMatrixDSym &matrix,Int_t row)
+{
+  Assert(matrix.IsValid());
+
+  fRowInd = row-matrix.GetRowLwb();
+  if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
+    Error("TMatrixDRow_const(const TMatrixDSym &,Int_t)","row index out of bounds");
+    return;
+  }
+
+  fMatrix = &matrix;
+  fPtr = matrix.GetMatrixArray()+fRowInd*matrix.GetNcols();
+  fInc = 1;
+}
+
+//______________________________________________________________________________
+TMatrixDRow::TMatrixDRow(TMatrixD &matrix,Int_t row)
+            :TMatrixDRow_const(matrix,row)
+{
+}
+
+//______________________________________________________________________________
+TMatrixDRow::TMatrixDRow(TMatrixDSym &matrix,Int_t row)
             :TMatrixDRow_const(matrix,row)
 {
 }
@@ -177,12 +201,13 @@ void TMatrixDRow::operator*=(const TMatrixDRow_const &r)
 }
 
 //______________________________________________________________________________
-TMatrixDColumn_const::TMatrixDColumn_const(const TMatrixDBase &matrix,Int_t col)
+TMatrixDColumn_const::TMatrixDColumn_const(const TMatrixD &matrix,Int_t col)
 {
   Assert(matrix.IsValid());
+
   fColInd = col-matrix.GetColLwb();
   if (fColInd >= matrix.GetNcols() || fColInd < 0) {
-    Error("TMatrixDColumn_const(const TMatrixDBase &,Int_t)","column index out of bounds");
+    Error("TMatrixDColumn_const(const TMatrixD &,Int_t)","column index out of bounds");
     return;
   }
 
@@ -192,7 +217,29 @@ TMatrixDColumn_const::TMatrixDColumn_const(const TMatrixDBase &matrix,Int_t col)
 }
 
 //______________________________________________________________________________
-TMatrixDColumn::TMatrixDColumn(TMatrixDBase &matrix,Int_t col)
+TMatrixDColumn_const::TMatrixDColumn_const(const TMatrixDSym &matrix,Int_t col)
+{
+  Assert(matrix.IsValid());
+
+  fColInd = col-matrix.GetColLwb();
+  if (fColInd >= matrix.GetNcols() || fColInd < 0) {
+    Error("TMatrixDColumn_const(const TMatrixDSym &,Int_t)","column index out of bounds");
+    return;
+  }
+
+  fMatrix = &matrix;
+  fPtr = matrix.GetMatrixArray()+fColInd;
+  fInc = matrix.GetNcols();
+}
+
+//______________________________________________________________________________
+TMatrixDColumn::TMatrixDColumn(TMatrixD &matrix,Int_t col)
+               :TMatrixDColumn_const(matrix,col)
+{
+}
+
+//______________________________________________________________________________
+TMatrixDColumn::TMatrixDColumn(TMatrixDSym &matrix,Int_t col)
                :TMatrixDColumn_const(matrix,col)
 {
 }
@@ -324,9 +371,10 @@ void TMatrixDColumn::operator*=(const TMatrixDColumn_const &mc)
 }     
 
 //______________________________________________________________________________
-TMatrixDDiag_const::TMatrixDDiag_const(const TMatrixDBase &matrix)
+TMatrixDDiag_const::TMatrixDDiag_const(const TMatrixD &matrix)
 {
   Assert(matrix.IsValid());
+
   fMatrix = &matrix;
   fNdiag  = TMath::Min(matrix.GetNrows(),matrix.GetNcols());
   fPtr    = matrix.GetMatrixArray();
@@ -334,7 +382,24 @@ TMatrixDDiag_const::TMatrixDDiag_const(const TMatrixDBase &matrix)
 }
 
 //______________________________________________________________________________
-TMatrixDDiag::TMatrixDDiag(TMatrixDBase &matrix)
+TMatrixDDiag_const::TMatrixDDiag_const(const TMatrixDSym &matrix)
+{ 
+  Assert(matrix.IsValid());
+  
+  fMatrix = &matrix;
+  fNdiag  = TMath::Min(matrix.GetNrows(),matrix.GetNcols());
+  fPtr    = matrix.GetMatrixArray();
+  fInc    = matrix.GetNcols()+1;
+}
+
+//______________________________________________________________________________
+TMatrixDDiag::TMatrixDDiag(TMatrixD &matrix)
+             :TMatrixDDiag_const(matrix)
+{
+}
+
+//______________________________________________________________________________
+TMatrixDDiag::TMatrixDDiag(TMatrixDSym &matrix)
              :TMatrixDDiag_const(matrix)
 {
 }
@@ -462,16 +527,33 @@ void TMatrixDDiag::operator*=(const TMatrixDDiag_const &d)
 }
 
 //______________________________________________________________________________
-TMatrixDFlat_const::TMatrixDFlat_const(const TMatrixDBase &matrix)
+TMatrixDFlat_const::TMatrixDFlat_const(const TMatrixD &matrix)
 {
   Assert(matrix.IsValid());
+
   fMatrix = &matrix;
   fPtr    = matrix.GetMatrixArray();
   fNelems = matrix.GetNoElements();
 }
 
 //______________________________________________________________________________
-TMatrixDFlat::TMatrixDFlat(TMatrixDBase &matrix)
+TMatrixDFlat_const::TMatrixDFlat_const(const TMatrixDSym &matrix)
+{
+  Assert(matrix.IsValid());
+
+  fMatrix = &matrix;
+  fPtr    = matrix.GetMatrixArray();
+  fNelems = matrix.GetNoElements();
+}
+
+//______________________________________________________________________________
+TMatrixDFlat::TMatrixDFlat(TMatrixD &matrix)
+             :TMatrixDFlat_const(matrix)
+{
+}
+
+//______________________________________________________________________________
+TMatrixDFlat::TMatrixDFlat(TMatrixDSym &matrix)
              :TMatrixDFlat_const(matrix)
 {
 }
@@ -599,4 +681,54 @@ void TMatrixDFlat::operator*=(const TMatrixDFlat_const &mf)
   const Double_t *fp2 = mf.GetPtr();
   while (fp1 < fPtr + fMatrix->GetNoElements())
     *fp1++ *= *fp2++;
+}
+
+//______________________________________________________________________________
+TMatrixDSparseRow_const::TMatrixDSparseRow_const(const TMatrixDSparse &matrix,Int_t row)
+{
+  Assert(matrix.IsValid());
+
+  const Int_t irow = row-matrix.GetRowLwb();
+  if (irow >= matrix.GetNrows() || irow < 0) {
+    Error("TMatrixDSparseRow_const(const TMatrixDSparse &,Int_t)","row index out of bounds");
+    return;
+  }
+
+  const Int_t sIndex = matrix.GetRowIndexArray()[irow];
+  const Int_t eIndex = matrix.GetRowIndexArray()[irow+1];
+  fMatrix  = &matrix;
+  fNindex  = eIndex-sIndex;
+  fColPtr  = matrix.GetColIndexArray()+sIndex;
+  fDataPtr = matrix.GetMatrixArray()+sIndex;
+}
+
+//______________________________________________________________________________
+TMatrixDSparseRow::TMatrixDSparseRow(TMatrixDSparse &matrix,Int_t row)
+                                    :TMatrixDSparseRow_const(matrix,row)
+{
+}
+
+//______________________________________________________________________________
+Double_t Drand(Double_t &ix)
+{
+  const Double_t a   = 16807.0;
+  const Double_t b15 = 32768.0;
+  const Double_t b16 = 65536.0;
+  const Double_t p   = 2147483647.0;
+  Double_t xhi = ix/b16;
+  Int_t xhiint = (Int_t) xhi;
+  xhi = xhiint;
+  Double_t xalo = (ix-xhi*b16)*a;
+
+  Double_t leftlo = xalo/b16;
+  Int_t leftloint = (int) leftlo;
+  leftlo = leftloint;
+  Double_t fhi = xhi*a+leftlo;
+  Double_t k = fhi/b15;
+  Int_t kint = (Int_t) k;
+  k = kint;
+  ix = (((xalo-leftlo*b16)-p)+(fhi-k*b15)*b16)+k;
+  if (ix < 0.0) ix = ix+p;
+
+  return (ix*4.656612875e-10);
 }

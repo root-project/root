@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.7 2004/03/22 14:20:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.8 2004/04/15 09:21:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -74,8 +74,9 @@ public:
   inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Float_t *elements) { Assert(IsValid());
                                                           memcpy(fElements,elements,fNrows*sizeof(Float_t)); }
+  inline void     Shift      (Int_t row_shift)   { fRowLwb += row_shift; }
          void     ResizeTo   (Int_t lwb,Int_t upb);
-  inline void     ResizeTo   (Int_t n)       { ResizeTo(0,n-1); }
+  inline void     ResizeTo   (Int_t n)           { ResizeTo(0,n-1); }
   inline void     ResizeTo   (const TVectorF &v) { ResizeTo(v.GetLwb(),v.GetUpb()); }
 
          void     Use        (Int_t n,Float_t *data);
@@ -128,38 +129,14 @@ public:
   Bool_t SomePositive         (const TVectorF &select);
   void   AddSomeConstant      (Float_t val,const TVectorF &select);
 
+  void   Randomize(Float_t alpha,Float_t beta,Double_t &seed);
+
   TVectorF &Apply(const TElementActionF    &action);
   TVectorF &Apply(const TElementPosActionF &action);
 
   void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements); fNrows = 0; }
   void Draw (Option_t *option=""); // *MENU*
   void Print(Option_t *option="") const;  // *MENU*
-
-  friend Bool_t    operator== (const TVectorF    &v1,     const TVectorF &v2);
-  friend Float_t   operator*  (const TVectorF    &v1,     const TVectorF &v2);
-  friend TVectorF  operator+  (const TVectorF    &source1,const TVectorF &source2);
-  friend TVectorF  operator-  (const TVectorF    &source1,const TVectorF &source2);
-  friend TVectorF  operator*  (const TMatrixF    &a,      const TVectorF &source);
-  friend TVectorF  operator*  (const TMatrixFSym &a,      const TVectorF &source);
-  friend TVectorF  operator*  (      Float_t      val,    const TVectorF &source);
-
-  friend TVectorF &Add        (TVectorF &target,Float_t scalar,const TVectorF &source);
-  friend TVectorF &AddElemMult(TVectorF &target,Float_t scalar,
-                               const TVectorF &source1,const TVectorF &source2);
-  friend TVectorF &AddElemMult(TVectorF &target,Float_t scalar,
-                               const TVectorF &source1,const TVectorF &source2,const TVectorF &select);
-  friend TVectorF &AddElemDiv (TVectorF &target,Float_t scalar,
-                               const TVectorF &source1,const TVectorF &source2);
-  friend TVectorF &AddElemDiv (TVectorF &target,Float_t scalar,
-                               const TVectorF &source1,const TVectorF &source2,const TVectorF &select);
-  friend TVectorF &ElementMult(TVectorF &target,const TVectorF &source);
-  friend TVectorF &ElementMult(TVectorF &target,const TVectorF &source,const TVectorF &select);
-  friend TVectorF &ElementDiv (TVectorF &target,const TVectorF &source);
-  friend TVectorF &ElementDiv (TVectorF &target,const TVectorF &source,const TVectorF &select);
-
-  friend Bool_t AreCompatible(const TVectorF &v1,const TVectorF &v2,Int_t verbose);
-  friend Bool_t AreCompatible(const TVectorF &v1,const TVectorD &v2,Int_t verbose);
-  friend void   Compare      (const TVectorF &v1,const TVectorF &v2);
 
   ClassDef(TVectorF,2)  // Vector class with single precision
 };

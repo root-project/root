@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.5 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.7 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected :
   static void   Diag_3       (TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l);
   static void   SortSingular (TMatrixD &v,TMatrixD &u,TVectorD &sDiag);
 
-  virtual const TMatrixD &GetDecompMatrix() const { return fU; }
+  virtual const TMatrixDBase &GetDecompMatrix() const { return fU; }
 
 public :
 
@@ -63,7 +63,7 @@ public :
 
   virtual       void      SetMatrix (const TMatrixD &a);
 
-  virtual Int_t    Decompose  ();
+  virtual Bool_t   Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   Solve      (      TMatrixDColumn &b);

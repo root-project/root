@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.3 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.4 2004/04/08 17:58:32 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -31,9 +31,9 @@ protected :
   static void MakeHessenBerg  (TMatrixD &v,TVectorD &ortho,TMatrixD &H);
   static void MakeSchurr      (TMatrixD &v,TVectorD &d,    TVectorD &e,TMatrixD &H);
 
-  TMatrixD     fEigenVectors;   // Eigen-vectors of matrix
-  TVectorD     fEigenValuesRe;  // Eigen-values
-  TVectorD     fEigenValuesIm;  // Eigen-values
+  TMatrixD fEigenVectors;   // Eigen-vectors of matrix
+  TVectorD fEigenValuesRe;  // Eigen-values
+  TVectorD fEigenValuesIm;  // Eigen-values
 
 public :
 

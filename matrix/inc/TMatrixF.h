@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.6 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.7 2004/04/15 09:21:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -36,8 +36,8 @@ protected:
 
   Float_t *fElements;  //[fNelems] elements themselves
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
-                        Int_t init = 0,Int_t nr_nonzero = -1);
+  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
+                        Int_t nr_nonzeros = -1);
 
   // Elementary constructors
   void AMultB (const TMatrixF     &a,const TMatrixF    &b,Int_t constr=1);
@@ -72,32 +72,29 @@ public:
 
   virtual const Float_t *GetMatrixArray  () const;
   virtual       Float_t *GetMatrixArray  ();
+  virtual const Int_t   *GetRowIndexArray() const { return 0; }
+  virtual       Int_t   *GetRowIndexArray()       { return 0; }
+  virtual const Int_t   *GetColIndexArray() const { return 0; }
+  virtual       Int_t   *GetColIndexArray()       { return 0; }
 
-  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); fNelems = 0; }
+  virtual void     Clear      (Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
+                                                            else fElements = 0;  fNelems = 0; }
 
-  void      Use         (Int_t nrows,Int_t ncols,Float_t *data);
-  void      Use         (Int_t row_lwb,Int_t row_upb,
-                         Int_t col_lwb,Int_t col_upb,Float_t *data);
-  void      Use         (TMatrixF &a);
-  TMatrixF  GetSub      (Int_t row_lwb,Int_t row_upb,
-                         Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-  void      SetSub      (Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source);
+          void     Use        (Int_t nrows,Int_t ncols,Float_t *data);
+          void     Use        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Float_t *data);
+          void     Use        (TMatrixF &a);
+          TMatrixF GetSub     (Int_t row_lwb,Int_t row_upb,
+                               Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
+          void     SetSub     (Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source);
 
   virtual Double_t Determinant() const;
   virtual void     Determinant(Double_t &d1,Double_t &d2) const;
 
-  TMatrixF &Zero        ();
-  TMatrixF &Abs         ();
-  TMatrixF &Sqr         ();
-  TMatrixF &Sqrt        ();
-  TMatrixF &UnitMatrix  ();
   TMatrixF &Invert      (Double_t *det=0);
   TMatrixF &InvertFast  (Double_t *det=0);
-  TMatrixF &Transpose   (const TMatrixF &source);
-
+  TMatrixF &Transpose   (const TMatrixFBase &source);
   inline TMatrixF &T    () { return this->Transpose(*this); }
 
-  TMatrixF &NormByDiag  (const TVectorF &v,Option_t *option="D");
   TMatrixF &NormByColumn(const TVectorF &v,Option_t *option="D");
   TMatrixF &NormByRow   (const TVectorF &v,Option_t *option="D");
 
@@ -106,9 +103,9 @@ public:
   inline void Mult(const TMatrixFSym &a,const TMatrixF    &b) { AMultB(a,b,0); }
 
   // Either access a_ij as a(i,j)
-  inline const Float_t           &operator()(Int_t rown,Int_t coln) const;
-  inline       Float_t           &operator()(Int_t rown,Int_t coln)
-                                             { return (Float_t&)((*(const TMatrixF *)this)(rown,coln)); }
+  inline const Float_t            operator()(Int_t rown,Int_t coln) const;
+  inline       Float_t           &operator()(Int_t rown,Int_t coln);
+
   // or as a[i][j]
   inline const TMatrixFRow_const  operator[](Int_t rown) const { return TMatrixFRow_const(*this,rown); }
   inline       TMatrixFRow        operator[](Int_t rown)       { return TMatrixFRow      (*this,rown); }
@@ -117,6 +114,7 @@ public:
   TMatrixF &operator= (const TMatrixD     &source);
   TMatrixF &operator= (const TMatrixFSym  &source);
   TMatrixF &operator= (const TMatrixFLazy &source);
+
   TMatrixF &operator= (Float_t val);
   TMatrixF &operator-=(Float_t val);
   TMatrixF &operator+=(Float_t val);
@@ -136,33 +134,7 @@ public:
   TMatrixF &operator*=(const TMatrixFColumn_const &col);
   TMatrixF &operator/=(const TMatrixFColumn_const &col);
 
-  TMatrixF &Apply(const TElementActionF    &action);
-  TMatrixF &Apply(const TElementPosActionF &action);
-
   const TMatrixF EigenVectors(TVectorF &eigenValues) const;
-
-  friend Bool_t    operator== (const TMatrixF    &m1,const TMatrixF    &m2);
-
-  friend TMatrixF  operator+  (const TMatrixF    &source1,const TMatrixF    &source2);
-  friend TMatrixF  operator+  (const TMatrixF    &source1,const TMatrixFSym &source2);
-  friend TMatrixF  operator+  (const TMatrixFSym &source1,const TMatrixF    &source2);
-  friend TMatrixF  operator-  (const TMatrixF    &source1,const TMatrixF    &source2);
-  friend TMatrixF  operator-  (const TMatrixF    &source1,const TMatrixFSym &source2);
-  friend TMatrixF  operator-  (const TMatrixFSym &source1,const TMatrixF    &source2);
-  friend TMatrixF  operator*  (      Float_t      val,    const TMatrixF    &source );
-  friend TMatrixF  operator*  (const TMatrixF     &source ,      Float_t      val   )
-                              { return operator*(val,source); }
-  friend TMatrixF  operator*  (const TMatrixF    &source1,const TMatrixF    &source2);
-  friend TMatrixF  operator*  (const TMatrixF    &source1,const TMatrixFSym &source2);
-  friend TMatrixF  operator*  (const TMatrixFSym &source1,const TMatrixF    &source2);
-  friend TMatrixF  operator*  (const TMatrixFSym &source1,const TMatrixFSym &source2);
-
-  friend TMatrixF &Add        (TMatrixF &target,      Float_t      scalar,const TMatrixF    &source);
-  friend TMatrixF &Add        (TMatrixF &target,      Float_t      scalar,const TMatrixFSym &source);
-  friend TMatrixF &ElementMult(TMatrixF &target,const TMatrixF    &source);
-  friend TMatrixF &ElementMult(TMatrixF &target,const TMatrixFSym &source);
-  friend TMatrixF &ElementDiv (TMatrixF &target,const TMatrixF    &source);
-  friend TMatrixF &ElementDiv (TMatrixF &target,const TMatrixFSym &source);
 
   ClassDef(TMatrixF,3) // Matrix class (single precision)
 };
@@ -192,10 +164,12 @@ public :
   ClassDef(TMatrix,3)  // Matrix class (single precision)
 };
 
-inline const Float_t  *TMatrixF::GetMatrixArray () const { return fElements; }
-inline       Float_t  *TMatrixF::GetMatrixArray ()       { return fElements; }
-inline       void      TMatrixF::Use(TMatrixF &a) { Use(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
-inline const Float_t  &TMatrixF::operator    ()(Int_t rown,Int_t coln) const {
+inline const Float_t  *TMatrixF::GetMatrixArray() const { return fElements; }
+inline       Float_t  *TMatrixF::GetMatrixArray()       { return fElements; }
+inline       void      TMatrixF::Use           (TMatrixF &a) { Use(a.GetRowLwb(),a.GetRowUpb(),
+                                                                   a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
+
+inline const Float_t TMatrixF::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;
@@ -204,14 +178,25 @@ inline const Float_t  &TMatrixF::operator    ()(Int_t rown,Int_t coln) const {
   return (fElements[arown*fNcols+acoln]);
 }
 
-Bool_t    operator== (const TMatrixF    &m1,const TMatrixF    &m2);
+inline Float_t &TMatrixF::operator()(Int_t rown,Int_t coln) {
+  Assert(IsValid());
+  const Int_t arown = rown-fRowLwb;
+  const Int_t acoln = coln-fColLwb;
+  Assert(arown < fNrows && arown >= 0);
+  Assert(acoln < fNcols && acoln >= 0);
+  return (fElements[arown*fNcols+acoln]);
+}
 
 TMatrixF  operator+  (const TMatrixF    &source1,const TMatrixF    &source2);
 TMatrixF  operator+  (const TMatrixF    &source1,const TMatrixFSym &source2);
 TMatrixF  operator+  (const TMatrixFSym &source1,const TMatrixF    &source2);
+TMatrixF  operator+  (const TMatrixF    &source ,      Float_t      val    );
+TMatrixF  operator+  (      Float_t      val    ,const TMatrixF    &source );
 TMatrixF  operator-  (const TMatrixF    &source1,const TMatrixF    &source2);
 TMatrixF  operator-  (const TMatrixF    &source1,const TMatrixFSym &source2);
 TMatrixF  operator-  (const TMatrixFSym &source1,const TMatrixF    &source2);
+TMatrixF  operator-  (const TMatrixF    &source ,      Float_t      val    );
+TMatrixF  operator-  (      Float_t      val    ,const TMatrixF    &source );
 TMatrixF  operator*  (      Float_t      val,    const TMatrixF    &source );
 TMatrixF  operator*  (const TMatrixF    &source,       Float_t      val    );
 TMatrixF  operator*  (const TMatrixF    &source1,const TMatrixF    &source2);

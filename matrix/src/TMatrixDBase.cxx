@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.7 2004/03/22 10:50:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.8 2004/03/29 22:35:36 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,15 +20,19 @@
 // have been added (LU,QRH,Cholesky and SVD) . The decompositions are   //
 // used in matrix inversion, equation solving.                          //
 //                                                                      //
-// Matrix elements are arranged in memory in a ROW-wise fashion         //
+// For a dense matrix, elements are arranged in memory in a ROW-wise    //
 // fashion . For (n x m) matrices where n*m <=kSizeMax (=25 currently)  //
-// storage space is avaialble on the stack, thus avoiding expensive     //
+// storage space is available on the stack, thus avoiding expensive     //
 // allocation/deallocation of heap space . However, this introduces of  //
 // course kSizeMax overhead for each matrix object . If this is an      //
 // issue recompile with a new appropriate value (>=0) for kSizeMax      //
 //                                                                      //
+// Sparse matrices are also stored in row-wise fashion but additional   //
+// row/column information is stored, see TMatrixDSparse source for      //
+// additional details .                                                 //
+//                                                                      //
 // Another way to assign and store matrix data is through Use           //
-// see for instance stress_linalg.cxx file .                            //
+// see for instance stressLinear.cxx file .                             //
 //                                                                      //
 // Unless otherwise specified, matrix and vector indices always start   //
 // with 0, spanning up to the specified limit-1. However, there are     //
@@ -46,7 +50,7 @@
 // Since TMatrixD et al. are fully integrated in ROOT they of course    //
 // can be stored in a ROOT database.                                    //
 //                                                                      //
-// For usage examples see $ROOTSYS/test/stress_linalg.cxx               //
+// For usage examples see $ROOTSYS/test/stressLinear.cxx                //
 //                                                                      //
 // Acknowledgements                                                     //
 // ----------------                                                     //
@@ -199,7 +203,7 @@
 ClassImp(TMatrixDBase)
 
 //______________________________________________________________________________
-void TMatrixDBase::Delete_m(Int_t size,Double_t*& m)
+void TMatrixDBase::Delete_m(Int_t size,Double_t *&m)
 { 
   // delete data pointer m, if it was assigned on the heap
 
@@ -251,6 +255,141 @@ Int_t TMatrixDBase::Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
       memcpy(newp,oldp,copySize*sizeof(Double_t));
   }
   return 0;
+}
+
+//______________________________________________________________________________
+void TMatrixDBase::DoubleLexSort(Int_t n,Int_t *first,Int_t *second,Double_t *data)
+{
+  const int incs[] = {1,5,19,41,109,209,505,929,2161,3905,8929,16001,INT_MAX};
+
+  Int_t kinc = 0;
+  while (incs[kinc] <= n/2)
+    kinc++;
+  kinc -= 1;
+
+  // incs[kinc] is the greatest value in the sequence that is also <= n/2.
+  // If n == {0,1}, kinc == -1 and so no sort will take place.
+
+  for( ; kinc >= 0; kinc--) {
+    const Int_t inc = incs[kinc];
+
+    for (Int_t k = inc; k < n; k++) {
+      const Double_t tmp = data[k];
+      const Int_t fi = first [k];
+      const Int_t se = second[k];
+      Int_t j;
+      for (j = k; j >= inc; j -= inc) {
+        if ( fi < first[j-inc] || (fi == first[j-inc] && se < second[j-inc]) ) {
+          data  [j] = data  [j-inc];
+          first [j] = first [j-inc];
+          second[j] = second[j-inc];
+        } else
+          break;
+      }
+      data  [j] = tmp;
+      first [j] = fi;
+      second[j] = se;
+    }
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDBase::IndexedLexSort(Int_t n,Int_t *first,Int_t swapFirst,
+                                  Int_t *second,Int_t swapSecond,Int_t *index)
+{ 
+  const int incs[] = {1,5,19,41,109,209,505,929,2161,3905,8929,16001,INT_MAX};
+  
+  Int_t kinc = 0;
+  while (incs[kinc] <= n/2)
+    kinc++;
+  kinc -= 1;
+
+  // incs[kinc] is the greatest value in the sequence that is also less
+  // than n/2.    
+
+  for( ; kinc >= 0; kinc--) {
+    const Int_t inc = incs[kinc];
+  
+    if ( !swapFirst && !swapSecond ) {
+      for (Int_t k = inc; k < n; k++) {
+        // loop over all subarrays defined by the current increment
+        const Int_t ktemp = index[k];
+        const Int_t fi = first [ktemp];
+        const Int_t se = second[ktemp];
+        // Insert element k into the sorted subarray
+        Int_t j;
+        for (j = k; j >= inc; j -= inc) {
+          // Loop over the elements in the current subarray
+          if (fi < first[index[j-inc]] || (fi == first[index[j-inc]] && se < second[index[j-inc]])) {
+            // Swap elements j and j - inc, implicitly use the fact
+            // that ktemp hold element j to avoid having to assign to
+            // element j-inc
+            index[j] = index[j-inc];
+          } else {
+            // There are no more elements in this sorted subarray which
+            // are less than element j
+            break;
+          }
+        } // End loop over the elements in the current subarray
+        // Move index[j] out of temporary storage
+        index[j] = ktemp;
+        // The element has been inserted into the subarray.
+      } // End loop over all subarrays defined by the current increment
+    } else if ( swapSecond && !swapFirst ) {
+      for (Int_t k = inc; k < n; k++) {
+        const Int_t ktemp = index[k];
+        const Int_t fi = first [ktemp];
+        const Int_t se = second[k];
+        Int_t j;
+        for (j = k; j >= inc; j -= inc) {
+          if (fi < first[index[j-inc]] || (fi == first[index[j-inc]] && se < second[j-inc])) {
+            index [j] = index[j-inc];
+            second[j] = second[j-inc];
+          } else {
+            break;
+          }
+        }
+        index[j]  = ktemp;
+        second[j] = se;
+      }
+    } else if (swapFirst  && !swapSecond) {
+      for (Int_t k = inc; k < n; k++ ) {
+        const Int_t ktemp = index[k];
+        const Int_t fi = first[k];
+        const Int_t se = second[ktemp];
+        Int_t j;
+        for (j = k; j >= inc; j -= inc) {
+          if ( fi < first[j-inc] || (fi == first[j-inc] && se < second[ index[j-inc]])) {
+            index[j] = index[j-inc];
+            first[j] = first[j-inc];
+          } else {
+            break;
+          }
+        }
+        index[j] = ktemp;
+        first[j] = fi;
+      }
+    } else { // Swap both
+      for (Int_t k = inc; k < n; k++ ) {
+        const Int_t ktemp = index[k];
+        const Int_t fi = first [k];
+        const Int_t se = second[k];
+        Int_t j;
+        for (j = k; j >= inc; j -= inc) {
+          if ( fi < first[j-inc] || (fi == first[j-inc] && se < second[j-inc])) {
+            index [j] = index [j-inc];
+            first [j] = first [j-inc];
+            second[j] = second[j-inc];
+          } else {
+            break;
+          }
+        }
+        index[j]  = ktemp;
+        first[j]  = fi;
+        second[j] = se;
+      }
+    }
+  }
 }
 
 //______________________________________________________________________________
@@ -345,7 +484,7 @@ void TMatrixDBase::Shift(Int_t row_shift,Int_t col_shift)
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols)
+void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
 {
   // Set size of the matrix to nrows x ncols
   // New dynamic elements are created, the overlapping part of the old ones are
@@ -353,7 +492,7 @@ void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols)
 
   Assert(IsValid());
   if (!fIsOwner) {
-    Error("ResizeTo(nrows,ncols)","Not owner of data array,cannot resize");
+    Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
     return;
   }
 
@@ -372,21 +511,21 @@ void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols)
     const Int_t  ncols_old    = fNcols;
 
     Allocate(nrows,ncols);
-    // new memory should be initialized but be careful ot to wipe out the stack
-    // storage. Initialize all when old or new storag ewas on the heap
-    if (fNelems > kSizeMax || nelems_old > kSizeMax)
-      memset(GetMatrixArray(),0,fNelems*sizeof(Double_t));
-    else if (fNelems > nelems_old)
-      memset(GetMatrixArray()+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
-
     Assert(IsValid());
+
+    Double_t *elements_new = GetMatrixArray();
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storage was on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(elements_new,0,fNelems*sizeof(Double_t));
+    else if (fNelems > nelems_old)
+      memset(elements_new+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
 
     // Copy overlap
     const Int_t ncols_copy = TMath::Min(fNcols,ncols_old); 
     const Int_t nrows_copy = TMath::Min(fNrows,nrows_old); 
 
     const Int_t nelems_new = fNelems;
-    Double_t *elements_new = GetMatrixArray();
     if (ncols_old < fNcols) {
       for (Int_t i = nrows_copy-1; i >= 0; i--)
         Memcpy_m(elements_new+i*fNcols,elements_old+i*ncols_old,ncols_copy,
@@ -404,7 +543,8 @@ void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols)
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
+void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                            Int_t /*nr_nonzeros*/)
 {
   // Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
   // New dynamic elemenst are created, the overlapping part of the old ones are
@@ -412,7 +552,7 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
 
   Assert(IsValid());
   if (!fIsOwner) {
-    Error("ResizeTo(row_lwb,row_upb,col_lwb,col_upb)","Not owner of data array,cannot resize");
+    Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
     return;
   }
 
@@ -439,14 +579,15 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
     const Int_t  colLwb_old   = fColLwb;
 
     Allocate(new_nrows,new_ncols,row_lwb,col_lwb);
+    Assert(IsValid());
+
+    Double_t *elements_new = GetMatrixArray();
     // new memory should be initialized but be careful ot to wipe out the stack
     // storage. Initialize all when old or new storag ewas on the heap
     if (fNelems > kSizeMax || nelems_old > kSizeMax)
-      memset(GetMatrixArray(),0,fNelems*sizeof(Double_t));
+      memset(elements_new,0,fNelems*sizeof(Double_t));
     else if (fNelems > nelems_old)
-      memset(GetMatrixArray()+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
-
-    Assert(IsValid());
+      memset(elements_new+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
 
     // Copy overlap
     const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old); 
@@ -457,7 +598,6 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
     const Int_t nrows_copy = rowUpb_copy-rowLwb_copy+1;
     const Int_t ncols_copy = colUpb_copy-colLwb_copy+1;
 
-    Double_t *elements_new = GetMatrixArray();
     if (nrows_copy > 0 && ncols_copy > 0) {
       const Int_t colOldOff = colLwb_copy-colLwb_old;
       const Int_t colNewOff = colLwb_copy-fColLwb;
@@ -482,6 +622,126 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
   } else {
     Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1);
   }
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixDBase::Zero()
+{
+  Assert(IsValid());
+  memset(this->GetMatrixArray(),0,fNelems*sizeof(Double_t));
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixDBase::Abs()
+{
+  // Take an absolute value of a matrix, i.e. apply Abs() to each element.
+
+  Assert(IsValid());
+
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNelems;
+  while (ep < fp) {
+    *ep = TMath::Abs(*ep);
+    ep++;
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixDBase::Sqr()
+{
+  // Square each element of the matrix.
+
+  Assert(IsValid());
+
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNelems;
+  while (ep < fp) {
+    *ep = (*ep) * (*ep);
+    ep++;
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixDBase::Sqrt()
+{
+  // Take square root of all elements.
+
+  Assert(IsValid());
+
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNelems;
+  while (ep < fp) {
+    *ep = TMath::Sqrt(*ep);
+    ep++;
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixDBase::UnitMatrix()
+{
+  // Make a unit matrix (matrix need not be a square one).
+
+  Assert(IsValid());
+
+  Double_t *ep = this->GetMatrixArray();
+  memset(ep,0,fNelems*sizeof(Double_t));
+  for (Int_t i = fRowLwb; i <= fRowLwb+fNrows-1; i++)
+    for (Int_t j = fColLwb; j <= fColLwb+fNcols-1; j++)
+      *ep++ = (i==j ? 1.0 : 0.0);
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixDBase::NormByDiag(const TVectorD &v,Option_t *option)
+{
+  // option:
+  // "D"   :  b(i,j) = a(i,j)/sqrt(abs*(v(i)*v(j)))  (default)
+  // else  :  b(i,j) = a(i,j)*sqrt(abs*(v(i)*v(j)))  (default)
+
+  Assert(IsValid());
+  Assert(v.IsValid());
+
+  const Int_t nMax = TMath::Max(fNrows,fNcols);
+  if (v.GetNoElements() < nMax) {
+    Error("NormByDiag","vector shorter than matrix diagonal");
+    Invalidate();
+    return *this;
+  }
+
+  TString opt(option);
+  opt.ToUpper();
+  const Int_t divide = (opt.Contains("D")) ? 1 : 0;
+
+  const Double_t *pV = v.GetMatrixArray();
+        Double_t *mp = this->GetMatrixArray();
+
+  if (divide) {
+    for (Int_t irow = 0; irow < fNrows; irow++) {
+      for (Int_t icol = 0; icol < fNcols; icol++) {
+        const Double_t val = TMath::Sqrt(TMath::Abs(pV[irow]*pV[icol]));
+        Assert(val != 0.0);
+        *mp++ /= val;
+      }
+    }
+  } else {
+    for (Int_t irow = 0; irow < fNrows; irow++) {
+      for (Int_t icol = 0; icol < fNcols; icol++) {
+        const Double_t val = TMath::Sqrt(TMath::Abs(pV[irow]*pV[icol]));
+        *mp++ *= val;
+      }
+    }
+  }
+
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -670,6 +930,9 @@ Bool_t TMatrixDBase::operator==(Double_t val) const
 
   Assert(IsValid());
 
+  if (val == 0. && fNelems == 0)
+    return kTRUE;
+
   const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
   for (; ep < fp; ep++)
@@ -685,6 +948,9 @@ Bool_t TMatrixDBase::operator!=(Double_t val) const
   // Are all matrix elements not equal to val?
 
   Assert(IsValid());
+
+  if (val == 0. && fNelems == 0)
+    return kFALSE;
 
   const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
@@ -757,6 +1023,63 @@ Bool_t TMatrixDBase::operator>=(Double_t val) const
       return kFALSE;
 
   return kTRUE;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixDBase::Apply(const TElementActionD &action)
+{
+  Assert(IsValid());
+
+  Double_t *ep = this->GetMatrixArray();
+  const Double_t * const ep_last = ep+fNelems;
+  while (ep < ep_last)
+    action.Operation(*ep++);
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixDBase::Apply(const TElementPosActionD &action)
+{
+  // Apply action to each element of the matrix. To action the location
+  // of the current element is passed.
+
+  Assert(IsValid());
+
+  Double_t *ep = this->GetMatrixArray();
+  for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
+    for (action.fJ = fColLwb; action.fJ < fColLwb+fNcols; action.fJ++)
+      action.Operation(*ep++);
+
+  Assert(ep == this->GetMatrixArray()+fNelems);
+
+  return *this;
+}
+
+//______________________________________________________________________________
+void TMatrixDBase::Randomize(Double_t alpha,Double_t beta,Double_t &seed)
+{
+  // randomize matrix element values
+
+  Assert(IsValid());
+
+  const Double_t scale = beta-alpha;
+  const Double_t shift = alpha/scale;
+
+        Double_t *       ep = GetMatrixArray();
+  const Double_t * const fp = ep+fNelems;
+  while (ep < fp)
+    *ep++ = scale*(Drand(seed)+shift);
+}
+
+//______________________________________________________________________________
+Bool_t operator==(const TMatrixDBase &m1,const TMatrixDBase &m2)
+{
+  // Check to see if two matrices are identical.
+
+  if (!AreCompatible(m1,m2)) return kFALSE;
+  return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),
+                 m1.GetNoElements()*sizeof(Double_t)) == 0);
 }
 
 //______________________________________________________________________________
@@ -888,6 +1211,9 @@ Bool_t VerifyMatrixValue(const TMatrixDBase &m,Double_t val,Int_t verbose,Double
 
   Assert(m.IsValid());
 
+  if (m == 0)
+    return kTRUE;
+
   Int_t    imax      = 0;
   Int_t    jmax      = 0;
   Double_t maxDevObs = 0;
@@ -923,8 +1249,11 @@ Bool_t VerifyMatrixIdentity(const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t 
 {
    // Verify that elements of the two matrices are equal within MaxDevAllow .
 
-  if (!AreCompatible(m1,m2))
+  if (!AreCompatible(m1,m2,verbose))
     return kFALSE;
+
+  if (m1 == 0 && m2 == 0)
+    return kTRUE;
 
   Int_t    imax      = 0;
   Int_t    jmax      = 0;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.3 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.4 2004/04/15 09:21:51 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -30,12 +30,12 @@
 #include "TMatrixFBase.h"
 
 //______________________________________________________________________________
-TMatrixFRow_const::TMatrixFRow_const(const TMatrixFBase &matrix,Int_t row)
+TMatrixFRow_const::TMatrixFRow_const(const TMatrixF &matrix,Int_t row)
 {
   Assert(matrix.IsValid());
   fRowInd = row-matrix.GetRowLwb();
   if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
-    Error("TMatrixFRow_const(const TMatrixFBase &,Int_t)","row index out of bounds");
+    Error("TMatrixFRow_const(const TMatrixF &,Int_t)","row index out of bounds");
     return;
   }
 
@@ -45,7 +45,28 @@ TMatrixFRow_const::TMatrixFRow_const(const TMatrixFBase &matrix,Int_t row)
 }
 
 //______________________________________________________________________________
-TMatrixFRow::TMatrixFRow(TMatrixFBase &matrix,Int_t row)
+TMatrixFRow_const::TMatrixFRow_const(const TMatrixFSym &matrix,Int_t row)
+{ 
+  Assert(matrix.IsValid());
+  fRowInd = row-matrix.GetRowLwb();
+  if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
+    Error("TMatrixFRow_const(const TMatrixFSym &,Int_t)","row index out of bounds");
+    return;
+  }
+  
+  fMatrix = &matrix;
+  fPtr = matrix.GetMatrixArray()+fRowInd*matrix.GetNcols();
+  fInc = 1;
+}
+
+//______________________________________________________________________________
+TMatrixFRow::TMatrixFRow(TMatrixF &matrix,Int_t row)
+            :TMatrixFRow_const(matrix,row)
+{
+}
+
+//______________________________________________________________________________
+TMatrixFRow::TMatrixFRow(TMatrixFSym &matrix,Int_t row)
             :TMatrixFRow_const(matrix,row)
 {
 }
@@ -177,12 +198,12 @@ void TMatrixFRow::operator*=(const TMatrixFRow_const &r)
 }
 
 //______________________________________________________________________________
-TMatrixFColumn_const::TMatrixFColumn_const(const TMatrixFBase &matrix,Int_t col)
+TMatrixFColumn_const::TMatrixFColumn_const(const TMatrixF &matrix,Int_t col)
 {
   Assert(matrix.IsValid());
   fColInd = col-matrix.GetColLwb();
   if (fColInd >= matrix.GetNcols() || fColInd < 0) {
-    Error("TMatrixFColumn_const(const TMatrixFBase &,Int_t)","column index out of bounds");
+    Error("TMatrixFColumn_const(const TMatrixF &,Int_t)","column index out of bounds");
     return;
   }
 
@@ -192,7 +213,28 @@ TMatrixFColumn_const::TMatrixFColumn_const(const TMatrixFBase &matrix,Int_t col)
 }
 
 //______________________________________________________________________________
-TMatrixFColumn::TMatrixFColumn(TMatrixFBase &matrix,Int_t col)
+TMatrixFColumn_const::TMatrixFColumn_const(const TMatrixFSym &matrix,Int_t col)
+{
+  Assert(matrix.IsValid());
+  fColInd = col-matrix.GetColLwb();
+  if (fColInd >= matrix.GetNcols() || fColInd < 0) {
+    Error("TMatrixFColumn_const(const TMatrixFSym, &,Int_t)","column index out of bounds");
+    return;
+  }
+
+  fMatrix = &matrix;
+  fPtr = matrix.GetMatrixArray()+fColInd;
+  fInc = matrix.GetNcols();
+}
+
+//______________________________________________________________________________
+TMatrixFColumn::TMatrixFColumn(TMatrixF &matrix,Int_t col)
+               :TMatrixFColumn_const(matrix,col)
+{
+}
+
+//______________________________________________________________________________
+TMatrixFColumn::TMatrixFColumn(TMatrixFSym &matrix,Int_t col)
                :TMatrixFColumn_const(matrix,col)
 {
 }
@@ -324,7 +366,7 @@ void TMatrixFColumn::operator*=(const TMatrixFColumn_const &mc)
 }     
 
 //______________________________________________________________________________
-TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixFBase &matrix)
+TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixF &matrix)
 {
   Assert(matrix.IsValid());
   fMatrix = &matrix;
@@ -334,7 +376,23 @@ TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixFBase &matrix)
 }
 
 //______________________________________________________________________________
-TMatrixFDiag::TMatrixFDiag(TMatrixFBase &matrix)
+TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixFSym &matrix)
+{
+  Assert(matrix.IsValid());
+  fMatrix = &matrix;
+  fNdiag  = TMath::Min(matrix.GetNrows(),matrix.GetNcols());
+  fPtr    = matrix.GetMatrixArray();
+  fInc    = matrix.GetNcols()+1;
+}
+
+//______________________________________________________________________________
+TMatrixFDiag::TMatrixFDiag(TMatrixF &matrix)
+             :TMatrixFDiag_const(matrix)
+{
+}
+
+//______________________________________________________________________________
+TMatrixFDiag::TMatrixFDiag(TMatrixFSym &matrix)
              :TMatrixFDiag_const(matrix)
 {
 }
@@ -462,7 +520,7 @@ void TMatrixFDiag::operator*=(const TMatrixFDiag_const &d)
 }
 
 //______________________________________________________________________________
-TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixFBase &matrix)
+TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixF &matrix)
 {
   Assert(matrix.IsValid());
   fMatrix = &matrix;
@@ -471,7 +529,22 @@ TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixFBase &matrix)
 }
 
 //______________________________________________________________________________
-TMatrixFFlat::TMatrixFFlat(TMatrixFBase &matrix)
+TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixFSym &matrix)
+{
+  Assert(matrix.IsValid());
+  fMatrix = &matrix;
+  fPtr    = matrix.GetMatrixArray();
+  fNelems = matrix.GetNoElements();
+}
+
+//______________________________________________________________________________
+TMatrixFFlat::TMatrixFFlat(TMatrixF &matrix)
+             :TMatrixFFlat_const(matrix)
+{
+}
+
+//______________________________________________________________________________
+TMatrixFFlat::TMatrixFFlat(TMatrixFSym &matrix)
              :TMatrixFFlat_const(matrix)
 {
 }
@@ -599,4 +672,29 @@ void TMatrixFFlat::operator*=(const TMatrixFFlat_const &mf)
   const Float_t *fp2 = mf.GetPtr();
   while (fp1 < fPtr + fMatrix->GetNoElements())
     *fp1++ *= *fp2++;
+}
+
+//______________________________________________________________________________
+Float_t Frand(Double_t &ix)
+{
+  const Double_t a   = 16807.0;
+  const Double_t b15 = 32768.0;
+  const Double_t b16 = 65536.0;
+  const Double_t p   = 2147483647.0;
+  Double_t xhi = ix/b16;
+  Int_t xhiint = (Int_t) xhi;
+  xhi = xhiint;
+  Double_t xalo = (ix-xhi*b16)*a;
+
+  Double_t leftlo = xalo/b16;
+  Int_t leftloint = (int) leftlo;
+  leftlo = leftloint;
+  Double_t fhi = xhi*a+leftlo;
+  Double_t k = fhi/b15;
+  Int_t kint = (Int_t) k;
+  k = kint;
+  ix = (((xalo-leftlo*b16)-p)+(fhi-k*b15)*b16)+k;
+  if (ix < 0.0) ix = ix+p;
+
+  return Float_t(ix*4.656612875e-10);
 }

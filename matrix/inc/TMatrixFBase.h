@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.6 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.7 2004/03/22 10:50:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -44,6 +44,8 @@
 #endif
 
 class TMatrixDBase;
+class TElementActionF;
+class TElementPosActionF;
 class TMatrixFBase : public TObject {
 
 private:
@@ -55,6 +57,7 @@ protected:
   Int_t     fRowLwb;              // lower bound of the row index
   Int_t     fColLwb;              // lower bound of the col index
   Int_t     fNelems;              // number of elements in matrix
+  Int_t     fNrowIndex;           // length of row index array (= fNrows+1) wich is only used for sparse matrices
 
   Float_t   fTol;                 // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
                                   //  fTol is used in matrix decomposition (like in inversion)
@@ -65,19 +68,19 @@ protected:
   Float_t   fDataStack[kSizeMax]; //! data container
   Bool_t    fIsOwner;             //!default kTRUE, when Use array kFALSE
 
-  Float_t* New_m   (Int_t size);
+  Float_t*  New_m   (Int_t size);
   void      Delete_m(Int_t size,Float_t*&);
   Int_t     Memcpy_m(Float_t *newp,const Float_t *oldp,Int_t copySize,
                      Int_t newSize,Int_t oldSize);
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
-                        Int_t init = 0,Int_t nr_nonzero = -1) = 0;
+  virtual void Allocate (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,
+                         Int_t col_lwb = 0,Int_t init = 0,Int_t nr_nonzero = -1) = 0;
 
 public:
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
-  enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult };
+  enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-  TMatrixFBase() { fIsOwner = kTRUE; fNelems = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
+  TMatrixFBase() { fIsOwner = kTRUE; fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
 
   virtual ~TMatrixFBase() {}
 
@@ -89,8 +92,14 @@ public:
           inline       Int_t     GetNcols     () const { return fNcols; }
           inline       Int_t     GetNoElements() const { return fNelems; }
           inline       Float_t   GetTol       () const { return fTol; }
+
   virtual        const Float_t  *GetMatrixArray  () const = 0;
   virtual              Float_t  *GetMatrixArray  ()       = 0;
+  virtual        const Int_t    *GetRowIndexArray() const = 0;
+  virtual              Int_t    *GetRowIndexArray()       = 0;
+  virtual        const Int_t    *GetColIndexArray() const = 0;
+  virtual              Int_t    *GetColIndexArray()       = 0;
+
           inline       Float_t   SetTol       (Float_t tol);
 
   virtual void   Invalidate ()       { fNrows = -1; }
@@ -99,18 +108,27 @@ public:
           Bool_t IsSymmetric() const;
 
   // Probably move this functionality to TMatrixFFlat
-  virtual void GetMatrix2Array(Float_t *data, Option_t *option="") const;
-  virtual void SetMatrixArray(const Float_t *data, Option_t *option="");
+  virtual void GetMatrix2Array(Float_t *data,Option_t *option="") const;
+  virtual void SetMatrixArray(const Float_t *data,Option_t *option="");
 
   virtual void Shift   (Int_t row_shift,Int_t col_shift);
-  virtual void ResizeTo(Int_t nrows,Int_t ncols);
-  virtual void ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
+  virtual void ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
+  virtual void ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
   inline  void ResizeTo(const TMatrixFBase &m) {
     ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
   }
 
-  virtual Double_t Determinant() const = 0;
-  virtual void     Determinant(Double_t &d1,Double_t &d2) const =0;
+  virtual Double_t Determinant() const                          { AbstractMethod("Determinant()"); return 0.; }
+  virtual void     Determinant(Double_t &d1,Double_t &d2) const { AbstractMethod("Determinant()"); d1 = 0.; d2 = 0.; }
+
+  virtual TMatrixFBase &Zero       ();
+  virtual TMatrixFBase &Abs        ();
+  virtual TMatrixFBase &Sqr        ();
+  virtual TMatrixFBase &Sqrt       ();
+  virtual TMatrixFBase &UnitMatrix ();
+
+  virtual TMatrixFBase &NormByDiag (const TVectorF &v,Option_t *option="D");
+
   virtual Float_t  RowNorm    () const;
   virtual Float_t  ColNorm    () const;
   virtual Float_t  E2Norm     () const;
@@ -125,8 +143,8 @@ public:
   void Draw (Option_t *option="");       // *MENU*
   void Print(Option_t *option="") const; // *MENU*
 
-  virtual const Float_t           &operator()(Int_t rown,Int_t coln) const = 0;
-  virtual       Float_t           &operator()(Int_t rown,Int_t coln)       = 0;
+  virtual const Float_t  operator()(Int_t rown,Int_t coln) const = 0;
+  virtual       Float_t &operator()(Int_t rown,Int_t coln)       = 0;
 
   Bool_t operator==(Float_t val) const;
   Bool_t operator!=(Float_t val) const;
@@ -135,7 +153,12 @@ public:
   Bool_t operator> (Float_t val) const;
   Bool_t operator>=(Float_t val) const;
 
-  ClassDef(TMatrixFBase,2) // Matrix class (double precision)
+  virtual TMatrixFBase &Apply(const TElementActionF    &action);
+  virtual TMatrixFBase &Apply(const TElementPosActionF &action);
+
+  virtual void Randomize(Float_t alpha,Float_t beta,Double_t &seed);
+
+  ClassDef(TMatrixFBase,2) // Dense Matrix base class (single precision)
 };
 
 Float_t TMatrixFBase::SetTol(Float_t newTol)
@@ -146,6 +169,7 @@ Float_t TMatrixFBase::SetTol(Float_t newTol)
   return oldTol;
 }
 
+Bool_t  operator==   (const TMatrixFBase &m1,const TMatrixFBase &m2);
 Float_t E2Norm       (const TMatrixFBase &m1,const TMatrixFBase &m2);
 Bool_t  AreCompatible(const TMatrixFBase &m1,const TMatrixFBase &m2,Int_t verbose=0);
 Bool_t  AreCompatible(const TMatrixFBase &m1,const TMatrixDBase &m2,Int_t verbose=0);

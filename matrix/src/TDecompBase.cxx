@@ -74,11 +74,12 @@
 //  Solve A^T x = b . x is supplied through the argument and replaced    //
 //  with the solution .                                                  //
 //                                                                       //
-// MultiSolve(TMatrixDBase &B)                                           //
+// MultiSolve(TMatrixD    &B)                                            //
+// MultiSolve(TMatrixDSym &B)                                            //
 //  Solve A X = B . where X and are now matrices . X is supplied through //
 //  the argument and replaced with the solution .                        //
 //                                                                       //
-// Invert(TMatrixDBase &inv)                                             //
+// Invert(TMatrixD &inv)                                                 //
 //  This is of course just a call to MultiSolve with as input argument   //
 //  the unit matrix . Note that for a matrix a(m,n) with m > n  a        //
 //  pseudo-inverse is calculated .                                       //
@@ -161,7 +162,7 @@ Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
 
   est = -1.0;
 
-  const TMatrixD &m = GetDecompMatrix();
+  const TMatrixDBase &m = GetDecompMatrix();
   if (!m.IsValid())
     return iter;
 
@@ -274,7 +275,29 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
 {
 // Solve set of equations with RHS in columns of B
 
-  const TMatrixD &m = GetDecompMatrix();
+  const TMatrixDBase &m = GetDecompMatrix();
+  Assert(m.IsValid() && B.IsValid());
+
+  const Int_t colLwb = B.GetColLwb();
+  const Int_t colUpb = B.GetColUpb();
+  Bool_t status = kTRUE;
+  for (Int_t icol = colLwb; icol <= colUpb && status; icol++) {
+    TMatrixDColumn b(B,icol);
+    status &= Solve(b);
+  }
+
+  if (!status)
+    B.Invalidate();
+
+  return status;
+}
+
+//______________________________________________________________________________
+Bool_t TDecompBase::MultiSolve(TMatrixDSym &B)
+{
+// Solve set of equations with RHS in columns of B
+
+  const TMatrixDBase &m = GetDecompMatrix();
   Assert(m.IsValid() && B.IsValid());
 
   const Int_t colLwb = B.GetColLwb();
@@ -334,9 +357,11 @@ void TDecompBase::Det(Double_t &d1,Double_t &d2)
       fDet1 = 0.0;
       fDet2 = 0.0;
     } else {
-      const TMatrixD &m = GetDecompMatrix();
+      const TMatrixDBase &m = GetDecompMatrix();
       Assert(m.IsValid());
-      const TVectorD diagv = TMatrixDDiag_const(m);
+      TVectorD diagv(m.GetNrows());
+      for (Int_t i = 0; i < diagv.GetNrows(); i++)
+        diagv(i) = m(i,i);
       DiagProd(diagv,fTol,fDet1,fDet2);
     }
     fStatus |= kDetermined;

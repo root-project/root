@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.4 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.5 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -40,10 +40,11 @@ protected :
 
   Int_t Hager(Double_t& est,Int_t iter=5);
 
-  virtual const TMatrixD &GetDecompMatrix() const = 0;
+  virtual const TMatrixDBase &GetDecompMatrix() const = 0;
 
 public :
-  enum EMatrixDecompStat { kInit=0,kMatrixSet=1,kDecomposed=2,kDetermined=4,kCondition=8,kSingular=16 };
+  enum EMatrixDecompStat { kInit=0,kPatternSet=1,kValuesSet=2,kMatrixSet=4,
+                           kDecomposed=8,kDetermined=16,kCondition=32,kSingular=64 };
   enum {kWorkMax = 100}; // size of work array's in several routines
 
   TDecompBase();
@@ -63,7 +64,7 @@ public :
 
   virtual Double_t Condition  ();
   virtual void     Det        (Double_t &d1,Double_t &d2);
-  virtual Int_t    Decompose  ()                             = 0;
+  virtual Bool_t   Decompose  ()                             = 0;
   virtual Bool_t   Solve      (      TVectorD &b)            = 0;
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) = 0;
   virtual Bool_t   Solve      (      TMatrixDColumn& b)      = 0;
@@ -71,8 +72,9 @@ public :
   virtual TVectorD TransSolve (const TVectorD &b,Bool_t &ok) = 0;
   virtual Bool_t   TransSolve (      TMatrixDColumn& b)      = 0;
 
-  virtual Bool_t   MultiSolve (TMatrixD& B);
-  virtual void     Invert     (TMatrixD& inv);
+  virtual Bool_t   MultiSolve (TMatrixD    &B);
+  virtual Bool_t   MultiSolve (TMatrixDSym &B);
+  virtual void     Invert     (TMatrixD    &inv);
   virtual TMatrixD Invert     ();
 
   static  void     DiagProd   (const TVectorD &diag,Double_t tol,Double_t &d1,Double_t &d2);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.6 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.8 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -92,13 +92,13 @@ TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 }
 
 //______________________________________________________________________________
-Int_t TDecompLU::Decompose()
+Bool_t TDecompLU::Decompose()
 {
   if ( !( fStatus & kMatrixSet ) )
     return kFALSE;
 
   Int_t nrZeros = 0;
-  Int_t ok;
+  Bool_t ok;
   if (fImplicitPivot)
     ok = DecomposeLUCrout(fLU,fIndex,fSign,fTol,nrZeros);
   else
@@ -530,8 +530,8 @@ TDecompLU &TDecompLU::operator=(const TDecompLU &source)
 }
 
 //______________________________________________________________________________
-Int_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
-                                  Double_t tol,Int_t &nrZeros)
+Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
+                                   Double_t tol,Int_t &nrZeros)
 {
 // Crout/Doolittle algorithm of LU decomposing a square matrix, with implicit partial
 // pivoting.  The decomposition is stored in fLU: U is explicit in the upper triag
@@ -635,8 +635,8 @@ Int_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
 }
 
 //______________________________________________________________________________
-Int_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
-                                  Double_t tol,Int_t &nrZeros)
+Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
+                                   Double_t tol,Int_t &nrZeros)
 {
 // LU decomposition using Gaussain Elimination with partial pivoting (See Golub &
 // Van Loan, Matrix Computations, Algorithm 3.4.1) of a square matrix .
@@ -706,7 +706,7 @@ Int_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
 }
 
 //______________________________________________________________________________
-Int_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
+Bool_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
 {
   // Calculate matrix inversion through in place forward/backward substitution
 

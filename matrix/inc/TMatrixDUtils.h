@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.21 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.22 2004/03/22 16:13:24 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 //   TMatrixDColumn_const    TMatrixDColumn                             //
 //   TMatrixDDiag_const      TMatrixDDiag                               //
 //   TMatrixDFlat_const      TMatrixDFlat                               //
+//   TMatrixDSparseRow_const TMatrixDSparseRow                          //
 //                                                                      //
 //   TElementActionD                                                    //
 //   TElementPosActionD                                                 //
@@ -52,8 +53,10 @@ class TMatrixDSym;
 
 class TElementActionD {
 
+friend class TMatrixDBase;
 friend class TMatrixD;
 friend class TMatrixDSym;
+friend class TMatrixDSparse;
 friend class TVectorD;
 
 protected:
@@ -77,8 +80,10 @@ private:
 
 class TElementPosActionD {
 
+friend class TMatrixDBase;
 friend class TMatrixD;
 friend class TMatrixDSym;
+friend class TMatrixDSparse;
 friend class TVectorD;
 
 protected:
@@ -108,7 +113,8 @@ protected:
 
 public:
   TMatrixDRow_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
-  TMatrixDRow_const(const TMatrixDBase &matrix,Int_t row);
+  TMatrixDRow_const(const TMatrixD    &matrix,Int_t row);
+  TMatrixDRow_const(const TMatrixDSym &matrix,Int_t row);
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
@@ -125,7 +131,8 @@ class TMatrixDRow : public TMatrixDRow_const {
 
 public: 
   TMatrixDRow() {}
-  TMatrixDRow(TMatrixDBase &matrix,Int_t row);
+  TMatrixDRow(TMatrixD    &matrix,Int_t row);
+  TMatrixDRow(TMatrixDSym &matrix,Int_t row);
   TMatrixDRow(const TMatrixDRow &mr);
    
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
@@ -167,7 +174,8 @@ protected:
 
 public:
   TMatrixDColumn_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
-  TMatrixDColumn_const(const TMatrixDBase &matrix,Int_t col);
+  TMatrixDColumn_const(const TMatrixD    &matrix,Int_t col);
+  TMatrixDColumn_const(const TMatrixDSym &matrix,Int_t col);
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
@@ -184,7 +192,8 @@ class TMatrixDColumn : public TMatrixDColumn_const {
 
 public:
   TMatrixDColumn() {}
-  TMatrixDColumn(TMatrixDBase &matrix,Int_t col);
+  TMatrixDColumn(TMatrixD    &matrix,Int_t col);
+  TMatrixDColumn(TMatrixDSym &matrix,Int_t col);
   TMatrixDColumn(const TMatrixDColumn &mc);
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
@@ -226,7 +235,8 @@ protected:
 
 public:
   TMatrixDDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
-  TMatrixDDiag_const(const TMatrixDBase &matrix);
+  TMatrixDDiag_const(const TMatrixD    &matrix);
+  TMatrixDDiag_const(const TMatrixDSym &matrix);
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
@@ -244,7 +254,8 @@ class TMatrixDDiag : public TMatrixDDiag_const {
 
 public:
   TMatrixDDiag() {}
-  TMatrixDDiag(TMatrixDBase &matrix);
+  TMatrixDDiag(TMatrixD    &matrix);
+  TMatrixDDiag(TMatrixDSym &matrix);
   TMatrixDDiag(const TMatrixDDiag &md);
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
@@ -284,7 +295,8 @@ protected:
 
 public:
   TMatrixDFlat_const() { fMatrix = 0; fPtr = 0; }
-  TMatrixDFlat_const(const TMatrixDBase &matrix);
+  TMatrixDFlat_const(const TMatrixD    &matrix);
+  TMatrixDFlat_const(const TMatrixDSym &matrix);
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
@@ -298,7 +310,8 @@ class TMatrixDFlat : public TMatrixDFlat_const {
 
 public:
   TMatrixDFlat() {}
-  TMatrixDFlat(TMatrixDBase &matrix);
+  TMatrixDFlat(TMatrixD    &matrix);
+  TMatrixDFlat(TMatrixDSym &matrix);
   TMatrixDFlat(const TMatrixDFlat &mf);
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
@@ -322,4 +335,65 @@ public:
   ClassDef(TMatrixDFlat,0)  // Flat representation of a matrix
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TMatrixDSparseRow_const                                              //
+//                                                                      //
+// Class represents a row of a TMatrixDSparse                           //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TMatrixDSparse;
+
+class TMatrixDSparseRow_const {
+
+protected:
+  const TMatrixDBase *fMatrix;  // the matrix I am a row of
+        Int_t         fNindex;  // index range
+  const Int_t        *fColPtr;  // column index pointer
+  const Double_t     *fDataPtr; // data pointer
+
+public:
+  TMatrixDSparseRow_const() { fMatrix = 0; fNindex = 0; fColPtr = 0; fDataPtr = 0; }
+  TMatrixDSparseRow_const(const TMatrixDSparse &matrix,Int_t row);
+
+  inline const TMatrixDBase *GetMatrix () const { return fMatrix; }
+  inline const Double_t     *GetDataPtr() const { return fDataPtr; }
+  inline const Int_t        *GetColPtr () const { return fColPtr; }
+  inline       Int_t         GetNindex () const { return fNindex; }
+
+  inline const Double_t operator ()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
+                                                     Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                                     const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+                                                     if (index < 0) return 0.0;
+                                                     else           return fDataPtr[index]; }
+  inline const Double_t operator [](Int_t i) const { return (*(const TMatrixDSparseRow_const *)this)(i); }
+
+  ClassDef(TMatrixDSparseRow_const,0)  // One row of a sparse matrix (double precision)
+};
+
+class TMatrixDSparseRow : public TMatrixDSparseRow_const {
+
+public:
+  TMatrixDSparseRow() {}
+  TMatrixDSparseRow(TMatrixDSparse &matrix,Int_t row);
+
+  inline Double_t *GetDataPtr() const { return const_cast<Double_t *>(fDataPtr); }
+
+  inline Double_t &operator()(Int_t i) { const Int_t acoln = i-fMatrix->GetColLwb();
+                                         Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                         const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+                                         if (index >= 0)
+                                           return (const_cast<Double_t*>(fDataPtr))[index];
+                                         else {
+                                           Error("TMatrixDSparseRow::operator()(Int_t","(%d) col not available",i);
+                                           return (const_cast<TMatrixDBase*>(fMatrix))->GetJunk();
+                                         }
+                                       }
+  inline Double_t &operator[](Int_t i) { return (Double_t&)((*(TMatrixDSparseRow *)this)(i)); }
+
+  ClassDef(TMatrixDSparseRow,0)  // One row of a matrix (double precision)
+};
+
+Double_t Drand(Double_t &ix);
 #endif

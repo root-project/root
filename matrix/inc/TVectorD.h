@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.29 2004/03/22 10:50:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.30 2004/04/15 09:21:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -22,6 +22,12 @@
 
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
+#endif
+#ifndef ROOT_TMatrixDSym
+#include "TMatrixDSym.h"
+#endif
+#ifndef ROOT_TMatrixDSparse
+#include "TMatrixDSparse.h"
 #endif
 
 class TVectorD : public TObject {
@@ -71,8 +77,9 @@ public:
   inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Double_t *elements) { Assert(IsValid());
                                                           memcpy(fElements,elements,fNrows*sizeof(Double_t)); }
+  inline void     Shift      (Int_t row_shift)   { fRowLwb += row_shift; }
          void     ResizeTo   (Int_t lwb,Int_t upb);
-  inline void     ResizeTo   (Int_t n)       { ResizeTo(0,n-1); }
+  inline void     ResizeTo   (Int_t n)           { ResizeTo(0,n-1); }
   inline void     ResizeTo   (const TVectorD &v) { ResizeTo(v.GetLwb(),v.GetUpb()); }
 
          void     Use        (Int_t n,Double_t *data);
@@ -105,6 +112,7 @@ public:
   TVectorD &operator= (const TMatrixDRow_const       &mr);
   TVectorD &operator= (const TMatrixDColumn_const    &mc);
   TVectorD &operator= (const TMatrixDDiag_const      &md);
+  TVectorD &operator= (const TMatrixDSparseRow_const &md);
   TVectorD &operator= (Double_t val);
   TVectorD &operator+=(Double_t val);
   TVectorD &operator-=(Double_t val);
@@ -114,6 +122,7 @@ public:
   TVectorD &operator-=(const TVectorD       &source);
   TVectorD &operator*=(const TMatrixD       &a);
   TVectorD &operator*=(const TMatrixDSym    &a);
+  TVectorD &operator*=(const TMatrixDSparse &a);
 
   Bool_t operator==(Double_t val) const;
   Bool_t operator!=(Double_t val) const;
@@ -125,38 +134,14 @@ public:
   Bool_t SomePositive         (const TVectorD &select);
   void   AddSomeConstant      (Double_t val,const TVectorD &select);
 
+  void   Randomize(Double_t alpha,Double_t beta,Double_t &seed);
+
   TVectorD &Apply(const TElementActionD    &action);
   TVectorD &Apply(const TElementPosActionD &action);
 
   void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements); fNrows = 0; }
   void Draw (Option_t *option=""); // *MENU*
   void Print(Option_t *option="") const;  // *MENU*
-
-  friend Bool_t    operator== (const TVectorD       &v1,     const TVectorD &v2);
-  friend Double_t  operator*  (const TVectorD       &v1,     const TVectorD &v2);
-  friend TVectorD  operator+  (const TVectorD       &source1,const TVectorD &source2);
-  friend TVectorD  operator-  (const TVectorD       &source1,const TVectorD &source2);
-  friend TVectorD  operator*  (const TMatrixD       &a,      const TVectorD &source);
-  friend TVectorD  operator*  (const TMatrixDSym    &a,      const TVectorD &source);
-  friend TVectorD  operator*  (      Double_t        val,    const TVectorD &source);
-
-  friend TVectorD &Add        (TVectorD &target,Double_t scalar,const TVectorD &source);
-  friend TVectorD &AddElemMult(TVectorD &target,Double_t scalar,
-                               const TVectorD &source1,const TVectorD &source2);
-  friend TVectorD &AddElemMult(TVectorD &target,Double_t scalar,
-                               const TVectorD &source1,const TVectorD &source2,const TVectorD &select);
-  friend TVectorD &AddElemDiv (TVectorD &target,Double_t scalar,
-                               const TVectorD &source1,const TVectorD &source2);
-  friend TVectorD &AddElemDiv (TVectorD &target,Double_t scalar,
-                               const TVectorD &source1,const TVectorD &source2,const TVectorD &select);
-  friend TVectorD &ElementMult(TVectorD &target,const TVectorD &source);
-  friend TVectorD &ElementMult(TVectorD &target,const TVectorD &source,const TVectorD &select);
-  friend TVectorD &ElementDiv (TVectorD &target,const TVectorD &source);
-  friend TVectorD &ElementDiv (TVectorD &target,const TVectorD &source,const TVectorD &select);
-
-  friend Bool_t AreCompatible(const TVectorD &v1,const TVectorD &v2,Int_t verbose);
-  friend Bool_t AreCompatible(const TVectorD &v1,const TVectorF &v2,Int_t verbose);
-  friend void   Compare      (const TVectorD &v1,const TVectorD &v2);
 
   ClassDef(TVectorD,2)  // Vector class with double precision
 };
@@ -178,6 +163,7 @@ TVectorD  operator-     (const TVectorD       &source1,const TVectorD &source2);
 Double_t  operator*     (const TVectorD       &source1,const TVectorD &source2);
 TVectorD  operator*     (const TMatrixD       &a,      const TVectorD &source);
 TVectorD  operator*     (const TMatrixDSym    &a,      const TVectorD &source);
+TVectorD  operator*     (const TMatrixDSparse &a,      const TVectorD &source);
 TVectorD  operator*     (      Double_t        val,    const TVectorD &source);
 TVectorD  &Add          (      TVectorD       &target,       Double_t  scalar,const TVectorD &source);
 TVectorD  &AddElemMult  (      TVectorD       &target,       Double_t  scalar,const TVectorD &source1,

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.4 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.5 2004/04/15 09:21:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -52,6 +52,7 @@ class TMatrixFSym;
 
 class TElementActionF {
 
+friend class TMatrixFBase;
 friend class TMatrixF;
 friend class TMatrixFSym;
 friend class TVectorF;
@@ -77,6 +78,7 @@ private:
 
 class TElementPosActionF {
 
+friend class TMatrixFBase;
 friend class TMatrixF;
 friend class TMatrixFSym;
 friend class TVectorF;
@@ -108,7 +110,8 @@ protected:
 
 public:
   TMatrixFRow_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
-  TMatrixFRow_const(const TMatrixFBase &matrix,Int_t row);
+  TMatrixFRow_const(const TMatrixF    &matrix,Int_t row);
+  TMatrixFRow_const(const TMatrixFSym &matrix,Int_t row);
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
@@ -125,14 +128,15 @@ class TMatrixFRow : public TMatrixFRow_const {
 
 public: 
   TMatrixFRow() {}
-  TMatrixFRow(TMatrixFBase &matrix,Int_t row);
+  TMatrixFRow(TMatrixF    &matrix,Int_t row);
+  TMatrixFRow(TMatrixFSym &matrix,Int_t row);
   TMatrixFRow(const TMatrixFRow &mr);
    
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
 
   inline Float_t  &operator()(Int_t i) { const Int_t acoln = i-fMatrix->GetColLwb();
                                          Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                         return (const_cast<Float_t  *>(fPtr))[acoln]; }
+                                         return (const_cast<Float_t *>(fPtr))[acoln]; }
   inline Float_t  &operator[](Int_t i) { return (Float_t &)((*(TMatrixFRow *)this)(i)); }
 
   void operator= (Float_t  val);
@@ -167,7 +171,8 @@ protected:
 
 public:
   TMatrixFColumn_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
-  TMatrixFColumn_const(const TMatrixFBase &matrix,Int_t col);
+  TMatrixFColumn_const(const TMatrixF    &matrix,Int_t col);
+  TMatrixFColumn_const(const TMatrixFSym &matrix,Int_t col);
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
@@ -175,7 +180,7 @@ public:
   inline const Float_t      &operator ()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb(); 
                                                           Assert(arown < fMatrix->GetNrows() && arown >= 0);
                                                           return fPtr[arown*fInc]; }
-  inline const Float_t  &operator [](Int_t i) const { return ((*(const TMatrixFColumn_const *)this)(i)); }
+  inline const Float_t      &operator [](Int_t i) const { return ((*(const TMatrixFColumn_const *)this)(i)); }
 
   ClassDef(TMatrixFColumn_const,0)  // One column of a matrix (single precision)
 };
@@ -184,7 +189,8 @@ class TMatrixFColumn : public TMatrixFColumn_const {
 
 public:
   TMatrixFColumn() {}
-  TMatrixFColumn(TMatrixFBase &matrix,Int_t col);
+  TMatrixFColumn(TMatrixF    &matrix,Int_t col);
+  TMatrixFColumn(TMatrixFSym &matrix,Int_t col);
   TMatrixFColumn(const TMatrixFColumn &mc);
 
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
@@ -226,7 +232,8 @@ protected:
 
 public:
   TMatrixFDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
-  TMatrixFDiag_const(const TMatrixFBase &matrix);
+  TMatrixFDiag_const(const TMatrixF    &matrix);
+  TMatrixFDiag_const(const TMatrixFSym &matrix);
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
@@ -244,7 +251,8 @@ class TMatrixFDiag : public TMatrixFDiag_const {
 
 public:
   TMatrixFDiag() {}
-  TMatrixFDiag(TMatrixFBase &matrix);
+  TMatrixFDiag(TMatrixF    &matrix);
+  TMatrixFDiag(TMatrixFSym &matrix);
   TMatrixFDiag(const TMatrixFDiag &md);
 
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
@@ -284,7 +292,8 @@ protected:
 
 public:
   TMatrixFFlat_const() { fMatrix = 0; fPtr = 0; }
-  TMatrixFFlat_const(const TMatrixFBase &matrix);
+  TMatrixFFlat_const(const TMatrixF    &matrix);
+  TMatrixFFlat_const(const TMatrixFSym &matrix);
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
@@ -298,7 +307,8 @@ class TMatrixFFlat : public TMatrixFFlat_const {
 
 public:
   TMatrixFFlat() {}
-  TMatrixFFlat(TMatrixFBase &matrix);
+  TMatrixFFlat(TMatrixF    &matrix);
+  TMatrixFFlat(TMatrixFSym &matrix);
   TMatrixFFlat(const TMatrixFFlat &mf);
 
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
@@ -325,7 +335,8 @@ public:
 class TMatrixRow : public TMatrixFRow {
 public :
   TMatrixRow() {}                                                      
-  TMatrixRow(TMatrixFBase &matrix,Int_t row) : TMatrixFRow(matrix,row) {}
+  TMatrixRow(TMatrixF    &matrix,Int_t row) : TMatrixFRow(matrix,row) {}
+  TMatrixRow(TMatrixFSym &matrix,Int_t row) : TMatrixFRow(matrix,row) {}
   TMatrixRow(const TMatrixFRow &mr) : TMatrixFRow(mr) {}
   virtual ~TMatrixRow() {}
   ClassDef(TMatrixRow,0)  // One row of a matrix (single precision)
@@ -334,7 +345,8 @@ public :
 class TMatrixColumn : public TMatrixFColumn {
 public :
   TMatrixColumn() {}                                                      
-  TMatrixColumn(TMatrixFBase &matrix,Int_t column) : TMatrixFColumn(matrix,column) {}
+  TMatrixColumn(TMatrixF    &matrix,Int_t column) : TMatrixFColumn(matrix,column) {}
+  TMatrixColumn(TMatrixFSym &matrix,Int_t column) : TMatrixFColumn(matrix,column) {}
   TMatrixColumn(const TMatrixFColumn &mc) : TMatrixFColumn(mc) {}
 
   virtual ~TMatrixColumn() {}
@@ -344,7 +356,8 @@ public :
 class TMatrixDiag : public TMatrixFDiag {
 public :
   TMatrixDiag() {}
-  TMatrixDiag(TMatrixFBase &matrix) : TMatrixFDiag(matrix) {}
+  TMatrixDiag(TMatrixF    &matrix) : TMatrixFDiag(matrix) {}
+  TMatrixDiag(TMatrixFSym &matrix) : TMatrixFDiag(matrix) {}
   TMatrixDiag(const TMatrixFDiag &md) : TMatrixFDiag(md) {}
   virtual ~TMatrixDiag() {}
   ClassDef(TMatrixDiag,0)  // Diagonal of a matrix (single precision)
@@ -353,10 +366,12 @@ public :
 class TMatrixFlat : public TMatrixFFlat {
 public :
   TMatrixFlat() {}
-  TMatrixFlat(TMatrixFBase &matrix) : TMatrixFFlat(matrix) {}
+  TMatrixFlat(TMatrixF    &matrix) : TMatrixFFlat(matrix) {}
+  TMatrixFlat(TMatrixFSym &matrix) : TMatrixFFlat(matrix) {}
   TMatrixFlat(const TMatrixFFlat &mf) : TMatrixFFlat(mf) {}
   virtual ~TMatrixFlat() {}
   ClassDef(TMatrixFlat,0)  // Flat representation of a matrix
 };
 
+Float_t Frand(Double_t &ix);
 #endif

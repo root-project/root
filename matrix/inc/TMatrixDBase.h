@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.7 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.8 2004/03/22 10:50:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <limits.h>
 #ifndef ROOT_TROOT
 #include "TROOT.h"
 #endif
@@ -44,6 +45,8 @@
 #endif
 
 class TMatrixFBase;
+class TElementActionD;
+class TElementPosActionD;
 class TMatrixDBase : public TObject {
 
 private:
@@ -55,6 +58,7 @@ protected:
   Int_t     fRowLwb;              // lower bound of the row index
   Int_t     fColLwb;              // lower bound of the col index
   Int_t     fNelems;              // number of elements in matrix
+  Int_t     fNrowIndex;           // length of row index array (= fNrows+1) wich is only used for sparse matrices
 
   Double_t  fTol;                 // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
                                   //  fTol is used in matrix decomposition (like in inversion)
@@ -70,13 +74,18 @@ protected:
   Int_t     Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
                      Int_t newSize,Int_t oldSize);
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0) = 0;
+  static  void DoubleLexSort (Int_t n,Int_t *first,Int_t *second,Double_t *data);
+  static  void IndexedLexSort(Int_t n,Int_t *first,Int_t swapFirst,
+                              Int_t *second,Int_t swapSecond,Int_t *index);
+
+  virtual void Allocate      (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,
+		              Int_t col_lwb = 0,Int_t init = 0,Int_t nr_nonzero = -1) = 0;
 
 public:
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
-  enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult };
+  enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-  TMatrixDBase() { fIsOwner = kTRUE; fNelems = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
+  TMatrixDBase() { fIsOwner = kTRUE; fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
 
   virtual ~TMatrixDBase() {}
 
@@ -91,6 +100,11 @@ public:
 
   virtual        const Double_t *GetMatrixArray  () const = 0;
   virtual              Double_t *GetMatrixArray  ()       = 0;
+  virtual              Double_t &GetJunk         ()       { AbstractMethod("GetJunk()"); return fTol; }
+  virtual        const Int_t    *GetRowIndexArray() const = 0;
+  virtual              Int_t    *GetRowIndexArray()       = 0;
+  virtual        const Int_t    *GetColIndexArray() const = 0;
+  virtual              Int_t    *GetColIndexArray()       = 0;
 
           inline       Double_t  SetTol        (Double_t tol);
 
@@ -100,18 +114,27 @@ public:
   virtual Bool_t IsSymmetric() const;
 
   // Probably move this functionality to TMatrixDFlat
-  virtual void GetMatrix2Array(Double_t *data, Option_t *option="") const;
-  virtual void SetMatrixArray(const Double_t *data, Option_t *option="");
+  virtual void GetMatrix2Array(Double_t *data,Option_t *option="") const;
+  virtual void SetMatrixArray(const Double_t *data,Option_t *option="");
 
   virtual void Shift   (Int_t row_shift,Int_t col_shift);
-  virtual void ResizeTo(Int_t nrows,Int_t ncols);
-  virtual void ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
+  virtual void ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
+  virtual void ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
   inline  void ResizeTo(const TMatrixDBase &m) {
     ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
   }
 
-  virtual Double_t Determinant() const = 0;
-  virtual void     Determinant(Double_t &d1,Double_t &d2) const =0;
+  virtual Double_t Determinant() const                          { AbstractMethod("Determinant()"); return 0.; }
+  virtual void     Determinant(Double_t &d1,Double_t &d2) const { AbstractMethod("Determinant()"); d1 = 0.; d2 = 0.; }
+
+  virtual TMatrixDBase &Zero       ();
+  virtual TMatrixDBase &Abs        ();
+  virtual TMatrixDBase &Sqr        ();
+  virtual TMatrixDBase &Sqrt       ();
+  virtual TMatrixDBase &UnitMatrix ();
+
+  virtual TMatrixDBase &NormByDiag (const TVectorD &v,Option_t *option="D");
+
   virtual Double_t RowNorm    () const;
   virtual Double_t ColNorm    () const;
   virtual Double_t E2Norm     () const;
@@ -126,7 +149,7 @@ public:
   void Draw (Option_t *option="");       // *MENU*
   void Print(Option_t *option="") const; // *MENU*
 
-  virtual const Double_t &operator()(Int_t rown,Int_t coln) const = 0;
+  virtual const Double_t  operator()(Int_t rown,Int_t coln) const = 0;
   virtual       Double_t &operator()(Int_t rown,Int_t coln)       = 0;
 
   Bool_t operator==(Double_t val) const;
@@ -136,7 +159,12 @@ public:
   Bool_t operator> (Double_t val) const;
   Bool_t operator>=(Double_t val) const;
 
-  ClassDef(TMatrixDBase,2) // Matrix base class (double precision)
+  virtual TMatrixDBase &Apply(const TElementActionD    &action);
+  virtual TMatrixDBase &Apply(const TElementPosActionD &action);
+
+  virtual void Randomize(Double_t alpha,Double_t beta,Double_t &seed);
+
+  ClassDef(TMatrixDBase,3) // Matrix base class (double precision)
 };
 
 Double_t TMatrixDBase::SetTol(Double_t newTol)
@@ -147,6 +175,7 @@ Double_t TMatrixDBase::SetTol(Double_t newTol)
   return oldTol;
 }
 
+Bool_t   operator==   (const TMatrixDBase &m1,const TMatrixDBase &m2);
 Double_t E2Norm       (const TMatrixDBase &m1,const TMatrixDBase &m2);
 Bool_t   AreCompatible(const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose=0);
 Bool_t   AreCompatible(const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose=0);
@@ -168,6 +197,9 @@ Bool_t VerifyMatrixIdentity(const TMatrixDBase &m1,const TMatrixDBase &m2,
 #endif
 #ifndef ROOT_TMatrixDSym
 #include "TMatrixDSym.h"
+#endif
+#ifndef ROOT_TMatrixDSparse
+#include "TMatrixDSparse.h"
 #endif
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.15 2004/04/15 09:21:51 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.16 2004/04/20 06:31:52 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 // Unless otherwise specified, vector indices always start with 0,      //
 // spanning up to the specified limit-1.                                //
 //                                                                      //
-// For (n) vectors where n < kSizeMax (5 currently) storage space is    //
+// For (n) vectors where n <= kSizeMax (5 currently) storage space is   //
 // available on the stack, thus avoiding expensive allocation/          //
 // deallocation of heap space . However, this introduces of course      //
 // kSizeMax overhead for each vector object . If this is an issue       //
@@ -39,7 +39,7 @@
 ClassImp(TVectorF)
 
 //______________________________________________________________________________
-void TVectorF::Delete_m(Int_t size,Float_t*& m)
+void TVectorF::Delete_m(Int_t size,Float_t *&m)
 {
   if (m) {
     if (size > kSizeMax)
@@ -559,7 +559,7 @@ Float_t TVectorF::Max() const
 //______________________________________________________________________________
 TVectorF &TVectorF::operator=(const TVectorF &source)
 {
-  // Notice that this assinment does NOT change the ownership :
+  // Notice that this assignment does NOT change the ownership :
   // if the storage space was adopted, source is copied to
   // this space .
 
@@ -856,9 +856,9 @@ TVectorF &TVectorF::operator*=(const TMatrixFSym &a)
     return *this;
   }
 
-  const Int_t nrows_old = fNrows;
-  Float_t * const elements_old = new Float_t[nrows_old];
-  memcpy(elements_old,fElements,nrows_old*sizeof(Float_t));
+  Float_t * const elements_old = new Float_t[fNrows];
+  memcpy(elements_old,fElements,fNrows*sizeof(Float_t));
+  memset(fElements,0,fNrows*sizeof(Float_t));
 
   const Float_t *mp1 = a.GetMatrixArray(); // Matrix row ptr
         Float_t *tp1 = fElements;       // Target vector ptr
@@ -866,24 +866,24 @@ TVectorF &TVectorF::operator*=(const TMatrixFSym &a)
   cblas_ssymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp1,
               fNrows,elements_old,1,0.0,tp1,1);
 #else
-  const Float_t *mp2;                                                   
-  const Float_t *sp1 = elements_old;                                    
+  const Float_t *mp2;
+  const Float_t *sp1 = elements_old;
   const Float_t *sp2 = sp1;
-        Float_t *tp2 = tp1;       // Target vector ptr                  
+        Float_t *tp2 = tp1;       // Target vector ptr
 
   for (Int_t i = 0; i < fNrows; i++) {
-    Float_t vec_i = *sp1++;                                             
+    Float_t vec_i = *sp1++;
     *tp1 += *mp1 * vec_i;
     Float_t tmp = 0.0;
     mp2 = mp1+1;
     sp2 = sp1;
     tp2 = tp1+1;
-    for (Int_t j = i+1; j < fNrows; j++) {                              
-      const Float_t a_ij = *mp2++; 
+    for (Int_t j = i+1; j < fNrows; j++) {
+      const Float_t a_ij = *mp2++;
       *tp2++ += a_ij * vec_i;
-      tmp += a_ij * *sp2++;                                             
+      tmp += a_ij * *sp2++;
     }
-    *tp1++ += tmp;                                                      
+    *tp1++ += tmp;
     mp1 += fNrows+1;
   }
 
@@ -1044,6 +1044,22 @@ void TVectorF::AddSomeConstant(Float_t val,const TVectorF &select)
 }
 
 //______________________________________________________________________________
+void TVectorF::Randomize(Float_t alpha,Float_t beta,Double_t &seed)
+{
+  // randomize vector elements value
+  
+  Assert(IsValid());
+  
+  const Float_t scale = beta-alpha;
+  const Float_t shift = alpha/scale;
+
+        Float_t *       ep = GetMatrixArray();
+  const Float_t * const fp = ep+fNrows;
+  while (ep < fp)
+    *ep++ = scale*(Frand(seed)+shift);
+}
+
+//______________________________________________________________________________
 TVectorF &TVectorF::Apply(const TElementActionF &action)
 {
   // Apply action to each element of the vector.
@@ -1092,13 +1108,13 @@ void TVectorF::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TVectorF::Print(Option_t *) const
+void TVectorF::Print(Option_t *flag) const
 {
   // Print the vector as a list of elements.
 
   Assert(IsValid());
 
-  printf("\nVector %d is as follows",fNrows);
+  printf("\nVector (%d) %s is as follows",fNrows,flag);
 
   printf("\n\n     |   %6d  |", 1);
   printf("\n%s\n", "------------------");
@@ -1642,17 +1658,17 @@ void TVector::Streamer(TBuffer &R__b)
     }
     //====process old version 2
     if (R__v > 1) {
-       Clear();
-       TObject::Streamer(R__b);
-       R__b >> fNrows;
-       R__b >> fRowLwb;
-       Char_t isArray;                           
-       R__b >> isArray;                             
-       if (fNrows) {
-          fElements = new Float_t[fNrows];
-          R__b.ReadFastArray(fElements,fNrows);
-       }
-       R__b.CheckByteCount(R__s, R__c, TVector::IsA());
+      Clear();
+      TObject::Streamer(R__b);
+      R__b >> fNrows;
+      R__b >> fRowLwb;
+      Char_t isArray;
+      R__b >> isArray;
+      if (fNrows) {
+        fElements = new Float_t[fNrows];
+        R__b.ReadFastArray(fElements,fNrows);
+      }
+      R__b.CheckByteCount(R__s, R__c, TVector::IsA());
       return;
     }
     //====process old version 1

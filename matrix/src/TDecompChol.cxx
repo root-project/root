@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.5 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.7 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -89,7 +89,7 @@ TDecompChol::TDecompChol(const TDecompChol &another) : TDecompBase(another)
 }
 
 //______________________________________________________________________________
-Int_t TDecompChol::Decompose()
+Bool_t TDecompChol::Decompose()
 {
   if ( !( fStatus & kMatrixSet ) )
     return kFALSE;

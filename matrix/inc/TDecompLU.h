@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.6 2004/02/18 14:36:43 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.8 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -34,7 +34,7 @@ protected :
   TMatrixD  fLU;            // decomposed matrix so that a = l u where
                             // l is stored lower left and u upper right side
 
-  virtual const TMatrixD &GetDecompMatrix() const { return fLU; }
+  virtual const TMatrixDBase &GetDecompMatrix() const { return fLU; }
 
 public :
 
@@ -53,7 +53,7 @@ public :
 
   virtual       void      SetMatrix (const TMatrixD &a);
 
-  virtual Int_t    Decompose  ();
+  virtual Bool_t   Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   Solve      (      TMatrixDColumn &b);
@@ -64,11 +64,11 @@ public :
   virtual Double_t Condition ();
   virtual void     Det       (Double_t &d1,Double_t &d2);
 
-  static  Int_t  DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
+  static  Bool_t DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
                                   Double_t tol,Int_t &nrZeros);
-  static  Int_t  DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
+  static  Bool_t DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
                                   Double_t tol,Int_t &nrZeros);
-  static  Int_t  InvertLU        (TMatrixD &lu,Int_t *index,Double_t tol);
+  static  Bool_t InvertLU        (TMatrixD &lu,Int_t *index,Double_t tol);
 
   TDecompLU &operator= (const TDecompLU &source);
 

@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.14 2004/03/23 15:16:58 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.15 2004/04/15 09:21:50 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -61,18 +61,21 @@
 #pragma link C++ function Compare      (const TVectorF &,const TVectorF &);
 
 #pragma link C++ function AreCompatible(const TMatrixFBase &,const TMatrixFBase &,Int_t);
+#pragma link C++ function AreCompatible(const TMatrixFBase &,const TMatrixDBase &,Int_t);
 #pragma link C++ function Compare      (const TMatrixFBase &,const TMatrixFBase &);
 #pragma link C++ function E2Norm       (const TMatrixFBase &,const TMatrixFBase &);
-#pragma link C++ function operator==   (const TMatrixF     &,const TMatrixF     &);
-#pragma link C++ function operator==   (const TMatrixFSym  &,const TMatrixF     &);
-#pragma link C++ function operator==   (const TMatrixF     &,const TMatrixFSym  &);
+#pragma link C++ function operator==   (const TMatrixFBase &,const TMatrixFBase &);
 
 #pragma link C++ function operator+    (const TMatrixF     &,const TMatrixF     &);
 #pragma link C++ function operator+    (const TMatrixF     &,const TMatrixFSym  &);
 #pragma link C++ function operator+    (const TMatrixFSym  &,const TMatrixF     &);
+#pragma link C++ function operator+    (const TMatrixF     &,      Float_t       );
+#pragma link C++ function operator+    (      Float_t       ,const TMatrixF     &);
 #pragma link C++ function operator-    (const TMatrixF     &,const TMatrixF     &);
 #pragma link C++ function operator-    (const TMatrixF     &,const TMatrixFSym  &);
 #pragma link C++ function operator-    (const TMatrixFSym  &,const TMatrixF     &);
+#pragma link C++ function operator-    (const TMatrixF     &,      Float_t       );
+#pragma link C++ function operator-    (      Float_t       ,const TMatrixF     &);
 #pragma link C++ function operator*    (      Float_t       ,const TMatrixF     &);
 #pragma link C++ function operator*    (const TMatrixF     &,      Float_t       );
 #pragma link C++ function operator*    (const TMatrixF      ,const TMatrixF     &);
@@ -105,6 +108,7 @@
 #pragma link C++ class TMatrixDBase-;
 #pragma link C++ class TMatrixD-;
 #pragma link C++ class TMatrixDSym-;
+#pragma link C++ class TMatrixDSparse+;
 
 #pragma link C++ class TMatrixDLazy+;
 #pragma link C++ class TMatrixDSymLazy+;
@@ -121,6 +125,9 @@
 #pragma link C++ class TMatrixDDiag_const;
 #pragma link C++ class TMatrixDFlat_const;
 
+#pragma link C++ class TMatrixDSparseRow_const;
+#pragma link C++ class TMatrixDSparseRow;
+
 #pragma link C++ class TMatrixDEigen+;
 #pragma link C++ class TMatrixDSymEigen+;
 
@@ -129,6 +136,7 @@
 #pragma link C++ class TDecompLU+;
 #pragma link C++ class TDecompQRH+;
 #pragma link C++ class TDecompSVD+;
+#pragma link C++ class TDecompSparse+;
 
 #pragma link C++ function operator==   (const TVectorD &,const TVectorD &);
 #pragma link C++ function operator+    (const TVectorD &,const TVectorD &);
@@ -152,16 +160,18 @@
 #pragma link C++ function AreCompatible(const TMatrixDBase &,const TMatrixFBase &,Int_t);
 #pragma link C++ function Compare      (const TMatrixDBase &,const TMatrixDBase &);
 #pragma link C++ function E2Norm       (const TMatrixDBase &,const TMatrixDBase &);
-#pragma link C++ function operator==   (const TMatrixD     &,const TMatrixD     &);
-#pragma link C++ function operator==   (const TMatrixDSym  &,const TMatrixD     &);
-#pragma link C++ function operator==   (const TMatrixD     &,const TMatrixDSym  &);
+#pragma link C++ function operator==   (const TMatrixDBase &,const TMatrixDBase &);
 
 #pragma link C++ function operator+    (const TMatrixD     &,const TMatrixD     &);
 #pragma link C++ function operator+    (const TMatrixD     &,const TMatrixDSym  &);
 #pragma link C++ function operator+    (const TMatrixDSym  &,const TMatrixD     &);
+#pragma link C++ function operator+    (const TMatrixD     &,      Double_t      );
+#pragma link C++ function operator+    (      Double_t      ,const TMatrixD     &);
 #pragma link C++ function operator-    (const TMatrixD     &,const TMatrixD     &);
 #pragma link C++ function operator-    (const TMatrixD     &,const TMatrixDSym  &);
 #pragma link C++ function operator-    (const TMatrixDSym  &,const TMatrixD     &);
+#pragma link C++ function operator-    (const TMatrixD     &,      Double_t      );
+#pragma link C++ function operator-    (      Double_t      ,const TMatrixD     &);
 #pragma link C++ function operator*    (      Double_t      ,const TMatrixD     &);
 #pragma link C++ function operator*    (const TMatrixD     &,      Double_t      );
 #pragma link C++ function operator*    (const TMatrixD      ,const TMatrixD     &);
@@ -194,5 +204,27 @@
 #pragma link C++ function NormalEqn (const TMatrixD &,const TVectorD &,const TVectorD &);
 #pragma link C++ function NormalEqn (const TMatrixD &,const TMatrixD &                 );
 #pragma link C++ function NormalEqn (const TMatrixD &,const TMatrixD &,const TVectorD &);
+
+#pragma link C++ function AreCompatible(const TMatrixDSparse &,const TMatrixDSparse &,Int_t);
+
+#pragma link C++ function operator+    (const TMatrixDSparse &,const TMatrixDSparse &);
+#pragma link C++ function operator+    (const TMatrixDSparse &,const TMatrixD       &);
+#pragma link C++ function operator+    (const TMatrixD       &,const TMatrixDSparse &);
+#pragma link C++ function operator+    (const TMatrixDSparse &,      Double_t        );
+#pragma link C++ function operator+    (      Double_t        ,const TMatrixDSparse &);
+#pragma link C++ function operator-    (const TMatrixDSparse &,const TMatrixDSparse &);
+#pragma link C++ function operator-    (const TMatrixDSparse &,const TMatrixD       &);
+#pragma link C++ function operator-    (const TMatrixD       &,const TMatrixDSparse &);
+#pragma link C++ function operator-    (const TMatrixDSparse &,      Double_t        );
+#pragma link C++ function operator-    (      Double_t        ,const TMatrixDSparse &);
+#pragma link C++ function operator*    (const TMatrixDSparse &,const TMatrixDSparse &);
+#pragma link C++ function operator*    (const TMatrixDSparse &,const TMatrixD       &);
+#pragma link C++ function operator*    (const TMatrixD       &,const TMatrixDSparse &);
+#pragma link C++ function operator*    (      Double_t        ,const TMatrixDSparse &);
+#pragma link C++ function operator*    (const TMatrixDSparse &,      Double_t        );
+
+#pragma link C++ function Add          (TMatrixDSparse &,      Double_t        ,const TMatrixDSparse &);
+#pragma link C++ function ElementMult  (TMatrixDSparse &,const TMatrixDSparse &);
+#pragma link C++ function ElementDiv   (TMatrixDSparse &,const TMatrixDSparse &);
 
 #endif
