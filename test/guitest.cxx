@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.5 2000/09/29 08:58:40 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.6 2000/10/09 19:16:42 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -301,7 +301,7 @@ class TestProgress : public TGTransientFrame {
 private:
    TGHorizontalFrame *fHframe1;
    TGVerticalFrame   *fVframe1;
-   TGLayoutHints     *fHint1, *fHint2, *fHint3, *fHint4;
+   TGLayoutHints     *fHint1, *fHint2, *fHint3, *fHint4, *fHint5;
    TGHProgressBar    *fHProg1, *fHProg2;
    TGVProgressBar    *fVProg1, *fVProg2;
    TGTextButton      *fGO;
@@ -1443,18 +1443,20 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
    fHframe1 = new TGHorizontalFrame(this, 0, 0, 0);
 
    fVProg1 = new TGVProgressBar(fHframe1, TGProgressBar::kProgressBarWidth, 300);
-   fVProg1->ShowPosition();
+   fVProg1->SetBarColor("purple");
    fVProg2 = new TGVProgressBar(fHframe1, TGProgressBar::kProgressBarWidth, 300);
    fVProg2->SetFillType(TGProgressBar::kBlockFill);
+   fVProg2->SetBarColor("green");
 
    fHframe1->Resize(300, 300);
 
    fVframe1 = new TGVerticalFrame(this, 0, 0, 0);
 
    fHProg1 = new TGHProgressBar(fVframe1, 300);
+   fHProg1->ShowPosition();
    fHProg2 = new TGHProgressBar(fVframe1, 300);
-   fVProg2->SetFillType(TGProgressBar::kBlockFill);
-   fVProg2->ShowPosition();
+   fHProg2->SetFillType(TGProgressBar::kBlockFill);
+   fHProg2->ShowPosition(kTRUE, kFALSE, "%.0f events");
 
    fGO = new TGTextButton(fVframe1, "Go", 10);
    fGO->Associate(this);
@@ -1464,7 +1466,8 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
    fHint1 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandY, 5, 10, 5, 5);
    fHint2 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 5, 5,  5, 10);
    fHint3 = new TGLayoutHints(kLHintsTop | kLHintsRight, 0, 50, 50, 0);
-   fHint4 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 0, 0);
+   fHint4 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandY, 0, 0, 0, 0);
+   fHint5 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 0, 0);
 
    fHframe1->AddFrame(fVProg1, fHint1);
    fHframe1->AddFrame(fVProg2, fHint1);
@@ -1474,19 +1477,11 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
    fVframe1->AddFrame(fGO,     fHint3);
 
    AddFrame(fHframe1, fHint4);
-   AddFrame(fVframe1, fHint4);
+   AddFrame(fVframe1, fHint5);
 
    SetWindowName("Progress Test");
    TGDimension size = GetDefaultSize();
    Resize(size);
-
-   SetWMSize(size.fWidth, size.fHeight);
-   SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
-   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
-                              kMWMDecorMinimize | kMWMDecorMenu,
-               kMWMFuncAll |  kMWMFuncResize    | kMWMFuncMaximize |
-                              kMWMFuncMinimize,
-               kMWMInputModeless);
 
    // position relative to the parent's window
    Window_t wdummy;
@@ -1511,8 +1506,8 @@ TestProgress::~TestProgress()
    delete fVframe1;
    delete fVProg1; delete fVProg2;
    delete fHProg1; delete fHProg2;
-   delete fGO;
-   delete fHint1; delete fHint2; delete fHint3; delete fHint4;
+   delete fHint1; delete fHint2; delete fHint3; delete fHint4; delete fHint5;
+   delete fGO; fGO = 0; // to get cleanly out of the loop in ProcessMessage
 }
 
 void TestProgress::CloseWindow()
@@ -1532,7 +1527,37 @@ Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             case kCM_BUTTON:
                switch (parm1) {
                   case 10:
-                     printf("GO\n");
+                     {
+                        fVProg1->Reset(); fVProg2->Reset();
+                        fHProg1->Reset(); fHProg2->Reset();
+                        fVProg2->SetBarColor("green");
+                        int cnt1 = 0, cnt2 = 0, cnt3 = 0, cnt4 = 0;
+                        int inc1 = 4, inc2 = 3, inc3 = 2, inc4 = 1;
+                        while (cnt1 < 100 || cnt2 < 100 || cnt3 < 100 || cnt4 <100) {
+                           if (cnt1 < 100) {
+                              cnt1 += inc1;
+                              fVProg1->Increment(inc1);
+                           }
+                           if (cnt2 < 100) {
+                              cnt2 += inc2;
+                              fVProg2->Increment(inc2);
+                              if (cnt2 > 75)
+                                 fVProg2->SetBarColor("red");
+                           }
+                           if (cnt3 < 100) {
+                              cnt3 += inc3;
+                              fHProg1->Increment(inc3);
+                           }
+                           if (cnt4 < 100) {
+                              cnt4 += inc4;
+                              fHProg2->Increment(inc4);
+                           }
+                           gSystem->Sleep(100);
+                           gSystem->ProcessEvents();
+                           // if user closed window return
+                           if (!fGO) return kTRUE;
+                        }
+                     }
                      break;
                   default:
                      break;
