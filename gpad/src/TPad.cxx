@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.103 2003/05/23 14:46:53 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.104 2003/06/17 08:40:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 #include "TAttMarkerCanvas.h"
 #include "TAttTextCanvas.h"
 #include "TPluginManager.h"
+#include "TEnv.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -3654,14 +3655,14 @@ void TPad::Print(const char *filename, Option_t *option)
 //  being atomic with printing a page.  Particularly if pages are being
 //  generated in some loop one needs to detect the special cases of first
 //  and last page and then munge the argument to Print() accordingly.
-//  
+//
 //  The "[" and "]" can be used instead of "(" and ")".  Example:
-//  
-//    c1.Print("file.ps[");   // No actual print, just open file.ps 
+//
+//    c1.Print("file.ps[");   // No actual print, just open file.ps
 //    for (int i=0; i<10; ++i) {
 //      // fill canvas for context i
 //      // ...
-//  
+//
 //      c1.Print("file.ps");  // actually print canvas to file
 //    }// end loop
 //    c1.Print("file.ps]");   // No actual print, just close.
@@ -4133,8 +4134,8 @@ void TPad::ResizePad(Option_t *option)
          cd();
          fView->ResizePad();
          padsav->cd();
-      }   
-   }   
+      }
+   }
 }
 
 
@@ -5101,8 +5102,13 @@ void TPad::x3d(Option_t *option)
    }
 
 #ifndef WIN32
+      TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));
+      guiBackend.ToLower();
+      if (guiBackend == "native")
+         guiBackend = "x11";
+
       TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TViewerX3D"))) {
+      if ((h = gROOT->GetPluginManager()->FindHandler("TViewerX3D", guiBackend))) {
          if (h->LoadPlugin() == -1)
             return;
          h->ExecPlugin(5,this,option,"X3D Viewer",800,600);

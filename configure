@@ -33,6 +33,7 @@ enable_openiv=yes
 enable_pgsql=yes
 enable_pythia=yes
 enable_pythia6=yes
+enable_qt=yes
 enable_rfio=yes
 enable_rpath=no
 enable_sapdb=yes
@@ -48,9 +49,9 @@ enable_explicitlink=no
 show_pkglist=no
 
 options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
-         enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
-         enable_sapdb enable_shadowpw enable_shared enable_soversion \
-         enable_srp enable_table enable_thread enable_venus \
+         enable_pythia enable_pythia6 enable_qt enable_rfio enable_dcache \
+         enable_rpath enable_sapdb enable_shadowpw enable_shared \
+         enable_soversion enable_srp enable_table enable_thread enable_venus \
          enable_krb5 enable_ldap enable_exceptions enable_openiv enable_alien \
          enable_asimage enable_chirp enable_explicitlink"
 
@@ -519,6 +520,8 @@ if test $# -gt 0 ; then
       --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
+      --with-qt-incdir=*)      qtincdir=$optarg      ; enable_qt="yes"      ;;
+      --with-qt-libdir=*)      qtlibdir=$optarg      ; enable_qt="yes"      ;;
       --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
@@ -823,7 +826,7 @@ fi
 # MySQL at all.
 #
 if test ! "x$enable_mysql" = "xno"; then
-# Check for MySQL include and library
+    # Check for MySQL include and library
     check_header "mysql.h" "$mysqlincdir" \
 	$MYSQL $MYSQL/include /usr/local/include /usr/local/include/mysql \
         /usr/local/mysql /usr/local/mysql/include /opt/mysql \
@@ -862,7 +865,7 @@ fi
 # PostgreSQL at all.
 #
 if test ! "x$enable_pgsql" = "xno"; then
-# Check for PgSQL include and library
+    # Check for PgSQL include and library
     check_header "libpq-fe.h" "$pgsqlincdir" $PGSQL $PGSQL/include \
 	/usr/include /usr/local/include /usr/local/pgsql/include \
         /usr/include/pgsql /usr/include/postgresql /usr/pgsql/include \
@@ -885,6 +888,32 @@ fi
 
 ######################################################################
 #
+### echo %%% Qt Support - Optional alternative graphics backend
+#
+# If the user has set the flags "--disable-qt", we don't check for
+# Qt at all.
+#
+if test ! "x$enable_qt" = "xno"; then
+    # Check for Qt include and library
+    check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
+        /usr/local/include  /usr/local/qt/include /usr/include \
+        /usr/include/qt
+    qtinc=$found_hdr
+    qtincdir=$found_dir
+
+    check_library "libqt-mt libqt" "$enable_shared" "$qtlibdir" \
+        $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
+        /usr/lib /usr/qt/lib
+    qtlib=$found_lib
+    qtlibdir=$found_dir
+
+    if test "x$qtincdir" = "x" || test "x$qtlib" = "x"; then
+        enable_qt="no"
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% SapDB Support - Third party libraries
 #
 # (See www.sapdb.org)
@@ -893,7 +922,7 @@ fi
 # SapDB at all.
 #
 if test ! "x$enable_sapdb" = "xno"; then
-# Check for SapDB include and library
+    # Check for SapDB include and library
     check_header "sql.h" "$sapdbincdir" $SAPDB $SAPDB/include \
 	/opt/sapdb/interfaces/odbc/incl /usr/sapdb/interfaces/odbc/incl \
 	/usr/sapdb/include /usr/local/sapdb/interfaces/odbc/incl \
@@ -1199,7 +1228,7 @@ fi
 # LDAP at all.
 #
 if test ! "x$enable_ldap" = "xno"; then
-# Check for ldap include and library
+    # Check for ldap include and library
     check_header "ldap.h" "$ldapincdir" $LDAP $LDAP/include \
 	/usr/include /usr/local/include /usr/local/ldap/include \
         /usr/include/ldap /usr/include/openldap /usr/ldap/include \
@@ -1736,6 +1765,9 @@ sed \
     -e "s|@pythia6libdir@|$pythia6libdir|"      \
     -e "s|@pythialib@|$pythialib|"              \
     -e "s|@pythialibdir@|$pythialibdir|"        \
+    -e "s|@qtincdir@|$qtincdir|"                \
+    -e "s|@qtlib@|$qtlib|"                      \
+    -e "s|@qtlibdir@|$qtlibdir|"                \
     -e "s|@rootbuild@|$rootbuild|"              \
     -e "s|@sapdbincdir@|$sapdbincdir|"          \
     -e "s|@sapdblib@|$sapdblib|"                \

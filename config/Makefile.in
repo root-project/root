@@ -68,6 +68,10 @@ SAPDBLIBDIR    := @sapdblibdir@
 SAPDBCLILIB    := @sapdblib@
 SAPDBINCDIR    := @sapdbincdir@
 
+QTLIBDIR       := @qtlibdir@
+QTLIB          := @qtlib@
+QTINCDIR       := @qtincdir@
+
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
 

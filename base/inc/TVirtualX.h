@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.18 2003/02/11 12:29:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.19 2003/02/17 18:33:14 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -117,6 +117,7 @@ public:
    virtual Int_t     ResizePixmap(Int_t wid, UInt_t w, UInt_t h);
    virtual void      ResizeWindow(Int_t wid);
    virtual void      SelectWindow(Int_t wid);
+   virtual void      SelectPixmap(Int_t qpixid);
    virtual void      SetCharacterUp(Float_t chupx, Float_t chupy);
    virtual void      SetClipOFF(Int_t wid);
    virtual void      SetClipRegion(Int_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
@@ -383,6 +384,7 @@ inline void      TVirtualX::RescaleWindow(Int_t, UInt_t, UInt_t) { }
 inline Int_t     TVirtualX::ResizePixmap(Int_t, UInt_t, UInt_t) { return 0; }
 inline void      TVirtualX::ResizeWindow(Int_t) { }
 inline void      TVirtualX::SelectWindow(Int_t) { }
+inline void      TVirtualX::SelectPixmap(Int_t) { }
 inline void      TVirtualX::SetCharacterUp(Float_t, Float_t) { }
 inline void      TVirtualX::SetClipOFF(Int_t) { }
 inline void      TVirtualX::SetClipRegion(Int_t, Int_t, Int_t, UInt_t, UInt_t) { }

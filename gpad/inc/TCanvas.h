@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.18 2003/02/01 17:35:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.19 2003/04/04 17:06:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -84,14 +84,15 @@ protected:
    Bool_t        fResizeOpaque;    //Resize objects in opaque mode
    Bool_t        fMenuBar;         //False if no menubar is displayed
    static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
-   
+
 private:
-   TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone
+   TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone()
    TCanvas &operator=(const TCanvas &rhs);  // idem
    void     Build();
    void     CopyPixmaps();
    void     DrawEventStatus(Int_t event, Int_t x, Int_t y, TObject *selected);
    void     RunAutoExec();
+   void     DisconnectWidget();  // used by TCanvasImp
 
 protected:
    virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.45 2003/03/10 14:57:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.46 2003/07/07 14:51:45 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -535,16 +535,20 @@ void TApplication::LoadGraphicsLibs()
    if (guiBackend == "native") {
       guiBackend = nativex;
    } else {
-      name   = guiBackend;
-      title  = title1 + guiBackend;
+      name  = guiBackend;
+      title = title1 + guiBackend;
    }
+   TString guiFactory(gEnv->GetValue("Gui.Factory", "native"));
+   guiFactory.ToLower();
+   if (guiFactory == "native")
+      guiFactory = nativeg;
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", guiBackend))) {
       if (h->LoadPlugin() == -1)
          return;
       gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
    }
-   if ((h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", nativeg))) {
+   if ((h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory))) {
       if (h->LoadPlugin() == -1)
          return;
       gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);

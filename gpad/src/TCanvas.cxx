@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.43 2003/04/04 17:06:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.44 2003/05/15 12:12:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -249,12 +249,14 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 5) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
       fCanvasImp->ShowMenuBar(fMenuBar);
-      fCanvasImp->Show();
       fBatch = kFALSE;
    }
    SetName(name);
    SetTitle(title); // requires fCanvasImp set
    Build();
+
+   // Popup canvas
+   fCanvasImp->Show();
 }
 
 //_____________________________________________________________________________
@@ -307,12 +309,14 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, UInt_t(cx*ww), UInt_t(cx*wh));
       fCanvasImp->ShowMenuBar(fMenuBar);
-      fCanvasImp->Show();
       fBatch = kFALSE;
    }
    SetName(name);
    SetTitle(title); // requires fCanvasImp set
    Build();
+
+   // Popup canvas
+   fCanvasImp->Show();
 }
 
 //_____________________________________________________________________________
@@ -370,12 +374,14 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, Int_t(cx*wtopx), Int_t(cx*wtopy), UInt_t(cx*ww), UInt_t(cx*wh));
       fCanvasImp->ShowMenuBar(fMenuBar);
-      fCanvasImp->Show();
       fBatch = kFALSE;
    }
    SetName(name);
    SetTitle(title); // requires fCanvasImp set
    Build();
+
+   // Popup canvas
+   fCanvasImp->Show();
 }
 
 //_____________________________________________________________________________
@@ -422,16 +428,7 @@ void TCanvas::Build()
    // Get window identifier
    if (fCanvasID == -1 && fCanvasImp)
       fCanvasID = fCanvasImp->InitWindow();
-#ifndef WIN32
    if (fCanvasID < 0) return;
-#else
-#ifndef GDK_WIN32
-   // fCanvasID is in fact a pointer to the TGWin32 class
-   if (fCanvasID  == -1) return;
-#else
-   if (fCanvasID < 0) return;
-#endif
-#endif
 
    if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
    else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
@@ -488,14 +485,14 @@ void TCanvas::Build()
       SetBorderMode(gStyle->GetCanvasBorderMode());
       fBorderMode=gStyle->GetCanvasBorderMode(); // do not call SetBorderMode (function redefined in TCanvas)
       SetPad(0, 0, 1, 1);
-      Range(0, 0, 1, 1);   //Pad range is set by default to [0,1] in x and y
-      PaintBorder(GetFillColor(), kTRUE);    //Paint background
+      Range(0, 0, 1, 1);   //pad range is set by default to [0,1] in x and y
+      gVirtualX->SelectPixmap(fPixmapID);    //pixmap must be selected
+      PaintBorder(GetFillColor(), kTRUE);    //paint background
    }
 
-#ifdef WIN32
-#ifndef GDK_WIN32
-   gVirtualX->UpdateWindow(1);
-#endif
+#if defined(WIN32) && !defined(GDK_WIN32)
+   if (!strcmp(gVirtualX->GetName(), "Win32"))
+      gVirtualX->UpdateWindow(1);
 #endif
 }
 
@@ -645,9 +642,9 @@ void TCanvas::Draw(Option_t *)
    if (old == this) {
       Paint();
       return;
-   } 
+   }
    if (old) { gROOT->GetListOfCanvases()->Remove(old); delete old;}
-     
+
    if (fWindowWidth  == 0) fWindowWidth  = 800;
    if (fWindowHeight == 0) fWindowHeight = 600;
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
@@ -1130,7 +1127,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-Bool_t TCanvas::IsFolder() const 
+Bool_t TCanvas::IsFolder() const
 {
    return fgIsFolder;
 }
@@ -1146,7 +1143,6 @@ void TCanvas::ls(Option_t *option) const
    TPad::ls(option);
    TROOT::DecreaseDirLevel();
 }
-
 
 //______________________________________________________________________________
 void TCanvas::MakeDefCanvas()
@@ -1478,24 +1474,24 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set Double Buffer On/Off*-*-**-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
+
    if (IsBatch()) return;
    fDoubleBuffer = mode;
    gVirtualX->SetDoubleBuffer(fCanvasID, mode);
 
    // depending of the buffer mode set the drawing window to either
    // the canvas pixmap or to the canvas on-screen window
-#ifndef WIN32
+#if !defined(WIN32) || defined(GDK_WIN32)
    if (fDoubleBuffer)
       gVirtualX->SelectWindow(fPixmapID);
    else
-#else
-#ifdef GDK_WIN32
-   if (fDoubleBuffer)
-      gVirtualX->SelectWindow(fPixmapID);
-   else
-#endif
-#endif
       gVirtualX->SelectWindow(fCanvasID);
+#else
+   if (fDoubleBuffer && strcmp(gVirtualX->GetName(), "Win32"))
+      gVirtualX->SelectWindow(fPixmapID);
+   else
+      gVirtualX->SelectWindow(fCanvasID);
+#endif
 }
 
 //______________________________________________________________________________
@@ -1520,11 +1516,11 @@ void TCanvas::SetFixedAspectRatio(Bool_t fixed)
 }
 
 //______________________________________________________________________________
-void TCanvas::SetFolder(Bool_t isfolder) 
+void TCanvas::SetFolder(Bool_t isfolder)
 {
 // if isfolder=kTRUE, the canvas can be browsed like a folder
 // by default a canvas is not browsable
-   
+
    fgIsFolder = isfolder;
 }
 
@@ -1684,4 +1680,13 @@ void TCanvas::Update()
    Flush();                   // Copy all pad pixmaps to the screen
 
    SetCursor(kCross);
+}
+
+//______________________________________________________________________________
+void TCanvas::DisconnectWidget()
+{
+   // Used by friend class TCanvasImp.
+
+   fCanvasID    = 0;
+   fContextMenu = 0;
 }
