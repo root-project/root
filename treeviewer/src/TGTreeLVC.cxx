@@ -247,17 +247,23 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
                  // dragging to scan box
                  if (!strlen(f->GetTrueName())) {
                     f->SetTrueName(((TGLVTreeEntry *)fLastActive)->GetTrueName());
+                    f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
                  } else {
-                    TString name = f->GetTrueName();
-                    name += ":";
-                    name += ((TGLVTreeEntry *)fLastActive)->GetTrueName();
-                    f->SetTrueName(name.Data());
+                    TString name(2000);
+		    TString dragged = ((TGLVTreeEntry *)fLastActive)->GetTrueName();
+                    name  = f->GetTrueName();
+		    if ((name.Length()+dragged.Length()) < 228) { 
+                       name += ":";
+                       name += dragged;
+                       f->SetTrueName(name.Data());
+                    } else {
+                       printf("Name too long. Can not add any more items to scan box\n");		    
+                    }
                  }
-                 f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
               }
               fLastActive = f;
               if (fViewer) {
-	         char msg[500];
+	         char msg[2000];
 	         msg[0] = 0;
 	         sprintf(msg, "Box : %s", f->GetTrueName());
                  fViewer->Message(msg);

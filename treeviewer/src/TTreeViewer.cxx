@@ -917,9 +917,9 @@ void TTreeViewer::ExecuteDraw()
    Int_t firstentry =(Int_t) fSlider->GetMinPosition();
 
    // check if Scan is checked and if there is something in the box
-   if (strlen(ScanList())) sprintf(varexp, ScanList());
    if (fBarScan->GetState() == kButtonDown) {
       fBarScan->SetState(kButtonUp);
+      if (strlen(ScanList())) sprintf(varexp, ScanList());
       sprintf(command, "tree->Scan(\"%s\",\"%s\",\"%s\", %i, %i);",
               varexp, cut, gopt, nentries, firstentry);
       ExecuteCommand(command, kTRUE);
@@ -931,6 +931,7 @@ void TTreeViewer::ExecuteDraw()
       fBarH->SetState(kButtonUp);
       TH1 *hist = fTree->GetHistogram();
       if (hist) {
+	 cout << " Graphics option for current histogram changed to " << gopt << endl; 
          hist->Draw(gopt);
          gPad->Update();
          return;
@@ -1617,7 +1618,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
    for (Int_t id=0; id<Branches->GetEntries(); id++) {
       branch = (TBranch *)Branches->At(id);
       TString name = branch->GetName();
-      if (name.Contains(".fBits") || name.Contains(".fUniqueID")) continue;
+      if (name.Contains("fBits") || name.Contains("fUniqueID")) continue;
       // now map sub-branches
       MapBranch(branch, parent, listIt);
       fStopMapping = kFALSE;
@@ -1639,7 +1640,7 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
    TGListTreeItem *branchItem = 0;
    ULong_t *itemType;
 // map this branch
-   if (name.Contains(".fBits") || name.Contains(".fUniqueID")) return;
+   if (name.Contains("fBits") || name.Contains("fUniqueID")) return;
    if (parent) {
    // make list tree items for each branch according to the type
       const TGPicture *pic, *spic;
