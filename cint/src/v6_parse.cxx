@@ -2389,8 +2389,8 @@ G__value G__exec_if()
     /* if(G__return!=G__RETURN_NON)return(result); */
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:1)\n"
-		,store_no_exec_compile);
+	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:1) %d\n"
+		,store_no_exec_compile,G__asm_noverflow);
 #endif
     G__no_exec_compile=store_no_exec_compile;
     G__no_exec=0;
@@ -2501,7 +2501,8 @@ G__value G__exec_if()
       G__no_exec_compile=store_no_exec_compile;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) 
-	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:2)\n",store_no_exec_compile);
+	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:2) %d\n"
+		     ,store_no_exec_compile,G__asm_noverflow);
 #endif
       G__no_exec=0;
     }

@@ -251,6 +251,11 @@ char *string,*endmark;
 	  string[i++]=' ';
 	}
 #endif
+#ifndef G__OLDIMPLEMENTATION1531
+	else if(i>2 && isspace(string[i-1]) && '>'!=string[i-2]) {
+	  --i;
+	}
+#endif
       }
       spaceflag=1;
       break;

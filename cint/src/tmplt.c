@@ -2540,6 +2540,9 @@ int funcmatch;
       basetagnum = tagnum;
       bmatch=0;
       while(0==bmatch && bn<basen) {
+#ifndef G__OLDIMPLEMENTATION1532
+	int nest=0;
+#endif
 	cnt=0;
 	if(bn>=0) basetagnum = G__struct.baseclass[tagnum]->basetagnum[bn];
 	++bn;
@@ -2556,9 +2559,20 @@ int funcmatch;
 	  *p = 0;  /*   ^ ^ ^       */
 	  ++p;     /*    ^ ^ ^      */
 	  cntarg[cnt++] = p;
+#ifndef G__OLDIMPLEMENTATION1532
+	  while((0!=(*p) && ','!=(*p) && '>'!=(*p)) || nest) {
+	    if('<'==(*p)) ++nest;
+	    else if('>'==(*p)) --nest;
+	    ++p;
+	  }
+#else
 	  while(0!=(*p) && ','!=(*p) && '>'!=(*p)) ++p;
+#endif
 	} while(','==(*p));
 	if('>'==(*p)) *p = 0;  /* the last '>' */
+#ifndef G__OLDIMPLEMENTATION1532
+	if(' '== (*(p-1))) *(p-1) = 0;
+#endif
 	/* match template argument */
 #ifndef G__OLDIMPLEMENTATION1116
 	if(fnt>cnt) {/* unmatch */

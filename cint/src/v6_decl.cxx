@@ -112,7 +112,11 @@ char *new_name;
     } 
 #endif
 
-    if(strcmp(new_name,"double")==0) {
+    if(strcmp(new_name,"double")==0
+#ifndef G__OLDIMPLEMENTATION1533
+       && 'l'!=G__var_type
+#endif
+       ) {
       cin=G__fgetvarname(new_name,",;=():");
       G__var_type='d';
     }
@@ -139,6 +143,10 @@ char *new_name;
 	G__def_struct_member = store_def_struct_member;
 #endif
       }
+#ifndef G__OLDIMPLEMENTATION1533
+      G__tagnum=G__defined_tagname("G__longdouble",2);
+      G__typenum=G__search_typename("long double",'u',G__tagnum,G__PARANORMAL);
+#endif
       G__tagnum=G__defined_tagname("G__longlong",2);
       if(-1==G__tagnum) {
 	G__genericerror("Error: 'long long' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
@@ -165,6 +173,59 @@ char *new_name;
 	G__reftype = G__PARAP2P;
       }
       else if(strcmp(new_name,"long&")==0) {
+	G__var_type='u';
+	G__reftype = G__PARAREFERENCE;
+      }
+      G__define_var(G__tagnum,G__typenum);
+      G__var_type='p';
+      G__tagnum=store_tagnum;
+      G__typenum=store_typenum;
+      G__decl=store_decl;
+      return(0);
+    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1533
+    else if(
+	    'l'==G__var_type &&
+	    (strcmp(new_name,"double")==0 ||
+	     strcmp(new_name,"double*")==0 ||
+	     strcmp(new_name,"double**")==0 ||
+	     strcmp(new_name,"double&")==0)) {
+      int store_tagnum = G__tagnum;
+      int store_typenum = G__typenum;
+      int store_decl = G__decl;
+      if(0==G__defined_macro("G__LONGLONG_H")) {
+#ifndef G__OLDIMPLEMENTATION1153
+	int store_def_struct_member = G__def_struct_member;
+	G__def_struct_member = 0;
+#endif
+	G__decl=0;
+	G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
+	G__decl=1;
+#ifndef G__OLDIMPLEMENTATION1153
+	G__def_struct_member = store_def_struct_member;
+#endif
+      }
+      G__tagnum=G__defined_tagname("G__longlong",2);
+      G__typenum=G__search_typename("long long",'u',G__tagnum,G__PARANORMAL);
+      G__tagnum=G__defined_tagname("G__longdouble",2);
+      if(-1==G__tagnum) {
+	G__genericerror("Error: 'long double' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
+      }
+      G__typenum=G__search_typename("long double",'u',G__tagnum,G__PARANORMAL);
+      if(strcmp(new_name,"double")==0) {
+	G__var_type='u';
+	G__reftype = G__PARANORMAL;
+      }
+      else if(strcmp(new_name,"double*")==0) {
+	G__var_type='U';
+	G__reftype = G__PARANORMAL;
+      }
+      else if(strcmp(new_name,"double**")==0) {
+	G__var_type='U';
+	G__reftype = G__PARAP2P;
+      }
+      else if(strcmp(new_name,"double&")==0) {
 	G__var_type='u';
 	G__reftype = G__PARAREFERENCE;
       }
@@ -2861,6 +2922,11 @@ char *new_name;
   }
 #endif
   
+#ifndef G__OLDIMPLEMENTATION1535
+  if(0==G__asm_noverflow && 1==G__no_exec_compile) {
+    G__no_exec = 1;
+  }
+#endif
   /**********************************************************
    * read upto next , or ;
    **********************************************************/

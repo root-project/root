@@ -137,7 +137,7 @@ class G__longlong {
 
 #ifdef IOS
   friend ostream& operator<<(ostream& ost,const G__longlong& a);
-  friend istream& operator>>(istream& ist,const G__longlong& a);
+  friend istream& operator>>(istream& ist,G__longlong& a);
 #endif
 
  private: 
@@ -225,7 +225,7 @@ inline ostream& operator<<(ostream& ost,const G__longlong& a) {
   return(ost);
 }
 
-inline istream& operator>>(istream& ist,const G__longlong& a) {
+inline istream& operator>>(istream& ist,G__longlong& a) {
   //long *upper = (long*)(&a+1);
   long *lower = (long*)&a;
   ist >> *lower;

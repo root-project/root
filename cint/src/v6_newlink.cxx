@@ -7168,7 +7168,13 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
-	  if(0==regexec(&re,ifunc->funcname[i],(size_t)0,(regmatch_t*)NULL,0)){
+	  if(0==regexec(&re,ifunc->funcname[i],(size_t)0,(regmatch_t*)NULL,0)
+#ifndef G__OLDIMPLEMENTATION1534
+	     && (-1==ifunc->para_p_tagtable[i][1] ||
+		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
+			 ,"G__CINT_",8)!=0)
+#endif
+	     ){
 	    ifunc->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
@@ -7191,7 +7197,13 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
- 	  if(0!=regex(re,ifunc->funcname[i])){
+ 	  if(0!=regex(re,ifunc->funcname[i])
+#ifndef G__OLDIMPLEMENTATION1534
+	     && (-1==ifunc->para_p_tagtable[i][1] ||
+		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
+			 ,"G__CINT_",8)!=0)
+#endif
+	     ){
 	    ifunc->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
@@ -7211,7 +7223,13 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
- 	  if(strncmp(buf,ifunc->funcname[i],hash)==0) {
+ 	  if(strncmp(buf,ifunc->funcname[i],hash)==0
+#ifndef G__OLDIMPLEMENTATION1534
+	     && (-1==ifunc->para_p_tagtable[i][1] ||
+		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
+			 ,"G__CINT_",8)!=0)
+#endif
+	     ) {
 	    ifunc->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
@@ -7231,7 +7249,13 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
-	  if(strcmp(buf,ifunc->funcname[i])==0) {
+	  if(strcmp(buf,ifunc->funcname[i])==0
+#ifndef G__OLDIMPLEMENTATION1534
+	     && (-1==ifunc->para_p_tagtable[i][1] ||
+		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
+			 ,"G__CINT_",8)!=0)
+#endif
+	     ) {
 	    ifunc->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;

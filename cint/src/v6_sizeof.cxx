@@ -246,9 +246,18 @@ char *typename;
   if((strcmp(typename,"float")==0)||
      (strcmp(typename,"float")==0))
     return(sizeof(float));
-  if((strcmp(typename,"double")==0)||
-     (strcmp(typename,"longdouble")==0))
+  if((strcmp(typename,"double")==0)
+#ifdef G__OLDIMPLEMENTATION1533
+     ||(strcmp(typename,"longdouble")==0)
+#endif
+     )
     return(sizeof(double));
+#ifndef G__OLDIMPLEMENTATION1533
+  if(strcmp(typename,"longdouble")==0) {
+    int tagnum = G__defined_tagname("G__longdouble",2);
+    return(G__struct.size[tagnum]);
+  }
+#endif
   if(strcmp(typename,"void")==0)
 #ifndef G__OLDIMPLEMENTATION930
     return(sizeof(void*));

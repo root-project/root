@@ -21,12 +21,15 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014089
-#define G__CINTVERSIONSTR  "5.14.89, May 20 2001"
+#define G__CINTVERSION      5014090
+#define G__CINTVERSIONSTR  "5.14.90, May 27 2001"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* Delete following macro for DLL binary compatibility improvement */
+#define G__OLDIMPLEMENTATION1530
 
 /* Define following macro to enable multi-thread safe libcint and DLL
  * features. */
@@ -1107,11 +1110,16 @@ struct G__ifunc_table_VMS {
 **************************************************************************/
 struct G__param {
   int paran;
+#ifdef G__OLDIMPLEMENTATION1530
   char parameter[G__MAXFUNCPARA][G__ONELINE];
+#endif
   G__value para[G__MAXFUNCPARA];
 #ifndef G__OLDIMPLEMENTATION834
   int allparan;
   struct G__param *next;
+#endif
+#ifndef G__OLDIMPLEMENTATION1530
+  char parameter[G__MAXFUNCPARA][G__ONELINE];
 #endif
 };
 
