@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.19 2001/09/20 13:24:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.20 2001/09/25 16:04:14 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1073,7 +1073,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*-              First case : (wmax-wmin)/N1A less than 0.001
 //*-*-              (0.001 fgMaxDigits of 5 (fgMaxDigits) characters). Then we use x 10 n
 //*-*-              format. If AF >=0 x10 n cannot be used
-               if ((TMath::Abs(wmax-wmin)/Double_t(N1A)) < 0.00099) {
+               Double_t xmicros = 0.00099;
+               if (fgMaxDigits) xmicros = TMath::Power(10,-fgMaxDigits);
+               if ((TMath::Abs(wmax-wmin)/Double_t(N1A)) < xmicros) {
                   AF    = TMath::Log10(WW) + epsilon;
                   if (AF < 0) {
                      FLEXE   = kTRUE;
