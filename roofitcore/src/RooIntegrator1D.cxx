@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.cc,v 1.17 2002/09/05 04:33:34 verkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.18 2003/05/07 21:06:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooIntegratorBinding.hh"
 
 #include <assert.h>
 
@@ -31,7 +32,7 @@ ClassImp(RooIntegrator1D)
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsRel(eps), _epsAbs(eps)
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsRel(eps), _epsAbs(eps), _minStepsZero(999)
 {
   // Use this form of the constructor to integrate over the function's default range.
 
@@ -44,7 +45,8 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooIntegrator
   _rule(config.summationRule1D()), 
   _maxSteps(config.maxSteps1D()), 
   _epsRel(config.epsilonRel1D()),
-  _epsAbs(config.epsilonAbs1D())
+  _epsAbs(config.epsilonAbs1D()),
+  _minStepsZero(config.minStepsZero1D())
 {
   // Use this form of the constructor to integrate over the function's default range.
   _useIntegrandLimits= kTRUE;
@@ -54,7 +56,7 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooIntegrator
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 SummationRule rule, Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsRel(eps), _epsAbs(eps)
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsRel(eps), _epsAbs(eps), _minStepsZero(999)
 {
   // Use this form of the constructor to override the function's default range.
 
@@ -70,7 +72,8 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _rule(config.summationRule1D()), 
   _maxSteps(config.maxSteps1D()), 
   _epsRel(config.epsilonRel1D()),
-  _epsAbs(config.epsilonAbs1D())
+  _epsAbs(config.epsilonAbs1D()),
+  _minStepsZero(config.minStepsZero1D())
 {
   // Use this form of the constructor to override the function's default range.
 
@@ -170,14 +173,36 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
 
   Int_t j;
   _h[1]=1.0;
+  Double_t zeroThresh = _epsAbs/_range ;
   for(j= 1; j<=_maxSteps; j++) {
     // refine our estimate using the appropriate summation rule
     _s[j]= (_rule == Trapezoid) ? addTrapezoids(j) : addMidpoints(j);
+
+    if (j >= _minStepsZero) {
+      Bool_t allZero(kTRUE) ;
+      Int_t jj ; for (jj=0 ; jj<=j ; jj++) {	
+	if (_s[j]>=zeroThresh) {
+	  allZero=kFALSE ;
+	}
+      }
+      if (allZero) {
+	//cout << "Roo1DIntegrator(" << this << "): zero convergence at step " << j << ", value = " << 0 << endl ;
+	return 0;
+      }
+    }
+    
+
     if(j >= _nPoints) {
       // extrapolate the results of recent refinements and check for a stable result
       extrapolate(j);
-      if(fabs(_extrapError) <= _epsRel*fabs(_extrapValue)) return _extrapValue;
-      if(fabs(_extrapError) <= _epsAbs) return _extrapValue ;
+      if(fabs(_extrapError) <= _epsRel*fabs(_extrapValue)) {
+	//cout << "Roo1DIntegrator(" << this << "): relative convergence at step " << j << ", value = " << _extrapValue << ", _extrapError = " << _extrapError << endl ;
+	return _extrapValue;
+      }
+      if(fabs(_extrapError) <= _epsAbs) {
+	//cout << "Roo1DIntegrator(" << this << "): absolute convergence at step " << j << ", value = " << _extrapValue << ", _extrapError = " << _extrapError << endl ;
+	return _extrapValue ;
+      }
     }
     // update the step size for the next refinement of the summation
     _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;

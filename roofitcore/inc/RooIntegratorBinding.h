@@ -13,14 +13,28 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+#ifndef ROO_INTEGRATOR_BINDING
+#define ROO_INTEGRATOR_BINDING
 
-// -- CLASS DESCRIPTION [AUX] --
-// Lightweight function object that applies a scale factor to a RooAbsFunc implementation.
+#include "RooFitCore/RooAbsFunc.hh"
+#include "RooFitCore/RooAbsIntegrator.hh"
 
-// #include "BaBar/BaBar.hh"
+class RooIntegratorBinding : public RooAbsFunc {
+public:
+  RooIntegratorBinding(RooAbsIntegrator& integrator) : 
+    RooAbsFunc(integrator.integrand()->getDimension()-1), _integrator(&integrator) {} ;
+  virtual ~RooIntegratorBinding() {} ;
 
-#include "RooFitCore/RooIntegrator1DBinding.hh"
+  inline virtual Double_t operator()(const Double_t xvector[]) const { _ncall++ ; return _integrator->integral(xvector) ; }
+  inline virtual Double_t getMinLimit(UInt_t index) const { return _integrator->integrand()->getMinLimit(index+1); }
+  inline virtual Double_t getMaxLimit(UInt_t index) const { return _integrator->integrand()->getMaxLimit(index+1); }
 
-ClassImp(RooIntegrator1DBinding)
-;
+protected:
+  RooAbsIntegrator* _integrator ;  
+
+
+  ClassDef(RooIntegratorBinding,0) // RooAbsFunc decorator
+};
+
+#endif
 

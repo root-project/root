@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegratorConfig.rdl,v 1.4 2002/09/05 04:33:35 verkerke Exp $
+ *    File: $Id: RooIntegratorConfig.rdl,v 1.5 2003/05/07 21:06:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,8 +30,10 @@ public:
   // 1D accessors
   RooIntegrator1D::SummationRule summationRule1D() const { return _rule ; }
   Int_t maxSteps1D() const { return _maxSteps ; }
+  Int_t minStepsZero1D() const { return _minSteps ; }
   Double_t epsilonRel1D() const { return _epsRel ; }
   Double_t epsilonAbs1D() const { return _epsAbs ; }
+  Int_t numSegments1D() const { return _nseg1d ; }
 
   // 2D accessors
   Bool_t useMCFor2D() const { return _useMCFor2D ; }
@@ -48,8 +50,10 @@ public:
   // 1D modifiers
   void setSummationRule1D(RooIntegrator1D::SummationRule rule) { _rule = rule ; }
   void setMaxSteps1D(Int_t maxSteps) { _maxSteps = maxSteps ; }
+  void setMinStepsZero1D(Int_t minSteps) { _minSteps = minSteps ; }
   void setEpsilonAbs1D(Double_t eps) { _epsAbs = eps ; }
   void setEpsilonRel1D(Double_t eps) { _epsRel = eps ; }
+  void setNumSegments1D(Int_t nseg) { _nseg1d = nseg ; }
   
   // 2D modifiers
   void setUseMCFor2D(Bool_t flag) { _useMCFor2D = flag ; }
@@ -69,8 +73,10 @@ protected:
   // 1D integrator
   RooIntegrator1D::SummationRule _rule ;
   Int_t _maxSteps ;
+  Int_t _minSteps ;
   Double_t _epsAbs ;
   Double_t _epsRel ;
+  Int_t _nseg1d ;
 
   // 2D integrator ;
   Bool_t _useMCFor2D ;

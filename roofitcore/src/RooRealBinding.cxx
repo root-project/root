@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRealBinding.cc,v 1.9 2002/09/05 04:33:51 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -72,6 +72,7 @@ void RooRealBinding::loadValues(const Double_t xvector[]) const {
 
 Double_t RooRealBinding::operator()(const Double_t xvector[]) const {
   assert(isValid());
+  _ncall++ ;
   loadValues(xvector);
   return _xvecValid ? _func->getVal(_nset) : 0. ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator2D.cc,v 1.1 2003/05/07 21:06:25 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.1 2003/05/07 21:06:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -15,11 +15,11 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [AUX] --
-// RooIntegrator2D implements an adaptive one-dimensional 
+// RooSegmentedIntegrator2D implements an adaptive one-dimensional 
 // numerical integration algorithm.
 
 
-#include "RooFitCore/RooIntegrator2D.hh"
+#include "RooFitCore/RooSegmentedIntegrator2D.hh"
 #include "RooFitCore/RooIntegratorBinding.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
@@ -27,37 +27,37 @@
 
 #include <assert.h>
 
-ClassImp(RooIntegrator2D)
+ClassImp(RooSegmentedIntegrator2D)
 ;
 
-RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, RooIntegrator1D::SummationRule rule,
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, RooIntegrator1D::SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,rule,maxSteps,eps)))),rule,maxSteps,eps)
+  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,nseg,rule,maxSteps,eps)))),nseg,rule,maxSteps,eps)
 {
 } 
 
-RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, const RooIntegratorConfig& config) :
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,config)))),config)
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, const RooIntegratorConfig& config) :
+  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,nseg,config)))),nseg,config)
 {
 } 
 
 
-RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax,
 				 Double_t ymin, Double_t ymax,
-				 SummationRule rule, Int_t maxSteps, Double_t eps) : 
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,ymin,ymax,rule,maxSteps,eps)))),xmin,xmax,rule,maxSteps,eps)
+				 RooIntegrator1D::SummationRule rule, Int_t maxSteps, Double_t eps) : 
+  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,nseg,ymin,ymax,rule,maxSteps,eps)))),nseg,xmin,xmax,rule,maxSteps,eps)
 {
 } 
 
-RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax,
 				 Double_t ymin, Double_t ymax,
 				 const RooIntegratorConfig& config) :
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
+  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,nseg,ymin,ymax,config)))),nseg,xmin,xmax,config)
 {
 } 
 
 
-RooIntegrator2D::~RooIntegrator2D() 
+RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() 
 {
   delete _xint ;
   delete _xIntegrator ;

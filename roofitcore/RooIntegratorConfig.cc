@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegratorConfig.cc,v 1.6 2003/05/07 21:06:25 wverkerke Exp $
+ *    File: $Id: RooIntegratorConfig.cc,v 1.7 2003/05/07 21:51:31 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,8 +29,10 @@ RooIntegratorConfig::RooIntegratorConfig()
   // 1D integrator
   _rule = RooIntegrator1D::Trapezoid ;
   _maxSteps = 20 ;
+  _minSteps = 999 ;
   _epsRel = 1e-6 ;
   _epsAbs = 1e-6 ;
+  _nseg1d = 1 ;
 
   // 2D integrator
   _useMCFor2D = kTRUE ;
@@ -54,9 +56,10 @@ RooIntegratorConfig::RooIntegratorConfig(const RooIntegratorConfig& other)
   // 1D integrator
   _rule = other._rule ;
   _maxSteps = other._maxSteps ;
+  _minSteps = other._minSteps ;
   _epsRel = other._epsRel ;
   _epsAbs = other._epsAbs ;
-
+  _nseg1d = other._nseg1d ;
 
   // 2D integrator
   _useMCFor2D = other._useMCFor2D ;

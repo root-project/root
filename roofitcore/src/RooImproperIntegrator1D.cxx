@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.8 2002/09/05 04:33:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -174,10 +174,10 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const 
   // return Invalid; OSF-CC: Statement unreachable
 }
 
-Double_t RooImproperIntegrator1D::integral() {
+Double_t RooImproperIntegrator1D::integral(const Double_t* yvec) {
   Double_t result(0);
-  if(0 != _integrator1) result+= _integrator1->integral();
-  if(0 != _integrator2) result+= _integrator2->integral();
-  if(0 != _integrator3) result+= _integrator3->integral();
+  if(0 != _integrator1) result+= _integrator1->integral(yvec);
+  if(0 != _integrator2) result+= _integrator2->integral(yvec);
+  if(0 != _integrator3) result+= _integrator3->integral(yvec);
   return result;  
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMCIntegrator.cc,v 1.9 2002/09/05 04:33:39 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,12 +65,11 @@ Bool_t RooMCIntegrator::checkLimits() const {
   return _grid.initialize(*integrand());
 }
 
-Double_t RooMCIntegrator::integral() {
+Double_t RooMCIntegrator::integral(const Double_t* yvec) {
   // Evaluate the integral using a fixed number of calls to evaluate the integrand
   // equal to about 10k per dimension. Use the first 5k calls to refine the grid
   // over 5 iterations of 1k calls each, and the remaining 5k calls for a single
   // high statistics integration.
-
   _timer.Start(kTRUE);
   vegas(AllStages,_nRefinePerDim*_grid.getDimension(),_nRefineIter);
   return vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
@@ -82,6 +81,8 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
   // Use the VEGAS algorithm, starting from the specified stage. Returns the best estimate
   // of the integral. Also sets *absError to the estimated absolute error of the integral
   // estimate if absError is non-zero.
+
+  cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << endl ;
 
   // reset the grid to its initial state if we are starting from scratch
   if(stage == AllStages) _grid.initialize(*_function);
@@ -229,7 +230,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
     }         
     if (_verbose) {
       cout << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << endl
-	   << "    Cummulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
+	   << "    Cumulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
 	   << ")" << endl;
       // print the grid after the final iteration
       if(it + 1 == iterations) _grid.Print("V");

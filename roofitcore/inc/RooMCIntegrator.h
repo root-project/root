@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMCIntegrator.rdl,v 1.9 2002/09/05 04:33:40 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,7 +33,7 @@ public:
   virtual ~RooMCIntegrator();
 
   virtual Bool_t checkLimits() const;
-  virtual Double_t integral();
+  virtual Double_t integral(const Double_t* yvec=0);
 
   enum Stage { AllStages, ReuseGrid, RefineGrid };
   Double_t vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError= 0);

@@ -13,27 +13,32 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_INTEGRATOR1D_BINDING
-#define ROO_INTEGRATOR1D_BINDING
+#ifndef ROO_SEGMENTED_INTEGRATOR_2D
+#define ROO_SEGMENTED_INTEGRATOR_2D
 
-#include "RooFitCore/RooAbsFunc.hh"
+#include "RooFitCore/RooSegmentedIntegrator1D.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
+class RooIntegratorConfig ;
 
-class RooIntegrator1DBinding : public RooAbsFunc {
+class RooSegmentedIntegrator2D : public RooSegmentedIntegrator1D {
 public:
-  RooIntegrator1DBinding(RooIntegrator1D& integrator) : 
-    RooAbsFunc(integrator.integrand()->getDimension()-1), _integrator(&integrator) {} ;
-  virtual ~RooIntegrator1DBinding() {} ;
 
-  inline virtual Double_t operator()(const Double_t xvector[]) const { return _integrator->integral(xvector) ; }
-  inline virtual Double_t getMinLimit(UInt_t index) const { return _integrator->integrand()->getMinLimit(index+1); }
-  inline virtual Double_t getMaxLimit(UInt_t index) const { return _integrator->integrand()->getMaxLimit(index+1); }
+  // Constructors, assignment etc
+  RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, RooIntegrator1D::SummationRule rule=RooIntegrator1D::Trapezoid,
+		  Int_t maxSteps= 0, Double_t eps= 0) ; 
+  RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, const RooIntegratorConfig& config) ;
+  RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+		  RooIntegrator1D::SummationRule rule= RooIntegrator1D::Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ; 
+  RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+		  const RooIntegratorConfig& config) ;
+  virtual ~RooSegmentedIntegrator2D() ;
 
 protected:
-  RooIntegrator1D* _integrator ;
 
-  ClassDef(RooIntegrator1DBinding,0) // RooAbsFunc decorator
+  RooSegmentedIntegrator1D* _xIntegrator ;
+  RooAbsFunc* _xint ;
+
+  ClassDef(RooSegmentedIntegrator2D,0) // 1-dimensional numerical integration engine
 };
 
 #endif
-
