@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Name:  $:$Id: TMCParticle.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/pythia:$Name:  $:$Id: TMCParticle.h,v 1.2 2000/12/13 15:13:53 brun Exp $
 // Author: Piotr Golonka   17/09/97
 
 /*************************************************************************
@@ -20,6 +20,9 @@
 #endif
 #ifndef ROOT_TPrimary
 #include "TPrimary.h"
+#endif
+#ifndef ROOT_TLorentzVector
+#include "TLorentzVector.h"
 #endif
 
 
@@ -93,6 +96,9 @@ public:
    Float_t     GetTime() const {return fTime;}
    Float_t     GetLifetime() const {return fLifetime;}
    virtual const char     *GetName() const;
+
+   void Momentum(TLorentzVector &v) const { v.SetPxPyPzE(fPx,fPy,fPz,fEnergy);}
+   void ProductionVertex(TLorentzVector &v) const { v.SetXYZT(fVx,fVy,fVz,fTime);}
 
    virtual void        SetKS(Int_t kS) {fKS=kS;}
    virtual void        SetKF(Int_t kF) {fKF=kF;}
