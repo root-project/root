@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.57 2003/11/05 18:11:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.58 2003/11/06 15:08:36 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -328,6 +328,9 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    gProofServ = this;
 
+   // Collect authentication info ...
+   CollectAuthInfo();
+
    // if master, start slave servers
    if (IsMaster()) {
       TString master = "proof://__master__";
@@ -336,9 +339,6 @@ TProofServ::TProofServ(int *argc, char **argv)
          master += ":";
          master += a.GetPort();
       }
-
-      // Collect authentication info ...
-      CollectAuthInfo();
 
       fProof = new TProof(master, fConfFile, fConfDir, fLogLevel);
       SendLogFile();
@@ -1468,8 +1468,6 @@ void TProofServ::Setup()
              gROOT->IsProofServ()) {
             // We got a file name ... extract the tmp directory path
             TString KeyFile = lApp->Argv()[3];
-            Int_t lTmp = KeyFile.Index("/proofauth", strlen("/proofauth"), 0, TString::kExact);
-            KeyFile.Resize(lTmp);
             KeyFile += "/rpk_";
             KeyFile += retval;
 
@@ -1519,6 +1517,9 @@ void TProofServ::Setup()
       (*mess) >> fUser >> fPwHash >> fSRPPwd >> fOrdinal;
 
    delete mess;
+
+   // Recv auth info transmitted from the client
+   RecvHostAuth();
 
    // deny write access for group and world
    gSystem->Umask(022);
@@ -1704,154 +1705,11 @@ TProofServ *TProofServ::This()
 }
 
 //______________________________________________________________________________
-void TProofServ::ReadProofAuth()
-{
-   // Read the content of a proofauth.xxx file, if exists, create related
-   // THostAuth and add them to the authInfo list.
-
-   TList     *authInfo = 0;
-   THostAuth *hostAuth = 0;
-
-   PDB(kGlobal,2) Info("ReadProofAuth","enter ...");
-
-   // Get pointer to list with authentication info
-   authInfo = TAuthenticate::GetAuthInfo();
-
-   // Check if we got a file name from the calling process
-   TApplication *lApp = gROOT->GetApplication();
-   if (lApp) {
-      if (lApp->Argc() > 3) {
-         // We got a file name ...
-         char *FilePA = StrDup(lApp->Argv()[3]);
-         PDB(kGlobal,3) Info("ReadProofAuth","filename is: %s", FilePA);
-
-         // Check accessibility ...
-         if (!gSystem->AccessPathName(FilePA, kReadPermission)) {
-            // Now open it
-            FILE *fpa = fopen(FilePA, "r");
-            if (fpa) {
-               // now read it
-               char  line[1024];
-               int   i, nmet, meth[kMAXSEC], len;
-               char *ptr, *pend, *host, *user, *rest, *det[kMAXSEC];
-               while (fgets(line, sizeof(line),fpa)) {
-                  // Reset entry
-                  for (i = 0; i < kMAXSEC; i++) { meth[i]= -1; det[i]= 0; }
-                  // get read of CR ... if any
-                  if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
-                  // Now decode
-                  rest = new char[strlen(line)+1]; rest[0]='\0';
-                  ptr  = line;
-
-                  host = new char[strlen(line)+1]; host[0]='\0';
-                  sscanf(ptr+2, "%s %s", host, rest);
-                  ptr = strstr(ptr, rest);
-
-                  user = new char[strlen(line)+1]; user[0]='\0';
-                  sscanf(ptr+2, "%s %s", user, rest);
-                  if (!strcmp(user, "any")) user[0] = '\0';
-                  ptr = strstr(ptr, rest);
-
-                  sscanf(ptr+2, "%d %s", &nmet, rest);
-                  PDB(kGlobal,3)
-                      Info("ReadProofAuth","host user nmet: %s %s %d",host,user,nmet);
-
-                  ptr = strstr(ptr, rest);
-                  for (i = 0; i < nmet; i++) {
-                     sscanf(ptr+1, "%d %s", &meth[i], rest);
-                     ptr = strstr(ptr, rest);
-
-                     PDB(kGlobal,3) Info("ReadProofAuth","meth[%d]: %d (%s)",i,meth[i]);
-
-                     pend = strstr(ptr+1,"'");
-                     len = pend-ptr;
-                     det[i] = new char[len+5];
-                     strncpy(det[i], ptr, len);
-                     det[i][len]='\0';
-                     // Turn off prompt
-                     char *ppt = strstr(det[i], "pt:");
-                     if (ppt) {
-                        if (!strncmp(ppt+3,"yes",3)) {
-                           ppt[3]='n'; ppt[4]='o'; ppt[5]=' ';
-                        }
-                        if (!strncmp(ppt+3,"1",1)) {
-                           ppt[3]='0';
-                        }
-                     }
-                     PDB(kGlobal,3) Info("ReadProofAuth", "det[%d]: %s",i,det[i]);
-                     ptr = strstr(pend+1, "'");
-                  }
-                  // Check if a HostAuth object for this (host,user) pair already exists
-                  hostAuth = TAuthenticate::GetHostAuth(host,user);
-                  if (!hostAuth) {
-                     // Create HostAuth object ...
-                     hostAuth = new THostAuth(host,user,nmet,meth,(char **)det);
-                     PDB(kGlobal,3) hostAuth->Print();
-
-                     // ... and add it to the list (static in TAuthenticate)
-                     authInfo->Add(hostAuth);
-                  } else {
-                     PDB(kGlobal,3) {
-                        Info("ReadProofAuth", "updating existing THostAuth for (%s,%s)",host,user);
-                        hostAuth->Print();
-                     }
-
-                    int nold = hostAuth->NumMethods();
-                    int i,j;
-                    for (i = 0; i < nmet; i++ ) {
-                       int jm = -1;
-                       for (j = 0; j < nold; j++ ) {
-                          if (meth[i] == hostAuth->GetMethods(j)) {
-                             jm= j; break;
-                          }
-                       }
-                       if (jm == -1) {
-                          // Add a method ...
-                          hostAuth->AddMethod(meth[i], det[i]);
-                       } else {
-                          // Set a new details string ...
-                          hostAuth->SetDetails(meth[i], det[i]);
-                       }
-                    }
-                 }
-                 // Delete allocate memory
-                 if (host) delete[] host;
-                 if (user) delete[] user;
-                 if (rest) delete[] rest;
-                 for (i = 0; i < kMAXSEC; i++) {
-                    if (det[i]) delete[] det[i];
-                    det[i] = 0; meth[i] = -1;
-                  }
-                  nmet = 0;
-               }
-               // Close the file
-               fclose(fpa);
-               // Unlink (=delete) the file
-               gSystem->Unlink(FilePA);
-            } else {
-               PDB(kGlobal,3)
-                  Info("ReadProofAuth","file %s cannot be opened", FilePA);
-            }
-         } else {
-            PDB(kGlobal,3)
-               Info("ReadProofAuth","file %s either non existing or not readable", FilePA);
-         }
-         delete [] FilePA;
-      } else {
-         PDB(kGlobal,3)
-            Info("ReadProofAuth","no file name received from calling process");
-      }
-   } else {
-      PDB(kGlobal,3) Info("ReadProofAuth","unable to access calling arguments");
-   }
-}
-
-//______________________________________________________________________________
 void TProofServ::CollectAuthInfo()
 {
    // Collect information needed for authentication to slaves.
-   // Sources are proof.conf and proofauth.xxx files.
-   // THostAuth objects are created accordingly and added to the authInfo list.
+   // Source is proof.conf and THostAuth objects are created accordingly
+   // and added to the authInfo list.
 
    TList     *authInfo = 0;
    THostAuth *hostAuth = 0;
@@ -1873,7 +1731,7 @@ void TProofServ::CollectAuthInfo()
    for (i = 0; i < kMAXSEC; i++){
       if (i == 0 && fUser != "" && fPasswd != "") {
          AuthAvailable[i] = 1;
-         AuthDet[i] = StrDup(Form("pt:0 ru:0 us:%s", fUser.Data()));
+         AuthDet[i] = StrDup(Form("pt:0 ru:1 us:%s", fUser.Data()));
       } else {
          AuthAvailable[i] = CheckAuth(i, &AuthDet[i]);
       }
@@ -2031,29 +1889,13 @@ void TProofServ::CollectAuthInfo()
                   PDB(kGlobal,3) hostAuth->Print();
                }
 
-#if 0
-               // If 'host' is ourselves, then use rfio (to setup things correctly)
-               // Check and save the host FQDN ...
-               static TString LocalFqdn;
-               if (LocalFqdn == "") {
-                  TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
-                  if (addr.IsValid()) {
-                     LocalFqdn = addr.GetHostName();
-                     if (LocalFqdn == "UnNamedHost")
-                        LocalFqdn = addr.GetHostAddress();
-	          }
-	       }
-               if (SlaveFqdn == LocalFqdn || SlaveFqdn.Contains("localhost"))
-                  hostAuth->SetFirst((int)TAuthenticate::kRfio);
-#endif
-
                // CleanUp memory
                int ks;
                for (ks = 0; ks < nSecs; ks++) {
                   if (fDets[ks]) delete[] fDets[ks];
                }
-	    } // strcmp "slave"
-	 } // fgets
+            } // strcmp "slave"
+         } // fgets
       } // fopen
 
       // close file
@@ -2097,22 +1939,16 @@ void TProofServ::CollectAuthInfo()
    for (Int_t ks = 0; ks < 2; ks++) {
       if (fDets[ks]) delete[] fDets[ks];
    }
-
-   // Read info transmitted from the client ...
-   ReadProofAuth();
 }
-
 
 //______________________________________________________________________________
 Int_t TProofServ::CheckAuth(Int_t cSec, char **Det)
 {
    // Check if the authentication method can be attempted for the client.
 
-   const char sshid[3][20] = { ".ssh/identity", ".ssh/id_dsa", ".ssh/id_rsa" };
-   const char netrc[2][20] = { ".netrc", ".rootnetrc" };
+   const char sshid[3][20] = { "/.ssh/identity", "/.ssh/id_dsa", "/.ssh/id_rsa" };
+   const char netrc[2][20] = { "/.netrc", "/.rootnetrc" };
    Int_t ok          = 0;
-   char *home        = 0;
-   char *infofile    = 0;
    char *details     = 0;
    char *user        = 0;
 
@@ -2122,17 +1958,16 @@ Int_t TProofServ::CheckAuth(Int_t cSec, char **Det)
       user = StrDup(pw->fUser);
       delete pw;
    } else {
-      Info("CheckAuth", "not properly logged on (getpwuid unable to find relevant info)!");
+      Info("CheckAuth",
+           "not properly logged on (getpwuid unable to find relevant info)!");
       return ok;
    }
 
    // UsrPwd
    if (cSec == (Int_t) TAuthenticate::kClear) {
-      home = StrDup(getenv("HOME"));
-      infofile = new char[sizeof(home)+25];
       Int_t i;
       for (i = 0; i < 2; i++) {
-         sprintf(infofile,"%s/%s",home,netrc[i]);
+         TString infofile = TString(gSystem->HomeDirectory())+TString(netrc[i]);
          if (!gSystem->AccessPathName(infofile, kReadPermission)) ok = 1;
       }
       if (ok == 1) {
@@ -2205,11 +2040,9 @@ Int_t TProofServ::CheckAuth(Int_t cSec, char **Det)
 
    // SSH
    if (cSec == (Int_t) TAuthenticate::kSSH) {
-      home = StrDup(getenv("HOME"));
-      infofile = new char[sizeof(home)+25];
       int i;
       for (i = 0; i < 3; i++) {
-         sprintf(infofile,"%s/%s",home,sshid[i]);
+         TString infofile = TString(gSystem->HomeDirectory())+TString(sshid[i]);
          if (!gSystem->AccessPathName(infofile,kReadPermission)) ok = 1;
       }
       if (ok == 1) {
@@ -2228,10 +2061,6 @@ Int_t TProofServ::CheckAuth(Int_t cSec, char **Det)
    // Fill output, if relevant ...
    if (details) { *Det= StrDup(details); delete [] details; }
 
-   // CleanUp remaining stuff ...
-   if (home)     delete [] home;
-   if (infofile) delete [] infofile;
-
    PDB(kGlobal,3) {
       if (ok == 1) {
          Info("CheckAuth","meth: %d ... is available: details: %s", cSec, *Det);
@@ -2242,4 +2071,151 @@ Int_t TProofServ::CheckAuth(Int_t cSec, char **Det)
 
    // return
    return ok;
+}
+
+//______________________________________________________________________________
+void TProofServ::RecvHostAuth()
+{
+   // Receive from TSlave directives for future authentications, create related
+   // THostAuth and add them to the authInfo list.
+
+   TList     *authInfo = 0;
+   THostAuth *hostAuth = 0;
+
+   PDB(kGlobal,2) Info("RecvHostAuth", "enter ...");
+
+   // Get pointer to list with authentication info
+   authInfo = TAuthenticate::GetAuthInfo();
+
+   // Receive buffer
+   Int_t kind;
+   const Int_t kBUF = 2048;
+   char buf[kBUF];
+   Int_t nr = fSocket->Recv(buf, kBUF, kind);
+   if (nr < 0 || kind != kPROOF_SENDHOSTAUTH) {
+      Error("RecvHostAuth", "received: kind: %d (%d bytes)", kind, nr);
+      return;
+   }
+   PDB(kGlobal,2)
+      Info("RecvHostAuth", "received: (%d bytes) %s", nr, buf);
+   char rest[kBUF], host[kBUF], user[kBUF];
+   Int_t i, nmet, meth[kMAXSEC], len;
+   char *ptr = 0, *pend = 0, *det[kMAXSEC] = {0};
+   while (strcmp(buf, "END")) {
+      // Clean buffer
+      Int_t nc = (nr < kBUF)? nr : kBUF ;
+      buf[nc] = '\0';
+
+      // Init
+      rest[0] = '\0';
+      host[0] = '\0';
+      user[0] = '\0';
+
+      // Now decode
+      ptr = strstr(buf, "h:");  // The host string begins with "h:"
+      sscanf(ptr+2, "%s %s", host, rest);
+
+      ptr = strstr(ptr, "u:");  // The user string begins with "u:"
+      sscanf(ptr+2, "%s %s", user, rest);
+      if (!strcmp(user, "any")) user[0] = '\0';
+
+      ptr = strstr(ptr, "n:");  // Methods info begins with "n:"
+      sscanf(ptr+2, "%d %s", &nmet, rest);
+
+      // Notify if required
+      PDB(kGlobal,3)
+          Info("RecvHostAuth", "host user nmet: %s %s %d", host, user, nmet);
+
+      // Details for methods should follow in the form of single-quote
+      // delimited strings with method number and details, eg
+      //   '0 pt:0 ru:1 us:qwerty'
+      ptr = strstr(ptr, rest);
+      for (i = 0; i < nmet; i++) {
+
+         // First the method number ...
+         sscanf(ptr+1, "%d %s", &meth[i], rest);
+         PDB(kGlobal,3)
+            Info("RecvHostAuth", "meth[%d]: %d (%s)", i, meth[i]);
+
+         // ... then the details
+         ptr = strstr(ptr, rest);
+         pend = strstr(ptr+1, "'");
+         len = pend-ptr;
+         det[i] = new char[len+5];
+         strncpy(det[i], ptr, len);
+         det[i][len] = '\0';
+         // Make sure that prompt is off
+         char *ppt = strstr(det[i], "pt:");
+         if (ppt) {
+            if (!strncasecmp(ppt+3, "yes", 3)) {
+               ppt[3] = 'n'; ppt[4] = 'o'; ppt[5] = ' ';
+            }
+            if (!strncmp(ppt+3, "1", 1)) {
+               ppt[3] = '0';
+            }
+         }
+         PDB(kGlobal,3)
+            Info("RecvHostAuth", "det[%d]: %s", i, det[i]);
+         ptr = strstr(pend+1, "'");
+      }
+
+      // Check if a HostAuth object for this (host,user) pair already exists
+      hostAuth = TAuthenticate::GetHostAuth(host, user);
+      if (!hostAuth || strcmp(hostAuth->GetHost(), host)) {
+         // Create HostAuth object ...
+         hostAuth = new THostAuth(host, user, nmet, meth, (char **)det);
+         PDB(kGlobal,3) hostAuth->Print();
+
+         // ... and add it to the list (static in TAuthenticate)
+         authInfo->Add(hostAuth);
+      } else {
+         PDB(kGlobal,3) {
+            Info("RecvHostAuth", "updating existing THostAuth for (%s,%s)", host, user);
+            hostAuth->Print();
+         }
+
+         Int_t nold = hostAuth->NumMethods();
+         Int_t i,j;
+         // We add new methods or update details; in any case the
+         // should be the one we have found, so we start from the
+         // last ...
+         for (i = nmet-1; i > -1; i-- ) {
+            int jm = -1;
+            for (j = 0; j < nold; j++ ) {
+               if (meth[i] == hostAuth->GetMethods(j)) {
+                  jm = j;
+                  break;
+               }
+            }
+            if (jm == -1) {
+               // Add method as first ...
+               hostAuth->SetFirst(meth[i], det[i]);
+            } else {
+               // Set method as first ...
+               hostAuth->SetFirst(meth[i]);
+               // ... and update details string
+               hostAuth->SetDetails(meth[i], det[i]);
+            }
+         }
+      }
+      // Delete allocate memory
+      for (i = 0; i < kMAXSEC; i++) {
+         if (det[i])
+            delete[] det[i];
+         det[i] = 0;
+         meth[i] = -1;
+      }
+      nmet = 0;
+      ptr = 0;
+      pend = 0;
+
+      // Get the next one
+      nr = fSocket->Recv(buf, kBUF, kind);
+      if (nr < 0 || kind != kPROOF_SENDHOSTAUTH) {
+         Info("RecvHostAuth","Error: received: kind: %d (%d bytes)", kind, nr);
+         return;
+      }
+      PDB(kGlobal,2)
+         Info("RecvHostAuth"," received: (%d bytes) %s", nr, buf);
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.21 2003/10/27 17:46:17 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.22 2003/10/28 16:32:43 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -192,7 +192,7 @@ const char *kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "Ui
 const char kMethods[]      = "usrpwd srp    krb5   globus ssh    uidgid";
 const char kRootdPass[]    = ".rootdpass";
 const char kSRootdPass[]   = ".srootdpass";
-const char kDaemonAccess[] = "daemon.access"; // file containing daemon access rules
+const char kDaemonRc[]     = ".rootdaemonrc"; // file containing daemon access rules
 
 // To control user access
 char *gUserAllow[kMAXSEC] = { 0 };
@@ -202,7 +202,7 @@ unsigned int gUserIgnLen[kMAXSEC] = { 0 };
 
 char gAltSRPPass[kMAXPATHLEN] = { 0 };
 char gAnonUser[64] = "rootd";
-char gAuthAllow[kMAXPATHLEN] = { 0 }; // path to kDaemonAccess
+char gSystemDaemonRc[kMAXPATHLEN] = { 0 }; // path to kDaemonRc
 char gExecDir[kMAXPATHLEN] = { 0 };   // needed to localize ssh2rpd
 char gFileLog[kMAXPATHLEN] = { 0 };
 char gOpenHost[256] = "????";         // same length as in net.cxx ...
@@ -221,6 +221,7 @@ int gGlobus = -1;
 int gNumAllow = -1;
 int gNumLeft = -1;
 int gOffSet = -1;
+int gPort = 0;
 int gRemPid = -1;
 int gReUseAllow = 0x1F;  // define methods for which previous auth can be reused
 int gRootLog = 0;
@@ -260,7 +261,6 @@ const int kAUTH_SRP_MSK = 0x2;
 const int kAUTH_KRB_MSK = 0x4;
 const int kAUTH_GLB_MSK = 0x8;
 const int kAUTH_SSH_MSK = 0x10;
-
 
 //______________________________________________________________________________
 static int rpdstrncasecmp(const char *str1, const char *str2, int n)
@@ -1037,14 +1037,24 @@ int RpdCheckAuthAllow(int Sec, char *Host)
    // If 'yes', returns 0, if 'no', returns 1, the number of allowed
    // methods in NumAllow, and the codes of the allowed methods (in order
    // of preference) in AllowMeth. Memory for AllowMeth must be allocated
-   // outside. Info read from gAuthAllow.
+   // outside. Info read from gSystemDaemonRc.
 
    int retval = 1, found = 0;
 
+   char theDaemonRc[kMAXPATHLEN] = { 0 };
+
+   // Check if user has a private daemon access file ...
+   struct passwd *pw = getpwuid(getuid());
+   if (pw != 0) {
+      sprintf(theDaemonRc, "%s/%s", pw->pw_dir, kDaemonRc);
+   }
+   if (pw == 0 || access(theDaemonRc, R_OK)) {
+      strcpy(theDaemonRc, gSystemDaemonRc);
+   }
    if (gDebug > 2)
       ErrorInfo
           ("RpdCheckAuthAllow: Checking file: %s for meth:%d host:%s (gNumAllow: %d)",
-           gAuthAllow, Sec, Host, gNumAllow);
+           theDaemonRc, Sec, Host, gNumAllow);
 
    // Check if info already loaded (not first call ...)
    if (gMethInit == 1) {
@@ -1072,16 +1082,16 @@ int RpdCheckAuthAllow(int Sec, char *Host)
       gMethInit = 1;
 
       // First check if file exists and can be read
-      if (access(gAuthAllow, R_OK)) {
+      if (access(theDaemonRc, R_OK)) {
          ErrorInfo("RpdCheckAuthAllow: can't read file %s (errno: %d)",
-                   gAuthAllow, GetErrno());
+                   theDaemonRc, GetErrno());
          return retval;
       }
       // Open file
-      FILE *ftab = fopen(gAuthAllow, "r");
+      FILE *ftab = fopen(theDaemonRc, "r");
       if (ftab == 0) {
          ErrorInfo("RpdCheckAuthAllow: error opening %s (errno: %d)",
-                   gAuthAllow, GetErrno());
+                   theDaemonRc, GetErrno());
          return retval;
       }
       // Get IP of the host in form of a string
@@ -1116,8 +1126,19 @@ int RpdCheckAuthAllow(int Sec, char *Host)
             nw = sscanf(pstr, "%s %s", host, rest);
             if (nw < 2)
                continue;        // no method defined for this host
-            //         pstr = strstr(line,rest);
             pstr = line + strlen(host) + 1;
+
+            // Check if a service is specified
+            char *pcol = strstr(host, ":");
+            if (pcol) {
+               if (!strstr(pcol+1, gService))
+                  continue;
+               else
+                  host[(int)(pcol-host)] = '\0';
+            }
+            if (strlen(host) == 0)
+               strcpy(host, "default");
+
             if (gDebug > 2)
                ErrorInfo("RpdCheckAuthAllow: found host: %s ", host);
 
@@ -1732,21 +1753,26 @@ void RpdKrb5Auth(const char *sstr)
 
    // get service principal
    const char *service = gService;
-   int port = 0; // need to retrieve that information
 
-   if ((strcmp(gService, "rootd") == 0  && port == 1094) ||
-       (strcmp(gService, "proofd") == 0 && port == 1093)) {
+   if (gDebug > 2)
+      ErrorInfo("RpdKrb5Auth: gService: %s, Port: %d ",gService,gPort);
+
+   if ((strcmp(gService, "rootd") == 0  && gPort == 1094) ||
+       (strcmp(gService, "proofd") == 0 && gPort == 1093)) {
       // keep the real service name
    } else {
       // default to host
       service = "host";
    }
 
+   if (gDebug > 2)
+      ErrorInfo("RpdKrb5Auth: using service: %s ",service);
+
    krb5_principal server;
    if ((retval = krb5_sname_to_principal(gKcontext, 0, service,
                                          KRB5_NT_SRV_HST, &server))) {
       ErrorInfo("RpdKrb5Auth: while generating service name (%s): %d %s",
-                gService, retval, error_message(retval));
+                service, retval, error_message(retval));
       return;
    }
 
@@ -2918,12 +2944,9 @@ void RpdDefaultAuthAllow()
 
    // Kerberos
 #ifdef R__KRB5
-//   if (getuid() == 0) {
-      gAllowMeth[gNumAllow] = 2;
-      gNumAllow++;
-      gNumLeft++;
-//   } else
-//      gHaveMeth[2] = 0;
+   gAllowMeth[gNumAllow] = 2;
+   gNumAllow++;
+   gNumLeft++;
 #else
    // Don't have this method
    gHaveMeth[2] = 0;

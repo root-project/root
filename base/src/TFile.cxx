@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.101 2003/09/21 21:38:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.102 2003/09/27 18:45:45 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1927,10 +1927,16 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 
    if (!strncmp(name, "root:", 5) || !strncmp(name, "roots:", 6) ||
        !strncmp(name, "rootk:", 6)) {
+      // if the url points to the local user on the localhost
+      // do not operate network machinery
+      Bool_t sameUser = kFALSE;
       TUrl url(name);
+      UserGroup_t *u = gSystem->GetUserInfo();
+      if (u && !strcmp(u->fUser, url.GetUser())) sameUser = kTRUE;
+      delete u;
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-      if (strcmp(a.GetHostName(), b.GetHostName())) {
+      if (strcmp(a.GetHostName(), b.GetHostName()) || !sameUser) {
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
              h->LoadPlugin() == 0)
             f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);

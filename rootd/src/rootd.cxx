@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.67 2003/10/27 09:48:35 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.68 2003/10/28 16:32:43 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2359,7 +2359,7 @@ int main(int argc, char **argv)
       strncpy(gConfDir, *argv, kMAXPATHLEN-1);
       gConfDir[kMAXPATHLEN-1] = 0;
       sprintf(gExecDir, "%s/bin", gConfDir);
-      sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
+      sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
    } else {
       // try to guess the config directory...
 #ifndef ROOTPREFIX
@@ -2367,7 +2367,7 @@ int main(int argc, char **argv)
          if (getenv("ROOTSYS")) {
             strcpy(gConfDir, getenv("ROOTSYS"));
             sprintf(gExecDir, "%s/bin", gConfDir);
-            sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
+            sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
             if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
          } else {
             if (!gInetdFlag)
@@ -2382,7 +2382,7 @@ int main(int argc, char **argv)
       strcpy(gExecDir, ROOTBINDIR);
 #endif
 #ifdef ROOTETCDIR
-      sprintf(gAuthAllow, "%s/%s", ROOTETCDIR, kDaemonAccess);
+      sprintf(gSystemDaemonRc, "%s/system%s", ROOTETCDIR, kDaemonRc);
 #endif
    }
 
@@ -2392,7 +2392,8 @@ int main(int argc, char **argv)
       // Also initialize the network connection - create the socket
       // and bind our well-know address to it.
 
-      int fdkeep = NetInit(gService, gPort1, gPort2, tcpwindowsize);
+      gPort = gPort1;
+      int fdkeep = NetInit(gService, gPort, gPort2, tcpwindowsize);
       if (!gForegroundFlag) DaemonStart(1, fdkeep, kROOTD);
    }
 

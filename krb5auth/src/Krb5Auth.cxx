@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.11 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.12 2003/10/27 09:48:35 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -213,11 +213,11 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    strcpy(User,client->data->data);
 
    if (gDebug > 3) {
-      char *Realm = StrDup(client->realm.data);
-      int k = 0, len = strlen(client->realm.data);
-      for (k = 0; k < len; k++ ) { if ((int)Realm[k] == 32) Realm[k] = '\0'; }
+      char *Realm = new char[client->realm.length+1];
+      strncpy(Realm,client->realm.data,client->realm.length);
+      Realm[client->realm.length]= '\0';
       Info("Krb5Authenticate", "cc_get_principal: client: %s %s (%d %d)",
-           client->data->data,Realm, strlen(client->data->data), strlen(Realm));
+           client->data->data,Realm, client->data->length, client->realm.length);
       delete [] Realm;
    }
 
@@ -319,11 +319,11 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    cleanup.server = server;
 
    if (gDebug > 3) {
-      char *Realm = StrDup(server->realm.data);
-      int k = 0, len = strlen(server->realm.data);
-      for (k = 0; k < len; k++) { if ((int)Realm[k] == 32) Realm[k] = '\0'; }
+      char *Realm = new char[server->realm.length+1];
+      strncpy(Realm,server->realm.data,server->realm.length);
+      Realm[server->realm.length]= '\0';
       Info("Krb5Authenticate","sname_to_principal: server: %s %s (%d %d)",
-           server->data->data, Realm, strlen(server->data->data), strlen(Realm));
+           server->data->data, Realm, server->data->length, server->realm.length);
       delete [] Realm;
    }
 
@@ -381,8 +381,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
       // Send the targetUser name
 
-   fprintf(stderr,"client is %s target is %s\n",
-           User,targetUser.Data());
+     if (gDebug > 0)
+        Info("Krb5Authenticate","client is %s target is %s",
+                                User,targetUser.Data());
       sock->Send(targetUser.Data(),kROOTD_KRB5);
 
       krb5_data outdata;
@@ -523,7 +524,7 @@ void Krb5InitCred(char *ClientPrincipal)
       if (Krb5Init!=0) delete[] Krb5Init;
       Krb5Init = "/usr/kerberos/bin/kinit";
   }
-  sprintf(cmd, "%s %s",Krb5Init,ClientPrincipal);
+  sprintf(cmd, "%s -f %s",Krb5Init,ClientPrincipal);
 
   if (gDebug > 2) Info("Krb5InitCred","executing: %s",cmd);
   gSystem->Exec(cmd);

@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.4 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.5 2003/10/22 18:48:36 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -111,7 +111,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    protocol = Auth->GetProtocol();
 
    if (gDebug > 2)
-      Info("GlobusAuthenticate", " enter: %s %s", protocol.Data(),
+      Info("GlobusAuthenticate", " enter: protocol:'%s' user:'%s'", protocol.Data(),
            user.Data());
 
    // If we are called for local cleanup, do it and return ...

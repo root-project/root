@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.37 2003/09/21 21:38:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.38 2003/10/22 18:48:36 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -474,21 +474,9 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
 
    // Authenticate remotely
    if (gDebug > 2) Info("Authenticate", "User from Url: %s", fUrl.GetUser());
-#if 0
-   if (!strcmp(fUrl.GetProtocol(), "roots")) {
-      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
-                               Form("roots:%d", fProtocol), fUrl.GetUser());
-   } else if (!strcmp(fUrl.GetProtocol(), "rootk")) {
-      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
-                               Form("rootk:%d", fProtocol), fUrl.GetUser());
-   } else {
-      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
-                               Form("rootd:%d", fProtocol), fUrl.GetUser());
-   }
-#else
    auth = new TAuthenticate(fSocket, fUrl.GetHost(),
                 Form("%s:%d",fUrl.GetProtocol(),fProtocol), fUrl.GetUser());
-#endif
+
    // Attempt authentication
    if (!auth->Authenticate()) {
       Error("TNetFile", "%s authentication failed for host %s",

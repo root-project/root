@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.25 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.26 2003/10/27 09:48:35 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -125,8 +125,16 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    }
 
    // Check or get user name
+   fUser = "";
+   TString CheckUser;
    if (user && strlen(user) > 0) {
       fUser = user;
+      CheckUser = user;
+   } else {
+      UserGroup_t *u = gSystem->GetUserInfo();
+      if (u)
+         CheckUser = u->fUser;
+      delete u;
    }
    fPasswd = "";
    fPwHash = kFALSE;
@@ -152,7 +160,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
            GetAuthInfo()->GetSize());
 
    // Check list of auth info for already loaded info about this host
-   fHostAuth = GetHostAuth(fqdn,fUser);
+   fHostAuth = GetHostAuth(fqdn, CheckUser);
 
    // If we did not find a good THostAuth instantiation, create one
    if (fHostAuth == 0) {
@@ -196,6 +204,23 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
       }
       if (nmeth) delete [] nmeth;
       if (usr[0]) delete[] usr[0];
+   }
+
+   // If a secific method has been requested via the protocol
+   // set it as first
+   Int_t Sec = -1;
+   if (fProtocol.Contains("roots") || fProtocol.Contains("proofs")) {
+      Sec = TAuthenticate::kSRP;
+   } else if (fProtocol.Contains("rootk") || fProtocol.Contains("proofk")) {
+      Sec = TAuthenticate::kKrb5;
+   }
+   if (Sec > -1 && Sec < kMAXSEC) {
+      if (fHostAuth->HasMethod(Sec)) {
+         fHostAuth->SetFirst(Sec);
+      } else {
+         TString Det(GetDefaultDetails(Sec, 1, CheckUser));
+         fHostAuth->SetFirst(Sec, Det);
+      }
    }
 
    // This is what we have in memory
@@ -268,6 +293,8 @@ Bool_t TAuthenticate::Authenticate()
          if (GetUserPasswd(user, passwd, pwhash, (Bool_t &)kFALSE))
             return kFALSE;
       }
+      fUser = user;
+      fPasswd = passwd;
 
       if (fUser != "root")
          st = ClearAuth(user, passwd, pwhash);
@@ -284,6 +311,8 @@ Bool_t TAuthenticate::Authenticate()
          if (GetUserPasswd(user, passwd, pwhash, (Bool_t &)kTRUE))
             return kFALSE;
       }
+      fUser = user;
+      fPasswd = passwd;
 
       if (!fgSecAuthHook) {
          char *p;
@@ -300,6 +329,11 @@ Bool_t TAuthenticate::Authenticate()
          Error("Authenticate",
                "no support for SRP authentication available");
          return kFALSE;
+      }
+      // Fill present user info ...
+      if (st == 1) {
+         fPwHash = kFALSE;
+         fSRPPwd = kTRUE;
       }
 
    } else if (fSecurity == kKrb5) {
@@ -675,10 +709,14 @@ void TAuthenticate::SetEnvironment()
       if (strlen(UsDef) > 0) {
          fgDefaultUser = UsDef;
       } else {
-         UserGroup_t *u = gSystem->GetUserInfo();
-         if (u)
-            fgDefaultUser = u->fUser;
-         delete u;
+         if (fgUser != "") {
+            fgDefaultUser = fgUser;
+         } else {
+            UserGroup_t *u = gSystem->GetUserInfo();
+            if (u)
+               fgDefaultUser = u->fUser;
+            delete u;
+         }
       }
 
       if (gDebug > 2)
@@ -745,11 +783,6 @@ Bool_t TAuthenticate::GetUserPasswd(TString & user, TString & passwd,
          return 1;
       }
    }
-   // Fill present user info ...
-   fUser = user;
-   fPasswd = passwd;
-   fPwHash = pwhash;
-   fSRPPwd = srppwd;
 
    return 0;
 }
@@ -947,7 +980,7 @@ Bool_t TAuthenticate::GetPromptUser()
 {
    // Static method returning the prompt user settings.
 
-   return fgDefaultUser;
+   return fgPromptUser;
 }
 
 //______________________________________________________________________________
@@ -1462,7 +1495,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
    // Space for AuthMeth and Details must be allocated outside
    // Default method is SSH.
 
-   int i;
+   Int_t i;
 
    if (gDebug > 2)
       ::Info("GetAuthMeth", "enter: h:%s p:%s u:%s (0x%lx 0x%lx) ",
@@ -1471,66 +1504,6 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
    if (*User[0] == 0)
       *User[0] = StrDup("");
 
-#if 0
-   // If 'host' is ourselves, then use rfio (to setup things correctly)
-   // Check and save the host FQDN ...
-   static TString LocalFQDN;
-   if (!gEnv->GetValue("Test.Auth",0)) {
-      if (LocalFQDN == "") {
-         TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
-         if (addr.IsValid()) {
-            LocalFQDN = addr.GetHostName();
-            if (LocalFQDN == "UnNamedHost")
-               LocalFQDN = addr.GetHostAddress();
-         }
-      }
-
-
-      Bool_t SameUser = kFALSE;
-      UserGroup_t *u = gSystem->GetUserInfo();
-      if (u)
-         if (!strcmp(u->fUser,*User[0])) SameUser = kTRUE;
-      delete u;
-
-      if (LocalFQDN == Host && SameUser) {
-         if (gDebug > 3)
-            ::Info("GetAuthMeth", "remote host is the local one (%s)",
-                   LocalFQDN.Data());
-         *NumMeth = new int[1];
-         *NumMeth[0] = 1;
-         AuthMeth[0] = new int[1];
-         AuthMeth[0][0] = 5;
-         Details[0] = new char *[1];
-         Details[0][0] = StrDup(Form("pt:0 ru:0 us:%s", *User[0]));
-         return 1;
-      }
-   }
-#endif
-
-   // If specific protocol was specified then it has absolute priority ...
-   if (!strcmp(Proto, "roots") || !strcmp(Proto, "proofs")) {
-      *NumMeth = new int[1];
-      *NumMeth[0] = 1;
-      AuthMeth[0] = new int[1];
-      AuthMeth[0][0] = 1;
-      Details[0] = new char *[1];
-      Details[0][0] = StrDup(Form("pt:%s ru:%s us:%s",
-                                  gEnv->GetValue("SRP.LoginPrompt", "no"),
-                                  gEnv->GetValue("SRP.ReUse", "0"),
-                                  gEnv->GetValue("SRP.Login", *User[0])));
-      return 1;
-   } else if (!strcmp(Proto, "rootk") || !strcmp(Proto, "proofk")) {
-      *NumMeth = new int[1];
-      *NumMeth[0] = 1;
-      AuthMeth[0] = new int[1];
-      AuthMeth[0][0] = 2;
-      Details[0] = new char *[1];
-      Details[0][0] = StrDup(Form("pt:%s ru:%s us:%s",
-                                  gEnv->GetValue("Krb5.LoginPrompt", "no"),
-                                  gEnv->GetValue("Krb5.ReUse", "0"),
-                                  gEnv->GetValue("Krb5.Login", *User[0])));
-      return 1;
-   }
    // Check then .rootauthrc (if there)
    char temp[kMAXPATHLEN];
    Int_t *am[kMAXSEC], *nh, nu = 0, j = 0;
@@ -1693,6 +1666,8 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       while (fgets(line, sizeof(line), fd) != 0) {
          // Skip comment lines
          if (line[0] == '#')
+            continue;
+         if (!strncmp(line,"proofserv",9))
             continue;
          char *pstr = 0;
          char *pdef = strstr(line, "default");
@@ -2123,7 +2098,7 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
          }
       }
       nn++;
-   }
+    }
 
    // Act accordingly ...
    if (name == 0) {
@@ -2150,6 +2125,17 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
                   goto exit;
                }
             }
+         } else {
+#if 0
+            const char *sp = strstr(Host, host);
+            if (sp == 0 || sp != Host) {
+               retval = kFALSE;
+               goto exit;
+            }
+#else
+            retval = kFALSE;
+            goto exit;
+#endif
          }
       } else {
          if (!CheckHostWild(Host, host)) {
@@ -2491,6 +2477,8 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
          fPasswd = PasHash;
          fgPwHash = kTRUE;
          fPwHash = kTRUE;
+         fSRPPwd = kFALSE;
+         fgSRPPwd = kFALSE;
 
          fSocket->Send("\0", kROOTD_PASS);  // Needs this for consistency
          if (SecureSend(fSocket, 1, PasHash) == -1) {
@@ -2504,6 +2492,8 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
          fPasswd = Passwd;
          fgPwHash = kFALSE;
          fPwHash = kFALSE;
+         fSRPPwd = kFALSE;
+         fgSRPPwd = kFALSE;
 
          // Standard technique: invert passwd
          if (Passwd != "") {
@@ -3010,13 +3000,27 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user)
    // Check list of auth info for already loaded info about this host
    TIter next(GetAuthInfo());
    THostAuth *ai;
+   Bool_t NotFound = kTRUE;
    while ((ai = (THostAuth *) next())) {
       if (gDebug > 3)
          ai->Print("Authenticate:GetHostAuth");
 
       // Use default entry if existing and nothing more specific is found
-      if (!strcmp(ai->GetHost(),"default"))
+      if (!strcmp(ai->GetHost(),"default") && NotFound)
          rHA = ai;
+
+      // Check
+      if (ulen > 0) {
+         if (CheckHost(lHost,ai->GetHost()) && !strcmp(user, ai->GetUser())) {
+            rHA = ai;
+            NotFound = kFALSE;
+         }
+      } else {
+         if (CheckHost(lHost,ai->GetHost())) {
+            rHA = ai;
+            NotFound = kFALSE;
+         }
+      }
 
       if (ulen > 0) {
          if (lHost == ai->GetHost() && !strcmp(user, ai->GetUser())) {

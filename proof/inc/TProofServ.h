@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.17 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.18 2003/10/07 21:09:55 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -88,7 +88,7 @@ private:
    Int_t       LockPackage() { return LockDir(fPackageLock); }
    Int_t       UnlockPackage() { return UnlockDir(fPackageLock); }
    Int_t       CheckAuth(Int_t sec, char **det);
-   void        ReadProofAuth();
+   void        RecvHostAuth();
    void        CollectAuthInfo();
 
 public:

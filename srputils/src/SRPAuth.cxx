@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.9 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.10 2003/10/07 21:09:55 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -182,13 +182,6 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
 
    if (version > 1) {
 
-     // Save passwd for later use ...
-     TAuthenticate::SetGlobalUser(user);
-     TAuthenticate::SetGlobalPasswd(psswd);
-     TAuthenticate::SetGlobalPwHash(kFALSE);
-     TAuthenticate::SetGlobalSRPPwd(kTRUE);
-
-
      // Receive result of the overall process
      sock->Recv(stat, kind);
      if (kind == kROOTD_ERR) {
@@ -196,10 +189,18 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        goto out;
      }
 
+     // Save passwd for later use ...
+     TAuthenticate::SetGlobalUser(user);
+     TAuthenticate::SetGlobalPasswd(psswd);
+     TAuthenticate::SetGlobalPwHash(kFALSE);
+     TAuthenticate::SetGlobalSRPPwd(kTRUE);
+
      if (ReUse == 1) {
 
        if (kind != kROOTD_RSAKEY)
-       Warning("SRPAuthenticate", "problems recvn RSA key flag: got message %d, flag: %d",kind,gRSAKey);
+       Warning("SRPAuthenticate",
+               "problems recvn RSA key flag: got message %d, flag: %d",
+                kind,gRSAKey);
        gRSAKey = 1;
 
        // Send the key securely

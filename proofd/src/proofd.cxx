@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.51 2003/10/27 09:48:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.52 2003/10/28 16:32:43 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -235,7 +235,6 @@ int     gDebug                   = 0;
 int     gForegroundFlag          = 0;
 int     gInetdFlag               = 0;
 int     gMaster                  =-1;
-int     gPort                    = 0;
 int     gProtocol                = 8;       // increase when protocol changes
 char    gRcFile[kMAXPATHLEN]     = { 0 };
 int     gRootLog                 = 0;
@@ -704,16 +703,18 @@ void Authenticate()
                   gAuthListSent = 1;
                   goto next;
                } else {
-                  Error(ErrFatal,kErrNotAllowed, "Authenticate: method not in the list sent to the client");
+                  Error(ErrFatal,kErrNotAllowed,
+                       "Authenticate: method not in the list sent to the client");
                }
             } else
-               Error(ErrFatal,kErrConnectionRefused, "Authenticate: connection refused from host %s", gOpenHost);
+               Error(ErrFatal,kErrConnectionRefused,
+                       "Authenticate: connection refused from host %s", gOpenHost);
          }
 
          // Then check if a previous authentication exists and is valid
          // ReUse does not apply for RFIO
          if (kind != kROOTD_RFIO && ProofdReUseAuth(recvbuf, kind))
-            goto recvauth;
+            goto next;
       }
 
       switch (kind) {
@@ -753,7 +754,8 @@ void Authenticate()
       if (gClientProtocol > 8) {
 
          if (gDebug > 2)
-            ErrorInfo("Authenticate: here we are: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d", kind, Meth, gAuth, gNumLeft);
+            ErrorInfo("Authenticate: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d",
+                      kind, Meth, gAuth, gNumLeft);
 
          // If authentication failure, check if other methods could be tried ...
          if ((Meth != -1 || kind==kROOTD_PASS) && gAuth == 0) {
@@ -768,39 +770,6 @@ void Authenticate()
          }
       }
 
-recvauth:
-      // If authentication successfull, receive info for later authentications
-      if (gAuth == 1 && gClientProtocol > 8) {
-
-         sprintf(gFilePA, "%s/proofauth.%ld", gTmpDir, (long)getpid());
-         if (gDebug > 2) ErrorInfo("Authenticate: file with hostauth info is: %s", gFilePA);
-
-         FILE *fpa = fopen(gFilePA, "w");
-         if (fpa == 0) {
-            ErrorInfo("Authenticate: error creating file: %s", gFilePA);
-            goto next;
-         }
-
-         // Receive buffer
-         EMessageTypes kindauth;
-         int nr = NetRecv(recvbuf, kMaxBuf, kindauth);
-         if (nr < 0 || kindauth != kPROOF_SENDHOSTAUTH)
-            ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)", kindauth, nr);
-         if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s", nr, recvbuf);
-         while (strcmp(recvbuf, "END")) {
-            // Clean buffer
-            recvbuf[nr+1] = '\0';
-            // Write it to file
-            fprintf(fpa, "%s\n", recvbuf);
-            // Get the next one
-            nr = NetRecv(recvbuf, kMaxBuf, kindauth);
-            if (nr < 0 || kindauth != kPROOF_SENDHOSTAUTH)
-               ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)", kindauth, nr);
-            if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s", nr, recvbuf);
-         }
-         // Close suth file
-         fclose(fpa);
-      }
 next:
       continue;
    }
@@ -1007,7 +976,7 @@ void ProofdExec()
    argvv[0] = arg0;
    argvv[1] = (char *)(gMaster ? "proofserv" : "proofslave");
    argvv[2] = gConfDir;
-   argvv[3] = gFilePA;
+   argvv[3] = gTmpDir;
    argvv[4] = gOpenHost;
    sprintf(rpid, "%d", gRemPid);
    argvv[5] = rpid;
@@ -1130,8 +1099,10 @@ int main(int argc, char **argv)
             case 'b':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr, "-b requires a buffersize in bytes as argument\n");
-                  Error(ErrFatal, -1, "-b requires a buffersize in bytes as argument");
+                     fprintf(stderr,
+                             "-b requires a buffersize in bytes as argument\n");
+                  Error(ErrFatal, -1,
+                             "-b requires a buffersize in bytes as argument");
                }
                tcpwindowsize = atoi(*++argv);
                break;
@@ -1139,8 +1110,10 @@ int main(int argc, char **argv)
             case 'T':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr, "-T requires a dir path for temporary files [/usr/tmp]\n");
-                  Error(ErrFatal, kErrFatal, "-T requires a dir path for temporary files [/usr/tmp]");
+                     fprintf(stderr,
+                             "-T requires a dir path for temporary files [/usr/tmp]\n");
+                  Error(ErrFatal, kErrFatal,
+                             "-T requires a dir path for temporary files [/usr/tmp]");
                }
                sprintf(gTmpDir, "%s", *++argv);
                break;
@@ -1148,8 +1121,10 @@ int main(int argc, char **argv)
             case 's':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr, "-s requires as argument a port number for the sshd daemon\n");
-                  Error(ErrFatal, kErrFatal, "-s requires as argument a port number for the sshd daemon");
+                     fprintf(stderr,
+                             "-s requires as argument a port number for the sshd daemon\n");
+                  Error(ErrFatal, kErrFatal,
+                             "-s requires as argument a port number for the sshd daemon");
                }
                gSshdPort = atoi(*++argv);
                break;
@@ -1184,8 +1159,10 @@ int main(int argc, char **argv)
             case 'C':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr, "-C requires a file name for the host certificates file location\n");
-                  Error(ErrFatal, -1, "-C requires a file name for the host certificates file location");
+                     fprintf(stderr,
+                             "-C requires a file name for the host certificates file location\n");
+                  Error(ErrFatal, -1,
+                             "-C requires a file name for the host certificates file location");
                }
                sprintf(gHostCertConf, "%s", *++argv);
                break;
@@ -1214,15 +1191,17 @@ int main(int argc, char **argv)
       strncpy(gConfDir, *argv, kMAXPATHLEN-1);
       gConfDir[kMAXPATHLEN-1] = 0;
       sprintf(gExecDir, "%s/bin", gConfDir);
-      sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
+      sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
    } else {
       // try to guess the config directory...
 #ifndef ROOTPREFIX
       if (getenv("ROOTSYS")) {
          strcpy(gConfDir, getenv("ROOTSYS"));
          sprintf(gExecDir, "%s/bin", gConfDir);
-         sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
-         if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
+         sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
+         if (gDebug > 0)
+            ErrorInfo("main: no config directory specified using ROOTSYS (%s)",
+                      gConfDir);
       } else {
          if (!gInetdFlag)
             fprintf(stderr, "proofd: no config directory specified\n");
@@ -1235,7 +1214,7 @@ int main(int argc, char **argv)
       strcpy(gExecDir, ROOTBINDIR);
 #endif
 #ifdef ROOTETCDIR
-      sprintf(gAuthAllow, "%s/%s", ROOTETCDIR, kDaemonAccess);
+      sprintf(gSystemDaemonRc, "%s/system%s", ROOTETCDIR, kDaemonRc);
 #endif
    }
 
@@ -1244,8 +1223,10 @@ int main(int argc, char **argv)
    sprintf(arg0, "%s/bin/proofserv", gConfDir);
    if (access(arg0, X_OK) == -1) {
       if (!gInetdFlag)
-         fprintf(stderr, "proofd: incorrect config directory specified (%s)\n", gConfDir);
-      Error(ErrFatal, -1, "main: incorrect config directory specified (%s)", gConfDir);
+         fprintf(stderr,
+                 "proofd: incorrect config directory specified (%s)\n", gConfDir);
+      Error(ErrFatal, -1,
+                 "main: incorrect config directory specified (%s)", gConfDir);
    }
 
    // Log to stderr if not started as daemon ...

@@ -1,14 +1,21 @@
 #
-#  daemon.access   This file describes the names of the hosts for which
-#                  the allowed authentication methods are not the default ones
-#                  as specified in system.rootc (if any).
-#                  This file is used by the 'rootd' and 'proofd' daemons.
+#  $ROOTSYS/etc/system.rootdaemonrc, $HOME/.rootdaemonrc 
+#      This files describe the names of the hosts for which
+#      the allowed authentication methods are not the default ones
+#      as specified in system.rootc (if any).
+#      This file is used by the 'rootd' and 'proofd' daemons.
+#
+#      If existing, $HOME/.rootdaemonrc has priority over 
+#      $ROOTSYS/etc/system.rootdaemonrc 
 #
 #  Format:
 #    - lines starting with '#' are comment lines.
 #
 #    - hosts can specified either with their FQDN (eg, pcepsft43.cern.ch) or
 #      their IP address (eg 137.138.99.73).
+#
+#    - host names can be followed by :rootd or :proofd to define directives
+#      applying only to the given service
 #
 #    - the '*' character can be used in the first field of the name to 
 #      indicate a set of machines, e.g. pcepsft*.cern.ch applies to all 
@@ -76,6 +83,7 @@
 # lxplus*.cern.ch      4 1 globus 0:ganis:gganis 5  
 # pcepsft43.cern.ch    4 3 1 5 2 0
 # afal57.cern.ch       0 5 4 
+# pcep*.cern.ch:rootd  4 1 3 2 5 0
 #
 # Everything allowed from the local host (for testing)
 #

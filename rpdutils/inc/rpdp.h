@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.6 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.7 2003/10/22 18:48:36 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -62,6 +62,7 @@ extern int  gNumAllow;
 extern int  gNumLeft;
 extern int  gOffSet;
 extern int  gParallel;
+extern int  gPort;
 extern int  gRemPid;
 extern int  gReUseAllow;
 extern int  gReUseRequired;
@@ -71,7 +72,7 @@ extern int  gSshdPort;
 
 extern char gAltSRPPass[kMAXPATHLEN];
 extern char gAnonUser[64];
-extern char gAuthAllow[kMAXPATHLEN];
+extern char gSystemDaemonRc[kMAXPATHLEN];
 extern char gExecDir[kMAXPATHLEN];        // for use in rootd ...
 extern char gFile[kMAXPATHLEN];
 extern char gFileLog[kMAXPATHLEN];
@@ -84,7 +85,7 @@ extern char gUser[64];
 extern char gPasswd[64];                  // only used for anonymous access
 
 extern const char *kAuthMeth[kMAXSEC];    // authentication method list
-extern const char kDaemonAccess[];        // file containing daemon access rules
+extern const char kDaemonRc[];        // file containing daemon access rules
 
 extern SigPipe_t gSigPipeHook;
 
@@ -124,7 +125,7 @@ int NetRecv(char *msg, int max);
 int NetOpen(int inetdflag, EService service);
 void NetClose();
 const char *NetRemoteHost();
-int  NetInit(const char *service, int port1, int port2, int tcpwindowsize);
+int  NetInit(const char *service, int &port1, int port2, int tcpwindowsize);
 void NetInit(const char *service, int port, int tcpwindowsize);
 void NetSetOptions(EService service, int sock, int tcpwindowsize);
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.18 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.19 2003/10/07 21:09:55 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -116,14 +116,6 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             Info("TSlave", "Remote Client: fUser is .... %s", proof->fUser.Data());
          }
 
-         if (ProofdProto > 6) {
-            // Now we send authentication details to access, eg, data servers
-            // not in the proof cluster and to be propagated to slaves.
-            // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
-            // card in .rootauthrc
-            SendHostAuth(this, 0);
-         }
-
       } else {
 
          // we are a master server... authenticate either:
@@ -163,10 +155,6 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          PDB(kGlobal,3) {
             auth->GetHostAuth()->PrintEstablished();
             Info("TSlave", "Master Server: fUser is .... %s", fUser.Data());
-         }
-
-         if (ProofdProto > 6) {
-            SendHostAuth(this, 1);
          }
       }
 
@@ -211,10 +199,18 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          TString passwd = "";
          Bool_t  pwhash = kFALSE;
          Bool_t  srppwd = kFALSE;
+         Bool_t  sndsrp = kFALSE;
 
-         if (!fProof->IsMaster() &&
-            (fSecurity == TAuthenticate::kClear ||
-            (fSecurity == TAuthenticate::kSRP && gEnv->GetValue("Proofd.SendSRPPwd",0)))) {
+         if (!fProof->IsMaster()) {
+            if (gEnv->GetValue("Proofd.SendSRPPwd",0))
+               sndsrp = kTRUE;
+         } else {
+            if (fProof->fSRPPwd && fProof->fPasswd != "")
+               sndsrp = kTRUE;
+         }
+
+         if (fSecurity == TAuthenticate::kClear ||
+            (fSecurity == TAuthenticate::kSRP && sndsrp)) {
 
             // Send offset to identify remotely the public part of RSA key
             fSocket->Send(RemoteOffSet,kROOTD_RSAKEY);
@@ -240,7 +236,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
                TMessage mess;
                mess << passwd;
                fSocket->Send(mess);
-	    }
+            }
 
          } else {
 
@@ -251,11 +247,22 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
          TMessage mess;
          if (!fProof->IsMaster())
-	   mess << fProof->fUser << pwhash << srppwd << fProof->fConfFile;
+            mess << fProof->fUser << pwhash << srppwd << fProof->fConfFile;
          else
-	   mess << fProof->fUser << pwhash << srppwd << fOrdinal;
+            mess << fProof->fUser << pwhash << srppwd << fOrdinal;
 
          fSocket->Send(mess);
+
+         if (ProofdProto > 6) {
+            // Now we send authentication details to access, eg, data servers
+            // not in the proof cluster and to be propagated to slaves.
+            // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
+            // card in .rootauthrc
+            if (!fProof->IsMaster())
+               SendHostAuth(this, 0);
+            else
+               SendHostAuth(this, 1);
+         }
 
          // set some socket options
          fSocket->SetOption(kNoDelay, 1);
