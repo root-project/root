@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.38 2005/01/05 09:27:15 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.39 2005/01/12 18:39:30 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -164,6 +164,8 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
+   if (!err->resourceid) return 0;
+
    TObject *w = (TObject *)gROOT->ProcessLineFast(Form("gClient->GetWindowById(%d)", err->resourceid));
 
    if (!w) {

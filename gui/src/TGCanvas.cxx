@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.29 2004/12/10 17:35:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.30 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1828,6 +1828,12 @@ TGCanvas::~TGCanvas()
    delete fHScrollbar;
    delete fVScrollbar;
    delete fVport;
+
+   TGFrame *container = fVport->GetContainer();
+
+   if (container->MustCleanup()) {
+      delete container;
+   }
 }
 
 //______________________________________________________________________________

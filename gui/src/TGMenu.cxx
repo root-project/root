@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.45 2004/09/13 22:42:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.46 2004/10/21 14:25:30 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -116,11 +116,14 @@ TGMenuBar::~TGMenuBar()
 
    const TGMainFrame *main = (TGMainFrame *)GetMainFrame();
 
-   TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
-      t = (TGMenuTitle *) el->fFrame;
-      if ((keycode = t->GetHotKeyCode()) != 0 && main)
-         main->RemoveBind(this, keycode, kKeyMod1Mask);
+   if (!MustCleanup()) {
+      TIter next(fList);
+      while ((el = (TGFrameElement *) next())) {
+         t = (TGMenuTitle *) el->fFrame;
+         if ((keycode = t->GetHotKeyCode()) != 0 && main) {
+            main->RemoveBind(this, keycode, kKeyMod1Mask);
+         }
+      }
    }
 
    // delete TGMenuTitles

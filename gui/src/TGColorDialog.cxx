@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.14 2004/08/13 15:12:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.15 2004/09/13 09:10:56 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -597,6 +597,7 @@ void TGColorPick::AllocColors()
 //________________________________________________________________________________
 void TGColorPick::FreeColors()
 {
+
    for (Int_t i = 0; i < fNColors; i++)
       gVirtualX->FreeColor(gVirtualX->GetColormap(), fPixel[i]);
    fNColors = 0;

@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.47 2004/12/03 12:07:44 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.48 2004/12/09 22:55:06 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -282,7 +282,6 @@ private:
    Bool_t               fFillHistos;
    TH1F                *fHpx;
    TH2F                *fHpxpy;
-   TList               *fCleanup;
 
    void FillHistos();
 
@@ -365,7 +364,6 @@ private:
    TGShutter        *fShutter;
    TGLayoutHints    *fLayout;
    const TGPicture  *fDefaultPic;
-   TList            *fTrash;
 
 public:
    TestShutter(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
@@ -576,6 +574,10 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // Create test main frame. A TGMainFrame is a top level window.
 
    fMain   = new TGMainFrame(p, w, h);
+
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
+
    fMain->Connect("CloseWindow()", "TestMainFrame", this, "CloseWindow()");
 
    // Create menubar and popup menus. The hint objects are used to place
@@ -701,11 +703,10 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fContainer->SetCanvas(fCanvasWindow);
    fCanvasWindow->SetContainer(fContainer->GetFrame());
 
-   // Fill canvas with 256 colored frames (notice that doing it this way
-   // causes a memory leak when deleting the canvas (i.e. the TGFrame's and
-   // TGLayoutHints are NOT adopted by the canvas).
-   // Best is to create a TList and store all frame and layout pointers
-   // in it. When deleting the canvas just delete contents of list.
+   // use hierarchical cleaning for container
+   fContainer->GetFrame()->SetCleanup(kDeepCleanup);
+
+   // Fill canvas with 256 colored frames
    for (int i=0; i < 256; ++i)
       fCanvasWindow->AddFrame(new TGFrame(fCanvasWindow->GetContainer(),
                                           32, 32, 0, (i+1)&255),
@@ -753,17 +754,6 @@ TestMainFrame::~TestMainFrame()
 {
    // Delete all created widgets.
 
-   delete fTestButton;
-   delete fTestText;
-
-   delete fStatusFrame;
-   delete fContainer;
-   delete fCanvasWindow;
-
-   delete fMenuBarLayout;
-   delete fMenuBarItemLayout;
-   delete fMenuBarHelpLayout;
-
    delete fMenuFile;
    delete fMenuTest;
    delete fMenuView;
@@ -773,8 +763,6 @@ TestMainFrame::~TestMainFrame()
    delete fCascade2Menu;
    delete fMenuNew1;
    delete fMenuNew2;
-   delete fMenuBar;
-   delete fMenuDock;
 
    delete fMain;
 }
@@ -783,7 +771,7 @@ void TestMainFrame::CloseWindow()
 {
    // Got close message for this MainFrame. Terminates the application.
 
-   gApplication->Terminate(0);
+   delete this;
 }
 
 void TestMainFrame::DoButton()
@@ -959,8 +947,8 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fMain = new TGTransientFrame(p, main, w, h, options);
    fMain->Connect("CloseWindow()", "TestDialog", this, "CloseWindow()");
 
-   // Used to store GUI elements that need to be deleted in the ctor.
-   fCleanup = new TList;
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
 
    fFrame1 = new TGHorizontalFrame(fMain, 60, 20, kFixedWidth);
 
@@ -1073,10 +1061,10 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fF4 = new TGCompositeFrame(tf, 60, 20, kVerticalFrame);
    fF4->AddFrame(bt = new TGTextButton(fF4, "A&dd Entry", 90), fL3);
    bt->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
-   fCleanup->Add(bt);
+
    fF4->AddFrame(bt = new TGTextButton(fF4, "Remove &Entry", 91), fL3);
    bt->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
-   fCleanup->Add(bt);
+
    fF4->AddFrame(fListBox = new TGListBox(fF4, 89), fL3);
    fF4->AddFrame(fCheckMulti = new TGCheckButton(fF4, "&Mutli Selectable", 92), fL3);
    fCheckMulti->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
@@ -1113,7 +1101,6 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
       TGTextEntry  *tent = new TGTextEntry(fF6, tbuf);
       tent->Resize(50, tent->GetDefaultHeight());
       tent->SetFont("-adobe-courier-bold-r-*-*-14-*-*-*-*-*-iso8859-1");
-      fCleanup->Add(tent);
       fF6->AddFrame(tent);
    }
    fF6->Resize();
@@ -1127,17 +1114,14 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fF7->AddFrame(bt = new TGTextButton(fF7, "Remove Tab", 101));
    bt->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
    bt->Resize(90, bt->GetDefaultHeight());
-   fCleanup->Add(bt);
 
    fF7->AddFrame(bt = new TGTextButton(fF7, "Add Tab", 103));
    bt->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
    bt->Resize(90, bt->GetDefaultHeight());
-   fCleanup->Add(bt);
 
    fF7->AddFrame(bt = new TGTextButton(fF7, "Remove Tab 5", 102));
    bt->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
    bt->Resize(90, bt->GetDefaultHeight());
-   fCleanup->Add(bt);
 
    fF7->Resize(fF6->GetDefaultSize());
 
@@ -1162,28 +1146,6 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
 TestDialog::~TestDialog()
 {
    // Delete test dialog widgets.
-
-   if (fCleanup) {
-      fCleanup->Delete();
-      delete fCleanup;
-   }
-   delete fOkButton;
-   delete fCancelButton;
-   delete fStartB; delete fStopB;
-   delete fFrame1;
-   delete fBtn1; delete fBtn2;
-   delete fChk1; delete fChk2;
-   delete fRad1; delete fRad2;
-   delete fTxt1; delete fTxt2;
-   delete fEc1; delete fEc2;
-   delete fListBox; delete fCheckMulti;
-   delete fF1; delete fF2; delete fF3; delete fF4; delete fF5;
-   delete fF6; delete fF7;
-   delete fCombo;
-   delete fTab;
-   delete fL3; delete fL4;
-   delete fL1; delete fL2;
-   delete fHpx; delete fHpxpy;
 
    delete fMain;
 }
@@ -1381,6 +1343,9 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    fMain = new TGTransientFrame(p, main, w, h, options);
    fMain->Connect("CloseWindow()", "TestMsgBox", this, "CloseWindow()");
 
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
+
    //------------------------------
    // Set foreground color in graphics context for drawing of
    // TGlabel and TGButtons with text in red.
@@ -1513,15 +1478,6 @@ TestMsgBox::~TestMsgBox()
 {
    // Delete widgets created by dialog.
 
-   delete fTestButton; delete fCloseButton;
-   delete fC[0]; delete fC[1]; delete fC[2]; delete fC[3];
-   delete fC[4]; delete fC[5]; delete fC[6]; delete fC[7]; delete fC[8];
-   delete fR[0]; delete fR[1]; delete fR[2]; delete fR[3];
-   delete fTitle; delete fLtitle;
-   delete fMsg; delete fLmsg;
-   delete f3; delete f4; delete f5; delete f2; delete f1;
-   delete fL1; delete fL2; delete fL3; delete fL4; delete fL5; delete fL6;
-   delete fL21;
    delete fMain;
 }
 
@@ -1584,6 +1540,9 @@ TestSliders::TestSliders(const TGWindow *p, const TGWindow *main,
 
    fMain = new TGTransientFrame(p, main, w, h);
    fMain->Connect("CloseWindow()", "TestSliders", this, "CloseWindow()");
+
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
 
    fMain->ChangeOptions((fMain->GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
@@ -1670,12 +1629,6 @@ TestSliders::~TestSliders()
 {
    // Delete dialog.
 
-   delete fVframe1;
-   delete fVframe2;
-   delete fBfly1; delete fBly;
-   delete fHslider1; delete fHslider2;
-   delete fVslider1; delete fVslider2;
-   delete fTeh1; delete fTeh2; delete fTev1; delete fTev2;
    delete fMain;
 }
 
@@ -1765,7 +1718,8 @@ TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
    fMain = new TGTransientFrame(p, main, w, h);
    fMain->Connect("CloseWindow()", "TestShutter", this, "CloseWindow()");
 
-   fTrash = new TList;
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
 
    fDefaultPic = gClient->GetPicture("folder_s.xpm");
    fShutter = new TGShutter(fMain, kSunkenFrame);
@@ -1799,11 +1753,9 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
 
    TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX,
                                         5, 5, 5, 0);
-   fTrash->Add(l);
 
    item = new TGShutterItem(fShutter, new TGHotString(name), id++);
    container = (TGCompositeFrame *) item->GetContainer();
-   fTrash->Add(item);
 
    for (int i=0; data[i].pixmap_name != 0; i++) {
       buttonpic = gClient->GetPicture(data[i].pixmap_name);
@@ -1814,7 +1766,7 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
       }
 
       button = new TGPictureButton(container, buttonpic, data[i].id);
-      fTrash->Add(button);
+
       container->AddFrame(button, l);
       button->Connect("Clicked()", "TestShutter", this, "HandleButtons()");
       button->SetToolTipText(data[i].tip_text);
@@ -1826,10 +1778,8 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
 
 TestShutter::~TestShutter()
 {
-   delete fLayout;
-   delete fShutter;
-   fTrash->Delete();
-   delete fTrash;
+   // dtor
+
    delete fMain;
 }
 
@@ -1853,6 +1803,9 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
    fMain = new TGTransientFrame(p, main, w, h);
    fIcon = gClient->GetPicture("rootdb_t.xpm");
    TGLayoutHints *lo;
+
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
 
    TGCanvas* canvas = new TGCanvas(fMain, 500, 300);
    fContents = new TGListTree(canvas, kHorizontalFrame);
@@ -1881,8 +1834,6 @@ TestDirList::~TestDirList()
 {
    // Cleanup.
 
-   delete fContents;
-   fMain->Cleanup();
    delete fMain;
 }
 
@@ -1942,6 +1893,9 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
 
    fMain = new TGTransientFrame(p, main, w, h);
 
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
+
    TGMenuBar* mb = new TGMenuBar(fMain);
    lo = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
    fMain->AddFrame(mb, lo);
@@ -1983,8 +1937,6 @@ TestFileList::~TestFileList()
 {
    // Cleanup.
 
-   delete fContents;
-   fMain->Cleanup();
    delete fMain;
 }
 
@@ -2093,6 +2045,9 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
    fMain->Connect("CloseWindow()", "TestProgress", this, "DoClose()");
    fMain->DontCallClose();
 
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
+
    fMain->ChangeOptions((fMain->GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
    fHframe1 = new TGHorizontalFrame(fMain, 0, 0, 0);
@@ -2154,12 +2109,6 @@ TestProgress::~TestProgress()
 {
    // Delete dialog.
 
-   delete fHframe1;
-   delete fVframe1;
-   delete fVProg1; delete fVProg2;
-   delete fHProg1; delete fHProg2; delete fHProg3;
-   delete fHint1; delete fHint2; delete fHint3; delete fHint4; delete fHint5;
-   delete fGO;
    delete fMain;
 }
 
@@ -2259,6 +2208,9 @@ EntryTestDlg::EntryTestDlg(const TGWindow *p, const TGWindow *main)
    fMain = new TGTransientFrame(p, main, 10, 10, kHorizontalFrame);
    fMain->Connect("CloseWindow()", "EntryTestDlg", this, "CloseWindow()");
 
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
+
    TGGC myGC = *gClient->GetResourcePool()->GetFrameGC();
    TGFont *myfont = gClient->GetFont("-adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1");
    if (myfont) myGC.SetFont(myfont->GetFontHandle());
@@ -2324,24 +2276,8 @@ EntryTestDlg::EntryTestDlg(const TGWindow *p, const TGWindow *main)
 
 EntryTestDlg::~EntryTestDlg()
 {
-   for (int i = 0; i < 13; i++) {
-      delete fNumericEntries[i];
-      delete fLabel[i];
-      delete fF[i];
-   }
-   delete fLowerLimit;
-   delete fUpperLimit;
-   delete fLimits[0];
-   delete fLimits[1];
-   delete fPositive;
-   delete fNonNegative;
-   delete fSetButton;
-   delete fExitButton;
-   delete fF1;
-   delete fF2;
-   delete fL1;
-   delete fL2;
-   delete fL3;
+   // dtor
+
    delete fMain;
 }
 
@@ -2397,6 +2333,9 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h)
    fMain = new TGTransientFrame(gClient->GetRoot(), main, w, h);
    fMain->Connect("CloseWindow()", "Editor", this, "CloseWindow()");
 
+   // use hierarchical cleaning
+   fMain->SetCleanup(kDeepCleanup);
+
    fEdit = new TGTextEdit(fMain, w, h, kSunkenFrame | kDoubleBorder);
    fL1 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3);
    fMain->AddFrame(fEdit, fL1);
@@ -2423,10 +2362,6 @@ Editor::~Editor()
 {
    // Delete editor dialog.
 
-   delete fEdit;
-   delete fOK;
-   delete fL1;
-   delete fL2;
    delete fMain;
 }
 
