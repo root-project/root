@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.19 2000/10/09 13:58:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.20 2000/10/13 19:01:55 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4265,7 +4265,10 @@ void TPad::UseCurrentStyle()
    fGridy = gStyle->GetPadGridY();
    fTickx = gStyle->GetPadTickX();
    fTicky = gStyle->GetPadTickY();
-
+   fLogx  = gStyle->GetOptLogx();
+   fLogy  = gStyle->GetOptLogy();
+   fLogz  = gStyle->GetOptLogz();
+   
    TIter next(GetListOfPrimitives());
    TObject *obj;
 
