@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.82 2004/07/05 07:02:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.83 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1199,7 +1199,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
   // is monotone increasing
   for (i = 0; i < nprobSum; i++) {
      const Double_t r = probSum[i];
-     Int_t bin  = TMath::Max(TMath::BinarySearch(npx+1,integral.GetArray(),r)-1,0);
+     Int_t bin  = TMath::Max(TMath::BinarySearch(npx+1,integral.GetArray(),r)-1,(Long64_t)0);
      while (bin < npx-1 && integral[bin+1] == r) {
         if (integral[bin+2] == r) bin++;
         else break;
