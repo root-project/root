@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.157 2004/11/18 06:13:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.158 2004/11/19 11:39:24 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -777,12 +777,11 @@ void TBranchElement::Browse(TBrowser *b)
 {
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches > 0) {
-#ifdef AXELNEWCODE
       TList persistentBranches;
       TBranch* branch=0;
       TIter iB(&fBranches);
-      while((branch=(TBranch*)iB())) 
-         if (branch->IsFolder()) persistentBranches.Add(b);
+      while((branch=(TBranch*)iB())) {
+         if (branch->IsFolder()) persistentBranches.Add(branch);
          else {
             // only show branches corresponding to persistent members
             TClass* cl=0;
@@ -809,14 +808,15 @@ void TBranchElement::Browse(TBrowser *b)
                Size_t mempos=strMember.Last('.');
                if (mempos!=kNPOS)
                   strMember.Remove(0, (Int_t)mempos+1);
+               mempos=strMember.First('[');
+               if (mempos!=kNPOS)
+                  strMember.Remove((Int_t)mempos);
                TDataMember* m=cl->GetDataMember(strMember);
                if (!m || m->IsPersistent()) persistentBranches.Add(branch);
             } else persistentBranches.Add(branch);
          } // branch if not a folder
+      }
       persistentBranches.Browse(b);      
-#else
-      fBranches.Browse(b);
-#endif
       // add all public const methods without params
       if (GetBrowsableMethods())
          GetBrowsableMethods()->Browse(b);
