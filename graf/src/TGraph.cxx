@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.64 2002/04/02 10:39:53 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.65 2002/04/26 10:20:01 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -530,6 +530,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t dpx, dpy;
    static Int_t *x=0, *y=0;
 
+   if (!IsEditable()) {gPad->SetCursor(kHand); return;}
    if (!gPad->IsEditable()) return;
 
    switch (event) {
@@ -2964,6 +2965,16 @@ void TGraph::Set(Int_t n)
    fNpoints =n;
    fX = xx;
    fY = yy;
+}
+
+//______________________________________________________________________________
+void TGraph::SetEditable(Bool_t editable)
+{
+// if editable=kFALSE, the graph cannot be modified with the mouse
+//  by default a TGraph is editable
+   
+   if (editable) ResetBit(kNotEditable);
+   else          SetBit(kNotEditable);
 }
 
 //______________________________________________________________________________
