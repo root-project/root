@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.6 2000/11/21 16:49:40 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.7 2000/12/13 15:13:46 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -327,7 +327,7 @@ void TList::Clear(Option_t *option)
    Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
 
    if (!nodel && IsOwner()) {
-      Delete();
+      Delete(option);
       return;
    }
 
@@ -838,7 +838,7 @@ void TList::Streamer(TBuffer &b)
          b.CheckByteCount(R__s, R__c,TList::IsA());
          return;
       }
-      
+
       //  process old versions when TList::Streamer was in TCollection::Streamer
       if (v > 2)
          TObject::Streamer(b);
@@ -850,7 +850,7 @@ void TList::Streamer(TBuffer &b)
          Add(obj);
       }
       b.CheckByteCount(R__s, R__c,TList::IsA());
-      
+
    } else {
       R__c = b.WriteVersion(TList::IsA(), kTRUE);
       TObject::Streamer(b);

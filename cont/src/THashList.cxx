@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.3 2000/09/08 16:41:26 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.4 2000/12/13 15:13:46 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -175,7 +175,7 @@ void THashList::Clear(Option_t *option)
    // the THashList is the owner (set via SetOwner()).
 
    if (IsOwner())
-      TList::Delete();
+      TList::Delete(option);
    else
       TList::Clear(option);
    fTable->Clear("nodelete");  // any kCanDelete objects have already been deleted
