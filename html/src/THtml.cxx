@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.45 2003/10/12 07:25:29 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.46 2003/11/11 18:07:19 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3146,7 +3146,10 @@ void THtml::MakeIndex(const char *filter)
                srcdir=strstr(fileNames[numberOfImpFiles],"/inc/");
          };
 
-         if (srcdir && (!strchr(srcdir + 5, '/'))) {
+	 // there can be no sub-path in the class name, 
+	 // and impl file names don't have absolute paths
+         if (srcdir && (!strchr(srcdir + 5, '/')) 
+             && fileNames[numberOfImpFiles][0]!='/') {
             strcpy(srcdir, "_");
             for (char *t = fileNames[numberOfImpFiles];
                  (t[0] = toupper(t[0])); t++);
