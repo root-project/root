@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.43 2003/04/04 00:52:39 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.44 2003/04/24 19:18:23 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -145,7 +145,6 @@ Plugin.TSQLServer:   ^mysql:   TMySQLServer  MySQL   "TMySQLServer(const char*,c
 +Plugin.TSQLServer:  ^oracle:  TOracleServer Oracle  "TOracleServer(const char*,const char*,const char*)"
 Plugin.TGrid:        ^alien    TAlien        RAliEn  "TAlien(const char*,const char*,const char*,const char*)"
 Plugin.TVirtualPad:         *  TPad          Gpad         "TPad()"
-Plugin.TVirtualFitter:      *  TFitter       Minuit       "TFitter(Int_t)"
 Plugin.TVirtualHistPainter: *  THistPainter  HistPainter  "THistPainter()"
 Plugin.TVirtualTreePlayer:  *  TTreePlayer   TreePlayer   "TTreePlayer()"
 Plugin.TVirtualTreeViewer:  *  TTreeViewer   TreeViewer   "TTreeViewer(const TTree*)"
@@ -153,8 +152,10 @@ Plugin.TVirtualGeoPainter:  *  TGeoPainter   GeomPainter  "TGeoPainter()"
 Plugin.TVirtualUtil3D:      *  TUtil3D       Graf3d       "TUtil3D()"
 Plugin.TVirtualUtilHist:    *  TUtilHist     Hist         "TUtilHist()"
 Plugin.TVirtualUtilPad:     *  TUtilPad      Gpad         "TUtilPad()"
-Plugin.TVirtualPS:          ps  TPostScript  Postscript   "TPostScript()"
-+Plugin.TVirtualPS:         svg TSVG         Postscript   "TSVG()"
+Plugin.TVirtualFitter:  Minuit TFitter       Minuit       "TFitter(Int_t)"
++Plugin.TVirtualFitter: Fumili TFumili       Fumili       "TFumili(Int_t)"
+Plugin.TVirtualPS:      ps     TPostScript   Postscript   "TPostScript()"
++Plugin.TVirtualPS:     svg    TSVG          Postscript   "TSVG()"
 Plugin.TViewerX3D:          *  TViewerX3D    X3d          "TViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
 Plugin.TMinuitGraph:        *  TGraph        Graf         "TGraph(Int_t,const Double_t*,const Double_t*)"
 Plugin.TVirtualProof:       *  TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
