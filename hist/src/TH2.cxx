@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.49 2004/02/27 20:06:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.50 2004/05/24 15:39:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -547,9 +547,13 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 // Before invoking this function, one can set a subrange to be fitted along X
 // via f1->SetRange(xmin,xmax)
 // The argument option (default="QNR") can be used to change the fit options.
-//     "Q" means Quiet mode
-//     "N" means do not show the result of the fit
-//     "R" means fit the function in the specified function range
+//     "Q"  means Quiet mode
+//     "N"  means do not show the result of the fit
+//     "R"  means fit the function in the specified function range
+//     "G2" merge 2 consecutive bins along X
+//     "G3" merge 3 consecutive bins along X
+//     "G4" merge 4 consecutive bins along X
+//     "G5" merge 5 consecutive bins along X
 //
 // Note that the generated histograms are added to the list of objects
 // in the current directory. It is the user's responsability to delete
@@ -575,7 +579,14 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    if (binmin < 1) binmin = 1;
    if (binmax > nbins) binmax = nbins;
    if (binmax < binmin) {binmin = 1; binmax = nbins;}
-
+   TString opt = option;
+   opt.ToLower();
+   Int_t ngroup = 1;
+   if (opt.Contains("g2")) {ngroup = 2; opt.ReplaceAll("g2","");}
+   if (opt.Contains("g3")) {ngroup = 3; opt.ReplaceAll("g3","");}
+   if (opt.Contains("g4")) {ngroup = 4; opt.ReplaceAll("g4","");}
+   if (opt.Contains("g5")) {ngroup = 5; opt.ReplaceAll("g5","");}
+   
    //default is to fit with a gaussian
    if (f1 == 0) {
       f1 = (TF1*)gROOT->GetFunction("gaus");
@@ -594,6 +605,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
+      delete gDirectory->FindObject(name);
       if (bins->fN == 0) {
          hlist[ipar] = new TH1D(name,title, nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
       } else {
@@ -602,26 +614,28 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       hlist[ipar]->GetXaxis()->SetTitle(fYaxis.GetTitle());
    }
    sprintf(name,"%s_chi2",GetName());
+   delete gDirectory->FindObject(name);
    TH1D *hchi2 = new TH1D(name,"chisquare", nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
    hchi2->GetXaxis()->SetTitle(fYaxis.GetTitle());
 
    //Loop on all bins in Y, generate a projection along X
    Int_t bin;
    Int_t nentries;
-   for (bin=binmin;bin<=binmax;bin++) {
-      TH1D *hpx = ProjectionX("_temp",bin,bin,"e");
+   for (bin=binmin;bin<=binmax;bin += ngroup) {
+      TH1D *hpx = ProjectionX("_temp",bin,bin+ngroup-1,"e");
       if (hpx == 0) continue;
       nentries = Int_t(hpx->GetEntries());
       if (nentries == 0 || nentries < cut) {delete hpx; continue;}
       f1->SetParameters(parsave);
-      hpx->Fit(f1,option);
+      hpx->Fit(f1,opt.Data());
       Int_t npfits = f1->GetNumberFitPoints();
       if (npfits > npar && npfits >= cut) {
+         Int_t binx = bin + ngroup/2;
          for (ipar=0;ipar<npar;ipar++) {
-            hlist[ipar]->Fill(fYaxis.GetBinCenter(bin),f1->GetParameter(ipar));
-            hlist[ipar]->SetBinError(bin,f1->GetParError(ipar));
+            hlist[ipar]->Fill(fYaxis.GetBinCenter(binx),f1->GetParameter(ipar));
+            hlist[ipar]->SetBinError(binx,f1->GetParError(ipar));
          }
-         hchi2->Fill(fYaxis.GetBinCenter(bin),f1->GetChisquare()/(npfits-npar));
+         hchi2->Fill(fYaxis.GetBinCenter(binx),f1->GetChisquare()/(npfits-npar));
       }
       delete hpx;
    }
@@ -638,9 +652,13 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 // Before invoking this function, one can set a subrange to be fitted along Y
 // via f1->SetRange(ymin,ymax)
 // The argument option (default="QNR") can be used to change the fit options.
-//     "Q" means Quiet mode
-//     "N" means do not show the result of the fit
-//     "R" means fit the function in the specified function range
+//     "Q"  means Quiet mode
+//     "N"  means do not show the result of the fit
+//     "R"  means fit the function in the specified function range
+//     "G2" merge 2 consecutive bins along Y
+//     "G3" merge 3 consecutive bins along Y
+//     "G4" merge 4 consecutive bins along Y
+//     "G5" merge 5 consecutive bins along Y
 //
 // Note that the generated histograms are added to the list of objects
 // in the current directory. It is the user's responsability to delete
@@ -674,6 +692,13 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    if (binmin < 1) binmin = 1;
    if (binmax > nbins) binmax = nbins;
    if (binmax < binmin) {binmin = 1; binmax = nbins;}
+   TString opt = option;
+   opt.ToLower();
+   Int_t ngroup = 1;
+   if (opt.Contains("g2")) {ngroup = 2; opt.ReplaceAll("g2","");}
+   if (opt.Contains("g3")) {ngroup = 3; opt.ReplaceAll("g3","");}
+   if (opt.Contains("g4")) {ngroup = 4; opt.ReplaceAll("g4","");}
+   if (opt.Contains("g5")) {ngroup = 5; opt.ReplaceAll("g5","");}
 
    //default is to fit with a gaussian
    if (f1 == 0) {
@@ -693,6 +718,7 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
+      delete gDirectory->FindObject(name);
       if (bins->fN == 0) {
          hlist[ipar] = new TH1D(name,title, nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
       } else {
@@ -701,14 +727,15 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       hlist[ipar]->GetXaxis()->SetTitle(fXaxis.GetTitle());
    }
    sprintf(name,"%s_chi2",GetName());
+   delete gDirectory->FindObject(name);
    TH1D *hchi2 = new TH1D(name,"chisquare", nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
    hchi2->GetXaxis()->SetTitle(fXaxis.GetTitle());
 
    //Loop on all bins in X, generate a projection along Y
    Int_t bin;
    Int_t nentries;
-   for (bin=binmin;bin<=binmax;bin++) {
-      TH1D *hpy = ProjectionY("_temp",bin,bin,"e");
+   for (bin=binmin;bin<=binmax;bin += ngroup) {
+      TH1D *hpy = ProjectionY("_temp",bin,bin+ngroup-1,"e");
       if (hpy == 0) continue;
       nentries = Int_t(hpy->GetEntries());
       if (nentries == 0 || nentries < cut) {delete hpy; continue;}
@@ -716,11 +743,12 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       hpy->Fit(f1,option);
       Int_t npfits = f1->GetNumberFitPoints();
       if (npfits > npar && npfits >= cut) {
+         Int_t biny = bin + ngroup/2;
          for (ipar=0;ipar<npar;ipar++) {
-            hlist[ipar]->Fill(fXaxis.GetBinCenter(bin),f1->GetParameter(ipar));
-            hlist[ipar]->SetBinError(bin,f1->GetParError(ipar));
+            hlist[ipar]->Fill(fXaxis.GetBinCenter(biny),f1->GetParameter(ipar));
+            hlist[ipar]->SetBinError(biny,f1->GetParError(ipar));
          }
-         hchi2->Fill(fXaxis.GetBinCenter(bin),f1->GetChisquare()/(npfits-npar));
+         hchi2->Fill(fXaxis.GetBinCenter(biny),f1->GetChisquare()/(npfits-npar));
       }
       delete hpy;
    }
