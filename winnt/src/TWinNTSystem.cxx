@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.83 2004/04/22 14:22:15 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.84 2004/05/03 15:27:12 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -623,6 +623,14 @@ Bool_t TWinNTSystem::Init()
    if (::GetVersion() < 0x80000000) { // Windows NT/2000/XP
       fActUser = -1;
       fNbGroups = fNbUsers = 0;
+      HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");
+      if (!netapi) return kFALSE;
+  
+      p2NetApiBufferFree  = (pfn1)GetProcAddress(netapi, "NetApiBufferFree");
+      p2NetUserGetInfo  = (pfn2)GetProcAddress(netapi, "NetUserGetInfo");
+      p2NetLocalGroupGetMembers  = (pfn3)GetProcAddress(netapi, "NetLocalGroupGetMembers");
+      p2NetLocalGroupEnum = (pfn4)GetProcAddress(netapi, "NetLocalGroupEnum");
+
       GetNbGroups();
 
       fGroups = (struct group *)calloc(fNbGroups, sizeof(struct group));
@@ -631,13 +639,6 @@ Bool_t TWinNTSystem::Init()
       }
       fPasswords = (struct passwd *)calloc(fNbUsers, sizeof(struct passwd));
 
-      HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");
-      if (!netapi) return kFALSE;
-  
-      p2NetApiBufferFree  = (pfn1)GetProcAddress(netapi, "NetApiBufferFree");
-      p2NetUserGetInfo  = (pfn2)GetProcAddress(netapi, "NetUserGetInfo");
-      p2NetLocalGroupGetMembers  = (pfn3)GetProcAddress(netapi, "NetLocalGroupGetMembers");
-      p2NetLocalGroupEnum = (pfn4)GetProcAddress(netapi, "NetLocalGroupEnum");
       CollectGroups();
    }
    return kFALSE;
