@@ -70,9 +70,9 @@ endif
 
 ifeq ($(ARCH),solaris)
 # Solaris CC
-CXX           = CC
+CXX           = /opt/SUNWspro/bin/CC
 CXXFLAGS      = -O -KPIC
-LD            = CC
+LD            = /opt/SUNWspro/bin/CC
 LDFLAGS       = -O
 SOFLAGS       = -G
 endif
