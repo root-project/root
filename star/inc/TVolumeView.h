@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
   virtual Text_t  *GetObjectInfo(Int_t px, Int_t py);
   virtual TShape  *GetShape()  const;
   virtual Int_t    GetVisibility() const;
-  virtual Bool_t   IsMarked();
+  virtual Bool_t   IsMarked() const;
   virtual Bool_t   Is3D()  {return kTRUE;}
   virtual TVolumePosition  *Local2Master(const TVolumeView *localNode,const TVolumeView *masterNode=0);
   virtual TVolumePosition  *Local2Master(const Char_t *localName, const Char_t *masterName=0);
@@ -74,7 +74,7 @@ public:
 };
 
 inline void    TVolumeView::Add(TVolumeView *node){ TDataSet::Add(node);}
-inline Bool_t  TVolumeView::IsMarked(){ return TestBit(kMark); }
+inline Bool_t  TVolumeView::IsMarked() const { return TestBit(kMark); }
 inline TList  *TVolumeView::GetListOfShapes() const {return fListOfShapes;}
 inline TShape *TVolumeView::GetShape()  const
        {return fListOfShapes ? (TShape *)fListOfShapes->First():0;}

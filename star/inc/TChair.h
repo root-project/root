@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.4 2000/09/05 09:21:24 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.5 2000/09/29 07:15:30 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.4 2000/09/05 09:21:24 brun Exp $
+// $Id: TChair.h,v 1.5 2000/09/29 07:15:30 brun Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -70,8 +70,8 @@ public:
                            GetThisTable()->Fit(formula,varexp,selection,option,goption,nentries,firstentry);}
    virtual     Long_t     HasData() const  { return GetThisTable()->HasData();}
    virtual     Bool_t     IsFolder() const { return GetThisTable()->IsFolder();}
-   virtual     void       ls(Option_t *option=""){GetThisTable()->ls(option);}
-   virtual     void       ls(Int_t deep)  {GetThisTable()->ls(deep);}
+   virtual     void       ls(Option_t *option="") const {GetThisTable()->ls(option);}
+   virtual     void       ls(Int_t deep) const  {GetThisTable()->ls(deep);}
                Int_t      NaN()           {return GetThisTable()->NaN();}
    virtual     Char_t    *MakeExpression(const Char_t *expressions[],Int_t nExpressions)
                          {return GetThisTable()->MakeExpression(expressions,nExpressions);}
@@ -115,6 +115,9 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.5  2000/09/29 07:15:30  brun
+// Remove unused function ReadGenericArray
+//
 // Revision 1.4  2000/09/05 09:21:24  brun
 // The following headers and classes have been modified to take into account;
 //   - the new signature of IsFolder (now const)
