@@ -1,21 +1,21 @@
 // benchmark comparing write/read to/from keys or trees
 // for example for N=10000, the following output is produced
-// on a P III 600 Mhz
+// on a P IV 62.4GHz
    
 // root -b -q bill.C    or root -b -q bill.C++
 //
-// billw0  : RT=  3.030 s, Cpu=  3.010 s, File size=  45507955 bytes, CX= 1
-// billr0  : RT=  4.110 s, Cpu=  4.110 s
-// billtw0 : RT=  2.160 s, Cpu=  2.160 s, File size=  45163899 bytes, CX= 1
-// billtr0 : RT=  2.040 s, Cpu=  2.040 s
-// billw1  : RT= 17.420 s, Cpu= 17.420 s, File size=  16215301 bytes, CX= 2.80687
-// billr1  : RT=  7.640 s, Cpu=  7.640 s
-// billtw1 : RT=  8.690 s, Cpu=  8.690 s, File size=   6884429 bytes, CX= 6.56023
-// billtr1 : RT=  3.040 s, Cpu=  3.040 s
-// billtot : RT= 62.330 s, Cpu= 49.210 s
-// ******************************************************************
-// *  ROOTMARKS = 200.6   *  Root3.03/07   20020810/1539
-// ******************************************************************
+//billw0  : RT=  1.070 s, Cpu=  1.050 s, File size=  45508003 bytes, CX= 1
+//billr0  : RT=  0.740 s, Cpu=  0.730 s
+//billtw0 : RT=  0.720 s, Cpu=  0.660 s, File size=  45163959 bytes, CX= 1
+//billtr0 : RT=  0.420 s, Cpu=  0.420 s
+//billw1  : RT=  6.600 s, Cpu=  6.370 s, File size=  16215349 bytes, CX= 2.80687
+//billr1  : RT=  2.290 s, Cpu=  2.270 s
+//billtw1 : RT=  3.260 s, Cpu=  3.230 s, File size=   6880273 bytes, CX= 6.5642
+//billtr1 : RT=  0.990 s, Cpu=  0.980 s
+//billtot : RT= 18.290 s, Cpu= 15.920 s
+//******************************************************************
+//*  ROOTMARKS = 600.9   *  Root3.05/02   20030201/1840
+//******************************************************************
 
 #include "TFile.h"
 #include "TSystem.h"
@@ -119,8 +119,8 @@ void bill() {
    Double_t rtime = totaltimer.RealTime();
    Double_t ctime = totaltimer.CpuTime();
    printf("billtot : RT=%7.3f s, Cpu=%7.3f s\n",rtime,ctime);
-   //reference is a P III 600 Mhz
-   Float_t rootmarks = 200*(62.3 + 49.21)/(rtime + ctime);
+   //reference is a P IV 2.4 GHz
+   Float_t rootmarks = 600*(16.98 + 14.40)/(rtime + ctime);
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");
