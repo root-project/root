@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.6 2000/09/06 14:14:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.7 2000/09/08 07:40:59 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -520,7 +520,8 @@ void TDirectory::Close(Option_t *)
       cursav = (TDirectory*) fMother;
 
    // Save the directory key list and header
-   SaveSelf();
+   //SaveSelf();
+   Save();
 
    // Delete objects from directory list, this in turn, recursively closes all
    // sub-directories (that were allocated on the heap)
@@ -675,19 +676,18 @@ void TDirectory::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-TObject *TDirectory::FindObject(TObject *) const
+TObject *TDirectory::FindObject(TObject *obj) const
 {
-// find object in the list of memory objects
-   
-   Error("FindObject","Not yet implemented");
-   return 0;
+   // Find object in the list of memory objects.
+
+   return fList->FindObject(obj);
 }
 
 //______________________________________________________________________________
 TObject *TDirectory::FindObject(const char *name) const
 {
-// find object by name in the list of memory objects
-   
+   // Find object by name in the list of memory objects.
+
    return fList->FindObject(name);
 }
 
@@ -1097,7 +1097,7 @@ void TDirectory::SaveSelf(Bool_t force)
 //    -In process2, use TDirectory::ReadKeys to refresh the directory
 
    if (IsWritable() && (fModified || force)) {
-      TFree *f1      = (TFree*) fFile->GetListOfFree()->First();
+      TFree *f1 = (TFree*) fFile->GetListOfFree()->First();
       if (f1) {
          WriteKeys();          //*-*- Write keys record
          WriteDirHeader();     //*-*- Update directory record
