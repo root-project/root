@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.1 2004/06/25 11:59:55 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -292,7 +292,7 @@ void TGeoParaboloid::Paint(Option_t *option)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::Safety(Double_t */*point*/, Bool_t /*in*/) const
+Double_t TGeoParaboloid::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
