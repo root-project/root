@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.59 2004/04/21 15:06:45 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.60 2004/06/10 05:15:43 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -489,7 +489,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                          << incl << "\"";
             }
             classFile << "</td></tr></table>"
-                      << std::endl;
+                      << endl;
          }
 
          // make a link to the description
