@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.92 2005/02/24 22:36:04 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.93 2005/02/25 14:22:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -585,6 +585,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   // InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
   // Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
   // Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
+  // Minos(const RooArgSet& set)    -- Only run MINOS on given subset of arguments
   // Save(Bool_t flag)              -- Flac controls if RooFitResult object is produced and returned, off by default
   // Strategy(Int_t flag)           -- Set Minuit strategy (0 through 2, default is 1)
   // FitOptions(const char* optStr) -- Steer fit with classic options string (for backward compatibility). Use of this option
@@ -637,6 +638,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("ext","Extended",0,0) ;
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
+  pc.defineObject("minosSet","Minos",0,0) ;
   pc.defineMutex("FitOptions","Verbose") ;
   pc.defineMutex("FitOptions","Save") ;
   pc.defineMutex("FitOptions","Timer") ;
@@ -667,6 +669,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t ext      = pc.getInt("ext") ;
   Int_t numcpu   = pc.getInt("numcpu") ;
   Int_t splitr   = pc.getInt("splitRange") ;
+  const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
 
   RooArgSet projDeps ;
   RooArgSet* tmp = (RooArgSet*) pc.getObject("projDepSet") ;  
@@ -740,7 +743,11 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
     if (minos) {
       // Evaluate errs with Minos
-      m.minos() ;
+      if (minosSet) {
+	m.minos(*minosSet) ;
+      } else {
+	m.minos() ;
+      }
     }
   }
   

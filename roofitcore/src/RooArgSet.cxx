@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.53 2004/11/29 20:22:49 wverkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.54 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -548,6 +548,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
   sectionHdr.Append("]") ;
   Bool_t inSection(section?kFALSE:kTRUE) ;
 
+  Bool_t reprocessToken = kFALSE ;
   while (1) {
 
     if (is.eof() || is.fail() || parser.atEOF()) {
@@ -555,7 +556,10 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
     }
     
     // Read next token until end of file
-    token = parser.readToken() ;
+    if (!reprocessToken) {
+      token = parser.readToken() ;
+    }
+    reprocessToken = kFALSE ;
 
     // Skip empty lines 
     if (token.IsNull()) {
@@ -653,7 +657,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 	    continue ;
 	  } else {
 	    // Process as normal 'if' no true conditional was encountered 
-	    parser.putBackToken(token) ;
+	    reprocessToken = kTRUE ;
 	    lastLineWasElse=kTRUE ;
 	    continue ;
 	  }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.45 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.46 2005/02/26 18:06:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -114,10 +114,6 @@ protected:
   virtual void fillTreeBranch(TTree& t) ;
 
   Double_t chopAt(Double_t what, Int_t where) const ;
-
-  Double_t  *_min ;
-  Double_t  *_max ;
-  TString   *_name ;
 
   RooLinkedList _altBinning ;  //! Optional alternative ranges and binnings
 //   Double_t _fitMin ;    // Minimum of fit range [ obsolete ]

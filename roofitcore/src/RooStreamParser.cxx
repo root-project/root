@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.cc,v 1.25 2005/02/23 15:10:05 wverkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.26 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -123,6 +123,7 @@ TString RooStreamParser::readToken()
     // Read next char
     _is.get(c) ;
     
+
     // Terminate at EOF, EOL or trouble
     if (_is.eof() || _is.fail() || c=='\n') break ;
 
@@ -296,27 +297,6 @@ void RooStreamParser::zapToEnd()
     _is.putback('\n') ;
   }
 }
-
-
-void RooStreamParser::putBackToken(const TString& token) 
-{
-  // Put back given token in stream buffer
-  const char* buf=token.Data() ;
-  int len=token.Length() ;
-
-  // Add a space to keep the token separate
-  if (buf[0]=='\n') {
-  } else {
-    _is.putback(' ') ;  
-  }
-  
-  for (int i=len-1 ; i>=0 ; i--)
-    _is.putback(buf[i]) ;
-
-  // Add a space to keep the token separate
-  _is.putback(' ') ;
-}
-
 
 
 Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError) 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.rdl,v 1.12 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooStreamParser.rdl,v 1.13 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,6 @@ public:
   TString readToken() ;
   TString readLine() ;
   Bool_t expectToken(const TString& expected, Bool_t zapOnError=kFALSE) ;
-  void putBackToken(const TString& token) ;
   void setPunctuation(const TString& punct) ;
   TString getPunctuation() const { return _punct ; }
 

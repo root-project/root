@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.52 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.53 2005/02/26 18:06:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -301,9 +301,14 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     removeError() ;
     removeAsymError() ;
 
+    Bool_t reprocessToken = kFALSE ;
     while(1) {      
       if (parser.atEOL() || parser.atEOF()) break ;
-      token=parser.readToken() ;
+
+      if (!reprocessToken) {
+	token=parser.readToken() ;
+      }
+      reprocessToken = kFALSE ;
 
       if (!token.CompareTo("+")) {
 	
@@ -322,7 +327,8 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	TString tmp = parser.readToken() ;
 	if (tmp.CompareTo("(")) {
 	  // No error, but back token
-	  parser.putBackToken(tmp) ;
+	  token = tmp ;
+	  reprocessToken = kTRUE ;	  
 	} else {
 	  // Have error
 	  Double_t asymErrLo, asymErrHi ;
@@ -352,7 +358,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
             parser.readInteger(plotBins,kTRUE) || 
 	    parser.expectToken(")",kTRUE)) break ;
 //   	setPlotRange(plotMin,plotMax) ;
-	cout << "RooRealVar::readFromStream(" << GetName() 
+	cout << "RooRealVar::readFromStrem(" << GetName() 
 	     << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
 
       } else if (!token.CompareTo("F")) {
