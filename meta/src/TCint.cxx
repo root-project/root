@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.90 2004/07/16 23:06:23 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.91 2004/07/26 23:32:54 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -407,6 +407,17 @@ void TCint::PrintIntro()
    Printf("\nCINT/ROOT C/C++ Interpreter version %s", G__cint_version());
    Printf("Type ? for help. Commands must be C++ statements.");
    Printf("Enclose multiple statements between { }.");
+}
+
+//______________________________________________________________________________
+void TCint::RecursiveRemove(TObject *obj) 
+{
+   // Delete object from CINT symbol table so it can not be used anymore.
+   // CINT object are always on the heap.
+
+   if (obj->IsOnHeap()) {
+      DeleteGlobal(obj);
+   }
 }
 
 //______________________________________________________________________________

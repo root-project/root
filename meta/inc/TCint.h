@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.20 2004/05/28 18:13:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.21 2004/07/16 23:06:23 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -115,6 +115,7 @@ public:
    void    Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);
    Long_t  ExecuteMacro(const char *filename, EErrorCode *error = 0);
+   void    RecursiveRemove(TObject *obj);
    Bool_t  IsErrorMessagesEnabled();
    Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
    const char *TypeName(const char *typeDesc);
