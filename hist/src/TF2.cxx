@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.11 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.7 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -16,8 +16,7 @@
 #include "TH2.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
-#include "Riostream.h"
-
+#include <fstream.h>
 
 ClassImp(TF2)
 
@@ -411,7 +410,7 @@ Double_t TF2::GetSave(const Double_t *xx)
    Double_t xlow = xmin + ibin*dx;
    Double_t ylow = ymin + jbin*dy;
    Double_t t    = (x-xlow)/dx;
-   Double_t u    = (y-ylow)/dy;
+   Double_t u    = (y-ylow)/dx;
    Int_t k1      = jbin*(npx+1) + ibin;
    Int_t k2      = jbin*(npx+1) + ibin +1;
    Int_t k3      = (jbin+1)*(npx+1) + ibin +1;
@@ -433,16 +432,6 @@ Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    Double_t relerr  = 0;
    Double_t result = IntegralMultiple(2,a,b,epsilon,relerr);
    return result;
-}
-
-//______________________________________________________________________________
-Bool_t TF2::IsInside(const Double_t *x) const
-{
-// Return kTRUE is the point is inside the function range
-
-   if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
-   if (x[1] < fYmin || x[1] > fYmax) return kFALSE;
-   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -699,14 +688,14 @@ void TF2::Streamer(TBuffer &R__b)
          fContour.Streamer(R__b);
       }
       R__b.CheckByteCount(R__s, R__c, TF2::IsA());
-      //====end of old versions
-
+      //====end of old versions 
+      
    } else {
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
-
+      
       TF2::Class()->WriteBuffer(R__b,this);
-
+      
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }
 }

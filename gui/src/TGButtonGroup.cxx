@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.8 2001/11/01 11:43:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.6 2001/04/11 17:25:41 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -49,10 +49,6 @@
 //    // map all buttons                                                //
 //    bg->Show();                                                       //
 //                                                                      //
-// NOTE: there is no need to call AddFrame() since the buttons are      //
-// automatically added with a default layout hint to their parent,      //
-// i.e. the buttongroup. To override the default layout hints use the   //
-// SetLayoutHints() method.                                             //
 //                                                                      //
 //  ButtonGroup Signals:                                                //
 //                                                                      //
@@ -83,7 +79,6 @@
 #include "TGButton.h"
 #include "TClass.h"
 #include "TGLayout.h"
-#include "TList.h"
 
 
 ClassImpQ(TGButtonGroup)
@@ -445,8 +440,7 @@ void TGButtonGroup::SetTitle(const char *title)
 //______________________________________________________________________________
 void TGButtonGroup::SetLayoutHints(TGLayoutHints *l, TGButton *button)
 {
-   // Set layout hints for the specified button or if button=0 for all
-   // buttons.
+   // Set layout hints.
 
    TGFrameElement *el;
    TIter next(fList);

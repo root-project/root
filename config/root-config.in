@@ -1,5 +1,5 @@
 #!/bin/sh
-# -*- sh-indentation: 3 -*-
+
 # This script returns the machine dependent compile options needed
 # to compile and link applications using the ROOT libraries.
 #
@@ -8,9 +8,6 @@
 arch=@architecture@
 libdir=@libdir@
 incdir=@incdir@
-if test "$arch" = "win32gdk"; then
-   arch="win32"
-fi
 if test "$arch" = "win32"; then
    incdir=`cygpath -u $incdir`
    libdir=`cygpath -u $libdir`
@@ -32,9 +29,9 @@ hpux)
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
-hpuxacc | hpuxia64acc)
+hpuxacc)
    # HP-UX 10.x with aCC
-   auxcflags="-DR__ACC"
+   auxcflags="+W823"
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
@@ -44,13 +41,7 @@ hpuxegcs)
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
-hurddeb)
-   # Debian GNU/Hurd
-   auxcflags=
-   auxlibs="-lnsl -lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
-   ;;
-aix | aix5)
+aix|aix5)
    # IBM AIX
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
    auxlibs=
@@ -153,7 +144,7 @@ alphacxx)
    auxlibs="-lm"
    auxglibs=${auxlibs}
    ;;
-linuxrh42 | linuxrh51)
+linuxrh42|linuxrh51)
    # Linux with gcc 2.7.2.x
    auxcflags=
    auxlibs="-lg++ -lm -ldl -rdynamic"
@@ -165,7 +156,7 @@ linux)
    auxlibs="-lm -ldl -lpthread -rdynamic"
    auxglibs=${auxlibs}
    ;;
-linuxdeb | linuxsuse6)
+linuxdeb|linuxsuse6)
    # Linux with egcs on Debian and SuSE
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
@@ -181,12 +172,6 @@ linuxkcc)
    # Linux with the KAI compiler
    auxcflags="--signed_chars -D_EXTERN_INLINE=inline --diag_suppress 191"
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
-   ;;
-linuxicc)
-   # Linux with the Intel icc compiler
-   auxcflags=
-   auxlibs="-lm -ldl"
    auxglibs=${auxlibs}
    ;;
 linuxppcegcs)
@@ -277,22 +262,17 @@ if test "$arch" = "win32"; then
 fi
 exec_prefix=${prefix}
 exec_prefix_set=no
+nonew_set=yes
 new_set=no
-libsout=no
 cflags=""
-noauxlibs=no
-noauxcflags=no
-noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
    exit 1
 fi
-
-out=""
 
 while test $# -gt 0; do
   case "$1" in
@@ -302,14 +282,12 @@ while test $# -gt 0; do
 
   case $1 in
     --prefix=*)
-      ### Set the prefix
       if test "$arch" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
       prefix=$optarg
       incdir=${prefix}/include
       libdir=${prefix}/lib
-      ### We need to expand the path to backslash seperated path
       if test "$arch" = "win32"; then
          incdir=`cygpath -u $incdir`
          libdir=`cygpath -u $libdir`
@@ -319,181 +297,88 @@ while test $# -gt 0; do
       fi
       ;;
     --prefix)
-      ### Output the prefix
-      out="$out $prefix"
+      echo $prefix
       ;;
     --exec-prefix=*)
-      ### Set the exec-prefix
       if test "$arch" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
       exec_prefix=$optarg
       exec_prefix_set=yes
       libdir=${exec_prefix}/lib
-      ### We need to expand the path to backslash seperated path
       if test "$arch" = "win32"; then
          libdir=`cygpath -u $libdir`
       fi
       ;;
     --exec-prefix)
-      ### Output the exec-prefix
-      out="$out $prefix"
+      echo $exec_prefix
       ;;
     --nonew)
-      ### Don't use the libNew library
-      new_set="no"
+      nonew_set=yes
       ;;
     --new)
-      ### Use the libNew library
-      new_set="yes"
-      ;;
-    --noauxlibs)
-      noauxlibs="yes"
-      ;;
-    --noauxcflags)
-      noauxcflags="yes"
-      ;;
-    --noldflags)
-      noldflags="yes"
+      new_set=yes
       ;;
     --version)
-      ### Output the version number.  If RVersion.h can not be found, give up.
       if test -r ${incdir}/RVersion.h; then
-         out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < ${incdir}/RVersion.h`"
+         echo `cat ${incdir}/RVersion.h | sed -e "s/.*ROOT_RELEASE //" \
+               -e "s/.*#.*$//" -e "s/.*\*.*$//" -e "s/\"//g" -e "/^$/d"`
       else
          echo "cannot read ${incdir}/RVersion.h"
-         exit 1
       fi
       ;;
     --cflags)
-      ### Output the compiler flags
       if test ${incdir} != /usr/include; then
-         ### In case we're on a Win32 system, we need to expand the
-         ### path to a backslash seperated path
          if test "$arch" = "win32"; then
             includes=-I\'`cygpath -w ${incdir}`\'
          else
             includes=-I${incdir}
          fi
       fi
-      if test "x$noauxcflags" = "xyes" ; then
-         out="$out $includes"
+      if test $# -gt 1; then
+         cflags="${auxcflags} $includes"
       else
-         out="$out ${auxcflags} $includes"
+         echo ${auxcflags} $includes
       fi
-      ;;
-   --auxcflags)
-      ### output auxiliary compiler flags
-      out="$out $auxcflags"
       ;;
     --libs)
-      ### Output regular ROOT libraries.  If the user said --glibs --libs,
-      ### We've already output the libraries, so we skip this section
-      if test "x$libsout" = "xyes" ; then
-	 shift
-	 continue
-      fi
-      ### Set the flag
-      libsout="yes"
-      ### See if we need the new library
-      if test "x$new_set" = "xyes"; then
+      if test $new_set = yes; then
          libs="${newlib} ${rootlibs}"
       else
          libs=${rootlibs}
       fi
-      ### If we're on a win32 system, we need to change the -l prefix
-      ### into a .lib suffix, and expend the paths to a backslash
-      ### separated path.
       if test "$arch" = "win32"; then
          nlibs=`echo $libs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          libs=
          for i in $nlibs; do
             libs="$libs '`cygpath -w $i`'"
          done
+         echo $cflags $libs ${auxlibs}
       else
-         if test "x$noldflags" = "xno" ; then
-	    out="$out -L${libdir}"
-	 fi
-      fi
-      if test "x$noauxlibs" = "xyes" ; then
-	 out="$out $libs"
-      else
-	 out="$out $libs ${auxlibs}"
+         echo $cflags -L${libdir} $libs ${auxlibs}
       fi
       ;;
     --glibs)
-      ### Output graphics an normal libraries
-      ### If the user said --libs --glibs, we don't need to add the
-      ### regular ROOT libraries.
-      if test "x$libsout" = "xno" ; then
-         ### Set the flag
-         libsout="yes"
-         if test "x$new_set" = "xyes" ; then
+      if test $new_set = yes; then
          glibs="${newlib} ${rootlibs} ${rootglibs}"
       else
          glibs="${rootlibs} ${rootglibs}"
       fi
-      fi
-      ### If we're on a win32 system, we need to change the -l prefix
-      ### into a .lib suffix, and expend the paths to a backslash
-      ### separated path.
       if test "$arch" = "win32"; then
          nlibs=`echo $glibs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          glibs=
          for i in $nlibs; do
             glibs="$glibs '`cygpath -w $i`'"
          done
+         echo $cflags $glibs ${auxglibs}
       else
-        if test "x$noldflags" = "xno" ; then
-           out="$out -L${libdir}"
-        fi
+         echo $cflags -L${libdir} $glibs ${auxglibs}
       fi
-      if test "x$noauxlibs" = "xyes" ; then
-         out="$out $glibs"
-      else
-         out="$out $glibs ${auxlibs}"
-      fi
-      ;;
-    --auxlibs)
-      ### output the auxiliary libraries
-      out="$out $auxlibs"
-      ;;
-    --libdir)
-      ### output the library directory
-      out="$out $libdir"
-      ;;
-    --incdir)
-      ### output the header directory
-      out="$out $incdir"
-      ;;
-    --help)
-      ### Print a help message
-      echo "Usage: `basename $0` [options]"
-      echo ""
-      echo "  --prefix[=dir]        Print or set prefix"
-      echo "  --exec-prefix[=dir]   Print or set execution prefix"
-      echo "  --libs                Print regular ROOT libraries"
-      echo "  --glibs               Print regular + GUI ROOT libraries"
-      echo "  --cflags              Print compiler flags and header path"
-      echo "  --libdir              Print the library directory"
-      echo "  --incdir              Print the header directory"
-      echo "  --auxlibs             Print auxiliary libraries"
-      echo "  --auxcflags           Print auxiliary compiler flags"
-      echo "  --[no]new             Turn on[off] use of libNew.so"
-      echo "  --noauxlibs           Do not print auxiliary/system libraries"
-      echo "  --noauxcflags         Do not print auxiliary compiler flags"
-      echo "  --noldflags           Do not print linker flags"
-      echo "  --version             Print the ROOT version"
-      exit 0
       ;;
     *)
-      ### Give an error
       echo "${usage}" 1>&2
       exit 1
       ;;
   esac
   shift
 done
-
-### Output the stuff
-echo $out

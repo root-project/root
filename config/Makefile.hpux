@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for HP-UX 10.20 with CC
 
 PLATFORM      = hpux

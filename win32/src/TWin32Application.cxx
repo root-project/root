@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.5 2001/07/09 07:01:37 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.4 2001/06/29 06:40:29 brun Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -146,7 +146,7 @@ unsigned int ROOT_DlgLoop(HANDLE ThrSem)
 
 //______________________________________________________________________________
 TWin32Application::TWin32Application(const char *appClassName, int *argc,
-                                     char **argv)
+                                     char **argv, void *options, int numOptions)
                   : fIDCmdThread(NULL)
 {
    fApplicationName = appClassName;

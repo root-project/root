@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.10 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.6 2001/02/16 16:05:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "Strlen.h"
 #include "TAttText.h"
@@ -17,6 +18,9 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TError.h"
+
+static Float_t x11factor[13] ={1.000,1.000,1.010,0.910,0.920,0.920,0.925,1.204,
+                               1.204,1.168,1.166,1.007,1.026};
 
 ClassImp(TAttText)
 
@@ -111,10 +115,7 @@ TAttText::TAttText()
 //*-*                      ===========================
 //*-*  Default text attributes are taking from the current style
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   if (!gStyle) {
-      ResetAttText();
-      return;
-   }
+   if (!gStyle) return;
    fTextAlign = gStyle->GetTextAlign();
    fTextAngle = gStyle->GetTextAngle();
    fTextColor = gStyle->GetTextColor();
@@ -262,7 +263,7 @@ again:
          }
 
 //*-*-           ready to draw text
-         Float_t mgn = rsize/Float_t(ihh);
+         Float_t mgn = x11factor[ifpx11-1]*rsize/Float_t(ihh);
          if (mgn > 100) mgn = 100;
          if (mgn <0)    mgn = 1;
          if (fTextFont%10 == 0 || fTextFont%10 > 2) mgn = 1;

@@ -1,10 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.10 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.5 2001/05/29 20:55:28 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
+// $Id:
+// $Log:
 
+#include <fstream.h>
+#include <iostream.h>
+#include <iomanip.h>
 #include <assert.h>
 #include <stdlib.h>
 
-#include "Riostream.h"
 #include "TCanvas.h"
 #include "TPad.h"
 #include "TCL.h"
@@ -276,7 +280,6 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
         nextPos.SetId(positionId);
         if (optMarked && !node->IsMarked()) {
             TVolumeView fakeView(*node,maxDepLevel,&nextPos,iopt,rootVolume);
-            fakeView.DoOwner(kFALSE);
             continue;
         }
 

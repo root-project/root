@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.5 2001/08/07 13:44:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.4 2001/08/01 15:13:58 rdm Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -330,7 +330,6 @@ void TFitPanel::RecursiveRemove(TObject *obj)
 {
 //  when obj is deleted, clear fObjectFit if fObjectFit=obj
    
-   TDialogCanvas::RecursiveRemove(obj);
    if (obj == fObjectFit) fObjectFit = 0;
 }
 

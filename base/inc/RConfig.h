@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.28 2002/01/22 10:53:28 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.23 2001/06/26 16:32:35 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,18 +27,10 @@
 /*---- machines --------------------------------------------------------------*/
 
 #ifdef __hpux
-#   ifdef __ia64
-#      define R__HPUX11    /* find a better test for HP-UX 11 */
-#   endif
 #   define R__HPUX
 #   define R__UNIX
 #   define ANSICPP
-#   ifdef __ia64
-#      define R__B64
-#   endif
-#   ifndef R__HPUX11
-#      define NEED_SNPRINTF
-#   endif
+#   define NEED_SNPRINTF
 #endif
 
 #ifdef _AIX
@@ -163,7 +155,7 @@
 #   define NEED_SIGJMP
 #endif
 
-#if defined(linux) && defined(__sparc__)
+#if defined(linux) && defined(__sun)
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
@@ -185,15 +177,6 @@
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__PPCEGCS
 #   endif
-#endif
-
-#if defined(__MACH__) && defined(__i386__)
-#   define R__HURD
-#   define f2cFortran   /* cfortran.h does not know HURD - sigh */
-#   define R__UNIX
-#   define R__BYTESWAP
-#   define R__GLIBC     /* GNU/Hurd always use GLIBC 2.x :-) */
-#   define NEED_SIGJMP
 #endif
 
 #if defined(__Lynx__) && defined(__powerpc__)
@@ -235,6 +218,9 @@
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
+#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 97    /* gcc 3.0pre */
+#      define R__NEWSTDHEADER    /* has only headers like: iostream without .h */
+#   endif
 #   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
@@ -247,12 +233,11 @@
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define ANSICPP
 #endif
 
-#ifdef __INTEL_COMPILER
-#   define R__INTEL_COMPILER
+#ifdef __ECC
+#   define R__ECC
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
@@ -261,13 +246,6 @@
 
 #ifdef R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   if __HP_aCC >= 53000
-#      define R__PLACEMENTDELETE /* supports overloading placement delete */
-#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#      define R__THROWNEWDELETE  /* new/delete throw exceptions */
-#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
-#      define R__TMPLTSTREAM     /* iostream implemented with templates */
-#   endif
 #endif
 
 #ifdef _WIN32

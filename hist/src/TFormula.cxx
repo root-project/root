@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.28 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.22 2001/06/22 09:48:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <iostream.h>
 #include <math.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TFormula.h"
@@ -883,7 +883,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 2) SetNumber(200);
+                      SetNumber(200);
                    }
                 }
             } else if (chaine(4,1) == "(") {
@@ -905,7 +905,7 @@ if (err==0) {
                             if (inter+2>fNpar) fNpar = inter+2;
                             if (fNpar>=MAXPAR) err=7; // too many parameters
                             if (!err) fNoper++;
-                            if (fNpar == 2) SetNumber(200);
+                            SetNumber(200);
                          } else err=20;
                       } else err = 20; // non integer value for parameter number
                     } else {
@@ -960,7 +960,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 3) SetNumber(100);
+                      SetNumber(100);
                    }
                 }
             } else if (chaine(4,1) == "(" && err==0) {
@@ -982,7 +982,7 @@ if (err==0) {
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
-                             if(fNpar == 3) SetNumber(100);
+                             SetNumber(100);
                          } else err = 20; // non integer value for parameter number
                       }
                    } else if (err==0) {
@@ -1037,7 +1037,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 3) SetNumber(400);
+                      SetNumber(400);
                    }
                 }
             } else if (chaine(6,1) == "(" && err==0) {
@@ -1059,7 +1059,7 @@ if (err==0) {
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
-                             if (fNpar == 3) SetNumber(400);
+                             SetNumber(400);
                          } else err = 20; // non integer value for parameter number
                       }
                    } else if (err==0) {
@@ -1463,55 +1463,13 @@ Int_t TFormula::Compile(const char *expression)
 
 
 //*-* replace 'normal' == or != by ==(string) or !=(string) if needed.
-  Int_t is_it_string,last_string=0,before_last_string=0;
+  Int_t is_it_string,last_string=0;
   if (!fOper) fNoper = 0;
-   enum { kIsCharacter = BIT(12) };
   for (i=0; i<fNoper; i++) {
      is_it_string = 0;
      if ((fOper[i]>=105000 && fOper[i]<110000) || fOper[i] == 80000) is_it_string = 1;
-     else if (last_string) {
-
-       if (fOper[i] == 62) {
-          if (!before_last_string) {
-             Error("Compile", "Both operands of the operator == have too be either numbers or strings");
-             return -1;
-          }
-          fOper[i] = 76;
-          SetBit(kIsCharacter);
-       } else if (fOper[i] == 63) {
-          if (!before_last_string) {
-             Error("Compile", "Both operands of the operator != have too be either numbers or strings");
-             return -1;
-          }
-          fOper[i] = 77;
-          SetBit(kIsCharacter);
-       }
-       else if (fOper[i] == 23) {
-          if (! (before_last_string && last_string) ) {
-             Error("Compile", "strstr requires 2 string arguments");
-             return -1;
-          }
-          SetBit(kIsCharacter);
-       } else if (before_last_string) {
-          // the i-2 element is a string not used in a string operation, let's down grade it
-          // to a char array:
-          if (fOper[i-2]>=105000) {
-            fOper[i-2] -= 5000;
-            fNval++;
-            fNstring--;
-          }
-       }
-
-     } else if (before_last_string) {
-        // the i-2 element is a string not used in a string operation, let's down grade it
-        // to a char array:
-        if (fOper[i-2]>=105000){
-           fOper[i-2] -= 5000;
-           fNval++;
-           fNstring--;
-        }
-     }
-     before_last_string = last_string;
+     else if (fOper[i] == 62 && last_string == 1) fOper[i] = 76;
+     else if (fOper[i] == 63 && last_string == 1) fOper[i] = 77;
      last_string = is_it_string;
   }
 
@@ -1826,25 +1784,13 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
           pos++;
           inter=action/100-20;
           int1=action-inter*100;
-          if (fParams[int1-1999] == 0) {
-             intermede2=1e10;
-          } else {
-             intermede2=Double_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
-          }
+          intermede2=Double_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
           tab[pos-1] = fParams[int1-2001]*TMath::Exp(-0.5*intermede2*intermede2);
 //*-*- xygaus
     } else if (action > 2500 && action < 2600) {
           pos++;
-          if (fParams[action-2499] == 0) {
-             intermede1=1e10;
-          } else {
-             intermede1=Double_t((x[0]-fParams[action-2500])/fParams[action-2499]);
-          }
-          if (fParams[action-2497] == 0) {
-             intermede2=1e10;
-          } else {
-             intermede2=Double_t((x[1]-fParams[action-2498])/fParams[action-2497]);
-          }
+          intermede1=Double_t((x[0]-fParams[action-2500])/fParams[action-2499]);
+          intermede2=Double_t((x[1]-fParams[action-2498])/fParams[action-2497]);
           tab[pos-1] = fParams[action-2501]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
 //*-*- landau, xlandau, ylandau or zlandau
     } else if (action > 4000 && action < 4500) {
@@ -1862,15 +1808,6 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
   }
   Double_t result = tab[0];
   return result;
-}
-
-//______________________________________________________________________________
-Double_t TFormula::GetParameter(Int_t ipar) const
-{
-  //return value of parameter number ipar
-
-  if (ipar <0 && ipar >= fNpar) return 0;
-  return fParams[ipar];
 }
 
 //______________________________________________________________________________
@@ -1981,15 +1918,6 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
    if (fNpar > 9) fParams[9] = p9;
    if (fNpar >10) fParams[10]= p10;
    Update();
-}
-
-//______________________________________________________________________________
-void TFormula::SetParName(Int_t ipar, const char *name)
-{
-// Set name of parameter number ipar
-
-   if (ipar <0 || ipar >= fNpar) return;
-   fNames[ipar] = name;
 }
 
 //______________________________________________________________________________

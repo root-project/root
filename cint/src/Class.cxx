@@ -22,10 +22,6 @@
 #include "Api.h"
 #include "common.h"
 
-#ifndef G__OLDIMPLEMENTATION1586
-static char G__buf[G__ONELINE];
-#endif
-
 /*********************************************************************
 * class G__ClassInfo
 *********************************************************************/
@@ -82,12 +78,7 @@ const char* G__ClassInfo::Name()
 const char* G__ClassInfo::Fullname()
 {
   if(IsValid()) {
-#ifndef G__OLDIMPLEMENTATION1586
-    strcpy(G__buf,G__fulltagname((int)tagnum,1));
-    return(G__buf);
-#else
     return(G__fulltagname((int)tagnum,1));
-#endif
   }
   else {
     return((char*)NULL);

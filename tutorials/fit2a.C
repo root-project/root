@@ -54,4 +54,6 @@ void fit2a() {
    f2->SetNpx(80);
    f2->SetNpy(80);
    f2->Draw("surf1 same [cutg]");
+   f2->GetHistogram()->SetMaximum(h2->GetMaximum());
+   f2->GetHistogram()->SetMinimum(h2->GetMinimum());
 }

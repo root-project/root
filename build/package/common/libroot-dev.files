@@ -1,2 +1,3 @@
-@prefix@/include/root/* 
-@prefix@/share/aclocal/root.m4 
+usr/include/root/* 
+usr/share/root/acinclude.m4 
+usr/share/doc/root/test

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for DEC OSF1 with KCC compiler
 
 PLATFORM      = alpha
@@ -69,8 +67,3 @@ F77LIBS       = /usr/lib/libfor.a -lUfor -lFutil
 CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -lX11 -lXext -lXmu -lXi -lm
-
-# Override default in Makefile.config
-INSTALL        := cp -pR
-INSTALLDATA    := cp -pR
-

@@ -133,64 +133,6 @@ static int G__addpreprocessfile()
 extern int G__rootCcomment; /* used and defined in sizeof.c */
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1581
-/**************************************************************************
-* G__do_not_include
-**************************************************************************/
-static void G__do_not_include()
-{
-  int c;
-  char fnameorig[G__ONELINE];
-  char *fname;
-  int len;
-  int hash;
-  int i;
-
-  /* if(!G__IsInMacro()) return; */
-
-  /* Get the key string for preprocessed header file group */
-  c=G__fgetstream(fnameorig,";\n\r");
-
-  switch(fnameorig[0]) {
-  case '\'':
-  case '"':
-  case '<':
-    fname = fnameorig+1;
-    break;
-  default:
-    fname = fnameorig;
-    break;
-  }
-  len = strlen(fname);
-  if(len) {
-    switch(fname[len-1]) {
-    case '\'':
-    case '"':
-    case '>':
-      fname[len-1] = 0;
-      break;
-    }
-  }
-
-  G__hash(fname,hash,i);
-
-  for(i=0;i<G__nfile;i++) {
-    if((hash==G__srcfile[i].hash&&strcmp(G__srcfile[i].filename,fname)==0)){
-      return;
-    }
-  }
-
-  G__srcfile[G__nfile].hash = hash;
-  G__srcfile[G__nfile].filename = (char*)malloc(strlen(fname)+1);
-  strcpy(G__srcfile[G__nfile].filename,fname);
-  G__srcfile[G__nfile].included_from = -1;
-
-  ++G__nfile;
-
-  return;
-}
-#endif
-
 /**************************************************************************
 * G__pragma()
 **************************************************************************/
@@ -336,12 +278,6 @@ int G__pragma()
   else if(strcmp(command,"extra_include")==0) {
     G__specify_extra_include();
     c='\n';
-  }
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1581
-  else if(strcmp(command,"do_not_include")==0) {
-    G__do_not_include();
   }
 #endif
 

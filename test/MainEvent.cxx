@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.22 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.16 2001/04/24 14:32:46 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -19,13 +19,10 @@
 //  The statement ***tree->Branch("event", event, 64000,split);*** below
 //  will parse the structure described in Event.h and will make
 //  a new branch for each data member of the class if split is set to 1.
-//    - 9 branches corresponding to the basic types fType, fNtrack,fNseg,
-//           fNvertex,fFlag,fTemperature,fMeasures,fMatrix,fClosesDistance.
+//    - 5 branches corresponding to the basic types fNtrack,fNseg,fNvertex
+//           ,fFlag and fTemperature.
 //    - 3 branches corresponding to the members of the subobject EventHeader.
 //    - one branch for each data member of the class Track of TClonesArray.
-//    - one branch for the TRefArray of high Pt tracks
-//    - one branch for the TRefArray of muon tracks
-//    - one branch for the reference pointer to the last track
 //    - one branch for the object fH (histogram of class TH1F).
 //
 //  if split = 0 only one single branch is created and the complete event
@@ -48,9 +45,6 @@
 //  are generated and added to the TClonesArray list.
 //  For each event the event histogram is saved as well as the list
 //  of all tracks.
-//
-//  The two TRefArray contain only references to the original tracks owned by
-//  the TClonesArray fTracks.
 //
 //  The number of events can be given as the first argument to the program.
 //  By default 400 events are generated.
@@ -82,7 +76,6 @@
 
 #include <stdlib.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TNetFile.h"
@@ -125,8 +118,8 @@ int main(int argc, char **argv)
    if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
    Int_t branchStyle = 1; //new style by default
-   if (split < 0) {branchStyle = 0; split = -1-split;}
-
+   if (split < 0) {branchStyle = 0; split = 1-split;}
+   
    TFile *hfile;
    TTree *tree;
    Event *event = 0;
@@ -144,9 +137,7 @@ int main(int argc, char **argv)
    if (arg5 < 100) printev = 1000;
    if (arg5 < 10)  printev = 10000;
 
-   //In this new version of mainEvent, one cannot activate the next statement
-   //because tracks are referenced
-   //Track::Class()->IgnoreTObjectStreamer();
+   Track::Class()->IgnoreTObjectStreamer();
 
 //         Read case
    if (read) {
@@ -210,7 +201,7 @@ int main(int argc, char **argv)
       TTree::SetBranchStyle(branchStyle);
       TBranch *branch = tree->Branch("event", "Event", &event, bufsize,split);
       branch->SetAutoDelete(kFALSE);
-      Float_t ptmin = 1;
+      char etype[20];
 
       for (ev = 0; ev < nevent; ev++) {
          if (ev%printev == 0) {
@@ -222,11 +213,36 @@ int main(int argc, char **argv)
             timer.Continue();
          }
 
-         event->Build(ev, arg5, ptmin);
+         Float_t sigmat, sigmas;
+         gRandom->Rannor(sigmat,sigmas);
+         Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
+         Float_t random = gRandom->Rndm(1);
+
+         sprintf(etype,"type%d",ev%5);
+         event->SetType(etype);
+         event->SetHeader(ev, 200, 960312, random);
+         event->SetNseg(Int_t(10*ntrack+20*sigmas));
+         event->SetNvertex(Int_t(1+20*gRandom->Rndm()));
+         event->SetFlag(UInt_t(random+0.5));
+         event->SetTemperature(random+20.);
+
+         for(UChar_t m = 0; m < 10; m++) {
+            event->SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
+         }
+         for(UChar_t i0 = 0; i0 < 4; i0++) {
+            for(UChar_t i1 = 0; i1 < 4; i1++) {
+               event->SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
+            }
+         }
+
+         //  Create and Fill the Track objects
+         for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
 
          if (write) nb += tree->Fill();  //fill the tree
 
          if (hm) hm->Hfill(event);      //fill histograms
+
+         event->Clear();
       }
       if (write) {
          hfile->Write();

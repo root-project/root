@@ -14,7 +14,3 @@ Files:
        XLIB.h	     : Header file for making xlib.dll
        x11const.h    : Header file for making xlib.dll
        x11mfunc.h    : Header file for making xlib.dll
-
-2001/Sep/29
- gcc-3.00 is supported from cint5.15.14, however, gl.dll can not be compiled.
-The author is working to solve this problem.

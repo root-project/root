@@ -269,9 +269,6 @@ void G__CallFunc::Exec(void *pobject)
   // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
@@ -298,9 +295,6 @@ long G__CallFunc::ExecInt(void *pobject)
   // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
@@ -325,9 +319,6 @@ double G__CallFunc::ExecDouble(void *pobject)
   // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
@@ -364,21 +355,5 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
   }
   return(ret);
 }
-///////////////////////////////////////////////////////////////////////////
-#ifndef G__OLDIMPLEMENTATION1591
-void G__CallFunc::SetFuncType() {
-  if(method.IsValid()) {
-    struct G__ifunc_table *ifunc = method.ifunc();
-    int ifn = method.Index();
-    result.type = ifunc->type[ifn];
-    result.tagnum = ifunc->p_tagtable[ifn];
-    result.typenum = ifunc->p_typetable[ifn];
-    result.isconst = ifunc->isconst[ifn];
-    if('d'!=result.type&&'f'!=result.type) {
-      result.obj.reftype.reftype = ifunc->reftype[ifn];
-    }
-  }
-}
-#endif
 ///////////////////////////////////////////////////////////////////////////
 

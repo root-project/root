@@ -1,6 +1,4 @@
-# -*- mode: makefile -*-
-#
-# Makefile of ROOT for Itanium/Linux with Intel ecc compiler
+# Makefile of ROOT for Itanium/Linux with sgiCC
 
 PLATFORM      = linux
 
@@ -15,19 +13,19 @@ endif
 # Compiler:
 CXX           = ecc
 CC            = ecc
-CXXFLAGS      = -KPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -KPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -KPIC $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = -kPIC $(EXTRA_CXXFLAGS)
+CFLAGS        = -kPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -kPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
-CINTCFLAGS    = -KPIC $(EXTRA_CFLAGS) \
+CINTCFLAGS    = -kPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 
 # Linker:
 LD            = ecc
-LDFLAGS       = -i_dynamic $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared -Qoption,ld,-soname,
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for SGI IRIX 6.x with KCC compiler
 
 # You can steer the build with the variable ROOTBUILD
@@ -15,7 +13,7 @@ CXXOPT        = +K0
 OPT           = -g -O0
 NOOPT         =
 else
-CXXOPT        = +K1
+CXXOPT        = +K3
 OPT           = -O2
 NOOPT         =
 endif
@@ -41,12 +39,12 @@ CXX           = KCC
 CC            = cc
 CXXFLAGS      = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 608 --diag_suppress 68 --diag_suppress 191 \
-                --one_instantiation_per_object $(CXXOPT) -DSGI_REL=$(SGI_REL) \
+                $(CXXOPT) -DSGI_REL=$(SGI_REL) \
                 $(EXTRA_CXXFLAGS)
 CFLAGS        = $(ABI) -signed $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 608 --diag_suppress 68 --diag_suppress 191 \
-                --one_instantiation_per_object -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
+                -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(CXXOPT) \
                 $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = $(ABI) -signed -w -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \

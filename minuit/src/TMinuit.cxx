@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.13 2001/08/22 07:33:45 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.12 2001/08/07 14:03:36 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -5492,7 +5492,7 @@ void TMinuit::mnparm(Int_t k1, TString cnamj, Double_t uk, Double_t wk, Double_t
 	    Printf(" CANNOT RELEASE. MAX NPAR EXCEEDED.");
 	    goto L800;
 	}
-	mnfree(-k);
+	mnfree(1);
     }
 //*-*-                      if redefining previously variable parameter
     if (fNiofex[k-1] > 0) kint = fNpar - 1;
@@ -5523,7 +5523,7 @@ L122:
 	nvl = 4;
 	fLnolim = kFALSE;
 	if (fISW[4] >= 0) {
-            Printf(" %5d %-10s %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
+            Printf(" %5d '%-10s' %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
 	}
     }
 //*-*-                            . . request for another variable parameter

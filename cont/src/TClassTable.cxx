@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.11 2001/12/02 16:50:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.8 2001/06/22 16:10:17 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -228,6 +228,10 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
    return 0;
 }
 
+extern "C" {
+   static int ClassComp(const void *a, const void *b);
+}
+
 //______________________________________________________________________________
 static int ClassComp(const void *a, const void *b)
 {
@@ -334,18 +338,15 @@ void RemoveClass(const char *cname)
    // Global function called by the dtor of a class's init class
    // (see the ClassImp macro).
 
+#if 1
    // don't delete class information since it is needed by the I/O system
    // to write the StreamerInfo to file
-   if (cname) { 
-     // Let's still remove this information to allow reloading later.
-     // Anyway since the shared library has been unloaded, the dictionary
-     // pointer is now invalid ....
-     // We still keep the TClass object around because TFile needs to 
-     // get to the TStreamerInfo.
-     if (gROOT && gROOT->GetListOfClasses()) {
-        TClass *cl = gROOT->GetClass(cname, kFALSE);
-        if (cl) cl->SetUnloaded();
-     }
-     TClassTable::Remove(cname);
-   }
+   if (cname) { }
+#else
+   TClassTable::Remove(cname);
+   if (gROOT && gROOT->GetListOfClasses()) {
+      TClass *cl = gROOT->GetClass(cname, kFALSE);
+      delete cl;  // interesting, for delete to call TClass::~TClass
+   }              // TClass.h needs to be included
+#endif
 }

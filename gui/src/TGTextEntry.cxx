@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.13 2001/10/16 17:28:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.9 2001/08/15 11:43:03 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -332,8 +332,8 @@ void TGTextEntry::Init()
    gVirtualX->SetCursor(fId, fgDefaultCursor);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask |
-                         kButtonMotionMask, kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
+                         kNone, kNone);
 
    AddInput(kKeyPressMask | kFocusChangeMask |
             kEnterWindowMask | kLeaveWindowMask);
@@ -887,7 +887,6 @@ void TGTextEntry::CopyText() const
    if (HasMarkedText() && GetEchoMode() == kNormal) {
       if (!fgClipboardText) fgClipboardText = new TString();
       *fgClipboardText = GetMarkedText();  // assign
-      gVirtualX->SetPrimarySelectionOwner(fId);
    }
 }
 
@@ -898,12 +897,7 @@ void TGTextEntry::Paste()
    // previous marked text.
    // See also CopyText() Cut().
 
-   if (gVirtualX->GetPrimarySelectionOwner() == kNone) {
-      // No primary selection, so use the buffer
-      if (fgClipboardText) Insert(fgClipboardText->Data());
-   } else {
-      gVirtualX->ConvertPrimarySelection(fId, fClipboard, 0);
-   }
+   if (fgClipboardText) Insert(fgClipboardText->Data());
 }
 
 //______________________________________________________________________________
@@ -1170,9 +1164,6 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    if (!IsEnabled()) return kTRUE;
 
-#ifdef GDK_WIN32
-   if (event->fType == kGKeyPress) {
-#endif
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
    n = strlen(tmp);
    Int_t unknown = 0;
@@ -1279,9 +1270,7 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    UpdateOffset();
    fClient->NeedRedraw(this);
-#ifdef GDK_WIN32
-   }
-#endif
+
    return kTRUE;
 }
 
@@ -1427,38 +1416,6 @@ Bool_t TGTextEntry::HandleSelection(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGTextEntry::HandleSelectionRequest(Event_t *event)
-{
-   // Handle request to send current clipboard contents to requestor window.
-
-   Event_t reply;
-   char   *buffer;
-   Long_t  len;
-
-   reply.fType    = kSelectionNotify;
-   reply.fTime    = event->fTime;
-   reply.fUser[0] = event->fUser[0];     // requestor
-   reply.fUser[1] = event->fUser[1];     // selection
-   reply.fUser[2] = event->fUser[2];     // target
-   reply.fUser[3] = event->fUser[3];     // property
-
-   len = 0;
-   if (fgClipboardText) len = fgClipboardText->Length();
-   buffer = new char[len+1];
-   if (fgClipboardText) strcpy (buffer, fgClipboardText->Data());
-   buffer[len] = '\0';
-
-   gVirtualX->ChangeProperty((Window_t) event->fUser[0], (Atom_t) event->fUser[3],
-                             (Atom_t) event->fUser[2], (UChar_t*) buffer,
-                             (Int_t) len);
-   delete [] buffer;
-
-   gVirtualX->SendEvent((Window_t)event->fUser[0], &reply);
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
 void TGTextEntry::PastePrimary(Window_t wid, Atom_t property, Bool_t del)
 {
    // Paste text from selection (either primary or cut buffer) into
@@ -1547,13 +1504,13 @@ void TGTextEntry::UpdateOffset()
 
    TString dt = GetDisplayText();
    Int_t textWidth = gVirtualX->TextWidth(fFontStruct, dt.Data() , dt.Length());
-   Int_t offset = IsFrameDrawn() ? 4 : 0;
-   Int_t w = GetWidth() - 2 * offset;   // subtract border twice
+   Int_t w = GetWidth();
+   Int_t offset = IsFrameDrawn() ? 6 : 0;
 
    if (textWidth > w) {                          // may need to scroll.
       if (IsCursorOutOfFrame()) ScrollByChar();
    }
-   else if (fAlignment == kTextRight)   fOffset = w - textWidth - 1;
+   else if (fAlignment == kTextRight)   fOffset = w - textWidth - offset;
    else if (fAlignment == kTextCenterX) fOffset = (w - textWidth)/2;
    else if (fAlignment == kTextLeft)    fOffset = 0;
 }

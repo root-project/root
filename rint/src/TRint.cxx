@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.13 2001/09/24 00:40:29 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.10 2001/06/25 16:28:39 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -97,7 +97,8 @@ public:
 //______________________________________________________________________________
 Bool_t TTermInputHandler::Notify()
 {
-   return gApplication->HandleTermInput();
+   gApplication->HandleTermInput();
+   return kTRUE;
 }
 
 
@@ -194,7 +195,7 @@ void TRint::Run(Bool_t retrn)
    // Main application eventloop. First process files given on the command
    // line and then go into the main application event loop, unless the -q
    // command line option was specfied in which case the program terminates.
-   // When retrun is true this method returns even when -q was specified.
+   // When retrn is true this method returns even when -q was specified.
 
    Getlinem(kInit, GetPrompt());
 
@@ -281,13 +282,7 @@ void TRint::PrintLogo()
    else
 #endif
       printf("\n");
-   Printf("Compiled for %s with thread support.", gSystem->GetBuildArch());
-#else
-#ifdef R__UNIX
-   else
-#endif
-      printf("\n");
-   Printf("Compiled for %s.", gSystem->GetBuildArch());
+   Printf("Compiled with thread support.");
 #endif
 
    gInterpreter->PrintIntro();
@@ -336,7 +331,7 @@ const char *TRint::SetPrompt(const char *newPrompt)
 }
 
 //______________________________________________________________________________
-Bool_t TRint::HandleTermInput()
+void TRint::HandleTermInput()
 {
    // Handle input coming from terminal.
 
@@ -368,7 +363,6 @@ Bool_t TRint::HandleTermInput()
       gTabCom->ClearAll();
       Getlinem(kInit, GetPrompt());
    }
-   return kTRUE;
 }
 
 //______________________________________________________________________________

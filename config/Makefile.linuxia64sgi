@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Itanium/Linux with sgiCC
 
 PLATFORM      = linux

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.34 2002/02/04 23:31:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.15 2001/06/07 08:37:04 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -11,10 +11,11 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <fstream.h>
 #include <time.h>
 #include <math.h>
+#include <float.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TGaxis.h"
 #include "TVirtualPad.h"
@@ -23,14 +24,7 @@
 #include "TLatex.h"
 #include "TStyle.h"
 #include "TF1.h"
-#include "TAxis.h"
-#include "THashList.h"
-#include "TObjString.h"
 #include "TMath.h"
-#include "THLimitsFinder.h"
-
-Int_t TGaxis::fgMaxDigits = 5;
-const Int_t kHori = BIT(9); //defined in TPad
 
 ClassImp(TGaxis)
 
@@ -111,12 +105,11 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fTitleOffset = 1;
    fTitleSize   = fLabelSize;
    fChopt       = "";
-   fName        = "";
-   fTitle       = "";
+   fName        = " "; 
+   fTitle       = " ";
    fTimeFormat  = "";
    fFunctionName= "";
    fFunction    = 0;
-   fAxis        = 0;
 }
 
 //______________________________________________________________________________
@@ -142,12 +135,11 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fTitleOffset = 1;
    fTitleSize   = fLabelSize;
    fChopt       = chopt;
-   fName        = "";
-   fTitle       = "";
+   fName        = " ";
+   fTitle       = " ";
    fTimeFormat  = "";
    fFunctionName= "";
    fFunction    = 0;
-   fAxis        = 0;
 }
 
 //______________________________________________________________________________
@@ -184,8 +176,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 //   A2->SetTitleOffset(1.2);
 //   A2->Draw();
 //
-//   TF1 *f3=new TF1("f3","log10(x)",1,1000);
-//   TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505,"G");
+//   TF1 *f3=new TF1("f3","log10(x)",0,800);
+//   TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505);
 //   A3->SetTitle("logarithmic axis");
 //   A3->SetLabelSize(0.03);
 //   A3->SetTitleSize(0.03);
@@ -218,10 +210,9 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fTitleOffset = 1;
    fTitleSize   = fLabelSize;
    fChopt       = chopt;
-   fName        = "";
-   fTitle       = "";
+   fName        = " ";
+   fTitle       = " ";
    fTimeFormat  = "";
-   fAxis        = 0;
 }
 
 //______________________________________________________________________________
@@ -271,39 +262,6 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 }
 
 //______________________________________________________________________________
-Int_t TGaxis::GetMaxDigits()
-{
-   // static function returning fgMaxDigits (See SetMaxDigits)
-
-   return fgMaxDigits;
-}
-
-//______________________________________________________________________________
-void TGaxis::ImportAxisAttributes(TAxis *axis)
-{
-// Copy TAxis attributes to this TGaxis
-
-   fAxis = axis;
-   SetLineColor(axis->GetAxisColor());
-   SetTextColor(axis->GetTitleColor());
-   SetTextFont(axis->GetTitleFont());
-   SetLabelColor(axis->GetLabelColor());
-   SetLabelFont(axis->GetLabelFont());
-   SetLabelSize(axis->GetLabelSize());
-   SetLabelOffset(axis->GetLabelOffset());
-   SetTickSize(axis->GetTickLength());
-   SetTitle(axis->GetTitle());
-   SetTitleOffset(axis->GetTitleOffset());
-   SetTitleSize(axis->GetTitleSize());
-   SetBit(kCenterTitle, axis->TestBit(kCenterTitle));
-   SetBit(kRotateTitle, axis->TestBit(kRotateTitle));
-   SetBit(TAxis::kNoExponent,   axis->TestBit(TAxis::kNoExponent));
-   SetBit(TAxis::kTickPlus,     axis->TestBit(TAxis::kTickPlus));
-   SetBit(TAxis::kTickMinus,    axis->TestBit(TAxis::kTickMinus));
-   SetTimeFormat(axis->GetTimeFormat());
-}
-
-//______________________________________________________________________________
 void TGaxis::Paint(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this axis with its current attributes*-*-*-*-*-*-*
@@ -311,7 +269,7 @@ void TGaxis::Paint(Option_t *)
 
    Double_t wmin = fWmin;
    Double_t wmax = fWmax;
-   Int_t    ndiv = fNdiv;
+   Int_t   ndiv = fNdiv;
    PaintAxis(fX1,fY1,fX2,fY2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
 }
 //______________________________________________________________________________
@@ -429,9 +387,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //       chopt='N': No bining optimization
 //       chopt='I': Integer labelling
 //
-// Maximum Number of Digits for the axis labels
-// --------------------------------------------
-// See the static function TGaxis::SetMaxDigits
 //
 // Time representation.
 // --------------------
@@ -442,7 +397,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //       chopt='t': Plot times with a defined format instead of values
 //
 
-   const char *where = "PaintAxis";
+   static const char *where = "PaintAxis";
 
    Double_t alfa, beta, ratio1, ratio2, grid_side;
    Double_t axis_lengthN = 0;
@@ -450,7 +405,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t axis_length1 = 0;
    Double_t axis_length;
    Double_t atick[3];
-   Double_t tick_side;
+   Double_t tick_side, label_side;
    Double_t charheight;
    Double_t phil, phi, sinphi, cosphi, asinphi, acosphi;
    Double_t BinLow,  BinLow2,  BinLow3;
@@ -459,7 +414,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t textsize;
    Double_t xpl1, xpl2, ypl1, ypl2;
    Double_t Xtick = 0;
-   Double_t Xtick0, Xtick1, DXtick=0;
+   Double_t Xtick0, Xtick1, DXtick;
    Double_t Ytick, Ytick0, Ytick1;
    Double_t Wlabel, DWlabel;
    Double_t Xfactor, Yfactor;
@@ -501,15 +456,16 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    char *LABEL;
    char *CHTEMP;
    char *CODED;
-   char CHLABEL[32];
-   char kCHTEMP[36];
-   char CHCODED[8];
+   static char CHLABEL[32];
+   static char kCHTEMP[36];
+   static char CHCODED[8];
    TLine *linegrid;
    TString timeformat;
    time_t timelabel;
    Double_t timed, wTimeIni;
    struct tm* utctis;
 
+   const Int_t precision = 5;
    Double_t epsilon = 0.00001;
    const Double_t kPI=3.141592;
 //*-*-______________________________________
@@ -526,15 +482,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- the following parameters correspond to the pad range in NDC
 //*-*- and the WC coordinates in the pad
 
-   Bool_t noExponent = TestBit(TAxis::kNoExponent);
-
    Double_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
    Double_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
    Double_t RWxmin = gPad->GetX1();
    Double_t RWxmax = gPad->GetX2();
    Double_t RWymin = gPad->GetY1();
    Double_t RWymax = gPad->GetY2();
-
+   //if (GetLabelFont()%10 > 2) {padh = 1; padw = 1;}
+   
    if(strchr(chopt,'G')) OptionLog  = 1;  else OptionLog  = 0;
    if(strchr(chopt,'B')) OptionBlank= 1;  else OptionBlank= 0;
    if(strchr(chopt,'V')) OptionVert = 1;  else OptionVert = 0;
@@ -558,15 +513,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if(strchr(chopt,'0')) OptionUp   = 1;  else OptionUp   = 0;
    if(strchr(chopt,'X')) OptionX    = 1;  else OptionX    = 0;
    if(strchr(chopt,'t')) OptionTime = 1;  else OptionTime = 0;
-   if (TestBit(TAxis::kTickPlus))  OptionPlus  = 2;
-   if (TestBit(TAxis::kTickMinus)) OptionMinus = 2;
-   if (fAxis) {
-      if (fAxis->GetLabels()) {
-         OptionM    = 1;
-         OptionText = 1;
-         ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
-      }
-   }
 
 //*-*-              Set the grid length
 
@@ -588,7 +534,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       wmin += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
       wmax += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
    }
-
+   
 //*-*-              Determine number of divisions 1, 2 and 3
    N     = ndiv;
    N3A   = N/10000;
@@ -622,7 +568,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- When integer labelling is required, Optimize is invoked first
 //*-*- and only if the result is not an integer labelling, AdjustBinSize is invoked.
 
-      THLimitsFinder::Optimize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth,fChopt.Data());
+      TGaxis::Optimize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth,fChopt.Data());
       if (OptionInt) {
          if (BinLow != Double_t(int(BinLow)) || BinWidth != Double_t(int(BinWidth))) {
             AdjustBinSize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth);
@@ -652,12 +598,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             Yymax = alfa*Xxmax + beta;
          }
       }
-      if (fFunction) {
-         Yymin = ymin;
-         Yymax = ymax;
-         Xxmin = xmin;
-         Xxmax = xmax;
-      } else {
+      if (!fFunction) {
          wmin = BinLow;
          wmax = BinHigh;
       }
@@ -665,13 +606,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- Secondary divisions optimization
       NB2 = N2A;
       if (!OptionNoopt && N2A > 1 && BinWidth > 0) {
-         THLimitsFinder::Optimize(wmin,wmin+BinWidth,N2A,BinLow2,BinHigh2,NB2,BinWidth2,fChopt.Data());
+         TGaxis::Optimize(wmin,wmin+BinWidth,N2A,BinLow2,BinHigh2,NB2,BinWidth2,fChopt.Data());
       }
 
 //*-*- Tertiary divisions optimization
       NB3 = N3A;
       if (!OptionNoopt && N3A > 1 && BinWidth2 > 0) {
-         THLimitsFinder::Optimize(BinLow2,BinLow2+BinWidth2,N3A,BinLow3,BinHigh3,NB3,BinWidth3,fChopt.Data());
+         TGaxis::Optimize(BinLow2,BinLow2+BinWidth2,N3A,BinLow3,BinHigh3,NB3,BinWidth3,fChopt.Data());
       }
       N1Aold = N1A;
       NN1old = NN1;
@@ -771,7 +712,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (OptionPlus)                Mside = 1;
    if (OptionMinus)               Mside = -1;
    if (OptionPlus && OptionMinus) Mside = 0;
-   XMside = Mside;
    Lside = -Mside;
    if (OptionEqual) Lside = Mside;
    if (OptionPlus && OptionMinus) {
@@ -779,7 +719,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       if (OptionEqual) Lside=1;
    }
    XLside = Lside;
-   //printf("OptionPlus=%d, OptionMinus=%d, OptionEqual=%d, Mside=%d, Lside=%d\n",OptionPlus, OptionMinus,OptionEqual,Mside,Lside);
+   XMside = Mside;
 
 //*-*-              Tick marks size
    if(XMside >= 0) tick_side = 1;
@@ -876,7 +816,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*-              (with alphanumeric labels for horizontal axis).
 
    charheight = GetLabelSize();
-   if (OptionText) charheight *= 0.66666;
    textaxis->SetTextFont(GetLabelFont());
    textaxis->SetTextColor(GetLabelColor());
    textaxis->SetTextSize (charheight);
@@ -885,45 +824,18 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       charheight /= padh;
    }
    if (!OptionUp && !OptionDown && !OptionY) {
-      if (OptionText && ((ymin == ymax) || (xmin == xmax))) {
-         textaxis->SetTextAlign(32);
-         OptionText = 2;
-         Int_t nl = fAxis->GetLast()-fAxis->GetFirst()+1;
-         Double_t angle     = 0;
-         for (i=fAxis->GetFirst(); i<=fAxis->GetLast(); i++) {
-            textaxis->SetText(0,0,fAxis->GetBinLabel(i));
-            if (textaxis->GetXsize() < (xmax-xmin)/nl) continue;
-            angle = -20;
-            break;
-         }
-         for (i=fAxis->GetFirst(); i<=fAxis->GetLast(); i++) {
-            if ((!strcmp(fAxis->GetName(),"xaxis") && !gPad->TestBit(kHori))
-              ||(!strcmp(fAxis->GetName(),"yaxis") &&  gPad->TestBit(kHori))) {
-               if (nl > 50) angle = 90;
-               if (fAxis->TestBit(TAxis::kLabelsHori)) angle = 0;
-               if (fAxis->TestBit(TAxis::kLabelsVert)) angle = 90;
-               if (fAxis->TestBit(TAxis::kLabelsUp))   angle = 20;
-               if (fAxis->TestBit(TAxis::kLabelsDown)) angle =-20;
-               if (angle==   0) textaxis->SetTextAlign(23);
-               if (angle== -20) textaxis->SetTextAlign(12);
-               textaxis->PaintLatex(fAxis->GetBinCenter(i),
-                                    gPad->GetUymin() - 3*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
-                                    angle,
-                                    charheight,
-                                    fAxis->GetBinLabel(i));
-            } else if ((!strcmp(fAxis->GetName(),"yaxis") && !gPad->TestBit(kHori))
-                    || (!strcmp(fAxis->GetName(),"xaxis") &&  gPad->TestBit(kHori))) {
-               textaxis->PaintLatex(gPad->GetUxmin() - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
-                                    fAxis->GetBinCenter(i),
-                                    0,
-                                    charheight,
-                                    fAxis->GetBinLabel(i));
-            } else {
-               textaxis->PaintLatex(xmin - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
-                                    ymin +(i-0.5)*(ymax-ymin)/nl,
-                                    0,
-                                    charheight,
-                                    fAxis->GetBinLabel(i));
+      if (OptionText && ymin == ymax) {
+         NHILAB = 0;
+         Double_t binwdh = 0.9*(axis_length/Double_t(N1A));
+         textsize       = 0;
+         for (i=0; i<NHILAB; i++) {
+//            CALL IGTEXT(0,0,HILabs(I),charheight,textsize,'S');
+            if (textsize > binwdh) {
+               OptionUp   = 1;
+               OptionRight= 1;
+               OptionCent = 0;
+               OptionLeft = 0;
+               break;
             }
          }
       }
@@ -956,17 +868,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    textaxis->SetTextAlign(10*Xalign+Yalign);
 
 //*-*-              Position of labels in Y
-   if (X0 == X1) {
-      Ylabel = fLabelOffset;
-      if (Lside < 0) Ylabel += atick[0];
-   } else if (Y0 == Y1) {
-      Ylabel = -fLabelOffset;
-      if (Mside <= 0) Ylabel -= TMath::Abs(atick[0]);
-   } else {
-      if (Mside+Lside >= 0) Ylabel =  fLabelOffset;
-      else                  Ylabel = -fLabelOffset;
-   }
-   if (OptionText) Ylabel /= 2;
+   if(XLside >= 0) label_side = 1;
+   else            label_side = -1;
+   Ylabel = label_side*fLabelOffset;
 
 //*-*-              Draw the linear tick marks if needed...
    if (!OptionLog) {
@@ -986,9 +890,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             if (k%NN3 == 0) ltick = 1;
             if (k%NN2 == 0) ltick = 0;
             if (fFunction) {
-               Double_t xx = BinLow+Double_t(k)*DXtick;
-               Double_t zz = fFunction->Eval(xx)-rwmi;
-               Xtick = zz* axis_length / TMath::Abs(rwma-rwmi);
+               Xtick = (fFunction->Eval(BinLow+Double_t(k)*DXtick)-rwmi)* axis_length / TMath::Abs(rwma-rwmi);
             } else {
                Xtick = Double_t(k)*DXtick;
             }
@@ -1141,7 +1043,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
             if (!OptionText && !OptionTime) {
 
-//*-*-              We have to decide what format to generate
+//*-*-              Here we have to decide what format to generate
 //*-*-              (for numeric labels only)
 //*-*-              Test the magnitude, decide format
                FLEXE  = kFALSE;
@@ -1151,11 +1053,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                WW     = TMath::Max(TMath::Abs(wmin),TMath::Abs(wmax));
 
 //*-*-              First case : (wmax-wmin)/N1A less than 0.001
-//*-*-              (0.001 fgMaxDigits of 5 (fgMaxDigits) characters). Then we use x 10 n
+//*-*-              (0.001 precision of 5 (precision) characters). Then we use x 10 n
 //*-*-              format. If AF >=0 x10 n cannot be used
-               Double_t xmicros = 0.00099;
-               if (fgMaxDigits) xmicros = TMath::Power(10,-fgMaxDigits);
-               if (!noExponent && (TMath::Abs(wmax-wmin)/Double_t(N1A)) < xmicros) {
+
+               if ((TMath::Abs(wmax-wmin)/Double_t(N1A)) < 0.00099) {
                   AF    = TMath::Log10(WW) + epsilon;
                   if (AF < 0) {
                      FLEXE   = kTRUE;
@@ -1163,8 +1064,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      IEXE    = TMath::Abs(NEXE);
                      Wlabel  = Wlabel*TMath::Power(10,IEXE);
                      DWlabel = DWlabel*TMath::Power(10,IEXE);
-                     IF1     = fgMaxDigits;
-                     IF2     = fgMaxDigits-2;
+                     IF1     = precision;
+                     IF2     = precision-2;
                      goto L110;
                   }
                }
@@ -1172,14 +1073,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                else         AF = TMath::Log10(WW*0.0001);
                AF += epsilon;
                NF  = Int_t(AF)+1;
-               if (!noExponent && NF > fgMaxDigits)  FLEXPO = kTRUE;
-               if (!noExponent && NF < -fgMaxDigits) FLEXNE = kTRUE;
+               if (NF > precision)  FLEXPO = kTRUE;
+               if (NF < -precision) FLEXNE = kTRUE;
 
 //*-*-              Use x 10 n format.
 
                if (FLEXPO) {
                   FLEXE = kTRUE;
-                  while ( WW > TMath::Power(10,fgMaxDigits-1)) {
+                  while ( WW > TMath::Power(10,precision-1)) {
                      NEXE++;
                      WW      /= 10;
                      Wlabel  /= 10;
@@ -1189,7 +1090,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
                if (FLEXNE) {
                   FLEXE = kTRUE;
-                  RNE   = 1/TMath::Power(10,fgMaxDigits-2);
+                  RNE   = 1/TMath::Power(10,precision-2);
                   while (WW < RNE) {
                      NEXE--;
                      WW      *= 10;
@@ -1199,13 +1100,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                }
 
                NA = 0;
-               for (i=fgMaxDigits-1; i>0; i--) {
-                  if (TMath::Abs(WW) < TMath::Power(10,i)) NA = fgMaxDigits-i;
+               for (i=precision-1; i>0; i--) {
+                  if (TMath::Abs(WW) < TMath::Power(10,i)) NA = precision-i;
                }
                ndyn = N1A;
                while (ndyn) {
                   Double_t wdyn = TMath::Abs((wmax-wmin)/ndyn);
-                  if (wdyn <= 0.999 && NA < fgMaxDigits-2) {
+                  if (wdyn <= 0.999 && NA < precision-2) {
                      NA++;
                      ndyn /= 10;
                   }
@@ -1213,7 +1114,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                }
 
                IF2 = NA;
-               IF1 = TMath::Max(NF+NA,fgMaxDigits)+1;
+               IF1 = TMath::Max(NF+NA,precision)+1;
 L110:
                if (TMath::Min(wmin,wmax) < 0)IF1 = IF1+1;
                IF1 = TMath::Min(IF1,32);
@@ -1230,27 +1131,19 @@ L110:
                else     sprintf(CODED,"%%%d.%df",IF1+1,1);
             }
 
-//*-*-              We draw labels
+//*-*-              Here we draw labels
 
-            sprintf(CHTEMP,"%g",DWlabel);
-            Int_t ndecimals = 0;
-            if (!gStyle->GetStripDecimals()) {
-               char *dot = strchr(CHTEMP,'.');
-               if (dot) ndecimals = CHTEMP + strlen(CHTEMP) -dot;
-            }
             if (OptionM) Nlabels = N1A-1;
             else         Nlabels = N1A;
             wTimeIni = Wlabel;
             for ( k=0; k<=Nlabels; k++) {
                if (fFunction) {
-                  Double_t xx = BinLow+Double_t(k*NN2)*DXtick;
-                  Double_t zz = fFunction->Eval(xx)-rwmi;
-                  Wlabel = xx;
-                  Xlabel = zz* axis_length / TMath::Abs(rwma-rwmi);
+                  Xlabel = (fFunction->Eval(Wlabel)-rwmi)
+                           * axis_length / TMath::Abs(rwma-rwmi);
                } else {
                   Xlabel = DXlabel*k;
                }
-               if (OptionM)    Xlabel += 0.5*DXlabel;
+               if (OptionM) Xlabel += 0.5*DXlabel;
 
                if (!OptionText && !OptionTime) {
                   sprintf(LABEL,&CHCODED[0],Wlabel);
@@ -1272,14 +1165,12 @@ L110:
                      first = 1; last = strlen(LABEL);
                   }
 
-//*-*-              We eliminate the non significant 0 after '.'
-                  if (ndecimals) {
-                     char *adot = strchr(LABEL,'.');
-                     if (adot) adot[ndecimals] = 0;
-                  } else {
-                     while (LABEL[last] == '0') { LABEL[last] = 0; last--;}
+//*-*-              Here we eliminate the non significiant 0 after '.'
+                  while (LABEL[last] == '0') {
+                     LABEL[last] = 0; last--;
                   }
-//*-*-              We eliminate the dot, unless dot is forced.
+
+//*-*-              Here we eliminate the dot, unless dot is forced.
                   if (LABEL[last] == '.') {
                      if (!OptionDot) { LABEL[last] = 0; last--;}
                   }
@@ -1290,7 +1181,7 @@ L110:
                if (OptionTime) {
                   timed = Wlabel + (int)(gStyle->GetTimeOffset());
                   timelabel = (time_t)((Long_t)(timed));
-                  utctis = localtime(&timelabel);
+                  utctis = gmtime(&timelabel);
                   strftime(LABEL,36,timeformat.Data(),utctis);
                   first = 0; last=strlen(LABEL)-1;
 
@@ -1300,10 +1191,9 @@ L110:
                      int tmplast, tmpfirst;
                      strcpy(CHTEMP,&LABEL[first]);
                      sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
-                     sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
                      tmplast = strlen(LABEL)-1;
 
-//*-*-              We eliminate the non significiant 0 after '.'
+//*-*-              Here we eliminate the non significiant 0 after '.'
                      while (LABEL[tmplast] == '0') {
                         LABEL[tmplast] = 0; tmplast--;
                      }
@@ -1324,13 +1214,13 @@ L110:
                   Wlabel = wTimeIni + (k+1)*DWlabel;
                }
 
-//*-*-              We generate labels (numeric or alphanumeric).
+//*-*-              Here we generate labels (numeric or alphanumeric).
 
                if (OptionNoopt && !OptionInt)
                         Rotate (Xlabel,Ylabel,cosphi,sinphi,X0,Y0,XX,YY);
                else     Rotate (Xlabel,Ylabel,cosphi,sinphi,XX0,YY0,XX,YY);
                if (Y0 == Y1 && !OptionDown && !OptionUp) {
-                  YY -= 0.80*charheight;
+                  if (Lside < 0) YY -= charheight;
                }
                if (OptionVert) {
                   if (X0 != X1 && Y0 != Y1) {
@@ -1348,7 +1238,9 @@ L110:
                      textaxis->PaintTextNDC(XX,YY,CHTEMP);
                   }
                   else  {
-                     if (OptionText == 1) textaxis->PaintTextNDC(XX,YY,fAxis->GetBinLabel(k+fAxis->GetFirst()));
+//                     if (k+1 > NHILAB)  strcpy(CHTEMP, " ");
+//                     else               strcpy(CHTEMP, HILabs(k));
+                     textaxis->PaintTextNDC(XX,YY,CHTEMP);
                   }
                }
                else {
@@ -1357,11 +1249,13 @@ L110:
                   if (!OptionText)     LNLEN = last-first+1;
                   else {
                      if (k+1 > NHILAB) LNLEN = 0;
+//                     else            LNLEN = strlen(HILabs(k));
                   }
                   for ( l=1; l<=LNLEN; l++) {
                      if (!OptionText) *CHTEMP = LABEL[first+l-2];
                      else {
                         if (LNLEN == 0) strcpy(CHTEMP, " ");
+//                        else          strcpy(CHTEMP, HILabs(k)(l:l));
                         else            strcpy(CHTEMP, "1");
                      }
                      textaxis->PaintTextNDC(XX,YY,CHTEMP);
@@ -1370,7 +1264,7 @@ L110:
                }
             }
 
-//*-*-                We use the format x 10 ** n
+//*-*-                Here we use the format x 10 ** n
 
             if (FLEXE && !OptionText && NEXE)  {
                sprintf(LABEL,"x10^{%d}", NEXE);
@@ -1444,8 +1338,6 @@ L110:
          if (X0 == X1 && j == 1) Ylabel += charheight*0.33;
          if (Y0 == Y1 && j == 1) Ylabel -= charheight*0.65;
          Xone = X00+AXMUL*(Double_t(decade)-XMNLOG);
-         //the following statement is a trick to circumvent a gcc bug
-         if (j < 0) printf("j=%d\n",j);
          if (X00 > Xone) goto L160;
          if (Xone > X11) break;
          Xtwo = Xone;
@@ -1478,18 +1370,14 @@ L110:
 
          if (!OptionUnlab)  {
 
-//*-*-              We generate labels (numeric only).
-            if (LogInteger || noExponent) {
+//*-*-              Here we generate labels (numeric only).
+            if (LogInteger) {
                rlab = TMath::Power(10,labelnumber);
-               sprintf(LABEL, "%f", rlab);
+               sprintf(LABEL, "%d", Int_t(rlab));
                LabelsLimits(LABEL,first,last);
-               while (last > first) {
-                  if (LABEL[last] != '0') break;
-                  LABEL[last] = 0;
-                  last--;
-               }
-               if (LABEL[last] == '.') {LABEL[last] = 0; last--;}
-            } else {
+                  if (LABEL[last] == '.') {LABEL[last] = 0; last--;}
+            }
+            else {
                sprintf(LABEL, "%d", labelnumber);
                LabelsLimits(LABEL,first,last);
             }
@@ -1505,11 +1393,9 @@ L110:
                      else                  XX    += 0.50*charheight;
                   }
                }
-               if (noExponent) XX += 0.25*charheight;
             }
             if ((Y0 == Y1) && !OptionDown && !OptionUp) {
-               //if (Lside < 0) YY  -= charheight;
-               if (noExponent) YY += 0.5*charheight;
+               if (Lside < 0) YY  -= charheight;
             }
             if (N1A == 0)goto L210;
             KMOD = NBININ/N1A;
@@ -1517,7 +1403,7 @@ L110:
             if ((NBININ <= N1A) || (j == 1) || (j == NBININ) || ((NBININ > N1A)
             && (j%KMOD == 0))) {
                if ((labelnumber != 0) && (labelnumber != 1)) {
-                  if (LogInteger || noExponent) {
+                  if (LogInteger) {
                      textaxis->PaintTextNDC(XX,YY,&LABEL[first]);
                   }
                   else {
@@ -1525,11 +1411,9 @@ L110:
                      textaxis->PaintTextNDC(XX,YY,"10");
                      Double_t s10 = textaxis->GetTextSize();
                      textaxis->SetTextSize (0.6*s10);
-                     Double_t pixels = 0.6*s10;
-                     if (textaxis->GetTextFont() % 10 < 3) {
-                        if (padw < padh) pixels = s10*padw;
-                        else             pixels = s10*padh;
-                     }
+                     Double_t pixels;
+                     if (padw < padh) pixels = s10*padw;
+                     else             pixels = s10*padh;
                      Int_t alig  = textaxis->GetTextAlign();
                      Int_t aligh = alig/10;
                      Int_t aligv = alig%10;
@@ -1541,7 +1425,7 @@ L110:
                      if (aligv == 3) YexpT = YY + 0.01*pixels/padh;
                      textaxis->SetTextAlign(11);
                      textaxis->PaintTextNDC(XexpT,YexpT,&LABEL[first]);
-                     textaxis->SetTextSize (s10);
+                     textaxis->SetTextSize (charheight);
                      textaxis->SetTextAlign(alig);
                   }
                }
@@ -1606,6 +1490,7 @@ L160:
                         else            YY -= Ylabel;
                      }
                   }
+                  if (CHTEMP[0] == '0') printf("len=%d, chtemp=%s\n",strlen(CHTEMP),CHTEMP);
                   if (CHTEMP[0] != '0') textaxis->PaintTextNDC(XX,YY,CHTEMP);
                }
 
@@ -1627,6 +1512,184 @@ L210:
    delete lineaxis;
    delete linegrid;
    delete textaxis;
+}
+
+//______________________________________________________________________________
+void TGaxis::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,Double_t &BinLow, Double_t &BinHigh, 
+                      Int_t &nbins, Double_t &BinWidth, Option_t *option)
+{
+//*-*-*-*-*-*-*-*-*-*-*-*Reasonable Axis labels optimisation*-*-*-*-*-*-*-*-*
+//*-*                    ===================================
+//*-*    STATIC function
+//*-*  Get reasonable values for tick marks & ensure they are
+//*-*  not plotted beyond allowed limits
+//*-*
+//*-* _Input parameters:
+//*-*
+//*-*  A1,A2 : Old WMIN,WMAX .
+//*-*  BinLow,BinHigh : New WMIN,WMAX .
+//*-*  nold   : Old NDIV .
+//*-*  nbins    : New NDIV .
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   Int_t lwid, kwid;
+   Int_t ntemp = 0;
+   Int_t jlog  = 0;
+   Double_t siground = 0;
+   Double_t alb, awidth, sigfig;
+   Double_t timemulti = 1;
+   Int_t roundmode =0;
+
+   Int_t OptionTime;
+   if(strchr(option,'t')) OptionTime = 1;  else OptionTime = 0;
+
+   Double_t AL = TMath::Min(A1,A2);
+   Double_t AH = TMath::Max(A1,A2);
+   if (AL == AH) AH = AL+1;
+//*-*-      IF nold  ==  -1 , program uses binwidth input from calling routine
+   if (nold == -1 && BinWidth > 0 ) goto L90;
+   ntemp = TMath::Max(nold,2);
+   if (ntemp < 1) ntemp = 1;
+
+L20:
+   awidth = (AH-AL)/Double_t(ntemp);
+   if (awidth >= FLT_MAX) goto LOK;  //in float.h
+   if (awidth <= 0)       goto LOK;
+
+//*-*-      If time representation, bin width should be rounded to seconds
+//          minutes, hours or days
+
+   if (OptionTime && awidth>=60) { // if width in seconds, treat it as normal
+//   width in minutes
+      awidth /= 60; timemulti *=60;
+      roundmode = 1; // round minutes (60)
+//   width in hours ?
+      if (awidth>=60) {
+         awidth /= 60; timemulti *= 60;
+         roundmode = 2; // round hours (24)
+//   width in days ?
+         if (awidth>=24) {
+            awidth /= 24; timemulti *= 24;
+            roundmode = 3; // round days (30)
+//   width in months ?
+            if (awidth>=30.43685) { // Mean month length in 1900.
+               awidth /= 30.43685; timemulti *= 30.43685;
+               roundmode = 2; // round months (12)
+//   width in years ?
+               if (awidth>=12) {
+                  awidth /= 12; timemulti *= 12;
+                  roundmode = 0; // round years (10)
+               }
+            }
+         }
+      }
+   }
+//*-*-      Get nominal bin width in exponential form
+
+   jlog   = Int_t(TMath::Log10(awidth));
+   if (jlog <-200 || jlog > 200) {
+      BinLow   = 0;
+      BinHigh  = 1;
+      BinWidth = 0.01;
+      nbins    = 100;
+      return;
+   }
+   if (awidth <= 1 && (!OptionTime || timemulti==1) ) jlog--;
+   sigfig = awidth*TMath::Power(10,-jlog);
+
+//*-*-      Round mantissa
+
+   switch (roundmode) {
+
+//*-*-      Round mantissa up to 1, 1.5, 2, 3, or 6 in case of minutes
+      case 1: // case 60
+         if      (sigfig <= 1)    siground = 1;
+         else if (sigfig <= 1.5 && jlog==1)    siground = 1.5;
+         else if (sigfig <= 2)    siground = 2;
+         else if (sigfig <= 3 && jlog ==1)    siground = 3;
+         else if (jlog==0)        {siground = 1; jlog++;}
+         else                     siground = 6;
+         break;
+      case 2: // case 12 and 24
+
+//*-*-      Round mantissa up to 1, 1.2, 2, 2.4, 3 or 6 in case of hours or months
+         if      (sigfig <= 1 && jlog==0)    siground = 1;
+         else if (sigfig <= 1.2 && jlog==1)    siground = 1.2;
+         else if (sigfig <= 2 && jlog==0)    siground = 2;
+         else if (sigfig <= 2.4 && jlog==1)    siground = 2.4;
+         else if (sigfig <= 3)    siground = 3;
+         else if (sigfig <= 6)    siground = 6;
+         else if (jlog==0)        siground = 12;
+         else                     siground = 2.4;
+         break;
+
+//*-*-      Round mantissa up to 1, 1.4, 2, or 7 in case of days (weeks)
+      case 3: // case 30
+         if      (sigfig <= 1 && jlog==0)    siground = 1;
+         else if (sigfig <= 1.4 && jlog==1)    siground = 1.4;
+         else if (sigfig <= 3 && jlog ==1)    siground = 3;
+         else                     siground = 7;
+         break;
+      default :
+      
+//*-*-      Round mantissa up to 1, 2, 2.5, 5, or 10 in case of decimal number
+         if      (sigfig <= 1)    siground = 1;
+         else if (sigfig <= 2)    siground = 2;
+//         else if (sigfig <= 2.5)  siground = 2.5;
+         else if (sigfig <= 5 && (!OptionTime || jlog<1))    siground = 5;
+         else if (sigfig <= 6 && OptionTime && jlog==1)    siground = 6;
+         else                    {siground = 1;   jlog++; }
+         break;
+   }
+
+   BinWidth = siground*TMath::Power(10,jlog);
+   if (OptionTime) BinWidth *= timemulti;
+
+//*-*-      Get new bounds from new width BinWidth
+
+L90:
+   alb  = AL/BinWidth;
+   if (TMath::Abs(alb) > 1e9) {
+      BinLow  = AL;
+      BinHigh = AH;
+      if (nbins > 10*nold && nbins > 10000) nbins = nold;
+      return;
+   }
+   lwid   = Int_t(alb);
+   if (alb < 0) lwid--;
+   BinLow     = BinWidth*Double_t(lwid);
+   alb        = AH/BinWidth + 1.00001;
+   kwid = Int_t(alb);
+   if (alb < 0) kwid--;
+   BinHigh = BinWidth*Double_t(kwid);
+   nbins = kwid - lwid;
+   if (nold == -1) goto LOK;
+   if (nold <= 5) {          //*-*-    Request for one bin is difficult case
+      if (nold > 1 || nbins == 1)goto LOK;
+      BinWidth = BinWidth*2;
+      nbins    = 1;
+      goto LOK;
+   }
+   if (2*nbins == nold) { ntemp++; goto L20; }
+
+LOK:
+   Double_t oldBinLow = BinLow;
+   Double_t oldBinHigh = BinHigh;
+   Int_t oldnbins = nbins;
+
+   Double_t atest = BinWidth*0.0001;
+   if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
+   if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
+
+   if (OptionTime && nbins==0) {
+      nbins = 2*oldnbins;
+      BinHigh = oldBinHigh;
+      BinLow = oldBinLow;
+      BinWidth = (oldBinHigh - oldBinLow)/nbins;
+      Double_t atest = BinWidth*0.0001;
+      if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
+      if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
+   }
 }
 
 //______________________________________________________________________________
@@ -1746,37 +1809,11 @@ void TGaxis::SetFunction(const char *funcname)
 }
 
 //______________________________________________________________________________
-void TGaxis::SetMaxDigits(Int_t maxd)
-{
-   // static function to set fgMaxDigits
-   //fgMaxDigits is the maximum number of digits permitted for the axis
-   //labels above which the notation with 10^N is used.
-   //For example, to accept 6 digits number like 900000 on an axis
-   //call TGaxis::SetMaxDigits(6). The default value is 5.
-   //fgMaxDigits must be greater than 0.
-
-   fgMaxDigits = maxd;
-   if (maxd < 1) fgMaxDigits = 1;
-}
-
-//______________________________________________________________________________
 void TGaxis::SetName(const char *name)
 {
 //*-*-*-*-*-*-*-*-*-*-*Change the name of the axis*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ============================
    fName = name;
-}
-
-//______________________________________________________________________________
-void TGaxis::SetNoExponent(Bool_t noExponent)
-{
-// Set the NoExponent flag
-// By default, an exponent of the form 10^N is used when the label values
-// are either all very small or very large.
-// One can disable the exponent by calling axis.SetNoExponent(kTRUE).
-
-   if (noExponent) SetBit(kNoExponent);
-   else            ResetBit(kNoExponent);
 }
 
 //______________________________________________________________________________
@@ -1860,7 +1897,7 @@ void TGaxis::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TGaxis::IsA());
       //====end of old versions
-
+      
    } else {
       TGaxis::Class()->WriteBuffer(R__b,this);
    }

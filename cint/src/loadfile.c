@@ -1070,7 +1070,7 @@ char *filenamein;
        ){
 #endif
       if(G__prerun==0 || G__debugtrace)
-	G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
+	G__fprinterr(G__serr,"Warning: File \"%s\" already loaded\n",filename);
       /******************************************************
        * restore input file information to G__ifile
        * and reset G__eof to 0.
@@ -1641,12 +1641,7 @@ char *filenamein;
   store_p_local=G__p_local;
 #ifndef G__OLDIMPLEMENTATION616
   if(0==G__def_struct_member||-1==G__tagdefining||
-     ('n'!=G__struct.type[G__tagdefining]
-#ifndef G__OLDIMPLEMENTATION1608
-      && 'c'!=G__struct.type[G__tagdefining]
-      && 's'!=G__struct.type[G__tagdefining]
-#endif
-     )) {
+     'n'!=G__struct.type[G__tagdefining]) {
     G__p_local=NULL;
   }
 #else
@@ -2201,6 +2196,7 @@ char *badname;
   }
 #endif
 }
+
 
 /**************************************************************************
 * G__tmpnam()

@@ -386,9 +386,7 @@ int G__defined_tagname(tagname,noerror)
 char *tagname;
 int noerror;
 {
-#ifdef G__OLDIMPLEMENTATION1593
   static int boolflag=0;
-#endif
   int i,len;
   char *p;
   char temp[G__LONGLINE];
@@ -508,16 +506,9 @@ int noerror;
     }
   }
 
-#ifndef G__OLDIMPLEMENTATION884 
-  /* THIS PART(884) MAY NOT BE NEEDED ANY MORE BY FIX 1604 */
+#ifndef G__OLDIMPLEMENTATION884
   if(strcmp(tagname,"bool")==0) {
-    if(
-#ifndef G__OLDIMPLEMENTATION1593
-       0==G__boolflag
-#else
-       0==boolflag
-#endif
-       ) {
+    if(0==boolflag) {
 #ifndef G__OLDIMPLEMENTATION913
       long store_globalvarpointer=G__globalvarpointer;
       int store_tagdefining=G__tagdefining;
@@ -525,9 +516,6 @@ int noerror;
       int store_def_tagnum=G__def_tagnum;
       int store_tagnum=G__tagnum;
       int store_cpp=G__cpp;
-#ifndef G__OLDIMPLEMENTATION1584
-      int store_globalcomp = G__globalcomp;
-#endif
       struct G__ifunc_table *store_ifunc = G__p_ifunc;
       G__cpp=0;
       G__globalvarpointer=G__PVOID;
@@ -537,16 +525,9 @@ int noerror;
       G__tagnum = -1;
       G__p_ifunc = &G__ifunc;
 #endif
-#ifndef G__OLDIMPLEMENTATION1593
-      G__boolflag=1;
-#else
       boolflag=1;
-#endif
       G__loadfile("bool.h");
       i=G__defined_tagname(tagname,noerror);
-#ifndef G__OLDIMPLEMENTATION1584
-      G__globalcomp = store_globalcomp;
-#endif
 #ifndef G__OLDIMPLEMENTATION913
       G__cpp=store_cpp;
       G__globalvarpointer=store_globalvarpointer;

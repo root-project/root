@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.12 2001/07/12 17:29:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.11 2001/05/08 09:17:03 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -73,7 +73,7 @@ TObjArray::~TObjArray()
    if (IsOwner())
       Delete();
 
-   ::operator delete(fCont);
+   delete [] fCont;
    fCont = 0;
    fSize = 0;
 }
@@ -433,14 +433,14 @@ void TObjArray::Init(Int_t s, Int_t lowerBound)
    // Initialize a TObjArray.
 
    if (fCont && fSize != s) {
-      ::operator delete(fCont);
+      delete [] fCont;
       fCont = 0;
    }
 
    fSize = s;
 
    if (!fCont)
-      fCont = (TObject**) ::operator new(fSize*sizeof(TObject*)); //new TObject* [fSize];
+      fCont = new TObject* [fSize];
    memset(fCont, 0, fSize*sizeof(TObject*));
    fLowerBound = lowerBound;
    fLast = -1;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.3 2001/05/10 14:31:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.2 2001/04/11 11:10:44 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -62,6 +62,8 @@ private:
 
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
+   UInt_t               fCwidth;     // width of canvas container
+   UInt_t               fCheight;    // height of canvas container
    Int_t                fButton;     // currently pressed button
 
    void     CreateCanvas(const char *name);

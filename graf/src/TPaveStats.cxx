@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.5 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.2 2000/06/13 11:12:13 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <fstream.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "Riostream.h"
 #include "TPaveStats.h"
 #include "TStyle.h"
 #include "TFile.h"
@@ -121,8 +121,7 @@ void TPaveStats::Streamer(TBuffer &R__b)
       TPaveText::Streamer(R__b);
       R__b >> fOptFit;
       R__b >> fOptStat;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (R__v > 1 || (file && file->GetVersion() == 22304)) {
+      if (R__v > 1 || (gFile && gFile->GetVersion() == 22304)) {
          fFitFormat.Streamer(R__b);
          fStatFormat.Streamer(R__b);
       } else {
@@ -131,7 +130,7 @@ void TPaveStats::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TPaveStats::IsA());
       //====end of old versions
-
+      
    } else {
       TPaveStats::Class()->WriteBuffer(R__b,this);
    }

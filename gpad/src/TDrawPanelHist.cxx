@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.4 2001/08/07 13:44:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.3 2001/08/01 15:13:58 rdm Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -373,7 +373,6 @@ void TDrawPanelHist::RecursiveRemove(TObject *obj)
 {
 //  when obj is deleted, clear fHistogram if fHistogram=obj
    
-   TDialogCanvas::RecursiveRemove(obj);
    if (obj == fHistogram) fHistogram = 0;
 }
 

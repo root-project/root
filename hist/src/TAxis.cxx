@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.27 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.16 2001/02/28 07:51:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream.h>
+#include <fstream.h>
 #include "TAxis.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
@@ -17,7 +18,6 @@
 #include "TView.h"
 #include "TError.h"
 #include "TH1.h"
-#include "TObjString.h"
 
 ClassImp(TAxis)
 
@@ -38,11 +38,11 @@ TAxis::TAxis(): TNamed(), TAttAxis()
 {
    fNbins   = 1;
    fXmin    = 0;
-   fXmax    = 1;
+   fXmax    = 0;
    fFirst   = 0;
    fLast    = 0;
+   fXlabels = 0;
    fParent  = 0;
-   fLabels  = 0;
    fTimeDisplay = 0;
 }
 
@@ -69,6 +69,7 @@ TAxis::TAxis(Int_t nbins,const Axis_t *xbins): TNamed(), TAttAxis()
 //______________________________________________________________________________
 TAxis::~TAxis()
 {
+   if (fXlabels) { delete [] fXlabels; fXlabels = 0; }
 }
 
 //______________________________________________________________________________
@@ -183,6 +184,7 @@ void TAxis::Copy(TObject &obj)
    ((TAxis&)obj).fXmax   = fXmax;
    ((TAxis&)obj).fFirst  = fFirst;
    ((TAxis&)obj).fLast   = fLast;
+   ((TAxis&)obj).fXlabels= 0;
    fXbins.Copy(((TAxis&)obj).fXbins);
    ((TAxis&)obj).fTimeFormat   = fTimeFormat;
    ((TAxis&)obj).fTimeDisplay  = fTimeDisplay;
@@ -227,19 +229,10 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
       axisNumber = 1;
-      if (!strcmp(GetName(),"xaxis")) {
-         axisNumber = 1;
-         if (!gPad->IsVertical()) axisNumber = 2;
-      }
-      if (!strcmp(GetName(),"yaxis")) {
-         axisNumber = 2;
-         if (!gPad->IsVertical()) axisNumber = 1;
-      }
-      if (!strcmp(GetName(),"zaxis")) {
-         if (TestBit(kPalette)) axisNumber = 4;
-         else                   axisNumber = 3;
-      }
-      if (view && axisNumber < 4) {
+      //if (!strcmp(GetName(),"xaxis")) axisNumber = 1;
+      if (!strcmp(GetName(),"yaxis")) axisNumber = 2;
+      //if (!axisNumber) return;
+      if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio1);
       } else {
          if (axisNumber == 1) {
@@ -248,17 +241,11 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             py1old = gPad->YtoAbsPixel(gPad->GetUymin());
             px2old = px1old;
             py2old = gPad->YtoAbsPixel(gPad->GetUymax());
-         } else if (axisNumber == 2) {
+         } else {
             ratio1 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
             py1old = gPad->YtoAbsPixel(gPad->GetUymin()+ratio1*(gPad->GetUymax() - gPad->GetUymin()));
             px1old = gPad->XtoAbsPixel(gPad->GetUxmin());
             px2old = gPad->XtoAbsPixel(gPad->GetUxmax());
-            py2old = py1old;
-         } else {
-            ratio1 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
-            py1old = gPad->YtoAbsPixel(gPad->GetUymin()+ratio1*(gPad->GetUymax() - gPad->GetUymin()));
-            px1old = gPad->XtoAbsPixel(gPad->GetUxmax());
-            px2old = gPad->XtoAbsPixel(gPad->GetX2());
             py2old = py1old;
          }
          gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
@@ -267,7 +254,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       // No break !!!
 
    case kButton1Motion:
-      if (view && axisNumber < 4) {
+      if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio2);
       } else {
          gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
@@ -283,7 +270,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    break;
 
    case kButton1Up:
-      if (view && axisNumber < 4) {
+      if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio2);
          if (ratio1 > ratio2) {
             temp   = ratio1;
@@ -291,27 +278,13 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             ratio2 = temp;
          }
          if (ratio2 - ratio1 > 0.05) {
-            TH1 *hobj = (TH1*)fParent;
-            if (axisNumber == 3 && hobj) {
-               Float_t zmin = hobj->GetMinimum();
-               Float_t zmax = hobj->GetMaximum();
-               Float_t newmin = zmin + (zmax-zmin)*ratio1;
-               Float_t newmax = zmin + (zmax-zmin)*ratio2;
-               if(newmin < zmin)newmin = hobj->GetBinContent(hobj->GetMinimumBin());
-               if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
-               hobj->SetMinimum(newmin);
-               hobj->SetMaximum(newmax);
-            } else {
-               if (fFirst > 0) first = fFirst;
-               else            first = 1;
-               if (fLast > 0) last = fLast;
-               else           last = fNbins;
-               bin1 = first + Int_t((last-first+1)*ratio1);
-               bin2 = first + Int_t((last-first+1)*ratio2);
-               SetRange(bin1, bin2);
-            }
-            delete view;
-            gPad->SetView(0);
+            if (fFirst > 0) first = fFirst;
+            else            first = 1;
+            if (fLast > 0) last = fLast;
+            else           last = fNbins;
+            bin1 = first + Int_t((last-first+1)*ratio1);
+            bin2 = first + Int_t((last-first+1)*ratio2);
+            SetRange(bin1, bin2);
             gPad->Modified(kTRUE);
          }
       } else {
@@ -323,7 +296,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                xmin = gPad->PadtoX(xmin);
                xmax = gPad->PadtoX(xmax);
             }
-         } else if (axisNumber == 2) {
+         } else {
             ratio2 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
             xmin = gPad->GetUymin() +ratio1*(gPad->GetUymax() - gPad->GetUymin());
             xmax = gPad->GetUymin() +ratio2*(gPad->GetUymax() - gPad->GetUymin());
@@ -331,14 +304,6 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                xmin = gPad->PadtoY(xmin);
                xmax = gPad->PadtoY(xmax);
             }
-         } else {
-            ratio2 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
-            xmin = ratio1;
-            xmax = ratio2;
-            //if (gPad->GetLogy()) {
-            //   xmin = gPad->PadtoY(xmin);
-            //   xmax = gPad->PadtoY(xmax);
-            //}
          }
          if (xmin > xmax) {
             temp   = xmin;
@@ -348,8 +313,6 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             ratio1 = ratio2;
             ratio2 = temp;
          }
-         if (!strcmp(GetName(),"xaxis")) axisNumber = 1;
-         if (!strcmp(GetName(),"yaxis")) axisNumber = 2;
          if (ratio2 - ratio1 > 0.05) {
             TH1 *hobj = (TH1*)fParent;
             bin1 = FindFixBin(xmin);
@@ -361,19 +324,6 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                   hobj->SetMaximum(xmax);
                } else {
                   SetRange(bin1,bin2);
-               }
-            }
-            if (axisNumber == 4 && hobj) {
-               if (hobj->GetDimension() == 2) {
-           	  Float_t zmin = hobj->GetMinimum();
-         	  Float_t zmax = hobj->GetMaximum();
-          	  Float_t newmin = zmin + (zmax-zmin)*ratio1;
-         	  Float_t newmax = zmin + (zmax-zmin)*ratio2;
-         	  if(newmin < zmin)newmin = hobj->GetBinContent(hobj->GetMinimumBin());
-         	  if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
-         	  hobj->SetMinimum(newmin);
-         	  hobj->SetMaximum(newmax);
-                  ResetBit(kPalette);
                }
             }
             gPad->Modified(kTRUE);
@@ -416,45 +366,6 @@ Int_t TAxis::FindBin(Axis_t x)
    return bin;
 }
 
-//______________________________________________________________________________
-Int_t TAxis::FindBin(const char *label)
-{
-// Find bin number with label.
-// If label is not in the list of labels, add it.
-// If the number of labels exceeds the number of bins, double the number
-// of bins via TH1::LabelsInflate (if the histogram can be rebinned).
-//
-
-   //create list of labels if it does not exist yet
-   if (!fLabels) {
-      if (!fParent) return -1;
-      fLabels = new THashList(fNbins,1);
-   }
-
-   // search for label in the existing list
-   TObjString *obj = (TObjString*)fLabels->FindObject(label);
-   if (obj) return (Int_t)obj->GetUniqueID();
-
-   //Not yet in the list. Can we rebin the histogram ?
-   if (!fParent->TestBit(TH1::kCanRebin)) return -1;
-
-   // count number of labels in the list
-   Int_t n = 0;
-   TIter next(fLabels);
-   while ((obj = (TObjString*)next())) {
-      n++;
-   }
-   TH1 *h = (TH1*)fParent;
-
-   //may be we have to resize the histogram (doubling number of channels)
-   if (n >= fNbins) h->LabelsInflate(GetName());
-
-   //add new label to the list: assign bin number
-   obj = new TObjString(label);
-   fLabels->Add(obj);
-   obj->SetUniqueID(n+1);
-   return n+1;
-}
 
 //______________________________________________________________________________
 Int_t TAxis::FindFixBin(Axis_t x) const
@@ -475,22 +386,6 @@ Int_t TAxis::FindFixBin(Axis_t x) const
       }
    }
    return bin;
-}
-
-//______________________________________________________________________________
-const char *TAxis::GetBinLabel(Int_t bin) const
-{
-// Return label for bin
-
-   if (!fLabels) return "";
-   if (bin <= 0 || bin > fNbins) return "";
-   TIter next(fLabels);
-   TObjString *obj;
-   while ((obj=(TObjString*)next())) {
-      Int_t binid = (Int_t)obj->GetUniqueID();
-      if (binid == bin) return obj->GetName();
-   }
-   return "";
 }
 
 //______________________________________________________________________________
@@ -584,41 +479,24 @@ void TAxis::GetLowEdge(Axis_t *edge)
   Int_t bin;
   for (bin=1; bin<=fNbins; bin++) *(edge + bin-1) = GetBinLowEdge(bin);
 }
-
+//--------------------------------------------------------------------
+//                     LABELs methods
+//--------------------------------------------------------------------
 //______________________________________________________________________________
-const char *TAxis::GetTicks() const
+char *TAxis::GetBinLabel(Int_t) const
 {
-// return the ticks option (see SetTicks)
-   
-   if (TestBit(kTickPlus) && TestBit(kTickMinus)) return "+-";
-   if (TestBit(kTickMinus)) return "-";
-   return "+";
+//*-*-*-*-*-*-*-*-*-*Return label associated to bin-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                ==============================
+
+   const char *snull = "";
+   return  (char*)snull;
 }
- 
+
 //______________________________________________________________________________
-void TAxis::LabelsOption(Option_t *option)
+void TAxis::GetLabel(char *)
 {
-//  Set option(s) to draw axis with labels
-//  option = "a" sort by alphabetic order
-//         = ">" sort by decreasing values
-//         = "<" sort by increasing values
-//         = "h" draw labels horizonthal
-//         = "v" draw labels vertical
-//         = "u" draw labels up (end of label right adjusted)
-//         = "d" draw labels down (start of label left adjusted)
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-
-   if (!fLabels) {
-      Warning("Sort","Cannot sort. No labels");
-      return;
-   }
-   TH1 *h = (TH1*)GetParent();
-   if (!h) {
-      Error("Sort","Axis has no parent");
-      return;
-   }
-
-   h->LabelsOption(option,GetName());
 }
 
 //___________________________________________________________________________
@@ -646,14 +524,6 @@ void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
       out<<"   "<<name<<subname<<"->SetTimeDisplay(1);"<<endl;
       out<<"   "<<name<<subname<<"->SetTimeFormat("<<quote<<GetTimeFormat()<<quote<<");"<<endl;
    }
-   if (fLabels) {
-      TIter next(fLabels);
-      TObjString *obj;
-      while ((obj=(TObjString*)next())) {
-         out<<"   "<<name<<subname<<"->SetBinLabel("<<obj->GetUniqueID()<<","<<quote<<obj->GetName()<<quote<<");"<<endl;
-      }
-   }
-
    TAttAxis::SaveAttributes(out,name,subname);
 }
 
@@ -667,6 +537,7 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fXmax    = xup;
    fFirst   = 0;
    fLast    = 0;
+   fXlabels = 0;
    fTitle   = "";
    char name[64];
    sprintf(name,"%s%s",GetName(),"x");
@@ -692,6 +563,7 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
    fXmax      = fXbins.fArray[fNbins];
    fFirst     = 0;
    fLast      = 0;
+   fXlabels   = 0;
    fTitle     = "";
    char name[64];
    sprintf(name,"%s%s","x",GetName());
@@ -717,6 +589,7 @@ void TAxis::Set(Int_t nbins, const Axis_t *xbins)
    fXmax      = fXbins.fArray[fNbins];
    fFirst     = 0;
    fLast      = 0;
+   fXlabels   = 0;
    fTitle     = "";
    char name[64];
    sprintf(name,"%s%s","x",GetName());
@@ -726,18 +599,18 @@ void TAxis::Set(Int_t nbins, const Axis_t *xbins)
 }
 
 //______________________________________________________________________________
-void TAxis::SetBinLabel(Int_t bin, const char *label)
+void TAxis::SetLabel(const char *)
 {
-// Set label for bin
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   if (!fLabels) fLabels = new THashList(fNbins,3);
-   if (bin <= 0 || bin > fNbins) {
-      Error("SetBinLabel","Illegal bin number: %d",bin);
-      return;
-   }
-   TObjString *obj = new TObjString(label);
-   fLabels->Add(obj);
-   obj->SetUniqueID((UInt_t)bin);
+}
+
+//______________________________________________________________________________
+void TAxis::SetBinLabel(Int_t, char *)
+{
+//*-*-*-*-*-*-*-*-*Set label associated to bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*              ===========================
+
 }
 
 //______________________________________________________________________________
@@ -750,23 +623,9 @@ void TAxis::SetLimits(Axis_t xmin, Axis_t xmax)
 }
 
 //______________________________________________________________________________
-void TAxis::SetNoExponent(Bool_t noExponent)
-{
-// Set the NoExponent flag
-// By default, an exponent of the form 10^N is used when the label values
-// are either all very small or very large.
-// One can disable the exponent by calling axis.SetNoExponent(kTRUE).
-// The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
-
-   if (noExponent) SetBit(kNoExponent);
-   else            ResetBit(kNoExponent);
-}
-
-//______________________________________________________________________________
 void TAxis::SetRange(Int_t first, Int_t last)
 {
-//  Set the viewing range for the axis from bin first to last
-//  To set a range using the axis coordinates, use TAxis::SetRangeUser.
+//          Set the viewing range for the axis from bin first to last
 
    if (last == 0) last = fNbins;
    if (last > fNbins) last = fNbins;
@@ -783,30 +642,6 @@ void TAxis::SetRange(Int_t first, Int_t last)
    }
 }
 
-
-//______________________________________________________________________________
-void TAxis::SetRangeUser(Axis_t ufirst, Axis_t ulast)
-{
-//  Set the viewing range for the axis from ufirst to ulast (in user coordinates)
-//  To set a range using the axis bin numbers, use TAxis::SetRange.
-
-   SetRange(FindBin(ufirst),FindBin(ulast));
-}
-
-//______________________________________________________________________________
-void TAxis::SetTicks(Option_t *option)
-{
-//  set ticks orientation
-//  option = "+"  ticks drawn on the "positive side" (default)
-//  option = "-"  ticks drawn on the "negative side" 
-//  option = "+-" ticks drawn on both sides
-   
-   ResetBit(kTickPlus);
-   ResetBit(kTickMinus);
-   if (strchr(option,'+')) SetBit(kTickPlus);
-   if (strchr(option,'-')) SetBit(kTickMinus);
-}
-   
 //______________________________________________________________________________
 void TAxis::SetTimeFormat(const char *tformat)
 {
@@ -856,7 +691,7 @@ void TAxis::Streamer(TBuffer &R__b)
          Int_t n = R__b.ReadArray(xbins);
          fXbins.Set(n);
          for (Int_t i=0;i<n;i++) fXbins.fArray[i] = xbins[i];
-         delete [] xbins;
+         delete [] xbins;         
       } else {
          R__b >> fXmin;
          R__b >> fXmax;
@@ -879,7 +714,7 @@ void TAxis::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TAxis::IsA());
       //====end of old versions
-
+      
    } else {
       TAxis::Class()->WriteBuffer(R__b,this);
    }
@@ -890,19 +725,10 @@ void TAxis::UnZoom()
 {
    // Reset first & last bin to the full range
 
-   TView *view = gPad->GetView();
-   if (view) {
-      delete view;
-      gPad->SetView(0);
-   }
    SetRange(0,0);
-   if (!strstr(GetName(),"xaxis")) {
+   if (strstr(GetName(),"yaxis")) {
       TH1 *hobj = (TH1*)GetParent();
-      if (hobj->GetDimension() == 2 && strstr(GetName(),"zaxis")) {
-         hobj->SetMinimum();
-         hobj->SetMaximum();
-         return;
-      }
+      if (hobj->GetDimension() != 1) return;
       if (strcmp(hobj->GetName(),"hframe") == 0 ) {
          hobj->SetMinimum(fXmin);
          hobj->SetMaximum(fXmax);

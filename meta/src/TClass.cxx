@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.68 2002/01/29 07:44:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.53 2001/07/05 20:17:28 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -24,7 +24,8 @@
 
 //*-*x7.5 macros/layout_class
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TFile.h"
 #include "TClass.h"
@@ -63,11 +64,11 @@ private:
 public:
    TBuildRealData(TObject *obj, TClass *cl)
       { fRealDataObject = obj; fRealDataClass = cl; }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
 };
 
 //______________________________________________________________________________
-void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
+void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, void *add)
 {
    // This method is called from ShowMembers() via BuildRealdata().
 
@@ -106,12 +107,12 @@ public:
 
    TAutoInspector(TBrowser *b) { fBrowser = b; fCount = 0; }
    virtual ~TAutoInspector() { }
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   virtual void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
 };
 
 //______________________________________________________________________________
 void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
-                             const void *addr)
+                             void *addr)
 {
    // This method is called from ShowMembers() via AutoBrowse().
 
@@ -439,8 +440,8 @@ void TClass::BuildRealData(void *pointer)
    // in all base classes. For each persistent data member, inserts a
    // TRealData object in the list fRealData.
    //
-   // If pointer is not 0, uses the object at pointer
-   // otherwise creates a temporary object of this class.
+   // if pointer is NULL, uses the object at pointer
+   // otherwise creates a temporary object object of this class
 
    if (fRealData) return;
    if (!fClassInfo) return;
@@ -463,26 +464,19 @@ void TClass::BuildRealData(void *pointer)
       char parent[256];
       parent[0] = 0;
       TBuildRealData brd(realDataObject, this);
-      
-      //Force a call to InheritsFrom. This function indirectly calls gROOT->GetClass
-      //It forces the loading of new typedefs in case some of them were not
-      //yet loaded.
-      InheritsFrom(TObject::Class());
-      
-      //Always call ShowMembers via the interpreter. A direct call like
-      //      realDataObject->ShowMembers(brd, parent);
-      //will not work if the class derives from TObject but not as primary
-      //inheritance.
-      G__CallFunc func;
-      void *address;
-      long  offset;
-      func.SetFunc(fClassInfo->GetMethod("ShowMembers",
-                   "TMemberInspector&,char*", &offset).InterfaceMethod());
-      func.SetArg((long)&brd);
-      func.SetArg((long)parent);
-      address = (void*)((long)realDataObject + offset);
-      func.Exec(address);
-
+      if (InheritsFrom(TObject::Class())) {
+         realDataObject->ShowMembers(brd, parent);
+      } else {
+         G__CallFunc func;
+         void *address;
+         long  offset;
+         func.SetFunc(fClassInfo->GetMethod("ShowMembers",
+                      "TMemberInspector&,char*", &offset).InterfaceMethod());
+         func.SetArg((long)&brd);
+         func.SetArg((long)parent);
+         address = (void*)((long)realDataObject + offset);
+         func.Exec(address);
+      }
       // take this opportunity to build the real data for base classes
       // In case one base class is abstract, it would not be possible later
       // to create the list of real data for this abstract class
@@ -634,7 +628,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
 
    if (!fClassInfo) {
       TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
-      if (!sinfo) return -1;
+      if (!sinfo) return 0;
       TIter next(sinfo->GetElements());
       TStreamerElement *element;
       Int_t offset = 0;
@@ -646,7 +640,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
             offset += baseclass->Size();
          }
       }
-      return -1;
+      return 0;
    }
 
    TClass     *c;
@@ -656,9 +650,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
 
    // otherwise look at inheritance tree
    while ((inh = (TBaseClass *) next())) {
-      //use option load=kFALSE to avoid a warning like:
-      //"Warning in <TClass::TClass>: no dictionary for class TRefCnt is available"
-      c = inh->GetClassPointer(kFALSE);
+      c = inh->GetClassPointer();
       if (c) {
          if (cl == c) return inh->GetDelta();
          off = c->GetBaseClassOffset(cl);
@@ -859,11 +851,9 @@ void TClass::GetMenuItems(TList *list)
    while ((method = (TMethod*)next())) {
       m = (TMethod*)list->FindObject(method->GetName());
       if (method->IsMenuItem()) {
-         if (!m)
-            list->AddFirst(method);
+         if (!m) list->AddFirst(method);
       } else {
-         if (m && m->GetNargs() == method->GetNargs())
-            list->Remove(m);
+         if (m) list->Remove(m);
       }
    }
 }
@@ -934,18 +924,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    // loop over all methods in this class (and its baseclasses) till
    // we find a TMethod with the same faddr
 
-
-   TMethod *m;
-
-   if (faddr == (Long_t)G__exec_bytecode) {
-      // the method is actually interpreted, its address is
-      // not a discriminant (it always point to the same
-      // function (G__exec_bytecode).
-      m = GetClassMethod(method,params);
-   } else {
-      m = GetClassMethod(faddr);
-   }
-
+   TMethod *m = GetClassMethod(faddr);
    if (m) return m;
 
    TBaseClass *base;
@@ -1015,32 +994,6 @@ TMethod *TClass::GetClassMethod(Long_t faddr)
 }
 
 //______________________________________________________________________________
-TMethod *TClass::GetClassMethod(const char *name, const char* params)
-{
-   // Look for a method in this class that has the name and
-   // signature
-
-   if (!fClassInfo) return 0;
-
-   // Need to go through those loops to get the signature from
-   // the valued params (i.e. from "1.0,3" to "double,int")
-
-   G__CallFunc  func;
-   long         offset;
-   func.SetFunc(GetClassInfo(), name, params, &offset);
-   G__MethodInfo *info = new G__MethodInfo(func.GetMethodInfo());
-   TMethod request(info,this);
-
-   TMethod *m;
-   TIter    next(GetListOfMethods());
-   while ((m = (TMethod *) next())) {
-     if (!strcmp(name,m->GetName())
-         &&!strcmp(request.GetSignature(),m->GetSignature()))
-       return m;
-   }
-   return 0;
-}
-//______________________________________________________________________________
 const char *TClass::GetTitle() const
 {
    // Return the description of the class.
@@ -1088,8 +1041,8 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
    // If the object doest not exist, it is created
 
    if (version == 0) version = fClassVersion;
-   if (!fStreamerInfo) fStreamerInfo = new TObjArray(version+10);
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
+   //if (sinfo) return sinfo;
    if (!sinfo) {
       sinfo = new TStreamerInfo(this,"");
       fStreamerInfo->AddAtAndExpand(sinfo,fClassVersion);
@@ -1121,10 +1074,8 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
    if (!ignore && !TestBit(kIgnoreTObjectStreamer)) return;
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
    if (sinfo) {
-      if (sinfo->GetOffsets()) {
-         Error("IgnoreTObjectStreamer","Must be called before the creation of StreamerInfo");
-         return;
-      }
+      Error("IgnoreTObjectStreamer","Must be called before the creation of StreamerInfo");
+      return;
    }
    if (ignore) SetBit  (kIgnoreTObjectStreamer);
    else        ResetBit(kIgnoreTObjectStreamer);
@@ -1198,16 +1149,11 @@ void *TClass::New(Bool_t defConstructor)
 
    if (!fClassInfo) {
       // We only have a fake class. Use TStreamerInfo service.
-      Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
       TStreamerInfo *sinfo = GetStreamerInfo();
-      Int_t l = sinfo->GetSize() + 8;
+      Int_t l = sinfo->GetSize();
       char *pp = new char[l];
       memset(pp, 0, l);
-      Long_t pp8 = (Long_t)pp;
-      pp = (char*)(pp8 - pp8%8 +8); //always align to 8 bytes address
       sinfo->New(pp);
-      SetObjectStat(statsave);
       return pp;
    }
 
@@ -1342,26 +1288,6 @@ Bool_t TClass::IsCallingNew()
    // This function cannot be inline (problems with NT linker).
 
    return fgCallingNew;
-}
-
-//______________________________________________________________________________
-Bool_t TClass::IsLoaded() const
-{
-   // Return true if the shared library of this class is currently in the a
-   // process's memory.  Return false, after the shared library has been
-   // unloaded or if this is a 'fake' class created from a file's StreamerInfo.
-
-   return (GetImplFileLine()>=0 && !TestBit(kUnloaded));
-}
-
-//______________________________________________________________________________
-void TClass::SetUnloaded()
-{
-   // Call this method to indicate that the shared library containing this
-   // class's code has been removed (unloaded) from the process's memory
-
-   gInterpreter->SetClassInfo(this,kTRUE);
-   SetBit(kUnloaded);
 }
 
 //______________________________________________________________________________
@@ -1609,8 +1535,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    UInt_t R__s, R__c;
    Version_t version = b.ReadVersion(&R__s, &R__c);
 
-   TFile *file = (TFile*)b.GetParent();
-   if (file && file->GetVersion() < 30000) version = -1; //This is old file
+   if (gFile && gFile->GetVersion() < 30000) version = -1; //This is old file
 
    //the StreamerInfo should exist at this point
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);

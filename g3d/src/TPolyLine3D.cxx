@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.10 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.5 2001/04/10 06:25:13 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -9,7 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TPolyLine3D.h"
 #include "TVirtualPad.h"
@@ -75,19 +77,22 @@ ClassImp(TPolyLine3D)
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D()
 {
-   // 3-D polyline default constructor.
+//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default constructor*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ================================
 
    fN = 0;
    fP = 0;
    fLastPoint = -1;
 }
 
+
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Option_t *option)
 {
-   // 3-D polyline normal constructor with initialization to 0.
-   // If n < 0 the default size (2 points) is set.
-
+//*-*-*-*-*-*3-D PolyLine normal constructor without initialisation*-*-*-*-*-*-*
+//*-*        ======================================================
+//*-*  If n < 0 the default size (2 points) is set
+//*-*
    fLastPoint = -1;
    if (n < 1) fN = 2;  // Set the default size for this object
    else fN = n;
@@ -100,56 +105,67 @@ TPolyLine3D::TPolyLine3D(Int_t n, Option_t *option)
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Float_t *p, Option_t *option)
 {
-   // 3-D polyline normal constructor. Polyline is intialized with p.
-   // If n < 0 the default size (2 points) is set.
+//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ===============================
+//*-*  If n < 0 the default size (2 points) is set
+//*-*
 
    if (n < 1) fN = 2;  // Set the default size for this object
    else fN = n;
 
    fP = new Float_t[3*fN];
    if (n > 0) {
-      for (Int_t i=0; i<3*n; i++) {
-         fP[i] = p[i];
-      }
-      fLastPoint = fN-1;
-   } else {
-      for (Int_t i=0; i<3*fN; i++) {
-         fP[i] = 0;
-      }
-      fLastPoint = -1;
+     for (Int_t i=0; i<3*n; i++) {
+        fP[i] = p[i];
+     }
+    fLastPoint = fN-1;
+   }
+   else {
+     for (Int_t i=0; i<3*fN; i++) {
+        fP[i] = 0;
+     }
+    fLastPoint = -1;
    }
    fOption = option;
+
 }
 
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Double_t *p, Option_t *option)
 {
-   // 3-D polyline normal constructor. Polyline is initialized with p
-   // (cast to float). If n < 0 the default size (2 points) is set.
+//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ===============================
+//*-*  If n < 0 the default size (2 points) is set
+//*-*
 
    if (n < 1) fN = 2;  // Set the default size for this object
    else fN = n;
 
    fP = new Float_t[3*fN];
    if (n > 0) {
-      for (Int_t i=0; i<3*n; i++) {
-         fP[i] = (Float_t) p[i];
-      }
-      fLastPoint = fN-1;
-   } else {
-      for (Int_t i=0; i<3*fN; i++) {
-         fP[i] = 0;
-      }
-      fLastPoint = -1;
+     for (Int_t i=0; i<3*n; i++) {
+        fP[i] = p[i];
+     }
+    fLastPoint = fN-1;
+   }
+   else {
+     for (Int_t i=0; i<3*fN; i++) {
+        fP[i] = 0;
+     }
+    fLastPoint = -1;
    }
    fOption = option;
+
 }
+
 
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option)
 {
-   // 3-D polyline normal constructor. Polyline is initialized withe the
-   // x, y ,z arrays. If n < 0 the default size (2 points) is set.
+//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ===============================
+//*-*  If n < 0 the default size (2 points) is set
+//*-*
 
    fLastPoint = -1;
    if (n < 1) fN = 2;  // Set the default size for this object
@@ -158,27 +174,30 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *
    fP = new Float_t[3*fN];
    Int_t j = 0;
    if (n > 0) {
-      for (Int_t i=0; i<n;i++) {
-         fP[j]   = x[i];
-         fP[j+1] = y[i];
-         fP[j+2] = z[i];
-         j += 3;
-      }
-      fLastPoint = fN-1;
-   } else {
-      for (Int_t i=0; i<3*fN; i++) {
-         fP[i] = 0;
-      }
+       for (Int_t i=0; i<n;i++) {
+           fP[j]   = x[i];
+           fP[j+1] = y[i];
+           fP[j+2] = z[i];
+           j += 3;
+       }
+       fLastPoint = fN-1;
+   }
+   else {
+     for (Int_t i=0; i<3*fN; i++) {
+        fP[i] = 0;
+     }
    }
    fOption = option;
 }
+
 
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *option)
 {
-   // 3-D polyline normal constructor. Polyline is initialized withe the
-   // x, y, z arrays (which are cast to float).
-   // If n < 0 the default size (2 points) is set.
+//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ===============================
+//*-*  If n < 0 the default size (2 points) is set
+//*-*
 
    fLastPoint = -1;
    if (n < 1) fN = 2;  // Set the default size for this object
@@ -187,41 +206,46 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_
    fP = new Float_t[3*fN];
    Int_t j = 0;
    if (n > 0) {
-      for (Int_t i=0; i<n;i++) {
-         fP[j]   = (Float_t) x[i];
-         fP[j+1] = (Float_t) y[i];
-         fP[j+2] = (Float_t) z[i];
-         j += 3;
-      }
-      fLastPoint = fN-1;
-   } else {
-      for (Int_t i=0; i<3*fN; i++) {
-         fP[i] = 0;
-      }
+       for (Int_t i=0; i<n;i++) {
+           fP[j]   = x[i];
+           fP[j+1] = y[i];
+           fP[j+2] = z[i];
+           j += 3;
+       }
+       fLastPoint = fN-1;
+   }
+   else {
+     for (Int_t i=0; i<3*fN; i++) {
+        fP[i] = 0;
+     }
    }
    fOption = option;
 }
 
+
 //______________________________________________________________________________
 TPolyLine3D::~TPolyLine3D()
 {
-   // 3-D polyline destructor.
+//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default destructor*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ===============================
 
    if (fP) delete [] fP;
+
 }
+
 
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline)
 {
-   // 3-D polyline copy ctor.
-
    ((TPolyLine3D&)polyline).Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::Copy(TObject &obj)
 {
-   // Copy polyline to polyline obj.
+//*-*-*-*-*-*-*-*-*-*-*-*-*Copy this polyline to polyline*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ==============================
 
    TObject::Copy(obj);
    TAttLine::Copy(((TPolyLine3D&)obj));
@@ -234,14 +258,18 @@ void TPolyLine3D::Copy(TObject &obj)
    ((TPolyLine3D&)obj).fLastPoint = fLastPoint;
 }
 
+
 //______________________________________________________________________________
 Int_t TPolyLine3D::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a 3-D polyline.
-   // Compute the closest distance of approach from point px,py to each segment
-   // of the polyline.
-   // Returns when the distance found is below DistanceMaximum.
-   // The distance is computed in pixels units.
+//*-*-*-*-*-*-*-*Compute distance from point px,py to a 3-D polyline*-*-*-*-*-*-*
+//*-*            ===================================================
+//*-*
+//*-*  Compute the closest distance of approach from point px,py to each segment
+//*-*  of the polyline.
+//*-*  Returns when the distance found is below DistanceMaximum.
+//*-*  The distance is computed in pixels units.
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    const Int_t inaxis = 7;
    Int_t dist = 9999;
@@ -251,7 +279,7 @@ Int_t TPolyLine3D::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
 
-   // return if point is not in the user area
+//*-*- return if point is not in the user area
    if (px < puxmin - inaxis) return dist;
    if (py > puymin + inaxis) return dist;
    if (px > puxmax + inaxis) return dist;
@@ -276,36 +304,43 @@ Int_t TPolyLine3D::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::Draw(Option_t *option)
 {
-   // Draw this 3-D polyline with its current attributes.
+//*-*-*-*-*-*-*-*Draw this 3-D polyline with its current attributes*-*-*-*-*-*-*
+//*-*            ==================================================
 
    AppendPad(option);
+
 }
 
 //______________________________________________________________________________
 void TPolyLine3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax)
 {
-   // Draw cube outline with 3d polylines.
-   //
-   //      x = fRmin[0]        X = fRmax[0]
-   //      y = fRmin[1]        Y = fRmax[1]
-   //      z = fRmin[2]        Z = fRmax[2]
-   //
-   //
-   //            (x,Y,Z) +---------+ (X,Y,Z)
-   //                   /         /|
-   //                  /         / |
-   //                 /         /  |
-   //        (x,y,Z) +---------+   |
-   //                |         |   + (X,Y,z)
-   //                |         |  /
-   //                |         | /
-   //                |         |/
-   //                +---------+
-   //             (x,y,z)   (X,y,z)
-   //
+//*-*-*-*-*-*-*-*Draw cube outline with 3d polylines*-*-*-*-*-*-*
+//*-*            ===================================
+//*-*                                                                    *
+//*-*      x = fRmin[0]        X = fRmax[0]                              *
+//*-*      y = fRmin[1]        Y = fRmax[1]                              *
+//*-*      z = fRmin[2]        Z = fRmax[2]                              *
+//*-*                                                                    *
+//*-*                                                                    *
+//*-*            (x,Y,Z) +---------+ (X,Y,Z)                             *
+//*-*                   /         /|                                     *
+//*-*                  /         / |                                     *
+//*-*                 /         /  |                                     *
+//*-*        (x,y,Z) +---------+   |                                     *
+//*-*                |         |   + (X,Y,z)                             *
+//*-*                |         |  /                                      *
+//*-*                |         | /                                       *
+//*-*                |         |/                                        *
+//*-*                +---------+                                         *
+//*-*             (x,y,z)   (X,y,z)                                      *
+//*-*                                                                    *
+//*-*                                                                    *
+//*-*                                                                    *
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**
 
    Double_t x = rmin[0];     Double_t X = rmax[0];
    Double_t y = rmin[1];     Double_t Y = rmax[1];
@@ -359,12 +394,12 @@ void TPolyLine3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax
    pl3d->SetPoint(3, x, Y, Z);
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::DrawPolyLine(Int_t n, Float_t *p, Option_t *option)
 {
-   // Draw 3-D polyline with new coordinates. Creates a new polyline which
-   // will be adopted by the pad in which it is drawn. Does not change the
-   // original polyline (should be static method).
+//*-*-*-*-*-*-*-*-*Draw this 3-D polyline with new coordinates*-*-*-*-*-*-*-*-*-*
+//*-*              ============================================
 
    TPolyLine3D *newpolyline = new TPolyLine3D();
    Int_t size = 3*Size();
@@ -381,137 +416,117 @@ void TPolyLine3D::DrawPolyLine(Int_t n, Float_t *p, Option_t *option)
 //______________________________________________________________________________
 void TPolyLine3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
+//*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*-*-*-*-*-*-*
+//*-*                =========================================
 
-  if (gPad->GetView())
-     gPad->GetView()->ExecuteRotateView(event, px, py);
+
+        if (gPad->GetView())
+                gPad->GetView()->ExecuteRotateView(event, px, py);
+
 }
 
 //______________________________________________________________________________
 void TPolyLine3D::ls(Option_t *option) const
 {
-   // List this 3-D polyline.
+//*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
+//*-*                ==========================================
 
    TROOT::IndentLevel();
    cout <<"PolyLine3D  N=" <<fN<<" Option="<<option<<endl;
-}
 
-//______________________________________________________________________________
-Int_t TPolyLine3D::Merge(TCollection *list)
-{
-// Merge polylines in the collection in this polyline
-
-   if (!list) return 0;
-   TIter next(list);
-
-   //first loop to count the number of entries
-   TPolyLine3D *pl;
-   Int_t npoints = 0;
-   while ((pl = (TPolyLine3D*)next())) {
-      if (!pl->InheritsFrom(TPolyLine3D::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",pl->ClassName(),this->ClassName());
-         return -1;
-      }
-      npoints += pl->Size();
-   }
-
-   //extend this polyline to hold npoints
-   pl->SetPoint(npoints-1,0,0,0);
-
-   //merge all polylines
-   next.Reset();
-   while ((pl = (TPolyLine3D*)next())) {
-      Int_t np = pl->Size();
-      Float_t *p = pl->GetP();
-      for (Int_t i=0;i<np;i++) {
-         SetPoint(i,p[3*i],p[3*i+1],p[3*i+2]);
-      }
-   }
-
-   return npoints;
 }
 
 //______________________________________________________________________________
 void TPolyLine3D::Paint(Option_t *option)
 {
-   // Paint this 3-D polyline with its current attributes.
-   // Option could be 'x3d', and it means that output
-   // will be performed by X3D package.
+//*-*-*-*-*-*-*-*-*Paint this 3-D polyline with its current attributes*-*-*-*-*
+//*-*              ===================================================
+//*-*
+//*-* Option could be 'x3d', and it means that output
+//*-* will be performed by X3D package.
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   // Check whether there is some 3D view class for this TPad
-   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
-   if (view3D) view3D->PaintPolyLine(this,option);
+    //*-* Check whether there is some 3D view class for this TPad
+    TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
+    if (view3D) view3D->PaintPolyLine(this,option);
 
-   // Check if option is 'x3d'.      NOTE: This is a simple checking
-   //                                      but since there is no other
-   //                                      options yet, this works fine.
-   Int_t size =Size();
-   if ((*option != 'x') && (*option != 'X')) {
-      PaintPolyLine(size, fP, option);
-   } else {
-      X3DBuffer *buff = new X3DBuffer;
-      if (buff) {
-         buff->numPoints = size;
-         buff->numSegs   = size-1;
-         buff->numPolys  = 0;        //NOTE: Because of different structure, our
-         buff->polys     = NULL;     //      TPolyLine3D can't use polygons
-         buff->points    = fP;
-      }
+    //*-* Check if option is 'x3d'.      NOTE: This is a simple checking
+    //                                         but since there is no other
+    //                                         options yet, this works fine.
+    Int_t size =Size();
+    if ((*option != 'x') && (*option != 'X')) {
+        PaintPolyLine(size, fP, option);
+    }
+    else {
+        X3DBuffer *buff = new X3DBuffer;
+        if (buff) {
+            buff->numPoints = size;
+            buff->numSegs   = size-1;
+            buff->numPolys  = 0;        //NOTE: Because of different structure, our
+            buff->polys     = NULL;     //      TPolyLine3D can't use polygons
+            buff->points    = fP;
+        }
 
-      Int_t c = ((GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 8
-      if (c < 0) c = 0;
+        Int_t c = ((GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 8
+        if (c < 0) c = 0;
 
-      // Allocate memory for segments *-*
-      buff->segs = new Int_t[buff->numSegs*3];
-      if (buff->segs) {
-         for (Int_t i = 0; i < buff->numSegs; i++) {
-             buff->segs[3*i  ] = c;
-             buff->segs[3*i+1] = i;
-             buff->segs[3*i+2] = i+1;
-         }
-      }
+    //*-* Allocate memory for segments *-*
+        buff->segs = new Int_t[buff->numSegs*3];
+        if (buff->segs) {
+            for (Int_t i = 0; i < buff->numSegs; i++) {
+                buff->segs[3*i  ] = c;
+                buff->segs[3*i+1] = i;
+                buff->segs[3*i+2] = i+1;
+            }
+        }
 
-      if (buff && buff->points && buff->segs) //If everything seems to be OK ...
-         FillX3DBuffer(buff);
-      else {                            // ... something very bad was happened
-         gSize3D.numPoints -= buff->numPoints;
-         gSize3D.numSegs   -= buff->numSegs;
-         gSize3D.numPolys  -= buff->numPolys;
-      }
 
-      if (buff->segs)     delete [] buff->segs;
-      if (buff->polys)    delete [] buff->polys;
-      if (buff)           delete    buff;
-   }
+        if (buff && buff->points && buff->segs) //If everything seems to be OK ...
+            FillX3DBuffer(buff);
+        else {                            // ... something very bad was happened
+            gSize3D.numPoints -= buff->numPoints;
+            gSize3D.numSegs   -= buff->numSegs;
+            gSize3D.numPolys  -= buff->numPolys;
+        }
+
+        if (buff->segs)     delete [] buff->segs;
+        if (buff->polys)    delete [] buff->polys;
+        if (buff)           delete    buff;
+    }
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::PaintPolyLine(Int_t n, Float_t *p, Option_t *)
 {
-   // Draw this 3-D polyline with new coordinates from p. Does not change
-   // original polyline. Should be static method.
+//*-*-*-*-*-*-*-*-*Draw this 3-D polyline with new coordinates*-*-*-*-*-*-*-*-*-*
+//*-*              ===========================================
 
    if (n < 2) return;
 
    TAttLine::Modify();  //Change line attributes only if necessary
 
-   // Loop on each individual line
+//*-*- Loop on each individual line
+
    for (Int_t i=1;i<n;i++) {
       gPad->PaintLine3D(&p[3*i-3], &p[3*i]);
    }
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::PaintPolyLine(Int_t n, Double_t *p, Option_t *)
 {
-   // Draw this 3-D polyline with new coordinates from p. Does not change
-   // original polyline. Should be static method.
+//*-*-*-*-*-*-*-*-*Draw this 3-D polyline with new coordinates*-*-*-*-*-*-*-*-*-*
+//*-*              ===========================================
 
    if (n < 2) return;
 
    TAttLine::Modify();  //Change line attributes only if necessary
 
-   // Loop on each individual line
+//*-*- Loop on each individual line
+
    for (Int_t i=1;i<n;i++) {
       gPad->PaintLine3D(&p[3*i-3], &p[3*i]);
    }
@@ -520,14 +535,15 @@ void TPolyLine3D::PaintPolyLine(Int_t n, Double_t *p, Option_t *)
 //______________________________________________________________________________
 void TPolyLine3D::Print(Option_t *option) const
 {
-   // Dump this 3-D polyline with its attributes on stdout.
+//*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
+//*-*                ==========================================
 
    printf("    TPolyLine3D N=%d, Option=%s\n",fN,option);
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("all")) {
       for (Int_t i=0;i<Size();i++) {
-         printf(" x[%d]=%g, y[%d]=%g, z[%d]=%g\n",i,fP[3*i],i,fP[3*i+1],i,fP[3*i+2]);
+        printf(" x[%d]=%g, y[%d]=%g, z[%d]=%g\n",i,fP[3*i],i,fP[3*i+1],i,fP[3*i+2]);
       }
    }
 }
@@ -535,14 +551,14 @@ void TPolyLine3D::Print(Option_t *option) const
 //______________________________________________________________________________
 void TPolyLine3D::SavePrimitive(ofstream &out, Option_t *)
 {
-   // Save primitive as a C++ statement(s) on output stream.
+    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TPolyLine3D::Class())) {
-      out<<"   ";
+       out<<"   ";
    } else {
-      out<<"   TPolyLine3D *";
+       out<<"   TPolyLine3D *";
    }
    Int_t size=Size();
    out<<"pline3D = new TPolyLine3D("<<fN<<","<<quote<<fOption<<quote<<");"<<endl;
@@ -550,8 +566,9 @@ void TPolyLine3D::SavePrimitive(ofstream &out, Option_t *)
    SaveLineAttributes(out,"pline3D",1,1,1);
 
    if (size > 0) {
-      for (Int_t i=0;i<size;i++)
-         out<<"   pline3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<endl;
+    for (Int_t i=0;i<size;i++) {
+       out<<"   pline3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<endl;
+    }
    }
    out<<"   pline3D->Draw();"<<endl;
 }
@@ -559,33 +576,30 @@ void TPolyLine3D::SavePrimitive(ofstream &out, Option_t *)
 //______________________________________________________________________________
 Int_t TPolyLine3D::SetNextPoint(Double_t x, Double_t y, Double_t z)
 {
-   // Set point following LastPoint to x, y, z.
-   // Returns index of the point (new last point).
+// Set point following LastPoint
 
-   fLastPoint++;
-   SetPoint(fLastPoint, x, y, z);
-   return fLastPoint;
+    fLastPoint++;
+    SetPoint(fLastPoint, x, y, z);
+    return fLastPoint;
 }
-
 //______________________________________________________________________________
 void TPolyLine3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 {
-   // Set point n to x, y, z.
-   // If n is more then the current TPolyLine3D size (n > fN) then
-   // the polyline will be resized to contain at least n points.
+//*-*-*-*-*-*-*-*-*-*Initialize one point of the 3-D polyline*-*-*-*-*-*-*-*-*-*
+//*-*                ========================================
+//*-*  if n is more then the current TPolyLine3D size (n > fN) - re-allocate this
+//*-*
 
    if (n < 0) return;
    if (!fP || n >= fN) {
-      // re-allocate the object
-      Int_t newN = TMath::Max(2*fN,n+1);
-      Float_t *savepoint = new Float_t [3*newN];
+   // re-allocate the object
+      Float_t *savepoint = new Float_t [3*(n+1)];
       if (fP && fN){
          memcpy(savepoint,fP,3*fN*sizeof(Float_t));
-         memset(&savepoint[3*fN],0,(newN-fN)*sizeof(Float_t));
-         delete [] fP;
+        delete [] fP;
       }
       fP = savepoint;
-      fN = newN;
+      fN = n+1;
    }
    fP[3*n  ] = x;
    fP[3*n+1] = y;
@@ -593,25 +607,30 @@ void TPolyLine3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
    fLastPoint = TMath::Max(fLastPoint,n);
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::SetPolyLine(Int_t n, Option_t *option)
 {
-   // Re-initialize polyline with n points (0,0,0).
+//*-*-*-*-*-*-*-*-*-*-*Set new values for this 3-D polyline*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ====================================
 
-   fN = n;
+   fN =n;
    if (fP) delete [] fP;
    fP = new Float_t[3*fN];
    memset(fP,0,3*fN*sizeof(Float_t));
    fOption = option;
    fLastPoint = fN-1;
+
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
 {
-   // Re-initialize polyline with n points from p. If p=0 initialize with 0.
+//*-*-*-*-*-*-*-*-*-*-*Set new values for this 3-D polyline*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ====================================
 
-   fN = n;
+   fN =n;
    if (fP) delete [] fP;
    fP = new Float_t[3*fN];
    if (p) {
@@ -621,48 +640,54 @@ void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
          fP[3*i+2] = p[3*i+2];
       }
    } else {
-      memset(fP,0,3*fN*sizeof(Float_t));
+       memset(fP,0,3*fN*sizeof(Float_t));
    }
    fOption = option;
    fLastPoint = fN-1;
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::SetPolyLine(Int_t n, Double_t *p, Option_t *option)
 {
-   // Re-initialize polyline with n points from p. If p=0 initialize with 0.
+//*-*-*-*-*-*-*-*-*-*-*Set new values for this 3-D polyline*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ====================================
 
-   fN = n;
+   fN =n;
    if (fP) delete [] fP;
    fP = new Float_t[3*fN];
    if (p) {
       for (Int_t i=0; i<fN;i++) {
-         fP[3*i]   = (Float_t) p[3*i];
-         fP[3*i+1] = (Float_t) p[3*i+1];
-         fP[3*i+2] = (Float_t) p[3*i+2];
+         fP[3*i]   = p[3*i];
+         fP[3*i+1] = p[3*i+1];
+         fP[3*i+2] = p[3*i+2];
       }
    } else {
-      memset(fP,0,3*fN*sizeof(Float_t));
+       memset(fP,0,3*fN*sizeof(Float_t));
    }
    fOption = option;
    fLastPoint = fN-1;
+
 }
 
 //______________________________________________________________________________
 void TPolyLine3D::Sizeof3D() const
 {
-   // Return total X3D size of this 3-D polyline with its attributes.
+//*-*-*-*-*-*Return total X3D size of this shape with its attributes*-*-*-*-*-*-*
+//*-*        =======================================================
 
-   gSize3D.numPoints += Size();
-   gSize3D.numSegs   += (Size()-1);
-   gSize3D.numPolys  += 0;
+    gSize3D.numPoints += Size();
+    gSize3D.numSegs   += (Size()-1);
+    gSize3D.numPolys  += 0;
+
 }
+
 
 //_______________________________________________________________________
 void TPolyLine3D::Streamer(TBuffer &b)
 {
-   // Stream a 3-D polyline object.
-
+//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*              =========================================
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       b.ReadVersion(&R__s, &R__c);

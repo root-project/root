@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.3 2001/04/22 16:00:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.2 2000/06/08 17:16:44 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -30,7 +30,7 @@ ClassImp(TRootApplication)
 
 //______________________________________________________________________________
 TRootApplication::TRootApplication(const char *appClassName,
-                                   Int_t *argc, char **argv)
+                                   Int_t *argc, char **argv, void *, Int_t)
 {
    fApplicationName = appClassName;
    fDisplay         = 0;

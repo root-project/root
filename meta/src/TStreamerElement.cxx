@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.40 2002/01/10 08:25:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.31 2001/06/01 11:02:54 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -24,8 +24,6 @@
 #include "TDataType.h"
 #include "TMethodCall.h"
 #include "TRealData.h"
-#include "TFolder.h"
-#include "TRef.h"
 
 const Int_t kMaxLen = 512;
 static char gIncludeName[kMaxLen];
@@ -79,17 +77,14 @@ TStreamerElement::~TStreamerElement()
 //______________________________________________________________________________
 Bool_t TStreamerElement::CannotSplit() const
 {
-   //returns true if the element cannot be split, false otherwise
+   //returns true if the element cannot be split, falso otherwise
    //An element cannot be split if the corresponding class member
    //has the special characters "||" as the first characters in the comment field
    
    if (strspn(GetTitle(),"||") == 2) return kTRUE;
    TClass *cl = GetClassPointer();
    if (!cl) return kFALSE;  //basic type or STL
-   if (cl->InheritsFrom("TRef"))      return kTRUE;
-   if (cl->InheritsFrom("TRefArray")) return kTRUE;
-   if (cl->InheritsFrom("TArray"))    return kTRUE;
-   
+
    //iterate on list of base classes (cannot split if one base class is unknown)
    TIter nextb(cl->GetListOfBases());
    TBaseClass *base;
@@ -107,34 +102,6 @@ TClass *TStreamerElement::GetClassPointer() const
    if (fClassObject) return fClassObject;
    TString className = fTypeName.Strip(TString::kTrailing, '*');
    return gROOT->GetClass(className);
-}
-
-//______________________________________________________________________________
-Int_t TStreamerElement::GetExecID() const
-{
-   //returns the TExec id for the EXEC instruction in the comment field
-   //of a TRef data member
-   
-   //check if element is a TRef or TRefArray
-   if (strncmp(fTypeName.Data(),"TRef",4) != 0) return 0;
-   
-   //if the UniqueID of this element has already been set, we assume
-   //that it contains the exec id of a TRef object.
-   if (GetUniqueID()) return GetUniqueID();
-   
-   //check if an Exec is specified in the comment field
-   char *action = (char*)strstr(GetTitle(),"EXEC:");
-   if (!action) return 0;
-   char caction[512];
-   strcpy(caction,action+5);
-   char *blank = (char*)strchr(caction,' ');
-   if (blank) *blank = 0;
-   //we have found the Exec name in the comment
-   //we register this Exec to the list of Execs.
-   Int_t index = TRef::AddExec(caction);
-   //we save the Exec index as the uniqueid of this STreamerElement
-   ((TStreamerElement*)this)->SetUniqueID(index+1);
-   return index+1;
 }
 
 //______________________________________________________________________________
@@ -186,7 +153,6 @@ const char *TStreamerElement::GetTypeNameBasic() const
       case 12: return "UShort_t";   
       case 13: return "UInt_t";   
       case 14: return "ULong_t"; 
-      case 15: return "UInt_t"; 
    }
    return "";  
 }
@@ -247,8 +213,7 @@ void TStreamerElement::SetStreamer(Streamer_t streamer)
 
    fStreamer = streamer;
    if (streamer) {
-      //if (fArrayLength == 0 && fType != kSTL) return;
-      if (fType != kSTL) return;
+      if (fArrayLength == 0 && fType != kSTL) return;
       //printf("Changing type of %s from %d to kStreamer\n",GetName(),fType);
       fType = TStreamerInfo::kStreamer;
       fNewType = fType;
@@ -265,9 +230,6 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
          TStreamerElement::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         SetUniqueID(0);
-         //check if element is a TRef or TRefArray
-         GetExecID();
          return;
       }
       //====process old versions before automatic schema evolution
@@ -378,7 +340,7 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
       fMethod->Execute((void*)(pointer+fOffset));
    } else {
       //printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
-      if (!fBaseClass->GetClassInfo()) fBaseClass->ReadBuffer(b,pointer);
+      fBaseClass->ReadBuffer(b,pointer);
    }
    return 0;
 }
@@ -417,7 +379,6 @@ void TStreamerBase::Update(TClass *oldClass, TClass *newClass)
 //______________________________________________________________________________
 Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 {
-   if (!fMethod) return 0;
    ULong_t args[1];
    args[0] = (ULong_t)&b;
    fMethod->SetParamPtrs(args);
@@ -903,16 +864,6 @@ Int_t TStreamerObjectPointer::GetSize() const
    
    if (fArrayLength) return fArrayLength*sizeof(void *);
    return sizeof(void *);
-}
-
-//______________________________________________________________________________
-void TStreamerObjectPointer::SetArrayDim(Int_t dim)
-{
-   // Set number of array dimensions.
-   
-   fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
-   fNewType = fType;
 }
 
 //______________________________________________________________________________

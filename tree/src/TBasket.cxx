@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.12 2002/02/03 16:15:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.6 2001/04/27 06:35:39 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -62,9 +62,6 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    fDisplacement= 0;  //Must be set to 0 before calling Sizeof
    fBuffer      = 0;  //Must be set to 0 before calling Sizeof
    fBufferRef   = new TBuffer(TBuffer::kWrite, fBufferSize);
-   if (branch->GetDirectory()) {
-      fBufferRef->SetParent(branch->GetFile());
-   }
    fHeaderOnly  = kTRUE;
    fLast        = 0; // RDK: Must initialize before calling Streamer()
    Streamer(*fBufferRef);
@@ -97,20 +94,9 @@ void TBasket::AdjustSize(Int_t newsize)
 {
 //      Increase the size of the current fBuffer up to newsize
 
-   char *newbuf = TStorage::ReAllocChar(fBuffer,newsize,fBufferSize);
+   char *newbuf = (char*)TStorage::ReAlloc(fBuffer,newsize,fBufferSize);
    fBufferSize  = newsize;
    fBuffer      = newbuf;
-}
-
-
-//_______________________________________________________________________
-void TBasket::DeleteEntryOffset()
-{
-//  delete fEntryOffset array
-
-   if (fEntryOffset) delete [] fEntryOffset;
-   fEntryOffset = 0;
-   fNevBufSize  = 0;
 }
 
 
@@ -157,31 +143,27 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
 
    Int_t badread= 0;
    TDirectory *cursav = gDirectory;
-   fBranch->GetDirectory()->cd();
+   gBranch->GetDirectory()->cd();
 
-   if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
+   if (gBranch->GetTree()->MemoryFull(fBufferSize)) gBranch->DropBaskets();
 
    fBufferRef = new TBuffer(TBuffer::kRead, len);
-   fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
    file->ReadBuffer(buffer,len);
    Streamer(*fBufferRef);
    if (fObjlen > fNbytes-fKeylen) {
-      //always allocate 100 bytes more to the buffer.
-      //There are some rare situations when unzip needs a few more bytes
-      //to inflate teh buffer.
-      fBuffer = new char[fObjlen+fKeylen+100];
+      fBuffer = new char[fObjlen+fKeylen];
       memcpy(fBuffer,buffer,fKeylen);
       char *objbuf = fBuffer + fKeylen;
       Int_t nin = fNbytes-fKeylen;
       Int_t nout;
-      Int_t len = fObjlen + 100;
-      R__unzip(&nin, &buffer[fKeylen], &len, objbuf, &nout);
+      R__unzip(&nin, &buffer[fKeylen], &fObjlen, objbuf, &nout);
       if (nout != fObjlen) {
-         Error("ReadBasketBuffers", "fNbytes = %d, fKeylen = %d, fObjlen = %d, nout = %d", fNbytes,fKeylen,fObjlen, nout);
+         Error("ReadBasketBuffers", "fObjlen = %d, nout = %d", fObjlen, nout);
          badread = 1;
       }
+      delete [] buffer;
       fBufferRef->SetBuffer(fBuffer, fObjlen+fKeylen );
    } else {
       fBuffer = fBufferRef->Buffer();
@@ -199,7 +181,7 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    delete [] fDisplacement;
    fDisplacement = 0;
    if (fBufferRef->Length() != fBufferRef->BufferSize()) {
-     // There is more data in the buffer!  It is the displacement
+     // There is more data in the buffer!  It is the diplacement
      // array.
      fBufferRef->ReadArray(fDisplacement);
    }
@@ -275,7 +257,6 @@ void TBasket::Streamer(TBuffer &b)
       }
       if (flag == 1 || flag > 10) {
          fBufferRef = new TBuffer(TBuffer::kRead,fBufferSize);
-         fBufferRef->SetParent(gDirectory->GetFile());
          char *buf  = fBufferRef->Buffer();
          if (v > 1) b.ReadFastArray(buf,fLast);
          else       b.ReadArray(buf);
@@ -285,10 +266,9 @@ void TBasket::Streamer(TBuffer &b)
    } else {
       TKey::Streamer(b);   //this must be first
       b.WriteVersion(TBasket::IsA());
-      Int_t curLast = fBufferRef->Length();
-      if (fBufferRef && !fHeaderOnly && !fSeekKey && curLast > fLast) fLast = curLast;
+      if (fBufferRef && !fHeaderOnly && !fSeekKey) fLast = fBufferRef->Length();
       if (fLast > fBufferSize) fBufferSize = fLast;
-
+      
       b << fBufferSize;
       b << fNevBufSize;
       b << fNevBuf;
@@ -319,11 +299,11 @@ void TBasket::Update(Int_t offset, Int_t skipped)
    if (fEntryOffset) {
       if (fNevBuf+1 >= fNevBufSize) {
          Int_t newsize = TMath::Max(10,2*fNevBufSize);
-         Int_t *newoff = TStorage::ReAllocInt(fEntryOffset, newsize,
-                                              fNevBufSize);
+         Int_t *newoff = (Int_t*)TStorage::ReAlloc(fEntryOffset,
+                               newsize*sizeof(Int_t),fNevBufSize*sizeof(Int_t));
          if (fDisplacement) {
-            Int_t *newdisp = TStorage::ReAllocInt(fDisplacement, newsize,
-                                                  fNevBufSize);
+            Int_t *newdisp = (Int_t*)TStorage::ReAlloc(fDisplacement,
+                               newsize*sizeof(Int_t),fNevBufSize*sizeof(Int_t));
             fDisplacement = newdisp;
          }
          fEntryOffset  = newoff;
@@ -358,7 +338,7 @@ Int_t TBasket::WriteBuffer()
    if (!file) return 0;
 
    fBranch->GetDirectory()->cd();
-   if (!file->IsWritable()) { cursav->cd(); return 0;}
+   if (gFile ? !gFile->IsWritable() : 1) { cursav->cd(); return 0;}
 //*-*- Transfer fEntryOffset table at the end of fBuffer. Offsets to fBuffer
 //     are transformed in entry length to optimize compression algorithm.
    fLast      = fBufferRef->Length();

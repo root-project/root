@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.14 2001/12/17 08:06:17 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.8 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -50,8 +50,8 @@ protected:
    Double_t      fUtoAbsPixelk;    //  Conversion coefficient for U NDC to absolute pixel
    Double_t      fUtoPixelk;       //  Conversion coefficient for U NDC to pixel
    Double_t      fUtoPixel;        //    xpixel = fUtoPixelk + fUtoPixel*undc
-   Double_t      fVtoAbsPixelk;    //  Conversion coefficient for V NDC to absolute pixel
-   Double_t      fVtoPixelk;       //  Conversion coefficient for V NDC to pixel
+   Double_t      fVtoAbsPixelk;    //  Conversion coefficient for Y World to absolute pixel
+   Double_t      fVtoPixelk;       //  Conversion coefficient for Y World to pixel
    Double_t      fVtoPixel;        //    ypixel = fVtoPixelk + fVtoPixel*vndc
 
    Double_t      fAbsPixeltoXk;    //  Conversion coefficient for absolute pixel to X World
@@ -79,8 +79,6 @@ protected:
    Double_t      fTheta;           //  theta angle to view as lego/surface
    Double_t      fPhi;             //  phi angle   to view as lego/surface
 
-   Double_t      fAspectRatio;     //  ratio of w/h in case of fixed ratio
-
    Int_t         fPixmapID;        //! Off-screen pixmap identifier
    Int_t         fNumber;          //  pad number identifier
    Int_t         fTickx;           //  Set to 1 if tick marks along X
@@ -98,7 +96,6 @@ protected:
    Bool_t        fGridy;           //  Set to true if grid along Y
    Bool_t        fAbsCoord;        //  Use absolute coordinates
    Bool_t        fEditable;        //  True if canvas is editable
-   Bool_t        fFixedAspectRatio; //  True if fixed aspect ratio
    TPad         *fMother;          //! pointer to mother of the list
    TCanvas      *fCanvas;          //! Pointer to mother canvas
    TList        *fPrimitives;      //->List of primitives (subpads)
@@ -109,8 +106,7 @@ protected:
    TView        *fView;            //! Pointer to 3-D view (if one exists)
    TObject      *fPadPointer;      //! free pointer
    TPadView3D   *fPadView3D;       //! 3D View of this TPad
-   static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
-   
+
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  HideToolTip(Int_t event);
@@ -129,10 +125,8 @@ private:
 public:
    // TPad status bits
    enum {
-      kFraming      = BIT(6),
-      kHori         = BIT(9),
-      kPrintingPS   = BIT(11),
-      kClearAfterCR = BIT(12)
+      kFraming = BIT(6),
+      kPrintingPS = BIT(11)
    };
 
    TPad();
@@ -197,7 +191,6 @@ public:
    Double_t          GetAbsYlowNDC() const {return fAbsYlowNDC;}
    Double_t          GetAbsWNDC() const {return fAbsWNDC;}
    Double_t          GetAbsHNDC() const {return fAbsHNDC;}
-   Double_t          GetAspectRatio() const { return fAspectRatio; }
    Double_t          GetPhi() const   {return fPhi;}
    Double_t          GetTheta() const {return fTheta;}
    Double_t          GetUxmin() const {return fUxmin;}
@@ -213,7 +206,6 @@ public:
    Double_t          GetX2() const { return fX2; }
    Double_t          GetY1() const { return fY1; }
    Double_t          GetY2() const { return fY2; }
-   static Int_t      GetMaxPickDistance();
    TList            *GetListOfPrimitives() const {return fPrimitives;}
    TList            *GetListOfExecs() const {return fExecs;}
    virtual TObject  *GetPrimitive(const char *name) const;  //obsolete, use FindObject instead
@@ -235,13 +227,11 @@ public:
    Int_t             GetPixmapID() const {return fPixmapID;}
    virtual Bool_t    HasCrosshair() const {return (Bool_t)fCrosshair;}
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE);
-   Bool_t            HasFixedAspectRatio() const { return fFixedAspectRatio; }
    virtual Bool_t    IsBatch() const;
    virtual Bool_t    IsEditable() const {return fEditable;}
    Bool_t            IsFolder() const {return kTRUE;}
    Bool_t            IsModified() const {return fModified;}
    virtual Bool_t    IsRetained() const;
-   virtual Bool_t    IsVertical() const {return !TestBit(kHori);}
    virtual void      ls(Option_t *option="") const;
    void              Modified(Bool_t flag=1) { fModified = flag; }
    virtual Bool_t    OpaqueMoving() const;
@@ -274,9 +264,7 @@ public:
    virtual void      Print(const char *filename="") const;
    virtual void      Print(const char *filename, Option_t *option);
    virtual void      Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2); // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
-   virtual void      RangeChanged() { Emit("RangeChanged()"); } // *SIGNAL*
    virtual void      RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
-   virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      RedrawAxis(Option_t *option="");
    virtual void      ResetView3D(TPadView3D *view=0){fPadView3D=view;}
@@ -291,7 +279,6 @@ public:
    virtual void      SetDoubleBuffer(Int_t mode=1);
    virtual void      SetDrawOption(Option_t *option="");
    virtual void      SetEditable(Bool_t mode=kTRUE); // *TOGGLE*
-   virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    virtual void      SetGrid(Int_t valuex = 1, Int_t valuey = 1) {fGridx = valuex; fGridy = valuey;}
    virtual void      SetGridx(Int_t value = 1) {fGridx = value;} // *TOGGLE*
    virtual void      SetGridy(Int_t value = 1) {fGridy = value;} // *TOGGLE*
@@ -309,7 +296,6 @@ public:
    virtual void      SetAttLinePS(Color_t color, Style_t style, Width_t lwidth);
    virtual void      SetAttMarkerPS(Color_t color, Style_t style, Size_t msize);
    virtual void      SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
-   static  void      SetMaxPickDistance(Int_t maxPick=5);
    virtual void      SetName(const char *name) {fName = name;} // *MENU*
    virtual void      SetSelected(TObject *obj);
    virtual void      SetTicks(Int_t valuex = 1, Int_t valuey = 1) {fTickx = valuex; fTicky = valuey;}
@@ -319,7 +305,6 @@ public:
    virtual void      SetTheta(Double_t theta=30) {fTheta = theta;}
    virtual void      SetPhi(Double_t phi=30) {fPhi = phi;}
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
-   virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view) {fView = view;}
    virtual void      Update();
    Int_t             UtoAbsPixel(Double_t u) const {return Int_t(fUtoAbsPixelk + u*fUtoPixel);}
@@ -343,7 +328,7 @@ public:
 
    virtual void      x3d(Option_t *option=""); // *MENU*
 
-   ClassDef(TPad,7)  //A Graphics pad
+   ClassDef(TPad,6)  //A Graphics pad
 };
 
 
