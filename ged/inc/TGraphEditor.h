@@ -59,12 +59,9 @@ public:
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGraphEditor();
    virtual void SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
-   // slots related to axis attributes 
-   virtual void DoShape();
-   virtual void DoShape0();
-   virtual void DoShape1();
-   virtual void DoShape2();
-   virtual void DoShape3();
+
+   // slots related to graph attributes 
+   virtual void DoShape(Int_t s);
    virtual void DoMarkerOnOff();
    virtual void DoTitle(const char *text);
  
