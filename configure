@@ -212,6 +212,16 @@ check_library() {
 		found_dir=""
 	    fi
 	fi
+
+        # Correct path for win32
+        if test "x$platform" = "xwin32"; then
+            if test ! "x$found_lib" = "x" ; then
+                found_lib=`cygpath -m $found_lib`
+            fi
+            if test ! "x$found_dir" = "x" ; then
+               found_dir=`cygpath -m $found_dir`
+            fi
+        fi
     fi
     unset shared
     unset lib
@@ -283,6 +293,7 @@ check_header()  {
 	found_dir="include"
     fi
 
+    # Correct path for win32
     if test "x$platform" = "xwin32"; then
         if test ! "x$found_hdr" = "x" ; then
            found_hdr=`cygpath -m $found_hdr`
