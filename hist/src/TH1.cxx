@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.165 2004/01/16 13:32:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.166 2004/01/25 20:33:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4543,8 +4543,8 @@ Stat_t TH1::GetMean(Int_t axis) const
 //  the histogram.
    
   if (axis <1 || axis > 3) return 0;
-  Stat_t stats[10];
-  for (Int_t i=4;i<10;i++) stats[i] = 0;
+  Stat_t stats[11];
+  for (Int_t i=4;i<11;i++) stats[i] = 0;
   GetStats(stats);
   if (stats[0] == 0) return 0;
   Int_t ax[3] = {2,4,7};
@@ -4564,8 +4564,8 @@ Stat_t TH1::GetRMS(Int_t axis) const
 //  the histogram.
 
   if (axis <1 || axis > 3) return 0;
-  Stat_t x, rms2, stats[10];
-  for (Int_t i=4;i<10;i++) stats[i] = 0;
+  Stat_t x, rms2, stats[11];
+  for (Int_t i=4;i<11;i++) stats[i] = 0;
   GetStats(stats);
   if (stats[0] == 0) return 0;
   Int_t ax[3] = {2,4,7};
