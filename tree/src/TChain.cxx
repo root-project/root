@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.29 2001/12/04 14:40:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.30 2001/12/05 21:07:52 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -891,6 +891,27 @@ Int_t TChain::Process(TSelector *selector,Option_t *option,  Int_t nentries, Int
 //*-*              ================================================
 
    return TTree::Process(selector,option,nentries,firstentry);
+}
+
+//______________________________________________________________________________
+void TChain::Reset(Option_t *)
+{
+// Resets the definition of this chain
+   
+   delete fFile;
+   fNtrees         = 0;
+   fTreeNumber     = -1;
+   fTree           = 0;
+   fFile           = 0;
+   fFiles->Delete();
+   fStatus->Delete();
+   fTreeOffset[0]  = 0;
+   TChainElement *element = new TChainElement("*","");
+   fStatus->Add(element);
+   fDirectory = 0;
+   fNotify    = 0;
+   
+   TTree::Reset();
 }
 
 //_______________________________________________________________________
