@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.4 2000/06/13 11:32:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.5 2000/06/14 13:12:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3101,8 +3101,8 @@ void TPad::PaintText(Double_t x, Double_t y, const char *text)
    if (gVirtualPS) {
       if (x < fX1) x = fX1;
       if( x > fX2) x = fX2;
-      if (y < fY1) x = fY1;
-      if( y > fY2) x = fY2;
+      if (y < fY1) y = fY1;
+      if( y > fY2) y = fY2;
       gVirtualPS->Text(x, y, text);
    }
 
