@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.25 2003/12/30 13:16:51 brun Exp $
+// @(#)root/tree:$Name: v4-00-08-patches $:$Id: TBasket.cxx,v 1.26 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -63,10 +63,10 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    fDisplacement= 0;  //Must be set to 0 before calling Sizeof
    fBuffer      = 0;  //Must be set to 0 before calling Sizeof
    fBufferRef   = new TBuffer(TBuffer::kWrite, fBufferSize);
+   fVersion    += 1000;
    if (branch->GetDirectory()) {
       TFile *file = branch->GetFile();
       fBufferRef->SetParent(file);
-      if (file && file->GetEND() > TFile::kStartBigFile) fVersion += 1000;
    }
    fHeaderOnly  = kTRUE;
    fLast        = 0; // RDK: Must initialize before calling Streamer()
@@ -173,7 +173,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    file->Seek(pos);
    file->ReadBuffer(buffer,len);
    Streamer(*fBufferRef);
-   Bool_t oldCase = fObjlen==fNbytes-fKeylen 
+   Bool_t oldCase = fObjlen==fNbytes-fKeylen
         && GetBranch()->GetCompressionLevel()!=0
         && file->GetVersion()<=30401;
    if (fObjlen > fNbytes-fKeylen || oldCase) {
@@ -181,18 +181,18 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          // By-passing buffer unzipping has been requested and is
          // possible (only 1 entry in this basket).
          fBuffer = fBufferRef->Buffer();
-         
+
          // Make sure that the buffer is set at the END of the data
          fBufferRef->SetBufferOffset(fNbytes);
-        
+
          // Indicate that this buffer is weird.
-         fBufferRef->SetBit(TBasket::kNotDecompressed); 
-        
-         // Usage of this mode assume the existance of only ONE 
+         fBufferRef->SetBit(TBasket::kNotDecompressed);
+
+         // Usage of this mode assume the existance of only ONE
          // entry in this basket.
          delete [] fEntryOffset; fEntryOffset = 0;
          delete [] fDisplacement; fDisplacement = 0;
-         
+
          fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
          return badread;
@@ -362,7 +362,7 @@ void TBasket::Streamer(TBuffer &b)
 //       }
 //  also he add (a little further
 //       if (!fEntryOffset || equidist)  flag  = 2;
-    
+
 //   timer.Stop();
 //   Double_t rt1 = timer.RealTime();
 //   Double_t cp1 = timer.CpuTime();
@@ -456,7 +456,7 @@ Int_t TBasket::WriteBuffer()
       Streamer(*fBufferRef);         //write key itself again
       TKey::WriteFile(0);
       fHeaderOnly = kFALSE;
-      
+
       cursav->cd();
       return fKeylen+nout;
    }
