@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.9 2001/05/29 07:20:52 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.10 2001/06/20 12:24:29 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -7577,7 +7577,7 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
           ityp = 1;
 	  if (fLwarn) {
              Printf(" MINUIT WARNING IN %s",(const char*)corg);
-             Printf(" ============== ",(const char*)cmes);
+             Printf(" ============== %s",(const char*)cmes);
 	     return;
 	  }
        } else {
