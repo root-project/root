@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.1 2000/09/29 08:52:52 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -103,6 +103,14 @@ TGGC &TGGC::operator=(const TGGC &rhs)
          fDelete = kTRUE;
    }
    return *this;
+}
+
+//______________________________________________________________________________
+GContext_t TGGC::operator()() const
+{
+   // Not inline due to a bug in g++ 2.96 20000731 (Red Hat Linux 7.0)
+
+   return fContext;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.1 2000/09/29 08:52:52 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
    TGGC &operator=(const TGGC &rhs);
 
    GContext_t GetGC() const { return fContext; }
-   GContext_t operator()() const { return fContext; }
+   GContext_t operator()() const;
    void SetAttributes(GCValues_t *values);
    void SetFunction(EGraphicsFunction v);
    void SetPlaneMask(ULong_t v);
