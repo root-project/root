@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.29 2004/01/29 12:36:31 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.30 2004/02/19 00:11:19 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -34,6 +34,9 @@
 #include <errno.h>
 #include <netdb.h>
 
+#if defined(__CYGWIN__) && defined(__GNUC__)
+#   define cygwingcc
+#endif
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
     defined(__MACH__) || defined(cygwingcc)
@@ -42,9 +45,6 @@
 #include <signal.h>
 #endif
 
-#if defined(__CYGWIN__) && defined(__GNUC__)
-#   define cygwingcc
-#endif
 #if defined(__alpha) && !defined(linux)
 #   ifdef _XOPEN_SOURCE
 #      if _XOPEN_SOURCE+0 > 0
