@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.15 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.16 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -588,6 +588,7 @@ void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
             fRmin1 = rmax1;
             fRmax1 = rmin1;
             Warning("SetConeDimensions", "rmin1>rmax1 Switch rmin1<->rmax1");
+            SetBit(TGeoShape::kGeoBad);
          }
       } else {
          // run-time
@@ -609,6 +610,7 @@ void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
             fRmin2 = rmax2;
             fRmax2 = rmin2;
             Warning("SetConeDimensions", "rmin2>rmax2 Switch rmin2<->rmax2");
+            SetBit(TGeoShape::kGeoBad);
          }
       } else {
          // run-time

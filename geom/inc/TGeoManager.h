@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.25 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.26 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -81,6 +81,7 @@ private :
    TList                *fMaterials;        //-> list of materials
    TList                *fMedia;            //-> list of tracking media
    TObjArray            *fNodes;            //-> current branch of nodes
+   TObjArray            *fOverlaps;         //-> list of geometrical overlaps
    UChar_t              *fBits;             //! bits used for voxelization
    TGeoVolume           *fCurrentVolume;    //! current volume
    TGeoVolume           *fTopVolume;        //! top level volume in geometry
@@ -107,11 +108,14 @@ public:
    TGeoManager(const char *name, const char *title);
    // destructor
    virtual ~TGeoManager();
-   //--- adding geometrical objects - used by constructors
+   //--- adding geometrical objects
    Int_t                  AddMaterial(const TGeoMaterial *material);
+   Int_t                  AddOverlap(const TNamed *ovlp);
    Int_t                  AddTransformation(const TGeoMatrix *matrix);
    Int_t                  AddShape(const TGeoShape *shape);
    Int_t                  AddVolume(TGeoVolume *volume);
+   void                   ClearOverlaps();
+   void                   SortOverlaps();
    //--- browsing and tree navigation
    void                   Browse(TBrowser *b);
    virtual Bool_t         cd(const char *path=""); // *MENU*
@@ -150,8 +154,6 @@ public:
    //--- geometry checking
    void                   CheckGeometry(Option_t *option="");
    void                   CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
-   void                   DrawOverlap(const char *mother, const char *node1, const char *node2); // *MENU*
-   void                   DrawExtrusion(const char *mother, const char *node); // *MENU*
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
    void                   DrawPath(const char *path);
@@ -252,6 +254,7 @@ public:
    Bool_t                 GotoSafeLevel();
    Double_t               GetSafeDistance() const      {return fSafety;}
    Double_t               GetStep() const              {return fStep;}
+   Bool_t                 IsCheckingOverlaps() const   {return fSearchOverlaps;}
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z);
    Bool_t                 IsStartSafe() const {return fStartSafe;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
@@ -287,6 +290,7 @@ public:
    
    //--- list getters
    TObjArray             *GetListOfNodes()              {return fNodes;}
+   TObjArray             *GetListOfOverlaps()           {return fOverlaps;}
    TList                 *GetListOfMatrices() const     {return fMatrices;}
    TList                 *GetListOfMaterials() const    {return fMaterials;}
    TList                 *GetListOfMedia() const        {return fMedia;}

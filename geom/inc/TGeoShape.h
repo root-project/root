@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.7 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.8 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -44,6 +44,7 @@ class TGeoShape : public TNamed
 public:
 enum EShapeType {
    kGeoNoShape = 0,
+   kGeoBad     = BIT(5),
    kGeoRSeg    = BIT(6),
    kGeoPhiSeg  = BIT(7),
    kGeoThetaSeg = BIT(8),

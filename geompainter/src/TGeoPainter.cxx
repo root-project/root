@@ -690,8 +690,9 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
     X3DBuffer *buff = new X3DBuffer;
     if (buff) {
         buff->numPoints = numpoints;
-        if (strstr(option, "x3d"))  buff->numSegs   = n*8;
-        else                        buff->numSegs   = n*6;
+//        if (strstr(option, "x3d"))  
+        buff->numSegs   = n*8;
+//        else                        buff->numSegs   = n*6;
         buff->numPolys  = n*4;
     }
 
@@ -722,7 +723,7 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
                 buff->segs[(i*n+j)*3+2] = (i-2)*n+j;
             }
         }
-        if (strstr(option, "x3d")) {
+//        if (strstr(option, "x3d")) {
            for (i = 6; i < 8; i++) {
               for (j = 0; j < n; j++) {
                  buff->segs[(i*n+j)*3  ] = c;
@@ -730,7 +731,7 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
                  buff->segs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
               }
            }
-        }
+//        }
     }
 //*-* Allocate memory for polygons *-*
 

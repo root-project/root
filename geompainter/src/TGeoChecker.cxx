@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.23 2003/02/07 13:46:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.24 2003/02/10 09:55:21 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -35,6 +35,7 @@
 
 #include "TGeoBBox.h"
 #include "TGeoManager.h"
+#include "TGeoOverlap.h"
 #include "TGeoPainter.h"
 #include "TGeoChecker.h"
 
@@ -260,7 +261,8 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    TGeoNode * node;
    TGeoMatrix *matrix;
    X3DPoints *buff;
-   Bool_t extrude;
+   Bool_t extrude, isextrusion, isoverlapping;
+   TGeoOverlap *nodeovlp = 0;
    Bool_t ismany;
    Double_t *points;
    Double_t local[3];
@@ -277,6 +279,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
       matrix = node->GetMatrix();
       ismany = node->IsOverlapping();
       points = buff->points;
+      isextrusion=kFALSE;
       // loop all points
       for (ip=0; ip<buff->numPoints; ip++) {
          memcpy(local, &points[3*ip], 3*sizeof(Double_t));
@@ -287,12 +290,17 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
 	          if (safety<ovlp) extrude=kFALSE;
 	       }    
 	       if (extrude) {
-	          if (!ismany) {
-	             printf("=== volume %s : extruding ONLY node %s, extr=%g\n", vol->GetName(), node->GetName(), safety);
-	          } else {
-	             printf("=== volume %s : extruding MANY node %s (G3 intersection), extr=%g\n", vol->GetName(), node->GetName(), safety);
-            }
-            break;
+            if (!isextrusion) {
+               isextrusion = kTRUE;
+               char *name = new char[20];
+               sprintf(name,"%s_x_%i", vol->GetName(),id); 
+               nodeovlp = new TGeoExtrusion(name, (TGeoVolume*)vol,id,safety);
+               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+               fGeom->AddOverlap(nodeovlp);
+            } else {
+               if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+            }   
 	       }
       }	     
       if (points) delete [] points;
@@ -331,6 +339,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          points = buff->points;
          // loop all points
          overlap = kFALSE;
+         isoverlapping = kFALSE;
          for (ip=0; ip<buff->numPoints; ip++) {
             memcpy(local, &points[3*ip], 3*sizeof(Double_t));
 	          matrix1->LocalToMaster(local, point);
@@ -341,14 +350,21 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
 	             if (safety<ovlp) overlap=kFALSE;
 	          }    
 	          if (overlap) {
-	             printf("===  volume %s : nodes %s and %s overlapping; overlap=%g\n", 
-                      vol->GetName(), node->GetName(), node1->GetName(), safety);
-               break;
+               if (!isoverlapping) {
+                  isoverlapping = kTRUE;
+                  char *name = new char[20];
+                  sprintf(name,"%s_o_%i_%i", vol->GetName(),id,io); 
+                  nodeovlp = new TGeoNodeOverlap(name, (TGeoVolume*)vol,id,io,safety);
+                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+                  fGeom->AddOverlap(nodeovlp);
+               } else {
+                  if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+               }     
 	          }
          }	     
          if (points) delete [] points;
          delete buff; 
-         if (overlap) continue;
          shape1 = node1->GetVolume()->GetShape();
          buff = (X3DPoints*)node->GetVolume()->Make3DBuffer();
          if (!buff) continue;   
@@ -364,14 +380,23 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
 	             if (safety<ovlp) overlap=kFALSE;
 	          }    
 	          if (overlap) {
-	             printf("===  volume %s : nodes %s and %s overlapping; overlap=%g\n", 
-                      vol->GetName(), node->GetName(), node1->GetName(), safety);
-               break;
+               if (!isoverlapping) {
+                  isoverlapping = kTRUE;
+                  char *name = new char[20];
+                  sprintf(name,"%s_o_%i_%i", vol->GetName(),id,io); 
+                  nodeovlp = new TGeoNodeOverlap(name, (TGeoVolume*)vol,id,io,safety);
+                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+                  fGeom->AddOverlap(nodeovlp);
+               } else {
+                  if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+               }     
 	          }
          }
          if (points) delete [] points;
          delete buff;          
       }   	     
+      node->SetOverlaps(0,0);
    }
 }
 
