@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.175 2004/11/22 20:29:09 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.176 2004/12/04 19:47:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1234,7 +1234,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          } else {
             if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1;}
          }
-         if (bre->GetStreamerType() <= 0) {
+         if (bre->GetStreamerType() < 0) {
+            {leafStatus[l] = 1; head = headcom;}
+            fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
+            continue;
+         }
+         if (bre->GetStreamerType() == 0) {
             if (!gROOT->GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
             fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
             if (leafStatus[l] == 0) mustInit.Add(bre);
