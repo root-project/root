@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.20 2003/04/30 16:29:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.21 2003/09/16 13:40:29 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -202,13 +202,13 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
       Int_t noutot = 0;
       while (1) {
          nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
-         if (nin > fObjlen && oldCase) {
+         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         if (oldCase && (nin > fObjlen || nbuf > fObjlen)) {
             //buffer was very likely not compressed in an old version
             delete [] fBuffer;
             fBuffer = fBufferRef->Buffer();
             goto AfterBuffer;
          }
-         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
          R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
          if (!nout) break;
          noutot += nout;
