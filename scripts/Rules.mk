@@ -172,8 +172,8 @@ endif
 %.log : run%.C
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
-define buildWithLib
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter-out $<,$^)\"\) > $*.build.log 2>&1
+define BuildWithLib
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.$(DllSuf),$^)\"\) > $*.build.log 2>&1
 endef
     
 define WarnFailTest

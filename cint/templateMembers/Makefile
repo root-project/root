@@ -59,4 +59,4 @@ templateMembers.ref:  runtemplateMembers.C  templateMembers_C.$(DllSuf)  templat
 	grep -v Mem: templateMembers.ref > templateMembersNoMem.ref
 
 templateMembersCode_C.$(DllSuf): templateMembersCode.C templateMembers_C.$(DllSuf)
-	$(buildWithLib)
+	$(BuildWithLib)
