@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.12 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.13 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -70,6 +70,7 @@ static const Double_t kBig;      // infinity
 protected :
 // data members
    Int_t                 fShapeId;   // shape id
+   UInt_t                fShapeBits; // shape bits
 // methods
 
 public:
@@ -102,8 +103,8 @@ public:
    virtual Bool_t        IsComposite() const {return kFALSE;}
    virtual Bool_t        IsCylType() const = 0;
    static Bool_t         IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
-   Bool_t                IsRunTimeShape() const {return TestBit(kGeoRunTimeShape);}
-   Bool_t                IsValid() const {return !TestBit(kGeoInvalidShape);}
+   Bool_t                IsRunTimeShape() const {return TestShapeBit(kGeoRunTimeShape);}
+   Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 
    virtual void          InspectShape() const                    = 0;
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const              = 0;
@@ -116,11 +117,19 @@ public:
    void                  SetId(Int_t id) {fShapeId = id;}
    virtual void          SetPoints(Double_t *buff) const         = 0;
    virtual void          SetPoints(Float_t *buff) const          = 0;
-   void                  SetRuntime(Bool_t flag=kTRUE) {SetBit(kGeoRunTimeShape, flag);}
+   void                  SetRuntime(Bool_t flag=kTRUE) {SetShapeBit(kGeoRunTimeShape, flag);}
    Int_t                 ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const;
    virtual void          Sizeof3D() const                        = 0;
+
+   //----- bit manipulation
+   void     SetShapeBit(UInt_t f, Bool_t set);
+   void     SetShapeBit(UInt_t f) { fShapeBits |= f & kBitMask; }
+   void     ResetShapeBit(UInt_t f) { fShapeBits &= ~(f & kBitMask); }
+   Bool_t   TestShapeBit(UInt_t f) const { return (Bool_t) ((fShapeBits & f) != 0); }
+   Int_t    TestShapeBits(UInt_t f) const { return (Int_t) (fShapeBits & f); }
+   void     InvertShapeBit(UInt_t f) { fShapeBits ^= f & kBitMask; }
    
-  ClassDef(TGeoShape, 1)           // base class for shapes
+  ClassDef(TGeoShape, 2)           // base class for shapes
 };
 
 #endif

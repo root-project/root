@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.11 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.12 2003/08/21 08:27:34 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -33,7 +33,7 @@ ClassImp(TGeoEltu)
 TGeoEltu::TGeoEltu()
 {
 // Dummy constructor
-   SetBit(TGeoShape::kGeoEltu);
+   SetShapeBit(TGeoShape::kGeoEltu);
 }   
 
 //_____________________________________________________________________________
@@ -41,7 +41,7 @@ TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
            :TGeoTube(a, b, dz)
 {
 // Default constructor specifying X and Y semiaxis length
-   SetBit(TGeoShape::kGeoEltu);
+   SetShapeBit(TGeoShape::kGeoEltu);
    SetEltuDimensions(a, b, dz);
    ComputeBBox();
 }
@@ -51,7 +51,7 @@ TGeoEltu::TGeoEltu(const char *name, Double_t a, Double_t b, Double_t dz)
            :TGeoTube(name, a, b, dz)
 {
 // Default constructor specifying X and Y semiaxis length
-   SetBit(TGeoShape::kGeoEltu);
+   SetShapeBit(TGeoShape::kGeoEltu);
    SetEltuDimensions(a, b, dz);
    ComputeBBox();
 }
@@ -63,7 +63,7 @@ TGeoEltu::TGeoEltu(Double_t *param)
 // param[0] =  A
 // param[1] =  B
 // param[2] = dz
-   SetBit(TGeoShape::kGeoEltu);
+   SetShapeBit(TGeoShape::kGeoEltu);
    SetDimensions(param);
    ComputeBBox();
 }
@@ -296,8 +296,8 @@ TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (!mother->TestBit(kGeoEltu)) {
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!mother->TestShapeBit(kGeoEltu)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }
@@ -337,7 +337,7 @@ Double_t TGeoEltu::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
 {
    if ((a<=0) || (b<0) || (dz<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    }
    fRmin=a;
    fRmax=b;

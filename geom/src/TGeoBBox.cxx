@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.21 2003/06/17 09:13:55 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.22 2003/07/31 20:19:32 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -84,7 +84,7 @@ ClassImp(TGeoBBox)
 TGeoBBox::TGeoBBox()
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoBox);
+   SetShapeBit(TGeoShape::kGeoBox);
    fDX = fDY = fDZ = 0;
    for (Int_t i=0; i<3; i++)
       fOrigin[i] = 0;
@@ -95,7 +95,7 @@ TGeoBBox::TGeoBBox(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
          :TGeoShape("")
 {
 // Constructor
-   SetBit(TGeoShape::kGeoBox);
+   SetShapeBit(TGeoShape::kGeoBox);
    SetBoxDimensions(dx, dy, dz, origin);
 }
 
@@ -104,7 +104,7 @@ TGeoBBox::TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
          :TGeoShape(name)
 {
 // Constructor
-   SetBit(TGeoShape::kGeoBox);
+   SetShapeBit(TGeoShape::kGeoBox);
    SetBoxDimensions(dx, dy, dz, origin);
 }
 
@@ -116,7 +116,7 @@ TGeoBBox::TGeoBBox(Double_t *param)
 // param[0] - half-length in x
 // param[1] - half-length in y
 // param[2] - half-length in z
-   SetBit(TGeoShape::kGeoBox);
+   SetShapeBit(TGeoShape::kGeoBox);
    SetDimensions(param);
 }   
 
@@ -407,7 +407,7 @@ TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) con
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    Double_t dx, dy, dz;
    Int_t ierr = mother->GetFittingBox(this, mat, dx, dy, dz);
    if (ierr) {
@@ -491,7 +491,7 @@ void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t 
    }
    if ((fDX==0) && (fDY==0) && (fDZ==0)) return;
    if ((fDX<0) || (fDY<0) || (fDZ<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
 //      printf("box : %f %f %f\n", fDX, fDY, fDZ);
    }
 }        
@@ -512,7 +512,7 @@ void TGeoBBox::SetDimensions(Double_t *param)
    fDZ = param[2];
    if ((fDX==0) && (fDY==0) && (fDZ==0)) return;
    if ((fDX<0) || (fDY<0) || (fDZ<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
 //      printf("box : %f %f %f\n", fDX, fDY, fDZ);
    }
 }   

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.1 2003/07/31 20:46:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.2 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -39,7 +39,7 @@ ClassImp(TGeoTorus)
 TGeoTorus::TGeoTorus()
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoTorus);
+   SetShapeBit(TGeoShape::kGeoTorus);
    fR    = 0.0;
    fRmin = 0.0;
    fRmax = 0.0;
@@ -52,10 +52,10 @@ TGeoTorus::TGeoTorus(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Do
           :TGeoBBox(0, 0, 0)
 {
 // Constructor without name.
-   SetBit(TGeoShape::kGeoTorus);
+   SetShapeBit(TGeoShape::kGeoTorus);
    SetTorusDimensions(r, rmin, rmax, phi1, dphi);
    if ((fRmin<0) || (fRmax<0)) 
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
 
@@ -64,10 +64,10 @@ TGeoTorus::TGeoTorus(const char *name, Double_t r, Double_t rmin, Double_t rmax,
           :TGeoBBox(name, 0, 0, 0)
 {
 // Constructor with name.
-   SetBit(TGeoShape::kGeoTorus);
+   SetShapeBit(TGeoShape::kGeoTorus);
    SetTorusDimensions(r, rmin, rmax, phi1, dphi);
    if ((fRmin<0) || (fRmax<0)) 
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
 
@@ -81,9 +81,9 @@ TGeoTorus::TGeoTorus(Double_t *param)
 // param[2] = Rmax
 // param[3] = Phi1
 // param[4] = Dphi
-   SetBit(TGeoShape::kGeoTorus);
+   SetShapeBit(TGeoShape::kGeoTorus);
    SetDimensions(param);
-   if (fRmin<0 || fRmax<0) SetBit(kGeoRunTimeShape);
+   if (fRmin<0 || fRmax<0) SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
 
@@ -275,7 +275,7 @@ Double_t TGeoTorus::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double
    Double_t dphi = kBig;
    if (hasphi) {
       // Torus segment case.
-      Double_t c1,s1,c2,s2,cm,sm,cdfi;
+      Double_t c1,s1,c2,s2,cm,sm;
       Double_t phi1=fPhi1*kDegRad;
       Double_t phi2=(fPhi1+fDphi)*kDegRad;
       c1=TMath::Cos(phi1);
@@ -285,7 +285,6 @@ Double_t TGeoTorus::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double
       Double_t fio=0.5*(phi1+phi2);
       cm=TMath::Cos(fio);
       sm=TMath::Sin(fio);
-      cdfi=TMath::Cos(0.5*(phi2-phi1));
       dphi = TGeoTubeSeg::DistToOutS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm);
       if (dphi>1E10) {
          Double_t pt[3];
@@ -320,9 +319,7 @@ Double_t TGeoTorus::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t rxy2,dd;
    Double_t snext;
    Double_t pt[3];
-   Double_t invdir[3];
    Int_t i;
-   for (i=0; i<3; i++) invdir[i] = -dir[i];
       
    if (hasphi) {
       // Torus segment case.
@@ -473,7 +470,7 @@ void TGeoTorus::GetBoundingCylinder(Double_t *param) const
 //_____________________________________________________________________________
 TGeoShape *TGeoTorus::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const
 {
-   if (!TestBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    Error("GetMakeRuntimeShape", "parametrized toruses not supported");
    return 0;
 }

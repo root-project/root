@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.21 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.22 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -73,7 +73,7 @@ ClassImp(TGeoCone)
 TGeoCone::TGeoCone()
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoCone);
+   SetShapeBit(TGeoShape::kGeoCone);
    fDz    = 0.0;
    fRmin1 = 0.0;
    fRmax1 = 0.0;
@@ -87,10 +87,10 @@ TGeoCone::TGeoCone(Double_t dz, Double_t rmin1, Double_t rmax1,
          :TGeoBBox(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoCone);
+   SetShapeBit(TGeoShape::kGeoCone);
    SetConeDimensions(dz, rmin1, rmax1, rmin2, rmax2);
    if ((dz<0) || (rmin1<0) || (rmax1<0) || (rmin2<0) || (rmax2<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    }
    else ComputeBBox();
 }
@@ -101,10 +101,10 @@ TGeoCone::TGeoCone(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1
          :TGeoBBox(name, 0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoCone);
+   SetShapeBit(TGeoShape::kGeoCone);
    SetConeDimensions(dz, rmin1, rmax1, rmin2, rmax2);
    if ((dz<0) || (rmin1<0) || (rmax1<0) || (rmin2<0) || (rmax2<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    }
    else ComputeBBox();
 }
@@ -119,10 +119,10 @@ TGeoCone::TGeoCone(Double_t *param)
 // param[2] = Rmax1
 // param[3] = Rmin2
 // param[4] = Rmax2
-   SetBit(TGeoShape::kGeoCone);
+   SetShapeBit(TGeoShape::kGeoCone);
    SetDimensions(param);
    if ((fDz<0) || (fRmin1<0) || (fRmax1<0) || (fRmin2<0) || (fRmax2<0))
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    else ComputeBBox();
 }
 
@@ -558,8 +558,8 @@ TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (!mother->TestBit(kGeoCone)) {
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!mother->TestShapeBit(kGeoCone)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }
@@ -698,7 +698,7 @@ void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
             fRmin1 = rmax1;
             fRmax1 = rmin1;
             Warning("SetConeDimensions", "rmin1>rmax1 Switch rmin1<->rmax1");
-            SetBit(TGeoShape::kGeoBad);
+            SetShapeBit(TGeoShape::kGeoBad);
          }
       } else {
          // run-time
@@ -720,7 +720,7 @@ void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
             fRmin2 = rmax2;
             fRmax2 = rmin2;
             Warning("SetConeDimensions", "rmin2>rmax2 Switch rmin2<->rmax2");
-            SetBit(TGeoShape::kGeoBad);
+            SetShapeBit(TGeoShape::kGeoBad);
          }
       } else {
          // run-time
@@ -851,7 +851,7 @@ ClassImp(TGeoConeSeg)
 TGeoConeSeg::TGeoConeSeg()
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoConeSeg);
+   SetShapeBit(TGeoShape::kGeoConeSeg);
    fPhi1 = fPhi2 = 0.0;
 }   
 
@@ -861,7 +861,7 @@ TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1,
             :TGeoCone(dz, rmin1, rmax1, rmin2, rmax2)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoConeSeg);
+   SetShapeBit(TGeoShape::kGeoConeSeg);
    SetConsDimensions(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    ComputeBBox();
 }
@@ -872,7 +872,7 @@ TGeoConeSeg::TGeoConeSeg(const char *name, Double_t dz, Double_t rmin1, Double_t
             :TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoConeSeg);
+   SetShapeBit(TGeoShape::kGeoConeSeg);
    SetConsDimensions(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    ComputeBBox();
 }
@@ -889,7 +889,7 @@ TGeoConeSeg::TGeoConeSeg(Double_t *param)
 // param[4] = Rmax2
 // param[5] = phi1
 // param[6] = phi2
-   SetBit(TGeoShape::kGeoConeSeg);
+   SetShapeBit(TGeoShape::kGeoConeSeg);
    SetDimensions(param);
    ComputeBBox();
 }
@@ -1455,8 +1455,8 @@ TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (!mother->TestBit(kGeoConeSeg)) {
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!mother->TestShapeBit(kGeoConeSeg)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }

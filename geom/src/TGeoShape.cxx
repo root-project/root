@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.10 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.11 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -263,3 +263,13 @@ Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t c1, Double_t 
    return TMath::Min(saf1,saf2);
 }        
 
+//_____________________________________________________________________________
+void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
+{
+   if (set) {
+      SetShapeBit(f);
+   } else {
+      ResetShapeBit(f);
+   }
+}
+         

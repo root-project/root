@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.24 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.25 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -105,7 +105,7 @@ ClassImp(TGeoTube)
 TGeoTube::TGeoTube()
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoTube);
+   SetShapeBit(TGeoShape::kGeoTube);
    fRmin = 0.0;
    fRmax = 0.0;
    fDz   = 0.0;
@@ -117,11 +117,11 @@ TGeoTube::TGeoTube(Double_t rmin, Double_t rmax, Double_t dz)
            :TGeoBBox(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoTube);
+   SetShapeBit(TGeoShape::kGeoTube);
    SetTubeDimensions(rmin, rmax, dz);
    if ((fDz<0) || (fRmin<0) || (fRmax<0)) {
-      SetBit(kGeoRunTimeShape);
-//      if (fRmax<=fRmin) SetBit(kGeoInvalidShape);
+      SetShapeBit(kGeoRunTimeShape);
+//      if (fRmax<=fRmin) SetShapeBit(kGeoInvalidShape);
 //      printf("tube : dz=%f rmin=%f rmax=%f\n", dz, rmin, rmax);
    }
    ComputeBBox();
@@ -131,11 +131,11 @@ TGeoTube::TGeoTube(const char *name, Double_t rmin, Double_t rmax, Double_t dz)
            :TGeoBBox(name, 0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoTube);
+   SetShapeBit(TGeoShape::kGeoTube);
    SetTubeDimensions(rmin, rmax, dz);
    if ((fDz<0) || (fRmin<0) || (fRmax<0)) {
-      SetBit(kGeoRunTimeShape);
-//      if (fRmax<=fRmin) SetBit(kGeoInvalidShape);
+      SetShapeBit(kGeoRunTimeShape);
+//      if (fRmax<=fRmin) SetShapeBit(kGeoInvalidShape);
 //      printf("tube : dz=%f rmin=%f rmax=%f\n", dz, rmin, rmax);
    }
    ComputeBBox();
@@ -149,9 +149,9 @@ TGeoTube::TGeoTube(Double_t *param)
 // param[0] = Rmin
 // param[1] = Rmax
 // param[2] = dz
-   SetBit(TGeoShape::kGeoTube);
+   SetShapeBit(TGeoShape::kGeoTube);
    SetDimensions(param);
-   if ((fDz<0) || (fRmin<0) || (fRmax<0)) SetBit(kGeoRunTimeShape);
+   if ((fDz<0) || (fRmin<0) || (fRmax<0)) SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
 
@@ -197,7 +197,7 @@ void TGeoTube::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 
 //_____________________________________________________________________________   
 void TGeoTube::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm, 
-                              Double_t rmin, Double_t rmax, Double_t dz)
+                              Double_t /*rmin*/, Double_t /*rmax*/, Double_t /*dz*/)
 {
 // Compute normal to closest surface from POINT. 
    norm[2] = 0;
@@ -521,7 +521,7 @@ TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    Double_t rmin, rmax, dz;
    Double_t xmin,xmax;
    rmin = fRmin;
@@ -747,7 +747,7 @@ ClassImp(TGeoTubeSeg)
 TGeoTubeSeg::TGeoTubeSeg()
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoTubeSeg);
+   SetShapeBit(TGeoShape::kGeoTubeSeg);
    fPhi1 = fPhi2 = 0.0;
 }   
 
@@ -757,7 +757,7 @@ TGeoTubeSeg::TGeoTubeSeg(Double_t rmin, Double_t rmax, Double_t dz,
             :TGeoTube(rmin, rmax, dz)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoTubeSeg);
+   SetShapeBit(TGeoShape::kGeoTubeSeg);
    SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
    ComputeBBox();
 }
@@ -768,7 +768,7 @@ TGeoTubeSeg::TGeoTubeSeg(const char *name, Double_t rmin, Double_t rmax, Double_
             :TGeoTube(name, rmin, rmax, dz)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoTubeSeg);
+   SetShapeBit(TGeoShape::kGeoTubeSeg);
    SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
    ComputeBBox();
 }
@@ -783,7 +783,7 @@ TGeoTubeSeg::TGeoTubeSeg(Double_t *param)
 // param[2] = dz
 // param[3] = phi1
 // param[4] = phi2
-   SetBit(TGeoShape::kGeoTubeSeg);
+   SetShapeBit(TGeoShape::kGeoTubeSeg);
    SetDimensions(param);
    ComputeBBox();
 }
@@ -876,7 +876,7 @@ void TGeoTubeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 
 //_____________________________________________________________________________   
 void TGeoTubeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
-                                 Double_t rmin, Double_t rmax, Double_t dz,
+                                 Double_t rmin, Double_t rmax, Double_t /*dz*/,
                                  Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
 // Compute normal to closest surface from POINT. 
@@ -1256,8 +1256,8 @@ TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (!mother->TestBit(kGeoTube)) {
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!mother->TestShapeBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }
@@ -1518,7 +1518,7 @@ TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Dou
    fNhigh[0] = tx;
    fNhigh[1] = ty;
    fNhigh[2] = tz;
-   SetBit(kGeoCtub);
+   SetShapeBit(kGeoCtub);
    ComputeBBox();
 }
 
@@ -1534,7 +1534,7 @@ TGeoCtub::TGeoCtub(const char *name, Double_t rmin, Double_t rmax, Double_t dz, 
    fNhigh[0] = tx;
    fNhigh[1] = ty;
    fNhigh[2] = tz;
-   SetBit(kGeoCtub);
+   SetShapeBit(kGeoCtub);
    ComputeBBox();
 }
 
@@ -1545,7 +1545,7 @@ TGeoCtub::TGeoCtub(Double_t *params)
 // ctor with parameters
    SetCtubDimensions(params[0], params[1], params[2], params[3], params[4], params[5],
                      params[6], params[7], params[8], params[9], params[10]);
-   SetBit(kGeoCtub);
+   SetShapeBit(kGeoCtub);
 }
 
 //_____________________________________________________________________________
@@ -2005,8 +2005,8 @@ TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (!mother->TestBit(kGeoTube)) {
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!mother->TestShapeBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }

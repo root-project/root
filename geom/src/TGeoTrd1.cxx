@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.19 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.20 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -53,7 +53,7 @@ TGeoTrd1::TGeoTrd1()
 {
    // dummy ctor
    fDz = fDx1 = fDx2 = fDy = 0;
-   SetBit(kGeoTrd1);
+   SetShapeBit(kGeoTrd1);
 }
 
 //_____________________________________________________________________________
@@ -61,13 +61,13 @@ TGeoTrd1::TGeoTrd1(Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
          :TGeoBBox(0,0,0)
 {
 // constructor. 
-   SetBit(kGeoTrd1);
+   SetShapeBit(kGeoTrd1);
    fDx1 = dx1;
    fDx2 = dx2;
    fDy = dy;
    fDz = dz;
    if ((dx1<0) || (dx2<0) || (dy<0) || (dz<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
       printf("trd1 : dx1=%f, dx2=%f, dy=%f, dz=%f\n",
               dx1,dx2,dy,dz);
    }
@@ -79,13 +79,13 @@ TGeoTrd1::TGeoTrd1(const char *name, Double_t dx1, Double_t dx2, Double_t dy, Do
          :TGeoBBox(name, 0,0,0)
 {
 // constructor. 
-   SetBit(kGeoTrd1);
+   SetShapeBit(kGeoTrd1);
    fDx1 = dx1;
    fDx2 = dx2;
    fDy = dy;
    fDz = dz;
    if ((dx1<0) || (dx2<0) || (dy<0) || (dz<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
       printf("trd1 : dx1=%f, dx2=%f, dy=%f, dz=%f\n",
               dx1,dx2,dy,dz);
    }
@@ -101,9 +101,9 @@ TGeoTrd1::TGeoTrd1(Double_t *param)
    // param[1] = dx2
    // param[2] = dy
    // param[3] = dz
-   SetBit(kGeoTrd1);
+   SetShapeBit(kGeoTrd1);
    SetDimensions(param);
-   if ((fDx1<0) || (fDx2<0) || (fDy<=0) || (fDz<=0)) SetBit(kGeoRunTimeShape);
+   if ((fDx1<0) || (fDx2<0) || (fDy<=0) || (fDz<=0)) SetShapeBit(kGeoRunTimeShape);
    else ComputeBBox();
 }
 
@@ -230,28 +230,28 @@ void TGeoTrd1::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *nor
    TGeoTrd1 *trd1 = (TGeoTrd1*)this;
    if (point[0]>distx) {
    // hi x face visible
-      trd1->SetBit(kGeoVisX);
+      trd1->SetShapeBit(kGeoVisX);
       normals[0]=calf;
       normals[2]=salf;
    } else {   
-      trd1->SetBit(kGeoVisX, kFALSE);
+      trd1->SetShapeBit(kGeoVisX, kFALSE);
       normals[0]=-calf;
       normals[2]=salf;
    }
    if (point[1]>fDy) {
    // hi y face visible
-      trd1->SetBit(kGeoVisY);
+      trd1->SetShapeBit(kGeoVisY);
       normals[4]=1;
    } else {
-      trd1->SetBit(kGeoVisY, kFALSE);
+      trd1->SetShapeBit(kGeoVisY, kFALSE);
       normals[4]=-1;  
    }   
    if (point[2]>fDz) {
    // hi z face visible
-      trd1->SetBit(kGeoVisZ);
+      trd1->SetShapeBit(kGeoVisZ);
       normals[8]=1;
    } else {
-      trd1->SetBit(kGeoVisZ, kFALSE);
+      trd1->SetShapeBit(kGeoVisZ, kFALSE);
       normals[8]=-1;  
    }
    SetVertex(vertex);
@@ -264,17 +264,17 @@ void TGeoTrd1::GetOppositeCorner(Double_t * /*point*/, Int_t inorm, Double_t *ve
    TGeoTrd1 *trd1 = (TGeoTrd1*)this;
    if (inorm != 0) {
    // change x face
-      trd1->SetBit(kGeoVisX, !TestBit(kGeoVisX));
+      trd1->SetShapeBit(kGeoVisX, !TestShapeBit(kGeoVisX));
       normals[0]=-normals[0];
    }
    if (inorm != 1) {
    // change y face
-      trd1->SetBit(kGeoVisY, !TestBit(kGeoVisY));
+      trd1->SetShapeBit(kGeoVisY, !TestShapeBit(kGeoVisY));
       normals[4]=-normals[4];
    } 
    if (inorm != 2) {
    // hi z face visible
-      trd1->SetBit(kGeoVisZ, !TestBit(kGeoVisZ));
+      trd1->SetShapeBit(kGeoVisZ, !TestShapeBit(kGeoVisZ));
       normals[8]=-normals[8];
    } 
    SetVertex(vertex);
@@ -522,8 +522,8 @@ TGeoShape *TGeoTrd1::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (!mother->TestBit(kGeoTrd1)) {
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!mother->TestShapeBit(kGeoTrd1)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }
@@ -589,25 +589,25 @@ void TGeoTrd1::SetDimensions(Double_t *param)
 void TGeoTrd1::SetVertex(Double_t *vertex) const
 {
 // set vertex of a corner according to visibility flags
-   if (TestBit(kGeoVisX)) {
-      if (TestBit(kGeoVisZ)) {
+   if (TestShapeBit(kGeoVisX)) {
+      if (TestShapeBit(kGeoVisZ)) {
          vertex[0] = fDx2;
          vertex[2] = fDz;
-         vertex[1] = (TestBit(kGeoVisY))?fDy:-fDy;
+         vertex[1] = (TestShapeBit(kGeoVisY))?fDy:-fDy;
       } else {   
          vertex[0] = fDx1;
          vertex[2] = -fDz;
-         vertex[1] = (TestBit(kGeoVisY))?fDy:-fDy;
+         vertex[1] = (TestShapeBit(kGeoVisY))?fDy:-fDy;
       }
    } else {
-      if (TestBit(kGeoVisZ)) {
+      if (TestShapeBit(kGeoVisZ)) {
          vertex[0] = -fDx2;
          vertex[2] = fDz;
-         vertex[1] = (TestBit(kGeoVisY))?fDy:-fDy;
+         vertex[1] = (TestShapeBit(kGeoVisY))?fDy:-fDy;
       } else {   
          vertex[0] = -fDx1;
          vertex[2] = -fDz;
-         vertex[1] = (TestBit(kGeoVisY))?fDy:-fDy;
+         vertex[1] = (TestShapeBit(kGeoVisY))?fDy:-fDy;
       }
    }            
 } 

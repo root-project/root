@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.24 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.25 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -108,7 +108,7 @@ TGeoArb8::TGeoArb8()
       fXY[i][0] = 0.0;
       fXY[i][1] = 0.0;
    }  
-   TObject::SetBit(kGeoArb8); 
+   SetShapeBit(kGeoArb8); 
 }
 
 //_____________________________________________________________________________
@@ -119,7 +119,7 @@ TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
 // in the format : (x0, y0, x1, y1, ... , x7, y7) 
    fDz = dz;
    fTwist = 0;
-   TObject::SetBit(kGeoArb8); 
+   SetShapeBit(kGeoArb8); 
    if (vertices) {
       for (Int_t i=0; i<8; i++) {
          fXY[i][0] = vertices[2*i];
@@ -143,7 +143,7 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 // in the format : (x0, y0, x1, y1, ... , x7, y7) 
    fDz = dz;
    fTwist = 0;
-   TObject::SetBit(kGeoArb8); 
+   SetShapeBit(kGeoArb8); 
    if (vertices) {
       for (Int_t i=0; i<8; i++) {
          fXY[i][0] = vertices[2*i];
@@ -186,7 +186,7 @@ void TGeoArb8::ComputeBBox()
    fOrigin[0] = 0.5*(xmax+xmin);
    fOrigin[1] = 0.5*(ymax+ymin);
    fOrigin[2] = 0;
-   TObject::SetBit(kGeoClosedShape);
+   SetShapeBit(kGeoClosedShape);
 }   
 
 //_____________________________________________________________________________
@@ -725,7 +725,7 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
    ComputeTwist();
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
        (h2<0) || (bl2<0) || (tl2<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    } 
    else TGeoArb8::ComputeBBox();
 }
@@ -768,7 +768,7 @@ TGeoTrap::TGeoTrap(const char *name, Double_t dz, Double_t theta, Double_t phi, 
    ComputeTwist();
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
        (h2<0) || (bl2<0) || (tl2<0)) {
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    } 
    else TGeoArb8::ComputeBBox();
 }
@@ -862,7 +862,7 @@ TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (mother->IsRunTimeShape()) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
@@ -1018,7 +1018,7 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
    }
    ComputeTwist();
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
-       (h2<0) || (bl2<0) || (tl2<0)) SetBit(kGeoRunTimeShape);
+       (h2<0) || (bl2<0) || (tl2<0)) SetShapeBit(kGeoRunTimeShape);
    else TGeoArb8::ComputeBBox();
 }
 
@@ -1075,7 +1075,7 @@ TGeoGtra::TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, 
    }
    ComputeTwist();
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
-       (h2<0) || (bl2<0) || (tl2<0)) SetBit(kGeoRunTimeShape);
+       (h2<0) || (bl2<0) || (tl2<0)) SetShapeBit(kGeoRunTimeShape);
    else TGeoArb8::ComputeBBox();
 }
 
@@ -1090,7 +1090,7 @@ TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (mother->IsRunTimeShape()) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;

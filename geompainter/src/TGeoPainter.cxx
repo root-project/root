@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.23 2003/07/31 20:19:33 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.24 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -167,7 +167,7 @@ void TGeoPainter::DefineColors() const
 {
 // Define 100 colors with increasing light intensities for each basic color (1-7)
 // Register these colors at indexes starting with 300.
-   TColor *color, *newcolor;
+   TColor *color;
    Int_t i,j;
    Float_t r,g,b,h,l,s;
    
@@ -177,7 +177,7 @@ void TGeoPainter::DefineColors() const
       for (j=0; j<100; j++) {
          l = 0.8*j/99.;
          TColor::HLS2RGB(h,l,s,r,g,b);
-         newcolor = new TColor(300+(i-1)*100+j, r,g,b);
+         new TColor(300+(i-1)*100+j, r,g,b);
       }
    }           
 }
@@ -2112,7 +2112,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    gVirtualX->SetMarkerStyle(1);
    Int_t i;
    Bool_t inclipst=kFALSE, inclip=kFALSE;
-   Double_t krad = TGeoShape::kDegRad;
+   Double_t krad = TMath::DegToRad();
    Double_t lat = view->GetLatitude();
    Double_t longit = view->GetLongitude();
    Double_t psi = view->GetPsi();
@@ -2174,7 +2174,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Int_t istep;
    Int_t base_color, color;
    Double_t light;
-   Double_t stemin=0, stemax=TGeoShape::kBig;
+   Double_t stemin=0, stemax=1E30;
    TPoint *pxy = new TPoint[1];
    Int_t npoints = (pxmax-pxmin)*(pymax-pymin);
    Int_t n10 = npoints/10;
@@ -2208,7 +2208,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          if (fClippingShape) {
             if (inclip) {
                stemin = fClippingShape->DistToOut(cop,dir,3);
-               stemax = TGeoShape::kBig;
+               stemax = 1E30;
             } else {
                stemax = fClippingShape->DistToIn(cop,dir,3);
                stemin = 0;
@@ -2263,7 +2263,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   inclip = fClippingShape->Contains(point);
                   if (inclip) {
                      stemin = fClippingShape->DistToOut(point,dir,3);
-                     stemax = TGeoShape::kBig;
+                     stemax = 1E30;
                      continue;
                   } else {
                      stemin = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.20 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.21 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -58,7 +58,7 @@ ClassImp(TGeoPcon)
 TGeoPcon::TGeoPcon()
 {
 // dummy ctor
-   SetBit(TGeoShape::kGeoPcon);
+   SetShapeBit(TGeoShape::kGeoPcon);
    fRmin = 0;
    fRmax = 0;
    fZ    = 0;
@@ -69,7 +69,7 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
          :TGeoBBox(0, 0, 0)
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoPcon);
+   SetShapeBit(TGeoShape::kGeoPcon);
    fPhi1 = phi;
    if (fPhi1<0) fPhi1+=360.;
    fDphi = dphi;
@@ -84,7 +84,7 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
          :TGeoBBox(name, 0, 0, 0)
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoPcon);
+   SetShapeBit(TGeoShape::kGeoPcon);
    fPhi1 = phi;
    if (fPhi1<0) fPhi1+=360.;
    fDphi = dphi;
@@ -107,7 +107,7 @@ TGeoPcon::TGeoPcon(Double_t *param)
 // param[4] = Rmin1
 // param[5] = Rmax1
 // ...
-   SetBit(TGeoShape::kGeoPcon);
+   SetShapeBit(TGeoShape::kGeoPcon);
    SetDimensions(param);
    ComputeBBox();
 }
@@ -168,7 +168,7 @@ void TGeoPcon::ComputeBBox()
    fDX = (xmax-xmin)/2;
    fDY = (ymax-ymin)/2;
    fDZ = (zmax-zmin)/2;
-   TObject::SetBit(kGeoClosedShape);
+   SetShapeBit(kGeoClosedShape);
 }   
 
 //_____________________________________________________________________________   

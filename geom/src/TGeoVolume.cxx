@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.35 2003/08/08 09:31:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.36 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -368,7 +368,7 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
 // default constructor
    fNodes    = 0;
    fShape    = (TGeoShape*)shape;
-   if (fShape->TestBit(TGeoShape::kGeoBad)) {
+   if (fShape->TestShapeBit(TGeoShape::kGeoBad)) {
       Warning("Ctor", "volume %s has invalid shape", name);
    }   
    fFinder   = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.24 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.25 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -44,7 +44,7 @@ ClassImp(TGeoPgon)
 TGeoPgon::TGeoPgon()
 {
 // dummy ctor
-   SetBit(TGeoShape::kGeoPgon);
+   SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = 0;
 }   
 
@@ -53,7 +53,7 @@ TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
          :TGeoPcon(phi, dphi, nz) 
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoPgon);
+   SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
 }
 
@@ -62,7 +62,7 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
          :TGeoPcon(name, phi, dphi, nz) 
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoPgon);
+   SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
 }
 
@@ -80,7 +80,7 @@ TGeoPgon::TGeoPgon(Double_t *param)
 // param[5] = Rmin1
 // param[6] = Rmax1
 // ...
-   SetBit(TGeoShape::kGeoPgon);
+   SetShapeBit(TGeoShape::kGeoPgon);
    SetDimensions(param);
    ComputeBBox();
 }
@@ -141,7 +141,7 @@ void TGeoPgon::ComputeBBox()
    fDX = (xmax-xmin)/2;
    fDY = (ymax-ymin)/2;
    fDZ = (zmax-zmin)/2;
-   TObject::SetBit(kGeoClosedShape);
+   SetShapeBit(kGeoClosedShape);
 }
 
 //_____________________________________________________________________________   
@@ -150,7 +150,7 @@ void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 // Compute normal to closest surface from POINT. 
    memset(norm,0,3*sizeof(Double_t));
    Double_t phi1=0, phi2=0, c1=0, s1=0, c2=0, s2=0;
-   Double_t dz, rmin1, rmax1, rmin2, rmax2;
+   Double_t dz, rmin1, rmin2;
    Bool_t is_seg  = (fDphi<360)?kTRUE:kFALSE;
    if (is_seg) {
       phi1 = fPhi1;
@@ -210,9 +210,7 @@ void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 
    dz = fZ[ipl+1]-fZ[ipl];
    rmin1 = fRmin[ipl];
-   rmax1 = fRmax[ipl];
    rmin2 = fRmin[ipl+1];
-   rmax2 = fRmax[ipl+1];
    rsum = rmin1+rmin2;
    Double_t safe = kBig;
    if (rsum>1E-10) {

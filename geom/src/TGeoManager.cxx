@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.58 2003/08/08 09:22:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.59 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3464,8 +3464,8 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
       if (shape->IsRunTimeShape()) {
          has_runtime = kTRUE;
       }
-      if (shape->TestBit(TGeoShape::kGeoPcon) || shape->TestBit(TGeoShape::kGeoArb8))
-         if (!shape->TestBit(TGeoShape::kGeoClosedShape)) shape->ComputeBBox();
+      if (shape->TestShapeBit(TGeoShape::kGeoPcon) || shape->TestShapeBit(TGeoShape::kGeoArb8))
+         if (!shape->TestShapeBit(TGeoShape::kGeoClosedShape)) shape->ComputeBBox();
    }      
    if (has_runtime) fTopNode->CheckShapes();
 }

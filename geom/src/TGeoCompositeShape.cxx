@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.11 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.12 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -157,7 +157,7 @@ TGeoCompositeShape::TGeoCompositeShape()
                    :TGeoBBox(0, 0, 0)
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoComb);
+   SetShapeBit(TGeoShape::kGeoComb);
    fNode  = 0;
 }   
 
@@ -166,7 +166,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
                    :TGeoBBox(0, 0, 0)
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoComb);
+   SetShapeBit(TGeoShape::kGeoComb);
    SetName(name);
    fNode  = 0;
    MakeNode(expression);
@@ -184,7 +184,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *expression)
                    :TGeoBBox(0, 0, 0)
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoComb);
+   SetShapeBit(TGeoShape::kGeoComb);
    fNode  = 0;
    MakeNode(expression);
    if (!fNode) {

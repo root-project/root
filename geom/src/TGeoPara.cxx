@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.16 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.17 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -53,7 +53,7 @@ ClassImp(TGeoPara)
 TGeoPara::TGeoPara()
 {
 // Default constructor
-   SetBit(TGeoShape::kGeoPara);
+   SetShapeBit(TGeoShape::kGeoPara);
    fX = fY = fZ = 0;
    fAlpha = 0;
    fTheta = 0;
@@ -69,7 +69,7 @@ TGeoPara::TGeoPara(Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
            :TGeoBBox(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoPara);
+   SetShapeBit(TGeoShape::kGeoPara);
    fX = dx;
    fY = dy;
    fZ = dz;
@@ -83,7 +83,7 @@ TGeoPara::TGeoPara(Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
    fTyz = tth*TMath::Sin(ph);
    if ((fX<0) || (fY<0) || (fZ<0)) {
 //      printf("para : %f %f %f\n", fX, fY, fZ);
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    }
    else ComputeBBox();
 }
@@ -94,7 +94,7 @@ TGeoPara::TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
            :TGeoBBox(name, 0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
-   SetBit(TGeoShape::kGeoPara);
+   SetShapeBit(TGeoShape::kGeoPara);
    fX = dx;
    fY = dy;
    fZ = dz;
@@ -108,7 +108,7 @@ TGeoPara::TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
    fTyz = tth*TMath::Sin(ph);
    if ((fX<0) || (fY<0) || (fZ<0)) {
 //      printf("para : %f %f %f\n", fX, fY, fZ);
-      SetBit(kGeoRunTimeShape);
+      SetShapeBit(kGeoRunTimeShape);
    }
    else ComputeBBox();
 }
@@ -124,9 +124,9 @@ TGeoPara::TGeoPara(Double_t *param)
 // param[3] = alpha
 // param[4] = theta
 // param[5] = phi
-   SetBit(TGeoShape::kGeoPara);
+   SetShapeBit(TGeoShape::kGeoPara);
    SetDimensions(param);
-   if ((fX<0) || (fY<0) || (fZ<0)) SetBit(kGeoRunTimeShape);
+   if ((fX<0) || (fY<0) || (fZ<0)) SetShapeBit(kGeoRunTimeShape);
    else ComputeBBox();
 }
 
@@ -496,8 +496,8 @@ TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
-   if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (!mother->TestBit(kGeoPara)) {
+   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!mother->TestShapeBit(kGeoPara)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }
