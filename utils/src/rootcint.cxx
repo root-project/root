@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.79 2002/06/14 17:08:15 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.80 2002/06/16 08:37:28 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2168,12 +2168,13 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
    int nesting = 0;
    const char *current, *next;
    current = next = 0;
+   name[len] = 0;
    current = &(name[0]);
    next = &(name[0]);
    for (int c = 0; c<len; c++) {
       switch (name[c]) {
       case '<': if (nesting==0) {
-                   name[c]=0;
+                   name[c] = 0;
                    current = next;
                    next = &(name[c+1]);
                    fullyQualifiedName += current;
@@ -2183,7 +2184,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
                 nesting++; break;
       case '>': nesting--; 
                 if (nesting==0) {
-                   name[c]=0;
+                   name[c] = 0;
                    current = next;
                    next = &(name[c+1]);
                    arg.Init(current);
@@ -2198,7 +2199,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
                 }
                 break;
       case ',': if (nesting==1) {
-                   name[c]=0;
+                   name[c] = 0;
                    current = next;
                    next = &(name[c+1]);
                    arg.Init(current);
@@ -2215,7 +2216,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
       }
    }
    if (current == &(name[0]) ) {
-      fullyQualifiedName += current;
+      fullyQualifiedName += name;
    }
    //fprintf(stderr,"Calculated: %s\n",fullyQualifiedName.c_str());
 }
