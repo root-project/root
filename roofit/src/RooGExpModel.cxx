@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.cc,v 1.16 2004/11/29 21:15:49 wverkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.17 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -144,9 +144,21 @@ Double_t RooGExpModel::evaluate() const
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
     if (_verboseEval>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 1st form" << endl ;    
 
-    Double_t result = 1/(2*rtau)
-                    * exp(sig*sig/(2*rtau*rtau) + fsign*x/rtau)
-                    * erfc(sig/(root2*rtau) + fsign*x/(root2*sig));
+    Double_t expArg = sig*sig/(2*rtau*rtau) + fsign*x/rtau ;
+
+    Double_t result ;
+    if (expArg<300) {
+      result = 1/(2*rtau) * exp(expArg) * erfc(sig/(root2*rtau) + fsign*x/(root2*sig));
+    } else {
+      // If exponent argument is very large, bring canceling erfc() term inside exponent
+      // to avoid floating point over/underflows of intermediate calculations
+      result = 1/(2*rtau) * exp(expArg + logErfC(sig/(root2*rtau) + fsign*x/(root2*sig))) ;
+    }
+
+//     Double_t result = 1/(2*rtau)
+//                     * exp(sig*sig/(2*rtau*rtau) + fsign*x/rtau)
+//                     * erfc(sig/(root2*rtau) + fsign*x/(root2*sig));
+
     // equivalent form, added FMV, 07/24/03
     //Double_t xprime = x/rtau ;
     //Double_t c = sig/(root2*rtau) ;
@@ -172,7 +184,7 @@ Double_t RooGExpModel::evaluate() const
     Double_t result(0) ;
     if (basisSign!=Minus) result += calcDecayConv(+1,tau,sig,rtau,fsign) ;  // modified FMV,08/13/03
     if (basisSign!=Plus)  result += calcDecayConv(-1,tau,sig,rtau,fsign) ;  // modified FMV,08/13/03
-    //cout << "3rd form " << "x= " << x << " result= " << result << endl;
+    cout << "3rd form " << "x= " << x << " result= " << result << endl;
     return result ;
   }
   
@@ -246,6 +258,24 @@ Double_t RooGExpModel::evaluate() const
 
 
 
+Double_t RooGExpModel::logErfC(Double_t x) const
+{
+  // Approximation of the log of the complex error function
+  Double_t t,z,ans;
+  z=fabs(x);
+  t=1.0/(1.0+0.5*z);
+  
+  if(x >= 0.0)
+    ans=log(t)+(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
+	t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
+  else
+    ans=log(2.0-t*exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
+        t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277))))))))));
+  
+  return ans;
+}
+
+
 
 RooComplex RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const
 {
@@ -263,6 +293,7 @@ RooComplex RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, 
   RooComplex eins(1,0);
   RooComplex k(1/tau,sign*omega);  
   //return (evalCerf(-sign*omega*tau,u1,c1)+evalCerf(0,u2,c2)*fsign*sign) / (eins + k*fsign*sign*rtau) ;
+
   return (evalCerf(-sign*omega*tau,u1,c1)+RooComplex(evalCerfRe(u2,c2),0)*fsign*sign) / (eins + k*fsign*sign*rtau) ;
   // equivalent form, added FMV, 07/24/03
   //return (evalCerf(-sign*omega*tau,-sign*u1,c1)+evalCerf(0,fsign*u2,c2)*fsign*sign) / (eins + k*fsign*sign*rtau) ;
@@ -309,13 +340,16 @@ Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, 
 
   Double_t cFly;
   if ((sign<0)&&(fabs(tau-rtau)<tau/260)) {
-    
+
     Double_t MeanTau=0.5*(tau+rtau);
-    cFly=1./(MeanTau*MeanTau*root2pi)
-      *exp(-(-xp/MeanTau-sig*sig/(2*MeanTau*MeanTau)))
-      *(sig*exp(-1/(2*sig*sig)*pow((sig*sig/MeanTau+xp),2))
-	-(sig*sig/MeanTau+xp)*(rootpi/root2)
-	*erfc(sig/(root2*MeanTau)+xp/(root2*sig)));
+    if (fabs(xp/MeanTau)>300) {
+      return 0 ;
+    }
+
+    cFly=1./(MeanTau*MeanTau*root2pi) *
+      exp(-(-xp/MeanTau-sig*sig/(2*MeanTau*MeanTau)))
+      *(sig*exp(-1/(2*sig*sig)*pow((sig*sig/MeanTau+xp),2)) 
+	-(sig*sig/MeanTau+xp)*(rootpi/root2)*erfc(sig/(root2*MeanTau)+xp/(root2*sig)));
     
     if(_nlo) {
       Double_t epsilon=0.5*(tau-rtau);
@@ -337,15 +371,33 @@ Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, 
     }
     
   } else {
+
+    Double_t expArg1 = sig*sig/(2*tau*tau)-sign*xp/tau ;
+    Double_t expArg2 = sig*sig/(2*rtau*rtau)+xp/rtau ;
+
+    Double_t term1, term2 ;
+    if (expArg1<300) {
+      term1 = exp(expArg1) *erfc(sig/(root2*tau)-sign*xp/(root2*sig)) ;
+    } else {
+      term1 = exp(expArg1+logErfC(sig/(root2*tau)-sign*xp/(root2*sig))) ; ;
+    }
+    if (expArg2<300) {
+      term2 = exp(expArg2) *erfc(sig/(root2*rtau)+xp/(root2*sig)) ;
+    } else {
+      term2 = exp(expArg2+logErfC(sig/(root2*rtau)+xp/(root2*sig))) ; ;
+    }
+
+    cFly=(term1+sign*term2)/(2*(tau+sign*rtau));
     
-    cFly=(exp(sig*sig/(2*tau*tau)-sign*xp/tau)
-	  *erfc(sig/(root2*tau)-sign*xp/(root2*sig))
-	  +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-	  *erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau+sign*rtau));
+    // WVE prevent numeric underflows 
+    if (cFly<1e-100) {
+      cFly = 0 ;
+    }
+
     // equivalent form, added FMV, 07/24/03 
     //cFly = calcSinConv(sign, sig, tau, rtau, fsign)/(2*tau) ;
   }
-  
+
   return cFly*2*tau ;    
 }
 
@@ -497,7 +549,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
     if (_asympInt) {
       result = 1.0 ;
     } else {
-      result = 0.5*evalCerfInt(-fsign,rtau,fsign*umin,fsign*umax,c); 
+      result = 0.5*evalCerfInt(-fsign,rtau,fsign*umin,fsign*umax,c)/rtau ;  //WVEFIX add 1/rtau
     }
 
     if (_basisCode!=0 && basisSign==Both) result *= 2 ;    
@@ -520,8 +572,8 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
     //if (basisSign==Both) result *= 2 ;
     // finite+asymtotic normalization, added FMV, 07/24/03
     Double_t result(0.);
-    if (basisSign!=Minus) result += calcSinConvNorm(+1,tau,sig,rtau,fsign,rangeName);
-    if (basisSign!=Plus) result += calcSinConvNorm(-1,tau,sig,rtau,fsign,rangeName);
+    if (basisSign!=Minus) result += calcSinConvNorm(+1,tau,sig,rtau,fsign,rangeName); 
+    if (basisSign!=Plus) result += calcSinConvNorm(-1,tau,sig,rtau,fsign,rangeName);  
     //cout << "Integral 3rd form " << " result= " << result*ssfInt << endl;
     return result*ssfInt ;
   }
@@ -654,6 +706,13 @@ Double_t RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t sig
   Double_t k(1/tau);
   Double_t term1 = evalCerfInt(sign, tau, -sign*umin1, -sign*umax1, c1);
   Double_t term2 = evalCerfInt(-fsign, rtau, fsign*umin2, fsign*umax2, c2)*fsign*sign;
+
+  // WVE Handle 0/0 numeric divergence 
+  if (fabs(tau-rtau)<1e-10 && fabs(term1+term2)<1e-10) {
+    cout << "epsilon method" << endl ;
+    static Double_t epsilon = 1e-4 ;
+    return calcSinConvNorm(sign,tau+epsilon,sig,rtau-epsilon,fsign,rangeName) ;
+  }
   return (term1+term2)/(eins + k*fsign*sign*rtau) ;
 }
 

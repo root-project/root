@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.rdl,v 1.11 2004/04/05 22:38:35 wverkerke Exp $
+ *    File: $Id: RooGExpModel.rdl,v 1.12 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,9 +65,11 @@ public:
 
   void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
 
-  void advertiseAymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
+  void advertiseAsymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
 
 protected:
+
+  Double_t logErfC(Double_t x) const ;
 
   //Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
   Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const ;  
@@ -104,7 +106,12 @@ protected:
   // Calculate Re(exp(-u^2) cwerf(i(u+c)))
   // added FMV, 08/17/03
   inline Double_t evalCerfRe(Double_t u, Double_t c) const {
-    return exp(u*2*c+c*c) * erfc(u+c);
+    Double_t expArg = u*2*c+c*c ;
+    if (expArg<300) {
+       return exp(expArg) * erfc(u+c);
+    } else {
+       return exp(expArg+logErfC(u+c));
+    }
   }
 
   // Calculate common normalization factors 
