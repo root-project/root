@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TSlider.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -109,7 +109,7 @@ TSlider::TSlider(): TPad()
 }
 
 //______________________________________________________________________________
-TSlider::TSlider(const char *name, const char *title, Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
+TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TPad(name,title,0.1,0.1,0.9,0.9,color,bordersize,bordermode)
 {
 //*-*-*-*-*-*-*-*-*-*-*Slider normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -117,14 +117,14 @@ TSlider::TSlider(const char *name, const char *title, Coord_t x1, Coord_t y1,Coo
 //
 //   x1,y1,x2,y2 are in pad user coordinates
 
-   Float_t x1pad = gPad->GetX1();
-   Float_t x2pad = gPad->GetX2();
-   Float_t y1pad = gPad->GetY1();
-   Float_t y2pad = gPad->GetY2();
-   Float_t xmin  = (x1-x1pad)/(x2pad-x1pad);
-   Float_t ymin  = (y1-y1pad)/(y2pad-y1pad);
-   Float_t xmax  = (x2-x1pad)/(x2pad-x1pad);
-   Float_t ymax  = (y2-y1pad)/(y2pad-y1pad);
+   Double_t x1pad = gPad->GetX1();
+   Double_t x2pad = gPad->GetX2();
+   Double_t y1pad = gPad->GetY1();
+   Double_t y2pad = gPad->GetY2();
+   Double_t xmin  = (x1-x1pad)/(x2pad-x1pad);
+   Double_t ymin  = (y1-y1pad)/(y2pad-y1pad);
+   Double_t xmax  = (x2-x1pad)/(x2pad-x1pad);
+   Double_t ymax  = (y2-y1pad)/(y2pad-y1pad);
    SetPad(xmin,ymin,xmax,ymax);
    Range(0,0,1,1);
 
@@ -135,8 +135,8 @@ TSlider::TSlider(const char *name, const char *title, Coord_t x1, Coord_t y1,Coo
    fMaximum = 1;
    fObject  = 0;
    fMethod  = "";
-   Float_t dx = PixeltoX(bordersize);
-   Float_t dy = PixeltoY(-bordersize);
+   Double_t dx = PixeltoX(bordersize);
+   Double_t dy = PixeltoY(-bordersize);
    TSliderBox *sbox = new TSliderBox(dx,dy,1-dx,1-dy,color,bordersize,-bordermode);
    sbox->SetSlider(this);
    fPrimitives->Add(sbox);
@@ -199,7 +199,7 @@ void TSlider::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
-void TSlider::SetRange(Float_t xmin, Float_t xmax)
+void TSlider::SetRange(Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set Slider range in [0,1]*-*-*-*-*
 //*-*                  =========================
