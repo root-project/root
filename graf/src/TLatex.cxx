@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.19 2001/06/25 12:54:33 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.20 2001/07/04 17:23:12 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -905,7 +905,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
  //        Double_t yoffset = GetHeight()*spec.size/20.; // Greek letter too low
          Double_t yoffset = 0.; // Greek letter too low
          if (OpGreek>25) letter -= 58;
-         if (OpGreek == 26) letter = 206; //epsilon
+         if (OpGreek == 26) letter = '\316'; //epsilon
          if (!fShow) {
             fs1 = Anal1(NewSpec,&letter,1);
             fs2 = Anal1(spec,text+strlen(tab[OpGreek])+1,length-strlen(tab[OpGreek])-1);
