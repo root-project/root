@@ -588,7 +588,7 @@ char* G__MethodInfo::GetPrototype()
     flag=1;
     strcat(G__buf,arg.Type()->Name());
     strcat(G__buf," ");
-    strcat(G__buf,arg.Name());
+    if (arg.Name()) strcat(G__buf,arg.Name());
     if(arg.DefaultValue()) {
       strcat(G__buf,"=");
       strcat(G__buf,arg.DefaultValue());
