@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.10 2001/12/07 21:55:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.11 2001/12/19 14:30:32 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -305,6 +305,10 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #      define finite _finite
 #      define isnan  _isnan
 #   endif
+#endif
+#if defined(R__GNU) && defined(__STRICT_ANSI__)
+#   define finite __finite
+#   define isnan  __isnan
 #endif
 #if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50) || \
     defined(R__USESTHROW)
