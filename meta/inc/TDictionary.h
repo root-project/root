@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.2 2000/08/25 21:45:22 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.3 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   20/06/96
 
 /*************************************************************************
@@ -48,24 +48,25 @@
 #include "Property.h"
 
 enum EProperty {
-   kIsClass       = G__BIT_ISCLASS,
-   kIsStruct      = G__BIT_ISSTRUCT,
-   kIsUnion       = G__BIT_ISUNION,
-   kIsEnum        = G__BIT_ISENUM,
-   kIsTypedef     = G__BIT_ISTYPEDEF,
-   kIsFundamental = G__BIT_ISFUNDAMENTAL,
-   kIsAbstract    = G__BIT_ISABSTRACT,
-   kIsVirtual     = G__BIT_ISVIRTUAL,
-   kIsPureVirtual = G__BIT_ISPUREVIRTUAL,
-   kIsPublic      = G__BIT_ISPUBLIC,
-   kIsProtected   = G__BIT_ISPROTECTED,
-   kIsPrivate     = G__BIT_ISPRIVATE,
-   kIsPointer     = G__BIT_ISPOINTER,
-   kIsArray       = G__BIT_ISARRAY,
-   kIsStatic      = G__BIT_ISSTATIC,
-   kIsDefault     = G__BIT_ISDEFAULT,
-   kIsReference   = G__BIT_ISREFERENCE,
-   kIsConstant    = G__BIT_ISCONSTANT
+   kIsClass        = G__BIT_ISCLASS,
+   kIsStruct       = G__BIT_ISSTRUCT,
+   kIsUnion        = G__BIT_ISUNION,
+   kIsEnum         = G__BIT_ISENUM,
+   kIsTypedef      = G__BIT_ISTYPEDEF,
+   kIsFundamental  = G__BIT_ISFUNDAMENTAL,
+   kIsAbstract     = G__BIT_ISABSTRACT,
+   kIsVirtual      = G__BIT_ISVIRTUAL,
+   kIsPureVirtual  = G__BIT_ISPUREVIRTUAL,
+   kIsPublic       = G__BIT_ISPUBLIC,
+   kIsProtected    = G__BIT_ISPROTECTED,
+   kIsPrivate      = G__BIT_ISPRIVATE,
+   kIsPointer      = G__BIT_ISPOINTER,
+   kIsArray        = G__BIT_ISARRAY,
+   kIsStatic       = G__BIT_ISSTATIC,
+   kIsDefault      = G__BIT_ISDEFAULT,
+   kIsReference    = G__BIT_ISREFERENCE,
+   kIsConstant     = G__BIT_ISCONSTANT,
+   kIsConstPointer = G__BIT_ISPCONSTANT
 };
 
 
