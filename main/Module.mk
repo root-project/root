@@ -41,11 +41,7 @@ HADD         := bin/hadd$(EXEEXT)
 ##### h2root #####
 H2ROOTS1     := $(MODDIRS)/h2root.cxx
 H2ROOTS2     := $(HBOOKS2)
-# 2003.01.29
-# Matthew D. Langston  <langston@SLAC.Stanford.EDU>
-#
 # Symbols in cfopei.obj is already provided in packmd.lib,
-#
 #H2ROOTS3    := $(wildcard $(MAINDIRW)/*.c)
 H2ROOTS3     := $(filter-out $(MAINDIRW)/cfopei.c, $(wildcard $(MAINDIRW)/*.c))
 H2ROOTS4     := $(MAINDIRW)/tzvers.f
@@ -75,7 +71,12 @@ G2ROOTOLD       := bin/g2rootold$(EXEEXT)
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
 ifneq ($(CERNLIBS),)
-ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
+ALLEXECS     += $(H2ROOT)
+endif
+ifneq ($(CERNLIBS),)
+ifneq ($(PLATFORM),win32)
+ALLEXECS     += $(G2ROOT) $(G2ROOTOLD)
+endif
 endif
 
 # include all dependency files
