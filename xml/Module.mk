@@ -39,7 +39,7 @@ include/%.h:    $(XMLDIRI)/%.h
 $(XMLLIB):      $(XMLO) $(XMLDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRXML.$(SOEXT) $@ "$(XMLO) $(XMLDO)" \
-		   "$(XMLLIBDIR) $(XMLCLILIB) $(XMLLIBEXTRA)"
+		   "$(XMLLIBDIR) $(XMLCLILIB)"
 
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
@@ -51,8 +51,7 @@ $(XMLDO):       $(XMLDS)
 all-xml:        $(XMLLIB)
 
 map-xml:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(XMLLIB) \
-		   -d $(XMLLIBDEP) -c $(XMLL)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(XMLLIB) -d $(XMLLIBDEP) -c $(XMLL)
 
 map::           map-xml
 
