@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.3 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.4 2002/01/24 11:39:27 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -53,7 +53,7 @@ istream& TString::ReadFile(istream& strm)
 //______________________________________________________________________________
 istream& TString::ReadLine(istream& strm, Bool_t skipWhite)
 {
-   // Read a line from strm upto newline skipping any whitespace.
+   // Read a line from stream upto newline skipping any whitespace.
 
    if (skipWhite)
       strm >> ws;
@@ -64,7 +64,7 @@ istream& TString::ReadLine(istream& strm, Bool_t skipWhite)
 //______________________________________________________________________________
 istream& TString::ReadString(istream& strm)
 {
-   // Read a line from strm upto newline.
+   // Read a line from stream upto \0, including any newline.
 
    return ReadToDelim(strm, '\0');
 }
