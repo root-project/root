@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.6 2001/01/16 16:17:39 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.7 2001/02/15 16:14:29 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -352,7 +352,7 @@ void TClonesArray::Sort(Int_t upto)
 }
 
 //_______________________________________________________________________
-void TClonesArray::Streamer(TBuffer &b)
+void TClonesArray::Streamer(TBuffer &b) 
 {
    // Write all objects in array to the I/O buffer. ATTENTION: empty slots
    // are also stored (using one byte per slot). If you don't want this
@@ -371,6 +371,11 @@ void TClonesArray::Streamer(TBuffer &b)
          fName.Streamer(b);
       s.Streamer(b);
       TClass *cl = gROOT->GetClass(s.Data());
+      if (!cl) {
+         printf("TClonesArray::Streamer expecting class %s\n", s.Data());
+         b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
+         return;
+      }
       b >> nobjects;
       if (nobjects < 0)
          nobjects = -nobjects;  // still there for backward compatibility
