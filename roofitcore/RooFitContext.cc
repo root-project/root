@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.14 2001/08/02 21:39:09 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.15 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -250,6 +250,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       // Substitute new data for old data 
       if (_ownData) delete _dataClone ;
       _dataClone = trimData ;
+      _ownData = kTRUE ;
 
       // Update _lastDataSet in cached variables to new trimmed dataset
       if (doCache) {

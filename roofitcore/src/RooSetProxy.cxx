@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.cc,v 1.6 2001/07/31 05:54:21 verkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.7 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -102,6 +102,8 @@ void RooSetProxy::removeAll()
     _owner->removeServer(*arg) ;
   }
   delete iter ;
+
+  RooArgSet::removeAll() ;
 }
 
 

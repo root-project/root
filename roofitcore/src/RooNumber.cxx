@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooNumber.cc,v 1.1 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,6 +25,6 @@ Double_t RooNumber::infinity= numeric_limits<Double_t>::infinity();
 
 // This assumes a well behaved IEEE-754 floating point implementation.
 // The next line may generate a compiler warning that can be ignored.
-Double_t RooNumber::infinity= 1./0.;
+Double_t RooNumber::infinity= 1.0e30 ;  //1./0.;
 
 #endif

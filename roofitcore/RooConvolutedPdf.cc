@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.7 2001/08/02 21:39:09 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.8 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,7 +25,7 @@ ClassImp(RooConvolutedPdf)
 
 RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title, 
 				   const RooResolutionModel& model, RooRealVar& convVar) :
-  RooAbsPdf(name,title), 
+  RooAbsPdf(name,title), _isCopy(kFALSE),
   _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&convVar),
   _convSet("convSet","Set of resModel X basisFunc convolutions",this),
   _convNormSet(0), _convSetIter(_convSet.MakeIterator())
@@ -36,7 +36,7 @@ RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title,
 
 
 RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* name) : 
-  RooAbsPdf(other,name), _model(0), _convVar(0),
+  RooAbsPdf(other,name), _model(0), _convVar(0), _isCopy(kTRUE),
   _convSet("convSet",this,other._convSet),
   _convNormSet(new RooArgSet(*other._convNormSet)),
   _convSetIter(_convSet.MakeIterator())
@@ -49,9 +49,24 @@ RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* na
 RooConvolutedPdf::~RooConvolutedPdf()
 {
   // Destructor
-
-  if (_convNormSet) delete _convNormSet ;
+  if (_convNormSet) {
+    delete _convNormSet ;
+  }
+    
   delete _convSetIter ;
+
+  if (!_isCopy) {
+    TIterator* iter = _convSet.MakeIterator() ;
+    RooAbsArg* arg ;
+    while (arg = (RooAbsArg*)iter->Next()) {
+      cout << "RooConvolutedPdf::dtor deleting convolution " << arg->GetName() << endl ;
+      _convSet.remove(*arg) ;
+      delete arg ;
+    }
+  }
+
+  // Delete all basis functions we created 
+  _basisList.Delete() ;
 }
 
 
@@ -76,6 +91,7 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& pa
   RooArgSet basisArgs(*_convVar) ;
   basisArgs.add(params) ;
   RooFormulaVar* basisFunc = new RooFormulaVar(expression,expression,basisArgs) ;
+  _basisList.Add(basisFunc) ;
 
   // Instantiate resModel x basisFunc convolution
   RooAbsReal* conv = _model->convolution(basisFunc,this) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.21 2001/07/31 05:54:19 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.22 2001/08/02 21:39:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,7 +50,10 @@ public:
   RooDataSet(const char *name, const char *filename, const char *treename, 
 	     const RooArgSet& vars, const char *cuts);  
   RooDataSet(RooDataSet const & other, const char* newname=0) ;
-  virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
+  virtual TObject* Clone(const char* newname=0) const { 
+    cout << "RooDataSet::Clone(" << this << "," << GetName() << ") newname= " << (newname?newname:"<none>") << endl ;
+    return new RooDataSet(*this,newname?newname:GetName()) ; 
+  }
   virtual ~RooDataSet() ;
 
   // Read data from a text file and create a dataset from it.
@@ -83,14 +86,14 @@ public:
   }
 
   // Forwarded from TTree
-  inline Stat_t GetEntries() const { return _tree.GetEntries() ; }
-  inline void Reset(Option_t* option=0) { _tree.Reset(option) ; }
-  inline Int_t Fill() { return _tree.Fill() ; }
-  inline Int_t GetEntry(Int_t entry = 0, Int_t getall = 0) { return _tree.GetEntry(entry,getall) ; }
+  inline Stat_t GetEntries() const { return _tree->GetEntries() ; }
+  inline void Reset(Option_t* option=0) { _tree->Reset(option) ; }
+  inline Int_t Fill() { return _tree->Fill() ; }
+  inline Int_t GetEntry(Int_t entry = 0, Int_t getall = 0) { return _tree->GetEntry(entry,getall) ; }
 
   // WVE Debug stuff
   void dump() ;
-  void origPrint() { _tree.Print() ; }
+  void origPrint() { _tree->Print() ; }
 
   // Cache copy feature is not publicly accessible
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
@@ -113,7 +116,7 @@ protected:
 
   void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
 
-  TTree _tree ; 
+  TTree *_tree ; 
 
   // Column structure definition
   RooArgSet _vars;         

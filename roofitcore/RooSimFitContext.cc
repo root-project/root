@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.3 2001/08/03 02:04:33 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.4 2001/08/09 01:02:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,6 +27,7 @@ RooSimFitContext::RooSimFitContext(const RooDataSet* data, const RooSimultaneous
   _nCtx = simCat.numTypes() ;
   _nCtxFilled = 0 ;
   _ctxArray = new pRooFitContext[_nCtx] ;
+  _dsetArray = new pRooDataSet[_nCtx] ;
   _offArray = new Double_t[_nCtx] ;
   _nllArray = new Double_t[_nCtx] ;
   _dirtyArray = new Bool_t[_nCtx] ;
@@ -51,7 +52,7 @@ RooSimFitContext::RooSimFitContext(const RooDataSet* data, const RooSimultaneous
       sprintf(cutSpec,"%s==%d",simCatName.Data(),simCat.getIndex()) ;
       RooDataSet* dset = new RooDataSet("dset_simcat","dset_simcat",
 					_dataClone,*_dataClone->get(),RooFormulaVar("simCatCut",cutSpec,simCat)) ;
-      
+      _dsetArray[n] = dset ;
       _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE) ;
       _dirtyArray[n] = kTRUE ;
       _nCtxFilled++ ;
@@ -87,11 +88,12 @@ RooSimFitContext::~RooSimFitContext()
 {
   Int_t i ;
   for (i=0 ; i<_nCtx ; i++) {
-    RooDataSet* dset = _ctxArray[i]->data() ;
     if (_ctxArray[i]) delete _ctxArray[i] ;
-    delete dset ;
+    cout << "RooSimFitContext::dtor deleting sub-dset = " << _dsetArray[i] << endl ;
+    if (_dsetArray[i]) delete _dsetArray[i] ;
   }
 
+  delete[] _dsetArray ;
   delete[] _ctxArray ;
   delete[] _nllArray ;
   delete[] _offArray ;

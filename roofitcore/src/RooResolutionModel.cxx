@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.7 2001/08/02 21:39:11 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.8 2001/08/09 01:02:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -23,18 +23,20 @@ RooFormulaVar* RooResolutionModel::_identity(0) ;
 
 
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
-  RooAbsPdf(name,title), _basis(0), _basisCode(0), x("x","Dependent or convolution variable",this,_x)
+  RooAbsPdf(name,title), _basis(0), _basisCode(0), x("x","Dependent or convolution variable",this,_x),
+  _ownBasis(kFALSE) 
 {
   if (!_identity) _identity = new RooFormulaVar("identity","1",RooArgSet("")) ;  
 }
 
 
 RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) : 
-  RooAbsPdf(other,name), _basis(0), _basisCode(other._basisCode), x("x",this,other.x)
+  RooAbsPdf(other,name), _basis(0), _basisCode(other._basisCode), x("x",this,other.x),
+  _ownBasis(kFALSE) 
 {
   if (other._basis) {
     _basis = (RooFormulaVar*) other._basis->Clone() ;
-
+    _ownBasis = kTRUE ;
     //_basis = other._basis ;
   }
 
@@ -54,6 +56,7 @@ RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const ch
 RooResolutionModel::~RooResolutionModel()
 {
   // Destructor
+  if (_ownBasis && _basis) delete _basis ;
 }
 
 

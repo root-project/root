@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.rdl,v 1.3 2001/08/03 02:04:33 verkerke Exp $
+ *    File: $Id: RooTrace.rdl,v 1.4 2001/08/09 01:02:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,7 +50,7 @@ typedef RooPad* pRooPad ;
 class RooPadTable {
 public: 
   RooPadTable() ;
-  void addPad(const TObject* ref) ;
+  void addPad(const TObject* ref, Bool_t doPad) ;
   Bool_t removePad(const TObject* ref) ;
    
   void checkPads() ;

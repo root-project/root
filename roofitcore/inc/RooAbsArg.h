@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.38 2001/08/03 18:11:33 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.39 2001/08/08 23:11:23 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,7 +37,10 @@ public:
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const = 0 ;
-  virtual TObject* Clone(const char* newname=0) const { return clone(newname?newname:GetName()) ; }
+  virtual TObject* Clone(const char* newname=0) const { 
+//     cout << "RooAbsArg::Clone(" << GetName() << "," << this << ") newname=" << (newname?newname:"<none>") << endl ;
+    return clone(newname?newname:GetName()) ; 
+  }
 
   // Accessors to client-server relation information 
   Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }

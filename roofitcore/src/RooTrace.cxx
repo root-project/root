@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.cc,v 1.2 2001/08/02 22:36:30 verkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.3 2001/08/09 01:02:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,15 +38,15 @@ RooPadTable::RooPadTable()
 }
 
 
-void RooPadTable::addPad(const TObject* ref)
+void RooPadTable::addPad(const TObject* ref, Bool_t doPad)
 {
   //cout << "addPad: filling slot " << _lfm << endl ;
-  _padA[_lfm] = new RooPad ;
+  _padA[_lfm] =  doPad ? new RooPad : 0 ;
   _refA[_lfm] = (TObject*) ref ;
 
   // Find next free block 
   _lfm++ ;
-  while (_padA[_lfm]!=0 && _lfm<size) _lfm++ ;
+  while (_refA[_lfm]!=0 && _lfm<size) _lfm++ ;
   //cout << "addPad: increasing LFM to " << _lfm  << endl ; 
 
   // Update hwm is necessary
@@ -106,7 +106,7 @@ void RooPadTable::checkPads()
 void RooTrace::create2(const TObject* obj) {
   if (_pad) _rpt.checkPads() ;
 
-  _rpt.addPad(obj) ;
+  _rpt.addPad(obj,_pad) ;
   if (_verbose) {
     cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName() 
 	 << " created " << endl ;
@@ -136,7 +136,7 @@ void RooTrace::dump(ostream& os) {
   char buf[100] ;
   Int_t i ;
   for(i=0 ; i<_rpt._hwm ; i++) {
-    if (_rpt._padA[i]) {
+    if (_rpt._refA[i]) {
       sprintf(buf,"%010x : ",(void*)_rpt._refA[i]) ;
       os << buf << setw(20) << _rpt._refA[i]->ClassName() << setw(0) << " - " << _rpt._refA[i]->GetName() << endl ;
     }

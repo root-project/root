@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.2 2001/08/02 21:39:10 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.cc,v 1.3 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -181,6 +181,7 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
     newName.Append(masterCatState) ;
 
     // Affix attribute with old name to clone to support name changing server redirect
+    cout << "RooPdfCustomizer::build cloning (" << branch << "," << branch->GetName() << ") = newName = " << newName.Data() << endl ;
     RooAbsArg* clone = (RooAbsArg*) branch->Clone(newName.Data()) ;
     TString nameAttrib("ORIGNAME:") ;
     nameAttrib.Append(branch->GetName()) ;
