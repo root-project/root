@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.13 2001/10/15 06:59:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.14 2002/01/23 08:38:59 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -364,6 +364,7 @@ void TBranchClones::Streamer(TBuffer &b)
       TIter      next(cl->GetListOfRealData());
       while ((rd = (TRealData *) next())) {
          TDataMember *member = rd->GetDataMember();
+         if (!member)                 continue;
          if (!member->IsBasic())      continue;
          if (!member->IsPersistent()) continue;
          TDataType *membertype = member->GetDataType();
