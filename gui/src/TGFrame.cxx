@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.62 2004/08/17 15:06:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.63 2004/09/06 08:39:01 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1782,6 +1782,34 @@ TString TGMainFrame::GetMWMinpString() const
 }
 
 //______________________________________________________________________________
+void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
+{
+   // auxilary protected method  used to save subframes
+
+   out << "   " << GetName() << "->SetLayoutBroken(" << fLayoutBroken;
+   out << ");" << endl;
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");"<< endl;
+      if (IsLayoutBroken()) {
+         out << "   " << el->fFrame->GetName() << "->MoveResize(";
+         out << el->fFrame->GetX() << "," << el->fFrame->GetY() << ",";
+         out << el->fFrame->GetWidth() << ","  << el->fFrame->GetHeight();
+         out << ");" << endl;
+      }
+   }
+   out << endl;
+}
+
+//______________________________________________________________________________
 void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save a composite frame widget as a C++ statement(s) on output stream out
@@ -1803,17 +1831,7 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");"<< endl;
-   }
+   SavePrimitiveSubframes(out, option);
 
    // setting layout manager if it differs from the composite frame type
    TGLayoutManager * lm = GetLayoutManager();
@@ -2049,18 +2067,7 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
        << GetOptionString() << ");" <<endl;
 
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");" << endl;
-   }
-   out << endl;
+   SavePrimitiveSubframes(out, option);
 
    // setting layout manager if it differs from the main frame type
    TGLayoutManager * lm = GetLayoutManager();
@@ -2111,17 +2118,7 @@ void TGHorizontalFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");" << endl;
-   }
+   SavePrimitiveSubframes(out, option);
 }
 
 //______________________________________________________________________________
@@ -2146,17 +2143,7 @@ void TGVerticalFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");" << endl;
-   }
+   SavePrimitiveSubframes(out, option);
 }
 
 //______________________________________________________________________________
@@ -2233,17 +2220,7 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << "," << ParGC << "," << ParFont << ",ucolor);"  << endl;
    }
 
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");" << endl;
-   }
+   SavePrimitiveSubframes(out, option);
 
    if (GetTitlePos() != -1)
       out << "   " << GetName() <<"->SetTitlePos(";
@@ -2393,7 +2370,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    sname[i] = 0;
 
    out << endl;
-   out <<"void "<< sname << "()" << endl;
+   out << "void " << gSystem->BaseName(sname) << "()" << endl;
    delete [] sname;
 
    //  Save GUI widgets as a C++ macro in a file
@@ -2472,18 +2449,7 @@ void TGTransientFrame::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << endl;
 
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");" << endl;
-   }
-   out << endl;
+   SavePrimitiveSubframes(out, option);
 
    // setting layout manager if it differs from transient frame type
    TGLayoutManager * lm = GetLayoutManager();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.42 2004/09/01 14:35:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.43 2004/09/06 08:21:02 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -282,6 +282,8 @@ protected:
 
    virtual Bool_t HandleEditEvent(Event_t *);
    virtual Bool_t OnContextMenu(Event_t *);
+
+   virtual void SavePrimitiveSubframes(ofstream &out, Option_t *option);
 
 public:
    TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
