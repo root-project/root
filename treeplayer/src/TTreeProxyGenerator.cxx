@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.13 2005/01/27 06:16:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.14 2005/02/10 07:26:54 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1085,7 +1085,7 @@ namespace ROOT {
       }
 
       TString branchName = leaf->GetBranch()->GetName();
-      TString dataMemberName = branchName;
+      TString dataMemberName = leaf->GetName();
 
       TBranchProxyDescriptor *desc;
       if (topdesc) {

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.4 2005/01/05 22:22:13 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.5 2005/01/22 09:29:37 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -35,6 +35,8 @@ namespace ROOT {
          fRawSymbol.Prepend("TClaPx_");
       else
          fRawSymbol.Prepend("TPx_");
+      if (fRawSymbol.Length() && fRawSymbol[fRawSymbol.Length()-1]=='.')
+         fRawSymbol.Remove(fRawSymbol.Length()-1);
 
       SetName(fRawSymbol);
    }
