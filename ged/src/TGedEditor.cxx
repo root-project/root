@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.13 2004/11/18 15:52:17 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.14 2004/12/03 12:07:44 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -38,7 +38,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    TGMainFrame(gClient->GetRoot(), 155, 20)
 {
 
-   fCan = new TGCanvas(this, 160, 10, kFixedWidth); 
+   fCan = new TGCanvas(this, 170, 10, kFixedWidth); 
    fTab = new TGTab(fCan->GetViewPort(), 10, 10);
    fCan->SetContainer(fTab);
    AddFrame(fCan, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));

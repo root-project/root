@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.63 2004/12/03 12:07:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.64 2004/12/07 01:38:14 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -509,7 +509,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fMainFrameLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
 
    // Create editor frame that will host the pad editor
-   fEditorFrame = new TGCompositeFrame(fMainFrame, 160, fMainFrame->GetHeight()+4, kFixedWidth);
+   fEditorFrame = new TGCompositeFrame(fMainFrame, 170, fMainFrame->GetHeight()+4, kFixedWidth);
    fEditorLayout = new TGLayoutHints(kLHintsExpandY | kLHintsLeft);
    fMainFrame->AddFrame(fEditorFrame, fEditorLayout);
 
