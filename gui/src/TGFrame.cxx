@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.33 2003/11/07 14:39:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.34 2003/11/12 19:34:59 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -122,7 +122,7 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
 {
    // Create a TGFrame object. Options is an OR of the EFrameTypes.
 
-   if (!fgInit) {
+   if (!fgInit && gClient) {
       TGFrame::GetDefaultFrameBackground();
       TGFrame::GetDefaultSelectedBackground();
       TGFrame::GetWhitePixel();
@@ -261,7 +261,7 @@ void TGFrame::RemoveInput(UInt_t emask)
 
 //________________________________________________________________________________
 void TGFrame::Draw3dRectangle(UInt_t type, Int_t x, Int_t y,
-                                     UInt_t w, UInt_t h)
+                              UInt_t w, UInt_t h)
 {
    switch (type) {
       case kSunkenFrame:
@@ -530,10 +530,10 @@ Bool_t TGFrame::HandleClientMessage(Event_t *event)
 //______________________________________________________________________________
 ULong_t TGFrame::GetDefaultFrameBackground()
 {
-   //
+   // Get default frame background.
 
    static Bool_t init = kFALSE;
-   if (!init) {
+   if (!init && gClient) {
       fgDefaultFrameBackground = gClient->GetResourcePool()->GetFrameBgndColor();
       init = kTRUE;
    }
@@ -543,10 +543,10 @@ ULong_t TGFrame::GetDefaultFrameBackground()
 //______________________________________________________________________________
 ULong_t TGFrame::GetDefaultSelectedBackground()
 {
-   //
+   // Get default selected frame background.
 
    static Bool_t init = kFALSE;
-   if (!init) {
+   if (!init && gClient) {
       fgDefaultSelectedBackground = gClient->GetResourcePool()->GetSelectedBgndColor();
       init = kTRUE;
    }
@@ -556,10 +556,10 @@ ULong_t TGFrame::GetDefaultSelectedBackground()
 //______________________________________________________________________________
 ULong_t TGFrame::GetWhitePixel()
 {
-   //
+   // Get white pixel value.
 
    static Bool_t init = kFALSE;
-   if (!init) {
+   if (!init && gClient) {
       fgWhitePixel = gClient->GetResourcePool()->GetWhiteColor();
       init  = kTRUE;
    }
@@ -569,10 +569,10 @@ ULong_t TGFrame::GetWhitePixel()
 //______________________________________________________________________________
 ULong_t TGFrame::GetBlackPixel()
 {
-   //
+   // Get black pixel value.
 
    static Bool_t init = kFALSE;
-   if (!init) {
+   if (!init && gClient) {
       fgBlackPixel = gClient->GetResourcePool()->GetBlackColor();
       init = kTRUE;
    }
@@ -582,9 +582,9 @@ ULong_t TGFrame::GetBlackPixel()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetBlackGC()
 {
-   //
+   // Get black graphics context.
 
-   if (!fgBlackGC)
+   if (!fgBlackGC && gClient)
       fgBlackGC = gClient->GetResourcePool()->GetBlackGC();
    return *fgBlackGC;
 }
@@ -592,9 +592,9 @@ const TGGC &TGFrame::GetBlackGC()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetWhiteGC()
 {
-   //
+   // Get white graphics context.
 
-   if (!fgWhiteGC)
+   if (!fgWhiteGC && gClient)
       fgWhiteGC = gClient->GetResourcePool()->GetWhiteGC();
    return *fgWhiteGC;
 }
@@ -602,9 +602,9 @@ const TGGC &TGFrame::GetWhiteGC()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetHilightGC()
 {
-   //
+   // Get highlight color graphics context.
 
-   if (!fgHilightGC)
+   if (!fgHilightGC && gClient)
       fgHilightGC = gClient->GetResourcePool()->GetFrameHiliteGC();
    return *fgHilightGC;
 }
@@ -612,7 +612,9 @@ const TGGC &TGFrame::GetHilightGC()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetShadowGC()
 {
-   if (!fgShadowGC)
+   // Get shadow color graphics context.
+
+   if (!fgShadowGC && gClient)
       fgShadowGC = gClient->GetResourcePool()->GetFrameShadowGC();
    return *fgShadowGC;
 }
@@ -620,9 +622,9 @@ const TGGC &TGFrame::GetShadowGC()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetBckgndGC()
 {
-   //
+   // Get background color graphics context.
 
-   if (!fgBckgndGC)
+   if (!fgBckgndGC && gClient)
       fgBckgndGC = gClient->GetResourcePool()->GetFrameBckgndGC();
    return *fgBckgndGC;
 }
@@ -630,7 +632,7 @@ const TGGC &TGFrame::GetBckgndGC()
 //______________________________________________________________________________
 Time_t TGFrame::GetLastClick()
 {
-   //
+   // Get time of last mouse click.
 
    return fgLastClick;
 }
