@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.51 2001/09/28 17:22:34 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.52 2001/11/04 11:04:21 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1645,6 +1645,48 @@ void WriteShowMembers(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
+void WriteClassCode(G__ClassInfo &cl) {
+
+   if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
+
+      if (cl.HasMethod("Streamer")) {
+         //WriteStreamerBases(cl);
+         if (cl.RootFlag()) WritePointersSTL(cl);
+         if (!(cl.RootFlag() & G__NOSTREAMER)) {
+            if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
+               WriteAutoStreamer(cl);
+            } else {
+              WriteStreamer(cl);
+            }
+         } else
+            fprintf(stderr, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
+      } else {
+         fprintf(stderr, "Class %s: Streamer() not declared\n", cl.Fullname());
+      }
+      if (cl.HasMethod("ShowMembers")) {
+         WriteShowMembers(cl);
+      } else {
+         fprintf(stderr, "Class %s: ShowMembers() not declared\n", cl.Fullname());
+      }
+      // Write Code for Class_Name() and static variable
+      // to hold initialization object (STK)
+      if (cl.IsTmplt()) {
+         if (cl.HasMethod("Class_Name")) {
+           WriteClassName(cl,1);
+         } else {
+           fprintf(stderr, "Class %s: Class_Name() and initialization object"
+                   " not declared\n", cl.Fullname());
+         }
+      } else {
+         if (cl.HasMethod("Class_Name")) {
+           WriteClassName(cl);
+         }
+      }
+   }
+
+}
+
+//______________________________________________________________________________
 void GenerateLinkdef(int *argc, char **argv, int iv)
 {
    FILE *fl = fopen(autold, "w");
@@ -2232,42 +2274,8 @@ int main(int argc, char **argv)
             clProcessed[ncls] = StrDup(request);
          ncls++;
          delete [] request;
-         if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
 
-            if (cl.HasMethod("Streamer")) {
-               //WriteStreamerBases(cl);
-               if (cl.RootFlag()) WritePointersSTL(cl);
-               if (!(cl.RootFlag() & G__NOSTREAMER)) {
-                  if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
-                     WriteAutoStreamer(cl);
-                  } else {
-                     WriteStreamer(cl);
-                  }
-               } else
-                  fprintf(stderr, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
-            } else {
-               fprintf(stderr, "Class %s: Streamer() not declared\n", cl.Fullname());
-            }
-            if (cl.HasMethod("ShowMembers")) {
-               WriteShowMembers(cl);
-            } else {
-               fprintf(stderr, "Class %s: ShowMembers() not declared\n", cl.Fullname());
-            }
-            // Write Code for Class_Name() and static variable
-            // to hold initialization object (STK)
-            if (cl.IsTmplt()) {
-               if (cl.HasMethod("Class_Name")) {
-                  WriteClassName(cl,1);
-               } else {
-                  fprintf(stderr, "Class %s: Class_Name() and initialization object"
-                          " not declared\n", cl.Fullname());
-               }
-            } else {
-               if (cl.HasMethod("Class_Name")) {
-                  WriteClassName(cl);
-               }
-            }
-         }
+         WriteClassCode(cl);
       }
    }
 
@@ -2289,39 +2297,7 @@ int main(int argc, char **argv)
          }
       if (nxt) continue;
 
-      if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
-
-         if (cl.HasMethod("Streamer")) {
-            if (!(cl.RootFlag() & G__NOSTREAMER)) {
-               if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/))
-                  WriteAutoStreamer(cl);
-               else
-                  WriteStreamer(cl);
-            } else
-               fprintf(stderr, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
-         } else {
-            fprintf(stderr, "Class %s: Streamer() not declared\n", cl.Fullname());
-         }
-         if (cl.HasMethod("ShowMembers")) {
-            WriteShowMembers(cl);
-         } else {
-            fprintf(stderr, "Class %s: ShowMembers() not declared\n", cl.Fullname());
-         }
-         // Write Code for Class_Name() and static variable
-         // to hold initialization object (STK)
-         if (cl.IsTmplt()) {
-            if (cl.HasMethod("Class_Name")) {
-               WriteClassName(cl,1);
-            } else {
-               fprintf(stderr, "Class %s: Class_Name() and initialization object"
-                       " not declared\n", cl.Fullname());
-            }
-         } else {
-            if (cl.HasMethod("Class_Name")) {
-               WriteClassName(cl);
-            }
-         }
-      }
+      WriteClassCode(cl);
    }
 
    fclose(fp);
