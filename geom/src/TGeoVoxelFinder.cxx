@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.13 2003/01/07 09:48:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.14 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -451,7 +451,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck)
 }      
 
 //-----------------------------------------------------------------------------
-Int_t *TGeoVoxelFinder::GetValidExtra(Int_t n1, UChar_t *array1, Int_t *list, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list, Int_t &ncheck)
 {
 // Get extra candidates that are contained in array1 but not in current check list
    UChar_t *bits = gGeoManager->GetBits();
@@ -471,7 +471,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t n1, UChar_t *array1, Int_t *list, In
 }      
 
 //-----------------------------------------------------------------------------
-Int_t *TGeoVoxelFinder::GetValidExtra(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t *list, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t *list, Int_t &ncheck)
 {
 // Get extra candidates that are contained in array1 but not in current check list
    UChar_t *bits = gGeoManager->GetBits();
@@ -1218,7 +1218,7 @@ Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
    return 0;   
 }
 //-----------------------------------------------------------------------------
-Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t &ncheck)
 {
 // get the list of new candidates for the next voxel crossed by current ray
 //   printf("### GetNextVoxel\n");
@@ -1329,7 +1329,7 @@ Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1)
 }      
 
 //-----------------------------------------------------------------------------
-Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2)
+Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2)
 {
 // make union of older bits with new array
 //   printf("Union - two slices\n");
@@ -1354,7 +1354,7 @@ Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *arra
 }      
 
 //-----------------------------------------------------------------------------
-Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t n3, UChar_t *array3)
+Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3)
 {
 // make union of older bits with new array
 //   printf("Union - three slices\n");
@@ -1408,7 +1408,7 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *
 }
 
 //-----------------------------------------------------------------------------
-Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2)
+Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2)
 {
 // return the list of nodes corresponding to the intersection of two arrays of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
@@ -1463,7 +1463,7 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *
 }
 
 //-----------------------------------------------------------------------------
-Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t n3, UChar_t *array3)
+Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3)
 {
 // return the list of nodes corresponding to the intersection of three arrays of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan

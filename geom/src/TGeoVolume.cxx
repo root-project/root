@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.16 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.17 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -269,7 +269,7 @@ void TGeoVolume::cd(Int_t inode) const
    if (fFinder) fFinder->cd(inode-fFinder->GetDivIndex());
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
+void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t * /*option*/)
 {
 // Add a TGeoNode to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
@@ -323,7 +323,7 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
    node->SetName(name);
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
+void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t * /*option*/)
 {
 // Add a TGeoNode to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
