@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.26 2001/09/27 18:22:27 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.27 2001/09/28 21:59:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,6 +24,7 @@
 #include "TString.h"
 #include "TH1.h"
 #include "TTree.h"
+#include "TLeaf.h"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/Roo1DTable.hh"
@@ -326,6 +327,59 @@ void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent)
 }
 
 
+void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
+{
+  // Attach the category index and label to as branches
+  // to the given TTree. The index field will be attached
+  // as integer with name <name>_idx, the label field will be attached
+  // as char[] with label <name>_lbl.
+
+  // First check if there is an integer branch matching the category name
+  TBranch* branch = t.GetBranch(GetName()) ;
+  if (branch) {
+
+    TString typeName(((TLeaf*)branch->GetListOfLeaves()->At(0))->GetTypeName()) ;
+    if (!typeName.CompareTo("Int_t")) {
+      // Imported TTree: attach only index field as branch
+
+      cout << "RooAbsCategory::attachToTree(" << GetName() << ") TTree branch " << GetName() 
+	   << " interpreted as category index" << endl ;
+
+      t.SetBranchAddress(GetName(),&((Int_t&)_value._value)) ;
+      setAttribute("INTIDXONLY_TREE_BRANCH",kTRUE) ;      
+      return ;
+    }
+  } 
+  
+  // Native TTree: attach both index and label of category as branches
+  
+  TString idxName(GetName()) ;
+  TString lblName(GetName()) ;  
+  idxName.Append("_idx") ;
+  lblName.Append("_lbl") ;
+  
+  // First determine if branch is taken
+  if (t.GetBranch(idxName)) {
+    t.SetBranchAddress(idxName,&((Int_t&)_value._value)) ;
+    } else {    
+      TString format(idxName);
+      format.Append("/I");
+      void* ptr = &(_value._value) ;
+      t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
+    }
+  
+  // First determine if branch is taken
+  if (t.GetBranch(lblName)) {
+    t.SetBranchAddress(lblName,_value._label) ;
+  } else {    
+    TString format(lblName);
+    format.Append("/C");
+    void* ptr = _value._label ;
+    t.Branch(lblName, ptr, (const Text_t*)format, bufSize);
+  }
+}
+
+
 void RooAbsCategory::copyCache(const RooAbsArg* source) 
 {
   // Copy the cached value from given source and raise dirty flag.
@@ -336,42 +390,22 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
   RooAbsCategory* other = dynamic_cast<RooAbsCategory*>(const_cast<RooAbsArg*>(source)) ;
   assert(other!=0) ;
 
-  _value = other->_value ;
+  if (source->getAttribute("INTIDXONLY_TREE_BRANCH")) {
+    // Lookup cat state from other-index because label is missing
+    cout << "other->_value._value = " << other->_value._value << endl ;
+    const RooCatType* type = lookupType(other->_value._value) ;
+    if (type) {
+      _value = *type ;
+    } else {
+      cout << "RooAbsCategory::copyCache(" << GetName() 
+	   << ") ERROR: index of source arg " << source->GetName() 
+	   << " is invalid, value not updated" << endl ;
+    }
+  } else {
+    _value = other->_value ;
+  }
+
   setValueDirty() ;
-}
-
-
-void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
-{
-  // Attach the category index and label to as branches
-  // to the given TTree. The index field will be attached
-  // as integer with name <name>_idx, the label field will be attached
-  // as char[] with label <name>_lbl.
-
-  TString idxName(GetName()) ;
-  TString lblName(GetName()) ;  
-  idxName.Append("_idx") ;
-  lblName.Append("_lbl") ;
-
-  // First determine if branch is taken
-  if (t.GetBranch(idxName)) {
-    t.SetBranchAddress(idxName,&((Int_t&)_value._value)) ;
-  } else {    
-    TString format(idxName);
-    format.Append("/I");
-    void* ptr = &(_value._value) ;
-    t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
-  }
-
-  // First determine if branch is taken
-  if (t.GetBranch(lblName)) {
-    t.SetBranchAddress(lblName,_value._label) ;
-  } else {    
-    TString format(lblName);
-    format.Append("/C");
-    void* ptr = _value._label ;
-    t.Branch(lblName, ptr, (const Text_t*)format, bufSize);
-  }
 }
 
 

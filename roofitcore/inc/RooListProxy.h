@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooListProxy.rdl,v 1.1 2001/09/17 18:48:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -34,7 +34,7 @@ public:
   virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) { return RooAbsCollection::add(list,silent) ; }
   virtual Bool_t add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent) ;
   virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
-  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE) ;
+  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   virtual void removeAll() ;
 
   RooListProxy& operator=(const RooArgList& other) ;

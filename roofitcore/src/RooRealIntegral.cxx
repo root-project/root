@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.42 2001/10/01 22:04:20 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.43 2001/10/01 22:13:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -132,6 +132,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
   }
   delete bIter ;
+  exclLVBranches.remove(depList,kTRUE,kTRUE) ;
 
   // Initial fill of list of LValue leaf servers (put in intDepList)
   RooArgSet exclLVServers("exclLVServers") ;
@@ -160,9 +161,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       RooArgSet* brDepList = branch->getDependents(&intDepList) ;
       RooArgSet bsList(*brDepList,"bsList") ;
       delete brDepList ;
-      bsList.remove(exclLVServers) ;
+      bsList.remove(exclLVServers,kTRUE,kTRUE) ;
       if (bsList.getSize()>0) {
-	exclLVBranches.remove(*branch) ;
+	exclLVBranches.remove(*branch,kTRUE,kTRUE) ;
 	converged=kFALSE ;
       }
     }
@@ -310,8 +311,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
     // Process only servers that are not treated analytically
     if (!_anaList.find(arg->GetName()) && arg->dependsOn(intDepList)) {
-
-      cout << "considering " << arg->GetName() << " for numeric integration" << endl ;
 
       // Process only derived RealLValues
       if (dynamic_cast<RooAbsLValue*>(arg) && arg->isDerived()) {
@@ -657,10 +656,10 @@ Double_t RooRealIntegral::integrate() const
   }
   else {
     // Partial or complete numerical integration
-    if(_intList.getSize() > 1) {
-      cout << "RooRealIntegral: Integrating out ";
-      _intList.printToStream(cout,OneLine);
-    }
+//     if(_intList.getSize() > 1) {
+//       cout << "RooRealIntegral: Integrating out ";
+//       _intList.printToStream(cout,OneLine);
+//     }
     return _numIntEngine->integral() ;
   }
 }

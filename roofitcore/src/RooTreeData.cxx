@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.7 2001/09/28 23:46:28 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.8 2001/10/01 23:55:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -79,8 +79,8 @@ RooTreeData::RooTreeData(const char *name, const char *title, const RooArgSet& v
   RooAbsData(name,title,vars), _truth("Truth")
 {
   RooTrace::create(this) ;
-  _tree = new TTree(name, title) ;
-  _tree->SetDirectory(0) ;
+  
+  createTree(name,title) ;
 
   // Constructor with list of variables
   initialize(vars);
@@ -93,7 +93,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   _blindString(t->_blindString)
 {
   RooTrace::create(this) ;
-  _tree = new TTree(name, title) ;
+  createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
   initialize(vars);
@@ -114,7 +114,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   _blindString(t->_blindString)
 {
   RooTrace::create(this) ;
-  _tree = new TTree(name, title) ;
+  createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
   initialize(vars);
@@ -135,7 +135,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   RooAbsData(name,title,vars), _truth("Truth")
 {
   RooTrace::create(this) ;
-  _tree = new TTree(name, title) ;
+  createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
   initialize(vars);
@@ -157,7 +157,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   _blindString(t->_blindString)
 {
   RooTrace::create(this) ;
-  _tree = new TTree(name, title) ;
+  createTree(name,title) ;
 
   // Deep clone cutVar and attach clone to this dataset
   RooFormulaVar* cloneVar(0) ;
@@ -183,7 +183,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   RooAbsData(name,title,vars), _truth("Truth")
 {
   RooTrace::create(this) ;
-  _tree = new TTree(name, title) ;
+  createTree(name,title) ;
 
   // Constructor from existing TTree with list of variables and cut expression
   initialize(vars);
@@ -205,7 +205,7 @@ RooTreeData::RooTreeData(const char *name, const char *filename,
   RooAbsData(name,name,vars), _truth("Truth")
 {
   RooTrace::create(this) ;
-  _tree = new TTree(name, name) ;
+  createTree(name,name) ;
 
   // Constructor from TTree file with list of variables and cut expression
   initialize(vars);
@@ -225,10 +225,23 @@ RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) :
 {
   // Copy constructor
   RooTrace::create(this) ;
-  _tree = new TTree(newName, other.GetTitle()) ;
+  createTree(newName,other.GetTitle()) ;
 
   initialize(other._vars) ;
   loadValues(other._tree,0) ;
+}
+
+
+void RooTreeData::createTree(const char* name, const char* title)
+{
+  // Create TTree object in memory
+
+  TString pwd(gDirectory->GetPath()) ;
+  TString memDir(gROOT->GetName()) ;
+  memDir.Append(":/") ;
+  gDirectory->cd(memDir) ;
+ _tree = new TTree(name, title) ;
+  gDirectory->cd(pwd) ;
 }
 
 
@@ -330,6 +343,9 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
      while (destArg = (RooAbsArg*)_iterator->Next()) {              
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
        if (!sourceArg->isValid()) {
+	 cout << "RooTreeData::loadValues(" << GetName() << ") row " << i 
+	      << ": TTree branch " << sourceArg->GetName() 
+	      << " has an invalid value, value not copied" << endl ;
 	 continue ;
        }       
        destArg->copyCache(sourceArg) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.10 2001/09/27 18:22:30 verkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.11 2001/10/01 22:04:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -63,6 +63,12 @@ RooLinearVar::RooLinearVar(const char *name, const char *title, RooRealVar& vari
 	 << variable.GetName() << ")" << endl ;
     assert(0) ;
   }
+
+  // Initial plot range and number of bins from dependent variable
+  setPlotRange(variable.getPlotMin()*_slope + _offset,
+               variable.getPlotMax()*_slope + _offset) ;
+  setPlotBins(variable.getPlotBins()) ;
+	       
 }  
 
 

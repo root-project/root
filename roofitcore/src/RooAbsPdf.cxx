@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.37 2001/09/27 18:22:27 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.38 2001/09/28 21:59:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -130,7 +130,7 @@ Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
   // Implement pass-through scenario, defer other codes to subclass implementations
   if (code==0) return getVal(normSet) ;
   if (normSet) {
-    return analyticalIntegral(code) / _norm->getVal(normSet) ;
+    return analyticalIntegral(code) / getNorm(normSet) ;
   } else {
     return analyticalIntegral(code) ;
   }
@@ -199,7 +199,7 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 //       return ;
 //     }
 //   }
-
+  
   _lastNormSet = (RooArgSet*) nset ;
   //_lastNameSet.refill(*nset) ;
 
@@ -208,7 +208,27 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   
   // Allow optional post-processing
   Bool_t fullNorm = syncNormalizationPreHook(_norm,nset) ;
-  RooArgSet* depList = fullNorm ? ((RooArgSet*)nset) : getDependents(nset) ;
+  RooArgSet* depList ;
+  if (fullNorm) {
+    depList = ((RooArgSet*)nset) ;
+  } else {
+    depList = getDependents(nset) ;
+
+    // Account for LValues in normalization here
+    RooArgSet bList ;
+    branchNodeServerList(&bList) ;
+    TIterator* dIter = nset->createIterator() ;
+    RooAbsArg* dep ;
+    while (dep=(RooAbsArg*)dIter->Next()) {
+      RooAbsArg* tmp = bList.find(dep->GetName()) ;
+      if (dynamic_cast<RooAbsLValue*>(tmp)) {
+	depList->add(*tmp) ;
+      }
+    }
+    delete dIter ;
+    
+  }
+
 
   if (_verboseEval>0) {
     if (!selfNormalized()) {

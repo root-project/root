@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.rdl,v 1.1 2001/09/17 18:48:11 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.2 2001/09/24 23:05:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,11 +46,11 @@ public:
   virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
   virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
-  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE) ;
+  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   virtual void removeAll() ;
   virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) ;
   Bool_t replace(const RooAbsCollection &other);
-  Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE) ;
+  Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
 
   // Group operations on AbsArgs
   void setAttribAll(const Text_t* name, Bool_t value=kTRUE) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategoryProxy.cc,v 1.5 2001/05/15 06:54:25 verkerke Exp $
+ *    File: $Id: RooCategoryProxy.cc,v 1.6 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,8 +26,8 @@ ClassImp(RooCategoryProxy)
 ;
 
 RooCategoryProxy::RooCategoryProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
-				   Bool_t valueServer, Bool_t shapeServer) : 
-  RooArgProxy(name, desc, owner, ref, valueServer, shapeServer)
+				   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
+  RooArgProxy(name, desc, owner, ref, valueServer, shapeServer, ownArg)
 {
   // Constructor with owner and proxied category object
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.50 2001/09/17 18:48:10 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.51 2001/09/26 18:29:32 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -244,8 +244,8 @@ void RooAbsArg::removeServer(RooAbsArg& server)
   if (_serverList.FindObject(&server)) {
     _serverList.Remove(&server) ;
   } else {
-    cout << fName << "::" << ClassName() << ":removeServer: Server for \""
-	 << server.GetName() << "\" is not registered" << endl;
+    cout << fName << "::" << ClassName() << "(" << this << "):removeServer: Server "
+	 << server.GetName() << "(" << &server << ") is not registered" << endl;
     return ;
   }
 
@@ -364,7 +364,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
 
-    if (!arg->dependsOn(*nset)) {
+    if (!nset || !arg->dependsOn(*nset)) {
       parList->add(*arg) ;
     }
   }
@@ -512,7 +512,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
 
   if (_operMode!=Auto) return ;
 
-  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << GetName() 
+  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << GetName() << "," << this
 			  << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
 
   // Handle no-propagation scenarios first

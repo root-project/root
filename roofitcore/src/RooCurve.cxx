@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.20 2001/09/27 18:22:29 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.21 2001/09/28 21:59:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,13 +40,13 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.20 2001/09/27 18:22:29 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.21 2001/09/28 21:59:28 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
 }
 
-RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
+RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t scaleFactor,
 		   const RooArgSet *normVars, Double_t prec, Double_t resolution) {
   // Create a 1-dim curve of the value of the specified real-valued expression
   // as a function of x. Use the optional precision parameter to control

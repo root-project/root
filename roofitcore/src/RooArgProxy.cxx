@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.cc,v 1.13 2001/08/23 23:43:42 david Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.14 2001/09/17 18:48:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,9 +32,9 @@ ClassImp(RooArgProxy)
 
 
 RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
-			 Bool_t valueServer, Bool_t shapeServer) : 
+			 Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) : 
   TNamed(name,desc), _arg(&arg),
-  _valueServer(valueServer), _shapeServer(shapeServer), _owner(owner)
+  _valueServer(valueServer), _shapeServer(shapeServer), _owner(owner), _ownArg(proxyOwnsArg)
 {
   // Constructor with owner and proxied variable
   _owner->registerProxy(*this) ;
@@ -45,9 +45,14 @@ RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, R
 RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) : 
   RooAbsProxy(other), TNamed(other), _arg(other._arg), 
   _valueServer(other._valueServer), _shapeServer(other._shapeServer), _owner(owner),
-  _isFund(other._isFund)
+  _isFund(other._isFund), _ownArg(other._ownArg) 
 {
   // Copy constructor
+
+  if (_ownArg) {
+    _arg = (RooAbsArg*) _arg->Clone() ;
+  }
+
   _owner->registerProxy(*this) ;
 }
 
@@ -55,6 +60,7 @@ RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& 
 RooArgProxy::~RooArgProxy()
 {
   _owner->unRegisterProxy(*this) ;
+  if (_ownArg) delete _arg ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.3 2001/09/22 00:30:56 david Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.4 2001/09/24 23:05:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -284,7 +284,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 
 
 
-Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t silent) {
+Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNameOnly) {
   // Remove the specified argument from our list. Return kFALSE if
   // the specified argument is not found in our list. An exact pointer
   // match is required, not just a match by name. A variable can be
@@ -293,10 +293,12 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t silent) {
   // is var already in this list?
   const char *name= var.GetName();
   RooAbsArg *found= find(name);
-  if(found != &var) {    
+  if(!matchByNameOnly && found != &var) {    
     if (!silent) cout << "RooAbsCollection: variable \"" << name << "\" is not in the list"
 		      << " and cannot be removed" << endl;
     return kFALSE;
+  } else if (!found) {
+    return kFALSE ;
   }
   _list.Remove(found);
   if(_isCopy) delete found;
@@ -304,7 +306,7 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t silent) {
   return kTRUE;
 }
 
-Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent) {
+Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly) {
   // Remove each argument in the input list from our list using remove(const RooAbsArg&).
   // Return kFALSE in case of problems.
 
@@ -312,7 +314,7 @@ Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent) {
 
   Int_t n= list.getSize() ;
   for(Int_t index= 0; index < n; index++) {
-    result |= remove((RooAbsArg&)*list._list.At(index),silent) ;
+    result |= remove((RooAbsArg&)*list._list.At(index),silent,matchByNameOnly) ;
   }
 
   return result;

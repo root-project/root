@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealProxy.cc,v 1.7 2001/05/17 00:43:16 verkerke Exp $
+ *    File: $Id: RooRealProxy.cc,v 1.8 2001/10/01 23:55:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,8 +27,8 @@ ClassImp(RooRealProxy)
 ;
 
 RooRealProxy::RooRealProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsReal& ref,
-			   Bool_t valueServer, Bool_t shapeServer) : 
-  RooArgProxy(name, desc, owner,ref, valueServer, shapeServer)
+			   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
+  RooArgProxy(name, desc, owner,ref, valueServer, shapeServer, ownArg)
 {
   // Constructor with owner and proxied real-valued object
 }

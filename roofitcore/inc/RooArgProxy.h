@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.rdl,v 1.11 2001/08/09 01:02:13 verkerke Exp $
+ *    File: $Id: RooArgProxy.rdl,v 1.12 2001/09/17 18:48:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,7 +23,7 @@ public:
   // Constructors, assignment etc.
   RooArgProxy() {} ;
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg, 
-	      Bool_t valueServer, Bool_t shapeServer) ;
+	      Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg=kFALSE) ;
   RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) ;
   virtual ~RooArgProxy() ;
   inline RooAbsArg* absArg() const { return _arg ; }
@@ -39,6 +39,7 @@ protected:
   Bool_t _valueServer ;
   Bool_t _shapeServer ;
   Bool_t _isFund ;
+  Bool_t _ownArg ;
 
   friend class RooAbsArg ;
 

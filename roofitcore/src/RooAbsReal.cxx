@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.45 2001/09/27 18:22:28 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.46 2001/09/28 21:59:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -423,7 +423,9 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
 
   // Get the set of our leaf nodes
   RooArgSet leafNodes;
+  RooArgSet treeNodes;
   leafNodeServerList(&leafNodes,this);
+  treeNodeServerList(&treeNodes,this) ;
 
   // Check that the dependents are all fundamental. Filter out any that we
   // do not depend on, and make substitutions by name in our leaf list.
@@ -432,19 +434,44 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   assert(0 != dependentIterator);
   const RooAbsArg *arg(0);
   while(arg= (const RooAbsArg*)dependentIterator->Next()) {
-    if(!arg->isFundamental()) {
+    if(!arg->isFundamental() && !dynamic_cast<const RooAbsLValue*>(arg)) {
       cout << ClassName() << "::" << GetName() << ":createProjection: variable \"" << arg->GetName()
 	   << "\" of wrong type: " << arg->ClassName() << endl;
       delete dependentIterator;
       return 0;
     }
-    RooAbsArg *found= leafNodes.find(arg->GetName());
+    //RooAbsArg *found= leafNodes.find(arg->GetName()); 
+    RooAbsArg *found= treeNodes.find(arg->GetName()); 
     if(!found) {
       cout << ClassName() << "::" << GetName() << ":createProjection: \"" << arg->GetName()
 	   << "\" is not a dependent and will be ignored." << endl;
       continue;
     }
-    if(found != arg) leafNodes.replace(*found,*arg);
+    if(found != arg) {
+      if (leafNodes.find(found->GetName())) {
+	//cout << " replacing " << found << " with " << arg << " in leafNodes" << endl ; 
+	leafNodes.replace(*found,*arg);
+      } else {
+	//cout << " adding " << found << " to leafNodes " << endl ;
+	leafNodes.add(*arg) ;
+
+	// Remove any dependents of found, replace by dependents of LV node
+	RooArgSet* lvDep = arg->getDependents(&leafNodes) ;
+	RooAbsArg* lvs ;
+	TIterator* iter = lvDep->createIterator() ;
+	while(lvs=(RooAbsArg*)iter->Next()) {
+	  RooAbsArg* tmp = leafNodes.find(lvs->GetName()) ;
+	  if (tmp) {
+	    //cout << " replacing " << tmp << " with " << lvs << " in leaf nodes (2)" << endl ;
+	    leafNodes.remove(*tmp) ;
+	    leafNodes.add(*lvs) ;
+	  }
+	}
+	delete iter ;
+	
+      }
+    }
+
     // check if this arg is also in the projection set
     if(0 != projectedVars && projectedVars->find(arg->GetName())) {
       cout << ClassName() << "::" << GetName() << ":createProjection: \"" << arg->GetName()
@@ -465,9 +492,22 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   // dependents (x) and parameters (p) of the projection. Patch them back
   // into the clone. This orphans the nodes they replace, but the orphans
   // are still in the cloneList and so will be cleaned up eventually.
+  //cout << "redirection leafNodes : " ; leafNodes.Print("1") ;
+
+  TIterator* it = leafNodes.createIterator() ;
+  RooAbsArg* a ;
+  while(a = (RooAbsArg*) it->Next()) {
+    //cout << "redir ln = " << a << " " << a->GetName() << endl ;
+  }
   clone->recursiveRedirectServers(leafNodes);
 
   // Create the set of normalization variables to use in the projection integrand
+
+//   // WVE dependentVars might be LValue, expand into final servers
+//   RooArgSet* xxx = dependentVars.getDependents(...) ;
+//   RooArgSet normSet(*xxx) ;
+//   delete xxx ;
+    
   RooArgSet normSet(dependentVars);
   if(0 != projectedVars) normSet.add(*projectedVars);
 
@@ -481,6 +521,10 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   title.Prepend("Projection of ");
 
   RooRealIntegral *projected= new RooRealIntegral(name.Data(),title.Data(),*clone,*projectedVars,&normSet);
+//   projected->getVal() ;
+//   clone->getVal(&normSet) ;
+//   clone->Print("v") ;
+//   projected->Print("v") ;
   if(0 == projected || !projected->isValid()) {
     cout << ClassName() << "::" << GetName() << ":createProjection: cannot integrate out ";
     projectedVars->printToStream(cout,OneLine);
@@ -651,7 +695,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
   // Clone the plot variable
   RooAbsReal* realVar = (RooRealVar*) frame->getPlotVar() ;
-  RooRealVar* plotVar = (RooRealVar*) realVar->Clone() ;
+  RooArgSet* plotCloneSet = (RooArgSet*) RooArgSet(*realVar).snapshot(kTRUE) ;
+  RooRealVar* plotVar = (RooRealVar*) plotCloneSet->find(realVar->GetName());
 
   // Inform user about projections
   if (projectedVars.getSize()) {
@@ -662,6 +707,18 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   // Create projection integral
   RooArgSet* projectionCompList ;
   const RooAbsReal *projection = createProjection(RooArgSet(*plotVar), &projectedVars, projectionCompList) ;
+
+//   projection->Print("v") ;
+
+//   RooArgSet depSet(*plotVar) ;
+//   RooArgSet pTN ;
+//   projection->treeNodeServerList(&pTN) ;
+//   TIterator* iter = pTN.createIterator() ;
+//   RooAbsArg* a ;
+//   while(a = (RooAbsArg*) iter->Next()) {
+//     cout << "dependent = " << a << " " << a->GetName() << endl ;
+//   }
+//   cout << "plotVar = " << plotVar << " " << plotVar->GetName() << endl ;
 
   // Reset name of projection to name of PDF to get appropriate curve name
   ((RooAbsArg*)projection)->SetName(GetName()) ;
@@ -824,7 +881,7 @@ Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
   }
 
   // check that the plot variable is not derived
-  if(!dynamic_cast<RooRealVar*>(var)) {
+  if(!dynamic_cast<RooAbsRealLValue*>(var)) {
      cout << ClassName() << "::" << GetName() << ":plotOn: cannot plot variable \""
 	  << var->GetName() << "\" of type " << var->ClassName() << endl;
     return kTRUE;
@@ -854,6 +911,18 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
   RooAbsArg *found= projectedVars.find(plotVar->GetName());
   if(found) {
     projectedVars.remove(*found);
+
+    // Take out eventual servers of plotVar
+    RooArgSet* plotServers = plotVar->getDependents(&projectedVars) ;
+    TIterator* psIter = plotServers->createIterator() ;
+    RooAbsArg* ps ;
+    while(ps=(RooAbsArg*)psIter->Next()) {
+      RooAbsArg* tmp = projectedVars.find(ps->GetName()) ;
+      if (tmp) projectedVars.remove(*tmp) ;
+    }
+    delete psIter ;
+    delete plotServers ;
+
     if (!silent) {
       cout << "RooAbsReal::plotOn(" << GetName() 
 	   << ") WARNING: cannot project out frame variable (" 
@@ -866,6 +935,7 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
   RooAbsArg* arg ;
   while(arg=(RooAbsArg*)iter->Next()) {
     if (!dependsOn(*arg)) projectedVars.remove(*arg,kTRUE) ;
+
     if (!silent) {
       cout << "RooAbsReal::plotOn(" << GetName() 
 	   << ") WARNING: function doesn't depend on projection variable " 
