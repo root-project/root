@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.7 2003/01/13 16:57:36 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.8 2004/11/26 07:55:13 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -194,7 +194,8 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
    Int_t   y    = gPad->GetWh()-py;
 
    if (gPad->GetLogz()) {
-      if (zmin <= 0 && zmax > 0) zmin = 0.001*zmax;
+      if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
+                                                   (Double_t)0.001*zmax);
       Double_t zminl = TMath::Log10(zmin);
       Double_t zmaxl = TMath::Log10(zmax);
       Double_t zl    = (zmaxl-zminl)*((Double_t)(y-y1)/(Double_t)(y2-y1))+zminl;
@@ -225,7 +226,8 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t wlmax = wmax;
    Double_t y1,y2,w1,w2,zc;
    if (gPad->GetLogz()) {
-      if (wmin <= 0 && wmax > 0) wmin = 0.001*wmax;
+      if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1,
+                                                   (Double_t)0.001*wmax);
       wlmin = TMath::Log10(wmin);
       wlmax = TMath::Log10(wmax);
    }
