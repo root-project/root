@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.3 2004/01/29 08:58:46 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -38,7 +38,8 @@ protected:
 
   Float_t *fElements;  //![fNelems] elements themselves
 
-  virtual void Allocate  (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0);
+  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
+                        Int_t init = 0,Int_t nr_nonzero = -1);
 
   // Elementary constructors
   void AtMultA(const TMatrixF    &a,Int_t constr=1);
@@ -66,8 +67,8 @@ public:
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); }
 
-  void        Adopt         (Int_t nrows,Float_t *data);
-  void        Adopt         (Int_t row_lwb,Int_t row_upb,Float_t *data);
+  void        Use           (Int_t nrows,Float_t *data);
+  void        Use           (Int_t row_lwb,Int_t row_upb,Float_t *data);
   TMatrixFSym GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
   void        SetSub        (Int_t row_lwb,const TMatrixFSym &source);
 
@@ -83,9 +84,12 @@ public:
   TMatrixFSym  &NormByDiag  (const TVectorF &v,Option_t *option="D");
 
   // Either access a_ij as a(i,j)
-  inline const Float_t &operator()(Int_t rown,Int_t coln) const;
-  inline       Float_t &operator()(Int_t rown,Int_t coln)
+  inline const Float_t           &operator()(Int_t rown,Int_t coln) const;
+  inline       Float_t           &operator()(Int_t rown,Int_t coln)
                                    { return (Float_t&)((*(const TMatrixFSym *)this)(rown,coln)); }
+  // or as a[i][j]
+  inline const TMatrixFRow_const  operator[](Int_t rown) const { return TMatrixFRow_const(*this,rown); }
+  inline       TMatrixFRow        operator[](Int_t rown)       { return TMatrixFRow      (*this,rown); }
 
   TMatrixFSym &operator= (const TMatrixFSym     &source);
   TMatrixFSym &operator= (const TMatrixFSymLazy &source);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.28 2004/01/26 11:28:07 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.29 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -32,6 +32,11 @@
 class TMatrixF;
 class TMatrixD : public TMatrixDBase {
 
+private:
+
+  const TMatrixD EigenVectors(TVectorD &eigenValues) const;  // This function is now obsolete (and not implemented), you
+                                                             // should use TMatrixDSymEigen or TMatrixDEigen .
+
 protected:
 
   Double_t *fElements;  //[fNelems] elements themselves
@@ -39,15 +44,15 @@ protected:
   virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0);
 
   // Elementary constructors
-  void AMultB (const TMatrixD     &a,const TMatrixD    &b,Int_t constr=1);
-  void AMultB (const TMatrixD     &a,const TMatrixDSym &b,Int_t constr=1);
-  void AMultB (const TMatrixDSym  &a,const TMatrixD    &b,Int_t constr=1);
-  void AMultB (const TMatrixDSym  &a,const TMatrixDSym &b,Int_t constr=1);
+  void AMultB (const TMatrixD    &a,const TMatrixD    &b,Int_t constr=1);
+  void AMultB (const TMatrixD    &a,const TMatrixDSym &b,Int_t constr=1);
+  void AMultB (const TMatrixDSym &a,const TMatrixD    &b,Int_t constr=1);
+  void AMultB (const TMatrixDSym &a,const TMatrixDSym &b,Int_t constr=1);
 
-  void AtMultB(const TMatrixD     &a,const TMatrixD    &b,Int_t constr=1);
-  void AtMultB(const TMatrixD     &a,const TMatrixDSym &b,Int_t constr=1);
-  void AtMultB(const TMatrixDSym  &a,const TMatrixD    &b,Int_t constr=1) { AMultB(a,b,constr); }
-  void AtMultB(const TMatrixDSym  &a,const TMatrixDSym &b,Int_t constr=1) { AMultB(a,b,constr); }
+  void AtMultB(const TMatrixD    &a,const TMatrixD    &b,Int_t constr=1);
+  void AtMultB(const TMatrixD    &a,const TMatrixDSym &b,Int_t constr=1);
+  void AtMultB(const TMatrixDSym &a,const TMatrixD    &b,Int_t constr=1) { AMultB(a,b,constr); }
+  void AtMultB(const TMatrixDSym &a,const TMatrixDSym &b,Int_t constr=1) { AMultB(a,b,constr); }
 
 public:
 
@@ -56,15 +61,15 @@ public:
   TMatrixD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TMatrixD(Int_t nrows,Int_t ncols,const Double_t *data,Option_t *option="");
   TMatrixD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,const Double_t *data,Option_t *option="");
-  TMatrixD(const TMatrixD &another);
-  TMatrixD(const TMatrixF &another);
-  TMatrixD(const TMatrixDSym  &another);
+  TMatrixD(const TMatrixD       &another);
+  TMatrixD(const TMatrixF       &another);
+  TMatrixD(const TMatrixDSym    &another);
 
   TMatrixD(EMatrixCreatorsOp1 op,const TMatrixD &prototype);
-  TMatrixD(const TMatrixD     &a,EMatrixCreatorsOp2 op,const TMatrixD &b);
-  TMatrixD(const TMatrixD     &a,EMatrixCreatorsOp2 op,const TMatrixDSym  &b);
-  TMatrixD(const TMatrixDSym  &a,EMatrixCreatorsOp2 op,const TMatrixD &b);
-  TMatrixD(const TMatrixDSym  &a,EMatrixCreatorsOp2 op,const TMatrixDSym  &b);
+  TMatrixD(const TMatrixD     &a,EMatrixCreatorsOp2 op,const TMatrixD    &b);
+  TMatrixD(const TMatrixD     &a,EMatrixCreatorsOp2 op,const TMatrixDSym &b);
+  TMatrixD(const TMatrixDSym  &a,EMatrixCreatorsOp2 op,const TMatrixD    &b);
+  TMatrixD(const TMatrixDSym  &a,EMatrixCreatorsOp2 op,const TMatrixDSym &b);
   TMatrixD(const TMatrixDLazy &lazy_constructor);
 
   virtual ~TMatrixD() { Clear(); Invalidate(); }
@@ -74,10 +79,10 @@ public:
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); }
 
-  void      Adopt       (Int_t nrows,Int_t ncols,Double_t *data);
-  void      Adopt       (Int_t row_lwb,Int_t row_upb,
+  void      Use         (Int_t nrows,Int_t ncols,Double_t *data);
+  void      Use         (Int_t row_lwb,Int_t row_upb,
                          Int_t col_lwb,Int_t col_upb,Double_t *data);
-  void      Adopt       (TMatrixD &a);
+  void      Use         (TMatrixD &a);
   TMatrixD  GetSub      (Int_t row_lwb,Int_t row_upb,
                          Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
   void      SetSub      (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
@@ -105,14 +110,17 @@ public:
   inline void Mult(const TMatrixDSym &a,const TMatrixD    &b) { AMultB(a,b,0); }
 
   // Either access a_ij as a(i,j)
-  inline const Double_t &operator()(Int_t rown,Int_t coln) const;
-  inline       Double_t &operator()(Int_t rown,Int_t coln)
-                                    { return (Double_t&)((*(const TMatrixD *)this)(rown,coln)); }
+  inline const Double_t          &operator()(Int_t rown,Int_t coln) const;
+  inline       Double_t          &operator()(Int_t rown,Int_t coln)
+                                             { return (Double_t&)((*(const TMatrixD *)this)(rown,coln)); }
+  // or as a[i][j]
+  inline const TMatrixDRow_const  operator[](Int_t rown) const { return TMatrixDRow_const(*this,rown); }
+  inline       TMatrixDRow        operator[](Int_t rown)       { return TMatrixDRow      (*this,rown); }
 
-  TMatrixD &operator= (const TMatrixD     &source);
-  TMatrixD &operator= (const TMatrixF     &source);
-  TMatrixD &operator= (const TMatrixDSym  &source);
-  TMatrixD &operator= (const TMatrixDLazy &source);
+  TMatrixD &operator= (const TMatrixD       &source);
+  TMatrixD &operator= (const TMatrixF       &source);
+  TMatrixD &operator= (const TMatrixDSym    &source);
+  TMatrixD &operator= (const TMatrixDLazy   &source);
   TMatrixD &operator= (Double_t val);
   TMatrixD &operator-=(Double_t val);
   TMatrixD &operator+=(Double_t val);
@@ -161,10 +169,10 @@ public:
   ClassDef(TMatrixD,3) // Matrix class (double precision)
 };
 
-inline const Double_t *TMatrixD::GetMatrixArray () const { return fElements; }
-inline       Double_t *TMatrixD::GetMatrixArray ()       { return fElements; }
-inline       void      TMatrixD::Adopt(TMatrixD &a) { Adopt(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
-inline const Double_t &TMatrixD::operator    ()(Int_t rown,Int_t coln) const {
+inline const Double_t *TMatrixD::GetMatrixArray() const { return fElements; }
+inline       Double_t *TMatrixD::GetMatrixArray()       { return fElements; }
+inline       void      TMatrixD::Use           (TMatrixD &a) { Use(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
+inline const Double_t &TMatrixD::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;
@@ -174,8 +182,6 @@ inline const Double_t &TMatrixD::operator    ()(Int_t rown,Int_t coln) const {
 }
 
 Bool_t    operator== (const TMatrixD    &m1,const TMatrixD    &m2);
-//Bool_t    operator== (const TMatrixDSym &m1,const TMatrixD    &m2);
-//Bool_t    operator== (const TMatrixD    &m1,const TMatrixDSym &m2);
 
 TMatrixD  operator+  (const TMatrixD    &source1,const TMatrixD    &source2);
 TMatrixD  operator+  (const TMatrixD    &source1,const TMatrixDSym &source2);

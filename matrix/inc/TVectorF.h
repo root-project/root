@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.2 2004/01/25 23:28:44 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.3 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,8 +20,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixFBase
-#include "TMatrixFBase.h"
+#ifndef ROOT_TMatrixF
+#include "TMatrixF.h"
+#endif
+#ifndef ROOT_TMatrixFSym
+#include "TMatrixFSym.h"
 #endif
 
 class TVectorF : public TObject {
@@ -33,7 +36,7 @@ protected:
 
   enum {kSizeMax = 5};             // size data container on stack, see New_m(),Delete_m()
   Float_t   fDataStack[kSizeMax];  //! data container
-  Bool_t    fIsOwner;              //!default kTRUE, when Adopt array kFALSE
+  Bool_t    fIsOwner;              //!default kTRUE, when Use array kFALSE
 
   Float_t*  New_m   (Int_t size);
   void      Delete_m(Int_t size,Float_t*);
@@ -73,8 +76,8 @@ public:
   inline void     ResizeTo   (Int_t n)       { ResizeTo(0,n-1); }
   inline void     ResizeTo   (const TVectorF &v) { ResizeTo(v.GetLwb(),v.GetUpb()); }
 
-         void     Adopt      (Int_t n,Float_t *data);
-         void     Adopt      (Int_t lwb,Int_t upb,Float_t *data);
+         void     Use        (Int_t n,Float_t *data);
+         void     Use        (Int_t lwb,Int_t upb,Float_t *data);
          TVectorF GetSub     (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
          void     SetSub     (Int_t row_lwb,const TVectorF &source);
 
@@ -82,10 +85,16 @@ public:
   TVectorF &Abs ();
   TVectorF &Sqr ();
   TVectorF &Sqrt();
+  TVectorF &Invert();
+  TVectorF &SelectNonZeros(const TVectorF &select);
 
   Float_t Norm1   () const;
   Float_t Norm2Sqr() const;
   Float_t NormInf () const;
+  Int_t   NonZeros() const;
+  Float_t Sum     () const;
+  Float_t Min     () const;
+  Float_t Max     () const;
 
   inline const Float_t &operator()(Int_t index) const;
   inline       Float_t &operator()(Int_t index)       { return (Float_t&)((*(const TVectorF *)this)(index)); }
@@ -112,6 +121,9 @@ public:
   Bool_t operator<=(Float_t val) const;
   Bool_t operator> (Float_t val) const;
   Bool_t operator>=(Float_t val) const;
+  Bool_t MatchesNonZeroPattern(const TVectorF &select);
+  Bool_t SomePositive         (const TVectorF &select);
+  void   AddSomeConstant      (Float_t val,const TVectorF &select);
 
   TVectorF &Apply(const TElementActionF    &action);
   TVectorF &Apply(const TElementPosActionF &action);
@@ -128,8 +140,18 @@ public:
   friend TVectorF  operator*  (const TMatrixFSym &a,      const TVectorF &source);
 
   friend TVectorF &Add        (TVectorF &target,Float_t scalar,const TVectorF &source);
+  friend TVectorF &AddElemMult(TVectorF &target,Float_t scalar,
+                               const TVectorF &source1,const TVectorF &source2);
+  friend TVectorF &AddElemMult(TVectorF &target,Float_t scalar,
+                               const TVectorF &source1,const TVectorF &source2,const TVectorF &select);
+  friend TVectorF &AddElemDiv (TVectorF &target,Float_t scalar,
+                               const TVectorF &source1,const TVectorF &source2);
+  friend TVectorF &AddElemDiv (TVectorF &target,Float_t scalar,
+                               const TVectorF &source1,const TVectorF &source2,const TVectorF &select);
   friend TVectorF &ElementMult(TVectorF &target,const TVectorF &source);
+  friend TVectorF &ElementMult(TVectorF &target,const TVectorF &source,const TVectorF &select);
   friend TVectorF &ElementDiv (TVectorF &target,const TVectorF &source);
+  friend TVectorF &ElementDiv (TVectorF &target,const TVectorF &source,const TVectorF &select);
 
   friend Bool_t AreCompatible(const TVectorF &v1,const TVectorF &v2,Int_t verbose);
   friend void   Compare      (const TVectorF &v1,const TVectorF &v2);
@@ -171,8 +193,18 @@ TVectorF  operator*     (const TMatrixF    &a,      const TVectorF &source);
 TVectorF  operator*     (const TMatrixFSym &a,      const TVectorF &source);
 Float_t   operator*     (const TVectorF    &source1,const TVectorF &source2);
 TVectorF  &Add          (      TVectorF    &target,       Float_t  scalar,const TVectorF &source);
+TVectorF  &AddElemMult  (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
+                         const TVectorF    &source2);
+TVectorF  &AddElemMult  (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
+                         const TVectorF    &source2,const TVectorF &select);
+TVectorF  &AddElemDiv   (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
+                         const TVectorF    &source2);
+TVectorF  &AddElemDiv   (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
+                         const TVectorF    &source2,const TVectorF &select);
 TVectorF  &ElementMult  (      TVectorF    &target, const TVectorF &source);
+TVectorF  &ElementMult  (      TVectorF    &target, const TVectorF &source,const TVectorF &select);
 TVectorF  &ElementDiv   (      TVectorF    &target, const TVectorF &source);
+TVectorF  &ElementDiv   (      TVectorF    &target, const TVectorF &source,const TVectorF &select);
 Bool_t     AreCompatible(const TVectorF    &source1,const TVectorF &source2,Int_t verbose=0);
 void       Compare      (const TVectorF    &source1,const TVectorF &source2);
 

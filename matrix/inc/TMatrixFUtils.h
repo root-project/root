@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.2 2004/01/27 06:36:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.3 2004/01/27 17:26:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -98,13 +98,13 @@ private:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixFRow_const : public TObject {
+class TMatrixFRow_const {
 
 protected:
-  const TMatrixFBase *fMatrix;  //! the matrix I am a row of
+  const TMatrixFBase *fMatrix;  //  the matrix I am a row of
         Int_t         fRowInd;  //  effective row index
         Int_t         fInc;     //  if ptr = @a[row,i], then ptr+inc = @a[row,i+1]
-  const Float_t      *fPtr;     //! pointer to the a[row,0]
+  const Float_t      *fPtr;     //  pointer to the a[row,0]
 
 public:
   TMatrixFRow_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
@@ -118,7 +118,7 @@ public:
                                                           return fPtr[acoln]; }
   inline const Float_t      &operator [](Int_t i) const { return (*(const TMatrixFRow_const *)this)(i); }
 
-  ClassDef(TMatrixFRow_const,1)  // One row of a matrix (double precision)
+  ClassDef(TMatrixFRow_const,0)  // One row of a matrix (double precision)
 };
 
 class TMatrixFRow : public TMatrixFRow_const {
@@ -146,7 +146,7 @@ public:
   void operator+=(const TMatrixFRow_const &r);
   void operator*=(const TMatrixFRow_const &r);
 
-  ClassDef(TMatrixFRow,2)  // One row of a matrix (double precision)
+  ClassDef(TMatrixFRow,0)  // One row of a matrix (double precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -157,13 +157,13 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixFColumn_const : public TObject {
+class TMatrixFColumn_const {
 
 protected:
-  const TMatrixFBase *fMatrix;  //! the matrix I am a column of
+  const TMatrixFBase *fMatrix;  //  the matrix I am a column of
         Int_t         fColInd;  //  effective column index
         Int_t         fInc;     //  if ptr = @a[i,col], then ptr+inc = @a[i+1,col]
-  const Float_t      *fPtr;     //! pointer to the a[0,col] column
+  const Float_t      *fPtr;     //  pointer to the a[0,col] column
 
 public:
   TMatrixFColumn_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
@@ -177,7 +177,7 @@ public:
                                                           return fPtr[arown*fInc]; }
   inline const Float_t  &operator [](Int_t i) const { return ((*(const TMatrixFColumn_const *)this)(i)); }
 
-  ClassDef(TMatrixFColumn_const,2)  // One column of a matrix (double precision)
+  ClassDef(TMatrixFColumn_const,0)  // One column of a matrix (double precision)
 };
 
 class TMatrixFColumn : public TMatrixFColumn_const {
@@ -205,7 +205,7 @@ public:
   void operator+=(const TMatrixFColumn_const &c);
   void operator*=(const TMatrixFColumn_const &c);
 
-  ClassDef(TMatrixFColumn,2)  // One column of a matrix (double precision)
+  ClassDef(TMatrixFColumn,0)  // One column of a matrix (double precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -216,13 +216,13 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixFDiag_const : public TObject {
+class TMatrixFDiag_const {
 
 protected:
-  const TMatrixFBase *fMatrix;  //! the matrix I am the diagonal of
+  const TMatrixFBase *fMatrix;  //  the matrix I am the diagonal of
         Int_t         fInc;     //  if ptr=@a[i,i], then ptr+inc = @a[i+1,i+1]
         Int_t         fNdiag;   //  number of diag elems, min(nrows,ncols)
-  const Float_t      *fPtr;     //! pointer to the a[0,0]
+  const Float_t      *fPtr;     //  pointer to the a[0,0]
 
 public:
   TMatrixFDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
@@ -237,7 +237,7 @@ public:
 
   Int_t GetNdiags() const { return fNdiag; }
 
-  ClassDef(TMatrixFDiag_const,1)  // Diagonal of a matrix (double  precision)
+  ClassDef(TMatrixFDiag_const,0)  // Diagonal of a matrix (double  precision)
 };
 
 class TMatrixFDiag : public TMatrixFDiag_const {
@@ -264,7 +264,7 @@ public:
   void operator+=(const TMatrixFDiag_const &d);
   void operator*=(const TMatrixFDiag_const &d);
 
-  ClassDef(TMatrixFDiag,2)  // Diagonal of a matrix (double  precision)
+  ClassDef(TMatrixFDiag,0)  // Diagonal of a matrix (double  precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -275,12 +275,12 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixFFlat_const : public TObject {
+class TMatrixFFlat_const {
 
 protected:
-  const TMatrixFBase *fMatrix;  //! the matrix I am the diagonal of
+  const TMatrixFBase *fMatrix;  //  the matrix I am the diagonal of
         Int_t         fNelems;  //
-  const Float_t      *fPtr;     //! pointer to the a[0,0]
+  const Float_t      *fPtr;     //  pointer to the a[0,0]
 
 public:
   TMatrixFFlat_const() { fMatrix = 0; fPtr = 0; }
@@ -291,7 +291,7 @@ public:
   inline const Float_t      &operator ()(Int_t i) { Assert(i >=0 && i < fNelems); return GetPtr()[i]; }
   inline const Float_t      &operator [](Int_t i) { Assert(i >=0 && i < fNelems); return GetPtr()[i]; }
 
-  ClassDef(TMatrixFFlat_const,1)  // Flat representation of a matrix
+  ClassDef(TMatrixFFlat_const,0)  // Flat representation of a matrix
 };
 
 class TMatrixFFlat : public TMatrixFFlat_const {
@@ -319,7 +319,7 @@ public:
   void operator+=(const TMatrixFFlat_const &f);
   void operator*=(const TMatrixFFlat_const &f);
 
-  ClassDef(TMatrixFFlat,2)  // Flat representation of a matrix
+  ClassDef(TMatrixFFlat,0)  // Flat representation of a matrix
 };
 
 #endif

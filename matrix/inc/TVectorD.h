@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.25 2004/01/25 23:28:44 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.26 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,8 +20,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixDBase
-#include "TMatrixDBase.h"
+#ifndef ROOT_TMatrixD
+#include "TMatrixD.h"
+#endif
+#ifndef ROOT_TMatrixDSym
+#include "TMatrixDSym.h"
 #endif
 
 class TVectorD : public TObject {
@@ -33,7 +36,7 @@ protected:
 
   enum {kSizeMax = 5};             // size data container on stack, see New_m(),Delete_m()
   Double_t  fDataStack[kSizeMax];  //! data container
-  Bool_t    fIsOwner;              //!default kTRUE, when Adopt array kFALSE
+  Bool_t    fIsOwner;              //!default kTRUE, when Use array kFALSE
 
   Double_t* New_m   (Int_t size);
   void      Delete_m(Int_t size,Double_t*);
@@ -73,8 +76,8 @@ public:
   inline void     ResizeTo   (Int_t n)       { ResizeTo(0,n-1); }
   inline void     ResizeTo   (const TVectorD &v) { ResizeTo(v.GetLwb(),v.GetUpb()); }
 
-         void     Adopt      (Int_t n,Double_t *data);
-         void     Adopt      (Int_t lwb,Int_t upb,Double_t *data);
+         void     Use        (Int_t n,Double_t *data);
+         void     Use        (Int_t lwb,Int_t upb,Double_t *data);
          TVectorD GetSub     (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
          void     SetSub     (Int_t row_lwb,const TVectorD &source);
 
@@ -82,29 +85,35 @@ public:
   TVectorD &Abs ();
   TVectorD &Sqr ();
   TVectorD &Sqrt();
+  TVectorD &Invert();
+  TVectorD &SelectNonZeros(const TVectorD &select);
 
   Double_t Norm1   () const;
   Double_t Norm2Sqr() const;
   Double_t NormInf () const;
+  Int_t    NonZeros() const;
+  Double_t Sum     () const;
+  Double_t Min     () const;
+  Double_t Max     () const;
 
   inline const Double_t &operator()(Int_t index) const;
   inline       Double_t &operator()(Int_t index)       { return (Double_t&)((*(const TVectorD *)this)(index)); }
   inline const Double_t &operator[](Int_t index) const { return (Double_t&)((*(const TVectorD *)this)(index)); }
   inline       Double_t &operator[](Int_t index)       { return (Double_t&)((*(const TVectorD *)this)(index)); }
 
-  TVectorD &operator= (const TVectorD             &source);
-  TVectorD &operator= (const TMatrixDRow_const    &mr);
-  TVectorD &operator= (const TMatrixDColumn_const &mc);
-  TVectorD &operator= (const TMatrixDDiag_const   &md);
+  TVectorD &operator= (const TVectorD                &source);
+  TVectorD &operator= (const TMatrixDRow_const       &mr);
+  TVectorD &operator= (const TMatrixDColumn_const    &mc);
+  TVectorD &operator= (const TMatrixDDiag_const      &md);
   TVectorD &operator= (Double_t val);
   TVectorD &operator+=(Double_t val);
   TVectorD &operator-=(Double_t val);
   TVectorD &operator*=(Double_t val);
 
-  TVectorD &operator+=(const TVectorD    &source);
-  TVectorD &operator-=(const TVectorD    &source);
-  TVectorD &operator*=(const TMatrixD    &a);
-  TVectorD &operator*=(const TMatrixDSym &a);
+  TVectorD &operator+=(const TVectorD       &source);
+  TVectorD &operator-=(const TVectorD       &source);
+  TVectorD &operator*=(const TMatrixD       &a);
+  TVectorD &operator*=(const TMatrixDSym    &a);
 
   Bool_t operator==(Double_t val) const;
   Bool_t operator!=(Double_t val) const;
@@ -112,6 +121,9 @@ public:
   Bool_t operator<=(Double_t val) const;
   Bool_t operator> (Double_t val) const;
   Bool_t operator>=(Double_t val) const;
+  Bool_t MatchesNonZeroPattern(const TVectorD &select);
+  Bool_t SomePositive         (const TVectorD &select);
+  void   AddSomeConstant      (Double_t val,const TVectorD &select);
 
   TVectorD &Apply(const TElementActionD    &action);
   TVectorD &Apply(const TElementPosActionD &action);
@@ -120,16 +132,26 @@ public:
   void Draw (Option_t *option=""); // *MENU*
   void Print(Option_t *option="") const;  // *MENU*
 
-  friend Bool_t    operator== (const TVectorD    &v1,     const TVectorD &v2);
-  friend Double_t  operator*  (const TVectorD    &v1,     const TVectorD &v2);
-  friend TVectorD  operator+  (const TVectorD    &source1,const TVectorD &source2);
-  friend TVectorD  operator-  (const TVectorD    &source1,const TVectorD &source2);
-  friend TVectorD  operator*  (const TMatrixD    &a,      const TVectorD &source);
-  friend TVectorD  operator*  (const TMatrixDSym &a,      const TVectorD &source);
+  friend Bool_t    operator== (const TVectorD       &v1,     const TVectorD &v2);
+  friend Double_t  operator*  (const TVectorD       &v1,     const TVectorD &v2);
+  friend TVectorD  operator+  (const TVectorD       &source1,const TVectorD &source2);
+  friend TVectorD  operator-  (const TVectorD       &source1,const TVectorD &source2);
+  friend TVectorD  operator*  (const TMatrixD       &a,      const TVectorD &source);
+  friend TVectorD  operator*  (const TMatrixDSym    &a,      const TVectorD &source);
 
   friend TVectorD &Add        (TVectorD &target,Double_t scalar,const TVectorD &source);
+  friend TVectorD &AddElemMult(TVectorD &target,Double_t scalar,
+                               const TVectorD &source1,const TVectorD &source2);
+  friend TVectorD &AddElemMult(TVectorD &target,Double_t scalar,
+                               const TVectorD &source1,const TVectorD &source2,const TVectorD &select);
+  friend TVectorD &AddElemDiv (TVectorD &target,Double_t scalar,
+                               const TVectorD &source1,const TVectorD &source2);
+  friend TVectorD &AddElemDiv (TVectorD &target,Double_t scalar,
+                               const TVectorD &source1,const TVectorD &source2,const TVectorD &select);
   friend TVectorD &ElementMult(TVectorD &target,const TVectorD &source);
+  friend TVectorD &ElementMult(TVectorD &target,const TVectorD &source,const TVectorD &select);
   friend TVectorD &ElementDiv (TVectorD &target,const TVectorD &source);
+  friend TVectorD &ElementDiv (TVectorD &target,const TVectorD &source,const TVectorD &select);
 
   friend Bool_t AreCompatible(const TVectorD &v1,const TVectorD &v2,Int_t verbose);
   friend void   Compare      (const TVectorD &v1,const TVectorD &v2);
@@ -148,17 +170,27 @@ inline const Double_t &TVectorD::operator()(Int_t ind) const
   return fElements[aind];
 }
 
-Bool_t    operator==    (const TVectorD    &source1,const TVectorD &source2);
-TVectorD  operator+     (const TVectorD    &source1,const TVectorD &source2);
-TVectorD  operator-     (const TVectorD    &source1,const TVectorD &source2);
-TVectorD  operator*     (const TMatrixD    &a,      const TVectorD &source);
-TVectorD  operator*     (const TMatrixDSym &a,      const TVectorD &source);
-Double_t  operator*     (const TVectorD    &source1,const TVectorD &source2);
-TVectorD  &Add          (      TVectorD    &target,       Double_t  scalar,const TVectorD &source);
-TVectorD  &ElementMult  (      TVectorD    &target, const TVectorD &source);
-TVectorD  &ElementDiv   (      TVectorD    &target, const TVectorD &source);
-Bool_t     AreCompatible(const TVectorD    &source1,const TVectorD &source2,Int_t verbose=0);
-void       Compare      (const TVectorD    &source1,const TVectorD &source2);
+Bool_t    operator==    (const TVectorD       &source1,const TVectorD &source2);
+TVectorD  operator+     (const TVectorD       &source1,const TVectorD &source2);
+TVectorD  operator-     (const TVectorD       &source1,const TVectorD &source2);
+TVectorD  operator*     (const TMatrixD       &a,      const TVectorD &source);
+TVectorD  operator*     (const TMatrixDSym    &a,      const TVectorD &source);
+Double_t  operator*     (const TVectorD       &source1,const TVectorD &source2);
+TVectorD  &Add          (      TVectorD       &target,       Double_t  scalar,const TVectorD &source);
+TVectorD  &AddElemMult  (      TVectorD       &target,       Double_t  scalar,const TVectorD &source1,
+                         const TVectorD       &source2);
+TVectorD  &AddElemMult  (      TVectorD       &target,       Double_t  scalar,const TVectorD &source1,
+                         const TVectorD       &source2,const TVectorD &select);
+TVectorD  &AddElemDiv   (      TVectorD       &target,       Double_t  scalar,const TVectorD &source1,
+                         const TVectorD       &source2);
+TVectorD  &AddElemDiv   (      TVectorD       &target,       Double_t  scalar,const TVectorD &source1,
+                         const TVectorD       &source2,const TVectorD &select);
+TVectorD  &ElementMult  (      TVectorD       &target, const TVectorD &source);
+TVectorD  &ElementMult  (      TVectorD       &target, const TVectorD &source,const TVectorD &select);
+TVectorD  &ElementDiv   (      TVectorD       &target, const TVectorD &source);
+TVectorD  &ElementDiv   (      TVectorD       &target, const TVectorD &source,const TVectorD &select);
+Bool_t     AreCompatible(const TVectorD       &source1,const TVectorD &source2,Int_t verbose=0);
+void       Compare      (const TVectorD       &source1,const TVectorD &source2);
 
 // Service functions (useful in the verification code).
 // They print some detail info if the validation condition fails

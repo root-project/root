@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.3 2004/01/26 11:28:07 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.4 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -32,11 +32,17 @@
 class TMatrixD;
 class TMatrixF : public TMatrixFBase {
 
+private:
+
+  const TMatrixF EigenVectors(TVectorF &eigenValues) const;  // This function is now obsolete (and not implemented), you
+                                                             // should use TMatrixDSymEigen or TMatrixDEigen .
+
 protected:
 
   Float_t *fElements;  //[fNelems] elements themselves
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0);
+  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
+                        Int_t init = 0,Int_t nr_nonzero = -1);
 
   // Elementary constructors
   void AMultB (const TMatrixF     &a,const TMatrixF    &b,Int_t constr=1);
@@ -74,10 +80,10 @@ public:
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); }
 
-  void      Adopt       (Int_t nrows,Int_t ncols,Float_t *data);
-  void      Adopt       (Int_t row_lwb,Int_t row_upb,
+  void      Use         (Int_t nrows,Int_t ncols,Float_t *data);
+  void      Use         (Int_t row_lwb,Int_t row_upb,
                          Int_t col_lwb,Int_t col_upb,Float_t *data);
-  void      Adopt       (TMatrixF &a);
+  void      Use         (TMatrixF &a);
   TMatrixF  GetSub      (Int_t row_lwb,Int_t row_upb,
                          Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
   void      SetSub      (Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source);
@@ -105,9 +111,12 @@ public:
   inline void Mult(const TMatrixFSym &a,const TMatrixF    &b) { AMultB(a,b,0); }
 
   // Either access a_ij as a(i,j)
-  inline const Float_t &operator()(Int_t rown,Int_t coln) const;
-  inline       Float_t &operator()(Int_t rown,Int_t coln)
-                                   { return (Float_t&)((*(const TMatrixF *)this)(rown,coln)); }
+  inline const Float_t           &operator()(Int_t rown,Int_t coln) const;
+  inline       Float_t           &operator()(Int_t rown,Int_t coln)
+                                             { return (Float_t&)((*(const TMatrixF *)this)(rown,coln)); }
+  // or as a[i][j]
+  inline const TMatrixFRow_const  operator[](Int_t rown) const { return TMatrixFRow_const(*this,rown); }
+  inline       TMatrixFRow        operator[](Int_t rown)       { return TMatrixFRow      (*this,rown); }
 
   TMatrixF &operator= (const TMatrixF     &source);
   TMatrixF &operator= (const TMatrixD     &source);
@@ -188,7 +197,7 @@ public :
 
 inline const Float_t  *TMatrixF::GetMatrixArray () const { return fElements; }
 inline       Float_t  *TMatrixF::GetMatrixArray ()       { return fElements; }
-inline       void      TMatrixF::Adopt(TMatrixF &a) { Adopt(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
+inline       void      TMatrixF::Use(TMatrixF &a) { Use(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
 inline const Float_t  &TMatrixF::operator    ()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;

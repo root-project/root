@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.4 2004/01/26 20:03:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.5 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -43,8 +43,6 @@
 #include "TMatrixFBase.h"
 #endif
 
-class TMatrixDRow_const;
-class TMatrixDRow;
 class TMatrixFBase;
 class TMatrixDBase : public TObject {
 
@@ -54,9 +52,10 @@ private:
 protected:
   Int_t     fNrows;               // number of rows
   Int_t     fNcols;               // number of columns
-  Int_t     fNelems;              // number of elements in matrix
   Int_t     fRowLwb;              // lower bound of the row index
   Int_t     fColLwb;              // lower bound of the col index
+  Int_t     fNelems;              // number of elements in matrix
+
   Double_t  fTol;                 // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
                                   //  fTol is used in matrix decomposition (like in inversion)
 
@@ -64,7 +63,7 @@ protected:
   enum {kWorkMax = 100};          // size of work array's in several routines
 
   Double_t  fDataStack[kSizeMax]; //! data container
-  Bool_t    fIsOwner;             //!default kTRUE, when Adopt array kFALSE
+  Bool_t    fIsOwner;             //!default kTRUE, when Use array kFALSE
 
   Double_t* New_m   (Int_t size);
   void      Delete_m(Int_t size,Double_t*);
@@ -81,21 +80,23 @@ public:
 
   virtual ~TMatrixDBase() {}
 
-          inline       Int_t     GetRowLwb    () const { return fRowLwb; }
-          inline       Int_t     GetRowUpb    () const { return fNrows+fRowLwb-1; }
-          inline       Int_t     GetNrows     () const { return fNrows; }
-          inline       Int_t     GetColLwb    () const { return fColLwb; }
-          inline       Int_t     GetColUpb    () const { return fNcols+fColLwb-1; }
-          inline       Int_t     GetNcols     () const { return fNcols; }
-          inline       Int_t     GetNoElements() const { return fNelems; }
-          inline       Double_t  GetTol       () const { return fTol; }
+          inline       Int_t     GetRowLwb     () const { return fRowLwb; }
+          inline       Int_t     GetRowUpb     () const { return fNrows+fRowLwb-1; }
+          inline       Int_t     GetNrows      () const { return fNrows; }
+          inline       Int_t     GetColLwb     () const { return fColLwb; }
+          inline       Int_t     GetColUpb     () const { return fNcols+fColLwb-1; }
+          inline       Int_t     GetNcols      () const { return fNcols; }
+          inline       Int_t     GetNoElements () const { return fNelems; }
+          inline       Double_t  GetTol        () const { return fTol; }
+
   virtual        const Double_t *GetMatrixArray  () const = 0;
   virtual              Double_t *GetMatrixArray  ()       = 0;
-          inline       Double_t  SetTol       (Double_t tol);
+
+          inline       Double_t  SetTol        (Double_t tol);
 
   virtual void Invalidate   ()       { fNrows = fNcols = fNelems = -1; }
   inline  Bool_t IsValid    () const { if (fNrows == -1) return kFALSE; return kTRUE; }
-          Bool_t IsSymmetric() const;
+  virtual Bool_t IsSymmetric() const;
 
   // Probably move this functionality to TMatrixDFlat
   virtual void GetMatrix2Array(Double_t *data, Option_t *option="") const;
@@ -115,15 +116,17 @@ public:
   virtual Double_t E2Norm     () const;
   inline  Double_t NormInf    () const { return RowNorm(); }
   inline  Double_t Norm1      () const { return ColNorm(); }
+  virtual Int_t    NonZeros   () const;
+  virtual Double_t Sum        () const;
+  virtual Double_t Min        () const;
+  virtual Double_t Max        () const;
 
   virtual void Clear(Option_t *option="") = 0;
   void Draw (Option_t *option="");       // *MENU*
   void Print(Option_t *option="") const; // *MENU*
 
-  virtual const Double_t          &operator()(Int_t rown,Int_t coln) const = 0;
-  virtual       Double_t          &operator()(Int_t rown,Int_t coln)       = 0;
-          const TMatrixDRow_const  operator[](Int_t rown) const;
-                TMatrixDRow        operator[](Int_t rown)      ;
+  virtual const Double_t &operator()(Int_t rown,Int_t coln) const = 0;
+  virtual       Double_t &operator()(Int_t rown,Int_t coln)       = 0;
 
   Bool_t operator==(Double_t val) const;
   Bool_t operator!=(Double_t val) const;
@@ -132,7 +135,7 @@ public:
   Bool_t operator> (Double_t val) const;
   Bool_t operator>=(Double_t val) const;
 
-  ClassDef(TMatrixDBase,2) // Matrix class (double precision)
+  ClassDef(TMatrixDBase,2) // Matrix base class (double precision)
 };
 
 Double_t TMatrixDBase::SetTol(Double_t newTol)
@@ -171,8 +174,5 @@ Bool_t VerifyMatrixIdentity(const TMatrixDBase &m1,const TMatrixDBase &m2,
 #ifndef ROOT_TVectorD
 #include "TVectorD.h"
 #endif
-
-inline const TMatrixDRow_const TMatrixDBase::operator[](Int_t rown) const { return TMatrixDRow_const(*this,rown); }
-inline       TMatrixDRow       TMatrixDBase::operator[](Int_t rown)       { return TMatrixDRow      (*this,rown); }
 
 #endif

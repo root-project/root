@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.16 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.17 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -17,10 +17,10 @@
 // The following classes are defined here:                              //
 //                                                                      //
 // Different matrix views without copying data elements :               //
-//   TMatrixDRow_const    TMatrixDRow                                   //
-//   TMatrixDColumn_const TMatrixDColumn                                //
-//   TMatrixDDiag_const   TMatrixDDiag                                  //
-//   TMatrixDFlat_const   TMatrixDFlat                                  //
+//   TMatrixDRow_const       TMatrixDRow                                //
+//   TMatrixDColumn_const    TMatrixDColumn                             //
+//   TMatrixDDiag_const      TMatrixDDiag                               //
+//   TMatrixDFlat_const      TMatrixDFlat                               //
 //                                                                      //
 //   TElementActionD                                                    //
 //   TElementPosActionD                                                 //
@@ -28,15 +28,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixDBase.h"
-
-ClassImp(TMatrixDRow)
-ClassImp(TMatrixDRow_const)
-ClassImp(TMatrixDColumn)
-ClassImp(TMatrixDColumn_const)
-ClassImp(TMatrixDDiag)
-ClassImp(TMatrixDDiag_const)
-ClassImp(TMatrixDFlat)
-ClassImp(TMatrixDFlat_const)
 
 //______________________________________________________________________________
 TMatrixDRow_const::TMatrixDRow_const(const TMatrixDBase &matrix,Int_t row)
@@ -51,21 +42,6 @@ TMatrixDRow_const::TMatrixDRow_const(const TMatrixDBase &matrix,Int_t row)
   fMatrix = &matrix;
   fPtr = matrix.GetMatrixArray()+fRowInd*matrix.GetNcols();
   fInc = 1;
-}
-
-//______________________________________________________________________________
-void TMatrixDRow_const::Streamer(TBuffer &R__b)
-{
-  // Stream an object of class TMatrixDRow_const.
-
-  if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
-    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
-    TMatrixDRow_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetMatrixArray()+fRowInd*fMatrix->GetNcols();
-  } else {
-    TMatrixDRow_const::Class()->WriteBuffer(R__b,this);
-  }
 }
 
 //______________________________________________________________________________
@@ -216,21 +192,6 @@ TMatrixDColumn_const::TMatrixDColumn_const(const TMatrixDBase &matrix,Int_t col)
 }
 
 //______________________________________________________________________________
-void TMatrixDColumn_const::Streamer(TBuffer &R__b)
-{
-  // Stream an object of class TMatrixDColumn.
-   
-  if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
-    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
-    TMatrixDColumn_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetMatrixArray()+fColInd;
-  } else {
-    TMatrixDColumn_const::Class()->WriteBuffer(R__b,this);
-  }
-}
-
-//______________________________________________________________________________
 TMatrixDColumn::TMatrixDColumn(TMatrixDBase &matrix,Int_t col)
                :TMatrixDColumn_const(matrix,col)
 {
@@ -373,21 +334,6 @@ TMatrixDDiag_const::TMatrixDDiag_const(const TMatrixDBase &matrix,Int_t /*dummy*
 }
 
 //______________________________________________________________________________
-void TMatrixDDiag_const::Streamer(TBuffer &R__b)
-{
-  // Stream an object of class TMatrixDDiag.
-
-  if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
-    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
-    TMatrixDDiag_const::Class()->ReadBuffer(R__b, this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetMatrixArray();
-  } else {
-    TMatrixDDiag_const::Class()->WriteBuffer(R__b,this);
-  }
-}
-
-//______________________________________________________________________________
 TMatrixDDiag::TMatrixDDiag(TMatrixDBase &matrix,Int_t dummy)
              :TMatrixDDiag_const(matrix,dummy)
 {
@@ -522,21 +468,6 @@ TMatrixDFlat_const::TMatrixDFlat_const(const TMatrixDBase &matrix,Int_t /*dummy*
   fMatrix = &matrix;
   fPtr    = matrix.GetMatrixArray();
   fNelems = matrix.GetNoElements();
-}
-
-//______________________________________________________________________________
-void TMatrixDFlat_const::Streamer(TBuffer &R__b)
-{
-  // Stream an object of class TMatrixDFlat.
-
-  if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
-    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
-    TMatrixDFlat_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetMatrixArray();
-  } else {
-    TMatrixDFlat_const::Class()->WriteBuffer(R__b,this);
-  }
 }
 
 //______________________________________________________________________________

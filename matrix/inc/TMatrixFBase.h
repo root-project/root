@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.3 2004/01/26 20:03:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.4 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -43,8 +43,6 @@
 #include "TMatrixDBase.h"
 #endif
 
-class TMatrixFRow_const;
-class TMatrixFRow;
 class TMatrixDBase;
 class TMatrixFBase : public TObject {
 
@@ -54,9 +52,10 @@ private:
 protected:
   Int_t     fNrows;               // number of rows
   Int_t     fNcols;               // number of columns
-  Int_t     fNelems;              // number of elements in matrix
   Int_t     fRowLwb;              // lower bound of the row index
   Int_t     fColLwb;              // lower bound of the col index
+  Int_t     fNelems;              // number of elements in matrix
+
   Float_t   fTol;                 // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
                                   //  fTol is used in matrix decomposition (like in inversion)
 
@@ -64,14 +63,15 @@ protected:
   enum {kWorkMax = 100};          // size of work array's in several routines
 
   Float_t   fDataStack[kSizeMax]; //! data container
-  Bool_t    fIsOwner;             //!default kTRUE, when Adopt array kFALSE
+  Bool_t    fIsOwner;             //!default kTRUE, when Use array kFALSE
 
   Float_t* New_m   (Int_t size);
   void      Delete_m(Int_t size,Float_t*);
   Int_t     Memcpy_m(Float_t *newp,const Float_t *oldp,Int_t copySize,
                      Int_t newSize,Int_t oldSize);
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0) = 0;
+  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
+                        Int_t init = 0,Int_t nr_nonzero = -1) = 0;
 
 public:
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
@@ -115,6 +115,10 @@ public:
   virtual Float_t  E2Norm     () const;
   inline  Float_t  NormInf    () const { return RowNorm(); }
   inline  Float_t  Norm1      () const { return ColNorm(); }
+  virtual Int_t    NonZeros   () const;
+  virtual Double_t Sum        () const;
+  virtual Double_t Min        () const;
+  virtual Double_t Max        () const;
 
   virtual void Clear(Option_t *option="") = 0;
   void Draw (Option_t *option="");       // *MENU*
@@ -122,8 +126,6 @@ public:
 
   virtual const Float_t           &operator()(Int_t rown,Int_t coln) const = 0;
   virtual       Float_t           &operator()(Int_t rown,Int_t coln)       = 0;
-          const TMatrixFRow_const  operator[](Int_t rown) const;
-                TMatrixFRow        operator[](Int_t rown)      ;
 
   Bool_t operator==(Float_t val) const;
   Bool_t operator!=(Float_t val) const;
@@ -171,8 +173,5 @@ Bool_t VerifyMatrixIdentity(const TMatrixFBase &m1,const TMatrixFBase &m2,
 #ifndef ROOT_TVectorF
 #include "TVectorF.h"
 #endif
-
-inline const TMatrixFRow_const TMatrixFBase::operator[](Int_t rown) const { return TMatrixFRow_const(*this,rown); }
-inline       TMatrixFRow       TMatrixFBase::operator[](Int_t rown)       { return TMatrixFRow      (*this,rown); }
 
 #endif

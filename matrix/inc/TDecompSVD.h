@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.4 2004/02/06 16:25:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.5 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -58,6 +58,8 @@ public :
                                                return fV; }
           const TVectorD &GetSig    ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
                                                return fSig; }
+
+  virtual       void      SetMatrix (const TMatrixD &a);
 
   virtual Int_t    Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);

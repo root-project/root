@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.7 2004/02/05 18:18:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.8 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -278,7 +278,8 @@ TMatrixF::TMatrixF(const TMatrixFLazy &lazy_constructor)
 }
 
 //______________________________________________________________________________
-void TMatrixF::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,Int_t init)
+void TMatrixF::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
+                        Int_t init,Int_t /*nr_nonzero*/)
 {
   // Allocate new matrix. Arguments are number of rows, columns, row
   // lowerbound (0 default) and column lowerbound (0 default).
@@ -606,11 +607,11 @@ void TMatrixF::AtMultB(const TMatrixF &a,const TMatrixFSym &b,Int_t constr)
 }
 
 //______________________________________________________________________________
-void TMatrixF::Adopt(Int_t nrows,Int_t ncols,Float_t *data)
+void TMatrixF::Use(Int_t nrows,Int_t ncols,Float_t *data)
 {
   if (nrows <= 0 || nrows <= 0)
   {
-    Error("Adopt","nrows=%d ncols=%d",nrows,ncols);
+    Error("Use","nrows=%d ncols=%d",nrows,ncols);
     return;
   }
 
@@ -625,17 +626,17 @@ void TMatrixF::Adopt(Int_t nrows,Int_t ncols,Float_t *data)
 }
 
 //______________________________________________________________________________
-void TMatrixF::Adopt(Int_t row_lwb,Int_t row_upb,
-                     Int_t col_lwb,Int_t col_upb,Float_t *data)
+void TMatrixF::Use(Int_t row_lwb,Int_t row_upb,
+                   Int_t col_lwb,Int_t col_upb,Float_t *data)
 {
   if (row_upb < row_lwb)
   {
-    Error("Adopt","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
+    Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
     return;
   }
   if (col_upb < col_lwb)
   {
-    Error("Adopt","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
+    Error("Use","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
     return;
   }
 

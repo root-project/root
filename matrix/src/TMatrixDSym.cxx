@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.4 2004/01/29 08:58:46 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.5 2004/02/05 18:18:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -270,11 +270,11 @@ void TMatrixDSym::AtMultA(const TMatrixDSym &a,Int_t constr)
 }
 
 //______________________________________________________________________________
-void TMatrixDSym::Adopt(Int_t nrows,Double_t *data)
+void TMatrixDSym::Use(Int_t nrows,Double_t *data)
 {
   if (nrows <= 0)
   {
-    Error("Adopt","nrows=%d",nrows);
+    Error("Use","nrows=%d",nrows);
     return;
   }
   
@@ -289,11 +289,11 @@ void TMatrixDSym::Adopt(Int_t nrows,Double_t *data)
 }
 
 //______________________________________________________________________________ 
-void TMatrixDSym::Adopt(Int_t row_lwb,Int_t row_upb,Double_t *data)
+void TMatrixDSym::Use(Int_t row_lwb,Int_t row_upb,Double_t *data)
 {
   if (row_upb < row_lwb)
   {
-    Error("Adopt","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
+    Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
     return;
   }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.5 2004/02/04 17:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.6 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -92,6 +92,8 @@ Int_t TDecompLU::Decompose()
 //______________________________________________________________________________
 const TMatrixD TDecompLU::GetMatrix()
 {
+// Reconstruct the original matrix using the decomposition parts
+
   if (fStatus & kSingular)
     return TMatrixD();
   if ( !( fStatus & kDecomposed ) ) {
@@ -132,6 +134,32 @@ const TMatrixD TDecompLU::GetMatrix()
   }
 
   return a;
+}
+
+//______________________________________________________________________________
+void TDecompLU::SetMatrix(const TMatrixD &a)
+{
+  Assert(a.IsValid());
+
+  if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
+    Error("TDecompLU(const TMatrixD &","matrix should be square");
+    return;
+  }
+
+  fStatus = kInit;
+  fCondition = -1.0;
+
+  fSign = 1.0;
+  if (fNIndex != a.GetNcols()) {
+    fNIndex = a.GetNcols();
+    delete [] fIndex;
+    fIndex = new Int_t[fNIndex];
+  }
+
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
+  fLU.ResizeTo(a);
+  fLU = a;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.3 2004/01/29 08:58:46 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected:
 
   Double_t *fElements;  //![fNelems] elements themselves
 
-  virtual void Allocate  (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0);
+  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0);
 
   // Elementary constructors
   void AtMultA(const TMatrixD    &a,Int_t constr=1);
@@ -67,8 +67,8 @@ public:
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); }
 
-  void        Adopt         (Int_t nrows,Double_t *data);
-  void        Adopt         (Int_t row_lwb,Int_t row_upb,Double_t *data);
+  void        Use           (Int_t nrows,Double_t *data);
+  void        Use           (Int_t row_lwb,Int_t row_upb,Double_t *data);
   TMatrixDSym GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
   void        SetSub        (Int_t row_lwb,const TMatrixDSym &source);
 
@@ -84,9 +84,12 @@ public:
   TMatrixDSym  &NormByDiag  (const TVectorD &v,Option_t *option="D");
 
   // Either access a_ij as a(i,j)
-  inline const Double_t &operator()(Int_t rown,Int_t coln) const;
-  inline       Double_t &operator()(Int_t rown,Int_t coln)
-                                   { return (Double_t&)((*(const TMatrixDSym *)this)(rown,coln)); }
+  inline const Double_t          &operator()(Int_t rown,Int_t coln) const;
+  inline       Double_t          &operator()(Int_t rown,Int_t coln)
+                                            { return (Double_t&)((*(const TMatrixDSym *)this)(rown,coln)); }
+  // or as a[i][j]
+  inline const TMatrixDRow_const  operator[](Int_t rown) const { return TMatrixDRow_const(*this,rown); }
+  inline       TMatrixDRow        operator[](Int_t rown)       { return TMatrixDRow      (*this,rown); }
 
   TMatrixDSym &operator= (const TMatrixDSym     &source);
   TMatrixDSym &operator= (const TMatrixDSymLazy &source);
@@ -115,18 +118,12 @@ public:
   ClassDef(TMatrixDSym,1) // Symmetric Matrix class (double precision)
 };
 
-inline const Double_t *TMatrixDSym::GetMatrixArray  () const { return fElements; }
-inline       Double_t *TMatrixDSym::GetMatrixArray  ()       { return fElements; }
+inline const Double_t *TMatrixDSym::GetMatrixArray() const { return fElements; }
+inline       Double_t *TMatrixDSym::GetMatrixArray()       { return fElements; }
 inline const Double_t &TMatrixDSym::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;
-  if (!(arown < fNrows && arown >= 0)) {
-    printf("fRowLwb = %d\n",fRowLwb);
-    printf("fNrows  = %d\n",fNrows);
-    printf("arown   = %d\n",arown);
-    printf("acoln   = %d\n",acoln);
-  }
   Assert(arown < fNrows && arown >= 0);
   Assert(acoln < fNcols && acoln >= 0);
   return (fElements[arown*fNcols+acoln]);

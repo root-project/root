@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.35 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.36 2004/01/29 21:57:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 // kSizeMax overhead for each vector object . If this is an issue       //
 // recompile with a new appropriate value (>=0) for kSizeMax            //
 //                                                                      //
-// Another way to assign and store vector data is through Adoption      //
+// Another way to assign and store vector data is through Use           //
 // see for instance stress_linalg.cxx file .                            //
 //                                                                      //
 // Note that Constructors/assignments exists for all different matrix   //
@@ -140,7 +140,7 @@ TVectorD::TVectorD(const TVectorD &another) : TObject(another)
 }
 
 //______________________________________________________________________________
-TVectorD::TVectorD(const TMatrixDRow_const &mr) : TObject(mr)
+TVectorD::TVectorD(const TMatrixDRow_const &mr) : TObject()
 {
   const TMatrixDBase *mt = mr.GetMatrix();
   Assert(mt->IsValid());
@@ -149,7 +149,7 @@ TVectorD::TVectorD(const TMatrixDRow_const &mr) : TObject(mr)
 }
 
 //______________________________________________________________________________
-TVectorD::TVectorD(const TMatrixDColumn_const &mc) : TObject(mc)
+TVectorD::TVectorD(const TMatrixDColumn_const &mc) : TObject()
 {
   const TMatrixDBase *mt = mc.GetMatrix();
   Assert(mt->IsValid());
@@ -158,7 +158,7 @@ TVectorD::TVectorD(const TMatrixDColumn_const &mc) : TObject(mc)
 }
 
 //______________________________________________________________________________
-TVectorD::TVectorD(const TMatrixDDiag_const &md) : TObject(md)
+TVectorD::TVectorD(const TMatrixDDiag_const &md) : TObject()
 {
   const TMatrixDBase *mt = md.GetMatrix();
   Assert(mt->IsValid());
@@ -243,7 +243,7 @@ void TVectorD::ResizeTo(Int_t lwb,Int_t upb)
 }
 
 //______________________________________________________________________________
-void TVectorD::Adopt(Int_t n,Double_t *data)
+void TVectorD::Use(Int_t n,Double_t *data)
 {
   Assert(n > 0);
 
@@ -255,7 +255,7 @@ void TVectorD::Adopt(Int_t n,Double_t *data)
 }
 
 //______________________________________________________________________________
-void TVectorD::Adopt(Int_t lwb,Int_t upb,Double_t *data)
+void TVectorD::Use(Int_t lwb,Int_t upb,Double_t *data)
 {
   Assert(upb >= lwb);
 
@@ -402,6 +402,45 @@ TVectorD &TVectorD::Sqrt()
 }
 
 //______________________________________________________________________________
+TVectorD &TVectorD::Invert()
+{
+   // v[i] = 1/v[i]
+
+  Assert(IsValid());                                                    
+
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows; 
+  while (ep < fp) {
+    Assert(*ep != 0.0);
+    *ep = 1./ *ep;                                             
+    ep++;
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::SelectNonZeros(const TVectorD &select)
+{   
+  if (!AreCompatible(*this,select)) {
+    Error("SelectNonZeros(const TVectorD &","vector's not compatible");
+    Invalidate();
+    return *this;
+  }
+  
+  const Double_t *sp = select.GetMatrixArray();
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows; 
+  while (ep < fp) {
+    if (*sp == 0.0)
+      *ep = 0.0;
+    sp++; ep++;
+  } 
+
+  return *this;
+}   
+
+//______________________________________________________________________________
 Double_t TVectorD::Norm1() const
 {
   // Compute the 1-norm of the vector SUM{ |v[i]| }.
@@ -452,6 +491,60 @@ Double_t TVectorD::NormInf() const
 }
 
 //______________________________________________________________________________
+Int_t TVectorD::NonZeros() const
+{
+  // Compute the number of elements != 0.0
+
+  Assert(IsValid());                                                    
+
+  Int_t nr_nonzeros = 0;
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    if (*ep++) nr_nonzeros++;
+
+  return nr_nonzeros;
+}
+
+//______________________________________________________________________________
+Double_t TVectorD::Sum() const
+{
+  // Compute sum of elements
+
+  Assert(IsValid());                                                    
+
+  Double_t sum = 0.0;
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) 
+    sum += *ep++;
+
+  return sum;
+}
+
+//______________________________________________________________________________
+Double_t TVectorD::Min() const
+{
+  // return minimum vector element value
+
+  Assert(IsValid());                                                    
+
+  const Int_t index = TMath::LocMin(fNrows,fElements);
+  return fElements[index];
+}
+
+//______________________________________________________________________________
+Double_t TVectorD::Max() const
+{
+  // return maximum vector element value
+
+  Assert(IsValid());
+
+  const Int_t index = TMath::LocMax(fNrows,fElements);
+  return fElements[index];
+}
+
+//______________________________________________________________________________
 TVectorD &TVectorD::operator=(const TVectorD &source)
 {
   // Notice that this assinment does NOT change the ownership :
@@ -468,8 +561,7 @@ TVectorD &TVectorD::operator=(const TVectorD &source)
 //______________________________________________________________________________
 TVectorD &TVectorD::operator=(const TMatrixDRow_const &mr)
 {
-  // Assign a matrix row to a vector. The matrix row is implicitly transposed
-  // to allow the assignment in the strict sense.
+  // Assign a matrix row to a vector.
 
   Assert(IsValid());
   const TMatrixDBase *mt = mr.GetMatrix();
@@ -483,7 +575,7 @@ TVectorD &TVectorD::operator=(const TMatrixDRow_const &mr)
 
   const Int_t inc    = mr.GetInc();
   const Double_t *rp = mr.GetPtr();              // Row ptr
-        Double_t *ep = this->GetMatrixArray();      // Vector ptr
+        Double_t *ep = this->GetMatrixArray();   // Vector ptr
   const Double_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep++ = *rp;
@@ -512,7 +604,7 @@ TVectorD &TVectorD::operator=(const TMatrixDColumn_const &mc)
 
   const Int_t inc    = mc.GetInc();
   const Double_t *cp = mc.GetPtr();              // Column ptr
-        Double_t *ep = this->GetMatrixArray();      // Vector ptr
+        Double_t *ep = this->GetMatrixArray();   // Vector ptr
   const Double_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep++ = *cp;
@@ -541,7 +633,7 @@ TVectorD &TVectorD::operator=(const TMatrixDDiag_const &md)
 
   const Int_t    inc = md.GetInc();
   const Double_t *dp = md.GetPtr();              // Diag ptr
-        Double_t *ep = this->GetMatrixArray();      // Vector ptr
+        Double_t *ep = this->GetMatrixArray();   // Vector ptr
   const Double_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep++ = *dp;
@@ -616,7 +708,7 @@ TVectorD &TVectorD::operator*=(Double_t val)
 //______________________________________________________________________________
 TVectorD &TVectorD::operator+=(const TVectorD &source)
 {
-  // Multiply every element of the vector with val.
+  // Add vector source
 
   if (!AreCompatible(*this,source)) {
     Error("operator+=(const TVectorD &)","vector's not compatible");
@@ -636,7 +728,7 @@ TVectorD &TVectorD::operator+=(const TVectorD &source)
 //______________________________________________________________________________
 TVectorD &TVectorD::operator-=(const TVectorD &source)
 {
-  // Multiply every element of the vector with val.
+  // Subtract vector source
 
   if (!AreCompatible(*this,source)) {
     Error("operator-=(const TVectorD &)","vector's not compatible");
@@ -863,6 +955,62 @@ Bool_t TVectorD::operator>=(Double_t val) const
 }
 
 //______________________________________________________________________________
+Bool_t TVectorD::MatchesNonZeroPattern(const TVectorD &select)
+{
+  if (!AreCompatible(*this,select)) {
+    Error("MatchesNonZeroPattern(const TVectorD&)","vector's not compatible");
+    return kFALSE;
+  } 
+
+  const Double_t *sp = select.GetMatrixArray();
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    if (*sp == 0.0 && *ep != 0.0)
+      return kFALSE;
+    sp++; ep++;
+  }
+
+  return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TVectorD::SomePositive(const TVectorD &select)
+{
+  if (!AreCompatible(*this,select)) {
+    Error("SomePositive(const TVectorD&)","vector's not compatible");
+    return kFALSE;
+  }
+
+  const Double_t *sp = select.GetMatrixArray();
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    if (*sp != 0.0 && *ep <= 0.0)
+      return kFALSE;
+    sp++; ep++;
+  }
+
+  return kTRUE;
+}
+
+//______________________________________________________________________________
+void TVectorD::AddSomeConstant(Double_t val,const TVectorD &select)
+{
+  if (!AreCompatible(*this,select))
+    Error("AddSomeConstant(Double_t,const TVectorD &)(const TVectorD&)","vector's not compatible");
+
+  const Double_t *sp = select.GetMatrixArray();
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    if (*sp)
+      *ep += val;
+    sp++; ep++;
+  }
+}
+
+//______________________________________________________________________________
 TVectorD &TVectorD::Apply(const TElementActionD &action)
 {
   // Apply action to each element of the vector.
@@ -1005,8 +1153,159 @@ TVectorD &Add(TVectorD &target,Double_t scalar,const TVectorD &source)
   const Double_t *       sp  = source.GetMatrixArray();
         Double_t *       tp  = target.GetMatrixArray();
   const Double_t * const ftp = tp+target.GetNrows();
-  while ( tp < ftp )
-    *tp++ += scalar * (*sp++);
+  if (scalar == 1.0 ) {
+    while ( tp < ftp )
+      *tp++ += *sp++;
+  } else if (scalar == -1.0) {
+    while ( tp < ftp )
+      *tp++ -= *sp++;
+  } else {
+    while ( tp < ftp )
+      *tp++ += scalar * *sp++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &AddElemMult(TVectorD &target,Double_t scalar,
+                      const TVectorD &source1,const TVectorD &source2)
+{
+  // Modify addition: target += scalar * ElementMult(source1,source2) .
+
+  if (!(AreCompatible(target,source1) && AreCompatible(target,source1))) {
+    Error("AddElemMult(TVectorD &,Double_t,const TVectorD &,const TVectorD &)",
+           "vector's are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *       sp1 = source1.GetMatrixArray();
+  const Double_t *       sp2 = source2.GetMatrixArray();
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();
+
+  if (scalar == 1.0 ) {
+    while ( tp < ftp )
+      *tp++ += *sp1++ * *sp2++;
+  } else if (scalar == -1.0) {
+    while ( tp < ftp )
+      *tp++ -= *sp1++ * *sp2++;
+  } else {
+    while ( tp < ftp )
+      *tp++ += scalar * *sp1++ * *sp2++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &AddElemMult(TVectorD &target,Double_t scalar,
+                      const TVectorD &source1,const TVectorD &source2,const TVectorD &select)
+{
+  // Modify addition: target += scalar * ElementMult(source1,source2) only for those elements
+  // where select[i] != 0.0 
+
+  if (!( AreCompatible(target,source1) && AreCompatible(target,source1) &&
+         AreCompatible(target,select) )) {
+    Error("AddElemMult(TVectorD &,Double_t,const TVectorD &,const TVectorD &,onst TVectorD &)",
+           "vector's are incompatible"); 
+    target.Invalidate(); 
+    return target;
+  }
+
+  const Double_t *       sp1 = source1.GetMatrixArray();                
+  const Double_t *       sp2 = source2.GetMatrixArray();                
+  const Double_t *       mp  = select.GetMatrixArray();                
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();                    
+
+  if (scalar == 1.0 ) {
+    while ( tp < ftp ) {
+      if (*mp) *tp += *sp1 * *sp2;
+      mp++; tp++; sp1++; sp2++;
+    }
+  } else if (scalar == -1.0) {
+    while ( tp < ftp ) {
+      if (*mp) *tp -= *sp1 * *sp2;
+      mp++; tp++; sp1++; sp2++;
+    }
+  } else {
+    while ( tp < ftp ) {
+      if (*mp) *tp += scalar * *sp1 * *sp2;
+      mp++; tp++; sp1++; sp2++;
+    }
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &AddElemDiv(TVectorD &target,Double_t scalar,
+                     const TVectorD &source1,const TVectorD &source2)
+{
+  // Modify addition: target += scalar * ElementMult(source1,source2) .
+
+  if (!(AreCompatible(target,source1) && AreCompatible(target,source1))) {
+    Error("AddElemDiv(TVectorD &,Double_t,const TVectorD &,const TVectorD &)",
+           "vector's are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *       sp1 = source1.GetMatrixArray();
+  const Double_t *       sp2 = source2.GetMatrixArray();
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();
+
+  if (scalar == 1.0 ) {
+    while ( tp < ftp ) 
+      *tp++ += *sp1++ / *sp2++;
+  } else if (scalar == -1.0) {
+    while ( tp < ftp ) 
+      *tp++ -= *sp1++ / *sp2++;
+  } else {
+    while ( tp < ftp ) 
+      *tp++ += scalar * *sp1++ / *sp2++;
+  } 
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &AddElemDiv(TVectorD &target,Double_t scalar,
+                     const TVectorD &source1,const TVectorD &source2,const TVectorD &select)
+{
+  // Modify addition: target += scalar * ElementMult(source1,source2) only for those elements
+  // where select[i] != 0.0 
+
+  if (!( AreCompatible(target,source1) && AreCompatible(target,source1) &&
+         AreCompatible(target,select) )) {
+    Error("AddElemDiv(TVectorD &,Double_t,const TVectorD &,const TVectorD &,onst TVectorD &)",
+           "vector's are incompatible"); 
+    target.Invalidate(); 
+    return target;
+  }
+
+  const Double_t *       sp1 = source1.GetMatrixArray();
+  const Double_t *       sp2 = source2.GetMatrixArray();
+  const Double_t *       mp  = select.GetMatrixArray();
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();
+
+  if (scalar == 1.0 ) {
+    while ( tp < ftp )
+      if (*mp) *tp += *sp1 / *sp2;
+      mp++; tp++; sp1++; sp2++;
+  } else if (scalar == -1.0) {
+    while ( tp < ftp )
+      if (*mp) *tp -= *sp1 / *sp2;
+      mp++; tp++; sp1++; sp2++;
+  } else {
+    while ( tp < ftp )
+      if (*mp) *tp += scalar * *sp1 / *sp2;
+      mp++; tp++; sp1++; sp2++;
+  }
 
   return target;
 }
@@ -1017,7 +1316,7 @@ TVectorD &ElementMult(TVectorD &target,const TVectorD &source)
   // Multiply target by the source, element-by-element.
 
   if (!AreCompatible(target,source)) {
-    Error("Add(TVectorD &,const TVectorD &)","vector's are incompatible");
+    Error("ElementMult(TVectorD &,const TVectorD &)","vector's are incompatible");
     target.Invalidate();
     return target;
   }
@@ -1032,12 +1331,35 @@ TVectorD &ElementMult(TVectorD &target,const TVectorD &source)
 }
 
 //______________________________________________________________________________
+TVectorD &ElementMult(TVectorD &target,const TVectorD &source,const TVectorD &select)
+{
+  // Multiply target by the source, element-by-element only where select[i] != 0.0 
+
+  if (!(AreCompatible(target,source) && AreCompatible(target,select))) {
+    Error("ElementMult(TVectorD &,const TVectorD &,const TVectorD &)","vector's are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *       sp  = source.GetMatrixArray();
+  const Double_t *       mp  = select.GetMatrixArray();
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();
+  while ( tp < ftp ) {
+    if (*mp) *tp *= *sp;
+    mp++; tp++; sp++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
 TVectorD &ElementDiv(TVectorD &target,const TVectorD &source)
 {
   // Divide target by the source, element-by-element.
 
   if (!AreCompatible(target,source)) {
-    Error("Add(TVectorD &,const TVectorD &)","vector's are incompatible");
+    Error("ElementDiv(TVectorD &,const TVectorD &)","vector's are incompatible");
     target.Invalidate();
     return target;
   }
@@ -1047,6 +1369,29 @@ TVectorD &ElementDiv(TVectorD &target,const TVectorD &source)
   const Double_t * const ftp = tp+target.GetNrows();
   while ( tp < ftp )
     *tp++ /= *sp++;
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &ElementDiv(TVectorD &target,const TVectorD &source,const TVectorD &select)
+{ 
+  // Divide target by the source, element-by-element only where select[i] != 0.0 
+    
+  if (!AreCompatible(target,source)) {
+    Error("ElementDiv(TVectorD &,const TVectorD &,const TVectorD &)","vector's are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *       sp  = source.GetMatrixArray();
+  const Double_t *       mp  = select.GetMatrixArray();
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();
+  while ( tp < ftp ) {
+    if (*mp) *tp /= *sp;
+    mp++; tp++; sp++;
+  }
 
   return target;
 }

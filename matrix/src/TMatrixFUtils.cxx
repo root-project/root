@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -29,15 +29,6 @@
 
 #include "TMatrixFBase.h"
 
-ClassImp(TMatrixFRow)
-ClassImp(TMatrixFRow_const)
-ClassImp(TMatrixFColumn)
-ClassImp(TMatrixFColumn_const)
-ClassImp(TMatrixFDiag)
-ClassImp(TMatrixFDiag_const)
-ClassImp(TMatrixFFlat)
-ClassImp(TMatrixFFlat_const)
-
 //______________________________________________________________________________
 TMatrixFRow_const::TMatrixFRow_const(const TMatrixFBase &matrix,Int_t row)
 {
@@ -51,21 +42,6 @@ TMatrixFRow_const::TMatrixFRow_const(const TMatrixFBase &matrix,Int_t row)
   fMatrix = &matrix;
   fPtr = matrix.GetMatrixArray()+fRowInd*matrix.GetNcols();
   fInc = 1;
-}
-
-//______________________________________________________________________________
-void TMatrixFRow_const::Streamer(TBuffer &R__b)
-{
-  // Stream an object of class TMatrixFRow_const.
-
-  if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
-    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
-    TMatrixFRow_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetMatrixArray()+fRowInd*fMatrix->GetNcols();
-  } else {
-    TMatrixFRow_const::Class()->WriteBuffer(R__b,this);
-  }
 }
 
 //______________________________________________________________________________
@@ -216,21 +192,6 @@ TMatrixFColumn_const::TMatrixFColumn_const(const TMatrixFBase &matrix,Int_t col)
 }
 
 //______________________________________________________________________________
-void TMatrixFColumn_const::Streamer(TBuffer &R__b)
-{
-  // Stream an object of class TMatrixFColumn.
-   
-  if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
-    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
-    TMatrixFColumn_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetMatrixArray()+fColInd;
-  } else {
-    TMatrixFColumn_const::Class()->WriteBuffer(R__b,this);
-  }
-}
-
-//______________________________________________________________________________
 TMatrixFColumn::TMatrixFColumn(TMatrixFBase &matrix,Int_t col)
                :TMatrixFColumn_const(matrix,col)
 {
@@ -373,21 +334,6 @@ TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixFBase &matrix,Int_t /*dummy*
 }
 
 //______________________________________________________________________________
-void TMatrixFDiag_const::Streamer(TBuffer &R__b)
-{
-  // Stream an object of class TMatrixFDiag.
-
-  if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
-    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
-    TMatrixFDiag_const::Class()->ReadBuffer(R__b, this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetMatrixArray();
-  } else {
-    TMatrixFDiag_const::Class()->WriteBuffer(R__b,this);
-  }
-}
-
-//______________________________________________________________________________
 TMatrixFDiag::TMatrixFDiag(TMatrixFBase &matrix,Int_t dummy)
              :TMatrixFDiag_const(matrix,dummy)
 {
@@ -522,21 +468,6 @@ TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixFBase &matrix,Int_t /*dummy*
   fMatrix = &matrix;
   fPtr    = matrix.GetMatrixArray();
   fNelems = matrix.GetNoElements();
-}
-
-//______________________________________________________________________________
-void TMatrixFFlat_const::Streamer(TBuffer &R__b)
-{
-  // Stream an object of class TMatrixFFlat.
-
-  if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
-    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
-    TMatrixFFlat_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetMatrixArray();
-  } else {
-    TMatrixFFlat_const::Class()->WriteBuffer(R__b,this);
-  }
 }
 
 //______________________________________________________________________________

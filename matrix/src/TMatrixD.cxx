@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.55 2004/02/05 18:18:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.56 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -606,11 +606,11 @@ void TMatrixD::AtMultB(const TMatrixD &a,const TMatrixDSym &b,Int_t constr)
 }
 
 //______________________________________________________________________________
-void TMatrixD::Adopt(Int_t nrows,Int_t ncols,Double_t *data)
+void TMatrixD::Use(Int_t nrows,Int_t ncols,Double_t *data)
 {
   if (nrows <= 0 || nrows <= 0)
   {
-    Error("Adopt","nrows=%d ncols=%d",nrows,ncols);
+    Error("Use","nrows=%d ncols=%d",nrows,ncols);
     return;
   }
 
@@ -625,17 +625,17 @@ void TMatrixD::Adopt(Int_t nrows,Int_t ncols,Double_t *data)
 }
 
 //______________________________________________________________________________
-void TMatrixD::Adopt(Int_t row_lwb,Int_t row_upb,
-                     Int_t col_lwb,Int_t col_upb,Double_t *data)
+void TMatrixD::Use(Int_t row_lwb,Int_t row_upb,
+                   Int_t col_lwb,Int_t col_upb,Double_t *data)
 {
   if (row_upb < row_lwb)
   {
-    Error("Adopt","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
+    Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
     return;
   }
   if (col_upb < col_lwb)
   {
-    Error("Adopt","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
+    Error("Use","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
     return;
   }
 
@@ -993,7 +993,7 @@ TMatrixD &TMatrixD::Transpose(const TMatrixD &source)
 
   if (this == &source) {
     Double_t *ap = this->GetMatrixArray();
-    if (fNrows == fNcols && fRowLwb == 0 && fColLwb == 0) {
+    if (fNrows == fNcols && fRowLwb == fColLwb) {
       for (Int_t i = 0; i < fNrows; i++) {
         const Int_t off_i = i*fNrows;
         for (Int_t j = i+1; j < fNcols; j++) {

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.3 2004/01/29 08:58:46 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.4 2004/02/05 18:18:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -148,7 +148,8 @@ TMatrixFSym::TMatrixFSym(const TMatrixFSymLazy &lazy_constructor)
 }
 
 //______________________________________________________________________________
-void TMatrixFSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,Int_t init)
+void TMatrixFSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
+                           Int_t init,Int_t /*nr_nonzero*/)
 {
   // Allocate new matrix. Arguments are number of rows, columns, row
   // lowerbound (0 default) and column lowerbound (0 default).
@@ -262,11 +263,11 @@ void TMatrixFSym::AtMultA(const TMatrixFSym &a,Int_t constr)
 }
 
 //______________________________________________________________________________
-void TMatrixFSym::Adopt(Int_t nrows,Float_t *data)
+void TMatrixFSym::Use(Int_t nrows,Float_t *data)
 {
   if (nrows <= 0)
   {
-    Error("Adopt","nrows=%d",nrows);
+    Error("Use","nrows=%d",nrows);
     return;
   }
   
@@ -281,11 +282,11 @@ void TMatrixFSym::Adopt(Int_t nrows,Float_t *data)
 }
 
 //______________________________________________________________________________ 
-void TMatrixFSym::Adopt(Int_t row_lwb,Int_t row_upb,Float_t *data)
+void TMatrixFSym::Use(Int_t row_lwb,Int_t row_upb,Float_t *data)
 {
   if (row_upb < row_lwb)
   {
-    Error("Adopt","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
+    Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
     return;
   }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.8 2004/02/06 16:25:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.9 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -79,7 +79,7 @@ Int_t TDecompSVD::Decompose()
   TVectorD offDiag;
   Double_t work[kWorkMax];
   if (nCol > kWorkMax) offDiag.ResizeTo(nCol);
-  else                 offDiag.Adopt(nCol,work);
+  else                 offDiag.Use(nCol,work);
 
   // step 1: bidiagonalization of A
   if (!Bidiagonalize(fV,fU,fSig,offDiag))
@@ -471,6 +471,8 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
 //______________________________________________________________________________
 const TMatrixD TDecompSVD::GetMatrix()
 {
+// Reconstruct the original matrix using the decomposition parts
+
   if (fStatus & kSingular)
     return TMatrixD();
   if ( !( fStatus & kDecomposed ) ) {
@@ -484,6 +486,31 @@ const TMatrixD TDecompSVD::GetMatrix()
   TMatrixDDiag(s,0) = fSig;
   const TMatrixD vt(TMatrixDBase::kTransposed,fV);
   return fU * s * vt;
+}
+
+//______________________________________________________________________________
+void TDecompSVD::SetMatrix(const TMatrixD &a)
+{
+  Assert(a.IsValid());
+  if (a.GetNrows() < a.GetNcols()) {
+    Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
+    return;
+  }
+
+  fStatus = kInit;
+  fCondition = -1.0;
+
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
+  const Int_t nRow = a.GetNrows();
+  const Int_t nCol = a.GetNcols();
+
+  fU.ResizeTo(nRow,nRow);
+  fSig.ResizeTo(nCol);
+  fV.ResizeTo(nRow,nCol); // In the end we only need the nColxnCol part
+
+  fU.UnitMatrix();
+  memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
 }
 
 //______________________________________________________________________________
@@ -531,7 +558,7 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 
   if (b.GetNrows() > fV.GetNrows()) {
       TVectorD tmp2;
-      tmp2.Adopt(lwb,upb,b.GetMatrixArray());
+      tmp2.Use(lwb,upb,b.GetMatrixArray());
       tmp2 = fV*tmp;
   } else
     b = fV*tmp;

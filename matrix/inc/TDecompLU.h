@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.5 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.6 2004/02/18 14:36:43 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -48,6 +48,8 @@ public :
   virtual       Int_t     GetNcols  () const { return fLU.GetNcols(); }
                 TMatrixD &GetLU     ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
                                                return fLU; }
+
+  virtual       void      SetMatrix (const TMatrixD &a);
 
   virtual Int_t    Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);

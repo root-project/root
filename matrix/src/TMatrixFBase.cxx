@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.3 2004/01/28 16:36:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.4 2004/01/29 21:57:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 // course kSizeMax overhead for each matrix object . If this is an      //
 // issue recompile with a new appropriate value (>=0) for kSizeMax      //
 //                                                                      //
-// Another way to assign and store matrix data is through Adoption      //
+// Another way to assign and store matrix data is through Use           //
 // see for instance stress_linalg.cxx file .                            //
 //                                                                      //
 // Unless otherwise specified, matrix and vector indices always start   //
@@ -279,7 +279,8 @@ Bool_t TMatrixFBase::IsSymmetric() const
 //______________________________________________________________________________
 void TMatrixFBase::GetMatrix2Array(Float_t *data,Option_t *option) const 
 {
-  // Copy matrix data to array . It is assumed that array is of size >= fNrows*fNcols
+  // Copy matrix data to array . It is assumed that array is of size >= fNelems
+  // (=)))) fNrows*fNcols
   // option indicates how the data is stored in the array:
   // option =
   //          'F'   : column major (Fortran) array[i+j*fNrows] = m[i][j]
@@ -307,7 +308,8 @@ void TMatrixFBase::GetMatrix2Array(Float_t *data,Option_t *option) const
 //______________________________________________________________________________
 void TMatrixFBase::SetMatrixArray(const Float_t *data,Option_t *option) 
 {
-  // Copy array data to matrix . It is assumed that array is of size >= fNrows*fNcols
+  // Copy array data to matrix . It is assumed that array is of size >= fNelems
+  // (=)))) fNrows*fNcols
   // option indicates how the data is stored in the array:
   // option =
   //          'F'   : column major (Fortran) m[i][j] = array[i+j*fNrows]
@@ -542,6 +544,62 @@ Float_t TMatrixFBase::E2Norm() const
 }
 
 //______________________________________________________________________________
+Int_t TMatrixFBase::NonZeros() const
+{
+  // Compute the number of elements != 0.0
+
+  Assert(IsValid());                                                    
+
+  Int_t nr_nonzeros = 0;
+  const Float_t *ep = this->GetMatrixArray();
+  const Float_t * const fp = ep+fNelems;
+  while (ep < fp) 
+    if (*ep++) nr_nonzeros++;                                           
+
+  return nr_nonzeros;
+}
+
+//______________________________________________________________________________
+Double_t TMatrixFBase::Sum() const
+{
+  // Compute sum of elements
+
+  Assert(IsValid());
+
+  Double_t sum = 0.0;
+  const Float_t *ep = this->GetMatrixArray();
+  const Float_t * const fp = ep+fNelems;
+  while (ep < fp)
+    sum += *ep++;
+
+  return sum;
+}
+
+//______________________________________________________________________________
+Double_t TMatrixFBase::Min() const
+{
+  // return minimum matrix element value
+
+  Assert(IsValid());
+
+  const Float_t * const ep = this->GetMatrixArray();
+  const Int_t index = TMath::LocMin(fNelems,ep);
+  return ep[index];
+}
+
+//______________________________________________________________________________
+Double_t TMatrixFBase::Max() const
+{
+  // return maximum vector element value
+
+  Assert(IsValid());
+
+  const Float_t * const ep = this->GetMatrixArray();
+  const Int_t index = TMath::LocMax(fNelems,ep);
+  return ep[index];
+}
+
+//______________________________________________________________________________
 void TMatrixFBase::Draw(Option_t *option)
 {
   // Draw this matrix using an intermediate histogram
@@ -564,7 +622,7 @@ void TMatrixFBase::Draw(Option_t *option)
 //______________________________________________________________________________
 void TMatrixFBase::Print(Option_t *) const
 {
-  // Print the matrix as a table of elements (zeros are printed as dots).
+  // Print the matrix as a table of elements .
 
   if (!IsValid()) {
      Error("Print","Matrix is invalid");

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.7 2004/02/05 18:18:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.8 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 // When the constructor is called with a "const" matrix, the original    //
 // matrix "survives" (of course) . Some classes (LU) have also a non-    //
 // "const" constructor available . Here the original matrix is adopted   //
-// by the decomposition class (See Adoption in TMatrixDBase) to store the//
+// by the decomposition class (See Use in TMatrixDBase) to store the     //
 // decomposed matrix, thereby avoiding new memory allocation.            //
 //                                                                       //
 // The decomposition (which is called by the constructor) fails when the //

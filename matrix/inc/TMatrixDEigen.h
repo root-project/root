@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.2 2004/02/06 16:25:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 // TMatrixDEigen                                                        //
 //                                                                      //
-// Eigenvalues and eigenvectors of a real symmetric matrix.             //
+// Eigenvalues and eigenvectors of a real matrix.                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

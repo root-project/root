@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.4 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.5 2004/02/06 16:25:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TMatrixDEigen                                                        //
 //                                                                      //
-// Eigenvalues and eigenvectors of a real symmetric matrix.             //
+// Eigenvalues and eigenvectors of a real matrix.                       //
 //                                                                      //
 // If A is not symmetric, then the eigenvalue matrix D is block         //
 // diagonal with the real eigenvalues in 1-by-1 blocks and any complex  //
@@ -66,7 +66,7 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
   TVectorD ortho;
   Double_t work[kWorkMax];
   if (nRows > kWorkMax) ortho.ResizeTo(nRows);
-  else                  ortho.Adopt(nRows,work);
+  else                  ortho.Use(nRows,work);
 
   TMatrixD H = a;
 

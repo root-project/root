@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.5 2004/02/06 16:25:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.6 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -84,7 +84,7 @@ Int_t TDecompQRH::Decompose()
   TVectorD diagR;
   Double_t work[kWorkMax];
   if (nCol > kWorkMax) diagR.ResizeTo(nCol);
-  else                 diagR.Adopt(nCol,work);
+  else                 diagR.Use(nCol,work);
 
   if (QRH(fQ,diagR,fUp,fW,fTol)) {
     for (Int_t i = 0; i < nRow; i++) {
@@ -132,6 +132,35 @@ Bool_t TDecompQRH::QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Doub
   }
 
   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TDecompQRH::SetMatrix(const TMatrixD &a)
+{
+  Assert(a.IsValid());
+  if (a.GetNrows() < a.GetNcols()) {
+    Error("TDecompQRH(const TMatrixD &","matrix rows should be >= columns");
+    return;
+  }
+
+  fStatus = kInit;
+  fCondition = a.Norm1();
+
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
+  const Int_t nRow = a.GetNrows();
+  const Int_t nCol = a.GetNcols();
+
+  fQ.ResizeTo(nRow,nCol);
+  memcpy(fQ.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
+  fR.ResizeTo(nCol,nCol);
+  if (nRow <= nCol) {
+    fW.ResizeTo(nRow);
+    fUp.ResizeTo(nRow);
+  } else {
+    fW.ResizeTo(nCol);
+    fUp.ResizeTo(nCol);
+  }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.4 2004/02/04 17:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.5 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -31,14 +31,16 @@ TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
 {
   Assert(a.IsValid());
 
-  fCondition = a.Norm1();
+  fCondition = -1.0;
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
 
   fRowLwb = a.GetRowLwb();
   fColLwb = a.GetColLwb();
-  Decompose(a);
+  fA.ResizeTo(a);
+  fA = a;
+  fU.ResizeTo(a);
 }
 
 //______________________________________________________________________________
@@ -51,14 +53,16 @@ TDecompChol::TDecompChol(const TMatrixD &a,Double_t tol)
     return;
   }
 
-  fCondition = a.Norm1();
+  fCondition = -1.0;
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
 
   fRowLwb = a.GetRowLwb();
   fColLwb = a.GetColLwb();
-  Decompose(a);
+  fA.ResizeTo(a);
+  fA = a;
+  fU.ResizeTo(a);
 }
 
 //______________________________________________________________________________
@@ -68,11 +72,10 @@ TDecompChol::TDecompChol(const TDecompChol &another) : TDecompBase(another)
 }
 
 //______________________________________________________________________________
-Int_t TDecompChol::Decompose(const TMatrixD &a)
+Int_t TDecompChol::Decompose()
 {
-  fU.ResizeTo(a);
-  const Int_t     n  = a.GetNrows();
-  const Double_t *pA = a.GetMatrixArray();
+  const Int_t     n  = fA.GetNrows();
+  const Double_t *pA = fA.GetMatrixArray();
         Double_t *pU = fU.GetMatrixArray();
   for (Int_t irow = 0; irow < n; irow++)
   {
@@ -107,15 +110,39 @@ Int_t TDecompChol::Decompose(const TMatrixD &a)
 }
 
 //______________________________________________________________________________
-const TMatrixD TDecompChol::GetMatrix() const
+const TMatrixD TDecompChol::GetMatrix()
 {
+// Reconstruct the original matrix using the decomposition parts
+
   if (fStatus & kSingular)
     return TMatrixD();
-  if ( !( fStatus & kDecomposed ) )
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
       return TMatrixD();
+  }
 
   const TMatrixD ut(TMatrixDBase::kTransposed,fU);
   return ut * fU;
+}
+
+//______________________________________________________________________________
+void TDecompChol::SetMatrix(const TMatrixDSym &a)
+{
+  Assert(a.IsValid());
+  
+  if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
+    Error("SetMatrix(const TMatrixDBase &","matrix should be square");
+    return;
+  } 
+  
+  fStatus = kInit;
+  fCondition = -1.0;
+    
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
+  fA.ResizeTo(a);
+  fA = a;
+  fU.ResizeTo(a);
 }
 
 //______________________________________________________________________________
@@ -126,10 +153,14 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 // element is zero. The solution is returned in b.
 
   Assert(b.IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
-  if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb())
-  {
+  if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb()) {
     Error("Solve(TVectorD &","vector and matrix incompatible");
     b.Invalidate();
     return kFALSE;
@@ -187,8 +218,13 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 { 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fStatus & kDecomposed);
-      
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
+
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
   { 
     Error("Solve(TMatrixDColumn &cb","vector and matrix incompatible");
@@ -233,16 +269,36 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 }
 
 //______________________________________________________________________________
+Double_t TDecompChol::Condition()
+{
+  if ( !( fStatus & kCondition ) ) {
+    fCondition = -1;
+    if (fStatus & kSingular)
+      return fCondition;
+    if ( !( fStatus & kDecomposed ) ) {
+      if (!Decompose())
+        return fCondition;
+    }
+    const Double_t norm = fA.Norm1();
+    Double_t invNorm;
+    if (Hager(invNorm))
+      fCondition = norm*invNorm;
+    else // no convergence in Hager
+      Error("Condition()","Hager procedure did NOT converge");
+    fStatus |= kCondition;
+  }
+  return fCondition;
+}
+
+//______________________________________________________________________________
 void TDecompChol::Det(Double_t &d1,Double_t &d2)
 {
   // determinant is square of diagProd of cholesky factor
 
   if ( !( fStatus & kDetermined ) ) {
-    if ( fStatus & kSingular ) {
-      fDet1 = 0.0;
-      fDet2 = 0.0;
-    } else 
-      TDecompBase::Det(d1,d2);
+    if ( !( fStatus & kDecomposed ) )
+      Decompose();
+    TDecompBase::Det(d1,d2);
     // square det as calculated by above
     fDet1 *= fDet1;
     fDet2 += fDet2;
@@ -257,6 +313,8 @@ TDecompChol &TDecompChol::operator=(const TDecompChol &source)
 { 
   if (this != &source) {
     TDecompBase::operator=(source);
+    fA.ResizeTo(source.fA);
+    fA = source.fA;
     fU.ResizeTo(source.fU);
     fU = source.fU;
   }
