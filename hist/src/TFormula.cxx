@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.62 2003/12/27 18:49:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.63 2004/01/06 07:44:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1861,7 +1861,10 @@ Int_t TFormula::Compile(const char *expression)
         SetParName(2,"Sigma");
      }
   }
-
+  if (fNpar <= 0) {
+     delete [] fParams; fParams=0;
+     delete [] fNames;  fNames = 0;
+  }
 
 //*-* replace 'normal' == or != by ==(string) or !=(string) if needed.
   Int_t is_it_string,last_string=0,before_last_string=0;
