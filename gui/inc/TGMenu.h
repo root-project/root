@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.22 2004/06/15 10:30:04 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.23 2004/06/16 08:16:30 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -133,6 +133,7 @@ protected:
    FontStruct_t       fHifontStruct;  // font to draw highlighted entries
    Cursor_t           fDefaultCursor; // right pointing cursor
    const TGWindow    *fMsgWindow;     // window which handles menu events
+   TGMenuBar         *fMenuBar;       // menu bar (if any)
 
    static const TGFont *fgDefaultFont;
    static const TGFont *fgHilightFont;
@@ -197,6 +198,8 @@ public:
    virtual Bool_t  HandleCrossing(Event_t *event);
    virtual Bool_t  HandleTimer(TTimer *t);
    virtual void    Associate(const TGWindow *w) { fMsgWindow = w; }
+   virtual void    SetMenuBar(TGMenuBar *bar) { fMenuBar = bar; }
+   TGMenuBar  *GetMenuBar() const {  return fMenuBar; }
 
    virtual void PoppedUp() { Emit("PoppedUp()"); }  //*SIGNAL
    virtual void PoppedDown() { Emit("PoppedDown()"); }  //*SIGNAL
@@ -271,6 +274,8 @@ public:
 
 class TGMenuBar : public TGHorizontalFrame {
 
+friend class TGPopupMenu;
+
 protected:
    TGMenuTitle  *fCurrent;       // current menu title
    TList        *fTitles;        // list of menu titles
@@ -281,6 +286,9 @@ protected:
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
+
+   virtual void BindKeys(Bool_t on = kTRUE);
+   virtual void BindHotKey(Int_t keycode, Bool_t on = kTRUE);
 
 public:
    TGMenuBar(const TGWindow *p, UInt_t w = 60, UInt_t h = 20,

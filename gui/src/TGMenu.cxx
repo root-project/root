@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.37 2004/06/16 10:07:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.38 2004/06/18 10:20:59 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -96,15 +96,6 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
                        kButtonPressMask | kButtonReleaseMask | kEnterWindowMask,
                        kNone, kNone);
 
-   const TGMainFrame *main = (TGMainFrame *)GetMainFrame();
-   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Left), kAnyModifier);
-   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
-   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier);
-   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier);
-   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
-   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
-   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
-
    fKeyNavigate = kFALSE;
 }
 
@@ -130,17 +121,63 @@ TGMenuBar::~TGMenuBar()
          main->RemoveBind(this, keycode, kKeyMod1Mask);
    }
 
-   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left), kAnyModifier);
-   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
-   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier);
-   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier);
-   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
-   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
-   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
+   BindKeys(kFALSE);
 
    // delete TGMenuTitles
    if (fTitles) fTitles->Delete();
    delete fTitles;
+}
+
+
+//______________________________________________________________________________
+void TGMenuBar::BindKeys(Bool_t on)
+{
+   // if on kTRUE bind arrow keys, otherwise - remove key bindings
+
+   const TGMainFrame *main = (TGMainFrame *)GetMainFrame();
+
+   if (!main) return;
+
+   if (on) {
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Left), kAnyModifier);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
+   } else {
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left), kAnyModifier);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
+   } 
+}
+
+//______________________________________________________________________________
+void TGMenuBar::BindHotKey(Int_t keycode, Bool_t on)
+{
+   // if on kTRUE bind hot keys, otherwise - remove key binding
+
+   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
+
+   if (!main) return;
+
+   if (on) {
+      // case unsensitive bindings
+      main->BindKey(this, keycode, kKeyMod1Mask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyLockMask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+   } else {
+      main->RemoveBind(this, keycode, kKeyMod1Mask);
+      main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyShiftMask);
+      main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyLockMask);
+      main->RemoveBind(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+   }
 }
 
 //______________________________________________________________________________
@@ -157,14 +194,8 @@ void TGMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l,
    AddFrameBefore(t = new TGMenuTitle(this, s, menu), l, before);
    fTitles->Add(t);  // keep track of menu titles for later cleanup in dtor
 
-   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-
    if ((keycode = t->GetHotKeyCode()) != 0) {
-      // case unsensitive bindings
-      main->BindKey(this, keycode, kKeyMod1Mask);
-      main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask);
-      main->BindKey(this, keycode, kKeyMod1Mask | kKeyLockMask);
-      main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+      BindHotKey(keycode, kTRUE);
    }
 }
 
@@ -290,14 +321,13 @@ TGPopupMenu *TGMenuBar::RemovePopup(const char *s)
    TIter next(GetList());
    TString str = s;
 
-   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-
    while ((el = (TGFrameElement *) next())) {
       TGMenuTitle *t = (TGMenuTitle *) el->fFrame;
       if (str == t->GetName()) {
          Int_t keycode;
-         if ((keycode = t->GetHotKeyCode()) != 0 && main)
-            main->RemoveBind(this, keycode, kKeyMod1Mask);
+         if ((keycode = t->GetHotKeyCode())) {
+            BindHotKey(keycode, kFALSE);  // remove bind
+         }
          TGPopupMenu *m = t->GetMenu();
          fTitles->Remove(t);
          t->DestroyWindow();
@@ -422,7 +452,9 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
       if (event->fState & kKeyMod1Mask) {
          while ((el = (TGFrameElement *) next())) {
             target = (TGMenuTitle *) el->fFrame;
-            if ((Int_t)event->fCode == target->GetHotKeyCode()) break;
+            if ((Int_t)event->fCode == target->GetHotKeyCode()) {
+               break;
+            }
          }
          if (el == 0) target = 0;
       } else {
@@ -603,6 +635,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fCurrent     = 0;
    fHasGrab     = kFALSE;
    fPoppedUp    = kFALSE;
+   fMenuBar     = 0;
 
    SetWindowAttributes_t wattr;
    wattr.fMask             = kWAOverrideRedirect | kWASaveUnder;
@@ -885,6 +918,7 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
 
    fPoppedUp = kTRUE;
    PoppedUp();
+   if (fMenuBar) fMenuBar->BindKeys(kTRUE);
 
    fClient->RegisterPopup(this);
 }
@@ -929,6 +963,7 @@ Int_t TGPopupMenu::EndMenu(void *&userData)
    UnmapWindow();
 
    gClient->UnregisterPopup(this);
+   if (fMenuBar) fMenuBar->BindKeys(kFALSE);
 
    if (fPoppedUp) {
       fPoppedUp = kFALSE;
@@ -1072,6 +1107,7 @@ Bool_t TGPopupMenu::HandleTimer(TTimer *)
                                        ax, ay, wdummy);
 
          fCurrent->fPopup->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
+         fCurrent->fPopup->SetMenuBar(fMenuBar);
       }
 
    fDelay->Remove();
@@ -1557,6 +1593,11 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    Resize(tw + 8, max_ascent + max_descent + 7);
+         
+   if (p->InheritsFrom(TGMenuBar::Class())) {
+      TGMenuBar *bar = (TGMenuBar*)p;
+      fMenu->SetMenuBar(bar);
+   }
 }
 
 //______________________________________________________________________________
