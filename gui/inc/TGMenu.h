@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.23 2004/06/16 08:16:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.24 2004/07/06 10:57:20 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -61,6 +61,8 @@ enum EMenuEntryType {
 
 
 class TGPopupMenu;
+class TGMenuBar;
+class TGMenuTitle;
 class TTimer;
 
 
@@ -96,7 +98,7 @@ public:
    const char    *GetName() const { return fLabel ? fLabel->GetString() : 0; }
    virtual Int_t  GetStatus() const { return fStatus; }
    EMenuEntryType GetType() const { return fType; }
-   TGPopupMenu   *GetPopup() const { return fPopup; }  
+   TGPopupMenu   *GetPopup() const { return fPopup; }
 
    ClassDef(TGMenuEntry,0);
 };
@@ -282,7 +284,7 @@ protected:
    Cursor_t      fDefaultCursor; // right pointing cursor
    Bool_t        fStick;         // stick mode (popup menu stays sticked on screen)
    TList        *fTrash;         // garbage
-   Bool_t        fKeyNavigate;   // kTRUE if arrow key navigation is on  
+   Bool_t        fKeyNavigate;   // kTRUE if arrow key navigation is on
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
