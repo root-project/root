@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.15 2004/04/27 13:13:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.16 2004/06/02 08:42:18 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -425,34 +425,36 @@ const char *TEnv::Getvalue(const char *name)
    if (gProgName && strlen(gProgName) > 0)
       haveProgName = kTRUE;
 
-   char aname[2048];
+   TString aname;
    TEnvRec *er = 0;
    if (haveProgName && gSystem && gProgName) {
-      sprintf(aname,"%s.%s.%s", gSystem->GetName(), gProgName, name);
+      aname = gSystem->GetName(); aname += "."; aname += gProgName;
+      aname += "."; aname += name;
       er = Lookup(aname);
    }
    if (er == 0 && gSystem && gROOT) {
-      sprintf(aname,"%s.%s.%s", gSystem->GetName(), gROOT->GetName(), name);
+      aname = gSystem->GetName(); aname += "."; aname += gROOT->GetName();
+      aname += "."; aname += name;
       er = Lookup(aname);
    }
    if (er == 0 && gSystem) {
-      sprintf(aname,"%s.*.%s", gSystem->GetName(), name);
+      aname = gSystem->GetName(); aname += ".*."; aname += name;
       er = Lookup(aname);
    }
    if (er == 0 && haveProgName && gProgName) {
-      sprintf(aname,"%s.%s", gProgName, name);
+      aname = gProgName; aname += "."; aname += name;
       er = Lookup(aname);
    }
    if (er == 0 && gROOT) {
-      sprintf(aname,"%s.%s", gROOT->GetName(), name);
+      aname = gROOT->GetName(); aname += "."; aname += name;
       er = Lookup(aname);
    }
    if (er == 0) {
-      sprintf(aname,"*.*.%s", name);
+      aname = "*.*."; aname += name;
       er = Lookup(aname);
    }
    if (er == 0) {
-      sprintf(aname,"*.%s", name);
+      aname = "*."; aname += name;
       er = Lookup(aname);
    }
    if (er == 0) {
