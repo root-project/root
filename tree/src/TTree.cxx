@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.188 2004/05/26 07:48:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.189 2004/05/29 20:36:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3220,6 +3220,33 @@ Bool_t TTree::MemoryFull(Int_t nbytes)
 
    if (fTotalBuffers + nbytes < fMaxVirtualSize) return kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+TTree *TTree::MergeTrees(TList *list) 
+{
+   //static function merging the Trees in the TList into a new Tree.
+   //Trees in the list can be memory or disk-resident trees
+   //The new tree is created in the current directory (memory if gROOT)
+
+   if (!list) return 0;
+   TIter next(list);
+   TTree *newtree = 0;
+   TObject *obj;
+   while ((obj=next())) {
+      if (!obj->InheritsFrom(TTree::Class())) continue;
+      TTree *tree = (TTree*)obj;
+      if (!newtree) {
+         newtree = (TTree*)tree->CloneTree();
+         continue;
+      }
+      Int_t nentries = (Int_t)tree->GetEntries();
+      for (Int_t i=0;i<nentries;i++) {
+         tree->GetEntry(i);
+         newtree->Fill();
+      }
+   }
+   return newtree;
 }
 
 //______________________________________________________________________________
