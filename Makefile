@@ -364,7 +364,7 @@ distclean:: clean
 maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
-	@rm -rf bin lib include system.rootrc config/Makefile.config \
+	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   test/Makefile etc/system.rootrc etc/root.mimes
 
 version: $(CINTTMP)
