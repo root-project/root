@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.11 2001/02/21 07:30:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.12 2001/06/29 17:00:10 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -68,6 +68,7 @@ enum EObjBits {
    kCanDelete        = BIT(0),   // if object in a list can be deleted
    kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
    kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
+   kIsReferenced     = BIT(4),   // if object is referenced by a TObjectRef
    kCannotPick       = BIT(6),   // if object in a pad cannot be picked
    kNoContextMenu    = BIT(8),   // if object does not want context menu
    kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
@@ -168,6 +169,7 @@ public:
    void     SetBit(UInt_t f) { fBits |= f & kBitMask; }
    void     ResetBit(UInt_t f) { fBits &= ~(f & kBitMask); }
    Bool_t   TestBit(UInt_t f) const { return (Bool_t) ((fBits & f) != 0); }
+   Int_t    TestBits(UInt_t f) const { return (Int_t) (fBits & f); }
    void     InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
 
    //---- error handling
