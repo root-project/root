@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.5 2004/12/06 09:55:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.6 2004/12/16 11:16:24 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
