@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.96 2003/07/16 16:14:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.97 2003/07/21 17:38:58 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -594,8 +594,10 @@ void TFile::Close(Option_t *option)
    TIter next(fProcessIDs);
    TProcessID *pid;
    while ((pid = (TProcessID*)next())) {
-      if (!pid->DecrementCount() || opt.Contains("r")) {
+      if (!pid->DecrementCount()) {
          if (pid != TProcessID::GetSessionProcessID()) pidDeleted.Add(pid);
+      } else if(opt.Contains("r")) {
+         pid->Clear();
       }
    }
    pidDeleted.Delete();
