@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.7 2001/10/31 11:28:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.8 2001/12/23 09:09:32 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -56,7 +56,8 @@ protected:
     TString    fTimeFormat;          //Time format, ex: 09/12/99 12:34:00
     TString    fFunctionName;        //name of mapping function pointed by fFunction
     TF1       *fFunction;            //!Pointer to function computing axis values
-
+    TAxis     *fAxis;                //!pointer to original TAxis axis (if any)
+    
   static Int_t fgMaxDigits;          //!Number of digits above which the 10>N notation is used
 
 public:
@@ -124,7 +125,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetWmin(Double_t wmin) {fWmin = wmin;}
                 void    SetWmax(Double_t wmax) {fWmax = wmax;}
 
-                ClassDef(TGaxis,4)  //Graphics axis
+                ClassDef(TGaxis,5)  //Graphics axis
 };
 
 #endif

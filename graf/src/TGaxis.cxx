@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.25 2001/12/17 17:06:52 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.26 2001/12/23 09:09:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include "TStyle.h"
 #include "TF1.h"
 #include "TAxis.h"
+#include "THashList.h"
+#include "TObjString.h"
 #include "TMath.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
@@ -112,6 +114,7 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fTimeFormat  = "";
    fFunctionName= "";
    fFunction    = 0;
+   fAxis        = 0;
 }
 
 //______________________________________________________________________________
@@ -142,6 +145,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fTimeFormat  = "";
    fFunctionName= "";
    fFunction    = 0;
+   fAxis        = 0;
 }
 
 //______________________________________________________________________________
@@ -215,6 +219,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fName        = "";
    fTitle       = "";
    fTimeFormat  = "";
+   fAxis        = 0;
 }
 
 //______________________________________________________________________________
@@ -276,6 +281,7 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
 {
 // Copy TAxis attributes to this TGaxis
 
+   fAxis = axis;
    SetLineColor(axis->GetAxisColor());
    SetTextColor(axis->GetTitleColor());
    SetTextFont(axis->GetTitleFont());
@@ -301,7 +307,7 @@ void TGaxis::Paint(Option_t *)
 
    Double_t wmin = fWmin;
    Double_t wmax = fWmax;
-   Int_t   ndiv = fNdiv;
+   Int_t    ndiv = fNdiv;
    PaintAxis(fX1,fY1,fX2,fY2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
 }
 //______________________________________________________________________________
@@ -548,7 +554,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if(strchr(chopt,'0')) OptionUp   = 1;  else OptionUp   = 0;
    if(strchr(chopt,'X')) OptionX    = 1;  else OptionX    = 0;
    if(strchr(chopt,'t')) OptionTime = 1;  else OptionTime = 0;
-
+   if (fAxis) {
+      if (fAxis->GetLabels()) {
+         OptionM    = 1;
+         OptionText = 1;
+         ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
+      }
+   }
+   
 //*-*-              Set the grid length
 
    if (OptionGrid) {
@@ -856,6 +869,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*-              (with alphanumeric labels for horizontal axis).
 
    charheight = GetLabelSize();
+   if (OptionText) charheight *= 0.66666;
    textaxis->SetTextFont(GetLabelFont());
    textaxis->SetTextColor(GetLabelColor());
    textaxis->SetTextSize (charheight);
@@ -864,18 +878,43 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       charheight /= padh;
    }
    if (!OptionUp && !OptionDown && !OptionY) {
-      if (OptionText && ymin == ymax) {
-         NHILAB = 0;
-         Double_t binwdh = 0.9*(axis_length/Double_t(N1A));
-         textsize       = 0;
-         for (i=0; i<NHILAB; i++) {
-//            CALL IGTEXT(0,0,HILabs(I),charheight,textsize,'S');
-            if (textsize > binwdh) {
-               OptionUp   = 1;
-               OptionRight= 1;
-               OptionCent = 0;
-               OptionLeft = 0;
-               break;
+      if (OptionText && ((ymin == ymax) || (xmin == xmax))) {
+         textaxis->SetTextAlign(32);
+         OptionText = 2;
+         Int_t nl = fAxis->GetLast()-fAxis->GetFirst()+1;
+         Double_t angle     = 0;
+         for (i=fAxis->GetFirst(); i<=fAxis->GetLast(); i++) {
+            textaxis->SetText(0,0,fAxis->GetBinLabel(i));
+            if (textaxis->GetXsize() < (xmax-xmin)/nl) continue;
+            angle = -20;
+            break;
+         }
+         for (i=fAxis->GetFirst(); i<=fAxis->GetLast(); i++) {
+            if (!strcmp(fAxis->GetName(),"xaxis")) {
+               if (nl > 50) angle = 90;
+               if (fAxis->TestBit(TAxis::kLabelsHori)) angle = 0;
+               if (fAxis->TestBit(TAxis::kLabelsVert)) angle = 90;
+               if (fAxis->TestBit(TAxis::kLabelsUp))   angle = 20;
+               if (fAxis->TestBit(TAxis::kLabelsDown)) angle =-20;
+               if (angle==   0) textaxis->SetTextAlign(23);
+               if (angle== -20) textaxis->SetTextAlign(12);
+               textaxis->PaintLatex(fAxis->GetBinCenter(i),
+                                    gPad->GetUymin() - 3*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
+                                    angle,
+                                    charheight,
+                                    fAxis->GetBinLabel(i));
+            } else if (!strcmp(fAxis->GetName(),"yaxis")) {
+               textaxis->PaintLatex(gPad->GetUxmin() - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
+                                    fAxis->GetBinCenter(i),
+                                    0,
+                                    charheight,
+                                    fAxis->GetBinLabel(i));
+            } else {
+               textaxis->PaintLatex(xmin - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
+                                    ymin +(i-0.5)*(ymax-ymin)/nl,
+                                    0,
+                                    charheight,
+                                    fAxis->GetBinLabel(i));
             }
          }
       }
@@ -911,6 +950,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if(XLside >= 0) label_side = 1;
    else            label_side = -1;
    Ylabel = label_side*fLabelOffset;
+   if (OptionText) Ylabel /= 2;
 
 //*-*-              Draw the linear tick marks if needed...
    if (!OptionLog) {
@@ -1194,8 +1234,8 @@ L110:
                } else {
                   Xlabel = DXlabel*k;
                }
-               if (OptionM) Xlabel += 0.5*DXlabel;
-
+               if (OptionM)    Xlabel += 0.5*DXlabel;
+ 
                if (!OptionText && !OptionTime) {
                   sprintf(LABEL,&CHCODED[0],Wlabel);
                   LABEL[28] = 0;
@@ -1292,9 +1332,7 @@ L110:
                      textaxis->PaintTextNDC(XX,YY,CHTEMP);
                   }
                   else  {
-//                     if (k+1 > NHILAB)  strcpy(CHTEMP, " ");
-//                     else               strcpy(CHTEMP, HILabs(k));
-                     textaxis->PaintTextNDC(XX,YY,CHTEMP);
+                     if (OptionText == 1) textaxis->PaintTextNDC(XX,YY,fAxis->GetBinLabel(k+fAxis->GetFirst()));
                   }
                }
                else {
@@ -1303,13 +1341,11 @@ L110:
                   if (!OptionText)     LNLEN = last-first+1;
                   else {
                      if (k+1 > NHILAB) LNLEN = 0;
-//                     else            LNLEN = strlen(HILabs(k));
                   }
                   for ( l=1; l<=LNLEN; l++) {
                      if (!OptionText) *CHTEMP = LABEL[first+l-2];
                      else {
                         if (LNLEN == 0) strcpy(CHTEMP, " ");
-//                        else          strcpy(CHTEMP, HILabs(k)(l:l));
                         else            strcpy(CHTEMP, "1");
                      }
                      textaxis->PaintTextNDC(XX,YY,CHTEMP);
@@ -1554,7 +1590,6 @@ L160:
                         else            YY -= Ylabel;
                      }
                   }
-                  if (CHTEMP[0] == '0') printf("len=%d, chtemp=%s\n",strlen(CHTEMP),CHTEMP);
                   if (CHTEMP[0] != '0') textaxis->PaintTextNDC(XX,YY,CHTEMP);
                }
 
