@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.50 2001/02/02 16:31:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.51 2001/02/06 11:02:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -319,11 +319,11 @@ TTree::~TTree()
 {
 //*-*-*-*-*-*-*-*-*-*-*Tree destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================
-
    if (fDirectory) {
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
          fDirectory->GetList()->Remove(this);
    }
+   fLeaves.Clear();
    fBranches.Delete();
    fDirectory  = 0;
    delete fPlayer;
