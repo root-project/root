@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.14 2001/04/16 19:15:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.15 2001/05/18 15:57:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -150,7 +150,7 @@ void TLeafD::SetAddress(void *add)
 //*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
 //*-*                  ============================
 
-   if (ResetAddress(add)) {
+   if (ResetAddress(add) && (add!= fValue)) {
       delete [] fValue;
    }
    if (add) {
