@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.28 2004/02/07 22:32:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.29 2004/08/03 16:01:18 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public:
                                          ,Int_t nbinsz,const Double_t *zbins);
    TH3(const TH3&);
    virtual ~TH3();
-   virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
+   virtual Int_t   BufferEmpty(Int_t action=0);
    virtual void    Copy(TObject &hnew) const;
            Int_t   Fill(Axis_t) {return -1;}        //MayNotUse
            Int_t   Fill(Axis_t,Stat_t) {return -1;} //MayNotUse

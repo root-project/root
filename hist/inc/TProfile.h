@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.24 2003/12/11 11:22:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.25 2004/02/07 21:17:40 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -68,13 +68,13 @@ public:
     virtual void    Add(const TH1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
     static  void    Approximate(Bool_t approx=kTRUE);
+    virtual Int_t   BufferEmpty(Int_t action=0);
             void    BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
     virtual void    Copy(TObject &hnew) const;
     virtual void    Divide(TF1 *h1, Double_t c1=1);
     virtual void    Divide(const TH1 *h1);
     virtual void    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual TH1    *DrawCopy(Option_t *option="") const;
-    virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual Int_t   Fill(Axis_t x, Axis_t y);
     virtual Int_t   Fill(const char *namex, Axis_t y);
     virtual Int_t   Fill(Axis_t x, Axis_t y, Stat_t w);

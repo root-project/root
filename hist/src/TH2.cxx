@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.54 2004/08/05 17:20:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.55 2004/09/03 10:51:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -129,15 +129,28 @@ TH2::~TH2()
 }
 
 //______________________________________________________________________________
-Int_t TH2::BufferEmpty(Bool_t deleteBuffer)
+Int_t TH2::BufferEmpty(Int_t action)
 {
 // Fill histogram with all entries in the buffer.
-// The buffer is deleted if deleteBuffer is true.
+// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+// action =  0 histogram is filled from the buffer
+// action =  1 histogram is filled and buffer is deleted
+//             The buffer is automatically deleted when the number of entries
+//             in the buffer is greater than the number of entries in the histogram   
 
    // do we need to compute the bin size?
+   if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (!nbentries) return 0;
-   if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+   Double_t *buffer = fBuffer;
+   if (nbentries < 0) {
+      if (action == 0) return 0;
+      nbentries  = -nbentries;
+      fBuffer=0;
+      Reset();
+      fBuffer = buffer;
+   }
+   if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -151,16 +164,31 @@ Int_t TH2::BufferEmpty(Bool_t deleteBuffer)
          if (y < ymin) ymin = y;
          if (y > ymax) ymax = y;
       }
-      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+      if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+      } else {
+         fBuffer = 0;
+         Int_t keep = fBufferSize; fBufferSize = 0;
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
+         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,"Y");
+         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,"Y");
+         fBuffer = buffer;
+         fBufferSize = keep;
+      }
    }
-   Double_t *buffer = fBuffer; fBuffer = 0;
    
+   fBuffer = 0;   
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
    }
+   fBuffer = buffer;
    
-   if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
-   else              { fBuffer = buffer; fBuffer[0] = 0;}
+   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   else {
+      if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
+      else                              fBuffer[0] = 0;
+   }
    return nbentries;
 }
  
@@ -173,9 +201,19 @@ Int_t TH2::BufferFill(Axis_t x, Axis_t y, Stat_t w)
 // fBuffer[2] = x of first entry
 // fBuffer[3] = y of first entry
 
+   if (!fBuffer) return -3;
    Int_t nbentries = (Int_t)fBuffer[0];
+   if (nbentries < 0) {
+      nbentries  = -nbentries;
+      fBuffer[0] =  nbentries;
+      if (fEntries > 0) {
+         Double_t *buffer = fBuffer; fBuffer=0;
+         Reset();
+         fBuffer = buffer;
+      }
+   }
    if (3*nbentries+3 >= fBufferSize) {
-      BufferEmpty(kTRUE);
+      BufferEmpty(1);
       return Fill(x,y,w);
    }
    fBuffer[3*nbentries+1] = w;
@@ -345,7 +383,7 @@ Int_t TH2::Fill(Axis_t x,Axis_t y)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   if (fBuffer) BufferFill(x,y,1);
+   if (fBuffer) return BufferFill(x,y,1);
    
    Int_t binx, biny, bin;
    fEntries++;
@@ -387,7 +425,7 @@ Int_t TH2::Fill(Axis_t x, Axis_t y, Stat_t w)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   if (fBuffer) BufferFill(x,y,w);
+   if (fBuffer) return BufferFill(x,y,w);
 
    Int_t binx, biny, bin;
    fEntries++;

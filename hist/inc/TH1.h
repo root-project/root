@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.57 2004/07/02 13:25:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.58 2004/08/11 13:08:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -145,7 +145,7 @@ public:
     virtual TH1     *DrawCopy(Option_t *option="") const;
     virtual TH1     *DrawNormalized(Option_t *option="", Double_t norm=1) const;
     virtual void     DrawPanel(); // *MENU*
-    virtual Int_t    BufferEmpty(Bool_t deleteBuffer=kFALSE);
+    virtual Int_t    BufferEmpty(Int_t action=0);
     virtual void     Eval(TF1 *f1, Option_t *option="");
     virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual Int_t    Fill(Axis_t x);

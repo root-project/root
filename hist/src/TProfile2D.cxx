@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.23 2004/03/12 22:40:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.24 2004/05/26 11:32:00 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -371,21 +371,34 @@ void TProfile2D::Approximate(Bool_t approx)
 
 
 //______________________________________________________________________________
-Int_t TProfile2D::BufferEmpty(Bool_t deleteBuffer)
+Int_t TProfile2D::BufferEmpty(Int_t action)
 {
 // Fill histogram with all entries in the buffer.
-// The buffer is deleted if deleteBuffer is true.
+// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+// action =  0 histogram is filled from the buffer
+// action =  1 histogram is filled and buffer is deleted
+//             The buffer is automatically deleted when the number of entries
+//             in the buffer is greater than the number of entries in the histogram   
 
    // do we need to compute the bin size?
+   if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (!nbentries) return 0;
-   if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+   Double_t *buffer = fBuffer;
+   if (nbentries < 0) {
+      if (action == 0) return 0;
+      nbentries  = -nbentries;
+      fBuffer=0;
+      Reset();
+      fBuffer = buffer;
+   }
+   if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
      Double_t xmin = fBuffer[2];
      Double_t xmax = xmin;
      Double_t ymin = fBuffer[3];
      Double_t ymax = ymin;
-    for (Int_t i=1;i<nbentries;i++) {
+     for (Int_t i=1;i<nbentries;i++) {
          Double_t x = fBuffer[4*i+2];
          if (x < xmin) xmin = x;
          if (x > xmax) xmax = x;
@@ -393,17 +406,31 @@ Int_t TProfile2D::BufferEmpty(Bool_t deleteBuffer)
          if (y < ymin) ymin = y;
          if (y > ymax) ymax = y;
      }
-      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+     if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+     } else {
+         fBuffer = 0;
+         Int_t keep = fBufferSize; fBufferSize = 0;
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
+         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,"Y");
+         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,"Y");
+         fBuffer = buffer;
+         fBufferSize = keep;
+     }
    }
 
-   Double_t *buffer = fBuffer; fBuffer = 0;
-
+   fBuffer = 0;
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);
    }
-
-   if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
-   else              { fBuffer = buffer; fBuffer[0] = 0;}
+   fBuffer = buffer;
+   
+   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   else {
+      if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
+      else                              fBuffer[0] = 0;
+   }
    return nbentries;
 }
 
@@ -414,10 +441,22 @@ Int_t TProfile2D::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 // fBuffer[0] = number of entries in buffer
 // fBuffer[1] = w of first entry
 // fBuffer[2] = x of first entry
+// fBuffer[3] = y of first entry
+// fBuffer[4] = z of first entry
 
+   if (!fBuffer) return -3;
    Int_t nbentries = (Int_t)fBuffer[0];
+   if (nbentries < 0) {
+      nbentries  = -nbentries;
+      fBuffer[0] =  nbentries;
+      if (fEntries > 0) {
+         Double_t *buffer = fBuffer; fBuffer=0;
+         Reset();
+         fBuffer = buffer;
+      }
+   }
    if (nbentries >= fBufferSize) {
-      BufferEmpty(kTRUE);
+      BufferEmpty(1);
       return Fill(x,y,z,w);
    }
    fBuffer[4*nbentries+1] = w;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.28 2004/01/25 20:33:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.29 2004/07/08 14:45:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
                                          ,Int_t nbinsy,const Float_t  *ybins);
    TH2(const TH2&);
    virtual ~TH2();
-   virtual Int_t    BufferEmpty(Bool_t deleteBuffer=kFALSE);
+   virtual Int_t    BufferEmpty(Int_t action=0);
    virtual Double_t Chi2Test(TH1 *h, Option_t *option, Int_t constraint =0 );
    virtual void     Copy(TObject &hnew) const;
            Int_t    Fill(Axis_t) {return -1;} //MayNotUse

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.20 2004/02/10 13:39:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.21 2004/05/26 11:32:00 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
     virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
     static  void    Approximate(Bool_t approx=kTRUE);
             void    BuildOptions(Double_t zmin, Double_t zmax, Option_t *option);
-    virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
+    virtual Int_t   BufferEmpty(Int_t action=0);
     virtual void    Copy(TObject &hnew) const;
     virtual void    Divide(TF1 *h1, Double_t c1=1);
     virtual void    Divide(const TH1 *h1);

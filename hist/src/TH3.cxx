@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.48 2004/08/03 16:01:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.49 2004/08/05 17:20:26 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -136,14 +136,28 @@ void TH3::Copy(TObject &obj) const
 }
       
 //______________________________________________________________________________
-Int_t TH3::BufferEmpty(Bool_t deleteBuffer)
+Int_t TH3::BufferEmpty(Int_t action)
 {
 // Fill histogram with all entries in the buffer.
+// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+// action =  0 histogram is filled from the buffer
+// action =  1 histogram is filled and buffer is deleted
+//             The buffer is automatically deleted when the number of entries
+//             in the buffer is greater than the number of entries in the histogram   
 
    // do we need to compute the bin size?
+   if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (!nbentries) return 0;
-   if (fXaxis.GetXmax() <= fXaxis.GetXmin() ||
+   Double_t *buffer = fBuffer;
+   if (nbentries < 0) {
+      if (action == 0) return 0;
+      nbentries  = -nbentries;
+      fBuffer=0;
+      Reset();
+      fBuffer = buffer;
+   }
+   if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() ||
        fYaxis.GetXmax() <= fYaxis.GetXmin() ||
        fZaxis.GetXmax() <= fZaxis.GetXmin()) {
      //find min, max of entries in buffer
@@ -164,16 +178,33 @@ Int_t TH3::BufferEmpty(Bool_t deleteBuffer)
          if (z < zmin) zmin = z;
          if (z > zmax) zmax = z;
      }
-     THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
+     if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin()) {
+        THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
+     } else {
+        fBuffer = 0;
+        Int_t keep = fBufferSize; fBufferSize = 0;
+        if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
+        if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
+        if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,"Y");
+        if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,"Y");
+        if (zmin <  fZaxis.GetXmin()) RebinAxis(zmin,"Z");
+        if (zmax >= fZaxis.GetXmax()) RebinAxis(zmax,"Z");
+        fBuffer = buffer;
+        fBufferSize = keep;
+      }
    }
-   Double_t *buffer = fBuffer; fBuffer = 0;
+   fBuffer = 0;
    
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);
    }
+   fBuffer = buffer;
    
-   if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
-   else              { fBuffer = buffer; fBuffer[0] = 0;}
+   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   else {
+      if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
+      else                              fBuffer[0] = 0;
+   }
    return nbentries;
 }
  
@@ -187,9 +218,19 @@ Int_t TH3::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 // fBuffer[3] = y of first entry
 // fBuffer[4] = z of first entry
 
+   if (!fBuffer) return -3;
    Int_t nbentries = (Int_t)fBuffer[0];
+   if (nbentries < 0) {
+      nbentries  = -nbentries;
+      fBuffer[0] =  nbentries;
+      if (fEntries > 0) {
+         Double_t *buffer = fBuffer; fBuffer=0;
+         Reset();
+         fBuffer = buffer;
+      }
+   }
    if (4*nbentries+4 >= fBufferSize) {
-      BufferEmpty(kTRUE);
+      BufferEmpty(1);
       return Fill(x,y,z,w);
    }
    fBuffer[4*nbentries+1] = w;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.47 2004/03/13 08:23:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.48 2004/05/26 11:31:20 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -368,15 +368,28 @@ void TProfile::Approximate(Bool_t approx)
 }
 
 //______________________________________________________________________________
-Int_t TProfile::BufferEmpty(Bool_t deleteBuffer)
+Int_t TProfile::BufferEmpty(Int_t action)
 {
 // Fill histogram with all entries in the buffer.
-// The buffer is deleted if deleteBuffer is true.
+// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+// action =  0 histogram is filled from the buffer
+// action =  1 histogram is filled and buffer is deleted
+//             The buffer is automatically deleted when the number of entries
+//             in the buffer is greater than the number of entries in the histogram   
 
    // do we need to compute the bin size?
+   if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (!nbentries) return 0;
-   if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+   Double_t *buffer = fBuffer;
+   if (nbentries < 0) {
+      if (action == 0) return 0;
+      nbentries  = -nbentries;
+      fBuffer=0;
+      Reset();
+      fBuffer = buffer;
+   }
+   if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin()) {
       //find min, max of entries in buffer
      Double_t xmin = fBuffer[2];
      Double_t xmax = xmin;
@@ -385,17 +398,30 @@ Int_t TProfile::BufferEmpty(Bool_t deleteBuffer)
          if (x < xmin) xmin = x;
          if (x > xmax) xmax = x;
       }
-      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+      if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+      } else {
+         fBuffer = 0;
+         Int_t keep = fBufferSize; fBufferSize = 0;
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
+         fBuffer = buffer;
+         fBufferSize = keep;
+      }
    }
 
-   Double_t *buffer = fBuffer;  fBuffer = 0;
+   fBuffer = 0;
 
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
    }
-
-   if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
-   else              { fBuffer = buffer; fBuffer[0] = 0;}
+   fBuffer = buffer;
+   
+   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   else {
+      if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
+      else                              fBuffer[0] = 0;
+   }
    return nbentries;
 }
 
@@ -408,9 +434,19 @@ Int_t TProfile::BufferFill(Axis_t x, Axis_t y, Stat_t w)
 // fBuffer[2] = x of first entry
 // fBuffer[3] = y of first entry
 
+   if (!fBuffer) return -2;
    Int_t nbentries = (Int_t)fBuffer[0];
+   if (nbentries < 0) {
+      nbentries  = -nbentries;
+      fBuffer[0] =  nbentries;
+      if (fEntries > 0) {
+         Double_t *buffer = fBuffer; fBuffer=0;
+         Reset();
+         fBuffer = buffer;
+      }
+   }
    if (3*nbentries+3 >= fBufferSize) {
-      BufferEmpty(kTRUE);
+      BufferEmpty(1);
       return Fill(x,y,w);
    }
    fBuffer[3*nbentries+1] = w;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.200 2004/08/28 07:05:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.201 2004/09/03 14:06:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -471,6 +471,8 @@ TH1::~TH1()
 //   -*-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     ============================
 
+   //TH1 *junk = 0;
+   //junk->SetLineColor(0);
    if (!TestBit(kNotDeleted)) return;
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
    if (fBuffer)   {delete [] fBuffer;   fBuffer   = 0;}
@@ -931,15 +933,27 @@ void TH1::AddDirectory(Bool_t add)
 
 
 //______________________________________________________________________________
-Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
+Int_t TH1::BufferEmpty(Int_t action)
 {
 // Fill histogram with all entries in the buffer.
-// The buffer is deleted if deleteBuffer is true.
-
+// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+// action =  0 histogram is filled from the buffer
+// action =  1 histogram is filled and buffer is deleted
+//             The buffer is automatically deleted when the number of entries
+//             in the buffer is greater than the number of entries in the histogram   
+   
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (!nbentries) return 0;
+   Double_t *buffer = fBuffer;
+   if (nbentries < 0) {
+      if (action == 0) return 0;
+      nbentries  = -nbentries;
+      fBuffer=0;
+      Reset();
+      fBuffer = buffer;
+   }
    if (TestBit(kCanRebin) || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
@@ -952,7 +966,7 @@ Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
       if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
       } else {
-         Double_t *buffer = fBuffer; fBuffer = 0;
+         fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
          if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
          if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
@@ -963,8 +977,11 @@ Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
 
    FillN(nbentries,&fBuffer[2],&fBuffer[1],2);
 
-   if (deleteBuffer) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
-   else fBuffer[0] = 0;
+   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   else {
+      if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
+      else                              fBuffer[0] = 0;
+   }
    return nbentries;
 }
 
@@ -978,8 +995,17 @@ Int_t TH1::BufferFill(Axis_t x, Stat_t w)
 
    if (!fBuffer) return -2;
    Int_t nbentries = (Int_t)fBuffer[0];
+   if (nbentries < 0) {
+      nbentries  = -nbentries;
+      fBuffer[0] =  nbentries;
+      if (fEntries > 0) {
+         Double_t *buffer = fBuffer; fBuffer=0;
+         Reset();
+         fBuffer = buffer;
+      }
+   }
    if (2*nbentries+2 >= fBufferSize) {
-      BufferEmpty(kTRUE);
+      BufferEmpty(1);
       return Fill(x,w);
    }
    fBuffer[2*nbentries+1] = w;
@@ -1849,7 +1875,9 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
       r1 = gRandom->Rndm(loop);
       ibin = TMath::BinarySearch(nbinsx,&integral[0],r1);
       binx = 1 + ibin;
-      x    = fXaxis.GetBinCenter(binx);
+      //x    = fXaxis.GetBinCenter(binx); //this is not OK when SetBuffer is used
+      x    = fXaxis.GetBinLowEdge(ibin+1)
+      +fXaxis.GetBinWidth(ibin+1)*(r1-integral[ibin])/(integral[ibin+1] - integral[ibin]);
       Fill(x, 1.);
   }
   delete [] integral;
@@ -3460,29 +3488,27 @@ Int_t TH1::Merge(TCollection *list)
 // of bins and different limits, BUT the largest bin width must be
 // a multiple of the smallest bin width.
 // Example:
-/*
-void atest() {
-   TH1F *h1 = new TH1F("h1","h1",110,-110,0);
-   TH1F *h2 = new TH1F("h2","h2",220,0,110);
-   TH1F *h3 = new TH1F("h3","h3",330,-55,55);
-   TRandom r;
-   for (Int_t i=0;i<10000;i++) {
-      h1->Fill(r.Gaus(-55,10));
-      h2->Fill(r.Gaus(55,10));
-      h3->Fill(r.Gaus(0,10));
-   }
+// void atest() {
+//    TH1F *h1 = new TH1F("h1","h1",110,-110,0);
+//    TH1F *h2 = new TH1F("h2","h2",220,0,110);
+//    TH1F *h3 = new TH1F("h3","h3",330,-55,55);
+//    TRandom r;
+//    for (Int_t i=0;i<10000;i++) {
+//       h1->Fill(r.Gaus(-55,10));
+//       h2->Fill(r.Gaus(55,10));
+//       h3->Fill(r.Gaus(0,10));
+//    }
+//
+//    TList *list = new TList;
+//    list->Add(h1);
+//    list->Add(h2);
+//    list->Add(h3);
+//    TH1F *h = (TH1F*)h1->Clone("h");
+//    h->Reset();
+//    h.Merge(list);
+//    h->Draw();
+// }
 
-   TList *list = new TList;
-   list->Add(h1);
-   list->Add(h2);
-   list->Add(h3);
-   TH1F *h = (TH1F*)h1->Clone("h");
-   h->Reset();
-   h.Merge(list);
-   h->Draw();
-}
-*/
-//-------------------------------------------------------
    if (!list) return 0;
    TIter next(list);
    Double_t umin,umax;
@@ -4511,8 +4537,8 @@ void TH1::Reset(Option_t *option)
 //   -*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
 //               ===========================================
 //
-// if option "ICE" is specified, resets only Integral, Contents and Errors
-
+// if option "ICE" is specified, resets only Integral, Contents and Errors.
+   
    TString opt = option;
    opt.ToUpper();
    fSumw2.Reset();
