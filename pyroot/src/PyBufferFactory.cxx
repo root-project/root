@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.3 2004/08/04 20:46:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -20,10 +20,9 @@ namespace {
    PySequenceMethods PyFloatBuffer_SeqMethods    = *(PyBuffer_Type.tp_as_sequence);
 
 
-// implement 'length' and 'get' functions
-   template< typename T >
-   int buffer_length( PyObject* self ) {
-      return (*(PyBuffer_Type.tp_as_sequence->sq_length))(self) / sizeof( T );
+// implement 'length' and 'get' functions (use explicit funcs: vc++ can't handle templates)
+   int long_buffer_length( PyObject* self ) {
+      return (*(PyBuffer_Type.tp_as_sequence->sq_length))(self) / sizeof( long );
    }
 
    PyObject* long_buffer_item( PyObject* self, int idx ) {
@@ -32,16 +31,28 @@ namespace {
       return PyLong_FromLong( *((long*)buf + idx) );
    }
 
+   int int_buffer_length( PyObject* self ) {
+      return (*(PyBuffer_Type.tp_as_sequence->sq_length))(self) / sizeof( int );
+   }
+
    PyObject* int_buffer_item( PyObject* self, int idx ) {
       const char* buf = 0;
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
       return PyInt_FromLong( *((int*)buf + idx) );
    }
 
+   int double_buffer_length( PyObject* self ) {
+      return (*(PyBuffer_Type.tp_as_sequence->sq_length))(self) / sizeof( double );
+   }
+
    PyObject* double_buffer_item( PyObject* self, int idx ) {
       const char* buf = 0;
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
       return PyFloat_FromDouble( *((double*)buf + idx) );
+   }
+
+   int float_buffer_length( PyObject* self ) {
+      return (*(PyBuffer_Type.tp_as_sequence->sq_length))(self) / sizeof( float );
    }
 
    PyObject* float_buffer_item( PyObject* self, int idx ) {
@@ -68,19 +79,19 @@ PyROOT::PyBufferFactory* PyROOT::PyBufferFactory::getInstance() {
 //- constructor/destructor ------------------------------------------------------
 PyROOT::PyBufferFactory::PyBufferFactory() {
    PyLongBuffer_SeqMethods.sq_item      = (intargfunc) long_buffer_item;
-   PyLongBuffer_SeqMethods.sq_length    = (inquiry) &buffer_length< long >;
+   PyLongBuffer_SeqMethods.sq_length    = (inquiry) &long_buffer_length;
    PyLongBuffer_Type.tp_as_sequence     = &PyLongBuffer_SeqMethods;
 
    PyIntBuffer_SeqMethods.sq_item       = (intargfunc) int_buffer_item;
-   PyIntBuffer_SeqMethods.sq_length     = (inquiry) &buffer_length< int >;
+   PyIntBuffer_SeqMethods.sq_length     = (inquiry) &int_buffer_length;
    PyIntBuffer_Type.tp_as_sequence      = &PyIntBuffer_SeqMethods;
 
    PyDoubleBuffer_SeqMethods.sq_item    = (intargfunc) double_buffer_item;
-   PyDoubleBuffer_SeqMethods.sq_length  = (inquiry) &buffer_length< double >;
+   PyDoubleBuffer_SeqMethods.sq_length  = (inquiry) &double_buffer_length;
    PyDoubleBuffer_Type.tp_as_sequence   = &PyDoubleBuffer_SeqMethods;
 
    PyFloatBuffer_SeqMethods.sq_item     = (intargfunc) float_buffer_item;
-   PyFloatBuffer_SeqMethods.sq_length   = (inquiry) &buffer_length< float >;
+   PyFloatBuffer_SeqMethods.sq_length   = (inquiry) &float_buffer_length;
    PyFloatBuffer_Type.tp_as_sequence    = &PyFloatBuffer_SeqMethods;
 }
 
