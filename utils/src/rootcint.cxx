@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.122 2002/12/17 21:14:11 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.123 2003/01/09 06:59:59 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -633,7 +633,8 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
          //        fileinfo.Name());
          if (abs(templ->line-cl.LineNumber())<=3 &&
              strcmp(cl.FileName(), fileinfo.Name())==0) {
-
+           
+            delete [] templatename;
             // This is an automatically instantiated templated class.
 #ifdef __KCC
             // for now KCC works better without it !
@@ -643,13 +644,16 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
 #endif
          } else {
 
+            delete [] templatename;
             // This is a specialized templated class
             return 0;
          }
       } else {
+        delete [] templatename;
          // It might be a specialization without us seeing the template definition
          return 0;
       }
+      delete [] templatename;
    }
    return 0;
 }
