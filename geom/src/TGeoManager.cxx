@@ -1043,7 +1043,7 @@ Int_t TGeoManager::GetVirtualLevel()
 //   Bool_t is_overlapping = kTRUE;
 //   Bool_t is_offset = fCurrentNode->IsOffset();
 //   if (!is_overlapping && !is_offset) return 0;
-   Int_t last_many = 0;
+   //Int_t last_many = 0;
    Int_t new_media = 0;
    Int_t imedia = fCurrentNode->GetMedia();
    Int_t virtual_level = 1;
@@ -1054,8 +1054,8 @@ Int_t TGeoManager::GetVirtualLevel()
          if (!new_media) new_media=(mother->GetMedia()==imedia)?0:virtual_level;
          break;
       }   
-      if (mother->IsOverlapping()) 
-         last_many=virtual_level;
+      //if (mother->IsOverlapping()) 
+         //last_many=virtual_level;
       if (!new_media) new_media=(mother->GetMedia()==imedia)?0:virtual_level;
       virtual_level++;
    }  

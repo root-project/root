@@ -395,7 +395,7 @@ void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, 
    node->SetName(name);
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="")
+void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
 //   vol->SetVisibility(kFALSE);
 /*
@@ -453,7 +453,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Double_t start, Double_t end
    return 0;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char *divname, TObject *userdiv, Double_t *params, Option_t *option="")
+TGeoVolume *TGeoVolume::Divide(const char *divname, TObject *userdiv, Double_t *params, Option_t *)
 {
 // divide this volume according to userdiv
    return 0;
@@ -1766,7 +1766,7 @@ void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, O
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoVolumeMulti::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="")
+void TGeoVolumeMulti::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *volume = 0;

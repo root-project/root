@@ -1288,7 +1288,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t saf[5];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
-   Double_t c1=0,s1=0,c2=0,s2=0,phim=0;
+   Double_t c1=0,s1=0,c2=0,s2=0;
    Double_t fio=0, cfio=0, sfio=0, dfi=0, cdfi=0, cpsi=0;
    Double_t phi1 = fPhi1*kDegRad;
    Double_t phi2 = fPhi2*kDegRad;
@@ -1296,7 +1296,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if ((fPhi2-fPhi1)==360) tub = kTRUE;
    if (!tub) {
       if (phi2<phi1) phi2+=2.*TMath::Pi();
-      phim = 0.5*(phi1+phi2);
+      //phim = 0.5*(phi1+phi2);
       c1 = TMath::Cos(phi1);
       c2 = TMath::Cos(phi2);
       s1 = TMath::Sin(phi1);

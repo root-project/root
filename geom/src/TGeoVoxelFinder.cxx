@@ -181,12 +181,12 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode)
 //   printf("ymin=%g  ymax=%g\n", ymin, ymax);
 //   printf("zmin=%g  zmax=%g\n", zmin, zmax);
    Bool_t in = kFALSE;
-   TGeoNode *node1;
+   //TGeoNode *node1;
    // loop on brothers
    for (Int_t ib=0; ib<nd; ib++) {
       if (ib == inode) continue; // everyone overlaps with itself
       in = kFALSE;
-      node1 = fVolume->GetNode(ib);
+      //node1 = fVolume->GetNode(ib);
       xmin1 = fBoxes[6*ib+3] - fBoxes[6*ib];
       xmax1 = fBoxes[6*ib+3] + fBoxes[6*ib];
       ymin1 = fBoxes[6*ib+4] - fBoxes[6*ib+1];
