@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.18 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.19 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -806,6 +806,20 @@ TObject *TDirectory::Get(const char *namecycle)
 //     foo;1 : get cycle 1 of foo on file
 //
 // WARNING: Never use TDirectory::Get when namecycle is a directory itself.
+//
+//  VERY IMPORTANT NOTE:
+//  In case the class of this object derives from TObject but not
+//  as a first inheritance, one must cast the return value twice.
+//  Example1: Normal case:
+//      class MyClass : public TObject, public AnotherClass
+//   then on return, one can do:
+//    MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
+//
+//  Example2: Special case:
+//      class MyClass : public AnotherClass, public TObject
+//   then on return, one must do:
+//    MyClass *obj = (MyClass*)((void*)directory->Get("some object of MyClass");
+//
 
    Short_t  cycle;
    char     name[256];
