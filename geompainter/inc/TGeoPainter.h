@@ -50,6 +50,7 @@ private:
    Double_t           fCheckedBox[6];    // bounding box of checked node
    Double_t           fMat[9];           // view rotation matrix
    Int_t              fNsegments;        // number of segments approximating circles
+   Int_t              fNVisNodes;        // number of visible nodes
    Int_t              fVisLevel;         // depth for drawing
    Int_t              fVisOption;        // global visualization option
    Int_t              fExplodedView;     // type of exploding current view
@@ -64,6 +65,7 @@ private:
    TGeoManager       *fGeom;             // geometry to which applies
    TGeoChecker       *fChecker;          // geometry checker
    TGeoShape         *fClippingShape;    // clipping shape
+   TGeoVolume        *fLastVolume;       // last drawn volume
    TObjArray         *fVisVolumes;       // list of visible volumes
    
    void               DefineColors() const;
@@ -82,6 +84,7 @@ public:
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
    virtual void       CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="") const;
+   virtual Int_t      CountVisibleNodes();
    virtual void       DefaultAngles();
    virtual void       DefaultColors();
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py);
@@ -123,17 +126,7 @@ public:
    virtual void      *MakePcon3DBuffer(const TGeoVolume *vol);
    virtual void      *MakeXtru3DBuffer(const TGeoVolume *vol);
    virtual void       Paint(Option_t *option="");
-   void               PaintShape(X3DBuffer *buff, Bool_t rangeView);
-   void               PaintBox(TGeoShape *shape, Option_t *option="");
-   void               PaintCompositeShape(TGeoVolume *vol, Option_t *option="");
-   virtual void       PaintParaboloid(TGeoShape *shape, Option_t *option="");
-   void               PaintTorus(TGeoShape *shape, Option_t *option="");
-   void               PaintTube(TGeoShape *shape, Option_t *option="");
-   void               PaintTubs(TGeoShape *shape, Option_t *option="");
-   void               PaintSphere(TGeoShape *shape, Option_t *option="");
-   void               PaintXtru(TGeoShape *shape, Option_t *option="");
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
-   void               PaintPcon(TGeoShape *shape, Option_t *option="");
    virtual void       PaintOverlap(void *ovlp, Option_t *option="");
    virtual void       PrintOverlaps() const;
    void               PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.25 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.26 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -69,6 +69,7 @@ public:
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="") = 0;
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const = 0;
    virtual void       CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="") const = 0;
+   virtual Int_t      CountVisibleNodes() = 0;
    virtual void       DefaultAngles() = 0;
    virtual void       DefaultColors() = 0;
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py) = 0;
@@ -107,15 +108,6 @@ public:
    virtual void      *MakeXtru3DBuffer(const TGeoVolume *vol) = 0;
    virtual void       ModifiedPad() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
-   virtual void       PaintBox(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintCompositeShape(TGeoVolume *vol, Option_t *option="") = 0;
-   virtual void       PaintParaboloid(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintTorus(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintTube(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintTubs(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintSphere(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintPcon(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintXtru(TGeoShape *shape, Option_t *option="") = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="")  = 0;
    virtual void       PrintOverlaps() const = 0;

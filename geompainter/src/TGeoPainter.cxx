@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.42 2004/09/06 16:42:33 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.43 2004/10/08 15:09:55 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -44,6 +44,7 @@ TGeoPainter::TGeoPainter()
 //*-*                  ====================================
    TVirtualGeoPainter::SetPainter(this);
    fNsegments = 20;
+   fNVisNodes = 0;
    fBombX = 1.3;
    fBombY = 1.3;
    fBombZ = 1.3;
@@ -60,6 +61,7 @@ TGeoPainter::TGeoPainter()
    fOverlap = 0;
    fMatrix = 0;
    fClippingShape = 0;
+   fLastVolume = 0;
    memset(&fCheckedBox[0], 0, 6*sizeof(Double_t));
    
    if (gGeoManager) fGeom = gGeoManager;
@@ -443,30 +445,43 @@ void TGeoPainter::DefaultColors()
       }
    }
 }   
+
+//______________________________________________________________________________
+Int_t TGeoPainter::CountVisibleNodes()
+{
+// Count total number of visible nodes.
+   Int_t maxnodes = gGeoManager->GetMaxVisNodes(); 
+   Int_t vislevel;
+   TGeoVolume *top = gGeoManager->GetTopVolume();
+   if (maxnodes <= 0) {
+      vislevel = gGeoManager->GetVisLevel();
+      fNVisNodes = top->CountNodes(vislevel,2);
+      SetVisLevel(vislevel);
+      return fNVisNodes;
+   }   
+   //if (the total number of nodes of the top volume is less than maxnodes
+   // we can visualize everything.
+   //recompute the best visibility level
+   fNVisNodes = -1;
+   for (Int_t level = 1;level<20;level++) {
+      vislevel = level;
+      Int_t nnodes = top->CountNodes(level,2);
+      if (nnodes > maxnodes) {
+         vislevel--;
+         break;
+      }
+      if (nnodes == fNVisNodes) break;
+      fNVisNodes = nnodes;
+   }
+   SetVisLevel(vislevel);
+   return fNVisNodes;
+}
+
 //______________________________________________________________________________
 void TGeoPainter::Draw(Option_t *option)
 {
-   Int_t maxnodes = gGeoManager->GetMaxVisNodes(); 
-   if (maxnodes > 0) {
-      //if (the total number of nodes of the top volume is less than maxnodes
-      // we can visualize everything.
-      TGeoVolume *top = gGeoManager->GetTopVolume();
-      //top->CountNodes(99);
-      //recompute the best visibility level
-      Int_t maxn = 0;
-      for (Int_t level = 1;level<20;level++) {
-         fVisLevel = level;
-         Int_t nnodes = top->CountNodes(level);
-         if (nnodes > maxnodes) {
-            fVisLevel--;
-            break;
-         }
-         if (nnodes == maxn) break;
-         maxn = nnodes;
-      }
-      printf("Drawing %d nodes with %d visible levels\n",maxn,fVisLevel);
-   }
-         
+   CountVisibleNodes();         
+   if (!gPad || !gPad->GetView())  printf("--- Drawing   %6d nodes with %d visible levels\n",fNVisNodes,fVisLevel);
    TString opt = option;
    opt.ToLower();
    fPaintingOverlaps = kFALSE;
@@ -501,13 +516,14 @@ void TGeoPainter::Draw(Option_t *option)
    }
    if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
+   fLastVolume = fGeom->GetTopVolume();
    //mark visible volumes
 //   TIter next(fVisVolumes);
 //   TGeoVolume *vol;
 //   while ((vol = (TGeoVolume*)next())) {
 //      vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
 //   }
-   printf("--- number of volumes on screen : %i\n", fVisVolumes->GetEntriesFast());
+//   printf("--- number of volumes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
 //______________________________________________________________________________
 void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
@@ -551,7 +567,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
 //   while ((vol = (TGeoVolume*)next())) {
 //      vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
 //   }
-   printf("--- number of volumes on screen : %i\n", fVisVolumes->GetEntriesFast());
+//   printf("--- number of volumes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
 //______________________________________________________________________________
 void TGeoPainter::DrawOnly(Option_t *option)
@@ -788,6 +804,17 @@ void TGeoPainter::Paint(Option_t *option)
    fGeom->CdTop();
    TGeoNode *top = fGeom->GetTopNode();
    top->Paint(option);
+   if (gGeoManager->IsDrawingExtra()) {
+      // loop the list of physical volumes
+      TObjArray *nodeList = gGeoManager->GetListOfPhysicalNodes();
+      Int_t nnodes = nodeList->GetEntriesFast();
+      Int_t inode;
+      TGeoPhysicalNode *node;
+      for (inode=0; inode<nnodes; inode++) {
+         node = (TGeoPhysicalNode*)nodeList->UncheckedAt(inode);
+         PaintPhysicalNode(node, option);
+      }
+   }
    fVisLock = kTRUE;
    TString opt(option);
    opt.ToLower();
@@ -837,80 +864,6 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    fGeom->SetMatrixTransform(kFALSE);
    fVisLock = kTRUE;
 }
-//______________________________________________________________________________
-void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView)
-{
-//*-*-*-*-*Paint 3-D shape in current pad with its current attributes*-*-*-*-*
-//*-*      ==========================================================
-//
-// rangeView = kTRUE - means no real painting
-//                     just estimate the range
-//                     of this shape only
-
-    //*-* Paint in the pad
-    //*-* Convert to the master system
-
-    if (!buff) return;
-    if (!fGeom) return;
-    TGeoVolume *vol = fGeom->GetCurrentVolume();
-    Float_t *point = &(buff->points[0]);
-    Double_t dlocal[3];
-    Double_t dmaster[3];
-    if (fGeom) {
-       for (Int_t j = 0; j < buff->numPoints; j++) {
-           dlocal[0]=point[3*j]; dlocal[1]=point[3*j+1]; dlocal[2]=point[3*j+2];
-           if (fGeom->IsMatrixTransform()) {
-              TGeoHMatrix *glmat = fGeom->GetGLMatrix();
-              glmat->LocalToMaster(&dlocal[0],&dmaster[0]);
-           } else {   
-              if (IsExplodedView()) 
-                 fGeom->LocalToMasterBomb(&dlocal[0],&dmaster[0]);
-              else   
-                 fGeom->LocalToMaster(&dlocal[0],&dmaster[0]);
-           }      
-//           printf("point %i : %g %g %g\n", j,dmaster[0],dmaster[1],dmaster[2]);
-           point[3*j]=dmaster[0]; point[3*j+1]=dmaster[1]; point[3*j+2]=dmaster[2];
-       }
-    }
-    
-    Float_t x0, y0, z0, x1, y1, z1;
-    const Int_t kExpandView = 2;
-    int i0;
-
-    x0 = x1 = buff->points[0];
-    y0 = y1 = buff->points[1];
-    z0 = z1 = buff->points[2];
-
-    if (!rangeView) {
-      if (!fPaintingOverlaps) {
-         ((TAttLine*)vol)->Modify();  //Change line attributes only if necessary
-         ((TAttFill*)vol)->Modify();  //Change fill area attributes only if necessary
-      } else {
-         ((TAttLine*)fOverlap)->Modify();
-      }   
-    }
-
-    for (Int_t i = 0; i < buff->numSegs; i++) {
-        i0 = 3*buff->segs[3*i+1];
-        Float_t *ptpoints_0 = &(buff->points[i0]);
-        i0 = 3*buff->segs[3*i+2];
-        Float_t *ptpoints_3 = &(buff->points[i0]);
-        if (!rangeView) gPad->PaintLine3D(ptpoints_0, ptpoints_3);
-        else {
-            x0 = ptpoints_0[0] < x0 ? ptpoints_0[0] : x0;
-            y0 = ptpoints_0[1] < y0 ? ptpoints_0[1] : y0;
-            z0 = ptpoints_0[2] < z0 ? ptpoints_0[2] : z0;
-            x1 = ptpoints_3[0] > x1 ? ptpoints_3[0] : x1;
-            y1 = ptpoints_3[1] > y1 ? ptpoints_3[1] : y1;
-            z1 = ptpoints_3[2] > z1 ? ptpoints_3[2] : z1;
-        }
-    }
-    if (rangeView)
-    {
-      TView *view = gPad->GetView();
-      if (view->GetAutoRange()) view->SetRange(x0,y0,z0,x1,y1,z1,kExpandView);
-    }
-}
 
 //______________________________________________________________________________
 void *TGeoPainter::MakeBox3DBuffer(const TGeoVolume *vol)
@@ -929,114 +882,6 @@ void *TGeoPainter::MakeBox3DBuffer(const TGeoVolume *vol)
    buff->points = points;
    return buff;
 }   
-
-//______________________________________________________________________________
-void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option)
-{
-// paint any type of box with 8 vertices
-   const Int_t numpoints = 8;
-
-//*-* Allocate memory for points *-*
-
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-
-   shape->SetPoints(points);
-
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   if (!rangeView  && gPad->GetView3D()) gVirtualGL->PaintBrik(points);
-
- //==  for (Int_t i = 0; i < numpoints; i++)
- //            gNode->Local2Master(&points[3*i],&points[3*i]);
-
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-
-   Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-   if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }   
-
-//*-* Allocate memory for segments *-*
-
-    X3DBuffer *buff = new X3DBuffer;
-    if (buff) {
-        buff->numPoints = 8;
-        buff->numSegs   = 12;
-        buff->numPolys  = (is3d)?6:0;
-    }
-
-//*-* Allocate memory for points *-*
-
-    buff->points = points;
-    buff->segs = new Int_t[buff->numSegs*3];
-    if (buff->segs) {
-        buff->segs[ 0] = c;    buff->segs[ 1] = 0;    buff->segs[ 2] = 1;
-        buff->segs[ 3] = c+1;  buff->segs[ 4] = 1;    buff->segs[ 5] = 2;
-        buff->segs[ 6] = c+1;  buff->segs[ 7] = 2;    buff->segs[ 8] = 3;
-        buff->segs[ 9] = c;    buff->segs[10] = 3;    buff->segs[11] = 0;
-        buff->segs[12] = c+2;  buff->segs[13] = 4;    buff->segs[14] = 5;
-        buff->segs[15] = c+2;  buff->segs[16] = 5;    buff->segs[17] = 6;
-        buff->segs[18] = c+3;  buff->segs[19] = 6;    buff->segs[20] = 7;
-        buff->segs[21] = c+3;  buff->segs[22] = 7;    buff->segs[23] = 4;
-        buff->segs[24] = c;    buff->segs[25] = 0;    buff->segs[26] = 4;
-        buff->segs[27] = c+2;  buff->segs[28] = 1;    buff->segs[29] = 5;
-        buff->segs[30] = c+1;  buff->segs[31] = 2;    buff->segs[32] = 6;
-        buff->segs[33] = c+3;  buff->segs[34] = 3;    buff->segs[35] = 7;
-    }
-
-//*-* Allocate memory for polygons *-*
-
-    buff->polys = 0;
-    if (is3d) {
-       buff->polys = new Int_t[buff->numPolys*6];
-       if (buff->polys) {
-           buff->polys[ 0] = c;   buff->polys[ 1] = 4;  buff->polys[ 2] = 0;
-           buff->polys[ 3] = 9;   buff->polys[ 4] = 4;  buff->polys[ 5] = 8;
-           buff->polys[ 6] = c+1; buff->polys[ 7] = 4;  buff->polys[ 8] = 1;
-           buff->polys[ 9] = 10;  buff->polys[10] = 5;  buff->polys[11] = 9;
-           buff->polys[12] = c;   buff->polys[13] = 4;  buff->polys[14] = 2;
-           buff->polys[15] = 11;  buff->polys[16] = 6;  buff->polys[17] = 10;
-           buff->polys[18] = c+1; buff->polys[19] = 4;  buff->polys[20] = 3;
-           buff->polys[21] = 8;   buff->polys[22] = 7;  buff->polys[23] = 11;
-           buff->polys[24] = c+2; buff->polys[25] = 4;  buff->polys[26] = 0;
-           buff->polys[27] = 3;   buff->polys[28] = 2;  buff->polys[29] = 1;
-           buff->polys[30] = c+3; buff->polys[31] = 4;  buff->polys[32] = 4;
-           buff->polys[33] = 5;   buff->polys[34] = 6;  buff->polys[35] = 7;
-       }
-    }
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (is3d) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    delete [] points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;
-}
-
-//______________________________________________________________________________
-void TGeoPainter::PaintCompositeShape(TGeoVolume *vol, Option_t *option)
-{
-// paint a composite shape
-   PaintBox(vol->GetShape(), option);
-}
 
 //______________________________________________________________________________
 void *TGeoPainter::MakeTorus3DBuffer(const TGeoVolume *vol)
@@ -1126,491 +971,6 @@ void *TGeoPainter::MakeParaboloid3DBuffer(const TGeoVolume *vol)
    buff->points = points;
    return buff;
 }   
-
-//______________________________________________________________________________
-void TGeoPainter::PaintParaboloid(TGeoShape *shape, Option_t *option)
-{
-   Int_t n = fNsegments;
-   Int_t indx, i, j;
-   Int_t numpoints = n*(n+1)+2;
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-   shape->SetPoints(points);
-   
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-   X3DBuffer *buff = new X3DBuffer;
-   if (buff) {
-      buff->numPoints = numpoints;
-      buff->numSegs   = n*(2*n+3);
-      buff->numPolys  = (is3d)?(n*(n+2)):0;
-   }
-   buff->points = points;
-
-   Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-   if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }
-//*-* Allocate memory for segments *-*
-   buff->segs = new Int_t[buff->numSegs*3];
-   if (!buff->segs) return;
-   Int_t nn1 = (n+1)*n+1;
-   indx = 0;
-   // Lower end-cap (n radial segments)
-   for (j=0; j<n; j++) {
-      buff->segs[indx++] = c+2;
-      buff->segs[indx++] = 0;
-      buff->segs[indx++] = j+1;
-   }
-   // Sectors (n) 
-   for (i=0; i<n+1; i++) {
-      // lateral (circles) segments (n)
-      for (j=0; j<n; j++) {
-         buff->segs[indx++] = c;
-         buff->segs[indx++] = n*i+1+j;
-         buff->segs[indx++] = n*i+1+((j+1)%n);
-      }
-      if (i==n) break;  // skip i=n for generators
-      // generator segments (n)
-      for (j=0; j<n; j++) { 
-         buff->segs[indx++] = c;
-         buff->segs[indx++] = n*i+1+j;
-         buff->segs[indx++] = n*(i+1)+1+j;
-      }
-   }
-   // Upper end-cap        
-   for (j=0; j<n; j++) {
-      buff->segs[indx++] = c+1;
-      buff->segs[indx++] = n*n+1+j;
-      buff->segs[indx++] = nn1;
-   }
-//*-* Allocate memory for polygons *-*
-   indx = 0;
-   buff->polys = 0;
-   if (is3d) {
-      buff->polys = new Int_t[2*n*5 + n*n*6];
-      if (!buff->polys) return;
-      // lower end-cap (n polygons)
-      for (j=0; j<n; j++) {
-         buff->polys[indx++] = c+2;
-         buff->polys[indx++] = 3;
-         buff->polys[indx++] = n+j;
-         buff->polys[indx++] = (j+1)%n;
-         buff->polys[indx++] = j;
-      }
-      // Sectors (n)
-      for (i=0; i<n; i++) {
-         // lateral faces (n)
-         for (j=0; j<n; j++) {
-            buff->polys[indx++] = c;
-            buff->polys[indx++] = 4;
-            buff->polys[indx++] = (2*i+1)*n+j;
-            buff->polys[indx++] = 2*(i+1)*n+j;
-            buff->polys[indx++] = (2*i+3)*n+j;
-            buff->polys[indx++] = 2*(i+1)*n+((j+1)%n);
-         }
-      }
-      // upper end-cap (n polygons)
-      for (j=0; j<n; j++) {
-         buff->polys[indx++] = c+1;
-         buff->polys[indx++] = 3;
-         buff->polys[indx++] = (2*n+1)*n+j;
-         buff->polys[indx++] = 2*n*(n+1)+((j+1)%n);
-         buff->polys[indx++] = 2*n*(n+1)+j;
-      }
-   }   
-   //*-* Paint in the pad
-   PaintShape(buff,rangeView);
-
-   if (is3d) {
-      if(buff && buff->points && buff->segs)
-         FillX3DBuffer(buff);
-      else {
-         gSize3D.numPoints -= buff->numPoints;
-         gSize3D.numSegs   -= buff->numSegs;
-         gSize3D.numPolys  -= buff->numPolys;
-      }
-   }
-
-   delete [] points;
-   if (buff->segs)     delete [] buff->segs;
-   if (buff->polys)    delete [] buff->polys;
-   if (buff)           delete    buff;              
-}
-
-//______________________________________________________________________________
-void TGeoPainter::PaintTorus(TGeoShape *shape, Option_t *option)
-{
-// paint a torus in pad or x3d
-   Int_t i, j;
-   const Int_t n = fNsegments+1;
-   Int_t indx, indp, startcap=0;
-   
-   TGeoTorus *tor = (TGeoTorus*)shape;
-   if (!tor) return;
-   Int_t numpoints = n*(n-1);
-   Bool_t hasrmin = (tor->GetRmin()>0)?kTRUE:kFALSE;
-   Bool_t hasphi  = (tor->GetDphi()<360)?kTRUE:kFALSE;
-   if (hasrmin) numpoints *= 2;
-   else if (hasphi) numpoints += 2;
-
-   //*-* Allocate memory for points *-*
-
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-
-   shape->SetPoints(points);
-
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-//   if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points,-n,2);
-
-//==   for (i = 0; i < numpoints; i++)
-//==            gNode->Local2Master(&points[3*i],&points[3*i]);
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-   
-    X3DBuffer *buff = new X3DBuffer;
-    if (buff) {
-        buff->numPoints =   numpoints;
-        buff->numSegs = (2*n-1)*(n-1);
-        buff->numPolys = (n-1)*(n-1);
-        if (hasrmin) {
-           buff->numSegs   += (2*n-1)*(n-1);
-           buff->numPolys  += (n-1)*(n-1);
-        }   
-        if (is3d && hasphi)  {
-           buff->numSegs   += 2*(n-1);
-           buff->numPolys  += 2*(n-1);
-        }   
-//        if (!is3d) buff->numPolys = 0;
-    }
-
-    buff->points = points;
-
-    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-    if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }
-//*-* Allocate memory for segments *-*
-
-    indp = n*(n-1); // start index for points on inner surface
-    buff->segs = new Int_t[buff->numSegs*3];
-    memset(buff->segs, 0, buff->numSegs*3*sizeof(Int_t));
-    if (buff->segs) {
-       // outer surface phi circles = n*(n-1) -> [0, n*(n-1) -1]
-       // connect point j with point j+1 on same row
-       indx = 0;
-       for (i = 0; i < n; i++) { // rows [0,n-1]
-          for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
-             buff->segs[indx+(i*(n-1)+j)*3] = c;
-             buff->segs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;   // j on row i
-             buff->segs[indx+(i*(n-1)+j)*3+2] = i*(n-1)+((j+1)%(n-1)); // j+1 on row i
-          }
-       }
-       indx += 3*n*(n-1);
-       // outer surface generators = (n-1)*(n-1) -> [n*(n-1), (2*n-1)*(n-1) -1]
-       // connect point j on row i with point j on row i+1
-       for (i = 0; i < n-1; i++) { // rows [0, n-2]
-          for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
-             buff->segs[indx+(i*(n-1)+j)*3] = c;
-             buff->segs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;     // j on row i
-             buff->segs[indx+(i*(n-1)+j)*3+2] = (i+1)*(n-1)+j; // j on row i+1
-          }
-       }
-       indx += 3*(n-1)*(n-1);
-       startcap = (2*n-1)*(n-1);
-                
-       if (hasrmin) {
-          // inner surface phi circles = n*(n-1) -> [(2*n-1)*(n-1), (3*n-1)*(n-1) -1]
-          // connect point j with point j+1 on same row
-          for (i = 0; i < n; i++) { // rows [0, n-1]
-             for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
-                buff->segs[indx+(i*(n-1)+j)*3] = c;              // lighter color
-                buff->segs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;   // j on row i
-                buff->segs[indx+(i*(n-1)+j)*3+2] = indp + i*(n-1)+((j+1)%(n-1)); // j+1 on row i
-             }
-          }
-          indx += 3*n*(n-1);
-          // inner surface generators = (n-1)*n -> [(3*n-1)*(n-1), (4*n-2)*(n-1) -1]
-          // connect point j on row i with point j on row i+1
-          for (i = 0; i < n-1; i++) { // rows [0, n-2]
-             for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
-                buff->segs[indx+(i*(n-1)+j)*3] = c;                // lighter color
-                buff->segs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;     // j on row i
-                buff->segs[indx+(i*(n-1)+j)*3+2] = indp + (i+1)*(n-1)+j; // j on row i+1
-             }
-          }
-          indx += 3*(n-1)*(n-1);
-          startcap = (4*n-2)*(n-1);
-       }   
-
-       if (is3d && hasphi) {
-          if (hasrmin) {
-           // endcaps = 2*(n-1) -> [(4*n-2)*(n-1), 4*n*(n-1)-1]
-             i = 0;
-             for (j = 0; j < n-1; j++) { 
-                buff->segs[indx+j*3] = c+1;
-                buff->segs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
-                buff->segs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row 0
-             }
-             indx += 3*(n-1);
-             i = n-1;   
-             for (j = 0; j < n-1; j++) { 
-                buff->segs[indx+j*3] = c+1;
-                buff->segs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
-                buff->segs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row n-1
-             }
-             indx += 3*(n-1);
-          } else {
-             i = 0;
-             for (j = 0; j < n-1; j++) { 
-                buff->segs[indx+j*3] = c+1;
-                buff->segs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
-                buff->segs[indx+j*3+2] = n*(n-1);       // center of first endcap
-             }
-             indx += 3*(n-1);
-             i = n-1;   
-             for (j = 0; j < n-1; j++) { 
-                buff->segs[indx+j*3] = c+1;
-                buff->segs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
-                buff->segs[indx+j*3+2] = n*(n-1)+1;     // center of second endcap
-             }
-             indx += 3*(n-1);
-          }
-       }
-    }               
-                   
-//*-* Allocate memory for polygons *-*
-
-    indx = 0;
-    buff->polys = 0;
-    if (is3d) {
-       buff->polys = new Int_t[buff->numPolys*6];
-       memset(buff->polys, 0, buff->numPolys*6*sizeof(Int_t));
-       if (buff->polys) {
-          // outer surface = (n-1)*(n-1) -> [0, (n-1)*(n-1)-1]
-          // normal pointing out
-          for (i=0; i<n-1; i++) {
-             for (j=0; j<n-1; j++) {
-                buff->polys[indx++] = c;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = (n-1)*i+j; // seg j on outer row i
-                buff->polys[indx++] = n*(n-1)+(n-1)*i+j; // generator j on outer row i
-                buff->polys[indx++] = (n-1)*(i+1)+j; // seg j on outer row i+1
-                buff->polys[indx++] = n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on outer row i
-             }   
-          }
-          if (hasrmin) {
-             indp = (2*n-1)*(n-1); // start index of inner segments
-             // inner surface = (n-1)*(n-1) -> [(n-1)*(n-1), 2*(n-1)*(n-1)-1] 
-             // normal pointing out 
-             for (i=0; i<n-1; i++) {
-                for (j=0; j<n-1; j++) {
-                   buff->polys[indx++] = c;
-                   buff->polys[indx++] = 4;
-                   buff->polys[indx++] = indp+(n-1)*i+j; // seg j on inner row i
-                   buff->polys[indx++] = indp+n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on inner row i
-                   buff->polys[indx++] = indp+(n-1)*(i+1)+j; // seg j on inner row i+1
-                   buff->polys[indx++] = indp+n*(n-1)+(n-1)*i+j; // generator j on inner row i
-                }   
-             }
-          }   
-          if (hasphi) {
-             // endcaps = 2*(n-1) -> [2*(n-1)*(n-1), 2*n*(n-1)-1]
-             i=0; // row 0
-             Int_t np = (hasrmin)?4:3;
-             for (j=0; j<n-1; j++) {
-                buff->polys[indx++] = c+1;
-                buff->polys[indx++] = np;
-                buff->polys[indx++] = (n-1)*i+j;         // seg j on outer row 0
-                buff->polys[indx++] = startcap+((j+1)%(n-1)); // endcap j+1 on row 0
-                if (hasrmin)
-                   buff->polys[indx++] = indp+(n-1)*i+j; // seg j on inner row 0
-                buff->polys[indx++] = startcap+j;        // endcap j on row 0
-             }   
-
-             i=n-1; // row n-1
-             for (j=0; j<n-1; j++) {
-                buff->polys[indx++] = c+1;
-                buff->polys[indx++] = np;
-                buff->polys[indx++] = (n-1)*i+j;         // seg j on outer row n-1
-                buff->polys[indx++] = startcap+(n-1)+j;      // endcap j on row n-1
-                if (hasrmin)
-                   buff->polys[indx++] = indp+(n-1)*i+j; // seg j on inner row n-1
-                buff->polys[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1
-             } 
-          }
-       }
-    }           
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (is3d) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    delete [] points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;
-}
-
-//______________________________________________________________________________
-void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option)
-{
-// paint tubes
-   Int_t i, j;
-   Int_t n = fNsegments;
-   const Int_t numpoints = 4*n;
-
-//*-* Allocate memory for points *-*
-
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-
-   shape->SetPoints(points);
-
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points, n, 2);
-
-//==   for (i = 0; i < numpoints; i++)
-//==            gNode->Local2Master(&points[3*i],&points[3*i]);
-
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-
-    X3DBuffer *buff = new X3DBuffer;
-    if (buff) {
-        buff->numPoints = numpoints;
-        if (is3d) {
-           buff->numSegs   = n*8;
-           buff->numPolys  = n*4;
-        } else {                        
-           buff->numSegs   = n*6;
-           buff->numPolys  = 0;
-        }   
-    }
-
-
-//*-* Allocate memory for points *-*
-
-    buff->points = points;
-
-    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-    if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }   
-
-//*-* Allocate memory for segments *-*
-
-    buff->segs = new Int_t[buff->numSegs*3];
-    if (buff->segs) {
-        for (i = 0; i < 4; i++) {
-            for (j = 0; j < n; j++) {
-                buff->segs[(i*n+j)*3  ] = c;
-                buff->segs[(i*n+j)*3+1] = i*n+j;
-                buff->segs[(i*n+j)*3+2] = i*n+j+1;
-            }
-            buff->segs[(i*n+j-1)*3+2] = i*n;
-        }
-        for (i = 4; i < 6; i++) {
-            for (j = 0; j < n; j++) {
-                buff->segs[(i*n+j)*3  ] = c+1;
-                buff->segs[(i*n+j)*3+1] = (i-4)*n+j;
-                buff->segs[(i*n+j)*3+2] = (i-2)*n+j;
-            }
-        }
-        if (is3d) {
-           for (i = 6; i < 8; i++) {
-              for (j = 0; j < n; j++) {
-                 buff->segs[(i*n+j)*3  ] = c;
-                 buff->segs[(i*n+j)*3+1] = 2*(i-6)*n+j;
-                 buff->segs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
-              }
-           }
-        }
-    }
-//*-* Allocate memory for polygons *-*
-
-    Int_t indx = 0;
-
-    buff->polys = 0;
-    if (is3d) {
-       buff->polys = new Int_t[buff->numPolys*6];
-       if (buff->polys) {
-           for (i = 0; i < 2; i++) {
-               for (j = 0; j < n; j++) {
-                   indx = 6*(i*n+j);
-                   buff->polys[indx  ] = c;
-                   buff->polys[indx+1] = 4;
-                   buff->polys[indx+2] = i*n+j;
-                   buff->polys[indx+3] = (4+i)*n+j;
-                   buff->polys[indx+4] = (2+i)*n+j;
-                   buff->polys[indx+5] = (4+i)*n+j+1;
-               }
-               buff->polys[indx+5] = (4+i)*n;
-           }
-           for (i = 2; i < 4; i++) {
-               for (j = 0; j < n; j++) {
-                   indx = 6*(i*n+j);
-                   buff->polys[indx  ] = c+i;
-                   buff->polys[indx+1] = 4;
-                   buff->polys[indx+2] = (i-2)*2*n+j;
-                   buff->polys[indx+3] = (4+i)*n+j;
-                   buff->polys[indx+4] = ((i-2)*2+1)*n+j;
-                   buff->polys[indx+5] = (4+i)*n+j+1;
-               }
-               buff->polys[indx+5] = (4+i)*n;
-           }
-       }
-    }
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (is3d) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    if (buff->points)   delete [] buff->points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;
-}
-
 //______________________________________________________________________________
 void *TGeoPainter::MakeTubs3DBuffer(const TGeoVolume *vol)
 {
@@ -1631,158 +991,7 @@ void *TGeoPainter::MakeTubs3DBuffer(const TGeoVolume *vol)
    buff->points = points;
    return buff;
 }   
-//______________________________________________________________________________
-void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option)
-{
-// paint tubes
-   Int_t i, j;
-   const Int_t n = fNsegments+1;
-   const Int_t numpoints = 4*n;
 
-   //*-* Allocate memory for points *-*
-
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-
-   shape->SetPoints(points);
-
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points,-n,2);
-
-//==   for (i = 0; i < numpoints; i++)
-//==            gNode->Local2Master(&points[3*i],&points[3*i]);
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-   
-    X3DBuffer *buff = new X3DBuffer;
-    if (buff) {
-        buff->numPoints =   numpoints;
-        if (is3d)  {
-           buff->numSegs   = 2*numpoints;
-           buff->numPolys  = numpoints-2;
-        } else { 
-           buff->numSegs   = 6*n+4;
-           buff->numPolys  = 0;
-        }   
-    }
-
-    buff->points = points;
-
-    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-    if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }
-//*-* Allocate memory for segments *-*
-
-    buff->segs = new Int_t[buff->numSegs*3];
-    memset(buff->segs, 0, buff->numSegs*3*sizeof(Int_t));
-    if (buff->segs) {
-        for (i = 0; i < 4; i++) {
-            for (j = 1; j < n; j++) {
-                buff->segs[(i*n+j-1)*3  ] = c;
-                buff->segs[(i*n+j-1)*3+1] = i*n+j-1;
-                buff->segs[(i*n+j-1)*3+2] = i*n+j;
-            }
-        }
-        for (i = 4; i < 6; i++) {
-            for (j = 0; j < n; j++) {
-                buff->segs[(i*n+j)*3  ] = c+1;
-                buff->segs[(i*n+j)*3+1] = (i-4)*n+j;
-                buff->segs[(i*n+j)*3+2] = (i-2)*n+j;
-            }
-        }
-        if (is3d) {
-           for (i = 6; i < 8; i++) {
-              for (j = 0; j < n; j++) {
-                buff->segs[(i*n+j)*3  ] = c;
-                buff->segs[(i*n+j)*3+1] = 2*(i-6)*n+j;
-                buff->segs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
-              }
-           }
-        } else {   
-           buff->segs[6*n*3] = c;
-           buff->segs[6*n*3+1] = 0;
-           buff->segs[6*n*3+2] = n;
-           buff->segs[6*n*3+3] = c;
-           buff->segs[6*n*3+4] = n-1;
-           buff->segs[6*n*3+5] = 2*n-1;
-           buff->segs[6*n*3+6] = c;
-           buff->segs[6*n*3+7] = 2*n;
-           buff->segs[6*n*3+8] = 3*n;
-           buff->segs[6*n*3+9] = c;
-           buff->segs[6*n*3+10] = 3*n-1;
-           buff->segs[6*n*3+11] = 4*n-1;
-        }   
-    }
-
-//*-* Allocate memory for polygons *-*
-
-    Int_t indx = 0;
-    buff->polys = 0;
-    if (is3d) {
-       buff->polys = new Int_t[buff->numPolys*6];
-       memset(buff->polys, 0, buff->numPolys*6*sizeof(Int_t));
-       if (buff->polys) {
-           for (i = 0; i < 2; i++) {
-               for (j = 0; j < n-1; j++) {
-                   buff->polys[indx++] = c;
-                   buff->polys[indx++] = 4;
-                   buff->polys[indx++] = i*n+j;
-                   buff->polys[indx++] = (4+i)*n+j;
-                   buff->polys[indx++] = (2+i)*n+j;
-                   buff->polys[indx++] = (4+i)*n+j+1;
-               }
-           }
-           for (i = 2; i < 4; i++) {
-               for (j = 0; j < n-1; j++) {
-                   buff->polys[indx++] = c+i;
-                   buff->polys[indx++] = 4;
-                   buff->polys[indx++] = (i-2)*2*n+j;
-                   buff->polys[indx++] = (4+i)*n+j;
-                   buff->polys[indx++] = ((i-2)*2+1)*n+j;
-                   buff->polys[indx++] = (4+i)*n+j+1;
-               }
-           }
-           buff->polys[indx++] = c+2;
-           buff->polys[indx++] = 4;
-           buff->polys[indx++] = 6*n;
-           buff->polys[indx++] = 4*n;
-           buff->polys[indx++] = 7*n;
-           buff->polys[indx++] = 5*n;
-
-           buff->polys[indx++] = c+2;
-           buff->polys[indx++] = 4;
-           buff->polys[indx++] = 7*n-1;
-           buff->polys[indx++] = 5*n-1;
-           buff->polys[indx++] = 8*n-1;
-           buff->polys[indx++] = 6*n-1;
-       }
-    }
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (is3d) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    delete [] points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;
-}
 //______________________________________________________________________________
 void *TGeoPainter::MakeSphere3DBuffer(const TGeoVolume *vol)
 {
@@ -1806,223 +1015,6 @@ void *TGeoPainter::MakeSphere3DBuffer(const TGeoVolume *vol)
    shape->SetPoints(points);
    buff->points = points;
    return buff;
-}
-
-//______________________________________________________________________________
-void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option)
-{
-// paint a sphere
-   Int_t i, j;
-   ((TGeoSphere*)shape)->SetNumberOfDivisions(fNsegments);
-   const Int_t n = ((TGeoSphere*)shape)->GetNumberOfDivisions()+1;
-   Double_t ph1 = ((TGeoSphere*)shape)->GetPhi1();
-   Double_t ph2 = ((TGeoSphere*)shape)->GetPhi2();
-   Int_t nz = ((TGeoSphere*)shape)->GetNz()+1;
-   if (nz < 2) return;
-   Int_t numpoints = 2*n*nz;
-   if (numpoints <= 0) return;
-   //*-* Allocate memory for points *-*
-
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-   shape->SetPoints(points);
-
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points, -n, nz);
-
- //==  for (i = 0; i < numpoints; i++)
- //==          gNode->Local2Master(&points[3*i],&points[3*i]);
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-
-   Bool_t specialCase = kFALSE;
-
-   if (TMath::Abs(TMath::Sin(2*(ph2 - ph1))) <= 0.01)  //mark this as a very special case, when
-         specialCase = kTRUE;                                  //we have to draw this PCON like a TUBE
-
-    X3DBuffer *buff = new X3DBuffer;
-    if (buff) {
-        buff->numPoints = numpoints;
-        buff->numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
-        buff->numPolys  = (is3d)?(2*(nz*n-1+(specialCase == kTRUE))):0;
-    }
-
-//*-* Allocate memory for points *-*
-
-    buff->points = points;
-
-    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-    if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }
-
-//*-* Allocate memory for segments *-*
-
-    Int_t indx, indx2, k;
-    indx = indx2 = 0;
-
-    buff->segs = new Int_t[buff->numSegs*3];
-    if (buff->segs) {
-
-        //inside & outside spheres, number of segments: 2*nz*(n-1)
-        //             special case number of segments: 2*nz*n
-        for (i = 0; i < nz*2; i++) {
-            indx2 = i*n;
-            for (j = 1; j < n; j++) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j-1;
-                buff->segs[indx++] = indx2+j;
-            }
-            if (specialCase) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j-1;
-                buff->segs[indx++] = indx2;
-            }
-        }
-
-        //bottom & top lines, number of segments: 2*n
-        for (i = 0; i < 2; i++) {
-            indx2 = i*(nz-1)*2*n;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n+j;
-            }
-        }
-
-        //inside & outside spheres, number of segments: 2*(nz-1)*n
-        for (i = 0; i < (nz-1); i++) {
-
-            //inside sphere
-            indx2 = i*n*2;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c+2;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n*2+j;
-            }
-            //outside sphere
-            indx2 = i*n*2+n;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c+3;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n*2+j;
-            }
-        }
-
-        //left & right sections, number of segments: 2*(nz-2)
-        //          special case number of segments: 0
-        if (!specialCase) {
-            for (i = 1; i < (nz-1); i++) {
-                for (j = 0; j < 2; j++) {
-                    buff->segs[indx++] = c;
-                    buff->segs[indx++] =  2*i    * n + j*(n-1);
-                    buff->segs[indx++] = (2*i+1) * n + j*(n-1);
-                }
-            }
-        }
-    }
-
-
-    Int_t m = n - 1 + (specialCase == kTRUE);
-
-//*-* Allocate memory for polygons *-*
-
-    indx = 0;
-    buff->polys = 0;
-    if (is3d) {
-       buff->polys = new Int_t[buff->numPolys*6];
-
-       if (buff->polys) {
-
-           //bottom & top, number of polygons: 2*(n-1)
-           // special case number of polygons: 2*n
-           for (i = 0; i < 2; i++) {
-               for (j = 0; j < n-1; j++) {
-                   buff->polys[indx++] = c+3;
-                   buff->polys[indx++] = 4;
-                   buff->polys[indx++] = 2*nz*m+i*n+j;
-                   buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                   buff->polys[indx++] = 2*nz*m+i*n+j+1;
-                   buff->polys[indx++] = i*(nz*2-2)*m+j;
-               }
-               if (specialCase) {
-                   buff->polys[indx++] = c+3;
-                   buff->polys[indx++] = 4;
-                   buff->polys[indx++] = 2*nz*m+i*n+j;
-                   buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                   buff->polys[indx++] = 2*nz*m+i*n;
-                   buff->polys[indx++] = i*(nz*2-2)*m+j;
-               }
-           }
-
-
-           //inside & outside, number of polygons: (nz-1)*2*(n-1)
-           for (k = 0; k < (nz-1); k++) {
-               for (i = 0; i < 2; i++) {
-                   for (j = 0; j < n-1; j++) {
-                       buff->polys[indx++] = c+i;
-                       buff->polys[indx++] = 4;
-                       buff->polys[indx++] = (2*k+i*1)*m+j;
-                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                       buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
-                   }
-                   if (specialCase) {
-                       buff->polys[indx++] = c+i;
-                       buff->polys[indx++] = 4;
-                       buff->polys[indx++] = (2*k+i*1)*m+j;
-                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                       buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n;
-                   }
-               }
-           }
-
-
-           //left & right sections, number of polygons: 2*(nz-1)
-           //          special case number of polygons: 0
-           if (!specialCase) {
-               indx2 = nz*2*(n-1);
-               for (k = 0; k < (nz-1); k++) {
-                   for (i = 0; i < 2; i++) {
-                       buff->polys[indx++] = c+2;
-                       buff->polys[indx++] = 4;
-                       buff->polys[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-                       buff->polys[indx++] = indx2+2*(k+1)*n+i*(n-1);
-                       buff->polys[indx++] = indx2+2*nz*n+2*k+i;
-                       buff->polys[indx++] = indx2+(2*k+3)*n+i*(n-1);
-                   }
-               }
-               buff->polys[indx-8] = indx2+n;
-               buff->polys[indx-2] = indx2+2*n-1;
-           }
-       }
-    }
-    
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (is3d) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    delete [] points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;
 }
 
 //______________________________________________________________________________
@@ -2062,344 +1054,6 @@ void *TGeoPainter::MakePcon3DBuffer(const TGeoVolume *vol)
    buff->numPoints = numpoints;
    buff->points = points;
    return buff;
-}
-
-//______________________________________________________________________________
-void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option)
-{
-// paint a pcon
-   Int_t i, j;
-   const Int_t n = ((TGeoPcon*)shape)->GetNsegments()+1;
-   Int_t nz = ((TGeoPcon*)shape)->GetNz();
-   if (nz < 2) return;
-   Int_t numpoints =  nz*2*n;
-   if (numpoints <= 0) return;
-   Double_t dphi = ((TGeoPcon*)shape)->GetDphi();
-   //*-* Allocate memory for points *-*
-
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-   shape->SetPoints(points);
-
-   Bool_t rangeView = strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points, -n, nz);
-
- //==  for (i = 0; i < numpoints; i++)
- //==          gNode->Local2Master(&points[3*i],&points[3*i]);
-
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-
-      Bool_t specialCase = kFALSE;
-
-   if (dphi == 360)           //mark this as a very special case, when
-        specialCase = kTRUE;     //we have to draw this PCON like a TUBE
-
-    X3DBuffer *buff = new X3DBuffer;
-    if (buff) {
-        buff->numPoints = numpoints;
-        buff->numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
-        buff->numPolys  = (is3d)?(2*(nz*n-1+(specialCase == kTRUE))):0;
-    }
-
-//*-* Allocate memory for points *-*
-
-    buff->points = points;
-
-    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-    if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }
-
-//*-* Allocate memory for segments *-*
-
-    Int_t indx, indx2, k;
-    indx = indx2 = 0;
-
-    buff->segs = new Int_t[buff->numSegs*3];
-    if (buff->segs) {
-
-        //inside & outside circles, number of segments: 2*nz*(n-1)
-        //             special case number of segments: 2*nz*n
-        for (i = 0; i < nz*2; i++) {
-            indx2 = i*n;
-            for (j = 1; j < n; j++) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j-1;
-                buff->segs[indx++] = indx2+j;
-            }
-            if (specialCase) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j-1;
-                buff->segs[indx++] = indx2;
-            }
-        }
-
-        //bottom & top lines, number of segments: 2*n
-        for (i = 0; i < 2; i++) {
-            indx2 = i*(nz-1)*2*n;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n+j;
-            }
-        }
-
-        //inside & outside cilindres, number of segments: 2*(nz-1)*n
-        for (i = 0; i < (nz-1); i++) {
-
-            //inside cilinder
-            indx2 = i*n*2;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c+2;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n*2+j;
-            }
-            //outside cilinder
-            indx2 = i*n*2+n;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c+3;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n*2+j;
-            }
-        }
-
-        //left & right sections, number of segments: 2*(nz-2)
-        //          special case number of segments: 0
-        if (!specialCase) {
-            for (i = 1; i < (nz-1); i++) {
-                for (j = 0; j < 2; j++) {
-                    buff->segs[indx++] = c;
-                    buff->segs[indx++] =  2*i    * n + j*(n-1);
-                    buff->segs[indx++] = (2*i+1) * n + j*(n-1);
-                }
-            }
-        }
-    }
-
-
-    Int_t m = n - 1 + (specialCase == kTRUE);
-
-//*-* Allocate memory for polygons *-*
-
-    indx = 0;
-
-    buff->polys = 0;
-    if (is3d) {
-       buff->polys = new Int_t[buff->numPolys*6];
-
-       if (buff->polys) {
-
-           //bottom & top, number of polygons: 2*(n-1)
-           // special case number of polygons: 2*n
-           for (i = 0; i < 2; i++) {
-               for (j = 0; j < n-1; j++) {
-                   buff->polys[indx++] = c+3;
-                   buff->polys[indx++] = 4;
-                   buff->polys[indx++] = 2*nz*m+i*n+j;
-                   buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                   buff->polys[indx++] = 2*nz*m+i*n+j+1;
-                   buff->polys[indx++] = i*(nz*2-2)*m+j;
-               }
-               if (specialCase) {
-                   buff->polys[indx++] = c+3;
-                   buff->polys[indx++] = 4;
-                   buff->polys[indx++] = 2*nz*m+i*n+j;
-                   buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                   buff->polys[indx++] = 2*nz*m+i*n;
-                   buff->polys[indx++] = i*(nz*2-2)*m+j;
-               }
-           }
-
-
-           //inside & outside, number of polygons: (nz-1)*2*(n-1)
-           for (k = 0; k < (nz-1); k++) {
-               for (i = 0; i < 2; i++) {
-                   for (j = 0; j < n-1; j++) {
-                       buff->polys[indx++] = c+i;
-                       buff->polys[indx++] = 4;
-                       buff->polys[indx++] = (2*k+i*1)*m+j;
-                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                       buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
-                   }
-                   if (specialCase) {
-                       buff->polys[indx++] = c+i;
-                       buff->polys[indx++] = 4;
-                       buff->polys[indx++] = (2*k+i*1)*m+j;
-                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                       buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n;
-                   }
-               }
-           }
-
-
-           //left & right sections, number of polygons: 2*(nz-1)
-           //          special case number of polygons: 0
-           if (!specialCase) {
-               indx2 = nz*2*(n-1);
-               for (k = 0; k < (nz-1); k++) {
-                   for (i = 0; i < 2; i++) {
-                       buff->polys[indx++] = c+2;
-                       buff->polys[indx++] = 4;
-                       buff->polys[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-                       buff->polys[indx++] = indx2+2*(k+1)*n+i*(n-1);
-                       buff->polys[indx++] = indx2+2*nz*n+2*k+i;
-                       buff->polys[indx++] = indx2+(2*k+3)*n+i*(n-1);
-                   }
-               }
-               buff->polys[indx-8] = indx2+n;
-               buff->polys[indx-2] = indx2+2*n-1;
-           }
-       }
-    }
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (is3d) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    delete [] points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;
-}
-
-//______________________________________________________________________________
-void TGeoPainter::PaintXtru(TGeoShape *shape, Option_t *option)
-{
-// Paint a TGeoXtru
-   TGeoXtru *xtru = (TGeoXtru*)shape;
-   Int_t nz = xtru->GetNz();
-   Int_t nvert = xtru->GetNvert();
-   Int_t numPoints =  nz*nvert;
-   Int_t numSegs   = nvert*(2*nz-1);
-   Int_t numPolys  = nvert*(nz-1)+2;
-   
-   Float_t *points = new Float_t[3*numPoints];
-   if (!points) return;
-   shape->SetPoints(points);
-
-   Bool_t rangeView = strcmp(option,"range")==0 ? kTRUE : kFALSE;
-//   if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points, -n, nz);
-
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-   X3DBuffer *buff = new X3DBuffer;
-   if (buff) {
-      buff->numPoints = numPoints;
-      buff->numSegs   = numSegs;
-      buff->numPolys  = (is3d)?numPolys:0;
-  }
-
-//*-* Allocate memory for points *-*
-
-   buff->points = points;
-
-   Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-   if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }
-
-//*-* Allocate memory for segments *-*
-   buff->segs = new Int_t[buff->numSegs*3];
-   Int_t i,j;
-   Int_t indx, indx2, k;
-   indx = indx2 = 0;
-   for (i=0; i<nz; i++) {
-      // loop Z planes
-      indx2 = i*nvert;
-      // loop polygon segments
-      for (j=0; j<nvert; j++) {
-         k = (j+1)%nvert;
-         buff->segs[indx++] = c;
-         buff->segs[indx++] = indx2+j;
-         buff->segs[indx++] = indx2+k;
-      } 
-   } // total: nz*nvert polygon segments    
-   for (i=0; i<nz-1; i++) {
-      // loop Z planes
-      indx2 = i*nvert;
-      // loop polygon segments
-      for (j=0; j<nvert; j++) {
-         k = j + nvert;
-         buff->segs[indx++] = c;
-         buff->segs[indx++] = indx2+j;
-         buff->segs[indx++] = indx2+k;
-      }
-   } // total (nz-1)*nvert lateral segments
-
-//*-* Allocate memory for polygons *-*
-   indx = 0;
-
-   buff->polys = 0;
-   if (is3d) {
-      buff->polys = new Int_t[(buff->numPolys-2)*6 + 2*(2+nvert)];
-      // fill lateral polygons
-      for (i=0; i<nz-1; i++) {
-         indx2 = i*nvert;
-         for (j=0; j<nvert; j++) {
-            k = (j+1)%nvert;
-            buff->polys[indx++] = c+j%3;
-            buff->polys[indx++] = 4;
-            buff->polys[indx++] = indx2+j;
-            buff->polys[indx++] = nz*nvert+indx2+k;
-            buff->polys[indx++] = indx2+nvert+j;
-            buff->polys[indx++] = nz*nvert+indx2+j;
-         }
-      } // total (nz-1)*nvert polys
-      buff->polys[indx++] = c+2;      
-      buff->polys[indx++] = nvert;
-      indx2 = 0;
-      for (j=0; j<nvert; j++) {
-         buff->polys[indx++] = indx2+j;
-      }   
-      buff->polys[indx++] = c;      
-      buff->polys[indx++] = nvert;
-      indx2 = (nz-1)*nvert;          
-      for (j=0; j<nvert; j++) {
-         buff->polys[indx++] = indx2+j;
-      }   
-   }
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (is3d) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    delete [] points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;    
 }
 
 //______________________________________________________________________________
@@ -2492,27 +1146,6 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
       default:
          return;
    }
-   if (node==gGeoManager->GetTopNode()) {
-      if (!gGeoManager->IsDrawingExtra()) return;
-      // loop the list of physical volumes
-      TObjArray *nodeList = gGeoManager->GetListOfPhysicalNodes();
-      Int_t nnodes = nodeList->GetEntriesFast();
-      Int_t inode;
-      TGeoVolume *vcrt = gGeoManager->GetCurrentVolume();
-      // save volume line settings
-      Int_t col = vcrt->GetLineColor();
-      Int_t wid = vcrt->GetLineWidth();
-      Int_t sty = vcrt->GetLineStyle();
-      TGeoPhysicalNode *node;
-      for (inode=0; inode<nnodes; inode++) {
-         node = (TGeoPhysicalNode*)nodeList->UncheckedAt(inode);
-         PaintPhysicalNode(node, option);
-      }
-      // restore volume line settings
-      vcrt->SetLineColor(col);
-      vcrt->SetLineWidth(wid);
-      vcrt->SetLineStyle(sty);
-   }      
 } 
 
 //______________________________________________________________________________
@@ -2521,43 +1154,56 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
 // Paints a physical node associated with a path.
    if (!node->IsVisible()) return;
    Int_t level = node->GetLevel();
-   Int_t i;
+   Int_t i, col, wid, sty;
    TGeoShape *shape;
    TGeoHMatrix *matrix = fGeom->GetGLMatrix();
-   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
-   gGeoManager->SetPaintVolume(vol);
    TGeoVolume *vcrt;
-   if (!node->IsVolAttributes()) {
-      vol->SetLineColor(node->GetLineColor());
-      vol->SetLineWidth(node->GetLineWidth());
-      vol->SetLineStyle(node->GetLineStyle());
-   }   
    fGeom->SetMatrixTransform(kTRUE);
    if (!node->IsVisibleFull()) {
       // Paint only last node in the branch
       vcrt  = node->GetVolume();
-      if (node->IsVolAttributes()) {
-         vol->SetLineColor(vcrt->GetLineColor());
-         vol->SetLineWidth(vcrt->GetLineWidth());
-         vol->SetLineStyle(vcrt->GetLineStyle());
-      }     
       shape = vcrt->GetShape();
       *matrix = node->GetMatrix();
       fGeom->SetMatrixReflection(matrix->IsReflection());
-      shape->Paint(option);
+      gGeoManager->SetPaintVolume(vcrt);
+      if (!node->IsVolAttributes() && !strstr(option,"range")) {
+         col = vcrt->GetLineColor();
+         wid = vcrt->GetLineWidth();
+         sty = vcrt->GetLineStyle();
+         vcrt->SetLineColor(node->GetLineColor());
+         vcrt->SetLineWidth(node->GetLineWidth());
+         vcrt->SetLineStyle(node->GetLineStyle());
+         ((TAttLine*)vcrt)->Modify(); 
+         shape->Paint(option);
+         vcrt->SetLineColor(col);
+         vcrt->SetLineWidth(wid);
+         vcrt->SetLineStyle(sty);
+      } else {    
+         shape->Paint(option);
+      }
    } else {
       // Paint full branch, except top node
       for (i=1;i<=level; i++) {
          vcrt  = node->GetVolume(i);
-         if (node->IsVolAttributes()) {
-            vol->SetLineColor(vcrt->GetLineColor());
-            vol->SetLineWidth(vcrt->GetLineWidth());
-            vol->SetLineStyle(vcrt->GetLineStyle());
-         }     
          shape = vcrt->GetShape();
          *matrix = node->GetMatrix(i);
          fGeom->SetMatrixReflection(matrix->IsReflection());
-         shape->Paint(option);
+         gGeoManager->SetPaintVolume(vcrt);
+         if (!node->IsVolAttributes() && !strstr(option,"range")) {
+            col = vcrt->GetLineColor();
+            wid = vcrt->GetLineWidth();
+            sty = vcrt->GetLineStyle();
+            vcrt->SetLineColor(node->GetLineColor());
+            vcrt->SetLineWidth(node->GetLineWidth());
+            vcrt->SetLineStyle(node->GetLineStyle());
+            ((TAttLine*)vcrt)->Modify();
+            shape->Paint(option);
+            vcrt->SetLineColor(col);
+            vcrt->SetLineWidth(wid);
+            vcrt->SetLineStyle(sty);
+         } else {     
+            shape->Paint(option);
+         }   
       }
    }      
    fGeom->SetMatrixTransform(kFALSE);
@@ -2989,7 +1635,7 @@ void TGeoPainter::SetVisLevel(Int_t level) {
       Warning("SetVisLevel", "visualization level should be >0");
       return;
    }   
-   if (level==fVisLevel) return;
+   if (level==fVisLevel && fLastVolume==gGeoManager->GetTopVolume()) return;
    fVisLevel=level;
    if (fVisLock) {
       ClearVisibleVolumes();
@@ -2997,6 +1643,7 @@ void TGeoPainter::SetVisLevel(Int_t level) {
    }   
    if (!gPad) return;
    if (gPad->GetView()) {
+      printf("--- Drawing   %6d nodes with %d visible levels\n",fNVisNodes,fVisLevel);
       gPad->Modified();
       gPad->Update();
    }

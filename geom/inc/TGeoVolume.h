@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.32 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.33 2004/09/07 08:15:57 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -97,7 +97,7 @@ public:
    TGeoVolume     *CloneVolume() const;
    void            CheckGeometry(Int_t nrays=1, Double_t startx=0, Double_t starty=0, Double_t startz=0) const;
    void            CheckOverlaps(Double_t ovlp=0.1, Option_t *option="") const; // *MENU*
-   Int_t           CountNodes(Int_t nlevels=1000);
+   Int_t           CountNodes(Int_t nlevels=1000, Int_t option=0);
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    virtual Bool_t  IsAssembly() const {return kFALSE;}
    Bool_t          IsFolder() const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.44 2004/08/30 07:04:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.45 2004/10/08 15:09:55 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -535,11 +535,23 @@ void TGeoVolume::CheckShapes()
 }     
 
 //_____________________________________________________________________________
-Int_t TGeoVolume::CountNodes(Int_t nlevels)
+Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
 {
-// count total number of subnodes starting from this volume, nlevels down
-   //if (fNtotal) return fNtotal;
-   fNtotal = 1;
+// Count total number of subnodes starting from this volume, nlevels down
+// option = 0 (default) - count only once per volume
+// option = 1           - count every time
+// option = 2           - count volumes on visible branches
+   if (option<0 || option>2) option = 0;
+   switch (option) {
+      case 0:
+         if (fNtotal) return fNtotal;
+      case 1:   
+         fNtotal = 1;
+         break;
+      case 2:
+         fNtotal = (IsVisible())?1:0;   
+         if (!IsVisibleDaughters()) return fNtotal;
+   }      
    if (!fNodes || !nlevels) return fNtotal;
    Int_t nd = GetNdaughters();
    TGeoNode *node;
@@ -547,7 +559,7 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels)
    for (Int_t i=0; i<nd; i++) {
       node = GetNode(i);
       vol = node->GetVolume();
-      fNtotal += vol->CountNodes(nlevels-1);
+      fNtotal += vol->CountNodes(nlevels-1, option);
    }
    return fNtotal;
 }

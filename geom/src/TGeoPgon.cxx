@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.40 2004/09/06 16:42:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.41 2004/09/20 13:44:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1098,8 +1098,8 @@ void TGeoPgon::Paint(Option_t *option)
    if (!buff) return;
 
    buff->fType = TBuffer3D::kPGON;
-   TObject *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = (vol)?vol:this;
+   TGeoVolume *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = vol;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;
@@ -1116,7 +1116,7 @@ void TGeoPgon::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   buff->fColor = gGeoManager->GetCurrentVolume()->GetLineColor();
+   buff->fColor = vol->GetLineColor();
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 

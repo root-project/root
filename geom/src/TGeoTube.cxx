@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.41 2004/09/14 15:56:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.42 2004/09/20 13:44:14 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -595,8 +595,8 @@ void TGeoTube::Paint(Option_t *option)
    if (!buff) return;
 
    buff->fType = TBuffer3D::kTUBE;
-   TObject *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = (vol)?vol:this;
+   TGeoVolume *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = vol;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;
@@ -613,7 +613,7 @@ void TGeoTube::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   buff->fColor = gGeoManager->GetCurrentVolume()->GetLineColor();
+   buff->fColor = vol->GetLineColor();
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
@@ -1447,8 +1447,8 @@ void TGeoTubeSeg::Paint(Option_t *option)
    if (!buff) return;
 
    buff->fType = TBuffer3D::kTUBS;
-   TObject *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = (vol)?vol:this;
+   TGeoVolume *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = vol;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;
@@ -1465,7 +1465,7 @@ void TGeoTubeSeg::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   buff->fColor = gGeoManager->GetCurrentVolume()->GetLineColor();
+   buff->fColor = vol->GetLineColor();
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 

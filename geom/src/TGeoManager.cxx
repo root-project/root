@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.93 2004/10/08 10:26:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.94 2004/10/08 15:09:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1424,7 +1424,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    Voxelize("ALL");
    printf("Building caches for nodes and matrices...\n");
    BuildCache(dummy,nodeid);
-   printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
+   printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
    printf("----------------modeler ready----------------\n");
 }
 
@@ -1554,7 +1554,7 @@ Bool_t TGeoManager::cd(const char *path)
    return kTRUE;
 }
 //_____________________________________________________________________________
-Int_t TGeoManager::CountNodes(const TGeoVolume *vol, Int_t nlevels)
+Int_t TGeoManager::CountNodes(const TGeoVolume *vol, Int_t nlevels, Int_t option)
 {
 // Count the total number of nodes starting from a volume, nlevels down.
    TGeoVolume *top;
@@ -1563,7 +1563,7 @@ Int_t TGeoManager::CountNodes(const TGeoVolume *vol, Int_t nlevels)
    } else {
       top = (TGeoVolume*)vol;
    }
-   Int_t count = top->CountNodes(nlevels);
+   Int_t count = top->CountNodes(nlevels, option);
    return count;
 }
 
@@ -2225,9 +2225,13 @@ void TGeoManager::SetClippingShape(TGeoShape *shape)
 
 //_____________________________________________________________________________
 void TGeoManager::SetMaxVisNodes(Int_t maxnodes) {
-// set the maximum number of visible nodes.
-   
+// set the maximum number of visible nodes.   
    fMaxVisNodes = maxnodes;
+   GetGeomPainter();
+   fPainter->CountVisibleNodes();
+   if (maxnodes>0) printf("--- Automatic visible depth for %d visible nodes\n", maxnodes);
+   Int_t level = fPainter->GetVisLevel();
+   if (level != fVisLevel) fVisLevel = level;
 }
 
 //_____________________________________________________________________________
@@ -2260,7 +2264,9 @@ void TGeoManager::SetVisLevel(Int_t level) {
 // set default level down to which visualization is performed
    GetGeomPainter();
    if (level>0) fVisLevel = level;
-   fPainter->SetVisLevel(level);
+   fMaxVisNodes = 0;
+   fPainter->CountVisibleNodes();
+   printf("--- Automatic visible depth disabled\n");
 }
 
 //_____________________________________________________________________________
