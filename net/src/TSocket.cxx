@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.10 2002/05/18 08:22:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.11 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -205,7 +205,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
 
    fSecContext = 0;
    fRemoteProtocol= 0;
-   fService = kSOCKD;
+   fService = (char*)kSOCKD;
    fBytesSent = 0;
    fBytesRecv = 0;
  
