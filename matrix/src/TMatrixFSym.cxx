@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.6 2004/04/15 09:21:51 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.7 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -622,7 +622,7 @@ TMatrixFSym &TMatrixFSym::operator-=(const TMatrixFSym &source)
 }
 
 //______________________________________________________________________________
-TMatrixFSym &TMatrixFSym::Apply(const TElementActionF &action)
+TMatrixFBase &TMatrixFSym::Apply(const TElementActionF &action)
 { 
   Assert(IsValid());
   
@@ -645,7 +645,7 @@ TMatrixFSym &TMatrixFSym::Apply(const TElementActionF &action)
 }
 
 //______________________________________________________________________________
-TMatrixFSym &TMatrixFSym::Apply(const TElementPosActionF &action)
+TMatrixFBase &TMatrixFSym::Apply(const TElementPosActionF &action)
 { 
   // Apply action to each element of the matrix. To action the location
   // of the current element is passed.
