@@ -13,7 +13,7 @@ endif
 # Compiler:
 CXX           = CC
 CC            = cc
-CXXFLAGS      = -n32  -signed -DSGI_REL=62 -I/usr/include/CC.sgi $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -n32  -signed -DIRIX64 -DSGI_REL=62 -I/usr/include/CC.sgi $(EXTRA_CXXFLAGS)
 CFLAGS        = -n32  -signed -DSGI_REL=62 $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -n32  -signed -DSGI_REL=62 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO -I/usr/include/CC.sgi $(EXTRA_CXXFLAGS)
