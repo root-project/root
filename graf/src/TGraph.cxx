@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.97 2003/04/10 20:12:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.98 2003/04/14 16:54:31 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2604,19 +2604,20 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               ComputeLogs(npt, OptionZ);
               //gPad->PaintPolyLine(npt,gxworkl,gyworkl);
               //do not draw the two vertical lines on the edges
-		    Int_t npoints = npt-2;
-		    Int_t point1  = 1;
+              Int_t npoints = npt-2;
+              Int_t point1  = 1;
               if (OptionOff) {
                  // remove points before the low cutoff
-			  for (Int_t Ip=point1; Ip<=npoints; Ip++) {
+                 Int_t Ip;
+                 for (Ip=point1; Ip<=npoints; Ip++) {
                     if (gyworkl[Ip] != ywmin) {
                        point1 = Ip;
                        break;
                     }
                  }
                  // remove points after the high cutoff
-		       Int_t point2 = npoints;
-			  for (Int_t Ip=point2; Ip>=point1; Ip--) {
+		 Int_t point2 = npoints;
+                 for (Ip=point2; Ip>=point1; Ip--) {
                     if (gyworkl[Ip] != ywmin) {
                        point2 = Ip;
                        break;
