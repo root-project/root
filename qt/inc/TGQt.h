@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.5 2005/02/08 07:36:08 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.6 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #ifndef ROOT_TGQt
 #define ROOT_TGQt
 
@@ -19,8 +18,8 @@
 //                                                                      //
 // TGQt                                                                 //
 //                                                                      //
-// Interface to low level Qt GUI. This class gives access to basic      //
-// Qt graphics, pixmap, text and font handling routines.                //
+// Interface to low level Qt GUI. This class gives an access            //
+// to the basic Qt graphics, pixmap, text and font handling routines.   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +166,8 @@ protected:
    void UpdatePen();
    void UpdateBrush();
    void UpdateClipRectangle();
+   
+   QPaintDevice *GetDoubleBuffer(QPaintDevice *dev);
 
 #endif
 private:
@@ -205,6 +206,8 @@ public:
    static TVirtualX     *GetVirtualX();
    static QWidget       *winid(Window_t id);
    static QWidget       *wid(Window_t id);
+   static Window_t       wid(TQtClientWidget *widget);
+   static Window_t       rootwid(QPaintDevice *dev);
    static void           PrintEvent(Event_t &);
 
    void SetQClientFilter(TQtClientFilter *filter) {fQClientFilter = filter;}
@@ -217,7 +220,7 @@ public:
    virtual Int_t LoadQt(const char *shareLibFileName);
    static void PostQtEvent(QObject *receiver, QEvent *event);
    virtual Int_t processQtEvents(Int_t maxtime=300); //milliseconds
-   // temporary thuis should be moved to the QTGL interface
+   // temporary this should be moved to the QTGL interface
    private:
       static int fgCoinFlag; // no coin viewer;
       static int fgCoinLoaded; // no coin viewer;

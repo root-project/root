@@ -1,6 +1,10 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.interface.h,v 1.1 2004/07/09 09:21:24 brun Exp $
-// Author: Fons Rademakers   3/12/95
+// @(#)root/base:$Name:  $:$Id: TVirtualX.interface.h,v 1.4 2005/03/03 00:56:18 fine Exp $
+// Author: Valeri Fine   28/07/2004
 
+//
+//  This is a copy of the all "abstract" TVirtualX methods to make sure 
+//  we don't miss it with the implementation
+//
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -233,7 +237,11 @@ public:
                                  Int_t dx, Int_t dy, Int_t x, Int_t y,
                                  UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
-
+#if 0 
+//   Alas CINT does not understand the complex CPP statement below.
+//   This forces us to edit the file "by hand" (V.Fine 01/03/2005)
+//   #if  ROOT_VERSION_CODE < ROOT_VERSION(4,01,02)
+   
    //---- Methods used for OpenGL -----
    virtual Window_t     CreateGLWindow(Window_t wind, Visual_t visual = 0, Int_t depth = 0);
    virtual ULong_t      GetWinDC(Window_t wind);
@@ -284,3 +292,4 @@ public:
    virtual void         glLoadMatrixd(const Double_t *matrix);
    virtual void         glShadeModel(UInt_t mode);
    virtual void         glNormal3fv(const Float_t *norm);
+#endif

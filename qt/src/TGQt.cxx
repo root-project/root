@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.10 2005/02/10 07:22:15 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.11 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -214,8 +213,12 @@ Int_t         TGQt::iwid(QPaintDevice *wid)
       intWid = Int_t(wid);
 #else	
        // look up the widget
+   if ((ULong_t) wid == (ULong_t) -1) intWid = -1;
+   else {
       intWid = fWidgetArray->find(wid);
+      // assert(intWid != -1);
       if (intWid == -1 )  intWid = Int_t(wid);
+   }
 #endif	
    return intWid;
 }
@@ -233,8 +236,10 @@ QPaintDevice *TGQt::iwid(Int_t wid)
 #else	
       if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
          topDevice = (*fWidgetArray)[wid];
-	   else
+	   else {
+         assert(0);
          topDevice = (QPaintDevice *)wid;
+      }
 #endif	
    return topDevice;
 }
@@ -247,6 +252,16 @@ QWidget      *TGQt::winid(Window_t id)
 }
 
 //______________________________________________________________________________
+Window_t    TGQt::wid(TQtClientWidget *widget)
+{
+   return rootwid(widget);
+}
+//______________________________________________________________________________
+Window_t    TGQt::rootwid(QPaintDevice *dev)
+{
+   return Window_t(dev);
+}
+//______________________________________________________________________________
 QWidget      *TGQt::wid(Window_t id)
 {
    // method to restore (dynamic cast) the QWidget object pointer (if any) from  ROOT windows "id"
@@ -257,13 +272,13 @@ QWidget      *TGQt::wid(Window_t id)
    else
       dev = (QPaintDevice *)id;
 
+   if ( dev->devType() != QInternal::Widget) {
+        fprintf(stderr," %s %i type=%d QInternal::Widget = %d\n", __FUNCTION__, __LINE__
+           , dev->devType()
+           , QInternal::Widget);
+//           , (const char *)dev->name(), (const char *)dev->className(), QInternal::Widget);
+   }
    assert(dev->devType() == QInternal::Widget);
-   //if ( dev->devType() != QInternal::Widget) {
-   //     printf(" %s %i type=%d name=%s, className=%s QInternal::Widget = %d\n", __FUNCTION__, __LINE__
-   //        , dev->devType()
-   //        , (const char *)dev->name(), (const char *)dev->className(), QInternal::Widget);
-   //     assert (dev->devType() == QInternal::Widget);
-   //}
    return (QWidget *)dev;
 }
 
@@ -600,7 +615,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.85 2005/02/28 04:06:35 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.87 2005/03/03 20:47:32 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1289,16 +1304,28 @@ void  TGQt::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 }
 
 //______________________________________________________________________________
+QPaintDevice *TGQt::GetDoubleBuffer(QPaintDevice *dev)
+{
+   // Query the pointer to the dev offscrenn buffer if any
+
+   QPaintDevice *buffer = 0;
+   if (dev) {
+       TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
+       buffer = widget && widget->IsDoubleBuffered() ? &widget->GetBuffer() : 0;
+    }
+    return buffer;
+}
+//______________________________________________________________________________
 Int_t  TGQt::GetDoubleBuffer(Int_t wid)
 {
    // Query the double buffer value for the window wid.
    // return pointer to the off-screen buffer if any
 
    if (wid == -1 || wid == kDefault ) return 0;
-
+   assert(0);
    QPaintDevice *dev = iwid(wid);
    TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
-   return  Int_t(widget && widget->IsDoubleBuffered() ? &widget->GetBuffer() : 0);
+   return  Int_t(widget && widget->IsDoubleBuffered());
 }
 
 //______________________________________________________________________________
@@ -1306,25 +1333,26 @@ void  TGQt::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
 {
    // Returns the global cooordinate of the window "wid"
    QRect devSize(0,0,0,0);
-   QPaintDevice  *dev = iwid(wid);
    if( wid == -1 || wid == 0 || wid == kDefault)
    {
       QDesktopWidget *d = QApplication::desktop();
       devSize.setWidth (d->width() );
       devSize.setHeight(d->height());
-   } else if (dev) {
-      if ( dev->devType() == QInternal::Widget) {
-         TQtWidget &thisWidget = *(TQtWidget *)dev;
-         if (thisWidget.GetRootID() ) {
-            // we are using the ROOT Gui factory
-            devSize = thisWidget.parentWidget()->geometry();
-         } else{
-            devSize = thisWidget.geometry();
+   } else {
+      QPaintDevice  *dev = iwid(wid);
+      if (dev) {
+         if ( dev->devType() == QInternal::Widget) {
+            TQtWidget &thisWidget = *(TQtWidget *)dev;
+            if (thisWidget.GetRootID() ) {
+               // we are using the ROOT Gui factory
+               devSize = thisWidget.parentWidget()->geometry();
+            } else{
+               devSize = thisWidget.geometry();
+            }
+            devSize.moveTopLeft(thisWidget.mapToGlobal(thisWidget.pos()));
+         } else {
+            devSize = GetQRect(*(QPaintDevice *)wid);
          }
-         devSize.moveTopLeft(thisWidget.mapToGlobal(thisWidget.pos()));
-      }
-      else {
-         devSize = GetQRect(*(QPaintDevice *)wid);
       }
    }
    x = devSize.left();
@@ -1581,15 +1609,16 @@ Int_t  TGQt::ResizePixmap(int wid, UInt_t w, UInt_t h)
 void  TGQt::ResizeWindow(int wid)
 {
    // Resize the current window if necessary.
-
-   if ( wid == -1  || wid == (int)kNone ) return;
-   QPaintDevice *dev = iwid(wid);
-   TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
-   if (widget) {
-      bool painting = widget->paintingActive();
-      if (painting) End();
-      widget->adjustSize ();
-      if (painting) Begin();
+   if (wid && ( (wid != (int)kNone ) &&  (wid != -1)  &&  (wid != kDefault)) ) 
+   {
+      QPaintDevice *dev = iwid(wid);
+      TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
+      if (widget) {
+         bool painting = widget->paintingActive();
+         if (painting) End();
+         widget->adjustSize ();
+         if (painting) Begin();
+      }
    }
 }
 
@@ -1606,13 +1635,13 @@ void  TGQt::SelectWindow(int wid)
        fSelectedBuffer=0; fSelectedWindow = NoOperation;
    } else {
       QPaintDevice *dev = iwid(wid);
-      QPixmap *offScreenBuffer = (QPixmap *)GetDoubleBuffer(wid);
+      QPixmap *offScreenBuffer = (QPixmap *)GetDoubleBuffer(dev);
       if ((dev == fSelectedWindow) && !( (fSelectedBuffer==0) ^ (offScreenBuffer == 0) ) ) return;
       fPrevWindow     = fSelectedWindow;
       if (wid == -1 || wid == (int) kNone) { fSelectedBuffer=0; fSelectedWindow = NoOperation; }
       else {
          fSelectedWindow = dev;
-        fSelectedBuffer = offScreenBuffer;
+         fSelectedBuffer = offScreenBuffer;
       }
    }
    // fprintf(stderr,"TGQt::SelectWindow fSelecteWindow old = %p; current= %p, buffer =%p\n"

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.5 2005/01/18 11:53:47 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.6 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -505,7 +505,7 @@ Window_t TGQt::GetWindowID(Int_t id) {
       canvasWidget->setMouseTracking(kFALSE);
       client->setMouseTracking(kTRUE);
    }
-   return iwid(client);
+   return rootwid(client);
 }
 //______________________________________________________________________________
 Window_t  TGQt::GetDefaultRootWindow() const
@@ -881,7 +881,7 @@ void  TGQt::RaiseWindow(Window_t id)
    QWidget *wg = wid(id);
    // fprintf(stderr, " 1.  TGQt::RaiseWindow id = %p IsTop=%d; parent = %p visible = %d \n", id,wg->isTopLevel(),iwid(wg->parentWidget()),wg->isVisible());
    if ( wg->isTopLevel() )  {
-      QWidget *wg = ((TQtClientWidget *)iwid(id))->topLevelWidget();
+      QWidget *wg = ((TQtClientWidget *)wid(id))->topLevelWidget();
 #ifdef R__QTWIN32
       // raising the window under MS Windows needs some extra effort.
       HWND h = wg->winId();
@@ -968,8 +968,8 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
             win->SetAttributeEventMask(attr->fEventMask);
          }
    }
-   MoveResizeWindow(Window_t(iwid(win)),x,y,w,h);
-   return Window_t(iwid(win));
+   MoveResizeWindow(rootwid(win),x,y,w,h);
+   return rootwid(win);
 }
 //______________________________________________________________________________
 Int_t        TGQt::OpenDisplay(const char *dpyName)
@@ -1053,9 +1053,10 @@ Atom_t     TGQt::InternAtom(const char *atom_name, Bool_t /*only_if_exist*/)
 Window_t     TGQt::GetParent(Window_t id) const
 {
    // Return the parent of the window.
-   Window_t dad = 0;
-   if (id)  dad =  iwid(wid(id)->parentWidget());
-   return dad;
+   if ( id == kNone || id == kDefault ) return id;
+   QWidget *dadWidget = wid(id)->parentWidget();
+   assert(dynamic_cast<TQtClientWidget*>(dadWidget));
+   return rootwid(dadWidget);
 }
 //______________________________________________________________________________
 FontStruct_t TGQt::LoadQueryFont(const char *font_name)
@@ -1156,7 +1157,7 @@ Pixmap_t     TGQt::CreatePixmap(Drawable_t /*id*/, UInt_t w, UInt_t h)
    // Creates a pixmap of the width and height you specified
    // and returns a pixmap ID that identifies it.
    QPixmap *p = fQPixmapGuard.Create(w, h);
-   return Pixmap_t(p);
+   return Pixmap_t(rootwid(p));
 }
 //______________________________________________________________________________
 Pixmap_t     TGQt::CreatePixmap(Drawable_t /*id*/, const char *bitmap, UInt_t width,
@@ -1177,7 +1178,7 @@ Pixmap_t     TGQt::CreatePixmap(Drawable_t /*id*/, const char *bitmap, UInt_t wi
    } else {
       p = fQPixmapGuard.Create(width, height,(const uchar*)bitmap);
    }
-   return Pixmap_t(p);
+   return Pixmap_t(rootwid(p));
 }
 //______________________________________________________________________________
 Pixmap_t     TGQt::CreateBitmap(Drawable_t id, const char *bitmap,
@@ -1191,7 +1192,7 @@ void         TGQt::DeletePixmap(Pixmap_t pmap)
 {
    // Explicitely delete pixmap resource.
    if (pmap  != kNone )
-      fQPixmapGuard.Delete((QPixmap *)pmap);
+      fQPixmapGuard.Delete((QPixmap *)iwid(pmap));
    // delete (QPixmap *)pmap;
 }
 //______________________________________________________________________________
@@ -1208,7 +1209,7 @@ static inline void FillPixmapAttribute(QPixmap &pixmap, Pixmap_t &pict_mask
          *pixmask = *pixmap.mask();
       } else {
          pixmask   = guard.Create(*pixmap.mask());
-         pict_mask = Pixmap_t(pixmask);
+         pict_mask = Pixmap_t(TGQt::rootwid(pixmask));
       }
    } else {
       pict_mask = kNone;
@@ -1230,7 +1231,7 @@ Bool_t       TGQt::CreatePictureFromFile( Drawable_t /*id*/, const char *filenam
       // Create the new pixmap
       pixmap = fQPixmapGuard.Create(QString(filename));
       // pixmap = new QPixmap (QString(filename));
-      pict = Pixmap_t(pixmap);
+      pict = Pixmap_t(iwid(pixmap));
    } else {
       // reload the old one
       pixmap->load(QString(filename));
@@ -1257,7 +1258,7 @@ Bool_t       TGQt::CreatePictureFromData(Drawable_t /*id*/, char **data,
    QPixmap *pixmap = fQPixmapGuard.Pixmap(pict);
    if (!pixmap) {
       pixmap = fQPixmapGuard.Create((const char **)data);
-      pict = Pixmap_t(pixmap);
+      pict = Pixmap_t(rootwid(pixmap));
    }  else {
       *pixmap = QPixmap ( (const char **)data);
    }
@@ -1352,7 +1353,8 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
    // from src_x,src_y,src_x+width,src_y+height to dest_x,dest_y.
    assert(qtcontext(gc).HasValid(QtGContext::kROp));
    // fprintf(stderr," TQt::CopyArea this=%p, fROp=%x\n", this, qtcontext(gc).fROp);
-   bitBlt(iwid(dest), dest_x,dest_y,iwid(src), src_x,src_y,width,height, qtcontext(gc).fROp); // ignoreMask )
+   if ( dest && src) 
+      bitBlt(iwid(dest), dest_x,dest_y,iwid(src), src_x,src_y,width,height, qtcontext(gc).fROp); // ignoreMask )
 }
 //______________________________________________________________________________
 void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr)
@@ -1993,7 +1995,13 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
 Window_t  TGQt::GetInputFocus()
 {
    // Returns the window id of the window having the input focus.
-   return Window_t(iwid(qApp->focusWidget () ));
+   TQtClientWidget *focus = 0;
+   QWidget *f = qApp->focusWidget ();
+   if (f) {
+     focus = dynamic_cast<TQtClientWidget*>(f);
+     assert(focus);
+   }
+   return wid(focus);
 }
 //______________________________________________________________________________
  void         TGQt::SetInputFocus(Window_t id)
@@ -2042,7 +2050,7 @@ void         TGQt::TranslateCoordinates(Window_t src, Window_t dest,
    }
    TQtClientWidget* tmpW = dynamic_cast<TQtClientWidget*>(wDst->childAt ( destX, destY, false ));
    if (tmpW) {
-      child = iwid((QWidget *)tmpW);
+      child = wid(tmpW);
    } else {
 #if 0
       fprintf(stderr,"TGQt::TranslateCoordinates Id src =%d; id dst %d\n", src,dest);
@@ -2120,13 +2128,13 @@ void  TGQt::QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
 
    QPoint position     = QCursor::pos();
    QWidget *thisWidget = wid(id);
-   QWidget *topWiget   = winid(id);
+   QWidget *topWiget   = thisWidget->topLevelWidget();
 
    // Returns the root window the pointer is logically on and the pointer
    // coordinates relative to the root window's origin.
    QPoint rootPosition = topWiget->mapFromGlobal( position );
    root_x = rootPosition.x(); root_y = rootPosition.y();
-   rootw  = iwid(topWiget);
+   rootw  = rootwid(topWiget);
 
    // The pointer coordinates returned to win_x and win_y are relative to
    // the origin of the specified window.
@@ -2134,7 +2142,7 @@ void  TGQt::QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
    win_x = win_pos.x(); win_y = win_pos.y();
 
    TQtClientWidget *ch = (TQtClientWidget * )thisWidget->childAt (win_x,win_y);
-   childw = ch ? iwid(ch): kNone;
+   childw = ch ? wid(ch): kNone;
 
    // QueryPointer returns the current logical state of the
    // keyboard buttons and the modifier keys in mask.
@@ -2505,13 +2513,14 @@ void TGQt::DeleteImage(Drawable_t img)
    delete (QImage *)img;
 }
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(4,01,02)
 //______________________________________________________________________________
 ULong_t TGQt::GetWinDC(Window_t wind)
 {
    // Returns HDC.
    return (wind == kNone) ? 0 :  ULong_t(wid(wind)->handle());
 }
-
+#endif
 
 //______________________________________________________________________________
 Bool_t  TGQt::IsHandleValid(Window_t /*id*/)
@@ -2530,11 +2539,11 @@ void  TGQt::SendDestroyEvent(TQtClientWidget *widget) const
    memset(&destroyEvent,0,sizeof(Event_t));
 
    destroyEvent.fType      = kDestroyNotify;
-   destroyEvent.fHandle    = iwid(widget);        // general resource handle (used for atoms or windows)
-   destroyEvent.fWindow    = iwid(widget);
+   destroyEvent.fHandle    = rootwid(widget);        // general resource handle (used for atoms or windows)
+   destroyEvent.fWindow    = rootwid(widget);
    destroyEvent.fSendEvent = kTRUE;
    destroyEvent.fTime      = QTime::currentTime().msec();
 
-   //  fprintf(stderr,"---- - - > TGQt::SendDestroyEvent %p  %ld \n", widget, iwid(widget) );
+   //  fprintf(stderr,"---- - - > TGQt::SendDestroyEvent %p  %ld \n", widget, pwid(widget) );
    ((TGQt *)this)->SendEvent(TGQt::kDefault,&destroyEvent);
 }

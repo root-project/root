@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUIThread.cxx,v 1.5 2004/08/02 08:14:43 rdm Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -126,15 +126,23 @@
                                 UInt_t,width, UInt_t,height);
 //______________________________________________________________________________
   SENDACTION1(DeletePixmap,Pixmap_t,pmap);
-#ifdef BUG2DEBUG
+
+#if 0  
 //______________________________________________________________________________
-  RETURNACTION5(Bool_t,CreatePictureFromFile,Drawable_t,id, const char *,filename,
-                                              Pixmap_t &,pict, Pixmap_t &,pict_mask,
-                                              PictureAttributes_t &,attr);
+Bool_t  TQtThread::CreatePictureFromFile(Drawable_t id, const char *filename,
+                                              Pixmap_t &pict, Pixmap_t &pict_mask,
+                                              PictureAttributes_t &attr)
+{
+   return TGQt::CreatePictureFromFile(id,filename,pict, pict_mask,attr);
+}
 //______________________________________________________________________________
-  RETURNACTION5(Bool_t,CreatePictureFromData,Drawable_t,id, char **,data,
-                                              Pixmap_t &,pict, Pixmap_t &,pict_mask,
-                                              PictureAttributes_t &,attr);
+Bool_t  TQtThread::CreatePictureFromData(Drawable_t id, char **data,
+                                              Pixmap_t &pict, Pixmap_t &pict_mask,
+                                              PictureAttributes_t &attr)
+{
+   return TGQt::CreatePictureFromData(id, data,pict, pict_mask,attr);
+
+}
 #endif
 //______________________________________________________________________________
   RETURNACTION2(Bool_t,ReadPictureDataFromFile,const char *,filename, char ***,ret_data);
@@ -149,9 +157,9 @@
 //______________________________________________________________________________
   VOIDACTION2(QueryColor,Colormap_t,cmap, ColorStruct_t &,color);
 //______________________________________________________________________________
-//  RETURNACTION0(Int_t,EventsPending);
+// RETURNACTION0(Int_t,EventsPending);
 //______________________________________________________________________________
-//  VOIDACTION1(NextEvent,Event_t &,event);
+//   VOIDACTION1(NextEvent,Event_t &,event);
 //______________________________________________________________________________
   SENDACTION1(Bell,Int_t,percent);
 //______________________________________________________________________________
@@ -160,10 +168,13 @@
                                  UInt_t,height, Int_t,dest_x, Int_t,dest_y);
 //______________________________________________________________________________
   VOIDACTION2(ChangeWindowAttributes,Window_t, id, SetWindowAttributes_t *,attr);
-#if BUG2DEBUG
-//______________________________________________________________________________
-  VOIDACTION5(ChangeProperty,Window_t, id, Atom_t,property, Atom_t,type,
-                                       UChar_t *,data, Int_t,len);
+#if 0
+ //______________________________________________________________________________
+ void TQtThread::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
+                                       UChar_t *data, Int_t len)
+ {
+     TGQt::ChangeProperty(id, property,type, data, len);
+ }
 #endif
 //______________________________________________________________________________
   VOIDACTION6(DrawLine,Drawable_t,id, GContext_t,gc, Int_t,x1, Int_t,y1, Int_t,x2, Int_t,y2);
@@ -261,13 +272,11 @@
   VOIDACTION5(SetClipRectangles,GContext_t,gc, Int_t,x, Int_t,y, Rectangle_t *,recs, Int_t,n);
 //______________________________________________________________________________
   SENDACTION1(Update,Int_t,mode);
-
-
-//______________________________________________________________________________
-Bool_t  TQtThread::CreatePictureFromFile(Drawable_t id, const char *filename,
-                                              Pixmap_t &pict, Pixmap_t &pict_mask,
-                                              PictureAttributes_t &attr)
-{ return    TGQt::CreatePictureFromFile(id,filename,pict,pict_mask,attr); }
-
 //______________________________________________________________________________
 void TQtThread::DeletePictureData(void *data) { TGQt::DeletePictureData(data);}
+//______________________________________________________________________________
+// SENDACTION2(FreeColor,Colormap_t, cmap, ULong_t, pixel);
+//______________________________________________________________________________
+// SENDACTION2(SetIconPixmap,Window_t, id, Pixmap_t, pix);
+//______________________________________________________________________________
+// RETURNACTION0(Window_t,GetInputFocus);

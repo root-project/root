@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TGQtDummy.cxx,v 1.2 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGQt.h"
+#include "TQtThread.h"
 
    Window_t     TGQt::GetPrimarySelectionOwner(){return 0;}
    void         TGQt::SetPrimarySelectionOwner(Window_t /*id*/){;}
@@ -33,6 +34,7 @@
 
    Handle_t     TGQt::GetNativeEvent() const { return 0; }
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(4,01,01)
 // -------------------  OpenGL interface ------------------------
    Window_t     TGQt::CreateGLWindow(Window_t      /*wind*/, Visual_t /*visual*/, Int_t /*depth*/){return 0;}
    ULong_t      TGQt::wglCreateContext(Window_t    /*wind*/){return 0;}
@@ -82,3 +84,4 @@
    void         TGQt::glLoadMatrixd(const Double_t  * /*matrix*/){}
    void         TGQt::glShadeModel(UInt_t  /*mode*/){}
    void         TGQt::glNormal3fv(const Float_t  * /*norm*/){}
+#endif

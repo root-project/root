@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtThread.h,v 1.4 2004/08/02 08:14:43 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtThread.h,v 1.5 2005/02/08 07:36:08 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -258,10 +258,7 @@ public:
    virtual Int_t        GetDepth() const;
    virtual Colormap_t   GetColormap() const;
    virtual Window_t     GetDefaultRootWindow() const;
-   virtual Bool_t       CreatePictureFromFile(Drawable_t id, const char *filename,
-                                              Pixmap_t &pict, Pixmap_t &pict_mask,
-                                              PictureAttributes_t &attr);
-  virtual void         DeletePictureData(void *data);
+   virtual void         DeletePictureData(void *data);
 
 
    #else
