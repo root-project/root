@@ -1,0 +1,3 @@
+namespace std {
+#include <errno.h>
+}
