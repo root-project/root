@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.6 2002/06/20 15:07:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.7 2002/08/23 14:50:44 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -635,6 +635,9 @@ void TGContainer::ClearViewPort()
 Bool_t TGContainer::HandleExpose(Event_t *event)
 {
    // Handle expose events. Do not use double buffer.
+
+   if (fMapSubwindows)
+      return TGCompositeFrame::HandleExpose(event);
 
    TGFrameElement *el;
 

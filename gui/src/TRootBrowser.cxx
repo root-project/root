@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.16 2002/07/31 21:59:16 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.17 2002/08/20 08:23:37 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -423,7 +423,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    if ((fCurrentList->GetSize()==fGroupSize) && !fGrouped) {
       browser->SetViewMode(kLVLargeIcons,kTRUE);
       fGrouped = kTRUE;
-   
+
       // clear fList
       TGFrameElement *el;
       TIter nextl(fList);
@@ -470,14 +470,14 @@ void TRootIconList::Browse(TBrowser *b)
    TClass *cl;
    TString name;
    TKey *key = 0;
-   
+
    fIconBox->RemoveAll();
    TObjLink *lnk = FirstLink();
 
    while (lnk) {
       obj = lnk->GetObject();
       lnk = lnk->Next();
- 
+
       if (obj->IsA() == TKey::Class()) {
          cl = gROOT->GetClass(((TKey *)obj)->GetClassName());
          key = (TKey *)obj;
@@ -490,7 +490,7 @@ void TRootIconList::Browse(TBrowser *b)
       name = obj->GetName();
 
       if (obj->IsA() == TKey::Class()) {
-         name += ";";      
+         name += ";";
          name +=  key->GetCycle();
       }
 
@@ -507,7 +507,7 @@ void TRootIconList::Browse(TBrowser *b)
          fIconBox->ActivateItem((TGFrameElement*)fIconBox->fList->Last());
       }
    }
-   
+
    fIconBox->fGarbage->Remove(this);
    fIconBox->RemoveGarbage();
    fIconBox->fGarbage->Add(this); // delete this later
@@ -614,6 +614,8 @@ void TRootIconBox::Refresh()
 
    // Make TRootBrowser display total objects in status bar
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),fTotal, fSelected);
+
+   MapSubwindows();
 }
 
 //______________________________________________________________________________
@@ -1587,7 +1589,7 @@ void TRootBrowser::Refresh(Bool_t force)
 {
    // Refresh the browser contents.
 
-   if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force) 
+   if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force)
       && !fIconBox->WasGrouped() && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
       gVirtualX->SetCursor(fId, fWaitCursor);
       gVirtualX->Update();
