@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.1 2004/01/20 15:43:30 brun Exp $
 // Author: Mihaela Gheata   05/01/04
 
 /*************************************************************************
@@ -45,7 +45,7 @@ protected :
    TObjArray          *fDaughters;        // list of concave daughters
 private:
    void                ConvexCheck(); // force convexity checking
-   Bool_t              IsSegConvex(Int_t iseg) const;
+   Bool_t              IsSegConvex(Int_t i1, Int_t i2=-1) const;
    Bool_t              IsRightSided(Double_t *point, Int_t ind1, Int_t ind2) const;
    void                OutscribedConvex();
 public:

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.71 2004/01/20 15:44:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.72 2004/01/23 16:34:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1322,6 +1322,10 @@ void TGeoManager::CloseGeometry(Option_t *option)
       Warning("CloseGeometry", "geometry already closed");
       return;
    }   
+   if (!fMasterVolume) {
+      Error("CloseGeometry","you MUST call SetTopVolume() first !");
+      return;
+   }      
    gROOT->GetListOfBrowsables()->Add(this);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);

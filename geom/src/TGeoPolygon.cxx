@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.1 2004/01/20 15:43:30 brun Exp $
 // Author: Mihaela Gheata   5/01/04
 
 /*************************************************************************
@@ -115,6 +115,10 @@ Bool_t TGeoPolygon::Contains(Double_t *point) const
 void TGeoPolygon::ConvexCheck() 
 {
 // Check polygon convexity.
+   if (fNvert==3) {
+      SetConvex(); 
+      return;
+   }    
    Int_t j,k;
    Double_t point[2];
    for (Int_t i=0; i<fNvert; i++) {
@@ -191,17 +195,15 @@ Bool_t TGeoPolygon::IsRightSided(Double_t *point, Int_t ind1, Int_t ind2) const
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoPolygon::IsSegConvex(Int_t iseg) const
+Bool_t TGeoPolygon::IsSegConvex(Int_t i1, Int_t i2) const
 {
 // Check if a segment [0..fNvert-1] belongs to the outscribed convex pgon.
-   Int_t i1 = iseg;
-   Int_t i2 = (iseg+1)%fNvert;
-   Int_t ipt;
+   if (i2<0) i2=(i1+1)%fNvert;
    Double_t point[2];
-   for (Int_t i=0; i<fNvert-2; i++) {
-      ipt = (iseg+2+i)%fNvert;
-      point[0] = fX[fInd[ipt]];
-      point[1] = fY[fInd[ipt]];
+   for (Int_t i=0; i<fNvert; i++) {
+      if (i==i1 || i==i2) continue;
+      point[0] = fX[fInd[i]];
+      point[1] = fY[fInd[i]];
       if (!IsRightSided(point, fInd[i1], fInd[i2])) return kFALSE;
    }
    return kTRUE;
@@ -213,18 +215,36 @@ void TGeoPolygon::OutscribedConvex()
 // Compute indices for the outscribed convex polygon.
    fNconvex = 0;
    Int_t iseg = 0;
+   Int_t ivnew;
+   Bool_t conv;
    Int_t *indconv = new Int_t[fNvert];
    memset(indconv, 0, fNvert*sizeof(Int_t));
    while (iseg<fNvert) {
       if (!IsSegConvex(iseg)) {
-         iseg++;
-         continue;
+         if (iseg+2 > fNvert) break;
+         ivnew = (iseg+2)%fNvert;
+         conv = kFALSE;
+         // check iseg with next vertices
+         while (ivnew) {
+            if (IsSegConvex(iseg, ivnew)) {
+               conv = kTRUE;
+               break;
+            } 
+            ivnew = (ivnew+1)%fNvert;  
+         } 
+         if (!conv) {
+            iseg++;
+            continue;
+         }   
+      } else {
+         ivnew = (iseg+1)%fNvert;
       }   
       // segment belonging to convex outscribed poligon
       if (!fNconvex) indconv[fNconvex++] = iseg;
       else if (indconv[fNconvex-1] != iseg) indconv[fNconvex++] = iseg;
-      if (iseg<fNvert-1) indconv[fNconvex++] = iseg+1;
-      iseg++;
+      if (iseg<fNvert-1) indconv[fNconvex++] = ivnew;
+      if (ivnew<iseg) break;
+      iseg = ivnew;
    }    
    if (!fNconvex) {
       Fatal("OutscribedConvex","cannot build outscribed convex");

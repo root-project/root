@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.7 2003/02/17 11:57:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.8 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -205,11 +205,13 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
    
    //compute equivalent radiation length (taken from Geant3/GSMIXT)
    const Double_t ALR2AV = 1.39621E-03 , AL183 =5.20948;
-   Double_t radinv = 0, aeff = 0, zeff = 0;
+   Double_t radinv = 0;
+   fA = 0;
+   fZ = 0;
    for (Int_t j=0;j<fNelements;j++) {
       if (fWeights[j] <= 0) continue;
-      aeff += fWeights[j]*fAmixture[j];
-      zeff += fWeights[j]*fZmixture[j];
+      fA += fWeights[j]*fAmixture[j];
+      fZ += fWeights[j]*fZmixture[j];
       Double_t zc = fZmixture[j];
       Double_t alz = TMath::Log(zc)/3.;
       Double_t xinv = zc*(zc+TGeoMaterial::ScreenFactor(zc))*
