@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.45 2003/06/18 11:28:57 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.46 2003/06/25 05:49:28 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -914,11 +914,10 @@ void TWinNTSystem::CheckChilds()
 int TWinNTSystem::mkdir(const char *name, Bool_t recursive)
 {
    // Make a file system directory. Returns 0 in case of success and
-   // -1 if the directory could not be created.
-   // Returns -1 if the directory exist.
-   // If 'recursive' is true, makes parent directories as needed,
-   // or returns 0 if the directory already exist.
-  
+   // -1 if the directory could not be created (either already exists or
+   // illegal path name).
+   // If 'recursive' is true, makes parent directories as needed.
+
    if (recursive) {
       TString dirname = DirName(name);
       if (dirname.Length()==0) {
@@ -941,7 +940,7 @@ int TWinNTSystem::mkdir(const char *name, Bool_t recursive)
          if (res) return res;
       }
       if (!AccessPathName(name, kFileExists)) {
-         return 0;
+         return -1;
       }
    }
 
@@ -951,9 +950,9 @@ int TWinNTSystem::mkdir(const char *name, Bool_t recursive)
 //______________________________________________________________________________
 int  TWinNTSystem::MakeDirectory(const char *name)
 {
-  // Make a WinNT file system directory.
-  // Make a Unix file system directory. Returns 0 in case of success and
-  // -1 if the directory could not be created.
+   // Make a WinNT file system directory. Returns 0 in case of success and
+   // -1 if the directory could not be created (either already exists or
+   // illegal path name).
 
    TSystem *helper = FindHelper(name);
    if (helper)
@@ -1423,12 +1422,12 @@ needshell:
 
    // Because (problably) we built with cygwin, the path name like:
    //     LOCALS~1\\Temp
-   // gets extended to 
+   // gets extended to
    //     LOCALSc:\\Devel
    // The most likely cause is that '~' is used with Unix semantic of the
    // home directory (and it also cuts the path short after ... who knows why!)
    // So we need to detect this case and prevents its expansion :(.
-   
+
    char replacement[4];
    for(int k=0;k<3;k++) replacement[k] = 0x1; // intentionally a non visible, unlikely character
    replacement[3] = 0x0;

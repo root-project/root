@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.63 2003/06/25 05:49:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.64 2003/06/29 22:42:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -591,7 +591,8 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
 int TSystem::MakeDirectory(const char*)
 {
    // Make a directory. Returns 0 in case of success and
-   // -1 if the directory could not be created.
+   // -1 if the directory could not be created (either already exists or
+   // illegal path name).
 
    AbstractMethod("MakeDirectory");
    return 0;
@@ -652,24 +653,23 @@ const char *TSystem::HomeDirectory(const char*)
 int TSystem::mkdir(const char *name, Bool_t recursive)
 {
    // Make a file system directory. Returns 0 in case of success and
-   // -1 if the directory could not be created.
-   // Returns -1 if the directory exist.
-   // If 'recursive' is true, makes parent directories as needed,
-   // or returns 0 if the directory already exist.
+   // -1 if the directory could not be created (either already exists or
+   // illegal path name).
+   // If 'recursive' is true, makes parent directories as needed.
 
    if (recursive) {
       TString dirname = DirName(name);
       if (dirname.Length()==0) {
          // well we should not have to make the root of the file system!
          // (and this avoid infinite recursions!)
-         return 0;
+         return -1;
       }
       if (AccessPathName(dirname, kFileExists)) {
-         int res = mkdir(dirname, true);
+         int res = mkdir(dirname, kTRUE);
          if (res) return res;
       }
       if (!AccessPathName(name, kFileExists)) {
-         return 0;
+         return -1;
       }
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.62 2003/06/18 11:31:07 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.63 2003/06/19 10:21:13 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2689,7 +2689,8 @@ const char *TUnixSystem::UnixHomedirectory(const char *name)
 int TUnixSystem::UnixMakedir(const char *dir)
 {
    // Make a Unix file system directory. Returns 0 in case of success and
-   // -1 if the directory could not be created.
+   // -1 if the directory could not be created (either already exists or
+   // illegal path name).
 
    return ::mkdir(dir, 0755);
 }
