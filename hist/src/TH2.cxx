@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.2 2000/05/23 08:00:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.3 2000/06/14 13:39:52 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH1(name,title,nbinsx,xbins)
 {
@@ -64,7 +64,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH1(name,title,nbinsx,xlow,xup)
 {
    fDimension   = 2;
@@ -77,8 +77,22 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                           ,Int_t nbinsy,Double_t *ybins)
+     :TH1(name,title,nbinsx,xbins)
+{
+   fDimension   = 2;
+   fScalefactor = 1;
+   fTsumwy      = fTsumwy2 = fTsumwxy = 0;
+   if (nbinsy <= 0) nbinsy = 1;
+   if (ybins) fYaxis.Set(nbinsy,ybins);
+   else       fYaxis.Set(nbinsy,0,1);
+   fNcells      = (nbinsx+2)*(nbinsy+2);
+}
+
+//______________________________________________________________________________
+TH2::TH2(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                           ,Int_t nbinsy,Float_t *ybins)
      :TH1(name,title,nbinsx,xbins)
 {
    fDimension   = 2;
@@ -929,7 +943,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
@@ -938,15 +952,23 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
    TArrayC::Set(fNcells);
 }
 
 //______________________________________________________________________________
-TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayC::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins)
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayC::Set(fNcells);
@@ -1124,7 +1146,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
@@ -1133,15 +1155,23 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
    TArrayS::Set(fNcells);
 }
 
 //______________________________________________________________________________
-TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayS::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins)
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayS::Set(fNcells);
@@ -1318,7 +1348,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
@@ -1328,7 +1358,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
 
@@ -1336,8 +1366,16 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayF::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins)
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayF::Set(fNcells);
@@ -1503,7 +1541,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
@@ -1512,15 +1550,23 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
    TArrayD::Set(fNcells);
 }
 
 //______________________________________________________________________________
-TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayD::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins)
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayD::Set(fNcells);

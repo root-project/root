@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.2 2000/06/13 10:36:25 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -51,7 +51,8 @@ public:
     TProfile();
     TProfile(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup, Option_t *option="");
     TProfile(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup,Axis_t ylow,Axis_t yup,Option_t *option="");
-    TProfile(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins, Option_t *option="");
+    TProfile(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins, Option_t *option="");
+    TProfile(const char *name,const char *title,Int_t nbinsx,Double_t *xbins, Option_t *option="");
     TProfile(const TProfile &profile);
     virtual ~TProfile();
     virtual void    Add(TH1 *h1, Double_t c1=1);

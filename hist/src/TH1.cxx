@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.4 2000/06/05 07:24:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.5 2000/06/13 10:35:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -209,7 +209,29 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
 }
 
 //______________________________________________________________________________
-TH1::TH1(const char *name,const char *title,Int_t nbins,Axis_t *xbins)
+TH1::TH1(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+{
+//*-*-*-*-*-*-*Normal constructor for variable bin size histograms*-*-*-*-*-*-*
+//*-*          ===================================================
+//
+//  Creates the main histogram structure:
+//     name   : name of histogram (avoid blanks)
+//     title  : histogram title
+//     nbins  : number of bins
+//     xbins  : array of low-edges for each bin
+//              This is an array of size nbins+1
+//
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   Build();
+   if (nbins <= 0) nbins = 1;
+   if (xbins) fXaxis.Set(nbins,xbins);
+   else       fXaxis.Set(nbins,0,1);
+   fNcells = fXaxis.GetNbins()+2;
+}
+
+//______________________________________________________________________________
+TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
 {
 //*-*-*-*-*-*-*Normal constructor for variable bin size histograms*-*-*-*-*-*-*
@@ -3374,7 +3396,19 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH1C::TH1C(const char *name,const char *title,Int_t nbins,Axis_t *xbins)
+TH1C::TH1C(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+     : TH1(name,title,nbins,xbins), TArrayC(nbins+2)
+{
+//
+//    Create a 1-Dim histogram with variable bins of type char (one byte per channel)
+//    ==========================================================================
+//                    (see TH1::TH1 for explanation of parameters)
+//
+   fDimension = 1;
+}
+
+//______________________________________________________________________________
+TH1C::TH1C(const char *name,const char *title,Int_t nbins,Double_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayC(nbins+2)
 {
 //
@@ -3530,7 +3564,19 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH1S::TH1S(const char *name,const char *title,Int_t nbins,Axis_t *xbins)
+TH1S::TH1S(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+     : TH1(name,title,nbins,xbins), TArrayS(nbins+2)
+{
+//
+//    Create a 1-Dim histogram with variable bins of type short
+//    =========================================================
+//           (see TH1::TH1 for explanation of parameters)
+//
+   fDimension = 1;
+}
+
+//______________________________________________________________________________
+TH1S::TH1S(const char *name,const char *title,Int_t nbins,Double_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayS(nbins+2)
 {
 //
@@ -3685,7 +3731,19 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH1F::TH1F(const char *name,const char *title,Int_t nbins,Axis_t *xbins)
+TH1F::TH1F(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+     : TH1(name,title,nbins,xbins), TArrayF(nbins+2)
+{
+//
+//    Create a 1-Dim histogram with variable bins of type float
+//    =========================================================
+//           (see TH1::TH1 for explanation of parameters)
+//
+   fDimension = 1;
+}
+
+//______________________________________________________________________________
+TH1F::TH1F(const char *name,const char *title,Int_t nbins,Double_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayF(nbins+2)
 {
 //
@@ -3820,7 +3878,19 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH1D::TH1D(const char *name,const char *title,Int_t nbins,Axis_t *xbins)
+TH1D::TH1D(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+     : TH1(name,title,nbins,xbins), TArrayD(nbins+2)
+{
+//
+//    Create a 1-Dim histogram with variable bins of type double
+//    =====================================================
+//           (see TH1::TH1 for explanation of parameters)
+//
+   fDimension = 1;
+}
+
+//______________________________________________________________________________
+TH1D::TH1D(const char *name,const char *title,Int_t nbins,Double_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayD(nbins+2)
 {
 //

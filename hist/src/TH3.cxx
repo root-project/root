@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.2 2000/06/14 13:52:28 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -61,9 +61,28 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH3::TH3(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3::TH3(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                           ,Int_t nbinsy,Float_t *ybins
+                                           ,Int_t nbinsz,Float_t *zbins)
+     :TH1(name,title,nbinsx,xbins),
+      TAtt3D()
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   fDimension   = 3;
+   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsz <= 0) nbinsz = 1;
+   if (ybins) fYaxis.Set(nbinsy,ybins);
+   else       fYaxis.Set(nbinsy,0,1);
+   if (zbins) fZaxis.Set(nbinsz,zbins);
+   else       fZaxis.Set(nbinsz,0,1);
+   fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
+}
+
+//______________________________________________________________________________
+TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                           ,Int_t nbinsy,Double_t *ybins
+                                           ,Int_t nbinsz,Double_t *zbins)
      :TH1(name,title,nbinsx,xbins),
       TAtt3D()
 {
@@ -832,9 +851,20 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins
+                                             ,Int_t nbinsz,Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayC::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins
+                                             ,Int_t nbinsz,Double_t *zbins)
      :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
@@ -1017,9 +1047,20 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins
+                                             ,Int_t nbinsz,Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayS::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins
+                                             ,Int_t nbinsz,Double_t *zbins)
      :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
@@ -1202,9 +1243,20 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins
+                                             ,Int_t nbinsz,Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayF::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins
+                                             ,Int_t nbinsz,Double_t *zbins)
      :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
@@ -1366,9 +1418,20 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins
+                                             ,Int_t nbinsz,Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayD::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins
+                                             ,Int_t nbinsz,Double_t *zbins)
      :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*

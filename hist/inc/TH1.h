@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.2 2000/06/13 10:35:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -104,7 +104,8 @@ public:
 
     TH1();
     TH1(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins);
+    TH1(const char *name,const char *title,Int_t nbinsx,Float_t *xbins);
+    TH1(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     virtual ~TH1();
 
     virtual void     Add(TH1 *h1, Double_t c1=1);
@@ -258,7 +259,8 @@ class TH1C : public TH1, public TArrayC {
 public:
     TH1C();
     TH1C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins);
+    TH1C(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
+    TH1C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     TH1C(const TH1C &h1c);
     virtual ~TH1C();
 
@@ -289,7 +291,8 @@ class TH1S : public TH1, public TArrayS {
 public:
     TH1S();
     TH1S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins);
+    TH1S(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
+    TH1S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     TH1S(const TH1S &h1s);
     virtual ~TH1S();
 
@@ -320,7 +323,8 @@ class TH1F : public TH1, public TArrayF {
 public:
     TH1F();
     TH1F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins);
+    TH1F(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
+    TH1F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     TH1F(const TH1F &h1f);
     virtual ~TH1F();
 
@@ -352,7 +356,8 @@ class TH1D : public TH1, public TArrayD {
 public:
     TH1D();
     TH1D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins);
+    TH1D(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
+    TH1D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     TH1D(const TH1D &h1d);
     virtual ~TH1D();
 

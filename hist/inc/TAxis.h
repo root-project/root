@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.2 2000/06/09 16:28:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.3 2000/06/13 10:34:10 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -84,6 +84,7 @@ public:
                 Axis_t  GetXmax() const {return fXmax;}
         virtual void    RotateTitle(Bool_t rotate=kTRUE); // *MENU*
         virtual void    Set(Int_t nbins, Axis_t xmin, Axis_t xmax);
+        virtual void    Set(Int_t nbins, Float_t *xbins);
         virtual void    Set(Int_t nbins, Axis_t *xbins);
         virtual void    SetBinLabel(Int_t bin, char *label);
         virtual void    SetLabel(const char *label);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.4 2000/06/09 16:29:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.5 2000/06/13 10:34:10 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -519,6 +519,32 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fLast    = 0;
    fXlabels = 0;
    fTitle   = "";
+   char name[64];
+   sprintf(name,"%s%s",GetName(),"x");
+   TAttAxis::ResetAttAxis(name);
+   fTimeDisplay = 0;
+   SetTimeFormat();
+}
+
+//______________________________________________________________________________
+void TAxis::Set(Int_t nbins, Float_t *xbins)
+{
+//*-*-*-*-*-*-*-*-*Initialize axis with variable bins*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*              ==================================
+   Int_t bin;
+   fNbins  = nbins;
+   fXbins.Set(fNbins+1);
+   for (bin=0; bin<= fNbins; bin++)
+      fXbins.fArray[bin] = xbins[bin];
+   for (bin=1; bin<= fNbins; bin++)
+      if (fXbins.fArray[bin] < fXbins.fArray[bin-1])
+         Error("TAxis::Set", "bins must be in increasing order");
+   fXmin      = fXbins.fArray[0];
+   fXmax      = fXbins.fArray[fNbins];
+   fFirst     = 0;
+   fLast      = 0;
+   fXlabels   = 0;
+   fTitle     = "";
    char name[64];
    sprintf(name,"%s%s",GetName(),"x");
    TAttAxis::ResetAttAxis(name);
