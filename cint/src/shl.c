@@ -127,7 +127,7 @@ int G__dlclose G__P((G__SHLHANDLE handle));
 * OSF or SunOS
 ****************************************************/
 #if defined(G__OSFDLL)
-#if defined(__FreeBSD__) || (defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)) || (defined(G__SUNOS4) && defined(G__NONANSI))
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || (defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)) || (defined(G__SUNOS4) && defined(G__NONANSI))
 # define G__RTLD_NOW RTLD_NOW
 # define G__RTLD_LAZY RTLD_LAZY
 #else
@@ -175,7 +175,7 @@ char *filename;
 {
   int result;
   int len = strlen(filename);
-#if defined(R__FBSD)
+#if defined(R__FBSD) || defined(R__OBSD)
   char soext[]=SOEXT;
 #endif
   if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
@@ -183,7 +183,7 @@ char *filename;
 	       strcmp(filename+len-3,".so")==0)) ||
      (len>4&& (strcmp(filename+len-4,".dll")==0 ||
 	       strcmp(filename+len-4,".DLL")==0)) ||
-#if defined(R__FBSD)
+#if defined(R__FBSD) || defined(R__OBSD)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif
      (len>2&& (strcmp(filename+len-2,".a")==0 ||

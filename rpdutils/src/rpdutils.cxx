@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.75 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.76 2005/03/11 00:48:15 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -42,16 +42,8 @@
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__) || defined(cygwingcc)
-#include <grp.h>
-#include <sys/types.h>
-#include <signal.h>
-#endif
-
-#if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__) || defined(cygwingcc)
+    defined(_AIX) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
+    defined(__APPLE__) || defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -77,7 +69,7 @@ extern "C" int ruserok(const char *, int, const char *, const char *);
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #elif defined(linux) || defined(__hpux)
 #include <sys/vfs.h>
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/param.h>
 #include <sys/mount.h>
 #else
@@ -99,7 +91,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
 #endif
-#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
+#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__OpenBSD__) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
 #include <sys/file.h>
@@ -205,7 +197,8 @@ static ERootdErrors kUsrPwdErr[4][4] = {
 
 //--- Machine specific routines ------------------------------------------------
 
-#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
+#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__) && \
+    !defined(__OpenBSD__)
 extern "C" int initgroups(const char *name, int basegid);
 #endif
 
@@ -223,8 +216,8 @@ extern "C" {
 }
 #endif
 
-#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) || \
-    defined(cygwingcc)
+#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) && \
+    !defined(__OpenBSD__) || defined(cygwingcc)
 static int setresgid(gid_t r, gid_t e, gid_t)
 {
    if (setgid(r) == -1)

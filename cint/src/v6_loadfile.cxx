@@ -1429,7 +1429,7 @@ char *filenamein;
   int store_no_exec_compile;
   int store_asm_exec;
 #endif
-#if defined(R__FBSD)
+#if defined(R__FBSD) || defined(R__OBSD)
   char soext[]=SOEXT;
 #endif
 #ifndef G__OLDIMPLEMENTATION1849
@@ -1715,7 +1715,7 @@ char *filenamein;
 	  strcpy(filename+len-2,G__getmakeinfo("DLLPOST"));
 #endif
 	}
-#if defined(R__FBSD)
+#if defined(R__FBSD) || defined(R__OBSD)
 	else if (len>strlen(soext) &&
 		 strcmp(filename+len-strlen(soext),soext)==0) {
 #ifndef G__OLDIMPLEMENTATION1645
@@ -2279,7 +2279,7 @@ char *filenamein;
 	       strcmp(filename+len-3,".so")==0)) ||
      (len>4&& (strcmp(filename+len-4,".dll")==0 ||
 	       strcmp(filename+len-4,".DLL")==0)) ||
-#if defined(R__FBSD)
+#if defined(R__FBSD) || defined(R__OBSD)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif
 #ifndef G__OLDIMPLEMENTATION1705

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.119 2005/02/22 16:03:46 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.120 2005/03/11 18:33:47 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -46,7 +46,7 @@
 #if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
     defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD)
+    defined(R__OBSD) || defined(R__MACOSX) || defined(R__HURD)
 #define HAS_DIRENT
 #endif
 #ifdef HAS_DIRENT
@@ -59,7 +59,8 @@
 #endif
 #if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || \
     defined(R__SGI) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
+    defined(R__OBSD) || defined(R__LYNXOS) || defined(R__MACOSX) || \
+    defined(R__HURD)
 #   include <sys/ioctl.h>
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
@@ -80,7 +81,7 @@
     extern "C" int statfs(const char *file, struct statfs *buffer);
 #elif defined(R__LINUX) || defined(R__HPUX) || defined(R__HURD)
 #   include <sys/vfs.h>
-#elif defined(R__FBSD)
+#elif defined(R__FBSD) || defined(R__OBSD)
 #   include <sys/param.h>
 #   include <sys/mount.h>
 #else
@@ -160,7 +161,7 @@
 #   define UTMP_NO_ADDR
 #endif
 #if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || \
-    defined(R__LYNXOS) || defined(R__MACOSX)
+    defined(R__OBSD) || defined(R__LYNXOS) || defined(R__MACOSX)
 #   define UTMP_NO_ADDR
 #endif
 
@@ -459,7 +460,7 @@ const char *TUnixSystem::GetError()
    if (err == 0 && fLastErrorString != "")
       return fLastErrorString;
 #if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
-    defined(R__FBSD) || defined(R__HURD)
+    defined(R__FBSD) || defined(R__OBSD) || defined(R__HURD)
    return strerror(err);
 #else
    if (err < 0 || err >= sys_nerr)
