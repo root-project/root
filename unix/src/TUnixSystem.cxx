@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.61 2003/06/17 21:05:37 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.62 2003/06/18 11:31:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -513,7 +513,7 @@ Int_t TUnixSystem::GetFPEMask()
 
    Int_t mask = 0;
 
-#if defined(R__LINUX)
+#if defined(R__LINUX) && !defined(__powerpc__)
 #if defined(__GLIBC__) && (__GLIBC__>2 || __GLIBC__==2 && __GLIBC_MINOR__>=1)
    fenv_t oldenv;
    fegetenv(&oldenv);
@@ -550,7 +550,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 
    Int_t old = GetFPEMask();
 
-#if defined(R__LINUX)
+#if defined(R__LINUX) && !defined(__powerpc__)
 #if defined(__GLIBC__) && (__GLIBC__>2 || __GLIBC__==2 && __GLIBC_MINOR__>=1)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_INVALID;
