@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.2 2000/10/01 15:20:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -244,7 +244,6 @@ public:
    TSubString    operator()(const TRegexp& re, Ssiz_t start) const;
    TSubString    SubString(const char *pat, Ssiz_t start = 0,
                            ECaseCompare cmp = kExact) const;
-   TSubString    Strip(EStripType s = kTrailing, char c = ' ') const;
 
    // Non-static member functions
    TString&     Append(const char *cs);
@@ -309,6 +308,7 @@ public:
    TString&     ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2, Ssiz_t ls2);  // Find&Replace all s1 with s2 if any
    void         Resize(Ssiz_t n);                       // Truncate or add blanks as necessary
    TSubString   Strip(EStripType s = kTrailing, char c = ' ');
+   TSubString   Strip(EStripType s = kTrailing, char c = ' ') const;
    void         ToLower();                              // Change self to lower-case
    void         ToUpper();                              // Change self to upper-case
 
