@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.21 2003/09/23 08:54:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.23 2003/10/07 21:09:55 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1460,7 +1460,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
 
    if (gDebug > 2)
       ::Info("GetAuthMeth", "enter: h:%s p:%s u:%s (0x%lx 0x%lx) ",
-              Host, Proto, *User[0], (long) (*User), (long) (*User[0]));
+              Host, Proto, *User[0], (Long_t) (*User), (Long_t) (*User[0]));
 
    if (*User[0] == 0)
       *User[0] = StrDup("");
@@ -1522,7 +1522,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
    if ((nu = CheckRootAuthrc(Host, User, &nh, am, det)) > 0) {
       if (gDebug > 3)
          ::Info("GetAuthMeth", "found %d users - nh: %d 0x%lx %s ", nu,
-                nh[0], (long) (*User[0]), *User[0]);
+                nh[0], (Long_t) (*User[0]), *User[0]);
       *NumMeth = new int[nu];
       for (i = 0; i < kMAXSEC; i++) {
          AuthMeth[i] = new int[nu];
@@ -1641,8 +1641,8 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
    FILE *ftmp = gSystem->TempFileName(filetmp);
 
    if (gDebug > 2)
-      ::Info("TAuthenticate::CheckRootAuthrc", "got tmp file: %s open at 0x%x",
-              filetmp.Data(),(int)ftmp);
+      ::Info("TAuthenticate::CheckRootAuthrc", "got tmp file: %s open at 0x%lx",
+              filetmp.Data(), (Long_t)ftmp);
    if (ftmp == 0)
       expand = 0;  // Problems opening temporary file: ignore 'include' directives ...
 
@@ -2863,7 +2863,7 @@ void TAuthenticate::DecodeDetails(char *details, char *Pt, char *Ru,
    if (Pt == 0 || Ru == 0) {
       ::Error("DecodeDetails",
               "memory for Pt and Ru must be allocated elsewhere (Pt:0x%lx, Ru:0x%lx)",
-              (long) Pt, (long) Ru);
+              (Long_t) Pt, (Long_t) Ru);
       return;
    }
 
@@ -2900,7 +2900,7 @@ void TAuthenticate::DecodeDetailsGlobus(char *details, char *Pt, char *Ru,
    if (Pt == 0 || Ru == 0) {
       ::Error("DecodeDetailsGlobus",
               "memory for Pt and Ru must be allocated elsewhere (Pt:0x%lx, Ru:0x%lx)",
-              (long) Pt, (long) Ru);
+              (Long_t) Pt, (Long_t) Ru);
       return;
    }
 
@@ -3025,7 +3025,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
    char cinc[20], fileinc[kMAXPATHLEN];
 
    if (gDebug > 2)
-     ::Info("FileExpand", "enter ... '%s' ... 0x%x", fexp, (int)ftmp);
+     ::Info("FileExpand", "enter ... '%s' ... 0x%lx", fexp, (Long_t)ftmp);
 
    fin = fopen(fexp, "r");
    if (fin == 0)
