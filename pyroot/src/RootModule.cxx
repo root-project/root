@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id:  $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -18,9 +18,9 @@ static PyMethodDef PyROOTMethods[] = {
    { NULL, NULL, 0, NULL }
 };
 
-extern "C" void initPyROOT() {
+extern "C" void initlibPyROOT() {
 // setup PyROOT
-   Py_InitModule( const_cast< char* >( "PyROOT" ), PyROOTMethods );
+   Py_InitModule( const_cast< char* >( "libPyROOT" ), PyROOTMethods );
 
 // setup ROOT
    PyROOT::initRoot();

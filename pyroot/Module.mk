@@ -21,9 +21,14 @@ PYROOTO      := $(PYROOTS:.cxx=.o)
 
 PYROOTDEP    := $(PYROOTO:.o=.d) $(PYROOTDO:.o=.d)
 
-PYROOTLIB    := $(LPATH)/PyROOT.$(SOEXT)
+PYROOTLIB    := $(LPATH)/libPyROOT.$(SOEXT)
 
-ROOTPY       := $(MODDIR)/ROOT.py
+ROOTPYS      := $(MODDIR)/ROOT.py
+ifeq ($(PLATFORM),win32)
+ROOTPY       := bin/ROOT.py
+else
+ROOTPY       := $(LPATH)/ROOT.py
+endif
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
@@ -36,16 +41,14 @@ INCLUDEFILES += $(PYROOTDEP)
 include/%.h:    $(PYROOTDIRI)/%.h
 		cp $< $@
 
-$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS)
+$(ROOTPY):      $(ROOTPYS)
+		cp $< $@
+
+$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS) $(ROOTPY)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		"$(SOFLAGS)" PyROOT.$(SOEXT) $@ \
+		"$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		"$(PYROOTO) $(PYROOTDO)" "$(PYTHONLIBDIR) $(PYTHONLIB)" \
                 "$(PYTHONLIBFLAGS)"
-ifeq ($(PLATFORM),win32)
-		@cp $(ROOTPY) bin
-else
-		@cp $(ROOTPY) lib
-endif
 
 $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

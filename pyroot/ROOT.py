@@ -1,4 +1,4 @@
-# @(#)root/pyroot:$Name$:$Id$
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.2 2004/04/27 09:20:34 rdm Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 04/02/04
@@ -23,7 +23,7 @@ except:
   pass
 
 ## PyROOT C++ extension module
-from PyROOT import * 
+from libPyROOT import * 
 
 ### load most common ROOT libraries______________________________________________
 libraries = ('libHist', 'libGpad', 'libGraf', 'libMatrix', 'libTree', 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -97,7 +97,7 @@ namespace {
 
    inline void addToScope( const char* label, TObject* obj, TClass* cls ) {
       PyModule_AddObject(
-         PyImport_AddModule( const_cast< char* >( "PyROOT" ) ),
+         PyImport_AddModule( const_cast< char* >( "libPyROOT" ) ),
          const_cast< char* >( label ),
          PyROOT::bindRootObject( new PyROOT::ObjectHolder( obj, cls, false ) )
       );
