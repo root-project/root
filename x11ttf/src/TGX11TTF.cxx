@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.2 2000/06/05 07:31:22 brun Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -89,8 +89,8 @@ public:
 
    TTChar();
    ~TTChar();
-   Bool_t  IsEqual(TObject *obj);
-   ULong_t Hash();
+   Bool_t  IsEqual(const TObject *obj) const ;
+   ULong_t Hash() const;
 };
 
 TTChar::TTChar()
@@ -104,7 +104,7 @@ TTChar::~TTChar()
    delete [] fBitmap;
 }
 
-Bool_t TTChar::IsEqual(TObject *obj)
+Bool_t TTChar::IsEqual(const TObject *obj) const
 {
    TTChar *c = (TTChar *) obj;
    if (fCode == c->fCode && fSize == c->fSize && fAngle == c->fAngle &&
@@ -112,7 +112,7 @@ Bool_t TTChar::IsEqual(TObject *obj)
    return kFALSE;
 }
 
-ULong_t TTChar::Hash()
+ULong_t TTChar::Hash() const
 {
    return fCode ^ fSize;
 }
