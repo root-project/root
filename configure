@@ -1675,36 +1675,39 @@ fi
 #
 message "Checking whether to build xrootd"
 xrdcomm=""
-case $arch in
-# The server builds on Linux and Solaris only (for the time being)
-linux*)
-    if test "x$enable_xrootd" = "x"; then
-        enable_xrootd="yes"
-    fi
-    ;;
-solaris*)
-    if test "x$enable_thread" = "xyes"; then 
-       if test "x$enable_xrootd" = "x"; then
-          enable_xrootd="yes"
-       fi
-    else
-       if test "x$enable_xrootd" = "xyes"; then
-          enable_xrootd="no"
-          xrdcomm=", needs thread support (rerun with --enable-thread)"
-       else
-          enable_xrootd="no"
-       fi
-    fi
-    ;;
-*)
-    if test "x$enable_xrootd" = "xyes"; then
-        enable_xrootd="yes"
-        xrdcomm=", but not officially supported"
-    else
-        enable_xrootd="no"
-    fi
-    ;;
-esac
+
+# Xrootd and its client need thread support
+if test "x$enable_thread" = "xyes"; then 
+    # Ok, now check the architecture
+    case $arch in
+    # The server builds on Linux and Solaris only (for the time being)
+    linux*)
+        if test "x$enable_xrootd" = "x"; then
+            enable_xrootd="yes"
+        fi
+        ;;
+    solaris*)
+           if test "x$enable_xrootd" = "x"; then
+              enable_xrootd="yes"
+           fi
+        ;;
+    *)
+        if test "x$enable_xrootd" = "xyes"; then
+            enable_xrootd="yes"
+            xrdcomm=", but not officially supported"
+        else
+            enable_xrootd="no"
+        fi
+        ;;
+    esac
+else
+   if test "x$enable_xrootd" = "xyes"; then
+      enable_xrootd="no"
+      xrdcomm=", needs thread support (rerun with --enable-thread)"
+   else
+      enable_xrootd="no"
+   fi
+fi
 
 echo $enable_xrootd$xrdcomm
 
