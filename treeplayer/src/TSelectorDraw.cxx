@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.23 2003/12/24 09:45:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.24 2004/02/11 08:51:59 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -116,7 +116,11 @@ void TSelectorDraw::Begin(TTree *tree)
    TEventList *elist = 0;
    char htitle[2560]; htitle[0] = '\0';
    Bool_t profile = kFALSE;
-
+   Bool_t optSame = kFALSE;
+   if (opt.Contains("same")) {
+      optSame = kTRUE;
+      opt.ReplaceAll("same","");
+   }
    TCut realSelection(selection);
    TEventList *inElist = fTree->GetEventList();
    fCleanElist = kFALSE;
@@ -136,7 +140,7 @@ void TSelectorDraw::Begin(TTree *tree)
    //   elist     - pointer to selection list of hname
 
    Bool_t CanRebin = kTRUE;
-   if (opt.Contains("same")) CanRebin = kFALSE;
+   if (optSame) CanRebin = kFALSE;
 
    Int_t nbinsx=0, nbinsy=0, nbinsz=0;
    Double_t xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0;
@@ -403,7 +407,7 @@ void TSelectorDraw::Begin(TTree *tree)
       fAction = 1;
       if (!fOldHistogram) {
          fNbins[0] = gEnv->GetValue("Hist.Binning.1D.x",100);
-         if (gPad && opt.Contains("same")) {
+         if (gPad && optSame) {
             TListIter np(gPad->GetListOfPrimitives());
             TObject *op;
             TH1 *oldhtemp = 0;
@@ -443,7 +447,7 @@ void TSelectorDraw::Begin(TTree *tree)
             hist->SetBit(kCanDelete);
             if (!opt.Contains("goff")) hist->SetDirectory(0);
          }
-         if (opt.Length() && opt[0] == 'e') hist->Sumw2();
+         if (opt.Length() && opt.Contains("e")) hist->Sumw2();
       }
       fVar1->SetAxis(hist->GetXaxis());
       fObject = hist;
@@ -451,11 +455,11 @@ void TSelectorDraw::Begin(TTree *tree)
    // 2-D distribution
    } else if (fDimension == 2) {
       fAction = 2;
-      if (!fOldHistogram || !opt.Contains("same")) {
+      if (!fOldHistogram || !optSame) {
          fNbins[0] = gEnv->GetValue("Hist.Binning.2D.y",40);
          fNbins[1] = gEnv->GetValue("Hist.Binning.2D.x",40);
          if (opt.Contains("prof")) fNbins[1] = gEnv->GetValue("Hist.Binning.2D.Prof",100);
-         if (opt.Contains("same")) {
+         if (optSame) {
              TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
              if (oldhtemp) {
                 fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
@@ -537,14 +541,14 @@ void TSelectorDraw::Begin(TTree *tree)
          fVar2->SetAxis(h2->GetXaxis());
          Bool_t graph = kFALSE;
          Int_t l = opt.Length();
-         if (l == 0 || opt == "same") graph = kTRUE;
+         if (l == 0 || optSame) graph = kTRUE;
          if (opt.Contains("p")     || opt.Contains("*")    || opt.Contains("l"))    graph = kTRUE;
          if (opt.Contains("surf")  || opt.Contains("lego") || opt.Contains("cont")) graph = kFALSE;
          if (opt.Contains("col")   || opt.Contains("hist") || opt.Contains("scat")) graph = kFALSE;
          fObject = h2;
          if (graph) {
             fAction = 12;
-            if (!fOldHistogram && !opt.Contains("same")) fAction = -12;
+            if (!fOldHistogram && !optSame) fAction = -12;
          }
       }
 
@@ -552,11 +556,11 @@ void TSelectorDraw::Begin(TTree *tree)
    } else if (fDimension == 3 || fDimension == 4) {
       fAction = 3;
       if (fDimension == 4) fAction = 40;
-      if (!fOldHistogram || !opt.Contains("same")) {
+      if (!fOldHistogram || !optSame) {
          fNbins[0] = gEnv->GetValue("Hist.Binning.3D.z",20);
          fNbins[1] = gEnv->GetValue("Hist.Binning.3D.y",20);
          fNbins[2] = gEnv->GetValue("Hist.Binning.3D.x",20);
-         if (opt.Contains("same")) {
+         if (optSame) {
              TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
              if (oldhtemp) {
                 fNbins[2] = oldhtemp->GetXaxis()->GetNbins();
@@ -653,10 +657,10 @@ void TSelectorDraw::Begin(TTree *tree)
          fVar3->SetAxis(h3->GetXaxis());
          fObject = h3;
          Int_t noscat = strlen(option);
-         if (opt.Contains("same")) noscat -= 4;
+         if (optSame) noscat -= 4;
          if (!noscat && fDimension ==3) {
             fAction = 13;
-            if (!fOldHistogram && !opt.Contains("same")) fAction = -13;
+            if (!fOldHistogram && !optSame) fAction = -13;
          }
       }
    // An Event List
