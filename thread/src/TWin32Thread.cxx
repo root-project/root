@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Thread.cxx,v 1.1 2004/11/02 13:07:57 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Thread.cxx,v 1.2 2004/12/10 12:13:33 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -29,13 +29,16 @@ Int_t TWin32Thread::Run(TThread *th)
    // Win32 has a thread handle in addition to the thread ID.
 
    DWORD  dwThreadId;
-   HANDLE hHandle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)&TThread::Fun,
+   HANDLE hHandle = CreateThread(0, 0,
+                                 (LPTHREAD_START_ROUTINE)&TThread::Function,
                                  th, 0, (DWORD*)&dwThreadId);
    if (th->fDetached) {
       ::CloseHandle(hHandle);
       th->fHandle = 0L;
    } else
       th->fHandle = (Long_t)hHandle;
+
+   th->fId = SelfId();
 
    return hHandle ? 0 : EINVAL;
 }
@@ -149,20 +152,6 @@ Int_t TWin32Thread::CancelPoint()
       Warning("CancelPoint", "Not implemented on Win32");
    return 0;
 }
-
-//______________________________________________________________________________
-Int_t TWin32Thread::Sleep(ULong_t secs, ULong_t /*nanos*/)
-{
-   ::Sleep(secs * 1000);
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TWin32Thread::GetTime(ULong_t * /*absSec*/, ULong_t * /*absNanoSec*/)
-{
-   return 0;
-}
-
 
 //   Clean Up section. PTHREAD implementations of cleanup after cancel are
 //   too different and often too bad. Temporary I invent my own bicycle.

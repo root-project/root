@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.2 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.3 2004/12/10 22:27:21 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -87,6 +87,8 @@ Int_t TCondition::Wait()
 Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
 {
    // Wait not more than secs+nanoSecs to be signaled.
+   // Returns 0 if successfully signalled, 1 if time expired and -1 in
+   // case of error.
 
    if (!fConditionImp) return -1;
 

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThreadImp.h,v 1.2 2001/04/03 10:40:24 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThreadImp.h,v 1.3 2004/12/10 12:13:33 rdm Exp $
 // Author: Victor Perev   10/08/97
 
 /*************************************************************************
@@ -51,9 +51,6 @@ public:
    virtual Int_t  CleanUp(void **main) = 0;
 
    virtual Int_t  Exit(void *ret) = 0;
-
-   virtual Int_t  Sleep(ULong_t secs, ULong_t nanos = 0) = 0;
-   virtual Int_t  GetTime(ULong_t *absSec, ULong_t *absNanoSec) = 0;
 
    ClassDef(TThreadImp,0)  // ThreadImp class
 };

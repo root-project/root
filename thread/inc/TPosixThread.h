@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixThread.h,v 1.2 2001/04/03 10:40:24 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TPosixThread.h,v 1.3 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -58,9 +58,6 @@ public:
    virtual Int_t  CleanUp(void **main);
 
    virtual Int_t  Exit(void *ret);
-
-   virtual Int_t  Sleep(ULong_t secs, ULong_t nanos = 0);
-   virtual Int_t  GetTime(ULong_t *absSec, ULong_t *absNanoSec);
 
    ClassDef(TPosixThread,0)  // TPosixThread class
 };

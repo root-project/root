@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.8 2004/11/02 13:07:57 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.9 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -38,6 +38,9 @@
 #endif
 #ifndef ROOT_TTimer
 #include "TTimer.h"
+#endif
+#ifndef ROOT_Varargs
+#include "Varargs.h"
 #endif
 
 class TThreadImp;
@@ -90,26 +93,30 @@ private:
    void          *fThreadArg;             // thread start function arguments
    void          *fClean;                 // support of cleanup structure
    void          *fTsd[20];               // thread specific data container
-   char           fComm[100];             // ????
+   char           fComment[100];          // thread specific state comment
 
    static TThreadImp      *fgThreadImp;   // static pointer to thread implementation
    static char  * volatile fgXAct;        // Action name to do by main thread
    static void ** volatile fgXArr;        // pointer to control array of void pointers for action
    static volatile Int_t   fgXAnb;        // size of array above
    static volatile Int_t   fgXArt;        // return XA flag
+   static Long_t           fgMainId;      // thread id of main thread
    static TThread         *fgMain;        // pointer to chain of TThread's
    static TMutex          *fgMainMutex;   // mutex to protect chain of threads
    static TMutex          *fgXActMutex;   // mutex to protect XAction
-   static TCondition      *fgXActCondi;   // Condition for XAction
+   static TCondition      *fgXActCondi;   // condition for XAction
 
    // Private Member functions
    void           Constructor();
-   void           PutComm(const char *txt = 0) { fComm[0] = 0; if (txt) { strncpy(fComm,txt,99); fComm[99] = 0;} }
-   const char    *GetComm() const { return fComm; }
-   static void   *Fun(void *ptr);
+   void           SetComment(const char *txt = 0)
+                     { fComment[0] = 0; if (txt) { strncpy(fComment, txt, 99); fComment[99] = 0; } }
+   void           DoError(Int_t level, const char *location, const char *fmt, va_list va) const;
+   void           ErrorHandler(int level, const char *location, const char *fmt, va_list ap) const;
+   static void    Init();
+   static void   *Function(void *ptr);
    static Int_t   XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret);
-   static ULong_t Call(void  *p2f, void *arg);
    static void    AfterCancel(TThread *th);
+   static void    JoinFunc(void *p);
 
 public:
    TThread(VoidRtnFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
@@ -119,7 +126,6 @@ public:
    TThread(Int_t id = 0);
    virtual ~TThread();
 
-   static void      Init();
    Int_t            Kill();
    Int_t            Run(void *arg = 0);
    void             SetPriority(EPriority pri);
@@ -130,8 +136,8 @@ public:
    static void      Ps();
    static void      ps() { Ps(); }
 
-   Long_t           Join(void **ret=0);
-   static Long_t    Join(Long_t id, void **ret=0);
+   Long_t           Join(void **ret = 0);
+   static Long_t    Join(Long_t id, void **ret = 0);
 
    static Int_t     Exit(void *ret = 0);
    static Int_t     Exists();
@@ -146,13 +152,12 @@ public:
    static Int_t     Sleep(ULong_t secs, ULong_t nanos = 0);
    static Int_t     GetTime(ULong_t *absSec, ULong_t *absNanoSec);
 
-   static void      Debug(const char *txt);
-   static Int_t     Delete(TThread* &th);
+   static Int_t     Delete(TThread *th);
    static void    **Tsd(void *dflt, Int_t k);
 
-   // Cancelation
+   // Cancellation
    // there are two types of TThread cancellation:
-   //    DEFERRED     - Cancelation only in user provided cancel-points
+   //    DEFERRED     - Cancellation only in user provided cancel-points
    //    ASYNCHRONOUS - In any point
    //    DEFERRED is more safe, it is DEFAULT.
    static Int_t     SetCancelOn();
@@ -162,18 +167,13 @@ public:
    static Int_t     CancelPoint();
    static Int_t     Kill(Long_t id);
    static Int_t     Kill(const char *name);
-   static Int_t     CleanUpPush(void *free, void *arg=0);
-   static Int_t     CleanUpPop(Int_t exe=0);
+   static Int_t     CleanUpPush(void *free, void *arg = 0);
+   static Int_t     CleanUpPop(Int_t exe = 0);
    static Int_t     CleanUp();
 
    // XActions
-   static void      Printf(const char *txt);
-   static void      Printf(const char *txt, Long_t i);
-   static void      Printf(const char *txt, void *i) { Printf(txt, (Long_t)i); }
+   static void      Printf(const char *fmt, ...);   // format and print
    static void      XAction();
-
-   // Compilation and dynamic link
-   static Int_t     MakeFun(char *funname);
 
    ClassDef(TThread,0)  // Thread class
 };
