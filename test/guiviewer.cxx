@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:$:$Id:$
+// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.1 2001/05/03 08:56:58 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
@@ -61,13 +61,13 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
    tloh = new TGTableLayoutHints(2,5,0,1,
                                  kLHintsExpandX|kLHintsShrinkX|kLHintsFillX);
    table->AddFrame(fHSlider,tloh);
-   fHSlider->Connect("PositionChanged()","Viewer",this,"HandleSlider()");
+   fHSlider->Connect("PositionChanged()","Viewer",this,"DoSlider()");
 
    fVSlider = new TGDoubleVSlider(table,300,kDoubleScaleBoth,200);
    tloh = new TGTableLayoutHints(0,1,2,6,
                                  kLHintsExpandY|kLHintsShrinkY|kLHintsFillY);
    table->AddFrame(fVSlider,tloh);
-   fVSlider->Connect("PositionChanged()","Viewer",this,"HandleSlider()");
+   fVSlider->Connect("PositionChanged()","Viewer",this,"DoSlider()");
 
    // The scales
    fHScaleCanvas =
@@ -115,7 +115,7 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
                                     kLHintsFillX|kLHintsFillY);
       table->AddFrame(button,tloh);
       button->Resize(100,button->GetDefaultHeight());
-      button->Connect("Clicked()","Viewer",this,"HandleButton()");
+      button->Connect("Clicked()","Viewer",this,"DoButton()");
    }
 
    const char* ctrl_button_name[3][3] = {
@@ -134,7 +134,7 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
                                     kLHintsFillX|kLHintsFillY);
       table->AddFrame(button,tloh);
       button->Resize(100,button->GetDefaultHeight());
-      button->Connect("Clicked()","Viewer",this,"HandleButton()");
+      button->Connect("Clicked()","Viewer",this,"DoButton()");
    }
 
    table->Layout();
@@ -152,7 +152,7 @@ Viewer::~Viewer()
    delete fCleanup;
 }
 
-void Viewer::HandleButton(void)
+void Viewer::DoButton()
 {
    TGButton* button = (TGButton*)gTQSender;
    UInt_t id = button->WidgetId();
@@ -252,7 +252,7 @@ void Viewer::HandleButton(void)
    } // end switch(id)
 }
 
-void Viewer::HandleSlider(void)
+void Viewer::DoSlider()
 {
    float xmin, ymin, xmax, ymax;
    fHSlider->GetPosition(xmin,xmax);
@@ -274,7 +274,7 @@ void Viewer::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    fVScale->SetWmin(ymin);
    fVScale->SetWmax(ymax);
 
-   // Set position of slider - don't if HandleSlider called SetRange
+   // Set position of slider - don't if DoSlider called SetRange
    if (move_slider) {
       fHSlider->SetPosition(xmin,xmax);
       fVSlider->SetPosition(ymin,ymax);

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:$:$Id:$
+// @(#)root/test:$Name:  $:$Id: guiviewer.h,v 1.1 2001/05/03 08:56:58 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 #ifndef ROOT_TGFrame
@@ -25,8 +25,8 @@ private:
 public:
    Viewer(const TGWindow *win);
    virtual ~Viewer();
-   void HandleButton();
-   void HandleSlider();
+   void DoButton();
+   void DoSlider();
    void SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
                  Bool_t move_slider = kTRUE);
 };
