@@ -6,4 +6,4 @@
 #include "ZIP.h"
 #include "ZDeflate.h"
 #include "Bits.h"
-#include "Trees.h"
+#include "ZTrees.h"
