@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.92 2002/07/19 11:41:01 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.93 2002/07/23 10:02:43 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -484,8 +484,9 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
 //______________________________________________________________________________
 bool NeedShadowClass(G__ClassInfo& cl)
 {
-  return (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT))
-         || (cl.HasMethod("ShowMembers") && cl.IsTmplt());
+  return (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
+            && strncmp(cl.FileName(),"prec_stl",8)!=0 )
+      || (cl.HasMethod("ShowMembers") && cl.IsTmplt());
 }
 
 //______________________________________________________________________________
