@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.49 2002/06/20 21:36:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.50 2002/08/09 19:26:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -106,6 +106,7 @@ TClass *TStreamerElement::GetClassPointer() const
    
    if (fClassObject) return fClassObject;
    TString className = fTypeName.Strip(TString::kTrailing, '*');
+   if (className.Index("const ")==0) className.Remove(0,6);
    return gROOT->GetClass(className);
 }
 
