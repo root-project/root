@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.15 2001/06/16 20:28:21 david Exp $
+ *    File: $Id: RooPlot.cc,v 1.16 2001/06/30 01:33:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -42,7 +42,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.15 2001/06/16 20:28:21 david Exp $";
+"$Id: RooPlot.cc,v 1.16 2001/06/30 01:33:13 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
@@ -129,9 +129,23 @@ void RooPlot::updateNormVars(const RooArgSet &vars) {
 Stat_t RooPlot::GetBinContent(Int_t i) const {
   // A plot object is a frame without any bin contents of its own so this
   // method always returns zero.
-
   return 0;
 }
+
+Stat_t RooPlot::GetBinContent(Int_t, Int_t) const
+{
+  // A plot object is a frame without any bin contents of its own so this
+  // method always returns zero.
+  return 0;
+}
+
+Stat_t RooPlot::GetBinContent(Int_t, Int_t, Int_t) const
+{
+  // A plot object is a frame without any bin contents of its own so this
+  // method always returns zero.
+  return 0;
+}
+
 
 void RooPlot::addObject(TObject *obj, Option_t *drawOptions) {
   // Add a generic object to this plot. The specified options will be

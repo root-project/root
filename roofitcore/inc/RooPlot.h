@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.12 2001/06/16 20:28:21 david Exp $
+ *    File: $Id: RooPlot.rdl,v 1.13 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -34,6 +34,8 @@ public:
 
   // implement the TH1 interface
   virtual Stat_t GetBinContent(Int_t) const;
+  virtual Stat_t GetBinContent(Int_t, Int_t) const;
+  virtual Stat_t GetBinContent(Int_t, Int_t, Int_t) const;
   virtual void Draw(Option_t *options= 0);
 
   // container management

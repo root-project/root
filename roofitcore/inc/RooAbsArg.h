@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.36 2001/07/31 05:54:16 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.37 2001/08/02 21:39:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -124,6 +124,7 @@ protected:
     case ADirty: return kTRUE ;
     case Auto: return (isDerived()?_valueDirty:kFALSE) ;
     }
+    return kTRUE ; // we should never get here
   }
   inline void setValueDirty() const { setValueDirty(0) ; }
   inline void setShapeDirty() const { setShapeDirty(0) ; } 

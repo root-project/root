@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.19 2001/07/31 05:54:19 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.20 2001/08/02 21:39:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -213,6 +213,8 @@ RooFormula::DefinedValue(Int_t code) {
       return ((RooAbsCategory*)_useList.At(code))->lookupType(label)->getVal() ;
     }
   }
+  assert(0) ;
+  return 0 ;
 }
 
 

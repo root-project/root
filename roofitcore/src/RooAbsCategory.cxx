@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.21 2001/06/30 01:33:11 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.22 2001/07/31 05:54:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -328,7 +328,7 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
   //          it is the callers responsibility to make sure the cache is clean
 
   RooAbsCategory* other = dynamic_cast<RooAbsCategory*>(const_cast<RooAbsArg*>(source)) ;
-  assert(other) ;
+  assert(other!=0) ;
 
   _value = other->_value ;
   setValueDirty() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.6 2001/06/30 01:33:13 verkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.7 2001/08/02 23:54:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -23,11 +23,12 @@
 #include "TH1.h"
 #include <iostream.h>
 #include <iomanip.h>
+#include <math.h>
 
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.6 2001/06/30 01:33:13 verkerke Exp $";
+"$Id: RooHist.cc,v 1.7 2001/08/02 23:54:24 david Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)

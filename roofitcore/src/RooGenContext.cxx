@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.6 2001/08/01 21:30:15 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.7 2001/08/02 23:54:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,7 +29,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.6 2001/08/01 21:30:15 david Exp $";
+"$Id: RooGenContext.cc,v 1.7 2001/08/02 23:54:24 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -204,6 +204,7 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
   // preload the dataset with values from our accept-reject generator
   _generator->generateEvents(nEvents,*data);
 
+  // WVE should this be here?
   return data;
 
   // Attach the model to the new data set

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPrintable.cc,v 1.5 2001/05/03 02:15:56 verkerke Exp $
+ *    File: $Id: RooPrintable.cc,v 1.6 2001/06/30 01:33:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,7 @@
 ClassImp(RooPrintable)
 
 static const char rcsid[] =
-"$Id: RooPrintable.cc,v 1.5 2001/05/03 02:15:56 verkerke Exp $";
+"$Id: RooPrintable.cc,v 1.6 2001/06/30 01:33:13 verkerke Exp $";
 
 void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print information about this object to the specified stream. The possible
@@ -68,15 +68,12 @@ RooPrintable::PrintOption RooPrintable::lessVerbose(PrintOption opt) const {
   switch(opt) {
   case OneLine:
     return OneLine;
-    break;
   case Standard:
     return OneLine;
-    break;
   case Shape:
   case Verbose:
   default:
     return Standard;
-    break;
   }
 }
 

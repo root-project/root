@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.9 2001/07/31 05:54:17 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.10 2001/08/03 02:04:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -147,7 +147,7 @@ void RooAbsString::copyCache(const RooAbsArg* source)
   //          it is the callers responsibility to make sure the cache is clean
 
   RooAbsString* other = dynamic_cast<RooAbsString*>(const_cast<RooAbsArg*>(source)) ;
-  assert(other) ;
+  assert(other!=0) ;
 
   strcpy(_value,other->_value) ;
   setValueDirty() ;

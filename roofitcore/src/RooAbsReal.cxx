@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.28 2001/08/02 21:39:07 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.29 2001/08/03 02:04:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -363,7 +363,7 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
   // Warning: This function copies the cached values of source,
   //          it is the callers responsibility to make sure the cache is clean
   RooAbsReal* other = dynamic_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
-  assert(other) ;
+  assert(other!=0) ;
 
   _value = other->_value ;
   setValueDirty() ;

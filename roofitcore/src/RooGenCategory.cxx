@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.2 2001/05/15 06:54:25 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.3 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -172,7 +172,7 @@ Bool_t RooGenCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbos
    } else {
      return kFALSE ;
    }
-   return kFALSE ;
+   //return kFALSE ; //OSF: statement unreachable
 }
 
 
