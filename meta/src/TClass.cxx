@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.76 2002/05/30 19:43:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.77 2002/06/04 17:50:04 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -224,45 +224,7 @@ TClass::TClass(const char *name) : TDictionary()
    // Normally you would use gROOT->GetClass("class") to get access to a
    // TClass object for a certain class.
 
-   if (!gROOT)
-      ::Fatal("TClass::TClass", "ROOT system not initialized");
-
-   fName           = name;
-   fClassVersion   = 0;
-   fDeclFileName   = "";
-   fImplFileName   = "";
-   fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
-   fImplFileLine   = 0;
-   fBase           = 0;
-   fData           = 0;
-   fMethod         = 0;
-   fRealData       = 0;
-   fClassInfo      = 0;
-   fAllPubData     = 0;
-   fAllPubMethod   = 0;
-   fCheckSum       = 0;
-   fStreamerInfo   = 0;
-   fShowMembers    = 0; // Is there any way to initialize it in this case?
-   fIsA            = 0; // Is there any way to initialize it in this case?
-   fTypeInfo       = 0; // Is there any way to initialize it in this case?
-
-   ResetInstanceCount();
-
-   fClassMenuList  = new TList();
-   fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList,this));
-
-   if (!fClassInfo) {
-      if (!gInterpreter)
-         ::Fatal("TClass::TClass", "gInterpreter not initialized");
-
-      gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
-      if (!fClassInfo) {
-         gInterpreter->InitializeDictionaries();
-         gInterpreter->SetClassInfo(this);
-      }
-      if (!fClassInfo)
-         ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
-   }
+   Init(name,0, 0, 0, 0, "", "", -2, 0);
 }
 
 //______________________________________________________________________________
@@ -404,6 +366,9 @@ void TClass::Init(const char *name, Version_t cversion,
       }
       if (cursav) cursav->cd();
    }
+   fProperty = -1;
+   fInterStreamer = 0;
+
    ResetBit(kLoading);
 
    fClassMenuList = new TList();
@@ -1481,15 +1446,6 @@ Int_t TClass::Size() const
 }
 
 //______________________________________________________________________________
-Long_t TClass::Property() const
-{
-   // Get property description word. For meaning of bits see EProperty.
-
-   if (!fClassInfo) return 0;
-   return GetClassInfo()->Property();
-}
-
-//______________________________________________________________________________
 TClass *TClass::Load(TBuffer &b)
 {
    // Load class description from I/O buffer and return class object.
@@ -1571,6 +1527,39 @@ Bool_t TClass::IsLoaded() const
    // unloaded or if this is a 'fake' class created from a file's StreamerInfo.
 
    return (GetImplFileLine()>=0 && !TestBit(kUnloaded));
+}
+
+//______________________________________________________________________________
+Bool_t  TClass::IsTObject() const
+{ 
+   if (fProperty==(-1)) Property();
+   return TestBit(kIsTObject);
+}
+
+//______________________________________________________________________________
+Bool_t  TClass::IsForeign() const
+{ 
+   if (fProperty==(-1)) Property();
+   return TestBit(kIsForeign);
+}
+
+//______________________________________________________________________________
+Long_t TClass::Property() const
+{
+   if (fProperty!=(-1)) return fProperty;
+   if (!fClassInfo)     return 0;
+   Long_t dummy;
+   TClass *kl = (TClass *)this; 
+   kl->fProperty = fClassInfo->Property();
+   if (InheritsFrom(TObject::Class())) {
+      kl->SetBit(kIsTObject);
+   }
+   if (!fClassInfo->HasMethod("Streamer") || 
+       !fClassInfo->GetMethod("Streamer","TBuffer&",&dummy).IsValid() ) {
+
+      kl->SetBit(kIsForeign);
+   }
+   return fProperty;
 }
 
 //______________________________________________________________________________
@@ -1902,4 +1891,41 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
 
    return 0;
 }
+
+//______________________________________________________________________________
+void TClass::Streamer(void *object, TBuffer &b)
+{
+   if (IsTObject()) {           // TObject, regular case
+
+      if (!fInterStreamer) {
+         fInterStreamer = fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+         fOffsetStreamer = GetBaseClassOffset(TObject::Class());
+      }
+      TObject * tobj = (TObject*)((Long_t)object + fOffsetStreamer);
+      tobj->Streamer(b);
+
+   } else if (!IsForeign()) {   // Instrumented class 
+
+      if (!fInterStreamer) {
+        fInterStreamer = fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+      }
+
+      G__CallFunc func;
+      func.SetFunc((G__InterfaceMethod)fInterStreamer);
+      // set arguments
+      func.SetArg((Long_t)&b);
+      // call function
+      func.Exec((char*)((Long_t)object + fOffsetStreamer) );
+
+   } else {                      // Foreign class
+     
+      if (b.IsReading()) 
+         ReadBuffer (b, object);             
+      else             
+         WriteBuffer(b, object);
+
+   }
+
+}
+
 

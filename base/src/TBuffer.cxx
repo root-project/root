@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.30 2002/06/04 07:29:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.31 2002/06/05 10:52:56 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1543,15 +1543,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          MapObject(obj, fMapCount);
 
       // let the object read itself
-      if (clRef->GetClassInfo() && clRef->InheritsFrom(TObject::Class())) {
-         ((TObject*)obj)->Streamer(*this);
-      } else {
-         //fake class has no Streamer
-         if (gDebug > 0)
-            Warning("ReadObject", "%s::Streamer not available, using "
-                    "TClass::ReadBuffer instead", clRef->GetName());
-         clRef->ReadBuffer(*this,obj);
-      }
+      StreamObject(obj,clRef); 
 
       CheckByteCount(startpos, tag, clRef);
    }
@@ -1564,47 +1556,10 @@ void TBuffer::WriteObject(const TObject *obj)
 {
    // Write object to I/O buffer.
 
-   Assert(IsWriting());
+   TClass *cl = 0;
+   if (obj) cl = obj->IsA();
+   WriteObject(obj,cl);
 
-   // make sure fMap is initialized
-   InitMap();
-
-   ULong_t idx;
-
-   if (!obj) {
-
-      // save kNullTag to represent NULL pointer
-      *this << kNullTag;
-
-   } else if ((idx = (ULong_t)fMap->GetValue(((TObject*)obj)->TObject::Hash(), (Long_t)obj)) != 0) {
-
-      // truncation is OK the value we did put in the map is an 30-bit offset
-      // and not a pointer
-      UInt_t objIdx = UInt_t(idx);
-
-      // save index of already stored object
-      *this << objIdx;
-
-   } else {
-
-      // reserve space for leading byte count
-      UInt_t cntpos = UInt_t(fBufCur-fBuffer);
-      fBufCur += sizeof(UInt_t);
-
-      // write class of object first
-      TClass *cl = obj->IsA();
-      WriteClass(cl);
-
-      // add to map before writing rest of object (to handle self reference)
-      // (+kMapOffset so it's != kNullTag)
-      MapObject(obj, cntpos+kMapOffset);
-
-      // let the object write itself (cast const away)
-      ((TObject *)obj)->Streamer(*this);
-
-      // write byte count
-      SetByteCount(cntpos);
-   }
 }
 
 //______________________________________________________________________________
@@ -1649,7 +1604,7 @@ void TBuffer::WriteObject(const void *obj, TClass *actualClass)
       // let the object write itself (cast const away)
       //      ((TObject *)obj)->Streamer(*this);
       //Could try to see if we have a streamer stored in the class
-      actualClass->WriteBuffer(*this, (void*)obj);
+      StreamObject((void*)obj,actualClass);
 
       // write byte count
       SetByteCount(cntpos);
@@ -1846,6 +1801,64 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
    return cntpos;
 }
 
+//______________________________________________________________________________
+void TBuffer::SetReadMode()
+{
+   // Set buffer in read mode.
+
+   fMode = kRead;
+}
+
+//______________________________________________________________________________
+void TBuffer::SetWriteMode()
+{
+   // Set buffer in write mode.
+
+   fMode = kWrite;
+}
+
+//______________________________________________________________________________
+void TBuffer::StreamObject(void *obj, const type_info &typeinfo)
+{
+   // Stream an object given its C++ typeinfo information.
+
+   TClass *cl = gROOT->GetClass(typeinfo);
+   cl->Streamer(obj, *this);
+}
+
+//______________________________________________________________________________
+void TBuffer::StreamObject(void *obj, const char *className)
+{
+   // Stream an object given the name of its actual class.
+
+   TClass *cl = gROOT->GetClass(className);
+   cl->Streamer(obj, *this);
+}
+
+//______________________________________________________________________________
+void TBuffer::StreamObject(void *obj, TClass *cl)
+{
+   // Stream an object given a pointer to its actual class.
+
+   cl->Streamer(obj, *this);
+}
+
+//______________________________________________________________________________
+TClass *TBuffer::GetClass(const type_info &typeinfo)
+{  
+   // Forward to TROOT::GetClass
+
+   return gROOT->GetClass(typeinfo);
+}
+
+//______________________________________________________________________________
+TClass *TBuffer::GetClass(const char *className)
+{
+   // Forward to TROOT::GetClass
+
+   return gROOT->GetClass(className);
+}
+
 //---- Static functions --------------------------------------------------------
 
 //______________________________________________________________________________
@@ -1893,53 +1906,3 @@ Int_t TBuffer::GetGlobalWriteParam()
    return fgMapSize;
 }
 
-//______________________________________________________________________________
-void TBuffer::SetReadMode()
-{
-   // Set buffer in read mode.
-
-   fMode = kRead;
-}
-
-//______________________________________________________________________________
-void TBuffer::SetWriteMode()
-{
-   // Set buffer in write mode.
-
-   fMode = kWrite;
-}
-
-//______________________________________________________________________________
-void TBuffer::StreamObject(void *obj, const type_info &typeinfo)
-{
-   TClass *cl = gROOT->GetClass(typeinfo);
-   StreamObject(obj, cl);
-}
-
-//______________________________________________________________________________
-void TBuffer::StreamObject(void *obj, const char *className)
-{
-   TClass *cl = gROOT->GetClass(className);
-   StreamObject(obj, cl);
-}
-//______________________________________________________________________________
-void TBuffer::StreamObject(void *obj, TClass *cl)
-{
-   if (IsReading()) {
-      cl->ReadBuffer(*this, obj);
-   } else {
-      cl->WriteBuffer(*this, obj);
-   }
-}
-
-//______________________________________________________________________________
-TClass *TBuffer::GetClass(const type_info &typeinfo)
-{
-   return gROOT->GetClass(typeinfo);
-}
-
-//______________________________________________________________________________
-TClass *TBuffer::GetClass(const char *className)
-{
-   return gROOT->GetClass(className);
-}

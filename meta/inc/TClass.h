@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.23 2002/05/09 20:22:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.24 2002/06/04 17:50:04 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -66,7 +66,11 @@ private:
    ShowMembersFunc_t fShowMembers;     //pointer to the class's ShowMembers function
    IsAFunc_t         fIsA;             //pointer to the class's IsA function.
    Bool_t            fVersionUsed;     //!Indicated whether GetClassVersion has been called
+   Long_t            fProperty;        //!Property
 
+   void             *fInterStreamer;   //!saved info to call Streamer
+   Long_t            fOffsetStreamer;  //!saved info to call Streamer
+   
    TMethod          *GetClassMethod(Long_t faddr);
    TMethod          *GetClassMethod(const char*name, const char* signature);
    void Init(const char *name, Version_t cversion, const type_info *info,
@@ -85,7 +89,7 @@ private:
 public:
    // TClass status bits
    enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13),
-          kUnloaded = BIT(15) };
+          kUnloaded = BIT(15), kIsTObject = BIT(16), kIsForeign = BIT(17) };
 
    TClass();
    TClass(const char *name);
@@ -105,6 +109,7 @@ public:
    Bool_t           CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    Int_t            Compare(const TObject *obj) const;
    void             Draw(Option_t *option="");
+   void             Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void            *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    char            *EscapeChars(char * text) const;
    UInt_t           GetCheckSum(UInt_t code=0) const;
@@ -148,10 +153,12 @@ public:
    Bool_t           InheritsFrom(const TClass *cl) const;
    Bool_t           IsFolder() const {return kTRUE;}
    Bool_t           IsLoaded() const;
+   Bool_t           IsForeign() const; 
+   Bool_t           IsTObject() const; 
    void             MakeCustomMenuList();
    void            *New(Bool_t defConstructor = kTRUE);
    void            *New(void *arena, Bool_t defConstructor = kTRUE);
-   void             Destructor(void *obj, Bool_t dtorOnly = kFALSE);
+   Long_t           Property() const;
    Int_t            ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t            ReadBuffer(TBuffer &b, void *pointer);
    void             ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
@@ -159,7 +166,6 @@ public:
    Int_t            Size() const;
    TStreamerInfo   *SetStreamerInfo(Int_t version, const char *info="");
    void             SetUnloaded();
-   Long_t           Property() const;
    void             SetStreamer(const char *name, Streamer_t p);
    Int_t            WriteBuffer(TBuffer &b, void *pointer, const char *info="");
 
@@ -167,7 +173,7 @@ public:
    static Bool_t    IsCallingNew();
    static TClass   *Load(TBuffer &b);
    void             Store(TBuffer &b) const;
-
+   void             Streamer(void *object, TBuffer &b);
    ClassDef(TClass,0)  //Dictionary containing class information
 };
 
