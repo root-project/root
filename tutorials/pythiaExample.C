@@ -29,9 +29,9 @@
 // 
 // NOTE: To run this example, you must have a version of ROOT 
 // compiled with the Pythia6 version enabled and have Pythia6 installed.
-// The statement gSystem->Load("libPythia6");  (see below)
+// The statement gSystem->Load("$HOME/pythia6/libPythia6");  (see below)
 // assumes that the directory containing the Pythia6 library
-// is somewhere where the dynamic loader can find it.  Locations
+// is in the pythia6 subdirectory of your $HOME.  Locations
 // that can specify this, are: 
 // 
 //  Root.DynamicPath resource in your ROOT configuration file 
@@ -47,7 +47,7 @@
 //
 //____________________________________________________________________ 
 //  
-// $Id: pythiaExample.C,v 1.1 2002/08/18 20:12:21 brun Exp $ 
+// $Id: pythiaExample.C,v 1.2 2002/08/20 16:15:19 brun Exp $ 
 // Author: Christian Holm Christensen <cholm@hilux15.nbi.dk>
 // Update: 2002-08-16 16:40:27+0200
 // Copyright: 2002 (C) Christian Holm Christensen
@@ -110,7 +110,7 @@ void loadLibraries()
   // Load the Event Generator abstraction library, Pythia 6
   // library, and the Pythia 6 interface library. 
   gSystem->Load("libEG");
-  gSystem->Load("libPythia6");
+  gSystem->Load("$HOME/pythia6/libPythia6"); //change to your setup
   gSystem->Load("libEGPythia6");
 #endif
 }
@@ -167,9 +167,12 @@ int makeEventSample(Int_t nEvents)
 			100, 0, 3);
   hist->SetXTitle("p_{#perp}");
   hist->SetYTitle("dN/dp_{#perp}");
-  tree->Draw(Form("sqrt(pow(%s.fPx,2)+pow(%s.fPy,2))>>%s", 
-		  BRANCHNAME, BRANCHNAME, HISTNAME), 
-	     Form("%s.fKF==%d", BRANCHNAME, PDGNUMBER));
+  char expression[64];
+  sprintf(expression,"sqrt(pow(%s.fPx,2)+pow(%s.fPy,2))>>%s", 
+		  BRANCHNAME, BRANCHNAME, HISTNAME); 
+  char selection[64];
+  sprintf(selection,"%s.fKF==%d", BRANCHNAME, PDGNUMBER);
+  tree->Draw(expression,selection);
 
   // Normalise to the number of events, and the bin sizes.
   hist->Sumw2();
@@ -221,9 +224,9 @@ int showEventSample()
   hist->Draw("e1");
   TF1* func = hist->GetFunction("expo");
   
-  TLatex* latex = new TLatex(1.5, -4, 
-			     Form("T #approx %5.1f", 
-				  - 1000 / func->GetParameter(1)));
+  char expression[64];
+  sprintf(expression,"T #approx %5.1f", -1000 / func->GetParameter(1));
+  TLatex* latex = new TLatex(1.5, -4, expression);
   latex->SetTextSize(.1);
   latex->SetTextColor(4);
   latex->Draw();
