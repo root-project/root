@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.55 2004/03/26 17:35:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.56 2004/05/10 08:05:33 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -872,13 +872,12 @@ void TApplication::ReturnPressed(char *text )
 }
 
 //______________________________________________________________________________
-void TApplication::SetNoechoMode(Bool_t)
+void TApplication::SetEchoMode(Bool_t)
 {
-   // set console mode:
+   // Set console echo mode:
    //
-   //  mode = 0 - echo input symbols
-   //  mode = 1 - noecho input symbols
-
+   //  mode = kTRUE  - echo input symbols
+   //  mode = kFALSE - noecho input symbols
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.13 2004/02/09 09:50:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.14 2004/05/10 08:05:33 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
 
    virtual void    GetOptions(Int_t *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
-   virtual void    SetNoechoMode(Bool_t mode);
+   virtual void    SetEchoMode(Bool_t mode);
 
    virtual void    HandleIdleTimer();
    virtual Bool_t  HandleTermInput() { return kFALSE; }

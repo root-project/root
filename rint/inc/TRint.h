@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.5 2003/10/28 14:09:48 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.6 2004/05/10 08:05:33 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    virtual             ~TRint();
    virtual char       *GetPrompt();
    virtual const char *SetPrompt(const char *newPrompt);
-   virtual void        SetNoechoMode(Bool_t mode);
+   virtual void        SetEchoMode(Bool_t mode);
    virtual Bool_t      HandleTermInput();
    virtual void        PrintLogo();
    virtual void        Run(Bool_t retrn = kFALSE);
