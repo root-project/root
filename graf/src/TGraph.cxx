@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.101 2003/05/05 16:38:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.102 2003/07/07 20:14:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2328,6 +2328,9 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    }
 
 //*-*  Set Clipping option
+  Option_t *NoClip;
+  if (TestBit(kClipFrame)) NoClip = "";
+  else                     NoClip = "C";
   gPad->SetBit(kClipFrame, TestBit(kClipFrame));
 
   OptionZ = 1;
@@ -2463,7 +2466,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gPad->PaintFillArea(npt,gxworkl,gyworkl);
               if (drawborder) {
                  if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
+                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl,NoClip);
               }
               continue;
            }
@@ -2497,7 +2500,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gPad->PaintFillArea(npt,gxworkl,gyworkl);
               if (drawborder) {
                  if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
+                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl,NoClip);
               }
               continue;
            }
@@ -2561,7 +2564,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                  }
 			  npoints = point2-point1+1;
 		    }
-              gPad->PaintPolyLine(npoints,&gxworkl[point1],&gyworkl[point1]);
+              gPad->PaintPolyLine(npoints,&gxworkl[point1],&gyworkl[point1],NoClip);
               continue;
            }
         }  //endfor (i=first; i<=last;i++)
@@ -2591,7 +2594,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gywork[npt-1] = gywork[npt-2];
               gxwork[npt-1] = xwmin;
               ComputeLogs(npt, OptionZ);
-              gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+              gPad->PaintPolyLine(npt,gxworkl,gyworkl,NoClip);
               continue;
            }
         }  //endfor (i=first; i<=last;i++)
@@ -2807,12 +2810,12 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
             }
           }
 
-          gPad->PaintPolyLine(2,xl,yl);
+          gPad->PaintPolyLine(2,xl,yl,NoClip);
           nrLine++;
         }
       }
 
-      gPad->PaintPolyLine(nrLine,xc,yc);
+      gPad->PaintPolyLine(nrLine,xc,yc,NoClip);
 
       delete [] xc;
       delete [] yc;
@@ -2861,7 +2864,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                        gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
                        gPad->PaintFillArea(npt+2,gxworkl,gyworkl);
                     }
-                    gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+                    gPad->PaintPolyLine(npt,gxworkl,gyworkl,NoClip);
                  }
               }
               gxwork[0] = gxwork[npt-1];
@@ -2925,7 +2928,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                  }
                  if (OptionLine) {
                     if (!OptionMarker) ComputeLogs(npt, OptionZ);
-                    gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+                    gPad->PaintPolyLine(npt,gxworkl,gyworkl,NoClip);
                  }
               }
               gxwork[0] = gxwork[npt-1];
@@ -2953,7 +2956,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
         }
         if (OptionLine != 0 && npt > 1) {
            if (!OptionMarker) ComputeLogs(npt, OptionZ);
-           gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+           gPad->PaintPolyLine(npt,gxworkl,gyworkl,NoClip);
         }
      }
    }
