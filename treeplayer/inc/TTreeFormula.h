@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.13 2001/05/28 06:29:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.14 2001/05/31 08:56:32 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -79,7 +79,7 @@ protected:
    Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];    //Index of array selected by user for each leaf
    TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; //Pointer to a variable index.
    TArrayI      *fVarDims[kMAXFORMDIM+1];             //List of variable sizes dimensions.
-   TArrayI      *fCumulUsedVarDims;                   //fCumulUsedSizes for multi variable dimensions case
+   TArrayI      *fCumulUsedVarDims;                   //fCumulUsedSizes(1) for multi variable dimensions case
 
    void        DefineDimensions(Int_t code, Int_t size,  Int_t& virt_dim);
    void        DefineDimensions(Int_t code, TBranchElement *branch,  Int_t& virt_dim);
@@ -94,7 +94,7 @@ public:
    virtual Int_t      DefinedVariable(TString &variable);
    virtual Double_t   EvalInstance(Int_t i=0);
    // EvalInstance should be const.  See comment on GetNdata()
-   TObject           *GetLeafInfo(Int_t code) const;
+   TFormLeafInfo     *GetLeafInfo(Int_t code) const;
    TMethodCall       *GetMethodCall(Int_t code) const;
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
    virtual TLeaf     *GetLeaf(Int_t n) const;
