@@ -66,6 +66,7 @@ tar cf - -C $ORG --exclude lib/WildCard --exclude lib/cintocx \
 
 rm -f $SRCT/dmystrm.c
 rm -f $SRCT/dmystrct.c
+rm -f $SRCT/dmyinit.c
 rm -f $INCLT/done
 rm -f $INCLT/error
 rm -f $INCLT/iosenum.*
