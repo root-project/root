@@ -1,0 +1,119 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for Linux with glibc and egcs, gcc 2.9x, gcc 3 (>RH5.1)
+
+PLATFORM      = linux
+
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O3 -foptimize-sibling-calls -finline-functions 
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         =
+else
+OPT           = $(OPTFLAGS)
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -pipe -Wall -Woverloaded-virtual -D_DLL $(EXTRA_CXXFLAGS) -I/usr/X11R6/include
+CFLAGS        = -pipe -Wall -D_DLL $(EXTRA_CFLAGS) -I/usr/X11R6/include
+CINTCXXFLAGS  = -pipe -Wall -Woverloaded-virtual -D_DLL $(EXTRA_CXXFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__CYGWIN \
+                -DG__NEWSTDHEADER 
+CINTCFLAGS    = -pipe -Wall -D_DLL $(EXTRA_CFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__CYGWIN \
+                -DG__NEWSTDHEADER
+COMPILER      = gnu
+
+# Linker:
+LD            = build/unix/wingcc_ld.sh
+# -Wl,--dll-search-prefix=cyg -Wl,--force-exe-suffix 
+LDFLAGS       = $(OPT) \
+                -Wl,--export-all-symbols -Wl,--export-dynamic \
+				-Wl,--enable-auto-import -Wl,-Bdynamic -L/usr/X11R6/lib \
+				$(EXTRA_LDFLAGS)
+SOFLAGS       = -shared --enable-auto-image-base -Wl,-soname,
+# that's what cygwin ld looks for when searching for shared libs 
+SOEXT         = dll
+EXEEXT        = .exe
+
+# System libraries:
+SYSLIBS       = -lm $(OSTHREADLIBDIR) $(OSTHREADLIB) 
+#-rdynamic
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+CILIBS        = -lm 
+#-rdynamic
+CRYPTLIBS     = -lcrypt
+
+# Fortran:
+F77           = g77
+F77FLAGS      =
+F77LIBS       = -lg2c -lnsl
+
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/X11R6/lib -lXmu
+
+# Extras
+EXPLICITLINK        = YES
+HISTLIBDEP          = $(MATRIXLIB)
+HISTLIBEXTRA        = -lMatrix
+GRAFLIBDEP          = $(HISTLIB) $(MATRIXLIB)
+GRAFLIBEXTRA        = -lHist -lMatrix
+GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
+GPADLIBEXTRA        = -lGraf -lHist
+G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
+G3DLIBEXTRA         = -lGraf -lHist
+WIN32LIBDEP         = $(GPADLIB) $(GRAFLIB)
+WIN32LIBEXTRA       = -lGpad -lGraf
+GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
+GUILIBEXTRA         = -lGpad -lGraf
+HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
+HISTPAINTERLIBEXTRA = -lGraf -lHist -lMatrix
+HTMLLIBDEP          = $(GRAFLIB)
+HTMLLIBEXTRA        = -lGraf
+PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
+PROOFLIBEXTRA       = -lTree -lHist
+TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TREEPLAYERLIBEXTRA  = -lTree -lGraf3d \
+                      -lGraf -lHist
+TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
+TREEVIEWERLIBEXTRA  = -lTree -lGpad -lGraf \
+                      -lHist -lGui
+EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
+EGLIBEXTRA          = -lGraf3d -lGraf
+MCLIBDEP            = $(EGLIB)
+MCLIBEXTRA          = -lEG
+PHYSICSLIBDEP       = $(MATRIXLIB)
+PHYSICSLIBEXTRA     = -lMatrix
+PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
+PYTHIALIBEXTRA      = -lEG -lGraf \
+                      $(FPYTHIALIBDIR) $(FPYTHIALIB)
+PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
+PYTHIA6LIBEXTRA     = -lEG -lGraf \
+                      $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
+VENUSLIBDEP         = $(EGLIB)
+VENUSLIBEXTRA       = -lEG $(FVENUSLIBDIR) $(FVENUSLIB)
+TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TABLELIBEXTRA       = -lTree -lGpad \
+                      -lGraf3d -lGraf -lHist
+GLLIBDEP            = $(GUILIB) $(G3DLIB)
+GLLIBEXTRA          = -lGui -lGraf3d -lGL -lGLU
+RFIOLIBEXTRA        = WSock32 Ws2_32
+HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
+                      $(TREEPLAYERLIB)
+HBOOKLIBEXTRA       = -lHist -lMatrix -lTree \
+                      -lGraf -lTreePlayer
+GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
+GEOMPAINTERLIBEXTRA = -lGeom -lTree -lGraf3d \
+                      -lHist
+X11TTFLIBDEP		= $(GX11LIB) $(GRAFLIB)
+X11TTFLIBEXTRA		= -lGX11 -lGraf -lX11
+X3DLIBDEP			= $(GX11LIB) $(GRAFLIB) $(GUILIB) $(G3DLIB)
+X3DLIBEXTRA			= -lGX11 -lGraf -lGui \
+					  -lGraf3d -lX11
+SEEDLIBEXTRA	    = -lTree
