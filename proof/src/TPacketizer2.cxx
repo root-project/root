@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.13 2002/12/10 02:20:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.14 2003/03/04 17:08:38 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -420,6 +420,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
    // Heuristic for starting packet size
    fPacketSize = fTotalEntries / (20 * fSlaveStats->GetSize());
+   if ( fPacketSize < 1 ) fPacketSize = 1;
    PDB(kPacketizer,1) Info("TPacketizer2", "Base Packetsize = %d", fPacketSize);
 
    fProgress = new TTimer;
@@ -489,9 +490,8 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 
       slstat->fCurElem = 0;
       if ( fProcessed == fTotalEntries ) {
-         fProgress->Stop();
+         delete fProgress; fProgress = 0;
          HandleTimer(0);   // Send last timer message
-         // worry about lifetime of packetizer ?
       }
    }
 
@@ -579,6 +579,10 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 //______________________________________________________________________________
 Bool_t TPacketizer2::HandleTimer(TTimer *)
 {
+   // Send progress message to client.
+
+   if (fProgress == 0) return kFALSE; // timer stopped already
+
    TMessage m(kPROOF_PROGRESS);
 
    m << fTotalEntries << fProcessed;

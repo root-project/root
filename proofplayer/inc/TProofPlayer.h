@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.10 2002/11/28 18:38:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.11 2003/01/20 10:25:58 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -68,9 +68,12 @@ public:
    virtual ~TProofPlayer();
 
    virtual Int_t     Process(TDSet *set,
-                             const char *selector,
-                             Long64_t nentries = -1, Long64_t first = 0,
+                             const char *selector, Option_t *option = "",
+                             Long64_t nentries = -1, Long64_t firstentry = 0,
                              TEventList *evl = 0);
+   virtual Int_t     DrawSelect(TDSet *set, const char *varexp,
+                                const char *selection, Option_t *option = "",
+                                Long64_t nentries = -1, Long64_t firstentry = 0);
 
    virtual void      AddInput(TObject *inp);
    virtual void      ClearInput();
@@ -125,10 +128,14 @@ public:
    TProofPlayerRemote(TProof *proof);
    ~TProofPlayerRemote();   // Owns the fOutput list
 
-   Int_t    Process(TDSet *set,
-                 const char *selector,
-                 Long64_t nentries = -1, Long64_t first = 0,
-                 TEventList *evl = 0);
+   Int_t    Process(TDSet *set, const char *selector, Option_t *option = "",
+                    Long64_t nentries = -1, Long64_t firstentry = 0,
+                    TEventList *evl = 0);
+
+   Int_t    DrawSelect(TDSet *set, const char *varexp,
+                       const char *selection, Option_t *option = "",
+                       Long64_t nentries = -1, Long64_t firstentry = 0);
+
    void     StoreOutput(TList *out);   // Adopts the list
    void     StoreFeedback(TSlave *slave, TList *out); // Adopts the list
    void     MergeOutput();

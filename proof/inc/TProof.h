@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.29 2003/03/04 17:29:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.30 2003/03/05 16:07:30 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -184,8 +184,12 @@ public:
 
    Int_t       Ping();
    Int_t       Exec(const char *cmd);
-   Int_t       Process(TDSet *set, const char *selector, Long64_t nentries = -1,
-                       Long64_t first = 0, TEventList *evl = 0);
+   Int_t       Process(TDSet *set, const char *selector, Option_t *option = "",
+                       Long64_t nentries = -1, Long64_t firstentry = 0,
+                       TEventList *evl = 0);
+   Int_t       DrawSelect(TDSet *set, const char *varexp, const char *selection,
+                          Option_t *option = "", Long64_t nentries = -1,
+                          Long64_t firstentry = 0);
 
    void        AddInput(TObject *obj);
    void        ClearInput();

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.18 2003/01/20 10:25:58 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.19 2003/03/04 17:09:41 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -124,13 +124,11 @@ void TProofPlayer::StoreOutput(TList *)
    MayNotUse("StoreOutput");
 }
 
-
 //______________________________________________________________________________
 void TProofPlayer::StoreFeedback(TSlave *, TList *)
 {
    MayNotUse("StoreFeedback");
 }
-
 
 //______________________________________________________________________________
 void TProofPlayer::Progress(Long64_t total, Long64_t processed)
@@ -144,7 +142,6 @@ void TProofPlayer::Progress(Long64_t total, Long64_t processed)
 
    gProof->Progress(total,processed);
 }
-
 
 //______________________________________________________________________________
 void TProofPlayer::Feedback(TList *objs)
@@ -160,11 +157,10 @@ void TProofPlayer::Feedback(TList *objs)
    gProof->Feedback(objs);
 }
 
-
 //______________________________________________________________________________
 Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
-                                 Long64_t nentries, Long64_t first,
-                                 TEventList * /*evl*/)
+                            Option_t *option, Long64_t nentries, Long64_t first,
+                            TEventList * /*evl*/)
 {
    PDB(kGlobal,1) Info("Process","Enter");
 
@@ -178,6 +174,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    SetupFeedback();
 
+   fSelector->SetOption(option);
    fSelector->SetInputList(fInput);
 
    dset->Reset();
@@ -217,8 +214,10 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 }
 
 //______________________________________________________________________________
-void TProofPlayer::UpdateAutoBin(const char *name, Double_t& xmin, Double_t& xmax,
-                Double_t& ymin, Double_t& ymax, Double_t& zmin, Double_t& zmax)
+void TProofPlayer::UpdateAutoBin(const char *name,
+                                 Double_t& xmin, Double_t& xmax,
+                                 Double_t& ymin, Double_t& ymax,
+                                 Double_t& zmin, Double_t& zmax)
 {
    if ( fAutoBins == 0 ) {
       fAutoBins = new THashList;
@@ -247,12 +246,21 @@ void TProofPlayer::SetupFeedback()
    MayNotUse("SetupFeedback");
 }
 
-
 //______________________________________________________________________________
 void TProofPlayer::StopFeedback()
 {
    MayNotUse("StopFeedback");
 }
+
+//______________________________________________________________________________
+Int_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
+                               const char *selection, Option_t *option,
+                               Long64_t nentries, Long64_t firstentry)
+{
+   MayNotUse("DrawSelect");
+   return -1;
+}
+
 
 
 //------------------------------------------------------------------------------
@@ -289,11 +297,10 @@ TProofPlayerRemote::~TProofPlayerRemote()
    delete fFeedbackLists;
 }
 
-
 //______________________________________________________________________________
 Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
-                                  Long64_t nentries, Long64_t first,
-                                  TEventList * /*evl*/)
+                                  Option_t *option, Long64_t nentries,
+                                  Long64_t first, TEventList * /*evl*/)
 {
    // Process specified TDSet on PROOF.
    // Returns -1 in case error, 0 otherwise.
@@ -304,15 +311,19 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    fOutput = new TList;
 
    TString filename = selector_file;
-   filename = filename.Strip(TString::kTrailing,'+');
 
-   PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
-   fProof->SendFile(filename);
+   // If the filename does not contain "." assume class is compiled in
+   if ( strchr(selector_file,'.') != 0 ) {
+      filename = filename.Strip(TString::kTrailing,'+');
 
-   if ( filename.EndsWith(".C") ) {
-      filename.ReplaceAll(".C",".h");
       PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
       fProof->SendFile(filename);
+
+      if ( filename.EndsWith(".C") ) {
+         filename.ReplaceAll(".C",".h");
+         PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
+         fProof->SendFile(filename);
+      }
    }
 
    TMessage mesg(kPROOF_PROCESS);
@@ -338,7 +349,8 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    SetupFeedback();
 
-   mesg << set << fn << fInput << nentries << first; // no evl yet
+   TString opt = option;
+   mesg << set << fn << fInput << opt << nentries << first; // no evl yet
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
@@ -353,6 +365,23 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    MergeOutput();
 
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
+                                     const char *selection, Option_t *option,
+                                     Long64_t nentries, Long64_t firstentry)
+{
+   Info("DrawSelect","Not implemented");
+   return 0;
+
+   // Analyze options
+
+
+   // Process query
+
+
+   // Display results
 }
 
 //______________________________________________________________________________
@@ -438,7 +467,6 @@ void TProofPlayerRemote::StoreOutput(TList *out)
    PDB(kOutput,1) Info("StoreOutput","Leave");
 }
 
-
 //______________________________________________________________________________
 TList *TProofPlayerRemote::MergeFeedback()
 {
@@ -504,7 +532,6 @@ TList *TProofPlayerRemote::MergeFeedback()
 
    return fb;
 }
-
 
 //______________________________________________________________________________
 void TProofPlayerRemote::StoreFeedback(TSlave *slave, TList *out)
@@ -579,14 +606,15 @@ void TProofPlayerRemote::StopFeedback()
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
 
-   fFeedbackTimer->Stop();
-   delete fFeedbackTimer;
+   delete fFeedbackTimer; fFeedbackTimer = 0;
 }
 
 //______________________________________________________________________________
 Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 {
    PDB(kFeedback,2) Info("HandleTimer","Entry");
+
+   if ( fFeedbackTimer == 0 ) return kFALSE; // timer already switched off
 
    if ( fFeedbackLists == 0 ) return kFALSE;
 
@@ -635,13 +663,11 @@ TProofPlayerSlave::TProofPlayerSlave()
   fFeedback = 0;
 }
 
-
 //______________________________________________________________________________
 TProofPlayerSlave::TProofPlayerSlave(TSocket *socket)
 {
       fSocket = socket;
 }
-
 
 //______________________________________________________________________________
 void TProofPlayerSlave::SetupFeedback()
@@ -664,7 +690,6 @@ void TProofPlayerSlave::SetupFeedback()
 
 }
 
-
 //______________________________________________________________________________
 void TProofPlayerSlave::StopFeedback()
 {
@@ -676,7 +701,6 @@ void TProofPlayerSlave::StopFeedback()
    delete fFeedbackTimer;
    fFeedback = 0;
 }
-
 
 //______________________________________________________________________________
 Bool_t TProofPlayerSlave::HandleTimer(TTimer *)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.9 2002/06/14 10:29:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.10 2002/08/09 13:12:24 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -45,6 +45,10 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
+#ifndef ROOT_TCut
+#include "TCut.h"
+#endif
+
 
 // typedef can be removed as soon as Long64_t becomes real 64 bit type
 typedef Long_t  Long64_t;
@@ -99,8 +103,17 @@ public:
    TDSet(const char *type, const char *objname = "*", const char *dir = "/");
    virtual ~TDSet();
 
-   Int_t                 Process(const char *selector, Long64_t nentries = -1,
-                                 Long64_t first = 0, TEventList *evl = 0);
+   virtual Int_t         Process(const char *selector, Option_t *option = "",
+                                 Long64_t nentries = -1,
+                                 Long64_t firstentry = 0,
+                                 TEventList *evl = 0); // *MENU*
+   virtual void          Draw(const Option_t *) { /* TODO: proper fix */ }
+   virtual Int_t         Draw(const char *varexp, const char *selection,
+                              Option_t *option = "", Long64_t nentries = -1,
+                              Long64_t firstentry = 0); // *MENU*
+   virtual Int_t         Draw(const char *varexp, TCut selection,
+                              Option_t *option = "", Long64_t nentries = -1,
+                              Long64_t firstentry = 0); // *MENU*
 
    void                  Print(Option_t *option="") const;
    void                  SetObjName(const char *objname);

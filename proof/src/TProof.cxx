@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.37 2003/03/04 17:29:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.38 2003/03/05 16:07:30 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1107,8 +1107,8 @@ void TProof::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TProof::Process(TDSet *set, const char *selector, Long64_t nentries,
-                      Long64_t first, TEventList *evl)
+Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
+                      Long64_t nentries, Long64_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
    // Returns -1 in case of error, 0 otherwise.
@@ -1116,8 +1116,23 @@ Int_t TProof::Process(TDSet *set, const char *selector, Long64_t nentries,
    if (!fPlayer)
       fPlayer = new TProofPlayerRemote(this);
 
-   return fPlayer->Process(set, selector, nentries, first, evl);
+   return fPlayer->Process(set, selector, option, nentries, first, evl);
 }
+
+
+//______________________________________________________________________________
+Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, Option_t *option,
+                         Long64_t nentries, Long64_t first)
+{
+   // Process a data set (TDSet) using the specified selector (.C) file.
+   // Returns -1 in case of error, 0 otherwise.
+
+   if (!fPlayer)
+      fPlayer = new TProofPlayerRemote(this);
+
+   return fPlayer->DrawSelect(set, varexp, selection, option, nentries, first);
+}
+
 
 //______________________________________________________________________________
 void TProof::AddInput(TObject *obj)

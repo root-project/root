@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.14 2002/10/02 13:03:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.15 2002/12/02 18:50:01 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -171,7 +171,7 @@ TDSet::~TDSet()
 }
 
 //______________________________________________________________________________
-Int_t TDSet::Process(const char *selector, Long64_t nentries,
+Int_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentries,
                      Long64_t first, TEventList *evl)
 {
    // Process TDSet on currently active PROOF session.
@@ -183,7 +183,7 @@ Int_t TDSet::Process(const char *selector, Long64_t nentries,
    }
 
    if (gProof)
-      return gProof->Process(this, selector, nentries, first, evl);
+      return gProof->Process(this, selector, option, nentries, first, evl);
 
    Error("Process", "no active PROOF session");
    return -1;
@@ -350,4 +350,37 @@ Int_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
    delete file;
 
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TDSet::Draw(const char *varexp, TCut selection, Option_t *option,
+                  Long64_t nentries, Long64_t firstentry)
+{
+   // Draw expression varexp for specified entries.
+   // This function accepts a TCut objects as argument.
+   // Use the operator+ to concatenate cuts.
+   // Example:
+   //   dset.Draw("x",cut1+cut2+cut3);
+
+   return TDSet::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
+}
+
+//______________________________________________________________________________
+Int_t TDSet::Draw(const char *varexp, const char *selection, Option_t *option,
+                  Long64_t nentries, Long64_t firstentry)
+{
+   // Draw expression varexp for specified entries.
+   // See TTree::Draw().
+
+   if (!IsValid() || !fElements->GetSize()) {
+      Error("Draw", "not a correctly initialized TDSet");
+      return -1;
+   }
+
+   if (gProof)
+      return gProof->DrawSelect(this, varexp, selection, option, nentries,
+                                firstentry);
+
+   Error("Draw", "no active PROOF session");
+   return -1;
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.35 2003/03/04 17:29:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.36 2003/03/05 16:07:30 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -565,13 +565,13 @@ void TProofServ::HandleSocketInput()
       case kPROOF_PROCESS:
          {
             TDSet *dset;
-            TString filename;
+            TString filename, opt;
             TList *input;
             Long64_t nentries, first;
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");
 
-            (*mess) >> dset >> filename >> input >> nentries >> first;
+            (*mess) >> dset >> filename >> input >> opt >> nentries >> first;
 
             TProofPlayer *p;
 
@@ -592,7 +592,7 @@ void TProofServ::HandleSocketInput()
             }
             delete input;
 
-            p->Process(dset, filename, nentries, first);
+            p->Process(dset, filename, opt, nentries, first);
 
             // return output!
 

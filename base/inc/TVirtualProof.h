@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.4 2003/03/04 17:07:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.5 2003/03/05 16:08:55 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -49,15 +49,22 @@ public:
    virtual Int_t       Ping() = 0;
    virtual Int_t       Exec(const char *cmd) = 0;
    virtual Int_t       Process(TDSet *set, const char *selector,
-                       Long64_t nentries = -1, Long64_t first = 0,
-                       TEventList *evl = 0) = 0;
+                               Option_t *option = "",
+                               Long64_t nentries = -1,
+                               Long64_t firstentry = 0,
+                               TEventList *evl = 0) = 0;
+   virtual Int_t       DrawSelect(TDSet *set, const char *varexp,
+                                  const char *selection,
+                                  Option_t *option = "",
+                                  Long64_t nentries = -1,
+                                  Long64_t firstentry = 0) = 0;
 
    virtual void        AddInput(TObject *obj) = 0;
    virtual void        ClearInput() = 0;
    virtual TObject    *GetOutput(const char *name) = 0;
    virtual TList      *GetOutputList() = 0;
 
-   virtual Int_t       SetParallel(Int_t nodes = 9999) = 0;
+   virtual Int_t       SetParallel(Int_t nodes = 99999) = 0;
    virtual void        SetLogLevel(Int_t level, UInt_t mask = 0xFFFFFFFF) = 0;
 
    virtual void        Close(Option_t *option="") = 0;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.11 2002/12/13 19:11:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.12 2003/01/31 17:19:53 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -66,7 +66,7 @@ TSelector::~TSelector()
 TSelector *TSelector::GetSelector(const char *filename)
 {
 //   The code in filename is loaded (interpreted or compiled , see below)
-//   filename must contain a valid class implementation derived from TSelector.
+//   filename must contain a valid class implementation derived from TSelector,
 //   where TSelector has the following member functions:
 //
 //     void TSelector::Init(TTree *t). Called every time a new TTree is attached.
@@ -76,6 +76,15 @@ TSelector *TSelector::GetSelector(const char *filename)
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
 //
+//     Bool_t TSelector::Process(Int_t entry). This function is called
+//          to process an event. It is the user's responsability to read
+//          the corresponding entry in memory (may be just a partial read).
+//          Once the entry is in memory one can apply a selection and if the
+//          event is selected histograms can be filled. Processing stops
+//          when this function returns kFALSE. This function combines the
+//          next two functions in one, avoiding to have to maintain state
+//          in the class to communicate between these two funtions.
+//          This method is used by PROOF.
 //     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
@@ -86,20 +95,26 @@ TSelector *TSelector::GetSelector(const char *filename)
 //     void TSelector::Terminate(). This function is called at the end of
 //          the loop on all events.
 //
-//   if filename is of the form file.C, the file will be interpreted.
-//   if filename is of the form file.C++, the file file.C will be compiled
-//      and dynamically loaded. The corresponding binary file and shared library
-//      will be deleted at the end of the function.
-//   if filename is of the form file.C+, the file file.C will be compiled
+//   If filename is of the form file.C, the file will be interpreted.
+//   If filename is of the form file.C++, the file file.C will be compiled
+//      and dynamically loaded. The corresponding binary file and shared
+//      library will be deleted at the end of the function.
+//   If filename is of the form file.C+, the file file.C will be compiled
 //      and dynamically loaded. At next call, if file.C is older than file.o
 //      and file.so, the file.C is not compiled, only file.so is loaded.
 //
 //   The static function returns a pointer to a TSelector object
 
-   //Interpret/compile filename via CINT
+   // If the filename does not contain "." assume class is compiled in
    char localname[256];
-   sprintf(localname,".L %s",filename);
-   gROOT->ProcessLine(localname);
+   Bool_t fromFile = kFALSE;
+   if ( strchr(filename, '.') != 0 ) {
+
+      //Interpret/compile filename via CINT
+      sprintf(localname,".L %s",filename);
+      gROOT->ProcessLine(localname);
+      fromFile = kTRUE;
+   }
 
    //loop on all classes known to CINT to find the class on filename
    //that derives from TSelector
@@ -109,7 +124,7 @@ TSelector *TSelector::GetSelector(const char *filename)
       return 0;
    }
    strcpy(localname,basename);
-   char *IsCompiled = strchr(localname,'+');
+   Bool_t  isCompiled = !fromFile || strchr(localname,'+') != 0 ;
    char *dot        = strchr(localname,'.');
    if (dot) dot[0] = 0;
 
@@ -121,13 +136,19 @@ TSelector *TSelector::GetSelector(const char *filename)
       break;
    }
    if (!OK) {
-      ::Error("TSelector::GetSelector","file %s does not have a valid class deriving from TSelector",filename);
+      if ( fromFile ) {
+         ::Error("TSelector::GetSelector",
+         "file %s does not have a valid class deriving from TSelector",filename);
+      } else {
+         ::Error("TSelector::GetSelector",
+         "class %s does not exist or does not derive from TSelector",filename);
+      }
       return 0;
    }
 
    // we can now create an instance of the class
    TSelector *selector = (TSelector*)cl.New();
-   if (!selector || IsCompiled) return selector;
+   if (!selector || isCompiled) return selector;
    //interpreted selector: cannot be used as such
    //create a fake selector
    TSelectorCint *select = new TSelectorCint();

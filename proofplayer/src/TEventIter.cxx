@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.6 2002/07/26 15:33:15 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.7 2002/09/17 10:14:25 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -88,7 +88,10 @@ Int_t TEventIter::LoadDir()
       delete fFile; fFile = 0;
 
       fFilename = fElem->GetFileName();
+
+      TDirectory *dirsave = gDirectory;
       fFile = TFile::Open(fFilename);
+      if (dirsave) dirsave->cd();
 
       if ( fFile->IsZombie() ) {
          Error("Process","Cannot open file: %s (%s)",
@@ -112,7 +115,7 @@ Int_t TEventIter::LoadDir()
       }
       PDB(kLoop,2) Info("Process","Cd to: %s", fPath.Data() );
       fDir = gDirectory;
-      dirsave->cd();
+      if (dirsave) dirsave->cd();
       ret = 1;
    }
 
@@ -222,7 +225,10 @@ Long64_t TEventIterObj::GetNextEvent()
    --fNum;
    ++fCur;
    TKey *key = (TKey*) fNextKey->Next();
+   TDirectory *dirsave = gDirectory;
+   fDir->cd();
    fObj = key->ReadObj();
+   if (dirsave) dirsave->cd();
    fSel->SetObject( fObj );
 
    return fElemCur;
@@ -296,7 +302,10 @@ Long64_t TEventIterTree::GetNextEvent()
 
          // delete fTree;
          PDB(kLoop,2) Info("GetNextEvent","Reading: %s", fTreeName.Data() );
+         TDirectory *dirsave = gDirectory;
+         fDir->cd();
          fTree = (TTree *) key->ReadObj();
+         if (dirsave) dirsave->cd();
 
          if ( fTree == 0 ) {
             // Error always reported?
