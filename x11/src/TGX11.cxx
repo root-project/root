@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.3 2001/03/28 10:20:14 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.4 2001/04/11 15:19:11 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -2749,7 +2749,8 @@ void TGX11::Warp(int ix, int iy)
    // iy       : New Y coordinate of pointer
    // (both coordinates are relative to the origin of the current window)
 
-   XWarpPointer(fDisplay,0,gCws->window,0,0,0,0,ix,iy);
+   // Causes problems when calling ProcessEvents()... BadWindow
+   //XWarpPointer(fDisplay, None, gCws->window, 0, 0, 0, 0, ix, iy);
 }
 
 //______________________________________________________________________________
