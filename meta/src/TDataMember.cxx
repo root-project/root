@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.8 2002/02/18 07:44:14 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.9 2002/02/21 15:40:08 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 // out automatically by ROOT: here's an example:
 // suppose you have a class definition:
 //Begin_Html <pre>
-/**************************************************************************
+/*
 
         class MyClass{
             private:
@@ -46,9 +46,8 @@
                     ...
         }
 
-</pre>
-***************************************************************************/
-//
+*/
+//</pre>
 //End_Html
 // Look at the data member name and method names: a data member name has
 // a prefix letter (f) and has a base name X1 . The methods for getting and
@@ -70,17 +69,17 @@
 
     TDataMember *dm = cl-&gt;GetDataMember("fEditable"); //This is our data member
 
-    TMethodCall *getter = dm-&gt;GetterMethod(); //find a method that gets value!
+    TMethodCall *getter = dm-&gt;GetterMethod(c); //find a method that gets value!
     Long_t l;   // declare a storage for this value;
 
     getter-&gt;Execute(c,"",l);  // Get this Value !!!! It will appear in l !!!
 
 
-    TMethodCall *setter = dm-&gt;SetterMethod();
+    TMethodCall *setter = dm-&gt;SetterMethod(c);
     setter-&gt;Execute(c,"0",);   // Set Value 0 !!!
 
-</pre>
 */
+//</pre>
 //End_Html
 //
 // This trick is widely used in ROOT TContextMenu and dialogs for obtaining
@@ -101,8 +100,8 @@
         Int_t Get(){ return mydata;};
         void  Set(Int_t i){mydata=i;};
         }
-</pre>
 */
+//</pre>
 //End_Html
 //
 // However, this getting/setting functions are not the only feature of
@@ -126,8 +125,8 @@
 
 <em>*OPTIONS={GetMethod="</em>getter<em>";SetMethod="</em>setter<em>";Items=(</em>it1<em>="</em>title1<em>",</em>it2<em>="</em>title2<em>", ... ) } </em>
 
-</pre>
 */
+//</pre>
 //End_Html
 //
 // While parsing this string ROOT firstly looks for command-tokens:
@@ -141,17 +140,16 @@
 // put token ITEMS= and then enclose all options in curly brackets "()".
 // You separate options by comas ",".
 // Each option item may have one of the following forms:
-//Begin_Html
+//Begin_Html <pre>
 /*
-<pre>
          IntegerValue<em>  = "</em>Text Label<em>"</em>
 
          EnumValue   <em>  = "</em>Text Label<em>"</em>
 
         <em>"</em>TextValue<em>" = </em>Text Label<em>"</em>
 
-</pre>
 */
+//</pre>
 //End_Html
 //
 // One can sepcify values as Integers or Enums - when data field is an
@@ -603,6 +601,11 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
    if (!fValueGetter || cl) {
 
       if (!cl) cl = fClass;
+
+      if (fValueGetter) {
+         delete fValueGetter;
+         fValueGetter = 0;
+      }
 
       // try to guess Getter function:
       // we strip the fist character of name of data field ('f') and then
