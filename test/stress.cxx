@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.46 2003/07/06 19:41:49 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.47 2003/08/22 10:40:16 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -1268,8 +1268,8 @@ void stress13()
 
    TFile f("Event.root");
    TTree *tree = (TTree*)f.Get("T");
-   ntotin  += f.GetEND();
-   ntotout += f.GetEND();
+   ntotin  += (Double_t)f.GetEND();
+   ntotout += (Double_t)f.GetEND();
 
    Bool_t OK = kTRUE;
    if (chentries != tree->GetEntries()) OK = kFALSE;
