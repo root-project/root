@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.12 2004/11/02 16:55:20 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.13 2004/11/03 17:40:18 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -63,7 +63,6 @@ static GLUquadric *GetQuadric()
          } else {
             gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
             gluQuadricDrawStyle(fQuad,   (GLenum)GLU_FILL);
-            gluQuadricNormals(fQuad,     (GLenum)GLU_FLAT);
          }
       }
       ~Init()
@@ -599,9 +598,6 @@ void TGLSphere::GLDraw()const
 
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-   glLoadName(GetGLName());
-
    glPushMatrix();
    glTranslated(fX, fY, fZ);
    gluSphere(quadObj, fRadius, fNdiv, fNdiv);
