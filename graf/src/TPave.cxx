@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.11 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.12 2002/06/19 12:40:50 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TPave.h"
+#include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TClass.h"
 #include "TMath.h"
@@ -42,10 +43,10 @@ TPave::TPave(): TBox()
    fName         = "";
    fInit         = 1;
    fCornerRadius = 0;
-   SetFillColor(18);
-   SetFillStyle(1001);
-   SetLineColor(1);
-   SetLineStyle(1);
+   SetFillColor(gStyle->GetFillColor());
+   SetFillStyle(gStyle->GetFillStyle());
+   SetLineColor(gStyle->GetLineColor());
+   SetLineStyle(gStyle->GetLineStyle());
 }
 
 //______________________________________________________________________________
@@ -77,10 +78,10 @@ TPave::TPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    fCornerRadius = 0;
    if (fOption == "NDC" || fOption == "ndc") fOption = "brNDC";
 
-   SetFillColor(18);
-   SetFillStyle(1001);
-   SetLineColor(1);
-   SetLineStyle(1);
+   SetFillColor(gStyle->GetFillColor());
+   SetFillStyle(gStyle->GetFillStyle());
+   SetLineColor(gStyle->GetLineColor());
+   SetLineStyle(gStyle->GetLineStyle());
    SetName((char*)ClassName());
 }
 
@@ -575,7 +576,7 @@ void TPave::SavePrimitive(ofstream &out, Option_t *)
    if (fCornerRadius) {
       out<<"   pave->SetCornerRadius("<<fCornerRadius<<");"<<endl;
    }
-   SaveFillAttributes(out,"pave",0,1001);
+   SaveFillAttributes(out,"pave",19,1001);
    SaveLineAttributes(out,"pave",1,1,1);
    out<<"   pave->Draw();"<<endl;
 }
