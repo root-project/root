@@ -41,7 +41,7 @@
 // *  Starting  Matrix - S T R E S S                                 *  //
 // *******************************************************************  //
 // Test  1 : Allocation, Resizing.................................. OK  //
-// Test  2 : Filling, Inserting, Adopting.......................... OK  //
+// Test  2 : Filling, Inserting, Using............................. OK  //
 // Test  3 : Uniform matrix operations............................. OK  //
 // Test  4 : Binary Matrix element-by-element operations............OK  //
 // Test  5 : Matrix transposition...................................OK  //
@@ -489,11 +489,11 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check array Adoption" << endl;
+      cout << "Check array Use" << endl;
     {
       TMatrixD *m1a = new TMatrixD(m);
       TMatrixD *m2a = new TMatrixD();
-      m2a->Adopt(m1a->GetRowLwb(),m1a->GetRowUpb(),m1a->GetColLwb(),m1a->GetColUpb(),m1a->GetMatrixArray());
+      m2a->Use(m1a->GetRowLwb(),m1a->GetRowUpb(),m1a->GetColLwb(),m1a->GetColUpb(),m1a->GetMatrixArray());
       ok &= VerifyMatrixIdentity(m,*m2a,gVerbose,EPSILON);
       m2a->Sqr();
       TMatrixD m3 = m; m3.Sqr();
@@ -506,7 +506,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
   if (gVerbose)
     cout << "\nDone\n" << endl;
 
-  StatusPrint(2,"Filling, Inserting, Adopting",ok);
+  StatusPrint(2,"Filling, Inserting, Using",ok);
 }
 
 //
@@ -1911,7 +1911,7 @@ void mstress_matrix_io()
     for (Int_t i = 0; i < msize*msize; i++)
       pattern_array[i] = pattern;
     TMatrixD ma;
-    ma.Adopt(msize,msize,pattern_array);
+    ma.Use(msize,msize,pattern_array);
 
     TMatrixDSym ms(msize);
     ms = pattern;
@@ -2568,7 +2568,7 @@ void vstress_vector_io()
     for (Int_t i = 0; i < msize; i++)
       pattern_array[i] = pattern;
     TVectorD va;
-    va.Adopt(msize,pattern_array);
+    va.Use(msize,pattern_array);
 
     if (verbose)
       cout << "\nWrite vector v to database" << endl;

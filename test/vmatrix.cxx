@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.23 2004/01/26 22:29:25 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.24 2004/01/27 08:12:26 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -10,7 +10,7 @@
 // *  Starting  Matrix - S T R E S S suite                              //
 // *******************************************************************  //
 // Test  1 : Allocation, Resizing.................................. OK  //
-// Test  2 : Filling, Inserting, Adopting.......................... OK  //
+// Test  2 : Filling, Inserting, Using............................. OK  //
 // Test  3 : Uniform matrix operations............................. OK  //
 // Test  4 : Binary Matrix element-by-element operations............OK  //
 // Test  5 : Matrix transposition...................................OK  //
@@ -350,11 +350,11 @@ void stress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check array Adoption" << endl;
+      cout << "Check array Use" << endl;
     {
       TMatrixD *m1 = new TMatrixD(m);
       TMatrixD *m2 = new TMatrixD();
-      m2->Adopt(m1->GetRowLwb(),m1->GetRowUpb(),m1->GetColLwb(),m1->GetColUpb(),m1->GetMatrixArray());
+      m2->Use(m1->GetRowLwb(),m1->GetRowUpb(),m1->GetColLwb(),m1->GetColUpb(),m1->GetMatrixArray());
       ok &= VerifyMatrixIdentity(m,*m2,gVerbose,EPSILON);
       m2->Sqr();
       TMatrixD m3 = m; m3.Sqr();
@@ -367,7 +367,7 @@ void stress_matrix_fill(Int_t rsize,Int_t csize)
   if (gVerbose)
     cout << "\nDone\n" << endl;
 
-  StatusPrint(2,"Filling, Inserting, Adopting",ok);
+  StatusPrint(2,"Filling, Inserting, Using",ok);
 }
 
 //
