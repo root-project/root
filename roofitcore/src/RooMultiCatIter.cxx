@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCatIter.cc,v 1.11 2002/09/05 04:33:43 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.13 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +21,8 @@
 
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooMultiCatIter.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooMultiCatIter)
 ;

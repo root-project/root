@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAICRegistry.cc,v 1.13 2003/05/14 02:58:39 wverkerke Exp $
+ *    File: $Id: RooAICRegistry.cc,v 1.15 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +18,8 @@
 // -- CLASS DESCRIPTION [AUX] --
 #include "RooFitCore/RooAICRegistry.hh"
 #include "RooFitCore/RooArgSet.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooAICRegistry)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGrid.rdl,v 1.4 2002/09/05 04:33:31 verkerke Exp $
+ *    File: $Id: RooGrid.rdl,v 1.6 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +27,7 @@ public:
   virtual ~RooGrid();
 
   // Printing interface
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

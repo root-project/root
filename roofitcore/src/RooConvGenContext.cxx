@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.9 2004/04/01 00:22:33 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.11 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +28,8 @@
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooTruthModel.hh"
+using std::cout;
+using std::endl;
 
 
 ClassImp(RooConvGenContext)

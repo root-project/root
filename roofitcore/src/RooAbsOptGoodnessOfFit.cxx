@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.13 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.15 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,6 +36,9 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooErrorHandler.hh"
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(RooAbsOptGoodnessOfFit)
 ;

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: Roo1DTable.cc,v 1.17 2004/04/05 22:43:54 wverkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.19 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +19,15 @@
 // Roo1DTable implements a one-dimensional table. A table is the category
 // equivalent of a plot. To create a table use the RooDataSet::table method.
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 #include "TString.h"
 #include "RooFitCore/Roo1DTable.hh"
+using std::cout;
+using std::endl;
+using std::ostream;
+using std::setfill;
+using std::setw;
 
 ClassImp(Roo1DTable)
 

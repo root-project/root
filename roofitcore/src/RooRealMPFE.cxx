@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealMPFE.cc,v 1.6 2004/03/31 22:17:02 wverkerke Exp $
+ *    File: $Id: RooRealMPFE.cc,v 1.8 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,6 +36,8 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooMPSentinel.hh"
+using std::cout;
+using std::endl;
 
 RooMPSentinel RooRealMPFE::_sentinel ;
 

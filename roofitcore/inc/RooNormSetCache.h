@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.rdl,v 1.5 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooNormSetCache.rdl,v 1.7 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_NORMSET_CACHE
 #define ROO_NORMSET_CACHE
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "Rtypes.h"
 #include "RooFitCore/RooNameSet.hh"

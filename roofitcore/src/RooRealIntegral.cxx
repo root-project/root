@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.74 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.76 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,7 +25,7 @@
 // The actual analytical integrations (if any) are done in the PDF themselves, the numerical
 // integration is performed in the various implemenations of the RooAbsIntegrator base class.
 
-#include <iostream.h>
+#include <iostream>
 #include "TObjString.h"
 #include "TH1.h"
 #include "RooFitCore/RooRealIntegral.hh"
@@ -42,6 +43,9 @@
 #include "RooFitCore/RooSegmentedIntegrator2D.hh"
 #include "RooFitCore/RooIntegrator2D.hh"
 #include "RooFitCore/RooIntegratorConfig.hh"
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(RooRealIntegral) 
 ;

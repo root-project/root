@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: Roo1DTable.rdl,v 1.13 2002/09/05 04:33:00 verkerke Exp $
+ *    File: $Id: Roo1DTable.rdl,v 1.15 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_1D_TABLE
 #define ROO_1D_TABLE
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "TNamed.h"
 #include "TObjArray.h"
@@ -37,7 +37,7 @@ public:
   Double_t getOverflow() const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
+  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
 protected:
 

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.cc,v 1.20 2002/09/05 04:33:16 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.22 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +20,7 @@
 // has a public interface to define the possible value states.
 
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 #include "TTree.h"
@@ -28,6 +29,10 @@
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
 
 ClassImp(RooCategory) 
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.rdl,v 1.6 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooHtml.rdl,v 1.8 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,14 +19,14 @@
 #include "THtml.h"
 #include "TString.h"
 
-#include <fstream.h>
+#include <fstream>
 
 class RooHtml : public THtml {
 public:
   inline RooHtml(const char *version) : _version(version), _hfColor("#FFCC00") { };
   inline virtual ~RooHtml() { };
-  virtual void WriteHtmlHeader(ofstream &out, const char *title);
-  virtual void  WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
+  virtual void WriteHtmlHeader(std::ofstream &out, const char *title);
+  virtual void  WriteHtmlFooter(std::ofstream &out, const char *dir="", const char *lastUpdate="",
 				const char *author="", const char *copyright="");
 
   inline const char *getVersion() const { return _version.Data(); }

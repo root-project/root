@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.79 2004/04/05 22:43:54 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.81 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_ARG
 #define ROO_ABS_ARG
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
@@ -103,11 +103,11 @@ public:
   void attachDataSet(const RooAbsData &set);
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const = 0 ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const = 0 ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
@@ -145,8 +145,8 @@ public:
 
 
   void printCompactTree(const char* indent="",const char* fileName=0) ;
-  void printCompactTree(ostream& os, const char* indent="") ;
-  virtual void printCompactTreeHook(ostream& os, const char* indent="") {} ;
+  void printCompactTree(std::ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") {} ;
 
   inline void setDeleteWatch(Bool_t flag=kTRUE) { _deleteWatch = flag ; } ;
   Bool_t deleteWatch() const { return _deleteWatch ; }
@@ -182,13 +182,13 @@ protected:
   inline void setValueDirty() const { setValueDirty(0) ; }
   inline void setShapeDirty() const { setShapeDirty(0) ; } 
   inline void clearValueDirty() const { 
-    if (_verboseDirty) cout << "RooAbsArg::clearValueDirty(" << GetName() 
-			    << "): dirty flag " << (_valueDirty?"":"already ") << "cleared" << endl ;
+    if (_verboseDirty) std::cout << "RooAbsArg::clearValueDirty(" << GetName() 
+			    << "): dirty flag " << (_valueDirty?"":"already ") << "cleared" << std::endl ;
     _valueDirty=kFALSE ; 
   }
   inline void clearShapeDirty() const { 
-    if (_verboseDirty) cout << "RooAbsArg::clearShapeDirty(" << GetName() 
-			    << "): dirty flag " << (_shapeDirty?"":"already ") << "cleared" << endl ;
+    if (_verboseDirty) std::cout << "RooAbsArg::clearShapeDirty(" << GetName() 
+			    << "): dirty flag " << (_shapeDirty?"":"already ") << "cleared" << std::endl ;
     _shapeDirty=kFALSE ; 
   }
 
@@ -245,7 +245,7 @@ protected:
 	
   // Attribute list
   THashList _attribList ; // List of string attributes
-  void printAttribList(ostream& os) const;
+  void printAttribList(std::ostream& os) const;
 
   // Hooks for RooTreeData interface
   friend class RooTreeData ;
@@ -258,8 +258,8 @@ protected:
   virtual void fillTreeBranch(TTree& t) = 0 ;
 
   // Global   
-  friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  
-  friend istream& operator>>(istream& is, RooAbsArg &arg) ;
+  friend std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  
+  friend std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
   
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
@@ -280,7 +280,7 @@ private:
   ClassDef(RooAbsArg,1) // Abstract variable
 };
 
-ostream& operator<<(ostream& os, const RooAbsArg &arg);  
-istream& operator>>(istream& is, RooAbsArg &arg) ;
+std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  
+std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
 
 #endif

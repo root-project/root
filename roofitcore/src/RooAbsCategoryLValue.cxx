@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.15 2002/09/05 04:33:03 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.17 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +24,7 @@
 // to other RooAbsArgs must be invertible
 //
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 #include "TTree.h"
@@ -33,6 +34,10 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooRandom.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
 
 ClassImp(RooAbsCategoryLValue) 
 ;

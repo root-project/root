@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCatType.rdl,v 1.14 2002/09/05 04:33:16 verkerke Exp $
+ *    File: $Id: RooCatType.rdl,v 1.16 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_CAT_TYPE
 #define ROO_CAT_TYPE
 
-#include <iostream.h>
+#include <iostream>
 #include "TObject.h"
 #include "RooFitCore/RooPrintable.hh"
 
@@ -30,7 +30,7 @@ public:
   virtual const Text_t* GetName() const { return _label ; }
   virtual void SetName(const Text_t* name) { 
     if (strlen(name)>255) {
-      cout << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << endl ;
+      std::cout << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << std::endl ;
       _label[255]=0 ;
     }
     strncpy(_label,name,255) ;
@@ -53,7 +53,7 @@ public:
   inline Int_t getVal() const { return _value ; }
   void setVal(Int_t newValue) { _value = newValue ; }
 
-  void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

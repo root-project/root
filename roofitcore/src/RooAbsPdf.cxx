@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.85 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.87 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -107,7 +108,7 @@
 // the proxy holds a function, and will trigger an assert
 
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include "TObjString.h"
 #include "TPaveText.h"
@@ -128,6 +129,9 @@
 #include "RooFitCore/RooMinuit.hh"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooCmdConfig.hh"
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(RooAbsPdf) 
 ;

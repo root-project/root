@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.rdl,v 1.25 2002/09/05 04:33:47 verkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.27 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,7 +57,7 @@ public:
   void addTH1(TH1 *hist, Option_t* drawOptions= "");
 
   // ascii printing
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

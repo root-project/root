@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.rdl,v 1.10 2004/04/01 00:22:33 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.rdl,v 1.12 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,7 +35,7 @@ public:
   virtual ~RooProdGenContext();
 
   virtual void setProtoDataOrder(Int_t* lut) ;
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
+  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const ;
 
 protected:
 

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.26 2004/06/03 23:17:45 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.28 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,9 +18,9 @@
 // -- CLASS DESCRIPTION [CONT] --
 // RooAbsCollection is an abstract container object that can hold multiple RooAbsArg objects.
 
-#include <iostream.h>
-#include <iomanip.h>
-#include <fstream.h>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
 #include "TClass.h"
 #include "TStopwatch.h"
 #include "TRegexp.h"
@@ -32,6 +33,11 @@
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooLinkedListIter.hh"
+using std::cout;
+using std::endl;
+using std::fstream;
+using std::ostream;
+using std::setw;
 
 ClassImp(RooAbsCollection)
   ;

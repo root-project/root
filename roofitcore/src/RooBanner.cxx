@@ -1,5 +1,8 @@
+#include "BaBar/BaBar.hh"
 #include "Rtypes.h"
-#include <iostream.h>
+#include <iostream>
+using std::cout;
+using std::endl;
 
 // -- CLASS DESCRIPTION [AUX] --
 // Print banner message when RooFit library is loaded

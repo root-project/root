@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.81 2003/10/06 18:32:59 wverkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.83 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,8 +21,8 @@
 // or RooStringVar objects 
 //
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "TH2.h"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooPlot.hh"
@@ -33,6 +34,12 @@
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "TROOT.h"
+using std::cout;
+using std::endl;
+using std::fstream;
+using std::ifstream;
+using std::ofstream;
+using std::ostream;
 
 ClassImp(RooDataSet)
 ;

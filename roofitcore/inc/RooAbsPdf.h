@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.71 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.73 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -139,7 +139,7 @@ public:
   virtual Double_t expectedEvents() const { return 0 ; } 
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   static void verboseEval(Int_t stat) { _verboseEval = stat ; }
 

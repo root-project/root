@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphEdge.cc,v 1.6 2002/10/23 00:44:55 wverkerke Exp $
+ *    File: $Id: RooGraphEdge.cc,v 1.8 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +19,13 @@
 #include "TLine.h"
 #include "TArrow.h"
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
+using std::cout;
+using std::endl;
+using std::fstream;
+using std::ifstream;
+using std::ios;
 
 ///////////////////////////////////////////////////////////////////////////////
 //RooGraphEdge:                                                              //

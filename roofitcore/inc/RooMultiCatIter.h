@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCatIter.rdl,v 1.8 2002/09/05 04:33:43 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.rdl,v 1.10 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_MULTI_CAT_ITER
 #define ROO_MULTI_CAT_ITER
 
-#include <iostream.h>
+#include <iostream>
 #include "TIterator.h"
 #include "RooFitCore/RooArgSet.hh"
 #include "TObjString.h"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsLValue.rdl,v 1.6 2002/09/05 04:33:06 verkerke Exp $
+ *    File: $Id: RooAbsLValue.rdl,v 1.8 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_LVALUE
 #define ROO_ABS_LVALUE
 
-#include <iostream.h>
+#include <iostream>
 #include "Rtypes.h"
 
 

@@ -1,9 +1,13 @@
 #ifndef __CINT__
+#include "BaBar/BaBar.hh"
 #include "RooFitCore/RooNumber.hh"
 #endif
 
 #include <math.h>
-#include <iomanip.h>
+#include <iomanip>
+using std::cout;
+using std::endl;
+using std::setprecision;
 
 // Study the performance of the Monte Carlo integration algorithm
 

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.cc,v 1.29 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.31 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,8 +59,11 @@
 //  The choice of basis returned by basisCode() is guaranteed not to change
 //  of the lifetime of a RooResolutionModel object.
 
-#include <iostream.h>
+#include <iostream>
 #include "RooFitCore/RooResolutionModel.hh"
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(RooResolutionModel) 
 ;

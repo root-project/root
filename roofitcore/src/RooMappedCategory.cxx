@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMappedCategory.cc,v 1.19 2002/09/05 04:33:41 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.21 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,13 +24,17 @@
 // output state label.
 
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include "TString.h"
 #include "RooFitCore/RooMappedCategory.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooMapCatEntry.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
 
 ClassImp(RooMappedCategory)
 

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsHiddenReal.cc,v 1.5 2002/09/05 04:33:05 verkerke Exp $
+ *    File: $Id: RooAbsHiddenReal.cc,v 1.7 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +27,10 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsHiddenReal.hh"
 #include "RooFitCore/RooCategory.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
 
 ClassImp(RooAbsHiddenReal)
 ;

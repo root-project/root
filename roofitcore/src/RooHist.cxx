@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.22 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.24 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,9 +24,13 @@
 #include "RooFitCore/RooHistError.hh"
 
 #include "TH1.h"
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 #include <math.h>
+using std::cout;
+using std::endl;
+using std::ostream;
+using std::setw;
 
 ClassImp(RooHist)
 

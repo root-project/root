@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPrintable.cc,v 1.10 2002/09/05 04:33:48 verkerke Exp $
+ *    File: $Id: RooPrintable.cc,v 1.12 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,9 +21,12 @@
 // #include "BaBar/BaBar.hh"
 #include "RooFitCore/RooPrintable.hh"
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 #include "TNamed.h"
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(RooPrintable)
 

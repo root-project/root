@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.cc,v 1.38 2002/09/05 04:33:02 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.40 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,7 +23,7 @@
 // Implementation of RooAbsCategory may be derived, there no interface
 // is provided to modify the contents, nor a public interface to define states.
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include "TString.h"
 #include "TH1.h"
@@ -32,6 +33,10 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooCategory.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
 
 ClassImp(RooAbsCategory) 
 ;

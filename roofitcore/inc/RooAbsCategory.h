@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.rdl,v 1.31 2002/09/05 04:33:02 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.33 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_CATEGORY
 #define ROO_ABS_CATEGORY
 
-#include <iostream.h>
+#include <iostream>
 #include "TNamed.h"
 #include "TObjArray.h"
 #include "THashList.h"
@@ -55,9 +55,9 @@ public:
   Roo1DTable *createTable(const char *label) const ;
 
   // I/O streaming interface
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
-  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual void printToStream(std::ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   virtual Bool_t isIntegrationSafeLValue(const RooArgSet* set) const { return kTRUE ; }
 

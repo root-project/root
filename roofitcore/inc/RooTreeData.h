@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.29 2003/10/06 18:32:59 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.31 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -107,7 +107,7 @@ public:
   // WVE Debug stuff
   void dump() ;
 
-  void printToStream(ostream& os, PrintOption opt, TString indent) const ;
+  void printToStream(std::ostream& os, PrintOption opt, TString indent) const ;
 
   // Cache copy feature is not publicly accessible
   RooTreeData(const char *name, const char *title, RooTreeData *ntuple, 

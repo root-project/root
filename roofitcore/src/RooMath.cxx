@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMath.cc,v 1.13 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooMath.cc,v 1.15 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,7 +23,12 @@
 
 #include "RooFitCore/RooMath.hh"
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::flush;
+using std::ifstream;
+using std::ofstream;
 
 ClassImp(RooMath)
 ;

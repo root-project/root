@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.rdl,v 1.17 2003/01/14 00:07:57 wverkerke Exp $
+ *    File: $Id: RooResolutionModel.rdl,v 1.19 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,7 +44,7 @@ public:
   inline const RooFormulaVar& basis() const { return _basis?*_basis:*_identity ; }
   Double_t getNorm(const RooArgSet* nset) const ;
 
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 protected:
 

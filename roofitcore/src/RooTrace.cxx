@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.cc,v 1.14 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.16 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +20,11 @@
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooAbsArg.hh"
 
-#include <iomanip.h>
+#include <iomanip>
+using std::cout;
+using std::endl;
+using std::ostream;
+using std::setw;
 
 ClassImp(RooTrace)
 ;

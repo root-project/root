@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.rdl,v 1.5 2003/09/10 03:58:06 wverkerke Exp $
+ *    File: $Id: RooMinuit.rdl,v 1.7 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +18,7 @@
 
 #include "TObject.h"
 #include "TStopwatch.h"
-#include <fstream.h>
+#include <fstream>
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -67,7 +67,7 @@ protected:
   void backProp() ;
 
   inline Int_t getNPar() const { return _nPar ; }
-  inline ofstream* logfile() const { return _logfile ; }
+  inline std::ofstream* logfile() const { return _logfile ; }
   inline Double_t& maxFCN() { return _maxFCN ; }
 
   Double_t getPdfParamVal(Int_t index) ;
@@ -93,7 +93,7 @@ private:
   RooAbsReal* _func ;
 
   Double_t    _maxFCN ;  
-  ofstream*   _logfile ;
+  std::ofstream*   _logfile ;
   Bool_t      _verbose ;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;

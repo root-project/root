@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.23 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.25 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,7 +26,7 @@
 //
 // No references to the fitted PDF and dataset are stored
 
-#include <iomanip.h>
+#include <iomanip>
 #include "TMinuit.h"
 #include "TMarker.h"
 #include "TLine.h"
@@ -39,6 +40,10 @@
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooEllipse.hh"
 #include "RooFitCore/RooRandom.hh"
+using std::cout;
+using std::endl;
+using std::ostream;
+using std::setw;
 
 ClassImp(RooFitResult) 
 ;

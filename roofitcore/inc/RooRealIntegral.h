@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.rdl,v 1.37 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.39 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,7 +42,7 @@ public:
 
   Bool_t isValid() const { return _valid; }
 
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
+  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
 protected:
 

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormManager.cc,v 1.5 2002/09/30 00:57:29 verkerke Exp $
+ *    File: $Id: RooNormManager.cc,v 1.7 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +28,8 @@
 // 
 
 #include "RooFitCore/RooNormManager.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooNormManager)
   ;

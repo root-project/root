@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.7 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.9 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_GOODNESS_OF_FIT
 #define ROO_ABS_GOODNESS_OF_FIT
 
-#include <iostream.h>
+#include <iostream>
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooSetProxy.hh"
 
@@ -48,7 +48,7 @@ public:
 
 protected:
 
-  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual Double_t evaluate() const ;
@@ -89,7 +89,7 @@ private:
 
   // Parallel mode data
   Int_t          _nCPU ;
-  pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond ends
+  pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond std::ends
 
   ClassDef(RooAbsGoodnessOfFit,1) // Abstract real-valued variable
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.rdl,v 1.11 2002/09/05 04:33:11 verkerke Exp $
+ *    File: $Id: RooAcceptReject.rdl,v 1.13 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ public:
   const RooArgSet *generateEvent(UInt_t remaining);
 
   // ascii printing interface
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
+  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const ;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgList.rdl,v 1.8 2002/09/05 04:33:13 verkerke Exp $
+ *    File: $Id: RooArgList.rdl,v 1.10 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -78,8 +78,8 @@ public:
   inline RooAbsArg* at(Int_t idx) const { return (RooAbsArg*) _list.At(idx) ; }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) ;  
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) ;  
 
   RooAbsArg& operator[](Int_t idx) const ; 
 

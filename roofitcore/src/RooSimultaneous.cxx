@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.51 2004/03/19 06:09:47 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.53 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,6 +42,8 @@
 #include "RooFitCore/RooSimGenContext.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooCmdConfig.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooSimultaneous)
 ;

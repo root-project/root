@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphNode.rdl,v 1.5 2002/09/09 21:43:34 verkerke Exp $
+ *    File: $Id: RooGraphNode.rdl,v 1.7 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #ifndef ROO_GRAPH_NODE
 #define ROO_GRAPH_NODE
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "TString.h"
 #include "TObject.h"
 #include "TEllipse.h"
@@ -44,8 +44,8 @@ public:
   void SetSize(double w, double l);
   void SetText(TString text);
   void print() const;
-  void read(ifstream & file);
-  void ReadPDF(ifstream & file);
+  void read(std::ifstream & file);
+  void ReadPDF(std::ifstream & file);
   double GetX1() const { return fX1; }
   double GetY1() const { return fY1; }
   double GetRadius() const { return fR1; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlotable.rdl,v 1.9 2002/09/05 04:33:48 verkerke Exp $
+ *    File: $Id: RooPlotable.rdl,v 1.11 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,7 +46,7 @@ public:
   virtual Double_t getFitRangeNEvt() const = 0;
   virtual Double_t getFitRangeBinW() const = 0;
 
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
   TObject *crossCast();
 protected:
   TString _yAxisLabel;

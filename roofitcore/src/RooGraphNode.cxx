@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphNode.cc,v 1.8 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooGraphNode.cc,v 1.10 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,12 +23,17 @@
 #include "RooFitCore/RooGraphSpring.hh"
 #include "TStyle.h"
 
-#include <iostream.h>
-#include <fstream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <fstream>
+#include <iomanip>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+using std::cout;
+using std::endl;
+using std::fstream;
+using std::ifstream;
+using std::ios;
 
 ///////////////////////////////////////////////////////////////////////////////
 //RooGraphNode:                                                              //

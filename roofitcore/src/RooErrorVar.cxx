@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.cc,v 1.6 2002/09/05 04:33:25 verkerke Exp $
+ *    File: $Id: RooErrorVar.cc,v 1.8 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,6 +26,10 @@
 #include "RooFitCore/RooErrorVar.hh"
 #include "RooFitCore/RooAbsBinning.hh"
 #include "RooFitCore/RooStreamParser.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
 
 ClassImp(RooErrorVar)
 ;

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProduct.cc,v 1.1 2003/04/28 20:42:41 wverkerke Exp $
+ *    File: $Id: RooProduct.cc,v 1.3 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,12 +22,14 @@
 // all integrals of the product are handled numerically
 
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitCore/RooProduct.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooErrorHandler.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooProduct)
 ;

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.58 2004/04/02 23:31:55 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.60 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,9 +19,9 @@
 // RooTreeData is the abstract base class for data collection that
 // use a TTree as internal storage mechanism
 
-#include <iostream.h>
-#include <iomanip.h>
-#include <fstream.h>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
 #include <stdlib.h>
 #include <math.h>
 
@@ -55,6 +56,10 @@
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooAbsBinning.hh" 
 #include "RooFitCore/RooCmdConfig.hh" 
+using std::cout;
+using std::endl;
+using std::fstream;
+using std::ostream;
 
 ClassImp(RooTreeData)
 ;

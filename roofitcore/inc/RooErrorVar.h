@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.rdl,v 1.6 2002/09/05 04:33:26 verkerke Exp $
+ *    File: $Id: RooErrorVar.rdl,v 1.8 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ERROR_VAR
 #define ROO_ERROR_VAR
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include <float.h>
 #include "TString.h"
@@ -50,8 +50,8 @@ public:
 //   virtual Bool_t isDerived() const { return kFALSE ; }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   // Set/get finite fit range limits
   void setFitMin(Double_t value) ;

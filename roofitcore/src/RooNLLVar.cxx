@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.cc,v 1.8 2004/04/02 23:31:55 wverkerke Exp $
+ *    File: $Id: RooNLLVar.cc,v 1.10 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,6 +26,8 @@
 #include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooAbsPdf.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooNLLVar)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvCoefVar.rdl,v 1.3 2002/09/05 04:33:19 verkerke Exp $
+ *    File: $Id: RooConvCoefVar.rdl,v 1.5 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_CONV_COEF_VAR
 #define ROO_CONV_COEF_VAR
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include <float.h>
 #include "TString.h"

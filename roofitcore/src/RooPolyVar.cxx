@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPolyVar.cc,v 1.3 2002/09/05 04:33:48 verkerke Exp $
+ *    File: $Id: RooPolyVar.cc,v 1.5 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,13 +17,15 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitCore/RooPolyVar.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooArgList.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooPolyVar)
 ;

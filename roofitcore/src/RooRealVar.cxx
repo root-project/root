@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.44 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.46 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,12 +25,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <iomanip.h>
+#include <iomanip>
 #include "TObjString.h"
 #include "TTree.h"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooErrorVar.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
+using std::setw;
 
 ClassImp(RooRealVar)
 ;

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRefCountList.cc,v 1.3 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooRefCountList.cc,v 1.5 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,7 +23,7 @@
 
 #include "RooFitCore/RooRefCountList.hh"
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 
 ClassImp(RooRefCountList)

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCustomizer.cc,v 1.14 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.16 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -111,6 +112,9 @@
 #include "RooFitCore/RooArgList.hh"
 
 #include "RooFitCore/RooCustomizer.hh"
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(RooCustomizer) 
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooComplex.rdl,v 1.7 2003/09/10 03:58:06 wverkerke Exp $
+ *    File: $Id: RooComplex.rdl,v 1.9 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +18,7 @@
 
 #include <math.h>
 #include "Rtypes.h"
-#include <iostream.h>
+#include <iostream>
 
 // This is a bare-bones complex class adapted from the CINT complex.h header,
 // and introduced to support the complex error function in RooMath. The main
@@ -97,6 +97,6 @@ private:
 };
 
 // output formatting
-ostream& operator<<(ostream& os, const RooComplex& z);
+std::ostream& operator<<(std::ostream& os, const RooComplex& z);
 
 #endif

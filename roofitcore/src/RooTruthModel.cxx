@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTruthModel.cc,v 1.20 2003/09/10 03:58:06 wverkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.22 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,7 +22,7 @@
 // as a RooFormulaVar.  The 6 basis functions used in B mixing and decay and 2 basis
 // functions used in D mixing have been hand coded for speed.
 
-#include <iostream.h>
+#include <iostream>
 #include "RooFitCore/RooTruthModel.hh"
 
 ClassImp(RooTruthModel) 

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.36 2004/03/31 03:51:42 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.38 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,10 +38,14 @@
 #include "RooFitCore/RooRealBinding.hh"
 #include "RooFitCore/RooScaledFunc.hh"
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 #include <math.h>
 #include <assert.h>
+using std::cout;
+using std::endl;
+using std::ostream;
+using std::setw;
 
 ClassImp(RooCurve)
 

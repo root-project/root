@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.cc,v 1.18 2002/09/05 04:34:00 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.20 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +24,7 @@
 // RooSuperCategory state are automatically defined and updated whenever an input
 // category modifies its list of states
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include "TString.h"
@@ -32,6 +33,10 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooMultiCatIter.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
 
 ClassImp(RooSuperCategory)
 ;

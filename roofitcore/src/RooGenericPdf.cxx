@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenericPdf.cc,v 1.20 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.22 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,6 +34,10 @@
 #include "RooFitCore/RooGenericPdf.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooArgList.hh"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
 
 ClassImp(RooGenericPdf)
 

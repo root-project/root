@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.cc,v 1.27 2003/05/14 02:58:39 wverkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.29 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,6 +32,10 @@
 #include "TIterator.h"
 
 #include <assert.h>
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(RooAcceptReject)
   ;

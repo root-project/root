@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdArg.cc,v 1.3 2002/09/05 04:33:17 verkerke Exp $
+ *    File: $Id: RooCmdArg.cc,v 1.5 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -15,7 +16,7 @@
  *****************************************************************************/
 
 #include "RooFitCore/RooCmdArg.hh"
-#include <iostream.h>
+#include <iostream>
 
 ClassImp(RooCmdArg)
   ;

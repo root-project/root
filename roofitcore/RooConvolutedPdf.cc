@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvolutedPdf.cc,v 1.38 2004/03/19 06:09:46 wverkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.40 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,7 +56,7 @@
 //  valid for all coefficients.
 
 
-#include <iostream.h>
+#include <iostream>
 #include "RooFitCore/RooConvolutedPdf.hh"
 #include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -64,6 +65,9 @@
 #include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooTruthModel.hh"
 #include "RooFitCore/RooConvCoefVar.hh"
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(RooConvolutedPdf) 
 ;

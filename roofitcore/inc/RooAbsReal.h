@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.62 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.64 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -125,11 +125,11 @@ public:
 		     Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0) const;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;

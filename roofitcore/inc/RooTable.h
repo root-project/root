@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTable.rdl,v 1.9 2002/09/05 04:34:01 verkerke Exp $
+ *    File: $Id: RooTable.rdl,v 1.11 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_TABLE
 #define ROO_TABLE
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
@@ -35,7 +35,7 @@ public:
   virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) = 0 ;
 
   // Printing interface (human readable) WVE change to RooPrintable interface
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
+  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));

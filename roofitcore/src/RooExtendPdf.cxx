@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.cc,v 1.10 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.12 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,6 +41,8 @@
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFormulaVar.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooExtendPdf)
 ;

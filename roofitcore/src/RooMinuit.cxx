@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.10 2003/10/16 23:26:32 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.12 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,8 +36,8 @@
 // Various methods are available to control verbosity, profiling,
 // automatic PDF optimization.
 
-#include <fstream.h>
-#include <iomanip.h>
+#include <fstream>
+#include <iomanip>
 #include "TH1.h"
 #include "TH2.h"
 #include "TMarker.h"
@@ -53,6 +54,12 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooAbsPdf.hh"
+using std::cout;
+using std::endl;
+using std::flush;
+using std::fstream;
+using std::ofstream;
+using std::setprecision;
 
 ClassImp(RooMinuit) 
 ;

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetProxy.cc,v 1.20 2002/09/05 04:33:56 verkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.22 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,6 +30,8 @@
 #include "RooFitCore/RooSetProxy.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsArg.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooSetProxy)
 ;

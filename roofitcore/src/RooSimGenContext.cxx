@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimGenContext.cc,v 1.14 2004/04/01 00:22:33 wverkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.16 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +27,8 @@
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooRandom.hh"
+using std::cout;
+using std::endl;
 
 
 ClassImp(RooSimGenContext)

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBrentRootFinder.cc,v 1.6 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooBrentRootFinder.cc,v 1.8 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,7 +23,9 @@
 #include "RooFitCore/RooBrentRootFinder.hh"
 #include "RooFitCore/RooAbsFunc.hh"
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
+using std::cout;
+using std::endl;
 
 ClassImp(RooBrentRootFinder)
 ;

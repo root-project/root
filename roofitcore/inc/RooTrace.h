@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.rdl,v 1.10 2002/09/05 04:34:02 verkerke Exp $
+ *    File: $Id: RooTrace.rdl,v 1.12 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_TRACE
 #define ROO_TRACE
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "RooFitCore/RooLinkedList.hh"
 
@@ -29,7 +29,7 @@ public:
   inline static void active(Bool_t flag) { _active = flag ; }
   inline static void verbose(Bool_t flag) { _verbose = flag ; }
   
-  static void dump(ostream& os=cout, Bool_t sinceMarked=kFALSE) ;
+  static void dump(std::ostream& os=std::cout, Bool_t sinceMarked=kFALSE) ;
   static void mark() ;
 
 protected:

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.100 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.102 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,7 +43,7 @@
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooIntegratorConfig.hh"
 
-#include <iostream.h>
+#include <iostream>
 
 #include "TObjString.h"
 #include "TTree.h"
@@ -52,6 +53,10 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TAttLine.h"
+using std::cout;
+using std::endl;
+using std::istream;
+using std::ostream;
  
 ClassImp(RooAbsReal)
 ;

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.cc,v 1.11 2004/06/22 05:09:51 wverkerke Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.13 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +25,8 @@
 #include "RooFitCore/RooLinkedListIter.hh"
 #include "RooFitCore/RooHashTable.hh"
 #include "RooFitCore/RooAbsArg.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooLinkedList)
 ;

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimPdfBuilder.cc,v 1.25 2004/04/05 22:44:13 wverkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.27 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -451,6 +452,8 @@
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooDataHist.hh"
 #include "RooFitCore/RooGenericPdf.hh"
+using std::cout;
+using std::endl;
 
 
 ClassImp(RooSimPdfBuilder)

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.11 2004/04/01 00:22:33 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.13 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +25,8 @@
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooRealVar.hh"
+using std::cout;
+using std::ostream;
 
 ClassImp(RooProdGenContext)
 ;

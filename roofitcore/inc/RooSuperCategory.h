@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.rdl,v 1.10 2002/09/05 04:34:00 verkerke Exp $
+ *    File: $Id: RooSuperCategory.rdl,v 1.12 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,11 +36,11 @@ public:
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(std::ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   TIterator* MakeIterator() const ;
   const RooArgSet& inputCatList() const { return _catSet ; }

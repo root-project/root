@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.cc,v 1.5 2004/03/19 06:09:46 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.cc,v 1.7 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +28,7 @@
 // analytically. Remaining non-factorizing observables are integrated numerically.
 
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitCore/RooGenProdProj.hh"

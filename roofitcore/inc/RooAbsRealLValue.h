@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.22 2002/09/05 04:33:10 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.24 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_REAL_LVALUE
 #define ROO_ABS_REAL_LVALUE
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include <float.h>
 #include "TString.h"
@@ -71,11 +71,11 @@ public:
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   
   // Build 1-dimensional plots
   RooPlot *frame(Double_t lo, Double_t hi, Int_t nbins) const;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategoryProxy.rdl,v 1.12 2002/09/05 04:33:17 verkerke Exp $
+ *    File: $Id: RooCategoryProxy.rdl,v 1.14 2004/08/09 00:00:53 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ protected:
     // Assert that the held arg is an LValue
     RooAbsCategoryLValue* lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
     if (!lvptr) {
-      cout << "RooCategoryProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << endl ;
+      std::cout << "RooCategoryProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << std::endl ;
       assert(0) ;
     }
     return lvptr ;

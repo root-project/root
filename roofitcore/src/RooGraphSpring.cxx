@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphSpring.cc,v 1.6 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooGraphSpring.cc,v 1.8 2004/08/09 00:00:54 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,9 +19,13 @@
 #include "TList.h"
 #include "RooFitCore/RooGraphEdge.hh"
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <math.h>
+using std::cout;
+using std::endl;
+using std::fstream;
+using std::ifstream;
 
 ///////////////////////////////////////////////////////////////////////////////
 //RooGraphSpring:                                                            //

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.83 2004/06/17 22:45:44 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.85 2004/08/09 00:00:52 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,8 +44,14 @@
 #include "RooFitCore/RooStringVar.hh" 
 
 #include <string.h>
-#include <iomanip.h>
-#include <fstream.h>
+#include <iomanip>
+#include <fstream>
+using std::cout;
+using std::endl;
+using std::fstream;
+using std::istream;
+using std::ofstream;
+using std::ostream;
 
 ClassImp(RooAbsArg)
 ;

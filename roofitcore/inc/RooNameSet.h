@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNameSet.rdl,v 1.9 2002/09/05 04:33:45 verkerke Exp $
+ *    File: $Id: RooNameSet.rdl,v 1.11 2004/08/09 00:00:55 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,7 +38,7 @@ public:
   Bool_t operator==(const RooNameSet& other) ;  
   RooNameSet& operator=(const RooNameSet&) ;
 
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

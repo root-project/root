@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.38 2002/09/05 04:33:55 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.40 2004/08/09 00:00:56 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_REAL_VAR
 #define ROO_REAL_VAR
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include <float.h>
 #include "TString.h"
@@ -72,14 +72,14 @@ public:
   inline void removeFitRange() { _binning->setRange(-RooNumber::infinity,RooNumber::infinity) ; }
  
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   // We implement a fundamental type of AbsArg that can be stored in a dataset
   inline virtual Bool_t isFundamental() const { return kTRUE; }
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   TString* format(Int_t sigDigits, const char *options) const ;
 
   static void printScientific(Bool_t flag=kFALSE) { _printScientific = flag ; }
