@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -554,7 +554,10 @@ void TMatrixFBase::Print(Option_t *) const
 {
   // Print the matrix as a table of elements (zeros are printed as dots).
 
-  Assert(IsValid());
+  if (!IsValid()) {
+     Error("Print","Matrix is invalid");
+     return;
+  }
 
   printf("\nMatrix %dx%d is as follows",fNrows,fNcols);
 
