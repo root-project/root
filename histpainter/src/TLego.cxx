@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.2 2000/06/13 09:52:04 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.3 2000/11/21 12:30:39 rdm Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2016,23 +2016,17 @@ void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t *ab, Double_t *
     ab[8] = ab[4] + ywid*Hparam.barwidth;
 
     if (Hoption.Logx) {
-	ab[3]  = TMath::Log10(ab[3]);
-	ab[5]  = TMath::Log10(ab[5]);
-	xval1l = TMath::Log10(Hparam.xmin);
-	xval2l = TMath::Log10(Hparam.xmax);
-    } else {
+       ab[3]  = TMath::Log10(ab[3]);
+       ab[5]  = TMath::Log10(ab[5]);
+    }
 	xval1l = Hparam.xmin;
 	xval2l = Hparam.xmax;
-    }
     if (Hoption.Logy) {
-	ab[4]  = TMath::Log10(ab[4]);
-	ab[8]  = TMath::Log10(ab[8]);
-	yval1l = TMath::Log10(Hparam.ymin);
-	yval2l = TMath::Log10(Hparam.ymax);
-    } else {
+       ab[4]  = TMath::Log10(ab[4]);
+       ab[8]  = TMath::Log10(ab[8]);
+    }
 	yval1l = Hparam.ymin;
 	yval2l = Hparam.ymax;
-    }
 
 //*-*-       Transform the cell position in the required coordinate system
 
@@ -3485,20 +3479,10 @@ void TLego::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t)
     ixt = ia + Hparam.xfirst - 1;
     iyt = ib + Hparam.yfirst - 1;
 
-    if (Hoption.Logx) {
-	xval1l = TMath::Log10(Hparam.xmin);
-	xval2l = TMath::Log10(Hparam.xmax);
-    } else {
 	xval1l = Hparam.xmin;
 	xval2l = Hparam.xmax;
-    }
-    if (Hoption.Logy) {
-	yval1l = TMath::Log10(Hparam.ymin);
-	yval2l = TMath::Log10(Hparam.ymax);
-    } else {
 	yval1l = Hparam.ymin;
 	yval2l = Hparam.ymax;
-    }
 
     for (i = 1; i <= 4; ++i) {
 	ixa = ixadd[i - 1];

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.19 2000/10/25 14:33:26 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.17 2000/09/13 12:04:15 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2207,6 +2207,9 @@ void THistPainter::PaintHist()
          if (Hoption.Logy) yb = TMath::Log10(TMath::Max(c1,.1*logymin));
          else              yb = c1;
       }
+      yb = TMath::Max(yb, ymin);
+      yb = TMath::Min(yb, ymax);
+
       if (Hoption.Plus) {
 //*-*         compute y1, y2
          y1 = keepy[j-first];
@@ -2657,24 +2660,10 @@ void THistPainter::PaintLego()
       fXbuf[2] = -1/TMath::Tan(dangle);
       fYbuf[2] =  1/TMath::Tan(dangle);
    } else {
-      if (Hoption.Logx) {
-         if (xlab1 > 0) fXbuf[0] = TMath::Log10(xlab1);
-         else           fXbuf[0] = 0;
-         if (xlab2 > 0) fYbuf[0] = TMath::Log10(xlab2);
-         else           fYbuf[0] = 0;
-      } else {
-         fXbuf[0] = xlab1;
-         fYbuf[0] = xlab2;
-      }
-      if (Hoption.Logy) {
-         if (ylab1 > 0) fXbuf[1] = TMath::Log10(ylab1);
-         else           fXbuf[1] = 0;
-         if (ylab2 > 0) fYbuf[1] = TMath::Log10(ylab2);
-         else           fYbuf[1] = 0;
-      } else {
-         fXbuf[1] = ylab1;
-         fYbuf[1] = ylab2;
-      }
+      fXbuf[0] = xlab1;
+      fYbuf[0] = xlab2;
+      fXbuf[1] = ylab1;
+      fYbuf[1] = ylab2;
       fXbuf[2] = z1c;
       fYbuf[2] = z2c;
       raster  = 0;
@@ -2891,10 +2880,10 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 
 //*-*-             Initialize the axis options
 
-    if (x1[0] > x2[0]) strcpy(chopax, "SDHV=+");
-    else               strcpy(chopax, "SDHV=-");
-    if (y1[0] > y2[0]) strcpy(chopay, "SDHV=+");
-    else               strcpy(chopay, "SDHV=-");
+    if (x1[0] > x2[0]) strcpy(chopax, "SDH=+");
+    else               strcpy(chopax, "SDH=-");
+    if (y1[0] > y2[0]) strcpy(chopay, "SDH=+");
+    else               strcpy(chopay, "SDH=-");
     strcpy(chopaz, "SDH+=");
 
 //*-*-             Option LOG is required ?
@@ -3583,24 +3572,10 @@ void THistPainter::PaintSurface()
       fXbuf[2] = -1/TMath::Tan(dangle);
       fYbuf[2] =  1/TMath::Tan(dangle);
    } else {
-      if (Hoption.Logx) {
-         if (xlab1 > 0) fXbuf[0] = TMath::Log10(xlab1);
-         else           fXbuf[0] = 0;
-         if (xlab2 > 0) fYbuf[0] = TMath::Log10(xlab2);
-         else           fYbuf[0] = 0;
-      } else {
-         fXbuf[0] = xlab1;
-         fYbuf[0] = xlab2;
-      }
-      if (Hoption.Logy) {
-         if (ylab1 > 0) fXbuf[1] = TMath::Log10(ylab1);
-         else           fXbuf[1] = 0;
-         if (ylab2 > 0) fYbuf[1] = TMath::Log10(ylab2);
-         else           fYbuf[1] = 0;
-      } else {
-         fXbuf[1] = ylab1;
-         fYbuf[1] = ylab2;
-      }
+      fXbuf[0] = xlab1;
+      fYbuf[0] = xlab2;
+      fXbuf[1] = ylab1;
+      fYbuf[1] = ylab2;
       fXbuf[2] = z1c;
       fYbuf[2] = z2c;
    }
@@ -3975,8 +3950,9 @@ Int_t THistPainter::TableInit()
 
 //*-*-   if log scale in X, replace xmin,max by the log
    if (Hoption.Logx) {
+//   find the first edge of a bin that is > 0
       if (Hparam.xlowedge <=0 ) {
-         Hparam.xlowedge = 0.1*Hparam.xbinsize;
+         Hparam.xlowedge = fXaxis->GetBinUpEdge(fXaxis->FindFixBin(0.01*Hparam.xbinsize));
          Hparam.xmin  = Hparam.xlowedge;
       }
       if (Hparam.xmin <=0 || Hparam.xmax <=0) {
@@ -3984,7 +3960,9 @@ Int_t THistPainter::TableInit()
          return 0;
       }
       Hparam.xfirst= fXaxis->FindFixBin(Hparam.xmin);
+      if (Hparam.xfirst < first) Hparam.xfirst = first;
       Hparam.xlast = fXaxis->FindFixBin(Hparam.xmax);
+      if (Hparam.xlast > last) Hparam.xlast = last;
       Hparam.xmin  = TMath::Log10(Hparam.xmin);
       Hparam.xmax  = TMath::Log10(Hparam.xmax);
    }
@@ -4003,7 +3981,7 @@ Int_t THistPainter::TableInit()
 //*-*-   if log scale in Y, replace ymin,max by the log
    if (Hoption.Logy) {
       if (Hparam.ylowedge <=0 ) {
-         Hparam.ylowedge = 0.1*Hparam.ybinsize;
+         Hparam.ylowedge = fYaxis->GetBinUpEdge(fYaxis->FindFixBin(0.01*Hparam.ybinsize));
          Hparam.ymin  = Hparam.ylowedge;
       }
       if (Hparam.ymin <=0 || Hparam.ymax <=0) {
@@ -4011,7 +3989,9 @@ Int_t THistPainter::TableInit()
          return 0;
       }
       Hparam.yfirst= fYaxis->FindFixBin(Hparam.ymin);
+      if (Hparam.yfirst < first) Hparam.yfirst = first;
       Hparam.ylast = fYaxis->FindFixBin(Hparam.ymax);
+      if (Hparam.ylast > last) Hparam.ylast = last;
       Hparam.ymin  = TMath::Log10(Hparam.ymin);
       Hparam.ymax  = TMath::Log10(Hparam.ymax);
    }
@@ -4121,4 +4101,3 @@ LZMIN:
 
    return 1;
 }
-
