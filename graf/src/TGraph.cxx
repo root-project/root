@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.80 2002/08/15 14:18:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.81 2002/09/06 16:32:56 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1010,6 +1010,10 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    xmax    = fX[fNpoints-1];
    ymin    = fY[0];
    ymax    = fY[fNpoints-1];
+   Double_t err0 = GetErrorX(0);
+   Double_t errn = GetErrorX(fNpoints-1);
+   if (err0 > 0) xmin -= 2*err0;
+   if (errn > 0) xmax += 2*errn;
    for (i=0;i<fNpoints;i++) {
       if (fX[i] < xmin) xmin = fX[i];
       if (fX[i] > xmax) xmax = fX[i];
