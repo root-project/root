@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -56,7 +56,7 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
    char branchname[80];
    char branchcount[64];
    SetName(name);
-   if (compress == -1) {
+   if (compress == -1 && gTree->GetDirectory()) {
       TFile *bfile = 0;
       if (gTree->GetDirectory()) bfile = gTree->GetDirectory()->GetFile();
       if (bfile) compress = bfile->GetCompressionLevel();
