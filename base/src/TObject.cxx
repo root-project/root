@@ -1,4 +1,4 @@
-;// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.48 2002/10/31 07:27:34 brun Exp $
+;// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.49 2002/11/24 22:46:20 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1054,11 +1054,28 @@ void TObject::operator delete(void *ptr)
       fgDtorOnly = 0;
 }
 
+//______________________________________________________________________________
+void TObject::operator delete[](void *ptr)
+{
+   if ((Long_t) ptr != fgDtorOnly)
+      TStorage::ObjectDealloc(ptr);
+   else
+      fgDtorOnly = 0;
+}
+
 #ifdef R__PLACEMENTDELETE
 //______________________________________________________________________________
 void TObject::operator delete(void *ptr, void *vp)
 {
    // Only called by placement new when throwing an exception.
+
+   TStorage::ObjectDealloc(ptr, vp);
+}
+
+//______________________________________________________________________________
+void TObject::operator delete[](void *ptr, void *vp)
+{
+   // Only called by placement new[] when throwing an exception.
 
    TStorage::ObjectDealloc(ptr, vp);
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.22 2002/07/09 21:02:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.23 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -151,10 +151,14 @@ public:
 
    //----- operators
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
+   void    *operator new[](size_t sz) { return TStorage::ObjectAlloc(sz); }
    void    *operator new(size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
+   void    *operator new[](size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
    void     operator delete(void *ptr);
+   void     operator delete[](void *ptr);
 #ifdef R__PLACEMENTDELETE
    void     operator delete(void *ptr, void *vp);
+   void     operator delete[](void *ptr, void *vp);
 #endif
 
    //----- bit manipulation
