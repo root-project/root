@@ -11,7 +11,7 @@ else
 OPT           = -O2
 LDOPT         = -pdb:none
 #LDOPT         = -opt:ref -pdb:none
-F77OPT        = -optimize:0 -nopdbfile
+F77OPT        = -optimize:0 -nopdbfile -recursive
 NOOPT         =
 endif
 
@@ -52,7 +52,7 @@ THREAD        =
 
 # Fortran:
 F77           = build/win/f77.sh
-F77FLAGS      = -nologo -4Nportlib -G5 -MD
+F77FLAGS      = -nologo -4Nportlib -G5 -MD -recursive
 F77LD         = $(F77)
 F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
 F77LIBS       =
