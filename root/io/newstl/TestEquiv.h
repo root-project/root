@@ -18,24 +18,8 @@ template <class T> bool IsEquiv(const std::string &test, T* orig, T* copy) {
    return IsEquiv(test, *orig, *copy);
 }
 
-bool IsEquiv(const std::string &, float orig, float copy) {
-   float epsilon = 1e-6;
-   float diff = orig-copy;
-   if (copy < epsilon ) return  TMath::Abs( diff ) < epsilon;
-   else return TMath::Abs( diff/copy ) < epsilon;
-}
-
-bool IsEquiv(const std::string &, double orig, double copy) {
-   double epsilon = 1e-14;
-   double diff = orig-copy;
-//    std::cerr << "epsilon = " << epsilon 
-//              << " diff = " << diff 
-//              << " div  = " << diff/copy
-//              << " abs = " << TMath::Abs( diff/copy )
-//              << " bool = " << (TMath::Abs( diff/copy ) < epsilon) << std::endl;
-   if (copy < epsilon ) return  TMath::Abs( diff ) < epsilon;
-   else return TMath::Abs( diff/copy ) < epsilon;
-}
+bool IsEquiv(const std::string &, float orig, float copy) { return IsEquiv(orig,copy); }
+bool IsEquiv(const std::string &, double orig, double copy) { return IsEquiv(orig,copy); }
 
 bool IsEquiv(const std::string &, const std::string& orig, const std::string& copy) {
    return orig==copy;

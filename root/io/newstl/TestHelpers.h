@@ -3,41 +3,63 @@
 
 #include "TObject.h"
 
+bool IsEquiv(float orig, float copy) {
+   float epsilon = 1e-6;
+   float diff = orig-copy;
+   if (copy < epsilon ) return  TMath::Abs( diff ) < epsilon;
+   else return TMath::Abs( diff/copy ) < epsilon;
+}
+
+bool IsEquiv(double orig, double copy) {
+   double epsilon = 1e-14;
+   double diff = orig-copy;
+//    std::cerr << "epsilon = " << epsilon 
+//              << " diff = " << diff 
+//              << " div  = " << diff/copy
+//              << " abs = " << TMath::Abs( diff/copy )
+//              << " bool = " << (TMath::Abs( diff/copy ) < epsilon) << std::endl;
+   if (copy < epsilon ) return  TMath::Abs( diff ) < epsilon;
+   else return TMath::Abs( diff/copy ) < epsilon;
+}
+
 class nonvirtHelper {
 public:
    unsigned int val;
-   nonvirtHelper() : val(0) {}
-   explicit nonvirtHelper(int v) : val(v) {}
+   double dval;
+   nonvirtHelper() : val(0),dval(0) {}
+   explicit nonvirtHelper(int v,double d) : val(v),dval(d) {}
    ~nonvirtHelper() {};
 
-   bool IsEquiv(const nonvirtHelper &rhs) const { return  val==rhs.val; }
+   bool IsEquiv(const nonvirtHelper &rhs) const { return (val==rhs.val) && ::IsEquiv(dval,rhs.dval); }
    bool operator<(const nonvirtHelper &rhs) const { return val<rhs.val; }
 };
 
 class Helper {
 public:
    unsigned int val;
-   Helper() : val(0) {}
-   explicit Helper(int v) : val(v) {}
+   double dval;   
+   Helper() : val(0),dval(0) {}
+   explicit Helper(int v,double d) : val(v),dval(d) {}
    virtual ~Helper() {};
    //bool operator==(const Helper &rhs) const { return val==rhs.val; }
    //bool operator!=(const Helper &rhs) const { return !(*this==rhs); }
-   bool IsEquiv(const Helper &rhs) const { return  val==rhs.val; }
+   bool IsEquiv(const Helper &rhs) const { return  val==rhs.val && ::IsEquiv(dval,rhs.dval); }
    bool operator<(const Helper &rhs) const { return val<rhs.val; }
 };
 
 class THelper : public Helper, public TObject {
 public:
    THelper() {};
-   explicit THelper(int v) : Helper(v) {};
+   explicit THelper(int v,double d) : Helper(v,d) {};
    ClassDef(THelper,1);
 };
 
 template <class T> class GHelper {
 public:
    T val;
-   GHelper() : val(0) {}
-   explicit GHelper(int v) : val(v) {}
+   bool defaultConstructed;
+   GHelper() : val(0),defaultConstructed(true) {}
+   explicit GHelper(int v) : val(v),defaultConstructed(false) {}
 };
 
 enum EHelper { kZero = 0, kOne, kTwo,

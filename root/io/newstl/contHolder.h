@@ -73,7 +73,7 @@ public:
 #if defined(R__CANNOT_SPLIT_STL_CONTAINER)
    std::TEST_CONT<Helper >   fObject;  //||
 #else
-   std::TEST_CONT<Helper >   fObject;  //||
+   std::TEST_CONT<Helper >   fObject;  //
 #endif
    std::TEST_CONT<Helper >  *fObjectPtr;
 
