@@ -535,10 +535,8 @@ install: all
 	   echo "Installing misc docs in  $(DESTDIR)$(DOCDIR)" ; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
-	   $(INSTALLDATA) README/README         $(DESTDIR)$(DOCDIR); \
-	   $(INSTALLDATA) README/README.PROOF   $(DESTDIR)$(DOCDIR); \
-	   $(INSTALLDATA) README/ChangeLog-2-24 $(DESTDIR)$(DOCDIR); \
-	   $(INSTALLDATA) README/CREDITS        $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) README/*              $(DESTDIR)$(DOCDIR); \
+	   rm -rf $(DESTDIR)$(DOCDIR)/CVS; \
 	   echo "Installing tutorials in $(DESTDIR)$(TUTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TUTDIR); \
 	   $(INSTALLDATA) tutorials/*           $(DESTDIR)$(TUTDIR); \
