@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.2 2000/06/13 12:28:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.3 2000/06/22 06:20:28 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -83,6 +83,7 @@ Double_t         GetPsi() {return fPsi;}
 Double_t        *GetRmax() {return fRmax;}
 Double_t        *GetRmin() {return fRmin;}
 TSeqCollection  *GetOutline() {return fOutline; }
+Double_t        *GetTback() {return fTback;}
 Double_t        *GetTN() {return fTN;}
 Double_t        *GetTnorm() {return fTnorm;}
   Int_t          GetSystem() {return fSystem;}
