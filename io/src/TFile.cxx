@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.93 2003/06/12 06:46:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.94 2003/06/26 13:53:21 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -158,7 +158,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //            34->37 fCompress   = Zip compression level
 //            38->41 fSeekInfo   = Pointer to TStreamerInfo record
 //            42->45 fNbytesInfo = Number of bytes in TStreamerInfo record
-//            46->62 fUUID       = Universal Unique ID
+//            46->63 fUUID       = Universal Unique ID
 //Begin_Html
 /*
 <img src="gif/file_layout.gif">
