@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.130 2003/02/27 11:42:17 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.131 2003/02/28 20:24:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -470,16 +470,18 @@ TH1::~TH1()
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
    if (fBuffer)   {delete [] fBuffer;   fBuffer   = 0;}
    if (fFunctions) {
-      fFunctions->SetBit(kInvalidObject);
-      fFunctions->Delete();
-      delete fFunctions;
+      TList *functions = fFunctions;
+      fFunctions = 0;
+      delete functions->FindObject("stats"); // to avoid recursive delete
+      functions->SetBit(kInvalidObject);
+      functions->Delete();
+      delete functions;
    }
    if (fDirectory) {
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
          fDirectory->GetList()->Remove(this);
    }
    fDirectory = 0;
-   fFunctions = 0;
    delete fPainter;
 }
 
@@ -3797,6 +3799,14 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
       }
    }
    delete hold;
+}
+
+//______________________________________________________________________________
+void TH1::RecursiveRemove(TObject *obj)
+{
+// Recursively remove object from the list of functions
+
+   if (fFunctions) fFunctions->RecursiveRemove(obj);
 }
 
 //______________________________________________________________________________
