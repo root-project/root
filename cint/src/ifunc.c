@@ -18,9 +18,9 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
-#include "common.h"
-
 #define G__OLDIMPLEMENTATION1928
+
+#include "common.h"
 
 #ifndef G__OLDIMPLEMENTATION1103
 extern int G__const_noerror;
