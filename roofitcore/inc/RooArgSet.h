@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.12 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.13 2001/05/14 22:54:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -76,7 +76,7 @@ public:
 
   // List search methods
   RooAbsArg *find(const char *name) const ;
-  Bool_t contains(RooAbsArg& var) const { return kTRUE ; }
+  Bool_t contains(const RooAbsArg& var) const { return (0 == find(var.GetName())) ? kFALSE:kTRUE; }
   RooArgSet* selectByAttrib(const char* name, Bool_t value) ;
 
   // I/O streaming interface (machine readable)

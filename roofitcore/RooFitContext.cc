@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.7 2001/05/14 22:56:53 david Exp $
+ *    File: $Id: RooFitContext.cc,v 1.8 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,7 +41,8 @@ ClassImp(RooFitContext)
 static TVirtualFitter *_theFitter(0);
 
 
-RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) 
+RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) :
+  TNamed(*pdf)
 {
   // Constructor
 
@@ -89,7 +90,7 @@ RooFitContext::~RooFitContext()
 void RooFitContext::printToStream(ostream &os, PrintOption opt, TString indent) const
 {
   // Print contents 
-  os << indent << "DataSet clone:" << endl ;
+  os << "DataSet clone:" << endl ;
   _dataClone->printToStream(os,opt,indent) ;
 
   os << indent << "PDF clone:" << endl ;

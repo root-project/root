@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.10 2001/05/14 22:56:53 david Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.11 2001/05/16 07:41:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,6 +19,7 @@
 class RooDataSet;
 class RooArgSet ;
 class RooRealProxy ;
+class RooGenContext ;
 class TPaveText;
 class TH1F;
 class TH2F;
@@ -29,14 +30,15 @@ public:
 
   // Constructors, assignment etc
   inline RooAbsPdf() { }
-  RooAbsPdf(const char *name, const char *title, const char *unit= "") ;
-  RooAbsPdf(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
+  RooAbsPdf(const char *name, const char *title) ;
+  RooAbsPdf(const char *name, const char *title, Double_t minVal, Double_t maxVal) ;
   RooAbsPdf(const RooAbsPdf& other, const char* name=0);
   virtual ~RooAbsPdf();
 
   // Toy MC generation
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype) const;
+  virtual void generateEvent(const RooArgSet &whatVars, Int_t maxTrials);
 
   // Analytical integration support
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
@@ -87,12 +89,11 @@ private:
 
 protected:
 
-  virtual Double_t extendedTerm(UInt_t observedEvents) const ;
+  // support interface for generating toy MC samples
+  virtual Double_t generateEnvelope(const RooArgSet &whatVars);
+  virtual Bool_t applyResolution(const RooArgSet &whatVars);
 
-  // toy MC generator support
-  RooDataSet *initGeneratedDataset(const RooArgSet &vars, RooArgSet *&cloneSet,
-				   RooAbsPdf *&pdfClone) const;
-  void generateEvent(const RooArgSet &whatVars);
+  virtual Double_t extendedTerm(UInt_t observedEvents) const ;
 
   // Analytical integration support
   Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 

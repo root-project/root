@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.24 2001/05/14 05:22:54 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.25 2001/05/14 22:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,6 +45,7 @@ public:
   Bool_t overlaps(const RooAbsArg& testArg) const ;
   inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
   inline TIterator* serverIterator() const { return _serverList.MakeIterator() ; }
+  inline RooAbsArg* findServer(const char *name) const { return (RooAbsArg*)_serverList.FindObject(name); }
   void leafNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
   void branchNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
   void treeNodeServerList(RooArgSet* list, const RooAbsArg* arg=0, 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.9 2001/05/16 07:41:07 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.10 2001/05/17 00:43:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,6 +37,7 @@
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooFitContext.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooGenContext.hh"
 
 ClassImp(RooAbsPdf) 
 ;
@@ -45,20 +46,20 @@ ClassImp(RooAbsPdf)
 Bool_t RooAbsPdf::_verboseEval(kFALSE) ;
 
 
-RooAbsPdf::RooAbsPdf(const char *name, const char *title, const char *unit) : 
-  RooAbsReal(name,title,unit), _norm(0), _lastDataSet(0)
+RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
+  RooAbsReal(name,title), _norm(0), _lastDataSet(0)
 {
-  // Constructor with unit
+  // Constructor with name and title only
   resetErrorCounters() ;
   setTraceCounter(0) ;
 }
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
-				 Double_t plotMin, Double_t plotMax, const char *unit) :
-  RooAbsReal(name,title,plotMin,plotMax,unit), _norm(0), _lastDataSet(0)
+		     Double_t plotMin, Double_t plotMax) :
+  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _lastDataSet(0)
 {
-  // Constructor with plot range and unit
+  // Constructor with name, title, and plot range
   resetErrorCounters() ;
   setTraceCounter(0) ;
 }
@@ -423,31 +424,11 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents= 0) con
   // in case of an error. The caller takes ownership of the returned
   // dataset.
 
-  // Initialize an empty dataset with the specified variables.
-  RooAbsPdf *pdfClone(0);
-  RooArgSet *cloneSet(0);
-  RooDataSet *data= initGeneratedDataset(whatVars, cloneSet, pdfClone);
-  if(0 == data || 0 == cloneSet || 0 == pdfClone) {
-    cout << fName << "::" << ClassName() << ":generate: unable to initialize dataset" << endl;
-    delete cloneSet;
-    return 0;
-  }
-
-  // Calculate the expected number of events if requested
-  if(nEvents <= 0) {
-    nEvents= expectedEvents() + 0.5;
-    if(nEvents <= 0) {
-      cout << fName << "::" << ClassName()
-	   << ":generate: cannot calculate expected number of events" << endl;
-      return 0;
-    }
-  }
-
-  // Loop over events to generate using our clone
-  for(Int_t evt= 0; evt < nEvents; evt++) pdfClone->generateEvent(whatVars);
-
-  delete cloneSet;
-  return data;
+  RooDataSet *generated(0);
+  RooGenContext *context= new RooGenContext(*this, whatVars);
+  if(context->isValid()) generated= context->generate(nEvents);
+  delete context;
+  return generated;
 }
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype) const {
@@ -466,30 +447,49 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   return 0;
 }
 
-RooDataSet *RooAbsPdf::initGeneratedDataset(const RooArgSet &vars, RooArgSet *&cloneSet,
-					    RooAbsPdf *&pdfClone) const {
-  // create a new empty dataset using the specified variables
-  TString name(GetName()),title(GetTitle());
-  name.Append("Data");
-  title.Prepend("Generated From ");
-  RooDataSet *data= new RooDataSet(name.Data(),title.Data(),vars);
+void RooAbsPdf::generateEvent(const RooArgSet &vars, Int_t maxTrials) {
+  // Set the values of the specified subset of our dependents to
+  // generate a new "event" according to our PDF model. Use an accept/reject
+  // algorithm with at most maxTrials trials.
 
-  // Make a deep-copy clone of ourself
-  RooArgSet tmp("PdfBranchNodeList") ;
-  branchNodeServerList(&tmp) ;
-  cloneSet= tmp.snapshot(kFALSE) ;
-
-  // Find our clone in the snapshot list
-  pdfClone = (RooAbsPdf*)cloneSet->FindObject(GetName()) ;
-  
-  // Attach our clone to the new data set
-  pdfClone->attachDataSet(data) ;
-
-  // Reset our clone's error counters
-  pdfClone->resetErrorCounters() ;
-
-  return data;
+  // loop over accept/reject trials
+  Int_t trial;
+  while(trial++ < maxTrials) {
+    // generate an event according to an envelope function
+    Double_t envelopeProb= generateEnvelope(vars);
+    // reject this event?
+    if(envelopeProb > 0 && RooGenContext::uniform() > envelopeProb) continue;
+    // apply resolution smearing
+    applyResolution(vars);
+    // test if the generated event is within the allowed range for each generated variable
+    //if(!vars.areValid()) continue;
+  }
+  if(trial >= maxTrials) {
+    cout << fName << "::" << ClassName() << ":generateEvent: giving up after "
+	 << maxTrials << " trials" << endl;
+  }
 }
 
-void RooAbsPdf::generateEvent(const RooArgSet &vars) {
+Double_t RooAbsPdf::generateEnvelope(const RooArgSet &vars) {
+  // Set the values of the specified variables by sampling them from
+  // an envelope model whose value is always >= our PDF value with
+  // the current settings of our servers that are not in vars. Return
+  // zero if the envelope function is exact, or else return the probability
+  // (target-prob)/(envelope-prob) that the generated point should be
+  // accepted in order to recover the target generator model. The generated
+  // value for real variables does not necessarily need to lie within the
+  // allowed range of each variable in vars, but this will reduce the efficiency
+  // of the generator. The target model is not necessarily the same as our model
+  // since resolution effects can be applied as a separate step using
+  // the applyResolution() method.
+
+  return 0;
+}
+
+Bool_t RooAbsPdf::applyResolution(const RooArgSet &vars) {
+  // Apply any resolution smearing to the specified variables, calculated
+  // using the current settings of our servers that are not in vars. Return
+  // kTRUE if any smearing has been applied, or otherwise kFALSE.
+
+  return kFALSE;
 }

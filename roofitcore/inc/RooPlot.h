@@ -1,13 +1,13 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.9 2001/05/11 00:45:49 david Exp $
+ *    File: $Id: RooPlot.rdl,v 1.10 2001/05/14 22:54:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
  *   30-Nov-2000 DK Created initial version
  *
- * Copyright (C) 2000 Stanford University
+ * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 #ifndef ROO_PLOT
 #define ROO_PLOT

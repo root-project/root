@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.28 2001/05/14 05:22:54 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.29 2001/05/14 22:54:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -95,9 +95,8 @@ RooAbsArg::~RooAbsArg()
 {
   // Destructor notifies its servers that they no longer need to serve us and
   // notifies its clients that they are now in limbo (!)
-  _attribList.Delete() ;
 
-  //Notify all servers that they no longer need to serve us
+  // Notify all servers that they no longer need to serve us
   TIterator* serverIter = _serverList.MakeIterator() ;
   RooAbsArg* server ;
   while (server=(RooAbsArg*)serverIter->Next()) {
@@ -106,18 +105,19 @@ RooAbsArg::~RooAbsArg()
 
   //Notify all client that they are in limbo
   TIterator* clientIter = _clientList.MakeIterator() ;
-  Bool_t fatalError(kFALSE) ;
-  RooAbsArg* client ;
+  RooAbsArg* client(0);
   while (client=(RooAbsArg*)clientIter->Next()) {
-    client->setAttribute("FATAL:ServerDied") ;
+    TString attr("ServerDied:");
+    attr.Append(GetName());
+    client->setAttribute(attr.Data());
+    client->removeServer(*this);
     if (_verboseDirty) {
-      cout << "RooAbsArg::~RooAbsArg(" << GetName() << "): Fatal error: dependent RooAbsArg " 
-	   << client->GetName() << " should have been deleted before" << endl ;
+      cout << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
+	   << client->GetName() << "\" should have been deleted first" << endl ;
     }
-    fatalError=kTRUE ;
   }
 
-  //assert(!fatalError) ;
+  _attribList.Delete() ;
 }
 
 
@@ -198,8 +198,8 @@ void RooAbsArg::removeServer(RooAbsArg& server)
   if (_serverList.FindObject(&server)) {
     _serverList.Remove(&server) ;
   } else {
-    cout << "RooAbsArg::removeServer(" << GetName() << "): Server " 
-	 << server.GetName() << " wasn't registered" << endl ;
+    cout << fName << "::" << ClassName() << ":removeServer: Server for \""
+	 << server.GetName() << "\" is not registered" << endl;
     return ;
   }
 
