@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:$:$Id:$
+// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.26 2004/02/13 14:27:00 rdm Exp $
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************
@@ -667,9 +667,9 @@ in the transformed space.
 <!--*/
 // -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.25 2004/01/25 20:33:32 brun Exp $
-// $Date: 2004/01/25 20:33:32 $
-// $Author: brun $
+// $Id: TPrincipal.cxx,v 1.26 2004/02/13 14:27:00 rdm Exp $
+// $Date: 2004/02/13 14:27:00 $
+// $Author: rdm $
 
 #include "TPrincipal.h"
 
@@ -698,7 +698,7 @@ TPrincipal::TPrincipal()
 TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
   : fMeanValues(nVariables),
     fSigmas(nVariables),
-    fCovarianceMatrix(nVariables),
+    fCovarianceMatrix(nVariables,nVariables),
     fEigenVectors(nVariables,nVariables),
     fEigenValues(nVariables),
     fOffDiagonal(nVariables),
@@ -1341,7 +1341,8 @@ void TPrincipal::MakePrincipals()
   // Normalize matrix covariance matrix
   MakeNormalised();
 
-  TMatrixDSymEigen eigen(fCovarianceMatrix);
+  TMatrixDSym sym; sym.Use(fCovarianceMatrix.GetNrows(),fCovarianceMatrix.GetMatrixArray());
+  TMatrixDSymEigen eigen(sym);
   fEigenVectors = eigen.GetEigenVectors();
   fEigenValues  = eigen.GetEigenValues();
 }
@@ -1595,7 +1596,6 @@ void TPrincipal::Print(Option_t *opt) const
     cout << endl;
 
     for (Int_t i = 0; i < fNumberOfVariables; i++) {
-#ifndef R__MACOSX
       cout << setw(12) << i << " " << flush;
       if (printM)
 	cout << "| " << setw(10) << setprecision(4)
@@ -1606,22 +1606,6 @@ void TPrincipal::Print(Option_t *opt) const
       if (printE)
 	cout << "| " << setw(10) << setprecision(4)
 	     << fEigenValues(i) << " " << flush;
-#else
-      fprintf(stdout,"%d12 ",i);
-      fflush(stdout);
-      if (printM) {
-        fprintf(stdout,"| %g10.4 ",fMeanValues(i));
-        fflush(stdout);
-      }
-      if (printS) {
-        fprintf(stdout,"| %g10.4 ",fSigmas(i));
-        fflush(stdout);
-      }
-      if (printE) {
-        fprintf(stdout,"| %g10.4 ",fEigenValues(i));
-        fflush(stdout);
-      }
-#endif
       cout << endl;
     }
     cout << endl;
