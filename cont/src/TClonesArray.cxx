@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.25 2002/02/25 11:24:22 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.26 2002/04/04 11:03:18 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -95,6 +95,48 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
       Error("TClonesArray", "%s is not a valid class name", classname);
       return;
    }
+   if (!fClass->InheritsFrom(TObject::Class())) {
+      Error("TClonesArray", "%s does not inherit from TObject", classname);
+      return;
+   }
+   char *name = new char[strlen(classname)+2];
+   sprintf(name, "%ss", classname);
+   SetName(name);
+   delete [] name;
+
+   fKeep = new TObjArray(s);
+
+   BypassStreamer(kTRUE);
+}
+
+//______________________________________________________________________________
+TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
+{
+   // Create an array of clone objects of class cl. The class must inherit from
+   // TObject. If the class defines an own operator delete(), make sure that
+   // it looks like this:
+   //
+   //    void MyClass::operator delete(void *vp)
+   //    {
+   //       if ((Long_t) vp != TObject::GetDtorOnly())
+   //          ::operator delete(vp);       // delete space
+   //       else
+   //          TObject::SetDtorOnly(0);
+   //    }
+   //
+   // The third argument is not used anymore and only there for backward
+   // compatibility reasons.
+
+   if (!gROOT)
+      ::Fatal("TClonesArray::TClonesArray", "ROOT system not initialized");
+
+   fKeep  = 0;
+   fClass = (TClass*)cl;
+   if (!fClass) {
+      Error("TClonesArray", "called with a null pointer");
+      return;
+   }
+   const char *classname = fClass->GetName();
    if (!fClass->InheritsFrom(TObject::Class())) {
       Error("TClonesArray", "%s does not inherit from TObject", classname);
       return;
