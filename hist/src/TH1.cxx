@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.38 2001/02/13 11:57:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.39 2001/02/15 21:18:13 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2745,7 +2745,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
 // in Proc.of the 1974 CERN School of Computing, Norway, 11-24 August, 1974.
 
    Int_t ii, jj, ik, jk, kk, nn1, nn2;
-   Double_t hh[5];
+   Double_t hh[6] = {0,0,0,0,0,0};
    Double_t *YY = new Double_t[NN];
    Double_t *ZZ = new Double_t[NN];
    Double_t *RR = new Double_t[NN];
