@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.115 2003/01/11 09:07:20 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.116 2003/01/11 12:47:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -715,42 +715,42 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    opt.ToLower();
    Bool_t draw = kFALSE;
    if (!drawflag && !opt.Contains("goff")) draw = kTRUE;
-   TH1 *hist = (TH1*)fSelector->GetObject();
+   fHistogram = (TH1*)fSelector->GetObject();
    
    //*-*- 1-D distribution
    if (fDimension == 1) {
-      if (fSelector->GetVar1()->IsInteger()) hist->LabelsDeflate("X");
-      if (draw) hist->Draw(option);
+      if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("X");
+      if (draw) fHistogram->Draw(option);
 
    //*-*- 2-D distribution
    } else if (fDimension == 2) {
-      if (fSelector->GetVar1()->IsInteger()) hist->LabelsDeflate("Y");
-      if (fSelector->GetVar2()->IsInteger()) hist->LabelsDeflate("X");
+      if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("Y");
+      if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("X");
       if (action == 4) {
-         if (draw) hist->Draw(option);
+         if (draw) fHistogram->Draw(option);
       } else {
          Int_t noscat = opt.Length();
          if (opt.Contains("same")) noscat -= 4;
          if (noscat) {
-            if (draw) hist->Draw(option);
+            if (draw) fHistogram->Draw(option);
          } else {
-            if (fSelector->GetOldHistogram() && draw) hist->Draw(option);
+            if (fSelector->GetOldHistogram() && draw) fHistogram->Draw(option);
          }
       }
    //*-*- 3-D distribution
    } else if (fDimension == 3) {
-      if (fSelector->GetVar1()->IsInteger()) hist->LabelsDeflate("Z");
-      if (fSelector->GetVar2()->IsInteger()) hist->LabelsDeflate("Y");
-      if (fSelector->GetVar3()->IsInteger()) hist->LabelsDeflate("X");
+      if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("Z");
+      if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("Y");
+      if (fSelector->GetVar3()->IsInteger()) fHistogram->LabelsDeflate("X");
       if (action == 23) {
-         if (draw) hist->Draw(option);
+         if (draw) fHistogram->Draw(option);
       } else {
          Int_t noscat = opt.Length();
          if (opt.Contains("same")) noscat -= 4;
          if (noscat) {
-            if (draw) hist->Draw(option);
+            if (draw) fHistogram->Draw(option);
          } else {
-            if (fSelector->GetOldHistogram() && draw) hist->Draw(option);
+            if (fSelector->GetOldHistogram() && draw) fHistogram->Draw(option);
          }
       }
 
@@ -775,17 +775,17 @@ Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *sele
 //  Example:
 //    tree.Fit("pol4","sqrt(x)>>hsqrt","y>0")
 //    will fit sqrt(x) and save the histogram as "hsqrt" in the current
-//    directory.
+//    directory. 
 //
 
    Int_t nch = strlen(option) + 10;
    char *opt = new char[nch];
-   if (option) sprintf(opt,"%sgoff",option);
+   if (option) sprintf(opt,"%s",option);
    else        strcpy(opt,"goff");
 
    Int_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
 
-   delete [] opt;
+   delete [] opt; 
 
    if (fHistogram) {
       fHistogram->Fit(formula,option,goption);
