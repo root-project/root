@@ -614,6 +614,7 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION1996
   char *icom=(char*)NULL;
 #endif
+  stubbegin.ptype = 0;
 
 
   /*****************************************************************

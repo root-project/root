@@ -236,7 +236,8 @@ void G__CallFunc::SetArgs(const char* args)
   int isrc=0;
   char *endmark=(char*)",";
 #ifndef G__OLDIMPLEMENTATION1941
-  char tmp[G__LONGLINE];
+  char *tmp = new char[ strlen(args)+2 ]; 
+  tmp[0] = 0;
 #endif
 
   // separate and evaluate argument list
@@ -246,6 +247,7 @@ void G__CallFunc::SetArgs(const char* args)
 #ifndef G__OLDIMPLEMENTATION1941
     c=G__getstream((char*)args,&isrc,tmp,endmark);
     if (tmp[0]) {
+       fprintf(stderr,"--%s--\n",tmp);
       // evaluate arg
       para.para[para.paran] = G__calc(tmp);
       if(strlen(tmp)<G__ONELINE-1) strcpy(para.parameter[para.paran],tmp);
@@ -263,6 +265,8 @@ void G__CallFunc::SetArgs(const char* args)
       ++para.paran; // increment argument count
     }
   } while (','==c);
+
+  delete [] tmp;
 }
 #endif
 #ifndef G__OLDIMPLEMENTATION540

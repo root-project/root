@@ -2833,7 +2833,7 @@ char *string,*endmark;
     if(ignoreflag==0) {
       string[i++] = c ;
 #ifndef G__OLDIMPLEMENTATION1331
-      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,{string[i]='\0';return(EOF);});
 #endif
     }
     
