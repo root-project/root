@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.78 2001/06/05 13:11:01 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.79 2001/06/18 02:14:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1336,9 +1336,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
    const Int_t kMaxPrint = 10;
    if (nc > kMaxPrint) nc = kMaxPrint;
 
-   Int_t bOffset = clones->GetClass()->GetBaseClassOffset(fClass);
    Int_t offset = eoffset + fOffset[i];
-   if (bOffset) offset += bOffset;
    Int_t j;
    for (Int_t k=0;k<nc;k++) {
       char *pointer = (char*)clones->UncheckedAt(k);
@@ -2014,8 +2012,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       BuildOld();
    }
    //loop on all active members
-   Int_t bOffset = clones->GetClass()->GetBaseClassOffset(fClass);
-   if (bOffset > 0) eoffset += bOffset;
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
@@ -2642,9 +2638,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 //==========
 
    //loop on all active members
-   Int_t bOffset = clones->GetClass()->GetBaseClassOffset(fClass);
    Int_t baseOffset = eoffset;
-   if (bOffset > 0) baseOffset += bOffset;
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
