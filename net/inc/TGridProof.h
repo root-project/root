@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridProof.h,v 1.0 2003/09/05 10:00:00 peters Exp $
+// @(#)root/net:$Name:  $:$Id: TGridProof.h,v 1.1 2003/11/13 15:15:11 rdm Exp $
 // Author: Andreas Peters  05/09/2003
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
          gGrid->ListProofSessions(sessionId);
    }
    void ps() const { ps(0); }
-   void ls(const Option_t *option = "") const
+   void ls(const Option_t * = "") const
    {
       if (gGrid)
          gGrid->ListProofDaemons();
@@ -73,7 +73,7 @@ public:
 
    virtual const char *GetSiteBlob() const { return 0; }   // AliEn specific
    virtual void        PrintSiteBlob() { }                 // AliEn specific
-   virtual Int_t       DSetMsnExtraction(TDSet *dset)
+   virtual Int_t       DSetMsnExtraction(TDSet *)
    {
       return 0;
    }      // provide GridProof with the dataset to extract the required daemons

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.1 2002/05/13 10:35:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.2 2003/11/13 15:15:11 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
    Int_t                  GetResultCount() const { return fResults; }
    virtual const char    *GetValue() { return 0; }
    virtual Grid_Result_t *Next() { return 0; }
-   virtual void           List(int indentation = 0) { }
+   virtual void           Print(Option_t * = "") const { }
    virtual void           Reset() { }
 
    ClassDef(TGridResult,0)  // ABC defining interface to GRID query result

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.7 2003/11/13 17:01:15 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.8 2003/11/13 17:34:47 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -34,16 +34,16 @@
 #include <sys/stat.h>
 #endif
 
-#include <string>
-#ifdef R__GLOBALSTL
-namespace std { using ::string; }
-#endif
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
+#endif
+
+#include <string>
+#ifdef R__GLOBALSTL
+namespace std { using ::string; }
 #endif
 
 class TGridResult;
