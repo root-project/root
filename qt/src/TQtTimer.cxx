@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtTimer.cxx,v 1.1 2004/08/13 06:21:09 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtTimer.cxx,v 1.2 2004/08/13 17:03:46 rdm Exp $
 // Author: Valery Fine  09/08/2004
 
 /*************************************************************************
@@ -20,6 +20,7 @@ TQtTimer *TQtTimer::fgQTimer=0;
 //______________________________________________________________________________
 void TQtTimer::AwakeRootEvent(){
    gSystem->DispatchOneEvent(kTRUE);
+   start(300,TRUE);
 }
 
 //______________________________________________________________________________

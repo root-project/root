@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.8 2004/08/02 08:14:43 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.9 2004/08/13 06:05:17 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -73,7 +73,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
     if (!gApplication) {
         argc = qApp->argc();
         new TRint("Rint", &argc ,qApp->argv()); 
-        TQtTimer::Create()->start(0,FALSE);
+        TQtTimer::Create()->start(0,TRUE);
     }         
     Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
