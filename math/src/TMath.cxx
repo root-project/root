@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.63 2004/07/06 07:10:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.64 2004/07/06 07:28:29 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2408,7 +2408,7 @@ void TMath::Sort(Long64_t n1, const Long64_t *a, Long64_t *index, Bool_t down)
 
    Long64_t i,i1,n,i2,i3,i33,i222,iswap,n2;
    Long64_t i22 = 0;
-   Long_t ai;
+   Long64_t ai;
    n = n1;
    if (n <= 0) return;
    if (n == 1) {index[0] = 0; return;}
