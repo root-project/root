@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.cc,v 1.5 2002/09/05 04:33:15 verkerke Exp $
+ *    File: $Id: RooBinning.cc,v 1.6 2002/09/05 22:29:46 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,7 +58,7 @@ RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries) : _array(0), _ow
   _bIter = binIterator() ;
 
   // Variable bin size constructor
-  setRange(boundaries[0],boundaries[nbins-1]) ;
+  setRange(boundaries[0],boundaries[nbins]) ;
   while(nbins--) addBoundary(boundaries[nbins]) ;
 }
 
