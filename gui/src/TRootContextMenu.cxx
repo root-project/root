@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.4 2002/04/04 17:32:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.5 2002/06/09 08:26:15 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -87,8 +87,8 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
    // delete menu items releated to previous object and reset menu size
    if (fEntryList) fEntryList->Delete();
    if (fCleanup)   fCleanup->Delete();
-   fHeight = 6;
-   fWidth  = 8;
+   fMenuHeight = 6;
+   fMenuWidth  = 8;
 
    // delete previous dialog
    if (fDialog) {
