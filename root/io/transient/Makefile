@@ -18,7 +18,12 @@ transientTest.log: TBigDSWriteEvent_cxx.$(DllSuf)  TBigDSWriteParticle_cxx.$(Dll
 	$(CMDECHO) root.exe -q -l -b run.C 2>&1 > transientTest.log
 
 transientTest: transientTest.log
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+	@echo "Having a data member whose ClassDef version is zero leads to a questionable warning message"
+else
 	$(CMDECHO) diff -b  transientTest.ref  transientTest.log
+endif
 
 testWithFailure:
 ifeq ($(FAIL),)
