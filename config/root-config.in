@@ -244,11 +244,12 @@ if test "$arch" = "win32"; then
 fi
 exec_prefix=${prefix}
 exec_prefix_set=no
-nonew_set=no
+nonew_set=yes
+new_set=no
 cflags=""
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--nonew] [--libs] [--glibs]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -297,6 +298,9 @@ while test $# -gt 0; do
     --nonew)
       nonew_set=yes
       ;;
+    --new)
+      new_set=yes
+      ;;
     --version)
       if test -r ${incdir}/RVersion.h; then
          echo `cat ${incdir}/RVersion.h | sed -e "s/.*ROOT_RELEASE //" \
@@ -320,7 +324,7 @@ while test $# -gt 0; do
       fi
       ;;
     --libs)
-      if test $nonew_set = no; then
+      if test $new_set = yes; then
          libs="${newlib} ${rootlibs}"
       else
          libs=${rootlibs}
@@ -337,7 +341,7 @@ while test $# -gt 0; do
       fi
       ;;
     --glibs)
-      if test $nonew_set = no; then
+      if test $new_set = yes; then
          glibs="${newlib} ${rootlibs} ${rootglibs}"
       else
          glibs="${rootlibs} ${rootglibs}"
