@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.28 2002/11/20 08:24:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.29 2002/11/20 09:31:13 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -172,14 +172,12 @@ class TRootIconBox;
 class TRootIconList : public TList {
 
 private:
-   TRootIconBox    *fIconBox; //
+   TRootIconBox    *fIconBox; // iconbox to which list belongs
    const TGPicture *fPic;     // list view icon
-   TString          fName;    // the name of the list
 
 public:
    TRootIconList(TRootIconBox* box = 0);
    virtual ~TRootIconList();
-   const char       *GetName() const { return fName.Data(); }
    void              UpdateName();
    const char       *GetTitle() const { return "ListView Container"; }
    Bool_t            IsFolder() const { return kFALSE; }
@@ -235,12 +233,12 @@ private:
    Bool_t           fGrouped;        //
    TString          fCachedPicName;  //
    TList           *fGarbage;        // garbage for  TRootIconList's
-   Int_t            fGroupSize;   // the total number of items when icon box switched to "global view" mode
+   Int_t            fGroupSize;      // the total number of items when icon box switched to "global view" mode
    TGString        *fCurrentName;    //
-   const TGPicture *fLargeCachedPic;  //
-   const TGPicture *fSmallCachedPic;  //
+   const TGPicture *fLargeCachedPic; //
+   const TGPicture *fSmallCachedPic; //
    Bool_t           fWasGrouped;
-   TObject         *fActiveObject;    //
+   TObject         *fActiveObject;   //
 
    void  *FindItem(const TString& name,
                    Bool_t direction = kTRUE,
@@ -1184,13 +1182,13 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (fListLevel) {
                            item = fListLevel->GetParent();
                            if (item) fListLevel = item;
-                          
+
                            obj = (TObject *) fListLevel->GetUserData();
-   
+
                            fLt->ClearHighlighted();
                            fLt->HighlightItem(fListLevel);
                            if (obj) BrowseObj(obj);
-                        }  
+                        }
 
                         fClient->NeedRedraw(fLt);
                         break;
@@ -1210,7 +1208,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         ToUpSystemDirectory();
                      }
                      break;
-                  }                  
+                  }
                   // Handle Help menu items...
                   case kHelpAbout:
                      // coming soon
@@ -1304,7 +1302,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (fListLevel) {
                         item = fListLevel->GetParent();
                         if (item) fListLevel = item;
-                          
+
                         obj = (TObject *) fListLevel->GetUserData();
                         fLt->ClearHighlighted();
                         fLt->HighlightItem(fListLevel);
@@ -1312,7 +1310,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      break;
                   }
-               }  
+               }
 
             default:
                break;
@@ -1329,7 +1327,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   void *p = 0;
                   if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
                      TObject *obj = (TObject *) item->GetUserData();
-         
+
                      TGListTreeItem *itm = 0;
                      if (!fListLevel) itm = fLt->GetFirstItem();
                      else itm = fListLevel->GetFirstChild();
@@ -1484,7 +1482,7 @@ void TRootBrowser::ToUpSystemDirectory()
 
    if (fListLevel) {
       TObject* obj = (TObject*)fListLevel->GetUserData();
-                  
+
       if (obj && (obj->IsA()==TSystemDirectory::Class())) {
          TString dirname;
          dirname = obj->GetTitle();
@@ -1493,7 +1491,7 @@ void TRootBrowser::ToUpSystemDirectory()
          fListLevel->Rename(dirname.Data());
          obj = new TSystemDirectory(dirname.Data(),dirname.Data());
 
-         while (fListLevel->GetFirstChild()) 
+         while (fListLevel->GetFirstChild())
             fLt->RecursiveDeleteItem(fListLevel->GetFirstChild(),
                                      fListLevel->GetFirstChild()->GetUserData());
 
@@ -1624,7 +1622,7 @@ void TRootBrowser::Refresh(Bool_t force)
    // Refresh the browser contents.
 
    if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force)
-      && !fIconBox->WasGrouped() 
+      && !fIconBox->WasGrouped()
       && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
 
       TGListTreeItem *sav;
@@ -1640,8 +1638,8 @@ void TRootBrowser::Refresh(Bool_t force)
             BrowseObj(obj);
             fTreeLock = kFALSE;
          }
-      } 
-     
+      }
+
       sav = fListLevel;
       fListLevel = 0;
       BrowseObj(gROOT);
