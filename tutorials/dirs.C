@@ -37,23 +37,37 @@
    char dirname[50];
    char hname[20];
    char htitle[80];
-   for (Int_t i=0;i<nplanes;i++) {
+   Int_t i,j,k;
+   TDirectory *cdplane[nplanes];
+   TH1F *hn[nplanes][ncounters];
+   TH1F *hs[nplanes][ncounters];
+   for (i=0;i<nplanes;i++) {
       sprintf(dirname,"plane%d",i);
-      TDirectory *cdplane = cdtof->mkdir(dirname);
-      cdplane->cd();
+      cdplane[i] = cdtof->mkdir(dirname);
+      cdplane[i]->cd();
       // create counter histograms
-      for (Int_t j=0;j<ncounters;j++) {
+      for (j=0;j<ncounters;j++) {
          sprintf(hname,"h%d_%dN",i,j);
          sprintf(htitle,"hist for counter:%d in plane:%d North",j,i);
-         TH1F *hn = new TH1F(hname,htitle,100,0,100);
+         hn[i][j] = new TH1F(hname,htitle,100,0,100);
          sprintf(hname,"h%d_%dS",i,j);
          sprintf(htitle,"hist for counter:%d in plane:%d South",j,i);
-         TH1F *hs = new TH1F(hname,htitle,100,0,100);
+         hs[i][j] = new TH1F(hname,htitle,100,0,100);
       }
       cdtof->cd();    // change current directory to top
    }
 
      // .. fill histograms
+   TRandom r;
+   for (i=0;i<nplanes;i++) {
+      cdplane[i]->cd();
+      for (j=0;j<ncounters;j++) {
+         for (k=0;k<100;k++) {
+            hn[i][j]->Fill(100*r.Rndm(),i+j);
+            hs[i][j]->Fill(100*r.Rndm(),i+j+k);
+         }
+      }
+   }
 
      // save histogram hierarchy in the file
    top->Write();
