@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.7 2001/02/26 02:49:06 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.8 2001/03/01 07:21:23 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -240,7 +240,7 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
    // the case (e.g. due to a crash), you can force unlock it by prepending
    // the remoteName with a '-'.
 
-   if (!IsOpen() || !file || !strlen(file)) return -1;
+   if (!IsOpen() || !file || !*file) return -1;
 
 #ifndef WIN32
    Int_t fd = open(file, O_RDONLY);
@@ -397,7 +397,7 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
    // the case (e.g. due to a crash), you can force unlock it by prepending
    // the file name with a '-'.
 
-   if (!IsOpen() || !file || !strlen(file)) return -1;
+   if (!IsOpen() || !file || !*file) return -1;
 
    if (!localName) {
       if (file[0] == '-')
@@ -603,7 +603,12 @@ Int_t TFTP::ChangeDirectory(const char *dir) const
    // file and it is < 1024 characters then the contents is echoed back.
    // Returns 0 in case of success and -1 in case of failure.
 
-   if (!IsOpen() || !dir || !strlen(dir)) return -1;
+   if (!IsOpen()) return -1;
+
+   if (!dir || !*dir) {
+      Error("ChangeDirectory", "illegal directory name specified");
+      return -1;
+   }
 
    if (fSocket->Send(Form("%s", dir), kROOTD_CHDIR) < 0) {
       Error("ChangeDirectory", "error sending kROOTD_CHDIR command");
@@ -637,7 +642,12 @@ Int_t TFTP::MakeDirectory(const char *dir) const
    // Make a remote directory. Anonymous users may not create directories.
    // Returns 0 in case of success and -1 in case of failure.
 
-   if (!IsOpen() || !dir || !strlen(dir)) return -1;
+   if (!IsOpen()) return -1;
+
+   if (!dir || !*dir) {
+      Error("MakeDirectory", "illegal directory name specified");
+      return -1;
+   }
 
    if (fSocket->Send(Form("%s", dir), kROOTD_MKDIR) < 0) {
       Error("MakeDirectory", "error sending kROOTD_MKDIR command");
@@ -663,7 +673,12 @@ Int_t TFTP::DeleteDirectory(const char *dir) const
    // Delete a remote directory. Anonymous users may not delete directories.
    // Returns 0 in case of success and -1 in case of failure.
 
-   if (!IsOpen() || !dir || !strlen(dir)) return -1;
+   if (!IsOpen()) return -1;
+
+   if (!dir || !*dir) {
+      Error("DeleteDirectory", "illegal directory name specified");
+      return -1;
+   }
 
    if (fSocket->Send(Form("%s", dir), kROOTD_RMDIR) < 0) {
       Error("DeleteDirectory", "error sending kROOTD_RMDIR command");
@@ -692,7 +707,7 @@ Int_t TFTP::ListDirectory(Option_t *cmd) const
 
    if (!IsOpen()) return -1;
 
-   if (!cmd || !strlen(cmd))
+   if (!cmd || !*cmd)
       cmd = "ls .";
 
    if (fSocket->Send(Form("%s", cmd), kROOTD_LSDIR) < 0) {
@@ -748,7 +763,7 @@ Int_t TFTP::RenameFile(const char *file1, const char *file2) const
 
    if (!IsOpen()) return -1;
 
-   if (!file1 || !file2 || !strlen(file1) || !strlen(file2)) {
+   if (!file1 || !file2 || !*file1 || !*file2) {
       Error("RenameFile", "illegal file names specified");
       return -1;
    }
@@ -779,7 +794,7 @@ Int_t TFTP::DeleteFile(const char *file) const
 
    if (!IsOpen()) return -1;
 
-   if (!file || !strlen(file)) {
+   if (!file || !*file) {
       Error("DeleteFile", "illegal file name specified");
       return -1;
    }
@@ -811,7 +826,7 @@ Int_t TFTP::ChangePermission(const char *file, Int_t mode) const
 
    if (!IsOpen()) return -1;
 
-   if (!file || !strlen(file)) {
+   if (!file || !*file) {
       Error("ChangePermission", "illegal file name specified");
       return -1;
    }
