@@ -22,17 +22,24 @@ printALREADY_EXIST() {
 			exit 1 ;
 		     }
 
-printERROR() { echo "ERROR: $@." >&2 ; }
+printERROR() { echo "ERROR: $@." >&2 ;  }
 
 
 check_target=`grep -F " $1 " $2/Makefile`
-echo $check_target
+#echo $check_target
+
+
+#if [ "$check_target" != "" ]; then
+	#printALREADY_EXIST ;
+#fi
+
+check_target2=`grep -F "$1:" $2/Makefile`
+#echo $check_target2
+
 
 if [ "$check_target" != "" ]; then
 	printALREADY_EXIST ;
 fi
-
-
 
 #printERROR ;
 
