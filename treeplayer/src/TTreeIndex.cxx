@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.1 2004/07/08 08:08:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.2 2004/07/09 07:41:43 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -113,6 +113,10 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    GetMajorFormula();
    GetMinorFormula();
    if (!fMajorFormula || !fMinorFormula) {
+      Error("TreeIndex","Cannot build the index with major=%s, minor=%s",fMajorName.Data(), fMinorName.Data());
+      return;
+   }   
+   if (!fMajorFormula->GetNdim() || !fMinorFormula->GetNdim()) {
       Error("TreeIndex","Cannot build the index with major=%s, minor=%s",fMajorName.Data(), fMinorName.Data());
       return;
    }   
