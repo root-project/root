@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.6 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.7 2002/01/24 11:39:31 rdm Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>
@@ -376,7 +376,11 @@ void Test_TBtree()
 }
 
 
+#if defined(__CINT__) || defined(G__DICTIONARY)
+int tcollex()
+#else
 int main()
+#endif
 {
    Test_TObjArray();
    Test_TOrdCollection();
