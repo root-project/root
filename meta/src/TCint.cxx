@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.63 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.64 2003/06/13 06:16:52 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -458,7 +458,7 @@ void TCint::UpdateListOfGlobalFunctions()
       if (t.IsValid() && t.Name()) {
          // first remove if already in list
          TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(t.Name());
-         if (f && f->InterfaceMethod()==t.InterfaceMethod()) {
+         if (f && f->InterfaceMethod()==((void*)t.InterfaceMethod()) ) {
             TString mangled = f->GetMangledName();
             if (mangled==t.GetMangledName()) {
                gROOT->fGlobalFunctions->Remove(f);
