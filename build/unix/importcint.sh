@@ -69,6 +69,10 @@ rm -f $INCLT/done
 rm -f $INCLT/error
 rm -f $INCLT/iosenum.*
 
+# copy man pages directly to man directory
+cp $ORG/doc/man1/cint.1 man/
+cp $ORG/doc/man1/makecint.1 man/
+
 # compare files in assembly area with the ones in the CVS area
 
 # make a sorted list of all files in the assmebly area
