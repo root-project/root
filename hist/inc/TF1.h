@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.2 2000/06/13 10:37:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.3 2000/11/06 07:19:08 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -50,6 +50,7 @@ protected:
    Int_t       fNpx;         //Number of points used for the graphical representation
    Int_t       fType;        //(=0 for standard functions, 1 if pointer to function)
    Int_t       fNpfits;      //Number of points used in the fit
+   Int_t       fNsave;       //Number of points used to fill array fSave
    Double_t    fChisquare;   //Function fit chisquare
    Double_t    *fIntegral;   //![fNpx] Integral of function binned on fNpx bins
    Double_t    *fParErrors;  //[fNpar] Array of errors of the fNpar parameters
@@ -63,9 +64,8 @@ protected:
    TH1         *fHistogram;  //!Pointer to histogram used for visualisation
    Double_t     fMaximum;    //Maximum value for plotting
    Double_t     fMinimum;    //Minimum value for plotting
-   Int_t        fNsave;      //Number of points used to fill array fSave
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
-   Double_t (*fFunction) (Double_t *, Double_t *);   //Pointer to function
+   Double_t (*fFunction) (Double_t *, Double_t *);   //!Pointer to function
 
 public:
    TF1();
@@ -127,7 +127,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     Update();
 
-   ClassDef(TF1,4)  //The Parametric 1-D function
+   ClassDef(TF1,5)  //The Parametric 1-D function
 };
 
 inline void TF1::SetRange(Double_t xmin, Double_t,  Double_t xmax, Double_t)
