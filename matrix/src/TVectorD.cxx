@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.7 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.8 2001/11/16 02:47:36 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -906,6 +906,27 @@ Bool_t TVectorD::IsValid() const
    if (fNrows == -1)
       return kFALSE;
    return kTRUE;
+}
+
+void TVectorD::SetElements(const Double_t *elements)
+{
+  if (!IsValid()) {
+    Error("SetElements", "vector is not initialized");
+    return;
+  }
+  memcpy(fElements,elements,fNrows*sizeof(Double_t));
+}
+
+TVectorD::TVectorD(Int_t n, const Double_t *elements)
+{
+   Allocate(n);
+   SetElements(elements);
+}
+
+TVectorD::TVectorD(Int_t lwb, Int_t upb, const Double_t *elements)
+{
+   Allocate(upb-lwb+1, lwb);
+   SetElements(elements);
 }
 
 Bool_t AreCompatible(const TVectorD &v1, const TVectorD &v2)
