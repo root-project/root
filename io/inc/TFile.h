@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #endif
 
 class TFree;
-
+class TArrayC;
 
 class TFile : public TDirectory {
 
@@ -46,7 +46,8 @@ protected:
    TList      *fFree;             //Free segments linked list table
    Double_t    fBytesWrite;       //Number of bytes written to this file
    Double_t    fBytesRead;        //Number of bytes read from this file
-
+   TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
+   
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
 
@@ -80,6 +81,7 @@ public:
    virtual void      FillBuffer(char *&buffer);
    virtual void      Flush();
    Int_t             GetBestBuffer();
+   TArrayC          *GetClassIndex() {return fClassIndex;}
    Int_t             GetCompressionLevel() {return fCompress;}
    Float_t           GetCompressionFactor();
    virtual Seek_t    GetEND() {return fEND;}
@@ -94,22 +96,26 @@ public:
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="");
    virtual void      MakeFree(Seek_t first, Seek_t last);
+   virtual void      MakeProject(const char *dirname, const char *classes="*", Option_t *option="new"); // *MENU*
    virtual void      Map(); // *MENU*
    virtual void      Paint(Option_t *option="");
    virtual void      Print(Option_t *option="");
    virtual Bool_t    ReadBuffer(char *buf, int len);
    virtual void      ReadFree();
+   virtual void      ReadStreamerInfo(const char *name="StreamerInfo");
    virtual void      Recover();
    virtual void      Seek(Seek_t offset, ERelativeTo pos = kBeg);
    virtual void      SetCompressionLevel(Int_t level=1);
    virtual void      SetEND(Seek_t last) {fEND = last;}
    virtual void      SetOption(Option_t *option=">") {fOption = option;}
+   virtual void      ShowStreamerInfo(const char *name="StreamerInfo");
    virtual Int_t     Sizeof() const;
    void              SumBuffer(Int_t bufsize);
    virtual Bool_t    WriteBuffer(const char *buf, int len);
    virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual void      WriteFree();
    virtual void      WriteHeader();
+   virtual void      WriteStreamerInfo(const char *name="StreamerInfo");
 
    static TFile     *Open(const char *name, Option_t *option="",
                           const char *ftitle="", Int_t compress=1);
