@@ -33,4 +33,4 @@ libFoo.so: main.C fooDict.C barDict.C foo.C bar.C
 #clean:
 #	rm -f main *Dict* Event.root *~
 
-CLEAN_TARGET += main *Dict* Event.root *~ TOffset_cxx.so
+CLEAN_TARGETS += main *Dict* Event.root *~ TOffset_cxx.so
