@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.53 2001/10/31 11:29:28 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.54 2001/11/16 15:01:51 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1474,12 +1474,8 @@ void THistPainter::PaintBoxes()
 //End_Html
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   Style_t linesav   = fH->GetLineStyle();
-   Width_t widthsav  = fH->GetLineWidth();
    Style_t fillsav   = fH->GetFillStyle();
    if (fH->GetFillColor() == 0)  fH->SetFillStyle(0);
-   fH->SetLineStyle(1);
-   fH->SetLineWidth(1);
    fH->TAttLine::Modify();
    fH->TAttFill::Modify();
 
@@ -1536,9 +1532,6 @@ void THistPainter::PaintBoxes()
 
    if (Hoption.Zscale) PaintPalette();
    fH->SetFillStyle(fillsav);
-   fH->SetLineStyle(linesav);
-   fH->SetLineWidth(widthsav);
-   fH->TAttLine::Modify();
 }
 
 //______________________________________________________________________________
