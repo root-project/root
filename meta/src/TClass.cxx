@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.58 2001/10/17 10:22:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.59 2001/10/18 09:16:08 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -851,9 +851,11 @@ void TClass::GetMenuItems(TList *list)
    while ((method = (TMethod*)next())) {
       m = (TMethod*)list->FindObject(method->GetName());
       if (method->IsMenuItem()) {
-         if (!m) list->AddFirst(method);
+         if (!m)
+            list->AddFirst(method);
       } else {
-         if (m) list->Remove(m);
+         if (m && m->GetNargs() == method->GetNargs())
+            list->Remove(m);
       }
    }
 }
