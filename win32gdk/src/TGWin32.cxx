@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.44 2004/01/30 18:23:35 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.45 2004/01/31 16:06:35 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -749,6 +749,7 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
       last_message = msg.message;
    }
 
+   TGWin32::Instance()->CloseDisplay();
    delete refersh;
 
    // exit thread
@@ -907,10 +908,10 @@ void TGWin32::CloseDisplay()
 {
    // close display (terminate server/gMainThread )
 
-   if (gSplash) {
-      delete gSplash;
-      gSplash = 0;
-   }
+   gPtr2VirtualX = 0;
+   gPtr2Interpreter = 0;
+   gVirtualX = TGWin32VirtualXProxy::RealObject();
+   gInterpreter = TGWin32InterpreterProxy::RealObject();
 
    if (gMainThread) {
       delete gMainThread;
@@ -919,15 +920,15 @@ void TGWin32::CloseDisplay()
 
    TGWin32ProxyBase::fgMainThreadId = 0;
 
+   if (gSplash) {
+      delete gSplash;
+      gSplash = 0;
+   }
+
    if (fWindows) TStorage::Dealloc(fWindows);
    fWindows = 0;
 
    if (fXEvent) gdk_event_free((GdkEvent*)fXEvent);
-
-   gPtr2VirtualX = 0;
-   gPtr2Interpreter = 0;
-   gVirtualX = TGWin32VirtualXProxy::RealObject();
-   gInterpreter = TGWin32InterpreterProxy::RealObject();
 
    gROOT->SetBatch(kTRUE);
 }
@@ -1515,7 +1516,7 @@ void TGWin32::ClearPixmap(GdkDrawable * pix)
 
    gdk_drawable_get_size(pix, &w, &h);
    SetColor(gGCpxmp, 0);
-   gdk_win32_draw_rectangle(pix,(GdkGC *)gGCpxmp, kTRUE, 0, 0, w, h);
+   gdk_win32_draw_rectangle(pix, (GdkGC *)gGCpxmp, kTRUE, 0, 0, w, h);
    SetColor(gGCpxmp, 1);
    GdiFlush();
 }
@@ -1524,6 +1525,8 @@ void TGWin32::ClearPixmap(GdkDrawable * pix)
 void TGWin32::ClearWindow()
 {
    // Clear current window.
+
+   if (!fWindows) return;
 
    if (!gCws->ispixmap && !gCws->double_buffer) {
       gdk_window_set_background(gCws->drawing, (GdkColor *) & gColors[0].color);
@@ -1627,6 +1630,8 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    // mode=0 hollow  (kHollow)
    // mode=1 solid   (kSolid)
 
+   if (!fWindows) return;
+
    Int_t x = TMath::Min(x1, x2);
    Int_t y = TMath::Min(y1, y2);
    Int_t w = TMath::Abs(x2 - x1);
@@ -1667,6 +1672,8 @@ void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
 
    int i, j, icol, ix, iy, w, h, current_icol;
 
+   if (!fWindows) return;
+
    current_icol = -1;
    w = TMath::Max((x2 - x1) / (nx), 1);
    h = TMath::Max((y1 - y2) / (ny), 1);
@@ -1701,7 +1708,9 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
    int i;
    static int lastn = 0;
    static GdkPoint *xy = 0;
-   
+
+   if (!fWindows) return;
+
    if (fFillStyleModified) UpdateFillStyle();
    if (fFillColorModified) UpdateFillColor();
 
@@ -1728,6 +1737,8 @@ void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
    // Draw a line.
    // x1,y1        : begin of line
    // x2,y2        : end of line
+
+   if (!fWindows) return;
 
    if (fLineColorModified) UpdateLineColor();
    if (fPenModified) UpdateLineStyle();
@@ -1756,6 +1767,8 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
    // xy        : list of points
 
    int i;
+
+   if (!fWindows) return;
 
    Point_t *xy = new Point_t[n];
 
@@ -1812,6 +1825,8 @@ void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
    int i;
    static lastn = 0;
    static GdkPoint *xy = 0;
+
+   if (!fWindows) return;
 
    if (fMarkerStyleModified) UpdateMarkerStyle();
    if (fMarkerColorModified) UpdateMarkerColor();
@@ -2603,6 +2618,8 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
 
     int i;
 
+   if (!fWindows) return;
+
    gTws = &fWindows[wid];
    if (!gTws->open)
       return;
@@ -2646,6 +2663,8 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
    int ww, hh, border, depth;
    wval = w;
    hval = h;
+
+   if (!fWindows) return 0;
 
    gTws = &fWindows[wid];
 
@@ -2976,8 +2995,6 @@ void TGWin32::SetDoubleBuffer(int wid, int mode)
 void TGWin32::SetDoubleBufferOFF()
 {
    // Turn double buffer mode off.
-
-   if (!fWindows) return;
 
    if (!gTws->double_buffer) return;
    gTws->double_buffer = 0;
@@ -3960,8 +3977,6 @@ void TGWin32::Warp(int ix, int iy)
    // ix       : New X coordinate of pointer
    // iy       : New Y coordinate of pointer
    // (both coordinates are relative to the origin of the current window)
-
-   if (!fWindows) return;
 
    POINT cpt, tmp;
    HWND dw = (HWND) GDK_DRAWABLE_XID((GdkWindow *)gCws->window);

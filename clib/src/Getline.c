@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.18 2004/01/29 12:11:19 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.19 2004/01/31 16:06:35 brun Exp $ */
 /* Author: */
 
 /*
@@ -1308,7 +1308,7 @@ gl_fixup(const char *prompt, int change, int cursor)
     gl_pos = cursor;
 #ifdef WIN32 // bb & vo
     ci.dwCursorPosition.X = gl_pos + strlen(prompt) - gl_shift;
-    //SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), ci.dwCursorPosition );
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), ci.dwCursorPosition );
 #endif
 }
 

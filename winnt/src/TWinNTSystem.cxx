@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.70 2004/01/29 16:02:03 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.71 2004/01/31 13:36:31 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1009,7 +1009,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
    while (1) {
       // first handle any GUI events
-      if (gXDisplay) {
+      if (gXDisplay && !gROOT->IsBatch()) {
          if (gXDisplay->Notify()) {
             if (!pendingOnly) return;
          } else {
@@ -1100,8 +1100,10 @@ void TWinNTSystem::ExitLoop()
    //
 
    TSystem::ExitLoop();
+#ifndef GDK_WIN32
    // Release Dispatch one event
-   ::SetEvent(fhTermInputEvent);
+   if (fhTermInputEvent) ::SetEvent(fhTermInputEvent);
+#endif
 }
 
 //---- handling of system events -----------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.19 2003/06/06 09:09:42 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.20 2004/01/28 02:41:42 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -145,6 +145,7 @@
 
 //Direct CINT include
 #include "DataMbr.h"
+#include "common.h"
 
 
 #define BUF_SIZE    1024        // must match value in C_Getline.c (for bounds checking)
@@ -386,14 +387,14 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
    if (!fpClasses) {
       // generate a text list of classes on disk
       const char *tmpfilename = tmpnam(0);
-      TString cmd(".class >");
-      cmd += tmpfilename;
-      cmd += "\n";
-      gROOT->ProcessLineSync(cmd.Data());
+      FILE *fout = fopen(tmpfilename, "w");
+      if (!fout) return 0;
+      G__display_class(fout,"",0,0);
+      fclose(fout);
 
       // open the file
       ifstream file1(tmpfilename);
-      if (!file1) {
+      if (!file1.is_open()) {
          Error("TTabCom::GetListOfClasses", "could not open file \"%s\"",
                tmpfilename);
          gSystem->Unlink(tmpfilename);
@@ -512,7 +513,7 @@ const TSeqCol *TTabCom::GetListOfEnvVars()
 
       // open the file
       ifstream file1(tmpfilename);
-      if (!file1) {
+      if (!file1.is_open()) {
          Error("TTabCom::GetListOfEnvVars", "could not open file \"%s\"",
                tmpfilename);
          gSystem->Unlink(tmpfilename);
@@ -836,7 +837,7 @@ TString TTabCom::DetermineClass(const char varName[])
 
    // open the file
    ifstream file1(tmpfile);
-   if (!file1) {
+   if (!file1.is_open()) {
       Error("TTabCom::DetermineClass", "could not open file \"%s\"",
             tmpfile);
       goto cleanup;
@@ -966,14 +967,15 @@ TString TTabCom::GetSysIncludePath(void)
    // get this part of the include path from the interpreter
    // and stick it in a tmp file.
    const char *tmpfilename = tmpnam(0);
-   TString cmd("gROOT->ProcessLine(\".include\"); > ");
-   cmd += tmpfilename;
-   cmd += "\n";
-   gROOT->ProcessLineSync(cmd.Data());
+
+   FILE *fout = fopen(tmpfilename, "w");
+   if (!fout) return "";
+   G__display_includepath(fout);
+   fclose(fout);
 
    // open the tmp file
    ifstream file1(tmpfilename);
-   if (!file1) {                // error
+   if (!file1.is_open()) {                // error
       Error("TTabCom::GetSysIncludePath", "could not open file \"%s\"",
             tmpfilename);
       gSystem->Unlink(tmpfilename);
@@ -1709,6 +1711,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             // Add all classes to pList that contain the prefix, i.e. are in the
             // specified namespace.
             const TSeqCol *tmp = GetListOfClasses();
+            if (!tmp) break;
+
             Int_t i;
             for (i = 0; i < tmp->GetSize(); i++) {
                TString str = ((TObjString *) tmp->At(i))->String();
@@ -2047,16 +2051,15 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          TContainer *pList = new TContainer;
 
          const TSeqCol *pL2 = GetListOfClasses();
-         pList->AddAll(pL2);
+         if (pL2) pList->AddAll(pL2);
          //
          const TSeqCol *pC1 = GetListOfGlobals();
-         pList->AddAll(pC1);
+         if (pC1) pList->AddAll(pC1);
          //
          const TSeqCol *pC3 = GetListOfGlobalFunctions();
-         pList->AddAll(pC3);
+         if (pC3) pList->AddAll(pC3);
 
          pos = Complete("[_a-zA-Z][_a-zA-Z0-9]*$", pList, "");
-
 
          delete pList;
       }

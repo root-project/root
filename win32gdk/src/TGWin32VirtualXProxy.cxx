@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.10 2003/08/23 14:51:25 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.1 2003/11/24 10:51:55 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -292,7 +292,7 @@ void TGWin32VirtualXProxy::CloseDisplay()
    //
 
    if (gDebug) printf("CloseDisplay\n");
-   SendExitMessage();
+   fgRealObject->CloseDisplay();
 }
 
 //______________________________________________________________________________
