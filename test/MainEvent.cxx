@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.18 2001/10/05 16:49:40 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.19 2001/10/07 20:03:29 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
    if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
    Int_t branchStyle = 1; //new style by default
-   if (split < 0) {branchStyle = 0; split = 1-split;}
+   if (split < 0) {branchStyle = 0; split = -1-split;}
    
    TFile *hfile;
    TTree *tree;
