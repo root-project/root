@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.2 2000/05/23 08:00:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -369,10 +369,15 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    Int_t ipar;
    char name[80], title[80];
    TH1D *hlist[25];
+   TArrayD *bins = fYaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-      hlist[ipar] = new TH1D(name,title, nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
+      if (bins->fN == 0) {
+         hlist[ipar] = new TH1D(name,title, nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
+      } else {
+         hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
+      }
       hlist[ipar]->GetXaxis()->SetTitle(fYaxis.GetTitle());
    }
    sprintf(name,"%s_chi2",GetName());
@@ -461,10 +466,15 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    Int_t ipar;
    char name[80], title[80];
    TH1D *hlist[25];
+   TArrayD *bins = fXaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-      hlist[ipar] = new TH1D(name,title, nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
+      if (bins->fN == 0) {
+         hlist[ipar] = new TH1D(name,title, nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
+      } else {
+         hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
+      }
       hlist[ipar]->GetXaxis()->SetTitle(fXaxis.GetTitle());
    }
    sprintf(name,"%s_chi2",GetName());
@@ -673,7 +683,13 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TProfile *h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
+  TProfile *h1;
+  TArrayD *bins = fYaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
+  } else {
+     h1 = new TProfile(pname,GetTitle(),nx,bins->fArray,option);
+  }
   if (pname != name)  delete [] pname;
 
 // Fill the profile histogram
@@ -713,7 +729,13 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TProfile *h1 = new TProfile(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),option);
+  TProfile *h1;
+  TArrayD *bins = fYaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TProfile(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),option);
+  } else {
+     h1 = new TProfile(pname,GetTitle(),ny,bins->fArray,option);
+  }
   if (pname != name)  delete [] pname;
 
 // Fill the profile histogram
@@ -756,7 +778,13 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
+  TH1D *h1;
+  TArrayD *bins = fXaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
+  } else {
+     h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
+  }
   Bool_t computeErrors = kFALSE;
   if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
   if (pname != name)  delete [] pname;
@@ -805,7 +833,13 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1 = new TH1D(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+  TH1D *h1;
+  TArrayD *bins = fYaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TH1D(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+  } else {
+     h1 = new TH1D(pname,GetTitle(),ny,bins->fArray);
+  }
   Bool_t computeErrors = kFALSE;
   if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
   if (pname != name)  delete [] pname;
