@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.63 2004/08/05 10:06:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.64 2005/01/01 11:29:21 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -719,7 +719,7 @@ Long_t TApplication::ProcessFile(const char *name, int *error)
       return 0;
    }
 
-   ::ifstream file(exnam,ios::in);
+   ::ifstream file(exnam, ios::in);
    if (!file.good()) {
       Error("ProcessFile", "%s no such file", exnam);
       delete [] exnam;
@@ -736,10 +736,10 @@ Long_t TApplication::ProcessFile(const char *name, int *error)
    Long_t retval = 0;
 
    while (1) {
-      file.getline(currentline,kBufSize);
+      file.getline(currentline, kBufSize);
       if (file.eof()) break;
       s = currentline;
-      while (s && (*s == ' ' || *s == '\t') ) s++;     // strip-off leading blanks
+      while (s && (*s == ' ' || *s == '\t')) s++;   // strip-off leading blanks
 
       // very simple minded pre-processor parsing, only works in case macro file
       // starts with "#ifndef __CINT__". In that case everything till next
@@ -770,7 +770,23 @@ Long_t TApplication::ProcessFile(const char *name, int *error)
       }
 
       if (!strncmp(s, "/*", 2)) comment = 1;
-      if (comment && !strncmp(s+strlen(s)-2, "*/", 2)) comment = 0;
+      if (comment) {
+         // handle slightly more complex cases like: /*  */  /*
+again:
+         s = strstr(s, "*/");
+         if (s) {
+            comment = 0;
+            s += 2;
+
+            while (s && (*s == ' ' || *s == '\t')) s++; // strip-off leading blanks
+            if (!*s) continue;
+            if (!strncmp(s, "//", 2)) continue;
+            if (!strncmp(s, "/*", 2)) {
+               comment = 1;
+               goto again;
+            }
+         }
+      }
       if (!comment && *s == '{') tempfile = 1;
       if (!comment) break;
    }
