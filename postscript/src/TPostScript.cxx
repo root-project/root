@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name$:$Id$
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 char backslash = '\\';
 
 const Int_t  kMaxBuffer = 250;
+const Int_t  kLatex = BIT(10);
 
 ClassImp(TPostScript)
 
@@ -803,13 +804,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Float_t *, Float_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name$:$Id$
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name$:$Id$
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1506,7 +1507,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name$:$Id$
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
@@ -2259,7 +2260,8 @@ while (ich < nchp ) {
 //*-*
 //*-*  read character number I and check if it is a escape character
 //*-*
-   scape  = (char*)strchr(cflip, char2[ich-1]);
+   if (TestBit(kLatex)) scape = 0;
+   else                 scape  = (char*)strchr(cflip, char2[ich-1]);
    if( scape )  {
       if ( *scape == cflip[0] ) {
              greek = kTRUE;       //*-*- find ` : go to greek
@@ -2318,6 +2320,7 @@ while (ich < nchp ) {
 //*-*- START of a new text: on the first character, or on the
 //*-*-    first non escape char. which follows an escape char.
       if( ich != 1) scape = (char*)strchr(cflip, char2[ich-2]);
+      if (TestBit(kLatex)) scape = 0;
       if( scape || ich == 1)  {
          ideb = ich;
          if( roman)       ifnb[nt]   = font;  //*-*- set font # (IFNB)
@@ -2338,6 +2341,7 @@ while (ich < nchp ) {
 //*-*-      the last non escape which preceeds an escape (but
 //*-*-      the terminating escape character itself is not known)
       if( ich != nchp) scape = (char*)strchr(cflip, char2[ich]);
+      if (TestBit(kLatex)) scape = 0;
       if( scape || ich == nchp)  {
          Int_t ifin = ich;              //*-* compute text length and make one piece
          Int_t ilen = ifin - ideb + 1;  //*-* if length <74 and not 80, because of
