@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.21 2001/04/12 15:04:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.22 2001/04/20 21:21:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -611,10 +611,9 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 //
 //  The function returns the number of bytes read from the input buffer.
 //  If entry does not exist or an I/O error occurs, the function returns 0.
-//  if entry is the same as the previous call, the function returns 1.
 
    if (TestBit(kDoNotProcess) && !getall) return 0;
-   if (fReadEntry == entry) return 1;
+   //if (fReadEntry == entry) return 1;  //side effects in case user Clear his structures
    if (entry < 0 || entry >= fEntryNumber) return 0;
    Int_t nbytes;
    Int_t first  = fBasketEntry[fReadBasket];
