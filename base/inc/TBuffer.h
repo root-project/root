@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.7 2002/01/08 22:13:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.8 2002/02/02 11:52:46 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -43,7 +43,6 @@ protected:
    Int_t     fMapCount;      //Number of objects or classes in map
    Int_t     fMapSize;       //Default size of map
    Int_t     fDisplacement;  //Value to be added to the map offsets
-   
    union {
       TExMap *fReadMap;      //Map containing id,object references during reading
       TExMap *fWriteMap;     //Map containing object,id pairs during writing
@@ -68,7 +67,7 @@ protected:
 
    Int_t Read(const char *name) { return TObject::Read(name); }
    Int_t Write(const char *name, Int_t opt, Int_t bufs)
-                                 { return TObject::Write(name, opt, bufs); }
+                                { return TObject::Write(name, opt, bufs); }
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
@@ -89,9 +88,9 @@ public:
    void     SetWriteParam(Int_t mapsize);
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
-   void     SetParent(TObject *parent) {fParent = parent;}
-   TObject *GetParent() {return fParent;} 
-     
+   void     SetParent(TObject *parent) { fParent = parent; }
+   TObject *GetParent() const { return fParent; }
+
    char    *Buffer() const { return fBuffer; }
    Int_t    BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = 0; }
