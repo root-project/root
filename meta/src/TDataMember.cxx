@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.17 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.18 2003/09/01 07:09:11 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -213,6 +213,12 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
                 // strncmp() also covers "unsigned long long"
                name = GetTypeName();
             fDataType = gROOT->GetType(name);
+
+            if (fDataType==0) {
+               // humm we did not find it ... maybe it's a typedef that has not been loaded yet.
+               // (this can happen if the executable does not have a TApplication object).
+               fDataType = gROOT->GetType(name,kTRUE);
+            }
          } else {
             fDataType = gROOT->GetType("Int_t");
          }
