@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.11 2001/10/24 15:13:43 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.12 2002/01/04 08:07:38 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1390,7 +1390,7 @@ TVector &e)
           // Use vector u/H stored in a to form P dot Q
           g += pa[i+k*n]*pa[k+j*n];
 
-        for (Int_t k = 0; k <= l; k++)
+        for (k = 0; k <= l; k++)
           pa[k+j*n] -= g*pa[k+i*n];
       }
     }
