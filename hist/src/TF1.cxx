@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.95 2004/09/13 16:39:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.96 2004/10/20 17:07:58 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -43,17 +43,40 @@ ClassImp(TF1)
 //    B- Expression using variable x with parameters
 //    C- A general C function with parameters
 //
-//      Example of a function of type A
+//         +++++++++++++++++++++++++++++++++++
+// ===>    + Example of a function of type A +
+//         +++++++++++++++++++++++++++++++++++
 //
-//   TF1 *f1 = new TF1("f1","sin(x)/x",0,10);
-//   f1->Draw();
+//  Case A1 (inline expression using standard C++ functions/operators)
+//  ------------------------------------------------------------------
+//   TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+//   fa1->Draw();
 //Begin_Html
 /*
 <img src="gif/function1.gif">
 */
 //End_Html
 //
-//      Example of a function of type B
+//  Case A2 (inline expression using TMath functions without parameters)
+//  --------------------------------------------------------------------
+//   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
+//   fa2->Draw();
+//
+//  Case A3 (inline expression using a CINT function by name
+//  --------------------------------------------------------
+//   Double_t myFunc(x) {
+//      return x+sin(x);
+//   }
+//   TF1 *fa3 = new TF1("fa4","myFunc(x)",-3,5);
+//   fa3->Draw();
+//
+//
+//         +++++++++++++++++++++++++++++++++++
+// ===>    + Example of a function of type B+
+//         +++++++++++++++++++++++++++++++++++
+//
+//  Case B1 (inline expression using standard C++ functions/operators)
+//  ------------------------------------------------------------------
 //   TF1 *f1 = new TF1("f1","[0]*x*sin([1]*x)",-3,3);
 //    This creates a function of variable x with 2 parameters.
 //    The parameters must be initialized via:
@@ -62,7 +85,17 @@ ClassImp(TF1)
 //    Parameters may be given a name:
 //      f1->SetParName(0,"Constant");
 //
-//     Example of function of type C
+//  Case B2 (inline expression using TMath functions with parameters)
+//  --------------------------------------------------------------------
+//   TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
+//   fb2->SetParameters(0.2,1.3);
+//   fb2->Draw();
+//
+//
+//         +++++++++++++++++++++++++++++++++++
+// ===>    + Example of a function of type C+
+//         +++++++++++++++++++++++++++++++++++
+//
 //   Consider the macro myfunc.C below
 //-------------macro myfunc.C-----------------------------
 //Double_t myfunction(Double_t *x, Double_t *par)
