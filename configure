@@ -145,7 +145,7 @@ mysqlincdirs="$MYSQL $MYSQL/include /usr/include /usr/local/include \
               /usr/local/mysql/include /usr/mysql /usr/local/mysql /opt/mysql \
               /opt/mysql/include"
 
-if [ -z $mysqlincdir ]; then
+if [ -z "$mysqlincdir" ]; then
    mysqlincdir=NO
    if [ "$MYSQL" != "NO" ]; then
       for i in $mysqlincdirs; do
@@ -165,7 +165,7 @@ mysqllibdirs="$MYSQL $MYSQL/lib /usr/lib /usr/local/lib /usr/lib/mysql \
               /usr/local/lib/mysql /usr/mysql/lib /usr/local/mysql/lib \
               /usr/mysql /usr/local/mysql /opt/mysql /opt/mysql/lib"
 
-if [ -z $mysqllibdir ]; then
+if [ -z "$mysqllibdir" ]; then
    mysqllibdir=NO
    if [ "$MYSQL" != "NO" ]; then
       for i in $mysqllibdirs; do
@@ -188,7 +188,7 @@ ttfincdirs="$TTF $TTF/include /usr/include /usr/local/include \
               /usr/freetype /usr/local/freetype /opt/freetype \
               /opt/freetype/include"
 
-if [ -z $ttfincdir ]; then
+if [ -z "$ttfincdir" ]; then
    ttfincdir=NO
    if [ "$TTF" != "NO" ]; then
       for i in $ttfincdirs; do
@@ -209,7 +209,7 @@ ttflibdirs="$TTF $TTF/lib /usr/lib /usr/local/lib /usr/lib/freetype \
               /usr/local/freetype/lib /usr/freetype /usr/local/freetype \
               /opt/freetype /opt/freetype/lib"
 
-if [ -z $ttflibdir ]; then
+if [ -z "$ttflibdir" ]; then
    ttflibdir=NO
    if [ "$TTF" != "NO" ]; then
       for i in $ttflibdirs; do
@@ -231,7 +231,7 @@ ttffontdirs="$TTF $TTF/fonts /usr/lib/X11/fonts /usr/lib/X11/fonts/ttf \
               /usr/local/share/fonts/ttf /usr/local/share/ttf 
               /opt/fonts /opt/fonts/ttf /opt/ttf"
 
-if [ -z $ttffontdir ]; then
+if [ -z "$ttffontdir" ]; then
    ttffontdir=NO
    if [ "$TTF" != "NO" ]; then
       for i in $ttffontdirs; do
@@ -253,7 +253,7 @@ openglincdirs="$OPENGL $OPENGL/include /usr/include /usr/local/include \
               /usr/local/Mesa/include /usr/Mesa /usr/local/Mesa /opt/Mesa \
               /opt/Mesa/include"
 
-if [ -z $openglincdir ]; then
+if [ -z "$openglincdir" ]; then
    openglincdir=NO
    if [ "$OPENGL" != "NO" ]; then
       for i in $openglincdirs; do
@@ -273,7 +273,7 @@ opengllibdirs="$OPENGL $OPENGL/lib /usr/lib /usr/local/lib /usr/lib/Mesa \
               /usr/local/lib/Mesa /usr/Mesa/lib /usr/local/Mesa/lib \
               /usr/Mesa /usr/local/Mesa /opt/Mesa /opt/Mesa/lib"
 
-if [ -z $opengllibdir ]; then
+if [ -z "$opengllibdir" ]; then
    opengllibdir=NO
    if [ "$OPENGL" != "NO" ]; then
       for i in $opengllibdirs; do
@@ -294,7 +294,7 @@ xpmlibdirs="$XPM $XPM/lib /usr/lib /usr/local/lib \
               /usr/lib/X11 /usr/local/lib/X11 /usr/X11R6/lib \
               /use/local/X11R6/lib /usr/X11/lib"
 
-if [ -z $xpmlib ]; then
+if [ -z "$xpmlib" ]; then
    xpmlib=NO
    for i in $xpmlibdirs; do
       for j in libXpm.a; do
@@ -311,7 +311,7 @@ echo $xpmlib
 echo $ac_n "Checking for SRP (libsrp.a)... $ac_c"
 srpdirs="$SRP /usr/srp /usr/local/srp"
 
-if [ -z $srpdir ]; then
+if [ -z "$srpdir" ]; then
    srpdir=NO
    for i in $srpdirs; do
       for j in lib/libsrp.a; do
@@ -328,7 +328,7 @@ echo $srpdir
 echo $ac_n "Checking for AFS (libdes.a)... $ac_c"
 afsdirs="$AFS /usr/afsws /usr/local/afsws"
 
-if [ -z $afsdir ]; then
+if [ -z "$afsdir" ]; then
    afsdir=NO
    for i in $afsdirs; do
       for j in lib/libdes.a; do
@@ -346,7 +346,7 @@ echo $ac_n "Checking for libshift.a... $ac_c"
 rfios="$RFIO /cern/pro/lib/libshift.a /cern/new/lib/libshift.a \
        /cern/old/lib/libshift.a"
 
-if [ -z $rfio ]; then
+if [ -z "$rfio" ]; then
    rfio=NO
    for i in $rfios; do
       if [ -r "$i" ]; then
@@ -362,7 +362,7 @@ echo $ac_n "Checking for libpacklib... $ac_c"
 cernlibdirs="$CERNLIB $CERNLIB/lib /cern/pro/lib /cern/old/lib /cern/new/lib"
 packlibs="libpacklib.a libpacklib.so libpacklib.sl libpacklib.lib"
 
-if [ -z $cernlibdir ]; then
+if [ -z "$cernlibdir" ]; then
    cernlibdir=NO
    for i in $cernlibdirs; do
       for j in $packlibs; do
@@ -380,7 +380,7 @@ echo $ac_n "Checking for libPythia... $ac_c"
 pythialibdirs="$PYTHIA $PYTHIA/lib /cern/pro/lib"
 pythialibs="libPythia.so libPythia.sl libPythia.a libPythia.lib"
 
-if [ -z $pythialib ]; then
+if [ -z "$pythialib" ]; then
    pythialib=NO
    for i in $pythialibdirs; do
       for j in $pythialibs; do
@@ -398,7 +398,7 @@ echo $ac_n "Checking for libPythia6... $ac_c"
 pythia6libdirs="$PYTHIA6 $PYTHIA6/lib /cern/pro/lib"
 pythia6libs="libPythia6.so libPythia6.sl libPythia6.a libPythia6.lib"
 
-if [ -z $pythia6lib ]; then
+if [ -z "$pythia6lib" ]; then
    pythia6lib=NO
    for i in $pythia6libdirs; do
       for j in $pythia6libs; do
@@ -416,7 +416,7 @@ echo $ac_n "Checking for libVenus... $ac_c"
 venuslibdirs="$VENUS $VENUS/lib /cern/pro/lib"
 venuslibs="libVenus.so libVenus.sl libVenus.a libVenus.lib"
 
-if [ -z $venuslib ]; then
+if [ -z "$venuslib" ]; then
    venuslib=NO
    for i in $venuslibdirs; do
       for j in $venuslibs; do
