@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.2 2005/03/03 08:06:16 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -45,8 +45,8 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
 
    const char *conn_str = 0;
    if (strcmp(url.GetFile(), "/"))
-      conn_str = url.GetFile()+1; 
-   
+      conn_str = url.GetFile()+1;
+
    try {
       fEnv = Environment::createEnvironment();
       fConn = fEnv->createConnection(uid, pw, conn_str);
@@ -76,6 +76,7 @@ TOracleServer::~TOracleServer()
 void TOracleServer::Close(Option_t *)
 {
    // Close connection to Oracle DB server.
+
    try {
       if (fStmt)
          fConn->terminateStatement(fStmt);
@@ -97,14 +98,14 @@ TSQLResult *TOracleServer::Query(const char *sql)
    // Execute SQL command. Result object must be deleted by the user.
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
-   
+
    if (!IsConnected()) {
       Error("Query", "not connected");
       return 0;
    }
-   
+
    try {
-      if (!fStmt) 
+      if (!fStmt)
          fStmt = fConn->createStatement();
       fStmt->setSQL(sql);
       fStmt->execute();
@@ -113,7 +114,7 @@ TSQLResult *TOracleServer::Query(const char *sql)
          Error("TOracleServer", "query failed: (error: %s)", (oraex.getMessage()).c_str());
       //MakeZombie();
    }
-   
+
    return 0;
 }
 
@@ -124,20 +125,21 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char *wild)
    // "t%" list all tables starting with "t".
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
-   
-/* In Oracle 9 and above, table is accessed in schema.table format.
- * GetTables returns tables in all schemas accessible for the user.
- * Assumption: table ALL_OBJECTS is accessible for the user, which is true in Oracle 10g
- * The returned TSQLResult has two columns: schema_name, table_name
- * "dbname": if specified, return table list of this schema, or return all tables
- * "wild" is not used in this implementation
-*/
+   //
+   // In Oracle 9 and above, table is accessed in schema.table format.
+   // GetTables returns tables in all schemas accessible for the user.
+   // Assumption: table ALL_OBJECTS is accessible for the user, which is
+   // true in Oracle 10g. The returned TSQLResult has two columns: schema_name,
+   // table_name.
+   // "dbname": if specified, returns table list of this schema, or return
+   //           all tables
+   // "wild":   is not used in this implementation
 
    if (!IsConnected()) {
       Error("GetTables", "not connected");
       return 0;
    }
-   
+
    TString sqlstr("SELECT owner, object_name FROM ALL_OBJECTS WHERE object_type='TABLE'");
    if (dbname)
       sqlstr = sqlstr + " AND owner='" + dbname + "'";
@@ -155,7 +157,7 @@ TSQLResult *TOracleServer::GetColumns(const char *dbname, const char *table,
    // Wild is for wildcarding "t%" list all columns starting with "t".
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
-   
+
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
       return 0;
@@ -166,7 +168,7 @@ TSQLResult *TOracleServer::GetColumns(const char *dbname, const char *table,
       return 0;
    }
    return new TOracleResult(fConn, table);
-   
+
 }
 
 //______________________________________________________________________________
@@ -225,7 +227,7 @@ Int_t TOracleServer::DropDataBase(const char * /*dbname*/)
       Error("DropDataBase", "not connected");
       return -1;
    }
-   
+
    return -1;
 }
 

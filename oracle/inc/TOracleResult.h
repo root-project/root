@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.2 2005/03/03 08:06:16 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -24,14 +24,6 @@
 using namespace std;
 using namespace oracle::occi;
 #else
-/*namespace oracle {
-   namespace occi { class Statement; }
-   namespace occi { class ResultSet; }
-   namespace occi { class MetaData;  }
-}
-namespace std {
-   using vector:
-}*/
 class Connection;
 class Statement;
 class ResultSet;
@@ -42,13 +34,13 @@ class MetaData;
 class TOracleResult : public TSQLResult {
 
 private:
-   Statement        *fStmt;   
+   Statement        *fStmt;
    ResultSet        *fResult;      // query result (rows)
    vector<MetaData> *fFieldInfo;   // info for each field in the row
    Int_t             fFieldCount;  // num of fields in resultset
    UInt_t            fUpdateCount; //for dml query, mutual exclusive with above
    Int_t             fResultType;  // 0 - Update(dml); 1 - Select; -1 - empty
-   
+
    Bool_t  IsValid(Int_t field);
    void    GetMetaDataInfo();
 

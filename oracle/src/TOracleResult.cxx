@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.2 2005/03/03 08:06:16 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -20,7 +20,7 @@ void TOracleResult::GetMetaDataInfo()
 {
    // Set fFieldInfo, fFieldCount, and fRowCount?
 
-   if (!fResult) 
+   if (!fResult)
       return;
    fFieldInfo = new vector<MetaData>(fResult->getColumnListMetaData());
    fFieldCount = fFieldInfo->size();
@@ -36,7 +36,7 @@ TOracleResult::TOracleResult(Statement *stmt)
       Error("TOracleResult", "construction: empty statement");
       fResultType = -1;
    } else {
-      fStmt         = stmt;      
+      fStmt         = stmt;
       if (stmt->status() == Statement::RESULT_SET_AVAILABLE) {
          fResultType = 1;
          fResult    = stmt->getResultSet();
@@ -57,9 +57,10 @@ TOracleResult::TOracleResult(Statement *stmt)
 }
 
 //______________________________________________________________________________
-//This construction func is only used to get table metainfo
 TOracleResult::TOracleResult(Connection *conn, const char *tableName)
 {
+   // This ctor is only used to get table metainfo.
+
    if (!tableName || !conn) {
       Error("TOracleResult", "construction: empty input parameter");
       fResultType = -1;
@@ -68,10 +69,10 @@ TOracleResult::TOracleResult(Connection *conn, const char *tableName)
       fFieldInfo = new vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
       fFieldCount = fFieldInfo->size();
       fRowCount = 0;
-      fResult = 0; 
+      fResult = 0;
       fUpdateCount = 0;
       fResultType = 1;
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -113,6 +114,7 @@ Bool_t TOracleResult::IsValid(Int_t field)
 Int_t TOracleResult::GetFieldCount()
 {
    // Get number of fields in result.
+
    /*
    if (!fResult) {
       Error("GetFieldCount", "result set closed");
@@ -126,7 +128,7 @@ Int_t TOracleResult::GetFieldCount()
 const char *TOracleResult::GetFieldName(Int_t field)
 {
    // Get name of specified field.
-   
+
    if (!IsValid(field))
       return 0;
    string s = (*fFieldInfo)[field].getString(MetaData::ATTR_NAME);
@@ -143,14 +145,14 @@ TSQLRow *TOracleResult::Next()
       Error("Next", "result set closed");
       return 0;
    }
-   
+
    if (fResultType == 0) {
       // if dml query, ...
       return new TOracleRow(fUpdateCount);
-   } 
+   }
    // if select query,
    if (fResult->next())
       return new TOracleRow(fResult, fFieldInfo);
    else
-      return 0;   
+      return 0;
 }
