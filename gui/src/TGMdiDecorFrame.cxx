@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.4 2004/09/03 16:19:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.5 2004/09/08 16:03:57 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -69,6 +69,7 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
                    options | kOwnBackground | kVerticalFrame | kFixedSize, back)
 {
    fMdiMainFrame = main;
+   fEditDisabled = kTRUE;
    fFrame = frame;
    fIsMinimized = fIsMaximized = kFALSE;
    fMinimizedX = fMinimizedY = 0;
@@ -295,6 +296,7 @@ TGMdiTitleBar::TGMdiTitleBar(const TGWindow *p, const TGWindow *mdiwin,
 {
 
    fMdiWin = mdiwin;
+   fEditDisabled = kTRUE;
    fWinName = NULL;
    fMidButPressed = fLeftButPressed = fRightButPressed = kFALSE;
 
@@ -542,6 +544,7 @@ TGMdiButtons::TGMdiButtons(const TGWindow *p, const TGWindow *titlebar) :
 {
    fDefaultHint = new TGLayoutHints(kLHintsNormal, 0, 0, 1, 0);
    fCloseHint = new TGLayoutHints(kLHintsNormal, 2, 0, 1, 0);
+   fEditDisabled = kTRUE;
 
    //--- Minimize button
 
@@ -608,6 +611,7 @@ TGMdiTitleIcon::TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
 {
 
    fMsgWindow = titlebar;
+   fEditDisabled = kTRUE;
 
    //--- MDI system menu
 
@@ -836,6 +840,7 @@ TGMdiCornerWinResizer::TGMdiCornerWinResizer(const TGWindow *p,
                    w, h, kFixedSize | kOwnBackground)
 {
    Cursor_t defaultCursor = kNone;
+   fEditDisabled = kTRUE;
 
    switch (fPos) {
       case (kMdiResizerTop | kMdiResizerLeft):
@@ -964,6 +969,7 @@ TGMdiHorizontalWinResizer::TGMdiHorizontalWinResizer(const TGWindow *p,
                    w, h, kFixedWidth | kOwnBackground)
 {
 
+   fEditDisabled = kTRUE;
    gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kArrowHor));
 }
 

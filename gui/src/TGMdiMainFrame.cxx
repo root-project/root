@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.7 2004/09/10 14:00:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.8 2004/09/10 16:06:49 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -91,7 +91,7 @@ TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
    fCurrentX = fCurrentY = 0;
    fResizeMode = kMdiDefaultResizeMode;
 
-   fWinListMenu = new TGPopupMenu(fClient->GetRoot());
+   fWinListMenu = new TGPopupMenu(fClient->GetDefaultRoot());
 
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
    if (main){
@@ -899,7 +899,7 @@ void TGMdiMainFrame::FreeSize(TGMdiFrame *mdiframe)
    Window_t win;
 
    gVirtualX->TranslateCoordinates(frame->GetLowerRightCR()->GetId(),
-              fClient->GetRoot()->GetId(), x, y, xroot, yroot, win);
+              fClient->GetDefaultRoot()->GetId(), x, y, xroot, yroot, win);
 
    gVirtualX->Warp(x, y, frame->GetLowerRightCR()->GetId());
 
