@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.15 2002/12/06 16:45:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.16 2002/12/10 07:52:33 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // TGeoChecker::CheckGeometry() by Mihaela Gheata
 
@@ -305,7 +305,6 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    Double_t start[3];
    Double_t dir[3];
    TGeoNode *startnode, *endnode;
-   Bool_t is_entering;
    Int_t i;  // loop index for phi
    Int_t j;  // loop index for theta
    Int_t ntot = ntheta * nphi;
@@ -339,7 +338,7 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
          endnode = fGeom->Step();
          if (fGeom->IsOutside()) endnode=0;
          step = fGeom->GetStep();
-         is_entering = fGeom->IsEntering();
+         fGeom->IsEntering();
          while (step<1E10) {
             // now see if we can make an other step
 	          iloop=0;
@@ -368,7 +367,7 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
             endnode = fGeom->Step();
             if (fGeom->IsOutside()) endnode=0;
             step = fGeom->GetStep();
-            is_entering = fGeom->IsEntering();
+            fGeom->IsEntering();
          }
 //	 printf("%i : x=%f\n", igen, x);
          hist->Fill(phi, theta, x); 
