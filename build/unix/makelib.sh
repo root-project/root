@@ -87,6 +87,7 @@ elif [ $PLATFORM = "macosx" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+   export DYLD_LIBRARY_PATH=`pwd`/lib:$DYLD_LIBRARY_PATH
    if [ $macosx_minor -ge 3 ]; then
       unset LD_PREBIND
       export MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor
