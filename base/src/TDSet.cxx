@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.7 2002/04/19 18:23:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.8 2002/06/11 15:47:35 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 #include "TList.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassTable.h"
 #include "Riostream.h"
 
 
@@ -108,9 +109,9 @@ TDSet::TDSet()
 
    fElements = new TList;
    fElements->IsOwner();
-   fIsTree = kFALSE;
+   fIsTree   = kFALSE;
    fIterator = 0;
-   fCurrent = 0;
+   fCurrent  = 0;
 }
 
 //______________________________________________________________________________
@@ -131,7 +132,7 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
    fElements = new TList;
    fElements->IsOwner();
    fIterator = 0;
-   fCurrent = 0;
+   fCurrent  = 0;
 
    if (!type || !*type) {
       Error("TDSet", "type name must be specified");
@@ -162,6 +163,33 @@ TDSet::~TDSet()
 
    delete fElements;
    delete fIterator;
+}
+
+//______________________________________________________________________________
+Int_t TDSet::Process(const char *selector, Long64_t nentries,
+                     Long64_t first, TEventList *evl)
+{
+   // Process TDSet on currently active PROOF session.
+   // Returns -1 in case of error, 0 otherwise.
+
+   if (!IsValid() || !fElements->GetSize()) {
+      Error("Process", "not a correctly initialized TDSet");
+      return -1;
+   }
+
+   if (TClassTable::GetDict("TProof")) {
+      if (gROOT->ProcessLineFast("TProof::IsActive()")) {
+         return (Int_t) gROOT->ProcessLineFast(
+            Form("TProof::This()->Process((TDSet *)0x%lx, %ld, %ld, (TEventList *)0x%lx);",
+            (Long_t)this, nentries, first, (Long_t)evl));
+      } else {
+         Error("Process", "no active PROOF session");
+         return -1;
+      }
+   }
+
+   Error("Process", "PROOF session not started");
+   return -1;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.5 2002/04/19 18:24:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.6 2002/06/13 15:13:21 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -225,6 +225,8 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                   Long64_t nentries, Long64_t first,
                                   TEventList *evl)
 {
+   // Process specified TDSet on PROOF.
+   // Returns -1 in case error, 0 otherwise.
 
 Info("Process","---- Start ----");
 

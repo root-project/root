@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.7 2002/01/20 10:22:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.8 2002/05/18 08:48:42 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -39,7 +39,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TEventList.h"
-#include "TTree.h"
+#include "TCut.h"
+#include "TClass.h"
 #include "TFile.h"
 #include "TMath.h"
 
@@ -216,7 +217,7 @@ Int_t TEventList::GetIndex(Int_t entry) const
 Int_t TEventList::Merge(TCollection *list)
 {
 // Merge entries in all the TEventList in the collection in this event list
-   
+
    if (!list) return -1;
    TIter next(list);
 
@@ -231,8 +232,8 @@ Int_t TEventList::Merge(TCollection *list)
       Add(el);
       nevents += el->GetN();
    }
-   
-   return nevents;   
+
+   return nevents;
 }
 
 //______________________________________________________________________________
@@ -356,7 +357,7 @@ void TEventList::Streamer(TBuffer &b)
       gDirectory->Append(this);
       b.CheckByteCount(R__s, R__c, TEventList::IsA());
       //====end of old versions
-      
+
    } else {
       TEventList::Class()->WriteBuffer(b,this);
    }
