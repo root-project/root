@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.164 2003/11/03 14:10:06 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.165 2003/11/12 07:23:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -624,6 +624,9 @@ void TTree::AutoSave()
 //   the file will be automatically recovered when you will connect the file
 //   in UPDATE mode.
 //   The Tree will be recovered at the status corresponding to the last AutoSave.
+//
+//   One can also call gDirectory->SaveSelf() after a call to TTree::AutoSave.
+//   This allows another process to analyze the Tree while the Tree is being filled.
 //
    if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return;
    if (gDebug > 0) {
@@ -3288,8 +3291,9 @@ void TTree::Refresh()
 {
 //  Refresh contents of this Tree and his branches from the current
 //  Tree status on its file
-   
-   printf("Refreshing Tree:%s from file%s\n",GetName(),GetDirectory()->GetName());
+//  One can call this function in case the Tree on its file is being
+//  updated by another process
+      
    if (!fDirectory) return;
    fDirectory->ReadKeys();
    fDirectory->GetList()->Remove(this);
@@ -3313,7 +3317,7 @@ void TTree::Refresh()
    fDirectory->GetList()->Remove(tree);
    fDirectory->GetList()->Add(this);
    delete tree;
-   }
+}
 
 //______________________________________________________________________________
 void TTree::RemoveFriend(TTree *oldFriend)
