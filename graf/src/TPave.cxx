@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.10 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.11 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -37,6 +37,15 @@ TPave::TPave(): TBox()
 {
 //*-*-*-*-*-*-*-*-*-*-*pave default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
+   fBorderSize   = 4;
+   fOption       = "brNDC";
+   fName         = "";
+   fInit         = 1;
+   fCornerRadius = 0;
+   SetFillColor(18);
+   SetFillStyle(1001);
+   SetLineColor(1);
+   SetLineStyle(1);
 }
 
 //______________________________________________________________________________
