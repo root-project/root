@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.73 2003/10/07 14:00:59 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.74 2003/10/13 18:20:18 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -163,9 +163,9 @@
 #endif
 
 #if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA)) || \
-    defined(R__SUNGCC3)
+    (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
-#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA))
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || (defined(R__SUNGCC3) && defined(__arch64__))
 #   define USE_SOCKLEN_T
 #endif
 
