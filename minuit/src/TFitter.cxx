@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.14 2003/11/26 16:21:47 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.15 2004/02/06 14:32:28 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -490,9 +490,17 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       if (exh > 0 && exl > 0) {
         xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
         xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
-        x[0] = xm; fm = f1->EvalPar(x,u);
-        x[0] = xp; fp = f1->EvalPar(x,u);
-        eux = 0.5*(fp-fm);
+
+        //"Effective Variance" method introduced by Anna Kreshuk 
+        // in version 4.00/08.
+	
+	eux = (exl + exh)*f1->Derivative(x[0], u);
+	
+	//Without the "variance method", we had the 3 next lines instead
+        // of the line above.
+        //x[0] = xm; fm = f1->EvalPar(x,u);
+        //x[0] = xp; fp = f1->EvalPar(x,u);
+        //eux = 0.5*(fp-fm);
       } else
         eux = 0.;
       eu = ey*ey+eux*eux;
