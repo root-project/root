@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.30 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.31 2002/12/05 10:01:50 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -46,7 +46,8 @@ friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 public:
    // TClass status bits
    enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13),
-          kUnloaded = BIT(15), kIsTObject = BIT(16), kIsForeign = BIT(17) };
+          kUnloaded = BIT(15), kIsTObject = BIT(16), kIsForeign = BIT(17),
+          kIsEmulation = BIT(18) };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
 private:
@@ -76,7 +77,7 @@ private:
    ROOT::DelArrFunc_t fDeleteArray;     //pointer to a function deleting an array of objects.
    ROOT::DesFunc_t    fDestructor;      //pointer to a function call an object's destructor.
 
-   Bool_t             fVersionUsed;     //!Indicated whether GetClassVersion has been called
+   Bool_t             fVersionUsed;     //!Indicates whether GetClassVersion has been called
    Long_t             fProperty;        //!Property
 
    void              *fInterStreamer;   //!saved info to call Streamer

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.157 2003/02/27 12:17:15 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.158 2003/02/28 09:27:16 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -381,8 +381,9 @@ void TStreamerInfo::BuildCheck()
          return;
       }
       if (fClass->GetListOfDataMembers()
-         && (fClassVersion == fClass->GetClassVersion())
-         && (fCheckSum != fClass->GetCheckSum())) {
+          && (fClassVersion == fClass->GetClassVersion())
+          && (fCheckSum != fClass->GetCheckSum())
+          && (fClass->GetClassInfo()) ) {
             //give a last chance. Due to a new CINT behaviour with enums
             //verify the checksum ignoring members of type enum
             if (fCheckSum != fClass->GetCheckSum(1)) {
@@ -403,6 +404,7 @@ void TStreamerInfo::BuildCheck()
       }
    } else {
       fClass = new TClass(GetName(),fClassVersion, 0, 0, -1, -1 );
+      fClass->SetBit(TClass::kIsEmulation);
       array = fClass->GetStreamerInfos();
    }
    if (TestBit(TClass::kIgnoreTObjectStreamer)) fClass->IgnoreTObjectStreamer();
@@ -480,7 +482,7 @@ void TStreamerInfo::BuildOld()
          TClass *baseclass = base->GetClassPointer();
          if (!baseclass) {
             Warning("BuildOld","Missing base class: %s skipped",base->GetName());
-            baseclass = new TClass(element->GetName(),1,0,0,0,0);
+            baseclass = new TClass(element->GetName(),1,0,0,-1,-1);
             element->Update(0,baseclass);
          }
          baseclass->BuildRealData();

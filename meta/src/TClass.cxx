@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.108 2003/02/22 13:13:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.109 2003/02/25 17:55:26 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -193,7 +193,8 @@ ClassImp(TClass)
 
 //______________________________________________________________________________
 TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
-                   fDeleteArray(0)
+                   fDeleteArray(0), fDestructor(0), fVersionUsed(kFALSE), 
+                   fOffsetStreamer(0)
 {
    // Default ctor.
 
@@ -220,7 +221,8 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
 
 //______________________________________________________________________________
 TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
-                                   fDelete(0), fDeleteArray(0)
+                                   fDelete(0), fDeleteArray(0), fDestructor(0), 
+                                   fVersionUsed(kFALSE), fOffsetStreamer(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -277,7 +279,8 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
-   : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0)
+   : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0), 
+   fDestructor(0), fVersionUsed(kFALSE), fOffsetStreamer(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -291,7 +294,8 @@ TClass::TClass(const char *name, Version_t cversion,
                const type_info &info, IsAFunc_t isa,
                ShowMembersFunc_t showmembers,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
-   : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0)
+   : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0), 
+   fDestructor(0), fVersionUsed(kFALSE), fOffsetStreamer(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
