@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.1 2001/10/01 06:48:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.2 2001/10/01 06:55:55 brun Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -79,7 +79,8 @@ void TGraphSmooth::Smoothin(TGraph *grin)
    fNin = fGin->GetN();
    Double_t *xin = new Double_t[fNin];
    Double_t *yin = new Double_t[fNin];
-   for (Int_t i=0;i<fNin;i++) {
+   Int_t i;
+   for (i=0;i<fNin;i++) {
       xin[i] = fGin->GetX()[i];
       yin[i] = fGin->GetY()[i];
    }
@@ -87,7 +88,7 @@ void TGraphSmooth::Smoothin(TGraph *grin)
 // sort input x, y
    Int_t *index = new Int_t[fNin];
    TMath::Sort(fNin, xin, index, kFALSE);
-   for (Int_t i=0;i<fNin;i++) {
+   for (i=0;i<fNin;i++) {
       fGin->SetPoint(i, xin[index[i]], yin[index[i]]);
    }
 
@@ -522,13 +523,14 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
 // output X, Y
    fNout = fNin;
    fGout = new TGraph(fNout);
-   for (Int_t i=0; i<fNout; i++) {
+   Int_t i;
+   for (i=0; i<fNout; i++) {
       fGout->SetPoint(i,fGin->GetX()[i], 0);
    }
 
 // weights
    Double_t *weight = new Double_t[fNin];
-   for (Int_t i=0; i<fNin; i++) {
+   for (i=0; i<fNin; i++) {
       if (w == 0) weight[i] = 1;
       else        weight[i] = w[i];
    }
@@ -536,7 +538,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
 // temporary storage array
    Int_t NTmp = (fNin+1)*8;
    Double_t *Tmp = new Double_t[NTmp];
-   for (Int_t i=0; i<NTmp; i++) {
+   for (i=0; i<NTmp; i++) {
       Tmp[i] = 0;
    }
 
@@ -898,7 +900,8 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
    fNin = fGin->GetN();
    Double_t *xin = new Double_t[fNin];
    Double_t *yin = new Double_t[fNin];
-   for (Int_t i=0;i<fNin;i++) {
+   Int_t i;
+   for (i=0;i<fNin;i++) {
       xin[i] = fGin->GetX()[i];
       yin[i] = fGin->GetY()[i];
    }
@@ -915,7 +918,7 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
    Double_t *x = new Double_t[fNin];
    Double_t *y = new Double_t[fNin];
    Double_t vMean, vMin, vMax;
-   for (Int_t i=1;i<fNin+1;i++) {
+   for (i=1;i<fNin+1;i++) {
       Int_t ndup = 1;
       vMin = vMean = vMax = yin[index[i-1]];
       while ((i < fNin) && (rank[index[i]] == rank[index[i-1]])) {
@@ -948,7 +951,7 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
 
 // set unique sorted input data x,y as final graph points
    fGin->Set(fNin);
-   for (Int_t i=0;i<fNin;i++) {
+   for (i=0;i<fNin;i++) {
       fGin->SetPoint(i, x[i], y[i]);
    }
 
