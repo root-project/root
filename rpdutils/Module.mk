@@ -57,6 +57,7 @@ SRVAUTHO      += $(MODDIRS)/globus.o
 else
 RPDUTILS      := $(filter-out $(MODDIRS)/globus.cxx,$(RPDUTILS))
 RPDUTILO      := $(filter-out $(MODDIRS)/globus.o,$(RPDUTILO))
+GLBSLIBS      += $(SSLLIBDIR) $(SSLLIB)
 endif
 
 # Combined...
