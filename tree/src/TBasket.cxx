@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.5 2001/02/12 07:36:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.6 2001/04/27 06:35:39 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -210,7 +210,7 @@ void TBasket::SetReadMode()
 {
    // Set read mode of basket.
 
-   //fLast = fBufferRef->Length();
+   fLast = fBufferRef->Length();
    fBufferRef->SetReadMode();
 }
 
