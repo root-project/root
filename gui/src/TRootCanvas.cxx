@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.55 2004/10/11 16:27:13 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.56 2004/10/15 15:36:41 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #include "TRootControlBar.h"
 #include "TGLabel.h"
 #include "TGuiBuilder.h"
+#include "TImage.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -72,6 +73,10 @@ enum ERootCanvasCommands {
    kFileSaveAsSVG,
    kFileSaveAsGIF,
    kFileSaveAsXML,
+   kFileSaveAsXPM,
+   kFileSaveAsPNG,
+   kFileSaveAsJPG,
+   kFileSaveAsTIFF,
    kFilePrint,
    kFileCloseCanvas,
    kFileQuit,
@@ -321,6 +326,15 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileSaveMenu->AddEntry(Form("%s.&C",   name), kFileSaveAsC);
    fFileSaveMenu->AddEntry(Form("%s.&root",name), kFileSaveAsRoot);
    fFileSaveMenu->AddEntry(Form("%s.&xml",name),  kFileSaveAsXML);
+
+   TImage *img = TImage::Create();
+   if (img) {
+      fFileSaveMenu->AddEntry(Form("%s.xp&m",name),  kFileSaveAsXPM);
+      fFileSaveMenu->AddEntry(Form("%s.&jpg",name),  kFileSaveAsJPG);
+      fFileSaveMenu->AddEntry(Form("%s.p&ng",name),  kFileSaveAsPNG);
+      fFileSaveMenu->AddEntry(Form("%s.&tiff",name),  kFileSaveAsTIFF);
+      delete img;
+   }
 
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Canvas",   kFileNewCanvas);
@@ -783,6 +797,18 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kFileSaveAsGIF:
                      fCanvas->SaveAs(".gif");
+                     break;
+                  case kFileSaveAsXPM:
+                     fCanvas->SaveAs(".xpm");
+                     break;
+                  case kFileSaveAsJPG:
+                     fCanvas->SaveAs(".jpg");
+                     break;
+                  case kFileSaveAsPNG:
+                     fCanvas->SaveAs(".png");
+                     break;
+                  case kFileSaveAsTIFF:
+                     fCanvas->SaveAs(".tiff");
                      break;
                   case kFilePrint:
                      fCanvas->Print();

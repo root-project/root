@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.144 2004/09/03 14:46:08 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.145 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -61,6 +61,7 @@
 #include "TAttTextCanvas.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
+#include "TImage.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -3557,6 +3558,10 @@ void TPad::Print(const char *filenam, Option_t *option)
 //               "pdf" - a PDF file is produced
 //               "svg" - a SVG file is produced
 //               "gif" - a GIF file is produced
+//               "xpm" - a XPM file is produced
+//               "png" - a PNG file is produced
+//               "jpg" - a JPEG file is produced
+//               "tiff" - a TIFF file is produced
 //               "cxx" - a C++ macro file is produced
 //               "xml" - a XML file
 //              "root" - a ROOT binary file
@@ -3646,16 +3651,37 @@ void TPad::Print(const char *filenam, Option_t *option)
    delete [] filename;
 
 //==============Save pad/canvas as a GIF file==================================
+      TImage::EImageFileTypes gtype = TImage::kUnknown;
       if (strstr(opt,"gif")) {
+         gtype = TImage::kGif;
+      } else if (strstr(opt,"png")) {
+         gtype = TImage::kPng;
+      } else if (strstr(opt,"jpg")) {
+         gtype = TImage::kJpeg;
+      } else if (strstr(opt,"tiff")) {
+         gtype = TImage::kTiff;
+      } else if (strstr(opt,"xpm")) {
+         gtype = TImage::kXpm;
+      } 
+
+      if (gtype != TImage::kUnknown) {
       if (GetCanvas()->IsBatch()) {
-         Printf("Cannot create gif file in batch mode.");
+         Printf("Cannot create %s file in batch mode.", opt);
          return;
       }
       Update();
-      Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
-      gVirtualX->SelectWindow(wid);
-      if (gVirtualX->WriteGIF(psname)) {
-         if (!gSystem->AccessPathName(psname)) Info("Print", "GIF file %s has been created", psname);
+      TImage* img = TImage::Create();
+      if (!img && (gtype == TImage::kGif)) {
+         Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
+
+         gVirtualX->SelectWindow(wid);
+         if (gVirtualX->WriteGIF(psname)) {
+            if (!gSystem->AccessPathName(psname)) Info("Print", "GIF file %s has been created", psname);
+         }
+      } else {
+         img->FromPad(this);
+         img->WriteImage(psname, gtype);
+         if (!gSystem->AccessPathName(psname)) Info("Print", "file %s has been created", psname);
       }
       return;
    }
@@ -4150,6 +4176,10 @@ void TPad::SaveAs(const char *filename)
 //   if filename contains .pdf, a PDF file is produced
 //   if filename contains .svg, a SVG file is produced
 //   if filename contains .gif, a GIF file is produced
+//   if filename contains  .xpm, a XPM file is produced
+//   if filename contains . png, a PNG file is produced
+//   if filename contains . jpg, a JPEG file is produced
+//   if filename contains . tiff, a TIFF file is produced
 //   if filename contains .C or .cxx, a C++ macro file is produced
 //   if filename contains .root, a Root file is produced
 //   if filename contains .xml, a XML file is produced
@@ -4182,6 +4212,14 @@ void TPad::SaveAs(const char *filename)
                 Print(psname,"pdf");
    else if (psname.EndsWith(".svg"))
                 Print(psname,"svg");
+   else if (psname.EndsWith(".xpm"))
+                Print(psname,"xpm");
+   else if (psname.EndsWith(".png"))
+                Print(psname,"png");
+   else if (psname.EndsWith(".jpg"))
+                Print(psname,"jpg");
+   else if (psname.EndsWith(".tiff"))
+                Print(psname,"tiff");
    else
                 Print(psname,"ps");
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.1 2002/08/09 13:56:00 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.2 2004/10/18 12:47:28 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -31,6 +31,10 @@
 #ifndef ROOT_TAttImage
 #include "TAttImage.h"
 #endif
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
+
 
 class TVirtualPad;
 class TImage;
@@ -78,6 +82,8 @@ public:
    virtual void SetImage(const Double_t *imageData, UInt_t width, UInt_t height, TImagePalette *palette = 0) = 0;
    virtual void SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *palette = 0) = 0;
    virtual void SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette = 0) = 0;
+   virtual void SetImage(Pixmap_t pxm) = 0;
+   virtual void SetImage(const TGPicture *pic) = 0;
 
    // Pad conversions
    virtual void FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) = 0;

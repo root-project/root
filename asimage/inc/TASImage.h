@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.3 2004/01/05 12:31:48 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.4 2004/10/18 12:47:28 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -83,6 +83,8 @@ public:
    void  SetImage(const Double_t *imageData, UInt_t width, UInt_t height, TImagePalette *palette = 0);
    void  SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *palette = 0);
    void  SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette = 0);
+   void  SetImage(Pixmap_t pxm);
+   void  SetImage(const TGPicture *pic);
 
    // Pad conversions
    void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0,

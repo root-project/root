@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.7 2004/01/27 08:12:25 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.8 2004/10/18 12:47:28 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -1360,4 +1360,40 @@ const TGPicture *TASImage::GetPicture()
    } 
    
    return ret;
+}
+
+//______________________________________________________________________________
+void TASImage::SetImage(Pixmap_t pxm)
+{
+   // create image drom pixmap
+
+   if (!InitVisual()) return;
+
+   if (fImage) {
+      destroy_asimage(&fImage);
+   }
+
+   if (fScaledImage) {
+      destroy_asimage(&fScaledImage);
+      fScaledImage = 0;
+   }
+
+   SetName("unknown");
+
+   Int_t xy;
+   UInt_t w, h;
+
+   gVirtualX->GetWindowSize(pxm, xy, xy, w, h);
+   fImage = pixmap2asimage(fgVisual, pxm, 0, 0, w, h, AllPlanes, 0, 0);
+}
+
+//______________________________________________________________________________
+void TASImage::SetImage(const TGPicture *pic) 
+{
+   //
+
+   if (!pic) return;
+
+   SetImage(pic->GetPicture()); 
+   SetName(pic->GetName());
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.3 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.4 2004/09/10 14:00:40 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -43,7 +43,6 @@
 #include "TGMdiMainFrame.h"
 #include "TGMdiDecorFrame.h"
 #include "Riostream.h"
-
 
 ClassImp(TGMdiFrame)
 

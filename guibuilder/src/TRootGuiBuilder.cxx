@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.3 2004/10/18 15:22:13 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.4 2004/10/19 15:10:49 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -784,8 +784,6 @@ static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
 Bool_t TRootGuiBuilder::HandleKey(Event_t *event)
 {
    // keys handling
-
-   if (!fClient->IsEditable()) return kFALSE;
 
    if (event->fType == kGKeyPress) {
       UInt_t keysym;
