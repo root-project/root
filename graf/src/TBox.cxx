@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.12 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.13 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -196,6 +196,8 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad) return;
    if (!gPad->IsEditable() && event != kMouseEnter) return;
 
+   if (TestBit(kCannotMove)) return;
+   
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
 
