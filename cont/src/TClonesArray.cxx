@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.43 2004/09/29 09:46:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.44 2004/11/17 06:02:52 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -545,6 +545,7 @@ void TClonesArray::Streamer(TBuffer &b)
          Expand(nobjects);
       
       //reset fLast. nobjects may be 0
+      Int_t oldLast = fLast;
       fLast = nobjects-1;
 
       TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
@@ -571,6 +572,7 @@ void TClonesArray::Streamer(TBuffer &b)
             }
          }
       }
+      for (Int_t i = TMath::Max(nobjects,0); i < oldLast+1; ++i) fCont[i] = 0; 
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
