@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.31 2002/11/27 15:24:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.32 2003/01/26 13:21:24 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -639,6 +639,15 @@ Double_t *TMath::Normal2Plane(Double_t p1[3],Double_t p2[3],Double_t p3[3], Doub
    return normal;
 }
 
+//______________________________________________________________________________
+Double_t TMath::Poisson(Double_t x, Double_t par)
+{
+  // compute the Poisson distribution function for (x,par)
+
+  if (x<=0) return 0;                                                         
+  return TMath::Power(par,x)/TMath::Gamma(x+1)/TMath::Exp(par); 
+}                                                                              
+    
 //______________________________________________________________________________
 Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 {
