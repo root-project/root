@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.57 2004/03/19 08:10:46 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.58 2004/03/22 15:06:30 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TPluginManager.h"
 #include "TVirtualUtilPad.h"
 #include "TPaveText.h"
+#include "TClassEdit.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -3334,7 +3335,8 @@ void THtml::MakeClass(const char *className, Bool_t force)
       } else
          Printf(formatStr, "-skipped-", fCounter, className);
    } else
-      Error("MakeClass", "Unknown class '%s' !", className);
+      if (!TClassEdit::IsStdClass(className)) // stl classes won't be available, so no warning
+         Error("MakeClass", "Unknown class '%s' !", className);
 
 }
 
