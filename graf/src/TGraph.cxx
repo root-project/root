@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.109 2003/09/08 10:08:39 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.110 2003/09/12 08:03:31 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2481,7 +2481,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               //make sure that the fill area does not overwrite the frame
               //take into account the frame linewidth
               if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
-              if (gxwork[npt-1] > vxmax) {gxwork[npt-1] = vxmax; gxwork[npt-2] = vxmax;}
               if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
               
               //transform to log ?
@@ -2566,7 +2565,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               //make sure that the fill area does not overwrite the frame
               //take into account the frame linewidth
               if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
-              if (gxwork[npt-1] > vxmax) {gxwork[npt-1] = vxmax; gxwork[npt-2] = vxmax;}
               if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
 
               ComputeLogs(npt, OptionZ);
