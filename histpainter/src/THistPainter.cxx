@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.161 2004/02/07 21:19:40 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.162 2004/02/09 14:21:03 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3038,6 +3038,7 @@ Int_t THistPainter::PaintInit()
    TObject *f;
    TF1 *f1;
    Stat_t allchan = 0;
+   Int_t NonNullErrors = 0;
    TIter   next(fFunctions);
    for (i=first; i<=last;i++) {
       c1 = fH->GetBinContent(i);
@@ -3049,6 +3050,7 @@ Int_t THistPainter::PaintInit()
       }
       if (Hoption.Error) {
          e1 = fH->GetBinError(i);
+         if (e1 > 0) NonNullErrors++;
          ymax = TMath::Max(ymax,c1+e1);
          if (Hoption.Logy) {
             if (c1-e1>0) ymin = TMath::Min(ymin,c1-e1);
@@ -3072,6 +3074,12 @@ Int_t THistPainter::PaintInit()
          next.Reset();
       }
       allchan += c1;
+   }
+   if (!NonNullErrors) {
+      if (Hoption.Error) {
+         if (!Hoption.Mark && !Hoption.Line && !Hoption.Star && !Hoption.Curve) Hoption.Hist = 2; 
+         Hoption.Error=0;
+      }
    }
 
 //     Take into account maximum , minimum
