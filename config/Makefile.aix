@@ -68,5 +68,6 @@ VENUSLIBDEP         = $(EGLIB)
 VENUSLIBEXTRA       = -lEG
 X11TTFLIBDEP        = $(X11LIB)
 X11TTFLIBEXTRA      = -lGX11 -L$(TTFLIBDIR) -lttf -lX11
-GLLIBEXTRA          = -lGpad -lGui -lGraf3d $(OPENGLLIBDIR)/libGLU.a \
+GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB) 
+GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLLIBDIR)/libGLU.a \
                       $(OPENGLLIBDIR)/libGL.a -lX11 -lXext -lXmu -lXi
