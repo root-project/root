@@ -1,4 +1,4 @@
-/* @(#)root/win32gdk:$Name:$:$Id:$ */
+/* @(#)root/win32gdk:$Name:  $:$Id: Win32Constants.h,v 1.1 2001/11/28 15:41:13 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
