@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.16 2002/05/07 15:30:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.17 2002/05/07 16:30:43 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -2127,7 +2127,7 @@ Bool_t TMatrix::IsValid() const
    return kTRUE;
 }
 
-inline void TMatrix::SetElements(const Float_t *elements, Option_t *option)
+void TMatrix::SetElements(const Float_t *elements, Option_t *option)
 {
   if (!IsValid()) {
     Error("SetElements", "matrix is not initialized");
@@ -2149,7 +2149,7 @@ inline void TMatrix::SetElements(const Float_t *elements, Option_t *option)
   }
 }
 
-inline TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
+TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
                         const Float_t *elements, Option_t *option)
 {
   // option="F": array elements contains the matrix stored column-wise
@@ -2161,14 +2161,14 @@ inline TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
   SetElements(elements,option);
 }
 
-inline TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
+TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
                         const Float_t *elements, Option_t *option)
 {
   Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
   SetElements(elements,option);
 }
 
-inline void TMatrix::GetElements(Float_t *elements, Option_t *option) const
+void TMatrix::GetElements(Float_t *elements, Option_t *option) const
 {
   if (!IsValid()) {
     Error("GetElements", "matrix is not initialized");
