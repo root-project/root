@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.58 2002/01/26 09:36:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.59 2002/02/24 18:01:15 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -454,7 +454,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
    const Int_t kMaxDiff = 10;
-   static Bool_t MIDDLE;
+   static Bool_t MIDDLE, BADCASE;
    static Int_t ipoint, pxp, pyp;
    static Int_t px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
@@ -466,6 +466,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kButton1Down:
+      BADCASE = kFALSE;
       gVirtualX->SetLineColor(-1);
       TAttLine::Modify();  //Change line attributes only if necessary
       px1 = gPad->XtoAbsPixel(gPad->GetX1());
@@ -481,6 +482,11 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       for (i=0;i<fNpoints;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+         if (pxp < -kMaxPixel || pxp >= kMaxPixel || 
+             pyp < -kMaxPixel || pyp >= kMaxPixel) {
+            BADCASE = kTRUE;
+            continue;
+         }
          gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
          gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
          gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
@@ -539,6 +545,8 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
             pxp = x[i]+dpx;
             pyp = y[i]+dpy;
+            if (pxp < -kMaxPixel || pxp >= kMaxPixel || 
+                pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
             gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
             gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
             gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
@@ -558,6 +566,8 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
             pxp = x[i]+dpx;
             pyp = y[i]+dpy;
+            if (pxp < -kMaxPixel || pxp >= kMaxPixel || 
+                pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
             gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
             gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
             gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
@@ -613,6 +623,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (MIDDLE) {
          for(i=0;i<fNpoints;i++) {
+            if (BADCASE) continue;  //do not update if big zoom and points moved          
             fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
             fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
          }
@@ -620,6 +631,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
          fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
       }
+      BADCASE = kFALSE;
       delete [] x; x = 0;
       delete [] y; y = 0;
       gPad->Modified(kTRUE);
