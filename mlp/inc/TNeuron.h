@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.5 2003/12/16 14:09:38 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.6 2004/09/29 10:55:55 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -12,8 +12,8 @@
 #ifndef ROOT_TNeuron
 #define ROOT_TNeuron
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
@@ -44,13 +44,14 @@ class TTree;
 //
 //____________________________________________________________________
 
-class TNeuron : public TObject {
+class TNeuron : public TNamed {
    friend class TSynapse;
 
  public:
    enum NeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss };
 
-   TNeuron(NeuronType type = kSigmoid);
+   TNeuron(NeuronType type = kSigmoid, 
+           const char* name = "", const char* title = "");
    virtual ~ TNeuron() {}
    inline TSynapse* GetPre(Int_t n) const { return (TSynapse*) fpre.At(n); }
    inline TSynapse* GetPost(Int_t n) const { return (TSynapse*) fpost.At(n); }

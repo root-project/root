@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TSynapse.h,v 1.2 2003/12/16 14:09:38 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.2 2004/09/29 10:55:55 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -17,6 +17,8 @@ class TTree;
 class TNeuron;
 class TSynapse;
 class TMultiLayerPerceptron;
+class TProfile;
+class THStack;
 
 //____________________________________________________________________
 //
@@ -34,6 +36,7 @@ class TMLPAnalyzer : public TObject {
 private:
    TMultiLayerPerceptron *fNetwork;
    TTree                 *fAnalysisTree;
+   TTree                 *fIOTree;
 
 protected:
    Int_t GetLayers();
@@ -41,14 +44,22 @@ protected:
    TString GetNeuronFormula(Int_t idx);
 
 public:
-   TMLPAnalyzer(TMultiLayerPerceptron& net) { fNetwork = &net; fAnalysisTree=0; }
-   TMLPAnalyzer(TMultiLayerPerceptron* net) { fNetwork = net;  fAnalysisTree=0; }
+   TMLPAnalyzer(TMultiLayerPerceptron& net): 
+      fNetwork(&net), fAnalysisTree(0), fIOTree(0) {}
+   TMLPAnalyzer(TMultiLayerPerceptron* net):
+      fNetwork(net), fAnalysisTree(0), fIOTree(0) {}
    virtual ~TMLPAnalyzer();
    void DrawNetwork(Int_t neuron, const char* signal, const char* bg);
    void DrawDInput(Int_t i);
    void DrawDInputs();
+   TProfile* DrawTruthDeviation(Int_t i, Option_t *option="");
+   THStack* DrawTruthDeviations(Option_t *option="");
+   TProfile* DrawTruthDeviationInOut(Int_t i, Int_t o, Option_t *option="");
+   THStack* DrawTruthDeviationInsOut(Int_t o, Option_t *option="");
+
    void CheckNetwork();
    void GatherInformations();
+   TTree* GetIOTree() const { return fIOTree;}
 
    ClassDef(TMLPAnalyzer, 0)
 };

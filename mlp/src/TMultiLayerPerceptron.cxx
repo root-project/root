@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.22 2004/09/29 10:50:41 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.23 2004/10/12 07:30:03 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -161,7 +161,7 @@ Expressions are evaluated as for TTree::Draw().
 One defines the training and test datasets by TEventLists.</FONT></P>
 <P STYLE="margin-left: 2cm"><FONT SIZE=3><SPAN STYLE="background: #e6e6e6">
 <U><FONT COLOR="#ff0000">Example</FONT></U><SPAN STYLE="text-decoration: none">:
-</SPAN>TMultiLayerPerceptron(&quot;x/F,y/F:10:5:f/F&quot;,inputTree);</SPAN></FONT></P>
+</SPAN>TMultiLayerPerceptron(&quot;x,y:10:5:f&quot;,inputTree);</SPAN></FONT></P>
 <P><FONT SIZE=3>Both the TTree and the TEventLists can be defined in
 the constructor, or later with the suited setter method.</FONT></P>
 <P><FONT SIZE=3>The learning method is defined using the
@@ -386,9 +386,10 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    // The output can be prepended by '@' if the variable has to be
    // normalized.
    // Input and outputs are taken from the TTree given as second argument.
-   // training and test are the two TEventLists defining events
-   // to be used during the neural net training.
-   // Both the TTree and the TEventLists  can be defined in the constructor,
+   // training and test are two cuts (see TTreeFormula) defining events
+   // to be used during the neural net training and testing.
+   // Example: "Entry$%2", "(Entry$+1)%2".
+   // Both the TTree and the cut can be defined in the constructor,
    // or later with the suited setter method.
 
    if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
@@ -440,9 +441,10 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * w
    // The output can be prepended by '@' if the variable has to be
    // normalized.
    // Input and outputs are taken from the TTree given as second argument.
-   // training and test are the two TEventLists defining events
-   // to be used during the neural net training.
-   // Both the TTree and the TEventLists  can be defined in the constructor,
+   // training and test are two cuts (see TTreeFormula) defining events
+   // to be used during the neural net training and testing.
+   // Example: "Entry$%2", "(Entry$+1)%2".
+   // Both the TTree and the cut can be defined in the constructor,
    // or later with the suited setter method.
 
    if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
@@ -864,8 +866,6 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
          }
          if ((!(iepoch % DisplayStepping)) || (iepoch == nEpoch - 1)) {
             residual_plot->GetYaxis()->UnZoom();
-            canvas->Modified();
-            canvas->Update();
             residual_plot->GetYaxis()->SetTitleOffset(1.4);
             residual_plot->GetYaxis()->SetDecimals();
             canvas->Modified();
@@ -1127,8 +1127,15 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
    Int_t nneurons = input.CountChar(',')+1;
    TNeuron *neuron = NULL;
    Int_t i = 0;
+   Ssiz_t pos = 0;
+   TString name;
    for (i = 0; i<nneurons; i++) {
-      neuron = new TNeuron(TNeuron::kOff);
+      Ssiz_t nextpos=input.Index(",",pos);
+      if (nextpos!=kNPOS)
+         name=input(pos,nextpos-pos);
+      else name=input(pos,input.Length());
+      pos=nextpos+1;
+      neuron = new TNeuron(TNeuron::kOff, name);
       fFirstLayer.AddLast(neuron);
       fNetwork.AddLast(neuron);
    }
@@ -1143,13 +1150,16 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
    Int_t end = hidden.Index(":", beg + 1);
    Int_t prevStart = 0;
    Int_t prevStop = fNetwork.GetEntriesFast();
+   Int_t layer = 1;
    TNeuron *neuron = NULL;
    TSynapse *synapse = NULL;
+   TString name;
    Int_t i,j;
    while (end != -1) {
       Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
       for (i = 0; i < num; i++) {
-         neuron = new TNeuron(TNeuron::kSigmoid);
+         name.Form("HiddenL%d:N%d",layer,i);
+         neuron = new TNeuron(TNeuron::kSigmoid, name);
          fNetwork.AddLast(neuron);
          for (j = prevStart; j < prevStop; j++) {
             synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
@@ -1160,10 +1170,12 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
       end = hidden.Index(":", beg + 1);
       prevStart = prevStop;
       prevStop = fNetwork.GetEntriesFast();
+      layer++;
    }
    Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
    for (i = 0; i < num; i++) {
-      neuron = new TNeuron(TNeuron::kSigmoid);
+      name.Form("HiddenL%d:N%d",layer,i);
+      neuron = new TNeuron(TNeuron::kSigmoid, name);
       fNetwork.AddLast(neuron);
       for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
@@ -1180,11 +1192,18 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
    Int_t nneurons = output.CountChar(',')+1;
    Int_t prevStop = fNetwork.GetEntriesFast();
    Int_t prevStart = prevStop - prev;
+   Ssiz_t pos = 0;
    TNeuron *neuron;
    TSynapse *synapse;
+   TString name;
    Int_t i,j;
    for (i = 0; i<nneurons; i++) {
-      neuron = new TNeuron(TNeuron::kLinear);
+      Ssiz_t nextpos=output.Index(",",pos);
+      if (nextpos!=kNPOS)
+         name=output(pos,nextpos-pos);
+      else name=output(pos,output.Length());
+      pos+=nextpos+1;
+      neuron = new TNeuron(TNeuron::kLinear, name);
       for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
          fSynapses.AddLast(synapse);
@@ -1203,6 +1222,7 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option) const
    // "option" can contain:
    // - test or train to select a dataset
    // - comp to produce a X-Y comparison plot
+   // - nocanv to not create a new TCanvas for the plot
 
    TString opt = option;
    opt.ToLower();
@@ -1212,17 +1232,18 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option) const
       return;
    }
    //TCanvas *canvas = new TCanvas("NNresult", "Neural Net output");
-   new TCanvas("NNresult", "Neural Net output");
+   if (!opt.Contains("nocanv"))
+      new TCanvas("NNresult", "Neural Net output");
    const Double_t *norm = out->GetNormalisation();
    TEventList *events = NULL;
    TString setname;
    Int_t i;
    if (opt.Contains("train")) {
       events = fTraining;
-      setname = "train";
+      setname = Form("train%d",index);
    } else if (opt.Contains("test")) {
       events = fTest;
-      setname = "test";
+      setname = Form("test%d",index);
    }
    if ((!fData) || (!events)) {
       Error("DrawResult()","no dataset.");

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.11 2004/05/26 12:30:31 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.12 2004/09/29 10:55:55 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -42,7 +42,9 @@
 ClassImp(TNeuron)
 
 //______________________________________________________________________________
-TNeuron::TNeuron(TNeuron::NeuronType type)
+TNeuron::TNeuron(TNeuron::NeuronType type /*= kSigmoid*/,
+                 const char* name /*= ""*/, const char* title /*= ""*/):
+   TNamed(name, title)
 {
    // Usual constructor
    fpre.SetOwner(false);

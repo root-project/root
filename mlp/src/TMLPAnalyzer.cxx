@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.4 2004/09/29 10:55:55 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.5 2004/09/30 10:13:30 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TTreeFormula.h"
 #include "TEventList.h"
 #include "TH1D.h"
+#include "TProfile.h"
 #include "THStack.h"
 #include "TLegend.h"
 #include "TPad.h"
@@ -123,7 +124,8 @@ void TMLPAnalyzer::CheckNetwork()
       sprintf(sel,"InNeuron==%d",i);
       fAnalysisTree->Draw(var, sel, "goff");
       TH1F* tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
-      cout << GetNeuronFormula(i) << " -> " << tmp->GetMean()
+      cout << ((TNeuron*)fNetwork->fFirstLayer[i])->GetName() 
+           << " -> " << tmp->GetMean()
            << " +/- " << tmp->GetRMS() << endl;
    }
 }
@@ -132,7 +134,8 @@ void TMLPAnalyzer::CheckNetwork()
 void TMLPAnalyzer::GatherInformations()
 {
    // Collect informations about what is usefull in the network.
-   // This method as to be called first when analyzing a network.
+   // This method has to be called first when analyzing a network.
+   // Fills the two analysis trees.
 
    Double_t shift = 0.1;
 
@@ -152,6 +155,7 @@ void TMLPAnalyzer::GatherInformations()
       data->Draw(Form("%s>>tmpb",formula.Data()),"","goff");
       rms[i]  = tmp.GetRMS();
    }
+
    Int_t InNeuron = 0;
    Double_t Diff = 0.;
    if(fAnalysisTree) delete fAnalysisTree;
@@ -159,26 +163,62 @@ void TMLPAnalyzer::GatherInformations()
    fAnalysisTree->SetDirectory(0);
    fAnalysisTree->Branch("InNeuron",&InNeuron,"InNeuron/I");
    fAnalysisTree->Branch("Diff",&Diff,"Diff/D");
-   // Loop on the input neurons
+
+   Int_t numOutNodes=GetNeurons(GetLayers());
+   Double_t *outVal=new Double_t[numOutNodes];
+   Double_t *trueVal=new Double_t[numOutNodes];
+
+   delete fIOTree;
+   fIOTree=new TTree("MLP_iotree","MLP_iotree");
+   fIOTree->SetDirectory(0);
+   TString leaflist;
+   for (i=0; i<NN; i++)
+      leaflist+=Form("In%d/D:",i);
+   leaflist.Remove(leaflist.Length()-1);
+   fIOTree->Branch("In", params, leaflist);
+
+   leaflist="";
+   for (i=0; i<numOutNodes; i++)
+      leaflist+=Form("Out%d/D:",i);
+   leaflist.Remove(leaflist.Length()-1);
+   fIOTree->Branch("Out", outVal, leaflist);
+
+   leaflist="";
+   for (i=0; i<numOutNodes; i++)
+      leaflist+=Form("True%d/D:",i);
+   leaflist.Remove(leaflist.Length()-1);
+   fIOTree->Branch("True", trueVal, leaflist);
+
    Double_t v1 = 0.;
    Double_t v2 = 0.;
-   for (i = 0; i < GetNeurons(1); i++) {
-      InNeuron = i;
-      // Loop on the events in the test sample
-      for(j=0; j< nEvents; j++) {
-         fNetwork->GetEntry(test->GetEntry(j));
-         // Loop on the neurons to evaluate
-         for(k=0; k<GetNeurons(1); k++) {
-            params[k] = formulas[k]->EvalInstance();
-         }
-         // Loop on the neurons in the output layer
+   // Loop on the events in the test sample
+   for(j=0; j< nEvents; j++) {
+      fNetwork->GetEntry(test->GetEntry(j));
+
+      // Loop on the neurons to evaluate
+      for(k=0; k<GetNeurons(1); k++) 
+         params[k] = formulas[k]->EvalInstance();
+
+      for(k=0; k<GetNeurons(GetLayers()); k++) {
+         outVal[k] = fNetwork->Evaluate(k,params);
+         trueVal[k] = ((TNeuron*)fNetwork->fLastLayer[k])->GetBranch();
+      }
+
+      fIOTree->Fill();
+
+      // Loop on the input neurons
+      for (i = 0; i < GetNeurons(1); i++) {
+         InNeuron = i;
          Diff = 0;
+         // Loop on the neurons in the output layer
          for(l=0; l<GetNeurons(GetLayers()); l++){
             params[i] += shift*rms[i];
             v1 = fNetwork->Evaluate(l,params);
             params[i] -= 2*shift*rms[i];
             v2 = fNetwork->Evaluate(l,params);
 	    Diff += (v1-v2)*(v1-v2);
+            // reset to original vealue
+            params[i] += shift*rms[i];
 	 }
          Diff = TMath::Sqrt(Diff);
          fAnalysisTree->Fill();
@@ -186,8 +226,10 @@ void TMLPAnalyzer::GatherInformations()
    }
    delete[] params;
    delete[] rms;
+   delete[] outVal;
    for(i=0; i<GetNeurons(1); i++) delete formulas[i]; delete [] formulas;
    fAnalysisTree->ResetBranchAddresses();
+   fIOTree->ResetBranchAddresses();
 }
 
 //______________________________________________________________________________
@@ -221,7 +263,7 @@ void TMLPAnalyzer::DrawDInputs()
       tmp->SetDirectory(0);
       tmp->SetLineColor(i+1);
       stack->Add(tmp);
-      legend->AddEntry(tmp,GetNeuronFormula(i),"l");
+      legend->AddEntry(tmp,((TNeuron*)fNetwork->fFirstLayer[i])->GetName(),"l");
    }
    stack->Draw("nostack");
    legend->Draw();
@@ -281,4 +323,92 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    data->SetEventList(current);
    delete signal_list;
    delete bg_list;
+}
+
+//______________________________________________________________________________
+TProfile* TMLPAnalyzer::DrawTruthDeviation(Int_t i, Option_t *option /*=""*/) 
+{
+   // Draws a profile of the difference of the MLP output minus the
+   // true value for a given output i, vs the true i, for all test data events.
+   // Options are passed to TProfile::Draw
+   TString pipehist=Form("MLP_truthdev_%d",i);
+   TString drawline;
+   drawline.Form("Out.Out%d/True.True%d-1.:True.True%d>>", i,i,i);
+   fIOTree->Draw(drawline+pipehist, "", "goff prof");
+   TProfile* h=(TProfile*)gROOT->FindObject(pipehist);
+   const char* title=((TNeuron*)fNetwork->fLastLayer[i])->GetName();
+   if (title && h) {
+      h->GetXaxis()->SetTitle(title);
+      h->GetYaxis()->SetTitle(Form("Deviation from %s", title));
+   }
+   h->Draw(option);
+   return h;
+}
+
+//______________________________________________________________________________
+THStack* TMLPAnalyzer::DrawTruthDeviations(Option_t *option /*=""*/)
+{
+   // Draws a profile of the difference of the MLP output minus the
+   // true value vs the true value, stacked for all outputs, for all 
+   // test data events.
+   // Options are passed to TProfile::Draw
+   THStack *hs=new THStack("MLP_TruthDeviation",
+                           "Deviation of MLP output from truth");
+   TLegend *leg=new TLegend(.7,.7,.95,.95,"MLP output");
+   for (Int_t o=0; o<GetNeurons(GetLayers()); o++) {
+      TProfile* h=DrawTruthDeviation(o, "goff");
+      h->SetLineColor(1+o);
+      hs->Add(h, Form("node %d",o));
+   }
+   if (!option || !strstr(option,"goff")) {
+      hs->Draw();
+      leg->Draw();
+   }
+   return hs;
+}
+
+//______________________________________________________________________________
+TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t i, Int_t o, 
+                                           Option_t *option /*=""*/)
+{
+   // Draws a profile of the difference of the MLP output o minus the
+   // true value of o vs the input value i, for all test data events.
+   // Options are passed to TProfile::Draw
+   TString pipehist=Form("MLP_truthdev_i%d_o%d",i,o);
+   TString drawline;
+   drawline.Form("Out.Out%d/True.True%d-1.:In.In%d>>", o,o,i);
+   fIOTree->Draw(drawline+pipehist, "", "goff prof");
+   TProfile* h=(TProfile*)gROOT->FindObject(pipehist);
+   const char* title=((TNeuron*)fNetwork->fFirstLayer[i])->GetName();
+   if (title && h)
+      h->GetXaxis()->SetTitle(title);
+   title=((TNeuron*)fNetwork->fLastLayer[o])->GetName();
+   if (title && h)
+      h->GetYaxis()->SetTitle(Form("Deviation from output %s", title));
+   h->Draw(option);
+   return h;
+}
+
+//______________________________________________________________________________
+THStack* TMLPAnalyzer::DrawTruthDeviationInsOut(Int_t o, Option_t *option /*=""*/)
+{
+   // Draws a profile of the difference of the MLP output o minus the
+   // true value of o vs the input value, stacked for all inputs, for
+   // all test data events.
+   // Options are passed to TProfile::Draw
+   TString sName;
+   sName.Form("MLP_TruthDeviationIO_%d", o);
+   THStack *hs=new THStack(sName,
+                           Form("Deviation of MLP output %o from truth"));
+   TLegend *leg=new TLegend(.7,.7,.95,.95,"MLP output");
+   for (Int_t o=0; o<GetNeurons(GetLayers()); o++) {
+      TProfile* h=DrawTruthDeviation(o, "goff");
+      h->SetLineColor(1+o);
+      hs->Add(h, Form("node %d",o));
+   }
+   if (!option || !strstr(option,"goff")) {
+      hs->Draw();
+      leg->Draw();
+   }
+   return hs;
 }
