@@ -412,10 +412,10 @@ check_symbol() {
         return 1
     fi
 
-    symbollib=`echo $symbollib | sed s/^-l/lib/`
+    symbollib=`echo $symbollib | sed -e 's/^-l/lib/'`
 
     if test ! "x$symboldir" = "x" ; then
-        symboldir=`echo $symboldir | sed s/^-L//`
+        symboldir=`echo $symboldir | sed -e 's/^-L//'`
     fi
 
     # Check if we got a specific argument as to where the library
@@ -1624,7 +1624,7 @@ fi
 if test ! "x$enable_ruby" = "xno" ; then
     # Check for Ruby include and library
     myruby=`which ruby 2> /dev/null`
-    if test ! "x$myruby" = "x" ; then
+    if test ! "x$myruby" = "x" && test -x $myruby ; then
        rubysysincdir=`ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]'`
        rubysyslibdir=`ruby -rrbconfig -e 'puts Config::CONFIG["libdir"]'`
     fi
@@ -2519,7 +2519,7 @@ checking_msg "Clarens support"
 if test ! "x$enable_clarens" = "xno" ; then
 
     myxmlrpc=`which xmlrpc-c-config 2> /dev/null`
-    if test ! "x$myxmlrpc" = "x" ; then
+    if test ! "x$myxmlrpc" = "x" && test -x $myxmlrpc ; then
         clarensinc=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
         clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
     else
