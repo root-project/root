@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.60 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.61 2004/01/16 16:27:36 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -546,8 +546,10 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, 
          if (offset > 0) {
             Error("CheckByteCount", "object of class %s read too many bytes: %d instead of %d",
                   name,bcnt+offset,bcnt);
-            Warning("CheckByteCount","%s::Streamer() not in sync with data on file, fix Streamer()",
-                    name);
+            const char *fname =" ";
+            if (fParent) fname = fParent->GetName();
+            Warning("CheckByteCount","%s::Streamer() not in sync with data on file: %s, fix Streamer()",
+                    name,fname);
          }
       }
       if ( ((char *)endpos) > fBufMax ) {
