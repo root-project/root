@@ -66,7 +66,7 @@ private:
    TList         *fFiles;        // TDSetElements (files) stored on this node
    TIter         *fFileIter;     // iterator on fFiles
    TList         *fActive;       // files with work remaining
-   TObject       *fActiveNext;      // cursor in fActive
+   TObject       *fActiveNext;   // cursor in fActive
 
 public:
 
@@ -124,7 +124,8 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
    // Split into per host entries
    dset->Reset();
-   for( TDSetElement *e = (TDSetElement*)dset->Next(); e != 0 ; e = (TDSetElement*)dset->Next() ) {
+   TDSetElement *e;
+   for( e = (TDSetElement*)dset->Next(); e != 0 ; e = (TDSetElement*)dset->Next() ) {
       TUrl url = e->GetFileName();
 
       // TODO: Names must be in rootd URL format, check where?
@@ -270,7 +271,7 @@ Info("TPacketizer2","Select returned: %p", sock);
 
       TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
       TSlaveStat *slavestat = (TSlaveStat*) fSlaveStats->GetValue( slave );
-      TDSetElement *e = slavestat->fCurFile->fElement;
+      e = slavestat->fCurFile->fElement;
       Long64_t entries;
       Int_t    r;
 
@@ -324,7 +325,7 @@ Info("TPacketizer2","Select returned: %p", sock);
 
    dset->Reset();
    Long64_t cur = 0;
-   for( TDSetElement *e = (TDSetElement*)dset->Next(); e != 0 ; e = (TDSetElement*)dset->Next() ) {
+   for( e = (TDSetElement*)dset->Next(); e != 0 ; e = (TDSetElement*)dset->Next() ) {
       TUrl url = e->GetFileName();
 
       if ( cur + e->GetNum() < first ) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.10 2002/02/23 16:01:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.11 2002/08/08 15:34:09 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -160,19 +160,23 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
 
    static const char *where = "TStorage::ReAlloc";
 
-   void *vp;
-   if (ovp == 0) {
-      vp = ::operator new[](size);
-      if (vp == 0)
-         Fatal(where, spaceErr);
-      return vp;
-   }
-
-   vp = ::operator new[](size);
+#ifndef WIN32
+   void *vp = ::operator new[](size);
+#else
+   void *vp = ::operator new(size);
+#endif
    if (vp == 0)
       Fatal(where, spaceErr);
+
+   if (ovp == 0)
+      return vp;
+
    memmove(vp, ovp, size);
+#ifndef WIN32
    ::operator delete[](ovp);
+#else
+   ::operator delete(ovp);
+#endif
    return vp;
 }
 
@@ -189,25 +193,30 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 
    static const char *where = "TStorage::ReAlloc";
 
-   void *vp;
-   if (ovp == 0) {
-     vp = ::operator new[](size);
-     if (vp == 0)
-        Fatal(where, spaceErr);
-     return vp;
-   }
    if (oldsize == size)
       return ovp;
 
-   vp = ::operator new[](size);
+#ifndef WIN32
+   void *vp = ::operator new[](size);
+#else
+   void *vp = ::operator new(size);
+#endif
    if (vp == 0)
       Fatal(where, spaceErr);
+
+   if (ovp == 0)
+     return vp;
+
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize);
       memset((char*)vp+oldsize, 0, size-oldsize);
    } else
       memcpy(vp, ovp, size);
+#ifndef WIN32
    ::operator delete[](ovp);
+#else
+   ::operator delete(ovp);
+#endif
    return vp;
 }
 
