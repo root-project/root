@@ -65,6 +65,7 @@ enable_rpath=no
 enable_shadowpw=
 enable_soversion=no
 enable_table=no
+enable_python=no
 enable_thread=           # must be set explicitely via --enable-thread
 
 #
@@ -556,7 +557,7 @@ enable/disable options, prefix with either --enable- or --disable-
    ldap            LDAP support, requires (Open)LDAP libs
    mysql           MySQL support, requires libmysqlclient
    opengl          OpenGL support, requires libGL and libGLU
-   python          PyROOT Python bindings, requires python23
+   python          PyROOT Python bindings, requires python >= 2.3
    openiv          OpenInventor support, requires libInventor and libInventorXt
    pgsql           PostgreSQL support, requires libpq
    pythia          Pythia5 EG support, requires libPythia
@@ -1299,41 +1300,6 @@ if test ! "x$enable_pythia6" = "xno" ; then
 
     if test "x$pythia6lib" = "x" ; then
         enable_pythia6=no
-### echo %%% PyRoot - Python Optional alternative interpreter
-#
-# (See http://www.python.org)
-#
-if test ! "x$enable_python" = "xno" ; then
-    # Check for Python include and library
-    if test "x$platform" = "xwin32"; then
-
-      check_header "Python.h" "$pythonincdir" \
-        $PYTHONDIR/include C:/Python23/include C:/Python22/include
-      pythoninc=$found_hdr
-      pythonincdir=$found_dir
-
-      check_library "python23" "$enable_shared" "$pythonlibdir" \
-        $PYTHONDIR/libs C:/Python23/libs C:/Python22/libs
-      pythonlib=$found_lib
-      pythonlibdir=$found_dir
-
-    else 
-      check_header "Python.h" "$pythonincdir" \
-        $PYTHONDIR/include/python2.3 $PYTHONDIR/include/python2.2 \
-        $PYTHONDIR/include $PYTHONDIR/include \
-        /usr/include/python2.3 /usr/include/python2.2 \
-        /usr/local/include/python2.3 /usr/local/include/python2.2
-      pythoninc=$found_hdr
-      pythonincdir=$found_dir
-    fi
-
-    if test "x$pythonincdir" = "x" ; then
-        enable_python=no
-    fi
-fi
-
-######################################################################
-#
     fi
 fi
 
@@ -2140,6 +2106,41 @@ if test "x$enable_shadowpw" = "xyes"; then
 fi
 
 echo $enable_shadowpw
+
+######################################################################
+#
+### echo %%% PyRoot - Python Optional alternative interpreter
+#
+# (See http://www.python.org)
+#
+if test ! "x$enable_python" = "xno" ; then
+    # Check for Python include and library
+    if test "x$platform" = "xwin32"; then
+
+        check_header "Python.h" "$pythonincdir" \
+           $PYTHONDIR/include C:/Python23/include C:/Python22/include
+        pythoninc=$found_hdr
+        pythonincdir=$found_dir
+
+        check_library "python23" "$enable_shared" "$pythonlibdir" \
+           $PYTHONDIR/libs C:/Python23/libs C:/Python22/libs
+        pythonlib=$found_lib
+        pythonlibdir=$found_dir
+
+    else
+        check_header "Python.h" "$pythonincdir" \
+            $PYTHONDIR/include/python2.3 $PYTHONDIR/include/python2.2 \
+            $PYTHONDIR/include $PYTHONDIR/include \
+            /usr/include/python2.3 /usr/include/python2.2 \
+            /usr/local/include/python2.3 /usr/local/include/python2.2
+        pythoninc=$found_hdr
+        pythonincdir=$found_dir
+    fi
+
+    if test "x$pythonincdir" = "x" ; then
+        enable_python=no
+    fi
+fi
 
 ######################################################################
 #

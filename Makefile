@@ -117,9 +117,6 @@ ifneq ($(FPYTHIALIB),)
 MODULES      += pythia
 endif
 ifneq ($(FPYTHIA6LIB),)
-ifneq ($(PYTHONINCDIR),)
-MODULES      += pyroot
-endif
 MODULES      += pythia6
 endif
 ifneq ($(FVENUSLIB),)
@@ -127,6 +124,11 @@ MODULES      += venus
 endif
 ifneq ($(TABLE),)
 MODULES      += table
+endif
+ifneq ($(PYTHONINCDIR),)
+#ifneq ($(PYTHONLIB),)
+MODULES      += pyroot
+#endif
 endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
