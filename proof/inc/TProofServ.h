@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.2 2000/06/13 09:43:33 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -46,13 +46,13 @@ private:
    TString     fUserPass;         //encoded user and passwd info for slaves
    TString     fVersion;          //proof server major version
    TString     fConfDir;          //directory containing cluster config information
+   TString     fConfFile;         //file containing config information
    TString     fLogDir;           //directory containing log files
    TSocket    *fSocket;           //socket connection to client
    FILE       *fLogFile;          //log file
    Int_t       fProtocol;         //protocol level
-   Int_t       fMasterPid;        //pid of master server
-   Int_t       fOrdinal;          //slaves (i.e. our) ordinal number, -1 for master
-   Int_t       fGroupId;          //our unique id in the active slave group
+   Int_t       fOrdinal;          //slave ordinal number, -1 for master
+   Int_t       fGroupId;          //slave unique id in the active slave group
    Int_t       fGroupSize;        //size of the active slave group
    Int_t       fLogLevel;         //debug logging level
    Bool_t      fMasterServ;       //true if we are a master server
@@ -64,6 +64,7 @@ private:
 
    void        Setup();
    void        RedirectOutput();
+   void        Info(const char *method, const char *msgfmt, ...) const; // should be in TObject
 
 public:
    TProofServ(int *argc, char **argv);
@@ -71,6 +72,7 @@ public:
 
    const char *GetService() const { return fService.Data(); }
    const char *GetConfDir() const { return fConfDir.Data(); }
+   const char *GetConfFile() const { return fConfFile.Data(); }
    const char *GetUser() const { return fUser.Data(); }
    const char *GetVersion() const { return fVersion.Data(); }
    Int_t       GetProtocol() const { return fProtocol; }
@@ -85,8 +87,10 @@ public:
 
    void        HandleSocketInput();
    void        HandleUrgentData();
+   void        HandleSigPipe();
    void        Interrupt() { fInterrupt = kTRUE; }
    Bool_t      IsMaster() const { return fMasterServ; }
+   Bool_t      IsParallel() const;
 
    void        Run(Bool_t retrn = kFALSE);
 
@@ -97,6 +101,7 @@ public:
    void        GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax);
    Bool_t      GetNextPacket(Int_t &nentries, Stat_t &firstentry);
    void        Reset(const char *dir);
+   void        ReceiveFile(const char *file, Int_t size);
    void        SendLogFile();
    void        SendStatus();
 

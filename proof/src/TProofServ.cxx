@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.2 2000/06/11 12:25:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.3 2000/06/13 09:43:33 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -44,7 +44,8 @@ TProofServ *gProofServ;
 
 
 //______________________________________________________________________________
-void ProofErrorHandler(int level, Bool_t abort, const char *location, const char *msg)
+static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
+                                  const char *msg)
 {
    // The PROOF error handler function. It prints the message on stderr and
    // if abort is set it aborts the application.
@@ -53,8 +54,12 @@ void ProofErrorHandler(int level, Bool_t abort, const char *location, const char
       return;
 
    const char *type   = 0;
-   ELogLevel loglevel = kLogWarning;
+   ELogLevel loglevel = kLogInfo;
 
+   if (level >= kInfo) {
+      loglevel = kLogInfo;
+      type = "Info";
+   }
    if (level >= kWarning) {
       loglevel = kLogWarning;
       type = "Warning";
@@ -68,7 +73,6 @@ void ProofErrorHandler(int level, Bool_t abort, const char *location, const char
       type = "SysError";
    }
    if (level >= kFatal) {
-      //loglevel = kLogEmerg;
       loglevel = kLogErr;
       type = "Fatal";
    }
@@ -79,7 +83,7 @@ void ProofErrorHandler(int level, Bool_t abort, const char *location, const char
       bp = Form("%s:%s:%s", gProofServ->GetUser(), type, msg);
    } else {
       fprintf(stderr, "%s in <%s>: %s\n", type, location, msg);
-      bp = Form("%s:%s:%s:%s", gProofServ->GetUser(), type, location, msg);
+      bp = Form("%s:%s:<%s>:%s", gProofServ->GetUser(), type, location, msg);
    }
    fflush(stderr);
    gSystem->Syslog(loglevel, bp);
@@ -96,35 +100,56 @@ void ProofErrorHandler(int level, Bool_t abort, const char *location, const char
 
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
-class TProofInterruptHandler : public TSignalHandler {
+class TProofServInterruptHandler : public TSignalHandler {
+   TProofServ  *fServ;
 public:
-   TProofInterruptHandler() : TSignalHandler(kSigUrgent, kFALSE) { }
+   TProofServInterruptHandler(TProofServ *s)
+      : TSignalHandler(kSigUrgent, kFALSE) { fServ = s; }
    Bool_t  Notify();
 };
 
 //______________________________________________________________________________
-Bool_t TProofInterruptHandler::Notify()
+Bool_t TProofServInterruptHandler::Notify()
 {
-   gProofServ->HandleUrgentData();
+   fServ->HandleUrgentData();
    if (TROOT::Initialized()) {
       Throw(GetSignal());
    }
    return kTRUE;
 }
 
-//----- Socket Input handler --------------------------------------------
+//----- SigPipe signal handler -------------------------------------------------
 //______________________________________________________________________________
-class TSocketInputHandler : public TFileHandler {
+class TProofServSigPipeHandler : public TSignalHandler {
+   TProofServ  *fServ;
 public:
-   TSocketInputHandler(int fd) : TFileHandler(fd, 1) { }
+   TProofServSigPipeHandler(TProofServ *s) : TSignalHandler(kSigPipe, kFALSE)
+      { fServ = s; }
+   Bool_t  Notify();
+};
+
+//______________________________________________________________________________
+Bool_t TProofServSigPipeHandler::Notify()
+{
+   fServ->HandleSigPipe();
+   return kTRUE;
+}
+
+//----- Input handler for messages from parent or master -----------------------
+//______________________________________________________________________________
+class TProofServInputHandler : public TFileHandler {
+   TProofServ  *fServ;
+public:
+   TProofServInputHandler(TProofServ *s, Int_t fd) : TFileHandler(fd, 1)
+      { fServ = s; }
    Bool_t Notify();
    Bool_t ReadNotify() { return Notify(); }
 };
 
 //______________________________________________________________________________
-Bool_t TSocketInputHandler::Notify()
+Bool_t TProofServInputHandler::Notify()
 {
-   gProofServ->HandleSocketInput();
+   fServ->HandleSocketInput();
    return kTRUE;
 }
 
@@ -143,15 +168,20 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // abort on kSysError's or higher and set error handler
    gErrorAbortLevel = kSysError;
-   SetErrorHandler(ProofErrorHandler);
+   SetErrorHandler(ProofServErrorHandler);
 
    fNcmd        = 0;
    fInterrupt   = kFALSE;
+   fProtocol    = 0;
+   fOrdinal     = -1;
+   fGroupId     = -1;
+   fGroupSize   = 0;
    fLogLevel    = 1;
    fRealTime    = 0.0;
    fCpuTime     = 0.0;
    fSocket      = new TSocket(0);
 
+   GetOptions(argc, argv);
    Setup();
    RedirectOutput();
 
@@ -169,14 +199,19 @@ TProofServ::TProofServ(int *argc, char **argv)
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
-   // Install interrupt and terminal input handlers
-   TProofInterruptHandler *ih = new TProofInterruptHandler;
-   gSystem->AddSignalHandler(ih);
-
-   TSocketInputHandler *th = new TSocketInputHandler(0);
-   gSystem->AddFileHandler(th);
+   // Install interrupt and message input handlers
+   gSystem->AddSignalHandler(new TProofServInterruptHandler(this));
+   gSystem->AddFileHandler(new TProofServInputHandler(this, 0));
 
    gProofServ = this;
+
+   // if master, start slave servers
+   if (IsMaster()) {
+      TProof::SetUser(fUser);
+      TProof::SetPasswd(fUserPass);
+      new TProof("", kPROOF_Port, fVersion, fConfFile, fConfDir, fLogLevel);
+      SendLogFile();
+   }
 }
 
 //______________________________________________________________________________
@@ -298,9 +333,17 @@ void TProofServ::HandleSocketInput()
 
       case kMESS_CINT:
          mess->ReadString(str, sizeof(str));
-         if (fLogLevel > 1) printf("Processing: %s...\n", str);
-         //gSystem->Syslog(kLogInfo, "%s", str);
-         ProcessLine(str);
+         if (IsMaster() && IsParallel()) {
+            gProof->SendCommand(str);
+         } else {
+            if (fLogLevel > 1) {
+               if (IsMaster())
+                  Info("HandleSocketInput", "Master processing: %s...", str);
+               else
+                  Info("HandleSocketInput", "Slave %d processing: %s...", fOrdinal, str);
+            }
+            ProcessLine(str);
+         }
          SendLogFile();
          break;
 
@@ -320,10 +363,19 @@ void TProofServ::HandleSocketInput()
       case kPROOF_LOGLEVEL:
          mess->ReadString(str, sizeof(str));
          sscanf(str, "%d", &fLogLevel);
+         if (IsMaster())
+            gProof->SetLogLevel(fLogLevel);
          break;
 
       case kPROOF_PING:
-         // do nothing
+         if (IsMaster())
+            gProof->Ping();
+         // do nothing (ping is already acknowledged)
+         break;
+
+      case kPROOF_PRINT:
+         Print();
+         SendLogFile();
          break;
 
       case kPROOF_RESET:
@@ -353,8 +405,18 @@ void TProofServ::HandleSocketInput()
          }
          break;
 
+      case kPROOF_SENDFILE:
+         mess->ReadString(str, sizeof(str));
+         {
+            Int_t size;
+            char  name[512];
+            sscanf(str, "%s %d", name, &size);
+            ReceiveFile(name, size);
+         }
+         break;
+
       default:
-         Error("HandleSocketInput", "unknown command");
+         Error("HandleSocketInput", "unknown command %d", what);
          break;
    }
 
@@ -417,12 +479,12 @@ void TProofServ::HandleUrgentData()
 
       case TProof::kHardInterrupt:
          if (IsMaster())
-            gSystem->Syslog(kLogInfo, "*** Master: Hard Interrupt");
+            Info("HandleUrgentData", "*** Master: Hard Interrupt");
          else
-            gSystem->Syslog(kLogInfo, Form("*** Slave %d: Hard Interrupt", fOrdinal));
+            Info("HandleUrgentData", "*** Slave %d: Hard Interrupt", fOrdinal);
 
          // If master server, propagate interrupt to slaves
-         if (IsMaster() && gProof)
+         if (IsMaster())
             gProof->Interrupt(TProof::kHardInterrupt);
 
          // Flush input socket
@@ -459,12 +521,12 @@ void TProofServ::HandleUrgentData()
 
       case TProof::kSoftInterrupt:
          if (IsMaster())
-            gSystem->Syslog(kLogInfo, "Master: Soft Interrupt");
+            Info("HandleUrgentData", "Master: Soft Interrupt");
          else
-            gSystem->Syslog(kLogInfo, Form("Slave %d: Soft Interrupt", fOrdinal));
+            Info("HandleUrgentData", "Slave %d: Soft Interrupt", fOrdinal);
 
          // If master server, propagate interrupt to slaves
-         if (IsMaster() && gProof)
+         if (IsMaster())
             gProof->Interrupt(TProof::kSoftInterrupt);
 
          if (wasted) {
@@ -478,12 +540,12 @@ void TProofServ::HandleUrgentData()
 
       case TProof::kShutdownInterrupt:
          if (IsMaster())
-            gSystem->Syslog(kLogInfo, "Master: Shutdown Interrupt");
+            Info("HandleUrgentData", "Master: Shutdown Interrupt");
          else
-            gSystem->Syslog(kLogInfo, Form("Slave %d: Shutdown Interrupt", fOrdinal));
+            Info("HandleUrgntData", "Slave %d: Shutdown Interrupt", fOrdinal);
 
          // If master server, propagate interrupt to slaves
-         if (IsMaster() && gProof)
+         if (IsMaster())
             gProof->Interrupt(TProof::kShutdownInterrupt);
 
          Terminate(0);  // will not return from here....
@@ -499,11 +561,59 @@ void TProofServ::HandleUrgentData()
 }
 
 //______________________________________________________________________________
+void TProofServ::HandleSigPipe()
+{
+   // Called when the client is not alive anymore (i.e. when kKeepAlive
+   // has failed).
+
+   if (IsMaster()) {
+      // Check if we are here because client is closed. Try to ping client,
+      // if that works it we are here because some slave died
+      if (fSocket->Send(kPROOF_PING | kMESS_ACK) < 0) {
+         Info("HandleSigPipe", "Master: KeepAlive probe failed");
+         // Tell slaves we are going to close since there is no client anymore
+         gProof->Interrupt(TProof::kShutdownInterrupt);
+         Terminate(0);
+      }
+   } else {
+      Info("HandleSigPipe", "Slave %d: KeepAlive probe failed", fOrdinal);
+      Terminate(0);  // will not return from here....
+   }
+}
+
+//______________________________________________________________________________
+void TProofServ::Info(const char *location, const char *va_(fmt), ...) const
+{
+   // Issue informational message. Use "location" to specify the method
+   // where the info was issued. Accepts standard printf formatting arguments.
+   // Should be moved into TObject.
+
+   va_list ap;
+   va_start(ap, va_(fmt));
+   DoError(kInfo, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+Bool_t TProofServ::IsParallel() const
+{
+   // True if in parallel mode.
+
+   if (IsMaster())
+      return gProof->IsParallel();
+   else
+      return kFALSE;
+}
+
+//______________________________________________________________________________
 void TProofServ::Print(Option_t *)
 {
    // Print status of slave server.
 
-   Printf("This is slave %s", gSystem->HostName());
+   if (IsMaster())
+      gProof->Print();
+   else
+      Printf("This is slave %s", gSystem->HostName());
 }
 
 //______________________________________________________________________________
@@ -572,6 +682,12 @@ void TProofServ::Reset(const char *dir)
 }
 
 //______________________________________________________________________________
+void TProofServ::ReceiveFile(const char *file, Int_t size)
+{
+
+}
+
+//______________________________________________________________________________
 void TProofServ::Run(Bool_t retrn)
 {
    // Main server eventloop.
@@ -621,7 +737,8 @@ void TProofServ::SendStatus()
 
    char str[64];
 
-   sprintf(str, "%g %.3f %.3f", TFile::GetFileBytesRead(), fRealTime, fCpuTime);
+   sprintf(str, "%g %.3f %.3f %s", TFile::GetFileBytesRead(), fRealTime,
+           fCpuTime, gSystem->WorkingDirectory());
    fSocket->Send(str, kPROOF_STATUS);
 }
 
@@ -633,21 +750,26 @@ void TProofServ::Setup()
    char str[512];
 
    if (IsMaster()) {
-      sprintf(str, "**** Welcome to the Proof server @ %s ****", gSystem->HostName());
+      sprintf(str, "**** Welcome to the PROOF server @ %s ****", gSystem->HostName());
    } else {
-      sprintf(str, "*** Proof slave server @ %s started ****", gSystem->HostName());
+      sprintf(str, "**** PROOF slave server @ %s started ****", gSystem->HostName());
    }
    fSocket->Send(str);
 
    fSocket->Recv(str, sizeof(str));
 
-   char user[16], vers[16], userpass[64], curdir[256];
+   char user[16], vers[16];
    if (IsMaster()) {
-      sscanf(str, "%s %s %s %d", user, vers, userpass, &fProtocol);
-      fUserPass = userpass;
+      char userpass[68], user_pass[64], conffile[64];
+      Int_t i;
+      sscanf(str, "%s %s %s %s %d", user, vers, userpass, conffile, &fProtocol);
+      for (i = 0; i < (Int_t) strlen(userpass); i++)
+         user_pass[i] = ~userpass[i];
+      user_pass[i] = '\0';
+      fUserPass = user_pass;
+      fConfFile = conffile;
    } else {
-      sscanf(str, "%s %s %s %d %d %d", user, vers, curdir, &fProtocol,
-             &fMasterPid, &fOrdinal);
+      sscanf(str, "%s %s %d %d", user, vers, &fProtocol, &fOrdinal);
    }
    fUser    = user;
    fVersion = vers;
@@ -667,9 +789,8 @@ void TProofServ::Setup()
    gSystem->Setenv("PATH", "/bin:/usr/bin:/usr/contrib/bin:/usr/local/bin");
 #endif
 
-   // set the working directory to $HOME/proof
-   char workdir[256];
-   sprintf(workdir, "%s/proof", gSystem->HomeDirectory());
+   // set the working directory to ~/proof
+   char *workdir = gSystem->ExpandPathName(kPROOF_WorkDir);
 
    if (gSystem->AccessPathName(workdir)) {
       gSystem->MakeDirectory(workdir);
@@ -686,21 +807,25 @@ void TProofServ::Setup()
       }
    }
 
-   // for master server the work and log directory are the same
+   // log directory is same as initial work directory
    fLogDir = workdir;
-
-   // Slave servers set their work directory to the work directory of the
-   // master server.
-   if (!IsMaster()) {
-      if (!gSystem->ChangeDirectory(curdir))
-         SysError("Setup", "can not change to the current directory");
-   }
+   delete [] workdir;
 
    // Incoming OOB should generate a SIGURG
    fSocket->SetOption(kProcessGroup, gSystem->GetPid());
 
-   // Send packages of immediately to reduce latency
+   // Send packages off immediately to reduce latency
    fSocket->SetOption(kNoDelay, 1);
+
+   // Use large buffers
+   fSocket->SetOption(kSendBuffer, 65536);
+   fSocket->SetOption(kRecvBuffer, 65536);
+
+   // Check every two hours if client is still alive
+   fSocket->SetOption(kKeepAlive, 1);
+
+   // Install SigPipe handler to handle kKeepAlive failure
+   gSystem->AddSignalHandler(new TProofServSigPipeHandler(this));
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.2 2000/06/11 12:25:48 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -29,18 +29,22 @@
 ClassImp(TSlave)
 
 //______________________________________________________________________________
-TSlave::TSlave(const char *host, Int_t ord, Int_t perf, TProof *proof)
+TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
+               const char *image, TProof *proof)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
 
    fName    = host;
+   fPort    = port;
+   fImage   = image;
    fOrdinal = ord;
    fPerfIdx = perf;
    fProof   = proof;
    fSocket  = 0;
+   fInput   = 0;
 
    // Open connection to remote PROOF slave server.
-   fSocket = new TSocket(host, fProof->GetPort());
+   fSocket = new TSocket(host, port);
    if (fSocket->IsValid()) {
       // Remove socket from global TROOT socket list. Only the TProof object,
       // representing all slave sockets, will be added to this list. This will
@@ -73,7 +77,7 @@ TSlave::TSlave(const char *host, Int_t ord, Int_t perf, TProof *proof)
          fSocket->Send(fProof->GetVersion());
 
          // get back startup message of proofserv (we are now talking with
-         // the real proofserver and not anymore with the proofd front-end
+         // the real proofserver and not anymore with the proofd front-end)
 
          Int_t what;
          fSocket->Recv(buf, sizeof(buf), what);
@@ -84,18 +88,17 @@ TSlave::TSlave(const char *host, Int_t ord, Int_t perf, TProof *proof)
             return;
          }
 
-         if (!fProof->IsMaster()) {
-            sprintf(buf, "%s %s %s %d", fProof->GetUser(), fProof->GetVersion(),
-                    user_pass, fProof->GetProtocol());
-            fSocket->Send(buf);
-         } else {
-            sprintf(buf, "%s %s %s %d %d %d", fProof->GetUser(), fProof->GetVersion(),
-                    gSystem->WorkingDirectory(), fProof->GetProtocol(),
-                    gSystem->GetPid(), fOrdinal);
-            fSocket->Send(buf);
-         }
+         if (!fProof->IsMaster())
+            sprintf(buf, "%s %s %s %s %d", fProof->GetUser(), fProof->GetVersion(),
+                    user_pass, fProof->GetConfFile(), fProof->GetProtocol());
+         else
+            sprintf(buf, "%s %s %d %d", fProof->GetUser(), fProof->GetVersion(),
+                    fProof->GetProtocol(), fOrdinal);
+         fSocket->Send(buf);
 
          fSocket->SetOption(kNoDelay, 1);
+         fSocket->SetOption(kSendBuffer, 65536);
+         fSocket->SetOption(kRecvBuffer, 65536);
       }
    } else
       SafeDelete(fSocket);
@@ -114,6 +117,7 @@ void TSlave::Close(Option_t *)
 {
    // Close slave socket.
 
+   SafeDelete(fInput);
    SafeDelete(fSocket);
 }
 
@@ -136,6 +140,9 @@ void TSlave::Print(Option_t *)
 
    Printf("*** Slave %d  (%s)", fOrdinal, fSocket ? "valid" : "invalid");
    Printf("    Host name:            %s", GetName());
+   Printf("    Port number:          %d", GetPort());
+   Printf("    Image name:           %s", GetImage());
+   Printf("    Working directory:    %s", GetWorkingDirectory());
    Printf("    Performance index:    %d", GetPerfIdx());
    Printf("    MB's processed:       %.2f", float(GetBytesRead())/(1024*1024));
    Printf("    MB's sent:            %.2f", fSocket ? float(fSocket->GetBytesRecv())/(1024*1024) : 0.0);
@@ -144,3 +151,12 @@ void TSlave::Print(Option_t *)
    Printf("    CPU time used (s):    %.3f", GetCpuTime());
 }
 
+//______________________________________________________________________________
+void TSlave::SetInputHandler(TFileHandler *ih)
+{
+   // Adopt and register input handler for this slave. Handler will be deleted
+   // by the slave.
+
+   fInput = ih;
+   fInput->Add();
+}
