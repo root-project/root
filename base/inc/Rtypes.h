@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.2 2000/11/02 18:11:29 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,14 +42,14 @@ typedef unsigned long  UInt_t;      //Unsigned integer 4 bytes
 typedef int            Int_t;       //Signed integer 4 bytes
 typedef unsigned int   UInt_t;      //Unsigned integer 4 bytes
 #endif
-#ifdef R__B64
-typedef int            Seek_t;      //File pointer
-typedef long           Long_t;      //Signed long integer 4 bytes
-typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes
-#else
+#ifdef R__B64    // Note: Long_t and ULong_t are currently not portable types
 typedef int            Seek_t;      //File pointer
 typedef long           Long_t;      //Signed long integer 8 bytes
 typedef unsigned long  ULong_t;     //Unsigned long integer 8 bytes
+#else
+typedef int            Seek_t;      //File pointer
+typedef long           Long_t;      //Signed long integer 4 bytes
+typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes
 #endif
 typedef float          Float_t;     //Float 4 bytes
 typedef double         Double_t;    //Float 8 bytes
