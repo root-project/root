@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.4 2001/06/22 16:10:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.5 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TGGC::TGGC(GCValues_t *values)
 }
 
 //______________________________________________________________________________
-TGGC::TGGC(const TGGC &g) : TObject(g)
+TGGC::TGGC(const TGGC &g) : TObject(g), TRefCnt()
 {
    // Copy a graphics context.
 
