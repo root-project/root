@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.41 2004/07/14 23:46:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.42 2004/07/15 23:46:40 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -134,13 +134,13 @@ void TGMenuBar::BindKeys(Bool_t on)
 {
    // if on kTRUE bind arrow, popup mehu hot keys, otherwise - remove key bindings
 
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), kAnyModifier, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier, on);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), 0, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), 0, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Up), 0, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Down), 0, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Enter), 0, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Return), 0, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), 0, on);
 
    if (fCurrent && fCurrent->GetMenu()) {
       TGMenuEntry *e;
@@ -151,7 +151,7 @@ void TGMenuBar::BindKeys(Bool_t on)
             hot = e->GetLabel()->GetHotChar();
          }
          if (!hot) continue;
-         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kAnyModifier, on);
+         gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), 0, on);
       }
    }
 }
