@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.15 2003/01/31 22:24:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.16 2003/03/07 08:36:00 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1207,8 +1207,10 @@ void TView::PadRange(Int_t rback)
         r1 = -1;
         r2 = -1;
         r3 = -1;
+        xgraf[0] = -smax[0];
         xgraf[1] = -smax[0];
         xgraf[2] = -smax[0];
+        xgraf[3] = -smax[0];
         xgraf[4] =  smax[0];
         xgraf[5] =  smax[0];
         ygraf[0] = -smax[1];
@@ -1236,6 +1238,7 @@ void TView::PadRange(Int_t rback)
             r1 = -r1;
             if (i % 2 == 0) r2 = -r2;
             if (i >= 4)     r3 = 1;
+            
         }
         gPad->PaintFillArea(6, xgraf, ygraf);
     }
