@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.11 2002/05/25 21:00:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.12 2002/06/04 19:51:14 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TRefArray.h"
 #include "TError.h"
 #include "TFile.h"
+#include "TSystem.h"
 
 ClassImp(TRefArray)
 
@@ -319,9 +320,14 @@ void TRefArray::Streamer(TBuffer &R__b)
       fLast = -1;
       R__b >> pidf;
       fPID = TProcessID::ReadProcessID(pidf,file);
+      if (gDebug > 1) printf("Reading TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
       for (Int_t i = 0; i < nobjects; i++) {
           R__b >> fUIDs[i];
           if (fUIDs[i] != 0) fLast = i;
+          if (gDebug > 1) {
+             printf(" %d",fUIDs[i]);
+             if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
+          }      
       }
       Changed();
       R__b.CheckByteCount(R__s, R__c,TRefArray::IsA());
@@ -334,8 +340,14 @@ void TRefArray::Streamer(TBuffer &R__b)
       R__b << fLowerBound;
       pidf = TProcessID::WriteProcessID(fPID,file);
       R__b << pidf;
+      if (gDebug > 1) printf("Writing TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
+      
       for (Int_t i = 0; i < nobjects; i++) {
           R__b << fUIDs[i];
+          if (gDebug > 1) {
+             printf(" %d",fUIDs[i]);
+             if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
+          }      
       }
       R__b.SetByteCount(R__c, kTRUE);
    }
