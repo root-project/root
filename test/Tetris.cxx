@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.17 2003/04/28 10:37:08 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.16 2003/02/03 01:02:50 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -1008,6 +1008,8 @@ void Tetris::Quit()
 void Tetris::NewGame()
 {
    // Start new game
+
+   gVirtualX->SetInputFocus(((TRootCanvas*)fCanvasImp)->GetId());
 
    if (IsGameOn()) StopGame();       // stop privious game
    fScore->Reset();
