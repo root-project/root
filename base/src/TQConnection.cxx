@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.13 2003/05/11 14:09:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.14 2003/09/19 14:06:27 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -65,6 +65,8 @@ public:
    void ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam = -1);
    void Print(Option_t *opt= "") const;
    void ls(Option_t *opt= "") const { Print(opt); }
+
+   Bool_t IsExecuting() const { return fExecuting > 0; }
 };
 
 
@@ -361,7 +363,7 @@ TQConnection::~TQConnection()
    fSlot->RemoveReference();  // decrease references to slot
 
    if (fSlot->References() <= 0) {
-      SafeDelete(fSlot);
+      if (!fSlot->IsExecuting()) SafeDelete(fSlot);
    }
 }
 
@@ -407,7 +409,12 @@ void TQConnection::ExecuteMethod()
 {
    // Apply slot-method to the fReceiver object without arguments.
 
+   // This connection might be deleted in result of the method execution
+   // (for example in case of a Disconnect).  Hence we do not assume
+   // the object is still valid on return.
+   TQSlot *s = fSlot;
    fSlot->ExecuteMethod(fReceiver);
+   if (s->References() <= 0) delete s;
 }
 
 //______________________________________________________________________________
@@ -416,7 +423,12 @@ void TQConnection::ExecuteMethod(Long_t param)
    // Apply slot-method to the fReceiver object with
    // single argument value.
 
+   // This connection might be deleted in result of the method execution
+   // (for example in case of a Disconnect).  Hence we do not assume
+   // the object is still valid on return.
+   TQSlot *s = fSlot;
    fSlot->ExecuteMethod(fReceiver, param);
+   if (s->References() <= 0) delete s;
 }
 
 //______________________________________________________________________________
@@ -425,7 +437,12 @@ void TQConnection::ExecuteMethod(Double_t param)
    // Apply slot-method to the fReceiver object with
    // single argument value.
 
+   // This connection might be deleted in result of the method execution
+   // (for example in case of a Disconnect).  Hence we do not assume
+   // the object is still valid on return.
+   TQSlot *s = fSlot;
    fSlot->ExecuteMethod(fReceiver, param);
+   if (s->References() <= 0) delete s;
 }
 
 //______________________________________________________________________________
@@ -434,7 +451,12 @@ void TQConnection::ExecuteMethod(Long_t *params, Int_t nparam)
    // Apply slot-method to the fReceiver object with variable
    // number of argument values.
 
+   // This connection might be deleted in result of the method execution
+   // (for example in case of a Disconnect).  Hence we do not assume
+   // the object is still valid on return.
+   TQSlot *s = fSlot;
    fSlot->ExecuteMethod(fReceiver, params, nparam);
+   if (s->References() <= 0) delete s;
 }
 
 //______________________________________________________________________________
@@ -443,5 +465,10 @@ void TQConnection::ExecuteMethod(const char *param)
    // Apply slot-method to the fReceiver object and
    // with string parameter.
 
+   // This connection might be deleted in result of the method execution
+   // (for example in case of a Disconnect).  Hence we do not assume
+   // the object is still valid on return.
+   TQSlot *s = fSlot;
    fSlot->ExecuteMethod(fReceiver, param);
+   if (s->References() <= 0) delete s;
 }
