@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.22 2003/09/27 10:49:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.23 2003/11/22 14:51:19 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -77,7 +77,10 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    fBuffer      = 0;
    fBranch      = branch;
    fHeaderOnly  = kFALSE;
-   if (fNevBufSize) fEntryOffset = new Int_t[fNevBufSize];
+   if (fNevBufSize) {
+      fEntryOffset = new Int_t[fNevBufSize];
+      for (Int_t i=0;i<fNevBufSize;i++) fEntryOffset[i] = 0;
+   }
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
