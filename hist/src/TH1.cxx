@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.98 2002/05/23 20:55:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.99 2002/06/04 07:22:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1736,6 +1736,29 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //     By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
 //     You can redefine this default value by calling :
 //       TVirtualFitter::Fitter(0,150); //to get a maximum of 150 parameters
+//
+//      Excluding points
+//      ================
+//     Use TF1::RejectPoint inside your fitting function to exclude points
+//     within a certain range from the fit. Example:
+//     Double_t fline(Double_t *x, Double_t *par)
+//     {
+//         if (x[0] > 2.5 && x[0] < 3.5) {
+//           TF1::RejectPoint();
+//           return 0;
+//        }
+//        return par[0] + par[1]*x[0];
+//     }
+//     
+//     void exclude() {
+//        TF1 *f1 = new TF1("f1","[0] +[1]*x +gaus(2)",0,5);
+//        f1->SetParameters(6,-1,5,3,0.2);
+//        TH1F *h = new TH1F("h","background + signal",100,0,5);
+//        h->FillRandom("f1",2000);
+//        TF1 *fline = new TF1("fline",fline,0,5,2);
+//        fline->SetParameters(2,-1);
+//        h->Fit("fline","l");
+//     }
 //
 //      Warning when using the option "0"
 //      =================================
