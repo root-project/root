@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.51 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawInfo.h,v 1.1 2005/03/10 17:57:04 rdm Exp $
 // Author: Marek Biskup   24/01/2004
 
 /*************************************************************************
@@ -45,31 +45,31 @@ public:
       kLISTOFGRAPHS,
       kLISTOFPOLYMARKERS3D,
    };
-   static const Int_t fgMaxDimension = 4;
-   static const Int_t fgMaxParameters = 9;
+
+   static Int_t fgMaxDimension;      // = 4
+   static Int_t fgMaxParameters;     // = 9
 
 protected:
-   TString       fExp;                       // complete variable expression
-   TString       fSelection;                 // selection expression
-   TString       fOption;                    // draw options
+   TString       fExp;        // complete variable expression
+   TString       fSelection;  // selection expression
+   TString       fOption;     // draw options
 
-   Int_t         fDimension;                 // dimension of the histogram/plot
-   TString       fVarExp[fgMaxDimension];    // variable expression 0 - X, 1 - Y, 2 - Z, 3 - W
-                                             // if dimension < fgMaxDimension then some
-                                             // expressions are empty
+   Int_t         fDimension;  // dimension of the histogram/plot
+   TString       fVarExp[4];  // variable expression 0 - X, 1 - Y, 2 - Z, 3 - W
+                              // if dimension < fgMaxDimension then some
+                              // expressions are empty
 
-   Bool_t        fAdd;                       // values should be added to an existing object
-   TString       fName;                      // histogram's/plot's name
+   Bool_t        fAdd;        // values should be added to an existing object
+   TString       fName;       // histogram's/plot's name
 
-   Int_t         fNoParameters;              // if dimensions of the plot was specified
-   Bool_t        fParameterGiven[fgMaxParameters]; // true if the parameter was given, otherwise false
-   Double_t      fParameters[fgMaxParameters];     // parameters in brackets
+   Int_t         fNoParameters;      // if dimensions of the plot was specified
+   Bool_t        fParameterGiven[9]; // true if the parameter was given, otherwise false
+   Double_t      fParameters[9];     // parameters in brackets
 
-
-   Bool_t        fDraw;                      // if to draw the plot
-   TObject      *fOriginal;                  // original plot (if it is to be reused)
-   Bool_t        fDrawProfile;               // true if the options contain :"prof"
-   EOutputType   fOutputType;                // type of the output
+   Bool_t        fDraw;              // if to draw the plot
+   TObject      *fOriginal;          // original plot (if it is to be reused)
+   Bool_t        fDrawProfile;       // true if the options contain :"prof"
+   EOutputType   fOutputType;        // type of the output
 
    Bool_t SplitVariables(TString variables);
    Bool_t ParseName(TString name);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.6 2004/12/28 20:51:25 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.7 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ Bool_t TProofDraw::ProcessSingle(Long64_t entry, Int_t i)
    // Processes a single variable from an entry.
 
    Double_t w;
-   Double_t v[TDrawInfo::fgMaxDimension];
+   Double_t v[4]; //[TDrawInfo::fgMaxDimension];
 
    if (fSelect)
       w = fSelect->EvalInstance(i);

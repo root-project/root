@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.51 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawInfo.cxx,v 1.1 2005/03/10 17:57:04 rdm Exp $
 // Author: Marek Biskup   24/01/2004
 
 /*************************************************************************
@@ -22,10 +22,11 @@
 #include "TDirectory.h"
 
 
-ClassImp(TDrawInfo)
+Int_t TDrawInfo::fgMaxDimension = 4;
+Int_t TDrawInfo::fgMaxParameters = 9;
 
-const Int_t TDrawInfo::fgMaxDimension;
-const Int_t TDrawInfo::fgMaxParameters;
+
+ClassImp(TDrawInfo)
 
 //______________________________________________________________________________
 TDrawInfo::TDrawInfo()

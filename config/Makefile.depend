@@ -42,8 +42,10 @@ TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libGraf3d.lib \
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libHist.lib lib/libGui.lib
-PROOFLIBDEP         = $(TREELIB) $(HISTLIB) $(TREEPLAYERLIB)
-PROOFLIBEXTRA       = lib/libTree.lib lib/libHist.lib lib/libTreePlayer.lib
+PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
+                      $(TREEPLAYERLIB)
+PROOFLIBEXTRA       = lib/libTree.lib lib/libGraf3d.lib lib/libGraf.lib \
+                      lib/libHist.lib lib/libTreePlayer.lib
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
 PROOFGUILIBEXTRA    = lib/libProof.lib lib/libGui.lib
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
@@ -120,8 +122,9 @@ TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
 TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
-PROOFLIBDEP         = $(TREELIB) $(HISTLIB) $(TREEPLAYERLIB)
-PROOFLIBEXTRA       = -Llib -lTree -lHist -lTreePlayer
+PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
+                      $(TREEPLAYERLIB)
+PROOFLIBEXTRA       = -Llib -lTree -lGraf3d -lGraf -lHist -lTreePlayer
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
 PROOFGUILIBEXTRA    = -Llib -lProof -lGui
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
