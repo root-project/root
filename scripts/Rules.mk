@@ -140,12 +140,18 @@ endif
 %.o: %.cxx
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log
 
+%.o: %.cpp
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cpp.build.log
+
 %.obj: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_C.build.log
 
 %.obj: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cxx.build.log
 
+%.obj: %.cpp
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log
+	
 %_cpp.$(DllSuf) : %.cpp
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_cpp.build.log
 
