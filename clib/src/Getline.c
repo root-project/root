@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.21 2004/02/05 10:05:06 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.22 2004/02/07 10:42:19 brun Exp $ */
 /* Author: */
 
 /*
@@ -1172,37 +1172,6 @@ gl_redraw()
     }
 }
 
-static void setCursorPosition(int x)
-{
-   // Set console cursor postion.
-   // Restore console parameters in case of console corruption
-
-#ifdef WIN32
-   static CONSOLE_SCREEN_BUFFER_INFO sav;
-   CONSOLE_SCREEN_BUFFER_INFO ci;
-   HANDLE out; 
-
-   out = GetStdHandle(STD_OUTPUT_HANDLE);
-   GetConsoleScreenBufferInfo(out, &ci);
-
-   if ((ci.dwSize.Y < 1) ||
-       (ci.dwSize.Y > 4095) ||
-       (ci.dwSize.X < 1) ||
-       (ci.dwSize.X > 4095) ||
-       (ci.dwCursorPosition.Y < 1) ||
-       (ci.dwCursorPosition.Y >= ci.dwSize.Y)) {
-      ci = sav;
-
-      SetConsoleScreenBufferSize(out, ci.dwSize);
-      SetConsoleWindowInfo(out, 1, &ci.srWindow);
-   }
-   ci.dwCursorPosition.X = x;
-   SetConsoleCursorPosition(out, ci.dwCursorPosition);
-   sav = ci;
-#endif
-}
-
-
 static void
 gl_fixup(const char *prompt, int change, int cursor)
 /*
@@ -1230,6 +1199,10 @@ gl_fixup(const char *prompt, int change, int cursor)
     int          new_right = -1; /* alternate right bound, using gl_extent */
     int          l1, l2;
 
+#ifdef WIN32 // bb & vo
+    CONSOLE_SCREEN_BUFFER_INFO ci; 
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &ci);
+#endif
     if (change == -2) {   /* reset */
         gl_pos = gl_cnt = gl_shift = off_right = off_left = 0;
         gl_passwd = 0;
@@ -1337,7 +1310,10 @@ gl_fixup(const char *prompt, int change, int cursor)
         }
     }
     gl_pos = cursor;
-    setCursorPosition(gl_pos + strlen(prompt) - gl_shift); // bb&vo
+#ifdef WIN32 // bb & vo
+    ci.dwCursorPosition.X = gl_pos + strlen(prompt) - gl_shift;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), ci.dwCursorPosition );
+#endif
 }
 
 static int
