@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.38 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.39 2004/11/26 15:55:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -612,54 +612,50 @@ void TGeoCone::Paint(Option_t *option)
    Int_t i, j, n = 20;
    if (gGeoManager) n = gGeoManager->GetNsegments();
 
-   // In case of OpenGL a tube can be drawn with specialized functions
-   TBuffer3D *buff = gPad->AllocateBuffer3D(24, 0, 0);
-   if (!buff) return;
    TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   if (0) {
-   //disabled
-   if (buff->fOption == TBuffer3D::kOGL) {
-      buff->fNbPnts  = 3;
+   // In case of OpenGL a cone can be drawn with specialized functions
+   if (!strcmp(option, "ogl") && !TestShapeBit(kGeoEltu)) {
+      TBuffer3D *buff = gPad->AllocateBuffer3D(42, 0, 0);
+
+      buff->fNbPnts  = 9;//9 points! not 3
       buff->fNbSegs  = 0;
       buff->fNbPols  = 0;
       buff->fColor   = vol->GetLineColor();
-      buff->fPnts[0] =      0; buff->fPnts[1] =      0; buff->fPnts[2] =    0;
-      buff->fPnts[3] =  fRmax2; buff->fPnts[4] =  fRmax2; buff->fPnts[5] =  fDz;
-      buff->fPnts[6] = -fRmax1; buff->fPnts[7] = -fRmax1; buff->fPnts[8] = -fDz;
-      buff->fPnts[9] = (Float_t)n;
-      buff->fPnts[10] = fRmin1;
-      buff->fPnts[11] = fRmax1;
-      buff->fPnts[12] = fRmin2;
-      buff->fPnts[13] = fRmax2;
-      buff->fPnts[14] = fDz;
+
+      buff->fPnts[0]  =      0; buff->fPnts[1]  =      0; buff->fPnts[2]  =    0;
+      buff->fPnts[3]  =  fRmax1; buff->fPnts[4]  =  fRmax1; buff->fPnts[5]  = -fDz;
+      buff->fPnts[6]  = -fRmax1; buff->fPnts[7]  =  fRmax1; buff->fPnts[8]  = -fDz;
+      buff->fPnts[9]  = -fRmax1; buff->fPnts[10] = -fRmax1; buff->fPnts[11] = -fDz;
+      buff->fPnts[12] =  fRmax1; buff->fPnts[13] = -fRmax1; buff->fPnts[14] = -fDz;
+
+      buff->fPnts[15] =  fRmax2; buff->fPnts[16] =  fRmax2; buff->fPnts[17] =  fDz;
+      buff->fPnts[18] = -fRmax2; buff->fPnts[19] =  fRmax2; buff->fPnts[20] =  fDz;
+      buff->fPnts[21] = -fRmax2; buff->fPnts[22] = -fRmax2; buff->fPnts[23] =  fDz;
+      buff->fPnts[24] =  fRmax2; buff->fPnts[25] = -fRmax2; buff->fPnts[26] =  fDz;
+
+      buff->fPnts[27] = (Float_t)n;
+      buff->fPnts[28] = fRmin1;
+      buff->fPnts[29] = fRmax1;
+      buff->fPnts[30] = fRmin2;
+      buff->fPnts[31] = fRmax2;
+      buff->fPnts[32] = fDz;
+
       TransformPoints(buff);
       buff->fId   = vol;
       buff->fType = TBuffer3D::kTUBE;
 
-      TGeoNodeCache *cn = gGeoManager->GetCache();
-      TGeoHMatrix *m = 0;
-      const Double_t *rotM = 0;
-
-      if (cn && (m = cn->GetCurrentMatrix()) && (rotM = m->GetRotationMatrix())) {
-         for (Int_t i = 15; i < 24; ++i)
-            buff->fPnts[i] = rotM[i - 15];
-      } else {
-         //identity matrix
-         for (Int_t i = 15; i < 24; ++i) {
-            buff->fPnts[i] = 0.;
-         }
-         buff->fPnts[15] = buff->fPnts[19] = buff->fPnts[23] = 1.;
-      }
+      TGeoHMatrix *m = (gGeoManager->IsMatrixTransform())?gGeoManager->GetGLMatrix() : gGeoManager->GetCurrentMatrix();
+      const Double_t *rotM = m->GetRotationMatrix();
+      for (Int_t i = 33; i < 42; ++i) buff->fPnts[i] = rotM[i - 33];
 
       buff->Paint(option);
       return;
-   }
    }
 
    Int_t NbPnts = 4*n;
    Int_t NbSegs = 8*n;
    Int_t NbPols = 4*n;
-   buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
    if (!buff) return;
 
    buff->fType = TBuffer3D::kANY;

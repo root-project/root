@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.22 2004/11/29 12:43:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.23 2004/11/29 21:59:07 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -79,8 +79,6 @@ static GLUquadric *GetQuadric()
    return singleton.fQuad;
 }
 
-static GLenum gLightNames[] = {GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3,
-                               GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7};
 //______________________________________________________________________________
 TGLSelection::TGLSelection()
 {
@@ -140,7 +138,7 @@ void TGLSelection::DrawBox()const
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
 }
-
+   
 //______________________________________________________________________________
 void TGLSelection::SetBBox(const Double_t *newBBox)
 {
@@ -185,41 +183,21 @@ TGLSceneObject::TGLSceneObject(const Double_t *start, const Double_t *end,
                     fGLName(glName), fNextT(0), fRealObject(obj)
 {
    fIsSelected = kFALSE;
-   
-   if (color) {
-      //diffuse and specular
-      fColor[0] = color[0];
-      fColor[1] = color[1];
-      fColor[2] = color[2];
-   } else {
-      for (Int_t i = 0; i < 12; ++i) fColor[i] = 1.f;
-   }
-   //ambient
-   fColor[4] = fColor[5] = fColor[6] = 0.f;
-   //specular
-   fColor[8] = fColor[9] = fColor[10] = 0.7f;
-   //emission
-   fColor[12] = fColor[13] = fColor[14] = 0.f;
-   //alpha
-   fColor[3] = fColor[7] = fColor[11] = fColor[15] = 1.f;
-   //shininess
-   fColor[16] = 60.f;
-
-   Double_t xmin = fVertices[0], xmax = xmin;
-   Double_t ymin = fVertices[1], ymax = ymin;
-   Double_t zmin = fVertices[2], zmax = zmin;
-
-   for (Int_t nv = 3, e = fVertices.size(); nv < e; nv += 3) {
-      xmin = TMath::Min(xmin, fVertices[nv]);
-      xmax = TMath::Max(xmax, fVertices[nv]);
-      ymin = TMath::Min(ymin, fVertices[nv + 1]);
-      ymax = TMath::Max(ymax, fVertices[nv + 1]);
-      zmin = TMath::Min(zmin, fVertices[nv + 2]);
-      zmax = TMath::Max(zmax, fVertices[nv + 2]);
-   }
-
-   fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
+   SetColor(color, kTRUE);
+   SetBBox(start, end);
 }
+
+//______________________________________________________________________________
+TGLSceneObject::TGLSceneObject(const Double_t *start, const Double_t *end, Int_t reserve,
+                               const Float_t *color, UInt_t glName, TObject *obj)
+                   :fVertices(reserve, 0.), fColor(),
+                    fGLName(glName), fNextT(0), fRealObject(obj)
+{
+   fIsSelected = kFALSE;
+   SetColor(color, kTRUE);
+   SetBBox(start, end);
+}
+
 
 //______________________________________________________________________________
 Bool_t TGLSceneObject::IsTransparent()const
@@ -258,9 +236,49 @@ void TGLSceneObject::Stretch(Double_t xs, Double_t ys, Double_t zs)
 }
 
 //______________________________________________________________________________
-void TGLSceneObject::SetColor(const Float_t *newColor)
+void TGLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
 {
-   for (Int_t i = 0; i < 17; ++i) fColor[i] = newColor[i];
+   if (!fromCtor) {
+      for (Int_t i = 0; i < 17; ++i) fColor[i] = color[i];
+   } else {
+      if (color) {
+         //diffuse and specular
+         fColor[0] = color[0];
+         fColor[1] = color[1];
+         fColor[2] = color[2];
+      } else {
+         for (Int_t i = 0; i < 12; ++i) fColor[i] = 1.f;
+      }
+      //ambient
+      fColor[4] = fColor[5] = fColor[6] = 0.f;
+      //specular
+      fColor[8] = fColor[9] = fColor[10] = 0.7f;
+      //emission
+      fColor[12] = fColor[13] = fColor[14] = 0.f;
+      //alpha
+      fColor[3] = fColor[7] = fColor[11] = fColor[15] = 1.f;
+      //shininess
+      fColor[16] = 60.f;
+   }
+}
+
+//______________________________________________________________________________
+void TGLSceneObject::SetBBox(const Double_t *start, const Double_t *end)
+{
+   Double_t xmin = start[0], xmax = xmin;
+   Double_t ymin = start[1], ymax = ymin;
+   Double_t zmin = start[2], zmax = zmin;
+
+   for (Int_t nv = 3, e = end - start; nv < e; nv += 3) {
+      xmin = TMath::Min(xmin, start[nv]);
+      xmax = TMath::Max(xmax, start[nv]);
+      ymin = TMath::Min(ymin, start[nv + 1]);
+      ymax = TMath::Max(ymax, start[nv + 1]);
+      zmin = TMath::Min(zmin, start[nv + 2]);
+      zmax = TMath::Max(zmax, start[nv + 2]);
+   }
+
+   fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
 }
 
 //______________________________________________________________________________
@@ -670,28 +688,34 @@ void TGLSphere::Stretch(Double_t, Double_t, Double_t)
 
 //______________________________________________________________________________
 TGLTube::TGLTube(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
-            :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r)
+            :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, 24, c, n, r)
 {
    fColor[3] = 1.f - b.fTransparency / 100.f;
+   //center
+   fVertices[0] = b.fPnts[0];
+   fVertices[1] = b.fPnts[1];
+   fVertices[2] = b.fPnts[2];
 
-   fX = b.fPnts[0];
-   fY = b.fPnts[1];
-   fZ = b.fPnts[2];
-   fNdiv = (Int_t)b.fPnts[9];
+   //rmin1
+   fVertices[3] = b.fPnts[28];
+   //rmax1
+   fVertices[4] = b.fPnts[29];
+   //rmin2
+   fVertices[5] = b.fPnts[30];
+   //rmax2
+   fVertices[6] = b.fPnts[31];
+   //Dz   
+   fVertices[7] = b.fPnts[32];
 
-   fRmin1 = b.fPnts[10];
-   fRmax1 = b.fPnts[11];
-   fRmin2 = b.fPnts[12];
-   fRmax2 = b.fPnts[13];
-   fDz = b.fPnts[14];
-
+   fNdiv = (Int_t)b.fPnts[27];
+   fInv = b.TestBit(TBuffer3D::kIsReflection);
+   
    const Double_t *p = b.fPnts;
 
-   fRotM[0] = p[15], fRotM[1] = p[18], fRotM[2] = p[21], fRotM[3] = 0.;
-   fRotM[4] = p[16], fRotM[5] = p[19], fRotM[6] = p[22], fRotM[7] = 0.;
-   fRotM[8] = p[17], fRotM[9] = p[20], fRotM[10] = p[23], fRotM[11] = 0.;
-   fRotM[12] = 0.,    fRotM[13] = 0.,    fRotM[14] = 0.,    fRotM[15] = 1.;
-   fInv = b.TestBit(TBuffer3D::kIsReflection);
+   fVertices[8]  = p[33], fVertices[9]  = p[36], fVertices[10] = p[39], fVertices[11] = 0.;
+   fVertices[12] = p[34], fVertices[13] = p[37], fVertices[14] = p[40], fVertices[15] = 0.;
+   fVertices[16] = p[35], fVertices[17] = p[38], fVertices[18] = p[41], fVertices[19] = 0.;
+   fVertices[20] = 0.,    fVertices[21] = 0.,    fVertices[22] = 0.,    fVertices[23] = 1.;
 }
 
 //______________________________________________________________________________
@@ -700,7 +724,7 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
    if (fr) {
       if (!fr->ClipOnBoundingBox(*this)) return;
    }
-
+   
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
@@ -717,20 +741,27 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
       glLoadName(GetGLName());
       glPushMatrix();
 
-      glTranslated(fX, fY, fZ);
-      glMultMatrixd(fRotM);
+      Double_t xC = fVertices[0], yC = fVertices[1], zC = fVertices[2];
+      Double_t rMin1 = fVertices[3], rMax1 = fVertices[4];
+      Double_t rMin2 = fVertices[5], rMax2 = fVertices[6];
+      Double_t dz = fVertices[7];
+      
+      glTranslated(xC, yC, zC);
+      glMultMatrixd(&fVertices[8]);
       glPushMatrix();
-      glTranslated(0., 0., -fDz);
+      glTranslated(0., 0., -dz);
+
       //outer surface
       if (fInv) {
-//         glFrontFace(GL_CW);
+         glFrontFace(GL_CW);
       }
-
-      gluCylinder(quadObj, fRmax1, fRmax2, 2 * fDz, fNdiv, 1);
+      
+      gluCylinder(quadObj, rMax1, rMax2, 2 * dz, fNdiv, 1);
+   
       //inner surface
-      if (fRmin1 && fRmin2) {
+      if (rMin1 && rMin2) {
          gluQuadricOrientation(quadObj, (GLenum)GLU_INSIDE);
-         gluCylinder(quadObj, fRmin1, fRmin2, 2 * fDz, fNdiv, 1);
+         gluCylinder(quadObj, rMin1, rMin2, 2 * dz, fNdiv, 1);
          //return orientation back
          gluQuadricOrientation(quadObj, (GLenum)GLU_OUTSIDE);
       }
@@ -739,17 +770,17 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
 
       //capping
       glPushMatrix();
-      glTranslated(0., 0., fDz);
-      gluDisk(quadObj, fRmin2, fRmax2, fNdiv, 1);
+      glTranslated(0., 0., dz);
+      gluDisk(quadObj, rMin2, rMax2, fNdiv, 1);
       glRotated(180., 1., 0., 0.);
-      glTranslated(0., 0., 2 * fDz);
-      gluDisk(quadObj, fRmin1, fRmax1, fNdiv, 1);
+      glTranslated(0., 0., 2 * dz);
+      gluDisk(quadObj, rMin1, rMax1, fNdiv, 1);
       glPopMatrix();
 
       glPopMatrix();
 
       if (fInv) {
-//         glFrontFace(GL_CCW);
+         glFrontFace(GL_CCW);
       }
    }
 
@@ -766,83 +797,13 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
 //______________________________________________________________________________
 void TGLTube::Shift(Double_t x, Double_t y, Double_t z)
 {
-   fX += x;
-   fY += y;
-   fZ += z;
-}
-
-//______________________________________________________________________________
-TGLSimpleLight::TGLSimpleLight(UInt_t n, UInt_t l, const Float_t *c, const Double_t *pos)
-                   :TGLSceneObject(pos, pos + 3, c, n, 0),
-                    fLightName(l)
-{
-   fColor[16] = -10.f;
-   fColor[0] = c[0];
-   fColor[1] = c[1];
-   fColor[2] = c[2];
-   fBulbRad = 10.f;
-}
-
-//______________________________________________________________________________
-void TGLSimpleLight::GLDraw(const TGLFrustum *fr)const
-{
-   if (fr) {
-      if (!fr->ClipOnBoundingBox(*this)) return;
-   }
-   
-   GLUquadric *quadObj = GetQuadric();
-   
-   if (quadObj) {
-      const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
-      const Float_t lightPos[] = {Float_t(fVertices[0]), Float_t(fVertices[1]),
-                                  Float_t(fVertices[2]), 1.f};
-      glMaterialfv(GL_FRONT, GL_EMISSION, fColor);
-      glMaterialfv(GL_FRONT, GL_AMBIENT, nullColor);
-      glMaterialfv(GL_FRONT, GL_DIFFUSE, nullColor);
-      glMaterialfv(GL_FRONT, GL_SPECULAR, nullColor);
-      glLightfv(gLightNames[fLightName], GL_DIFFUSE, fColor);
-      glLightfv(gLightNames[fLightName], GL_AMBIENT, fColor + 4);
-      glLightfv(gLightNames[fLightName], GL_SPECULAR, fColor + 8);
-      glLightfv(gLightNames[fLightName], GL_POSITION, lightPos);
-      //Draw light source as sphere
-      glLoadName(GetGLName());
-      glPushMatrix();
-
-      glTranslatef(lightPos[0], lightPos[1], lightPos[2]);
-      if (quadObj) gluSphere(quadObj, fBulbRad, 10, 10);
-
-      glPopMatrix();
-   }
-   
-   if (fIsSelected) {
-      fSelectionBox.DrawBox();
-   }
-}
-
-//______________________________________________________________________________
-void TGLSimpleLight::Shift(Double_t x, Double_t y, Double_t z)
-{
+   fSelectionBox.Shift(x, y, z);
    fVertices[0] += x;
    fVertices[1] += y;
    fVertices[2] += z;
 }
 
 //______________________________________________________________________________
-void TGLSimpleLight::SetBulbRad(Float_t newRad)
-{
-   fBulbRad = newRad;
-   fSelectionBox.SetBBox(fVertices[0] - newRad, fVertices[0] + newRad,
-                         fVertices[1] - newRad, fVertices[1] + newRad,
-                         fVertices[2] - newRad, fVertices[2] + newRad);
-}
-
-//______________________________________________________________________________
-Bool_t TGLSimpleLight::IsTransparent()const
-{
-   return kFALSE;
-}
-
-//______________________________________________________________________________
-void TGLSimpleLight::Stretch(Double_t, Double_t, Double_t)
+void TGLTube::Stretch(Double_t, Double_t, Double_t)
 {
 }

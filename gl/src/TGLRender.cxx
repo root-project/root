@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.19 2004/11/29 12:43:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.20 2004/11/29 21:59:07 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -314,12 +314,8 @@ void TGLRender::Init()
 //______________________________________________________________________________
 void TGLRender::DrawScene(Bool_t clip)
 {
-   Bool_t isTr = kFALSE;
-   TGLFrustum *frObj = clip ? &fFrustum : 0;
 
-   if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
-      fSelectedObj->GLDraw(frObj);
-   }
+   TGLFrustum *frObj = clip ? &fFrustum : 0;
 
    for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
       TGLSceneObject *currObj = (TGLSceneObject *)fGLObjects.At(i);
@@ -330,9 +326,13 @@ void TGLRender::DrawScene(Bool_t clip)
          currObj->GLDraw(frObj);
       }
    }
-
-   if (isTr)
+   
+   Bool_t isTr = kFALSE;
+   if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
       fSelectedObj->GLDraw(frObj);
+   } else if (isTr) {
+      fSelectedObj->GLDraw(frObj);
+   }
 
    while (fFirstT) {
       fFirstT->GLDraw(frObj);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.21 2004/11/23 14:00:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.22 2004/11/23 21:42:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -94,7 +94,7 @@ private:
 
    TContextMenu      *fContextMenu;
    TGLSceneObject    *fSelectedObj;
-   enum EAction{kNoAction, kRotating, kPicking};
+   enum EAction{kNoAction, kRotating, kPicking, kZooming};
    EAction fAction;
 
 public:
