@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.71 2004/11/17 17:56:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.72 2005/01/12 07:50:02 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -313,7 +313,6 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
    //function called by the TClass constructor when replacing an emulated class
    //by the real class
    
-   GetClassPointer(); //force fClassObject
    if (fClassObject == oldClass) {
       fClassObject = newClass;
       if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
@@ -326,6 +325,9 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
       // for reading STL containers).
       fClassObject = (TClass*)-1;
       GetClassPointer(); //force fClassObject
+      if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+         fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+      }
    }
 }
    
@@ -461,10 +463,18 @@ void TStreamerBase::Update(const TClass *oldClass, TClass *newClass)
    //function called by the TClass constructor when replacing an emulated class
    //by the real class
    
-   TStreamerElement::GetClassPointer();//Force fClassObject
    if (fClassObject == oldClass) fClassObject = newClass;
+   else if (fClassObject == 0) {
+      fClassObject = (TClass*)-1;
+      GetClassPointer(); //force fClassObject
+   }
    if (fBaseClass   == oldClass) fBaseClass   = newClass;
-   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+   else if (fBaseClass == 0 ) {
+      fBaseClass = (TClass*)-1;
+      GetClassPointer(); //force fClassObject
+   }
+   if (fClassObject != (TClass*)-1 && 
+       fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
 }
