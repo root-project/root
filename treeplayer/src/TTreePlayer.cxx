@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.140 2003/10/16 15:01:01 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.141 2003/11/20 15:03:44 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -759,8 +759,6 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       } else {
          Int_t noscat = opt.Length();
          if (opt.Contains("same")) noscat -= 4;
-         else noscat = 0;
-printf("noscat=%d\n",noscat);
          if (noscat) {
             if (draw) fHistogram->Draw(option);
          } else {
