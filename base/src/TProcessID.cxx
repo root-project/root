@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.15 2002/07/09 21:12:17 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.16 2002/07/13 16:19:26 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -200,7 +200,7 @@ TObject *TProcessID::GetObjectWithID(UInt_t uidd)
    
    Int_t uid = uidd & 0xffffff;  //take only the 24 lower bits
    
-   if (uid > fObjects->GetSize()) return 0;
+   if (uid >= fObjects->GetSize()) return 0;
    return fObjects->UncheckedAt(uid);
 }
 
