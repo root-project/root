@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.5 2000/12/15 12:05:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.6 2001/02/28 07:22:46 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -37,6 +37,7 @@ public:
         TGraphErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *ex=0, const Float_t *ey=0);
         TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *ex=0, const Double_t *ey=0);
         virtual ~TGraphErrors();
+        virtual void    Apply(TF1 *f);
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
         Double_t        GetErrorX(Int_t bin) const;
         Double_t        GetErrorY(Int_t bin) const;

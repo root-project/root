@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.4 2000/12/15 12:05:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.5 2001/02/28 07:26:04 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -39,6 +39,7 @@ public:
         TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl=0, const Float_t *exh=0, const Float_t *eyl=0, const Float_t *eyh=0);
         TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl=0, const Double_t *exh=0, const Double_t *eyl=0, const Double_t *eyh=0);
         virtual ~TGraphAsymmErrors();
+        virtual void    Apply(TF1 *f);
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
         Double_t        GetErrorX(Int_t bin) const;
         Double_t        GetErrorY(Int_t bin) const;

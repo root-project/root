@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.14 2001/06/27 08:12:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.15 2001/07/20 21:05:30 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TMath.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
+#include "TF1.h"
 
 ClassImp(TGraphErrors)
 
@@ -151,6 +152,33 @@ TGraphErrors::~TGraphErrors()
 
    delete [] fEX;
    delete [] fEY;
+}
+
+//______________________________________________________________________________
+void TGraphErrors::Apply(TF1 *f) 
+{
+  // apply function to all the data points
+  // y = f(x,y)
+  // 
+  // The error is calculated as ey=(f(x,y+ey)-f(x,y-ey))/2 
+  // This is the same as error(fy) = df/dy * ey for small errors
+  //
+  // For generic functions the symmetric errors might become non-symmetric
+  // and are averaged here. Use TGraphAsymmErrors if desired.
+  //
+  // error on x doesn't change
+  // function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
+
+  Double_t x,y,ex,ey;
+
+  for (Int_t i=0;i<GetN();i++) {
+     GetPoint(i,x,y);
+     ex=GetErrorX(i);
+     ey=GetErrorY(i);
+
+     SetPoint(i,x,f->Eval(x,y));
+     SetPointError(i,ex,TMath::Abs(f->Eval(x,y+ey) - f->Eval(x,y-ey))/2.);    
+  }
 }
 
 //______________________________________________________________________________

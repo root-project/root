@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.11 2001/06/27 08:12:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.12 2001/07/20 21:05:30 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TMath.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
+#include "TF1.h"
 
 ClassImp(TGraphAsymmErrors)
 
@@ -172,6 +173,47 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
    delete [] fEXhigh;
    delete [] fEYlow;
    delete [] fEYhigh;
+}
+
+//______________________________________________________________________________
+void TGraphAsymmErrors::Apply(TF1 *f) 
+{
+  // apply a function to all data points
+  // y = f(x,y)
+  //
+  // Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and 
+  // eyl = f(x,y)-f(x,y-eyl)
+  //
+  // Special treatment has to be applied for the functions where the
+  // role of "up" and "down" is reversed.
+  // function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
+
+  Double_t x,y,exl,exh,eyl,eyh,eyl_new,eyh_new,fxy;
+
+  for (Int_t i=0;i<GetN();i++) {
+     GetPoint(i,x,y);
+     exl=GetEXlow()[i];
+     exh=GetEXhigh()[i];
+     eyl=GetEYlow()[i];
+     eyh=GetEYhigh()[i];
+
+     fxy = f->Eval(x,y);
+     SetPoint(i,x,fxy);
+
+     // in the case of the functions like y-> -1*y the roles of the
+     // upper and lower error bars is reversed
+     if (f->Eval(x,y-eyl)<f->Eval(x,y+eyh)) {
+        eyl_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
+        eyh_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
+     }
+     else {
+        eyh_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
+        eyl_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
+     }
+
+     //error on x doesn't change
+     SetPointError(i,exl,exh,eyl_new,eyh_new);
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.45 2001/09/20 20:48:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.46 2001/10/01 14:40:36 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -190,12 +190,25 @@ TGraph::~TGraph()
 }
 
 //______________________________________________________________________________
+void TGraph::Apply(TF1 *f) 
+{
+  // apply function f to all the data points
+  // f may be a 1-D function TF1 or 2-d function TF2
+  // The Y values of the graph are replaced by the new values computed
+  // using the function
+     
+  for (Int_t i=0;i<fNpoints;i++) {
+    fY[i] = f->Eval(fX[i],fY[i]);
+  }
+}
+
+
+//______________________________________________________________________________
 void TGraph::Browse(TBrowser *)
 {
     Draw("alp");
     gPad->Update();
 }
-
 
 //______________________________________________________________________________
 void TGraph::ComputeRange(Double_t &, Double_t &, Double_t &, Double_t &)

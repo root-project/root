@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.12 2001/02/28 07:20:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.13 2001/09/20 20:48:51 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -57,6 +57,7 @@ public:
         TGraph(Int_t n, const Float_t *x, const Float_t *y);
         TGraph(Int_t n, const Double_t *x, const Double_t *y);
         virtual ~TGraph();
+        virtual void     Apply(TF1 *f);
         virtual void     Browse(TBrowser *b);
                 void     ComputeLogs(Int_t npoints, Int_t opt);
         virtual void     ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
