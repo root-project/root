@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.6 2001/04/09 08:10:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.7 2001/04/12 19:17:28 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -42,6 +42,7 @@ protected:
     Int_t               fNdata;         //!Number of data in this branch
     TBranchElement     *fBranchCount;   //pointer to branchcount branch
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
+    char               *fObject;        //!Pointer to object at *fAddress
     
 public:
     TBranchElement();

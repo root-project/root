@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.14 2001/04/12 15:06:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.15 2001/04/12 19:17:28 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -48,6 +48,7 @@ TBranchElement::TBranchElement(): TBranch()
    fNleaves   = 1;
    fInfo = 0;
    fBranchCount = 0;
+   fObject = 0;
 }
 
 
@@ -68,6 +69,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fStreamerType = -1;
    fType         = 0;
    fBranchCount  = 0;
+   fObject       = 0;
    fClassVersion = cl->GetClassVersion();
    fTree         = gTree;
    ULong_t *elems = sinfo->GetElems();
@@ -191,13 +193,13 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
             if (fin == 0) continue;
             TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
             sprintf(branchname,"%s[%s_]",fin+1,name);
-            bre->SetTitle(branchname);
             bre->SetBranchCount(this);
             char *dim = strstr(branchname,"][");
             if (dim) {
                char *bracket = strstr(branchname,"[");
                if (bracket < dim) strcpy(bracket+1,dim+2);
             }
+            bre->SetTitle(branchname);
             lf->SetTitle(branchname);
          }
          return;
@@ -263,6 +265,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fType         = 0;
    fClassVersion = 1;
    fBranchCount  = 0;
+   fObject       = 0;
            
    SetName(name);
    SetTitle(name);
@@ -308,23 +311,21 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
       char branchname[kMaxLen];
       sprintf(branchname,"%s_",name);
       SetTitle(branchname);
-//printf("Unrolling TClonesArray, branchname=%s, clm=%s\n",branchname,clm->GetName());
       Unroll(name,clm,clm,basketsize,splitlevel,31);
       Int_t nbranches = fBranches.GetEntries();
       for (Int_t i=0;i<nbranches;i++) {
          TBranchElement *bre = (TBranchElement*)fBranches.At(i);
-//printf("  before setting title, i=%d, title=%s\n",i,bre->GetTitle());
          const char *fin = strrchr(bre->GetTitle(),'.');
          if (fin == 0) continue;
          TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
          sprintf(branchname,"%s[%s_]",fin+1,name);
-         bre->SetTitle(branchname);
          bre->SetBranchCount(this);
          char *dim = strstr(branchname,"][");
          if (dim) {
             char *bracket = strstr(branchname,"[");
             if (bracket < dim) strcpy(bracket+1,dim+2);
          }
+         bre->SetTitle(branchname);
          lf->SetTitle(branchname);
       }
       return;
@@ -371,6 +372,10 @@ Int_t TBranchElement::Fill()
 
    Int_t nbytes = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
+   // update addresses if top level branch
+   if (fID < 0) {
+      if (fObject != (char*)*fAddress) SetAddress(fAddress);
+   }
    if (fType == 3)  nbytes += TBranch::Fill();  //TClonesArray counter
    if (nbranches) {
       for (Int_t i=0;i<nbranches;i++)  {
@@ -411,7 +416,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
     Int_t n = clones->GetEntriesFast();
     fInfo->WriteBufferClones(b,clones,n,fID);
   } else if (fType <= 2) {
-    fInfo->WriteBuffer(b,fAddress,fID);
+    fInfo->WriteBuffer(b,fObject,fID);
   }   
 }
 
@@ -629,7 +634,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     fNdata = n;
     fInfo->ReadBufferClones(b,clones,n,fID);
   } else if (fType <= 2) {     // branch in split mode
-    fInfo->ReadBuffer(b,fAddress,fID);
+    fInfo->ReadBuffer(b,fObject,fID);
   }   
 }
 
@@ -673,18 +678,26 @@ void TBranchElement::SetAddress(void *add)
    Int_t nbranches = fBranches.GetEntriesFast();
 //printf("SetAddress, branch:%s, classname=%s, fID=%d, fType=%d, nbranches=%d, add=%x, fInfo=%s, version=%d\n",GetName(),fClassName.Data(),fID,fType,nbranches,(Seek_t)add,fInfo->GetName(),fClassVersion);
    fAddress = (char*)add;
+   fObject = fAddress;
    if (fID < 0) {
       TStreamerInfo::Optimize(kFALSE);
       if (fAddress) {
          char **ppointer = (char**)add;
-         fAddress = *ppointer;
-         if (!fAddress && cl) {
-            fAddress = (char*)cl->New();
-            *ppointer = fAddress;
+         fObject = *ppointer;
+         if (!fObject && cl) {
+            fObject = (char*)cl->New();
+            *ppointer = fObject;
          }
       } else {
-         fAddress = (char*)cl->New();
+         fObject = (char*)cl->New();
       }
+   }
+   
+   //special case for a TClonesArray when address is not yet set
+   //we must create the clonesarray first
+   if (fAddress == 0 && fType ==3) {
+      printf("Branch: %s, Creating TClonesArray\n",GetName());
+      Dump();
    }
       
    if (nbranches == 0) return;
@@ -707,7 +720,7 @@ void TBranchElement::SetAddress(void *add)
          if (info) {            
             Int_t *leafOffsets = info->GetOffsets();
             if (leafOffsets) {               
-               branch->SetAddress(fAddress + leafOffsets[id] + baseOffset);
+               branch->SetAddress(fObject + leafOffsets[id] + baseOffset);
             } else {
                Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
             }
@@ -715,7 +728,7 @@ void TBranchElement::SetAddress(void *add)
             Error("SetAddress","branch=%s, info=0",branch->GetName());
          }
       } else {
-         branch->SetAddress(fAddress + baseOffset);
+         branch->SetAddress(fObject + baseOffset);
       }
    }      
 }
