@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.8 2001/01/04 16:35:59 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.9 2001/04/17 15:29:35 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1092,13 +1092,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.8 2001/01/04 16:35:59 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.9 2001/04/17 15:29:35 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.8 2001/01/04 16:35:59 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.9 2001/04/17 15:29:35 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1799,7 +1799,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.8 2001/01/04 16:35:59 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.9 2001/04/17 15:29:35 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
@@ -2552,6 +2552,7 @@ while (ich < nchp ) {
 //*-*
 //*-*  read character number I and check if it is a escape character
 //*-*
+   scape = 0;
    if (TestBit(kLatex)) scape = 0;
    else                 scape  = (char*)strchr(cflip, char2[ich-1]);
    if( scape )  {
@@ -2716,12 +2717,12 @@ L120:        //*-* check if CHAR2 will not be cut in the middle of an octal code
       if( ifnb[i] == 12)  {
          pc = piece[i];
          for ( j=0;j<(int)strlen(pc);j++) {
-            if(      pc[j] == 'J')  pc[j]='I';
-            else if( pc[j] == 'V')  pc[j]='C';
+            //if(      pc[j] == 'J')  pc[j]='I';
+            //else if( pc[j] == 'V')  pc[j]='C';
           //  else if( pc[j] == 'C')  pc[j]='H';
           //  else if( pc[j] == 'H')  pc[j]='C';
-            else if( pc[j] == 'j')  pc[j]='i';
-            else if( pc[j] == 'v')  pc[j]='c';
+            //else if( pc[j] == 'j')  pc[j]='i';
+            //else if( pc[j] == 'v')  pc[j]='c';
           //  else if( pc[j] == 'c')  pc[j]='h';
           //  else if( pc[j] == 'h')  pc[j]='c';
          }
