@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.26 2001/03/14 18:34:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.27 2001/03/21 16:45:18 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -672,7 +672,17 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       (dict)();
       return GetClass(name);
    }
-   return cl;
+   if (cl) return cl;
+   
+   //last attempt. Look in CINT list of all (compiled+interpreted) classes
+   for (Int_t tagnum=0;tagnum<G__struct.alltag;tagnum++) {
+      if (strcmp(G__struct.name[tagnum],name) == 0) {
+         if (strchr(name,'<')) continue; //reject STL containers
+         if (strcmp(name,"string") == 0) continue;
+         return new TClass(name,1,"","",-1,-1);
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
