@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.9 2001/10/19 21:32:22 david Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.10 2001/10/19 22:19:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -102,14 +102,12 @@ protected:
 
   // RooFitContext optimizer interface
   friend class RooFitContext ;
-
-public:
-
   virtual void cacheArgs(RooArgSet& varSet) ;
 
 protected:
 
   // Load data from another TTree
+  void loadValues(const RooTreeData *t, RooFormulaVar* select=0) ;
   void loadValues(const TTree *t, RooFormulaVar* cutVar=0) ; 
   void loadValues(const char *filename, const char *treename,
 		  RooFormulaVar *cutVar=0);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.30 2001/10/11 01:28:50 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.31 2001/10/13 21:53:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -247,17 +247,19 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       RooArgSet newVarList(*_dataClone->get()) ;
       TIterator* iter = pruneList.createIterator() ;
       RooAbsArg* arg ;
+      RooArgSet trimList ;
       while (arg = (RooAbsArg*) iter->Next()) {
-	cout << "RooFitContext::optimizePDF: dropping variable " 
-	     << arg->GetName() << " from context data set" << endl ;
 	newVarList.remove(*arg) ;      
+	trimList.add(*arg) ;
       }      
       delete iter ;
-      
+      if (trimList.getSize()>0) {
+	cout << "RooFitContext::optimizePDF: dropping unused variables from dataset: " ;
+	trimList.Print("1") ;
+      }
+
       // Create trimmed data set
       RooAbsData *trimData = _dataClone->reduceEng(newVarList,0,kTRUE) ;
-//       new RooAbsData("trimData","Reduced data set for fit context",
-// 					    _dataClone,newVarList,kTRUE) ;
       
       // Unattach PDF clone from previous dataset
       _pdfClone->recursiveRedirectServers(_origLeafNodeList,kFALSE);
@@ -266,7 +268,8 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       _pdfClone->attachDataSet(*trimData) ;
 
       // Update normSet with components from trimData
-      _normSet->replace(*trimData->get()) ;
+      delete _normSet ;
+      _normSet = (RooArgSet*) trimData->get()->snapshot(kFALSE) ;
       
       // WVE --- Is this still necessary now that we use RooNameSets? YES!!! --------
       //         Forces actual calculation of normalization of cached 
@@ -343,8 +346,8 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooAbsData* dset,
       delete branchParamList ;
 
       if (canOpt) {
-	cout << "RooFitContext::optimizePDF: component PDF " << server->GetName() 
-	     << " of PDF " << pdf->GetName() << " will be cached" << endl ;
+	cout << "RooFitContext::optimizePDF: component PDF " 
+	     << server->GetName() << " will be cached" << endl ;
 
 	// Add to cache list
 	cacheList.add(*server) ;

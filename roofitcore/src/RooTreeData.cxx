@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.16 2001/10/19 21:32:22 david Exp $
+ *    File: $Id: RooTreeData.cc,v 1.17 2001/10/19 22:19:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -92,9 +92,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   if (cuts && *cuts) {
     // Create a RooFormulaVar cut from given cut expression
     RooFormulaVar cutVar(cuts,cuts,t->_vars) ;
-    loadValues(t->_tree,&cutVar);
+    loadValues(t,&cutVar);
   } else {
-    loadValues(t->_tree,0);
+    loadValues(t,0);
   }
 }
 
@@ -118,7 +118,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   RooFormulaVar* cloneVar = (RooFormulaVar*) tmp->find(cutVar.GetName()) ;
   cloneVar->attachDataSet(*this) ;
 
-  loadValues(t->_tree,cloneVar);
+  loadValues(t,cloneVar);
 
   delete tmp ;
 }
@@ -171,7 +171,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   initialize(vars);
   initCache(t->_cachedVars) ;
   
-  loadValues(t->_tree,cloneVar);
+  loadValues(t,cloneVar);
+
+  // WVE copy values of cached variables here!!!
 
   if (cloneVarSet) delete cloneVarSet ;
 }
@@ -234,7 +236,7 @@ RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) :
   createTree(newName,other.GetTitle()) ;
 
   initialize(other._vars) ;
-  loadValues(other._tree,0) ;
+  loadValues(&other,0) ;
 }
 
 
@@ -306,6 +308,46 @@ void RooTreeData::loadValues(const char *filename, const char *treename,
     TTree* tree= (TTree*)gDirectory->Get(treename);
     loadValues(tree,cutVar);
   }
+}
+
+
+void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select) 
+{
+  // Load values from dataset 't' into this data collection, optionally
+  // selecting events using 'select' RooFormulaVar
+  //
+
+  // Redirect formula servers to source data row
+  if (select) {
+    select->recursiveRedirectServers(*t->get()) ;
+
+    RooArgSet branchList ;
+    select->branchNodeServerList(&branchList) ;
+    TIterator* iter = branchList.createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      arg->setOperMode(RooAbsArg::ADirty) ;
+    }
+    delete iter ;
+  }
+
+  // Loop over events in source tree   
+  RooAbsArg* destArg(0) ;
+  Int_t nevent= t->numEntries() ;
+  for(Int_t i=0; i < nevent; ++i) {
+    t->_tree->GetEntry(i,1) ;
+
+    // Does this event pass the cuts?
+    if (select && select->getVal()==0) {
+      continue ; 
+    }
+
+    _vars = t->_vars ;
+    _cachedVars = t->_cachedVars ;
+    Fill() ;
+   }
+  
+  SetTitle(t->GetTitle());
 }
 
 
@@ -412,8 +454,6 @@ void RooTreeData::dump() {
 }
 
 
-
-
 void RooTreeData::cacheArgs(RooArgSet& newVarSet) 
 {
   // Cache given RooAbsArgs with this tree: The tree is
@@ -440,6 +480,7 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet)
     // Evaluate the cached variables and store the results
     iter->Reset() ;
     while (arg=(RooAbsArg*)iter->Next()) {
+      arg->setValueDirty() ;
       arg->syncCache(&_vars) ;
       arg->fillTreeBranch(*_tree) ;
     }
@@ -447,8 +488,6 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet)
 
   delete iter ;
 }
-
-
 
 
 const RooArgSet* RooTreeData::get(Int_t index) const 
@@ -509,8 +548,8 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   //       using addColumn(), you may alter the outcome of the fit. 
   //
   //       Only in cases where such a modification of fit behaviour is intentional, 
-  //       this function should be used. (E.g. to collapse multiple category
-  //       dependents determining a 'fit category' into a single category)
+  //       this function should be used. (E.g collapsing a continuous B0 flavour
+  //       probability into a 2-state B0/B0bar category)
 
   // Create a fundamental object of the right type to hold newVar values
   RooAbsArg* valHolder= newVar.createFundamental();
@@ -539,11 +578,9 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
     valHolder->fillTreeBranch(*_tree) ;
   }
   
-  delete newVarCloneList;
-  
+  delete newVarCloneList;  
   return valHolder ;
 }
-
 
 
 
@@ -608,6 +645,7 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
   cloneSetList.Delete() ;
   return holderSet ;
 }
+
 
 
 RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions) const 
