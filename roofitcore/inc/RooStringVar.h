@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.rdl,v 1.13 2001/11/01 22:52:22 verkerke Exp $
+ *    File: $Id: RooStringVar.rdl,v 1.14 2001/11/19 07:24:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,8 +29,8 @@ public:
   
   // Parameter value and error accessors
   virtual operator TString() ;
-  virtual TString getVal() const { return TString(_value) ; } // overrides RooAbsReal::getVal()
-  virtual void setVal(TString value);
+  virtual const char* getVal() const { return _value ; } // overrides RooAbsReal::getVal()
+  virtual void setVal(const char* newVal) ;
   virtual RooAbsArg& operator=(Int_t ival) { return RooAbsArg::operator=(ival) ; }
   virtual RooAbsArg& operator=(Double_t fval) { return RooAbsArg::operator=(fval) ; }
   virtual RooAbsArg& operator=(const char* newValue);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.24 2002/06/12 23:53:26 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.25 2002/08/21 23:06:40 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -50,13 +50,26 @@ public:
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
 
-  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
-			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const ; 
+  virtual RooPlot* plotOn(RooPlot* frame, 
+			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const {
+    return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  }
+
+  // Backward compatibility function
+  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 
+			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0,
+			  Double_t precision=1e-3, Bool_t shiftToZero=kFALSE, const RooArgSet* projDataSet=0,
+			  Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
   
   RooAbsPdf* getPdf(const char* catName) const ;
   const RooAbsCategory& indexCat() const { return _indexCat.arg() ; }
   
 protected:
+
+  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const ;
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   mutable RooSetProxy _plotCoefNormSet ;

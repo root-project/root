@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.59 2002/06/19 20:59:39 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.60 2002/08/21 23:05:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,6 +20,7 @@
 #include "RooFitCore/RooNameSet.hh"
 #include "RooFitCore/RooNormSetCache.hh"
 #include "RooFitCore/RooNormManager.hh"
+#include "RooFitCore/RooCmdArg.hh"
 
 class RooDataSet;
 class RooArgSet ;
@@ -27,6 +28,7 @@ class RooRealProxy ;
 class RooAbsGenContext ;
 class RooFitResult ;
 class RooExtendPdf ;
+class RooCategory ;
 class TPaveText;
 class TH1F;
 class TH2F;
@@ -48,11 +50,20 @@ public:
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Int_t nEvents= 0,
 		       Bool_t verbose=kFALSE) const;
 
+  virtual RooPlot* plotOn(RooPlot* frame, 
+			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const {
+    return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  }
 
-  // PDF specific plotting
-  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
-			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const;
-
+  // Backward compatibility functions
+  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 
+			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0,
+			  Double_t precision=1e-3, Bool_t shiftToZero=kFALSE, const RooArgSet* projDataSet=0,
+			  Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
+  
   virtual RooPlot *plotCompOn(RooPlot *frame, const char* compNameList, Option_t* drawOptions="L",
 			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
 			      const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
@@ -69,13 +80,6 @@ public:
 				   Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
 				   const RooAbsData* projData=0) const ;
 
-  virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
-			   Option_t *options = "NELU", Double_t xmin=0.65,
-			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
-
-
-
-  // Backward compatibility functions
   inline RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
                             Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
     return plotNLLOn(frame,data,kFALSE,RooArgSet(),drawOptions,prec,fixMinToZero) ;
@@ -86,6 +90,12 @@ public:
   }
   virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
                              Option_t* drawOptions="L", Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
+  // End backward compatibility functions
+
+
+  virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
+			   Option_t *options = "NELU", Double_t xmin=0.65,
+			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
 
 
 
@@ -139,6 +149,9 @@ public:
   virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet()) ;
 
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
+
+  static void clearEvalError() { _evalError = kFALSE ; }
+  static Bool_t evalError() { return _evalError ; }
   
 private:
 
@@ -147,11 +160,15 @@ private:
 
 protected:
 
+  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const ;
+  void plotOnCompSelect(RooArgSet* selNodes) const ;
+
   friend class RooAddGenContext ;
   friend class RooProdGenContext ;
   friend class RooSimGenContext ;
   friend class RooSimultaneous ;
   friend class RooMCStudy ;
+
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
@@ -191,8 +208,19 @@ protected:
   static void globalSelectComp(Bool_t flag) { _globalSelectComp = flag ; }
   Bool_t _selectComp ;               // Component selection flag for RooAbsPdf::plotCompOn
   static Bool_t _globalSelectComp ;  // Global activation switch for component selection
+
+  static void raiseEvalError() { _evalError = kTRUE ; }
+  
+  static Bool_t _evalError ;
   
   ClassDef(RooAbsPdf,1) // Abstract PDF with normalization support
 };
+
+// Additional RooAbsPdf::plotOn arguments
+RooCmdArg Normalization(Double_t scaleFactor, RooAbsPdf::ScaleType scaleType) ;
+RooCmdArg Components(const RooArgSet& compSet) ;
+RooCmdArg Components(const char* compSpec) ;
+
+
 
 #endif

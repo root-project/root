@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.14 2001/11/01 22:52:22 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.15 2001/11/19 07:24:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -58,11 +58,11 @@ RooStringVar::~RooStringVar()
 
 RooStringVar::operator TString() {
   // Cast operator to TString
-  return this->getVal();
+  return TString(_value) ;
 }
 
 
-void RooStringVar::setVal(TString value) {
+void RooStringVar::setVal(const char* value) {
   // Set value to given TString
   if (!isValidString(value)) {    
     cout << "RooStringVar::setVal(" << GetName() << "): new string too long and ignored" << endl ;

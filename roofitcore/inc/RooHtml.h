@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHtml.rdl,v 1.1 2001/10/04 00:37:19 david Exp $
+ *    File: $Id: RooHtml.rdl,v 1.2 2001/10/08 05:20:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,7 +16,7 @@
 #include "THtml.h"
 #include "TString.h"
 
-class ofstream;
+#include <fstream.h>
 
 class RooHtml : public THtml {
 public:

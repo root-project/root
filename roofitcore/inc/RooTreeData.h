@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.22 2002/04/12 19:06:22 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.23 2002/08/21 23:06:42 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -64,6 +64,13 @@ public:
   virtual void reset() { Reset() ; }
 
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
+
+  virtual RooPlot* plotOn(RooPlot* frame, 
+			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
+
   virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
   virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
@@ -149,6 +156,9 @@ protected:
 		  RooFormulaVar *cutVar=0);
 
 
+  // PlotOn with command list
+  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const ;
+
   void createTree(const char* name, const char* title) ; 
   TTree *_tree ;           // TTree holding the data points
   TTree *_cacheTree ;      //! TTree holding the cached function values
@@ -168,5 +178,13 @@ private:
 
   ClassDef(RooTreeData,1) // Abstract ttree based data collection
 };
+
+RooCmdArg Cut(const char* cutSpec) ;
+RooCmdArg Cut(const RooAbsReal& cutVar) ;
+RooCmdArg Binning(const RooAbsBinning& binning) ;
+RooCmdArg MarkerStyle(Style_t style) ;
+RooCmdArg MarkerSize(Size_t size) ;
+RooCmdArg MarkerColor(Color_t color) ;
+
 
 #endif

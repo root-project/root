@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.16 2002/06/18 22:19:22 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.17 2002/08/21 23:06:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -70,6 +70,15 @@ public:
 
   void weightError(Double_t& lo, Double_t& hi) const ;
 
+  virtual RooPlot* plotOn(RooPlot* frame, 
+			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const
+  {
+    return RooTreeData::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  }
+
   virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
   virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
 
@@ -85,6 +94,10 @@ protected:
   Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize) ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
+
+  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const {
+    return RooTreeData::plotOn(frame,cmdList) ;
+  }
 
   Int_t calcTreeIndex() const ;
 

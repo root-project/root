@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.45 2002/05/09 00:55:52 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.46 2002/08/21 23:06:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,6 +51,7 @@
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooAbsBinning.hh" 
+#include "RooFitCore/RooCmdConfig.hh" 
 
 ClassImp(RooTreeData)
 ;
@@ -317,8 +318,11 @@ void RooTreeData::initialize() {
   // Attach variables of internal ArgSet 
   // to the corresponding TTree branches
 
+  // Recreate (empty) cache tree
+  createTree(GetName(),GetTitle()) ;
+
   // Attach each variable to the dataset
-  _iterator->Reset() ;
+  _iterator->Reset() ;  
   RooAbsArg *var;
   while(0 != (var= (RooAbsArg*)_iterator->Next())) {
     var->attachToTree(*_tree,_defTreeBufSize) ;
@@ -825,6 +829,81 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 }
 
 
+RooCmdArg Cut(const char* cutSpec)              { return RooCmdArg("CutSpec",0,0,0,0,cutSpec,0,0,0) ; }
+RooCmdArg Cut(const RooAbsReal& cutVar)         { return RooCmdArg("CutVar",0,0,0,0,0,0,&cutVar,0) ; }
+RooCmdArg Binning(const RooAbsBinning& binning) { return RooCmdArg("Binning",0,0,0,0,0,0,&binning,0) ;}
+RooCmdArg MarkerStyle(Style_t style)            { return RooCmdArg("MarkerStyle",style,0,0,0,0,0,0,0) ; }
+RooCmdArg MarkerSize(Size_t size)               { return RooCmdArg("MarkerSize",size,0,0,0,0,0,0,0) ; }
+RooCmdArg MarkerColor(Color_t color)            { return RooCmdArg("MarkerColor",color,0,0,0,0,0,0,0) ; }
+
+
+RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
+			     const RooCmdArg& arg3, const RooCmdArg& arg4,
+			     const RooCmdArg& arg5, const RooCmdArg& arg6,
+			     const RooCmdArg& arg7, const RooCmdArg& arg8) const 
+{
+  TList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  return plotOn(frame,l) ;
+}
+
+RooPlot* RooTreeData::plotOn(RooPlot* frame, TList& argList) const
+{
+
+  // New experimental plotOn() with varargs...
+
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooTreeData::plotOn(%s)",GetName())) ;
+  pc.defineString("drawOption","DrawOption",0,"P") ;
+  pc.defineString("cutString","CutSpec",0,"") ;
+  pc.defineObject("cutVar","CutVar",0) ;
+  pc.defineObject("binning","Binning",0) ;
+  pc.defineObject("asymCat","Asymmetry",0) ;
+  pc.defineInt("lineColor","LineColor",0,-999) ;
+  pc.defineInt("lineStyle","LineStyle",0,-999) ;
+  pc.defineInt("lineWidth","LineWidth",0,-999) ;
+  pc.defineInt("markerColor","MarkerColor",0,-999) ;
+  pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
+  pc.defineInt("markerSize","MarkerSize",0,-999) ;
+
+  // Process & check varargs 
+  pc.process(argList) ;
+  if (!pc.ok(kTRUE)) {
+    return frame ;
+  }
+
+  // Extract values from named arguments
+  Option_t* drawOptions = pc.getString("drawOption") ;
+  const char* cutSpec = pc.getString("cutString") ;
+  const RooAbsReal* cutVar = (const RooAbsReal*) pc.getObject("cutVar") ;
+  const RooAbsBinning* bins = (const RooAbsBinning*) pc.getObject("binning") ;
+  const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
+  
+  RooPlot* ret ;
+  if (!asymCat) {
+    ret = plotOn(frame,cutSpec,drawOptions,bins) ;
+  } else {
+    ret = plotAsymOn(frame,*asymCat,cutSpec,drawOptions,bins) ;    
+  }
+
+  Int_t lineColor   = pc.getInt("lineColor") ;
+  Int_t lineStyle   = pc.getInt("lineStyle") ;
+  Int_t lineWidth   = pc.getInt("lineWidth") ;
+  Int_t markerColor = pc.getInt("markerColor") ;
+  Int_t markerStyle = pc.getInt("markerStyle") ;
+  Int_t markerSize  = pc.getInt("markerSize") ;
+  if (lineColor!=-999) ret->getAttLine()->SetLineColor(lineColor) ;
+  if (lineStyle!=-999) ret->getAttLine()->SetLineStyle(lineStyle) ;
+  if (lineWidth!=-999) ret->getAttLine()->SetLineWidth(lineWidth) ;
+  if (markerColor!=-999) ret->getAttMarker()->SetMarkerColor(markerColor) ;
+  if (markerStyle!=-999) ret->getAttMarker()->SetMarkerStyle(markerStyle) ;
+  if (markerSize!=-999) ret->getAttMarker()->SetMarkerSize(markerSize) ;
+
+  return ret ;
+}
 
 
 RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, const RooAbsBinning* bins) const 
@@ -837,6 +916,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option
 
 RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins) const 
 {
+
   // Create and fill a histogram of the frame's variable and append it to the frame.
   // The frame variable must be one of the data sets dimensions.
   //

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.50 2002/06/12 23:53:25 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.51 2002/08/21 23:05:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,6 +16,8 @@
 #define ROO_ABS_REAL
 
 #include "RooFitCore/RooAbsArg.hh"
+#include "RooFitCore/RooCmdArg.hh"
+#include "RooFitCore/RooCurve.hh"
 
 class RooArgSet ;
 class RooArgList ;
@@ -24,6 +26,7 @@ class RooPlot;
 class RooRealVar;
 class RooAbsFunc;
 class RooAbsCategoryLValue ;
+class RooCategory ;
 
 class TH1;
 class TH1F;
@@ -82,14 +85,27 @@ public:
 
 public:
 
-
+  // User entry point for plotting
   enum ScaleType { Raw, Relative, NumEvent, RelativeExpected } ;
+  virtual RooPlot* plotOn(RooPlot* frame, 
+			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
+
+  // Plot implementation functions
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 
-			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const;
+			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0,
+			  Double_t precision=1e-3, Bool_t shiftToZero=kFALSE, const RooArgSet* projDataSet=0,
+			  Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
+  virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions="L", 
+			      Double_t scaleFactor=1.0, const RooAbsData* projData=0, const RooArgSet* projSet=0,
+			      Double_t precision=1e-3, const RooArgSet* projDataSet=0, 
+			      Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
+
+  // Forwarder function for backward compatibility
   virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L", 
 			       Double_t scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=0) const;
-  virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions="L", 
-			      Double_t scaleFactor=1.0, const RooAbsData* projData=0, const RooArgSet* projSet=0) const;
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
@@ -106,6 +122,9 @@ public:
   const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
 
 protected:
+
+  // PlotOn with command list
+  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const ;
 
   // Hook for objects with normalization-dependent parameters interperetation
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) {} ;
@@ -173,5 +192,23 @@ protected:
 
   ClassDef(RooAbsReal,1) // Abstract real-valued variable
 };
+
+// RooAbsReal::plotOn arguments
+RooCmdArg DrawOption(const char* opt) ;
+RooCmdArg Normalization(Double_t scaleFactor) ;
+RooCmdArg Slice(const RooArgSet& sliceSet) ;
+RooCmdArg Project(const RooArgSet& projSet) ;
+RooCmdArg ProjWData(const RooAbsData& projData) ;
+RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData) ;
+RooCmdArg Asymmetry(const RooCategory& cat) ;
+RooCmdArg Precision(Double_t prec) ;
+RooCmdArg ShiftToZero() ;
+RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines=kFALSE) ;
+RooCmdArg LineColor(Color_t color) ;
+RooCmdArg LineStyle(Style_t style) ;
+RooCmdArg LineWidth(Width_t width) ;
+RooCmdArg FillColor(Color_t color) ;
+RooCmdArg FillStyle(Style_t style) ;
+
 
 #endif

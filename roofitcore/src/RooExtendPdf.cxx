@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExtendPdf.cc,v 1.5 2002/01/08 02:18:05 verkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.6 2002/08/21 23:06:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -232,7 +232,7 @@ void RooExtendPdf::syncFracIntegral() const
   RooAbsPdf& pdf = (RooAbsPdf&) _pdf.arg() ;
 
   // Check first if any changes are needed
-  if (_lastFracSet == pdf._normMgr.lastNormSet()) return ;
+  if (_lastFracSet == pdf._normMgr.lastNormSet() && _fracIntegral!=0) return ;
   _lastFracSet = (RooArgSet*) pdf._normMgr.lastNormSet() ;
   
   // Delete existing integral

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.19 2002/03/07 06:22:19 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.20 2002/08/21 23:05:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -63,7 +63,7 @@ RooAbsString::~RooAbsString()
 }
 
 
-TString RooAbsString::getVal() const
+const char* RooAbsString::getVal() const
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty()) {
@@ -71,15 +71,15 @@ TString RooAbsString::getVal() const
     strcpy(_value,traceEval()) ;
   } 
   
-  return TString(_value) ;
+  return _value ;
 }
 
 
 
-Bool_t RooAbsString::operator==(TString value) const
+Bool_t RooAbsString::operator==(const char* value) const
 {
   // Equality operator comparing with a TString
-  return (getVal()==value) ;
+  return !TString(getVal()).CompareTo(value) ;
 }
 
 
@@ -124,22 +124,22 @@ Bool_t RooAbsString::isValid() const
 }
 
 
-Bool_t RooAbsString::isValidString(TString value, Bool_t printError) const 
+Bool_t RooAbsString::isValidString(const char* value, Bool_t printError) const 
 {
   // Check if given value is valid
 
   // Protect against string overflows
-  if (value.Length()>_len) return kFALSE ;
+  if (TString(value).Length()>_len) return kFALSE ;
 
   return kTRUE ;
 }
 
 
 
-TString RooAbsString::traceEval() const
+const char* RooAbsString::traceEval() const
 {
   // Calculate current value of object, with error tracing wrapper
-  TString value = evaluate() ;
+  const char* value = evaluate() ;
   
   //Standard tracing code goes here
   if (!isValidString(value)) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.31 2002/04/03 23:37:24 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.32 2002/06/12 23:53:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -41,7 +41,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.31 2002/04/03 23:37:24 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.32 2002/06/12 23:53:26 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -49,7 +49,7 @@ RooCurve::RooCurve() {
 
 RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
 		   Double_t scaleFactor, const RooArgSet *normVars, Double_t prec, Double_t resolution,
-		   Bool_t shiftToZero) {
+		   Bool_t shiftToZero, WingMode wmode) {
   // Create a 1-dim curve of the value of the specified real-valued expression
   // as a function of x. Use the optional precision parameter to control
   // how precisely the smooth curve is rasterized. Use the optional argument set
@@ -93,7 +93,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 
   // calculate the points to add to our curve
   Double_t prevYMax = getYAxisMax() ;
-  addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution);
+  addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode);
   initialize();
 
   // cleanup
@@ -114,11 +114,11 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution,
-		   Bool_t shiftToZero) {
+		   Bool_t shiftToZero, WingMode wmode) {
   SetName(name);
   SetTitle(title);
   Double_t prevYMax = getYAxisMax() ;
-  addPoints(func,xlo,xhi,minPoints+1,prec,resolution);  
+  addPoints(func,xlo,xhi,minPoints+1,prec,resolution,wmode);  
   initialize();
   if (shiftToZero) shiftCurveToZero(prevYMax) ;
 
@@ -183,7 +183,7 @@ void RooCurve::shiftCurveToZero(Double_t prevYMax)
 
 
 void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
-			 Int_t minPoints, Double_t prec, Double_t resolution) {
+			 Int_t minPoints, Double_t prec, Double_t resolution, WingMode wmode) {
   // Add points calculated with the specified function, over the range (xlo,xhi).
   // Add at least minPoints equally spaced points, and add sufficient points so that
   // the maximum deviation from the final straight-line segements is prec*(ymax-ymin),
@@ -220,8 +220,12 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   Double_t minDx= resolution*(xhi-xlo);
   Double_t x1,x2= xlo;
 
-  addPoint(xlo-dx,0) ;
-  addPoint(xlo-dx,yval[0]) ;
+  if (wmode==Extended) {
+    addPoint(xlo-dx,0) ;
+    addPoint(xlo-dx,yval[0]) ;
+  } else if (wmode==Straight) {
+    addPoint(xlo,0) ;
+  }
 
   addPoint(xlo,yval[0]);
   for(step= 1; step < minPoints; step++) {
@@ -231,8 +235,12 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   }
   addPoint(xhi,yval[minPoints-1]) ;
 
-  addPoint(xhi+dx,yval[minPoints-1]) ;
-  addPoint(xhi+dx,0) ;
+  if (wmode==Extended) {
+    addPoint(xhi+dx,yval[minPoints-1]) ;
+    addPoint(xhi+dx,0) ;
+  } else if (wmode==Straight) {
+    addPoint(xhi,0) ;
+  }
 
   // cleanup
   delete [] yval;

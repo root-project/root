@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooMinuit.cc,v 1.1 2002/08/21 23:06:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -48,6 +48,7 @@
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFitResult.hh"
+#include "RooFitCore/RooAbsPdf.hh"
 
 ClassImp(RooMinuit) 
 ;
@@ -75,13 +76,13 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   if (_floatParamList->getSize()>1) {
     _floatParamList->sort() ;
   }
-  _floatParamList->setName("floatParamList") ;
+  _floatParamList->SetName("floatParamList") ;
 
   _constParamList = (RooArgList*) paramList.selectByAttrib("Constant",kTRUE) ;
   if (_constParamList->getSize()>1) {
     _constParamList->sort() ;
   }
-  _constParamList->setName("constParamList") ;
+  _constParamList->SetName("constParamList") ;
 
   // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
   TIterator* pIter = _floatParamList->createIterator() ;
@@ -765,10 +766,11 @@ void RooMinuitGlue(Int_t &np, Double_t *gin,
 
   // Calculate the function for these parameters
   f= context->_func->getVal() ;
-  if (f==0) {
+  if (f==0 || (context->_handleLocalErrors&&RooAbsPdf::evalError())) {
     cout << "RooFitGlue: Minimized function has error status. Returning maximum FCN" << endl
 	 << "            so far (" << maxFCN << ") to force MIGRAD to back out of this region" << endl ;
     f = maxFCN ;
+    RooAbsPdf::clearEvalError() ;
     context->_numBadNLL++ ;
   } else if (f>maxFCN) {
     maxFCN = f ;

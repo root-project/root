@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.15 2002/03/07 06:22:20 verkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.16 2002/08/21 23:05:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,8 +29,8 @@ public:
   virtual ~RooAbsString();
 
   // Return value and unit accessors
-  virtual TString getVal() const ;
-  Bool_t operator==(TString value) const ;
+  virtual const char* getVal() const ;
+  Bool_t operator==(const char*) const ;
   virtual Bool_t operator==(const RooAbsArg& other) ;
 
   // I/O streaming interface (machine readable)
@@ -45,13 +45,13 @@ public:
 protected:
 
   // Function evaluation and error tracing
-  TString traceEval() const ;
-  virtual Bool_t traceEvalHook(TString value) const { return kFALSE ; }
+  const char* traceEval() const ;
+  virtual Bool_t traceEvalHook(const char* value) const { return kFALSE ; }
   virtual TString evaluate() const { return 0 ; }
 
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
-  virtual Bool_t isValidString(TString value, Bool_t printError=kFALSE) const ;
+  virtual Bool_t isValidString(const char*, Bool_t printError=kFALSE) const ;
 
   virtual void syncCache(const RooArgSet* nset=0) { getVal() ; }
   void copyCache(const RooAbsArg* source) ;

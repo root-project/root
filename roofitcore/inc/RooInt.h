@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDouble.rdl,v 1.2 2002/03/11 07:41:02 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -10,32 +10,32 @@
  *
  * Copyright (C) 2002 University of California
  *****************************************************************************/
-#ifndef ROO_DOUBLE
-#define ROO_DOUBLE
+#ifndef ROO_INT
+#define ROO_INT
 
 #include "Rtypes.h"
 #include "TNamed.h"
 
-class RooDouble : public TNamed {
+class RooInt : public TNamed {
 public:
 
-  RooDouble() {} ;
-  RooDouble(Double_t value) : TNamed(), _value(value) {} ;
-  RooDouble(const RooDouble& other) : TNamed(other), _value(other._value) {}
-  virtual ~RooDouble() {} ;
+  RooInt() {} ;
+  RooInt(Int_t value) : TNamed(), _value(value) {} ;
+  RooInt(const RooInt& other) : TNamed(other), _value(other._value) {}
+  virtual ~RooInt() {} ;
 
   // Double_t cast operator 
-  inline operator Double_t() const { return _value ; }
-  RooDouble& operator=(Double_t value) { _value = value ; return *this ; }
-  
+  inline operator Int_t() const { return _value ; }
+  RooInt& operator=(Int_t value) { _value = value ; return *this ; }
+
   // Sorting interface ;
   Int_t Compare(const TObject* other) const ;
   virtual Bool_t IsSortable() const { return kTRUE ; }
 
 protected:
 
-  Double_t _value ;
-  ClassDef(RooDouble,1) // Container class for Double_t
+  Int_t _value ;
+  ClassDef(RooInt,1) // Container class for Int_t
 };
 
 #endif

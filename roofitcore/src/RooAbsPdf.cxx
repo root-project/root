@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.71 2002/07/11 22:26:30 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.72 2002/08/21 23:05:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -125,6 +125,8 @@
 #include "RooFitCore/RooIntegratorConfig.hh"
 #include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooMinuit.hh"
+#include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooCmdConfig.hh"
 
 ClassImp(RooAbsPdf) 
 ;
@@ -132,6 +134,7 @@ ClassImp(RooAbsPdf)
 
 Int_t RooAbsPdf::_verboseEval = 0;
 Bool_t RooAbsPdf::_globalSelectComp = kFALSE ;
+Bool_t RooAbsPdf::_evalError = kFALSE ;
 RooIntegratorConfig* RooAbsPdf::_defaultNormIntConfig(0) ;
 
 
@@ -196,7 +199,10 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     Bool_t error = traceEvalPdf(val) ;
     if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() 
 			     << "): value = " << val << " (unnormalized)" << endl ;
-    if (error) return 0 ;
+    if (error) {
+      raiseEvalError() ;
+      return 0 ;
+    }
     return val ;
   }
 
@@ -217,6 +223,9 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     Double_t normVal(_norm->getVal()) ;
     Double_t normError(kFALSE) ;
     if (normVal==0.) normError=kTRUE ;
+
+    // Raise global error flag if problems occur
+    if (normError||error) raiseEvalError() ;
 
     _value = normError ? 0 : (rawVal / normVal) ;
 
@@ -662,6 +671,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Opti
   // Parse option strings
   TString fopt(fitOpt) ;
   TString oopt(optOpt) ;
+  fopt.ToLower() ;
+  oopt.ToLower() ;
+
   Bool_t extended = fopt.Contains("e") ;  
   Bool_t saveRes  = fopt.Contains("r") ;
   Bool_t cOpt     = oopt.Contains("p") || // for backward compatibility
@@ -839,11 +851,194 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 
 
 
-RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, 
-			   Double_t scaleFactor, ScaleType stype, 
-			   const RooAbsData* projData, const RooArgSet* projSet) const
+RooCmdArg Components(const RooArgSet& compSet) { return RooCmdArg("SelectCompSet",0,0,0,0,0,0,&compSet,0) ; }
+RooCmdArg Components(const char* compSpec) { return RooCmdArg("SelectCompSpec",0,0,0,0,compSpec,0,0,0) ; }
+RooCmdArg Normalization(Double_t scaleFactor, RooAbsPdf::ScaleType scaleType) 
+                         { return RooCmdArg("Normalization",scaleType,0,scaleFactor,0,0,0,0,0) ; }
+
+RooPlot* RooAbsPdf::plotOn(RooPlot* frame, TList& cmdList) const
 {
-  // Plot outself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
+  // New experimental plotOn() with varargs...
+
+  // Sanity checks
+  if (plotSanityChecks(frame)) return frame ;
+
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
+  pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
+  pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;
+  pc.defineObject("compSet","SelectCompSet",0) ;
+  pc.defineString("compSpec","SelectCompSpec",0) ;
+  pc.defineObject("asymCat","Asymmetry",0) ;
+  pc.defineMutex("SelectCompSet","SelectCompSpec") ;
+  pc.allowUndefined() ; // unknowns may be handled by RooAbsReal
+
+  // Process and check varargs 
+  pc.process(cmdList) ;
+  if (!pc.ok(kTRUE)) {
+    return frame ;
+  }
+
+  // Decode command line arguments
+  ScaleType stype = (ScaleType) pc.getInt("scaleType") ;
+  Double_t scaleFactor = pc.getDouble("scaleFactor") ;
+  const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
+  const char* compSpec = pc.getString("compSpec") ;
+  const RooArgSet* compSet = (const RooArgSet*) pc.getObject("compSet") ;
+  Bool_t haveCompSel = (strlen(compSpec)>0 || compSet) ;
+
+  // Remove PDF-only commands from command list
+  pc.stripCmdList(cmdList,"SelectCompSet,SelectCompSpec") ;
+  
+  // Adjust normalization, if so requested
+  if (asymCat) {
+    return  RooAbsReal::plotOn(frame,cmdList) ;
+  }
+
+  // More sanity checks
+  Double_t nExpected(1) ;
+  if (stype==RelativeExpected) {
+    if (!canBeExtended()) {
+      cout << "RooAbsPdf::plotOn(" << GetName() 
+	   << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << endl ;
+      return frame ;
+    }
+    nExpected = expectedEvents() ;
+  }
+  
+  if (stype != Raw) {    
+    
+    if (frame->getFitRangeNEvt() && stype==Relative) {
+      scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+    } else if (stype==RelativeExpected) {
+      scaleFactor *= nExpected ;
+    } else if (stype==NumEvent) {
+      scaleFactor /= nExpected ;
+    }
+    scaleFactor *= frame->getFitRangeBinW() ;
+  }
+  frame->updateNormVars(*frame->getPlotVar()) ;
+  
+  // Append overriding scale factor command at end of original command list
+  RooCmdArg tmp = Normalization(scaleFactor,Raw) ;
+  cmdList.Add(&tmp) ;
+  
+  // Was a component selected requested
+  if (haveCompSel) {
+    
+    // Get complete set of tree branch nodes
+    RooArgSet branchNodeSet ;
+    branchNodeServerList(&branchNodeSet) ;
+    
+    // Discard any non-PDF nodes
+    TIterator* iter = branchNodeSet.createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (!dynamic_cast<RooAbsPdf*>(arg)) {
+	branchNodeSet.remove(*arg) ;
+      }
+    }
+    delete iter ;
+    
+    // Obtain direct selection
+    RooArgSet* dirSelNodes ;
+    if (compSet) {
+      dirSelNodes = (RooArgSet*) branchNodeSet.selectCommon(*compSet) ;
+    } else {
+      dirSelNodes = (RooArgSet*) branchNodeSet.selectByName(compSpec) ;
+    }
+    cout << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " ;
+    dirSelNodes->Print("1") ;
+    
+    // Do indirect selection and activate both
+    plotOnCompSelect(dirSelNodes) ;
+  }
+  
+  RooPlot* ret =  RooAbsReal::plotOn(frame,cmdList) ;
+  
+  // Restore selection status ;
+  if (haveCompSel) plotOnCompSelect(0) ;
+  
+  return ret ;
+}
+
+
+
+void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
+{
+  // Get complete set of tree branch nodes
+  RooArgSet branchNodeSet ;
+  branchNodeServerList(&branchNodeSet) ;
+
+  // Discard any non-PDF nodes
+  TIterator* iter = branchNodeSet.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!dynamic_cast<RooAbsPdf*>(arg)) {
+      branchNodeSet.remove(*arg) ;
+    }
+  }
+
+  // If no set is specified, restored all selection bits to kTRUE
+  if (!selNodes) {
+    // Reset PDF selection bits to kTRUE
+    iter->Reset() ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      ((RooAbsPdf*)arg)->selectComp(kTRUE) ;
+    }
+    delete iter ;
+    return ;
+  }
+
+
+  // Add all nodes below selected nodes
+  iter->Reset() ;
+  TIterator* sIter = selNodes->createIterator() ;
+  RooArgSet tmp ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    sIter->Reset() ;
+    RooAbsArg* selNode ;
+    while(selNode=(RooAbsArg*)sIter->Next()) {
+      if (selNode->dependsOn(*arg)) {
+	tmp.add(*arg,kTRUE) ;
+      }      
+    }      
+  }
+  delete sIter ;
+
+  // Add all nodes that depend on selected nodes
+  iter->Reset() ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (arg->dependsOn(*selNodes)) {
+      tmp.add(*arg,kTRUE) ;
+    }
+  }
+
+  tmp.remove(*selNodes,kTRUE) ;
+  tmp.remove(*this) ;
+  selNodes->add(tmp) ;
+  cout << "RooAbsPdf::plotOn(" << GetName() << ") indirectly selected PDF components: " ;
+  tmp.Print("1") ;
+
+  // Set PDF selection bits according to selNodes
+  iter->Reset() ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    Bool_t select = selNodes->find(arg->GetName()) ? kTRUE : kFALSE ;
+    ((RooAbsPdf*)arg)->selectComp(select) ;
+  }
+  
+  delete iter ;
+} 
+
+
+
+
+RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
+			  ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet,
+			  Double_t precision, Bool_t shiftToZero, const RooArgSet* projDataSet,
+			  Double_t rangeLo, Double_t rangeHi, RooCurve::WingMode wmode) const
+{
+  // Plot oneself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
   // the scale factor for a PDF can be interpreted in three different ways. The interpretation
   // is controlled by ScaleType
   //
@@ -884,7 +1079,6 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions,
 
   return RooAbsReal::plotOn(frame,drawOptions,scaleFactor,Raw,projData,projSet) ;
 }
-
 
 
 
@@ -1178,7 +1372,11 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended,
 			      Option_t* drawOptions, Double_t prec, Bool_t fixMinToZero) {
   
   RooNLLVar nll("nll","-log(L)",*this,*data,extended) ;
-  nll.plotOn(frame,drawOptions) ;
+  if (fixMinToZero) {
+    nll.plotOn(frame,DrawOption("L"),Precision(prec),ShiftToZero()) ;
+  } else {
+    nll.plotOn(frame,DrawOption("L"),Precision(prec)) ;
+  }
 
   return frame ;
 }

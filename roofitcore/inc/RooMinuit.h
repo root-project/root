@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooMinuit.rdl,v 1.1 2002/08/21 23:06:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,10 +14,10 @@
 
 #include "TObject.h"
 #include "TStopwatch.h"
+#include <fstream.h>
 
 class RooAbsReal ;
 class RooFitResult ;
-class ofstream ;
 class RooArgList ;
 class RooRealVar ;
 
@@ -29,6 +29,7 @@ public:
 
   void setStrategy(Int_t strat) ;
   void setErrorLevel(Double_t level) ;
+  void setErrorHandling(Bool_t flag) { _handleLocalErrors = flag ; }
   void optimizeConst(Bool_t flag) ;
 
   Int_t fit(const char* options) ;
@@ -76,6 +77,7 @@ private:
   Int_t       _status ;
   Bool_t      _optConst ;
   Bool_t      _profile ;
+  Bool_t      _handleLocalErrors ;
   Int_t       _numBadNLL ;
   Int_t       _nPar ;
   RooArgList* _floatParamList ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.81 2002/06/20 01:41:14 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.82 2002/08/21 23:05:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,6 +38,8 @@
 #include "RooFitCore/RooScaledFunc.hh"
 #include "RooFitCore/RooDataProjBinding.hh"
 #include "RooFitCore/RooAddPdf.hh"
+#include "RooFitCore/RooCmdConfig.hh"
+#include "RooFitCore/RooCategory.hh"
 
 #include <iostream.h>
 
@@ -636,11 +638,145 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
 
 
+RooCmdArg DrawOption(const char* opt)           { return RooCmdArg("DrawOption",0,0,0,0,opt,0,0,0) ; }
+RooCmdArg Slice(const RooArgSet& sliceSet)      { return RooCmdArg("SliceVars",0,0,0,0,0,0,&sliceSet,0) ; }
+RooCmdArg Project(const RooArgSet& projSet)     { return RooCmdArg("Project",0,0,0,0,0,0,&projSet,0) ; }
+RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData) { return RooCmdArg("ProjData",0,0,0,0,0,0,&projSet,&projData) ; }
+RooCmdArg ProjWData(const RooAbsData& projData) { return RooCmdArg("ProjData",0,0,0,0,0,0,0,&projData) ; }
+RooCmdArg Asymmetry(const RooCategory& cat)     {return RooCmdArg("Asymmetry",0,0,0,0,0,0,&cat,0) ; }
+RooCmdArg Precision(Double_t prec)              { return RooCmdArg("Precision",0,0,prec,0,0,0,0,0) ; }
+RooCmdArg ShiftToZero()                         { return RooCmdArg("ShiftToZero",1,0,0,0,0,0,0,0) ; }
+RooCmdArg Normalization(Double_t scaleFactor)   { return RooCmdArg("Normalization",RooAbsReal::Relative,0,scaleFactor,0,0,0,0,0) ; }
+RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines) { return RooCmdArg("Range",vlines?1:0,0,lo,hi,0,0,0,0) ; }
+RooCmdArg LineColor(Color_t color)              { return RooCmdArg("LineColor",color,0,0,0,0,0,0,0) ; }
+RooCmdArg LineStyle(Style_t style)              { return RooCmdArg("LineStyle",style,0,0,0,0,0,0,0) ; }
+RooCmdArg LineWidth(Width_t width)              { return RooCmdArg("LineWidth",width,0,0,0,0,0,0,0) ; }
+RooCmdArg FillColor(Color_t color)              { return RooCmdArg("FillColor",color,0,0,0,0,0,0,0) ; }
+RooCmdArg FillStyle(Style_t style)              { return RooCmdArg("FillStyle",style,0,0,0,0,0,0,0) ; }
+
+RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
+			    const RooCmdArg& arg3, const RooCmdArg& arg4,
+			    const RooCmdArg& arg5, const RooCmdArg& arg6,
+			    const RooCmdArg& arg7, const RooCmdArg& arg8) const
+{
+  TList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  return plotOn(frame,l) ;
+}
+
+RooPlot* RooAbsReal::plotOn(RooPlot* frame, TList& argList) const
+{
+
+  // New experimental plotOn() with varargs...
+
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsReal::plotOn(%s)",GetName())) ;
+  pc.defineString("drawOption","DrawOption",0,"L") ;
+  pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
+  pc.defineObject("sliceSet","SliceVars",0) ;
+  pc.defineObject("projSet","Project",0) ;
+  pc.defineObject("asymCat","Asymmetry",0) ;
+  pc.defineDouble("precision","Precision",0,1e-3) ;
+  pc.defineInt("shiftToZero","ShiftToZero",0,0) ;  
+  pc.defineObject("projDataSet","ProjData",0) ;
+  pc.defineObject("projData","ProjData",1) ;
+  pc.defineDouble("rangeLo","Range",0,frame->GetXaxis()->GetXmin()) ;
+  pc.defineDouble("rangeHi","Range",1,frame->GetXaxis()->GetXmax()) ;
+  pc.defineInt("rangeVL","Range",0,2) ; // 2==ExtendedWings
+  pc.defineInt("lineColor","LineColor",0,-999) ;
+  pc.defineInt("lineStyle","LineStyle",0,-999) ;
+  pc.defineInt("lineWidth","LineWidth",0,-999) ;
+  pc.defineInt("fillColor","FillColor",0,-999) ;
+  pc.defineInt("fillStyle","FillStyle",0,-999) ;
+  pc.defineMutex("SliceVars","Project") ;
+
+  // Process & check varargs 
+  pc.process(argList) ;
+  if (!pc.ok(kTRUE)) {
+    return frame ;
+  }
+
+  // Extract values from named arguments
+  Option_t* drawOptions = pc.getString("drawOption") ;
+  Double_t scaleFactor = pc.getDouble("scaleFactor") ;
+  const RooAbsData* projData = (const RooAbsData*) pc.getObject("projData") ;
+  const RooArgSet* projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
+  const RooArgSet* sliceSet = (const RooArgSet*) pc.getObject("sliceSet") ;
+  const RooArgSet* projSet = (const RooArgSet*) pc.getObject("projSet") ;
+  const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
+  Double_t precision = pc.getDouble("precision") ;
+  Bool_t shiftToZero = (pc.getInt("shiftToZero")!=0) ;
+  Double_t rangeLo = pc.getDouble("rangeLo") ;
+  Double_t rangeHi = pc.getDouble("rangeHi") ;
+  Int_t rangeVL = pc.getInt("rangeVL");
+  RooCurve::WingMode wmode = (rangeVL==2)?RooCurve::Extended:(rangeVL==1?RooCurve::Straight:RooCurve::NoWings) ;
+
+  RooArgSet projectedVars ;
+  if (sliceSet) {
+    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+    
+    // Take out the sliced variables
+    TIterator* iter = sliceSet->createIterator() ;
+    RooAbsArg* sliceArg ;
+    while(sliceArg=(RooAbsArg*)iter->Next()) {
+      RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
+      if (arg) {
+	projectedVars.remove(*arg) ;
+      } else {
+	cout << "RooAbsReal::plotOn(" << GetName() << ") slice variable " 
+	     << sliceArg->GetName() << " was not projected anyway" << endl ;
+      }
+    }
+    delete iter ;
+  } else if (projSet) {
+    makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
+  } else {
+    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+  }
+
+  RooPlot* ret ;
+  if (!asymCat) {
+
+    // Forward to actual calculation
+    ret = RooAbsReal::plotOn(frame,drawOptions,scaleFactor,RooAbsReal::Raw,
+			      projData,projectedVars.getSize()>0?&projectedVars:0,precision,shiftToZero,
+			      projDataSet,rangeLo,rangeHi,wmode) ;
+  } else {
+        
+    // Forward to actual calculation
+    ret = RooAbsReal::plotAsymOn(frame,*asymCat,drawOptions,scaleFactor,
+				  projData,projectedVars.getSize()>0?&projectedVars:0,precision,
+				  projDataSet,rangeLo,rangeHi,wmode) ;    
+  }
+
+  // Optionally adjust line/fill attributes
+  Int_t lineColor = pc.getInt("lineColor") ;
+  Int_t lineStyle = pc.getInt("lineStyle") ;
+  Int_t lineWidth = pc.getInt("lineWidth") ;
+  Int_t fillColor = pc.getInt("fillColor") ;
+  Int_t fillStyle = pc.getInt("fillStyle") ;
+  if (lineColor!=-999) ret->getAttLine()->SetLineColor(lineColor) ;
+  if (lineStyle!=-999) ret->getAttLine()->SetLineStyle(lineStyle) ;
+  if (lineWidth!=-999) ret->getAttLine()->SetLineWidth(lineWidth) ;
+  if (fillColor!=-999) ret->getAttFill()->SetFillColor(fillColor) ;
+  if (fillStyle!=-999) ret->getAttFill()->SetFillStyle(fillStyle) ;
+  
+  return ret ;
+}
+
+
+
+
 
 
 RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions, 
 			    Double_t scaleFactor, ScaleType stype, 
-			    const RooAbsData* projData, const RooArgSet* projSet) const
+			    const RooAbsData* projData, const RooArgSet* projSet,
+			    Double_t precision, Bool_t shiftToZero, const RooArgSet* projDataSet,
+                            Double_t rangeLo, Double_t rangeHi, RooCurve::WingMode wmode) const
 {
   // Plot ourselves on given frame. If frame contains a histogram, all dimensions of the plotted
   // function that occur in the previously plotted dataset are projected via partial integration,
@@ -658,7 +794,19 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
-  
+
+  // ProjDataVars is either all projData observables, or the user indicated subset of it
+  RooArgSet projDataVars ;
+  if (projData) {
+    if (projDataSet) {
+      RooArgSet* tmp = (RooArgSet*) projData->get()->selectCommon(*projDataSet) ;
+      projDataVars.add(*tmp) ;
+      delete tmp ;
+    } else {
+      projDataVars.add(*projData->get()) ;
+    }
+  }
+
   // Make list of variables to be projected
   RooArgSet projectedVars ;
   RooArgSet sliceSet ;
@@ -672,7 +820,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
       sliceSetTmp->remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
 
       if (projData) {
-	RooArgSet* tmp = (RooArgSet*) projData->get()->selectCommon(*projSet) ;
+	RooArgSet* tmp = (RooArgSet*) projDataVars.selectCommon(*projSet) ;
 	sliceSetTmp->remove(*tmp,kTRUE,kTRUE) ;
 	delete tmp ;
       }
@@ -692,8 +840,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   RooArgSet* projDataNeededVars = 0 ;
   // Take out data-projected dependents from projectedVars
   if (projData) {
-    projDataNeededVars = (RooArgSet*) projectedVars.selectCommon(*projData->get()) ;
-    projectedVars.remove(*projData->get(),kTRUE,kTRUE) ;
+    projDataNeededVars = (RooArgSet*) projectedVars.selectCommon(projDataVars) ;
+    projectedVars.remove(projDataVars,kTRUE,kTRUE) ;
   }
 
   // Clone the plot variable
@@ -715,8 +863,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 	 << " averages using data variables " ; projDataNeededVars->Print("1") ;
   }
 
-
-
   // Create projection integral
   RooArgSet* projectionCompList ;
 
@@ -728,7 +874,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   deps->remove(*plotVar,kTRUE,kTRUE) ;
   deps->add(*plotVar) ;
 
-  
   // Now that we have the final set of dependents, call checkDependents()
   if (checkDependents(deps)) {
     cout << "RooAbsReal::plotOn(" << GetName() << ") error in checkDependents, abort" << endl ;
@@ -760,11 +905,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   }
   delete deps ;
 
+
   // Apply data projection, if requested
   if (projData && projDataNeededVars && projDataNeededVars->getSize()>0) {
 
-    // Disable dirty state propagation in projection
-    
+    // Disable dirty state propagation in projection    
     RooArgSet branchList("branchList") ;
     ((RooAbsReal*)projection)->setOperMode(RooAbsArg::ADirty) ;
     projection->branchNodeServerList(&branchList) ;
@@ -775,7 +920,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     }
     delete bIter ;
 
-    // If data set contains more columns than needed, make reduced copy first
+    // If data set contains more rows than needed, make reduced copy first
     RooDataSet* projDataSel = (RooDataSet*)projData;
 //     cout << "projDataNeededVars = " ; projDataNeededVars->Print("1") ;
 //     cout << "projData vars      = " ; projData->get()->Print("1") ;
@@ -823,9 +968,15 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     projectionCompList->find(GetName())->attachDataSet(*projDataSel) ;
     RooDataProjBinding projBind(*projection,*projDataSel,*plotVar) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);
+
+    // Set default range, if not specified
+    if (rangeLo==0 && rangeHi==0) {
+      rangeLo = frame->GetXaxis()->GetXmin() ;
+      rangeHi = frame->GetXaxis()->GetXmax() ;
+    }
+
     RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
-				   frame->GetXaxis()->GetXmin(),frame->GetXaxis()->GetXmax(),
-				   frame->GetNbinsX()) ;
+				   rangeLo,rangeHi,frame->GetNbinsX(),precision,precision,shiftToZero,wmode) ;
     cout << endl ;
 
     // add this new curve to the specified plot frame
@@ -836,9 +987,15 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
        
   } else {
     
+    // Set default range, if not specified
+    if (rangeLo==0 && rangeHi==0) {
+      rangeLo = frame->GetXaxis()->GetXmin() ;
+      rangeHi = frame->GetXaxis()->GetXmax() ;
+    }
+
     // create a new curve of our function using the clone to do the evaluations
-    RooCurve *curve = new RooCurve(*projection,*plotVar,frame->GetXaxis()->GetXmin(),
-				   frame->GetXaxis()->GetXmax(),frame->GetNbinsX(), scaleFactor);
+    RooCurve *curve = new RooCurve(*projection,*plotVar,rangeLo,rangeHi,frame->GetNbinsX(),
+				   scaleFactor,0,precision,precision,shiftToZero,wmode);
 
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);
@@ -885,7 +1042,10 @@ RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Opti
 
 
 RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions, 
-				Double_t scaleFactor, const RooAbsData* projData, const RooArgSet* projSet) const
+				Double_t scaleFactor, const RooAbsData* projData, const RooArgSet* projSet,
+				Double_t precision, const RooArgSet* projDataSet, Double_t rangeLo, Double_t rangeHi,
+				RooCurve::WingMode wmode) const
+
 {
   // Plot asymmetry of ourselves, defined as
   //
@@ -900,6 +1060,18 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
+
+  // ProjDataVars is either all projData observables, or the user indicated subset of it
+  RooArgSet projDataVars ;
+  if (projData) {
+    if (projDataSet) {
+      RooArgSet* tmp = (RooArgSet*) projData->get()->selectCommon(*projDataSet) ;
+      projDataVars.add(*tmp) ;
+      delete tmp ;
+    } else {
+      projDataVars.add(*projData->get()) ;
+    }
+  }
 
   // Must depend on asymCat
   if (!dependsOn(asymCat)) {
@@ -937,7 +1109,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   // Take out data-projected dependens from projectedVars
   if (projData) {
-    projectedVars.remove(*projData->get(),kTRUE,kTRUE) ;
+    projectedVars.remove(projDataVars,kTRUE,kTRUE) ;
   }
 
   // Take out plotted asymmetry from projection
@@ -992,16 +1164,29 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     ((RooAbsReal*)posProj)->attachDataSet(*projData) ;
     ((RooAbsReal*)negProj)->attachDataSet(*projData) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);
+
+    // Set default range, if not specified
+    if (rangeLo==0 && rangeHi==0) {
+      rangeLo = frame->GetXaxis()->GetXmin() ;
+      rangeHi = frame->GetXaxis()->GetXmax() ;
+    }
+
     RooCurve *curve = new RooCurve(funcAsym->GetName(),funcAsym->GetTitle(),scaleBind,
-				   frame->GetXaxis()->GetXmin(),frame->GetXaxis()->GetXmax(),frame->GetNbinsX()) ;
+				   rangeLo,rangeHi,frame->GetNbinsX(),precision,precision,kFALSE,wmode) ;
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);
        
   } else {
 
-    RooCurve* curve= new RooCurve(*funcAsym,*plotVar,frame->GetXaxis()->GetXmin(),
-				  frame->GetXaxis()->GetXmax(),frame->GetNbinsX(),scaleFactor);
+    // Set default range, if not specified
+    if (rangeLo==0 && rangeHi==0) {
+      rangeLo = frame->GetXaxis()->GetXmin() ;
+      rangeHi = frame->GetXaxis()->GetXmax() ;
+    }
+
+    RooCurve* curve= new RooCurve(*funcAsym,*plotVar,rangeLo,rangeHi,frame->GetNbinsX(),
+				  scaleFactor,0,precision,precision,kFALSE,wmode);
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
     
     // add this new curve to the specified plot frame

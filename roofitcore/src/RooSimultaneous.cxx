@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.40 2002/07/11 22:26:30 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.41 2002/08/21 23:06:39 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -36,6 +36,7 @@
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooSimGenContext.hh"
 #include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooCmdConfig.hh"
 
 ClassImp(RooSimultaneous)
 ;
@@ -301,13 +302,44 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 
 
 
-RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
-				 ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet) const 
+
+
+
+RooPlot* RooSimultaneous::plotOn(RooPlot *frame, TList& cmdList) const
 {
+  // New experimental plotOn() with varargs...
+
   // See RooAbsPdf::plotOn() for description. Because a RooSimultaneous PDF cannot project out
   // its index category via integration, plotOn() will abort if this is requested without 
   // providing a projection dataset
+
+  // Sanity checks
+  if (plotSanityChecks(frame)) return frame ;
   
+  // Extract projection configuration from command list
+  RooCmdConfig pc(Form("RooSimultaneous::plotOn(%s)",GetName())) ;
+  pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
+  pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;
+  pc.defineObject("projSet","Project",0) ;
+  pc.defineObject("sliceSet","SliceVars",0) ;
+  pc.defineObject("projDataSet","ProjData",0) ;
+  pc.defineObject("projData","ProjData",1) ;
+  pc.defineMutex("Project","SliceVars") ;
+  pc.allowUndefined() ; // there may be commands we don't handle here
+
+  // Process and check varargs 
+  pc.process(cmdList) ;
+  if (!pc.ok(kTRUE)) {
+    return frame ;
+  }
+
+  const RooAbsData* projData = (const RooAbsData*) pc.getObject("projData") ;
+  const RooArgSet* projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
+  const RooArgSet* sliceSet = (const RooArgSet*) pc.getObject("sliceSet") ;
+  const RooArgSet* projSet = (const RooArgSet*) pc.getObject("projSet") ;  
+  Double_t scaleFactor = pc.getDouble("scaleFactor") ;
+  ScaleType stype = (ScaleType) pc.getInt("scaleType") ;
+
   // Check if we have a projection dataset
   if (!projData) {
     cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: must have a projection dataset for index category" << endl ;
@@ -316,7 +348,23 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
   // Make list of variables to be projected
   RooArgSet projectedVars ;
-  if (projSet) {
+  if (sliceSet) {
+    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+    
+    // Take out the sliced variables
+    TIterator* iter = sliceSet->createIterator() ;
+    RooAbsArg* sliceArg ;
+    while(sliceArg=(RooAbsArg*)iter->Next()) {
+      RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
+      if (arg) {
+	projectedVars.remove(*arg) ;
+      } else {
+	cout << "RooAbsReal::plotOn(" << GetName() << ") slice variable " 
+	     << sliceArg->GetName() << " was not projected anyway" << endl ;
+      }
+    }
+    delete iter ;
+  } else if (projSet) {
     makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
   } else {
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
@@ -418,10 +466,20 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
     }
 
     // Multiply scale factor with fraction of events in current state of index
-    //cout << "wTable->getFrac(" << _indexCat.arg().getLabel() << ") = " << wTable->getFrac(_indexCat.arg().getLabel()) << endl ;
-    RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,drawOptions,
-					   scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),
-					   stype,projDataTmp,projSet) ;
+
+//     RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,drawOptions,
+// 					   scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),
+// 					   stype,projDataTmp,projSet) ;
+    
+    // Override normalization and projection dataset
+    RooCmdArg tmp1 = Normalization(scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),stype) ;
+    RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
+    cmdList.Add(&tmp1) ;
+    cmdList.Add(&tmp2) ;
+
+    // Plot single component
+    RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,cmdList) ;
+
     delete wTable ;
     return retFrame ;
   }
@@ -539,8 +597,15 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 	 << " averages with data index category (" << _indexCat.arg().GetName() << ")" << endl ;
   }
 
+
+  // Override normalization and projection dataset
+  RooCmdArg tmp1 = Normalization(scaleFactor*sumWeight,stype) ;
+  RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
+  cmdList.Add(&tmp1) ;
+  cmdList.Add(&tmp2) ;
+
   // Plot temporary function  
-  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*sumWeight,stype,projDataTmp,projSet?&projSetTmp:0) ;
+  RooPlot* frame2 = plotVar->plotOn(frame,cmdList) ;
 
   // Cleanup
   delete pIter ;
@@ -557,12 +622,35 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
 
 
+RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
+				 ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet,
+				 Double_t precision, Bool_t shiftToZero, const RooArgSet* projDataSet,
+				 Double_t rangeLo, Double_t rangeHi, RooCurve::WingMode wmode) const
+{
+  // Forward to new implementation
+
+  // Make command list
+  TList cmdList ;
+  cmdList.Add(DrawOption(drawOptions).Clone()) ;
+  cmdList.Add(Normalization(scaleFactor,stype).Clone()) ;
+  if (projData) cmdList.Add(ProjWData(*projData).Clone()) ;
+  if (projSet) cmdList.Add(Project(*projSet).Clone()) ;
+
+  // Call new method
+  RooPlot* ret = plotOn(frame,cmdList) ;
+
+  // Cleanup
+  cmdList.Delete() ;
+  return ret ;  
+}
+
+
+
 void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t force) 
 {
   _plotCoefNormSet.removeAll() ;
   if (normSet) _plotCoefNormSet.add(*normSet) ;
 }
-
 
 
 
