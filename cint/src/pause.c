@@ -698,7 +698,7 @@ void G__rewinddictionary()
 #endif
     }
     else {
-      G__fprinterr(G__serr,"!!!Dictionary position not recorvered because G__unloadfile() is used in the macro!!!\n");
+      G__fprinterr(G__serr,"!!!Dictionary position not recovered because G__unloadfile() is used in the macro!!!\n");
     }
   }
 #ifndef G__OLDIMPLEMENTATION1422
