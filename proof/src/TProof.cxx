@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.65 2004/05/03 10:45:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.66 2004/05/04 14:09:31 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -515,8 +515,8 @@ void TProof::AskStatus()
 
    if (!IsValid()) return;
 
-   Broadcast(kPROOF_STATUS, kAll);
-   Collect(kAll);
+   Broadcast(kPROOF_STATUS, kActive);
+   Collect(kActive);
 }
 
 //______________________________________________________________________________
