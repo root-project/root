@@ -188,19 +188,28 @@ CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
 ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
-                $(LPATH)/libGraf3d.lib $(LPATH)/libTree.lib \
-                $(LPATH)/libMatrix.lib
+                $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
+                $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib
 endif
 ifeq ($(PLATFORM),macosx)
-# MacOS X has very lazy linker, explicitly mark dictionary initializers undefined
-ROOTULIBS    := -u _G__cpp_setup_initializerG__Hist    \
-                -u _G__cpp_setup_initializerG__Graf1   \
-                -u _G__cpp_setup_initializerG__G3D     \
-                -u _G__cpp_setup_initializerG__GPad    \
-                -u _G__cpp_setup_initializerG__Tree    \
-                -u _G__cpp_setup_initializerG__Matrix
+# Force loading of not referenced libraries
+ROOTULIBS    := -u _G__cpp_setup_setupG__Hist    \
+                -u _G__cpp_setup_setupG__Graf1   \
+                -u _G__cpp_setup_setupG__G3D     \
+                -u _G__cpp_setup_setupG__GPad    \
+                -u _G__cpp_setup_setupG__Tree    \
+                -u _G__cpp_setup_setupG__Matrix
+endif
+ifeq ($(PLATFORM),win32)
+# Force loading of not referenced libraries
+ROOTULIBS    := -include:_G__cpp_setupG__Hist    \
+                -include:_G__cpp_setupG__Graf1   \
+                -include:_G__cpp_setupG__G3D     \
+                -include:_G__cpp_setupG__GPad    \
+                -include:_G__cpp_setupG__Tree    \
+                -include:_G__cpp_setupG__Matrix
 endif
 
 ##### gcc version #####
