@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.2 2000/10/11 07:13:11 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -90,7 +90,8 @@ public:
   inline Double_t Px() const;
   inline Double_t Py() const;
   inline Double_t Pz() const;
-  inline Double_t E() const;
+  inline Double_t P()  const;
+  inline Double_t E()  const;
   inline Double_t Energy() const;
   // Get momentum and energy.
 
@@ -280,6 +281,7 @@ inline void TLorentzVector::SetT(Double_t a) { fE = a; }
 inline Double_t TLorentzVector::Px() const { return X(); }
 inline Double_t TLorentzVector::Py() const { return Y(); }
 inline Double_t TLorentzVector::Pz() const { return Z(); }
+inline Double_t TLorentzVector::P()  const { return fP.Mag(); }
 inline Double_t TLorentzVector::E()  const { return T(); }
 inline Double_t TLorentzVector::Energy()  const { return T(); }
 
