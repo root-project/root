@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.25 2004/09/22 16:29:48 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.26 2004/11/05 13:55:13 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -127,7 +127,7 @@ private:
    static Bool_t         fgSRPPwd;         // kTRUE if fgPasswd is a SRP passwd
    static TString        fgUser;
    static Bool_t         fgUsrPwdCrypt;    // kTRUE if encryption for UsrPwd is required
-   static Int_t          fgLastError;      // kTRUE if encryption for UsrPwd is required
+   static Int_t          fgLastError;      // Last error code processed by AuthError()
 
    static Bool_t         CheckHost(const char *Host, const char *host);
    static Bool_t         CleanupSecContext(TSecContext *ctx, Bool_t all);

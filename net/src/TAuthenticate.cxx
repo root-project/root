@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.64 2004/10/15 17:08:10 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.65 2004/11/05 13:55:13 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -541,85 +541,69 @@ Bool_t TAuthenticate::Authenticate()
             sprintf(NoSupport, "UidGid");
       }
    }
+   //
    // Analyse the result now ...
+   Bool_t rc = kFALSE;
+   // Type of action after the analysis:
+   // 0 = return, 1 = negotiation, 2 = send kROOTD_BYE + 3, 3 = print failure and return
+   Int_t action = 0; 
+   Int_t nmet = fHostAuth->NumMethods();
+   Int_t remloc = nmet - meth - 1;
    Int_t kind, stat;
-   if (st == 1) {
-      fHostAuth->CountSuccess((Int_t)fSecurity);
-      if (gDebug > 2)
-         fSecContext->Print();
-      if (fSecContext->IsActive())
-         fSecContext->AddForCleanup(fSocket->GetPort(),
-             fSocket->GetRemoteProtocol(),fSocket->GetServType());
-      return kTRUE;
-   } else {
-      fHostAuth->CountFailure((Int_t)fSecurity);
-      if (fVersion > 2) {
-         if (st == -2) {
-            // Remote host does not accepts connections from local host
-            return kFALSE;
-         }
-      }
-      Int_t nmet = fHostAuth->NumMethods();
-      Int_t remloc = nmet - meth - 1;
-      if (gDebug > 2)
-         Info("Authenticate",
-              "got st=%d: still %d methods locally available",
-              st, remloc);
-      if (st == -1) {
+   switch (st) {
+
+      case 1:
+         //
+         // Success
+         fHostAuth->CountSuccess((Int_t)fSecurity);
          if (gDebug > 2)
-            Info("Authenticate",
-                 "method not even started: insufficient or wrong info: %s",
-                 "try with next method, if any");
-         if (meth < nmet - 1) {
-            meth++;
-            goto negotia;
-         } else if (strlen(NoSupport) > 0)
-            Info("Authenticate",
-                 "attempted methods %s are not supported by remote server version",
-                 NoSupport);
-         Info("Authenticate",
-              "failure: list of attempted methods: %s", TriedMeth);
-         AuthError("Authenticate",-1);
-         fSocket->Send("0", kROOTD_BYE);
-         return kFALSE;
-      } else {
+            fSecContext->Print();
+         if (fSecContext->IsActive())
+            fSecContext->AddForCleanup(fSocket->GetPort(),
+                fSocket->GetRemoteProtocol(),fSocket->GetServType());
+         rc = kTRUE;
+         break;
+
+      case 0:
+         //
+         // Failure
          if (fVersion < 2) {
+            //
+            // Negotiation not supported by old daemons ...
             if (gDebug > 2)
                Info("Authenticate",
                     "negotiation not supported remotely: try next method, if any");
             if (meth < nmet - 1) {
                meth++;
-               goto negotia;
-            } else if (strlen(NoSupport) > 0)
-               Info("Authenticate",
-                    "attempted methods %s are not supported by remote server version",
-                    NoSupport);
-            Info("Authenticate",
-                 "failure: list of attempted methods: %s", TriedMeth);
-            AuthError("Authenticate",-1);
-            fSocket->Send("0", kROOTD_BYE);
-            return kFALSE;
+               action = 1;
+            } else {
+               action = 2;
+            }
+            rc = kFALSE;
+            break;
          }
+         // 
          // Attempt negotiation ...
-         if (fSocket->Recv(stat, kind) < 0)
-            return kFALSE;
+         if (fSocket->Recv(stat, kind) < 0) {
+            action = 0;
+            rc = kFALSE;
+         }
          if (gDebug > 2)
             Info("Authenticate",
                  "after failed attempt: kind= %d, stat= %d", kind, stat);
          if (kind == kROOTD_ERR) {
-            AuthError("Authenticate", stat);
-            Info("Authenticate",
-                 "failure: list of attempted methods: %s", TriedMeth);
-            AuthError("Authenticate",-1);
-            fSocket->Send("0", kROOTD_BYE);
-            return kFALSE;
+            action = 2;
+            rc = kFALSE;
          } else if (kind == kROOTD_NEGOTIA) {
             if (stat > 0) {
                int len = 3 * stat;
                char *answer = new char[len];
                int nrec = fSocket->Recv(answer, len, kind);  // returns user
-               if (nrec < 0)
-                  return kFALSE;
+               if (nrec < 0) {
+                  action = 0;
+                  rc = kFALSE;
+                  break;
+               }
                if (kind != kMESS_STRING)
                   Warning("Authenticate",
                           "strings with accepted methods not received (%d:%d)",
@@ -634,64 +618,101 @@ Bool_t TAuthenticate::Authenticate()
             } else if (stat == 0) {
                Info("Authenticate",
                     "no more methods accepted remotely to be tried");
-               if (strlen(NoSupport) > 0)
-                  Info("Authenticate",
-                       "attempted methods %s are not supported"
-                       " by remote server version",NoSupport);
-               Info("Authenticate",
-                    "failure: list of attempted methods: %s", TriedMeth);
-               AuthError("Authenticate",-1);
-               return kFALSE;
+               action = 3;
+               rc = kFALSE;
+               break;
             }
-            // If no more local methods, exit
+            // If no more local methods, return
             if (remloc < 1) {
-               if (strlen(NoSupport) > 0)
-                  Info("Authenticate",
-                       "attempted methods %s are not supported"
-                       " by remote server version",NoSupport);
-               Info("Authenticate",
-                    "failure: list of attempted methods: %s", TriedMeth);
-               AuthError("Authenticate",-1);
-               fSocket->Send("0", kROOTD_BYE);
-               return kFALSE;
+               action = 2;
+               rc = kFALSE;
+               break;
             }
-            // Look if a non tried method matches
+            // Look if a non-tried method matches
             int i, j;
-            char lav[40] = { 0 };
+            char locav[40] = { 0 };
+            Bool_t methfound = kFALSE;
             for (i = 0; i < RemMeth; i++) {
                for (j = 0; j < nmet; j++) {
                   if (fHostAuth->GetMethod(j) == rMth[i] && tMth[j] == 0) {
                      meth = j;
-                     goto negotia;
+                     action = 1;
+                     methfound = kTRUE;
+                     break;
                   }
                   if (i == 0)
-                     sprintf(lav, "%s %d", lav, fHostAuth->GetMethod(j));
+                     sprintf(locav, "%s %d", locav, fHostAuth->GetMethod(j));
                }
+               if (methfound) break;
             }
+            if (methfound) break;
+            //
+            // No method left to be tried: notify and exit
             if (gDebug > 0)
                Warning("Authenticate",
-                       "no match with those locally available: %s",
-                       lav);
-            if (strlen(NoSupport) > 0)
-               Info("Authenticate",
-                    "attempted methods %s are not supported by"
-                    " remote server version",NoSupport);
+                       "no match with those locally available: %s", locav);
+            action = 2;
+            rc = kFALSE;
+            break;
+         } else {        // unknown message code at this stage
+            action = 3;
+            rc = kFALSE;
+            break;
+         }
+         break;
+
+      case -1:
+         //
+         // Method not supported
+         if (gDebug > 2)
             Info("Authenticate",
-                 "failure: list of attempted methods: %s", TriedMeth);
-            AuthError("Authenticate",-1);
-            fSocket->Send("0", kROOTD_BYE);
-            return kFALSE;
-         } else                 // unknown message code at this stage
-         if (strlen(NoSupport) > 0) 
-            Info("Authenticate",
-                 "attempted methods %s are not supported by remote server version",
-                 NoSupport);
+                 "method not even started: insufficient or wrong info: %s",
+                 "try with next method, if any");
+         if (meth < nmet - 1) {
+            meth++;
+            action = 1;
+         } else
+            action = 2;
+         break;
+
+      case -2:
+         //
+         // Remote host does not accepts connections from local host
+         if (fVersion > 2) {
+            rc = kFALSE;
+            break;
+         } else
+            if (gDebug > 2)
+               Info("Authenticate", "status code -2 not expected from old daemons");
+
+      default:
+         if (gDebug > 2)
+            Info("Authenticate", "unknown status code: %d - assume failure",st);
+         rc = kFALSE;
+         action = 0;
+         break; 
+   }
+
+   switch (action) {
+      case 1:
+         goto negotia;
+      case 2:
+         fSocket->Send("0", kROOTD_BYE);
+      case 3:
+         if (strlen(NoSupport) > 0)
+            Info("Authenticate", "attempted methods %s are not supported"
+                 " by remote server version", NoSupport);
          Info("Authenticate",
               "failure: list of attempted methods: %s", TriedMeth);
          AuthError("Authenticate",-1);
-         return kFALSE;
-      }
+         rc = kFALSE;
+         break;
+      default:
+         break;
    }
+
+   return rc;
+
 }
 
 //______________________________________________________________________________
