@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.15 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.16 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -88,10 +88,10 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
     fTol = tol;
 
   fSign = 1.0;
-  fNIndex = a.GetNcols(); 
-  fIndex = new Int_t[fNIndex]; 
+  fNIndex = a.GetNcols();
+  fIndex = new Int_t[fNIndex];
   memset(fIndex,0,fNIndex*sizeof(Int_t));
-  
+
   fRowLwb = a.GetRowLwb();
   fColLwb = a.GetColLwb();
   fLU.ResizeTo(a);
@@ -274,10 +274,10 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 
 //______________________________________________________________________________
 Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
-{ 
+{
 // Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
 // been transformed.  Solution returned in b.
-    
+
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());
   if (TestBit(kSingular)) {
@@ -290,13 +290,13 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
       return kFALSE;
     }
   }
-    
+
   if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
     b->Invalidate();
-    return kFALSE; 
-  }   
-    
+    return kFALSE;
+  }
+
   const Int_t     n   = fLU.GetNrows();
   const Double_t *pLU = fLU.GetMatrixArray();
 
@@ -522,7 +522,7 @@ void TDecompLU::Invert(TMatrixD &inv)
 
 //______________________________________________________________________________
 TMatrixD TDecompLU::Invert()
-{  
+{
   // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
   // (n x m) Ainv is returned .
 
@@ -550,7 +550,7 @@ void TDecompLU::Print(Option_t *opt) const
 
 //______________________________________________________________________________
 TDecompLU &TDecompLU::operator=(const TDecompLU &source)
-{ 
+{
   if (this != &source) {
     TDecompBase::operator=(source);
     fLU.ResizeTo(source.fLU);
@@ -740,7 +740,7 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
     } else
       return kFALSE;
   }
-      
+
   return kTRUE;
 }
 
@@ -748,9 +748,9 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
 Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
 {
   // Calculate matrix inversion through in place forward/backward substitution
- 
+
   if (lu.GetNrows() != lu.GetNcols() || lu.GetRowLwb() != lu.GetColLwb()) {
-    ::Error("InvertLU","matrix should be square");
+    ::Error("TDecompLU::InvertLU","matrix should be square");
     lu.Invalidate();
     return kFALSE;
   }
@@ -782,7 +782,7 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
     DiagProd(diagv,tol,d1,d2);
     d1 *= sign;
     if (TMath::Abs(d2) > 52.0) {
-      ::Warning("InvertLU","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
+      ::Warning("TDecompLU::InvertLU","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
       *det =  0.0;
     } else
       *det = d1*TMath::Power(2.0,d2);
@@ -841,8 +841,8 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
   // Compute current column of inv(A).
 
     if (j < n-1) {
-      const Double_t *mp = pLU+j+1;     // Matrix row ptr           
-            Double_t *tp = pLU+j;       // Target vector ptr        
+      const Double_t *mp = pLU+j+1;     // Matrix row ptr
+            Double_t *tp = pLU+j;       // Target vector ptr
 
       for (Int_t irow = 0; irow < n; irow++) {
         Double_t sum = 0.;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.7 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.8 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -10,9 +10,9 @@
  *************************************************************************/
 
 #include "TDecompSparse.h"
-  
+
 ClassImp(TDecompSparse)
-  
+
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
 // Sparse Symmetric Decomposition class                                  //
@@ -450,7 +450,7 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
     info[i] = 0;
 
   if (icntl[3] > 0 && icntl[2] > 0) {
-    printf("Start with n = %d  nz = %d  liw = %d  iflag = %d\n",n,nz,liw,iflag);
+    ::Info("TDecompSparse::InitPivot","Start with n = %d  nz = %d  liw = %d  iflag = %d",n,nz,liw,iflag);
     nsteps = 0;
     k = TMath::Min(8,nz);
     if (icntl[3] > 1) k = nz;
@@ -476,7 +476,7 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
     if (nz < 0) {
       info[1] = -2;
       if (icntl[1] > 0)
-        ::Error("InitPivot","info[1]= %d; value of nz out of range .. = %d",info[1],nz);
+        ::Error("TDecompSparse::InitPivot","info[1]= %d; value of nz out of range .. = %d",info[1],nz);
       return;
     }
     lliw = liw-2*n;
@@ -487,7 +487,7 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
         info[1] = -3;
         info[2] = 2*nz+3*n+1;
         if (icntl[1] > 0)
-          ::Error("InitPivot","info[1]= %d; liw too small, must be increased from %d to at least %d",info[1],liw,info[2]);
+          ::Error("TDecompSparse::InitPivot","info[1]= %d; liw too small, must be increased from %d to at least %d",info[1],liw,info[2]);
         return;
       }
       InitPivot_sub1(n,nz,irn,icn,iw,iw1,iw1+n+1,iw+l1-1,iwfr,icntl,info);
@@ -498,7 +498,7 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
         info[1] = -3;
         info[2] = nz+3*n+1;
         if (icntl[1] > 0)
-          ::Error("InitPivot","info[1]= %d; liw too small, must be increased from %d to at least %d",info[1],liw,info[2]);
+          ::Error("TDecompSparse::InitPivot","info[1]= %d; liw too small, must be increased from %d to at least %d",info[1],liw,info[2]);
         return;
       }
       InitPivot_sub3(n,nz,irn,icn,ikeep,iw,iw1,iw1+n+1,iw+l1-1,iwfr,icntl,info);
@@ -511,7 +511,7 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
   } else {
     info[1] = -1;
     if (icntl[1] > 0)
-      ::Error("InitPivot","info[1]= %d; value of n out of range ... = %d",info[1],n);
+      ::Error("TDecompSparse::InitPivot","info[1]= %d; value of n out of range ... = %d",info[1],n);
     return;
   }
 
@@ -611,38 +611,38 @@ void TDecompSparse::Factor(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &A
     if (info[1] != -3 && info[1] != -4) {
       Factor_sub2(n,nz1,a,la,iw,liw,ikeep,ikeep+2*(n+1),nsteps,maxfrt,ikeep+n+1,iw1,icntl,cntl,info);
       if (info[1] == 3 && icntl[2] > 0)
-        ::Warning("Factor","info[1]= %d; matrix is singular. rank=%d",info[1],info[2]);
+        ::Warning("TDecompSparse::Factor","info[1]= %d; matrix is singular. rank=%d",info[1],info[2]);
     }
   }
 
   if (icntl[1] > 0) {
     switch(info[1]) {
       case -1:
-        ::Error("Factor","info[1]= %d; value of n out of range ... =%d",info[1],n);
+        ::Error("TDecompSparse::Factor","info[1]= %d; value of n out of range ... =%d",info[1],n);
         break;
 
       case -2:
-        ::Error("Factor","info[1]= %d; value of nz out of range ... =%d",info[1],nz);
+        ::Error("TDecompSparse::Factor","info[1]= %d; value of nz out of range ... =%d",info[1],nz);
       break;
 
       case -3:
-        ::Error("Factor","info[1]= %d; liw too small, must be increased from %d to at least %d",info[1],liw,info[2]);
+        ::Error("TDecompSparse::Factor","info[1]= %d; liw too small, must be increased from %d to at least %d",info[1],liw,info[2]);
       break;
 
       case -4:
-        ::Error("Factor","info[1]= %d; la too small, must be increased from %d to at least %d",info[1],la,info[2]);
+        ::Error("TDecompSparse::Factor","info[1]= %d; la too small, must be increased from %d to at least %d",info[1],la,info[2]);
       break;
 
       case -5:
-        ::Error("Factor","info[1]= %d; zero pivot at stage %d zero pivot at stage",info[1],info[2]);
+        ::Error("TDecompSparse::Factor","info[1]= %d; zero pivot at stage %d zero pivot at stage",info[1],info[2]);
       break;
 
       case -6:
-        ::Error("Factor","info[1]= %d; change in sign of pivot encountered when factoring allegedly definite matrix",info[1]);
+        ::Error("TDecompSparse::Factor","info[1]= %d; change in sign of pivot encountered when factoring allegedly definite matrix",info[1]);
       break;
 
       case -7:
-        ::Error("Factor","info[1]= %d; nsteps is out of range",info[1]);
+        ::Error("TDecompSparse::Factor","info[1]= %d; nsteps is out of range",info[1]);
       break;
     }
   }
@@ -650,8 +650,8 @@ void TDecompSparse::Factor(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &A
   if (icntl[3] <= 0 || icntl[2] <= 0 || info[1] < 0)
     return;
 
-  printf("leaving Factor with maxfrt=%d info[1]=%d nrlbdu=%d nirbdu=%d ncmpbr=%d ncmpbi=%d ntwo=%d ierror=%d\n",
-             maxfrt,info[1],info[9],info[10],info[12],info[13],info[14],info[2]);
+  ::Info("TDecompSparse::Factor","leaving Factor with maxfrt=%d info[1]=%d nrlbdu=%d nirbdu=%d ncmpbr=%d ncmpbi=%d ntwo=%d ierror=%d",
+         maxfrt,info[1],info[9],info[10],info[12],info[13],info[14],info[2]);
 
   if (info[1] < 0) return;
 
@@ -670,7 +670,7 @@ void TDecompSparse::Factor(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &A
       nrows = 1;
       j1 = j1-1;
     }
-    printf("block pivot =%d nrows =%d ncols =%d\n",iblk,nrows,ncols);
+    ::Info("TDecompSparse::Factor","block pivot =%d nrows =%d ncols =%d",iblk,nrows,ncols);
     j2 = j1+ncols-1;
     ipos = j2+1;
 
@@ -768,7 +768,7 @@ void TDecompSparse::Solve(const Int_t n,TArrayD &Aa,TArrayI &Aiw,
   nblk = 0;
   if (iw[1] == 0) {
     nblk = 0;
-    for (i = 1; i < n+1; i++) 
+    for (i = 1; i < n+1; i++)
       rhs[i] = 0.0;
   } else {
     nblk = (iw[1] <= 0) ? -iw[1] : iw[1];
@@ -813,7 +813,7 @@ void TDecompSparse::InitPivot_sub1(const Int_t n,const Int_t nz,Int_t *irn,Int_t
         info[2] = info[2]+1;
         info[1] = 1;
         if (info[2] <= 1 && icntl[2]> 0)
-          ::Warning("InitPivot_sub1","info[1]= %d; %d th non-zero (in row=%d and column=%d) ignored",info[1],k,i,j);
+          ::Warning("TDecompSparse::InitPivot_sub1","info[1]= %d; %d th non-zero (in row=%d and column=%d) ignored",info[1],k,i,j);
       }
 
       if (outRange || i == j) {
@@ -844,7 +844,7 @@ void TDecompSparse::InitPivot_sub1(const Int_t n,const Int_t nz,Int_t *irn,Int_t
   flag[n] = 0;
   if (lr < last) {
     k1 = lr+1;
-    for (k = k1; k < last+1; k++) 
+    for (k = k1; k < last+1; k++)
       iw[k] = 0;
   }
   ipe[n] = iq[n];
@@ -1321,7 +1321,7 @@ void TDecompSparse::InitPivot_sub3(const Int_t n,const Int_t nz,Int_t *irn,Int_t
         info[2] = info[2]+1;
         info[1] = 1;
         if (info[2] <= 1 && icntl[2] > 0)
-          ::Warning("InitPivot_sub3","info[1]= %d; %d 'th non-zero (in row %d and column %d) ignored",info[1],k,i,j);
+          ::Warning("TDecompSparse::InitPivot_sub3","info[1]= %d; %d 'th non-zero (in row %d and column %d) ignored",info[1],k,i,j);
       }
 
       if (outRange || i==j) {
@@ -1587,7 +1587,7 @@ void TDecompSparse::InitPivot_sub6(const Int_t n,const Int_t nz,Int_t *irn,Int_t
 {
   Int_t i,inew,iold,iorg,irow,istki,istkr,itop,itree,jold,jorg,k,lstk,nassr,nelim,nfr,nstk,
         numorg,nz1,nz2,nrladu,niradu,nirtot,nrltot,nirnec,nrlnec;
-  Double_t delim; 
+  Double_t delim;
 
   if (nz != 0 && irn[1] == iw[1]) {
     irn[1] = iw[1]-1;
@@ -1724,7 +1724,7 @@ void TDecompSparse::Factor_sub1(const Int_t n,const Int_t nz,Int_t &nz1,Double_t
           info[1] = 1;
           info[2] = info[2]+1;
           if (info[2] <= 1 && icntl[2] > 0)
-            ::Warning("Factor_sub1","info[1]= %d; %d 'th non-zero (in row %d and column %d) ignored",
+            ::Warning("TDecompSparse::Factor_sub1","info[1]= %d; %d 'th non-zero (in row %d and column %d) ignored",
               info[1],k,irn[k],icn[k]);
           iw[k] = 0;
         }
@@ -2054,7 +2054,7 @@ void TDecompSparse::Factor_sub2(const Int_t n,const Int_t nz,Double_t *a,const I
             info[1] = 2;
             i = ntotpv+1;
             if (icntl[2] > 0 && info[2] <= 10)
-              ::Warning("Factor_sub2","info[1]= %d; pivot %d has different sign from the previous one",
+              ::Warning("TDecompSparse::Factor_sub2","info[1]= %d; pivot %d has different sign from the previous one",
                         info[1],i);
             isnpiv = -isnpiv;
           }
