@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.35 2004/07/29 10:54:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.36 2004/08/12 08:40:27 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1088,6 +1088,16 @@ void TSelectorDraw::TakeAction()
    }
    //__________________________2D scatter plot_______________________
    else if (fAction == 12) {
+      TH2 *h2 = (TH2*)fObject;
+      if (h2->TestBit(TH1::kCanRebin) && h2->TestBit(kCanDelete)) {
+         for (i=0;i<fNfill;i++) {
+            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
+            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
+            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
+            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
+         }
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
+      }
       TGraph *pm = new TGraph(fNfill,fV2,fV1);
       pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
@@ -1103,15 +1113,9 @@ void TSelectorDraw::TakeAction()
          if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
          else                                             pm->Draw(fOption.Data());
       }
-      TH2 *h2 = (TH2*)fObject;
       if (!h2->TestBit(kCanDelete)) {
          for (i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
       }
-      //if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
-      //else                                             pm->Draw(fOption.Data());
-      //if (!h2->TestBit(kCanDelete)) {
-      //TH2 *h2 = (TH2*)fObject;
-      //for(i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
    }
    //__________________________3D scatter plot_______________________
    else if (fAction ==  3) {
@@ -1228,7 +1232,7 @@ void TSelectorDraw::TakeEstimate()
    //__________________________2D scatter plot_______________________
    } else if (fAction == 12) {
       TH2 *h2 = (TH2*)fObject;
-      if (fObject->TestBit(TH1::kCanRebin)) {
+      if (h2->TestBit(TH1::kCanRebin)) {
          for (i=0;i<fNfill;i++) {
             if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
             if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
