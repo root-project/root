@@ -273,6 +273,6 @@ $(CMDECHO) ( touch dummy$$$$.C && \
 )
 endef
 
-RemoveLeadingDirs := sed -e 's?^[A-z/\].*[/\]??' -e 's/.dll/.so/'
-RemoveDirs := sed -e 's?([A-z]:|[/]).*[/\]??'
+RemoveLeadingDirs := sed -e 's?^[A-Za-z/\].*[/\]??' -e 's/.dll/.so/'
+RemoveDirs := sed -e 's?([A-Za-z]:|[/]).*[/\]??'
 
