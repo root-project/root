@@ -82,7 +82,18 @@
       break;                                    \
    }
 
-#define SkipCBasicArray(name)                           \
+#define SkipCBasicArray(name)                            \
+    {                                                    \
+      name* readbuf = new name[fLength[i]];              \
+      DOLOOP {                                           \
+          b.ReadFastArray(readbuf, fLength[i]);          \
+      }                                                  \
+      delete readbuf;                                    \
+      break;                                             \
+    }
+
+
+#define SkipCBasicArrayOld(name)                        \
    {  name dummy;                                       \
       DOLOOP{                                           \
          for (Int_t j=0;j<fLength[i];j++) b >> dummy;   \
@@ -90,7 +101,30 @@
       break;                                            \
    }
 
-#define SkipCBasicPointer(name)                                         \
+#define SkipCBasicPointer(name)                                           \
+   {                                                                      \
+      int len = aElement->GetArrayDim()?aElement->GetArrayLength():1;     \
+      Char_t isArray;                                                     \
+      if ((imethod>0) && (fMethod[i]>0)) {                                \
+         DOLOOP {                                                         \
+            b >> isArray;                                                 \
+            Int_t *l = (Int_t*)(arr[k]+imethod);                          \
+            if (*l>0) {                                                   \
+               name* readbuf = new name[*l];                              \
+               for (int j=0;j<len;j++)                                    \
+                  b.ReadFastArray(readbuf, *l);                           \
+               delete[] readbuf;                                          \
+            }                                                             \
+         }                                                                \
+      } else {                                                            \
+         Error("ReadBufferSkip","Counter: %s for data memeber: %s should not be skipped", aElement->GetTitle(), aElement->GetName()); \
+      }                                                                   \
+                                                                          \
+      break;                                                              \
+   }
+
+
+#define SkipCBasicPointerOld(name)                                      \
    {                                                                    \
       Int_t *n = (Int_t*)(arr[0]+imethod);                              \
       Int_t l = b.Length();                                             \
@@ -119,10 +153,11 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
 #endif
 {
    //  Skip elements in a TClonesArray
-   UInt_t start, count;
+   
+   TClass* cle = fComp[i].fClass;
 
-//   Int_t ioffset = fOffset[i]+eoffset;
    Int_t imethod = fMethod[i]+eoffset;
+   
    switch (kase) {
 
       // skip basic types
@@ -171,21 +206,15 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkipP + TStreamerInfo::kULong:    SkipCBasicPointer(ULong_t);
       case TStreamerInfo::kSkipP + TStreamerInfo::kULong64:  SkipCBasicPointer(ULong64_t);
 
-         // skip char*
+      // skip char*
       case TStreamerInfo::kSkip + TStreamerInfo::kCharStar: {
          DOLOOP {
             Int_t nch; b >> nch;
-            Int_t l = b.Length();
-            b.SetBufferOffset(l+4+nch);
-         }
-         break;
-      }
-
-      // skip Class *  derived from TObject with comment field  //->
-      case TStreamerInfo::kSkip + TStreamerInfo::kObjectp: {
-         DOLOOP {
-            b.ReadVersion(&start, &count);
-            b.SetBufferOffset(start+count+sizeof(UInt_t));
+            if (nch>0) {
+              char* readbuf = new char[nch];  
+              b.ReadFastArray(readbuf,nch);
+              delete[] readbuf;
+            }
          }
          break;
       }
@@ -194,8 +223,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kObjectP: {
          DOLOOP{
             for (Int_t j=0;j<fLength[i];j++) {
-               b.ReadVersion(&start, &count);
-               b.SetBufferOffset(start+count+sizeof(UInt_t));
+               b.SkipObjectAny(); 
             }
          }
          break;
@@ -204,22 +232,21 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       // skip array counter //[n]
       case TStreamerInfo::kSkip + TStreamerInfo::kCounter: {
          DOLOOP {
-            //Int_t *counter = (Int_t*)fMethod[i];
-            //b >> *counter;
             Int_t dummy; b >> dummy;
          }
          break;
       }
 
+      // skip Class *  derived from TObject with comment field  //->
       // skip Class    derived from TObject
+      case TStreamerInfo::kSkip + TStreamerInfo::kObjectp: 
       case TStreamerInfo::kSkip + TStreamerInfo::kObject:  {
-         if (fClass == TRef::Class()) {
+         if (cle == TRef::Class()) {
             TRef refjunk;
             DOLOOP{ refjunk.Streamer(b);}
          } else {
             DOLOOP{
-               b.ReadVersion(&start, &count);
-               b.SetBufferOffset(start+count+sizeof(UInt_t));
+               b.SkipObjectAny();  
             }
          }
          break;
@@ -251,8 +278,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       // skip Class *  not derived from TObject with comment field  //->
       case TStreamerInfo::kSkip + TStreamerInfo::kAnyp: {
          DOLOOP {
-            b.ReadVersion(&start, &count);
-            b.SetBufferOffset(start+count+sizeof(UInt_t));
+            b.SkipObjectAny();  
          }
          break;
       }
@@ -261,18 +287,16 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kAnyP: {
          DOLOOP {
             for (Int_t j=0;j<fLength[i];j++) {
-               b.ReadVersion(&start, &count);
-               b.SetBufferOffset(start+count+sizeof(UInt_t));
+               b.SkipObjectAny();  
             }
          }
          break;
       }
 
       // skip Any Class not derived from TObject
-      case TStreamerInfo::kSkip + TStreamerInfo::kAny:     {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAny:    {
          DOLOOP {
-            b.ReadVersion(&start, &count);
-            b.SetBufferOffset(start+count+sizeof(UInt_t));
+            b.SkipObjectAny();  
          }
          break;
       }
@@ -282,26 +306,23 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:
       case TStreamerInfo::kSkip + TStreamerInfo::kSTL:     {
          if (fOldVersion<3) return 0;
-         b.ReadVersion(&start, &count);
-         b.SetBufferOffset(start+count+sizeof(UInt_t));
+         b.SkipObjectAny(); 
          break;
       }
 
       // skip Base Class
       case TStreamerInfo::kSkip + TStreamerInfo::kBase:    {
          DOLOOP {
-            b.ReadVersion(&start, &count);
-            b.SetBufferOffset(start+count+sizeof(UInt_t));
+            b.SkipObjectAny();  
          }
          break;
       }
 
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamLoop:
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamer: {
-         UInt_t start,count;
-         DOLOOP {
-            b.ReadVersion(&start,&count);
-            b.SetBufferOffset(start + count + sizeof(UInt_t));}
+         DOLOOP { 
+            b.SkipObjectAny();
+            }
          break;
       }
       default:
@@ -310,6 +331,109 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
    }
    return 0;
 }
+
+#define ConvCBasicType(name)                                              \
+   {                                                                      \
+      DOLOOP {                                                            \
+         name u;                                                          \
+         b >> u;                                                          \
+         switch(fNewType[i]) {                                            \
+            case TStreamerInfo::kChar:    {Char_t   *x=(Char_t*)(arr[k]+ioffset);   *x = (Char_t)u;   break;} \
+            case TStreamerInfo::kShort:   {Short_t  *x=(Short_t*)(arr[k]+ioffset);  *x = (Short_t)u;  break;} \
+            case TStreamerInfo::kInt:     {Int_t    *x=(Int_t*)(arr[k]+ioffset);    *x = (Int_t)u;    break;} \
+            case TStreamerInfo::kLong:    {Long_t   *x=(Long_t*)(arr[k]+ioffset);   *x = (Long_t)u;   break;} \
+            case TStreamerInfo::kLong64:  {Long64_t *x=(Long64_t*)(arr[k]+ioffset); *x = (Long64_t)u;   break;} \
+            case TStreamerInfo::kFloat:   {Float_t  *x=(Float_t*)(arr[k]+ioffset);  *x = (Float_t)u;  break;} \
+            case TStreamerInfo::kDouble:  {Double_t *x=(Double_t*)(arr[k]+ioffset); *x = (Double_t)u; break;} \
+            case TStreamerInfo::kDouble32:{Double_t *x=(Double_t*)(arr[k]+ioffset); *x = (Double_t)u; break;} \
+            case TStreamerInfo::kUChar:   {UChar_t  *x=(UChar_t*)(arr[k]+ioffset);  *x = (UChar_t)u;  break;} \
+            case TStreamerInfo::kUShort:  {UShort_t *x=(UShort_t*)(arr[k]+ioffset); *x = (UShort_t)u; break;} \
+            case TStreamerInfo::kUInt:    {UInt_t   *x=(UInt_t*)(arr[k]+ioffset);   *x = (UInt_t)u;   break;} \
+            case TStreamerInfo::kULong:   {ULong_t  *x=(ULong_t*)(arr[k]+ioffset);  *x = (ULong_t)u;  break;} \
+            case TStreamerInfo::kULong64: {ULong64_t*x=(ULong64_t*)(arr[k]+ioffset);*x = (ULong64_t)u;  break;} \
+         }                                                                \
+      } break;                                                            \
+   }
+
+#define ConvCBasicArrayTo(newtype)                                        \
+   {                                                                      \
+      newtype *f=(newtype*)(arr[k]+ioffset);                              \
+      for (j=0;j<len;j++) f[j] = (newtype)readbuf[j];                     \
+      break;                                                              \
+   }
+
+#define ConvCBasicArray(name)                                             \
+   {                                                                      \
+      int j, len = fLength[i];                                            \
+      name* readbuf = new name[len];                                      \
+      int newtype = fNewType[i]%20;                                       \
+      DOLOOP {                                                            \
+          b.ReadFastArray(readbuf, len);                                  \
+          switch(newtype) {                                               \
+             case TStreamerInfo::kChar:     ConvCBasicArrayTo(Char_t);    \
+             case TStreamerInfo::kShort:    ConvCBasicArrayTo(Short_t);   \
+             case TStreamerInfo::kInt:      ConvCBasicArrayTo(Int_t);     \
+             case TStreamerInfo::kLong:     ConvCBasicArrayTo(Long_t);    \
+             case TStreamerInfo::kLong64:   ConvCBasicArrayTo(Long64_t);  \
+             case TStreamerInfo::kFloat:    ConvCBasicArrayTo(Float_t);   \
+             case TStreamerInfo::kDouble:   ConvCBasicArrayTo(Double_t);  \
+             case TStreamerInfo::kDouble32: ConvCBasicArrayTo(Double_t);  \
+             case TStreamerInfo::kUChar:    ConvCBasicArrayTo(UChar_t);   \
+             case TStreamerInfo::kUShort:   ConvCBasicArrayTo(UShort_t);  \
+             case TStreamerInfo::kUInt:     ConvCBasicArrayTo(UInt_t);    \
+             case TStreamerInfo::kULong:    ConvCBasicArrayTo(ULong_t);   \
+             case TStreamerInfo::kULong64:  ConvCBasicArrayTo(ULong64_t); \
+          }                                                               \
+      }                                                                   \
+      delete[] readbuf;                                                   \
+      break;                                                              \
+   }
+
+#define ConvCBasicPointerTo(newtype)                                      \
+   {                                                                      \
+     newtype **f=(newtype**)(arr[k]+ioffset);                             \
+     for (j=0;j<len;j++) {                                                \
+       delete [] f[j];                                                    \
+       f[j] = 0;                                                          \
+       if (*l ==0) continue;                                              \
+       f[j] = new newtype[*l];                                            \
+       newtype *af = f[j];                                                \
+       b.ReadFastArray(readbuf, *l);                                      \
+       for (jj=0;jj<*l;jj++) af[jj] = (newtype)readbuf[jj];               \
+     }                                                                    \
+     break;                                                               \
+   }
+
+#define ConvCBasicPointer(name)                                           \
+   {                                                                      \
+      Char_t isArray;                                                     \
+      int j, jj, len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+      name* readbuf = 0;                                                  \
+      int newtype = fNewType[i] %20;                                      \
+      Int_t imethod = fMethod[i]+eoffset;                                 \
+      DOLOOP {                                                            \
+         b >> isArray;                                                    \
+         Int_t *l = (Int_t*)(arr[k]+imethod);                             \
+         if (*l>0) readbuf = new name[*l];                                \
+         switch(newtype) {                                                \
+            case TStreamerInfo::kChar:     ConvCBasicPointerTo(Char_t);   \
+            case TStreamerInfo::kShort:    ConvCBasicPointerTo(Short_t);  \
+            case TStreamerInfo::kInt:      ConvCBasicPointerTo(Int_t);    \
+            case TStreamerInfo::kLong:     ConvCBasicPointerTo(Long_t);   \
+            case TStreamerInfo::kLong64:   ConvCBasicPointerTo(Long64_t); \
+            case TStreamerInfo::kFloat:    ConvCBasicPointerTo(Float_t);  \
+            case TStreamerInfo::kDouble:   ConvCBasicPointerTo(Double_t); \
+            case TStreamerInfo::kDouble32: ConvCBasicPointerTo(Double_t); \
+            case TStreamerInfo::kUChar:    ConvCBasicPointerTo(UChar_t);  \
+            case TStreamerInfo::kUShort:   ConvCBasicPointerTo(UShort_t); \
+            case TStreamerInfo::kUInt:     ConvCBasicPointerTo(UInt_t);   \
+            case TStreamerInfo::kULong:    ConvCBasicPointerTo(ULong_t);  \
+            case TStreamerInfo::kULong64:  ConvCBasicPointerTo(ULong64_t); \
+         }                                                                \
+         delete[] readbuf;                                                \
+         readbuf = 0;                                                     \
+      } break;                                                            \
+   }
 
 //______________________________________________________________________________
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
@@ -333,175 +457,6 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
    //  Convert elements of a TClonesArray
 
    Int_t ioffset = eoffset+fOffset[i];
-
-#define ConvCBasicType(name) \
-   { \
-      DOLOOP { \
-         name u; \
-         b >> u; \
-         switch(fNewType[i]) { \
-            case TStreamerInfo::kChar:    {Char_t   *x=(Char_t*)(arr[k]+ioffset);   *x = (Char_t)u;   break;} \
-            case TStreamerInfo::kShort:   {Short_t  *x=(Short_t*)(arr[k]+ioffset);  *x = (Short_t)u;  break;} \
-            case TStreamerInfo::kInt:     {Int_t    *x=(Int_t*)(arr[k]+ioffset);    *x = (Int_t)u;    break;} \
-            case TStreamerInfo::kLong:    {Long_t   *x=(Long_t*)(arr[k]+ioffset);   *x = (Long_t)u;   break;} \
-            case TStreamerInfo::kLong64:  {Long64_t *x=(Long64_t*)(arr[k]+ioffset); *x = (Long64_t)u;   break;} \
-            case TStreamerInfo::kFloat:   {Float_t  *x=(Float_t*)(arr[k]+ioffset);  *x = (Float_t)u;  break;} \
-            case TStreamerInfo::kDouble:  {Double_t *x=(Double_t*)(arr[k]+ioffset); *x = (Double_t)u; break;} \
-            case TStreamerInfo::kDouble32:{Double_t *x=(Double_t*)(arr[k]+ioffset); *x = (Double_t)u; break;} \
-            case TStreamerInfo::kUChar:   {UChar_t  *x=(UChar_t*)(arr[k]+ioffset);  *x = (UChar_t)u;  break;} \
-            case TStreamerInfo::kUShort:  {UShort_t *x=(UShort_t*)(arr[k]+ioffset); *x = (UShort_t)u; break;} \
-            case TStreamerInfo::kUInt:    {UInt_t   *x=(UInt_t*)(arr[k]+ioffset);   *x = (UInt_t)u;   break;} \
-            case TStreamerInfo::kULong:   {ULong_t  *x=(ULong_t*)(arr[k]+ioffset);  *x = (ULong_t)u;  break;} \
-            case TStreamerInfo::kULong64: {ULong64_t*x=(ULong64_t*)(arr[k]+ioffset);*x = (ULong64_t)u;  break;} \
-         } \
-      } break; \
-   }
-
-#define ConvCBasicArray(name) \
-   { \
-      name reader; \
-      int len = fLength[i]; \
-      int newtype = fNewType[i]%20; \
-      DOLOOP { \
-          switch(newtype) { \
-             case TStreamerInfo::kChar:   {Char_t *f=(Char_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (Char_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kShort:  {Short_t *f=(Short_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (Short_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kInt:    {Int_t *f=(Int_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (Int_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kLong:   {Long_t *f=(Long_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (Long_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kLong64: {Long64_t *f=(Long64_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (Long64_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kFloat:  {Float_t *f=(Float_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (Float_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kDouble: {Double_t *f=(Double_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (Double_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kDouble32:{Double_t *f=(Double_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (Double_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kUChar:  {UChar_t *f=(UChar_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (UChar_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kUShort: {UShort_t *f=(UShort_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (UShort_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kUInt:   {UInt_t *f=(UInt_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (UInt_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kULong:  {ULong_t *f=(ULong_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (ULong_t)reader;} \
-                            break; } \
-             case TStreamerInfo::kULong64:{ULong64_t *f=(ULong64_t*)(arr[k]+ioffset); \
-                            for (Int_t j=0;j<len;j++) {b >> reader; f[j] = (ULong64_t)reader;} \
-                            break; } \
-          } \
-      } break; \
-   }
-
-#define ConvCBasicPointer(name) \
-   { \
-   Char_t isArray; \
-      int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
-      int j; \
-      name u; \
-      int newtype = fNewType[i] %20; \
-      Int_t imethod = fMethod[i]+eoffset;\
-      DOLOOP { \
-         b >> isArray; \
-         Int_t *l = (Int_t*)(arr[k]+imethod); \
-         switch(newtype) { \
-            case TStreamerInfo::kChar:   {Char_t   **f=(Char_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new Char_t[*l]; Char_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Char_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kShort:  {Short_t  **f=(Short_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new Short_t[*l]; Short_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Short_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kInt:    {Int_t    **f=(Int_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new Int_t[*l]; Int_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Int_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kLong:   {Long_t   **f=(Long_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new Long_t[*l]; Long_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Long_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kLong64: {Long64_t   **f=(Long64_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new Long64_t[*l]; Long64_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Long64_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kFloat:  {Float_t  **f=(Float_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new Float_t[*l]; Float_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Float_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kDouble: {Double_t **f=(Double_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new Double_t[*l]; Double_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Double_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kDouble32: {Double_t **f=(Double_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new Double_t[*l]; Double_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Double_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kUChar:  {UChar_t  **f=(UChar_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new UChar_t[*l]; UChar_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (UChar_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kUShort: {UShort_t **f=(UShort_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new UShort_t[*l]; UShort_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (UShort_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kUInt:   {UInt_t   **f=(UInt_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new UInt_t[*l]; UInt_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (UInt_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kULong:  {ULong_t  **f=(ULong_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new ULong_t[*l]; ULong_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (ULong_t)u;} \
-                       } break;} \
-            case TStreamerInfo::kULong64:{ULong64_t  **f=(ULong64_t**)(arr[k]+ioffset); \
-                       for (j=0;j<len;j++) { \
-                          delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
-                          f[j] = new ULong64_t[*l]; ULong64_t *af = f[j]; \
-                          for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (ULong64_t)u;} \
-                       } break;} \
-         } \
-      } break; \
-   }
-
-   //============
 
    switch (kase) {
 
