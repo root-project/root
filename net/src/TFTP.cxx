@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.19 2004/01/19 18:31:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.20 2004/01/19 22:42:07 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -92,7 +92,6 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
    // Set up the actual connection.
 
    TAuthenticate *auth;
-   EMessageTypes kind;
 
    TUrl url(surl);
 
@@ -128,12 +127,10 @@ again:
    EMessageTypes tmpkind;
    fSocket->Send(kROOTD_PROTOCOL);
    Recv(fProtocol, tmpkind);
-   kind = tmpkind;
    if (fProtocol > 6) {
       fSocket->Send(Form("%d", TNetFile::GetClientProtocol()),
                     kROOTD_PROTOCOL2);
       Recv(fProtocol, tmpkind);
-      kind = tmpkind;
    }
 
    // Authenticate to remote rootd server
