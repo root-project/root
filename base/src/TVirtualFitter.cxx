@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.3 2003/05/05 16:38:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.4 2003/05/06 09:24:30 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -11,6 +11,7 @@
 #include "TROOT.h"
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
+#include "TEnv.h"
 #include "Api.h"
 
 
@@ -18,7 +19,7 @@ TVirtualFitter *TVirtualFitter::fgFitter    = 0;
 Int_t           TVirtualFitter::fgMaxpar    = 0;
 Int_t           TVirtualFitter::fgMaxiter   = 5000;
 Double_t        TVirtualFitter::fgPrecision = 1e-6;
-TString         TVirtualFitter::fgDefault   = "Minuit";
+TString         TVirtualFitter::fgDefault   = "";
 
 ClassImp(TVirtualFitter)
 
@@ -54,6 +55,7 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
 
    if (!fgFitter) {
       TPluginHandler *h;
+      if (fgDefault.Length() == 0) fgDefault = gEnv->GetValue("Root.Fitter","Minuit");
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter",fgDefault.Data()))) {
          if (h->LoadPlugin() == -1)
             return 0;
