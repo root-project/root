@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.2 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.3 2004/07/02 15:43:56 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -14,11 +14,12 @@
 //  TAttFillEditor                                                      //
 //                                                                      //
 //  Implements GUI for editing fill attributes.                         //                                             //
+//             color and fill style                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 //Begin_Html
 /*
-<img src="gif/fill_e.gif">
+<img src="gif/TAttFillEditor.gif">
 */
 //End_Html
 

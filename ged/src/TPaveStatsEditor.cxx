@@ -14,11 +14,16 @@
 //  TPaveStatsEditor                                                    //
 //                                                                      //
 //  Implements GUI for editing attributes of TPaveStats objects.        //                                             //
+//      all text attributes                                             //
+//      The following statistics option settings can be set:            //
+//      name, mean, RMS, overflow, underflow, integral of bins,         //
+//      Fit parameters that can be set are: Values/Names, Probability,  // 
+//      Errors, Chisquare                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 //Begin_Html
 /*
-<img src="gif/pavs_e.gif">
+<img src="gif/TPaveStatsEditor.gif">
 */
 //End_Html
 

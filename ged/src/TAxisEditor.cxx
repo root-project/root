@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.3 2004/06/30 13:04:44 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.4 2004/07/02 15:43:56 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -14,11 +14,23 @@
 //  TAxisEditor                                                         //
 //                                                                      //
 //  Implements GUI for axis attributes.                                 //
+//     axis color                                                       //
+//     ticks parameters: length, setting on both axis sides,            //
+//     logarithmic or linear scale along the selected axis,             //
+//     primary, secondary and tertiary axis divisions,                  //
+//     setting more logarithmic labels,                                 //
+//     optimizing labels' position if available                         //
+//     axis title - a title can be added via the text entry field       // 
+//     and can be set to be centered or rotated via the corresponding   // 
+//     check buttons, the title color, offset, font can be set easily   //
+//     axis labels - their color, size, offset can be set similarly,    //
+//     in addition there is a check box for no exponent choice,         //
+//     and another one for setting the same decimal part for all labels //                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 //Begin_Html
 /*
-<img src="gif/axis_e.gif">
+<img src="gif/TAxisEditor.gif">
 */
 //End_Html
 

@@ -15,8 +15,21 @@
 //  TPadEditor                                                          //
 //                                                                      //
 //  Editor of pad/canvas objects.                                       //
+//       color and fill style,                                          //             
+//      'Edit' check box sets pad/canvad editable,                      //
+//      'Crosshair' sets a cross hair on the pad,                       //
+//      'Fixed aspect ratio' can be set when resizing the pad           //
+//      'TickX' and 'TickY' set ticks along the X and Y axis            //
+//      'GridX' and 'GridY' set a grid along the X and Y axis           //
+//       pad/canvas border size can be set if a sinken or a raised      //
+//       border mode is selected; no border mode can be set to          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/TPadEditor.gif">
+*/
+//End_Html
 
 #include "TPadEditor.h"
 #include "TGClient.h"
@@ -26,13 +39,6 @@
 #include "TGLabel.h"
 #include "TColor.h"
 #include "TCanvas.h"
-//Begin_Html
-/*
-<img src="gif/pad_e.gif">
-*/
-//End_Html
-
-
 
 ClassImp(TGedFrame)
 ClassImp(TPadEditor)

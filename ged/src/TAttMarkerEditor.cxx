@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.3 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.4 2004/07/02 15:43:56 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -14,11 +14,12 @@
 //  TAttMarkerEditor                                                    //
 //                                                                      //
 //  Implements GUI for editing marker attributes.                       //
+//            color, style and size                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 //Begin_Html
 /*
-<img src="gif/mark_e.gif">
+<img src="gif/TAttMarkerEditor.gif">
 */
 //End_Html
 

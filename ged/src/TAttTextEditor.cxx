@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.3 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.4 2004/07/02 15:43:56 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -14,11 +14,12 @@
 //  TAttTextEditor                                                      //
 //                                                                      //
 //  Implements GUI for editing text attributes.                         //
+//          color, font, font size and alignment                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 //Begin_Html
 /*
-<img src="gif/text_e.gif">
+<img src="gif/TAttTextEditor.gif">
 */
 //End_Html
 
