@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.20 2004/10/12 20:30:11 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.21 2004/10/13 12:24:08 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -2321,6 +2321,7 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
    frame->Resize(w, h);
    frame->MapRaised();
    frame->SetCleanup(kDeepCleanup);
+   frame->AddInput(kButtonPressMask);
 
    if (fClient->GetRoot()->InheritsFrom(TGCompositeFrame::Class())) {
       TGCompositeFrame *edit = (TGCompositeFrame*)fClient->GetRoot();

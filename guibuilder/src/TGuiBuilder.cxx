@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.22 2004/10/13 12:24:08 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.23 2004/10/14 07:23:06 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -122,7 +122,8 @@ enum EMenuIds {
    M_WINDOW_ARRANGE,
 
    M_HELP_CONTENTS,
-   M_HELP_ABOUT
+   M_HELP_ABOUT,
+   M_HELP_BUG
 };
 
 const char gHelpBuilder[] = "\
@@ -325,6 +326,8 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    AddSection("Containers");
    AddSection("Input");
    AddSection("Display");
+//   AddSection("Complex Input");
+//   AddSection("Extended");
 
 //   AddSection("Extended");
 
@@ -577,6 +580,8 @@ void TGuiBuilder::InitMenu()
    fMenuHelp->AddEntry(new TGHotString("&Contents"), M_HELP_CONTENTS);
    fMenuHelp->AddSeparator();
    fMenuHelp->AddEntry(new TGHotString("&About"), M_HELP_ABOUT);
+   fMenuHelp->AddSeparator();
+   fMenuHelp->AddEntry(new TGHotString("&Send Bug Report"), M_HELP_BUG);
 
    fMenuBar->AddPopup(new TGHotString("&File"), fMenuFile,
                       new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
