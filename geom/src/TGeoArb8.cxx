@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.21 2003/02/17 13:23:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.22 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -41,7 +41,7 @@ ClassImp(TGeoArb8)
 
 //Begin_Html
 /*
-<img src="gif/TGeoArb8.jpg">
+<img src="gif/t_arb8.gif">
 */
 //End_Html
 
@@ -61,7 +61,13 @@ ClassImp(TGeoArb8)
 ////////////////////////////////////////////////////////////////////////////
 //Begin_Html
 /*
-<img src="gif/TGeoTrap.gif">
+<img src="gif/t_trap.gif">
+*/
+//End_Html
+//
+//Begin_Html
+/*
+<img src="gif/t_trapdivZ.gif">
 */
 //End_Html
 
@@ -81,7 +87,13 @@ ClassImp(TGeoArb8)
 ////////////////////////////////////////////////////////////////////////////
 //Begin_Html
 /*
-<img src="gif/TGeoGtra.gif">
+<img src="gif/t_gtra.gif">
+*/
+//End_Html
+//
+//Begin_Html
+/*
+<img src="gif/t_gtradivstepZ.gif">
 */
 //End_Html
 

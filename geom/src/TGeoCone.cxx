@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.18 2003/02/11 12:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.19 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -27,7 +27,24 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoCone.gif">
+<img src="gif/t_cone.gif">
+*/
+//End_Html
+//
+//Begin_Html
+/*
+<img src="gif/t_conedivR.gif">
+*/
+//End_Html
+//
+//Begin_Html
+/*
+<img src="gif/t_conedivPHI.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_conedivZ.gif">
 */
 //End_Html
 
@@ -40,7 +57,13 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoCons.gif">
+<img src="gif/t_coneseg.gif">
+*/
+//End_Html
+//
+//Begin_Html
+/*
+<img src="gif/t_conesegdivstepZ.gif">
 */
 //End_Html
 
@@ -386,7 +409,7 @@ TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             Double_t rmax1n = 0.5*(fRmax1*(fDz-z1)+fRmax2*(fDz+z1))/fDz;
             Double_t rmin2n = 0.5*(fRmin1*(fDz-z2)+fRmin2*(fDz+z2))/fDz;
             Double_t rmax2n = 0.5*(fRmax1*(fDz-z2)+fRmax2*(fDz+z2))/fDz;
-            shape = new TGeoCone(rmin1n, rmax1n, rmin2n, rmax2n, step/2); 
+            shape = new TGeoCone(0.5*step,rmin1n, rmax1n, rmin2n, rmax2n); 
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             vmulti->AddVolume(vol);
             opt = "Z";
@@ -564,7 +587,8 @@ Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmi
         saf[0] = dz + point[2];
         break;
      case 3: // skip both
-        saf[0] = kBig;   
+        saf[0] = kBig;
+        break;   
      default:
         saf[0] = dz-TMath::Abs(point[2]);         
    }

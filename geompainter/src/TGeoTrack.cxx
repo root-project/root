@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.1 2003/05/07 13:32:39 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -303,15 +303,14 @@ void TGeoTrack::Draw(Option_t *option)
 }      
 
  //______________________________________________________________________________
-void TGeoTrack::ExecuteEvent(Int_t event, Int_t px, Int_t py)     
+void TGeoTrack::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)     
 {
    if (!gPad) return;
    gPad->SetCursor(kHand);
-
 }
 
 //______________________________________________________________________________
-char *TGeoTrack::GetObjectInfo(Int_t px, Int_t py) const
+char *TGeoTrack::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
    static char info[128];
    Double_t x=0,y=0,z=0,t=0;
@@ -577,7 +576,7 @@ void TGeoTrack::PaintTrack(Option_t *option)
 }
    
 //______________________________________________________________________________
-void TGeoTrack::Print(Option_t *option) const
+void TGeoTrack::Print(Option_t */*option*/) const
 {
    Int_t np = fNpoints>>2;
    printf(" TGeoTrack%6i : %s  ===============================\n", fId,GetName());

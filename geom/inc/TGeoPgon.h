@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.6 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.7 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -32,7 +32,7 @@ class TGeoPgon : public TGeoPcon
 {
 protected:
    // data members
-   Int_t                 fNedges;    // number of z planes (at least two)
+   Int_t                 fNedges;    // number of edges (at least one)
 public:
    // constructors
    TGeoPgon();

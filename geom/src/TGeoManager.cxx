@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.50 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.51 2003/05/07 13:32:39 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -531,6 +531,8 @@ void TGeoManager::Init()
    fNsegments = 20;
    fCurrentMatrix = 0;
    fUniqueVolumes = new TObjArray(256);
+   fNodeIdArray = 0;
+   printf("===> %s, %s created\n", GetName(), GetTitle());
 }
 
 //_____________________________________________________________________________
@@ -554,13 +556,14 @@ TGeoManager::~TGeoManager()
    }
    delete [] fBits;
    if (fCache) delete fCache;
-   if (fMatrices) {fMatrices->Delete(); delete fMatrices;}
    if (fNodes) delete fNodes;
    if (fOverlaps) {fOverlaps->Delete(); delete fOverlaps;}
    if (fMaterials) {fMaterials->Delete(); delete fMaterials;}
    if (fMedia) {fMedia->Delete(); delete fMedia;}
    if (fShapes) {fShapes->Delete(); delete fShapes;}
    if (fVolumes) {fVolumes->Delete(); delete fVolumes;}   
+   fVolumes = 0;
+   if (fMatrices) {fMatrices->Delete(); delete fMatrices;}
    if (fTracks) {fTracks->Delete(); delete fTracks;}   
    if (fUniqueVolumes) delete fUniqueVolumes;
    if (fPdgNames) {fPdgNames->Delete(); delete fPdgNames;}
@@ -645,26 +648,24 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
    Int_t uid = fUniqueVolumes->GetEntriesFast();
    if (!fCurrentVolume) {
       fCurrentVolume = volume;
-      volume->SetNumber(uid);
       fUniqueVolumes->AddAtAndExpand(volume,uid);
    } else {      
       if (!strcmp(volume->GetName(), fCurrentVolume->GetName())) {
          uid = fCurrentVolume->GetNumber();
-         volume->SetNumber(uid);
       } else {
+         fCurrentVolume = volume;
          Int_t olduid = GetUID(volume->GetName());
          if (olduid<0) {
-            volume->SetNumber(uid);
-	    fUniqueVolumes->AddAtAndExpand(volume,uid);
-	    fCurrentVolume = volume;
+	         fUniqueVolumes->AddAtAndExpand(volume,uid);
          } else {
             uid = olduid;
-            volume->SetNumber(uid);
          }
       }
-   }      	 	    	          
+   }
+   volume->SetNumber(uid);      	 	    	          
    TObjArray *list = fVolumes;
-   if (volume->IsRunTime()) list = fGVolumes;
+   if (!volume->GetShape()) list=fGVolumes;
+   else if (volume->IsRunTime() || volume->IsVolumeMulti()) list = fGVolumes;
    Int_t index = list->GetEntriesFast();
    list->AddAtAndExpand((TGeoVolume*)volume,index);
    return uid;
@@ -714,6 +715,24 @@ void TGeoManager::BuildCache(Bool_t dummy)
 }
 
 //_____________________________________________________________________________
+void TGeoManager::BuildIdArray()
+{
+// Builds node id array.
+   if (fCache) fCache->BuildIdArray();
+}
+
+//_____________________________________________________________________________
+void TGeoManager::RegisterMatrix(const TGeoMatrix *matrix)
+{
+// Register a matrix to the list of matrices. It will be cleaned-up at the
+// destruction TGeoManager.
+   if (matrix->IsRegistered()) return;
+   TGeoMatrix *mat = (TGeoMatrix*)matrix;
+   Int_t nmat = fMatrices->GetEntriesFast();
+   fMatrices->AddAtAndExpand(mat, nmat);
+}
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t iaxis,
                                   Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
@@ -757,14 +776,15 @@ void TGeoManager::Matrix(Int_t index, Double_t theta1, Double_t phi1,
    
    char name[50];
    sprintf(name,"rot%d",index);
-   new TGeoRotation(name,theta1,phi1,theta2,phi2,theta3,phi3);
+   TGeoRotation * rot = new TGeoRotation(name,theta1,phi1,theta2,phi2,theta3,phi3);
+   rot->SetUniqueID(index);
 }
 
 //_____________________________________________________________________________
-TGeoMaterial *TGeoManager::Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid)      
+TGeoMaterial *TGeoManager::Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid,Double_t radlen, Double_t intlen)      
 {
 // Create material with given A, Z and density, having an unique id.
-   TGeoMaterial *material = new TGeoMaterial(name,a,z,dens);
+   TGeoMaterial *material = new TGeoMaterial(name,a,z,dens,radlen,intlen);
    material->SetUniqueID(uid);
    return material;
 }
@@ -927,7 +947,19 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       vmulti->AddVolume(volume);
    }
    if (irot) {
-      TGeoRotation *matrix = (TGeoRotation*)fMatrices->At(irot);
+      TGeoRotation *matrix = 0;
+      TGeoMatrix *mat;
+      TIter next(fMatrices);
+      while ((mat=(TGeoMatrix*)next())) {
+         if (mat->IsRotation() && mat->GetUniqueID()==UInt_t(irot)) {
+            matrix = (TGeoRotation*)mat;
+            break;
+         }
+      }      
+      if (!matrix) {
+         Error("Node", "rotation %i not found", irot);
+         return;
+      }   
       if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
       else        amother->AddNodeOverlap(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
    } else {
@@ -1042,7 +1074,19 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       vmulti->AddVolume(volume);
    }
    if (irot) {
-      TGeoRotation *matrix = (TGeoRotation*)fMatrices->At(irot);
+      TGeoRotation *matrix = 0;
+      TGeoMatrix *mat;
+      TIter next(fMatrices);
+      while ((mat=(TGeoMatrix*)next())) {
+         if (mat->IsRotation() && mat->GetUniqueID()==UInt_t(irot)) {
+            matrix = (TGeoRotation*)mat;
+            break;
+         }
+      }      
+      if (!matrix) {
+         Error("Node", "rotation %i not found", irot);
+         return;
+      }   
       if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
       else        amother->AddNodeOverlap(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
    } else {
@@ -1258,6 +1302,10 @@ void TGeoManager::CloseGeometry(Option_t *option)
 // with negative parameters (run-time shapes)building the cache manager,
 // voxelizing all volumes, counting the total number of physical nodes and
 // registring the manager class to the browser.
+   if (IsClosed()) {
+      Warning("CloseGeometry", "geometry already closed");
+      return;
+   }   
    gROOT->GetListOfBrowsables()->Add(this);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
@@ -1286,6 +1334,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
          Voxelize("ALL");
          if (!fCache) BuildCache(dummy);
       }
+//      BuildIdArray();
       printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
       printf("----------------modeler ready----------------\n");
       return;
@@ -1296,6 +1345,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    CheckGeometry();
    printf("Counting nodes...\n");
    fNNodes = CountNodes();
+//   BuildIdArray();
    Voxelize("ALL");
    printf("Building caches for nodes and matrices...\n");
    BuildCache(dummy);
@@ -1332,6 +1382,21 @@ void TGeoManager::CleanGarbage()
    fGVolumes->Delete();
    fGShapes->Delete();
 }
+
+//_____________________________________________________________________________
+void TGeoManager::CdNode(Int_t nodeid)
+{
+// Change current path to point to the node having this id.
+// Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
+   fCache->CdNode(nodeid);
+}
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetCurrentNodeId() const
+{
+   return fCache->GetCurrentNodeId();
+}
+
 //_____________________________________________________________________________
 void TGeoManager::CdTop()
 {
@@ -2661,11 +2726,9 @@ Int_t TGeoManager::GetUID(const char *volname) const
 {
 // Retreive unique id for a volume name. Return -1 if name not found.
    TIter next(fUniqueVolumes);
-   Int_t uid = 0;
-   TNamed *nvol;
-   while ((nvol=(TNamed*)next())) {
-      if (!strcmp(nvol->GetName(), volname)) return uid;
-      uid++;
+   TGeoVolume *vol;
+   while ((vol=(TGeoVolume*)next())) {
+      if (!strcmp(vol->GetName(), volname)) return vol->GetNumber();
    }
    return -1;
 }          

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.31 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.32 2003/05/07 13:32:39 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -105,8 +105,11 @@ private :
    TGeoHMatrix          *fCurrentMatrix;    //! current global matrix
    TObjArray            *fUniqueVolumes;    //-> list of unique volumes
 
+   Int_t                *fNodeIdArray;      //! array of node id's
+
 //--- private methods
    void                   BuildCache(Bool_t dummy=kFALSE);
+   void                   BuildIdArray();
    TGeoNode              *FindInCluster(Int_t *cluster, Int_t nc);
    Int_t                  GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
                                             Int_t ncheck, Int_t *result);
@@ -129,10 +132,12 @@ public:
    Int_t                  AddTrack(Int_t id, Int_t pdgcode, TObject *particle=0);
    Int_t                  AddVolume(TGeoVolume *volume);
    void                   ClearOverlaps();
+   void                   RegisterMatrix(const TGeoMatrix *matrix);
    void                   SortOverlaps();
    //--- browsing and tree navigation
    void                   Browse(TBrowser *b);
    virtual Bool_t         cd(const char *path=""); // *MENU*
+   void                   CdNode(Int_t nodeid);
    void                   CdDown(Int_t index);
    void                   CdUp();
    void                   CdTop();
@@ -195,7 +200,7 @@ public:
    void                   Matrix(Int_t index, Double_t theta1, Double_t phi1, 
                                        Double_t theta2, Double_t phi2, 
                                        Double_t theta3, Double_t phi3); 
-   TGeoMaterial          *Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid);
+   TGeoMaterial          *Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid, Double_t radlen=0, Double_t intlen=0);
    TGeoMaterial          *Mixture(const char *name, Float_t *a, Float_t *z, Double_t dens,
                                         Int_t nelem, Float_t *wmat, Int_t uid);
    TGeoMaterial          *Mixture(const char *name, Double_t *a, Double_t *z, Double_t dens,
@@ -345,6 +350,7 @@ public:
    TGeoHMatrix           *GetHMatrix();
    TGeoHMatrix           *GetCurrentMatrix() const    {return fCache->GetCurrentMatrix();}
    TGeoNode              *GetCurrentNode() const      {return fCurrentNode;}
+   Int_t                  GetCurrentNodeId() const;
    Double_t              *GetCurrentPoint() const     {return fPoint;}
    Double_t              *GetCurrentDirection() const {return fDirection;}
    TGeoVolume            *GetCurrentVolume() const {return fCurrentNode->GetVolume();}

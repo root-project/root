@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.26 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.27 2003/05/07 13:32:39 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -99,9 +99,10 @@ public:
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    Bool_t          IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
-   virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat=0, Option_t *option="");       // most general case
+   virtual Bool_t  IsVolumeMulti() const {return kFALSE;}
+   virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");       // most general case
    void            AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t offset=0, Option_t *option="");
-   virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat=0, Option_t *option="");
+   virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");
 
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
@@ -201,8 +202,8 @@ public:
 
    void            AddVolume(TGeoVolume *vol);
    TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
-   virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option="");       // most general case
-   virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option="");
+   virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
+   virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    TGeoShape      *GetLastShape() const {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();}
    Int_t           GetNvolumes() const {return fVolumes->GetEntriesFast();}
@@ -210,6 +211,7 @@ public:
    Int_t           GetNdiv() const {return fNdiv;}
    Double_t        GetStart() const {return fStart;}
    Double_t        GetStep() const {return fStep;}
+   virtual Bool_t  IsVolumeMulti() const {return kTRUE;}
    virtual TGeoVolume *MakeCopyVolume(TGeoShape *newshape);
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.14 2003/02/11 12:17:20 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.15 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -100,8 +100,11 @@ protected:
    Int_t                 fGeoCacheObjArrayInd; // maximum number of daughters stored as node arrays
    Int_t                 fGeoCacheStackSize;   // maximum size of the stack
    Int_t                 fLevel;            // level in the current branch
+   Int_t                 fCurrentID;        // unique ID of current node
    TString               fPath;             // path for current branch
    TObjArray            *fStack;            // stack of cache states
+   Int_t                *fNodeIdArray;      //! array of node id's
+   Int_t                 fIndex;            // index in array of ID's
 
 private:
    Int_t                 fSize;             // current size of the cache
@@ -121,6 +124,7 @@ private:
 
 protected:
    TGeoMatrixCache      *fMatrixPool;       // pool of compressed global matrices
+   Int_t                 fIdBranch[30];     // current branch of indices
 
 public:
    TGeoNodeCache();
@@ -128,10 +132,12 @@ public:
    virtual ~TGeoNodeCache();
 
    Int_t                AddNode(TGeoNode *node);
+   void                 BuildIdArray();
    Int_t                CacheId(Int_t nindex) const
                          {return (*((UChar_t*)&nindex+3)>fGeoCacheMaxDaughters)?
                                  fGeoCacheObjArrayInd:*((UChar_t*)&nindex+3);}
    void                 CdCache();
+   void                 CdNode(Int_t nodeid);
    virtual Bool_t       CdDown(Int_t index, Bool_t make=kTRUE);
    virtual void         CdTop() {fLevel=1; CdUp();}
    virtual void         CdUp();
@@ -148,6 +154,7 @@ public:
    virtual void        *GetMatrices() const {return fMatrices;}
    virtual TGeoHMatrix *GetCurrentMatrix() const;
    Int_t                GetCurrentNode() const {return fCurrentNode;}
+   Int_t                GetCurrentNodeId() const {return fNodeIdArray[fIndex];}
    virtual TGeoNode    *GetMother(Int_t up=1) const;
    virtual TGeoNode    *GetNode() const;
    Int_t                GetStackLevel() const  {return fStackLevel;}
@@ -205,7 +212,7 @@ public:
    virtual ~TGeoCacheDummy();
 
    virtual Bool_t       CdDown(Int_t index, Bool_t make=kTRUE);
-   virtual void         CdTop() {fLevel=0; fNode=fTop; fMatrix=fMatrixBranch[0];}
+   virtual void         CdTop() {fIndex=0; fLevel=0; fNode=fTop; fMatrix=fMatrixBranch[0];}
    virtual void         CdUp();
    virtual void         CleanCache() {;}
    virtual void         ClearDaughter(Int_t /*index*/) {;}

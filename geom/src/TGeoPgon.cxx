@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.21 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.22 2003/04/17 15:51:13 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -30,7 +30,12 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoPgon.gif">
+<img src="gif/t_pgon.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_pgondivZ.gif">
 */
 //End_Html
    
@@ -887,6 +892,8 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
                if ((start+ndiv*step)>fZ[ipl+1]) continue;
             }
             isect = ipl;
+            zmin = fZ[isect];
+            zmax = fZ[isect+1];
             break;
          }
          if (isect<0) {
@@ -982,13 +989,20 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
    Double_t safe, dz;
    Int_t i;
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (ipl>1) {
+      if(fZ[ipl]==fZ[ipl-1] && point[2]==fZ[ipl]) ipl--;
+   }   
    for (i=0; i<5; i++) saf[i]=kBig;
+   Double_t ssp[2];
+   ssp[0] = ssp[1] = TGeoShape::kBig;
    if (in) {
       //---> first locate Z segment and compute Z safety
       if (ipl==(fNz-1)) return 0;
       if (ipl<0) return 0;
       dz = fZ[ipl+1]-fZ[ipl];
-      if (dz<1E-10) return 0;
+      if (dz<1E-6) {
+         if (fRmin[ipl]>0) return 0;
+      }
       if (ipl==0) {
          saf[0] = point[2]-fZ[0];
          if (saf[0]<1E-4) return saf[0];
@@ -1023,18 +1037,18 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
          if (ipl>1) {
             if (fZ[ipl]==fZ[ipl-1]) {
                if (fRmin[ipl]>fRmin[ipl-1] || fRmax[ipl]<fRmax[ipl-1]) {
-                  saf[0] = point[2]-fZ[ipl];
-                  if (saf[0]<1E-4) return saf[0];
-                  saf[0] = -saf[0];
+                  ssp[0] = point[2]-fZ[ipl];
+                  if (ssp[0]<1E-4) return ssp[0];
+//                  saf[0] = -saf[0];
                }
             }
          }
          if (ipl<fNz-3) {
             if (fZ[ipl+1]==fZ[ipl+2]) {
                if (fRmin[ipl+1]>fRmin[ipl+2] || fRmax[ipl+1]<fRmax[ipl+2]) {
-                  saf[1] = fZ[ipl+1]-point[2];
-                  if (saf[1]<1E-4) return saf[1];
-                  saf[1] = -saf[1];         
+                  ssp[1] = fZ[ipl+1]-point[2];
+                  if (ssp[1]<1E-4) return ssp[1];
+//                  saf[1] = -saf[1];         
                }
             }
          }
@@ -1085,6 +1099,7 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
    if (in) return saf[TMath::LocMin(5,saf)];
    for (i=0; i<5; i++) saf[i]=-saf[i];
    safe = saf[TMath::LocMax(5,saf)];
+   safe = TMath::Min(safe, TMath::Min(ssp[0],ssp[1]));
    return safe;
 }
 //-----------------------------------------------------------------------------

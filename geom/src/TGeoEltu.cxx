@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.8 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.9 2003/03/14 11:49:02 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -23,7 +23,7 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoEltu.gif">
+<img src="gif/t_eltu.gif">
 */
 //End_Html
 

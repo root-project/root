@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.16 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.17 2003/04/17 15:51:13 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -26,7 +26,25 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoTrd1.gif">
+<img src="gif/t_trd1.gif">
+*/
+//End_Html
+
+//Begin_Html
+/*
+<img src="gif/t_trd1divY.gif">
+*/
+//End_Html
+
+//Begin_Html
+/*
+<img src="gif/t_trd1divZ.gif">
+*/
+//End_Html
+
+//Begin_Html
+/*
+<img src="gif/t_trd1divstepZ.gif">
 */
 //End_Html
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.16 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.17 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -12,57 +12,53 @@
 ////////////////////////////////////////////////////////////////////////////////
 // TGeoNode
 //_________
-//   Nodes are positioned volumes. They have a pointer to the corresponding
-// volume. Nodes always belong to a mother container volume, so they also
-// have a pointer to this. The base class for nodes is TGeoNode, describing only
-// the logical tree. The position of the node with respect to its mother is
-// defined by classes deriving from TGeoNode and is stored as a transformation
-// matrix by TGeoNodeMatrix or just an offset by division nodes (TGeoNodeXXX).
-//   Nodes are invisible to user at build time : to create a node one has only
-// to call TGeoVolume::AddNode() or TGeoVolume::Divide() methods. In the first
-// case, the volume pointed by the node and the geometrical transformation with
-// respect to the mother must be created a priori :
+//   A node represent a volume positioned inside another.They store links to both
+// volumes and to the TGeoMatrix representing the relative positioning. Node are
+// never instanciated directly by users, but created as a result of volume operations.
+// Adding a volume named A with a given user ID inside a volume B will create a node 
+// node named A_ID. This will be added to the list of nodes stored by B. Also,
+// when applying a division operation in N slices to a volume A, a list of nodes
+// B_1, B_2, ..., B_N is also created. A node B_i does not represent a unique
+// object in the geometry because its container A might be at its turn positioned
+// as node inside several other volumes. Only when a complete branch of nodes
+// is fully defined up to the top node in the geometry, a given path like:
+//       /TOP_1/.../A_3/B_7 will represent an unique object. Its global transformation
+// matrix can be computed as the pile-up of all local transformations in its
+// branch. We will therefore call "logical graph" the hierarchy defined by nodes
+// and volumes. The expansion of the logical graph by all possible paths defines
+// a tree sructure where all nodes are unique "touchable" objects. We will call
+// this the "physical tree". Unlike the logical graph, the physical tree can
+// become a huge structure with several milions of nodes in case of complex
+// geometries, therefore it is not always a good idea to keep it transient
+// in memory. Since a the logical and physical structures are correlated, the
+// modeller rather keeps track only of the current branch, updating the current
+// global matrix at each change of the level in geometry. The current physical node
+// is not an object that can be asked for at a given moment, but rather represented
+// by the combination: current node + current global matrix. However, physical nodes
+// have unique ID's that can be retreived for a given modeler state. These can be
+// fed back to the modeler in order to force a physical node to become current.
+// The advantage of this comes from the fact that all navigation queries check
+// first the current node, therefore knowing the location of a point in the 
+// geometry can be saved as a starting state for later use.
 //
-//   TGeoVolume *vol = new TGeoSphere("SPH", 200, 400);
-//   TGeoVolume *mother = gGeoManager->MakeBox("HALL", "mat1", 1000, 1000, 3000);
-//   TGeoTranslation *t1 = new TGeoTranslation(0, 0, 300);
-//   mother->AddNode(vol, t1);
+//   Nodes can be declared as "overlapping" in case they do overlap with other
+// nodes inside the same container or extrude this container. Non-overlapping
+// nodes can be created with:
 //
-//   The last line will create a branch : HALL->SPH . A node named SPH:0 will
-// be created. If trying to place the same volume many times inside the same
-// mother, the automatic naming scheme for the corresponding nodes is just
-// appending <:copy_number> to the name of the volume. Therefore :
+//      TGeoVolume::AddNode(TGeoVolume *daughter, Int_t copy_No, TGeoMatrix *matr);
 //
-//   TGeoTranslation *t2 = new TGeoTranslation(0,0,-300);
-//   mother->AddNode(vol, t2);
+// The creation of overapping nodes can be done with a similar prototype:
 //
-// will create a TGeoNodeMatrix named SPH:1 inside HALL.
+//      TGeoVolume::AddNodeOverlap(same arguments);
 //
-//   When creating division nodes (TGeoVolume::Divide()), one has to specify the
-// number of divisions, optionally the range for dividing and an string option
-// specifying the division type. A list of TGeoNodeOffset will be generated :
+// When closing the geometry, overlapping nodes perform a check of possible
+// overlaps with their neighbours. These are stored and checked all the time
+// during navigation, therefore navigation is slower when embedding such nodes
+// into geometry.
 //
-//   mother->Divide(5, "X");
-//
-// will create five TGeoNodeOffset nodes, pointing to the same basic cell volume
-// which is automatically generated :
-//
-//   HALL:0 --|
-//   HALL:1 --|
-//   HALL:2 --|---> HALL_C = gGeoManager->MakeBox("HALL_C", "mat1", 200, 1000, 3000)
-//   HALL:3 --|
-//   HALL:4 --|
-//
-//   One can subsequently add usual nodes inside HALL_C cell or divide it, and the
-// action will affect all nodes HALL:i .
-//   If the basic cell volumes coming from a division operation are not identical,
-// a volume will be generated per division node, and the naming sheme for them
-// will be HALL_d1, HALL_d2, ... .
-//
-// Browsing nodes. (to be added)
-//
-// Node flags.(to be added)
-//
+//   Node have visualization attributes as volume have. When undefined by users,
+// painting a node on a pad will take the corresponding volume attributes.
+// 
 //Begin_Html
 /*
 <img src="gif/t_node.jpg">
@@ -202,6 +198,24 @@ void TGeoNode::DrawOverlaps()
    }
    gGeoManager->GetTopVolume()->Draw();
 }
+
+//_____________________________________________________________________________
+void TGeoNode::FillIdArray(Int_t &ifree, Int_t &nodeid, Int_t *array) const
+{
+// Fill array with node id. Recursive on node branch.
+   Int_t nd = GetNdaughters();
+   if (!nd) return;
+   TGeoNode *daughter;
+   Int_t istart = ifree; // start index for daughters
+   ifree += nd;
+   for (Int_t id=0; id<nd; id++) {
+      daughter = GetDaughter(id);
+      array[istart+id] = ifree;
+      array[ifree++] = ++nodeid;
+      daughter->FillIdArray(ifree, nodeid, array);
+   }
+}      
+   
 
 //_____________________________________________________________________________
 Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
@@ -433,8 +447,9 @@ TGeoNodeMatrix::TGeoNodeMatrix()
 TGeoNodeMatrix::TGeoNodeMatrix(const TGeoVolume *vol, const TGeoMatrix *matrix) :
              TGeoNode(vol)
 {
-// Constructor. Null pointer to matrix means identity transformation
+// Constructor. 
    fMatrix = (TGeoMatrix*)matrix;
+   if (!fMatrix) fMatrix = gGeoIdentity;
 }
 
 //_____________________________________________________________________________

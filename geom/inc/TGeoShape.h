@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.9 2003/02/10 17:23:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.10 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -111,6 +111,7 @@ public:
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const  = 0;
    virtual const char   *GetName() const;
    static Int_t          GetVertexNumber(Bool_t vx, Bool_t vy, Bool_t vz);
+   virtual Bool_t        IsComposite() const {return kFALSE;}
    virtual Bool_t        IsCylType() const = 0;
    Bool_t                IsRunTimeShape() const {return TestBit(kGeoRunTimeShape);}
    Bool_t                IsValid() const {return !TestBit(kGeoInvalidShape);}

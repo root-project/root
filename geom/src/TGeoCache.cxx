@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.17 2003/02/17 13:40:22 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.18 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -61,10 +61,14 @@ TGeoNodeCache::TGeoNodeCache()
    fCurrentNode = 0;
    fCurrentCache = 0;
    fCurrentIndex = 0;
+   fCurrentID   = 0;
    fBranch      = 0;
    fMatrices    = 0;
    fGlobalMatrix= 0;
    fMatrixPool  = 0;
+   fNodeIdArray = 0;
+   fIndex = 0;
+   BuildIdArray();
 }
 
 //_____________________________________________________________________________
@@ -100,6 +104,7 @@ TGeoNodeCache::TGeoNodeCache(Int_t /*size*/)
       fCurrentCache = fGeoCacheObjArrayInd;
    fBranch = new Int_t[fGeoCacheMaxLevels];
    memset(fBranch, 0, fGeoCacheMaxLevels*sizeof(Int_t));
+   memset(fIdBranch, 0, 30*sizeof(Int_t));
    fMatrices = new Int_t[fGeoCacheMaxLevels];
    memset(fMatrices, 0, fGeoCacheMaxLevels*sizeof(Int_t));
    fGlobalMatrix = new TGeoHMatrix("current_global");
@@ -112,6 +117,10 @@ TGeoNodeCache::TGeoNodeCache(Int_t /*size*/)
       fStack->Add(new TGeoCacheState(100)); // !obsolete 100
    printf("### nodes stored in cache %i ###\n", fSize);
    fMatrixPool = new TGeoMatrixCache(0);
+   fCurrentID   = 0;
+   fNodeIdArray = 0;
+   fIndex = 0;
+   BuildIdArray();
    CdTop();
 }
 
@@ -130,6 +139,19 @@ TGeoNodeCache::~TGeoNodeCache()
       fStack->Delete();
       delete fStack;
    }   
+   if (fNodeIdArray) delete [] fNodeIdArray;
+}
+
+//_____________________________________________________________________________
+void TGeoNodeCache::BuildIdArray()
+{
+// Builds node id array.
+   if (fNodeIdArray) delete [] fNodeIdArray;
+   fNodeIdArray = new Int_t[2*gGeoManager->GetNNodes()+1];
+   fNodeIdArray[0] = 0;
+   Int_t ifree  = 1;
+   Int_t nodeid = 0;
+   gGeoManager->GetTopNode()->FillIdArray(ifree, nodeid, fNodeIdArray);
 }
 
 //_____________________________________________________________________________
@@ -176,6 +198,44 @@ Int_t TGeoNodeCache::AddNode(TGeoNode *node)
 //}
 
 //_____________________________________________________________________________
+void TGeoNodeCache::CdNode(Int_t nodeid) {
+// Change current path to point to the node having this id.
+// Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
+   Int_t *arr = fNodeIdArray;
+   if (nodeid == arr[fIndex]) return;
+   while (fLevel>0) {
+      gGeoManager->CdUp();
+      if (nodeid == arr[fIndex]) return;
+   }   
+   gGeoManager->CdTop();
+   Int_t currentID = 0;
+   Int_t nd = GetNode()->GetNdaughters();
+//   printf("%s nd=%d current=%d fIndex=%d\n", GetNode()->GetName(),nd,currentID,fIndex);
+   Int_t nabove, nbelow, middle;
+   while (nodeid!=currentID && nd) {
+      nabove = nd+1;
+      nbelow = 0;
+//      for (Int_t j=0; j<nd; j++) printf("   %d id=%d\n", j, arr[fIndex+j+1]);
+      while (nabove-nbelow > 1) {
+         middle = (nabove+nbelow)>>1;
+         currentID = arr[arr[fIndex+middle]];
+//         printf("   nabove=%d nbelow=%d, middle=%d cid=%d\n", nabove,nbelow,middle,currentID);
+         if (nodeid == currentID) {
+            gGeoManager->CdDown(middle-1);
+//            printf("final id : %d\n", nodeid);
+            return;
+         }
+         if (nodeid < currentID) nabove = middle;
+         else                    nbelow = middle;
+      }
+      gGeoManager->CdDown(nbelow-1);
+      currentID = arr[fIndex];
+//      printf("current=%d\n", currentID);
+      nd = GetNode()->GetNdaughters();   
+   }
+}   
+ 
+//_____________________________________________________________________________
 Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
 {
 // make daughter 'index' of current node current
@@ -199,6 +259,8 @@ Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
    }
    // make daughter current 
    fBranch[++fLevel] = nind_d;
+   fIndex = fNodeIdArray[fIndex+index+1];
+   fIdBranch[fLevel] = fIndex;
    fCurrentNode = nind_d;
    fCurrentCache = CacheId(nind_d);
    fCurrentIndex = Index(nind_d);
@@ -236,6 +298,7 @@ void TGeoNodeCache::CdUp()
 // change current path to mother.
    if (!fLevel) return;
    fLevel--;
+   fIndex = fIdBranch[fLevel];
    fCurrentNode = fBranch[fLevel];
    fCurrentCache = CacheId(fCurrentNode);
    fCurrentIndex = Index(fCurrentNode);
@@ -509,6 +572,8 @@ Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
    *newmat = fMatrix;
    newmat->Multiply(local);
    fLevel++;
+   fIndex = fNodeIdArray[fIndex+index+1];
+   fIdBranch[fLevel] = fIndex;
    fMatrix = newmat;
    fNode = newnode;
    fNodeBranch[fLevel] = fNode;
@@ -521,6 +586,7 @@ void TGeoCacheDummy::CdUp()
 {
    if (!fLevel) return;
    fLevel--;
+   fIndex = fIdBranch[fLevel];
    fNode = fNodeBranch[fLevel];
    fMatrix = fMatrixBranch[fLevel];
 }

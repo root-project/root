@@ -1,5 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.19 2003/03/14 11:49:02 brun Exp $
-// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.20 2003/06/04 07:05:41 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -26,11 +25,6 @@
  *      fOrigin[3]    - position of box origin
  *
  *************************************************************************/
-//Begin_Html
-/*
-<img src="gif/TGeoBBox.gif">
-*/
-//End_Html
 
 //--- Building boxes
 //  ==================
@@ -43,10 +37,45 @@
 // further positioning of other shapes inside. Therefore in order to build a
 // positioned box one should follow the recipe described in class TGeoNode.
 //
-//   Fast build of box volumes : TGeoManager::MakeBox()
+// Creation of boxes
+// 1.   TGeoBBox *box = new TGeoBBox("BOX", 20, 30, 40);
+//Begin_Html
+/*
+<img src="gif/t_box.gif">
+*/
+//End_Html
 //
+// 2. A volume having a box shape can be built in one step:
+//      TGeoVolume *vbox = gGeoManager->MakeBox("vbox", ptrMed, 20,30,40);
+//
+// Divisions of boxes.
+//
+//   Volumes having box shape can be divided with equal-length slices on 
+// X, Y or Z axis. The following options are supported:
+// a) Dividing the full range of one axis in N slices
+//      TGeoVolume *divx = vbox->Divide("SLICEX", 1, N);
+//   - here 1 stands for the division axis (1-X, 2-Y, 3-Z)
+//Begin_Html
+/*
+<img src="gif/t_boxdivX.gif">
+*/
+//End_Html
+//
+// b) Dividing in a limited range - general case.
+//      TGeoVolume *divy = vbox->Divide("SLICEY",2,N,start,step);
+//   - start = starting offset within (-fDY, fDY)
+//   - step  = slicing step
+//
+//Begin_Html
+/*
+<img src="gif/t_boxdivstepZ.gif">
+*/
+//End_Html
+//
+// Both cases are supported by all shapes.
 //   See also class TGeoShape for utility methods provided by any particular 
 // shape.
+
 //------------------------------------------------------------------------------
 ClassImp(TGeoBBox)
    

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.27 2003/02/17 11:57:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.28 2003/02/18 15:37:36 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -11,15 +11,56 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-// A simple geometry checker. Points can be randomly generated inside the 
-// bounding  box of a node. For each point the distance to the nearest surface
-// and the corresponting point on that surface are computed. These points are 
-// stored in a tree and can be directly visualized within ROOT
-// A second algoritm is shooting multiple rays from a given point to a geometry
-// branch and storing the intersection points with surfaces in same tree. 
-// Rays can be traced backwords in order to find overlaps by comparing direct 
-// and inverse points.
-//Begin_Html
+//   Geometry checking package.
+//
+// TGeoChecker class provides several geometry checking methods. There are two
+// types of tests that can be performed. One is based on random sampling or
+// ray-tracing and provides a visual check on how navigation methods work for
+// a given geometry. The second actually checks the validity of the geometry
+// definition in terms of overlapping/extruding objects. Both types of checks
+// can be done for a given branch (starting with a given volume) as well as for 
+// the geometry as a whole.
+//
+// 1. TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z)
+//
+// This method can be called direcly from the TGeoManager class and print a
+// report on how a given point is classified by the modeller: which is the
+// full path to the deepest node containing it, and the (under)estimation 
+// of the distance to the closest boundary (safety).
+//
+// 2. TGeoChecker::RandomPoints(Int_t npoints)
+//
+// Can be called from TGeoVolume class. It first draws the volume and its
+// content with the current visualization settings. Then randomly samples points
+// in its bounding box, plotting in the geometry display only the points 
+// classified as belonging to visible volumes. 
+//
+// 3. TGeoChecker::RandomRays(Int_t nrays, Double_t startx, starty, startz)
+//
+// Can be called and acts in the same way as the previous, but instead of points,
+// rays having random isotropic directions are generated from the given point.
+// A raytracing algorithm propagates all rays untill they exit geometry, plotting
+// all segments crossing visible nodes in the same color as these.
+//
+// 4. TGeoChecker::Test(Int_t npoints)
+//
+// Implementation of TGeoManager::Test(). Computes the time for the modeller
+// to find out "Where am I?" for a given number of random points.
+//
+// 5. TGeoChecker::LegoPlot(ntheta, themin, themax, nphi, phimin, phimax,...)
+// 
+// Implementation of TGeoVolume::LegoPlot(). Draws a spherical radiation length 
+// lego plot for a given volume, in a given theta/phi range.
+//
+// 6. TGeoChecker::Weigth(Double_t precision)
+//
+// Implementation of TGeoVolume::Weigth(). Estimates the total weigth of a given 
+// volume by matrial sampling. Accepts as input the desired precision.
+//
+// Overlap checker
+//-----------------
+//
+//  -> add it from the doc.
 /*
 <img src="gif/t_checker.jpg">
 */
@@ -49,7 +90,6 @@ TGeoChecker::TGeoChecker()
 {
 // Default constructor
    fGeom = 0;
-   fTreePts      = 0; 
    fVsafe = 0;
 }
 //-----------------------------------------------------------------------------
@@ -57,7 +97,6 @@ TGeoChecker::TGeoChecker(TGeoManager *geom)
 {
 // Constructor for a given geometry
    fGeom = geom;
-   fTreePts = 0;
    fVsafe = 0;
 }
 //-----------------------------------------------------------------------------
@@ -65,7 +104,6 @@ TGeoChecker::TGeoChecker(const char * /*treename*/, const char * /*filename*/)
 {
 // constructor
    fGeom = gGeoManager;
-   fTreePts = 0;
    fVsafe = 0;
 }
 //-----------------------------------------------------------------------------
@@ -260,15 +298,24 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    TGeoShape *shapem = vol->GetShape();
    TGeoNode * node;
    TGeoMatrix *matrix;
-   X3DPoints *buff;
+   X3DPoints *buff, *buffm;
    Bool_t extrude, isextrusion, isoverlapping;
    TGeoOverlap *nodeovlp = 0;
    Bool_t ismany;
-   Double_t *points;
+   Double_t *points, *pointsm;
    Double_t local[3];
    Double_t point[3];
    Double_t safety = 1e30;  //TGeoShape::kBig
    Int_t id, ip;
+   // first, test if any of container vertices is inside some daughter
+   // first, test if daughters extrude their container
+   buffm = (X3DPoints*)vol->Make3DBuffer();
+   if (!buffm) {
+      Error("CheckOverlaps", "could not fill X3D buffer for volume %s", vol->GetName());
+      return;
+   }	       
+   pointsm = buffm->points;
+   
    for (id=0; id<nd; id++) {
       node = vol->GetNode(id);
       buff = (X3DPoints*)node->GetVolume()->Make3DBuffer();
@@ -280,16 +327,16 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
       ismany = node->IsOverlapping();
       points = buff->points;
       isextrusion=kFALSE;
-      // loop all points
+      // loop all points of the daughter
       for (ip=0; ip<buff->numPoints; ip++) {
          memcpy(local, &points[3*ip], 3*sizeof(Double_t));
-	       matrix->LocalToMaster(local, point);
-	       extrude = !shapem->Contains(point);
-	       if (extrude) {
-	          safety = shapem->Safety(point, kFALSE);
-	          if (safety<ovlp) extrude=kFALSE;
-	       }    
-	       if (extrude) {
+	      matrix->LocalToMaster(local, point);
+	      extrude = !shapem->Contains(point);
+	      if (extrude) {
+	         safety = shapem->Safety(point, kFALSE);
+	         if (safety<ovlp) extrude=kFALSE;
+	      }    
+	      if (extrude) {
             if (!isextrusion) {
                isextrusion = kTRUE;
                char *name = new char[20];
@@ -301,11 +348,42 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
                nodeovlp->SetNextPoint(point[0],point[1],point[2]);
             }   
-	       }
+	      }
       }	     
+      // loop all points of the mother
+      for (ip=0; ip<buffm->numPoints; ip++) {
+         memcpy(point, &pointsm[3*ip], 3*sizeof(Double_t));
+	      matrix->MasterToLocal(point, local);
+         extrude = node->GetVolume()->GetShape()->Contains(local);
+         if (extrude) {
+            // skip points on mother mesh that have no neghbourhood ouside mother
+            safety = shapem->Safety(point,kTRUE);
+            if (safety>1E-4) {
+               extrude = kFALSE;
+            } else {   
+               safety = node->GetVolume()->GetShape()->Safety(local,kTRUE);
+	            if (safety<ovlp) extrude=kFALSE;
+            }   
+         }   
+         if (extrude) {
+            if (!isextrusion) {
+               isextrusion = kTRUE;
+               char *name = new char[20];
+               sprintf(name,"%s_mo_%i", vol->GetName(),id); 
+               nodeovlp = new TGeoExtrusion(name, (TGeoVolume*)vol,id,safety);
+               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+               fGeom->AddOverlap(nodeovlp);
+            } else {
+               if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+            }   
+         }
+      }
       if (points) delete [] points;
       delete buff; 
    }
+   if (pointsm) delete [] pointsm;
+   delete buffm;   
    // now check if the daughters overlap with each other
    if (nd<2) return;
    TGeoVoxelFinder *vox = vol->GetVoxels();
@@ -1252,49 +1330,4 @@ Bool_t TGeoChecker::TestVoxels(TGeoVolume *vol, Int_t npoints)
    vol->SetCylVoxels(kTRUE);
    delete xyz;
    return kTRUE;      
-}
-//-----------------------------------------------------------------------------
-void TGeoChecker::CreateTree(const char * /*treename*/, const char * /*filename*/)
-{
-// These points are stored in a tree and can be directly visualized within ROOT.
-//Begin_Html
-/*
-<img src=".gif">
-*/
-//End_Html
-}
-//-----------------------------------------------------------------------------
-void TGeoChecker::Generate(UInt_t /*npoint*/)
-{
-// Points are randomly generated inside the 
-// bounding  box of a node. For each point the distance to the nearest surface
-// and the corresponding point on that surface are computed.
-//Begin_Html
-/*
-<img src=".gif">
-*/
-//End_Html
-}
-//-----------------------------------------------------------------------------
-void TGeoChecker::Raytrace(Double_t * /*startpoint*/, UInt_t /*npoints*/)
-{
-// A second algoritm is shooting multiple rays from a given point to a geometry
-// branch and storing the intersection points with surfaces in same tree. 
-// Rays can be traced backwords in order to find overlaps by comparing direct 
-// and inverse points.   
-//Begin_Html
-/*
-<img src=".gif">
-*/
-//End_Html
-}
-//-----------------------------------------------------------------------------
-void TGeoChecker::ShowPoints(Option_t * /*option*/)
-{
-// 
-//Begin_Html
-/*
-<img src=".gif">
-*/
-//End_Html
 }

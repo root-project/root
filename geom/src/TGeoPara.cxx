@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.13 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.14 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -28,7 +28,22 @@
 
 //Begin_Html
 /*
-<img src="gif/TGeoPara.gif">
+<img src="gif/t_para.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_paradivX.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_paradivY.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_paradivZ.gif">
 */
 //End_Html
 

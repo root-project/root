@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.21 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.22 2003/05/07 13:32:39 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -19,12 +19,42 @@
 
 /*************************************************************************
  * TGeoTube - cylindrical tube class. It takes 3 parameters : 
- * inner radius, outer radius and half-length dz. 
+ *            inner radius, outer radius and half-length dz. 
  *
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoTube.gif">
+<img src="gif/t_tube.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubedivR.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubedivstepR.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubedivPHI.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubedivstepPHI.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubedivZ.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubedivstepZ.gif">
 */
 //End_Html
 
@@ -37,7 +67,22 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoTubs.gif">
+<img src="gif/t_tubseg.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubsegdivstepR.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubsegdivPHI.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/t_tubsegdivZ.gif">
 */
 //End_Html
 
@@ -52,7 +97,7 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoCtub.gif">
+<img src="gif/t_ctub.gif">
 */
 //End_Html
 

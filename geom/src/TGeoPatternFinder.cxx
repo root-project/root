@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.5 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.6 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -92,6 +92,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions)
    fEnd = dx;
    fStep = 2*dx/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -103,6 +104,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fEnd = fStart + ndivisions*step;
    fStep       = step;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -113,6 +115,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternX::~TGeoPatternX()
@@ -152,6 +155,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions)
    fEnd = dy;
    fStep = 2*dy/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -163,6 +167,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fEnd = fStart + ndivisions*step;
    fStep       = step;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -173,6 +178,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternY::~TGeoPatternY()
@@ -212,6 +218,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions)
    fEnd = dz;
    fStep = 2*dz/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -223,6 +230,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fEnd = fStart + ndivisions*step;
    fStep       = step;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -233,6 +241,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternZ::~TGeoPatternZ()
@@ -272,6 +281,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions)
    fEnd = dx;
    fStep = 2*dx/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -283,6 +293,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fEnd = fStart + ndivisions*step;
    fStep       = step;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -293,6 +304,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaX::~TGeoPatternParaX()
@@ -338,6 +350,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions)
    fEnd = dy;
    fStep = 2*dy/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -350,6 +363,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fEnd = fStart + ndivisions*step;
    fStep       = step;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -361,6 +375,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaY::~TGeoPatternParaY()
@@ -414,6 +429,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions)
    fEnd = dz;
    fStep = 2*dz/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -427,6 +443,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fEnd = fStart + ndivisions*step;
    fStep       = step;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -439,6 +456,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaZ::~TGeoPatternParaZ()
@@ -494,6 +512,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
    fEnd = dz;
    fStep = 2*dz/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -509,6 +528,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fEnd = fStart + ndivisions*step;
    fStep       = step;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -523,6 +543,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
    fMatrix     = new TGeoTranslation(0,0,0);
+   fMatrix->RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoPatternTrapZ::~TGeoPatternTrapZ()
@@ -657,7 +678,8 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
       fStep       = (end-start+360)/ndivisions;
    else
       fStep       = (end-start)/ndivisions;
-   fMatrix     = new TGeoRotation("rotdiv");
+   fMatrix     = new TGeoRotation();
+   fMatrix->RegisterYourself();
    fSinCos     = new Double_t[2*ndivisions];
    for (Int_t idiv = 0; idiv<ndivisions; idiv++) {
       fSinCos[2*idiv] = TMath::Sin(TGeoShape::kDegRad*(start+fStep/2+idiv*fStep));

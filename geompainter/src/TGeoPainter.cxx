@@ -1,3 +1,4 @@
+// @(#)root/geompainter:$Name:  $:$Id:$
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -526,16 +527,21 @@ void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px
 {
 // Execute mouse actions on a given volume.
    if (!gPad) return;
+   static Int_t width, color;
    gPad->SetCursor(kHand);
    switch (event) {
    case kMouseEnter:
+      width = volume->GetLineWidth();
+      color = volume->GetLineColor();
       volume->SetLineWidth(3);
+      volume->SetLineColor(2);
       gPad->Modified();
       gPad->Update();
       break;
    
    case kMouseLeave:
-      volume->SetLineWidth(1);
+      volume->SetLineWidth(width);
+      volume->SetLineColor(color);
       gPad->Modified();
       gPad->Update();
       break;
@@ -814,6 +820,8 @@ void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option, TGeoHMatrix *glma
  //==  for (Int_t i = 0; i < numpoints; i++)
  //            gNode->Local2Master(&points[3*i],&points[3*i]);
 
+   Bool_t is3d = kFALSE;
+   if (strstr(option, "x3d")) is3d=kTRUE;   
 
    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
    if (c < 0) c = 0;
@@ -833,7 +841,7 @@ void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option, TGeoHMatrix *glma
     if (buff) {
         buff->numPoints = 8;
         buff->numSegs   = 12;
-        buff->numPolys  = 6;
+        buff->numPolys  = (is3d)?6:0;
     }
 
 //*-* Allocate memory for points *-*
@@ -857,26 +865,28 @@ void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option, TGeoHMatrix *glma
 
 //*-* Allocate memory for polygons *-*
 
-    buff->polys = new Int_t[buff->numPolys*6];
-    if (buff->polys) {
-        buff->polys[ 0] = c;   buff->polys[ 1] = 4;  buff->polys[ 2] = 0;
-        buff->polys[ 3] = 9;   buff->polys[ 4] = 4;  buff->polys[ 5] = 8;
-        buff->polys[ 6] = c+1; buff->polys[ 7] = 4;  buff->polys[ 8] = 1;
-        buff->polys[ 9] = 10;  buff->polys[10] = 5;  buff->polys[11] = 9;
-        buff->polys[12] = c;   buff->polys[13] = 4;  buff->polys[14] = 2;
-        buff->polys[15] = 11;  buff->polys[16] = 6;  buff->polys[17] = 10;
-        buff->polys[18] = c+1; buff->polys[19] = 4;  buff->polys[20] = 3;
-        buff->polys[21] = 8;   buff->polys[22] = 7;  buff->polys[23] = 11;
-        buff->polys[24] = c+2; buff->polys[25] = 4;  buff->polys[26] = 0;
-        buff->polys[27] = 3;   buff->polys[28] = 2;  buff->polys[29] = 1;
-        buff->polys[30] = c+3; buff->polys[31] = 4;  buff->polys[32] = 4;
-        buff->polys[33] = 5;   buff->polys[34] = 6;  buff->polys[35] = 7;
+    buff->polys = 0;
+    if (is3d) {
+       buff->polys = new Int_t[buff->numPolys*6];
+       if (buff->polys) {
+           buff->polys[ 0] = c;   buff->polys[ 1] = 4;  buff->polys[ 2] = 0;
+           buff->polys[ 3] = 9;   buff->polys[ 4] = 4;  buff->polys[ 5] = 8;
+           buff->polys[ 6] = c+1; buff->polys[ 7] = 4;  buff->polys[ 8] = 1;
+           buff->polys[ 9] = 10;  buff->polys[10] = 5;  buff->polys[11] = 9;
+           buff->polys[12] = c;   buff->polys[13] = 4;  buff->polys[14] = 2;
+           buff->polys[15] = 11;  buff->polys[16] = 6;  buff->polys[17] = 10;
+           buff->polys[18] = c+1; buff->polys[19] = 4;  buff->polys[20] = 3;
+           buff->polys[21] = 8;   buff->polys[22] = 7;  buff->polys[23] = 11;
+           buff->polys[24] = c+2; buff->polys[25] = 4;  buff->polys[26] = 0;
+           buff->polys[27] = 3;   buff->polys[28] = 2;  buff->polys[29] = 1;
+           buff->polys[30] = c+3; buff->polys[31] = 4;  buff->polys[32] = 4;
+           buff->polys[33] = 5;   buff->polys[34] = 6;  buff->polys[35] = 7;
+       }
     }
-
     //*-* Paint in the pad
     PaintShape(buff,rangeView, glmat);
 
-    if (strstr(option, "x3d")) {
+    if (is3d) {
         if(buff && buff->points && buff->segs)
             FillX3DBuffer(buff);
         else {
@@ -938,13 +948,19 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
 //==   for (i = 0; i < numpoints; i++)
 //==            gNode->Local2Master(&points[3*i],&points[3*i]);
 
+   Bool_t is3d = kFALSE;
+   if (strstr(option, "x3d")) is3d=kTRUE;   
+
     X3DBuffer *buff = new X3DBuffer;
     if (buff) {
         buff->numPoints = numpoints;
-//        if (strstr(option, "x3d"))  
-        buff->numSegs   = n*8;
-//        else                        buff->numSegs   = n*6;
-        buff->numPolys  = n*4;
+        if (is3d) {
+           buff->numSegs   = n*8;
+           buff->numPolys  = n*4;
+        } else {                        
+           buff->numSegs   = n*6;
+           buff->numPolys  = 0;
+        }   
     }
 
 
@@ -983,7 +999,7 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
                 buff->segs[(i*n+j)*3+2] = (i-2)*n+j;
             }
         }
-//        if (strstr(option, "x3d")) {
+        if (is3d) {
            for (i = 6; i < 8; i++) {
               for (j = 0; j < n; j++) {
                  buff->segs[(i*n+j)*3  ] = c;
@@ -991,44 +1007,46 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
                  buff->segs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
               }
            }
-//        }
+        }
     }
 //*-* Allocate memory for polygons *-*
 
     Int_t indx = 0;
 
-    buff->polys = new Int_t[buff->numPolys*6];
-    if (buff->polys) {
-        for (i = 0; i < 2; i++) {
-            for (j = 0; j < n; j++) {
-                indx = 6*(i*n+j);
-                buff->polys[indx  ] = c;
-                buff->polys[indx+1] = 4;
-                buff->polys[indx+2] = i*n+j;
-                buff->polys[indx+3] = (4+i)*n+j;
-                buff->polys[indx+4] = (2+i)*n+j;
-                buff->polys[indx+5] = (4+i)*n+j+1;
-            }
-            buff->polys[indx+5] = (4+i)*n;
-        }
-        for (i = 2; i < 4; i++) {
-            for (j = 0; j < n; j++) {
-                indx = 6*(i*n+j);
-                buff->polys[indx  ] = c+i;
-                buff->polys[indx+1] = 4;
-                buff->polys[indx+2] = (i-2)*2*n+j;
-                buff->polys[indx+3] = (4+i)*n+j;
-                buff->polys[indx+4] = ((i-2)*2+1)*n+j;
-                buff->polys[indx+5] = (4+i)*n+j+1;
-            }
-            buff->polys[indx+5] = (4+i)*n;
-        }
+    buff->polys = 0;
+    if (is3d) {
+       buff->polys = new Int_t[buff->numPolys*6];
+       if (buff->polys) {
+           for (i = 0; i < 2; i++) {
+               for (j = 0; j < n; j++) {
+                   indx = 6*(i*n+j);
+                   buff->polys[indx  ] = c;
+                   buff->polys[indx+1] = 4;
+                   buff->polys[indx+2] = i*n+j;
+                   buff->polys[indx+3] = (4+i)*n+j;
+                   buff->polys[indx+4] = (2+i)*n+j;
+                   buff->polys[indx+5] = (4+i)*n+j+1;
+               }
+               buff->polys[indx+5] = (4+i)*n;
+           }
+           for (i = 2; i < 4; i++) {
+               for (j = 0; j < n; j++) {
+                   indx = 6*(i*n+j);
+                   buff->polys[indx  ] = c+i;
+                   buff->polys[indx+1] = 4;
+                   buff->polys[indx+2] = (i-2)*2*n+j;
+                   buff->polys[indx+3] = (4+i)*n+j;
+                   buff->polys[indx+4] = ((i-2)*2+1)*n+j;
+                   buff->polys[indx+5] = (4+i)*n+j+1;
+               }
+               buff->polys[indx+5] = (4+i)*n;
+           }
+       }
     }
-
     //*-* Paint in the pad
     PaintShape(buff,rangeView, glmat);
 
-    if (strstr(option, "x3d")) {
+    if (is3d) {
         if(buff && buff->points && buff->segs)
             FillX3DBuffer(buff);
         else {
@@ -1084,13 +1102,19 @@ void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
 
 //==   for (i = 0; i < numpoints; i++)
 //==            gNode->Local2Master(&points[3*i],&points[3*i]);
-
-
+   Bool_t is3d = kFALSE;
+   if (strstr(option, "x3d")) is3d=kTRUE;   
+   
     X3DBuffer *buff = new X3DBuffer;
     if (buff) {
         buff->numPoints =   numpoints;
-        buff->numSegs   = 2*numpoints;
-        buff->numPolys  =   numpoints-2;
+        if (is3d)  {
+           buff->numSegs   = 2*numpoints;
+           buff->numPolys  = numpoints-2;
+        } else { 
+           buff->numSegs   = 6*n+4;
+           buff->numPolys  = 0;
+        }   
     }
 
     buff->points = points;
@@ -1125,61 +1149,77 @@ void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
                 buff->segs[(i*n+j)*3+2] = (i-2)*n+j;
             }
         }
-        for (i = 6; i < 8; i++) {
-            for (j = 0; j < n; j++) {
+        if (is3d) {
+           for (i = 6; i < 8; i++) {
+              for (j = 0; j < n; j++) {
                 buff->segs[(i*n+j)*3  ] = c;
                 buff->segs[(i*n+j)*3+1] = 2*(i-6)*n+j;
                 buff->segs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
-            }
-        }
+              }
+           }
+        } else {   
+           buff->segs[6*n*3] = c;
+           buff->segs[6*n*3+1] = 0;
+           buff->segs[6*n*3+2] = n;
+           buff->segs[6*n*3+3] = c;
+           buff->segs[6*n*3+4] = n-1;
+           buff->segs[6*n*3+5] = 2*n-1;
+           buff->segs[6*n*3+6] = c;
+           buff->segs[6*n*3+7] = 2*n;
+           buff->segs[6*n*3+8] = 3*n;
+           buff->segs[6*n*3+9] = c;
+           buff->segs[6*n*3+10] = 3*n-1;
+           buff->segs[6*n*3+11] = 4*n-1;
+        }   
     }
 
 //*-* Allocate memory for polygons *-*
 
     Int_t indx = 0;
+    buff->polys = 0;
+    if (is3d) {
+       buff->polys = new Int_t[buff->numPolys*6];
+       memset(buff->polys, 0, buff->numPolys*6*sizeof(Int_t));
+       if (buff->polys) {
+           for (i = 0; i < 2; i++) {
+               for (j = 0; j < n-1; j++) {
+                   buff->polys[indx++] = c;
+                   buff->polys[indx++] = 4;
+                   buff->polys[indx++] = i*n+j;
+                   buff->polys[indx++] = (4+i)*n+j;
+                   buff->polys[indx++] = (2+i)*n+j;
+                   buff->polys[indx++] = (4+i)*n+j+1;
+               }
+           }
+           for (i = 2; i < 4; i++) {
+               for (j = 0; j < n-1; j++) {
+                   buff->polys[indx++] = c+i;
+                   buff->polys[indx++] = 4;
+                   buff->polys[indx++] = (i-2)*2*n+j;
+                   buff->polys[indx++] = (4+i)*n+j;
+                   buff->polys[indx++] = ((i-2)*2+1)*n+j;
+                   buff->polys[indx++] = (4+i)*n+j+1;
+               }
+           }
+           buff->polys[indx++] = c+2;
+           buff->polys[indx++] = 4;
+           buff->polys[indx++] = 6*n;
+           buff->polys[indx++] = 4*n;
+           buff->polys[indx++] = 7*n;
+           buff->polys[indx++] = 5*n;
 
-    buff->polys = new Int_t[buff->numPolys*6];
-    memset(buff->polys, 0, buff->numPolys*6*sizeof(Int_t));
-    if (buff->polys) {
-        for (i = 0; i < 2; i++) {
-            for (j = 0; j < n-1; j++) {
-                buff->polys[indx++] = c;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = i*n+j;
-                buff->polys[indx++] = (4+i)*n+j;
-                buff->polys[indx++] = (2+i)*n+j;
-                buff->polys[indx++] = (4+i)*n+j+1;
-            }
-        }
-        for (i = 2; i < 4; i++) {
-            for (j = 0; j < n-1; j++) {
-                buff->polys[indx++] = c+i;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = (i-2)*2*n+j;
-                buff->polys[indx++] = (4+i)*n+j;
-                buff->polys[indx++] = ((i-2)*2+1)*n+j;
-                buff->polys[indx++] = (4+i)*n+j+1;
-            }
-        }
-        buff->polys[indx++] = c+2;
-        buff->polys[indx++] = 4;
-        buff->polys[indx++] = 6*n;
-        buff->polys[indx++] = 4*n;
-        buff->polys[indx++] = 7*n;
-        buff->polys[indx++] = 5*n;
-
-        buff->polys[indx++] = c+2;
-        buff->polys[indx++] = 4;
-        buff->polys[indx++] = 7*n-1;
-        buff->polys[indx++] = 5*n-1;
-        buff->polys[indx++] = 8*n-1;
-        buff->polys[indx++] = 6*n-1;
+           buff->polys[indx++] = c+2;
+           buff->polys[indx++] = 4;
+           buff->polys[indx++] = 7*n-1;
+           buff->polys[indx++] = 5*n-1;
+           buff->polys[indx++] = 8*n-1;
+           buff->polys[indx++] = 6*n-1;
+       }
     }
-
     //*-* Paint in the pad
     PaintShape(buff,rangeView, glmat);
 
-    if (strstr(option, "x3d")) {
+    if (is3d) {
         if(buff && buff->points && buff->segs)
             FillX3DBuffer(buff);
         else {
@@ -1243,6 +1283,8 @@ void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *g
 
  //==  for (i = 0; i < numpoints; i++)
  //==          gNode->Local2Master(&points[3*i],&points[3*i]);
+   Bool_t is3d = kFALSE;
+   if (strstr(option, "x3d")) is3d=kTRUE;   
 
    Bool_t specialCase = kFALSE;
 
@@ -1253,7 +1295,7 @@ void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *g
     if (buff) {
         buff->numPoints = numpoints;
         buff->numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
-        buff->numPolys  = 2*(nz*n-1+(specialCase == kTRUE));
+        buff->numPolys  = (is3d)?(2*(nz*n-1+(specialCase == kTRUE))):0;
     }
 
 //*-* Allocate memory for points *-*
@@ -1344,79 +1386,81 @@ void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *g
 //*-* Allocate memory for polygons *-*
 
     indx = 0;
+    buff->polys = 0;
+    if (is3d) {
+       buff->polys = new Int_t[buff->numPolys*6];
 
-    buff->polys = new Int_t[buff->numPolys*6];
+       if (buff->polys) {
 
-    if (buff->polys) {
-
-        //bottom & top, number of polygons: 2*(n-1)
-        // special case number of polygons: 2*n
-        for (i = 0; i < 2; i++) {
-            for (j = 0; j < n-1; j++) {
-                buff->polys[indx++] = c+3;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = 2*nz*m+i*n+j;
-                buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                buff->polys[indx++] = 2*nz*m+i*n+j+1;
-                buff->polys[indx++] = i*(nz*2-2)*m+j;
-            }
-            if (specialCase) {
-                buff->polys[indx++] = c+3;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = 2*nz*m+i*n+j;
-                buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                buff->polys[indx++] = 2*nz*m+i*n;
-                buff->polys[indx++] = i*(nz*2-2)*m+j;
-            }
-        }
-
-
-        //inside & outside, number of polygons: (nz-1)*2*(n-1)
-        for (k = 0; k < (nz-1); k++) {
-            for (i = 0; i < 2; i++) {
-                for (j = 0; j < n-1; j++) {
-                    buff->polys[indx++] = c+i;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = (2*k+i*1)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                    buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
-                }
-                if (specialCase) {
-                    buff->polys[indx++] = c+i;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = (2*k+i*1)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                    buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n;
-                }
-            }
-        }
+           //bottom & top, number of polygons: 2*(n-1)
+           // special case number of polygons: 2*n
+           for (i = 0; i < 2; i++) {
+               for (j = 0; j < n-1; j++) {
+                   buff->polys[indx++] = c+3;
+                   buff->polys[indx++] = 4;
+                   buff->polys[indx++] = 2*nz*m+i*n+j;
+                   buff->polys[indx++] = i*(nz*2-2)*m+m+j;
+                   buff->polys[indx++] = 2*nz*m+i*n+j+1;
+                   buff->polys[indx++] = i*(nz*2-2)*m+j;
+               }
+               if (specialCase) {
+                   buff->polys[indx++] = c+3;
+                   buff->polys[indx++] = 4;
+                   buff->polys[indx++] = 2*nz*m+i*n+j;
+                   buff->polys[indx++] = i*(nz*2-2)*m+m+j;
+                   buff->polys[indx++] = 2*nz*m+i*n;
+                   buff->polys[indx++] = i*(nz*2-2)*m+j;
+               }
+           }
 
 
-        //left & right sections, number of polygons: 2*(nz-1)
-        //          special case number of polygons: 0
-        if (!specialCase) {
-            indx2 = nz*2*(n-1);
-            for (k = 0; k < (nz-1); k++) {
-                for (i = 0; i < 2; i++) {
-                    buff->polys[indx++] = c+2;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-                    buff->polys[indx++] = indx2+2*(k+1)*n+i*(n-1);
-                    buff->polys[indx++] = indx2+2*nz*n+2*k+i;
-                    buff->polys[indx++] = indx2+(2*k+3)*n+i*(n-1);
-                }
-            }
-            buff->polys[indx-8] = indx2+n;
-            buff->polys[indx-2] = indx2+2*n-1;
-        }
+           //inside & outside, number of polygons: (nz-1)*2*(n-1)
+           for (k = 0; k < (nz-1); k++) {
+               for (i = 0; i < 2; i++) {
+                   for (j = 0; j < n-1; j++) {
+                       buff->polys[indx++] = c+i;
+                       buff->polys[indx++] = 4;
+                       buff->polys[indx++] = (2*k+i*1)*m+j;
+                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+                       buff->polys[indx++] = (2*k+i*1+2)*m+j;
+                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
+                   }
+                   if (specialCase) {
+                       buff->polys[indx++] = c+i;
+                       buff->polys[indx++] = 4;
+                       buff->polys[indx++] = (2*k+i*1)*m+j;
+                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+                       buff->polys[indx++] = (2*k+i*1+2)*m+j;
+                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n;
+                   }
+               }
+           }
+
+
+           //left & right sections, number of polygons: 2*(nz-1)
+           //          special case number of polygons: 0
+           if (!specialCase) {
+               indx2 = nz*2*(n-1);
+               for (k = 0; k < (nz-1); k++) {
+                   for (i = 0; i < 2; i++) {
+                       buff->polys[indx++] = c+2;
+                       buff->polys[indx++] = 4;
+                       buff->polys[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
+                       buff->polys[indx++] = indx2+2*(k+1)*n+i*(n-1);
+                       buff->polys[indx++] = indx2+2*nz*n+2*k+i;
+                       buff->polys[indx++] = indx2+(2*k+3)*n+i*(n-1);
+                   }
+               }
+               buff->polys[indx-8] = indx2+n;
+               buff->polys[indx-2] = indx2+2*n-1;
+           }
+       }
     }
-
+    
     //*-* Paint in the pad
     PaintShape(buff,rangeView, glmat);
 
-    if (strstr(option, "x3d")) {
+    if (is3d) {
         if(buff && buff->points && buff->segs)
             FillX3DBuffer(buff);
         else {
@@ -1474,7 +1518,10 @@ void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
  //==  for (i = 0; i < numpoints; i++)
  //==          gNode->Local2Master(&points[3*i],&points[3*i]);
 
-   Bool_t specialCase = kFALSE;
+   Bool_t is3d = kFALSE;
+   if (strstr(option, "x3d")) is3d=kTRUE;   
+
+      Bool_t specialCase = kFALSE;
 
    if (dphi == 360)           //mark this as a very special case, when
         specialCase = kTRUE;     //we have to draw this PCON like a TUBE
@@ -1483,7 +1530,7 @@ void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
     if (buff) {
         buff->numPoints = numpoints;
         buff->numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
-        buff->numPolys  = 2*(nz*n-1+(specialCase == kTRUE));
+        buff->numPolys  = (is3d)?(2*(nz*n-1+(specialCase == kTRUE))):0;
     }
 
 //*-* Allocate memory for points *-*
@@ -1575,78 +1622,80 @@ void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
 
     indx = 0;
 
-    buff->polys = new Int_t[buff->numPolys*6];
+    buff->polys = 0;
+    if (is3d) {
+       buff->polys = new Int_t[buff->numPolys*6];
 
-    if (buff->polys) {
+       if (buff->polys) {
 
-        //bottom & top, number of polygons: 2*(n-1)
-        // special case number of polygons: 2*n
-        for (i = 0; i < 2; i++) {
-            for (j = 0; j < n-1; j++) {
-                buff->polys[indx++] = c+3;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = 2*nz*m+i*n+j;
-                buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                buff->polys[indx++] = 2*nz*m+i*n+j+1;
-                buff->polys[indx++] = i*(nz*2-2)*m+j;
-            }
-            if (specialCase) {
-                buff->polys[indx++] = c+3;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = 2*nz*m+i*n+j;
-                buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                buff->polys[indx++] = 2*nz*m+i*n;
-                buff->polys[indx++] = i*(nz*2-2)*m+j;
-            }
-        }
-
-
-        //inside & outside, number of polygons: (nz-1)*2*(n-1)
-        for (k = 0; k < (nz-1); k++) {
-            for (i = 0; i < 2; i++) {
-                for (j = 0; j < n-1; j++) {
-                    buff->polys[indx++] = c+i;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = (2*k+i*1)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                    buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
-                }
-                if (specialCase) {
-                    buff->polys[indx++] = c+i;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = (2*k+i*1)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                    buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n;
-                }
-            }
-        }
+           //bottom & top, number of polygons: 2*(n-1)
+           // special case number of polygons: 2*n
+           for (i = 0; i < 2; i++) {
+               for (j = 0; j < n-1; j++) {
+                   buff->polys[indx++] = c+3;
+                   buff->polys[indx++] = 4;
+                   buff->polys[indx++] = 2*nz*m+i*n+j;
+                   buff->polys[indx++] = i*(nz*2-2)*m+m+j;
+                   buff->polys[indx++] = 2*nz*m+i*n+j+1;
+                   buff->polys[indx++] = i*(nz*2-2)*m+j;
+               }
+               if (specialCase) {
+                   buff->polys[indx++] = c+3;
+                   buff->polys[indx++] = 4;
+                   buff->polys[indx++] = 2*nz*m+i*n+j;
+                   buff->polys[indx++] = i*(nz*2-2)*m+m+j;
+                   buff->polys[indx++] = 2*nz*m+i*n;
+                   buff->polys[indx++] = i*(nz*2-2)*m+j;
+               }
+           }
 
 
-        //left & right sections, number of polygons: 2*(nz-1)
-        //          special case number of polygons: 0
-        if (!specialCase) {
-            indx2 = nz*2*(n-1);
-            for (k = 0; k < (nz-1); k++) {
-                for (i = 0; i < 2; i++) {
-                    buff->polys[indx++] = c+2;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-                    buff->polys[indx++] = indx2+2*(k+1)*n+i*(n-1);
-                    buff->polys[indx++] = indx2+2*nz*n+2*k+i;
-                    buff->polys[indx++] = indx2+(2*k+3)*n+i*(n-1);
-                }
-            }
-            buff->polys[indx-8] = indx2+n;
-            buff->polys[indx-2] = indx2+2*n-1;
-        }
+           //inside & outside, number of polygons: (nz-1)*2*(n-1)
+           for (k = 0; k < (nz-1); k++) {
+               for (i = 0; i < 2; i++) {
+                   for (j = 0; j < n-1; j++) {
+                       buff->polys[indx++] = c+i;
+                       buff->polys[indx++] = 4;
+                       buff->polys[indx++] = (2*k+i*1)*m+j;
+                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+                       buff->polys[indx++] = (2*k+i*1+2)*m+j;
+                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
+                   }
+                   if (specialCase) {
+                       buff->polys[indx++] = c+i;
+                       buff->polys[indx++] = 4;
+                       buff->polys[indx++] = (2*k+i*1)*m+j;
+                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+                       buff->polys[indx++] = (2*k+i*1+2)*m+j;
+                       buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n;
+                   }
+               }
+           }
+
+
+           //left & right sections, number of polygons: 2*(nz-1)
+           //          special case number of polygons: 0
+           if (!specialCase) {
+               indx2 = nz*2*(n-1);
+               for (k = 0; k < (nz-1); k++) {
+                   for (i = 0; i < 2; i++) {
+                       buff->polys[indx++] = c+2;
+                       buff->polys[indx++] = 4;
+                       buff->polys[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
+                       buff->polys[indx++] = indx2+2*(k+1)*n+i*(n-1);
+                       buff->polys[indx++] = indx2+2*nz*n+2*k+i;
+                       buff->polys[indx++] = indx2+(2*k+3)*n+i*(n-1);
+                   }
+               }
+               buff->polys[indx-8] = indx2+n;
+               buff->polys[indx-2] = indx2+2*n-1;
+           }
+       }
     }
-
     //*-* Paint in the pad
     PaintShape(buff,rangeView, glmat);
 
-    if (strstr(option, "x3d")) {
+    if (is3d) {
         if(buff && buff->points && buff->segs)
             FillX3DBuffer(buff);
         else {

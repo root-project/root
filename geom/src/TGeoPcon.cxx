@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.17 2003/03/07 07:55:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.18 2003/04/17 15:51:13 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -31,7 +31,25 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoPcon.gif">
+<img src="gif/t_pcon.gif">
+*/
+//End_Html
+
+//Begin_Html
+/*
+<img src="gif/t_pcondivPHI.gif">
+*/
+//End_Html
+
+//Begin_Html
+/*
+<img src="gif/t_pcondivstepPHI.gif">
+*/
+//End_Html
+
+//Begin_Html
+/*
+<img src="gif/t_pcondivstepZ.gif">
 */
 //End_Html
 
@@ -417,6 +435,8 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
                if ((start+ndiv*step)>fZ[ipl+1]) continue;
             }
             isect = ipl;
+            zmin = fZ[isect];
+            zmax= fZ[isect+1];
             break;
          }
          if (isect<0) {
@@ -435,7 +455,15 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             Double_t rmax1 = (fRmax[isect]*(zmax-z1)-fRmax[isect+1]*(zmin-z1))/(zmax-zmin);
             Double_t rmin2 = (fRmin[isect]*(zmax-z2)-fRmin[isect+1]*(zmin-z2))/(zmax-zmin);
             Double_t rmax2 = (fRmax[isect]*(zmax-z2)-fRmax[isect+1]*(zmin-z2))/(zmax-zmin);
-            shape = new TGeoConeSeg(step/2, rmin1, rmax1, rmin2, rmax2, fPhi1, fPhi1+fDphi); 
+            Bool_t is_tube = (fRmin[isect]==fRmin[isect+1] && fRmax[isect]==fRmax[isect+1])?kTRUE:kFALSE;
+            Bool_t is_seg = (fDphi<360)?kTRUE:kFALSE;
+            if (is_seg) {
+               if (is_tube) shape=new TGeoTubeSeg(fRmin[isect],fRmax[isect],step/2, fPhi1, fPhi1+fDphi);
+               else shape=new TGeoConeSeg(step/2, rmin1, rmax1, rmin2, rmax2, fPhi1, fPhi1+fDphi);
+            } else {
+               if (is_tube) shape=new TGeoTube(fRmin[isect],fRmax[isect],step/2);
+               else shape = new TGeoCone(step/2,rmin1,rmax1,rmin2,rmax2);
+            }    
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             vmulti->AddVolume(vol);
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
@@ -570,8 +598,21 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
       Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
       if (ipl==(fNz-1)) return 0;   // point on last Z boundary
       if (ipl<0) return 0;          // point on first Z boundary
+      if (ipl>1) {
+         if(fZ[ipl]==fZ[ipl-1] && point[2]==fZ[ipl]) ipl--;
+      }   
       dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
-      if (dz<1E-10) return 0;
+      if (dz<1E-6) {
+         Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+  //       printf("r=%f rmin(%i,%i) %f, %f\n", r,ipl,ipl+1,fRmin[ipl],fRmin[ipl+1]);
+         if ((fRmin[ipl]-r)*(r-fRmin[ipl+1])>1E-8) return 0;
+         if ((fRmax[ipl]-r)*(r-fRmax[ipl+1])>1E-8) return 0;
+         Double_t safin = TMath::Max(fRmin[ipl],fRmin[ipl+1]);
+         if (safin>1E-6) safin = r-safin;
+         else safin=1E30;
+         Double_t safout = TMath::Min(fRmax[ipl],fRmax[ipl+1]) - r;
+         return TMath::Min(safin,safout);
+      }              
       skipz = 3; // skip z checks
       if (ipl==0) {
          saf[0] = point[2]-fZ[0];

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.1 2002/09/28 06:39:05 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.2 2002/12/03 16:01:38 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -31,7 +31,14 @@ class TGeoHMatrix;
 
 class TGeoBoolNode : public TObject
 {
-protected :
+public:
+enum EGeoBoolType {
+   kGeoUnion,
+   kGeoIntersection,
+   kGeoSubtraction
+};
+
+protected:
    TGeoShape        *fLeft;           // shape on the left branch
    TGeoShape        *fRight;          // shape on the right branch
    TGeoMatrix       *fLeftMat;        // transformation that applies to the left branch
@@ -53,7 +60,12 @@ public:
                                Double_t step=0, Double_t *safe=0) const = 0;
    virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const = 0;
+   virtual EGeoBoolType GetBooleanOperator() const = 0;
    virtual Int_t     GetNpoints() const = 0;
+   TGeoMatrix       *GetLeftMatrix() const {return fLeftMat;}
+   TGeoMatrix       *GetRightMatrix() const {return fRightMat;}
+   TGeoShape        *GetLeftShape() const {return fLeft;}
+   TGeoShape        *GetRightShape() const {return fRight;}
    virtual void      Paint(Option_t * /*option*/) {;}
    virtual void      PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual void      SetPoints(Double_t *buff) const = 0;
@@ -86,6 +98,7 @@ public:
                                Double_t step=0, Double_t *safe=0) const;
    virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
+   virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
    virtual Int_t     GetNpoints() const;
    virtual void      SetPoints(Double_t *buff) const;
    virtual void      SetPoints(Float_t *buff)  const;
@@ -117,6 +130,7 @@ public:
                                Double_t step=0, Double_t *safe=0) const;
    virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
+   virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
    virtual Int_t     GetNpoints() const;
    virtual void      SetPoints(Double_t *buff) const;
    virtual void      SetPoints(Float_t *buff)  const;
@@ -148,6 +162,7 @@ public:
                                Double_t step=0, Double_t *safe=0) const;
    virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
+   virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
    virtual Int_t     GetNpoints() const;
    virtual void      SetPoints(Double_t *buff) const;
    virtual void      SetPoints(Float_t *buff)  const;

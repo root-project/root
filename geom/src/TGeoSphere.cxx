@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.15 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.16 2003/03/11 07:48:59 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -29,7 +29,7 @@
  *************************************************************************/
 //Begin_Html
 /*
-<img src="gif/TGeoSphere.gif">
+<img src="gif/t_sphere.gif">
 */
 //End_Html
 

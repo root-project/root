@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.6 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.7 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -49,9 +49,11 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
+   TGeoBoolNode         *GetBoolNode() const {return fNode;}
    virtual void          GetBoundingCylinder(Double_t * /*param*/) const {;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    virtual void          InspectShape() const;
+   virtual Bool_t        IsComposite() const {return kTRUE;}
    virtual Bool_t        IsCylType() const {return kFALSE;}
    void                  MakeNode(const char *expression);
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.12 2003/01/20 14:35:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.13 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    void              Draw(Option_t *option="");
    void              DrawOnly(Option_t *option="");
    void              DrawOverlaps(); // *MENU*
+   void              FillIdArray(Int_t &ifree, Int_t &nodeid, Int_t *array) const;
    Int_t             FindNode(const TGeoNode *node, Int_t level);
    virtual Int_t     GetByteCount() const {return 44;}
    TGeoNode         *GetDaughter(Int_t ind) const {return fVolume->GetNode(ind);}
