@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.151 2004/11/02 16:24:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.152 2004/11/02 21:51:10 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -777,7 +777,43 @@ void TBranchElement::Browse(TBrowser *b)
 {
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches > 0) {
-      fBranches.Browse(b);
+      TList persistentBranches;
+      TBranch* branch=0;
+      TIter iB(&fBranches);
+      while((branch=(TBranch*)iB())) 
+         if (branch->IsFolder()) persistentBranches.Add(b);
+         else {
+            // only show branches corresponding to persistent members
+            TClass* cl=0;
+            if (strlen(GetClonesName()))
+               // this works both for top level branches and for sub-branches,
+               // as GetClonesName() is properly updated for sub-branches
+               cl=gROOT->GetClass(GetClonesName());
+            else {
+               cl=gROOT->GetClass(GetClassName());
+               
+               // check if we're in a sub-branch of this class
+               // we can only find out asking the streamer given our ID
+               ULong_t *elems=0;
+               TStreamerElement *element=0;
+               TClass* clsub=0;
+               if (fID>=0 && GetInfo() 
+                   && ((elems=GetInfo()->GetElems()))
+                   && ((element=(TStreamerElement *)elems[fID]))
+                   && ((clsub=element->GetClassPointer())))
+                  cl=clsub;
+            }
+            if (cl) {
+               TString strMember=branch->GetName();
+               Size_t mempos=strMember.Last('.');
+               if (mempos!=kNPOS)
+                  strMember.Remove(0, (Int_t)mempos+1);
+               TDataMember* m=cl->GetDataMember(strMember);
+               if (!m || m->IsPersistent()) persistentBranches.Add(branch);
+            } else persistentBranches.Add(branch);
+         } // branch if not a folder
+      
+      persistentBranches.Browse(b);
       // add all public const methods without params
       if (GetBrowsableMethods())
          GetBrowsableMethods()->Browse(b);

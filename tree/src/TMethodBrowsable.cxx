@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TMethodBrowsable.cxx,v 1.2 2004/10/17 20:59:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TMethodBrowsable.cxx,v 1.3 2004/10/18 12:52:32 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TPad.h"
 #include "TClass.h"
 #include "TBaseClass.h"
+#include "TDataMember.h"
 
 ClassImp(TMethodBrowsable);
 
@@ -152,9 +153,10 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(TMethod* m) {
 // if does not have any parameter without default value, and if it has 
 // a (non-void) return value.
 // A method called *, Get*, or get* will not be browsable if there is a 
-// data member called f*, _*, or m*, as data member access is faster
-// than method access. Examples: if one of fX, _X, or mX is a data
-// member, the methods GetX(), getX(), and X() will not be browsable.
+// persistent data member called f*, _*, or m*, as data member access is 
+// faster than method access. Examples: if one of fX, _X, or mX is a 
+// persistent data member, the methods GetX(), getX(), and X() will not 
+// be browsable.
 
    if (m->GetNargs()-m->GetNargsOpt()==0
        && (m->Property() & kIsConstant 
@@ -191,9 +193,12 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(TMethod* m) {
              !strncmp(m->GetName(), "get", 3))
             baseName+=3;
          if (!baseName[0]) return kTRUE;
-         return (!members->FindObject(Form("f%s", baseName)) &&
-                 !members->FindObject(Form("_%s", baseName)) &&
-                 !members->FindObject(Form("m%s", baseName)));
+
+         TObject* mem=0;
+         const char* arrMemberNames[3]={"f%s","_%s","m%s"};
+         for (Int_t i=0; !mem && i<3; i++)
+            mem=members->FindObject(Form(arrMemberNames[i],baseName));
+         return (!mem ||! ((TDataMember*)mem)->IsPersistent());
    };
    return kFALSE;
 }
