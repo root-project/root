@@ -61,7 +61,7 @@ void tclread()
    TTree *T = (TTree*)f->Get("T");
    TH2F *h2 = new TH2F("h2","center of lines",40,0,1,40,0,1);
 
-   TClonesArray *arr = 0;
+   TClonesArray *arr = new TClonesArray("TLine");
    T->GetBranch("tcl")->SetAutoDelete(kFALSE);
    T->SetBranchAddress("tcl",&arr);
    Int_t nentries = (Int_t)(T->GetEntries());
