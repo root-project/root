@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.137 2004/07/30 01:13:51 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.138 2004/08/03 16:01:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TView.h"
 #include "TPoint.h"
 #include "TGraph.h"
+#include "TMultiGraph.h"
 #include "TArrow.h"
 #include "TPaveText.h"
 #include "TPavesText.h"
@@ -2492,7 +2493,7 @@ Double_t TPad::YtoPad(Double_t y) const
 }
 
 //______________________________________________________________________________
-void TPad::Paint(Option_t *option)
+void TPad::Paint(Option_t * /*option*/)
 {
 //*-*-*-*-*-*-*-*-*-*Paint all primitives in pad*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ===========================
@@ -3915,6 +3916,16 @@ void TPad::RedrawAxis(Option_t *option)
          TH1 *hobj = (TH1*)obj;
          if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
          else                   hobj->DrawCopy("sameaxis");
+         return;
+      }
+      if (obj->InheritsFrom("TMultiGraph")) {
+         TMultiGraph *mg = (TMultiGraph*)obj;
+         if (mg) mg->GetHistogram()->DrawCopy("sameaxis");
+         return;
+      }
+      if (obj->InheritsFrom("TGraph")) {
+         TGraph *g = (TGraph*)obj;
+         if (g) g->GetHistogram()->DrawCopy("sameaxis");
          return;
       }
    }
