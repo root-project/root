@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.13 2004/05/19 16:12:58 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.14 2004/06/02 13:58:36 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -320,9 +320,9 @@ int main(int argc, char **argv)
          for (int i = ic; i < argc && argv[i][0] != '-'; i++) {
             string dl = argv[i];
 #ifdef __APPLE__
-            string::size_type i = dl.find(".dylib");
-            if (i != string::npos)
-               dl.replace(i, 6, ".so");
+            string::size_type j = dl.find(".dylib");
+            if (j != string::npos)
+               dl.replace(j, 6, ".so");
 #endif
             solibdeps.push_back(dl);
             ic++;
