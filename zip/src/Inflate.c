@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name$:$Id$ */
+/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -285,9 +285,6 @@ int R__Inflate_block OF((int *));
 int R__Inflate OF((void));
 int R__Inflate_free OF((void));
 
-static int  R__ReadByte();
-static void R__WriteData OF((int));
-
 /* The inflate algorithm uses a sliding 32K byte window on the uncompressed
    stream to find repeated byte strings.  This is implemented here as a
    circular buffer.  The index is updated simply by incrementing and then
@@ -350,14 +347,21 @@ static ush mask[] = {
 
 static ulg bb;                         /* bit buffer */
 static unsigned bk;                    /* bits in bit buffer */
+static uch  *ibufptr;
+static long  ibufcnt;
 
 #define CHECK_EOF
 
 #ifndef CHECK_EOF
+static int  R__ReadByte();
+#endif
+static void R__WriteData OF((int));
+
+#ifndef CHECK_EOF
 #  define NEEDBITS(n) {while(k<(n)){b|=((ulg)NEXTBYTE)<<k;k+=8;}}
 #else
-#  define NEEDBITS(n) {while(k<(n)){int c=NEXTBYTE;if(c==EOF)return 1;\
-    b|=((ulg)c)<<k;k+=8;}}
+#  define NEEDBITS(n) {while(k<(n)){if(ibufcnt-- <= 0)return 1;\
+    b|=((ulg) *ibufptr++)<<k;k+=8;}}
 #endif                      /* Piet Plomp:  change "return 1" to "break" */
 
 #define DUMPBITS(n) {b>>=(n);k-=(n);}
@@ -1179,6 +1183,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   *irep = isize;
 }
 
+#ifndef CHECK_EOF
 static int R__ReadByte ()
 {
   int k;
@@ -1188,6 +1193,7 @@ static int R__ReadByte ()
     k = *ibufptr++;
   return k;
 }
+#endif
 
 static void R__WriteData(int n)
 {
