@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.21 2001/04/20 09:15:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.22 2001/04/20 21:21:38 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -421,6 +421,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
     Int_t n = clones->GetEntriesFast();
     fInfo->WriteBufferClones(b,clones,n,fID);
   } else if (fType <= 2) {
+    if (fID < 0) b.MapObject((TObject*)fObject);
     fInfo->WriteBuffer(b,fObject,fID);
   }   
 }
@@ -635,6 +636,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     fInfo->ReadBufferClones(b,clones,n,fID);
   } else if (fType <= 2) {     // branch in split mode
     fNdata = 1;
+    if (fID < 0) b.MapObject((TObject*)fObject);
     fInfo->ReadBuffer(b,fObject,fID);
   }   
 }
