@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.23 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.24 2004/08/03 16:01:18 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -38,6 +38,7 @@ class TGeoShape : public TNamed
 {
 public:
 enum EShapeType {
+   kBitMask32  = 0xffffffff,
    kGeoNoShape = 0,
    kGeoBad     = BIT(0),
    kGeoRSeg    = BIT(1),
@@ -67,7 +68,8 @@ enum EShapeType {
    kGeoComb    = BIT(25),
    kGeoClosedShape = BIT(26),
    kGeoXtru    = BIT(27),
-   kGeoParaboloid = BIT(28)
+   kGeoParaboloid = BIT(28),
+   kGeoHalfSpace  = BIT(29)
 };
 
 protected :
@@ -130,11 +132,11 @@ public:
 
    //----- bit manipulation
    void     SetShapeBit(UInt_t f, Bool_t set);
-   void     SetShapeBit(UInt_t f) { fShapeBits |= f & kBitMask; }
-   void     ResetShapeBit(UInt_t f) { fShapeBits &= ~(f & kBitMask); }
+   void     SetShapeBit(UInt_t f) { fShapeBits |= f & kBitMask32; }
+   void     ResetShapeBit(UInt_t f) { fShapeBits &= ~(f & kBitMask32); }
    Bool_t   TestShapeBit(UInt_t f) const { return (Bool_t) ((fShapeBits & f) != 0); }
    Int_t    TestShapeBits(UInt_t f) const { return (Int_t) (fShapeBits & f); }
-   void     InvertShapeBit(UInt_t f) { fShapeBits ^= f & kBitMask; }
+   void     InvertShapeBit(UInt_t f) { fShapeBits ^= f & kBitMask32; }
    
   ClassDef(TGeoShape, 2)           // base class for shapes
 };

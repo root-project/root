@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.39 2004/06/25 12:13:44 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.40 2004/08/03 16:01:18 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2387,6 +2387,13 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 // paint recursively a node and its content accordind to visualization options
    TGeoNode *daughter = 0;
    TGeoVolume *vol = node->GetVolume();
+   if (vol->GetShape()->IsComposite()) {
+      TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
+      *glmat = gGeoManager->GetCurrentMatrix();
+      gGeoManager->SetMatrixTransform(kTRUE);
+   } else {
+      gGeoManager->SetMatrixTransform(kFALSE);
+   }   
 // Temporary solution must go in TGeovolume ...
    if (!strstr(option,"range")) {
       ((TAttLine*)vol)->Modify();  //Change line attributes only if necessary

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.11 2004/06/01 11:46:25 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.12 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -126,7 +126,8 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
          shape = new TGeoCompositeShape(newshape.Data());
          break;
    }      
-   if (!shape->IsValid()) {
+   if (boolop && !shape->IsValid()) {
+      Error("MakeBranch", "Shape %s not valid", newshape.Data());
       delete shape;
       return kFALSE;
    }      
@@ -178,6 +179,9 @@ TGeoUnion::TGeoUnion(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMa
           :TGeoBoolNode(left,right,lmat,rmat)
 {
 // Constructor providing pointers to components
+   if (left->TestShapeBit(TGeoShape::kGeoHalfSpace) || right->TestShapeBit(TGeoShape::kGeoHalfSpace)) {
+      Fatal("TGeoUnion", "Unions with a half-space (%s + %s) not allowed", left->GetName(), right->GetName());
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -408,6 +412,9 @@ TGeoSubtraction::TGeoSubtraction(TGeoShape *left, TGeoShape *right, TGeoMatrix *
                 :TGeoBoolNode(left,right,lmat,rmat)
 {
 // Constructor providing pointers to components
+   if (left->TestShapeBit(TGeoShape::kGeoHalfSpace)) {
+      Fatal("TGeoSubstraction", "Substractions from a half-space (%s) not allowed", left->GetName());
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -632,6 +639,9 @@ TGeoIntersection::TGeoIntersection(TGeoShape *left, TGeoShape *right, TGeoMatrix
                  :TGeoBoolNode(left,right,lmat,rmat)
 {
 // Constructor providing pointers to components
+   Bool_t hs1 = (fLeft->TestShapeBit(TGeoShape::kGeoHalfSpace))?kTRUE:kFALSE;
+   Bool_t hs2 = (fRight->TestShapeBit(TGeoShape::kGeoHalfSpace))?kTRUE:kFALSE;
+   if (hs1 && hs2) Fatal("ctor", "cannot intersect two half-spaces: %s * %s", left->GetName(), right->GetName());
 }
 
 //-----------------------------------------------------------------------------
@@ -645,8 +655,8 @@ TGeoIntersection::~TGeoIntersection()
 void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin)
 {
 // Compute bounding box corresponding to a intersection of two shapes.
-   if (((TGeoBBox*)fLeft)->IsNullBox()) fLeft->ComputeBBox();
-   if (((TGeoBBox*)fRight)->IsNullBox()) fRight->ComputeBBox();
+   Bool_t hs1 = (fLeft->TestShapeBit(TGeoShape::kGeoHalfSpace))?kTRUE:kFALSE;
+   Bool_t hs2 = (fRight->TestShapeBit(TGeoShape::kGeoHalfSpace))?kTRUE:kFALSE;
    Double_t vert[48];
    Double_t pt[3];
    Int_t i;
@@ -654,25 +664,49 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
    Double_t xmin2, xmax2, ymin2, ymax2, zmin2, zmax2;
    xmin1 = ymin1 = zmin1 = xmin2 = ymin2 = zmin2 = TGeoShape::Big();
    xmax1 = ymax1 = zmax1 = xmax2 = ymax2 = zmax2 =  -TGeoShape::Big();
-   ((TGeoBBox*)fLeft)->SetBoxPoints(&vert[0]);
-   ((TGeoBBox*)fRight)->SetBoxPoints(&vert[24]);
-   for (i=0; i<8; i++) {
-      fLeftMat->LocalToMaster(&vert[3*i], &pt[0]);
-      if (pt[0]<xmin1) xmin1=pt[0];
-      if (pt[0]>xmax1) xmax1=pt[0];
-      if (pt[1]<ymin1) ymin1=pt[1];
-      if (pt[1]>ymax1) ymax1=pt[1];
-      if (pt[2]<zmin1) zmin1=pt[2];
-      if (pt[2]>zmax1) zmax1=pt[2];
+   if (!hs1) {
+      if (((TGeoBBox*)fLeft)->IsNullBox()) fLeft->ComputeBBox();
+      ((TGeoBBox*)fLeft)->SetBoxPoints(&vert[0]);
+      for (i=0; i<8; i++) {
+         fLeftMat->LocalToMaster(&vert[3*i], &pt[0]);
+         if (pt[0]<xmin1) xmin1=pt[0];
+         if (pt[0]>xmax1) xmax1=pt[0];
+         if (pt[1]<ymin1) ymin1=pt[1];
+         if (pt[1]>ymax1) ymax1=pt[1];
+         if (pt[2]<zmin1) zmin1=pt[2];
+         if (pt[2]>zmax1) zmax1=pt[2];
+      }   
    }   
-   for (i=8; i<16; i++) {
-      fRightMat->LocalToMaster(&vert[3*i], &pt[0]);
-      if (pt[0]<xmin2) xmin2=pt[0];
-      if (pt[0]>xmax2) xmax2=pt[0];
-      if (pt[1]<ymin2) ymin2=pt[1];
-      if (pt[1]>ymax2) ymax2=pt[1];
-      if (pt[2]<zmin2) zmin2=pt[2];
-      if (pt[2]>zmax2) zmax2=pt[2];
+   if (!hs2) {
+      if (((TGeoBBox*)fRight)->IsNullBox()) fRight->ComputeBBox();
+      ((TGeoBBox*)fRight)->SetBoxPoints(&vert[24]);
+      for (i=8; i<16; i++) {
+         fRightMat->LocalToMaster(&vert[3*i], &pt[0]);
+         if (pt[0]<xmin2) xmin2=pt[0];
+         if (pt[0]>xmax2) xmax2=pt[0];
+         if (pt[1]<ymin2) ymin2=pt[1];
+         if (pt[1]>ymax2) ymax2=pt[1];
+         if (pt[2]<zmin2) zmin2=pt[2];
+         if (pt[2]>zmax2) zmax2=pt[2];
+      }
+   }      
+   if (hs1) {
+      dx = 0.5*(xmax2-xmin2);
+      origin[0] = 0.5*(xmax2+xmin2);   
+      dy = 0.5*(ymax2-ymin2);
+      origin[1] = 0.5*(ymax2+ymin2);   
+      dz = 0.5*(zmax2-zmin2);
+      origin[2] = 0.5*(zmax2+zmin2);   
+      return;
+   }            
+   if (hs2) {
+      dx = 0.5*(xmax1-xmin1);
+      origin[0] = 0.5*(xmax1+xmin1);   
+      dy = 0.5*(ymax1-ymin1);
+      origin[1] = 0.5*(ymax1+ymin1);   
+      dz = 0.5*(zmax1-zmin1);
+      origin[2] = 0.5*(zmax1+zmin1);   
+      return;
    }   
    Double_t sort[4];
    Int_t isort[4];
