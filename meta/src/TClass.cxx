@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.125 2003/07/26 05:51:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.126 2003/07/31 17:49:01 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1656,7 +1656,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
    G__CallFunc func;
    void *address;
    long  offset;
-   char  dtor[64];
+   char  dtor[512];
    sprintf(dtor, "~%s", GetName());
    R__LOCKGUARD(gCINTMutex);
    func.SetFunc(fClassInfo->GetMethod(dtor, "", &offset));
