@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.22 2001/07/09 17:20:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.23 2001/07/19 17:12:25 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -577,6 +577,7 @@ Int_t TF1::DistancetoPrimitive(Int_t px, Int_t py)
    Double_t xx[1];
    Double_t x    = gPad->AbsPixeltoX(px);
    xx[0]         = gPad->PadtoX(x);
+   if (xx[0] < fXmin || xx[0] > fXmax) return distance;
    Double_t fval = Eval(xx[0]);
    Double_t y    = gPad->YtoPad(fval);
    Int_t pybin   = gPad->YtoAbsPixel(y);
