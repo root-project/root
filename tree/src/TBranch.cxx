@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.53 2003/03/05 23:36:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.54 2003/03/05 23:40:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -314,7 +314,7 @@ void TBranch::DropBaskets()
          fNBasketRAM--;
       }
       if (fNBasketRAM < 0) {
-         printf("ERROR, fNBasketRAM =%d\n",fNBasketRAM);
+         Error("DropBaskets", "fNBasketRAM =%d",fNBasketRAM);
          fNBasketRAM = 0;
       }
       i = 0;
@@ -831,7 +831,11 @@ TBranch *TBranch::GetMother() const
    TIter next(fTree->GetListOfBranches());
    TBranch *branch;
    while ((branch=(TBranch*)next())) {
-      if (branch->GetSubBranch(this)); return branch;
+      TBranch *br = branch->GetSubBranch(this);
+      if (br) {
+         //if (br == this) return 0;
+         return br;
+      }
    }
    return 0;
 }
@@ -846,7 +850,9 @@ TBranch *TBranch::GetSubBranch(const TBranch *br) const
    TIter next(((TBranch*)this)->GetListOfBranches());
    TBranch *branch;
    while ((branch = (TBranch*)next())) {
-      if (branch->GetSubBranch(br)) return branch;
+      if (branch == br) return (TBranch*)this;
+      TBranch *br2 = branch->GetSubBranch(br);
+      if (br2) return branch;
    }
    return 0;
 }
@@ -1223,19 +1229,5 @@ void TBranch::Streamer(TBuffer &b)
 
    } else {
       TBranch::Class()->WriteBuffer(b,this);
-
-         // if branch is in a separate file save this branch
-         // as an independent key
-      TBranch *mother = GetMother();
-      TDirectory *pdirectory = fTree->GetDirectory();
-      if (mother) pdirectory = mother->GetDirectory();
-      if (fDirectory && fDirectory != pdirectory) {
-         TDirectory *cursav = gDirectory;
-         fDirectory->cd();
-         fDirectory = 0;  // to avoid recursive calls
-         Write();
-         fDirectory = gDirectory;
-         cursav->cd();
-      }
    }
 }
