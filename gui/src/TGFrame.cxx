@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.38 2003/12/09 09:06:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.39 2003/12/15 18:04:27 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1278,6 +1278,7 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
    fText       = title;
    fFontStruct = font;
    fNormGC     = norm;
+   fTitlePos   = kLeft;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -1476,7 +1477,7 @@ void TGFrame::SaveUserColor(ofstream &out, Option_t *)
       out << "   gClient->GetColorByName(" << quote << ucolorname << quote
           << ",ucolor);" << endl;
       fgUserColor = ucolor;
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -1684,7 +1685,7 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
       GetLayoutManager()->SavePrimitive(out, option);
       out << ");" << endl;
    }
-   
+
 }
 
 //______________________________________________________________________________
@@ -2044,19 +2045,19 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
    char ParGC[50], ParFont[50];
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
