@@ -1107,7 +1107,7 @@ void WritePointersSTL(G__ClassInfo &cl)
                for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
                fprintf(fp, "      for (Int_t l=0;l<%d;l++) {\n",len);
                if (m.Property() & G__BIT_ISPOINTER) {
-                  fprintf(fp, "         %s[l]->Streamer(R__b);\n",m.Name());
+                  fprintf(fp, "         R__b >> %s[l];\n",m.Name());
                } else {
                   fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
                }
@@ -1149,7 +1149,7 @@ void WritePointersSTL(G__ClassInfo &cl)
                for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
                fprintf(fp, "      for (Int_t l=0;l<%d;l++) {\n",len);
                if (m.Property() & G__BIT_ISPOINTER) {
-                  fprintf(fp, "         %s[l]->Streamer(R__b);\n",m.Name());
+                  fprintf(fp, "         R__b << %s[l];\n",m.Name());
                } else {
                   fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
                }
