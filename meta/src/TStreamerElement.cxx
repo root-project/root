@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.27 2001/04/27 19:06:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.28 2001/05/20 14:14:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -246,6 +246,16 @@ void TStreamerElement::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
+void TStreamerElement::Update(TClass *oldClass, TClass *newClass)
+{
+   //function called by the TClass constructor when replacing a fake class
+   //by the real class
+   
+   if (fClassObject == oldClass) fClassObject = newClass;
+}
+
+   
+//______________________________________________________________________________
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -345,6 +355,16 @@ void TStreamerBase::Streamer(TBuffer &R__b)
    } else {
       TStreamerBase::Class()->WriteBuffer(R__b,this);
    }
+}
+
+//______________________________________________________________________________
+void TStreamerBase::Update(TClass *oldClass, TClass *newClass)
+{
+   //function called by the TClass constructor when replacing a fake class
+   //by the real class
+   
+   if (fClassObject == oldClass) fClassObject = newClass;
+   if (fBaseClass   == oldClass) fBaseClass   = newClass;
 }
 
 //______________________________________________________________________________
