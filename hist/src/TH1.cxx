@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.56 2001/07/12 19:13:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.57 2001/07/19 17:12:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1561,6 +1561,19 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //*-*  By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
 //*-*  You can redefine this default value by calling :
 //*-*    TVirtualFitter::Fitter(0,150); //to get a maximum of 150 parameters
+//*-*
+//*-*   Warning when using the option "0"
+//*-*   =================================
+//*-*  When selecting the option "0", the fitted function is added to 
+//*-*  the list of functions of the histogram, but it is not drawn. 
+//*-*  You can undo what you disabled in the following way:
+//*-*    h.Fit("myFunction","0"); // fit, store function but do not draw
+//*-*    h.Draw(); function is not drawn
+//*-*    const Int_t kNotDraw = 1<<9;
+//*-*    h.GetFunction("myFunction")->ResetBit(kNotDraw);
+//*-*    h.Draw();  // function is visible again
+//*-*  
+//*-*  By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
