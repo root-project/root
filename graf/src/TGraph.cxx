@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.75 2002/07/16 21:59:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.76 2002/07/16 22:29:03 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1087,13 +1087,16 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //*-*- Reset Print level
    if (!fitOption.Quiet) {
       if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
-      else                 { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
+      else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
    }
 
 //*-*- Compute sum of squares of errors in the bin range
-   Double_t ey, sumw2=0;
+   Bool_t hasErrors = kFALSE;
+   Double_t ex, ey, sumw2=0;
    for (i=gxfirst;i<=gxlast;i++) {
+      ex = GetErrorX(i);
       ey = GetErrorY(i);
+      if (ex > 0 || ey > 0) hasErrors = kTRUE;
       sumw2 += ey*ey;
    }
 //*-*- Perform minimization
@@ -1106,6 +1109,11 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       grFitter->ExecuteCommand("MINOS",arglist,0);
    }
 
+   grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
+   grF1->SetChisquare(amin);
+   Int_t ndf = grF1->GetNumberFitPoints()-npar+nfixed;
+   grF1->SetNDF(ndf);
+
 //*-*- Get return status
    char parName[50];
    for (i=0;i<npar;i++) {
@@ -1116,12 +1124,10 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
          else                         werr = we;
       }
+      if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
       grF1->SetParameter(i,par);
       grF1->SetParError(i,werr);
    }
-   grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
-   grF1->SetChisquare(amin);
-   grF1->SetNDF(grF1->GetNumberFitPoints()-npar+nfixed);
 
 //*-*- Print final values of parameters.
    if (!fitOption.Quiet) {
@@ -1329,17 +1335,9 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
 //*-*-*-*-*-*Minimization function for Graphs using a Chisquare method*-*-*-*-*
 //*-*        =========================================================
 //
-// The algorithm uses a parabolic approximation for the derivative at point x.
-// The function is called at points x-ex, x and x+ex where ex is the
-// error along x.
-// In case of a TGraphErrors object, ex is directly taken as the specified
-// error at a point.
-// In case of a TGraph object, the error in x is not set (ex=0).
-// same for ey, the error along y.
-//
-// If both ex and ey are null, a special algorithm is used to estimate the errors.
-// The function is evaluated at x+epsilon and x-epsilon (epsilon=range/1000)
-// and the error is set to the difference of these two values.
+// In case of a TGraphErrors object, ex, the error along x,  is projected
+// along the y-direction by calculating the function at the points x-ex and
+// x+ex.
 //
 // The chisquare is computed as the sum of the quantity below at each point:
 //
@@ -1348,7 +1346,7 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
 //         ey**2 + ((f(x+ex) - f(x-ex))/2)**2
 //
 // where x and y are the point coordinates
-//
+
    Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
    Double_t x[1], xx[1];
    Double_t xm,xp;
@@ -1377,20 +1375,21 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
          f += fsum*fsum;
          continue;
       }
-      ex   = gr->GetErrorX(bin);
-      ey   = gr->GetErrorY(bin);
+      ex  = gr->GetErrorX(bin);
+      ey  = gr->GetErrorY(bin);
       if (ex < 0) ex = 0;
       if (ey < 0) ey = 0;
-      if (ex == 0) ex = (fxmax-fxmin)*1e-3;
-      xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-      xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
-      xx[0] = xm; fm = grF1->EvalPar(xx,u);
-      xx[0] = xp; fp = grF1->EvalPar(xx,u);
-      eux = 0.5*(fp-fm);
-      eu = eux*eux;
-      if (ey) eu += ey*ey;
+      if (ex >= 0) {
+        xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
+        xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+        xx[0] = xm; fm = grF1->EvalPar(xx,u);
+        xx[0] = xp; fp = grF1->EvalPar(xx,u);
+        eux = 0.5*(fp-fm);
+      } else
+        eux = 0.;
+      eu = ey*ey+eux*eux;
       if (eu <= 0) eu = 1;
-      f   += fsum*fsum/eu;
+      f += fsum*fsum/eu;
    }
    grF1->SetNumberFitPoints(npfits);
 }
@@ -1687,6 +1686,7 @@ void TGraph::PaintFit(TF1 *fit)
    else       dofit  = gStyle->GetOptFit();
    
    if (!dofit) fit = 0;
+   if (!fit) return;
    if (dofit  == 1) dofit  =  111;
    Int_t nlines = 0;
    Int_t print_fval    = dofit%10;
@@ -1755,7 +1755,7 @@ void TGraph::PaintFit(TF1 *fit)
 
    if (!done) fFunctions->Add(stats);
    stats->Paint();
-}
+} 
 
 //______________________________________________________________________________
 void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
