@@ -77,6 +77,10 @@ DCAPLIBDIR     := @dcaplibdir@
 DCAPLIB        := @dcaplib@
 DCAPINCDIR     := @dcapincdir@
 
+CHIRPLIBDIR    := @chirplibdir@
+CHIRPCLILIB    := @chirplib@
+CHIRPINCDIR    := @chirpincdir@
+
 ALIENLIBDIR    := @alienlibdir@
 ALIENCLILIB    := @alienlib@
 ALIENINCDIR    := @alienincdir@

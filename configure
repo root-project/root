@@ -23,6 +23,7 @@ enable_afs=no
 enable_alien=yes
 enable_asimage=yes
 enable_cern=yes
+enable_chirp=yes
 enable_dcache=yes
 enable_krb5=yes
 enable_ldap=yes
@@ -41,9 +42,9 @@ enable_soversion=no
 enable_srp=yes
 enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
-enable_exceptions=yes
 enable_ttf=yes
 enable_venus=yes
+enable_exceptions=yes
 show_pkglist=no
 
 options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
@@ -51,7 +52,7 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
          enable_srp enable_table enable_thread enable_ttf enable_venus \
          enable_krb5 enable_ldap enable_exceptions enable_openiv enable_alien \
-         enable_asimage"
+         enable_asimage enable_chirp"
 
 
 ######################################################################
@@ -356,6 +357,7 @@ enable/disable options, prefix with either --enable- or --disable-
    alien           AliEn support, requires libAliEn from ALICE
    asimage         Image processing support, requires libAfterImage
    cern            CERNLIB usage, build h2root and g2root
+   chirp           Chirp support (Condor remote I/O), requires libchirp_client
    dcache          dCache support, requires libdcap from DESY
    krb5            Kerberos5 support, requires Kerberos libs
    ldap            LDAP support, requires (Open)LDAP libs
@@ -383,6 +385,8 @@ with options, prefix with --with-, enables corresponding support
    asimage-incdir  Image processing support, location of afterimage.h
    asimage-libdir  Image processing support, location of libAfterImage
    cern-libdir     HBOOK converter, location of CERNLIB libraries
+   chirp-incdir    Chirp support, location of chirp_client.h
+   chirp-libdir    Chirp support, location of libchirp_client
    dcap-incdir     dCache support, location of dcap.h
    dcap-libdir     dCache support, location of libdcap
    krb5            Kerberos5 support, location of Kerberos distribution
@@ -478,6 +482,8 @@ if test $# -gt 0 ; then
       --with-asimage-incdir=*) asimageincdir=$optarg ; enable_asimage="yes" ;;
       --with-asimage-libdir=*) asimagelibdir=$optarg ; enable_asimage="yes" ;;
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
+      --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
+      --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
@@ -1075,6 +1081,32 @@ fi
 
 ######################################################################
 #
+### echo %%% Chirp Support - Third party libraries
+#
+# (See http://www.cs.wisc.edu/condor/chirp)
+#
+# Check for libchirp_client
+#
+if test ! "x$enable_chirp" = "xno" ; then
+    check_header "chirp_client.h" "$chirpincdir" $CHIRP $CHIRP/include \
+	/opt/chirp/include /usr/include /usr/local/include
+    chirpincdir=$found_dir
+
+    #At this time, libchirp_client.a should always be prefered over .so,
+    #to avoid problems with linkage on grid execute machines.
+
+    check_library "libchirp_client" "no" "$chirplibdir" $CHIRP $CHIRP/lib \
+	/opt/chirp/lib /usr/lib /usr/local/lib
+    chirplib=$found_lib
+    chirplibdir=$found_dir
+
+    if test "x$chirpincdir" = "x" || test "x$chirplib" = "x"; then
+        enable_chirp="no"
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% AliEn Support - Third party libraries
 #
 # (See http://alien.cern.ch)
@@ -1595,6 +1627,9 @@ sed \
     -e "s|@bindir@|$bindir|"                \
     -e "s|@cernlibdir@|$cernlibdir|"        \
     -e "s|@cernlibs@|$cernlib|"             \
+    -e "s|@chirpincdir@|$chirpincdir|"      \
+    -e "s|@chirplib@|$chirplib|"            \
+    -e "s|@chirplibdir@|$chirplibdir|"      \
     -e "s|@cintincdir@|$cintincdir|"        \
     -e "s|@datadir@|$datadir|"              \
     -e "s|@dcapincdir@|$dcapincdir|"        \

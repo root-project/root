@@ -82,6 +82,11 @@ ifneq ($(DCAPLIB),)
 MODULES      += dcache
 endif
 endif
+ifneq ($(CHIRPINCDIR),)
+ifneq ($(CHIRPCLILIB),)
+MODULES      += chirp
+endif
+endif
 ifneq ($(ALIENINCDIR),)
 ifneq ($(ALIENCLILIB),)
 MODULES      += alien
@@ -125,7 +130,7 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
                 pythia6 venus table mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd dcache hbook alien asimage ldap
+                rootd proofd dcache chirp hbook alien asimage ldap
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
