@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.5 2004/05/10 12:10:09 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.6 2004/06/11 15:59:10 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -136,6 +136,7 @@ public:
    void      MapRaised(Window_t id);
    void      UnmapWindow(Window_t id);
    void      DestroyWindow(Window_t id);
+   void      DestroySubwindows(Window_t id);
    void      RaiseWindow(Window_t id);
    void      LowerWindow(Window_t id);
    void      MoveWindow(Window_t id, Int_t x, Int_t y);

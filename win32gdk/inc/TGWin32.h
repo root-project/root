@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.20 2004/05/10 12:10:09 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.21 2004/06/11 15:59:10 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -233,6 +233,7 @@ public:
    void         MapRaised(Window_t id);
    void         UnmapWindow(Window_t id);
    void         DestroyWindow(Window_t id);
+   void         DestroySubwindows(Window_t id);
    void         RaiseWindow(Window_t id);
    void         LowerWindow(Window_t id);
    void         MoveWindow(Window_t id, Int_t x, Int_t y);

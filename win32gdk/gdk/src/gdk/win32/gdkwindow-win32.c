@@ -633,12 +633,12 @@ gdk_window_internal_destroy(GdkWindow * window,
 /* Like internal_destroy, but also destroys the reference created by
    gdk_window_new. */
 
-void gdk_window_destroy(GdkWindow * window)
+void gdk_window_destroy(GdkWindow * window, gboolean xdestroy)
 {
    GDK_NOTE(MISC,
             g_print("gdk_window_destroy: %#x\n",
                     GDK_DRAWABLE_XID(window)));
-   gdk_window_internal_destroy(window, TRUE, TRUE);
+   gdk_window_internal_destroy(window, xdestroy, TRUE);
    gdk_drawable_unref(window);
 }
 
@@ -2070,8 +2070,8 @@ static gboolean gdk_window_gravity_works(void)
 
       gdk_window_get_geometry(child, NULL, &y, NULL, NULL, NULL);
 
-      gdk_window_destroy(parent);
-      gdk_window_destroy(child);
+      gdk_window_destroy(parent, TRUE);
+      gdk_window_destroy(child, TRUE);
 
       gravity_works = ((y == -20) ? YES : NO);
    }
