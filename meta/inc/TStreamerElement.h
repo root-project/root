@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.32 2004/01/27 19:52:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.33 2004/05/04 15:57:24 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -135,15 +135,17 @@ public:
    TStreamerBasicPointer(const char *name, const char *title, Int_t offset, Int_t dtype, 
                          const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerBasicPointer();
-   const char    *GetCountName() const {return fCountName.Data();}
+   const char    *GetCountClass()   const {return fCountClass.Data();}
+   const char    *GetCountName()    const {return fCountName.Data();}
+   Int_t          GetCountVersion() const {return fCountVersion;}
    ULong_t        GetMethod() const;
    Int_t          GetSize() const;
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
    void           SetArrayDim(Int_t dim);
-   void           SetCountVersion(Int_t count) {fCountVersion = count;}
-   void           SetCountName(const char *name) {fCountName = name;}
    void           SetCountClass(const char *clname) {fCountClass = clname;}
+   void           SetCountName(const char *name)    {fCountName = name;}
+   void           SetCountVersion(Int_t count)      {fCountVersion = count;}
    
    ClassDef(TStreamerBasicPointer,2)  //Streamer element for a pointer to a basic type
 };
@@ -162,14 +164,17 @@ public:
    TStreamerLoop();
    TStreamerLoop(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerLoop();
+   const char    *GetCountClass()   const {return fCountClass.Data();}
+   const char    *GetCountName()    const {return fCountName.Data();}
+   Int_t          GetCountVersion() const {return fCountVersion;}
    const char    *GetInclude() const;
    ULong_t        GetMethod() const;
    Int_t          GetSize() const;
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
-   void           SetCountVersion(Int_t count) {fCountVersion = count;}
-   void           SetCountName(const char *name) {fCountName = name;}
    void           SetCountClass(const char *clname) {fCountClass = clname;}
+   void           SetCountName(const char *name)    {fCountName = name;}
+   void           SetCountVersion(Int_t count)      {fCountVersion = count;}
 
    ClassDef(TStreamerLoop,2)  //Streamer element for a pointer to an array of objects
 };
