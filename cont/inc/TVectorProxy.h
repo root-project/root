@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.1 2004/01/10 10:52:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.2 2004/01/16 21:29:27 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -60,10 +60,15 @@ namespace ROOT {
          unsigned int n = Size();
          if (n >= fNarr) {
             delete [] fArr;
+            // Note: heuristic for the increase in size.
             fNarr =  int(n*1.3) + 10;
             fArr  = new void*[fNarr+1];
          }
          
+         if (fArr[0]==At(0) && fArr[n-1]==At(n-1)) {
+            fArr[n]=0;
+            return fArr;            
+         }
          fArr[0] = At(0);
          Int_t valSize = sizeof(nested);
          for (unsigned int i=1;i<n;i++)   { fArr[i] = (char*)(fArr[i-1]) + valSize;}
