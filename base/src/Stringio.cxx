@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.5 2002/12/08 16:56:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.6 2003/06/30 09:54:24 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -81,24 +81,23 @@ istream& TString::ReadToDelim(istream& strm, char delim)
 
    Clobber(GetInitialCapacity());
    int p = strm.peek();             // Check if we are already at delim
-   if (p == delim) {                
-     strm.get();                      // eat the delimiter, and return \0.
-   }else{
-
-     while (1) {
-       strm.get(fData+Length(),            // Address of next byte
-                Capacity()-Length()+1,     // Space available (+1 for terminator)
-                delim);                    // Delimiter
-       Pref()->fNchars += strm.gcount();
-       if (!strm.good()) break;            // Check for EOF or stream failure
-       int p = strm.peek();
-       if (p == delim) {                   // Check for delimiter
-         strm.get();                       // eat the delimiter.
-         break;
-       }
-       // Delimiter not seen.  Resize and keep going:
-       Capacity(Length() + GetResizeIncrement());
-     }
+   if (p == delim) {
+      strm.get();                    // eat the delimiter, and return \0.
+   } else {
+      while (1) {
+         strm.get(fData+Length(),            // Address of next byte
+                  Capacity()-Length()+1,     // Space available (+1 for terminator)
+                  delim);                    // Delimiter
+         Pref()->fNchars += strm.gcount();
+         if (!strm.good()) break;            // Check for EOF or stream failure
+         int p = strm.peek();
+         if (p == delim) {                   // Check for delimiter
+            strm.get();                      // eat the delimiter.
+            break;
+         }
+         // Delimiter not seen.  Resize and keep going:
+         Capacity(Length() + GetResizeIncrement());
+      }
    }
 
    fData[Length()] = '\0';                // Add null terminator
@@ -170,4 +169,32 @@ ostream& operator<<(ostream& os, const TString& s)
    if (os.flags() & ios::unitbuf)
       os.flush();
    return os;
+}
+
+// ------------------- C I/O ------------------------------------
+
+//______________________________________________________________________________
+Bool_t TString::Fgets(FILE *fp)
+{
+   // Read one line from the stream, including the \n, or until EOF.
+   // Returns kTRUE if string lenght > 0.
+
+   char buf[256];
+
+   Clobber(GetInitialCapacity());
+
+   do {
+      if (fgets(buf, sizeof(buf), fp) == 0) break;
+         *this += buf;
+   } while (!ferror(fp) && !feof(fp) && strchr(buf,'\n') == 0);
+
+   return Length() > 0;
+}
+
+//______________________________________________________________________________
+void TString::Fputs(FILE *fp)
+{
+   // Write string to the stream.
+
+   fputs(Data(), fp);
 }

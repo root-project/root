@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.20 2002/07/19 12:58:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.21 2002/12/05 15:31:02 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 
 #ifndef __CINT__
 #include <string.h>
+#include <stdio.h>
 #endif
 
 #ifndef ROOT_TMath
@@ -226,6 +227,10 @@ public:
    static void      WriteString(TBuffer &b, const TString *a);
 
    friend TBuffer &operator<<(TBuffer &b, const TString *obj);
+
+   // C I/O interface
+   Bool_t   Fgets(FILE *fp);
+   void     Fputs(FILE *fp);
 
    // Type conversion
    operator const char*() const { return fData; }
