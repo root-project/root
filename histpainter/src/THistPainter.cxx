@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.204 2005/02/08 16:33:38 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.205 2005/02/08 16:35:21 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4550,7 +4550,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    if (fit) statw   = 1.8*gStyle->GetStatW();
    Double_t  stath  = (nlines+nlinesf)*gStyle->GetStatFontSize();
    if (stath <= 0 || 3 == (gStyle->GetStatFont()%10)) {
-      stath = 0.25*nlines*gStyle->GetStatH();
+      stath = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
    }
    if (stats) {
       stats->Clear();
