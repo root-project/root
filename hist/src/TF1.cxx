@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.40 2002/06/29 17:19:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.41 2002/07/16 08:06:07 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -661,7 +661,6 @@ void TF1::DrawDerivative(Option_t *option)
 
    char cmd[512];
    sprintf(cmd,"{TGraph *R__%s_Derivative = new TGraph((TF1*)0x%lx,\"d\");R__%s_Derivative->Draw(\"%s\");}",GetName(),(Long_t)this,GetName(),option);
-   printf("cmd=%s\n",cmd);
    gROOT->ProcessLine(cmd);
    if (padsav) padsav->cd();
 }
@@ -683,7 +682,6 @@ void TF1::DrawIntegral(Option_t *option)
 
    char cmd[512];
    sprintf(cmd,"{TGraph *R__%s_Integral = new TGraph((TF1*)0x%lx,\"i\");R__%s_Integral->Draw(\"%s\");}",GetName(),(Long_t)this,GetName(),option);
-   printf("cmd=%s\n",cmd);
    gROOT->ProcessLine(cmd);
    if (padsav) padsav->cd();
 }
