@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.67 2002/05/15 17:59:26 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.68 2002/05/16 06:21:27 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -244,14 +244,14 @@ FILE *fp;
 char *StrDup(const char *str);
 
 //______________________________________________________________________________
-bool CheckInputOperator(G__ClassInfo &cl) 
+bool CheckInputOperator(G__ClassInfo &cl)
 {
    // Check if the operator>> has been properly declared if the user has
    // resquested a custom version.
 
    bool has_input_error = false;
 
-   // Need to find out if the operator>> is actually defined for 
+   // Need to find out if the operator>> is actually defined for
    // this class.
    G__ClassInfo gcl;
    long offset;
@@ -259,10 +259,10 @@ bool CheckInputOperator(G__ClassInfo &cl)
    sprintf(proto,"TBuffer&,%s*&",cl.Fullname());
    G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
    delete proto;
-   
+
    fprintf(stderr, "Class %s: Do not generate operator>>()\n",
            cl.Fullname());
-   if (!methodinfo.IsValid() || 
+   if (!methodinfo.IsValid() ||
        methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
        strstr(methodinfo.FileName(),"Rtypes.h")!=0 ) {
       fprintf(stderr, "ERROR: This version of ROOT require the presence of an actual declaration of:\n");
@@ -271,7 +271,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
    } else {
       // fprintf(stderr, "WARNING: TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
    }
-   return has_input_error; 
+   return has_input_error;
 }
 
 
@@ -329,12 +329,12 @@ int NeedTemplateKeyword(G__ClassInfo &cl) {
 bool NeedShadowClass(G__ClassInfo& cl) {
 
   return (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT))
-         || (cl.HasMethod("ShowMembers") && cl.IsTmplt()); 
+         || (cl.HasMethod("ShowMembers") && cl.IsTmplt());
 }
 
 //______________________________________________________________________________
 void AddShadowClassName(string& buffer, G__ClassInfo &cl) {
-  
+
    G__ClassInfo class_obj = cl.EnclosingClass();
    if (class_obj.IsValid()) {
       AddShadowClassName(buffer, class_obj);
@@ -478,9 +478,9 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
       case '<': if (nesting==0) {
                    arg[c]=0;
                    current = next;
-                   next = &(arg[c+1]);                   
+                   next = &(arg[c+1]);
                 }
-                nesting++; 
+                nesting++;
                 break;
       case '>': nesting--; break;
       case ',': if (nesting==1) {
@@ -1155,24 +1155,24 @@ void WriteClassFunctions(G__ClassInfo &cl, int tmplt = 0)
        fprintf(fp, "//_______________________________________");
        fprintf(fp, "_______________________________________\n");
        if (add_template_keyword) fprintf(fp, "template <> ");
-       fprintf(fp, "const char* %s::ImplFileName()\n{\n", cl.Fullname());
+       fprintf(fp, "const char *%s::ImplFileName()\n{\n", cl.Fullname());
        fprintf(fp, "   return ROOT::GenerateInitInstance((const %s*)0x0)->GetImplFileName();\n}\n\n",
                cl.Fullname());
-       
+
        fprintf(fp, "//_______________________________________");
        fprintf(fp, "_______________________________________\n");
        if (add_template_keyword) fprintf(fp, "template <> ");
-       fprintf(fp, "int   %s::ImplFileLine()\n{\n", cl.Fullname());
+       fprintf(fp, "int %s::ImplFileLine()\n{\n", cl.Fullname());
        fprintf(fp, "   return ROOT::GenerateInitInstance((const %s*)0x0)->GetImplFileLine();\n}\n\n",
                cl.Fullname());
-       
+
        fprintf(fp, "//_______________________________________");
        fprintf(fp, "_______________________________________\n");
        if (add_template_keyword) fprintf(fp, "template <> ");
        fprintf(fp, "void %s::Dictionary()\n{\n", cl.Fullname());
        fprintf(fp, "   fgIsA = ROOT::GenerateInitInstance((const %s*)0x0)->GetClass();\n", cl.Fullname());
        fprintf(fp, "}\n\n");
-       
+
        fprintf(fp, "//_______________________________________");
        fprintf(fp, "_______________________________________\n");
        if (add_template_keyword) fprintf(fp, "template <> ");
@@ -1188,29 +1188,29 @@ void WriteClassInit(G__ClassInfo &cl)
    // Write the code to initialize the class name and the initialization object.
 
    fprintf(fp, "namespace ROOT {\n");
-   fprintf(fp, "   void %s_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent);\n", 
+   fprintf(fp, "   void %s_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent);\n",
            G__map_cpp_name((char *)cl.Fullname()));
-   
-   if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) 
+
+   if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
       fprintf(fp, "   void %s_Dictionary();\n\n",G__map_cpp_name((char *)cl.Fullname()));
 
-   fprintf(fp, "   TClass* %s_IsA(const void*);\n\n",G__map_cpp_name((char *)cl.Fullname()));
+   fprintf(fp, "   TClass *%s_IsA(const void*);\n\n",G__map_cpp_name((char *)cl.Fullname()));
 
    fprintf(fp, "   // Function generating the singleton Type initializer\n");
 
-   // fprintf(fp, "   template <> ROOT::ClassInfo< %s > *GenerateInitInstance< %s >(const %s*)\n   {\n", 
+   // fprintf(fp, "   template <> ROOT::ClassInfo< %s > *GenerateInitInstance< %s >(const %s*)\n   {\n",
    //      cl.Fullname(), cl.Fullname(), cl.Fullname() );
 
 #if 0
    fprintf(fp, "#if defined R__NAMESPACE_TEMPLATE_IMP_BUG\n");
-   fprintf(fp, "   template <> ROOT::TGenericClassInfo *ROOT::GenerateInitInstance< %s >(const %s*)\n   {\n", 
+   fprintf(fp, "   template <> ROOT::TGenericClassInfo *ROOT::GenerateInitInstance< %s >(const %s*)\n   {\n",
            cl.Fullname(), cl.Fullname() );
    fprintf(fp, "#else\n");
-   fprintf(fp, "   template <> ROOT::TGenericClassInfo *GenerateInitInstance< %s >(const %s*)\n   {\n", 
+   fprintf(fp, "   template <> ROOT::TGenericClassInfo *GenerateInitInstance< %s >(const %s*)\n   {\n",
            cl.Fullname(), cl.Fullname() );
    fprintf(fp, "#endif\n");
-#endif 
-   fprintf(fp, "   TGenericClassInfo *GenerateInitInstance(const %s*)\n   {\n", 
+#endif
+   fprintf(fp, "   TGenericClassInfo *GenerateInitInstance(const %s*)\n   {\n",
            cl.Fullname());
 
 
@@ -1230,7 +1230,7 @@ void WriteClassInit(G__ClassInfo &cl)
       fprintf(fp, "%s::Class_Version(),",cl.Fullname());
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
-      // Need to find out if the operator>> is actually defined for 
+      // Need to find out if the operator>> is actually defined for
       // this class.
       G__ClassInfo gcl;
       long offset;
@@ -1243,10 +1243,10 @@ void WriteClassInit(G__ClassInfo &cl)
       delete [] funcname;
       delete [] proto;
 
-      if (methodinfo.IsValid() &&  
+      if (methodinfo.IsValid() &&
           //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
           strstr(methodinfo.FileName(),"Rtypes.h")==0 ) {
-  
+
          // GetClassVersion was defined in the header file.
          //fprintf(fp, "GetClassVersion((%s *)0x0), ",cl.Fullname());
          fprintf(fp, "GetClassVersion<%s >(), ",cl.Fullname());
@@ -1263,8 +1263,8 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "                  typeid(%s), DefineBehavior(ptr, ptr),\n",cl.Fullname());
    //   fprintf(fp, "                  (ROOT::ClassInfo< %s >::ShowMembersFunc_t)&ROOT::ShowMembers,%d);\n", cl.Fullname(),cl.RootFlag());
    fprintf(fp, "                  ");
-   if (!NeedShadowClass(cl)){
-      if (!cl.HasMethod("ShowMembers")) fprintf(fp, "                  0, ");
+   if (!NeedShadowClass(cl)) {
+      if (!cl.HasMethod("ShowMembers")) fprintf(fp, "0, ");
    } else {
       fprintf(fp, "(void*)&%s_ShowMembers, ",G__map_cpp_name((char *)cl.Fullname()));
    }
@@ -1274,19 +1274,19 @@ void WriteClassInit(G__ClassInfo &cl)
    } else {
       fprintf(fp, "&%s_Dictionary, ",G__map_cpp_name((char *)cl.Fullname()));
    }
-   
+
    if (cl.HasMethod("IsA")) {
-      //      fprintf(fp, " 0, "); 
+      //      fprintf(fp, " 0, ");
    } else {
       fprintf(fp, "&%s_IsA, ", G__map_cpp_name((char *)cl.Fullname()));
    }
    fprintf(fp, "%d);\n", cl.RootFlag());
-   fprintf(fp, "      return &instance;\n"); 
+   fprintf(fp, "      return &instance;\n");
    fprintf(fp, "   }\n");
    fprintf(fp, "   // Static variable to force the class initialization\n");
-   //   fprintf(fp, "   static ROOT::ClassInfo< %s > & _R__UNIQUE_(Init) \n",
+   //   fprintf(fp, "   static ROOT::ClassInfo< %s > &_R__UNIQUE_(Init)\n",
    //        cl.Fullname() );
-   fprintf(fp, "   static ROOT::TGenericClassInfo * _R__UNIQUE_(Init) \n" );
+   fprintf(fp, "   static ROOT::TGenericClassInfo *_R__UNIQUE_(Init)\n" );
    fprintf(fp, "      = GenerateInitInstance((const %s*)0x0);\n\n", cl.Fullname());
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
@@ -1298,13 +1298,13 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (!cl.HasMethod("IsA")) {
       fprintf(fp, "   // Return the actual TClass for the object argument\n");
-      fprintf(fp, "   TClass* %s_IsA(const void* obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "      return gROOT->GetClass( typeid( * (%s*) obj ) );\n",cl.Fullname());
+      fprintf(fp, "   TClass *%s_IsA(const void* obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "      return gROOT->GetClass(typeid(*(%s*)obj));\n",cl.Fullname());
       fprintf(fp, "   }\n\n");
    }
 
    fprintf(fp,"}\n\n");
-   
+
 }
 
 //______________________________________________________________________________
@@ -1848,13 +1848,13 @@ void WritePointersSTL(G__ClassInfo &cl)
 void WriteBodyShowMembers(G__ClassInfo& cl, bool outside) {
 
    const char *prefix = "";
-   
+
    if (outside) {
       fprintf(fp, "      typedef %s ShadowClass;\n",GetFullShadowName(cl));
       fprintf(fp, "      ShadowClass *sobj = (ShadowClass*)obj;\n");
       fprintf(fp, "      sobj = sobj; // Dummy usage just in case there is no datamember.\n\n");
       prefix = "sobj->";
-   } 
+   }
 
    fprintf(fp, "      // Inspect the data members of an object of class %s.\n\n", cl.Fullname());
    if (cl.HasMethod("IsA") && !outside) {
@@ -1862,20 +1862,20 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside) {
       // This is to work around a bad msvc C++ bug.
       // This code would work in the general case, but why bother....and
       // we want to remember to eventually remove it ...
-      
+
       if (strstr(cl.Fullname(),"::")) {
          // there is a namespace involved, trigger MS VC bug workaround
          fprintf(fp, "   typedef %s msvc_bug_workaround;\n", cl.Fullname());
-         fprintf(fp, "   TClass *R__cl  = msvc_bug_workaround::IsA();\n");
+         fprintf(fp, "   TClass *R__cl = msvc_bug_workaround::IsA();\n");
       } else
-         fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
+         fprintf(fp, "   TClass *R__cl = %s::IsA();\n", cl.Fullname());
 #else
-      fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
+      fprintf(fp, "   TClass *R__cl = %s::IsA();\n", cl.Fullname());
 #endif
    } else {
-      fprintf(fp, "      TClass *R__cl  = ROOT::GenerateInitInstance((const %s*)0x0)->GetClass();\n", cl.Fullname());      
+      fprintf(fp, "      TClass *R__cl  = ROOT::GenerateInitInstance((const %s*)0x0)->GetClass();\n", cl.Fullname());
    }
-   fprintf(fp, "      Int_t   R__ncp = strlen(R__parent);\n");
+   fprintf(fp, "      Int_t R__ncp = strlen(R__parent);\n");
    fprintf(fp, "      if (R__ncp || R__cl || R__insp.IsA()) { }\n");
 
    // Inspect data members
@@ -1975,19 +1975,19 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside) {
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", (void*)&%s%s);\n",
                          m.Name(), prefix, m.Name());
                   /* if (can call ShowStreamer) */
-                  
+
                   char compareName[G__LONGLINE];
                   strcpy(compareName,clName);
                   strcat(compareName,"::");
-                  
-                  if (strlen(m.Type()->Name()) && 
+
+                  if (strlen(m.Type()->Name()) &&
                       strcmp(compareName,m.Type()->Name())!=0 ) {
                      // Filter out the unamed type from with a the class.
-                     fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", &%s%s, R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n", 
+                     fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", &%s%s, R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
                              m.Type()->Name(), prefix, m.Name(), m.Name());
                   }
                   if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
-                  
+
                }
             }
          }
@@ -2006,10 +2006,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside) {
          }
       } else {
          if (outside) {
-            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>( (::%s*) obj ), R__insp, R__parent);\n", 
+            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>( (::%s*) obj ), R__insp, R__parent);\n",
                     b.Name(), b.Name(), cl.Fullname());
          } else {
-            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>(this ), R__insp, R__parent);\n", 
+            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>(this ), R__insp, R__parent);\n",
                     b.Name(), b.Name());
          }
       }
@@ -2026,7 +2026,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
 
-   //   fprintf(fp, "void ROOT::ShowMembers< %s >(%s *obj, TMemberInspector &R__insp, char *R__parent)\n{\n", 
+   //   fprintf(fp, "void ROOT::ShowMembers< %s >(%s *obj, TMemberInspector &R__insp, char *R__parent)\n{\n",
    //      cl.Fullname(),cl.Fullname());
 //   fprintf(fp, "#ifdef R__ACCESS_IN_SYMBOL\n");
 //   fprintf(fp, "template <> void ROOT__ShowMembersFunc<%s >(%s *obj, TMemberInspector &R__insp, char *R__parent)\n   {\n",
@@ -2038,10 +2038,10 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
    if (outside || cl.IsTmplt()) {
       fprintf(fp, "namespace ROOT {\n");
 
-      fprintf(fp, "   void %s_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent)\n   {\n", 
+      fprintf(fp, "   void %s_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent)\n   {\n",
               G__map_cpp_name((char *)cl.Fullname()));
 //   fprintf(fp, "#endif\n");
-   
+
 //  if (outside || cl.IsTmplt()) {
       WriteBodyShowMembers(cl, outside || cl.IsTmplt() );
       fprintf(fp, "   }\n\n");
@@ -2055,7 +2055,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
 
 //   fprintf(fp, "#ifdef R__ACCESS_IN_SYMBOL\n");
 //   fprintf(fp, "namespace ROOT {\n");
-//   fprintf(fp, "   void ShowMembers(%s *obj, TMemberInspector &R__insp, char *R__parent)\n   {\n", 
+//   fprintf(fp, "   void ShowMembers(%s *obj, TMemberInspector &R__insp, char *R__parent)\n   {\n",
 //           cl.Fullname());
 //   fprintf(fp, "      ROOT__ShowMembersFunc(obj,R__insp,R__parent);\n");
 //   fprintf(fp, "   }\n\n");
@@ -2068,7 +2068,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
       if (add_template_keyword) fprintf(fp, "template <> ");
       fprintf(fp, "void %s::ShowMembers(TMemberInspector &R__insp, char *R__parent)\n{\n", cl.Fullname());
       if (!cl.IsTmplt()) {
-         WriteBodyShowMembers(cl, outside); 
+         WriteBodyShowMembers(cl, outside);
       } else {
          fprintf(fp, "   ROOT::%s_ShowMembers(this, R__insp, R__parent);\n",G__map_cpp_name((char *)cl.Fullname()));
       }
@@ -2108,7 +2108,7 @@ void WriteClassCode(G__ClassInfo &cl) {
 //______________________________________________________________________________
 int WriteNamespaceHeader(G__ClassInfo &cl) {
   // Write all the necessary opening part of the namespace and
-  // return the number of closing brackets needed 
+  // return the number of closing brackets needed
   // For example for Space1::Space2
   // we write: namespace Space1 { namespace Space2 {
   // and return 2.
@@ -2141,7 +2141,7 @@ void WriteShadowClass(G__ClassInfo &cl) {
   int closing_brackets = WriteNamespaceHeader(cl);
   if (closing_brackets) fprintf(fp,"\n");
   if (cl.HasMethod("Class_Name")) {
-     
+
      fprintf(fp,"      typedef ::%s %s;\n",cl.Fullname(),classname.c_str());
      // instead of fprintf(fp,"      using ::%s;\n",cl.Fullname());
   } else {
@@ -2153,7 +2153,7 @@ void WriteShadowClass(G__ClassInfo &cl) {
         //     fprintf(fp,"      #undef %s\n",codeGuard);
         //     fprintf(fp,"      #include \"%s\"\n",cl.FileName());
      //}
-  
+
      const char *prefix = "";
 
      fprintf(fp,"      #if !(defined(R__ACCESS_IN_SYMBOL) || defined(R__USE_SHADOW_CLASS))\n");
@@ -2162,16 +2162,16 @@ void WriteShadowClass(G__ClassInfo &cl) {
      fprintf(fp,"      #else\n");
 
      fprintf(fp,"      class %s ",classname.c_str());
-     
+
 
      // Write ShowMembers for base class(es) when they have the ShowMember() method
      G__BaseClassInfo b(cl);
      bool first = true;
      while (b.Next()) {
-        if (first) { 
+        if (first) {
            fprintf(fp, " : ");
-           first = false; 
-        } else { 
+           first = false;
+        } else {
            fprintf(fp, ", ");
         }
         if (b.Property() & G__BIT_ISPRIVATE)
@@ -2186,28 +2186,28 @@ void WriteShadowClass(G__ClassInfo &cl) {
      fprintf(fp, " {\n");
      fprintf(fp, "         public:\n");
      fprintf(fp, "         //friend XX;\n");
-   
+
      // Figure out if there are virtual function and write a dummy one if needed
      G__MethodInfo methods(cl);
      while (methods.Next()) {
        // fprintf(stderr,"%s::%s has property 0x%x\n",cl.Fullname(),methods.Name(),methods.Property());
         if (methods.Property()&
             (G__BIT_ISVIRTUALBASE|G__BIT_ISVIRTUAL|G__BIT_ISPUREVIRTUAL) ) {
-           fprintf(fp,"         // To force the creation of a virtual table.\n"); 
+           fprintf(fp,"         // To force the creation of a virtual table.\n");
            fprintf(fp,"         virtual ~%s() {};\n",classname.c_str());
            break;
         }
      }
-   
+
      // Write data members
      G__DataMemberInfo d(cl);
      while (d.Next()) {
-   
+
        //fprintf(stderr,"%s %s %d\n",d.Type()->Name(),d.Name(),d.Property());
-   
+
        if (d.Property() & G__BIT_ISSTATIC) continue;
        if (strcmp("G__virtualinfo",d.Name())==0) continue;
-      
+
        string type_name = d.Type()->Name();
 
        // Remove the eventual ThisClass:: part in the data member class name.
@@ -2215,14 +2215,14 @@ void WriteShadowClass(G__ClassInfo &cl) {
        // if (where==0) type_name.erase(where,strlen(cl.Fullname())+2);
        if (where==0) prefix="::";
        else prefix = "";
-   
+
        fprintf(fp,"         %s%s %s",prefix, type_name.c_str(),d.Name());
 
        for(int dim = 0; dim < d.ArrayDim(); dim++) {
           fprintf(fp, "[%d]",d.MaxIndex(dim));
        }
        fprintf(fp, "; //%s\n",d.Title());
-   
+
      }
 
      fprintf(fp,"      };\n");
@@ -2765,7 +2765,7 @@ int main(int argc, char **argv)
    // Loop over all classes and create Streamer() & Showmembers() methods
    G__ClassInfo cl;
 
-   
+
    fprintf(fp, "namespace ROOT {\n   namespace Shadow {\n");
    cl.Init();
    while (cl.Next()) {
