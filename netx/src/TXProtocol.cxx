@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXProtocol.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -19,19 +19,9 @@
 
 #include "TXProtocol.h"
 #include "Bytes.h"
-#include <netinet/in.h> // needed to use htonl/htons byte swap functions
-#include <string.h> // proto for memcpy (wanted by Solaris compiler)
-#include <stdio.h>
+
 
 namespace ROOT {
-
-//____________________________________________________________________________
-static kXR_int64 _htonll(kXR_int64 n)
-{
-   // custom client routine to convert long long (64 bit integers) from
-   // host to network byte order
-   return (kXR_int64)host2net((ULong64_t)n);
-}
 
 //___________________________________________________________________________
 void clientMarshall(ClientRequest* str)
@@ -40,14 +30,12 @@ void clientMarshall(ClientRequest* str)
    // parts of the 16-bytes buffer, only if it is composed
    // by some binary part
 
-   kXR_int64 tmpl;
-
    switch(str->header.requestid) {
    case kXR_auth:
       // no swap on ASCII fields
       break;
    case kXR_chmod:
-      str->chmod.mode = htons(str->chmod.mode);
+      str->chmod.mode = host2net(str->chmod.mode);
       break;
    case kXR_close:
       // no swap on ASCII fields
@@ -56,11 +44,11 @@ void clientMarshall(ClientRequest* str)
       // no swap on ASCII fields
       break;
    case kXR_getfile:
-      str->getfile.options = htonl(str->getfile.options);
-      str->getfile.buffsz  = htonl(str->getfile.buffsz);
+      str->getfile.options = host2net(str->getfile.options);
+      str->getfile.buffsz  = host2net(str->getfile.buffsz);
       break;
    case kXR_login:
-      str->login.pid     = htonl(str->login.pid);
+      str->login.pid = host2net(str->login.pid);
       break;
    case kXR_mkdir:
       // no swap on ASCII fields
@@ -69,8 +57,8 @@ void clientMarshall(ClientRequest* str)
       // no swap on ASCII fields
       break;
    case kXR_open:
-      str->open.mode    = htons(str->open.mode);
-      str->open.options = htons(str->open.options);
+      str->open.mode    = host2net(str->open.mode);
+      str->open.options = host2net(str->open.options);
       break;
    case kXR_ping:
       // no swap on ASCII fields
@@ -79,17 +67,15 @@ void clientMarshall(ClientRequest* str)
       // no swap on ASCII fields
       break;
    case kXR_putfile:
-      str->putfile.options = htonl(str->putfile.options);
-      str->putfile.buffsz  = htonl(str->putfile.buffsz);
+      str->putfile.options = host2net(str->putfile.options);
+      str->putfile.buffsz  = host2net(str->putfile.buffsz);
       break;
    case kXR_query:
       // no swap on ASCII fields
       break;
    case kXR_read:
-      memcpy(&tmpl, &str->read.offset, sizeof(kXR_int64) );
-      tmpl = _htonll(tmpl);
-      memcpy(&str->read.offset, &tmpl, sizeof(kXR_int64) );
-      str->read.rlen = htonl(str->read.rlen);
+      str->read.offset = host2net(str->read.offset);
+      str->read.rlen   = host2net(str->read.rlen);
       break;
    case kXR_rm:
       // no swap on ASCII fields
@@ -107,36 +93,34 @@ void clientMarshall(ClientRequest* str)
       // no swap on ASCII fields
       break;
    case kXR_write:
-      memcpy(&tmpl, &str->write.offset, sizeof(kXR_int64) );
-      tmpl = _htonll(tmpl);
-      memcpy(&str->write.offset, &tmpl, sizeof(kXR_int64) );
+      str->write.offset = host2net(str->write.offset);
       break;
    }
 
-   str->header.requestid = htons(str->header.requestid);
-   str->header.dlen      = htonl(str->header.dlen);
+   str->header.requestid = host2net(str->header.requestid);
+   str->header.dlen      = host2net(str->header.dlen);
 }
 
 //_________________________________________________________________________
 void clientUnmarshall(struct ServerResponseHeader* str)
 {
-   str->status = ntohs(str->status);
-   str->dlen = ntohl(str->dlen);
+   str->status = net2host(str->status);
+   str->dlen   = net2host(str->dlen);
 }
 
 //_________________________________________________________________________
 void ServerResponseHeader2NetFmt(struct ServerResponseHeader *srh)
 {
-   srh->status = htons(srh->status);
-   srh->dlen = htonl(srh->dlen);
+   srh->status = host2net(srh->status);
+   srh->dlen   = host2net(srh->dlen);
 }
 
 //_________________________________________________________________________
 void ServerInitHandShake2HostFmt(struct ServerInitHandShake *srh)
 {
-   srh->msglen  = ntohl(srh->msglen);
-   srh->msgtype = ntohl(srh->msgtype);
-   srh->msgval  = ntohl(srh->msgval);
+   srh->msglen  = net2host(srh->msglen);
+   srh->msgtype = net2host(srh->msgtype);
+   srh->msgval  = net2host(srh->msgval);
 }
 
 //_________________________________________________________________________
@@ -286,8 +270,6 @@ char *convertRespStatusToChar(kXR_int16 status)
 //___________________________________________________________________________
 void smartPrintClientHeader(ClientRequest* hdr)
 {
-   kXR_int64 tmpl;
-
    printf("\n\n================= DUMPING CLIENT REQUEST HEADER =================\n");
 
    printf("%40s0x%.2x 0x%.2x\n", "ClientHeader.streamid = ",
@@ -432,11 +414,9 @@ void smartPrintClientHeader(ClientRequest* hdr)
              hdr->read.fhandle[2],
              hdr->read.fhandle[3]);
 
-      memcpy(&tmpl, &hdr->read.offset, sizeof(kXR_int64) );
-
       printf("%40s%lld\n",
              "ClientHeader.read.offset = ",
-             tmpl);
+             hdr->read.offset);
 
       printf("%40s%d\n",
              "ClientHeader.read.rlen = ",
@@ -489,11 +469,9 @@ void smartPrintClientHeader(ClientRequest* hdr)
              hdr->write.fhandle[2],
              hdr->write.fhandle[3]);
 
-      memcpy(&tmpl, &hdr->write.offset, sizeof(kXR_int64) );
-
       printf("%40s%lld\n",
              "ClientHeader.write.offset = ",
-             tmpl);
+             hdr->write.offset);
 
       printf("%40s0 repeated %d times\n",
              "ClientHeader.write.reserved = ",

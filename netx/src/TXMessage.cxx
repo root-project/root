@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXMessage.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -20,11 +20,9 @@
 #include "TXMessage.h"
 #include "TXPhyConnection.h"
 #include "TXProtocol.h"
-
 #include "TError.h"
 #include "TXDebug.h"
-#include <stdlib.h> // for malloc
-#include <string.h> // for memcpy
+
 
 ClassImp(TXMessage);
 

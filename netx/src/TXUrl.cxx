@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXUrl.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -13,30 +13,18 @@
 #include "TXDebug.h"
 #include "TString.h"
 #include "TError.h"
-#include <string.h>
-#include <stdio.h>
-#include <iostream>
-#include <ctype.h>               // needed by isdigit()
-#include <netdb.h>               // needed by getservbyname()
-#include <netinet/in.h>          // needed by ntohs()
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <resolv.h>
-#include <arpa/nameser.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include "TSystem.h"
 #include "TInetAddress.h"
+
+#include <ctype.h>               // needed by isdigit()
+
 
 extern int h_errno;
 
 using namespace std;
 
+
 ClassImp(TXUrl);
-
-
 
 //_____________________________________________________________________________
 TXUrl::TXUrl(TString Urls) : fIsValid(kTRUE)
@@ -354,24 +342,3 @@ void TXUrl::ConvertDNSAliases(UrlArray& urls, TString list, TString fname)
 
 
 }
-
-//_____________________________________________________________________________
-const char *TXUrl::ConvertIP_to_Name(const char* IP)
-{
-   struct in_addr A;
-   struct hostent *H;
-   //  char str[INET_ADDRSTRLEN];
-
-   memset((void *)&A, 0, sizeof(A));
-   inet_pton(AF_INET, IP, (void *)&A);
-   //  H = gethostbyaddr(&A, sizeof(A), AF_INET);
-   H = gethostbyaddr((const char *)&A, sizeof(A), AF_INET);
-   //  cout << H->h_name << endl;
-
-   if (H)
-      return (const char* )H->h_name;
-   else
-      return IP;
-}
-
-

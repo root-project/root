@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -45,10 +45,6 @@
 #include "TXError.h"
 #include "TXUrl.h"
 #include "TXNetConn.h"
-
-#include <strings.h>
-#include <string.h>
-#include <unistd.h>
 
 
 ClassImp(TXNetFile);

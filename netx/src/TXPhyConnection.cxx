@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -17,20 +17,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
 #include "TXPhyConnection.h"
 #include "TError.h"
 #include "TXDebug.h"
 #include "TXMessage.h"
 #include "TString.h"
-#include <sys/socket.h>
 #include "TEnv.h"
 #include "TSystem.h"
 #include "TThread.h"
 #include "TApplication.h"
 #include "Riostream.h"
+
 
 ClassImp(TXPhyConnection);
 

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -35,7 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include <pthread.h>
+
 #ifndef ROOT_TString
 #include "TString.h"
 #endif

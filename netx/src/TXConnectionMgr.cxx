@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -37,12 +37,6 @@
 #include "TXMessage.h"
 #include "TError.h"
 #include "TXMutexLocker.h"
-
-#ifdef AIX
-#include <sys/sem.h>
-#else
-#include <semaphore.h>
-#endif
 
 extern TEnv *gEnv;
 

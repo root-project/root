@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXUrl.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -46,8 +46,6 @@ private:
    // Takes a sequence of hostname and resolves it into a vector of TUrl
    void ConvertDNSAliases(UrlArray&, TString, TString);
    Bool_t ConvertSingleDNSAlias(UrlArray&, TString, TString);
-
-   const char *ConvertIP_to_Name(const char* IP);
 
  public:
    TXUrl(TString);

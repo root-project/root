@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 #include "TEnv.h"
 #include "TRegexp.h"
 #include "TObjString.h"
-
+#include "TUrl.h"
 #include "TXDebug.h"
 #include "TXConnectionMgr.h"
 #include "TXNetConn.h"
@@ -31,22 +31,6 @@
 #include "TXProtocol.h"
 
 #include "XrdSec/XrdSecInterface.hh"
-#include "TUrl.h"
-
-#include <stdio.h>      // needed by printf
-#include <stdlib.h>     // needed by getenv()
-#include <pwd.h>        // needed by getpwuid()
-#include <sys/types.h>  // needed by getpid()
-#include <unistd.h>     // needed by getpid() and getuid()
-#include <string.h>     // needed by memcpy() and strcspn()
-#include <ctype.h>
-//#include <netinet/in.h> // needed by htonl()
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
 
 
 extern TEnv *gEnv;
@@ -1098,7 +1082,7 @@ Bool_t TXNetConn::DoLogin()
 
    SetSID(reqhdr.header.streamid);
    reqhdr.header.requestid = kXR_login;
-   reqhdr.login.pid = getpid();
+   reqhdr.login.pid = gSystem->GetPid();
 
    // Get username from Url
    TString User = fUrl.GetUser();

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #endif
 
 #include <time.h> // for time_t data type
-#include <pthread.h>
+
 
 enum ELoginState {
    kNo      = 0,
@@ -70,13 +70,6 @@ private:
                                              // out the data from the socket
                                              // in the async mode
    Bool_t              fReaderthreadrunning;
-
-/* #ifndef __CINT__ */
-
-/*    pthread_t           fReaderthreadhandler; // The thread which is going to pump */
-/*                                              // out the data from the socket */
-/*                                              // in the async operations */
-/* #endif */
 
    TString             fRemoteAddress;
    Int_t               fRemotePort;
