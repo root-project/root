@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.62 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.63 2002/01/27 13:57:01 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1082,35 +1082,52 @@ void TROOT::InitThreads()
 }
 
 //______________________________________________________________________________
-Int_t TROOT::LoadClass(const char *classname, const char *libname)
+Int_t TROOT::LoadClass(const char *classname, const char *libname,
+                       Bool_t check)
 {
    // Check if class "classname" is known to the interpreter. If
-   // not it will load library "libname". Returns 0 on successful loading
-   // and -1 in case libname does not exist or in case of error.
+   // not it will load library "libname". If the library name does
+   // not start with "lib", "lib" will be prepended and a search will
+   // be made in the DynamicPath (see .rootrc). If not found a search
+   // will be made on libname (without "lib" prepended) and if not found
+   // a direct try of libname will be made (in case it contained an
+   // absolute path.
+   // If check is true it will only check if libname exists and is
+   // readable.
+   // Returns 0 on successful loading and -1 in case libname does not
+   // exist or in case of error.
 
    if (TClassTable::GetDict(classname)) return 0;
 
    Int_t err;
 
-   if (classname[0] != 'T')
-      err = gSystem->Load(libname, 0, kTRUE);
-   else {
-      // special case for ROOT classes Txxx
-      char *lib, *path;
+   char *path;
+   char *lib = 0;
+   if (strncmp(libname, "lib", 3))
       lib = Form("lib%s", libname);
-      if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
+   if (lib && (path = gSystem->DynamicPathName(lib, kTRUE))) {
+      if (check)
+         err = 0;
+      else
          err = gSystem->Load(path, 0, kTRUE);
-         delete [] path;
-      } else {
-#ifdef WIN32
-         err = gSystem->Load(lib, 0, kTRUE);
-#else
+      delete [] path;
+   } else if ((path = gSystem->DynamicPathName(libname, kTRUE))) {
+      if (check)
+         err = 0;
+      else
+         err = gSystem->Load(path, 0, kTRUE);
+      delete [] path;
+   } else {
+      if (check) {
+         if (!gSystem->AccessPathName(libname, kReadPermission))
+            err = 0;
+         else
+            err = -1;
+      } else
          err = gSystem->Load(libname, 0, kTRUE);
-#endif
-      }
    }
 
-   if (err == 0)
+   if (err == 0 && !check)
       GetListOfTypes(kTRUE);
 
    if (err == -1)

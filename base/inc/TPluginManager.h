@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.1 2002/01/27 13:53:35 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -83,6 +83,7 @@ private:
 
 public:
    const char *GetClass() const { return fClass; }
+   Int_t       CheckPlugin();
    Int_t       LoadPlugin();
 
    ClassDef(TPluginHandler,1)  // Handler for plugin libraries

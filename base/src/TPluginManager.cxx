@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.1 2002/01/27 13:53:35 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -80,6 +80,15 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
    if (ruri.Index(re) != kNPOS)
       return kTRUE;
    return kFALSE;
+}
+
+//______________________________________________________________________________
+Int_t TPluginHandler::CheckPlugin()
+{
+   // Check if the plugin library for this handler exits. Returns 0 on
+   // when it exists and -1 in case the library does not exist.
+
+   return gROOT->LoadClass(fClass, fPlugin, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -220,8 +229,13 @@ void TPluginManager::Print(Option_t *) const
    printf("=====================================================================\n");
 
    while ((h = (TPluginHandler*) next())) {
-      printf("%-18s %-15s %-18s %s\n", h->fBase.Data(), h->fRegexp.Data(),
-             h->fClass.Data(), h->fPlugin.Data());
+      const char *exist = "";
+      if (h->CheckPlugin() == -1)
+         exist = " [*]";
+      printf("%-18s %-15s %-18s %s%s\n", h->fBase.Data(), h->fRegexp.Data(),
+             h->fClass.Data(), h->fPlugin.Data(), exist);
    }
+   printf("=====================================================================\n");
+   printf("[*] plugin not available\n");
    printf("=====================================================================\n\n");
 }
