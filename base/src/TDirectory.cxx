@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.28 2002/07/09 21:08:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.29 2002/08/02 18:54:37 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -808,17 +808,18 @@ TObject *TDirectory::Get(const char *namecycle)
 //
 //  VERY IMPORTANT NOTE:
 //  In case the class of this object derives from TObject but not
-//  as a first inheritance, one must cast the return value twice.
-//  Example1: Normal case:
+//  as a first inheritance, one must use dynamic_cast<>().
+//  Example 1: Normal case:
 //      class MyClass : public TObject, public AnotherClass
 //   then on return, one can do:
-//    MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
+//      MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
 //
-//  Example2: Special case:
+//  Example 2: Special case:
 //      class MyClass : public AnotherClass, public TObject
-//   then on return, one must do:
-//    MyClass *obj = (MyClass*)((void*)directory->Get("some object of MyClass");
+//  then on return, one must do:
+//      MyClass *obj = dynamic_cast<MyClass*>(directory->Get("some object of MyClass"));
 //
+//  Of course, dynamic_cast<> can also be used in the example 1.
 
    Short_t  cycle;
    char     name[256];
