@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.27 2002/09/15 10:16:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.29 2002/10/23 21:56:31 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -930,7 +930,7 @@ TMatrix &TMatrix::NormByColumn(const TVector &v, Option_t *option)
       return *this;
    }
 
-   TString opt;
+   TString opt(option);
    opt.ToUpper();
    const Int_t divide = (opt.Contains("D")) ? 1 : 0;
 
@@ -974,7 +974,7 @@ TMatrix &TMatrix::NormByRow(const TVector &v, Option_t *option)
       return *this;
    }
 
-   TString opt;
+   TString opt(option);
    opt.ToUpper();
    const Int_t divide = (opt.Contains("D")) ? 1 : 0;
 
@@ -2761,10 +2761,9 @@ TMatrix &TMatrix::Apply(const TElementPosAction &action)
    }
 
    Real_t *ep = fElements;
-   Int_t i,j;
-   for (j = fColLwb; j < fColLwb+fNcols; j++)
-      for (i = fRowLwb; i < fRowLwb+fNrows; i++)
-         action.Operation(*ep++,i,j);
+   for (action.fJ = fColLwb; action.fJ < fColLwb+fNcols; action.fJ++)
+      for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
+         action.Operation(*ep++);
 
    Assert(ep == fElements+fNelems);
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.26 2002/09/15 10:16:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.28 2002/10/23 21:56:31 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -929,7 +929,7 @@ TMatrixD &TMatrixD::NormByColumn(const TVectorD &v, Option_t *option)
       return *this;
    }
 
-   TString opt;
+   TString opt(option);
    opt.ToUpper();
    const Int_t divide = (opt.Contains("D")) ? 1 : 0;
 
@@ -973,7 +973,7 @@ TMatrixD &TMatrixD::NormByRow(const TVectorD &v, Option_t *option)
       return *this;
    }
 
-   TString opt;
+   TString opt(option);
    opt.ToUpper();
    const Int_t divide = (opt.Contains("D")) ? 1 : 0;
 
