@@ -24,7 +24,6 @@ NETO         := $(NETS:.cxx=.o)
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
 
 #### DaemonUtils goes into libSrvAuth ####
-NETH         := $(filter-out $(MODDIRI)/DaemonUtils.h,$(NETH))
 NETS         := $(filter-out $(MODDIRS)/DaemonUtils.cxx,$(NETS))
 NETO         := $(filter-out $(MODDIRS)/DaemonUtils.o,$(NETO))
 
