@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.2 2000/07/15 05:16:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.3 2000/08/11 20:10:12 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -80,7 +80,7 @@ public:
                             *name8="p8",const char *name9="p9"); // *MENU*
  virtual void       Update() {;}
 
- ClassDef(TFormula,3)  //The formula base class  f(x,y,z,par)
+ ClassDef(TFormula,4)  //The formula base class  f(x,y,z,par)
 };
 
 #endif

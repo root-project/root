@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.2 2000/06/13 10:37:48 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -74,7 +74,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax); // *MENU*
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax);
 
-   ClassDef(TF2,3)  //The Parametric 2-D function
+   ClassDef(TF2,4)  //The Parametric 2-D function
 };
 
 inline void TF2::SetRange(Double_t xmin, Double_t xmax)
