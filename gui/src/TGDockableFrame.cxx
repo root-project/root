@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.3 2004/07/09 00:36:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.4 2004/07/30 15:42:20 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -49,7 +49,7 @@ ClassImp(TGDockableFrame)
 
 //______________________________________________________________________________
 TGDockButton::TGDockButton(const TGCompositeFrame *p, int id) :
-   TGButton (p, id, kChildFrame)
+   TGButton (p, id, GetDefaultGC()(), kChildFrame)
 {
    // Create a dock button (i.e. button with two vertical bars).
 
