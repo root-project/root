@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -133,7 +133,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t xlow,Ax
 
 
 //______________________________________________________________________________
-void TProfile::BuildOptions(Float_t ymin, Float_t ymax, Option_t *option)
+void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 {
 //*-*-*-*-*-*-*Set Profile histogram structure and options*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
@@ -197,7 +197,7 @@ TProfile::TProfile(const TProfile &profile)
 
 
 //______________________________________________________________________________
-void TProfile::Add(TH1 *h1, Float_t c1)
+void TProfile::Add(TH1 *h1, Double_t c1)
 {
    // Performs the operation: this = this + c1*h1
 
@@ -219,7 +219,7 @@ void TProfile::Add(TH1 *h1, Float_t c1)
    }
 
 //*-*- Add statistics
-   Float_t ac1 = TMath::Abs(c1);
+   Double_t ac1 = TMath::Abs(c1);
    fEntries += ac1*p1->GetEntries();
    fTsumw   += ac1*p1->fTsumw;
    fTsumw2  += ac1*p1->fTsumw2;
@@ -239,7 +239,7 @@ void TProfile::Add(TH1 *h1, Float_t c1)
 }
 
 //______________________________________________________________________________
-void TProfile::Add(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2)
+void TProfile::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
 {
 //*-*-*-*-*Replace contents of this profile by the addition of h1 and h2*-*-*
 //*-*      =============================================================
@@ -270,8 +270,8 @@ void TProfile::Add(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2)
    }
 
 //*-*- Add statistics
-   Float_t ac1 = TMath::Abs(c1);
-   Float_t ac2 = TMath::Abs(c2);
+   Double_t ac1 = TMath::Abs(c1);
+   Double_t ac2 = TMath::Abs(c2);
    fEntries = ac1*p1->GetEntries() + ac2*p2->GetEntries();
    fTsumw   = ac1*p1->fTsumw       + ac2*p2->fTsumw;
    fTsumw2  = ac1*p1->fTsumw2      + ac2*p2->fTsumw2;
@@ -366,7 +366,7 @@ void TProfile::Divide(TH1 *h1)
 
 
 //______________________________________________________________________________
-void TProfile::Divide(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2, Option_t *option)
+void TProfile::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //*-*-*-*-*Replace contents of this profile by the division of h1 by h2*-*-*
 //*-*      ============================================================
@@ -613,7 +613,7 @@ void TProfile::Multiply(TH1 *)
 
 
 //______________________________________________________________________________
-void TProfile::Multiply(TH1 *, TH1 *, Float_t, Float_t, Option_t *)
+void TProfile::Multiply(TH1 *, TH1 *, Double_t, Double_t, Option_t *)
 {
 //*-*-*-*-*Replace contents of this profile by multiplication of h1 by h2*-*
 //*-*      ================================================================
@@ -674,7 +674,7 @@ void TProfile::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TProfile::Scale(Float_t c1)
+void TProfile::Scale(Double_t c1)
 {
 //*-*-*-*-*Multiply this profile by a constant c1*-*-*-*-*-*-*-*-*
 //*-*      ======================================
@@ -700,7 +700,7 @@ void TProfile::SetBinEntries(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TProfile::SetBins(Int_t nx, Float_t xmin, Float_t xmax)
+void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================
@@ -736,4 +736,35 @@ void TProfile::SetErrorOption(Option_t *option)
    if (opt.Contains("s")) fErrorMode = kERRORSPREAD;
    if (opt.Contains("i")) fErrorMode = kERRORSPREADI;
    if (opt.Contains("g")) fErrorMode = kERRORSPREADG;
+}
+
+//______________________________________________________________________________
+void TProfile::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TProfile.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      TH1D::Streamer(R__b);
+      fBinEntries.Streamer(R__b);
+      R__b >> (Int_t&)fErrorMode;
+      if (R__v < 2) {
+         Float_t ymin,ymax;
+         R__b >> ymin; fYmin = ymin;
+         R__b >> ymax; fYmax = ymax;
+      } else {
+         R__b >> fYmin;
+         R__b >> fYmax;
+      }
+      R__b.CheckByteCount(R__s, R__c, TProfile::IsA());
+   } else {
+      R__c = R__b.WriteVersion(TProfile::IsA(), kTRUE);
+      TH1D::Streamer(R__b);
+      fBinEntries.Streamer(R__b);
+      R__b << (Int_t)fErrorMode;
+      R__b << fYmin;
+      R__b << fYmax;
+      R__b.SetByteCount(R__c, kTRUE);
+   }
 }
