@@ -3,15 +3,26 @@
 #include "TError.h"
 #include "TObject.h"
 #include "TROOT.h"
-
+#include "TMath.h"
 #include "versions.h"
 #endif
 
 #include <vector>
 
 #include <iostream>
-void TestError(const char *msg) {
-   std::cerr << msg << "\n";
+#include <sstream>
+
+#define VERIFY(X)                                                 \
+  bool Verify##X (Int_t entryNumber, const std::string &testname) \
+  {                                                               \
+     return SetOrVerify##X (entryNumber,false,testname);          \
+  }
+
+void TestError(const std::string &test, const char *msg) {
+   std::cerr << "Error for '" << test << "' : " << msg << "\n";
+}
+void TestError(const std::string &test, const std::string &str) {
+   TestError(test, str.c_str());
 }
 //void TestError(const char *msg);
 
@@ -20,13 +31,32 @@ public:
    unsigned int val;
    Helper() : val(0) {};
    explicit Helper(int v) : val(v) {};
-   bool operator==(const Helper &rhs) const { return val==rhs.val; }
-   bool operator!=(const Helper &rhs) const { return !(*this==rhs); }
+   //bool operator==(const Helper &rhs) const { return val==rhs.val; }
+   //bool operator!=(const Helper &rhs) const { return !(*this==rhs); }
+   bool IsEquiv(const Helper &rhs) const { return  val==rhs.val; }
 };
 
-void TestError(const Helper &orig, const Helper &copy) {
-     TestError(Form("Helper object wrote %d and read %d\n",
-                    orig.val,copy.val));
+template <class T> void TestError(const std::string &test, const std::vector<T> &orig, const std::vector<T> &copy) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class T> void TestError(const std::string &test, const T &orig, const T &copy) {
+   std::stringstream s;
+   s << "We wrote: " << orig << " but read " << copy << std::ends;
+   TestError(test, s.str());
+}
+
+void TestError(const std::string &test, const Helper &orig, const Helper &copy) {
+     TestError(test, Form("Helper object wrote %d and read %d\n",
+                          orig.val,copy.val));
+}
+
+void TestError(const std::string &test, const Helper* &orig, const Helper* &copy) {
+   if (orig==0 || copy==0) {
+      TestError(test,Form("For Helper, non-initialized pointer %p %p",orig,copy));
+   } else {
+      TestError(test, *orig, *copy); 
+   }
 }
 
 template <class T> void fill(T& filled, UInt_t seed) {
@@ -39,40 +69,135 @@ template <class T> void fill(T& filled, UInt_t seed) {
   }  
 }
 
-template <class T> bool isEqual(const T& orig, const T& copy) {
+template <class T> void fill(std::vector<T*>& filled, UInt_t seed) {
+   UInt_t size = seed%10;
 
-    if (orig.size() != copy.size()) {
-       TestError(Form("IsEqual for %s: Wrong size %d vs %d\n",typeid(T).name(),orig.size(),copy.size()));
-       return false;
-    }
-
-    bool result = true;
-    typename T::const_iterator iorig = orig.begin();
-    typename T::const_iterator icopy = copy.begin();
-    UInt_t i = 0;
-    while ( iorig != orig.end() && icopy != copy.end() ) {
-        if (!(*iorig == *icopy)) {
-           TestError(Form("IsEqual for %s:\nelem #%d are not equal",
-                     typeid(T).name(),i));
-           TestError(*iorig,*icopy);
-           result = false;
-        }
-        i++;
-        iorig++;
-        icopy++;
-    }
-    return result;
+   filled.clear();
+   for(UInt_t i=0; i<size; i++) {
+      T* val = new T(seed*10+i);
+      filled.push_back(val);
+  }  
 }
 
+bool IsEquiv(const std::string &, const Helper &orig, const Helper &copy) { return  orig.IsEquiv(copy); }
 
+template <class T> bool IsEquiv(const std::string &test, const T& orig, const T& copy) {
+   TClass *cl = gROOT->GetClass(typeid(T));
+   const char* classname = cl?cl->GetName():typeid(T).name();
 
+   if (orig.size() != copy.size()) {
+      TestError(test,Form("For %s, wrong size! Wrote %d and read %d\n",classname,orig.size(),copy.size()));
+      return false;
+   }
+
+   bool result = true;
+   typename T::const_iterator iorig = orig.begin();
+   typename T::const_iterator icopy = copy.begin();
+   UInt_t i = 0;
+   while ( iorig != orig.end() && icopy != copy.end() ) {
+      if (!IsEquiv(test,*iorig,*icopy)) {
+         TestError(test, Form("for %s:\nelem #%d are not equal",
+                              classname,i));
+         TestError(test,*iorig,*icopy);
+         result = false;
+      }
+      i++;
+      iorig++;
+      icopy++;
+   }
+   return result;
+}
+
+template <class T> bool IsEquiv(const std::string &test, T* orig, T* copy) {
+   TClass *cl = gROOT->GetClass(typeid(T));
+   const char* classname = cl?cl->GetName():typeid(T).name();
+
+   if ( (orig==0 && copy) || (orig && copy==0) ) {
+      TestError(test,Form("For %s, non-initialized pointer %p %p",classname,orig,copy));
+      return false;
+   }
+   return IsEquiv(test, *orig, *copy) && false;
+}
+
+bool IsEquiv(const std::string &, float orig, float copy) {
+   float epsilon = 1e-6;
+   float diff = orig-copy;
+   return TMath::Abs( diff/copy ) < epsilon;
+}
+
+bool IsEquiv(const std::string &, int orig, int copy) {
+   return orig==copy;
+}
 
 class vectorHolder : public TObject {
 
+   template <class T> bool SetOrVerify(const char *dataname,
+                                       T& datamember,
+                                       Int_t seed,
+                                       Int_t entryNumber, 
+                                       bool reset, 
+                                       const std::string &testname) {
+      bool result = true;
+
+      // Int_t seed = 3 * (entryNumber+1);
+      if (reset) {
+         fill(datamember, seed);
+      } else {
+         T build;
+         fill(build, seed);
+         std::stringstream s;
+         s << testname << " verify " << dataname << " entry #" <<  entryNumber << std::ends;
+         result = IsEquiv(s.str(), build, datamember);
+      }
+      return result;      
+   }
+
+   template <class T> bool SetOrVerify(const char *dataname,
+                                       T* &datamember,
+                                       Int_t seed,
+                                       Int_t entryNumber, 
+                                       bool reset, 
+                                       const std::string &testname) {
+      bool result = true;
+
+      // Int_t seed = 3 * (entryNumber+1);
+      if (reset) {
+         delete datamember;
+         datamember = new T;
+         fill(*datamember, seed);
+      } else {
+         T build;
+         fill(build, seed);
+         std::stringstream s;
+         s << testname << " verify " << dataname << " entry #" <<  entryNumber << std::ends;
+         result = IsEquiv(s.str(), &build, datamember);
+      }
+      return result;      
+   }
+
 public:   
-   std::vector<float >  *fScalarPtr; //!
+
+   vectorHolder() : TObject(),
+      fScalarPtr(0),
+      fObjectPtr(0)
+      ,fPtrObjectPtr(0)
+      {}
+
+   explicit vectorHolder(Int_t entry) : TObject()
+      ,fScalarPtr(0)
+      ,fObjectPtr(0)
+      ,fPtrObjectPtr(0)
+      {
+         Reset(entry);
+      }
+
+
+   std::vector<int >    *fScalarPtr;
    std::vector<float >   fScalar;
    std::vector<Helper >  fObject;
+   std::vector<Helper > *fObjectPtr;
+   std::vector<Helper* > fPtrObject;
+   std::vector<Helper* >*fPtrObjectPtr;
 
    typedef std::vector<Helper > nested_t;
    typedef std::vector<nested_t > nesting_t;
@@ -82,157 +207,73 @@ public:
    nesting_t fNested;  //
 #endif
 
-   vectorHolder() : TObject() {}
-
-   explicit vectorHolder(Int_t entry) : TObject() {
-      Reset(entry);
+   bool SetOrVerifyScalar(Int_t entryNumber, bool reset, const std::string &testname) {
+      Int_t seed = 3 * (entryNumber+1);
+      return SetOrVerify("fScalar",fScalar,seed,entryNumber,reset,testname);
    }
-
-   bool SetOrVerifyScalar(Int_t entryNumber, bool reset) {
-      TClass *cl = gROOT->GetClass(typeid(fScalar));
-      bool result = true;
-
-      UInt_t size = 3 * (entryNumber+1);
-      
-      if (reset) {
-         fScalar.clear();
-      } else {
-         if (size != fScalar.size()) {
-            Error("VerifyScalar","At entry #%d wrong size (%d instead of %d) of fScalar of type %s",
-                  entryNumber,fScalar.size(),size,cl?cl->GetName():typeid(fScalar).name());
-            result = false;
-         }
-      }
-
-     std::vector<float >::iterator iter = fScalar.begin();
-
-      for(UInt_t i=0; i<size; i++) {
-         float val = entryNumber*10000+i;
-
-         if (reset) {
-            fScalar.push_back(val);
-         } else {
-            if (iter == fScalar.end()) {
-               Error("VerifyScalar","At entry #%d, index %d: premature end of container, only %d elements processed",
-                     entryNumber, i);
-               result = false;
-               break;
-            }
-            if ( val != *iter) {
-               Error("VerifyScalar","At entry #%d, index %d wrong value (%f instead of %f) for fScalar of type %s",
-                     entryNumber,i,*iter,val,cl?cl->GetName():typeid(fScalar).name());
-               result = false;
-            }
-            iter++;
-         }
-
-      }  
-      return result;
-   }
+   VERIFY(Scalar);
    
-   bool SetOrVerifyObject(Int_t entryNumber, bool reset) {
-      TClass *cl = gROOT->GetClass(typeid(fObject));
-      bool result = true;
-      UInt_t size = 2 * (entryNumber+1);
-std::cerr << "verifying object " << fObject.size() << " " << size << std::endl;
-      if (reset) {
-         fObject.clear();
-      } else {
-         if (size != fObject.size()) {
-            Error("VerifyObject","At entry #%d wrong size (%d instead of %d) of fObject of type %s",
-                  entryNumber,fObject.size(),size,cl?cl->GetName():typeid(fObject).name());
-            result = false;
-         }
-      }
-
-      std::vector<Helper >::iterator iter(fObject.begin());
-
-      for(UInt_t i=0; i<size; i++) {
-         Helper val(entryNumber*20000+2*i);
-
-         if (reset) {
-            fObject.push_back(val);
-         } else {
-            if (iter == fObject.end()) {
-               Error("VerifyObject","At entry #%d, index %d: premature end of container, only %d elements processed",
-                     entryNumber, i);
-               result = false;
-               break;
-            }
-            if ( val != *iter) {
-               Error("VerifyObject","At entry #%d, index %d wrong value (%f instead of %f) for fObject of type %s",
-                     entryNumber,i,(*iter).val,val.val,cl?cl->GetName():typeid(fObject).name());
-               result = false;
-            }
-            iter++;
-         }
-
-      }  
-      return result;
+   bool SetOrVerifyScalarPtr(Int_t entryNumber, bool reset, const std::string &testname) {
+      Int_t seed = 4 * (entryNumber+1);
+      return SetOrVerify("fScalarPtr",fScalarPtr,seed,entryNumber,reset,testname);
    }
+   VERIFY(ScalarPtr);
 
-   bool SetOrVerifyNested(Int_t entryNumber, bool reset) {
+   bool SetOrVerifyObject(Int_t entryNumber, bool reset, const std::string &testname) {
+      UInt_t seed = 2 * (entryNumber+1);
+      return SetOrVerify("fObject",fObject,seed,entryNumber,reset,testname);
+   }
+   VERIFY(Object);
+
+   bool SetOrVerifyObjectPtr(Int_t entryNumber, bool reset, const std::string &testname) {
+      UInt_t seed = 3 * (entryNumber+1);
+      return SetOrVerify("fObjectPtr",fObjectPtr,seed,entryNumber,reset,testname);
+   }
+   VERIFY(ObjectPtr);
+
+   bool SetOrVerifyPtrObject(Int_t entryNumber, bool reset, const std::string &testname) {
+      UInt_t seed = 4 * (entryNumber+1);
+      return SetOrVerify("fPtrObject",fPtrObject,seed,entryNumber,reset,testname);
+   }
+   VERIFY(PtrObject);
+
+   bool SetOrVerifyPtrObjectPtr(Int_t entryNumber, bool reset, const std::string &testname) {
+      UInt_t seed = 5 * (entryNumber+1);
+      return SetOrVerify("fPtrObjectPtr",fPtrObjectPtr,seed,entryNumber,reset,testname);
+   }
+   VERIFY(PtrObjectPtr);
+
+   bool SetOrVerifyNested(Int_t entryNumber, bool reset, const std::string &testname) {
       if (gFile && !HasNestedContainer(gFile)) return true;
 
-      TClass *cl = gROOT->GetClass(typeid(fNested));
+      UInt_t seed = 1 * (entryNumber+1);
+      return SetOrVerify("fNested",fNested,seed,entryNumber,reset,testname);
+   }
+   VERIFY(Nested)
+
+protected:
+   bool SetOrVerify(Int_t entryNumber, bool reset, const std::string &testname) {
       bool result = true;
-      UInt_t size = 1 * (entryNumber+1);
-      if (reset) {
-         fNested.clear();
-      } else {
-         if (size != fNested.size()) {
-            Error("VerifyNested","At entry #%d wrong size (%d instead of %d) of fNested of type %s",
-                  entryNumber,fNested.size(),size,cl?cl->GetName():typeid(fNested).name());
-            result = false;
-         }
-      }
-
-      nesting_t::iterator iter(fNested.begin());
-      for(UInt_t i=0; i<size; i++) {
-         nested_t subvec; // (entryNumber*20000+2*i);
-         
-         fill(subvec, entryNumber*1000+3*i);
-
-         if (reset) {
-            fNested.push_back(subvec);
-         } else {
-            if (iter == fNested.end()) {
-               Error("VerifyNested","At entry #%d, index %d: premature end of container, only %d elements processed",
-                     entryNumber, i);
-               result = false;
-               break;
-            }
-            if ( subvec.size() != (*iter).size() ) {
-               Error("VerifyNested","At entry #%d, index %d wrong sub-size (%d instead of %d) for fNested of type %s",
-                     entryNumber,i,(*iter).size(),subvec.size(),cl?cl->GetName():typeid(fNested).name());
-               result = false;
-            }
-            isEqual(subvec, *iter);
-            iter++;
-         }
-
-      }  
+      result &= SetOrVerifyScalar(entryNumber,reset,testname);
+      result &= SetOrVerifyScalarPtr(entryNumber,reset,testname);
+      result &= SetOrVerifyObject(entryNumber,reset,testname);
+      result &= SetOrVerifyObjectPtr(entryNumber,reset,testname);
+      result &= SetOrVerifyPtrObject(entryNumber,reset,testname);
+      result &= SetOrVerifyPtrObjectPtr(entryNumber,reset,testname);
+      result &= SetOrVerifyNested(entryNumber,reset,testname);
+      if (reset) Assert(result);
       return result;
    }
 
+public:
+   
    void Reset(Int_t entryNumber) {
-      bool result = true;
-      result &= SetOrVerifyScalar(entryNumber,true);
-      result &= SetOrVerifyObject(entryNumber,true);
-      result &= SetOrVerifyNested(entryNumber,true);
-      Assert(result);
+      SetOrVerify(entryNumber, true, "reseting");
    }
    
-   bool Verify(Int_t entryNumber) {
-      bool result = true;
-      result &= VerifyScalar(entryNumber);
-      result &= VerifyObject(entryNumber);
-      result &= VerifyNested(entryNumber);
-      return result;
+   bool Verify(Int_t entryNumber, const std::string &testname) {
+      return SetOrVerify(entryNumber,false,testname);
    }
-   bool VerifyScalar(Int_t entryNumber) { return SetOrVerifyScalar(entryNumber,false); }
-   bool VerifyObject(Int_t entryNumber) { return SetOrVerifyObject(entryNumber,false); }
-   bool VerifyNested(Int_t entryNumber) { return SetOrVerifyNested(entryNumber,false); }
 
 #if defined(R__NO_NESTED_CONTAINER)
    ClassDef(vectorHolder,1);

@@ -1,15 +1,16 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TSystem.h"
+#include "TLeafObject.h"
 
-void TestError(const char *msg);
+void TestError(const std::string &test, const char *msg);
 
 template <class HolderClass> Bool_t checkHolder() {
    HolderClass *holder = new HolderClass( 0 );
-   Bool_t result = holder->Verify(0);
+   Bool_t result = holder->Verify(0,"checkHolder");
    delete holder;
    holder = new HolderClass( 2 );
-   result &= holder->Verify( 2 );
+   result &= holder->Verify(2,"checkHolder" );
    return result;
 }
 
@@ -35,6 +36,8 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
 
    TString classname = holder->IsA()->GetName();
    TTree *tree = new TTree("stltree","testing stl containers");
+   tree->Branch("split_2.",classname,&holder,32000,-2);
+   tree->Branch("split_1.",classname,&holder,32000,-1);
    tree->Branch("split0.",classname,&holder,32000,0);
    tree->Branch("split1.",classname,&holder,32000,1);
    tree->Branch("split2.",classname,&holder,32000,2);
@@ -43,8 +46,8 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
    if (testingTopLevelVectors) {
      TClass *cls = gROOT->GetClass(typeid(holder->fScalar));
      if (!cls) {
-        TestError(Form("Writing holder class: Missing class for %s",
-                  typeid(holder->fScalar).name()));
+        TestError("TreeBuilding", Form("Writing holder class: Missing class for %s",
+                                       typeid(holder->fScalar).name()));
      } else {
         TString scalarclass = cls?cls->GetName():typeid(holder->fScalar).name();
         tree->Branch("scalar0." ,scalarclass,&holder->fScalar,32000,0);
@@ -55,7 +58,7 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
  
      TClass *clo = gROOT->GetClass(typeid(holder->fObject));
      if (!clo) {
-        TestError(Form("Writing holder class: Missing class for %s",
+        TestError("TreeBuilding", Form("Writing holder class: Missing class for %s",
                   typeid(holder->fObject).name()));
      } else {
        TString objectclass = clo?clo->GetName():typeid(holder->fObject).name();
@@ -67,7 +70,7 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
 
      TClass *cln = gROOT->GetClass(typeid(holder->fNested));
      if (!cln) {
-        TestError(Form("Writing holder class: Missing class for %s",
+        TestError("TreeBuilding", Form("Writing holder class: Missing class for %s",
                   typeid(holder->fNested).name()));
      } else {     
         TString nestedclass = cln?cln->GetName():typeid(holder->fNested).name();
@@ -92,24 +95,34 @@ template <class HolderClass> bool verifyBranch(TTree *chain, const char *bname, 
 
    TBranch *branch = chain->GetBranch(bname);
    if (branch==0) {
-      TestError(Form("Missing branch: %s",bname));
-      return false;
-   }
-
-   add = (HolderClass**)branch->GetAddress();
-   if (add==0) {
-      TestError(Form("Branch %s with add == 0!",bname));
+      TestError("treeReading",Form("Missing branch: %s",bname));
       return false;
    }
    
-   holder = *add;
+   if (branch->InheritsFrom("TBranchObject")) {
+      TLeafObject *tbo = dynamic_cast<TLeafObject*>(branch->GetListOfLeaves()->At(0));
+      holder = (HolderClass*)(tbo->GetObject());
+
+      if (holder==0) {
+         TestError("treeReading",Form("BranchObject %s with holder == 0!",bname));
+         return false;         
+      }
+   } else {
+      add = (HolderClass**)branch->GetAddress();
+      if (add==0) {
+         TestError("treeReading",Form("Branch %s with add == 0!",bname));
+         return false;
+      }
+      holder = *add;
+   }
+   
    switch (type) {
-      case 0: return holder->Verify(chain->GetTree()->GetReadEntry());
-      case 1: return holder->VerifyScalar(chain->GetTree()->GetReadEntry());
-      case 2: return holder->VerifyObject(chain->GetTree()->GetReadEntry());
-      case 3: return holder->VerifyNested(chain->GetTree()->GetReadEntry());
+      case 0: return holder->Verify(chain->GetTree()->GetReadEntry(),bname);
+      case 1: return holder->VerifyScalar(chain->GetTree()->GetReadEntry(),bname);
+      case 2: return holder->VerifyObject(chain->GetTree()->GetReadEntry(),bname);
+      case 3: return holder->VerifyNested(chain->GetTree()->GetReadEntry(),bname);
       default: 
-         TestError(Form("Unknown type %d in verifyBranch",type));
+         TestError("treeReading",Form("Unknown type %d in verifyBranch",type));
          return false;
    }
 }
@@ -124,7 +137,7 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
 
    holder = dynamic_cast<HolderClass*>( file.Get("holder") );
    if (!holder) result = false;
-   else result &= holder->Verify(0);
+   else result &= holder->Verify(0,"Write in dir");
 
    TTree *chain = dynamic_cast<TTree*>( file.Get("stltree") );
 
@@ -135,10 +148,12 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
          ) {
 
       if ( chain->GetEntry(entryInChain) == 0 ) {
-         TestError(Form("Nothing read for entry #%d",entryInChain));
+         TestError("treeReading",Form("Nothing read for entry #%d",entryInChain));
          break;
       }
 
+      result &= verifyBranch<HolderClass>(chain,"split_2.");
+      result &= verifyBranch<HolderClass>(chain,"split_1.");
       result &= verifyBranch<HolderClass>(chain,"split0.");
       result &= verifyBranch<HolderClass>(chain,"split1.");
       result &= verifyBranch<HolderClass>(chain,"split2.");
