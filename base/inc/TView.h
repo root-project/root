@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.2 2000/06/13 12:28:49 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -113,23 +113,23 @@ Double_t        *GetTnorm() {return fTnorm;}
     static  void AdjustPad(TVirtualPad *pad=0);
     virtual void AdjustScales(TVirtualPad *pad=0); // *MENU*
     virtual void Centered3DImages(TVirtualPad *pad=0);
-            void Centered();                       // *MENU*
+    virtual void Centered();                       // *MENU*
     virtual void FrontView(TVirtualPad *pad=0);
-            void Front();                          // *MENU*
+    virtual void Front();                          // *MENU*
 
     virtual void ZoomView(TVirtualPad *pad=0, Double_t zoomFactor = 1.25 );
     virtual void UnzoomView(TVirtualPad *pad=0,Double_t unZoomFactor = 1.25);
 
     virtual void RotateView(Double_t phi, Double_t theta, TVirtualPad *pad=0);
     virtual void SideView(TVirtualPad *pad=0);
-            void Side();                          // *MENU*
+    virtual void Side();                          // *MENU*
     virtual void TopView(TVirtualPad *pad=0);
-            void Top();                           // *MENU*
+    virtual void Top();                           // *MENU*
 
     virtual void ToggleRulers(TVirtualPad *pad=0);
-            void ShowAxis();                      // *MENU*
+    virtual void ShowAxis();                      // *MENU*
     virtual void ToggleZoom(TVirtualPad *pad=0);
-            void ZoomMove();                      // *MENU*
+    virtual void ZoomMove();                      // *MENU*
 
    ClassDef(TView,1)  //3-D View
 };
