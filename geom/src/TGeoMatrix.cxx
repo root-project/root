@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.23 2004/09/03 15:30:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.24 2004/09/03 16:08:44 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -207,7 +207,7 @@ TGeoMatrix::~TGeoMatrix()
    if (IsRegistered() && gGeoManager) {
       if (gGeoManager->GetListOfVolumes()) {
          gGeoManager->GetListOfMatrices()->Remove(this);
-         Error("dtor", "a registered matrix was removed !!!");
+         Warning("dtor", "Registered matrix %s was removed", GetName());
       }
    }
 }
@@ -534,7 +534,6 @@ TGeoTranslation::TGeoTranslation(Double_t dx, Double_t dy, Double_t dz)
 {
 // Default constructor defining the translation
    if (dx || dy || dz) SetBit(kGeoTranslation);
-   SetDefaultName();
    SetTranslation(dx, dy, dz);
 }
 
@@ -701,7 +700,6 @@ TGeoRotation::TGeoRotation(const char *name)
       if (i%4) fRotationMatrix[i] = 0;
       else fRotationMatrix[i] = 1.0;
    }
-   SetDefaultName();
 }
 
 //_____________________________________________________________________________
@@ -713,7 +711,6 @@ TGeoRotation::TGeoRotation(const char *name, Double_t phi, Double_t theta, Doubl
 // second, psi is the rotation angle about new Z and is done third. All angles are in
 // degrees.
    SetAngles(phi, theta, psi);
-   SetDefaultName();
 }
 
 //_____________________________________________________________________________
@@ -728,7 +725,6 @@ TGeoRotation::TGeoRotation(const char *name, Double_t theta1, Double_t phi1, Dou
 //      theta1=90, phi1=0, theta2=90, phi2=90, theta3=0, phi3=0
 //   SetBit(kGeoRotation);
    SetAngles(theta1, phi1, theta2, phi2, theta3, phi3);
-   SetDefaultName();
 }
 
 //_____________________________________________________________________________
@@ -795,6 +791,7 @@ void TGeoRotation::FastRotZ(Double_t *sincos)
    fRotationMatrix[1] = -sincos[0];
    fRotationMatrix[3] = sincos[0];
    fRotationMatrix[4] = sincos[1];
+   SetBit(kGeoRotation);
 }
 
 //_____________________________________________________________________________
@@ -833,6 +830,7 @@ void TGeoRotation::MasterToLocal(const Double_t *master, Double_t *local) const
 void TGeoRotation::RotateX(Double_t angle)
 {
 // Rotate about X axis with angle expressed in degrees.
+   SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
@@ -851,6 +849,7 @@ void TGeoRotation::RotateX(Double_t angle)
 void TGeoRotation::RotateY(Double_t angle)
 {
 // Rotate about Y axis with angle expressed in degrees.
+   SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
@@ -869,6 +868,7 @@ void TGeoRotation::RotateY(Double_t angle)
 void TGeoRotation::RotateZ(Double_t angle)
 {
 // Rotate about Z axis with angle expressed in degrees.
+   SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
@@ -1007,6 +1007,7 @@ void TGeoRotation::GetInverse(Double_t *invmat) const
 void TGeoRotation::MultiplyBy(TGeoRotation *rot, Bool_t after)
 {
    const Double_t *matleft, *matright;
+   SetBit(kGeoRotation);
    Double_t  newmat[9] = {0};
    if (after) {
       matleft  = &fRotationMatrix[0];
@@ -1053,7 +1054,6 @@ TGeoScale::TGeoScale(Double_t sx, Double_t sy, Double_t sz)
 {
 // default constructor
    SetBit(kGeoScale);
-   SetDefaultName();
    SetScale(sx, sy, sz);
 }
 
@@ -1172,7 +1172,6 @@ TGeoCombiTrans::TGeoCombiTrans(const char *name)
                :TGeoMatrix(name)
 {
 // ctor
-   SetDefaultName();
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
 }
 
@@ -1181,7 +1180,6 @@ TGeoCombiTrans::TGeoCombiTrans(Double_t dx, Double_t dy, Double_t dz, TGeoRotati
                :TGeoMatrix("")
 {
 // ctor
-   SetDefaultName();
    SetTranslation(dx, dy, dz);
    fRotation = 0;
    SetRotation(rot);
@@ -1192,7 +1190,6 @@ TGeoCombiTrans::TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Doubl
                :TGeoMatrix(name)
 {
 // ctor
-   SetBit(kGeoCombiTrans);
    SetTranslation(dx, dy, dz);
    fRotation = 0;
    SetRotation(rot);
@@ -1281,8 +1278,9 @@ void TGeoCombiTrans::RotateX(Double_t angle)
 {
 // Combine this with a rotation about X axis. Current rotation must be not NULL.
    if (!fRotation) fRotation = new TGeoRotation();
+   SetBit(kGeoRotation);
    fRotation->RotateX(angle);
-   if (fTranslation[0]==0 && fTranslation[1]==0 && fTranslation[2]==0) return;
+   if (!IsTranslation()) return;
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
@@ -1298,8 +1296,9 @@ void TGeoCombiTrans::RotateY(Double_t angle)
 {
 // Combine this with a rotation about Y axis. Current rotation must be not NULL.
    if (!fRotation) fRotation = new TGeoRotation();
+   SetBit(kGeoRotation);
    fRotation->RotateY(angle);
-   if (fTranslation[0]==0 && fTranslation[1]==0 && fTranslation[2]==0) return;
+   if (!IsTranslation()) return;
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
@@ -1315,8 +1314,9 @@ void TGeoCombiTrans::RotateZ(Double_t angle)
 {
 // Combine this with a rotation about Z axis. Current rotation must be not NULL.
    if (!fRotation) fRotation = new TGeoRotation();
+   SetBit(kGeoRotation);
    fRotation->RotateZ(angle);
-   if (fTranslation[0]==0 && fTranslation[1]==0 && fTranslation[2]==0) return;
+   if (!IsTranslation()) return;
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
@@ -1328,12 +1328,12 @@ void TGeoCombiTrans::RotateZ(Double_t angle)
 }   
 
 //_____________________________________________________________________________
-void TGeoCombiTrans::SetRotation(TGeoRotation *rot)
+void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
 {
 // Copy the rotation from another one.
    if (rot->IsRotation()) {
       SetBit(kGeoRotation);
-      const TGeoRotation r = *rot;
+      const TGeoRotation &r = *rot;
       if (!fRotation) fRotation = new TGeoRotation(r);
    } else {   
       if (!IsRotation()) return;
@@ -1432,7 +1432,6 @@ TGeoGenTrans::TGeoGenTrans(Double_t dx, Double_t dy, Double_t dz,
 {
 // ctor
    SetBit(kGeoGenTrans);
-   SetDefaultName();
    SetTranslation(dx, dy, dz);
    SetScale(sx, sy, sz);
    SetRotation(rot);
