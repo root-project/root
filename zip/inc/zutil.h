@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zutil.h,v 1.1 2004/03/17 17:34:01 brun Exp $ */
+/* @(#) $Id: zutil.h,v 1.2 2004/06/16 20:23:52 brun Exp $ */
 
 #ifndef ZUTIL_H
 #define ZUTIL_H
@@ -37,11 +37,11 @@ typedef uch FAR uchf;
 typedef unsigned short ush;
 typedef ush FAR ushf;
 typedef unsigned long  ulg;
-/* THE ORIGINAL z_errmsg renamed to z_ROOT_errmsg to avoid a load conflict on MacOS */
-extern const char * const z_ROOT_errmsg[10]; /* indexed by 2-zlib_error */
+/* THE ORIGINAL z_errmsg renamed to R__z_errmsg to avoid a load conflict on MacOS */
+extern const char * const R__z_errmsg[10]; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
 
-#define ERR_MSG(err) z_ROOT_errmsg[Z_NEED_DICT-(err)]
+#define ERR_MSG(err) R__z_errmsg[Z_NEED_DICT-(err)]
 
 #define ERR_RETURN(strm,err) \
   return (strm->msg = (char*)ERR_MSG(err), (err))
