@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.6 2001/11/17 15:56:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.5 2001/09/25 07:10:48 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -113,11 +113,10 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
 //*-*          ============================================
 //
 //  If leaf name has the forme var[nelem], where nelem is alphanumeric, then
-//     If nelem is a leaf name, return countval = 1 and the pointer to 
-//     the leaf named nelem.
+//     If nelem is a leaf name, return countval = 0 and the pointer to leaf.
 //  If leaf name has the forme var[nelem], where nelem is a digit, then
-//     return countval = nelem and a null pointer.
-//  Otherwise return countval=0 and a null pointer.
+//     return countval = nelemr and a null pointer.
+//  Otherwise return countval=1 and a null pointer.
 //
 
    countval = 1;

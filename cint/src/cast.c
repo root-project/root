@@ -108,9 +108,6 @@ G__value result3;
 #ifndef G__OLDIMPLEMENTATION961
   int isconst=0;
 #endif
-#ifndef G__PHILIPPE31
-  char hasstar=0;
-#endif
   G__value store_result;
   store_result = result3;
 
@@ -132,45 +129,13 @@ G__value result3;
   else if (strncmp (casttype, "typename", 8) == 0) {
     strcpy (casttype, casttype+8);
   }
-#ifndef G__PHILIPPE33
-  if (casttype[0]==' ') strcpy (casttype, casttype+1);
-  while (strncmp(casttype,"const ",6)==0) {
+  if(strncmp(casttype,"const",5)==0 && 
+     -1==G__defined_tagname(casttype,2)&&-1==G__defined_typename(casttype)) {
 #ifndef G__OLDIMPLEMENTATION961
     isconst=1;
 #endif
-    strcpy(casttype,casttype+6);
-  } 
-#endif
-#ifndef G__PHILIPPE31
-  if(strncmp(casttype,"const",5)==0) {
-     for( lenitem=strlen(casttype)-1;
-          lenitem>=5 && (casttype[lenitem]=='*' || casttype[lenitem]=='&');
-          lenitem--) {}
-     if (lenitem>=5) {
-        lenitem++;
-        hasstar = casttype[lenitem];
-        casttype[lenitem] = '\0';
-     }
-     if (-1==G__defined_tagname(casttype,2)&&-1==G__defined_typename(casttype)) {
-#else
-  if(strncmp(casttype,"const",5)==0 && 
-     -1==G__defined_tagname(casttype,2)&&-1==G__defined_typename(casttype)) {
-#endif
-#ifndef G__OLDIMPLEMENTATION961
-        isconst=1;
-#endif
-#ifndef G__PHILIPPE31
-        if (hasstar) casttype[lenitem] = hasstar;
-#endif
-        strcpy(casttype,casttype+5);
-#ifndef G__PHILIPPE31
-     } else if (hasstar) casttype[lenitem] = hasstar;
-#endif
+    strcpy(casttype,casttype+5);
   }
-#ifndef G__PHILIPPE32
-  /* since we have the information let's return it */
-  result3.isconst = isconst;
-#endif
 #ifndef G__OLDIMPLEMENTATION1539
   if(isspace(casttype[0])) strcpy(casttype,casttype+1);
 #endif
@@ -532,10 +497,6 @@ G__value result3;
 
 #ifndef G__OLDIMPLEMENTATION1408
   if(type!=result3.type) result3.ref = 0; /* questionable */
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1628
-  result3.isconst = isconst;
 #endif
 
   switch(type) {

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.79 2002/01/23 08:38:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.75 2002/01/02 21:46:53 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -139,7 +139,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    if (btype || fStreamerType <= 0 
              || fStreamerType == 7 
              || fStreamerType > 15) fEntryOffsetLen = 1000; 
-   if (basketsize < 100+fEntryOffsetLen) basketsize = 100+fEntryOffsetLen;
+   if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
@@ -188,8 +188,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          } else {
             clones = (TClonesArray*)pointer;
          }
-         basket->DeleteEntryOffset(); //entryoffset not require for the clonesarray counterif (!clones) return; // TClonesArray must exist
-         fEntryOffsetLen = 0;
+         if (!clones) return; // TClonesArray must exist
          clm = clones->GetClass();
          if (!clm) return;
          // ===> Create a leafcount
@@ -199,8 +198,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          fLeaves.Add(leaf);
          fTree->GetListOfLeaves()->Add(leaf);
          // Create a basket for the leafcount
-         TBasket *basket2 = new TBasket(name,fTree->GetName(),this);
-         fBaskets.Add(basket2);
+         TBasket *basket = new TBasket(name,fTree->GetName(),this);
+         fBaskets.Add(basket);
          // ===> create sub branches for each data member of a TClonesArray
          fType = 3;
          //check that the contained objects class name is part of the element title
@@ -409,14 +408,8 @@ void TBranchElement::Browse(TBrowser *b)
          if (len) {
             if (mothername(len-1)!='.') {
                mothername.Append(".");
-               name.Prepend(mothername);
-            } else {
-               // If the mother's name end with a dot then 
-               // the daughter probabley already contains the mother's name
-               if (name.Index(mothername)==kNPOS) {
-                  name.Prepend(mothername);
-               }
             }
+            name.Prepend(mothername);
          }
       }
 
@@ -1176,12 +1169,11 @@ void TBranchElement::SetBasketSize(Int_t buffsize)
 {
 // Reset basket size for all subbranches of this branchelement
 
-   TBranch::SetBasketSize(buffsize);
-
+   fBasketSize = buffsize;
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i=0;i<nbranches;i++)  {
       TBranch *branch = (TBranch*)fBranches[i];
-      branch->SetBasketSize(fBasketSize);
+      branch->SetBasketSize(buffsize);
    }
 }
 

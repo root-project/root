@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.24 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.22 2001/12/19 07:15:19 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -25,7 +25,8 @@
 #include "config.h"
 #endif
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TApplication.h"
 #include "TGuiFactory.h"
 #include "TVirtualX.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.14 2002/01/07 09:08:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.13 2001/12/17 17:06:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -327,7 +327,6 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fDateX          = fDateX;
    ((TStyle&)obj).fDateY          = fDateY;
    ((TStyle&)obj).fFitFormat      = fFitFormat;
-   ((TStyle&)obj).fPaintTextFormat= fPaintTextFormat;
    ((TStyle&)obj).fShowEventStatus= fShowEventStatus;
    ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
    ((TStyle&)obj).fStripDecimals  = fStripDecimals;
@@ -421,7 +420,6 @@ void TStyle::Reset(Option_t *)
    fStatY          = 0.98;
    SetStatFormat();
    SetFitFormat();
-   SetPaintTextFormat();
    fTitleColor     = fCanvasColor;
    fTitleTextColor = 1;
    fTitleFont      = 62;

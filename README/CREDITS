@@ -91,8 +91,7 @@ D: CINT C/C++ interpreter
 
 N: Robert Hatcher
 E: rhatcher@slac.stanford.edu
-D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
-D: class TTimeStamp
+D: Class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 
 N: Miroslav Helbich
 E: helbich@mail.desy.de
@@ -105,13 +104,14 @@ D: contributions to the thread classes, SapDB interface
 N: Jacek M. Holeczek
 E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
-D: generator, many comments on the Users Guide
+D: generator
+D: many comments on the Users Guide
 
 N: Christian Holm Christensen
 E: cholm@nbi.dk
 D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
-D: debian and redhat packaging scripts, port to GNU/Hurd (Debian)
+D: debian and redhat packaging scripts
 
 N: Marian Ivanov
 E: m.ivanov@gsi.de
@@ -124,10 +124,6 @@ D: changes in rootcint to handle templates
 N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
 D: TTabCom [TAB] command line expansion class, #1 bug reporter
-
-N: Grzegorz Mazur
-E: mazur@mail.desy.de
-D: class TDCacheFile, interface to DESY's dCache system
 
 N: Akiya Miyamoto
 E: akiya.miyamoto@kek.jp

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Linux gcc 2.7.x.x with glibc
 
 PLATFORM      = linux

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.27 2002/01/27 15:55:57 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.25 2001/12/02 16:49:02 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1182,7 +1182,6 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the WinNT access(2) function.
-   // Attention, bizarre convention of return value!!
 
    if (::_access(path, mode) == 0)
       return kFALSE;
@@ -1317,15 +1316,15 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    // skip leading blanks
    while (*patbuf == ' ')
       patbuf++;
-
+   
    // skip leading ':'
    while (*patbuf == ':')
       patbuf++;
-
+    
    // skip leading ';'
    while (*patbuf == ';')
       patbuf++;
-
+  
    // Transform a Unix list of directory into a Windows list
    // by changing the separator from ':' into ';'
    for (q = (char*)patbuf; *q; q++) {
@@ -1486,7 +1485,7 @@ const char *TWinNTSystem::GetDynamicPath()
 char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mode)
 {
    // Find location of file in a search path.
-   // User must delete returned string. Returns 0 in case file is not found.
+   // User must delete returned string.
 
    static char name[kMAXPATHLEN];
    char *lpFilePart = 0;
@@ -1623,36 +1622,36 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 
    if ( (opt.First('L')!=kNPOS) ) {
       TRegexp separator("[^ \\t\\s]+");
-      TRegexp user_dll("\.dll$", kFALSE);
-      TRegexp user_lib("\.lib$", kFALSE);
+      TRegexp user_dll("*.dll", kTRUE);
+      TRegexp user_lib("*.lib", kTRUE);
       TString s;
       Ssiz_t start, index, end;
       start = index = end = 0;
 
       while ((start < libs.Length()) && (index != kNPOS)) {
-         index = libs.Index(separator,&end,start);
-         if (index >= 0) {
-            s = libs(index,end);
-            if (s.Index(user_dll) != kNPOS) {
-               s.ReplaceAll(".dll",".lib");
-               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
-                  s.Replace( 0, s.Last('/')+1, 0, 0);
-                  s.Replace( 0, s.Last('\\')+1, 0, 0);
-               }
-            } else if (s.Index(user_lib) != kNPOS) {
-               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
-                  s.Replace( 0, s.Last('/')+1, 0, 0);
-                  s.Replace( 0, s.Last('\\')+1, 0, 0);
-               }
-            }
-            if (!fListLibs.IsNull()) ntlibs.Append(" ");
-            ntlibs.Append(s);
-         }
-         start += end+1;
+	index = libs.Index(separator,&end,start);
+	if (index >= 0) {
+	  s = libs(index,end);
+	  if (s.Index(user_dll) != kNPOS) {
+	    s.ReplaceAll(".dll",".lib");
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }
+	  } else if (s.Index(user_lib) != kNPOS) {
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }
+	  }
+	  if (!fListLibs.IsNull())
+	    ntlibs.Append(" ");
+	  ntlibs.Append(s);
+	}
+	start += end+1;
       }
-   } else {
-      ntlibs = libs;
-   }
+   } else
+     ntlibs = libs;
 
    fListLibs = ntlibs;
    return fListLibs;

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile to build ROOT for DEC unix with cxx 6
 
 PLATFORM      = alpha
@@ -42,8 +40,3 @@ F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
 CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -lX11 -lXext -lXmu -lXi -lm
-
-# Override default in Makefile.config
-INSTALL        := cp -pR
-INSTALLDATA    := cp -pR
-

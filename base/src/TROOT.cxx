@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.65 2002/01/27 16:49:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.58 2001/12/21 09:56:25 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -65,8 +65,8 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "Gtypes.h"
 #include "TROOT.h"
 #include "TClass.h"
@@ -96,7 +96,6 @@
 #include "TFolder.h"
 #include "TQObject.h"
 #include "TProcessID.h"
-#include "TPluginManager.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -155,6 +154,9 @@ static Int_t ITIMQQ()
 }
 //------------------------------------------------------------------------------
 
+extern "C" {
+   static void CleanUpROOTAtExit();
+}
 
 //______________________________________________________________________________
 static void CleanUpROOTAtExit()
@@ -244,7 +246,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fClasses     = 0;  // might be checked via TCint ctor
    fInterpreter = new TCint("C/C++", "CINT C/C++ Interpreter");
 
-   // Add the root include directory to list searched by default by
+   // Add the root include directory to list search by default by
    // the interpreter (should this be here or somewhere else?)
 #ifndef ROOTINCDIR
    TString include = gSystem->Getenv("ROOTSYS");
@@ -283,9 +285,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fStreamerInfo= new TObjArray(100);
    fMessageHandlers = new TList;
 
-   fPluginManager = new TPluginManager;
-   fPluginManager->LoadHandlersFromEnv(gEnv);
-
    TProcessID::AddProcessID();
 
    fRootFolder = new TFolder();
@@ -323,7 +322,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fEditorMode    = 0;
    fDefCanvasName = "c1";
    fEditHistograms= kFALSE;
-   fLineIsProcessing = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
+   fLineIsProcessing  = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
    gDirectory     = this;
    gPad           = 0;
    gRandom        = new TRandom;
@@ -1079,52 +1078,35 @@ void TROOT::InitThreads()
 }
 
 //______________________________________________________________________________
-Int_t TROOT::LoadClass(const char *classname, const char *libname,
-                       Bool_t check)
+Int_t TROOT::LoadClass(const char *classname, const char *libname)
 {
    // Check if class "classname" is known to the interpreter. If
-   // not it will load library "libname". If the library name does
-   // not start with "lib", "lib" will be prepended and a search will
-   // be made in the DynamicPath (see .rootrc). If not found a search
-   // will be made on libname (without "lib" prepended) and if not found
-   // a direct try of libname will be made (in case it contained an
-   // absolute path.
-   // If check is true it will only check if libname exists and is
-   // readable.
-   // Returns 0 on successful loading and -1 in case libname does not
-   // exist or in case of error.
+   // not it will load library "libname". Returns 0 on successful loading
+   // and -1 in case libname does not exist or in case of error.
 
    if (TClassTable::GetDict(classname)) return 0;
 
-   Int_t err = -1;
+   Int_t err;
 
-   char *path;
-   char *lib = 0;
-   if (strncmp(libname, "lib", 3))
+   if (classname[0] != 'T')
+      err = gSystem->Load(libname, 0, kTRUE);
+   else {
+      // special case for ROOT classes Txxx
+      char *lib, *path;
       lib = Form("lib%s", libname);
-   if (lib && (path = gSystem->DynamicPathName(lib, kTRUE))) {
-      if (check)
-         err = 0;
-      else
+      if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
          err = gSystem->Load(path, 0, kTRUE);
-      delete [] path;
-   } else if ((path = gSystem->DynamicPathName(libname, kTRUE))) {
-      if (check)
-         err = 0;
-      else
-         err = gSystem->Load(path, 0, kTRUE);
-      delete [] path;
-   } else {
-      if (check) {
-         if (!gSystem->AccessPathName(libname, kReadPermission))
-            err = 0;
-         else
-            err = -1;
-      } else
+         delete [] path;
+      } else {
+#ifdef WIN32
+         err = gSystem->Load(lib, 0, kTRUE);
+#else
          err = gSystem->Load(libname, 0, kTRUE);
+#endif
+      }
    }
 
-   if (err == 0 && !check)
+   if (err == 0)
       GetListOfTypes(kTRUE);
 
    if (err == -1)
@@ -1252,7 +1234,7 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLine(const char *line, Int_t *error)
+void TROOT::ProcessLine(const char *line, int *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed a-synchronously by sending
@@ -1276,7 +1258,7 @@ void TROOT::ProcessLine(const char *line, Int_t *error)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLineSync(const char *line, Int_t *error)
+void TROOT::ProcessLineSync(const char *line, int *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed synchronously (i.e. it will
@@ -1298,7 +1280,7 @@ void TROOT::ProcessLineSync(const char *line, Int_t *error)
 }
 
 //______________________________________________________________________________
-Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
+Long_t TROOT::ProcessLineFast(const char *line, int *error)
 {
    // Process interpreter command directly via CINT interpreter.
    // Only executable statements are allowed (no variable declarations),
@@ -1329,8 +1311,8 @@ void TROOT::Proof(const char *cluster)
 {
    // Start PROOF session on a specific cluster (default is
    // "proof://localhost"). The TProof object can be accessed via
-   // the gProof global. Creating a new TProof object will reset
-   // the gProof global. For more on PROOF see the TProof ctor.
+   // the gProof global. Creating a new TProof object will delete
+   // the current one. For more on PROOF see the TProof ctor.
 
    // make sure libProof is loaded and TProof can be created
    if (gROOT->LoadClass("TProof","Proof")) return;

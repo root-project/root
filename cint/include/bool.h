@@ -4,8 +4,10 @@
 #pragma ifdef G__OLDIMPLEMENTATION1604
 /* This header file may not be needed any more */
 
-//#undef FALSE
-//#undef TRUE
+/*
+#undef FALSE
+#undef TRUE
+*/
 #undef true
 #undef false
 #ifndef G__OLDIMPLEMENTATION1604

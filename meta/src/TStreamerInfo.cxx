@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.118 2002/01/29 07:49:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.112 2002/01/07 16:00:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -116,7 +116,8 @@ void TStreamerInfo::Build()
    // one by one the list of data members of the analyzed class.
 
    TStreamerElement::Class()->IgnoreTObjectStreamer();
-   //if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
+   if (!strcmp(fClass->GetName(),"TLorentzVector")) fClass->IgnoreTObjectStreamer();
+   if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
    
    fClass->BuildRealData();
 
@@ -133,9 +134,12 @@ void TStreamerInfo::Build()
    while((base = (TBaseClass*)nextb())) {
       clm = gROOT->GetClass(base->GetName());
       if (!clm) {
-         // this case appears with STL collections as base class.
+#ifdef MAYBEINFUTURE
+         // support sor STL collections as base class cannot be implemented
+         // It requires access to the base class offset in the class
+         // try STL container or string
          Streamer_t streamer = 0;
-         offset = base->GetDelta();
+         offset = GetDataMemberOffset(dm,streamer);
          if (offset == kMissing) continue;
          if (strcmp(base->GetName(),"string") == 0) {
             TStreamerSTLstring *stls = new TStreamerSTLstring(base->GetName(),base->GetTitle(),offset,base->GetName());
@@ -152,7 +156,8 @@ void TStreamerInfo::Build()
             else delete stl;
             continue;
          }
-         Error("Build","%s, unknown type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
+         Error("Build","%s, unknow type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
+#endif
          continue;
       }
       clm->GetStreamerInfo();
@@ -450,8 +455,8 @@ void TStreamerInfo::BuildOld()
          Int_t alength = element->GetArrayLength();
          if (alength == 0) alength = 1;
          Int_t asize = element->GetSize();
-         //align the non-basic data types (required on alpha and IRIX!!)
-         if (offset%sp != 0) offset = offset - offset%sp + sp;
+         //align the non-basic data types (required on IRIX!!)
+         if (element->GetType() > 30 && offset%sp != 0) offset = offset - offset%sp + sp;
          element->SetOffset(offset);
          offset += asize;
       } else if (dm && dm->IsPersistent()) {
@@ -467,10 +472,8 @@ void TStreamerInfo::BuildOld()
          if (strcmp(element->GetTypeName(),dm->GetFullTypeName())) {
             if (element->IsOldFormat(dm->GetFullTypeName())) continue;
             if (dt) {
-               if (element->GetType() != dt->GetType()) {
-                  element->SetNewType(dt->GetType());
-                  printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
-               }
+               element->SetNewType(dt->GetType());
+               printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
             } else {
                element->SetNewType(-2);
                printf("Cannot convert %s from type:%s to type:%s, skip element\n",
@@ -923,7 +926,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    TRealData *rdm;
    while ((rdm = (TRealData*)nextr())) {
       char *rdmc = (char*)rdm->GetName();
-      //next statement required in case a class and one of its parent class
+      //next statement reuired in case a class and one of its parent class
       //have data members with the same name
       if (dm->IsaPointer() && rdmc[0] == '*') rdmc++;
       

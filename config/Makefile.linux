@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-#
 # Makefile of ROOT for Linux with glibc and egcs, gcc 2.9x, gcc 3 (>RH5.1)
 
 PLATFORM      = linux

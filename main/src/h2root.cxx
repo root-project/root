@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.11 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.9 2001/11/03 16:52:32 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -18,12 +18,10 @@
 //  if tolower = 2 same as tolower=1 except that the first character is also
 //                convertex to lower case
 /////////////////////////////////////////////////////////////////////////
-
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "Riostream.h"
+#include <iostream.h>
 #include "TFile.h"
 #include "TDirectory.h"
 #include "TTree.h"
@@ -478,7 +476,7 @@ void convert_directory(const char *dir)
   Float_t offsety = 0.5*(ymax-ymin)/ncy;
   Int_t lw = lq[lcont];
   if (lw) h2->Sumw2();
-
+  
   Float_t x,y;
   for (Int_t j=0;j<=ncy+1;j++) {
      for (Int_t i=0;i<=ncx+1;i++) {

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.16 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.14 2001/04/25 14:03:51 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -37,9 +37,6 @@ protected:
     Double_t    fYmin;            //Lower limit in Y (if set)
     Double_t    fYmax;            //Upper limit in Y (if set)
     Bool_t      fScaling;         //!True when TProfile::Scale is called
-
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w);
     
 private:
    Int_t Fill(Axis_t) { MayNotUse("Fill(Axis_t)"); return -1;}
@@ -69,7 +66,6 @@ public:
     virtual void    Divide(TH1 *h1);
     virtual void    Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual TH1    *DrawCopy(Option_t *option="");
-    virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual Int_t   Fill(Axis_t x, Axis_t y);
     virtual Int_t   Fill(const char *namex, Axis_t y);
     virtual Int_t   Fill(Axis_t x, Axis_t y, Stat_t w);
@@ -89,7 +85,6 @@ public:
     virtual void    LabelsDeflate(Option_t *axis="X");
     virtual void    LabelsInflate(Option_t *axis="X");
     virtual void    LabelsOption(Option_t *option="h", Option_t *axis="X");
-    virtual Int_t   Merge(TCollection *list);
     virtual void    Multiply(TF1 *h1, Double_t c1=1);
     virtual void    Multiply(TH1 *h1);
     virtual void    Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
@@ -100,7 +95,6 @@ public:
     virtual void    Scale(Double_t c1=1);
     virtual void    SetBinEntries(Int_t bin, Stat_t w);
     virtual void    SetBins(Int_t nbins, Double_t xmin, Double_t xmax);
-    virtual void    SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 
     ClassDef(TProfile,3)  //Profile histogram class

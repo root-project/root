@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.6 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.3 2001/01/30 15:41:17 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -14,9 +14,9 @@
 #include "TGraph.h"
 #include "TH1.h"
 #include "TVirtualPad.h"
-#include "Riostream.h"
 
 #include <ctype.h>
+#include <fstream.h>
 
 
 ClassImp(TMultiGraph)
@@ -75,7 +75,7 @@ TMultiGraph::~TMultiGraph()
 void TMultiGraph::Add(TGraph *graph)
 {
    // add a new graph to the list of graphs
-
+   
    if (!fGraphs) fGraphs = new TList();
    fGraphs->Add(graph);
 }
@@ -172,7 +172,7 @@ void TMultiGraph::Paint(Option_t *option)
   chopt[nch] = 0;
   Double_t *x, *y;
   TGraph *g;
-
+   
   l = strstr(chopt,"A");
   if (l) {
      *l = ' ';
@@ -183,26 +183,9 @@ void TMultiGraph::Paint(Option_t *option)
      rwxmax    = gPad->GetUxmax();
      rwymin    = gPad->GetUymin();
      rwymax    = gPad->GetUymax();
-     char *xtitle = 0;
-     char *ytitle = 0;
-     Int_t firstx = 0;
-     Int_t lastx  = 0;
-     
      if (fHistogram) {
         //cleanup in case of a previous unzoom
         if (fHistogram->GetMinimum() >= fHistogram->GetMaximum()) {
-           Int_t nch = strlen(fHistogram->GetXaxis()->GetTitle());
-           firstx = fHistogram->GetXaxis()->GetFirst();
-           lastx  = fHistogram->GetXaxis()->GetLast();
-           if (nch) {
-              xtitle = new char[nch+1];
-              strcpy(xtitle,fHistogram->GetXaxis()->GetTitle());
-           }
-           nch = strlen(fHistogram->GetYaxis()->GetTitle());
-           if (nch) {
-              ytitle = new char[nch+1];
-              strcpy(ytitle,fHistogram->GetYaxis()->GetTitle());
-           }
            delete fHistogram;
            fHistogram = 0;
         }
@@ -282,13 +265,10 @@ void TMultiGraph::Paint(Option_t *option)
         fHistogram->SetMaximum(rwymax);
         fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
         fHistogram->SetDirectory(0);
-        if (xtitle) {fHistogram->GetXaxis()->SetTitle(xtitle); delete [] xtitle;}
-        if (ytitle) {fHistogram->GetYaxis()->SetTitle(ytitle); delete [] ytitle;}
-        if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);
      }
      fHistogram->Paint();
    }
-
+  
    if (fGraphs) {
      TIter   next(fGraphs);
      while ((g = (TGraph*) next())) {

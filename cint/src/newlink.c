@@ -695,18 +695,18 @@ void G__gen_cpplink()
 	 strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 || 
 	 strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 || 
 	 strcmp(fname,"queue")==0) {
-	algoflag |= 1;
+	algoflag = 1;
       }
       if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 || 
 	 strcmp(fname,"deque.h")==0 || strcmp(fname,"map.h")==0 || 
 	 strcmp(fname,"multimap.h")==0 || strcmp(fname,"set.h")==0 || 
 	 strcmp(fname,"multiset.h")==0 || strcmp(fname,"stack.h")==0 || 
 	 strcmp(fname,"queue.h")==0) {
-	algoflag |= 2;
+	algoflag = 2;
       }
     }
     if(algoflag&1) fprintf(hfp,"#include <algorithm>\n");
-    else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
+    if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
   }
 #endif
 

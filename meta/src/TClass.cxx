@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.68 2002/01/29 07:44:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.62 2001/12/03 09:04:42 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -24,7 +24,8 @@
 
 //*-*x7.5 macros/layout_class
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TFile.h"
 #include "TClass.h"
@@ -463,26 +464,19 @@ void TClass::BuildRealData(void *pointer)
       char parent[256];
       parent[0] = 0;
       TBuildRealData brd(realDataObject, this);
-      
-      //Force a call to InheritsFrom. This function indirectly calls gROOT->GetClass
-      //It forces the loading of new typedefs in case some of them were not
-      //yet loaded.
-      InheritsFrom(TObject::Class());
-      
-      //Always call ShowMembers via the interpreter. A direct call like
-      //      realDataObject->ShowMembers(brd, parent);
-      //will not work if the class derives from TObject but not as primary
-      //inheritance.
-      G__CallFunc func;
-      void *address;
-      long  offset;
-      func.SetFunc(fClassInfo->GetMethod("ShowMembers",
-                   "TMemberInspector&,char*", &offset).InterfaceMethod());
-      func.SetArg((long)&brd);
-      func.SetArg((long)parent);
-      address = (void*)((long)realDataObject + offset);
-      func.Exec(address);
-
+      if (InheritsFrom(TObject::Class())) {
+         realDataObject->ShowMembers(brd, parent);
+      } else {
+         G__CallFunc func;
+         void *address;
+         long  offset;
+         func.SetFunc(fClassInfo->GetMethod("ShowMembers",
+                      "TMemberInspector&,char*", &offset).InterfaceMethod());
+         func.SetArg((long)&brd);
+         func.SetArg((long)parent);
+         address = (void*)((long)realDataObject + offset);
+         func.Exec(address);
+      }
       // take this opportunity to build the real data for base classes
       // In case one base class is abstract, it would not be possible later
       // to create the list of real data for this abstract class
@@ -934,18 +928,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    // loop over all methods in this class (and its baseclasses) till
    // we find a TMethod with the same faddr
 
-
-   TMethod *m;
-
-   if (faddr == (Long_t)G__exec_bytecode) {
-      // the method is actually interpreted, its address is
-      // not a discriminant (it always point to the same
-      // function (G__exec_bytecode).
-      m = GetClassMethod(method,params);
-   } else {
-      m = GetClassMethod(faddr);
-   }
-
+   TMethod *m = GetClassMethod(faddr);
    if (m) return m;
 
    TBaseClass *base;
@@ -1014,32 +997,6 @@ TMethod *TClass::GetClassMethod(Long_t faddr)
    return 0;
 }
 
-//______________________________________________________________________________
-TMethod *TClass::GetClassMethod(const char *name, const char* params)
-{
-   // Look for a method in this class that has the name and
-   // signature
-
-   if (!fClassInfo) return 0;
-
-   // Need to go through those loops to get the signature from
-   // the valued params (i.e. from "1.0,3" to "double,int")
-
-   G__CallFunc  func;
-   long         offset;
-   func.SetFunc(GetClassInfo(), name, params, &offset);
-   G__MethodInfo *info = new G__MethodInfo(func.GetMethodInfo());
-   TMethod request(info,this);
-
-   TMethod *m;
-   TIter    next(GetListOfMethods());
-   while ((m = (TMethod *) next())) {
-     if (!strcmp(name,m->GetName())
-         &&!strcmp(request.GetSignature(),m->GetSignature()))
-       return m;
-   }
-   return 0;
-}
 //______________________________________________________________________________
 const char *TClass::GetTitle() const
 {
@@ -1348,18 +1305,18 @@ Bool_t TClass::IsCallingNew()
 Bool_t TClass::IsLoaded() const
 {
    // Return true if the shared library of this class is currently in the a
-   // process's memory.  Return false, after the shared library has been
+   // process's memory.  Return false, after the shared library has been 
    // unloaded or if this is a 'fake' class created from a file's StreamerInfo.
 
    return (GetImplFileLine()>=0 && !TestBit(kUnloaded));
 }
 
 //______________________________________________________________________________
-void TClass::SetUnloaded()
+void TClass::SetUnloaded() 
 {
-   // Call this method to indicate that the shared library containing this
+   // Call this method to indicate that the shared library containing this 
    // class's code has been removed (unloaded) from the process's memory
-
+  
    gInterpreter->SetClassInfo(this,kTRUE);
    SetBit(kUnloaded);
 }
@@ -1609,8 +1566,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    UInt_t R__s, R__c;
    Version_t version = b.ReadVersion(&R__s, &R__c);
 
-   TFile *file = (TFile*)b.GetParent();
-   if (file && file->GetVersion() < 30000) version = -1; //This is old file
+   if (gFile && gFile->GetVersion() < 30000) version = -1; //This is old file
 
    //the StreamerInfo should exist at this point
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);

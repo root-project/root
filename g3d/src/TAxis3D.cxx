@@ -1,6 +1,5 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.4 2000/12/13 15:13:47 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
-
 // ***********************************************************************
 // * C++ class library to paint 3D axice "arround" TView object
 //                     and zoom 3D objects  as well
@@ -20,11 +19,12 @@
 // * representations about the suitability of this software for any
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
+//
 
+#include <iostream.h>
 #include <ctype.h>
 #include <assert.h>
 
-#include "Riostream.h"
 #include "TClass.h"
 #include "TAxis3D.h"
 #include "TCanvas.h"

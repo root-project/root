@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.11 2002/02/02 11:57:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.9 2001/12/03 10:26:36 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -190,7 +190,7 @@ TRef::TRef(TObject *obj)
    // TRef copy ctor.
 
    *this = obj;
-   fPID = TProcessID::GetSessionProcessID();
+   fPID = TProcessID::GetProcessID(0);
 }
 
 //______________________________________________________________________________
@@ -210,7 +210,7 @@ void TRef::operator=(TObject *obj)
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
          return;
       }
-      if (!fPID) fPID = TProcessID::GetSessionProcessID();
+      if (!fPID) fPID = TProcessID::GetProcessID(0);
       uid = TProcessID::AssignID(obj);
    }
    SetUniqueID(uid);
@@ -348,11 +348,10 @@ void TRef::Streamer(TBuffer &R__b)
    // Stream an object of class TRef.
 
    UShort_t pidf;
-   TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       TObject::Streamer(R__b);
       R__b >> pidf;
-      fPID = TProcessID::ReadProcessID(pidf,file);
+      fPID = TProcessID::ReadProcessID(pidf,gFile);
       //The execid has been saved in the unique id of the TStreamerElement
       //being read by TStreamerElement::Streamer
       //The current element (fgElement) is set as a static global
@@ -362,7 +361,7 @@ void TRef::Streamer(TBuffer &R__b)
    } else {
       TObject::Streamer(R__b);
 
-      pidf = TProcessID::WriteProcessID(fPID,file);
+      pidf = TProcessID::WriteProcessID(fPID,gFile);
       R__b << pidf;
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.12 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.9 2001/12/17 08:09:23 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -9,7 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TView.h"
 #include "TStyle.h"
@@ -254,41 +256,6 @@ void TPolyMarker3D::ls(Option_t *option) const
 
    TROOT::IndentLevel();
    cout << "    TPolyMarker3D  N=" << Size() <<" Option="<<option<<endl;
-}
-
-//______________________________________________________________________________
-Int_t TPolyMarker3D::Merge(TCollection *list)
-{
-// Merge polymarkers in the collection in this polymarker
-
-   if (!list) return 0;
-   TIter next(list);
-
-   //first loop to count the number of entries
-   TPolyMarker3D *pm;
-   Int_t npoints = 0;
-   while ((pm = (TPolyMarker3D*)next())) {
-      if (!pm->InheritsFrom(TPolyMarker3D::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",pm->ClassName(),this->ClassName());
-         return -1;
-      }
-      npoints += pm->Size();
-   }
-
-   //extend this polymarker to hold npoints
-   pm->SetPoint(npoints-1,0,0,0);
-
-   //merge all polymarkers
-   next.Reset();
-   while ((pm = (TPolyMarker3D*)next())) {
-      Int_t np = pm->Size();
-      Float_t *p = pm->GetP();
-      for (Int_t i=0;i<np;i++) {
-         SetPoint(i,p[3*i],p[3*i+1],p[3*i+2]);
-      }
-   }
-
-   return npoints;
 }
 
 //______________________________________________________________________________
@@ -558,7 +525,6 @@ void TPolyMarker3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
       Float_t *savepoint = new Float_t [kDimension*newN];
       if (fP && fN){
          memcpy(savepoint,fP,kDimension*fN*sizeof(Float_t));
-         memset(&savepoint[kDimension*fN],0,(newN-fN)*sizeof(Float_t));
          delete [] fP;
       }
       fP = savepoint;

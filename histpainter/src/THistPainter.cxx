@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.65 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.60 2002/01/07 18:11:00 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -13,8 +13,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "THistPainter.h"
 #include "TH2.h"
@@ -100,11 +101,11 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 //     Compute the closest distance of approach from point px,py to elements
 //     of an histogram.
 //     The distance is computed in pixels units.
-//
+//   
 //     Algorithm:
 //     Currently, this simple model computes the distance from the mouse
 //     to the histogram contour only.
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    const Int_t big = 9999;
@@ -135,14 +136,10 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       return big;
    }
 //     check if point is close to an axis
-   TString doption = gPad->GetPadPointer()->GetDrawOption();
-   doption.ToLower();
-   Bool_t dsame = kFALSE;
-   if (doption.Contains("same")) dsame = kTRUE;
    Int_t xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
    Int_t dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
    if (px >= xyaxis-dyaxis && px <= xyaxis && py >puymax && py < puymin) {
-      if (!dsame) {
+      if (!strstr(gPad->GetPadPointer()->GetDrawOption(),"same")) {
          if (gPad->IsVertical()) gPad->SetSelected(fYaxis);
          else                    gPad->SetSelected(fXaxis);
          return 0;
@@ -152,7 +149,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    if (yxaxis < puymin) yxaxis = puymin;
    Int_t dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
    if (py <= yxaxis+dxaxis && py >= yxaxis && px <puxmax && px > puxmin) {
-      if (!dsame) {
+      if (!strstr(gPad->GetPadPointer()->GetDrawOption(),"same")) {
          if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
          else                    gPad->SetSelected(fYaxis);
          return 0;
@@ -172,7 +169,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          if (TMath::Abs(px-xzaxis) < kMaxDiff) {
             gPad->SetSelected(fZaxis);
             fZaxis->SetBit(TAxis::kPalette);
-            return 0;
+            return 0; 
          }
       }
    }
@@ -244,7 +241,7 @@ void THistPainter::DrawPanel()
 {
 //    *-*-*-*-*Display a panel with all histogram drawing options*-*-*-*-*-*
 //             ==================================================
-//
+//   
 //      See class TDrawPanelHist for example
 
    gCurrentHist = fH;
@@ -278,10 +275,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //    *-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
 //                     =========================================
 //     This member function is called when a histogram is clicked with the locator
-//
+//   
 //     If Left button clicked on the bin top value, then the content of this bin
 //     is modified according to the new position of the mouse when it is released.
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    static Int_t bin, px1, py1, px2, py2, pyold;
    Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
@@ -379,7 +376,7 @@ void THistPainter::FitPanel()
 {
 //    *-*-*-*-*Display a panel with all histogram fit options*-*-*-*-*-*
 //             ==============================================
-//
+//   
 //      See class TFitPanel for example
 
    gCurrentHist = fH;
@@ -482,7 +479,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
 {
    // return kTRUE if the cell ix, iy is inside one of the graphical cuts
-
+   
    for (Int_t i=0;i<fNcuts;i++) {
       Double_t x = fXaxis->GetBinCenter(ix);
       Double_t y = fYaxis->GetBinCenter(iy);
@@ -499,7 +496,7 @@ Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
 Bool_t THistPainter::IsInside(Double_t x, Double_t y)
 {
    // return kTRUE if the point x,y is inside one of the graphical cuts
-
+   
    for (Int_t i=0;i<fNcuts;i++) {
       if (fCutsOpt[i] > 0) {
          if (!fCuts[i]->IsInside(x,y)) return kFALSE;
@@ -537,7 +534,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    //check for graphical cuts
    MakeCuts(chopt);
-
+   
    for (Int_t i=0;i<nch;i++) chopt[i] = toupper(chopt[i]);
    if (fH->GetDimension() > 1) Hoption.Scat = 1;
    if (!nch) Hoption.Hist = 1;
@@ -976,7 +973,7 @@ void THistPainter::Paint(Option_t *option)
 //  The left side of the bar is drawn with a light fill color
 //  The right side of the bar is drawn with a dark fill color
 //  The percentage of the bar drawn with either the light or dark color
-//    is  0 per cent for option "bar" or "bar0"
+//    is  0 per cent for option "bar" or "bar0"         
 //    is 10 per cent for option "bar1"
 //    is 20 per cent for option "bar2"
 //    is 30 per cent for option "bar3"
@@ -997,7 +994,7 @@ void THistPainter::Paint(Option_t *option)
 //  The bottom side of the bar is drawn with a light fill color
 //  The top side of the bar is drawn with a dark fill color
 //  The percentage of the bar drawn with either the light or dark color
-//    is  0 per cent for option "hbar" or "hbar0"
+//    is  0 per cent for option "hbar" or "hbar0"         
 //    is 10 per cent for option "hbar1"
 //    is 20 per cent for option "hbar2"
 //    is 30 per cent for option "hbar3"
@@ -1213,11 +1210,9 @@ void THistPainter::Paint(Option_t *option)
 //
 //
 //--------------------------------------------------------------------
-
-   if (fH->GetBuffer()) fH->BufferEmpty();
-
+   
    gPad->SetVertical(kTRUE);
-
+   
    TH1 *oldhist = gCurrentHist;
    gCurrentHist = fH;
    TH1 *hsave   = fH;
@@ -1260,7 +1255,7 @@ void THistPainter::Paint(Option_t *option)
       gCurrentHist = oldhist;
       return;
    }
-
+   
    if (Hoption.Bar >= 20) {PaintBarH(); return;}
 
    if (!PaintInit()) return;  //fill Hparam structure with histo parameters
@@ -1328,7 +1323,7 @@ void THistPainter::PaintArrows()
 {
 //    *-*-*-*-*-*Control function to draw a table as an arrow plot*-*-*-*-*-*
 //               =================================================
-//
+//   
 //       For each cell (i,j) an arrow is drawn
 //       The orientation of the arrow follows the cell gradient
 //Begin_Html
@@ -1336,7 +1331,7 @@ void THistPainter::PaintArrows()
 <img src="gif/PaintArrows.gif">
 */
 //End_Html
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Style_t linesav   = fH->GetLineStyle();
    Width_t widthsav  = fH->GetLineWidth();
@@ -1565,7 +1560,7 @@ void THistPainter::PaintBar()
 // The left side of the bar is drawn with a light fill color
 // The right side of the bar is drawn with a dark fill color
 // The percentage of the bar drawn with either the light or dark color
-//   is  0 per cent for option "bar" or "bar0"
+//   is  0 per cent for option "bar" or "bar0"         
 //   is 10 per cent for option "bar1"
 //   is 20 per cent for option "bar2"
 //   is 30 per cent for option "bar3"
@@ -1627,7 +1622,7 @@ void THistPainter::PaintBarH()
 // The bottom side of the bar is drawn with a light fill color
 // The top side of the bar is drawn with a dark fill color
 // The percentage of the bar drawn with either the light or dark color
-//   is  0 per cent for option "hbar" or "hbar0"
+//   is  0 per cent for option "hbar" or "hbar0"         
 //   is 10 per cent for option "hbar1"
 //   is 20 per cent for option "hbar2"
 //   is 30 per cent for option "hbar3"
@@ -1641,20 +1636,20 @@ void THistPainter::PaintBarH()
 <img src="gif/PaintBarH.gif">
 */
 //End_Html
-
+   
    gPad->SetVertical(kFALSE);
-
+   
    PaintInitH();
-
+   
    TAxis *xaxis = fXaxis;
    TAxis *yaxis = fYaxis;
    if (!strcmp(xaxis->GetName(),"xaxis")) {
-      fXaxis = yaxis;
+      fXaxis = yaxis; 
       fYaxis = xaxis;
    }
-
+   
    PaintFrame();
-
+   
    Int_t bar = Hoption.Bar - 20;
    Double_t xmin,xmax,ymin,ymax,umin,umax,w;
    Double_t offset = fH->GetBarOffset();
@@ -1687,7 +1682,7 @@ void THistPainter::PaintBarH()
          box.PaintBox(xmin,umax,xmax,ymax);
       }
    }
-
+   
    PaintTitle();
    PaintAxis();
    fXaxis = xaxis;
@@ -1709,7 +1704,7 @@ void THistPainter::PaintBoxes()
 {
 //    *-*-*-*-*-*Control function to draw a table as a box plot*-*-*-*-*-*
 //               ==============================================
-//
+//   
 //       For each cell (i,j) a box is drawn.
 //       The size of the box is proportional to the cell content.
 //Begin_Html
@@ -1717,7 +1712,7 @@ void THistPainter::PaintBoxes()
 <img src="gif/PaintBox.gif">
 */
 //End_Html
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Style_t fillsav   = fH->GetFillStyle();
    if (fH->GetFillColor() == 0)  fH->SetFillStyle(0);
@@ -1784,7 +1779,7 @@ void THistPainter::PaintColorLevels()
 {
 //    *-*-*-*-*-*Control function to draw a table as a color plot*-*-*-*-*-*
 //               ================================================
-//
+//   
 //       For each cell (i,j) a box is drawn with a color proportional
 //       to the cell content.
 //       The color table used is defined in the current style (gStyle).
@@ -1794,7 +1789,7 @@ void THistPainter::PaintColorLevels()
 <img src="gif/PaintCol.gif">
 */
 //End_Html
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 
@@ -1871,7 +1866,7 @@ void THistPainter::PaintContour()
 //       12  Use line style to distinguish contours. ("cont2")
 //       13  Line style and colour are the same for all contours. ("cont3")
 //       14  same as 1 but uses the "SURF" algorithm ("cont4")
-//
+//   
 //     When option "List" is specified together with option "cont",
 //     the points used to draw the contours are saved in the TGraph format
 //     and are accessible in the following way:
@@ -1884,14 +1879,14 @@ void THistPainter::PaintContour()
 //    countour is given by list->GetSize().
 //    Here we show only the case to access the first graph in the list.
 //       TGraph *gr1 = (TGraph*)list->First();
-//
-//
+//   
+//   
 //Begin_Html
 /*
 <img src="gif/PaintContour1.gif">
 */
 //End_Html
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i, j, count, ncontour, icol, n, lj, m, ix, jx, ljfill;
@@ -2198,7 +2193,7 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
 {
 //    *-*-*-*-*-*Fill the matrix XARR YARR for Contour Plot*-*-*-*-*-*-*-*
 //               ==========================================
-//
+//   
 
    Bool_t vert;
    Double_t tlen, tdif, elev, diff, pdif, xlen;
@@ -2241,10 +2236,10 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
 void THistPainter::PaintErrors()
 {
 //    *-*-*-*-*-*-*-*-*Draw histogram error bars*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//
+//    
 //       Draws error bars for the current histogram. The current polymarker
 //       is drawn at the centre of the errors according to CHOPT:
-//
+//    
 //       ' ' Coordinates are expressed in histogram coordinates
 //           (of the last drawn histogram). Error bars are drawn.
 //       '1' Small lines are drawn at the end of the error bars.
@@ -2254,7 +2249,7 @@ void THistPainter::PaintErrors()
 //       '4' A smoothed filled area is drawn through the end points of the
 //           vertical error bars.
 //       '0' Turn off the symbols clipping.
-//
+//    
 //     Note that for all options, the line and fill attributes of the
 //     histogram are used for the errors or errors contours.
 //Begin_Html
@@ -2451,8 +2446,8 @@ void THistPainter::PaintErrors()
       if (optionE && drawmarker) {
          if (yi3 < yi1 - s2y) gPad->PaintLine(xi3,yi3,xi4,yi1 - s2y);
          if (yi1 + s2y < yi4) gPad->PaintLine(xi3,yi1 + s2y,xi4,yi4);
-  	 //don't duplicate the horizontal line
- 	 if (Hoption.Hist != 2){
+  	 //don't duplicate the horizontal line 
+ 	 if (Hoption.Hist != 2){ 
             if (xi1 < xi3 - s2x) gPad->PaintLine(xi1,yi1,xi3 - s2x,yi2);
             if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
          }
@@ -2461,7 +2456,7 @@ void THistPainter::PaintErrors()
          if (yi3 < yi4) gPad->PaintLine(xi3,yi3,xi4,yi4);
          if (yi1 < yi4) gPad->PaintLine(xi3,yi1,xi4,yi4);
  	 //don't duplicate the horizontal line
- 	 if (Hoption.Hist != 2){
+ 	 if (Hoption.Hist != 2){ 
             if (xi1 < xi3) gPad->PaintLine(xi1,yi1,xi3,yi2);
             if (xi3 < xi2) gPad->PaintLine(xi3,yi1,xi2,yi2);
          }
@@ -3179,14 +3174,14 @@ void THistPainter::PaintLego()
 {
 //    *-*-*-*-*-*Control function to draw a table as a lego plot*-*-*-*-*-*
 //               ===============================================
-//
+//   
 //        In a lego plot, cell contents are represented as 3-d boxes.
 //        The height of the box is proportional to the cell content.
-//
+//   
 //       A lego plot can be represented in several coordinate systems.
 //       Default system is Cartesian coordinates.
 //       Possible systems are CYL,POL,SPH,PSR.
-//
+//   
 //      See THistPainter::Draw for the list of Lego options.
 //      See TLego for more examples of lego options.
 //
@@ -3199,7 +3194,7 @@ void THistPainter::PaintLego()
 <img src="gif/PaintLego1.gif">
 */
 //End_Html
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i;
@@ -3410,7 +3405,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 {
 //    *-*-*-*-*Draw the axis for legos and surface plots*-*-*-*-*-*-*-*-*-*
 //             =========================================
-//
+//   
 
     static Double_t epsil = 0.001;
 
@@ -3644,7 +3639,7 @@ void THistPainter::PaintScatterPlot()
 {
 //    *-*-*-*-*-*Control function to draw a table as a scatter plot*-*-*-*-*
 //               ==================================================
-//
+//   
 //       For each cell (i,j) a number of points proportional to the cell
 //       content is drawn.
 //       A maximum of 500 points per cell is drawn. If the maximum is above 500
@@ -3654,7 +3649,7 @@ void THistPainter::PaintScatterPlot()
 <img src="gif/PaintScatterPlot.gif">
 */
 //End_Html
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    fH->TAttMarker::Modify();
 
@@ -4046,14 +4041,14 @@ void THistPainter::PaintSurface()
 {
 //    *-*-*-*-*-*Control function to draw a table as a surface plot*-*-*-*-*-*
 //               ==================================================
-//
+//   
 //        In a surface plot, cell contents are represented as a mesh.
 //        The height of the mesh is proportional to the cell content.
-//
+//   
 //       A surface plot can be represented in several coordinate systems.
 //       Default system is Cartesian coordinates.
 //       Possible systems are CYL,POL,SPH,PSR.
-//
+//   
 //      See THistPainter::Draw for a list of Surface options
 //     The following picture is generated with option SURF1.
 //
@@ -4072,7 +4067,7 @@ void THistPainter::PaintSurface()
 <img src="gif/PaintSurface3.gif">
 */
 //End_Html
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    const Double_t ydiff = 1;
    const Double_t yligh1 = 10;
@@ -4141,7 +4136,7 @@ void THistPainter::PaintSurface()
          fYbuf[iv] = view->GetRmax()[iv];
       }
    }
-
+   
    fLego = new TLego(fXbuf, fYbuf, Hoption.System);
    fLego->SetLineColor(fH->GetLineColor());
    fLego->SetFillColor(fH->GetFillColor());
@@ -4363,21 +4358,18 @@ void THistPainter::PaintText()
 {
 //    *-*-*-*Control function to draw a table with the bin values*-*-*-*-*-*
 //           ====================================================
-//
+//   
 //       For each cell (i,j) the cell content is printed.
 //       The text attributes are:
 //*_*      - text font = current TStyle font
 //         - text size = 0.02*padheight*markersize
 //         - text color= marker color
-//   By default the format "g" is used. This format can be redefined
-//   by calling gStyle->SetPaintTextFormat
-//
 //Begin_Html
 /*
 <img src="gif/PaintText.gif">
 */
 //End_Html
-//
+//   
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    TText text;
    text.SetTextFont(gStyle->GetTextFont());
@@ -4388,8 +4380,6 @@ void THistPainter::PaintText()
 
    Double_t x, y, z;
    char value[50];
-   char format[32];
-   sprintf(format,"%s%s","%",gStyle->GetPaintTextFormat());
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       y    = fYaxis->GetBinCenter(j);
@@ -4399,7 +4389,7 @@ void THistPainter::PaintText()
          if (!IsInside(x,y)) continue;
          z     = fH->GetBinContent(bin);
          if (z <= Hparam.zmin) continue;
-         sprintf(value,format,z);
+         sprintf(value,"%g",z);
          gPad->PaintText(x,y,value);
       }
    }

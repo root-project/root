@@ -1,2 +1,2 @@
-@prefix@/lib/root/libEGPythia.so*
-@prefix@/lib/root/libEGPythia6.so*
+usr/lib/root/libEGPythia.so*
+usr/lib/root/libEGPythia6.so*

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.6 2002/01/20 10:02:41 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.4 2001/12/17 08:07:27 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -35,7 +35,6 @@
 #endif
 
 class TH1;
-class TCollection;
 
 class TPolyMarker3D : public TObject, public TAttMarker, public TAtt3D {
 
@@ -64,7 +63,6 @@ public:
    virtual Float_t  *GetP() const { return fP;}
    Option_t         *GetOption() const {return fOption.Data();}
    virtual void      ls(Option_t *option="") const;
-   virtual Int_t     Merge(TCollection *list);
    virtual void      Paint(Option_t *option="");
    virtual void      PaintPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
    virtual void      Print(Option_t *option="") const;

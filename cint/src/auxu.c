@@ -54,9 +54,7 @@ char *argv[];
   string[i]='\0';
   line[i]='\0';
   lenstring=i;
-#ifdef G__OLDIMPLEMENTATION1616
   if(string[i]==EOF) n_eof=0;
-#endif
   argv[0]=line;
 
   *argc=0;

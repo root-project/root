@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.6 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.4 2000/06/13 11:01:03 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -11,9 +11,12 @@
 #ifndef ROOT_TLatex
 #define ROOT_TLatex
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
+#ifndef __CINT__
+#include <fstream.h>
+#else
+class ofstream;
 #endif
+
 #ifndef ROOT_TText
 #include "TText.h"
 #endif

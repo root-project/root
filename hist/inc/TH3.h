@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.15 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.13 2001/08/08 07:20:12 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -32,12 +32,6 @@
 
 class TH3 : public TH1, public TAtt3D {
 
-protected:
-   
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-   
 public:
    TH3();
    TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
@@ -50,7 +44,6 @@ public:
                                          ,Int_t nbinsy,const Double_t *ybins
                                          ,Int_t nbinsz,const Double_t *zbins);
    virtual ~TH3();
-   virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;}        //MayNotUse
            Int_t   Fill(Axis_t,Stat_t) {return -1;} //MayNotUse
@@ -79,7 +72,6 @@ public:
    virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Option_t *option="") {return 0;}
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="");
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
-   virtual Int_t   Merge(TCollection *list);
           TH1D    *ProjectionZ(const char *name="_pz", Int_t firstxbin=-1, Int_t lastxbin=9999, Int_t firstybin=0,
                                  Int_t lastybin=9999, Option_t *option=""); // *MENU*
           TH1     *Project3D(Option_t *option="x"); // *MENU*

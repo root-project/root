@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.30 2002/01/27 15:55:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.26 2001/12/21 12:22:10 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -25,8 +25,9 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TException.h"
@@ -753,10 +754,9 @@ char *TSystem::ExpandPathName(const char *)
 }
 
 //______________________________________________________________________________
-Bool_t TSystem::AccessPathName(const char *, EAccessMode)
+Bool_t TSystem::AccessPathName(const char*, EAccessMode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
-   // Attention, bizarre convention of return value!!
 
    return kFALSE;
 }
@@ -828,7 +828,6 @@ int TSystem::Umask(Int_t)
 char *TSystem::Which(const char *, const char *, EAccessMode)
 {
    // Find location of file in a search path. User must delete returned string.
-   // Returns 0 in case file is not found.
 
    AbstractMethod("Which");
    return 0;
@@ -1418,13 +1417,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
   // the file name end up in the file produced
   // by rootcint as a variable name so all character need to be valid!
-  static const int maxforbidden = 26;
-  static const char *forbidden_chars[maxforbidden] = 
-        { "+","-","*","/","&","%","|","^",">","<","=","~",".",
-          "(",")","[","]","!",",","$"," ",":","'","#","\\","\"" };
-  for( int ic = 0; ic < maxforbidden; ic++ ) {
-     dict.ReplaceAll( forbidden_chars[ic],"_" );
-  }
+  dict.ReplaceAll( "-","_" );
   if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
   dict.Prepend( build_loc + "/" );
   TString dicth = dict;

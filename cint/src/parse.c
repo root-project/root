@@ -1596,9 +1596,7 @@ G__value G__exec_do()
   if(result.type==G__block_break.type) {
     switch(result.obj.i) {
     case G__BLOCK_BREAK:
-#ifdef G__OLDIMPLEMENTATION1625 /* Don't know why following line is here */
-      G__fignorestream(";"); 
-#endif
+      G__fignorestream(";");
       if(result.ref==G__block_goto.ref) {
 	/* free breakcontinue buffer */
 	if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
@@ -1945,22 +1943,18 @@ void G__free_tempobject()
     G__return=G__RETURN_NON;
     
 #ifndef G__OLDIMPLEMENTATION1516
-    if(0==G__p_tempbuf->no_exec
-#ifndef G__OLDIMPLEMENTATION1626
-       || 1==G__no_exec_compile
+    if(0==G__p_tempbuf->no_exec) {
 #endif
-       ) {
-#endif
-      if(G__dispsource) {
-	G__fprinterr(G__serr,
-		     "!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
-		     ,G__struct.name[G__tagnum]
-		     ,G__p_tempbuf->obj.obj.i
-		     ,G__p_tempbuf->level,G__templevel);
-      }
-      
-      sprintf(statement,"~%s()",G__struct.name[G__tagnum]);
-      G__getfunction(statement,&iout,G__TRYDESTRUCTOR); 
+    if(G__dispsource) {
+      G__fprinterr(G__serr,
+	      "!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
+	      ,G__struct.name[G__tagnum]
+	      ,G__p_tempbuf->obj.obj.i
+	      ,G__p_tempbuf->level,G__templevel);
+    }
+    
+    sprintf(statement,"~%s()",G__struct.name[G__tagnum]);
+    G__getfunction(statement,&iout,G__TRYDESTRUCTOR); 
 #ifndef G__OLDIMPLEMENTATION1516
     }
 #endif
@@ -2586,7 +2580,7 @@ G__value G__exec_if()
 
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"   %x: JMP assigned %x\n",asm_jumppointer-1,G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"     JMP assigned %x\n",G__asm_cp);
 #endif
     G__asm_inst[asm_jumppointer] = G__asm_cp;
 #ifndef G__OLDIMPLEMENTATION599
@@ -3075,10 +3069,6 @@ G__value G__exec_statement()
   int add_fake_space = 0;
   int fake_space = 0;
 #endif
-#ifndef G__PHILIPPE33
-  int discard_space = 0;
-  int discarded_space = 0;
-#endif
 
   fgetpos(G__ifile.fp,&start_pos);
   start_line=G__ifile.line_number;
@@ -3098,9 +3088,6 @@ G__value G__exec_statement()
     } else 
 #endif
       c=G__fgetc();
-#ifndef G__PHILIPPE33
-    discard_space = 0;
-#endif
 
 /*#define G__OLDIMPLEMENTATION781*/
 #ifndef G__OLDIMPLEMENTATION781
@@ -3121,9 +3108,6 @@ G__value G__exec_statement()
 	statement[iout++] = c ;
       }
       else {
-#ifndef G__PHILIPPE33
-        if (!fake_space) discard_space = 1;
-#endif
 	if(spaceflag==1) {
 	  statement[iout] = '\0' ;
 	  /* search keyword */
@@ -4529,15 +4513,6 @@ G__value G__exec_statement()
       
     default:
       /* G__CHECK(G__SECURE_BUFFER_SIZE,iout==G__LONGLINE,return(G__null)); */
-#ifndef G__PHILIPPE33
-       /* Make sure that the delimiters that have not been treated
-        * in the switch statement do drop the discarded_space */
-      if (c!='[' && c!=']' && discarded_space && iout) {
-	/* since the character following a discarded space is NOT a
-	   separator, we have to keep the space */
-	statement[iout++] = ' ';
-      }
-#endif
       statement[iout++] = c ;
       spaceflag |= 1;
 #ifdef G__MULTIBYTE
@@ -4549,9 +4524,6 @@ G__value G__exec_statement()
 #endif
       break;
     } /* end of switch */
-#ifndef G__PHILIPPE33
-    discarded_space = discard_space;
-#endif
   } /* end of infinite loop */
   
 }

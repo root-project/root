@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.11 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.9 2001/03/15 21:53:05 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TText.h"
@@ -490,7 +492,7 @@ void TText::Streamer(TBuffer &R__b)
       R__b >> x; fX = x;
       R__b >> y; fY = y;
       //====end of old versions
-
+      
    } else {
       TText::Class()->WriteBuffer(R__b,this);
    }

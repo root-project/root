@@ -76,11 +76,11 @@ fi
 # Add INETD lines to configuration file, if not already present 
 #
 if ! grep -qs ^rootd /etc/inetd.conf ; then 
-  echo 'rootd stream tcp nowait root @prefix@/bin/rootd rootd -i' \
+  echo 'rootd stream tcp nowait root /usr/bin/rootd rootd -i' \
     >> /etc/inetd.conf
 fi
 if ! grep -qs ^proofd /etc/inetd.conf ; then 
-  echo 'proofd stream tcp nowait root @prefix@/bin/proofd proofd @prefix@/share/root' \
+  echo 'proofd stream tcp nowait root /usr/bin/proofd proofd /usr/share/root' \
     >> /etc/inetd.conf
 fi
 # Install lines in /etc/services 

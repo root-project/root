@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.11 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.9 2001/02/21 14:57:37 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -36,10 +36,6 @@ protected:
     Double_t    fZmin;            //Lower limit in Z (if set)
     Double_t    fZmax;            //Upper limit in Z (if set)
 
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
    Double_t *GetW()  {return &fArray[0];}
@@ -58,7 +54,6 @@ public:
     virtual void    Add(TH1 *h1, Double_t c1=1);
     virtual void    Add(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
             void    BuildOptions(Double_t zmin, Double_t zmax, Option_t *option);
-    virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual void    Copy(TObject &hnew);
     virtual void    Divide(TF1 *h1, Double_t c1=1);
     virtual void    Divide(TH1 *h1);
@@ -86,7 +81,6 @@ public:
     virtual void    LabelsDeflate(Option_t *axis="X");
     virtual void    LabelsInflate(Option_t *axis="X");
     virtual void    LabelsOption(Option_t *option="h", Option_t *axis="X");
-    virtual Int_t   Merge(TCollection *list);
     virtual void    Multiply(TF1 *h1, Double_t c1=1);
     virtual void    Multiply(TH1 *h1);
     virtual void    Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
@@ -99,7 +93,6 @@ public:
     virtual void    SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax);
             void    SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
                        { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
-    virtual void    SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 
     ClassDef(TProfile2D,3)  //Profile2D histogram class

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.8 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.6 2001/12/21 13:41:09 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -13,7 +13,9 @@
 #include "THStack.h"
 #include "TVirtualPad.h"
 #include "TH2.h"
-#include "Riostream.h"
+
+#include <fstream.h>
+#include <iostream.h>
 
 ClassImp(THStack)
 
@@ -324,7 +326,7 @@ void THStack::Paint(Option_t *option)
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
    if (!opt.Contains("nostack")) BuildStack();
-
+   
    Double_t themax,themin;
    if (fMaximum == -1111) themax = GetMaximum(option);
    else                   themax = fMaximum;

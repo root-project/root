@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.32 2002/02/03 16:14:46 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.30 2001/12/10 14:57:42 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -838,7 +838,7 @@ void stress9tree(TTree *tree)
 // or TChain::Draw with an explicit loop on events.
 // Also a good test for the interpreter
 
-   Event *event = 0;
+   Event *event = new Event();
    tree->SetBranchAddress("event",&event);
    gROOT->cd();
    TDirectory *hfile = gDirectory;
@@ -1104,6 +1104,7 @@ void stress9()
    stress9tree(tree);
 
    // Save test9 histograms
+   delete tree;
    TFile f("stress_test9.root","recreate");
    gROOT->GetList()->Write();
    gROOT->GetList()->Delete();
@@ -1127,7 +1128,7 @@ void stress10()
    TFile *hfile = new TFile("Event.root");
    TTree *tree = (TTree*)hfile->Get("T");
 
-   Event *event = 0;
+   Event *event = new Event();
    tree->SetBranchAddress("event",&event);
 
    // Create 10 clones of this tree
@@ -1264,13 +1265,10 @@ void stress13()
       chain->Add(filename);
    }
 
-   Event *event = 0;
+   Event *event = new Event();
    chain->SetBranchAddress("event",&event);
 
    chain->Merge("Event.root");
-
-   Double_t chentries = chain->GetEntries();
-   delete chain;
 
    event->ResetHistogramPointer(); // fH was deleted above!!
    delete event;
@@ -1283,7 +1281,9 @@ void stress13()
    ntotout += f.GetEND();
 
    Bool_t OK = kTRUE;
-   if (chentries != tree->GetEntries()) OK = kFALSE;
+   if (chain->GetEntries() != tree->GetEntries()) OK = kFALSE;
+   delete tree;
+   delete chain;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
@@ -1311,7 +1311,7 @@ void stress15()
    //We want to copy only a few branches.
    TFile *oldfile = new TFile("Event.root");
    TTree *oldtree = (TTree*)oldfile->Get("T");
-   Event *event   = 0;
+   Event *event   = new Event();
    oldtree->SetBranchAddress("event",&event);
    oldtree->SetBranchStatus("*",0);
    oldtree->SetBranchStatus("event",1);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.38 2002/01/19 11:04:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.33 2001/12/14 13:29:44 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -57,6 +57,7 @@ TChain::TChain(): TTree()
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
+   fNotify         = 0;
 }
 
 //______________________________________________________________________________
@@ -101,6 +102,7 @@ TChain::TChain(const char *name, const char *title)
    gDirectory->GetList()->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
+   fNotify    = 0;
 }
 
 //______________________________________________________________________________
@@ -161,29 +163,15 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 // the chain name will be assumed.
 // Name may use the wildcarding notation, eg "xxx*.root" means all files
 // starting with xxx in the current file system directory.
+//
+// If nentries <= 0, the file is connected and the tree header read in memory
+// to get the number of entries.
+// If (nentries > 0, the file is not connected, nentries is assumed to be
+// the number of entries in the file. In this case, no check is made that
+// the file exists and the Tree existing in the file. This second mode
+// is interesting in case the number of entries in the file is already stored
+// in a run data base for example.
 // NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
-//
-//    A- if nentries <= 0, the file is connected and the tree header read 
-//       in memory to get the number of entries.
-//
-//    B- if (nentries > 0, the file is not connected, nentries is assumed to be
-//       the number of entries in the file. In this case, no check is made that
-//       the file exists and the Tree existing in the file. This second mode
-//       is interesting in case the number of entries in the file is already stored
-//       in a run data base for example.
-//
-//    C- if (nentries == kBigNumber) (default), the file is not connected.
-//       the number of entries in each file will be read only when the file
-//       will need to be connected to read an entry.
-//       This option is the default and very efficient if one process
-//       the chain sequentially. Note that in case TChain::GetEntry(entry)
-//       is called and entry refers to an entry in the 3rd file, for example,
-//       this forces the Tree headers in the first and second file
-//       to be read to find the number of entries in these files.
-//       Note that if one calls TChain::GetEntriesFast() after having created
-//       a chain with this default, GetEntriesFast will return kBigNumber!
-//       TChain::GetEntries will force of the Tree headers in the chain to be
-//       read to read the number of entries in each Tree.
 
    // case with one single file
    if (strchr(name,'*') == 0) {
@@ -238,28 +226,14 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 {
 //       Add a new file to this chain.
 //
-//    A- if nentries <= 0, the file is connected and the tree header read 
-//       in memory to get the number of entries.
-//
-//    B- if (nentries > 0, the file is not connected, nentries is assumed to be
-//       the number of entries in the file. In this case, no check is made that
-//       the file exists and the Tree existing in the file. This second mode
-//       is interesting in case the number of entries in the file is already stored
-//       in a run data base for example.
-//
-//    C- if (nentries == kBigNumber) (default), the file is not connected.
-//       the number of entries in each file will be read only when the file
-//       will need to be connected to read an entry.
-//       This option is the default and very efficient if one process
-//       the chain sequentially. Note that in case TChain::GetEntry(entry)
-//       is called and entry refers to an entry in the 3rd file, for example,
-//       this forces the Tree headers in the first and second file
-//       to be read to find the number of entries in these files.
-//       Note that if one calls TChain::GetEntriesFast() after having created
-//       a chain with this default, GetEntriesFast will return kBigNumber!
-//       TChain::GetEntries will force of the Tree headers in the chain to be
-//       read to read the number of entries in each Tree.
-   
+//    if nentries <= 0, the file is connected and the tree header read in memory
+//    to get the number of entries.
+//    if (nentries > 0, the file is not connected, nentries is assumed to be
+//    the number of entries in the file. In this case, no check is made that
+//    the file exists and the Tree existing in the file. This second mode
+//    is interesting in case the number of entries in the file is already stored
+//    in a run data base for example.
+
    TDirectory *cursav = gDirectory;
    char *treename = (char*)GetName();
    char *dot = (char*)strstr(name,".root");
@@ -320,14 +294,9 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
    }
 
    if (nentries > 0) {
-      if (nentries < kBigNumber) {
-         fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
-         fEntries += nentries;
-      } else {
-         fTreeOffset[fNtrees+1] = kBigNumber;
-         fEntries = nentries;
-      }
+      fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
       fNtrees++;
+      fEntries += nentries;
 
       TChainElement *element = new TChainElement(treename,filename);
       element->SetPacketSize(pksize);
@@ -497,19 +466,6 @@ Int_t TChain::GetChainEntryNumber(Int_t entry) const
 }
 
 //______________________________________________________________________________
-Stat_t TChain::GetEntries() const
-{
-// return the total number of entries in the chain.
-// In case the number of entries in each tree is not yet known,
-// the offset table is computed
-   
-   if (fEntries >= (Stat_t)kBigNumber) {
-      ((TChain*)this)->LoadTree(fEntries-1);
-   }
-   return fEntries;
-}
-
-//______________________________________________________________________________
 Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 {
 //*-*-*-*-*-*-*-*-*Return entry in memory*-*-*-*-*-*-*-*-*-*
@@ -617,19 +573,6 @@ Int_t TChain::GetNbranches()
 
 
 //______________________________________________________________________________
-Double_t TChain::GetWeight() const
-{
-//  return the chain weight.
-//  by default, the weight is the weight of the current Tree in the TChain.
-//  However, if the weight has been set in TChain::SetWeight with
-//  the option "global", each Tree will use the same weight stored
-//  in TChain::fWeight.
-   
-   if (TestBit(kGlobalWeight)) return fWeight;
-   else                        return fTree->GetWeight();   
-}
-
-//______________________________________________________________________________
 Int_t TChain::LoadTree(Int_t entry)
 {
 //  The input argument entry is the entry serial number in the whole chain.
@@ -641,8 +584,7 @@ Int_t TChain::LoadTree(Int_t entry)
 
    //Find in which tree this entry belongs to
    Int_t t;
-   if (fTreeNumber!=-1 &&
-       (entry >= fTreeOffset[fTreeNumber] && entry < fTreeOffset[fTreeNumber+1])){
+   if (entry >= fTreeOffset[fTreeNumber] && entry < fTreeOffset[fTreeNumber+1]){
      t = fTreeNumber;
    }
    else {
@@ -670,19 +612,7 @@ Int_t TChain::LoadTree(Int_t entry)
    fTree = (TTree*)fFile->Get(element->GetName());
    fTreeNumber = t;
    fDirectory = fFile;
-   
-   //check if fTreeOffset has really been set
-   Int_t nentries = (Int_t)fTree->GetEntries();
-   if (fTreeOffset[fTreeNumber+1] != fTreeOffset[fTreeNumber] + nentries) {
-      fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
-      fEntries = fTreeOffset[fNtrees]; 
-      if (entry > fTreeOffset[fTreeNumber+1]) {
-         cursav->cd();
-         if (fTreeNumber < fNtrees) return LoadTree(entry);
-         else                       fReadEntry = -2;
-      }
-   }
-   
+
    //Set the branches status and address for the newly connected file
    fTree->SetMakeClass(fMakeClass);
    fTree->SetMaxVirtualSize(fMaxVirtualSize);
@@ -855,9 +785,9 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 
    Int_t nFiles = 0;
    Int_t treeNumber = -1;
-   Int_t nentries = Int_t(GetEntriesFast());
+   Int_t nentries = Int_t(GetEntries());
    for (Int_t i=0;i<nentries;i++) {
-      if (GetEntry(i) <= 0) break;
+      GetEntry(i);
       if (treeNumber != fTreeNumber) {
          treeNumber = fTreeNumber;
          TIter next(fTree->GetListOfBranches());
@@ -979,6 +909,7 @@ void TChain::Reset(Option_t *)
    TChainElement *element = new TChainElement("*","");
    fStatus->Add(element);
    fDirectory = 0;
+   fNotify    = 0;
 
    TTree::Reset();
 }
@@ -1054,32 +985,6 @@ void TChain::SetPacketSize(Int_t size)
    TChainElement *element;
    while ((element = (TChainElement*)next())) {
       element->SetPacketSize(size);
-   }
-}
-
-//______________________________________________________________________________
-void TChain::SetWeight(Double_t w, Option_t *option)
-{
-//  Set chain weight.
-//  The weight is used by TTree::Draw to automatically weight each
-//  selected entry in the resulting histogram.
-//  For example the equivalent of
-//     chain.Draw("x","w")
-//  is
-//     chain.SetWeight(w,"global");
-//     chain.Draw("x");
-//
-//  By default the weight used will be the weight
-//  of each Tree in the TChain. However, one can force the individual
-//  weights to be ignored by specifying the option "global".
-//  In this case, the TChain global weight will be used for all Trees.
-   
-   fWeight = w;
-   TString opt = option;
-   opt.ToLower();
-   ResetBit(kGlobalWeight);
-   if (opt.Contains("global")) {
-      SetBit(kGlobalWeight);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.12 2002/01/04 08:48:18 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.11 2001/07/18 16:01:08 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -24,7 +24,6 @@
 #include <KeySymbols.h>
 #include <TRootCanvas.h>
 #include <TApplication.h>
-#include <TList.h>
 #include "Tetris.h"
 
 static Tetris *gTetris;                    // game manager

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.9 2002/01/02 21:42:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.8 2001/12/23 09:09:32 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -98,6 +98,8 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
              Float_t    GetTickSize() const     {return fTickSize;}
         virtual void    ImportAxisAttributes(TAxis *axis);
                 void    LabelsLimits(const char *label, Int_t &first, Int_t &last);
+        static  void    Optimize(Double_t A1,  Double_t A2,  Int_t nold
+                       ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID, Option_t *option="");
         virtual void    Paint(Option_t *chopt="");
         virtual void    PaintAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                   Double_t &wmin,Double_t &wmax,Int_t &ndiv, Option_t *chopt="",

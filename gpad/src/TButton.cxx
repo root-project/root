@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.4 2001/10/29 11:59:12 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
 #include "TROOT.h"
 #include "TButton.h"
 #include "TCanvas.h"
@@ -292,7 +292,7 @@ void TButton::SavePrimitive(ofstream &out, Option_t *)
       <<","<<fYlowNDC+fHNDC
       <<");"<<endl;
    delete [] cmethod;
-
+   
    SaveFillAttributes(out,"button",0,1001);
    SaveLineAttributes(out,"button",1,1,1);
    SaveTextAttributes(out,"button",22,0,1,61,.65);

@@ -26,11 +26,8 @@ The packages are:
 * root-ttf       True Type Font support in ROOT
 * root-gl	 (Open)GL support for visualisation in ROOT
 * root-mysql     MySQL client for ROOT
-* root-psql      PostGreSQL client for ROOT
-* root-sapdb     SapDB client for ROOT
 * root-shift     Interface to SHIFT maanged tape robots
 * root-pythia    Wrapper for Pythia event generators
-* root-venus     Wrapper for Venus event generator
 * task-root	 Meta package for easy installation of ROOT. 
 
 The packages are structured like this, to allow maximum modularity and 
@@ -51,7 +48,7 @@ into "non-free".  Redhat may not have any such policy.
 The current license of ROOT in fact means, that if you built the
 Redhat or Debian GNU/Linux packages, you may not redistribute those
 without the prior consent of the ROOT team.  The maintainers of the
-Debian GNU/Linux and Redhat packages has such a consent and may
+Denian GNU/Linux and Redhat packages has such a consent and mey
 therefore redistribute packages.  So, in short, if you got a Redhat or 
 Debian GNU/Linux ROOT package set from someone other than the ROOT
 team or the maintainers you are in violation with the License!
@@ -124,31 +121,33 @@ about such a system, please let us know.
 
 Building the Package:
 =====================
-The basic process of building the RPM and Debian packages is given in
-README/INSTALL; here we'll go into the details.   
-
-Basic configuration:
---------------------
-The source tree is configured with 
+This package was build with the following configuration options. 
 
   ./configure <arch> \
-		--prefix=<prefix>				\
-		--etcdir=<etcdir> 				\
+    --prefix=/usr \
+    --docdir=/usr/share/doc/root \
+    --mandir=/usr/share/man/man1 \
+    --enable-shared \
+    --enable-thread \
     --enable-star \
-		--enable-thread 				\
-		--enable-shared 				\
+    --enable-ttf \
+    --enable-opengl \
+    --enable-cern \
+    --enable-mysql \
+    --enable-rfio \
+    --enable-pythia \
+    --enable-pythia6 \
     --enable-soversion \
-		--disable-afs 					\
-		--disable-srp 					\
-		--with-sys-iconpath=/usr/share/pixmaps		\
-		--with-ttf-fontdir=/usr/share/fonts/truetype
+    --with-ttf-fontdir=/usr/share/fonts/truetype \
+    --with-sys-iconpath=/usr/share/pixmaps
 
-where <arch> is "linux" for Red Hat and "linuxdeb" for Debian
-GNU/Linux.  More will be said on the paths <prefix> and <etcdir>
-below.  This configuration has the following meanings: 
+where <arch> was linuxdeb2 for Debian GNU/Linux and linuxegcs for
+Redhat. 
+
+The build-in features:
 
 * 3rd party libraries:
-  The packages will use third-party shared libraries when ever
+  The pakages will use third-party shared libraries when ever
   possible.  This is noted in the below items. 
 
 * Thread Support and API:
@@ -161,9 +160,9 @@ below.  This configuration has the following meanings:
 
 * TrueType Font Support:
   Note, that if you want to have system wide TrueType Font support,
-  you can install the fonts into the directory
+  you _must_ install the fonts into the directory
 
-    @prefix@/share/fonts/truetype
+    /usr/share/fonts/truetype
 
   It's possible for individual users to override this path, using the 
   lines 
@@ -174,6 +173,9 @@ below.  This configuration has the following meanings:
 
   in thier ~/.rootrc, where <ttffontdir> is the path to the TrueType 
   Fonts. 
+
+  You must have the font file "arialbd.ttf" in the directory
+  /usr/share/fonts/truetype, or the one corresponding to <ttffontdir>.  
 
   The currently supported TrueType Fonts in ROOT are:
 
@@ -199,66 +201,35 @@ below.  This configuration has the following meanings:
      ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz
 
   Please note, that these fonts are copyright of Microsoft, under
-  restrictive license.  In a nut shell, this license prohibits the
+  restrictive license.  In a nut shell, this license prohibts the
   maintainer from including them in the packages, since it will
   violate other license issues, and make ROOT less close to being
   OpenSource.  For now, we must endure. 
 
-* Version number in soname:
-  Debian GNU/Linux (indirectly) mandates that any shared library shall 
-  have the major version number the soname, so that the packaging
-  system (dpkg/apt) may resolve conflicts, dependencies, etc.  Hence,
-  the ROOT libraries are build with the major version number in the 
-  soname.  Redhat does not have such a strict policy, but it is
-  generally a good idea to set version numbers in sonames (the shared
-  library's internal identifier) so that the runtime environment may
-  resolve confilcts etc. cleanly. 
-
-
-Features:
----------
-The number of features that is compiled in and how many packages are
-made depend upon the system you're building the packages.  The
-possible feature packages are 
-
-* root-gl - OpenGL usage:
+* OpenGL usage:
   You need an OpenGL implementation installed on your system.  Several 
-  Debian GNU/Linux and Redhat packages provide OpenGL.  
+  Debian GNU/Linux and Redhat packages provide OpenGL, among these are 
+  mesag.  However, some graphics cards - like Matrox G200 and G400 - 
+  are supported with fully fleshed 3D acceleration, using the OpenGL 
+  package libutahglx1, so it's recommended to checkout this package
+  first. 
 
-  If you're running XFree86 version 4 or higher, the OpenGL support
-  comes with the X server.  The maintainer highly recommends using
-  XFree86 version 4 or above if you want proper 3D rendering.
-
-  If, for some reason, you're stuck with XFree86 version 3.3.x, you
-  can get (poor) OpenGL support via the package mesag (Debian) or Mesa
-  (Red Hat).  However, some graphics cards - like Matrox G200 and G400
-  -  are supported with fully fleshed 3D acceleration, using the
-  OpenGL package libutahglx1, so it's recommended to checkout this
-  package first. 
-
-* root-zebra - ZEBRA conversion tools:
+* ZEBRA conversion tools:
   The CERNLIB libraries libpacklib and libkernlib are statically
   linked into the applications h2root and g2root, so these need only
   be installed at build time.  As of the 2000 release, CERNLIB is
-  released under GNU GPL (see @prefix@/share/doc/copyright/GPL), so
-  this package must be distributed under the GNU GPL. 
+  released under GNU GPL (see /usr/share/doc/copyright/GPL), so there
+  are no licensing problems related to this. 
 
-* root-mysql - MySQL client API:
+* MySQL client API:
   All you need is the MySQL client library, which for Debian GNU/Linux
   is avaliable in the main distribution in section libs.  The client
   library is also avaliable for Redhat, either on the PowerTools CD,
-  or from the MySQL web-site <http://www.mysql.com>. 
+  or from the MySQL web-site <http://www.mysql.com>. The client
+  library for MySQL is GPL'ed. Hence you should have no problem here
+  either.  
 
-* root-psql - PostGreSQL client API:
-  All you need is the PostGreeSQL client library, which is avaliable
-  in both Debian and Red Hat.
-
-* root-sapdb - Sap DB support: 
-  ROOT interface to the Sap DB Relational Database Manager.
-  Currently there exists only SapDB packages for Red Hat and non for
-  Debian.  This feature has not been tested extensively. 
-
-* root-shift - SHIFT interface:
+* SHIFT interface:
   The SHIFT API library libshift is statically linked into libRFIO, so  
   you only need this library when building the package.  No Copyright
   notice was found anywhere for SHIFT, so use this feature with some
@@ -266,7 +237,7 @@ possible feature packages are
   for misuse of this feature on the recipient of this packages
   part.  You have been warned. 
 
-* root-pythia - Pythia interfaces:
+* Pythia interfaces:
   The ROOT interfaces to event generators Pythia version 5 and 6 uses
   dynamic loading, so you need to have libPythia.so and libPythia6.so
   installed on your system.  The maintainer of these packages also
@@ -279,65 +250,45 @@ possible feature packages are
   install it anywhere you want, or you may opt to build it yourself.
   Please refer to the ROOT install file for more information. 
 
-  Pythia is copyright of Thorbjorn Sjostrand.  Again note that no
-  lisence information was found anywhere, so use this feature with
-  some discresion.  In no way will the maintainer claim any
-  responsebility for misuse of this feature on the recipient of this
-  packages part.  You have been warned.  
+  Again note that no copyright information was found anywhere, so use  
+  this feature with some discresion.  In no way will the maintainer
+  claim any responsebility for misuse of this feature on the recipient 
+  of this packages part.  You have been warned. 
 
-* root-venus - Venus Event Generator interface:
-  This package has not been tested at all. 
+* Version number in soname:
+  Debian GNU/Linux (indirectly) mandates that any shared library shall 
+  have the major version number the soname, so that the packaging
+  system (dpkg/apt) may resolve conflicts, dependencies, etc.  Hence,
+  the ROOT libraries are build with the major version number in the 
+  soname.  Redhat does not have such a strict policy, but it is
+  generally a good idea to set version numbers in sonames (the shared
+  library's internal identifier) so that the runtime environment may
+  resolve confilcts etc. cleanly. 
 
-Other features exist in the ROOT distribution, namely AFS and SRP
-support, but was not used in this package.  AFS and SRP support
-affects crucial binaries (rootd and proofd) in the ROOT system, and
-since one can not clearly seperate out these binaries from the system,
-it was choosen not to include AFS and SRP support, since one may be in
-a situation where on root-daemon package has AFS and SRP support, and
-another not.  In the future, there might be an extra package with AFS
-and SRP support. 
+* What is missing:
+  Other features exist in the ROOT distribution, such as AFS, SRP, and
+  Venus support, but was not used in this package.  The reasons for
+  this are many: 
 
-Some Red Hat notes:
--------------------
-The avaliability of third-party libraries on the system that made the
-root.spec file dictates which packages will be build.  Hence, if you
-got a spec file from somewhere else, it may not be right for your
-system.  The packages build from any given spec file can be examined
-by look at the end of the spec, at the line contaning the command 
+  * AFS binaries generally depend on the kernel version installed, and 
+    can therefore not be linked in.  Also, there may well be lisencing 
+    problems.  If AFS is avaliable as shared libraries, this may not
+    be a problem, and an OpenSource AFS distribution - OpenAFS from
+    IBM - is avaliable but still in beta. 
+  * A full SRP distribution need to be installed to link ROOT binaries
+    with SRP support.  Debian GNU/Linux only provide a subset of this,
+    and the situation is to the best of our knowledge the same on
+    Redhat.  Lisencing issues are relevant as well. 
+  * A clean Venus source code could not be obtained.  The maintainers
+    will not build binary files from other binary files they have not
+    build themselves or isn't avaliable as standard packages on a
+    given system, since that makes it even harder to guaranty binary
+    compatiblity. 
 
-   build/package/lib/makerpmfiles.sh 
-
-The list after the 5'th argument is the packages that this spec file
-builds (possibly empty). 
-
-If you feel you may have more or less features avaliable on your
-system, try run configure as  
-
-   ./configure linux --pkglist 
-
-This will give you a list of the packages that is possible to build on
-your system.  If that list differs from the one in the spec file, you
-should remake the spec file with 
-
-   make redhat 
-
-Some Debian notes:
-------------------
-The avaliability of third-party libraries on the system that made the
-debian directory dictates which packages will be build.  Hence, if you
-got source package from somewhere else, it may not be right for your
-system.  Inspect the file debian/control to see the packages build.  
-
-If you feel you may have more or less features avaliable on your
-system, try run configure as  
-
-   ./configure linux --pkglist 
-
-This will give you a list of the packages that is possible to build on
-your system.  If that list differs from those in the debian/control
-file, you should remake the debian directory with 
-
-   ./build/package/lib/makedebdir.sh 
+  AFS and SRP support effects crucial binaries in the ROOT system, and 
+  therefore it was chosen not to include support for these two systems. 
+  In the future, there might be an extra package with AFS and SRP
+  support. 
 
 Rebuilding the packages:
 ========================
@@ -358,17 +309,12 @@ observe:
 * Do not move files yourself. 
 
 Make sure you've got the nessecary libraries/headers/fonts installed. 
-Should you want to not include a feature and the corresponding
+Should you wan't to not include a feature and the corresponding
 package in the build, you should edit the file in
 
-  build/package/lib/makedebdir.sh   or
-  build/package/lib/makerpmspec.sh
+	build/package/lib/common.sh 
 
-The definition of variable "pkgs" is usual defined via 
-
-    ./configure [linuxdeb|linux] --pkglist 
-
-Starting from that output, you can set that variable yourself.  For 
+the definition of variable "pkgs" to include only waht you want.  For
 example, to build only the basic (read: minimal) set of packages
 libroot, libroot-dev, root-bin, root-daemon and root-cint, the
 definition should read:  
@@ -378,25 +324,10 @@ definition should read:
 Please note that the order is important (See note one ".files" files
 below). 
 
-Per default, the packages are build with prefix=/usr and
-etcdir=/etc/root.  Depending on the system, you can more or less
-easily redefine this to something else, say prefix=/usr/local.  
-
-* Debian: Edit the file 
-
-    build/package/lib/makedebdir.sh 
-
-  so that prefix and/or etcdir is set to where you want to install the 
-  package.  
-
-* Red Hat:  First make the spec file.  Then at the top of the spec file
-  edit the definition of _prefix and _sysconfdir to your liking.
-
 To make the package, cd to the toplevel source diretory, and do a
 "make debian" or "make redhat" - that's it.  All packaging files are
 made and no patches are applied.  Please also refer to
 README/INSTALL. 
-
 
 Package Bugs, etc.:
 ===================
@@ -713,9 +644,6 @@ many suggestions and inspirrational talks.
 Thanks to Richard B. Kreckel the CINT Debian GNU/Linux package
 maintainer, for inspirring correspondence, advice, and great
 cooperation.  
-
-Thanks to Brett Viren for alpha and beta testing of the Debian
-GNU/Linux packages. 
 
  -- Anders Waananen <waananen@nbi.dk>, Fri,  16 Mar 2001 12:45:54 +0100
  -- Christian Holm <cholm@nbi.dk>, Sat,  16 Mar 2001 12:45:54 +0100

@@ -1062,16 +1062,7 @@ struct G__Charlist *callpara,*defpara;
 {
   while(defpara->next) {
     if(strcmp(defpara->string,symbol)==0) {
-#ifndef G__OLDIMPLEMENTATION1629
-      if(callpara->string) strcpy(symbol,callpara->string);
-      else {
-	/* Line number is not quite correct in following error messaging */
-	G__genericerror("Error: insufficient number of macro arguments");
-	symbol[0] = 0;
-      }
-#else
       strcpy(symbol,callpara->string);
-#endif
       break;
     }
     defpara = defpara->next;
