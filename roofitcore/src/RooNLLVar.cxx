@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooNLLVar.cc,v 1.4 2002/09/05 04:33:44 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -88,7 +88,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   // If part of simultaneous PDF normalize probability over 
   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n) 
   if (_simCount>1) {
-    result += (lastEvent-firstEvent)*log(_simCount) ;
+    result += (lastEvent-firstEvent)*log(1.0*_simCount) ;
   }
 
   return result ;
