@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.53 2005/03/17 10:43:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.54 2005/03/18 22:41:27 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -142,28 +142,15 @@ void TProofPlayer::StoreFeedback(TObject *, TList *)
 }
 
 //______________________________________________________________________________
-void TProofPlayer::Progress(Long64_t total, Long64_t processed)
+void TProofPlayer::Progress(Long64_t /*total*/, Long64_t /*processed*/)
 {
-   PDB(kGlobal,1)
-      Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
-
-   EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
-
-   gProof->Progress(total, processed);
+   MayNotUse("Progress");
 }
 
 //______________________________________________________________________________
-void TProofPlayer::Feedback(TList *objs)
+void TProofPlayer::Feedback(TList *)
 {
-   PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
-   PDB(kFeedback,1) {
-      Info("Feedback","%d Objects", objs->GetSize());
-      objs->ls();
-   }
-
-   Emit("Feedback(TList *objs)", (Long_t) objs);
-
-   gProof->Feedback(objs);
+   MayNotUse("Feedback");
 }
 
 //______________________________________________________________________________
@@ -208,7 +195,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
    } else {
-      if (gProof != 0 && !gProof->IsMaster()) {
+      if (IsClient()) {
          // on client (for local run)
          PDB(kLoop,1) Info("Process","Call Begin(0)");
          fSelector->Begin(0);
@@ -256,13 +243,13 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       } else {
          PDB(kLoop,1) Info("Process","Call SlaveTerminate()");
          fSelector->SlaveTerminate();
-         if (gProof != 0 && !gProof->IsMaster() && fSelStatus->IsOk()) {
+         if (IsClient() && fSelStatus->IsOk()) {
             PDB(kLoop,1) Info("Process","Call Terminate()");
             fSelector->Terminate();
          }
       }
    }
-   if (gProof && gProof->IsMaster()) {  // put all the canvases onto the output list
+   if (gProofServ && !gProofServ->IsParallel()) {  // put all the canvases onto the output list
       TIter next(gROOT->GetListOfCanvases());
       while (TCanvas* c = dynamic_cast<TCanvas*> (next()))
          fOutput->Add(c);
@@ -319,48 +306,13 @@ void TProofPlayer::StopFeedback()
 }
 
 //______________________________________________________________________________
-Long64_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
-                               const char *selection, Option_t *option,
-                               Long64_t nentries, Long64_t firstentry)
+Long64_t TProofPlayer::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
+                               const char * /*selection*/, Option_t * /*option*/,
+                               Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
-   TTreeDrawArgsParser info;
-   info.Parse(varexp, selection, option);
-   TString selector = info.GetProofSelectorName();
+   MayNotUse("DrawSelect");
 
-   TNamed *varexpobj = new TNamed("varexp", varexp);
-   TNamed *selectionobj = new TNamed("selection", selection);
-
-   // save the feedback list
-   TList *fb = (TList*) fInput->FindObject("FeedbackList");
-   if (fb)
-      fInput->Remove(fb);
-
-   fInput->Clear();  // good idea? what about a feedbacklist, but old query
-                     // could have left objs? clear at end? no, may want to
-                     // rerun, separate player?
-   if (fb)
-      fInput->Add(fb);
-
-   fInput->Add(varexpobj);
-   fInput->Add(selectionobj);
-
-   if (info.GetObjectName() == "")
-      info.SetObjectName("htemp");
-   gProof->AddFeedback(info.GetObjectName());
-   Long64_t r = Process(set, selector, option, nentries, firstentry);
-   gProof->RemoveFeedback(info.GetObjectName());
-
-   fInput->Remove(varexpobj);
-   fInput->Remove(selectionobj);
-   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
-      fInput->Remove(opt);
-      delete opt;
-   }
-
-   delete varexpobj;
-   delete selectionobj;
-
-   return r;
+   return 0;
 }
 
 
@@ -473,7 +425,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    PDB(kGlobal,1) Info("Process","Calling Collect");
    fProof->Collect();
 
-   HandleTimer(0);
+   if (!IsClient()) HandleTimer(0); // force an update of final result
 
    StopFeedback();
 
@@ -487,7 +439,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       TIter next(fOutput);
       TList *output = fSelector->GetOutputList();
       while(TObject* obj = next()) {
-         if (!gProof->IsParallel()) {
+         if (!fProof->IsParallel()) {
             if (TCanvas* c = dynamic_cast<TCanvas *> (obj))
                c->Draw();
             else
@@ -587,6 +539,31 @@ void TProofPlayerRemote::MergeOutput()
 
    delete fOutputLists; fOutputLists = 0;
    PDB(kOutput,1) Info("MergeOutput","Leave (%d object(s))", fOutput->GetSize());
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
+{
+   PDB(kGlobal,1)
+      Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
+
+   EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
+
+   fProof->Progress(total, processed);
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::Feedback(TList *objs)
+{
+   PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
+   PDB(kFeedback,1) {
+      Info("Feedback","%d Objects", objs->GetSize());
+      objs->ls();
+   }
+
+   Emit("Feedback(TList *objs)", (Long_t) objs);
+
+   fProof->Feedback(objs);
 }
 
 //______________________________________________________________________________
@@ -746,7 +723,7 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
       return;
    }
 
-   if ( !gProof->IsMaster() ) {
+   if ( IsClient() ) {
       // in client
       Feedback(out);
       delete out;
@@ -789,7 +766,7 @@ void TProofPlayerRemote::SetupFeedback()
 {
    // Setup reporting of feedback objects.
 
-   if (!gProof->IsMaster()) return; // Client does not need timer
+   if ( IsClient() ) return; // Client does not need timer
 
    fFeedback = (TList*) fInput->FindObject("FeedbackList");
 
@@ -824,29 +801,33 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
+   Assert( !IsClient() );
+
    if ( fFeedbackTimer == 0 ) return kFALSE; // timer already switched off
 
-   if ( gProof->IsMaster() ) {
-      // process local feedback objects
 
-      TList *fb = new TList;
-      fb->SetOwner();
+   // process local feedback objects
 
-      TIter next(fFeedback);
-      while( TObjString *name = (TObjString*) next() ) {
-         TObject *o = fOutput->FindObject(name->GetName());
-         if (o != 0) fb->Add(o->Clone());
-      }
+   TList *fb = new TList;
+   fb->SetOwner();
 
-      if (fb->GetSize() > 0) StoreFeedback(this, fb); // adopts fb
+   TIter next(fFeedback);
+   while( TObjString *name = (TObjString*) next() ) {
+      TObject *o = fOutput->FindObject(name->GetName());
+      if (o != 0) fb->Add(o->Clone());
    }
+
+   if (fb->GetSize() > 0)
+      StoreFeedback(this, fb); // adopts fb
+   else
+      delete fb;
 
    if ( fFeedbackLists == 0 ) {
       fFeedbackTimer->Start(500,kTRUE);   // maybe next time
       return kFALSE;
    }
 
-   TList *fb = MergeFeedback();
+   fb = MergeFeedback();
 
    PDB(kFeedback,2) Info("HandleTimer","Sending %d objects", fb->GetSize());
 
@@ -880,6 +861,59 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    }
 
    return e;
+}
+
+//______________________________________________________________________________
+Bool_t TProofPlayerRemote::IsClient() const
+{
+   // Is the player running on the client?
+
+   return !fProof->IsMaster();
+}
+
+//______________________________________________________________________________
+Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
+                               const char *selection, Option_t *option,
+                               Long64_t nentries, Long64_t firstentry)
+{
+   TTreeDrawArgsParser info;
+   info.Parse(varexp, selection, option);
+   TString selector = info.GetProofSelectorName();
+
+   TNamed *varexpobj = new TNamed("varexp", varexp);
+   TNamed *selectionobj = new TNamed("selection", selection);
+
+   // save the feedback list
+   TList *fb = (TList*) fInput->FindObject("FeedbackList");
+   if (fb)
+      fInput->Remove(fb);
+
+   fInput->Clear();  // good idea? what about a feedbacklist, but old query
+                     // could have left objs? clear at end? no, may want to
+                     // rerun, separate player?
+   if (fb)
+      fInput->Add(fb);
+
+   fInput->Add(varexpobj);
+   fInput->Add(selectionobj);
+
+   if (info.GetObjectName() == "")
+      info.SetObjectName("htemp");
+   fProof->AddFeedback(info.GetObjectName());
+   Long64_t r = Process(set, selector, option, nentries, firstentry);
+   fProof->RemoveFeedback(info.GetObjectName());
+
+   fInput->Remove(varexpobj);
+   fInput->Remove(selectionobj);
+   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
+      fInput->Remove(opt);
+      delete opt;
+   }
+
+   delete varexpobj;
+   delete selectionobj;
+
+   return r;
 }
 
 
@@ -1147,7 +1181,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
          }
       }
 
-      HandleTimer(0);
+      if ( !IsClient() ) HandleTimer(0);
       PDB(kGlobal,1) Info("Process","Calling Collect");
       proof->Collect(&usedmasters);
       HandleTimer(0);
@@ -1213,9 +1247,9 @@ Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
 //______________________________________________________________________________
 void TProofPlayerSuperMaster::SetupFeedback()
 {
-   // Setup reporting of feedback objects.
+   // Setup reporting of feedback objects and progress.
 
-   if (!gProof->IsMaster()) return; // Client does not need timer
+   if (IsClient()) return; // Client does not need timer
 
    TProofPlayerRemote::SetupFeedback();
 
@@ -1226,7 +1260,7 @@ void TProofPlayerSuperMaster::SetupFeedback()
       fReturnFeedback = kFALSE;
    }
 
-   // setup the timer (for both feedback and progress)
+   // setup the timer for progress message
 
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);

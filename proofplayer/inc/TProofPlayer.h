@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.25 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.26 2005/03/13 15:06:50 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -118,6 +118,8 @@ public:
                                    Double_t& ymin, Double_t& ymax,
                                    Double_t& zmin, Double_t& zmax);
 
+   virtual Bool_t    IsClient() const { return kFALSE; }
+
    ClassDef(TProofPlayer,0)  // Abstract PROOF player
 };
 
@@ -162,11 +164,21 @@ public:
    Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0, TEventList *evl = 0);
+   Long64_t       DrawSelect(TDSet *set, const char *varexp,
+                             const char *selection, Option_t *option = "",
+                             Long64_t nentries = -1, Long64_t firstentry = 0);
+
    void           StopProcess(Bool_t abort);
    void           StoreOutput(TList *out);   // Adopts the list
    void           StoreFeedback(TObject *slave, TList *out); // Adopts the list
    void           MergeOutput();
+   void           Progress(Long64_t total, Long64_t processed); // *SIGNAL*
+   void           Progress(TSlave *, Long64_t total, Long64_t processed)
+                     { Progress(total, processed); }
+   void           Feedback(TList *objs); // *SIGNAL*
    TDSetElement  *GetNextPacket(TSlave *slave, TMessage *r);
+
+   Bool_t         IsClient() const;
 
    ClassDef(TProofPlayerRemote,0)  // PROOF player running on master server
 };
