@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.2 2000/06/13 10:37:30 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -50,7 +50,6 @@ protected:
    Int_t       fNpx;         //Number of points used for the graphical representation
    Int_t       fType;        //(=0 for standard functions, 1 if pointer to function)
    Int_t       fNpfits;      //Number of points used in the fit
-   Int_t       fNsave;       //Number of points used to fill array fSave
    Double_t    fChisquare;   //Function fit chisquare
    Double_t    *fIntegral;   //![fNpx] Integral of function binned on fNpx bins
    Double_t    *fParErrors;  //[fNpar] Array of errors of the fNpar parameters
@@ -60,11 +59,12 @@ protected:
    Double_t    *fAlpha;      //!Array alpha. for each bin in x the deconvolution r of fIntegral
    Double_t    *fBeta;       //!Array beta.  is approximated by x = alpha +beta*r *gamma*r**2
    Double_t    *fGamma;      //!Array gamma.
-   TObject     *fParent;     //Parent object hooking this function (if one)
-   TH1         *fHistogram;  //Pointer to histogram used for visualisation
+   TObject     *fParent;     //!Parent object hooking this function (if one)
+   TH1         *fHistogram;  //!Pointer to histogram used for visualisation
    Double_t     fMaximum;    //Maximum value for plotting
    Double_t     fMinimum;    //Minimum value for plotting
-   TMethodCall *fMethodCall; //Pointer to MethodCall in case of interpreted function
+   Int_t        fNsave;      //Number of points used to fill array fSave
+   TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
    Double_t (*fFunction) (Double_t *, Double_t *);   //Pointer to function
 
 public:
