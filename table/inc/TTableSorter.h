@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.h,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
-//  $Id: TTableSorter.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+//  $Id: TTableSorter.h,v 1.2 2003/01/27 20:41:36 brun Exp $
 //
 //  TTableSorter  - Is an "observer" class to sort the TTable objects
 //                    The class provides an interface to the standard "C/C++"
@@ -84,6 +84,7 @@ protected:
    static int CompareUShort_t    (const void **, const void **);
    static int CompareUChar_t     (const void **, const void **);
    static int CompareChar_t      (const void **, const void **);
+   static int CompareBool_t      (const void **, const void **);
 
    Int_t  BSearch(const void *value) const;
 
@@ -97,6 +98,7 @@ protected:
    Int_t BSearch(UShort_t value ) const;
    Int_t BSearch(UChar_t  value ) const;
    Int_t BSearch(Char_t   value ) const;
+   Int_t BSearch(Bool_t   value ) const;
 
    //  Int_t BSearch(const Char_t *value) const;
    //  Int_t BSearch(TString &value)     ;
@@ -116,6 +118,7 @@ protected:
    static int SearchUShort_t    (const void *, const void **);
    static int SearchUChar_t     (const void *, const void **);
    static int SearchChar_t      (const void *, const void **);
+   static int SearchBool_t      (const void *, const void **);
 
    Int_t SelectSearch(Float_t  value ) const;
    Int_t SelectSearch(Int_t    value ) const;
@@ -127,6 +130,7 @@ protected:
    Int_t SelectSearch(UShort_t value ) const;
    Int_t SelectSearch(UChar_t  value ) const;
    Int_t SelectSearch(Char_t   value ) const;
+   Int_t SelectSearch(Bool_t   value ) const;
 
    void  SetSearchMethod();
    void  SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRows);
@@ -160,6 +164,7 @@ public:
    Int_t BinarySearch(UShort_t value ) const;
    Int_t BinarySearch(UChar_t  value ) const;
    Int_t BinarySearch(Char_t   value ) const;
+   Int_t BinarySearch(Bool_t   value ) const;
 
    virtual const Text_t   *GetColumnName() const { return fColName.Data();}
    Int_t     GetIndex(UInt_t sortedIndex) const;
