@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.4 2000/09/30 11:11:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.5 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -146,6 +146,7 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
    fListBox = new TGListBox(fComboFrame, fComboBoxId, kChildFrame);
    fListBox->Resize(100, 100);
    fListBox->Associate(this);
+   fListBox->GetScrollBar()->GrabPointer(kFALSE); // combobox will do a pointergrab
 
    fComboFrame->AddFrame(fListBox, fLhdd = new TGLayoutHints(kLHintsExpandX |
                                                              kLHintsExpandY));

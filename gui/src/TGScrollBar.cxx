@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.3 2000/09/08 16:11:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.4 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -270,9 +270,10 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       }
 
       // last argument kFALSE forces all specified events to this window
-      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, kNone,
-                             kTRUE, kFALSE);
+      if (fGrabPointer)
+         gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                                kPointerMotionMask, kNone, kNone,
+                                kTRUE, kFALSE);
    } else {
       fHead->SetState(kButtonUp);
       fTail->SetState(kButtonUp);
@@ -289,7 +290,8 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
 
       SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
 
-      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+      if (fGrabPointer)
+         gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }
@@ -459,9 +461,10 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       }
 
       // last argument kFALSE forces all specified events to this window
-      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, kNone,
-                             kTRUE, kFALSE);
+      if (fGrabPointer)
+         gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                                kPointerMotionMask, kNone, kNone,
+                                kTRUE, kFALSE);
    } else {
       fHead->SetState(kButtonUp);
       fTail->SetState(kButtonUp);
@@ -478,7 +481,8 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
 
       SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
 
-      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+      if (fGrabPointer)
+         gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }

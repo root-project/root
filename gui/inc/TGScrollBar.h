@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.2 2000/07/03 18:48:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -75,6 +75,7 @@ protected:
    Int_t                fX0, fY0;      // current slider position in pixels
    Int_t                fXp, fYp;      // previous slider position in pixels
    Bool_t               fDragging;     // in dragging mode?
+   Bool_t               fGrabPointer;  // grab pointer when dragging
    Int_t                fRange;        // logical upper range of scrollbar
    Int_t                fPsize;        // logical page size of scrollbar
    Int_t                fPos;          // logical current position
@@ -96,8 +97,11 @@ public:
                UInt_t options = kChildFrame,
                ULong_t back = fgDefaultFrameBackground) :
       TGFrame(p, w, h, options | kOwnBackground, back)
-            { fMsgWindow = p; fRepeat = 0; SetBackgroundPixmap(fgBckgndPixmap); }
+            { fMsgWindow = p; fRepeat = 0; fGrabPointer = kTRUE;
+              SetBackgroundPixmap(fgBckgndPixmap); }
    virtual ~TGScrollBar();
+
+   void           GrabPointer(Bool_t grab) { fGrabPointer = grab; }
 
    virtual void   DrawBorder() { }
    virtual Bool_t HandleButton(Event_t *event) = 0;

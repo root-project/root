@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.4 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -37,6 +37,9 @@
 #endif
 #ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
+#endif
+#ifndef ROOT_TGScrollBar
+#include "TGScrollBar.h"
 #endif
 
 
@@ -220,8 +223,9 @@ public:
    virtual Bool_t GetMultipleSelections() const
                                   { return fLbc->GetMultipleSelections(); }
 
-   TGFrame *GetContainer() const { return fVport->GetContainer(); }
-   TGViewPort *GetViewPort() const { return fVport; }
+   TGFrame     *GetContainer() const { return fVport->GetContainer(); }
+   TGViewPort  *GetViewPort() const { return fVport; }
+   TGScrollBar *GetScrollBar() const { return fVScrollbar; }
    virtual void DrawBorder();
    virtual void Resize(UInt_t w, UInt_t h);
    virtual void Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
