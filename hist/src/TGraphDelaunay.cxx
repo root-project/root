@@ -180,48 +180,37 @@ void TGraphDelaunay::CreateTrianglesDataStructure()
 
 
 //______________________________________________________________________________
-Bool_t TGraphDelaunay::Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const
+Bool_t TGraphDelaunay::Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t E) const
 {
    // Is point E inside the triangle T1-T2-T3 ?
 
-   Int_t E=0,A=0,B=0;
+   Int_t A = 0, B = 0;
    Double_t dx1,dx2,dx3,dy1,dy2,dy3,U,V;
 
-   Bool_t enclose = kFALSE;
-
-   E = TMath::Abs(Ex);
-      
    // First ask if point E is colinear with any pair of the triangle points
-   A = 0;
    if (((fXN[T1]-fXN[E])*(fYN[T1]-fYN[T2])) == ((fYN[T1]-fYN[E])*(fXN[T1]-fXN[T2]))) {
-   //     E is colinear with T1 and T2
+      // E is colinear with T1 and T2
       A = T1;
       B = T2;
    } else if (((fXN[T1]-fXN[E])*(fYN[T1]-fYN[T3])) == ((fYN[T1]-fYN[E])*(fXN[T1]-fXN[T3]))) {
-   //     E is colinear with T1 and T3
+      // E is colinear with T1 and T3
       A = T1;
       B = T3;
    } else if (((fXN[T2]-fXN[E])*(fYN[T2]-fYN[T3])) == ((fYN[T2]-fYN[E])*(fXN[T2]-fXN[T3]))) {
-   //     E is colinear with T2 and T3
+      // E is colinear with T2 and T3
       A = T2;
       B = T3;
    }
    if (A != 0) {
-   //     point E is colinear with 2 of the triangle points, if it lies 
-   //     between them it's in the circle otherwise it's outside
+      // point E is colinear with 2 of the triangle points, if it lies 
+      // between them it's in the circle otherwise it's outside
       if (fXN[A] != fXN[B]) {
-         if (((fXN[E]-fXN[A])*(fXN[E]-fXN[B])) <= 0) {
-            enclose = kTRUE;
-            return enclose;
-         }
+         if (((fXN[E]-fXN[A])*(fXN[E]-fXN[B])) <= 0) return kTRUE;
       } else {
-         if (((fYN[E]-fYN[A])*(fYN[E]-fYN[B])) <= 0) {
-            enclose = kTRUE;
-            return enclose;
-         }
+         if (((fYN[E]-fYN[A])*(fYN[E]-fYN[B])) <= 0) return kTRUE;
       }
-   //     point is outside the triangle
-      return enclose;
+      // point is outside the triangle
+      return kFALSE;
    }
 
    // E is not colinear with any pair of triangle points, if it is inside
@@ -242,9 +231,9 @@ Bool_t TGraphDelaunay::Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const
    U = (dx2*dy3-dx3*dy2)/(dx2*dy1-dx1*dy2);
    V = (dx1*dy3-dx3*dy1)/(dx1*dy2-dx2*dy1);
 
-   if ((U>=0) && (V>=0)) enclose = kTRUE;
+   if ((U>=0) && (V>=0)) return kTRUE;
 
-   return enclose;
+   return kFALSE;
 }
 
 
