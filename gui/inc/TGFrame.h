@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.9 2000/10/30 10:58:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.10 2001/01/04 13:22:55 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -418,7 +418,7 @@ public:
    virtual ~TGGroupFrame();
 
    virtual void DrawBorder();
-   virtual void SetTitle(TGSting *title);
+   virtual void SetTitle(TGString *title);
    virtual void SetTitle(const char *title);
 
    static FontStruct_t  GetDefaultFontStruct();
