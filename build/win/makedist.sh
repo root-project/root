@@ -34,7 +34,8 @@ $TAR $TARFILE $EXCLUDE $dir/LICENSE $dir/README $dir/bin \
    $dir/include $dir/lib $dir/cint/MAKEINFO $dir/cint/include \
    $dir/cint/lib $dir/cint/stl $dir/tutorials/*.C $dir/tutorials/*.h \
    $dir/tutorials/*.dat $dir/test/*.cxx $dir/test/*.h $dir/test/Makefile* \
-   $dir/test/README $dir/macros $dir/icons $dir/system.rootrc
+   $dir/test/README $dir/macros $dir/icons $dir/etc $dir/proof/etc \
+   $dir/proof/utils
 if [ "$TAR" = '' ] || [ $stat = 0 ]; then
    gzip $TARFILE
 fi
