@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.33 2003/06/25 15:35:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.34 2003/08/01 17:52:12 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -166,14 +166,26 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
 
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
+//printf("fKeylen=%d\n",fKeylen);
+//char *keybuf = fBufferRef->Buffer() + fKeylen;
+//memset(keybuf,0,2);
    fBufferRef->MapObject(obj);    //register obj in map in case of self reference
    obj->Streamer(*fBufferRef);    //write object
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
+printf("fObjlen=%d, lbuf=%d\n",fObjlen,lbuf);
+char *abuf = fBufferRef->Buffer();
+int tot=0; 
+for (int k=0;k<lbuf;k++) {
+   tot += 2*abuf[k];
+   if (k<100 || k>lbuf-100)printf("k=%4d, tot=%d\n",k,tot);
+}   
+printf("I am here\n");
+printf("tot=%d\n",tot);
 
    Int_t cxlevel = gFile->GetCompressionLevel();
    if (cxlevel && fObjlen > 256) {
-      if (cxlevel == 2) cxlevel--;
+      //if (cxlevel == 2) cxlevel--;
       Int_t nbuffers = fObjlen/kMAXBUF;
       Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 8); //add 8 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
