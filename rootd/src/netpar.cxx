@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: netpar.cxx,v 1.2 2001/02/07 11:00:20 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: netpar.cxx,v 1.3 2001/02/07 11:50:49 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -30,6 +30,9 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
+#if defined(_AIX)
+#include <strings.h>
+#endif
 
 #if defined(linux)
 #   include <features.h>
@@ -110,7 +113,7 @@ int NetParSend(const void *buf, int len)
                if (ilen < 0) {
                   ErrorInfo("NetParSend: error sending for socket %d (%d)",
                             i, gPSockFd[i]);
-                  ilen = 0;
+                  return -1;
                }
                gWriteBytesLeft[i] -= ilen;
                gWritePtr[i] += ilen;
@@ -161,7 +164,11 @@ int NetParRecv(void *buf, int len)
                if (ilen < 0) {
                   ErrorInfo("NetParRecv: error receiving for socket %d (%d)",
                             i, gPSockFd[i]);
-                  ilen = 0;
+                  return -1;
+               } else if (ilen == 0) {
+                  ErrorInfo("NetParRecv: EOF on socket %d (%d)",
+                            i, gPSockFd[i]);
+                  return 0;
                }
                gReadBytesLeft[i] -= ilen;
                gReadPtr[i] += ilen;
