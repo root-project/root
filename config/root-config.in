@@ -23,16 +23,28 @@ newlib="-lNew"
 rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
           -lPostscript -lMatrix -lPhysics"
 rootglibs="-lGui"
-rootulibs="-u _G__cpp_setup_initializerG__Hist       \
-           -u _G__cpp_setup_initializerG__Graf1      \
-           -u _G__cpp_setup_initializerG__G3D        \
-           -u _G__cpp_setup_initializerG__GPad       \
-           -u _G__cpp_setup_initializerG__Tree       \
-           -u _G__cpp_setup_initializerG__Rint       \
-           -u _G__cpp_setup_initializerG__PostScript \
-           -u _G__cpp_setup_initializerG__Matrix     \
-           -u _G__cpp_setup_initializerG__Physics"
-rootuglibs="_G__cpp_setup_initializerG__Gui1"
+rootulibs="-u _G__cpp_setupG__Hist       \
+           -u _G__cpp_setupG__Graf1      \
+           -u _G__cpp_setupG__G3D        \
+           -u _G__cpp_setupG__GPad       \
+           -u _G__cpp_setupG__Tree       \
+           -u _G__cpp_setupG__Rint       \
+           -u _G__cpp_setupG__PostScript \
+           -u _G__cpp_setupG__Matrix     \
+           -u _G__cpp_setupG__Physics"
+rootuglibs="-u _G__cpp_setupG__Gui1"
+if test "$arch" = "win32"; then
+   rootulibs="-include:_G__cpp_setupG__Hist       \
+              -include:_G__cpp_setupG__Graf1      \
+              -include:_G__cpp_setupG__G3D        \
+              -include:_G__cpp_setupG__GPad       \
+              -include:_G__cpp_setupG__Tree       \
+              -include:_G__cpp_setupG__Rint       \
+              -include:_G__cpp_setupG__PostScript \
+              -include:_G__cpp_setupG__Matrix     \
+              -include:_G__cpp_setupG__Physics"
+   rootuglibs="-include:_G__cpp_setupG__Gui1"
+fi
 
 ### machine dependent settings ###
 
@@ -41,268 +53,230 @@ hpux)
    #HP-UX with CC
    auxcflags="+a1 +Z"
    auxlibs="-lm -ldld"
-   auxglibs=${auxlibs}
    ;;
 hpuxacc | hpuxia64acc)
    # HP-UX 10.x with aCC
    auxcflags=
    auxlibs="-lm -ldld"
-   auxglibs=${auxlibs}
    ;;
 hpuxegcs)
    # HP-UX 10.x with g++
    auxcflags=
    auxlibs="-lm -ldld"
-   auxglibs=${auxlibs}
    ;;
 hurddeb)
    # Debian GNU/Hurd
    auxcflags=
    auxlibs="-lnsl -lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 aix | aix5)
    # IBM AIX
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
    auxlibs=
-   auxglibs=${auxlibs}
    ;;
 aixegcs)
    # IBM AIX with g++
    auxcflags="-fsigned-char"
    auxlibs=
-   auxglibs=${auxlibs}
    ;;
 solaris)
    # Solaris
    auxcflags=
    auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl -lsunmath"
-   auxglibs=${auxlibs}
    ;;
 solarisegcs)
    # Solaris egcs
    auxcflags=
    auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
-   auxglibs=${auxlibs}
    ;;
 solarisgcc)
    # Solaris g++ 2.8.x
    auxcflags=
    auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
-   auxglibs=${auxlibs}
    ;;
 solarisCC5)
    # Solaris CC 5.0
    auxcflags=
    auxlibs="-lm -ldl -lnsl -lsocket"
-   auxglibs=${auxlibs}
    ;;
 solariskcc)
    # Solaris KCC
    auxcflags=
    auxlibs="-L/usr/ccs/lib -lgen -lm -ldl -lsocket -lnsl"
-   auxglibs=${auxlibs}
    ;;
 solarisx86)
    # Solaris CC on Intel
    auxcflags=
    auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
-   auxglibs=${auxlibs}
    ;;
 sgicc)
    # SGI
    auxcflags="-LANG:std"
    auxlibs="-lm -ldl"
-   auxglibs=${auxlibs}
    ;;
 sgicc64)
    # SGI
    auxcflags="-64 -LANG:std"
    auxlibs="-lm"
-   auxglibs=${auxlibs}
    ;;
 sgiegcs)
    # SGI 6.x with EGCS
    auxcflags="-fsigned-char"
    auxlibs="-lgen -lstdc++ -lm -ldl"
-   auxglibs=${auxlibs}
    ;;
 sgin32egcs)
    # SGI 6.x with EGCS with n32 ABI
    auxcflags="-fsigned-char"
    auxlibs="-lm -ldl"
-   auxglibs=${auxlibs}
    ;;
 sgikcc)
    # SGI with KCC
    auxcflags="--signed_chars --display_error_number \
               --diag_suppress 68 --diag_suppress 191 --diag_suppress 837"
    auxlibs="-lm -ldl"
-   auxglibs=${auxlibs}
    ;;
 alphagcc)
    # Alpha/OSF with g++
    auxcflags=
    auxlibs="-lg++ -lm"
-   auxglibs=${auxlibs}
    ;;
 alphaegcs)
    # Alpha/OSF with egcs
    auxcflags="-mcpu=ev5 -D__osf__ -D__alpha"
    auxlibs="-ltermcap -lm"
-   auxglibs=${auxlibs}
    ;;
 alphakcc)
    # Alpha/OSF with kai compiler (not yet valid)
    auxcflags="-mcpu=ev5 -D__osf__ -D__alpha"
    auxlibs="-ltermcap -lm"
-   auxglibs=${auxlibs}
    ;;
 alphacxx6)
    # Alpha/OSF with cxx6
    auxcflags="-tlocal -D__osf__ -D__alpha"
    auxlibs="-lm"
-   auxglibs=${auxlibs}
    ;;
 alphacxx)
    # Alpha/OSF with cxx5
    auxcflags="-oldcxx -D__osf__ -D__alpha"
    auxlibs="-lm"
-   auxglibs=${auxlibs}
    ;;
 linuxrh42 | linuxrh51)
    # Linux with gcc 2.7.2.x
    auxcflags=
    auxlibs="-lg++ -lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linux)
    # Linux with egcs, gcc 2.9x, gcc 3.x
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxdeb | linuxsuse6)
    # Linux with egcs on Debian and SuSE
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxdeb2)
    # Linux with egcs (Debian 2)
    auxcflags=
    auxlibs="-lnsl -lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxdeb2ppc)
    # Debian/Linux on PPC
    auxcflags=-fsigned-char
    auxlibs="-lnsl -lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxkcc)
    # Linux with the KAI compiler
    auxcflags="--signed_chars -D_EXTERN_INLINE=inline --diag_suppress 191"
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxicc)
    # Linux with the Intel icc compiler
    auxcflags=
    auxlibs="-lm -ldl"
-   auxglibs=${auxlibs}
    ;;
 linuxppcegcs)
    # Linux/ppc with gcc/glibc
    auxcflags="-fsigned-char -I/usr/X11/include"
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxia64gcc)
    # Itanium Linux with gcc 2.x/3.x
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxia64sgi)
    # Itanium Linux with SGI compiler
    auxcflags=
    auxlibs="-lm -ldl"
-   auxglibs=${auxlibs}
    ;;
 linuxia64ecc)
    # Itanium Linux with Intel ecc compiler
    auxcflags=
    auxlibs="-lm -ldl"
-   auxglibs=${auxlibs}
    ;;
 linuxx8664gcc)
    # AMD Opteron (64 bit mode) Linux with gcc 3.x
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxalphaegcs)
    # Alpha Linux with egcs
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 linuxarm)
    # ARM Linux with egcs
    auxcflags="-fsigned-char"
    auxlibs="-lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 mklinux)
    # MkLinux with libc5
    auxcflags="-fsigned-char -I/usr/X11/include -I/usr/include/g++"
    auxlibs="-lg++ -lm -ldl -rdynamic"
-   auxglibs=${auxlibs}
    ;;
 freebsd)
    # FreeBSD with libc5
    auxcflags=
    auxlibs="-lm -lg++"
-   auxglibs=${auxlibs}
    ;;
 freebsd4)
    # FreeBSD with glibc
    auxcflags=
    auxlibs="-lm -lstdc++"
-   auxglibs=${auxlibs}
    ;;
 macosx)
    # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-   auxlibs="$rootulibs -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   auxglibs=${rootuglibs}
+   auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
    ;;
 macosxxlc)
    # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-   auxlibs="$rootulibs -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   auxglibs=${rootuglibs}
+   auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
    ;;
 hiux)
    # Hitachi HIUX
    auxcflags=
    auxlibs="-lm -ldld"
-   auxglibs=${auxlibs}
    ;;
 win32)
    # Win32
    auxcflags="-MD"
    auxlibs=
-   auxglibs=${auxlibs}
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
    ;;
 win32gcc)
    # Win32 with cygwin gcc
    auxcflags="-MD"
    auxlibs="-lm"
-   auxglibs=${auxlibs}
    ;;
 *)
    echo "root-config: \"$arch\" invalid architecture"
@@ -518,9 +492,9 @@ while test $# -gt 0; do
 	 fi
       fi
       if test "x$noauxlibs" = "xyes" ; then
-	 out="$out $libs"
+	 out="$out $forcelibs $libs"
       else
-	 out="$out $libs ${auxlibs}"
+	 out="$out $forcelibs $libs ${auxlibs}"
       fi
       ;;
     --glibs)
@@ -531,13 +505,13 @@ while test $# -gt 0; do
          ### Set the flag
          libsout="yes"
          if test "x$new_set" = "xyes" ; then
-         glibs="${newlib} ${rootlibs} ${rootglibs}"
-      else
-         glibs="${rootlibs} ${rootglibs}"
-      fi
+            glibs="${newlib} ${rootlibs} ${rootglibs}"
+         else
+            glibs="${rootlibs} ${rootglibs}"
+         fi
       fi
       ### If we're on a win32 system, we need to change the -l prefix
-      ### into a .lib suffix, and expend the paths to a backslash
+      ### into a .lib suffix, and expand the paths to a backslash
       ### separated path.
       if test "$arch" = "win32"; then
          nlibs=`echo $glibs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
@@ -551,9 +525,9 @@ while test $# -gt 0; do
         fi
       fi
       if test "x$noauxlibs" = "xyes" ; then
-         out="$out $glibs"
+         out="$out $forcelibs $forceglibs $glibs"
       else
-         out="$out $glibs ${auxlibs}"
+         out="$out $forcelibs $forceglibs $glibs ${auxlibs}"
       fi
       ;;
     --auxlibs)
