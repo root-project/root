@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.2 2001/05/21 11:18:02 rdm Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -249,6 +249,7 @@ Bool_t TExMapIter::Next(ULong_t &hash, Long_t &key, Long_t &value)
    hash  = fMap->fTable[fCursor]->fHash;
    key   = fMap->fTable[fCursor]->fKey;
    value = fMap->fTable[fCursor]->fValue;
+   fCursor++;
 
    return kTRUE;
 }
