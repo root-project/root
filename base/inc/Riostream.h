@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: Riostream.h,v 1.1 2002/01/23 17:46:06 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_IOStream
-#define ROOT_IOStream
+#ifndef ROOT_Riostream
+#define ROOT_Riostream
 
 #ifndef ROOT_RConfig
 #include "RConfig.h"

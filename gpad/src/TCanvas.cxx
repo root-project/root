@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.36 2001/12/04 17:58:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.37 2002/01/23 17:52:47 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TClass.h"

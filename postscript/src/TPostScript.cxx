@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.23 2002/01/21 14:01:29 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
@@ -1228,13 +1228,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.23 2002/01/21 14:01:29 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.23 2002/01/21 14:01:29 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1942,7 +1942,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.23 2002/01/21 14:01:29 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from

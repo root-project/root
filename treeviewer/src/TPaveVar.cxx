@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.2 2000/06/13 13:59:21 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.3 2002/01/23 17:52:52 rdm Exp $
 // Author: Rene Brun   08/12/98
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "Buttons.h"
 #include "TPaveVar.h"

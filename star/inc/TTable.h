@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.12 2001/07/11 06:46:19 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.13 2002/01/23 17:52:51 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -31,8 +31,8 @@
 #ifndef ROOT_TCut
 #include "TCut.h"
 #endif
-#ifndef ROOT_IOSFwd
-#include "IOSFwd.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
 #endif
 
 

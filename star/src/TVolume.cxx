@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.4 2001/02/07 08:18:15 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.5 2002/01/23 17:52:51 rdm Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"

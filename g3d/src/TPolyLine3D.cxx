@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.9 2002/01/20 10:02:41 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.10 2002/01/23 17:52:47 rdm Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TPolyLine3D.h"
 #include "TVirtualPad.h"

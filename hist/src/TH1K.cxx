@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.3 2001/02/22 08:47:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.4 2002/01/23 17:52:49 rdm Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TH1K.h"
 #include "TMath.h"

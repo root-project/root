@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.63 2002/01/23 09:34:58 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.64 2002/01/23 17:52:50 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "THistPainter.h"
 #include "TH2.h"

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.25 2002/01/12 08:43:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.26 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TAxis.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"

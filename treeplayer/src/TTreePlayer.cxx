@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.84 2002/01/20 10:25:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.85 2002/01/23 17:52:52 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -212,7 +212,7 @@
 
 #include "snprintf.h"
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TTreePlayer.h"
 #include "TROOT.h"
 #include "TSystem.h"

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.10 2001/12/03 21:31:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.11 2002/01/23 17:52:49 rdm Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TText.h"

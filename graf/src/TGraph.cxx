@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.55 2001/12/19 14:21:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.56 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TGraph.h"
 #include "TGaxis.h"

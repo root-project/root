@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.30 2002/01/15 10:24:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.31 2002/01/23 17:52:48 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 #include <time.h>
 #include <math.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TGaxis.h"
 #include "TVirtualPad.h"

@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.10 2001/12/03 15:34:10 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.11 2002/01/23 17:52:50 rdm Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -23,7 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TFile.h"
 #include "TDirectory.h"
 #include "TTree.h"

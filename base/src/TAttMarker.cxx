@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.2 2001/02/13 08:29:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.3 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "Strlen.h"
 #include "TAttMarker.h"

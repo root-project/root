@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.3 2002/01/08 09:42:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.4 2002/01/23 17:52:47 rdm Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include "TSystem.h"
 #include "TObjString.h"
 #include "TFile.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 const Int_t kIsClassTree = BIT(7);
 const Int_t kUsedByData  = BIT(11);

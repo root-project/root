@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.13 2001/08/30 16:15:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.14 2002/01/23 17:52:47 rdm Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"

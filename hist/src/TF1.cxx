@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.31 2002/01/19 08:25:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.32 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TMath.h"
 #include "TF1.h"

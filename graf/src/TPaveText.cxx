@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.11 2001/12/10 21:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.12 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TPaveText.h"
 #include "TPaveLabel.h"

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.9 2001/09/29 13:00:59 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.10 2002/01/23 17:52:51 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -137,7 +137,7 @@
 #include "Getline.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 //Direct CINT include
 #include "DataMbr.h"

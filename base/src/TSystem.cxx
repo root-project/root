@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.27 2002/01/09 17:05:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.28 2002/01/23 17:52:47 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TException.h"

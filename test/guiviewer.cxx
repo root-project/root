@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.7 2001/08/22 08:43:09 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.8 2002/01/23 17:52:51 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
@@ -23,7 +23,7 @@
 #include "TRandom.h"
 #include "TGDoubleSlider.h"
 #include "TGaxis.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 
 Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)

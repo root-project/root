@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.3 2001/02/15 21:14:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.4 2002/01/23 17:52:48 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TArc.h"
 #include "TVirtualPad.h"

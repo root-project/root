@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.3 2002/01/16 15:30:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.4 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TFile.h"
 #include "TMath.h"
 #include "TAttAxis.h"

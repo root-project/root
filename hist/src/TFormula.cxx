@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.27 2002/01/19 08:25:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.28 2002/01/23 17:52:49 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include <math.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TFormula.h"

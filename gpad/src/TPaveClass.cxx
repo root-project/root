@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.2 2000/06/13 11:35:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.3 2002/01/23 17:52:47 rdm Exp $
 // Author: Rene Brun   06/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "Buttons.h"
 #include "TPaveClass.h"

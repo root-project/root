@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.4 2002/01/23 17:52:48 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -15,8 +15,8 @@
 // This class implements a curly or wavy polyline typically
 // used to draw Feynman diagrams.
 
-#ifndef ROOT_IOSFwd
-#include "IOSFwd.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
 #endif
 #ifndef ROOT_TPolyLine
 #include "TPolyLine.h"

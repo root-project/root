@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.13 2002/01/18 18:46:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.14 2002/01/23 17:52:46 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -35,8 +35,8 @@
 #include "TRefCnt.h"
 #endif
 
-#ifndef ROOT_IOSFwd
-#include "IOSFwd.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
 #endif
 
 #ifdef R__MWERKS

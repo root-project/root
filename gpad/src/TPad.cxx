@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.64 2002/01/08 09:41:13 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.65 2002/01/23 17:52:47 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TSystem.h"

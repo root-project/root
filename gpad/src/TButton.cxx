@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.5 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TButton.h"
 #include "TCanvas.h"

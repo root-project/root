@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.7 2002/01/02 21:45:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.8 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 #include "THStack.h"
 #include "TVirtualPad.h"
 #include "TH2.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 ClassImp(THStack)
 

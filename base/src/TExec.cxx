@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.3 2001/12/12 10:02:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.4 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TExec.h"
 

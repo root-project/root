@@ -1,8 +1,8 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.6 2001/05/14 06:44:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.7 2002/01/23 17:52:51 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TDataSetIter.h"
 #include "TBrowser.h"
 #include "TSystem.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.45 2002/01/15 00:50:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.46 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 #   include <sys/types.h>
 #endif
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "Strlen.h"
 #include "TFile.h"
 #include "TWebFile.h"

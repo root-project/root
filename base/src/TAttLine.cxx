@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.3 2000/06/13 12:35:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.4 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TMath.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 ClassImp(TAttLine)
 

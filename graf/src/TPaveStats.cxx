@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.3 2000/11/21 20:27:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.4 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TPaveStats.h"
 #include "TStyle.h"
 #include "TFile.h"

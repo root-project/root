@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.5 2001/03/05 09:09:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -37,7 +37,7 @@
 #include "TText.h"
 #include "TPaveText.h"
 #include "TClonesArray.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 
 ClassImp(TGenerator)

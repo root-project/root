@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.8 2001/12/17 13:17:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.9 2002/01/23 17:52:48 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TBox.h"
 #include "TVirtualPad.h"

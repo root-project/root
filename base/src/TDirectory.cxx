@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.17 2002/01/05 17:15:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.18 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "Strlen.h"
 #include "TDirectory.h"
 #include "TMapFile.h"

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.25 2002/01/12 08:52:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.26 2002/01/23 17:52:49 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TLatex.h"
 #include "TVirtualPad.h"

@@ -1,9 +1,9 @@
-// @(#)root/test:$Name:  $:$Id: tstring.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tstring.cxx,v 1.3 2002/01/23 17:52:51 rdm Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TString.h"
 #include "TRegexp.h"
 

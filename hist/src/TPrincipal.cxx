@@ -657,9 +657,9 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.19 2002/01/04 08:07:38 brun Exp $
-// $Date: 2002/01/04 08:07:38 $
-// $Author: brun $
+// $Id: TPrincipal.cxx,v 1.20 2002/01/23 17:52:50 rdm Exp $
+// $Date: 2002/01/23 17:52:50 $
+// $Author: rdm $
 
 #include "TPrincipal.h"
 
@@ -670,7 +670,7 @@ in the transformed space.
 #include "TDatime.h"
 #include "TBrowser.h"
 #include "TROOT.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 
 ClassImp(TPrincipal);

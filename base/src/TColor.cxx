@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.8 2001/10/24 13:16:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.9 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TObjArray.h"

@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.8 2002/01/09 17:14:32 brun Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.9 2002/01/23 17:52:47 rdm Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -9,7 +9,7 @@
 #include "TVirtualGL.h"
 #include "GLConstants.h"
 
-#include "IOStream.h"
+#include "Riostream.h"
 
 
 ClassImp(TXTRU)

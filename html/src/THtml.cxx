@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.14 2001/09/29 13:00:58 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.15 2002/01/23 17:52:50 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 #include "TString.h"
 #include "TInterpreter.h"
 #include "TRegexp.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -1,9 +1,9 @@
-// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.5 2001/04/20 17:56:50 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.6 2002/01/23 17:52:51 rdm Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TString.h"
 #include "TObjString.h"
 #include "TSortedList.h"

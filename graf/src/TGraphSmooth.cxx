@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.4 2001/10/07 20:03:29 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.5 2002/01/23 17:52:49 rdm Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -20,7 +20,7 @@
 ******************************************************************************/
 
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TMath.h"
 #include "TGraphSmooth.h"
 #include "TGraphErrors.h"

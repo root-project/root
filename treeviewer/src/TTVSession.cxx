@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.2 2001/04/06 07:27:18 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.3 2002/01/23 17:52:52 rdm Exp $
 //Author : Andrei Gheata   21/02/01
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TTVSession.h"
 #include "TTreeViewer.h"
 #include "TTVLVContainer.h"

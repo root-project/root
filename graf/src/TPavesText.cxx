@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.3 2001/12/10 21:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.4 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TPavesText.h"
 #include "TVirtualPad.h"

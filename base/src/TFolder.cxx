@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.16 2002/01/12 20:58:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.17 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -77,7 +77,7 @@
 */
 //End_Html
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "Strlen.h"
 #include "TFolder.h"
 #include "TBrowser.h"

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.10 2001/12/07 07:10:17 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.11 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 #include "TH2.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 
 ClassImp(TF2)

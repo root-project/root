@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.64 2002/01/16 21:13:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.65 2002/01/23 17:52:50 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 
 //*-*x7.5 macros/layout_class
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TClass.h"

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.24 2002/01/15 10:33:34 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.25 2002/01/23 17:52:51 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,11 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.25  2002/01/23 17:52:51  rdm
+// use Riosfwd.h in headers instead of <iosfwd> or many other ifdef'ed variant
+// and Riostream.h in the source instead of <iostream[.h]>, <fstream[.h]> and
+// <iomanip[.h]>.
+//
 // Revision 1.24  2002/01/15 10:33:34  brun
 // Use THLimitsFinder instead of TGaxis::Optimize.
 //
@@ -146,7 +151,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TBaseClass.h"
 #include "TSystem.h"

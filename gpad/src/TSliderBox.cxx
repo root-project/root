@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.2 2000/06/13 12:14:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.3 2002/01/23 17:52:48 rdm Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TSlider.h"
 #include "TSliderBox.h"

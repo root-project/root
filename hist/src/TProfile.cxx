@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.20 2002/01/20 10:21:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.21 2002/01/23 17:52:50 rdm Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include "TProfile.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 ClassImp(TProfile)
 

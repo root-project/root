@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.6 2001/02/21 11:02:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.7 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TMarker.h"

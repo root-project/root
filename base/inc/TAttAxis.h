@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.4 2002/01/16 15:30:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.5 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -24,8 +24,8 @@
 #ifndef ROOT_Gtypes
 #include "Gtypes.h"
 #endif
-#ifndef ROOT_IOSFwd
-#include "IOSFwd.h"
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
 #endif
 
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.8 2002/01/20 10:11:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.9 2002/01/23 17:52:50 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TPolyMarker.h"

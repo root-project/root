@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.60 2002/01/15 00:48:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.61 2002/01/23 17:52:47 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -66,7 +66,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "Gtypes.h"
 #include "TROOT.h"
 #include "TClass.h"

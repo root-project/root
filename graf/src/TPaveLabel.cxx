@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.8 2001/05/31 15:45:45 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.9 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TPaveLabel.h"
 #include "TLatex.h"

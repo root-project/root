@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.16 2001/12/19 14:21:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.17 2002/01/23 17:52:49 rdm Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TGraphAsymmErrors.h"
 #include "TStyle.h"

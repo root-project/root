@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.27 2002/01/18 18:46:06 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.28 2002/01/22 10:53:28 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -234,9 +234,6 @@
 #   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
-#   endif
-#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 97    /* gcc 3.0pre */
-#      define R__NEWSTDHEADER    /* has only headers like: iostream without .h */
 #   endif
 #   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */

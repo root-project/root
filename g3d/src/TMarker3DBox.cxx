@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.4 2001/11/20 07:33:56 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
 // Author: "Valery fine"   31/10/97
 
 
@@ -10,7 +10,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TView.h"
 #include "TMarker3DBox.h"

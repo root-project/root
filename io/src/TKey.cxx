@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.14 2001/10/04 16:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.15 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -42,7 +42,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TDirectory.h"

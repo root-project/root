@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.9 2002/01/02 21:46:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.10 2002/01/23 17:52:49 rdm Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 #include "TMath.h"
 #include "TROOT.h"
 #include "TLegendEntry.h"
-#include "IOStream.h"
+#include "Riostream.h"
 
 
 ClassImp(TLegend)

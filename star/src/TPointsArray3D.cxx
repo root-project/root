@@ -1,7 +1,7 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.3 2000/12/13 15:13:54 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.4 2002/01/23 17:52:51 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TPointsArray3D.h"
 #include "TVirtualPad.h"
 #include "TView.h"

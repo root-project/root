@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.4 2001/03/10 08:20:38 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -62,7 +62,7 @@
 // range[0] = 0 and range[1] = 1
 //______________________________________________________________________________
 
-#include "IOStream.h"
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "THelix.h"
