@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.33 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.34 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2187,18 +2187,24 @@ TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
    fStartSafe = safe_start;
-   TGeoNode *node = SearchNode();
-   if (fIsOutside) node = 0;
+   return SearchNode();
+   //TGeoNode *node = SearchNode();
+   //if (fIsOutside) node = 0;
 //   printf("CURRENT POINT (%g, %g, %g) in %s\n", fPoint[0], fPoint[1], fPoint[2], GetPath());
-   return node;
+   //return node;
 }
    
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
 {
 // Returns deepest node containing current point.
-   SetCurrentPoint(x,y,z);
-   return FindNode();
+   fPoint[0] = x;
+   fPoint[1] = y;
+   fPoint[2] = z;
+   fSearchOverlaps = kFALSE;
+   fIsOutside = kFALSE;
+   fStartSafe = kTRUE;
+   return SearchNode();
 }
    
 //-----------------------------------------------------------------------------
