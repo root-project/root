@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.183 2003/12/26 18:38:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.184 2004/01/03 14:24:33 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -365,22 +365,22 @@ void TStreamerInfo::BuildCheck()
    if (fClass) {
       array = fClass->GetStreamerInfos();
       TStreamerInfo *info = 0;
-	  // if a foreign class, search info with same checksum
-	  if (fClass->IsForeign()) {
-		  Int_t ninfos = array->GetEntriesFast();
-		  for (Int_t i=1;i<ninfos;i++) {
-			  info = (TStreamerInfo*)array->At(i);
-			  if (!info) continue;
-			  if (fCheckSum == info->GetCheckSum()) {
-				  fClassVersion = i;
-				  //printf("found class with checksum, version=%d\n",i);
-				  break;
-              } else {
-				  info = 0;
-              }
-          }
+      // if a foreign class, search info with same checksum
+      if (fClass->IsForeign()) {
+         Int_t ninfos = array->GetEntriesFast();
+         for (Int_t i=1;i<ninfos;i++) {
+            info = (TStreamerInfo*)array->At(i);
+            if (!info) continue;
+            if (fCheckSum == info->GetCheckSum()) {
+               fClassVersion = i;
+               //printf("found class with checksum, version=%d\n",i);
+               break;
+            } else {
+               info = 0;
+            }
+         }
       } else {
-			(TStreamerInfo *)array->At(fClassVersion);
+         info = (TStreamerInfo *)array->At(fClassVersion);
       }
 	  // NOTE: Should we check if the already exsiting info is the same as
       // the current one? Yes
