@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.66 2004/05/24 11:23:26 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.67 2004/05/30 15:42:01 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -6507,8 +6507,8 @@ void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
 //______________________________________________________________________________
 void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
                                    Int_t src_x, Int_t src_y,
-                                   Int_t & dest_x, Int_t & dest_y,
-                                   Window_t & child)
+                                   Int_t &dest_x, Int_t &dest_y,
+                                   Window_t &child)
 {
    // TranslateCoordinates translates coordinates from the frame of
    // reference of one window to another. If the point is contained
@@ -6517,16 +6517,16 @@ void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
 
    HWND sw, dw, ch = NULL;
    POINT point;
-   sw = (HWND) GDK_DRAWABLE_XID((GdkWindow *) src);
-   dw = (HWND) GDK_DRAWABLE_XID((GdkWindow *) dest);
+   sw = (HWND)GDK_DRAWABLE_XID((GdkWindow *)src);
+   dw = (HWND)GDK_DRAWABLE_XID((GdkWindow *)dest);
    point.x = src_x;
    point.y = src_y;
    ::MapWindowPoints(sw,        // handle of window to be mapped from
                    dw,          // handle to window to be mapped to
                    &point,      // pointer to array with points to map
                    1);          // number of structures in array
-   ch = ::ChildWindowFromPoint(dw, point);
-   child = (Window_t) gdk_xid_table_lookup(ch);
+   ch = ::ChildWindowFromPointEx(dw, point, CWP_SKIPDISABLED | CWP_SKIPINVISIBLE);
+   child = (Window_t)gdk_xid_table_lookup(ch);
 
    if (child == src) {
       child = (Window_t) 0;
