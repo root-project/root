@@ -37,7 +37,13 @@ HADD         := bin/hadd$(EXEEXT)
 ##### h2root #####
 H2ROOTS1     := $(MODDIRS)/h2root.cxx
 H2ROOTS2     := $(HBOOKS2)
-H2ROOTS3     := $(wildcard $(MAINDIRW)/*.c)
+# 2003.01.29
+# Matthew D. Langston  <langston@SLAC.Stanford.EDU>
+#
+# Symbols in cfopei.obj is already provided in packmd.lib,
+#
+#H2ROOTS3    := $(wildcard $(MAINDIRW)/*.c)
+H2ROOTS3     := $(filter-out $(MAINDIRW)/cfopei.c, $(wildcard $(MAINDIRW)/*.c))
 H2ROOTS4     := $(MAINDIRW)/tzvers.f
 H2ROOTO      := $(H2ROOTS1:.cxx=.o) $(H2ROOTS2:.f=.o)
 ifeq ($(PLATFORM),win32)

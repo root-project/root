@@ -46,7 +46,7 @@ SOEXT         = dll
 EXEEXT        = .exe
 
 # System libraries:
-SYSLIBS       =
+SYSLIBS       = advapi32.lib
 XLIBS         =
 CILIBS        =
 CRYPTLIBS     =

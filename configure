@@ -876,7 +876,7 @@ fi
 # Check for libshift.a
 #
 if test ! "x$enable_rfio" = "xno" ; then
-    check_library "libshift shift" "$enable_shared" "$shiftlibdir" \
+    check_library "libshift shiftmd shift" "$enable_shared" "$shiftlibdir" \
 	$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
 	/opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
 	/usr/local/lib/shift /usr/lib /usr/local/lib
@@ -907,12 +907,12 @@ if test ! "x$enable_cern" = "xno"; then
 	/opt/cern/new/lib /opt/cern/old/lib /usr/local/cern/pro/lib \
 	/usr/local/cern/new/lib /usr/local/cern/old/lib /usr/lib \
 	/usr/lib/cern /usr/local/lib /usr/local/lib/cern"
-    check_library "libpacklib packlib" "$enable_shared" "${cernlibdir}" \
+    check_library "libpacklib packmd packlib" "$enable_shared" "${cernlibdir}" \
 	$cernlibdirs
     packlib=$found_lib
     packlibdir=$found_dir
 
-    check_library "libkernlib kernlib" "$enable_shared" "${cernlibdir}" \
+    check_library "libkernlib kernmd kernlib" "$enable_shared" "${cernlibdir}" \
 	$cernlibdirs
     kernlib=$found_lib
     kernlibdir=$found_dir

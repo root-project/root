@@ -204,7 +204,7 @@ clean::         clean-cint
 
 distclean-cint: clean-cint
 		@rm -f $(CINTALLDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
-		   $(CINT) $(CINTTMP) $(MAKECINT)
+		   $(CINT) $(CINTTMP) $(MAKECINT) $(CINTDIRM)/*.exp $(CINTDIRM)/*.lib
 
 distclean::     distclean-cint
 
