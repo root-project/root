@@ -16,7 +16,12 @@ if [ $depstat -ne 0 ]; then
 fi
 
 # adding .d file as target
-sed -e 's@^\(.*\)\.o:@\1.d \1.o:@' -e 's@^#.*$@@' -e '/^$/d' $1.tmp
+isdict=`expr $3 : '.*/G__.*\.cxx'`
+if test $isdict -ne 0 ; then
+   sed -e 's@^\(.*\)\.o:@\1.d \1.cxx:@' -e 's@^#.*$@@' -e '/^$/d' $1.tmp
+else
+   sed -e 's@^\(.*\)\.o:@\1.d \1.o:@' -e 's@^#.*$@@' -e '/^$/d' $1.tmp
+fi
 rm -f $1.tmp $1.tmp.bak
 
 exit 0
