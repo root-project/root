@@ -56,7 +56,8 @@ int main( int argc, char **argv ) {
   }
 
   MergeRootfile( Target, FileList );
-
+  
+  return 0;
 }
 
 void MergeRootfile( TDirectory *target, TList *sourcelist ) {
