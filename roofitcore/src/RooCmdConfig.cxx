@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.4 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.5 2003/04/07 21:39:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -248,7 +248,7 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
     return kTRUE ;
   }
 
-  RooStringVar* rs = new RooStringVar(name,argName,defVal) ;
+  RooStringVar* rs = new RooStringVar(name,argName,defVal,10240) ;
   rs->SetUniqueID(stringNum) ;
   
   _sList.Add(rs) ;
