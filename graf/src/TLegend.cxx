@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.15 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.16 2003/06/05 19:47:20 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -307,6 +307,8 @@ void TLegend::PaintPrimitives()
   //       in NDC          y2 > y1,   and x2 > x1
   //
   Double_t margin = fMargin*( fX2 - fX1 );
+  Double_t boxwidth = margin;
+  Double_t boxw = boxwidth*0.35;
   Double_t yspace = (fY2 - fY1)/nEntries;
   Double_t textsize = GetTextSize();
   Double_t save_textsize = textsize;
@@ -345,7 +347,7 @@ void TLegend::PaintPrimitives()
   while (( entry = (TLegendEntry *)next() )) {
     ytext -= yspace;
 
-    // Draw Label in Latex
+    // Draw Label in Latexmargin
 
     Short_t talign = entry->GetTextAlign();
     Float_t tangle = entry->GetTextAngle();
@@ -404,14 +406,11 @@ void TLegend::PaintPrimitives()
       }
 
       // box total height is yspace*0.7
-      Double_t boxwidth = yspace*
-        (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
-      if ( boxwidth > margin ) boxwidth = margin;
       entry->TAttFill::Modify();
       Double_t xf[4],yf[4];
-      xf[0] = xsym - boxwidth*0.35;
+      xf[0] = xsym - boxw;
       yf[0] = ysym - yspace*0.35;
-      xf[1] = xsym + boxwidth*0.35;
+      xf[1] = xsym + boxw;
       yf[1] = yf[0];
       xf[2] = xf[1];
       yf[2] = ysym + yspace*0.35;
@@ -440,7 +439,7 @@ void TLegend::PaintPrimitives()
          entry->Execute("SetLineWidth",cmd);
       }
       // line total length (in x) is margin*0.8
-      TLine entryline( xsym - margin*0.4, ysym, xsym + margin*0.4, ysym );
+      TLine entryline( xsym - boxw, ysym, xsym + boxw, ysym );
       entry->TAttLine::Copy(entryline);
       // if the entry is filled, then surround the box with the line instead
       if ( opt.Contains("f") && !opt.Contains("l")) {
@@ -449,14 +448,14 @@ void TLegend::PaintPrimitives()
           (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
         if ( boxwidth > margin ) boxwidth = margin;
 
-        entryline.PaintLine( xsym - boxwidth*0.35, ysym + yspace*0.35,
-                             xsym + boxwidth*0.35, ysym + yspace*0.35);
-        entryline.PaintLine( xsym - boxwidth*0.35, ysym - yspace*0.35,
-                             xsym + boxwidth*0.35, ysym - yspace*0.35);
-        entryline.PaintLine( xsym + boxwidth*0.35, ysym - yspace*0.35,
-                             xsym + boxwidth*0.35, ysym + yspace*0.35);
-        entryline.PaintLine( xsym - boxwidth*0.35, ysym - yspace*0.35,
-                             xsym - boxwidth*0.35, ysym + yspace*0.35);
+        entryline.PaintLine( xsym - boxwidth, ysym + yspace*0.35,
+                             xsym + boxwidth, ysym + yspace*0.35);
+        entryline.PaintLine( xsym - boxwidth, ysym - yspace*0.35,
+                             xsym + boxwidth, ysym - yspace*0.35);
+        entryline.PaintLine( xsym + boxwidth, ysym - yspace*0.35,
+                             xsym + boxwidth, ysym + yspace*0.35);
+        entryline.PaintLine( xsym - boxwidth, ysym - yspace*0.35,
+                             xsym - boxwidth, ysym + yspace*0.35);
       } else {
          entryline.Paint();
       }
