@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.39 2004/02/13 16:34:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.40 2004/02/19 00:11:18 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -75,11 +75,6 @@ protected:
    Int_t           fTimer;                //Timer flag
    TApplication    *fApplication;         //Pointer to current application
    TInterpreter    *fInterpreter;         //Command interpreter
-   TFile           *fCurrentFile;         //Current file
-   TDirectory      *fCurrentDirectory;    //Current directory
-   TVirtualPad     *fCurrentCanvas;       //Current graphics canvas
-   TVirtualPad     *fCurrentPad;          //Current graphics pad
-   TStyle          *fCurrentStyle;        //Current graphics style
    Bool_t          fBatch;                //True if session without graphics
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;            //True if command executed from a popup menu
