@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.1 2003/04/04 00:40:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.2 2003/04/04 06:38:28 brun Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -202,7 +202,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       sprintf(buf, "%.1f sec (%ld events of %ld processed)", eta, processed,
               total);
       fTotal->SetText(buf);
-      sprintf(buf, "%.1f events/sec", Float_t(processed-fPrevProcessed)/Long_t(tdiff)*1000.);
+      sprintf(buf, "%.1f events/sec", Float_t(processed)/Long_t(tdiff)*1000.);
       fRate->SetText(buf);
    }
    fPrevProcessed = processed;
