@@ -613,6 +613,8 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                 switch(parm1) {
 
                     case M_EVENT_NEXT:
+                        if(fDisplayFrame->GetCurrent() != 0)
+                            fDisplayFrame->SetTab(0);
                         Initialize(0);
                         fStatusBar->SetText("Simulation running, please wait...",0);
 	                    fButtonFrame->SetState(GButtonFrame::kNoneActive);
@@ -627,6 +629,8 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 	                    break;
                     case M_EVENT_SELECT:
                         {
+                            if(fDisplayFrame->GetCurrent() != 1)
+                                fDisplayFrame->SetTab(1);
                             TGListTreeItem *item;
 	                        if ((item = fEventListTree->GetSelected()) != 0)
                             OnShowSelected(item);
@@ -827,13 +831,15 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                     case M_SHOW_TRACK:
                         if(fIsRunning) break;
                         {
+                            if(fDisplayFrame->GetCurrent() != 1)
+                                fDisplayFrame->SetTab(1);
                             TGListTreeItem *item;
 	                        if ((item = fEventListTree->GetSelected()) != 0)
                             OnShowSelected(item);
                         }
                         break;
 
-
+	
                 } // switch parm1
                 break; // M_MENU
 
@@ -843,7 +849,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
         case kC_LISTTREE:
 
             switch (GET_SUBMSG(msg)) {
-
+     
                 case kCT_ITEMDBLCLICK:
                     if (parm1 == kButton1) {
 	                    if (fEventListTree->GetSelected()) {
@@ -852,10 +858,10 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                     }
                     break;
 
-            } // switch submsg
+            } // switch submsg      
             break; // case kC_LISTTREE
     } // switch msg
-
+  
   return kTRUE;
 }
 
@@ -1047,7 +1053,7 @@ void RootShower::OnShowerProduce()
           delete f1;
        }
     }
-    fHisto_dEdX->Draw();
+    fHisto_dEdX->Draw();    
     padC->Modified();
     padC->Update();
     cC->Update();
@@ -1194,7 +1200,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
           delete f1;
        }
     }
-    fHisto_dEdX->Draw();
+    fHisto_dEdX->Draw();    
     padC->Modified();
     padC->Update();
     cC->Update();
