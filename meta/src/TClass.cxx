@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.84 2002/08/21 20:35:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.85 2002/09/15 19:43:23 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -515,11 +515,12 @@ void TClass::BuildRealData(void *pointer)
    // otherwise creates a temporary object of this class.
 
    if (fRealData) return;
+
+   fRealData = new TList;
+
    if (!fClassInfo) return;
 
    TObject *realDataObject = (TObject*)pointer;
-
-   fRealData = new TList;
 
    if ((!pointer) && (Property() & kIsAbstract)) return;
 
