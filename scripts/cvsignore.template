@@ -1,1 +1,1 @@
- *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
+ *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk  *.clog
