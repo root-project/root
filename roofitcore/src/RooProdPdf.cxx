@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.20 2002/03/22 22:43:57 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.21 2002/04/10 20:59:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -116,7 +116,6 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
       _extendedIndex=_pdfList.index(&pdf2) ;
     }
   }
-
 }
 
 
@@ -187,8 +186,8 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _pdfList("_pdfList",this,other._pdfList),
   _pdfIter(_pdfList.createIterator()), 
-  _partIntSet1("partIntSet1",this,other._partIntSet1),
-  _partIntSet2("partIntSet2",this,other._partIntSet2),
+  _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
+  _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
   _intIter1(_partIntSet1.createIterator()),
   _intIter2(_partIntSet2.createIterator()),
   _lastAICode1(-1),
@@ -439,6 +438,7 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
   while(partInt=(RooAbsReal*)_intIter->Next()) {    
     Double_t piVal = partInt->getVal() ;
     value *= piVal ;
+//     cout << GetName() << ": value *= " << piVal << " (" << partInt->GetName() << ")" << endl ;
     if (value<_cutOff) {
       //cout << "RooProdPdf::aIWN(" << GetName() << ") calculation cut off after " << partInt->GetName() << endl ; 
       break ;

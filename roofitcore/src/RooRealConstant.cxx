@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealConstant.cc,v 1.3 2001/10/08 21:22:51 verkerke Exp $
+ *    File: $Id: RooRealConstant.cc,v 1.4 2002/04/03 23:37:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -23,7 +23,7 @@
 // RooRealVar objects and will recycle them as appropriate.
 
 #include "RooFitCore/RooRealConstant.hh"
-#include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooConstVar.hh"
 #include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooRealConstant)
@@ -33,20 +33,20 @@ ClassImp(RooRealConstant)
 RooArgList* RooRealConstant::_constDB = 0;
 TIterator* RooRealConstant::_constDBIter = 0;
 
-
-const RooRealVar& RooRealConstant::value(Double_t value) 
+const RooAbsReal& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
+const RooAbsReal& RooRealConstant::value(Double_t value) 
 {
   // Lookup existing constant
   init() ;
-  RooRealVar* var ;
-  while(var=(RooRealVar*)_constDBIter->Next()) {
+  RooConstVar* var ;
+  while(var=(RooConstVar*)_constDBIter->Next()) {
     if (var->getVal()==value) return *var ;
   }
 
   // Create new constant
   char label[128] ;
   sprintf(label,"%8.6f",value) ;
-  var = new RooRealVar(label,label,value) ;
+  var = new RooConstVar(label,label,value) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
   _constDB->add(*var) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.68 2002/04/08 22:08:39 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.69 2002/04/10 20:59:04 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -380,7 +380,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
 
-    if (!nset || !arg->dependsOn(*nset)) {
+    if ((!nset || !arg->dependsOn(*nset)) && arg->isLValue()) {
       parList.add(*arg) ;
     }
   }
@@ -435,7 +435,7 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
 
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
-    if (arg->dependsOn(*dataList)) {
+    if (arg->dependsOn(*dataList) && arg->isLValue()) {
       depList->add(*arg) ;
     }
   }  
