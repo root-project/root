@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.83 2002/11/11 21:21:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.84 2002/12/02 18:50:01 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1300,8 +1300,14 @@ void TROOT::LoadMacro(const char *filename, int *error)
    if (fInterpreter) {
       char *fn1 = Strip(filename);
       // remove the possible ACLiC + or ++
-      char *fn2 = strchr(fn1, '+');
-      if (fn2) *fn2 = '\0';
+      char *fn2 = 0;
+      if (!strcmp(fn1+strlen(fn1)-2,"++")) {
+         fn2 = fn1 + strlen(fn1) - 2;
+         *fn2 = '\0';
+      } else if (!strcmp(fn1+strlen(fn1)-1,"+")) {
+         fn2 = fn1 + strlen(fn1) - 1;
+         *fn2 = '\0';
+      }
       char *mac = gSystem->Which(GetMacroPath(), fn1, kReadPermission);
       if (!mac) {
          Error("LoadMacro", "macro %s not found in path %s", fn1, GetMacroPath());
@@ -1340,8 +1346,14 @@ Int_t TROOT::Macro(const char *filename, int *error)
       char *arg = strchr(fn1, '(');
       if (arg) *arg = '\0';
       // and the possible ACLiC + or ++
-      char *fn2  = strchr(fn1, '+');
-      if (fn2) *fn2 = '\0';
+      char *fn2 = 0;
+      if (!strcmp(fn1+strlen(fn1)-2,"++")) {
+         fn2 = fn1 + strlen(fn1) - 2;
+         *fn2 = '\0';
+      } else if (!strcmp(fn1+strlen(fn1)-1,"+")) {
+         fn2 = fn1 + strlen(fn1) - 1;
+         *fn2 = '\0';
+      }
       char *mac = gSystem->Which(GetMacroPath(), fn1, kReadPermission);
       if (!mac) {
          Error("Macro", "macro %s not found in path %s", fn1, GetMacroPath());
