@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.135 2003/05/27 16:31:09 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.136 2003/06/06 16:07:56 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3457,7 +3457,7 @@ int main(int argc, char **argv)
 
    if (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
        strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
-       strstr(argv[ic],".cc")) {
+       strstr(argv[ic],".cc") || strstr(argv[ic],".c++")) {
       if ((fp = fopen(argv[ic], "r")) != 0) {
          fclose(fp);
          if (!force) {
