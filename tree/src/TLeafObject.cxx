@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.6 2001/01/16 16:15:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.7 2001/01/23 14:40:28 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -63,7 +63,8 @@ void TLeafObject::FillBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
 //*-*                  =========================================
 
-   TObject *object  = GetObject();
+   if (!fObjAddress) return;
+   TObject *object  = GetObject(); 
    if (object) {
       if (fVirtual) {
          UChar_t n = strlen(object->ClassName());

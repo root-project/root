@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.9 2001/01/24 12:02:22 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.10 2001/01/30 09:30:30 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -255,7 +255,7 @@ void TBranchObject::SetAddress(void *add)
       SetBit(kWarn);
       return;
    }
-   fReadEntry = -1;
+   fReadEntry = -1; 
    Int_t nbranches = fBranches.GetEntriesFast();
    TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
    if (leaf) leaf->SetAddress(add);
@@ -263,7 +263,8 @@ void TBranchObject::SetAddress(void *add)
    fAddress = (char*)add;
    char *pointer   = fAddress;
    void **ppointer = (void**)add;
-   TObject *obj = (TObject*)(*ppointer);
+   TObject *obj = 0;
+   if (add) obj = (TObject*)(*ppointer);
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!obj && cl) {
       obj = (TObject*)cl->New();
