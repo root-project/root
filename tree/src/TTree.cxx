@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.220 2005/01/12 07:50:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.221 2005/01/12 10:51:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -764,7 +764,7 @@ TBranch* TTree::BranchImp(const char *name, TClass *realClass, void *addobj,
    // See TTree::Branch for other details.
 
    if (realClass == 0) {
-      Error("Branch","The pointer specified for %s not of a class known to ROOT",
+      Error("Branch","The pointer specified for %s is not of a class known to ROOT",
             name);
       return 0;
    }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.60 2004/11/05 22:57:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.61 2004/12/22 21:23:26 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -866,6 +866,7 @@ TObject *TDirectory::Get(const char *namecycle)
          break;
       }
    }
+
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
    TObject *idcur = fList->FindObject(namobj);
@@ -970,9 +971,31 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
       }
    }
 
+//*-*---------------------Case of Object in memory---------------------
+//                        ========================
+   if (cl->InheritsFrom(TObject::Class())) {
+      TObject *objcur = fList->FindObject(namobj);
+      if (objcur) {
+         if (objcur==gDirectory && strlen(namobj)!=0) {
+            // The object has the same name has the directory and
+            // that's what we picked-up!  We just need to ignore
+            // it ...
+            objcur = 0;
+         } else if (cycle == 9999) {
+            cursav->cd();
+            return objcur;
+         } else {
+            if (objcur->InheritsFrom(TCollection::Class()))
+               objcur->Delete();  // delete also list elements
+            delete objcur;
+            objcur = 0;
+         }
+      }
+   }
+
 //*-*---------------------Case of Key---------------------
 //                        ===========
-   void *idcur=0;
+   void *idcur = 0;
    TKey *key;
    TIter nextkey(gDirectory->GetListOfKeys());
    while ((key = (TKey *) nextkey())) {
@@ -987,8 +1010,6 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
 
    return idcur;
 }
-
-
 
 //______________________________________________________________________________
 Int_t TDirectory::GetBufferSize() const

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.157 2004/11/17 17:56:53 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.158 2005/01/12 07:50:03 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1243,10 +1243,16 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                }
                // First we need to recover the collection.
                TBranchElement *count = BranchEl->GetBranchCount();
-               TStreamerElement *collectionElement = (TStreamerElement *)count->GetInfo()->GetElems()[count->GetID()];
-               TClass *collectionCl = collectionElement->GetClassPointer();
+               TFormLeafInfo* collectioninfo;
+               if ( count->GetID() >= 0 ) {
+                  TStreamerElement *collectionElement = (TStreamerElement *)count->GetInfo()->GetElems()[count->GetID()];
+                  TClass *collectionCl = collectionElement->GetClassPointer();
 
-               TFormLeafInfo* collectioninfo = new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
+                  collectioninfo = new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
+               } else {
+                  TClass *collectionCl = gROOT->GetClass(count->GetClassName());
+                  collectioninfo = new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
+               }
 
                 // The following code was commmented out because in THIS case
                // the dimension are actually handled by parsing the title and name of the leaf
@@ -2601,7 +2607,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       if (fLookupType[0]==kDirect) {
          return (char*)leaf->GetValuePointer();
       } else {
-         return  (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);
+         return  (char*)GetLeafInfo(0)->GetValuePointer(leaf,instance);
       }
    }
 
@@ -3372,11 +3378,11 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
       if (mode == 0) {
          TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
          leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
-         char * val = 0;
+         const char * val = 0;
          if (fLookupType[0]==kDirect) {
-            val = (char*)leaf->GetValuePointer();
+            val = (const char*)leaf->GetValuePointer();
          } else {
-            val = (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);
+            val = ((TTreeFormula*)this)->EvalStringInstance(instance);
          }
          if (val) {
             strncpy(value, val, kMAXLENGTH-1);

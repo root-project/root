@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.2 2000/12/26 14:23:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.3 2002/12/02 18:50:08 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -21,7 +21,8 @@
 ClassImp(TChainElement)
 
 //______________________________________________________________________________
-TChainElement::TChainElement(): TNamed()
+TChainElement::TChainElement(): TNamed(),fBaddress(0),fBaddressType(0),
+     fBaddressIsPtr(kFALSE)
 {
 //*-*-*-*-*-*Default constructor for a chain element*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        =======================================
@@ -30,13 +31,13 @@ TChainElement::TChainElement(): TNamed()
    fPackets    = 0;
    fEntries    = 0;
    fPacketSize = 100;
-   fBaddress   = 0;
    fStatus     = -1;
 }
 
 //______________________________________________________________________________
 TChainElement::TChainElement(const char *name, const char *title)
-    :TNamed(name,title)
+    :TNamed(name,title),fBaddress(0),fBaddressType(0),
+     fBaddressIsPtr(kFALSE)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a chain element*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ======================
@@ -46,7 +47,6 @@ TChainElement::TChainElement(const char *name, const char *title)
    fPackets    = 0;
    fEntries    = 0;
    fPacketSize = 100;
-   fBaddress   = 0;
    fStatus     = -1;
 }
 

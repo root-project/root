@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.55 2004/12/17 12:19:02 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.56 2005/01/12 07:50:02 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -534,9 +534,9 @@ void stress6()
       f.cd(dirname);
       for (j=0;j<ncounters;j++) {
          sprintf(hname,"h%d_%dN",i,j);
-         TH1S *hnorth = (TH1S*)gDirectory->Get(hname);
+         TH1S *hnorth; gDirectory->GetObject(hname,hnorth);
          sprintf(hname,"h%d_%dS",i,j);
-         TH1S *hsouth = (TH1S*)gDirectory->Get(hname);
+         TH1S *hsouth; gDirectory->GetObject(hname,hsouth);
          if (hnorth == 0 || hsouth == 0) continue;
          hsumPlanes->Add(hnorth);
          hsumPlanes->Add(hsouth);
@@ -613,10 +613,10 @@ void stress7()
 
    // Fill a TEventList using the standard cut
    ntuple->Draw(">>elist","py<0 && pz>4 && random<0.5","goff");
-   TEventList *elist = (TEventList*)gDirectory->Get("elist");
+   TEventList *elist; gDirectory->GetObject("elist",elist);
    // Fill hist htemp using the standard cut
    ntuple->Draw("px>>htemp0","py<0 && pz>4 && random<0.5","goff");
-   TH1F *htemp0 = (TH1F*)gDirectory->Get("htemp0");
+   TH1F *htemp0;  gDirectory->GetObject("htemp0",htemp0);
    Double_t pxmean0 = htemp0->GetMean();
    Double_t pxrms0  = htemp0->GetRMS();
 
@@ -628,8 +628,8 @@ void stress7()
    ntuple->SetEventList(elist);
    ntuple->Draw("px>>helist","","goff");
    ntuple->SetEventList(0);
-   TH1F *hcut   = (TH1F*)gDirectory->Get("hcut");
-   TH1F *helist = (TH1F*)gDirectory->Get("helist");
+   TH1F *hcut;   gDirectory->GetObject("hcut",hcut);
+   TH1F *helist; gDirectory->GetObject("helist",helist);
    Int_t n1 = (Int_t)hcut->GetEntries();
    Int_t n2 = (Int_t)helist->GetEntries();
    htemp0->Write();
@@ -664,7 +664,7 @@ void stress7()
       sprintf(elistname,">>elist%d",i);
       sprintf(cutname,"i 10 == %d",i); cutname[1] ='%';
       ntuple->Draw(elistname,cutname,"goff");
-      el[i] = (TEventList*)gDirectory->Get(&elistname[2]);
+      el[i]; gDirectory->GetObject(&elistname[2],el[i]);
       el[i]->Write();
       elistall->Add(el[i]);
    }
@@ -673,11 +673,11 @@ void stress7()
    // Read big list from file and check that the distribution with the list
    // correspond to all events (no cuts)
    delete ntuple;
-   TNtuple *nt = (TNtuple*)gDirectory->Get("ntuple");
+   TNtuple *nt; gDirectory->GetObject("ntuple",nt);
    nt->SetBranchAddress("px",&pxr);
    TH1F *hpx = new TH1F("hpx","hpx",100,-3,3);
    nt->Draw("px>>hpx","","goff");
-   TEventList *all = (TEventList*)gDirectory->Get("elistall");
+   TEventList *all; gDirectory->GetObject("elistall",all);
    nt->SetEstimate(nall); //must be done because the order in eventlist is different
    nt->SetEventList(all);
    TH1F *hall = (TH1F*)hpx->Clone();
@@ -716,7 +716,7 @@ Int_t stress8read(Int_t nevent)
 //  Count number of bytes read
 
    TFile *hfile = new TFile("Event.root");
-   TTree *tree = (TTree*)hfile->Get("T");
+   TTree *tree; hfile->GetObject("T",tree);
    Event *event = 0;
    tree->SetBranchAddress("event",&event);
    Int_t nentries = (Int_t)tree->GetEntries();
@@ -1122,7 +1122,7 @@ void stress9()
 
    gROOT->GetList()->Delete();
    TFile *hfile = new TFile("Event.root");
-   TTree *tree = (TTree*)hfile->Get("T");
+   TTree *tree; hfile->GetObject("T",tree);
 
    stress9tree(tree,9);
 
@@ -1148,7 +1148,7 @@ void stress10()
    Bprint(10,"Create 10 files starting from Event.root");
 
    TFile *hfile = new TFile("Event.root");
-   TTree *tree = (TTree*)hfile->Get("T");
+   TTree *tree; hfile->GetObject("T",tree);
 
    Event *event = 0;
    tree->SetBranchAddress("event",&event);
@@ -1331,7 +1331,7 @@ void stress15()
    //Get old file, old tree and set top branch address
    //We want to copy only a few branches.
    TFile *oldfile = new TFile("Event.root");
-   TTree *oldtree = (TTree*)oldfile->Get("T");
+   TTree *oldtree; oldfile->GetObject("T",oldtree);
    Event *event   = 0;
    oldtree->SetBranchAddress("event",&event);
    oldtree->SetBranchStatus("*",0);
@@ -1360,17 +1360,17 @@ void stress15()
 
    // Open small file, histogram fNtrack and fH
    newfile = new TFile("stress_small.root");
-   newtree = (TTree*)newfile->Get("T");
+   newtree; newfile->GetObject("T", newtree);
    newtree->Draw("fNtrack>>hNtrack","","goff");
    newtree->Draw("fH.GetMean()>>hHmean","","goff");
-   TH1F *hNtrack = (TH1F*)newfile->Get("hNtrack");
-   TH1F *hHmean  = (TH1F*)newfile->Get("hHmean");
+   TH1F *hNtrack; newfile->GetObject("hNtrack",hNtrack);
+   TH1F *hHmean; newfile->GetObject("hHmean",hHmean);
    ntotin  += newfile->GetBytesRead();
 
    // Open old reference file of stress9
    oldfile = new TFile("stress_test9.root");
-   TH1F *bNtrack = (TH1F*)oldfile->Get("bNtrack");
-   TH1F *bHmean  = (TH1F*)oldfile->Get("bHmean");
+   TH1F *bNtrack; oldfile->GetObject("bNtrack",bNtrack);
+   TH1F *bHmean;  oldfile->GetObject("bHmean",bHmean);
    Int_t cNtrack = HistCompare(hNtrack,bNtrack);
    Int_t cHmean  = HistCompare(hHmean, bHmean);
    delete newfile;
