@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += test.root output create.out def_C*
+CLEAN_TARGETS += test.root output create.out def_C* *.log
 
 #Set the list of target to make while testing
 TEST_TARGETS += testForeignDraw
@@ -10,13 +10,13 @@ TEST_TARGETS += testForeignDraw
 include ../../Rules.mk
 
 test.root: def.C def.h
-	$(CMDECHO) root.exe -b -l -q def.C+ > create.out
+	$(CMDECHO) root.exe -b -l -q def.C+ > create.log
 
-output: Run.C test.root
-	$(CMDECHO) root.exe -b -l -q Run.C 2>&1 | tee fulloutput.log | grep -v 'Total =' > output
+testForeignDraw.log: Run.C test.root
+	$(CMDECHO) root.exe -b -l -q Run.C 2>&1 | tee fulloutput.log | grep -v 'Total =' > testForeignDraw.log
 
-testForeignDraw: output
-	$(CMDECHO) diff -u output good.output
+testForeignDraw: testForeignDraw.log 
+	$(CMDECHO) diff -u testForeignDraw.log testForeignDraw.ref
 
 testWithFailure:
 ifeq ($(FAIL),)
