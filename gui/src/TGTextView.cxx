@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.16 2004/01/08 22:45:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.17 2004/04/20 14:48:01 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -52,10 +52,12 @@ void TGTextView::Init(ULong_t /*back*/)
    // Initialize a text view widget.
 
    // set in TGResourcePool via .rootrc
-   fFont      = GetDefaultFontStruct();
-   fNormGC    = GetDefaultGC();
-   fSelGC     = GetDefaultSelectedGC();
-   fSelbackGC = GetDefaultSelectedBackgroundGC()();
+   fFont        = GetDefaultFontStruct();
+   fNormGC      = GetDefaultGC();
+   fSelGC       = GetDefaultSelectedGC();
+   fSelbackGC   = GetDefaultSelectedBackgroundGC()();
+   fMarkedFromX = 0;
+   fMarkedFromY = 0;
 
    fText = new TGText();
    TGView::Clear();
