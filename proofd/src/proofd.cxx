@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.29 2003/01/22 11:23:03 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.30 2003/04/06 21:30:13 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -79,6 +79,7 @@
 //                     1 = minimum                                      //
 //                     2 = medium                                       //
 //                     3 = maximum                                      //
+//   -f                do not run as daemon, run in the foreground      //
 //   rootsys_dir       directory which must contain bin/proofserv and   //
 //                     proof/etc/proof.conf                             //
 //                                                                      //
@@ -229,6 +230,7 @@ const int  kMaxSlaves       = 32;
 const int  kMAXPATHLEN      = 1024;
 
 int  gInetdFlag             = 0;
+int  gForegroundFlag        = 0;
 int  gPort                  = 0;
 int  gDebug                 = 0;
 int  gSockFd                = -1;
@@ -917,6 +919,10 @@ int main(int argc, char **argv)
                gInetdFlag = 1;
                break;
 
+            case 'f':
+               gForegroundFlag = 1;
+               break;
+
             case 'p':
                if (--argc <= 0) {
                   if (!gInetdFlag)
@@ -979,7 +985,7 @@ int main(int argc, char **argv)
       // Also initialize the network connection - create the socket
       // and bind our well-know address to it.
 
-      DaemonStart(1);
+      if(!gForegroundFlag) DaemonStart(1);
 
       NetInit(kProofdService, gPort, tcpwindowsize);
    }
