@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.49 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.50 2005/03/10 23:53:24 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -147,10 +147,7 @@ void TProofPlayer::Progress(Long64_t total, Long64_t processed)
    PDB(kGlobal,1)
       Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
 
-   Long_t parm[2];
-   parm[0] = (Long_t) (&total);
-   parm[1] = (Long_t) (&processed);
-   Emit("Progress(Long64_t,Long64_t)", parm);
+   EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
 
    gProof->Progress(total, processed);
 }
@@ -396,8 +393,8 @@ TProofPlayerRemote::~TProofPlayerRemote()
 
 //______________________________________________________________________________
 Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
-                                  Option_t *option, Long64_t nentries,
-                                  Long64_t first, TEventList * /*evl*/)
+                                     Option_t *option, Long64_t nentries,
+                                     Long64_t first, TEventList * /*evl*/)
 {
    // Process specified TDSet on PROOF.
    // Returns -1 in case error, 0 otherwise.

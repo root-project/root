@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.24 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.25 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -112,11 +112,11 @@ public:
    virtual void      Feedback(TList *objs); // *SIGNAL*
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
-   void              UpdateAutoBin(const char *name,
-                                    Double_t& xmin, Double_t& xmax,
-                                    Double_t& ymin, Double_t& ymax,
-                                    Double_t& zmin, Double_t& zmax);
 
+   void              UpdateAutoBin(const char *name,
+                                   Double_t& xmin, Double_t& xmax,
+                                   Double_t& ymin, Double_t& ymax,
+                                   Double_t& zmin, Double_t& zmax);
 
    ClassDef(TProofPlayer,0)  // Abstract PROOF player
 };
@@ -146,6 +146,7 @@ private:
    TDSet              *fDSet;          //!tdset for current processing
 
    TList              *MergeFeedback();
+
 protected:
    virtual Bool_t  HandleTimer(TTimer *timer);
    TProof         *GetProof() const { return fProof; }

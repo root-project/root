@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.78 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.79 2005/03/10 17:57:04 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -725,10 +725,7 @@ Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
    bytesready = fBytesReady;
    totalbytes = fTotalBytes;
 
-   Long_t parm[2];
-   parm[0] = (Long_t) (&totalbytes);
-   parm[1] = (Long_t) (&bytesready);
-   Emit("IsDataReady(Long64_t,Long64_t)", parm);
+   EmitVA("IsDataReady(Long64_t,Long64_t)", 2, totalbytes, bytesready);
 
    //PDB(kGlobal,2)
    Info("IsDataReady", "%lld / %lld (%s)", bytesready, totalbytes, fDataReady?"READY":"NOT READY");
@@ -2644,10 +2641,7 @@ void TProof::Progress(Long64_t total, Long64_t processed)
    PDB(kGlobal,1)
       Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
 
-   Long_t parm[2];
-   parm[0] = (Long_t) (&total);
-   parm[1] = (Long_t) (&processed);
-   Emit("Progress(Long64_t,Long64_t)", parm);
+   EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
 }
 
 //______________________________________________________________________________
