@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.2 2002/02/12 17:53:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.3 2002/03/13 01:52:21 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include "THashList.h"
 #include "TEventIter.h"
+#include "TPacketizer.h"
 #include "TSelector.h"
 #include "TProof.h"
 #include "TROOT.h"
@@ -92,7 +93,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                  Int_t nentries, Int_t first,
                                  TEventList *evl)
 {
-   Info("Process","Voila!");
+   Info("Process","Enter");
 
    delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
@@ -122,12 +123,13 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       // Check Filename
       if ( finp == 0 || filename != e->GetFileName() ) {
          delete evIter; evIter = 0;
-         if ( dir != finp ) { delete dir; }; dir = 0;
+         if ( dir != finp ) { delete dir; } // dir != top-level
+         dir = 0;
          delete finp; finp = 0;
          path = "";
 
          filename = e->GetFileName();
-         finp = new TFile(filename);
+         finp = TFile::Open(filename);
 
          if ( finp->IsZombie() ) {
             Error("Process","Cannot open file: %s (%s)",
@@ -180,10 +182,13 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       while (evIter->GetNextEvent()) {
 
          if ( once ) {
+Info("Process","Call Begin");
+
             fSelector->Begin( /* need to change API */ 0);
             once = kFALSE;
          }
 
+Info("Process","Call Process");
          Bool_t stop = fSelector->Process();
          if (stop) {}  // remove unused warning
 
@@ -309,6 +314,9 @@ Info("Process","Broadcast");
 Info("Process","Collect");
 
    fProof->SetPlayer(this);  // Fix SetPlayer to release current player
+
+   fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves());
+
    fProof->Collect();
 
 
@@ -325,6 +333,11 @@ void TProofPlayerRemote::MergeOutput()
 Info("MergeOutput","Enter");
    delete fOutput;
    fOutput = new THashList;
+
+   if ( fOutputLists == 0 ) {
+      Info("MergeOutput","Leave (empty)");
+      return;
+   }
 
    TIter next(fOutputLists);
 
@@ -366,6 +379,12 @@ Info("MergeOutput","Leave");
 void TProofPlayerRemote::StoreOutput(TList *out)
 {
 Info("StoreOutput","Enter");
+
+   if ( out == 0 ) {
+Info("StoreOutput","Leave (empty)");
+      return;
+   }
+
    TIter next(out);
 
    if (fOutputLists == 0) {
@@ -399,28 +418,18 @@ Info("StoreOutput","Leave");
 //______________________________________________________________________________
 TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave)
 {
-   Info("GetNextPacket","Enter");
+   TDSetElement *e = fPacketizer->GetNextPacket( slave );
 
-   if ( fElem == 0 ) {
-
-      // open new file
-      fElem = fSet->Next();
-      if ( fElem == 0 ) {
-         Info("GetNextPacket","Leave (done)");
-         return 0;      // Done
-      }
-      // get number of entries / objects
-
-      // set / check counters
-
+   if ( e != 0 ) {
+      Info("GetNextPacket","'%s' '%s' '%s' %d %d", e->GetFileName(),
+            e->GetDirectory(), e->GetObjName(),e->GetFirst(),e->GetNum());
+   } else {
+      Info("GetNextPacket","Done");
    }
 
-   TDSetElement *e = fElem;
-   fElem = 0;
-
-   Info("GetNextPacket","Leave");
    return e;
 }
+
 
 //------------------------------------------------------------------------------
 

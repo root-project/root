@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.2 2002/02/12 17:53:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.3 2002/03/13 01:52:20 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -31,6 +31,7 @@ class TSlave;
 class TEventList;
 class TProof;
 class TSocket;
+class TPacketizer;
 
 
 //------------------------------------------------------------------------
@@ -86,9 +87,10 @@ private:
    // currently here -- for packet generation
    TDSet         *fSet;          // TDSet to split in packets
    TDSetElement  *fElem;         // Element currently being processed
-   Double_t       fFirst;
-   Double_t       fNum;
-   Double_t       fCur;
+   TPacketizer   *fPacketizer;   //
+   Double_t       fFirst;        //
+   Double_t       fNum;          //
+   Double_t       fCur;          //
 
 public:
    TProofPlayerRemote() { fProof = 0; fOutputLists = 0; }

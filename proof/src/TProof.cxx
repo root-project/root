@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.19 2002/03/17 00:26:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.20 2002/03/20 18:54:57 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -908,7 +908,18 @@ Int_t TProof::Collect(TMonitor *mon)
                }
 
                TMessage answ(kPROOF_GETPACKET);
-               answ << elem;;
+
+               if (elem != 0) {
+                  answ << kTRUE
+                       << TString(elem->GetFileName())
+                       << TString(elem->GetDirectory())
+                       << TString(elem->GetObjName())
+                       << elem->GetFirst()
+                       << elem->GetNum();
+               } else {
+                  answ << kFALSE;
+               }
+
                s->Send(answ);
             }
             break;

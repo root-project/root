@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.20 2002/03/17 00:26:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.21 2002/03/20 18:54:57 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -399,19 +399,36 @@ TDSetElement *TProofServ::GetNextPacket()
 {
    // Get next range of entries to be processed on this server.
 
-Info("GetNextPacket","Enter");
    fSocket->Send(kPROOF_GETPACKET);
 
    TMessage *mess;
    if (fSocket->Recv(mess) < 0)
       return 0;
 
-   TDSetElement *element;
-   (*mess) >> element;
+   Bool_t         ok;
+   TDSetElement  *e;
+   TString        file;
+   TString        dir;
+   TString        obj;
+   Long64_t       first;
+   Long64_t       num;
 
-Info("GetNextPacket","Leave");
+   (*mess) >> ok;
 
-   return element;
+   if (ok) {
+      (*mess) >> file >> dir >> obj >> first >> num;
+      e = new TDSetElement(0, file, obj, dir, first, num);
+   } else {
+      e = 0;
+   }
+   if (e != 0) {
+      Info("GetNextPacket", "'%s' '%s' '%s' %d %d", e->GetFileName(),
+            e->GetDirectory(), e->GetObjName(),e->GetFirst(),e->GetNum());
+   } else {
+      Info("GetNextPacket", "Done");
+   }
+
+   return e;
 }
 
 //______________________________________________________________________________

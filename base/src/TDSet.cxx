@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.4 2002/02/14 16:21:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.5 2002/03/13 01:52:21 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 #include "TList.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "Riostream.h"
 
 
 ClassImp(TDSetElement)
@@ -50,7 +51,7 @@ ClassImp(TDSet)
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const TDSet *set, const char *file,
                            const char *objname, const char *dir,
-                           Double_t first, Double_t num)
+                           Long64_t first, Long64_t num)
 {
    // Create a TDSet element.
 
@@ -83,6 +84,18 @@ const char *TDSetElement::GetDirectory() const
    if (fSet && fDirectory.IsNull())
       return fSet->GetDirectory();
    return fDirectory;
+}
+
+//______________________________________________________________________________
+void TDSetElement::Print(Option_t *option) const
+{
+   // Print a TDSetElement.
+
+   cout << IsA()->GetName()
+      << " file '" << fFileName
+      << "' dir '" << fDirectory
+      << "' obj '" << fObjName
+      << "' first=" << fFirst << " num=" << fNum << endl;
 }
 
 
@@ -169,7 +182,7 @@ void TDSet::SetDirectory(const char *dir)
 
 //______________________________________________________________________________
 void TDSet::Add(const char *file, const char *objname, const char *dir,
-                Double_t first, Double_t num)
+                Long64_t first, Long64_t num)
 {
    // Add file to list of files to be analyzed. Optionally with the
    // objname and dir arguments the default, TDSet wide, objname and

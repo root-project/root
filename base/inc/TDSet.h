@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.4 2002/02/14 16:21:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.5 2002/03/13 01:52:21 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -46,6 +46,9 @@
 #include "TNamed.h"
 #endif
 
+// typedef can be removed as soon as Long64_t becomes real 64 bit type
+typedef Long_t  Long64_t;
+
 class TList;
 class TDSet;
 
@@ -55,21 +58,22 @@ private:
    TString      fFileName;   // physical or logical file name
    TString      fObjName;    // name of objects to be analyzed in this file
    TString      fDirectory;  // directory in file where to look for objects
-   Double_t     fFirst;      // first entry to process
-   Double_t     fNum;        // number of entries to process
+   Long64_t     fFirst;      // first entry to process
+   Long64_t     fNum;        // number of entries to process
    const TDSet *fSet;        // set to which element belongs
 
 public:
    TDSetElement() { fSet = 0; }
    TDSetElement(const TDSet *set, const char *file, const char *objname = 0,
-                const char *dir = 0, Double_t first = 0, Double_t num = 9999999);
+                const char *dir = 0, Long64_t first = 0, Long64_t num = 9999999);
    virtual ~TDSetElement() { }
 
    const char *GetFileName() const { return fFileName; }
-   Double_t    GetFirst() const { return fFirst; }
-   Double_t    GetNum() const { return fNum ; }
+   Long64_t    GetFirst() const { return fFirst; }
+   Long64_t    GetNum() const { return fNum ; }
    const char *GetObjName() const;
    const char *GetDirectory() const;
+   void        Print(Option_t *option="") const;
 
    ClassDef(TDSetElement,1)  // A TDSet element
 };
@@ -100,8 +104,8 @@ public:
    const char *GetDirectory() const { return fTitle; }
 
    virtual void        Add(const char *file, const char *objname = 0,
-                           const char *dir = 0, Double_t first = 0,
-                           Double_t num = 9999999);
+                           const char *dir = 0, Long64_t first = 0,
+                           Long64_t num = 9999999);
    virtual void        Add(TDSet *set);
    virtual void        AddFriend(TDSet *friendset);
 
