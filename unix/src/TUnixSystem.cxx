@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.16 2001/01/26 17:11:25 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.17 2001/02/03 14:46:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1689,7 +1689,7 @@ int TUnixSystem::SendRaw(int sock, const void *buf, int length, int opt)
 {
    // Send exactly length bytes from buffer. Use opt to send out-of-band
    // data (see TSocket). Returns the number of bytes sent or -1 in case of
-   // error.
+   // error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
 
    int flag;
 
@@ -1710,9 +1710,10 @@ int TUnixSystem::SendRaw(int sock, const void *buf, int length, int opt)
    }
 
    int n;
-   if ((n = UnixSend(sock, buf, length, flag)) < 0) {
-      Error("SendRaw", "cannot send buffer");
-      return -1;
+   if ((n = UnixSend(sock, buf, length, flag)) <= 0) {
+      if (n == -1 && GetErrno() != EINTR)
+         Error("SendRaw", "cannot send buffer");
+      return n;
    }
    return n;
 }
@@ -2461,7 +2462,8 @@ int TUnixSystem::UnixRecv(int sock, void *buffer, int length, int flag)
 int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 {
    // Send exactly length bytes from buffer. Returns -1 in case of error,
-   // otherwise number of sent bytes.
+   // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
+   // errno == EWOULDBLOCK.
 
    if (sock < 0) return -1;
 
@@ -2476,8 +2478,15 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 
    for (n = 0; n < length; n += nsent) {
       if ((nsent = send(sock, buf+n, length-n, flag)) <= 0) {
-         ::SysError("TUnixSystem::UnixSend", "send");
-         return nsent;
+         if (nsent == 0)
+            break;
+         if (GetErrno() == EWOULDBLOCK)
+            return -4;
+         else {
+            if (GetErrno() != EINTR)
+               ::SysError("TUnixSystem::UnixSend", "send");
+            return -1;
+         }
       }
       if (once)
          return nsent;
