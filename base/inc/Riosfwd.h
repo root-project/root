@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Riosfwd.h,v 1.1 2002/01/23 17:46:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Riosfwd.h,v 1.1 2002/01/24 11:39:26 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************
@@ -22,7 +22,11 @@
 #   else
 #      include <iosfwd>
 #   endif
-using namespace std;
+using std::istream;
+using std::ostream;
+using std::fstream;
+using std::ifstream;
+using std::ofstream;
 #elif R__MWERKS
 template <class charT> class ios_traits;
 template <class charT, class traits> class basic_istream;
