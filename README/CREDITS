@@ -10,6 +10,10 @@ PS: please let us know if you are not on this list while you should be, or
     if something in your entry is incorrect.
 
 -------------------
+N: Khamit Ardashev
+E: ka223487@oak.cats.ohiou.edu
+D: Improvements in h2root/hntvar2 to support small integers as shorts
+
 N: Maarten Ballintijn
 E: maartenb@mit.edu
 D: initial linux port
