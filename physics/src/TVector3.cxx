@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.6 2002/05/18 08:22:00 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.7 2003/09/03 06:08:34 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -355,3 +355,9 @@ TVector3 operator * (const TMatrix & m, const TVector3 & v ) {
 //const TVector3 kXHat(1.0, 0.0, 0.0);
 //const TVector3 kYHat(0.0, 1.0, 0.0);
 //const TVector3 kZHat(0.0, 0.0, 1.0);
+
+void TVector3::Print(Option_t*)const
+{
+  Printf("%s %s (x,y,z)=(%f,%f,%f) (rho,theta,phi)=(%f,%f,%f)",GetName(),GetTitle(),X(),Y(),Z(),
+                                          Mag(),Theta()*TMath::RadToDeg(),Phi()*TMath::RadToDeg());
+}

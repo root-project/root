@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.11 2003/02/12 17:44:02 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.12 2003/11/13 10:26:17 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -175,7 +175,7 @@ public:
 
   inline TVector2 XYvector() const;
 
-
+  void Print(Option_t* option) const;
 
 private:
 

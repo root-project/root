@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.2 2000/11/21 20:44:24 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.3 2003/09/01 09:46:30 brun Exp $
 // Author: Pasha Murat   12/02/99
 //------------------------------------------------------------------------------
 // Copyright(c) 1995-1997, P.Murat (CDF collaboration, FNAL)
@@ -102,3 +102,10 @@ void TVector2::Streamer(TBuffer &R__b)
       TVector2::Class()->WriteBuffer(R__b,this);
    }
 }
+
+void TVector2::Print(Option_t*)const
+{
+  Printf("%s %s (x,y)=(%f,%f) (rho,phi)=(%f,%f)",GetName(),GetTitle(),X(),Y(),
+                                          Mod(),Phi()*TMath::RadToDeg());
+}
+

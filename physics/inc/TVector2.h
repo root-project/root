@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.8 2002/08/02 20:56:10 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.9 2003/09/01 09:46:30 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -114,7 +114,7 @@ public:
   static Double_t Phi_mpi_pi(Double_t x);
 
 
-
+  void Print(Option_t* option) const;
 
   ClassDef(TVector2,3)  // A 2D physics vector
 
