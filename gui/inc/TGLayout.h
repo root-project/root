@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -180,6 +180,8 @@ public:
 //                                                                      //
 // TGMatrixLayout manager.                                              //
 //                                                                      //
+// This layout managers does not make use of TGLayoutHints.             //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 class TGMatrixLayout : public TGLayoutManager {
@@ -189,7 +191,7 @@ protected:
 
 public:
    Int_t   fSep;                      // interval between frames
-   Int_t   fHints;                    // layout hints
+   Int_t   fHints;                    // layout hints (currently not used)
    UInt_t  fRows;                     // number of rows
    UInt_t  fColumns;                  // number of columns
 

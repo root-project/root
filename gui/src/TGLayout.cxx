@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -38,14 +38,15 @@
 //         frames outside the count won't be managed.                   //
 //         Unlimited rows means the frame can expand downward           //
 //         (the default behaviour in most UI).                          //
-//         Both unlimied rows and columns is undefined (read: will      //
+//         Both unlimited rows and columns is undefined (read: will     //
 //         crash the algorithm ;-).                                     //
 //         With fixed dimensions, frames are always arranged in rows.   //
 //         That is: 1st frame is at position (0,0), next one is at      //
 //         row(0), column(1) and so on...                               //
 //         When specifying one dimension as unlimited (i.e. row=0 or    //
 //         column=0) the frames are arranged according to the direction //
-//         of the fixed dimension.                                      //
+//         of the fixed dimension. This layout manager does not make    //
+//         use of TGLayoutHints.                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
