@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.10 2004/05/14 16:34:10 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.11 2004/05/14 16:35:44 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -146,23 +146,23 @@ int RemoveLib(const string &solib, bool fullpath, FILE *fp)
 
    if (!siz) return 0;
 
+   const char *libbase = solib.c_str();
+   if (!fullpath) {
+      if ((libbase = strrchr(libbase, '/')))
+         libbase++;
+   }
+
    // read file and remove lines matching specified libs
    char *fbuf = new char[siz+1];
    char *fptr = fbuf;
 
    while (fgets(fptr, siz - size_t(fptr-fbuf), fp)) {
 
-      const char *libbase = solib.c_str();
-      if (!fullpath) {
-         if ((libbase = strrchr(libbase, '/')))
-            libbase++;
-      }
-
       char *line = new char[strlen(fptr)+1];
       strcpy(line, fptr);
       strtok(line, " ");
       char *lib = strtok(0, " \n");
-      if (strcmp(lib, libbase)) {
+      if (lib && strcmp(lib, libbase)) {
          fptr += strlen(fptr);
          if (*(fptr-1) != '\n') {
             *fptr = '\n';
@@ -171,11 +171,9 @@ int RemoveLib(const string &solib, bool fullpath, FILE *fp)
       }
       delete [] line;
 
-#ifdef __hpux
       // fgets() should return 0 in this case but doesn't
       if (siz - size_t(fptr - fbuf) <= 0)
          break;
-#endif
    }
 
    ftruncate(fileno(fp), 0);
