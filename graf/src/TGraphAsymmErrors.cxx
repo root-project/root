@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.40 2004/07/06 14:55:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.41 2004/07/12 20:06:33 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -689,6 +689,14 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    // if option "[]" is specified only the end vertical/horizonthal lines
    // of the error bars are drawn. This option is interesting to superimpose
    // systematic errors on top of a graph with statistical errors.
+   //
+   // if option "2" is specified error rectangles are drawn.
+   // 
+   // if option "3" is specified a filled area is drawn through the end points >
+   // the vertical error bars.
+   // 
+   // if option "4" is specified a smoothed filled area is drawn through the end
+   // points of the vertical error bars.
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -716,8 +724,10 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    if (strchr(option,'A')) axis = kTRUE;
    if (axis) TGraph::Paint(option);
 
+   Bool_t option2 = kFALSE;
    Bool_t option3 = kFALSE;
    Bool_t option4 = kFALSE;
+   if (strchr(option,'2')) option2 = kTRUE;
    if (strchr(option,'3')) option3 = kTRUE;
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}  
 
@@ -767,6 +777,15 @@ void TGraphAsymmErrors::Paint(Option_t *option)
       if (y > gPad->GetUymax()) continue;
       xl1 = x - s2x*cx;
       xl2 = gPad->XtoPad(fX[i] - fEXlow[i]);
+
+      //  draw the error rectangles
+      if (option2) {
+         gPad->PaintBox(gPad->XtoPad(fX[i] - fEXlow[i]),
+                        gPad->YtoPad(fY[i] - fEYlow[i]),
+                        gPad->XtoPad(fX[i] + fEXhigh[i]),
+                        gPad->YtoPad(fY[i] + fEYhigh[i]));
+         continue;
+      }
 
       //  keep points for fill area drawing
       if (option3) {

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.133 2004/07/20 07:23:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.134 2004/08/20 08:07:30 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1980,7 +1980,8 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    if(opt.Contains("R")) OptionR    = 1;  else OptionR    = 0;
    if(opt.Contains("1")) OptionOne  = 1;  else OptionOne  = 0;
    if(opt.Contains("F")) OptionFill = 1;  else OptionFill = 0;
-   if(opt.Contains("3") || opt.Contains("4")) OptionE = 1;  else OptionE = 0;
+   if(opt.Contains("2") || opt.Contains("3") || 
+      opt.Contains("4")) OptionE = 1;  else OptionE = 0;
    OptionZ    = 0;
 //*-*           If no "drawing" option is selected and if chopt<>' '
 //*-*           nothing is done.
