@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.166 2005/02/25 21:49:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.167 2005/03/04 19:37:52 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -4004,11 +4004,15 @@ void TTreeFormula::LoadBranches()
    Int_t i;
    for (i=0; i<fNoper ; ++i) {
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      if (leaf==0) continue;
+
       TBranch *br = leaf->GetBranch();
       Long64_t treeEntry = br->GetTree()->GetReadEntry();
       if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
+
       TTreeFormula *alias = (TTreeFormula*)fAliases.UncheckedAt(i);
       if (alias) alias->LoadBranches();
+
       Int_t max_dim = fNdimensions[i];
       for (Int_t dim = 0; dim < max_dim; ++dim) {
          if (fVarIndexes[i][dim]) fVarIndexes[i][dim]->LoadBranches();
