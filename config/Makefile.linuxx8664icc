@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for Linux with glibc and Intel icc compiler
+# Makefile of ROOT for AMD Opteron and Intel EM64T (64 bit mode) Linux with icc
 
 PLATFORM      = linux
 
@@ -17,19 +17,19 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -wd1476 $(EXTRA_CXXFLAGS)
-CFLAGS        = $(EXTRA_CFLAGS) -restrict
-CINTCXXFLAGS  = $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = -fPIC -wd1476 -wd1572 $(EXTRA_CXXFLAGS)
+CFLAGS        = -fPIC -wd1572 $(EXTRA_CFLAGS) -restrict
+CINTCXXFLAGS  = -fPIC -wd1572 $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = $(EXTRA_CFLAGS) -restrict \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
+CINTCFLAGS    = -fPIC -wd1572 $(EXTRA_CFLAGS) -restrict \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 
 # Compiler version:
-ICC_MAJOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f1)
-ICC_MINOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f2)
 
 # Linker:
@@ -39,9 +39,9 @@ SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
-CILIBS        = -lm -ldl -rdynamic
+SYSLIBS       = -lstdc++ -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
+XLIBS         = -lstdc++ $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
+CILIBS        = -lstdc++ -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:

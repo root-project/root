@@ -325,7 +325,6 @@ else
 ICC           = ecc
 IFORT         = efc
 endif
-
 CXX           = $(ICC)
 CXXFLAGS      = -O -fPIC -wd1476
 LD            = $(ICC)
@@ -334,11 +333,20 @@ SOFLAGS       = -shared
 endif
 
 ifeq ($(ARCH),linuxx8664gcc)
-# AMD Opteron (64 bit mode) Linux with gcc 3.x
+# AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
 CXX           = g++
 CXXFLAGS      = -O2 -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxx8664icc)
+# AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc compiler
+CXX           = icc
+CXXFLAGS      = -O -fPIC -wd1476 -wd1572
+LD            = icc
+LDFLAGS       = -O -lstdc++
 SOFLAGS       = -shared
 endif
 

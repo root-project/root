@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for AMD Opteron (64 bit mode) Linux with gcc
+# Makefile of ROOT for AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc
 
 PLATFORM      = linux
 

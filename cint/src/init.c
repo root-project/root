@@ -2246,7 +2246,7 @@ void G__platformMacro()
 #ifdef __KCC        /* KCC  C++ compiler */
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
-#ifdef __INTEL_COMPILER /* icc and ecc C++ compilers */
+#if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 810 /* icc and ecc C++ compilers */
   sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
 #endif
 #ifndef _AIX

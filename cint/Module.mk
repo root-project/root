@@ -136,7 +136,15 @@ endif
 ifeq ($(CXXCMD),icc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
+ifeq ($(ICC_MAJOR),8)
+ifeq ($(ICC_MINOR),1)
+CINTS2       += $(MODDIRS)/gcc3strm.cxx
+else
 CINTS2       += $(MODDIRS)/iccstrm.cxx
+endif
+else
+CINTS2       += $(MODDIRS)/iccstrm.cxx
+endif
 CINTS2       += $(MODDIRS)/longif3.cxx
 endif
 ifeq ($(CXXCMD),ecc)

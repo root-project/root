@@ -39,7 +39,7 @@ $(ROOTCINTTMP): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 
 $(RLIBMAP):     $(RLIBMAPO)
 ifneq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) -o $@ $<
+		$(LD) $(LDFLAGS) -o $@ $< $(CILIBS)
 else
 		$(LD) $(LDFLAGS) -o $@ $< imagehlp.lib
 endif

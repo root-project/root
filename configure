@@ -677,12 +677,13 @@ fi
 
 platform=`grep "^PLATFORM *=" config/Makefile.$arch | awk '{ print $3 }'`
 
-if test "x$arch" = "xsgicc" ; then
-   checklib32="yes"
-fi
-if test "x$arch" = "xlinuxx8664gcc" || test "x$arch" = "xsgicc64" ; then
-   checklib64="yes"
-fi
+case $arch in
+sgicc)
+   checklib32="yes" ;;
+linuxx8664*|sgicc64)
+   checklib64="yes" ;;
+esac
+
 if test "x$platform" = "xmacosx" ; then
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
 fi

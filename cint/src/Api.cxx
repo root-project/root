@@ -583,7 +583,7 @@ extern "C" const char* G__saveconststring(const char* s)
 #ifndef G__OLDIMPLEMENTATION1689
 extern "C" void G__initcxx() 
 {
-#if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)||defined(__INTEL_COMPILER)
+#if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)|| (defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 810))
   char temp[G__ONELINE];
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
@@ -598,7 +598,7 @@ extern "C" void G__initcxx()
 #ifdef __KCC        /* KCC  C++ compiler */
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
-#ifdef __INTEL_COMPILER /* icc and ecc C++ compilers */
+#if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 810 /* icc and ecc C++ compilers */
   sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
 #endif
   /*
