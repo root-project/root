@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.51 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.52 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -646,6 +646,7 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
       return -1;
    }
    Int_t uid = fUniqueVolumes->GetEntriesFast();
+   if (!uid) uid++;
    if (!fCurrentVolume) {
       fCurrentVolume = volume;
       fUniqueVolumes->AddAtAndExpand(volume,uid);
@@ -3160,6 +3161,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       delete fTopNode;
    } else {
       fMasterVolume = vol;
+      fUniqueVolumes->AddAtAndExpand(vol,0);
       GetHMatrix();
    }   
    *fCurrentMatrix = gGeoIdentity;

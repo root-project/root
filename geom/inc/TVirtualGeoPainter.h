@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.16 2003/02/17 11:57:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.17 2003/05/07 13:32:39 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -78,17 +78,17 @@ public:
    virtual void       DrawCurrentPoint(Int_t color) = 0;
    virtual void       DrawPanel() = 0;
    virtual void       DrawPath(const char *path) = 0;
-   virtual void       EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *start, Double_t *end) {;}
+   virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t */*start*/, Double_t */*end*/) {;}
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py) = 0;
    virtual Int_t      GetNsegments() const = 0; 
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const = 0;
    virtual Int_t      GetBombMode() const = 0; 
    virtual const char *GetDrawPath() const = 0; 
-   virtual void       GetViewAngles(Double_t &longitude, Double_t &latitude, Double_t &psi) {;}
+   virtual void       GetViewAngles(Double_t &/*longitude*/, Double_t &/*latitude*/, Double_t &/*psi*/) {;}
    virtual Int_t      GetVisLevel() const = 0; 
    virtual Int_t      GetVisOption() const = 0; 
    virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;
-   virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0) {;}
+   virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0) =0;
    virtual Double_t  *GetViewBox() = 0;
    virtual Bool_t     IsExplodedView() const = 0;
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const = 0;

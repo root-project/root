@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.7 2003/05/07 14:21:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.8 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -437,6 +437,7 @@ TGeoTranslation::TGeoTranslation()
 
 //-----------------------------------------------------------------------------
 TGeoTranslation::TGeoTranslation(const TGeoTranslation &other)
+                :TGeoMatrix()
 {
 // Copy ctor.
    SetBit(kGeoTranslation);
@@ -547,6 +548,7 @@ TGeoRotation::TGeoRotation()
 
 //-----------------------------------------------------------------------------
 TGeoRotation::TGeoRotation(const TGeoRotation &other)
+             :TGeoMatrix()
 {
 // Copy ctor.
    SetBit(kGeoRotation);
@@ -791,6 +793,7 @@ TGeoScale::TGeoScale()
 }
 //-----------------------------------------------------------------------------
 TGeoScale::TGeoScale(const TGeoScale &other)
+          :TGeoMatrix()
 {
 // Copy constructor
    SetBit(kGeoScale);
@@ -853,6 +856,7 @@ TGeoCombiTrans::TGeoCombiTrans()
 }
 //-----------------------------------------------------------------------------
 TGeoCombiTrans::TGeoCombiTrans(const TGeoCombiTrans &other)
+               :TGeoMatrix()
 {
 // Copy ctor
    SetBit(kGeoCombiTrans);
