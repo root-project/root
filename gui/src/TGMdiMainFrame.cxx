@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.2 2004/09/03 08:15:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.3 2004/09/03 08:17:37 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -60,11 +60,9 @@ ClassImp(TGMdiFrameList)
 TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
                                Int_t w, Int_t h, UInt_t options,
                                ULong_t back) :
-   TGCanvas(p, w, h, options | kDoubleBorder | kSunkenFrame | kMdiMainFrame)
+   TGCanvas(p, w, h, options | kDoubleBorder | kSunkenFrame | kMdiMainFrame, back)
 {
    // Create a MDI main frame.
-
-   // [we should use the specified back color -- HP]
 
    fContainer = new TGMdiContainer(this, 10, 10, kOwnBackground,
                          fClient->GetShadow(GetDefaultFrameBackground()));
@@ -856,6 +854,8 @@ void TGMdiMainFrame::Minimize(TGMdiFrame *mdiframe)
 //______________________________________________________________________________
 Int_t TGMdiMainFrame::Close(TGMdiFrame *mdiframe)
 {
+   if (!mdiframe) return kFALSE;
+
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
    Restore(mdiframe);
    mdiframe->Emit("CloseWindow()");
@@ -873,7 +873,7 @@ void TGMdiMainFrame::FreeMove(TGMdiFrame *mdiframe)
    Int_t x = frame->GetTitleBar()->GetWidth() / 2;
    Int_t y = frame->GetTitleBar()->GetHeight() - 1;// / 2;
 
-   gVirtualX->Warp(x, y, frame->GetTitleBar()->GetId()); 
+   gVirtualX->Warp(x, y, frame->GetTitleBar()->GetId());
 
    frame->GetTitleBar()->SetLeftButPressed();
    frame->GetTitleBar()->SetX0(x);
@@ -901,7 +901,7 @@ void TGMdiMainFrame::FreeSize(TGMdiFrame *mdiframe)
    gVirtualX->TranslateCoordinates(frame->GetLowerRightCR()->GetId(),
               fClient->GetRoot()->GetId(), x, y, xroot, yroot, win);
 
-   gVirtualX->Warp(x, y, frame->GetLowerRightCR()->GetId()); 
+   gVirtualX->Warp(x, y, frame->GetLowerRightCR()->GetId());
 
    Event_t event;
 
