@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.11 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.12 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -160,7 +160,8 @@ ClassImp(TGeoShape)
 TGeoShape::TGeoShape()
 {
 // Default constructor
-   fShapeId = 0;
+   fShapeBits = 0;
+   fShapeId   = 0;
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
       // gROOT->AddGeoManager(gGeoManager);
@@ -174,7 +175,8 @@ TGeoShape::TGeoShape(const char *name)
           :TNamed(name, "")
 {
 // Default constructor
-   fShapeId = 0;
+   fShapeBits = 0;
+   fShapeId   = 0;
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
       // gROOT->AddGeoManager(gGeoManager);
