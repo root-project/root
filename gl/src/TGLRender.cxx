@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.18 2004/11/26 15:55:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.19 2004/11/29 12:43:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -56,16 +56,15 @@ TGLRender::TGLRender()
 
    fGLInit = kFALSE;
    fAllActive = kTRUE;
-   fIsPicking = kFALSE;
    fActiveCam = 0;
    fPlaneEqn[0] = 1.;
    fPlaneEqn[1] = fPlaneEqn[2] = fPlaneEqn[3] = 0.;
    fClipping = kFALSE;
+   fNeedFrustum = kFALSE;
    fSelected = 0;
 
    fFirstT = 0;
    fSelectedObj = 0;
-   fSelectionBox = 0;
    fPxs = kFALSE;
    fAxes = kFALSE;
 }
@@ -94,16 +93,20 @@ void TGLRender::Traverse()
    for (; start < end; ++start) {
       TGLCamera *currCam = (TGLCamera *)fGLCameras.At(start);
       currCam->TurnOn();
-      fFrustum.Update();
+      
+      if (fNeedFrustum) {
+         fFrustum.Update();
+      }
 
       if (fClipping) {
          glClipPlane(GL_CLIP_PLANE0, fPlaneEqn);
       }
 
       DrawScene();
-
-      if (fSelectionBox) {
-         fSelectionBox->DrawBox();
+      
+      if (fNeedFrustum) {
+         if (Double_t(fFrustum.GetVisible()) / fGLObjects.GetEntriesFast() > 0.8)
+            fNeedFrustum = kFALSE;
       }
       
       if(fAxes) DrawAxes();
@@ -172,29 +175,20 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
          hitObject = (TGLSceneObject *)fGLObjects.At(chosen - 1);
       }
       if (fSelected != chosen) {
+         if (fSelectedObj) fSelectedObj->Select(kFALSE);
          fSelected = chosen;
          fSelectedObj = hitObject;
-         fSelectionBox = fSelectedObj->GetBox();
-         Traverse();
+         fSelectedObj->Select();
+         Traverse(); 
       }
    } else if (fSelected) {
       fSelected = 0;
+      fSelectedObj->Select(kFALSE);
       fSelectedObj = 0;
-      fSelectionBox = 0;
       Traverse();
    }
 
    return fSelectedObj;
-}
-
-//______________________________________________________________________________
-void TGLRender::MoveSelected(Double_t x, Double_t y, Double_t z)
-{
-   if (!fIsPicking) {
-      fIsPicking = kTRUE;
-   }
-   fSelectedObj->Shift(x, y, z);
-   fSelectionBox->Shift(x, y, z);
 }
 
 //______________________________________________________________________________
@@ -204,12 +198,6 @@ void TGLRender::SetPlane(const Double_t *n)
    fPlaneEqn[1] = n[1];
    fPlaneEqn[2] = n[2];
    fPlaneEqn[3] = n[3];
-}
-
-//______________________________________________________________________________
-void TGLRender::EndMovement()
-{
-   if (fIsPicking) fIsPicking = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -355,6 +343,10 @@ void TGLRender::DrawScene(Bool_t clip)
 //______________________________________________________________________________
 void TGLRender::GetStat()const
 {
-   std::cout<<"There are "<<fGLObjects.GetEntries()<<" objects in scene\n";
-   std::cout<<"There are "<<fFrustum.GetVisible()<<" objects in frustum\n";
+   if (fNeedFrustum) {
+      std::cout<<"There are "<<fGLObjects.GetEntries()<<" objects in scene\n";
+      std::cout<<"There are "<<fFrustum.GetVisible()<<" objects in frustum\n";
+   } else {
+      std::cout<<"Not frustuming\n";
+   }
 }

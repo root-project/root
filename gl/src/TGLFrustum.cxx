@@ -4,8 +4,6 @@
 
 #include <GL/gl.h>
 
-//Author Richard
-
 #include "TGLSceneObject.h"
 #include "TGLFrustum.h"
 
@@ -99,17 +97,13 @@ void TGLFrustum::Update()
 //______________________________________________________________________________
 Bool_t TGLFrustum::ClipOnBoundingBox(const TGLSceneObject &SceneObject) const
 {
-   const TGLSelection *box = SceneObject.GetBox();
-   typedef std::pair<Double_t, Double_t>PDD_t;
-   const PDD_t &xb = box->GetRangeX();
-   const PDD_t &yb = box->GetRangeY();
-   const PDD_t &zb = box->GetRangeZ();
+   const Double_t *box = SceneObject.GetBBox()->GetData();
    
    Double_t BBVertexes[][3] = {
-                               {xb.first, yb.first,  zb.first},  {xb.second, yb.first,  zb.first},
-                               {xb.first, yb.second, zb.first},  {xb.second, yb.second, zb.first},
-                               {xb.first, yb.first,  zb.second}, {xb.second, yb.first,  zb.second},
-                               {xb.first, yb.second, zb.second}, {xb.second, yb.second, zb.second}
+                               {box[0], box[2], box[4]}, {box[1], box[2], box[4]},
+                               {box[0], box[3], box[4]}, {box[1], box[3], box[4]},
+                               {box[0], box[2], box[5]}, {box[1], box[2], box[5]},
+                               {box[0], box[3], box[5]}, {box[1], box[3], box[5]}
                               };
                               
    ClipResult clip = ClipOnBoundingBox(BBVertexes);

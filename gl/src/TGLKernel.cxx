@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.27 2004/11/24 15:06:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.28 2004/11/29 12:43:35 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -1462,15 +1462,13 @@ TGLSceneObject *TGLKernel::SelectObject(TGLRender *graph, Int_t x, Int_t y, Int_
 }
 
 //______________________________________________________________________________
-void TGLKernel::MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z)
+void TGLKernel::MoveSelected(TGLRender *, Double_t, Double_t, Double_t)
 {
-   render->MoveSelected(x, y, z);
 }
 
 //______________________________________________________________________________
-void TGLKernel::EndMovement(TGLRender *render)
+void TGLKernel::EndMovement(TGLRender *)
 {
-   render->EndMovement();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.14 2004/11/24 15:06:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.15 2004/11/29 12:43:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -27,96 +27,67 @@ class TBuffer3D;
 /////////////////////////////////////////////////////////////
 class TGLSelection {
 private:
-   typedef std::pair<Double_t, Double_t>PDD_t;
-   PDD_t fRangeX;
-   PDD_t fRangeY;
-   PDD_t fRangeZ;
+   Double_t fBBox[6];
 
 public:
    TGLSelection();
-   TGLSelection(const PDD_t &x, const PDD_t &y, const PDD_t &z);
+   TGLSelection(const Double_t *bbox);
+   TGLSelection(Double_t xmin, Double_t xmax, Double_t ymin,
+                Double_t ymax, Double_t zmin, Double_t zmax);
+
    void DrawBox()const;
 
-   void SetBox(const PDD_t &x, const PDD_t &y, const PDD_t &z);
+   void SetBBox(const Double_t *newBbox);
+   void SetBBox(Double_t xmin, Double_t xmax, Double_t ymin,
+               Double_t ymax, Double_t zmin, Double_t zmax);
+   const Double_t *GetData()const{return fBBox;}
+   
+               
    void Shift(Double_t x, Double_t y, Double_t z);
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
 
-   const PDD_t &GetRangeX()const
-   {
-      return fRangeX;
-   }
-   const PDD_t &GetRangeY()const
-   {
-      return fRangeY;
-   }
-   const PDD_t &GetRangeZ()const
-   {
-      return fRangeZ;
-   }
+   const Double_t *GetRangeX()const{return fBBox;}
+   const Double_t *GetRangeY()const{return fBBox + 2;}
+   const Double_t *GetRangeZ()const{return fBBox + 4;}
 };
 
 /////////////////////////////////////////////////////////////
 class TGLSceneObject : public TObject {
 protected:
-   std::vector<Double_t>fVertices;
-   Float_t fColor[17];
-   TGLSelection fSelectionBox;
-   Double_t fCenter[3];
+   std::vector<Double_t> fVertices;
+   Float_t               fColor[17];
+   TGLSelection          fSelectionBox;
+   Bool_t                fIsSelected;
 
 private:
-   UInt_t fGLName;
-   TGLSceneObject *fNextT;
-   TObject *fRealObject;
+   UInt_t                fGLName;
+   TGLSceneObject        *fNextT;
+   TObject               *fRealObject;
 
 public:
    TGLSceneObject(const Double_t *vertStart, const Double_t *vertEnd, 
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
 
    virtual Bool_t IsTransparent()const;
-   virtual void ResetTransparency(char newval);
 
    virtual void GLDraw(const TGLFrustum *fr)const = 0;
+
    virtual void Shift(Double_t x, Double_t y, Double_t z);
    virtual void Stretch(Double_t xs, Double_t ys, Double_t zs);
 
-   TGLSelection *GetBox()
-   {
-      return &fSelectionBox;
-   }
-   const TGLSelection *GetBox()const
-   {
-      return &fSelectionBox;
-   }
-   void SetNextT(TGLSceneObject *next)
-   {
-      fNextT = next;
-   }
-   TGLSceneObject *GetNextT()const
-   {
-      return fNextT;
-   }
-   UInt_t GetGLName()const
-   {
-      return fGLName;
-   }
-   TObject *GetRealObject()const
-   {
-      return fRealObject;
-   }
-   const Float_t *GetColor()const
-   {
-      return fColor;
-   }
-
+   TGLSelection *GetBBox(){return &fSelectionBox;}
+   const TGLSelection *GetBBox()const{return &fSelectionBox;}
+   
+   void SetNextT(TGLSceneObject *next){fNextT = next;}
+   TGLSceneObject *GetNextT()const{return fNextT;}
+   
+   UInt_t GetGLName()const{return fGLName;}
+   TObject *GetRealObject()const{return fRealObject;}
+   
+   const Float_t *GetColor()const{return fColor;}
    void SetColor(const Float_t *newColor);
-
-   const Double_t *GetObjectCenter()const
-   {
-      return fCenter;
-   }
-
-protected:
-   void SetBox();
+   
+   void Select(Bool_t select = kTRUE){fIsSelected = select;}
 
 private:
    TGLSceneObject(const TGLSceneObject &);
@@ -136,10 +107,7 @@ public:
    TGLFaceSet(const TBuffer3D &buff, const Float_t *color,
               UInt_t glName, TObject *realObj);
 
-   Bool_t IsTransparent()const;
-   void ResetTransparency(char newVal);
    void GLDraw(const TGLFrustum *fr)const;
-   void Shift(Double_t x, Double_t y, Double_t z);
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
 
 private:
@@ -147,6 +115,7 @@ private:
    static Bool_t Eq(const Double_t *p1, const Double_t *p2);
    void CalculateNormals();
 };
+
 ////////////////////////////////////////////////////////////////////////
 class TGLPolyMarker : public TGLSceneObject {
 private:
@@ -178,9 +147,11 @@ private:
 
 public:
    TGLSphere(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
+
    void GLDraw(const TGLFrustum *fr)const;
+
    void Shift(Double_t x, Double_t y, Double_t z);
-   Bool_t IsTransparent()const;
+   void Stretch(Double_t xs, Double_t ys, Double_t zs);   
 };
 
 
@@ -202,7 +173,6 @@ public:
    TGLTube(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
    void GLDraw(const TGLFrustum *fr)const;
    void Shift(Double_t x, Double_t y, Double_t z);
-   Bool_t IsTransparent()const;
 };
 
 class TGLSimpleLight : public TGLSceneObject {
@@ -212,8 +182,15 @@ private:
 
 public:
    TGLSimpleLight(UInt_t glName, UInt_t lightName, const Float_t *color, const Double_t *position);
+
+
+
    void GLDraw(const TGLFrustum *fr)const;
+
+   Bool_t IsTransparent()const;
+
    void Shift(Double_t x, Double_t y, Double_t z);
+   void Stretch(Double_t xs, Double_t ys, Double_t zs);
    void SetBulbRad(Float_t newRad);
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.11 2004/11/24 15:16:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.12 2004/11/29 12:43:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -35,13 +35,12 @@ private:
 
    Bool_t         fGLInit;
    Bool_t         fAllActive;
-   Bool_t         fIsPicking;
+   Bool_t         fNeedFrustum;
    Int_t          fActiveCam;
    UInt_t         fSelected;
 
    TGLSceneObject *fFirstT;
    TGLSceneObject *fSelectedObj;
-   TGLSelection   *fSelectionBox;
    //clipping plane equation A*x+B*y+C*z+D=0
    Double_t       fPlaneEqn[4];
    Bool_t         fClipping;
@@ -63,7 +62,7 @@ public:
    void AddNewObject(TGLSceneObject *newObject);
    void AddNewCamera(TGLCamera *newCamera);
    TGLSceneObject *SelectObject(Int_t x, Int_t y, Int_t);
-   void MoveSelected(Double_t x, Double_t y, Double_t z);
+
    Bool_t ResetPlane()
    {
       return fClipping = !fClipping;
@@ -73,7 +72,7 @@ public:
    {
       return fGLObjects.GetEntriesFast();
    }
-   void EndMovement();
+
    void SetAxes(const PDD_t &x, const PDD_t &y, const PDD_t &z);
    void ResetAxes()
    {
@@ -82,7 +81,10 @@ public:
 
    void SetFamilyColor(const Float_t *newColor);
    void GetStat()const;
-
+   void SetNeedFrustum()
+   {
+      fNeedFrustum = kTRUE;
+   }
 private:
    void DrawScene(Bool_t clip = kTRUE);
    void DrawAxes();

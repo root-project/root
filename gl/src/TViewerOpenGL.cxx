@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.38 2004/11/24 13:11:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.39 2004/11/29 12:43:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -327,6 +327,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
    }
    if (event->fCode == kButton5) {
       // zoom in
+      fRender->SetNeedFrustum();
       fZoom[fConf] /= 1.2;
       fCamera[fConf]->Zoom(fZoom[fConf]);
       DrawObjects();
@@ -341,7 +342,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
       } else {
          if ((fSelectedObj = TestSelection(event))) {
             fColorEditor->SetRGBA(fSelectedObj->GetColor());
-            fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
+            fGeomEditor->SetCenter(fSelectedObj->GetBBox()->GetData());
             if (event->fCode == kButton2) {
                fPressed = kTRUE;
                fLastPos.fX = event->fX;
@@ -358,10 +359,8 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
       }
    } else if (event->fType == kButtonRelease) {
       if (event->fCode == kButton2) {
-         MakeCurrent();
-         gVirtualGL->EndMovement(fRender);
          DrawObjects();
-         if (fSelectedObj)fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
+         if (fSelectedObj)fGeomEditor->SetCenter(fSelectedObj->GetBBox()->GetData());
          fAction = kNoAction;
       }
       fPressed = kFALSE;
@@ -392,6 +391,7 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
    case kKey_Plus:
    case kKey_J:
    case kKey_j:
+      fRender->SetNeedFrustum();
       fZoom[fConf] /= 1.2;
       fCamera[fConf]->Zoom(fZoom[fConf]);
       DrawObjects();
@@ -445,7 +445,6 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
       if (fAction == kRotating) {
          TPoint pnt(event->fX, event->fY);
          fArcBall->Drag(pnt);
-         DrawObjects();
       } else if (fAction == kPicking) {
          TGLWindow *glWin = fCanvasContainer->GetGLWindow();
          Double_t xshift = (event->fX - fLastPos.fX) / Double_t(glWin->GetWidth());
@@ -454,16 +453,15 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
          yshift *= fViewVolume[1] * 1.9 * fZoom[fConf];
 
          if (fConf != kPERSP) {
-            MakeCurrent();
             switch (fConf) {
             case kXOY:
-               gVirtualGL->MoveSelected(fRender, xshift, yshift, 0.);
+               fSelectedObj->Shift(xshift, -yshift, 0.);
                break;
             case kXOZ:
-               gVirtualGL->MoveSelected(fRender, xshift, 0., -yshift);
+               fSelectedObj->Shift(-yshift, 0., xshift);
                break;
             case kYOZ:
-               gVirtualGL->MoveSelected(fRender, 0., -xshift, -yshift);
+               fSelectedObj->Shift(0., -yshift, xshift);
                break;
 	         default:
 	            break;
@@ -477,13 +475,14 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
             TToySolver tr(*matrix);
             Double_t shift[3] = {0.};
             tr.GetSolution(shift);
-            gVirtualGL->MoveSelected(fRender, shift[0], shift[1], shift[2]);
+            fSelectedObj->Shift(shift[0], shift[1], shift[2]);
          }
 
-         DrawObjects();
          fLastPos.fX = event->fX;
          fLastPos.fY = event->fY;
       }
+
+      DrawObjects();
    }
 
    return kTRUE;
@@ -592,7 +591,7 @@ void TViewerOpenGL::UpdateScene(Option_t *)
          break;
       }
 
-      UpdateRange(addObj->GetBox());
+      UpdateRange(addObj->GetBBox());
       fRender->AddNewObject(addObj);
    }
 }
@@ -607,7 +606,6 @@ void TViewerOpenGL::Show()
 void TViewerOpenGL::CloseWindow()
 {
    fPad->SetViewer3D(0);
-   //DeleteWindow();
    TTimer::SingleShot(50, IsA()->GetName(), this, "ReallyDelete()");
 }
 
@@ -623,29 +621,29 @@ void TViewerOpenGL::DrawObjects()const
 //______________________________________________________________________________
 void TViewerOpenGL::UpdateRange(const TGLSelection *box)
 {
-   const PDD_t &X = box->GetRangeX();
-   const PDD_t &Y = box->GetRangeY();
-   const PDD_t &Z = box->GetRangeZ();
+   const Double_t *X = box->GetRangeX();
+   const Double_t *Y = box->GetRangeY();
+   const Double_t *Z = box->GetRangeZ();
 
    if (!fRender->GetSize()) {
-      fRangeX.first = X.first, fRangeX.second = X.second;
-      fRangeY.first = Y.first, fRangeY.second = Y.second;
-      fRangeZ.first = Z.first, fRangeZ.second = Z.second;
+      fRangeX.first = X[0], fRangeX.second = X[1];
+      fRangeY.first = Y[0], fRangeY.second = Y[1];
+      fRangeZ.first = Z[0], fRangeZ.second = Z[1];
       return;
    }
 
-   if (fRangeX.first > X.first)
-      fRangeX.first = X.first;
-   if (fRangeX.second < X.second)
-      fRangeX.second = X.second;
-   if (fRangeY.first > Y.first)
-      fRangeY.first = Y.first;
-   if (fRangeY.second < Y.second)
-      fRangeY.second = Y.second;
-   if (fRangeZ.first > Z.first)
-      fRangeZ.first = Z.first;
-   if (fRangeZ.second < Z.second)
-      fRangeZ.second = Z.second;
+   if (fRangeX.first > X[0])
+      fRangeX.first = X[0];
+   if (fRangeX.second < X[1])
+      fRangeX.second = X[1];
+   if (fRangeY.first > Y[0])
+      fRangeY.first = Y[0];
+   if (fRangeY.second < Y[1])
+      fRangeY.second = Y[1];
+   if (fRangeZ.first > Z[0])
+      fRangeZ.first = Z[1];
+   if (fRangeZ.second < Z[0])
+      fRangeZ.second = Z[1];
 }
 
 //______________________________________________________________________________
@@ -803,7 +801,6 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
          Double_t s[] = {1., 1., 1.};
          fGeomEditor->GetObjectData(c, s);
          fSelectedObj->Stretch(s[0], s[1], s[2]);
-         fSelectedObj->GetBox()->Shift(c[0], c[1], c[2]);
          fSelectedObj->Shift(c[0], c[1], c[2]);
       }
       break;
@@ -841,16 +838,13 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       break;
    }
 
-   if (wid == kTBa || wid == kTBa1 || wid == kTBaf) {
-//      gVirtualGL->Invalidate(fRender);
-   }
-
    DrawObjects();
 }
 
 //______________________________________________________________________________
 void TViewerOpenGL::MoveCenter(Int_t key)
 {
+   fRender->SetNeedFrustum();
    Double_t shift[3] = {0.};
    Double_t steps[2] = {fViewVolume[0] * fZoom[0] / 40, fViewVolume[0] * fZoom[0] / 40};
 
