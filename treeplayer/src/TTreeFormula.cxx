@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.78 2002/01/09 18:51:08 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.79 2002/01/10 07:19:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -429,6 +429,9 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
          {UInt_t **val   = (UInt_t**)(thisobj+fOffset);   return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kULong_t:
          {ULong_t **val  = (ULong_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+
+      case TStreamerInfo::kCharStar:
+         {char **stringp = (char**)(thisobj+fOffset); return *stringp;} 
 
       case TStreamerInfo::kObjectp:
       case TStreamerInfo::kObjectP:
@@ -1102,8 +1105,9 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
          if (fOper[last_code]>=105000 && high_dim==(1+fNdimensions[last_code])) {
             // We have a string used as a string (and not an array of number) 
             info->fSize = 1; // Maybe this should actually do nothing!
+         } else {
+            DefineDimensions(info->fCode,info->fSize, info->fMultiDim, virt_dim);
          }
-         DefineDimensions(info->fCode,info->fSize, info->fMultiDim, virt_dim);
       }
    }
     
@@ -1375,9 +1379,14 @@ void TTreeFormula::DefineDimensions(Int_t code, TFormLeafInfo *leafinfo) {
       size = elem->GetMaxIndex(0);
 
    } else if ( elem->GetType()== TStreamerInfo::kCharStar) {
-
+     
+      // When we implement being able to read the length from
+      // strlen, we will have:
+      // ndim = 1;
+      // size = -1;
+      // until then we more or so die:
       ndim = 1;
-      size = -1;
+      size = 0;
      
    } else return;
 
@@ -2002,7 +2011,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                         break;
                   case TMethodCall::kString:
                         leafinfo = new TFormLeafInfoMethod(cl,method);
-                        DefineDimensions(code,-1);
+                        // 0 will be replaced by -1 when we know how to use strlen
+                        DefineDimensions(code,0);
                         break;                        
                   case TMethodCall::kOther:
                        {TString return_type = gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
@@ -2697,12 +2707,18 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
       if (action >= 105000) {
          Int_t string_code = action-105000;
          TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(string_code);
-         leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
+
+         // Now let calculate what physical instance we really need.
+         real_instance = GetRealInstance(instance,string_code);
+         
+         if (!instance) leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
+         else if (real_instance>fNdata[string_code]) return 0;
+         
          pos2++;
          if (fLookupType[string_code]==kDirect) {
             tab2[pos2-1] = (char*)leafc->GetValuePointer();
          } else {
-            tab2[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,0);
+            tab2[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,real_instance);
          }
          continue;
       }
