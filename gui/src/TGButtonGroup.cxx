@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.1 2000/10/17 12:30:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.2 2000/10/17 12:34:52 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -99,9 +99,9 @@ TGButtonGroup::TGButtonGroup(TGWindow *parent,
 
    Init();
    if (options & kVerticalFrame) {
-      SetLayoutManager(new TGMatrixLayout(this,0,1));
+      SetLayoutManager(new TGVerticalLayout(this));
    } else {
-      SetLayoutManager(new TGMatrixLayout(this,1,0));
+      SetLayoutManager(new TGHorizontalLayout(this));
    }
 
    fDrawBorder = !title.IsNull();
@@ -115,7 +115,7 @@ TGButtonGroup::TGButtonGroup(TGWindow *parent,
                              GContext_t norm ,
                              FontStruct_t font ,
                              ULong_t back) :
-   TGGroupFrame(parent, new TGString(title), 0, norm, font,back),
+   TGGroupFrame(parent, new TGString(title), 0, norm, font, back),
    TQObject()
 {
    // Constructor. Layout defined by TGMatrixLayout:
@@ -226,14 +226,17 @@ Int_t TGButtonGroup::Insert(TGButton *button, Int_t id)
    // Inserting several buttons with id = -1 assigns the identifiers 1,
    // 2, 3, etc.
 
-   if (button->fGroup) {
+   if (button->fGroup && button->fGroup != this)
       button->fGroup->Remove(button);
+
+   if (button->fGroup == this) {
+      if (id == -1)
+         return GetId(button);    // the button is already in group
+      else
+         button->fGroup->Remove(button);  // want to set a new id
    }
 
-   if (button->fGroup == this)
-      return GetId(button);    // the button is already in group
-   else
-      button->fGroup = this;
+   button->fGroup = this;
 
    static int seq_no = -2;
    int bid;
@@ -304,7 +307,18 @@ void TGButtonGroup::ButtonPressed()
    // This slot is activated when one of the buttons in the group emits the
    // Pressed() signal.
 
-   TGButton *btn = (TGButton*)gTQSender;
+   //TGButton *btn = (TGButton*)gTQSender;
+   // This is needed since gTQSender points to TQObject part of TGButton
+#ifdef R__RTTI
+   TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
+#else
+   TQObject *oq = (TQObject*)gTQSender;
+   TGButton *btn = (TGButton*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
+#endif
+   if (!btn) {
+      Error("ButtonPressed", "gTQSender not a TGButton");
+      return;
+   }
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
@@ -319,7 +333,18 @@ void TGButtonGroup::ButtonReleased()
    // This slot is activated when one of the buttons in the group emits the
    // Released() signal.
 
-   TGButton *btn = (TGButton*)gTQSender;
+   //TGButton *btn = (TGButton*)gTQSender;
+   // This is needed since gTQSender points to TQObject part of TGButton
+#ifdef R__RTTI
+   TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
+#else
+   TQObject *oq = (TQObject*)gTQSender;
+   TGButton *btn = (TGButton*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
+#endif
+   if (!btn) {
+      Error("ButtonReleased", "gTQSender not a TGButton");
+      return;
+   }
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
@@ -334,7 +359,18 @@ void TGButtonGroup::ButtonClicked()
    // This slot is activated when one of the buttons in the group emits the
    // Clicked() signal.
 
-   TGButton *btn = (TGButton*)gTQSender;
+   //TGButton *btn = (TGButton*)gTQSender;
+   // This is needed since gTQSender points to TQObject part of TGButton
+#ifdef R__RTTI
+   TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
+#else
+   TQObject *oq = (TQObject*)gTQSender;
+   TGButton *btn = (TGButton*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
+#endif
+   if (!btn) {
+      Error("ButtonClicked", "gTQSender not a TGButton");
+      return;
+   }
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
@@ -351,7 +387,18 @@ void TGButtonGroup::ReleaseButtons()
 
    if (!fExclGroup && !fRadioExcl) return;
 
-   TGButton *btn = (TGButton*)gTQSender;
+   //TGButton *btn = (TGButton*)gTQSender;
+   // This is needed since gTQSender points to TQObject part of TGButton
+#ifdef R__RTTI
+   TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
+#else
+   TQObject *oq = (TQObject*)gTQSender;
+   TGButton *btn = (TGButton*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
+#endif
+   if (!btn) {
+      Error("ReleaseButtons", "gTQSender not a TGButton");
+      return;
+   }
 
    if (!fExclGroup && !btn->IsA()->InheritsFrom(TGRadioButton::Class()))
       return;

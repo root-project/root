@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.1 2000/10/17 12:30:14 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -43,7 +43,7 @@ protected:
    Bool_t  fExclGroup;       // kTRUE if group is exclusive
    Bool_t  fRadioExcl;       // kTRUE if radio buttons are exclusive
    Bool_t  fDrawBorder;      // kTRUE if border and title are drawn
-   TMap   *fMapOfButtons;   // map of button/id pairs in this group
+   TMap   *fMapOfButtons;    // map of button/id pairs in this group
 
    void Init();
 
@@ -76,23 +76,23 @@ public:
    Bool_t IsExclusive() const { return fExclGroup; }
    Bool_t IsRadioButtonExclusive() const  { return fRadioExcl; }
    Bool_t IsBorderDrawn() const { return fDrawBorder; }
-   Int_t  GetCount() const { return fMapOfButtons->GetSize(); }
 
    void SetExclusive(Bool_t flag = kTRUE);
    void SetRadioButtonExclusive(Bool_t flag = kTRUE);
    void SetBorderDrawn(Bool_t enable = kTRUE);
    void SetButton(Int_t id, Bool_t down = kTRUE);
+   void SetTitle(const char *title = "");
 
-   Int_t Insert(TGButton *button, int id = -1);
-   void  Remove(TGButton *button);
+   Int_t     Insert(TGButton *button, int id = -1);
+   void      Remove(TGButton *button);
    TGButton *Find(Int_t id) const;
    TGButton *GetButton(Int_t id) const { return Find(id); }
-   Int_t GetId(TGButton *button ) const;
-   void Show();
-   void Hide();
-   void SetTitle(const char *title = "");
-   void DrawBorder() { if (fDrawBorder) TGGroupFrame::DrawBorder(); }
-   void SetLayoutHints(TGLayoutHints *l, TGButton *button = 0);
+   Int_t     GetCount() const { return fMapOfButtons->GetSize(); }
+   Int_t     GetId(TGButton *button) const;
+   void      Show();
+   void      Hide();
+   void      DrawBorder() { if (fDrawBorder) TGGroupFrame::DrawBorder(); }
+   void      SetLayoutHints(TGLayoutHints *l, TGButton *button = 0);
 
    ClassDef(TGButtonGroup,0)  // Organizes TGButtons in a group
 };
