@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.79 2004/06/22 16:05:25 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.66 2004/05/24 11:23:26 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -177,7 +177,6 @@ const char null_cursor_bits[] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 static GdkCursor *gNullCursor;
-static HWND gConsoleWindow = 0;   // console window handle
 
 //
 // Data to create fill area interior style
@@ -749,27 +748,6 @@ static char *EventMask2String(UInt_t evmask)
 }
 
 //______________________________________________________________________________
-static void TGWin32SetConsoleWindowName()
-{
-   char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
-   char pszOldWindowTitle[1024]; // contains original WindowTitle
-
-   ::GetConsoleTitle(pszOldWindowTitle, 1024);
-   // format a "unique" NewWindowTitle
-   wsprintf(pszNewWindowTitle,"%d/%d", ::GetTickCount(), ::GetCurrentProcessId());
-   // change current window title
-   ::SetConsoleTitle(pszNewWindowTitle);
-   // ensure window title has been updated
-   ::Sleep(40);
-   // look for NewWindowTitle
-   gConsoleWindow = ::FindWindow(0, pszNewWindowTitle);
-   // restore original window title
-   ::ShowWindow(gConsoleWindow, SW_RESTORE);
-   ::SetForegroundWindow(gConsoleWindow);
-   ::SetConsoleTitle("ROOT session");
-}
-
-//______________________________________________________________________________
 static Bool_t MessageProcessingFunc(MSG *msg)
 {
    // windows message processing procedure
@@ -944,7 +922,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
       gPtr2VirtualX = &TGWin32VirtualXProxy::ProxyObject;
       gPtr2Interpreter = &TGWin32InterpreterProxy::ProxyObject;
    }
-   TGWin32SetConsoleWindowName();
 }
 
 //______________________________________________________________________________
@@ -1649,7 +1626,7 @@ void TGWin32::CloseWindow1()
    if (gCws->ispixmap) {
       gdk_pixmap_unref(gCws->window);
    } else {
-      gdk_window_destroy(gCws->window, kTRUE);
+      gdk_window_destroy(gCws->window);
    }
 
    if (gCws->buffer) {
@@ -2249,10 +2226,8 @@ Int_t TGWin32::InitWindow(ULong_t win)
    }
    attributes.window_type = GDK_WINDOW_CHILD;
    gCws->window = gdk_window_new(wind, &attributes, attr_mask);
-   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)gCws->window);
-   ::ShowWindow(window, SW_SHOWNORMAL);
-   ::ShowWindow(window, SW_RESTORE);
-   ::BringWindowToTop(window);
+   gdk_window_show((GdkWindow *) gCws->window);
+   GdiFlush();
 
    // Initialise the window structure
 
@@ -2501,11 +2476,13 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
       UInt_t dx, ddx, h;
       int i;
 
-      if (EventsPending()) {
+      if(PeekMessage(&msg, (HWND)GDK_DRAWABLE_XID(CurWnd),
+          0,0,PM_NOREMOVE)) {
          event = gdk_event_get();
-      } else {
+      }
+      else {
          gSystem->ProcessEvents();
-         ::SleepEx(10, kTRUE);
+         SleepEx(10, kTRUE);
          continue;
       }
 
@@ -2538,7 +2515,6 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
          case GDK_ENTER_NOTIFY:
             focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID(CurWnd));
             break;
-
          case GDK_LEAVE_NOTIFY:
             ::SetFocus(focuswindow);
             break;
@@ -4385,11 +4361,6 @@ void TGWin32::MapWindow(Window_t id)
    // Map window on screen.
 
    gdk_window_show((GdkWindow *)id);
-   if ((GDK_DRAWABLE_TYPE((GdkWindow *)id) != GDK_WINDOW_TEMP) &&
-       (GetParent(id) == GetDefaultRootWindow())) {
-      HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
-      ::SetForegroundWindow(window);
-   }
 }
 
 //______________________________________________________________________________
@@ -4398,7 +4369,7 @@ void TGWin32::MapSubwindows(Window_t id)
    //
 
    HWND wp;
-   EnumChildWindows((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
+   EnumChildWindows((HWND) GDK_DRAWABLE_XID((GdkWindow *) id),
                     EnumChildProc, (LPARAM) NULL);
 }
 
@@ -4407,20 +4378,8 @@ void TGWin32::MapRaised(Window_t id)
 {
    // Map window on screen and put on top of all windows.
 
-   HWND hwnd = ::GetForegroundWindow();
-   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
-   gdk_window_show((GdkWindow *)id);
-   if (GDK_DRAWABLE_TYPE((GdkWindow *)id) != GDK_WINDOW_TEMP)
-      ::SetForegroundWindow(window);
-
-   if (hwnd == gConsoleWindow) {
-      RECT r1, r2, r3;
-      ::GetWindowRect(gConsoleWindow, &r1);
-      ::GetWindowRect(window, &r2);
-      if (!::IntersectRect(&r3, &r2, &r1)) {
-          ::SetForegroundWindow(gConsoleWindow);
-      }
-   }
+   gdk_window_show((GdkWindow *) id);
+   gdk_window_raise((GdkWindow *) id);
 }
 
 //______________________________________________________________________________
@@ -4436,15 +4395,7 @@ void TGWin32::DestroyWindow(Window_t id)
 {
    // Destroy window.
 
-   gdk_window_destroy((GdkDrawable *) id, kTRUE);
-}
-
-//______________________________________________________________________________
-void TGWin32::DestroySubwindows(Window_t id)
-{
-   // Destroy all internal subwindows
-
-   gdk_window_destroy((GdkDrawable *) id, kFALSE);
+   gdk_window_destroy((GdkDrawable *) id);
 }
 
 //______________________________________________________________________________
@@ -4452,15 +4403,7 @@ void TGWin32::RaiseWindow(Window_t id)
 {
    // Put window on top of window stack.
 
-   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
-   if (GDK_DRAWABLE_TYPE((GdkWindow *)id) == GDK_WINDOW_TEMP) {
-       ::SetWindowPos(window, HWND_TOPMOST,  0, 0, 0, 0, 
-                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-   }
-   else {
-      ::BringWindowToTop(window);
-      ::SetForegroundWindow(window);
-   }
+   gdk_window_raise((GdkWindow *) id);
 }
 
 //______________________________________________________________________________
@@ -4468,9 +4411,7 @@ void TGWin32::LowerWindow(Window_t id)
 {
    // Lower window so it lays below all its siblings.
 
-   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
-   ::SetWindowPos(window, HWND_BOTTOM, 0, 0, 0, 0, 
-                  SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+   gdk_window_lower((GdkWindow *) id);
 }
 
 //______________________________________________________________________________
@@ -4505,15 +4446,6 @@ void TGWin32::IconifyWindow(Window_t id)
 
    gdk_window_lower((GdkWindow *) id);
    ::CloseWindow((HWND)GDK_DRAWABLE_XID((GdkWindow *)id));
-}
-
-//______________________________________________________________________________
-void TGWin32::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
-{
-   // Reparent window, make pid the new parent and position the window at
-   // position (x,y) in new parent.
-
-   gdk_window_reparent((GdkWindow *)id, (GdkWindow *)pid, x, y);
 }
 
 //______________________________________________________________________________
@@ -6163,7 +6095,6 @@ void TGWin32::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
    MapEventMask(evmask, xevmask);
 
    if (grab) {
-      if(!::IsWindowVisible((HWND)GDK_DRAWABLE_XID(id))) return;
       gdk_pointer_grab((GdkWindow *) id, owner_events, (GdkEventMask) xevmask,
                        (GdkWindow *) confine, (GdkCursor *) cursor,
                        GDK_CURRENT_TIME);
@@ -6576,8 +6507,8 @@ void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
 //______________________________________________________________________________
 void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
                                    Int_t src_x, Int_t src_y,
-                                   Int_t &dest_x, Int_t &dest_y,
-                                   Window_t &child)
+                                   Int_t & dest_x, Int_t & dest_y,
+                                   Window_t & child)
 {
    // TranslateCoordinates translates coordinates from the frame of
    // reference of one window to another. If the point is contained
@@ -6586,16 +6517,16 @@ void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
 
    HWND sw, dw, ch = NULL;
    POINT point;
-   sw = (HWND)GDK_DRAWABLE_XID((GdkWindow *)src);
-   dw = (HWND)GDK_DRAWABLE_XID((GdkWindow *)dest);
+   sw = (HWND) GDK_DRAWABLE_XID((GdkWindow *) src);
+   dw = (HWND) GDK_DRAWABLE_XID((GdkWindow *) dest);
    point.x = src_x;
    point.y = src_y;
    ::MapWindowPoints(sw,        // handle of window to be mapped from
                    dw,          // handle to window to be mapped to
                    &point,      // pointer to array with points to map
                    1);          // number of structures in array
-   ch = ::ChildWindowFromPointEx(dw, point, CWP_SKIPDISABLED | CWP_SKIPINVISIBLE);
-   child = (Window_t)gdk_xid_table_lookup(ch);
+   ch = ::ChildWindowFromPoint(dw, point);
+   child = (Window_t) gdk_xid_table_lookup(ch);
 
    if (child == src) {
       child = (Window_t) 0;
@@ -6630,10 +6561,10 @@ void TGWin32::FillPolygon(Window_t id, GContext_t gc, Point_t * points,
 }
 
 //______________________________________________________________________________
-void TGWin32::QueryPointer(Window_t id, Window_t &rootw,
-                           Window_t &childw, Int_t &root_x,
-                           Int_t &root_y, Int_t &win_x, Int_t &win_y,
-                           UInt_t &mask)
+void TGWin32::QueryPointer(Window_t id, Window_t & rootw,
+                           Window_t & childw, Int_t & root_x,
+                           Int_t & root_y, Int_t & win_x, Int_t & win_y,
+                           UInt_t & mask)
 {
    // Returns the root window the pointer is logically on and the pointer
    // coordinates relative to the root window's origin.
@@ -6648,18 +6579,19 @@ void TGWin32::QueryPointer(Window_t id, Window_t &rootw,
    UInt_t umask = 0;
    BYTE kbd[256];
 
-   window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
+   window = (HWND) GDK_DRAWABLE_XID((GdkWindow *)id);
    rootw = (Window_t)GDK_ROOT_PARENT();
    ::GetCursorPos(&currPt);
    chw = ::WindowFromPoint(currPt);
+   ::ClientToScreen(window, &mousePt);
+   root_x = mousePt.x;
+   root_y = mousePt.y;
+   sPt.x = mousePt.x;
+   sPt.y = mousePt.y;
+   ::ScreenToClient(window, &sPt);
+   win_x = sPt.x;
+   win_y = sPt.y;
    childw = (Window_t)gdk_xid_table_lookup(chw);
-   root_x = currPt.x;
-   root_y = currPt.y;
-
-   ::ClientToScreen(window, &currPt);
-   win_x = currPt.x;
-   win_y = currPt.y;
-
    ::GetKeyboardState (kbd);
 
    if (kbd[VK_SHIFT] & 0x80) {

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.12 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.11 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -473,16 +473,6 @@ void TDecompQRH::Det(Double_t &d1,Double_t &d2)
   }
   d1 = fDet1;
   d2 = fDet2;
-}
-
-//______________________________________________________________________________
-void TDecompQRH::Print(Option_t *opt) const
-{
-  TDecompBase::Print(opt);
-  fQ.Print("fQ");
-  fR.Print("fR");
-  fUp.Print("fUp");
-  fW.Print("fW");
 }
 
 //______________________________________________________________________________

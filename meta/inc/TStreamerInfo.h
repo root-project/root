@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.50 2004/06/09 16:22:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.48 2004/05/04 15:57:24 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -147,7 +147,6 @@ public:
    Int_t              *GetNewTypes() const {return fNewType;}
    Int_t               GetOffset(const char *) const;
    Int_t              *GetOffsets() const {return fOffset;}
-   Version_t           GetOldVersion() const {return fOldVersion;}
    Int_t               GetSize()    const;
    Int_t               GetSizeElements()    const;
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
@@ -187,7 +186,7 @@ public:
 
    Int_t             WriteBufferAux      (TBuffer &b, char **arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 
-   ClassDef(TStreamerInfo,4)  //Streamer information for one class version
+   ClassDef(TStreamerInfo,3)  //Streamer information for one class version
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.51 2004/07/04 17:48:43 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.46 2004/05/06 16:57:39 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -62,22 +62,19 @@
 
 #include <errno.h>
 
+#include "TNetFile.h"
+#include "TROOT.h"
+#include "TPSocket.h"
+#include "TSystem.h"
+#include "TApplication.h"
+#include "TSysEvtHandler.h"
+#include "TEnv.h"
 #include "Bytes.h"
 #include "NetErrors.h"
-#include "TApplication.h"
-#include "TEnv.h"
-#include "TNetFile.h"
-#include "TPSocket.h"
-#include "TROOT.h"
-#include "TSysEvtHandler.h"
-#include "TSystem.h"
-#include "TTimeStamp.h"
-#include "TVirtualPerfStats.h"
 
 // fgClientProtocol is now in TAuthenticate
 
 ClassImp(TNetFile)
-ClassImp(TNetSystem)
 
 //______________________________________________________________________________
 TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
@@ -107,6 +104,7 @@ TNetFile::~TNetFile()
    // TNetFile dtor. Send close message and close socket.
 
    Close();
+   SafeDelete(fSocket);
 }
 
 //______________________________________________________________________________
@@ -177,8 +175,6 @@ void TNetFile::Close(Option_t *opt)
 
    if (fProtocol > 6)
       fSocket->Send(kROOTD_BYE);
-
-   SafeDelete(fSocket);
 }
 
 //______________________________________________________________________________
@@ -280,9 +276,6 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->Delay();
 
-   Double_t start = 0;
-   if (gPerfStats != 0) start = TTimeStamp();
-
    if (fSocket->Send(Form("%lld %d", fOffset, len), kROOTD_GET) < 0) {
       Error("ReadBuffer", "error sending kROOTD_GET command");
       result = kTRUE;
@@ -318,11 +311,6 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 #endif
 
 end:
-
-   if (gPerfStats != 0) {
-      gPerfStats->FileReadEvent(this, len, double(TTimeStamp())-start);
-   }
-
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->HandleDelayedSignal();
 
@@ -418,17 +406,14 @@ void TNetFile::Seek(Long64_t offset, ERelativeTo pos)
    // Set position from where to start reading.
 
    switch (pos) {
-      case kBeg:
-         fOffset = offset + fArchiveOffset;
-         break;
-      case kCur:
-         fOffset += offset;
-         break;
-      case kEnd:
-         // this option is not used currently in the ROOT code
-         if (fArchiveOffset)
-            Error("Seek", "seeking from end in archive is not (yet) supported");
-         fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
+   case kBeg:
+      fOffset = offset;
+      break;
+   case kCur:
+      fOffset += offset;
+      break;
+   case kEnd:
+      fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
       break;
    }
 }
@@ -604,269 +589,3 @@ zombie:
    SafeDelete(fSocket);
    gDirectory = gROOT;
 }
-
-//
-// TNetSystem: the directory handler for net files
-//
-
-//______________________________________________________________________________
-TNetSystem::TNetSystem() : TSystem("-root", "Net file Helper System")
-{
-   // Create helper class that allows directory access via rootd.
-
-   // name must start with '-' to bypass the TSystem singleton check
-   SetName("root");
-
-   fDir = kFALSE;
-   fDirp = 0;
-   fFTP  = 0;
-   fUser = "";
-   fHost = "";
-}
-
-//______________________________________________________________________________
-TNetSystem::TNetSystem(const char *url) : TSystem("-root", "Net file Helper System")
-{
-   // Create helper class that allows directory access via rootd.
-
-   // name must start with '-' to bypass the TSystem singleton check
-   SetName("root");
-
-   // If we got here protocol must be at least its short form "^root.*:" :
-   // make sure that it is in the full form to avoid problems in TFTP
-   TString surl(url);
-   if (!surl.Contains("://")) {
-      surl.Insert(surl.Index(":")+1,"//");
-   }
-   TUrl turl(surl);
-
-   fDir = kFALSE;
-   fDirp = 0;
-   // Remote username: local as default
-   fUser = turl.GetUser();
-   if (!fUser.Length()) {
-      UserGroup_t *u = gSystem->GetUserInfo();
-      if (u)
-         fUser = u->fUser;
-      delete u;
-   }
-
-   // Check and save the host FQDN ...
-   fHost = turl.GetHost();
-   TInetAddress addr = gSystem->GetHostByName(turl.GetHost());
-   if (addr.IsValid()) {
-      fHost = addr.GetHostName();
-      if (fHost == "UnNamedHost")
-         fHost = addr.GetHostAddress();
-   }
-
-   // Build a TFTP url
-   if (fHost.Length()) {
-      TString eurl = "";
-      // First the protocol
-      if (strlen(turl.GetProtocol())) {
-         eurl = turl.GetProtocol();
-         eurl += "://";
-      } else
-         eurl = "root://";
-      // Add user, if specified
-      if (strlen(turl.GetUser())) {
-         eurl += turl.GetUser();
-         eurl += "@";
-      }
-      // Add host
-      eurl += fHost;
-      // Add port
-      eurl += ":";
-      eurl += turl.GetPort();
-
-      fFTP  = new TFTP(eurl);
-      if (fFTP && fFTP->IsOpen()) {
-         if (fFTP->GetSocket()->GetRemoteProtocol() < 12) {
-            Error("TNetSystem",
-                  "remote daemon does not support 'system' functionality");
-            fFTP->Close();
-            delete fFTP;
-         } else {
-            fUser = fFTP->GetSocket()->GetSecContext()->GetUser();
-            fHost = fFTP->GetSocket()->GetSecContext()->GetHost();
-         }
-      }
-   }
-}
-
-//______________________________________________________________________________
-TNetSystem::~TNetSystem()
-{
-   // Dtor
-
-   // Close FTP connection
-   if (fFTP) {
-      if (fFTP->IsOpen()) {
-
-         // Close remote directory if still open
-         if (fDir) {
-            fFTP->FreeDirectory(kFALSE);
-            fDir = kFALSE;
-         }
-         fFTP->Close();
-      }
-      delete fFTP;
-   }
-
-   fDirp = 0;
-   fFTP  = 0;
-}
-
-//______________________________________________________________________________
-Int_t TNetSystem::MakeDirectory(const char *dir)
-{
-   // Make a directory via rootd.
-
-   if (fFTP && fFTP->IsOpen()) {
-      // Extract the directory name
-      TString edir = TUrl(dir).GetFile();
-      return fFTP->MakeDirectory(edir,kFALSE);
-   }
-   return -1;
-}
-
-//______________________________________________________________________________
-void *TNetSystem::OpenDirectory(const char *dir)
-{
-   // Open a directory via rfiod. Returns an opaque pointer to a dir
-   // structure. Returns 0 in case of error.
-
-   if (!fFTP || !fFTP->IsOpen())
-      return (void *)0;
-
-   if (fDir) {
-      if (gDebug > 0)
-         Info("OpenDirectory", "a directory is already open: close it first");
-      fFTP->FreeDirectory(kFALSE);
-      fDir = kFALSE;
-   }
-
-   // Extract the directory name
-   TString edir = TUrl(dir).GetFile();
-
-   if (fFTP->OpenDirectory(edir,kFALSE)) {
-      fDir = kTRUE;
-      fDirp = (void *)&fDir;
-      return fDirp;
-   } else
-      return (void *)0;
-}
-
-//______________________________________________________________________________
-void TNetSystem::FreeDirectory(void *dirp)
-{
-   // Free directory via rootd.
-
-   if (dirp != fDirp) {
-      Error("GetDirEntry", "invalid directory pointer (should never happen)");
-      return;
-   }
-
-   if (fFTP && fFTP->IsOpen()) {
-      if (fDir) {
-         fFTP->FreeDirectory(kFALSE);
-         fDir = kFALSE;
-         fDirp = 0;
-      }
-   }
-}
-
-//______________________________________________________________________________
-const char *TNetSystem::GetDirEntry(void *dirp)
-{
-   // Get directory entry via rootd. Returns 0 in case no more entries.
-
-   if (dirp != fDirp) {
-      Error("GetDirEntry", "invalid directory pointer (should never happen)");
-      return 0;
-   }
-
-   if (fFTP && fFTP->IsOpen() && fDir) {
-      return fFTP->GetDirEntry(kFALSE);
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TNetSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                               Long_t *flags, Long_t *modtime)
-{
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is 0 for RFIO file
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
-   if (fFTP && fFTP->IsOpen()) {
-      // Extract the directory name
-      TString epath = TUrl(path).GetFile();
-      fFTP->GetPathInfo(epath, id, size, flags, modtime, kFALSE);
-      return 0;
-   }
-   return 1;
-}
-
-//______________________________________________________________________________
-Bool_t TNetSystem::AccessPathName(const char *path, EAccessMode mode)
-{
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
-
-   if (fFTP && fFTP->IsOpen()) {
-      // Extract the directory name
-      TString epath = TUrl(path).GetFile();
-      return fFTP->AccessPathName(epath, mode, kFALSE);
-   }
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
-{
-   // Check consistency of this helper with the one required
-   // by 'path' or 'dirptr'.
-
-   // Standard check: only the protocol part of 'path' is required
-   // to match
-   Bool_t checkstd = TSystem::ConsistentWith(path,dirptr);
-
-   // Require match of 'user' and 'host'
-   Bool_t checknet = kFALSE;
-   if (path && strlen(path)) {
-
-      TUrl url(path);
-      TString user = url.GetUser();
-      if (!user.Length()) {
-         UserGroup_t *u = gSystem->GetUserInfo();
-         if (u)
-            user = u->fUser;
-         delete u;
-      }
-
-      TString host = url.GetHost();
-      TInetAddress addr = gSystem->GetHostByName(host);
-      if (addr.IsValid()) {
-         host = addr.GetHostName();
-         if (host == "UnNamedHost")
-            host = addr.GetHostAddress();
-      }
-
-      if (user == fUser && host == fHost )
-         checknet = kTRUE;
-   }
-
-   return (checkstd && checknet);
-}
-

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.27 2004/06/01 06:16:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.26 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 //   TMatrixDColumn_const     TMatrixDColumn                            //
 //   TMatrixDDiag_const       TMatrixDDiag                              //
 //   TMatrixDFlat_const       TMatrixDFlat                              //
-//   TMatrixDSub_const        TMatrixDSub                               //
 //   TMatrixDSparseRow_const  TMatrixDSparseRow                         //
 //   TMatrixDSparseDiag_const TMatrixDSparseDiag                        //
 //                                                                      //
@@ -118,14 +117,12 @@ public:
   TMatrixDRow_const(const TMatrixD    &matrix,Int_t row);
   TMatrixDRow_const(const TMatrixDSym &matrix,Int_t row);
 
-  inline const TMatrixDBase *GetMatrix  () const { return fMatrix; }
-  inline       Int_t         GetRowIndex() const { return fRowInd; }
-  inline       Int_t         GetInc     () const { return fInc; }
-  inline const Double_t     *GetPtr     () const { return fPtr; }
-  inline const Double_t     &operator   ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                            const Int_t acoln = i-fMatrix->GetColLwb();
-                                                            Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                                            return fPtr[acoln]; }
+  inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
+  inline const Double_t     *GetPtr   () const { return fPtr; }
+  inline       Int_t         GetInc   () const { return fInc; }
+  inline const Double_t     &operator ()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
+                                                          Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                                          return fPtr[acoln]; }
   inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDRow_const *)this)(i); }
 
   ClassDef(TMatrixDRow_const,0)  // One row of a dense matrix (double precision)
@@ -141,12 +138,10 @@ public:
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
-  inline const Double_t &operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     const Int_t acoln = i-fMatrix->GetColLwb();
+  inline const Double_t &operator()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
                                                      Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
                                                      return fPtr[acoln]; }
-  inline       Double_t &operator()(Int_t i)       { Assert(fMatrix->IsValid());
-                                                     const Int_t acoln = i-fMatrix->GetColLwb();
+  inline       Double_t &operator()(Int_t i)       { const Int_t acoln = i-fMatrix->GetColLwb();
                                                      Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
                                                      return (const_cast<Double_t *>(fPtr))[acoln]; }
   inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDRow *)this)(i); }
@@ -157,7 +152,7 @@ public:
   void operator*=(Double_t val);
 
   void operator=(const TMatrixDRow_const &r);
-  void operator=(const TMatrixDRow       &r) { operator=((TMatrixDRow_const &)r); }
+  void operator=(const TMatrixDRow       &r);
   void operator=(const TVectorD          &vec);
 
   void operator+=(const TMatrixDRow_const &r);
@@ -187,14 +182,12 @@ public:
   TMatrixDColumn_const(const TMatrixD    &matrix,Int_t col);
   TMatrixDColumn_const(const TMatrixDSym &matrix,Int_t col);
 
-  inline const TMatrixDBase *GetMatrix  () const { return fMatrix; }
-  inline       Int_t         GetColIndex() const { return fColInd; }
-  inline       Int_t         GetInc     () const { return fInc; }
-  inline const Double_t     *GetPtr     () const { return fPtr; }
-  inline const Double_t     &operator   ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                            const Int_t arown = i-fMatrix->GetRowLwb();
-                                                            Assert(arown < fMatrix->GetNrows() && arown >= 0);
-                                                            return fPtr[arown*fInc]; }
+  inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
+  inline const Double_t     *GetPtr   () const { return fPtr; }
+  inline       Int_t         GetInc   () const { return fInc; }
+  inline const Double_t     &operator ()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb();
+                                                          Assert(arown < fMatrix->GetNrows() && arown >= 0);
+                                                          return fPtr[arown*fInc]; }
   inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDColumn_const *)this)(i); }
 
   ClassDef(TMatrixDColumn_const,0)  // One column of a dense matrix (double precision)
@@ -210,12 +203,10 @@ public:
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
-  inline const Double_t &operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     const Int_t arown = i-fMatrix->GetRowLwb();
+  inline const Double_t &operator()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb();
                                                      Assert(arown < fMatrix->GetNrows() && arown >= 0);
                                                      return fPtr[arown]; }
-  inline       Double_t &operator()(Int_t i)       { Assert(fMatrix->IsValid());
-                                                     const Int_t arown = i-fMatrix->GetRowLwb();
+  inline       Double_t &operator()(Int_t i)       { const Int_t arown = i-fMatrix->GetRowLwb();
                                                      Assert(arown < fMatrix->GetNrows() && arown >= 0);
                                                      return (const_cast<Double_t *>(fPtr))[arown*fInc]; }
   inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDColumn *)this)(i); }
@@ -226,7 +217,7 @@ public:
   void operator*=(Double_t val);
 
   void operator=(const TMatrixDColumn_const &c);
-  void operator=(const TMatrixDColumn       &c) { operator=((TMatrixDColumn_const &)c); }
+  void operator=(const TMatrixDColumn       &c);
   void operator=(const TVectorD             &vec);
 
   void operator+=(const TMatrixDColumn_const &c);
@@ -259,8 +250,7 @@ public:
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
   inline       Int_t         GetInc   () const { return fInc; }
-  inline const Double_t     &operator ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                          Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
+  inline const Double_t     &operator ()(Int_t i) const { Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
   inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDDiag_const *)this)(i); }
 
   Int_t GetNdiags() const { return fNdiag; }
@@ -278,10 +268,8 @@ public:
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
-  inline const Double_t &operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
-  inline       Double_t &operator()(Int_t i)       { Assert(fMatrix->IsValid());
-                                                     Assert(i < fNdiag && i >= 0);
+  inline const Double_t &operator()(Int_t i) const { Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
+  inline       Double_t &operator()(Int_t i)       { Assert(i < fNdiag && i >= 0);
                                                      return (const_cast<Double_t *>(fPtr))[i*fInc]; }
   inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDDiag *)this)(i); }
   inline       Double_t &operator[](Int_t i)       { return (*(      TMatrixDDiag *)this)(i); }
@@ -291,7 +279,7 @@ public:
   void operator*=(Double_t val);
 
   void operator=(const TMatrixDDiag_const &d);
-  void operator=(const TMatrixDDiag       &d) { operator=((TMatrixDDiag_const &)d); }
+  void operator=(const TMatrixDDiag       &d);
   void operator=(const TVectorD           &vec);
 
   void operator+=(const TMatrixDDiag_const &d);
@@ -316,14 +304,13 @@ protected:
   const Double_t     *fPtr;     //  pointer to the a[0,0]
 
 public:
-  TMatrixDFlat_const() { fMatrix = 0; fNelems = 0; fPtr = 0; }
+  TMatrixDFlat_const() { fMatrix = 0; fPtr = 0; }
   TMatrixDFlat_const(const TMatrixD    &matrix);
   TMatrixDFlat_const(const TMatrixDSym &matrix);
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
-  inline const Double_t     &operator ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                          Assert(i >=0 && i < fNelems); return fPtr[i]; }
+  inline const Double_t     &operator ()(Int_t i) const { Assert(i >=0 && i < fNelems); return fPtr[i]; }
   inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDFlat_const *)this)(i); }
 
   ClassDef(TMatrixDFlat_const,0)  // Flat representation of a dense matrix
@@ -339,10 +326,8 @@ public:
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
-  inline const Double_t &operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     Assert(i >=0 && i < fNelems); return fPtr[i]; }
-  inline       Double_t &operator()(Int_t i)       { Assert(fMatrix->IsValid());
-                                                     Assert(i >=0 && i < fNelems);
+  inline const Double_t &operator()(Int_t i) const { Assert(i >=0 && i < fNelems); return fPtr[i]; }
+  inline       Double_t &operator()(Int_t i)       { Assert(i >=0 && i < fNelems);
                                                      return (const_cast<Double_t *>(fPtr))[i]; }
   inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDFlat *)this)(i); }
   inline       Double_t &operator[](Int_t i)       { return (*(      TMatrixDFlat *)this)(i); }
@@ -352,86 +337,13 @@ public:
   void operator*=(Double_t val);
 
   void operator=(const TMatrixDFlat_const &f);
-  void operator=(const TMatrixDFlat       &f) { operator=((TMatrixDFlat_const &)f); }
+  void operator=(const TMatrixDFlat       &f);
   void operator=(const TVectorD           &vec);
 
   void operator+=(const TMatrixDFlat_const &f);
   void operator*=(const TMatrixDFlat_const &f);
 
   ClassDef(TMatrixDFlat,0)  // Flat representation of a dense matrix
-};
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixDSub_const                                                    //
-//                                                                      //
-// Class represents a sub matrix of a TMatrixDBase                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TMatrixDSub_const {
-
-protected:
-  const TMatrixDBase *fMatrix;    //  the matrix I am a submatrix of
-        Int_t         fRowOff;    //
-        Int_t         fColOff;    //
-        Int_t         fNrowsSub;  //
-        Int_t         fNcolsSub;  //
-
-  enum {kWorkMax = 100};
-
-public:
-  TMatrixDSub_const() { fRowOff = fColOff = fNrowsSub = fNcolsSub = 0; fMatrix = 0; }
-  TMatrixDSub_const(const TMatrixD    &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-  TMatrixDSub_const(const TMatrixDSym &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-
-  inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
-  inline       Int_t         GetRowOff() const { return fRowOff; }
-  inline       Int_t         GetColOff() const { return fColOff; }
-  inline       Int_t         GetNrows () const { return fNrowsSub; }
-  inline       Int_t         GetNcols () const { return fNcolsSub; }
-  inline const Double_t     &operator ()(Int_t rown,Int_t coln) const
-                                                    { Assert(fMatrix->IsValid());
-                                                      Assert(rown < fNrowsSub && rown >= 0);
-                                                      Assert(coln < fNcolsSub && coln >= 0);
-                                                      const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fColOff;
-                                                      const Double_t *ptr = fMatrix->GetMatrixArray();
-                                                      return ptr[index]; }
-
-  ClassDef(TMatrixDSub_const,0)  // sub matrix (double precision)
-};
-
-class TMatrixDSub : public TMatrixDSub_const {
-
-public:
-  TMatrixDSub() {}
-  TMatrixDSub(TMatrixD    &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-  TMatrixDSub(TMatrixDSym &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-  TMatrixDSub(const TMatrixDSub &ms);
-
-  inline       Double_t &operator()(Int_t rown,Int_t coln)
-                                                    { Assert(fMatrix->IsValid());
-                                                      Assert(rown < fNrowsSub && rown >= 0);
-                                                      Assert(coln < fNcolsSub && coln >= 0);
-                                                      const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fColOff;
-                                                      const Double_t *ptr = fMatrix->GetMatrixArray();
-                                                      return (const_cast<Double_t *>(ptr))[index]; }
-
-  void operator= (Double_t val);
-  void operator+=(Double_t val);
-  void operator*=(Double_t val);
-
-  void operator=(const TMatrixDSub_const &s);
-  void operator=(const TMatrixDSub       &s) { operator=((TMatrixDSub_const &)s); }
-  void operator=(const TMatrixDBase      &m);
-
-  void operator+=(const TMatrixDSub_const &s);
-  void operator*=(const TMatrixDSub_const &s);
-  void operator+=(const TMatrixDBase      &m);
-  void operator*=(const TMatrixD          &m);
-  void operator*=(const TMatrixDSym       &m);
-
-  ClassDef(TMatrixDSub,0)  // sub matrix (double precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -463,8 +375,7 @@ public:
   inline       Int_t         GetRowIndex() const { return fRowInd; }
   inline       Int_t         GetNindex  () const { return fNindex; }
 
-  inline Double_t operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                              const Int_t acoln = i-fMatrix->GetColLwb();
+  inline Double_t operator()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
                                               Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
                                               const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
                                               if (index >= 0 && fColPtr[index] == acoln) return fDataPtr[index];
@@ -483,8 +394,7 @@ public:
 
   inline Double_t *GetDataPtr() const { return const_cast<Double_t *>(fDataPtr); }
 
-  inline Double_t  operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                               const Int_t acoln = i-fMatrix->GetColLwb();
+  inline Double_t  operator()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
                                                Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
                                                const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
                                                if (index >= 0 && fColPtr[index] == acoln) return fDataPtr[index];
@@ -498,7 +408,7 @@ public:
   void operator*=(Double_t val);
 
   void operator=(const TMatrixDSparseRow_const &r);
-  void operator=(const TMatrixDSparseRow       &r) { operator=((TMatrixDSparseRow_const &)r); }
+  void operator=(const TMatrixDSparseRow       &r);
   void operator=(const TVectorD                &vec);
 
   void operator+=(const TMatrixDSparseRow_const &r);
@@ -530,8 +440,7 @@ public:
   inline const Double_t     *GetDataPtr() const { return fDataPtr; }
   inline       Int_t         GetNdiags () const { return fNdiag; }
 
-  inline Double_t operator ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                               Assert(i < fNdiag && i >= 0);
+  inline Double_t operator ()(Int_t i) const { Assert(i < fNdiag && i >= 0);
                                                const Int_t    * const pR = fMatrix->GetRowIndexArray();
                                                const Int_t    * const pC = fMatrix->GetColIndexArray();
                                                const Double_t * const pD = fMatrix->GetMatrixArray();
@@ -555,8 +464,7 @@ public:
 
   inline Double_t *GetDataPtr() const { return const_cast<Double_t *>(fDataPtr); }
   
-  inline       Double_t  operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     Assert(i < fNdiag && i >= 0);
+  inline       Double_t  operator()(Int_t i) const { Assert(i < fNdiag && i >= 0);
                                                      const Int_t    * const pR = fMatrix->GetRowIndexArray();
                                                      const Int_t    * const pC = fMatrix->GetColIndexArray();
                                                      const Double_t * const pD = fMatrix->GetMatrixArray();
@@ -567,14 +475,14 @@ public:
                                                      else                                   return 0.0; }
                Double_t &operator()(Int_t i);
   inline       Double_t  operator[](Int_t i) const { return (*(const TMatrixDSparseDiag *)this)(i); }
-  inline       Double_t &operator[](Int_t i)       { return (*(TMatrixDSparseDiag *)this)(i); }
+  inline       Double_t &operator[](Int_t i)       { return (Double_t&)((*(TMatrixDSparseDiag *)this)(i)); }
 
   void operator= (Double_t val);
   void operator+=(Double_t val);
   void operator*=(Double_t val);
 
   void operator=(const TMatrixDSparseDiag_const &d);
-  void operator=(const TMatrixDSparseDiag       &d) { operator=((TMatrixDSparseDiag_const &)d); }
+  void operator=(const TMatrixDSparseDiag       &d);
   void operator=(const TVectorD                 &vec);
 
   void operator+=(const TMatrixDSparseDiag_const &d);

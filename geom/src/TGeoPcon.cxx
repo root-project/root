@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.27 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.26 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -674,9 +674,19 @@ void TGeoPcon::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
+   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintPcon(this, option);
 }
 
+//_____________________________________________________________________________
+void TGeoPcon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintPcon(this, option, glmat);
+}
 //_____________________________________________________________________________
 Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double_t safmin) const
 {

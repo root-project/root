@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.23 2004/07/06 13:53:48 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.21 2004/02/02 15:32:57 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1486,7 +1486,11 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
    TString newPath;
    str << originalPath;
 
-   while (str.good())
+#ifndef WIN32
+   while (str)
+#else
+   while (1)
+#endif
    {
       dir = "";
       dir.ReadToDelim(str, kDelim);

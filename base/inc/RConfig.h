@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.74 2004/06/04 16:28:30 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.73 2004/06/04 00:39:37 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -94,7 +94,6 @@
 #      endif
 #      if defined __GNUC__
 #         define R__NAMESPACE_TEMPLATE_IMP_BUG
-#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #      else
 #         define R__TEMPLATE_OVERLOAD_BUG
 #      endif

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.13 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.12 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -106,7 +106,7 @@ public:
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
-   virtual void   SetFocus() { RequestFocus(); }
+   virtual void   SetFocus();
 
    TGLongPosition GetCurrentPos() const { return fCurrent; }
    virtual Long_t ReturnLongestLineWidth();

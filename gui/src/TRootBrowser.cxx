@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.55 2004/07/07 10:17:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.51 2004/02/05 12:49:24 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -35,7 +35,6 @@
 #include "TGFSContainer.h"
 #include "TGMimeTypes.h"
 #include "TRootHelpDialog.h"
-#include "TGTextEntry.h"
 
 #include "TROOT.h"
 #include "TEnv.h"
@@ -52,7 +51,7 @@
 #include "TInterpreter.h"
 
 #include "HelpText.h"
-
+#include "TGFrame.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -605,7 +604,7 @@ void TRootIconBox::Refresh()
    Sort(fSortType);
 
    // Make TRootBrowser display total objects in status bar
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
+   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),fTotal, fSelected);
 
    MapSubwindows();
 }
@@ -661,7 +660,6 @@ TRootBrowser::~TRootBrowser()
    delete fToolBarSep;
    delete fToolBar;
    delete fFSComboBox;
-   delete fDrawOption;
    delete fStatusBar;
    delete fV1;
    delete fV2;
@@ -812,20 +810,6 @@ void TRootBrowser::CreateBrowser(const char *name)
       fToolBar->AddButton(this, &gToolBarData[i], spacing);
       spacing = 0;
    }
-   fDrawOption = new TGComboBox(fToolBar, "");
-   fDrawOption->GetTextEntry()->SetToolTipText("Object Draw Option", 300);
-   fDrawOption->Resize(80, 10);
-   Int_t dropt = 1;
-   fDrawOption->AddEntry("", dropt++);
-   fDrawOption->AddEntry("same", dropt++);
-   fDrawOption->AddEntry("box", dropt++);
-   fDrawOption->AddEntry("lego", dropt++);
-   fDrawOption->AddEntry("colz", dropt++);
-   fDrawOption->AddEntry("alp", dropt++);
-
-   fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsCenterY | kLHintsRight | kLHintsExpandY,2,2,2,0));
-   fToolBar->AddFrame(new TGLabel(fToolBar,"Option"), 
-                      new TGLayoutHints(kLHintsCenterY | kLHintsRight, 2,2,2,0));
 
    fBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
    AddFrame(fToolBarSep, fBarLayout);
@@ -994,38 +978,10 @@ void TRootBrowser::BrowseObj(TObject *obj)
 
    Emit("BrowseObj(TObject*)", (Long_t)obj);
    fIconBox->RemoveAll();
-
    obj->Browse(fBrowser);
    fIconBox->Refresh();
    if (fBrowser)
       fBrowser->SetRefreshFlag(kFALSE);
-
-   UpdateDrawOption();
-}
-
-//______________________________________________________________________________
-void TRootBrowser::UpdateDrawOption()
-{
-   // add new draw option to the "history"
- 
-   TString opt = GetDrawOption();
-   TGListBox *lb = fDrawOption->GetListBox();
-   TGLBContainer *lbc = (TGLBContainer *)lb->GetContainer();
-
-   TIter next(lbc->GetList());
-   TGFrameElement *el;
-   Bool_t newopt = kTRUE;
-
-   while ((el = (TGFrameElement *)next())) {
-      TGTextLBEntry *lbe = (TGTextLBEntry *)el->fFrame;
-      if (lbe->GetText()->GetString() == opt) {
-         newopt = kFALSE;
-         break;
-      }
-   }
-   if (newopt) {
-      fDrawOption->AddEntry(opt.Data(), fDrawOption->GetNumberOfEntries() + 1);
-   } 
 }
 
 //______________________________________________________________________________
@@ -1102,7 +1058,6 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
    // Emits signal "ExecuteDefaultAction(TObject*)".
 
    char action[512];
-   fBrowser->SetDrawOption(GetDrawOption());
 
    // Special case for file system objects...
    if (obj->IsA() == TSystemFile::Class()) {
@@ -1598,21 +1553,6 @@ void TRootBrowser::ToUpSystemDirectory()
    return;
 }
 
-//______________________________________________________________________________
-void TRootBrowser::SetDrawOption(Option_t *option)
-{
-   // sets drawing option
- 
-   fDrawOption->GetTextEntry()->SetText(option);
-}
-
-//______________________________________________________________________________
-Option_t *TRootBrowser::GetDrawOption() const
-{
-   // returns drawing option
- 
-   return fDrawOption->GetTextEntry()->GetText();
-}
 //______________________________________________________________________________
 void TRootBrowser::DoubleClicked(TObject *obj)
 {

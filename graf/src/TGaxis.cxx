@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.71 2004/06/16 08:23:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.67 2004/04/26 08:25:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -313,7 +313,6 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetBit(TAxis::kTickPlus,      axis->TestBit(TAxis::kTickPlus));
    SetBit(TAxis::kTickMinus,     axis->TestBit(TAxis::kTickMinus));
    SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
-   if (axis->GetDecimals())      SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2   
    SetTimeFormat(axis->GetTimeFormat());
 }
 
@@ -326,26 +325,7 @@ void TGaxis::Paint(Option_t *)
    Double_t wmin = fWmin;
    Double_t wmax = fWmax;
    Int_t    ndiv = fNdiv;
-   
-   // following code required to support toggle of lin/log scales
-   Double_t x1 = gPad->XtoPad(fX1);
-   Double_t y1 = gPad->YtoPad(fY1);
-   Double_t x2 = gPad->XtoPad(fX2);
-   Double_t y2 = gPad->YtoPad(fY2);
-   TString opt = fChopt;
-   opt.ToUpper();
-   if (gPad->GetLogx()) {
-	   if ((y1 == y2) && !opt.Contains("G")) opt += "G";
-   } else {
-	   if ((y1 == y2) && opt.Contains("G")) opt.ReplaceAll("G","");
-   }
-   if (gPad->GetLogy()) {
-	   if ((x1 == x2) && !opt.Contains("G")) opt += "G";
-   } else {
-	   if ((x1 == x2) && opt.Contains("G")) opt.ReplaceAll("G","");
-   }
-
-	PaintAxis(x1,y1,x2,y2,wmin,wmax,ndiv,opt.Data(),fGridLength);
+   PaintAxis(fX1,fY1,fX2,fY2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
 }
 //______________________________________________________________________________
 void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
@@ -435,11 +415,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //
 //   Blank characters are stripped, and then the
 //   label is correctly aligned. the dot, if last
-//   character of the string, is also stripped,
-//   unless the option "." (a dot, or period) is specified.
-//   if SetDecimals(kTRUE) has been called (bit TAxis::kDecimals set).
-//   all labels have the same number of decimals after the "."
-//   The same is true if gStyle->SetStripDecimals(kFALSE) has been called.
+//   character of the string, is also stripped.
 //
 //   In the following, we have some parameters, like
 //   tick marks length and characters height (in percentage
@@ -524,7 +500,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t LNLEN = 0;
    Int_t IEXE, IF1, IF2, NA, NF, IH1, IH2, NBININ, NCH, KMOD;
    Int_t OptionLog,OptionBlank,OptionVert,OptionPlus,OptionMinus,OptionUnlab,OptionPara;
-   Int_t OptionDown,OptionRight,OptionLeft,OptionCent,OptionEqual,OptionDecimals=0,OptionDot;
+   Int_t OptionDown,OptionRight,OptionLeft,OptionCent,OptionEqual,OptionDot;
    Int_t OptionY,OptionText,OptionGrid,OptionSize,OptionNoopt,OptionInt,OptionM,OptionUp,OptionX;
    Int_t OptionTime;
    Int_t first,last,labelnumber;
@@ -588,6 +564,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if(strchr(chopt,'L')) OptionLeft = 1;  else OptionLeft = 0;
    if(strchr(chopt,'C')) OptionCent = 1;  else OptionCent = 0;
    if(strchr(chopt,'=')) OptionEqual= 1;  else OptionEqual= 0;
+   if(strchr(chopt,'.')) OptionDot  = 1;  else OptionDot  = 0;
    if(strchr(chopt,'Y')) OptionY    = 1;  else OptionY    = 0;
    if(strchr(chopt,'T')) OptionText = 1;  else OptionText = 0;
    if(strchr(chopt,'W')) OptionGrid = 1;  else OptionGrid = 0;
@@ -598,12 +575,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if(strchr(chopt,'0')) OptionUp   = 1;  else OptionUp   = 0;
    if(strchr(chopt,'X')) OptionX    = 1;  else OptionX    = 0;
    if(strchr(chopt,'t')) OptionTime = 1;  else OptionTime = 0;
-   if(strchr(chopt,'.')) OptionDot  = 1;  else OptionDot  = 0;
-   if (TestBit(TAxis::kTickPlus))     OptionPlus  = 2;
-   if (TestBit(TAxis::kTickMinus))    OptionMinus = 2;
-   if (TestBit(TAxis::kCenterLabels)) OptionM     = 1;
-   if (TestBit(TAxis::kDecimals))     OptionDecimals = 1;
-   if (!gStyle->GetStripDecimals())   OptionDecimals = 1;
+   if (TestBit(TAxis::kTickPlus))  OptionPlus  = 2;
+   if (TestBit(TAxis::kTickMinus)) OptionMinus = 2;
+   if (TestBit(TAxis::kCenterLabels)) OptionM = 1;
    if (fAxis) {
       if (fAxis->GetLabels()) {
          OptionM    = 1;
@@ -1365,7 +1339,7 @@ L110:
 
             sprintf(CHTEMP,"%g",DWlabel);
             Int_t ndecimals = 0;
-            if (OptionDecimals) {
+            if (!gStyle->GetStripDecimals()) {
                char *dot = strchr(CHTEMP,'.');
                if (dot) ndecimals = CHTEMP + strlen(CHTEMP) -dot;
             }
@@ -1880,20 +1854,6 @@ void TGaxis::SavePrimitive(ofstream &out, Option_t *)
    }
    
    out<<"   gaxis->Draw();"<<endl;
-}
-
-//______________________________________________________________________________
-void TGaxis::SetDecimals(Bool_t dot)
-{
-// Set the Decimals flag
-// By default, blank characters are stripped, and then the
-// label is correctly aligned. The dot, if last character of the string, 
-// is also stripped, unless this option is specified.
-// One can disable the option by calling axis.SetDecimals(kTRUE).
-// Note the bit is set in fBits (as opposed to fBits2 in TAxis!)
-
-   if (dot) SetBit(TAxis::kDecimals);
-   else     ResetBit(TAxis::kDecimals);
 }
 
 //______________________________________________________________________________

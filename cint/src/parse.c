@@ -608,35 +608,6 @@ int G__IsFundamentalDecl()
   else {
     tagnum = G__defined_tagname(typename,1);
     if(-1!=tagnum) result = 0;
-#ifndef G__OLDIMPLEMENTATION2072
-    else {
-      int typenum = G__defined_typename(typename);	
-      if(-1!=typenum) {
-	switch(G__newtype.type[typenum]) {
-	case 'c':
-	case 's':
-	case 'i':
-	case 'l':
-	case 'b':
-	case 'r':
-	case 'h':
-	case 'k':
-	  result=1;
-	  break;
-        default:
-	  result=0;
-	}
-      }
-      else {
-        if(strcmp(typename,"unsigned")==0 ||
-           strcmp(typename,"char")==0 ||
-           strcmp(typename,"short")==0 ||
-           strcmp(typename,"int")==0 ||
-           strcmp(typename,"long")==0) result=1;
-        else result=0;
-      }
-    }
-#endif
   }
 
   /* restore file position */

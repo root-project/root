@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.24 2004/07/06 10:57:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.20 2003/12/11 16:26:11 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -61,8 +61,6 @@ enum EMenuEntryType {
 
 
 class TGPopupMenu;
-class TGMenuBar;
-class TGMenuTitle;
 class TTimer;
 
 
@@ -98,7 +96,6 @@ public:
    const char    *GetName() const { return fLabel ? fLabel->GetString() : 0; }
    virtual Int_t  GetStatus() const { return fStatus; }
    EMenuEntryType GetType() const { return fType; }
-   TGPopupMenu   *GetPopup() const { return fPopup; }
 
    ClassDef(TGMenuEntry,0);
 };
@@ -116,7 +113,6 @@ public:
 class TGPopupMenu : public TGFrame {
 
 friend class TGMenuTitle;
-friend class TGMenuBar;
 
 protected:
    TList             *fEntryList;     // list of menu entries
@@ -135,7 +131,6 @@ protected:
    FontStruct_t       fHifontStruct;  // font to draw highlighted entries
    Cursor_t           fDefaultCursor; // right pointing cursor
    const TGWindow    *fMsgWindow;     // window which handles menu events
-   TGMenuBar         *fMenuBar;       // menu bar (if any)
 
    static const TGFont *fgDefaultFont;
    static const TGFont *fgHilightFont;
@@ -146,6 +141,7 @@ protected:
    void DrawTrianglePattern(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawRCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
+   virtual void Activate(TGMenuEntry *entry);
    virtual void DoRedraw();
    virtual void DrawEntry(TGMenuEntry *entry);
    virtual void Reposition();
@@ -191,7 +187,6 @@ public:
    virtual void   DeleteEntry(Int_t id);
    virtual void   DeleteEntry(TGMenuEntry *entry);
    virtual TGMenuEntry *GetEntry(Int_t id);
-   virtual TGMenuEntry *GetCurrent() const { return fCurrent; }
    virtual TGMenuEntry *GetEntry(const char *s);
    const TList    *GetListOfEntries() const { return fEntryList; }
    virtual void    DrawBorder();
@@ -200,15 +195,12 @@ public:
    virtual Bool_t  HandleCrossing(Event_t *event);
    virtual Bool_t  HandleTimer(TTimer *t);
    virtual void    Associate(const TGWindow *w) { fMsgWindow = w; }
-   virtual void    SetMenuBar(TGMenuBar *bar) { fMenuBar = bar; }
-   TGMenuBar  *GetMenuBar() const {  return fMenuBar; }
 
    virtual void PoppedUp() { Emit("PoppedUp()"); }  //*SIGNAL
    virtual void PoppedDown() { Emit("PoppedDown()"); }  //*SIGNAL
    virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
    virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
    virtual void Activate(Bool_t) { }
-   virtual void Activate(TGMenuEntry *entry);
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGPopupMenu,0)  // Popup menu
@@ -276,21 +268,15 @@ public:
 
 class TGMenuBar : public TGHorizontalFrame {
 
-friend class TGPopupMenu;
-
 protected:
    TGMenuTitle  *fCurrent;       // current menu title
    TList        *fTitles;        // list of menu titles
    Cursor_t      fDefaultCursor; // right pointing cursor
    Bool_t        fStick;         // stick mode (popup menu stays sticked on screen)
    TList        *fTrash;         // garbage
-   Bool_t        fKeyNavigate;   // kTRUE if arrow key navigation is on
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
-
-   virtual void BindKeys(Bool_t on = kTRUE);
-   virtual void BindHotKey(Int_t keycode, Bool_t on = kTRUE);
 
 public:
    TGMenuBar(const TGWindow *p, UInt_t w = 60, UInt_t h = 20,

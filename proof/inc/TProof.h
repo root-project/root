@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.44 2004/05/30 23:14:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.43 2004/04/29 23:43:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -79,20 +79,6 @@ const char* const kPROOF_CacheLockFile   = "/tmp/proof-cache-lock-";   // cache 
 const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // package lock file
 
 
-class TSlaveInfo : public TObject {
-public:
-   Int_t    fOrdinal;      //slave ordinal
-   TString  fHostName;     //hostname this slave is running on
-   Int_t    fPerfIndex;    //relative performance of this slave
-
-   TSlaveInfo(Int_t ordinal = 0, const char *host = "", Int_t perfidx = 0)
-      : fOrdinal(ordinal), fHostName(host), fPerfIndex(perfidx) {}
-
-   void Print(Option_t *option="") const;
-   ClassDef(TSlaveInfo,1) //basic info on slave
-};
-
-
 class TProof : public TVirtualProof {
 
 friend class TProofServ;
@@ -106,37 +92,36 @@ friend class TPacketizer2;
 friend class TCondor;
 
 private:
-   Bool_t          fValid;          //is this a valid proof object
-   TString         fMaster;         //name of master server (use "" if this is a master)
-   TString         fConfDir;        //directory containing cluster config information
-   TString         fConfFile;       //file containing config information
-   TString         fWorkDir;        //current work directory on remote servers
-   TString         fUser;           //user under which to run
-   TString         fImage;          //master's image name
-   TString         fUrlProtocol;    //net protocol name
-   Int_t           fPort;           //port we are connected to (proofd = 1093)
-   TSecContext    *fSecContext;     //SecContext of the related authentication
-   Int_t           fProtocol;       //remote PROOF server protocol version number
-   Int_t           fLogLevel;       //server debug logging level
-   Int_t           fStatus;         //remote return status (part of kPROOF_LOGDONE)
-   Int_t           fParallel;       //number of active slaves (only set on client, on server use fActiveSlaves)
-   TList          *fSlaveInfo;      //!list returned by kPROOF_GETSLAVEINFO
-   Bool_t          fMasterServ;     //true if we are a master server
-   Bool_t          fSendGroupView;  //if true send new group view
-   TList          *fSlaves;         //list of all slave servers as in config file
-   TList          *fActiveSlaves;   //list of active slaves (subset of all slaves)
-   TList          *fUniqueSlaves;   //list of all active slaves with unique file systems
-   TList          *fBadSlaves;      //dead slaves (subset of all slaves)
-   TMonitor       *fAllMonitor;     //monitor activity on all valid slave sockets
-   TMonitor       *fActiveMonitor;  //monitor activity on all active slave sockets
-   TMonitor       *fUniqueMonitor;  //monitor activity on all unique slave sockets
-   Double_t        fBytesRead;      //bytes read by all slaves during the session
-   Float_t         fRealTime;       //realtime spent by all slaves during the session
-   Float_t         fCpuTime;        //CPU time spent by all slaves during the session
+   Bool_t    fValid;         //is this a valid proof object
+   TString   fMaster;        //name of master server (use "" if this is a master)
+   TString   fConfDir;       //directory containing cluster config information
+   TString   fConfFile;      //file containing config information
+   TString   fWorkDir;       //current work directory on remote servers
+   TString   fUser;          //user under which to run
+   TString   fImage;         //master's image name
+   TString   fUrlProt;       //net protocol name
+   Int_t     fPort;          //port we are connected to (proofd = 1093)
+   TSecContext *fSecContext; //SecContext of the related authentication
+   Int_t     fProtocol;      //remote PROOF server protocol version number
+   Int_t     fLogLevel;      //server debug logging level
+   Int_t     fStatus;        //remote return status (part of kPROOF_LOGDONE)
+   Int_t     fParallel;      //number of active slaves (only set on client, on server use fActiveSlaves)
+   Bool_t    fMasterServ;    //true if we are a master server
+   Bool_t    fSendGroupView; //if true send new group view
+   TList    *fSlaves;        //list of all slave servers as in config file
+   TList    *fActiveSlaves;  //list of active slaves (subset of all slaves)
+   TList    *fUniqueSlaves;  //list of all active slaves with unique file systems
+   TList    *fBadSlaves;     //dead slaves (subset of all slaves)
+   TMonitor *fAllMonitor;    //monitor activity on all valid slave sockets
+   TMonitor *fActiveMonitor; //monitor activity on all active slave sockets
+   TMonitor *fUniqueMonitor; //monitor activity on all unique slave sockets
+   Double_t  fBytesRead;     //bytes read by all slaves during the session
+   Float_t   fRealTime;      //realtime spent by all slaves during the session
+   Float_t   fCpuTime;       //CPU time spent by all slaves during the session
    TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
-   TPluginHandler *fProgressDialog; //progress dialog plugin
+   TPluginHandler *fProgressDialog; // progress dialog plugin
    TProofPlayer   *fPlayer;         //current player
-   TCondor  *fCondor;               //proxy for our Condor pool
+   TCondor  *fCondor;        //proxy for our Condor pool
    struct MD5Mod_t {
       TMD5   fMD5;              //file's md5
       Long_t fModtime;          //file's modification time
@@ -247,7 +232,7 @@ public:
    const char *GetUser() const { return fUser; }
    const char *GetWorkDir() const { return fWorkDir; }
    const char *GetImage() const { return fImage; }
-   const char *GetUrlProtocol() const { return fUrlProtocol; }
+   const char *GetUrlProt() const { return fUrlProt; }
    Int_t       GetPort() const { return fPort; }
    Int_t       GetSecurity() const { return fSecContext->GetMethod(); }
    Int_t       GetRemoteProtocol() const { return fProtocol; }
@@ -255,7 +240,6 @@ public:
    Int_t       GetStatus() const { return fStatus; }
    Int_t       GetLogLevel() const { return fLogLevel; }
    Int_t       GetParallel() const;
-   TList      *GetSlaveInfo();
 
    Double_t    GetBytesRead() const { return fBytesRead; }
    Float_t     GetRealTime() const { return fRealTime; }

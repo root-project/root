@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.39 2004/07/06 07:45:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.34 2004/05/21 19:07:34 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -280,17 +280,13 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 // Fills this TGraphAsymmErrors by dividing two input TH1 histograms pass/total. 
 //
 // Andy Haas (haas@fnal.gov)
-// University of Washington
+// Univeristy of Washington
 //
 // Method and code directly taken from:
 // Marc Paterno (paterno@fnal.gov)
 // FNAL/CD
 //
 // The input histograms must be filled with weights of 1.
-// By default the function does not check this assertion.
-// if option "w" is specified, the function will fail if the histograms
-// have been filled with weights not equal to 1.
-//
 // The assumption is that the entries in "pass" are a 
 // subset of those in "total". That is, we create an "efficiency" 
 // graph, where each entry is between 0 and 1, inclusive. 
@@ -332,19 +328,17 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 		return;
 	}
 
-	if (opt.Contains("w")) {
-	   //compare sum of weights with sum of squares of weights
-           Double_t stats[10];
-	   pass->GetStats(stats);
-	   if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
+	Double_t stats[10];
+	//compare sum of weights with sum of squares of weights
+	pass->GetStats(stats);
+	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
 		Error("BayesDivide","Pass histogram has not been filled with weights = 1");
 		return;
-	   }
-	   total->GetStats(stats);
-	   if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
+	}
+	total->GetStats(stats);
+	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
 		Error("BayesDivide","Total histogram has not been filled with weights = 1");
 		return;
-	   }
 	}
 
 	//Set the graph to have a number of points equal to the number of histogram bins
@@ -410,6 +404,53 @@ double TGraphAsymmErrors::Beta_ab(double a, double b, int k, int N) const
    return Ibetai(c1,c2,b)-Ibetai(c1,c2,a);
 }
 
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::Betacf(double a, double b, double x) const
+{
+  // Evaluates the continued fraction for the incomplete beta function
+  // calculation in Ibeta(); uses modified Lentz's method
+  // Adapted from Numerical Recipes in C, 2nd edition.
+  // Translated to C++ by by Marc Paterno
+   
+   const int    kMAXIT = 100;
+   const double kEPS   = 3.0e-7;
+   const double kFPMIN = 1.0e-30;
+   int m;
+
+   double qab=a+b;
+   double qap=a+1.0;
+   double qam=a-1.0;
+   double c=1.0;
+   double d=1.0-qab*x/qap;
+   if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
+   d=1.0/d;
+   double h=d;
+   for (m=1;m<=kMAXIT;m++) {
+      int m2=2*m;
+      double aa=m*(b-m)*x/((qam+m2)*(a+m2));
+      d=1.0+aa*d;
+      if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
+      c=1.0+aa/c;
+      if (TMath::Abs(c) < kFPMIN) c=kFPMIN;
+      d=1.0/d;
+      h *= d*c;
+      aa = -(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+      d=1.0+aa*d;
+      if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
+      c=1.0+aa/c;
+      if (TMath::Abs(c) < kFPMIN) c=kFPMIN;
+      d=1.0/d;
+      double del=d*c;
+      h *= del;
+      if (TMath::Abs(del-1.0) < kEPS) break;
+   }
+   if (m > kMAXIT) {
+      Error("Betacf","a or b too big, or MAXIT too small, a=%g, b=%g, kMAXIT=%d",a,b,kMAXIT);
+   }
+   return h;
+}
+
 //______________________________________________________________________________
 double TGraphAsymmErrors::Ibetai(double a, double b, double x) const
 {
@@ -427,9 +468,9 @@ double TGraphAsymmErrors::Ibetai(double a, double b, double x) const
      bt=TMath::Exp(TMath::LnGamma(a+b)-TMath::LnGamma(a)-TMath::LnGamma(b)+a*log(x)+b*log(1.0-x));
 
   if (x < (a+1.0)/(a+b+2.0))
-     return bt*TMath::BetaCf(x,a,b)/a;
+     return bt*Betacf(a,b,x)/a;
   else
-     return 1.0-bt*TMath::BetaCf(1-x,b,a)/b;
+     return 1.0-bt*Betacf(b,a,1.0-x)/b;
 }
 
 //______________________________________________________________________________
@@ -554,7 +595,6 @@ void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel,
    // that contains CONFLEVEL probability. We use Brent's method,
    // except in two special cases: when k=0, or when k=N
    // Main driver routine
-   // Author: Marc Paterno
 
    //If there are no entries, then we know nothing, thus return the prior...
    if (0==N) {
@@ -594,7 +634,7 @@ void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel,
 Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
-//    It returns the error along X at point i.
+//    It returns the quadratic error along X at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEXlow && !fEXhigh) return -1;
@@ -608,7 +648,7 @@ Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
-//    It returns the error along Y at point i.
+//    It returns the quadratic error along Y at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEYlow && !fEYhigh) return -1;

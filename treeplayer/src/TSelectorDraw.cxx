@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.33 2004/06/21 06:05:05 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.28 2004/04/27 12:31:19 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -101,7 +101,6 @@ void TSelectorDraw::Begin(TTree *tree)
    ResetBit(kCustomHistogram);
    fSelectedRows   = 0;
    fTree = tree;
-   fDimension = 0;
 
    const char *varexp0   = fInput->FindObject("varexp")->GetTitle();
    const char *selection = fInput->FindObject("selection")->GetTitle();
@@ -337,15 +336,7 @@ void TSelectorDraw::Begin(TTree *tree)
          }
 
       } else { // if (i)                       // make selection list (i.e. varexp0 starts with ">>")
-         TObject *oldObject = gDirectory->Get(hname);
-         elist = dynamic_cast<TEventList*>(oldObject);
-
-         if (elist==0 && oldObject!=0) {
-            Error("Begin","An object of type '%s' has the same name as the requested event list (%s)",
-                  oldObject->IsA()->GetName(),hname);
-            SetStatus(-1);
-            return;
-         }
+         elist = (TEventList*)gDirectory->Get(hname);
          if (!elist) {
             elist = new TEventList(hname,realSelection.GetTitle(),1000,0);
          }
@@ -561,7 +552,6 @@ void TSelectorDraw::Begin(TTree *tree)
          if (opt.Contains("p")     || opt.Contains("*")    || opt.Contains("l"))    graph = kTRUE;
          if (opt.Contains("surf")  || opt.Contains("lego") || opt.Contains("cont")) graph = kFALSE;
          if (opt.Contains("col")   || opt.Contains("hist") || opt.Contains("scat")) graph = kFALSE;
-         if (opt.Contains("box"))                                                   graph = kFALSE;
          fObject = h2;
          if (graph) {
             fAction = 12;
@@ -1094,10 +1084,6 @@ void TSelectorDraw::TakeAction()
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
-      pm->SetLineColor(fTree->GetLineColor());
-      pm->SetLineStyle(fTree->GetLineStyle());
-      pm->SetFillColor(fTree->GetFillColor());
-      pm->SetFillStyle(fTree->GetFillStyle());
 
    if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
       else                                          pm->Draw(fOption.Data());
@@ -1230,19 +1216,7 @@ void TSelectorDraw::TakeEstimate()
       }
 
       if (!strstr(fOption.Data(),"same") && !strstr(fOption.Data(),"goff")) {
-         if (!h2->TestBit(kCanDelete)) {
-            // case like: T.Draw("y:x>>myhist")
-            // we must draw a copy before filling the histogram h2=myhist
-            // because h2 will be filled below and we do not want to show
-            // the binned scatter-plot, the TGraph being better.
-	    TH1 *h2c = h2->DrawCopy(fOption.Data());
-	    h2c->SetStats(kFALSE);
-         } else {
-            // case like: T.Draw("y:x")
-            // h2 is a temporary histogram (htemp). This histogram
-            // will be automatically deleted by TPad::Clear
-            h2->Draw();
-         }
+         h2->Draw(fOption.Data());
          gPad->Update();
       }
       TGraph *pm = new TGraph(fNfill,fV2,fV1);
@@ -1251,10 +1225,6 @@ void TSelectorDraw::TakeEstimate()
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
-      pm->SetLineColor(fTree->GetLineColor());
-      pm->SetLineStyle(fTree->GetLineStyle());
-      pm->SetFillColor(fTree->GetFillColor());
-      pm->SetFillStyle(fTree->GetFillStyle());
       if (!fDraw && !strstr(fOption.Data(),"goff")) {
          if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
          else                                             pm->Draw(fOption.Data());

@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.171 2004/06/24 06:17:58 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.163 2004/04/15 06:41:49 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -421,27 +421,7 @@ string R__tmpnam()
       else tmpdir = ".";
       tmpdir += '/';
    }
-#if 0 && defined(R__USE_MKSTEMP)
-   else {
-      tmpdir  = P_tmpdir;
-      tmpdir += '/';
-   }
 
-   static char pattern[L_tmpnam+2];
-   const char *radix = "XXXXXX";
-   const char *appendix = "_rootcint";
-   if (tmpdir.length() + strlen(radix) + strlen(appendix) + 2) {
-      // too long
-
-   }
-   sprintf(pattern,"%s%s",tmpdir.c_str(),radix);
-   strcpy(filename,pattern);
-   close(mkstemp(filename));/*mkstemp not only generate file name but also opens the file*/
-   remove(filename);
-   fprintf(stderr,"pattern is %s filename is %s\n",pattern,filename);
-   return filename;
-
-#else
    tmpnam(filename);
 
    string result(tmpdir);
@@ -449,7 +429,6 @@ string R__tmpnam()
    result += "_rootcint";
 
    return result;
-#endif
 }
 
 //______________________________________________________________________________
@@ -1026,11 +1005,11 @@ int IsSTLContainer(G__DataMemberInfo &m)
    // Is this an STL container?
 
    const char *s = m.Type()->TrueName();
-   if (!s) return kNotSTL;
+   if (!s) return kNone;
 
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
-
+   
 //    if (k) printf(" %s==%d\n",type.c_str(),k);
 
    return k;
@@ -1042,7 +1021,7 @@ int IsSTLContainer(G__BaseClassInfo &m)
    // Is this an STL container?
 
    const char *s = m.Name();
-   if (!s) return kNotSTL;
+   if (!s) return kNone;
 
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
@@ -1325,14 +1304,9 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
             break;
 
          case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
-            if (!R__t)  return 1;
-            //fprintf(fp, "            fprintf(stderr,\"info is %%p %%d\\n\",R__b.GetInfo(),R__b.GetInfo()?R__b.GetInfo()->GetOldVersion():-1);\n");
-            fprintf(fp, "            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {\n");
-            fprintf(fp, "               %s = new %s;\n",R__t,objType);
-            fprintf(fp, "               %s->Streamer(R__b);\n",R__t);
-            fprintf(fp, "            } else {\n");
-            fprintf(fp, "               %s = (%s)R__b.ReadObjectAny(%s);\n",R__t,tiName,tcl);
-            fprintf(fp, "            }\n");
+            if (!R__t)  return 0;
+            fprintf(fp, "            %s = new %s;\n",R__t,objType);
+            fprintf(fp, "            %s->Streamer(R__b);\n",R__t);
             break;
 
          case R__BIT_ISSTRING:
@@ -1382,8 +1356,8 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
             break;
 
          case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
-            if (!R__t)  return 1;
-            fprintf(fp, "            R__b.WriteObjectAny(%s,%s);\n",R__t,tcl);
+            if (!R__t)  return 0;
+            fprintf(fp, "            ((%s*)%s)->Streamer(R__b);\n",objType,R__t);
             break;
 
          case R__BIT_ISSTRING:
@@ -2034,7 +2008,7 @@ void WriteClassInit(G__ClassInfo &cl)
       fprintf(fp, "%s::Class_Version(), ",classname.c_str());
    } else if (stl) {
 
-      fprintf(fp, "TStreamerInfo::Class_Version(), ");
+      fprintf(fp, "GetROOT()->GetVersionInt() / 100, ");
 
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
@@ -2994,14 +2968,11 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
 //           G__map_cpp_name((char *)cl.Fullname()));
 //   fprintf(fp, "#else\n");
 
-   string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
-   string mappedname = G__map_cpp_name((char*)classname.c_str());
-
    if (outside || cl.IsTmplt()) {
       fprintf(fp, "namespace ROOT {\n");
 
       fprintf(fp, "   void %s_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent)\n   {\n",
-              mappedname.c_str());
+              G__map_cpp_name((char *)cl.Fullname()));
 //   fprintf(fp, "#endif\n");
 
 //  if (outside || cl.IsTmplt()) {
@@ -3032,10 +3003,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
       if (!cl.IsTmplt()) {
          WriteBodyShowMembers(cl, outside);
       } else {
-         string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
-         string mappedname = G__map_cpp_name((char*)classname.c_str());
-
-         fprintf(fp, "   ROOT::%s_ShowMembers(this, R__insp, R__parent);\n",mappedname.c_str());
+         fprintf(fp, "   ROOT::%s_ShowMembers(this, R__insp, R__parent);\n",G__map_cpp_name((char *)cl.Fullname()));
       }
       fprintf(fp, "}\n\n");
    }
@@ -3777,16 +3745,10 @@ int main(int argc, char **argv)
 
       // remove possible pathname to get the dictionary name
       strcpy(dictname, argv[ifl]);
-      char *p = 0;
-      // find the right part of then name.
-      for(p = dictname + strlen(dictname)-1;p!=dictname;--p) {
-        if ( *p =='/' ||  *p =='\\') {
-          break;
-        }
-      }
+      char *p = strrchr(dictname, '/');
       if (!p)
          p = dictname;
-      else if (p != dictname)
+      else
          p++;
       strcpy(dictname, p);
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
@@ -3914,14 +3876,6 @@ int main(int argc, char **argv)
 #ifdef _WIN32
          argvv[argcc] = (char *)calloc(64, 1);
          sprintf(argvv[argcc], "-D_WIN32=%ld",(long)_WIN32); argcc++;
-#endif
-#ifdef WIN32
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-DWIN32=%ld",(long)WIN32); argcc++;
-#endif
-#ifdef GDK_WIN32
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-DGDK_WIN32=%ld",(long)GDK_WIN32); argcc++;
 #endif
 #ifdef _MSC_VER
          argvv[argcc] = (char *)calloc(64, 1);
@@ -4054,7 +4008,6 @@ int main(int argc, char **argv)
 
    fprintf(fp, "#include \"TClass.h\"\n");
    fprintf(fp, "#include \"TBuffer.h\"\n");
-   fprintf(fp, "#include \"TStreamerInfo.h\"\n");
    fprintf(fp, "#include \"TMemberInspector.h\"\n");
    fprintf(fp, "#include \"TError.h\"\n\n");
    fprintf(fp, "#ifndef G__ROOT\n");

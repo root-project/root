@@ -48,7 +48,7 @@ TVirtualPadEditor *TVirtualPadEditor::LoadEditor()
    if (h) {
       if (h->LoadPlugin() == -1)
          return 0;
-      return (TVirtualPadEditor*) h->ExecPlugin(1, gPad->GetCanvas());
+      return (TVirtualPadEditor*) h->ExecPlugin(1, gPad);
    }
 
    return 0;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.199 2004/07/09 10:41:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.191 2004/06/04 16:40:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -299,7 +299,6 @@
 #include "TFriendElement.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualFitter.h"
-#include "TVirtualIndex.h"
 #include "TCut.h"
 #include "Api.h"
 
@@ -345,7 +344,6 @@ TTree::TTree(): TNamed()
    fFileNumber     = 0;
    fClones         = 0;
    fUserInfo       = 0;
-   fTreeIndex      = 0;
 }
 
 //______________________________________________________________________________
@@ -391,8 +389,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fFileNumber     = 0;
    fClones         = 0;
    fUserInfo       = 0;
-   fTreeIndex      = 0;
-   
+
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
    SetLineColor(gStyle->GetHistLineColor());
@@ -453,9 +450,6 @@ TTree::~TTree()
       // delete the array but NOT its content
       delete fClones;
    }
-   
-   delete fTreeIndex;
-   
    fDirectory  = 0; //must be done after the destruction of friends
 }
 
@@ -480,12 +474,6 @@ void TTree::AddClone(TTree *clone)
 TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
 {
 // Add a TFriendElement to the list of friends.
-// This function:
-//   -opens a file if filename is specified
-//   -reads a Tree with name treename from the file (current directory)
-//   -adds the Tree to the list of friends
-// see other AddFriend functions
-//
 // A TFriendElement TF describes a TTree object TF in a file.
 // When a TFriendElement TF is added to the the list of friends of an
 // existing TTree T, any variable from TF can be referenced in a query
@@ -560,7 +548,7 @@ TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
       fFriends->Add(fe);
       TTree *t = fe->GetTree();
       if (t) {
-         if (!t->GetTreeIndex() && t->GetEntries() < fEntries) {
+         if (t->GetEntries() < fEntries) {
             Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
                      treename,filename,t->GetEntries(),fEntries);
          }
@@ -579,9 +567,6 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
 // Add a TFriendElement to the list of friends. The TFile is managed by
 // the user (e.g. the user must delete the file).
 // For complete description see AddFriend(const char *, const char *).
-// This function:
-//   -reads a Tree with name treename from the file
-//   -adds the Tree to the list of friends
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,treename,file);
@@ -589,7 +574,7 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
       fFriends->Add(fe);
       TTree *t = fe->GetTree();
       if (t) {
-         if (!t->GetTreeIndex() && t->GetEntries() < fEntries) {
+         if (t->GetEntries() < fEntries) {
             Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
                      treename,file->GetName(),t->GetEntries(),fEntries);
          }
@@ -1410,40 +1395,75 @@ void TTree::Browse(TBrowser *b)
 //______________________________________________________________________________
 Int_t TTree::BuildIndex(const char *majorname, const char *minorname)
 {
-   // Build a Tree Index (default is TtreeIndex).
-   // see a description of the parameters and functionality in
-   //  TTreeIndex::TTreeIndex
+   // Build an index table using the leaves with name: major & minor name
+   // The index is built in the following way:
+   //    A pass on all entries is made using TTree::Draw
+   //    var1 = majorname
+   //    var2 = minorname
+   //    sel  = majorname +minorname*1e-9
+   //    The standard result from TTree::Draw is stored in fV1, fV2 and fW
+   //    The array fW is sorted into fIndex
+   //  Once the index is computed, one can retrieve one entry via
+   //    TTree:GetEntryWithIndex(majornumber, minornumber)
+   // Example:
+   //  tree.BuildIndex("Run","Event"); //creates an index using leaves Run and Event
+   //  tree.GetEntryWithIndex(1234,56789); //reads entry corresponding to
+   //                                        Run=1234 and Event=56789
+   //
+   // Note that majorname and minorname may be expressions using original
+   // Tree variables eg: "run-90000", "event +3*xx"
+   // In case an expression is specified, the equivalent expression must be computed
+   // when calling GetEntryWithIndex.
+   //
+   // To build an index with only majorname, specify minorname="0" (default)
+   //
+   // Note that once the index is built, it can be saved with the TTree object
+   // with tree.Write(); //if the file has been open in "update" mode.
+   //
+   // The most convenient place to create the index is at the end of
+   // the filling process just before saving the Tree header.
+   // If a previous index was computed, it is redefined by this new call.
+   //
+   // Note that this function can also be applied to a TChain.
    //
    // The return value is the number of entries in the Index (< 0 indicates failure)
-   //
-   // A TTreeIndex object pointed by fTreeIndex is created.
-   // This object will be automatically deleted by the TTree destructor
-   // See also comments in TTree::SetTreeIndex
-   
-   fTreeIndex = GetPlayer()->BuildIndex(this,majorname,minorname);
-   if (fTreeIndex->IsZombie()) {
-      delete fTreeIndex;
-      fTreeIndex = 0;
-      return 0;
+
+   Int_t nch = strlen(majorname) + strlen(minorname) + 10;
+   char *varexp = new char[nch];
+   sprintf(varexp,"%s+%s*1e-9",majorname,minorname);
+
+   Int_t oldEstimate = fEstimate;
+   Int_t n = (Int_t)GetEntries(); //must use GetEntries instead of fEntries in case of a chain
+   if (n <= 0) return 0;
+
+   if (n > fEstimate) SetEstimate(n);
+
+   Int_t res = Draw(varexp,"","goff");
+   if (res!=n) {
+      Error("BuildIndex",
+            Form("Badly formed index because the expression %s has %d values while the tree has %d entries\n",
+                 varexp,res,n));
+      return -1;
    }
-   return fTreeIndex->GetN();
+
+   // Sort array fV1 (contains  majorname +minorname*1e-9) into fIndex
+   Double_t *w = GetPlayer()->GetV1();
+   Int_t *ind = new Int_t[n];
+   TMath::Sort(n,w,ind,0);
+   fIndexValues.Set(n);
+   fIndex.Set(n);
+   for (Int_t i=0;i<n;i++) {
+      fIndexValues.fArray[i] = w[ind[i]];
+      fIndex.fArray[i] = ind[i];
+   }
+   if (n > oldEstimate) SetEstimate(oldEstimate);
+
+   // clean up
+   delete [] ind;
+   delete [] varexp;
+   return n;
 }
 
-//______________________________________________________________________________
-void TTree::SetTreeIndex(TVirtualIndex*index)
-{
-  // The current TreeIndex is replaced by the new index.
-  // Note that this function does not delete the previous index.
-  // This gives the possibility to play with more than one index, eg
-  // TVirtualIndex *oldIndex = tree.GetTreeIndex();
-  // tree.SetTreeIndex(newIndex);
-  // tree.Draw(...);
-  // tree.SetTreeIndex(oldIndex);
-  // tree.Draw(); etc
-   
-   fTreeIndex = index;
-}
-   
 //______________________________________________________________________________
 TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
 {
@@ -1487,8 +1507,6 @@ TFile *TTree::ChangeFile(TFile *file)
   // The new file name has a suffix "_N" where N is equal to fFileNumber+1.
   // By default a Root session starts with fFileNumber=0. One can set
   // fFileNumber to a different value via TTree::SetFileNumber.
-  // In case a file named "_N" already exists, the function will try
-  // a file named "__N", then "___N", etc.
   //
   // fgMaxTreeSize can be set via the static function TTree::SetMaxTreeSize.
   // The default value of fgMaxTreeSize is 1.9 Gigabytes.
@@ -1516,43 +1534,31 @@ TFile *TTree::ChangeFile(TFile *file)
    file->cd();
    Write();
    Reset();
-   char *fname = new char[2000];
    fFileNumber++;
-   char uscore[10];
-   for (Int_t i=0;i<10;i++) uscore[i] = 0;
-   Int_t nus = 0;
-   
-   //try to find a suitable file name that does not already exist
-   while(nus < 10) {
-      uscore[nus] = '_';
-      fname[0] = 0;
-      strcpy(fname,file->GetName());
-      if (fFileNumber > 1) {
-         char *cunder = strrchr(fname,'_');
-         if (cunder) {
-            sprintf(cunder,"%s%d",uscore,fFileNumber);
-            strcat(fname,strrchr(file->GetName(),'.'));
-         } else {
-            char fcount[10];
-            sprintf(fcount,"%s%d",uscore,fFileNumber);
-            strcat(fname,fcount);
-         }
+   char *fname = new char[2000];
+   fname[0] = 0;
+   strcpy(fname,file->GetName());
+   if (fFileNumber > 1) {
+      char *cunder = strrchr(fname,'_');
+      if (cunder) {
+         sprintf(cunder,"_%d",fFileNumber);
+         strcat(fname,strrchr(file->GetName(),'.'));
       } else {
-         char *cdot = strrchr(fname,'.');
-         if (cdot) {
-            sprintf(cdot,"%s%d",uscore,fFileNumber);
-            strcat(fname,strrchr(file->GetName(),'.'));
-         } else {
-            char fcount[10];
-            sprintf(fcount,"%s%d",uscore,fFileNumber);
-            strcat(fname,fcount);
-         }
+         char fcount[10];
+         sprintf(fcount,"_%d",fFileNumber);
+         strcat(fname,fcount);
       }
-      if (gSystem->AccessPathName(fname)) break;
-      nus++;
-      Warning("ChangeFile","file %s already exist, trying with %d underscores",fname,nus+1);
+   } else {
+      char *cdot = strrchr(fname,'.');
+      if (cdot) {
+         sprintf(cdot,"_%d",fFileNumber);
+         strcat(fname,strrchr(file->GetName(),'.'));
+      } else {
+         char fcount[10];
+         sprintf(fcount,"_%d",fFileNumber);
+         strcat(fname,fcount);
+      }
    }
-   
    Int_t compress = file->GetCompressionLevel();
    TFile *newfile = TFile::Open(fname,"recreate","chain files",compress);
    Printf("Fill: Switching to new file: %s",fname);
@@ -1630,8 +1636,7 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
    newtree->Reset();
 
   // delete non active branches from the clone
-   Int_t j,k,l,nb1,nb2;
-   Int_t i;
+   Int_t i,j,k,l,nb1,nb2;
    TObjArray *lb, *lb1;
    TBranch *branch, *b1, *b2;
    TObjArray *leaves = newtree->GetListOfLeaves();
@@ -2683,7 +2688,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    TBranch *branch;
 
    Int_t nbranches = fBranches.GetEntriesFast();
-   Int_t nb=0;
+   Int_t nb;
    for (i=0;i<nbranches;i++)  {
       branch = (TBranch*)fBranches.UncheckedAt(i);
       nb = branch->GetEntry(entry, getall);
@@ -2698,12 +2703,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
       if (t) {
-         TVirtualIndex *index = t->GetTreeIndex();
-         if (index) {
-            Int_t jentry = index->GetEntryNumberFriend(this); 
-            nb = t->GetEntry(jentry,getall);
-         }
-         else t->GetEntry(entry,getall);
+         nb = t->GetEntry(entry, getall);
          if (nb < 0) return nb;
          nbytes += nb;
       }
@@ -2743,8 +2743,11 @@ Int_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 //
 // See also GetEntryNumberWithIndex
 
-   if (!fTreeIndex) return -1;
-   return fTreeIndex->GetEntryNumberWithBestIndex(major,minor);
+   if (fIndex.fN == 0) return -1;
+   Double_t value = major + minor*1e-9;
+   Int_t i = TMath::BinarySearch(Int_t(fEntries), fIndexValues.fArray, value);
+   if (i < 0) return -1;
+   return fIndex.fArray[i];
 }
 
 
@@ -2762,8 +2765,12 @@ Int_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 //
 // See also GetEntryNumberWithBestIndex
 
-   if (!fTreeIndex) return -1;
-   return fTreeIndex->GetEntryNumberWithIndex(major,minor);
+   if (fIndex.fN == 0) return -1;
+   Double_t value = major + minor*1e-9;
+   Int_t i = TMath::BinarySearch(Int_t(fEntries), fIndexValues.fArray, value);
+   if (i < 0) return -1;
+   if (TMath::Abs(fIndexValues.fArray[i] - value) > 1.e-10) return -1;
+   return fIndex.fArray[i];
 }
 
 
@@ -2808,7 +2815,7 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
       if (t) {
          serial = t->GetEntryNumberWithIndex(major,minor);
          if (serial <0) return -nbytes;
-         nb = t->GetEntry(serial);
+         nb = t->GetEntryNumberWithIndex(major,minor);
          if (nb < 0) return nb;
          nbytes += nb;
       }
@@ -3053,7 +3060,7 @@ Int_t TTree::LoadTree(Int_t entry)
          if (t->IsA()!=TTree::Class()) {
             Int_t oldNumber = t->GetTreeNumber();
 
-            friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
+            friendHasEntry|=(t->LoadTree(entry)>=0);
 
             Int_t newNumber = t->GetTreeNumber();
             if (oldNumber!=newNumber) {
@@ -3065,7 +3072,7 @@ Int_t TTree::LoadTree(Int_t entry)
             }
          } else {
             // we assume it is a simple tree so we have nothing to do.
-            friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
+            friendHasEntry|=(t->LoadTree(entry)>=0);
          }
       } // for each friend
 
@@ -3080,20 +3087,6 @@ Int_t TTree::LoadTree(Int_t entry)
    if (fReadEntry>=fEntries && !friendHasEntry) return -2;
    return fReadEntry;
 
-}
-
-//______________________________________________________________________________
-Int_t TTree::LoadTreeFriend(Int_t entry, TTree *T)
-{
-  // called by TTree::LoadTree when TTree *T looks for the entry
-  // number in a friend Tree (this) corresponding to the entry number in T.
-  // If the friend Tree has no TTreeIndex, entry in the friend and entry
-  // in T are the same.
-  // If the friend Tree has an index, one must find the value pair major,minor
-  // in T to locate the corresponding entry in the friend Tree.
-   
-   if (!fTreeIndex) return LoadTree(entry);
-   return fReadEntry = fTreeIndex->GetEntryNumberFriend(T);
 }
 
 //______________________________________________________________________________
@@ -3127,32 +3120,6 @@ Int_t TTree::MakeSelector(const char *selector)
 //    root > T->Process("select.C")
 
    return MakeClass(selector,"selector");
-}
-
-//______________________________________________________________________________
-Int_t TTree::MakeProxy(const char *classname, const char *macrofilename, 
-                       const char *cutfilename, Int_t maxUnrolling)
-{
-   // Generate a skeleton analysis class for this Tree using TBranchProxy
-   //
-   // The skeleton is a TSelector where the access to the data is set
-   // via TBranchProxy.  
-   //
-   // macrofilename and cutfilename can be files contains a C++ function
-   // (with the same name as the file) using the branches of the Tree
-   // as if they were data members.
-   //
-   // Only the branch used will be read.
-   //
-   // 'maxUnrolling' controls how deep in the class hierachy does the 
-   // system 'unroll' class that are not split.
-   //
-   // 'unrolling' means to offer an direct access to the data members of
-   // a class (this emulates the behavior of TTreeFormula).
-
-      GetPlayer();
-   if (!fPlayer) return 0;
-   return fPlayer->MakeProxy(classname,macrofilename,cutfilename,maxUnrolling);
 }
 
 //______________________________________________________________________________
@@ -3266,29 +3233,21 @@ TTree *TTree::MergeTrees(TList *list)
    TIter next(list);
    TTree *newtree = 0;
    TObject *obj;
-
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
-      Long64_t nentries = (Long64_t)tree->GetEntries();
+      Int_t nentries = (Int_t)tree->GetEntries();
       if (nentries == 0) continue;
       if (!newtree) {
          newtree = (TTree*)tree->CloneTree();
-
-         // Once the cloning is done, separate the trees,
-         // to avoid as many side-effects as possible
-         tree->GetListOfClones()->Remove(newtree);
-         tree->ResetBranchAddresses();
-         newtree->ResetBranchAddresses();
          continue;
-      } 
-      
-      newtree->CopyAddresses(tree);
-      for (Long64_t i=0;i<nentries;i++) {
+      } else {
+         tree->CopyAddresses(newtree);
+      }
+      for (Int_t i=0;i<nentries;i++) {
          tree->GetEntry(i);
          newtree->Fill();
       }
-      tree->ResetBranchAddresses(); // Disconnect from new tree.
    }
    return newtree;
 }
@@ -3302,7 +3261,6 @@ Int_t TTree::Merge(TCollection *list)
    TIter next(list);
    TTree *tree;
    while ((tree = (TTree*)next())) {
-      if (tree==this) continue;
       if (!tree->InheritsFrom(TTree::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",
                tree->ClassName(), ClassName());
@@ -3312,12 +3270,11 @@ Int_t TTree::Merge(TCollection *list)
       Long64_t nentries = (Long64_t)tree->GetEntries();
       if (nentries == 0) continue;
 
-      CopyAddresses(tree);
+      tree->CopyAddresses(this);
       for (Long64_t i=0; i<nentries ; i++) {
          tree->GetEntry(i);
          Fill();
       }
-      tree->ResetBranchAddresses();
    }
 
    return (Int_t) GetEntries();
@@ -4124,12 +4081,6 @@ void TTree::Streamer(TBuffer &b)
       if (R__v > 4) {
          fDirectory = gDirectory;
          TTree::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         if (fTreeIndex) fTreeIndex->SetTree(this);
-         if (fIndex.fN) {
-            Warning("Streamer","Old style index in this tree is deleted. Rebuild the index via TTree::BuildIndex");
-            fIndex.Set(0);
-            fIndexValues.Set(0);
-         }
          if (fEstimate <= 10000) fEstimate = 1000000;
          fSavedBytes = fTotBytes;
          gDirectory->Append(this);

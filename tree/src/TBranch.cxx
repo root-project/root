@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.73 2004/05/29 20:36:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.72 2004/05/08 07:08:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -297,7 +297,7 @@ void TBranch::Browse(TBrowser *b)
       Int_t pos = name.First('[');
       if (pos!=kNPOS) name.Remove(pos);
 
-      GetTree()->Draw(name, "", b ? b->GetDrawOption() : "");
+      GetTree()->Draw(name);
       if (gPad) gPad->Update();
    }
 }

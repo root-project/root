@@ -1,11 +1,8 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.3 2004/05/27 06:44:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.2 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
 #define PYROOT_METHODHOLDER_H
-
-// Bindings
-#include "Utility.h"
 
 // ROOT
 class TClass;
@@ -24,7 +21,7 @@ namespace PyROOT {
 /** Python side ROOT method
       @author  WLAV
       @date    05/06/2004
-      @version 1.6
+      @version 1.5
  */
 
    class MethodHolder {
@@ -37,6 +34,9 @@ namespace PyROOT {
       virtual PyObject* operator()( PyObject* aTuple, PyObject* aDict );
 
    public:
+      enum EReturnType { kLong, kDouble, kString, kOther,
+         kDoublePtr, kFloatPtr, kLongPtr, kIntPtr };
+
       typedef bool (*cnvfct_t)( PyObject*, G__CallFunc*, void*& );
 
    protected:
@@ -75,7 +75,7 @@ namespace PyROOT {
       TClass*      m_class;
       TMethod*     m_method;
       G__CallFunc* m_methodCall;
-      Utility::EDataType m_returnType;
+      EReturnType  m_returnType;
       std::string  m_rtShortName;
       long         m_offset;
       long         m_tagnum;

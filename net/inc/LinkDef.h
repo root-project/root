@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.9 2004/02/19 00:11:18 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.8 2003/11/13 15:15:11 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,7 +32,6 @@
 #pragma link C++ class TMonitor;
 #pragma link C++ class TUrl;
 #pragma link C++ class TNetFile;
-#pragma link C++ class TNetSystem;
 #pragma link C++ class TWebFile;
 #pragma link C++ class TCache;
 #pragma link C++ class TFTP;

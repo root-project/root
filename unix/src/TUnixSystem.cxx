@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.107 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.101 2004/05/18 04:55:29 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1023,10 +1023,8 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
    // (this avoids certain security problems). Returns 0 in case
    // of error.
 
-   char *b = ConcatFileName(dir ? dir : TempDirectory(), base);
-   base = b;
+   base = ConcatFileName(dir ? dir : TempDirectory(), base);
    base += "XXXXXX";
-   delete [] b;
 
    char *arg = StrDup(base);
    int fd = mkstemp(arg);
@@ -2123,14 +2121,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    }
    ClosePipe(p);
 #elif defined(R__LINUX) || defined(R__SOLARIS)
-#if defined(R__WINGCC )
-   const char *cLDD="cygcheck";
-   const char *cSOEXT=".dll";
-#else
-   const char *cLDD="ldd";
-   const char *cSOEXT=".so";
-#endif
-   FILE *p = OpenPipe(Form("%s %s", cLDD, exe), "r");
+   FILE *p = OpenPipe(Form("ldd %s", exe), "r");
    TString ldd;
    while (ldd.Gets(p)) {
       TString delim(" \t");
@@ -2146,7 +2137,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       }
       if (solibName) {
          TString solib = solibName->String();
-         if (solib.EndsWith(cSOEXT)) {
+         if (solib.EndsWith(".so")) {
             if (!linkedLibs.IsNull())
                linkedLibs += " ";
             linkedLibs += solib;
@@ -2259,21 +2250,10 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 #endif
       type = AF_INET;
       if ((host_ptr = gethostbyaddr((const char *)&addr,
-                                    sizeof(addr), AF_INET))) {
+                                    sizeof(addr), AF_INET)))
          host = host_ptr->h_name;
-         TInetAddress a(host, ntohl(addr), type);
-         UInt_t addr2;
-         Int_t  i;
-         for (i = 1; host_ptr->h_addr_list[i]; i++) {
-            memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
-            a.AddAddress(ntohl(addr2));
-         }
-         for (i = 0; host_ptr->h_aliases[i]; i++)
-            a.AddAlias(host_ptr->h_aliases[i]);
-         return a;
-      } else {
+      else
          host = "UnNamedHost";
-      }
    } else if ((host_ptr = gethostbyname(hostname))) {
       // Check the address type for an internet host
       if (host_ptr->h_addrtype != AF_INET) {
@@ -2283,16 +2263,6 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
       memcpy(&addr, host_ptr->h_addr, host_ptr->h_length);
       host = host_ptr->h_name;
       type = host_ptr->h_addrtype;
-      TInetAddress a(host, ntohl(addr), type);
-      UInt_t addr2;
-      Int_t  i;
-      for (i = 1; host_ptr->h_addr_list[i]; i++) {
-         memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
-         a.AddAddress(ntohl(addr2));
-      }
-      for (i = 0; host_ptr->h_aliases[i]; i++)
-         a.AddAlias(host_ptr->h_aliases[i]);
-      return a;
    } else {
       if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
       return TInetAddress(hostname, 0, -1);
@@ -3278,8 +3248,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    // Create socket
    int sock;
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "socket (%s:%d)",
-                 hostname, port);
+      ::SysError("TUnixSystem::UnixTcpConnect", "socket");
       return -1;
    }
 
@@ -3289,8 +3258,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    }
 
    if (connect(sock, (struct sockaddr*) &server, sizeof(server)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "connect (%s:%d)",
-                 hostname, port);
+      ::SysError("TUnixSystem::UnixTcpConnect", "connect");
       close(sock);
       return -1;
    }
@@ -3539,44 +3507,35 @@ const char *TUnixSystem::GetDynamicPath()
 {
    // Get shared library search path. Static utility function.
 
-   static TString dynpath;
+   static const char *dynpath = 0;
 
-   if (dynpath.IsNull()) {
-      TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-      if (rdynpath.IsNull()) {
+   if (dynpath == 0) {
+      const char *rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+      if (rdynpath == 0)
 #ifdef ROOTLIBDIR
-         rdynpath = ".:"; rdynpath += ROOTLIBDIR;
+         rdynpath = StrDup(Form(".:%s", ROOTLIBDIR));
 #else
-         rdynpath = ".:"; rdynpath += gRootDir; rdynpath += "/lib";
+         rdynpath = StrDup(Form(".:%s/lib", gRootDir));
 #endif
-      }
-      TString ldpath;
+      const char *ldpath = 0;
 #if defined (R__AIX)
       ldpath = gSystem->Getenv("LIBPATH");
 #elif defined(R__HPUX)
       ldpath = gSystem->Getenv("SHLIB_PATH");
-#elif defined(R__MACOSX)
-      ldpath = gSystem->Getenv("DYLD_LIBRARY_PATH");
-      if (!ldpath.IsNull())
-         ldpath += ":";
-      ldpath += gSystem->Getenv("LD_LIBRARY_PATH");
 #else
       ldpath = gSystem->Getenv("LD_LIBRARY_PATH");
 #endif
-      if (ldpath.IsNull())
+      if (ldpath == 0)
          dynpath = rdynpath;
-      else {
-         dynpath = rdynpath; dynpath += ":"; dynpath += ldpath;
-      }
+      else
+         dynpath = StrDup(Form("%s:%s", rdynpath, ldpath));
 
 #ifdef ROOTLIBDIR
-      if (!dynpath.Contains(ROOTLIBDIR)) {
-         dynpath += ":"; dynpath += ROOTLIBDIR;
-      }
+      if (!strstr(dynpath, ROOTLIBDIR))
+         dynpath = StrDup(Form("%s:%s", dynpath, ROOTLIBDIR));
 #else
-      if (!dynpath.Contains(Form("%s/lib", gRootDir))) {
-         dynpath += ":"; dynpath += gRootDir; dynpath += "/lib";
-      }
+      if (!strstr(dynpath, Form("%s/lib", gRootDir)))
+         dynpath = StrDup(Form("%s:%s/lib", dynpath, gRootDir));
 #endif
    }
    return dynpath;

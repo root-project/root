@@ -522,31 +522,6 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check sub-matrix views" << endl;
-    {
-      TMatrixD m3(-1,rsize-2,1,csize);
-      TMatrixDSub(m3,0,rsize-2,2,csize) = TMatrixDSub(m,0,rsize-2,2,csize);
-      TMatrixDSub(m3,0,rsize-2,1,1)     = TMatrixDSub(m,0,rsize-2,1,1);
-      TMatrixDSub(m3,-1,-1,2,csize)     = TMatrixDSub(m,-1,-1,2,csize);
-      TMatrixDSub(m3,-1,-1,1,1)         = TMatrixDSub(m,-1,-1,1,1);
-      ok &= VerifyMatrixIdentity(m,m3,gVerbose,EPSILON);
-         
-      TMatrixD unit(3,3);
-      TMatrixDSub(m3,1,3,1,3)  = unit.UnitMatrix();
-      TMatrixDSub(m3,1,3,1,3) *= m.GetSub(1,3,1,3);
-      ok &= VerifyMatrixIdentity(m,m3,gVerbose,EPSILON);
-
-      TMatrixDSub(m3,0,rsize-2,2,csize) = 1.0;
-      TMatrixDSub(m3,0,rsize-2,1,1)     = 1.0;
-      TMatrixDSub(m3,-1,-1,2,csize)     = 1.0;
-      TMatrixDSub(m3,-1,-1,1,1)         = 1.0;
-      ok &= (m3 == 1.0);
-
-    }
-  }
-
-  {
-    if (gVerbose)
       cout << "Check array Use" << endl;
     {
       TMatrixD *m1a = new TMatrixD(m);
@@ -554,8 +529,8 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
       m2a->Use(m1a->GetRowLwb(),m1a->GetRowUpb(),m1a->GetColLwb(),m1a->GetColUpb(),m1a->GetMatrixArray());
       ok &= VerifyMatrixIdentity(m,*m2a,gVerbose,EPSILON);
       m2a->Sqr();
-      TMatrixD m4 = m; m4.Sqr();
-      ok &= VerifyMatrixIdentity(m4,*m1a,gVerbose,EPSILON);
+      TMatrixD m3 = m; m3.Sqr();
+      ok &= VerifyMatrixIdentity(m3,*m1a,gVerbose,EPSILON);
       delete m1a;
       delete m2a;
     }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.42 2004/06/25 09:56:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.40 2004/05/10 17:31:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -184,7 +184,6 @@ protected:
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
 
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
-   virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);
    virtual const char    *ExpandFileName(const char *fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
    virtual const char    *GetLinkedLibraries();
@@ -265,7 +264,6 @@ public:
    virtual const char     *DirName(const char *pathname);
    virtual char           *ConcatFileName(const char *dir, const char *name);
    virtual Bool_t          IsAbsoluteFileName(const char *dir);
-   virtual Bool_t          IsFileInIncludePath(const char *name);
    virtual Bool_t          ExpandPathName(TString &path);
    virtual char           *ExpandPathName(const char *path);
    virtual Bool_t          AccessPathName(const char *path, EAccessMode mode = kFileExists);

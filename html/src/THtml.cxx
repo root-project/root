@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.62 2004/06/29 21:36:18 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.58 2004/03/22 15:06:30 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -460,37 +460,6 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
          // write a HTML header for the classFile file
          WriteHtmlHeader(classFile, classPtr->GetName(), classPtr);
-
-         // show box with lib, include
-         // needs to go first to allow title on the left
-         const char* lib=classPtr->GetSharedLibs();
-         const char* incl=classPtr->GetDeclFileName();
-         if (incl) incl=gSystem->BaseName(incl);
-         if (lib && strlen(lib)|| incl && strlen(incl)) {
-            classFile << "<table cellpadding=\"2\" border=\"1\" style=\"float:right;\"><tr><td>";
-            if (lib) {
-               char* libDup=StrDup(lib);
-               char* libDupSpace=strchr(libDup,' ');
-               if (libDupSpace) *libDupSpace=0;
-               char* libDupEnd=libDup+strlen(libDup);
-               while (libDupEnd!=libDup)
-                  if (*(--libDupEnd)=='.') {
-                     *libDupEnd=0;
-                     break;
-                  }
-               classFile << "library: "
-                         << libDup;
-               delete[] libDup;
-            }
-            if (incl) {
-               if (lib)
-                  classFile << "<br/>";
-               classFile << "#include \""
-                         << incl << "\"";
-            }
-            classFile << "</td></tr></table>"
-                      << endl;
-         }
 
          // make a link to the description
          classFile << "<!--BEGIN-->" << endl;
@@ -1047,7 +1016,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
       filename = StrDup(tmp1, 16);
       strcat(filename, ".cxx.html");
 
-      ofstream tempFile;
+ofstream tempFile;
       tempFile.open(filename, ios::out);
 
       if (dirname)
@@ -1621,12 +1590,8 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
         // get a class
         TClass *classInh =
           GetClass((const char *) inheritFrom->GetName());
-        if (classInh)
-           ClassHtmlTree(out, classInh, kUp, depth+1);
-        else 
-           out << "<tt>" 
-               << (const char *) inheritFrom->GetName()
-               << "</tt>"; 
+         
+        ClassHtmlTree(out, classInh, kUp, depth+1);
         out << "</td>"<< endl;
       }
       if (!first) {
@@ -3130,9 +3095,6 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
    if(!name1) return 0;
-   // no doc for internal classes
-   if (strstr(name1,"ROOT::")==name1) return 0;
-
    Int_t n = strlen(name1);
    if (!n) return 0;
    char *name = new char[n + 1];

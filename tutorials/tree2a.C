@@ -12,10 +12,8 @@
 // The example emulates the Geant3 step routines.
 //
 // to run the example, do:
-// .x tree2a.C+ to execute with native compiler
-//
-//  Note that this example cannot be run under CINT (ie .x tree2a.c)
-//  because an interpreted class cannot derive from a compiled class.
+// .x tree2a.C   to execute with the CINT interpreter
+// .x tree2a.C++ to execute with native compiler
 //
 //  Author: Rene Brun
 

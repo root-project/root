@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.7 2003/03/03 20:02:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.6 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -34,7 +34,7 @@ protected:
 public:
    TDatime();
    TDatime(const TDatime &d) { fDatime = d.fDatime; }
-   TDatime(UInt_t tloc, Bool_t dosDate = kFALSE) { Set(tloc, dosDate); }
+   TDatime(UInt_t tloc) { Set(tloc); }
    TDatime(Int_t date, Int_t time);
    TDatime(Int_t year, Int_t month, Int_t day,
            Int_t hour, Int_t min, Int_t sec);
@@ -59,7 +59,7 @@ public:
    void         Print(Option_t *option="") const;
    void         ReadBuffer(char *&buffer);
    void         Set();
-   void         Set(UInt_t tloc, Bool_t dosDate = kFALSE);
+   void         Set(UInt_t tloc);
    void         Set(Int_t date, Int_t time);
    void         Set(Int_t year, Int_t month, Int_t day,
                     Int_t hour, Int_t min, Int_t sec);

@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.14 2004/05/30 16:15:52 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.13 2004/05/12 13:04:12 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -43,7 +43,6 @@ extern "C" {
 #include <sys/shm.h>
 }
 
-static gss_cred_id_t GlbCredHandle = GSS_C_NO_CREDENTIAL;
 static gss_cred_id_t GlbDelCredHandle = GSS_C_NO_CREDENTIAL;
 static int gShmIdCred = -1;
 
@@ -86,6 +85,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
 
    int auth = 0, rc;
    int retval = 0, kind = 0, type = 0, server_auth = 0, brcv = 0, bsnd = 0;
+   gss_cred_id_t GlbCredHandle = GSS_C_NO_CREDENTIAL;
    gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
    OM_uint32 MajStat = 0;
    OM_uint32 MinStat = 0;
@@ -99,7 +99,6 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    if (user == "-1") {
       if (gDebug > 2)
          Info("GlobusAuthenticate", " cleanup call (%s)",details.Data());
-
       if (details == "context") {
          // Security context cleaning
          GlobusCleanupContext((gss_ctx_id_t)Auth);
@@ -184,8 +183,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    }
 
    // Create Options string
-   Int_t Opt = ReUse * kAUTH_REUSE_MSK +
-               Auth->GetRSAKeyType() * kAUTH_RSATY_MSK;
+   Int_t Opt = ReUse * kAUTH_REUSE_MSK;
    TString Options(Form("%d %d %s", Opt, ssuj.Length(), ssuj.Data()));
 
    // Check established authentications
@@ -328,14 +326,14 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    Int_t RSAKey = 0;
    if (ReUse == 1) {
 
-      if (type != kROOTD_RSAKEY || retval < 1 || retval > 2)
+      if (type != kROOTD_RSAKEY)
          Warning("GlobusAuthenticate",
                  "problems recvn RSA key flag: got message %d, flag: %d",
                  type, RSAKey);
-      RSAKey = retval - 1;
+      RSAKey = 1;
 
       // Send the key securely
-      TAuthenticate::SendRSAPublicKey(sock,RSAKey);
+      TAuthenticate::SendRSAPublicKey(sock);
 
       // Receive username used for login
       nrec = sock->Recv(retval, type);  // returns user
@@ -364,7 +362,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    // Receive Token
    char *Token = 0;
    if (ReUse == 1 && OffSet > -1) {
-      if (TAuthenticate::SecureRecv(sock, 1, RSAKey, &Token) == -1) {
+      if (TAuthenticate::SecureRecv(sock, RSAKey, &Token) == -1) {
          Warning("SRPAuthenticate",
                  "Problems secure-receiving Token -"
                  " may result in corrupted Token");
@@ -1007,16 +1005,13 @@ Int_t GlobusCleanupContext(gss_ctx_id_t ctx)
 
    OM_uint32 MajStat = 0;
    OM_uint32 MinStat = 0;
-
-   // Delete context
    if ((MajStat = gss_delete_sec_context(&MinStat, &ctx,
                   GSS_C_NO_BUFFER)) != GSS_S_COMPLETE) {
       if (gDebug > 0)
          GlobusError("GlobusCleanupContext: gss_delete_sec_context",
-                     MajStat,MinStat, 0);
+            MajStat,MinStat, 0);
       return 0;
    }
-
    return 1;
 }
 

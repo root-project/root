@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.29 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.27 2004/05/27 08:39:00 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
    // The url contains information about the server type: make sure
    // it is 'proofd' or alike
-   TString hurl(proof->GetUrlProtocol());
+   TString hurl(proof->GetUrlProt());
    hurl.Insert(5, 'd');
    // Add host, port (and user) information
    if (proof->GetUser() && strlen(proof->GetUser())) {
@@ -155,7 +155,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             }
             srppwd = fSecContext->IsA("SRP");
 
-            if (fSocket->SecureSend(passwd,1,fSecContext->GetRSAKey()) == -1) {
+            if (fSocket->SecureSend(passwd) == -1) {
                if (RemoteOffSet > -1)
                   Warning("TSlave","problems secure-sending pass hash %s",
                           "- may result in failures");

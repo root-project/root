@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowserImp.cxx,v 1.2 2004/06/25 10:10:11 brun Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -21,5 +21,3 @@
 #include "TBrowserImp.h"
 
 ClassImp(TBrowserImp)
-
-void TBrowserImp::SetDrawOption(Option_t * /*option*/) {}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.4 2004/03/05 11:53:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.3 2003/07/07 21:18:30 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -309,7 +309,7 @@ void TGeoTrack::Draw(Option_t *option)
       gPad->Modified();
       gPad->Update();
    }      
-   delete [] opt1;
+   delete opt1;
    return;
 }      
 

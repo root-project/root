@@ -118,7 +118,7 @@ extern "C" {
                              GdkWindowAttr * attributes,
                              gint attributes_mask);
 
-   void gdk_window_destroy(GdkWindow * window, gboolean xdestroy);
+   void gdk_window_destroy(GdkWindow * window);
 
    GdkWindow *gdk_window_at_pointer(gint * win_x, gint * win_y);
    void gdk_window_show(GdkWindow * window);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.14 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.13 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
    virtual Int_t         GetNsegments() const {return fNedges;}     
    virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin=TGeoShape::Big()) const;
    virtual void          SetDimensions(Double_t *param);

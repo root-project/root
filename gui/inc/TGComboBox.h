@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.12 2004/07/07 10:17:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.8 2004/02/18 20:13:42 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -38,7 +38,7 @@
 #endif
 
 class TGScrollBarElement;
-class TGTextEntry;
+
 
 class TGComboBoxPopup : public TGCompositeFrame {
 
@@ -48,7 +48,6 @@ public:
                    Pixel_t back = GetWhitePixel());
 
    virtual Bool_t HandleButton(Event_t *);
-
    void PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void EndPopup();
 
@@ -60,7 +59,6 @@ class TGComboBox : public TGCompositeFrame, public TGWidget {
 
 protected:
    TGLBEntry           *fSelEntry;      // selected item frame
-   TGTextEntry         *fTextEntry;     // text entry
    TGScrollBarElement  *fDDButton;      // button controlling drop down of popup
    TGComboBoxPopup     *fComboFrame;    // popup containing a listbox
    TGListBox           *fListBox;       // the listbox with text items
@@ -69,26 +67,16 @@ protected:
    TGLayoutHints       *fLhb;           // layout hints for fDDButton
    TGLayoutHints       *fLhdd;          // layout hints for fListBox
 
-   virtual void Init();
-
 public:
    TGComboBox(const TGWindow *p, Int_t id,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
-   TGComboBox(const TGWindow *p, const char *text, Int_t id = -1,
-              UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
-              Pixel_t back = GetWhitePixel());
-
    virtual ~TGComboBox();
 
    virtual void DrawBorder();
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
    virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleSelection(Event_t *event);
-   virtual Bool_t HandleSelectionRequest(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    virtual void AddEntry(TGString *s, Int_t id)
@@ -107,12 +95,8 @@ public:
            { fListBox->RemoveEntry(id); }
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
            { fListBox->RemoveEntries(from_ID, to_ID); }
-   virtual Int_t GetNumberOfEntries() const
-           { return fListBox->GetNumberOfEntries(); }
 
-   virtual TGListBox    *GetListBox() const { return fListBox; }
-   virtual TGTextEntry  *GetTextEntry() const { return fTextEntry; }
-
+   virtual TGListBox *GetListBox() const { return fListBox; }
    virtual void  Select(Int_t id);
    virtual Int_t GetSelected() const { return fListBox->GetSelected(); }
    virtual TGLBEntry *GetSelectedEntry() const
@@ -142,6 +126,8 @@ public:
    TGLineStyleComboBox(const TGWindow *p, Int_t id,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
+   
+   virtual Bool_t HandleButton(Event_t *event);
       
    ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
     

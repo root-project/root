@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.40 2004/06/04 16:05:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.39 2004/06/04 15:57:28 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -270,8 +270,8 @@ class TGCompositeFrame : public TGFrame {
 protected:
    TGLayoutManager *fLayoutManager;   // layout manager
    TList           *fList;            // container of frame elements
-   Bool_t           fLayoutBroken;    // no layout manager is used
-   Bool_t           fCleanup;         // if kTRUE Cleanup() is called in destructor
+
+   Bool_t   fLayoutBroken;            // no layout manager is used
 
    static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
@@ -325,8 +325,6 @@ public:
    virtual void   SetEditable(Bool_t on = kTRUE);
    virtual void   SetLayoutBroken(Bool_t on = kTRUE);
    virtual Bool_t IsLayoutBroken() const { return fLayoutBroken || !fLayoutManager || IsEditable(); }
-   virtual void   SetCleanup(Bool_t on = kTRUE);
-   virtual Bool_t MustCleanup() const { return fCleanup; }
 
    TList *GetList() { return fList; }
    virtual void Print(Option_t *option="") const;

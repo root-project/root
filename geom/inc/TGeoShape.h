@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.22 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.21 2004/02/09 14:03:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -63,8 +63,7 @@ enum EShapeType {
    kGeoTrd2    = BIT(24),
    kGeoComb    = BIT(25),
    kGeoClosedShape = BIT(26),
-   kGeoXtru    = BIT(27),
-   kGeoParaboloid = BIT(28)
+   kGeoXtru    = BIT(27)
 };
 
 protected :
@@ -114,6 +113,7 @@ public:
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const              = 0;
    static void           NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual void          Paint(Option_t *option)                 = 0;
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option) = 0;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    static  Double_t      SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param)          = 0;

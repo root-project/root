@@ -27,8 +27,7 @@ BASEDH       := $(BASEDS:.cxx=.h)
 
 BASEH1       := $(wildcard $(MODDIRI)/T*.h)
 BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
-                TVirtualProof.h TVirtualPerfStats.h TVirtualX.h TParameter.h \
-                TArchiveFile.h TZIPFile.h
+                TVirtualProof.h TVirtualX.h
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))

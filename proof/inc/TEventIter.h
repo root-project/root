@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.6 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.5 2003/04/11 11:48:11 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -41,26 +41,25 @@ class TTree;
 class TEventIter : public TObject {
 
 protected:
-   TDSet         *fDSet;         // data set over which to iterate
+   TDSet         *fDSet;      // data set over which to iterate
 
-   TDSetElement  *fElem;         // Current Element
+   TDSetElement  *fElem;      // Current Element
 
-   TString        fFilename;     // Name of the current file
-   TFile         *fFile;         // Current file
-   Long64_t       fOldBytesRead; // last reported number of bytes read
-   TString        fPath;         // Path to current TDirectory
-   TDirectory    *fDir;          // directory containing the objects or the TTree
-   Long64_t       fElemFirst;    // first entry to process for this element
-   Long64_t       fElemNum;      // number of entries to process for this element
-   Long64_t       fElemCur;      // current entry for this element
+   TString        fFilename;  // Name of the current file
+   TFile         *fFile;      // Current file
+   TString        fPath;      // Path to current TDirectory
+   TDirectory    *fDir;       // directory containing the objects or the TTree
+   Long64_t       fElemFirst; // first entry to process for this element
+   Long64_t       fElemNum;   // number of entries to process for this element
+   Long64_t       fElemCur;   // current entry for this element
 
-   TSelector     *fSel;          // selector to be used
-   Long64_t       fFirst;        // first entry to process
-   Long64_t       fNum;          // number of entries to process
-   Long64_t       fCur;          // current entry
-   Bool_t         fStop;         // termination of run requested
+   TSelector     *fSel;       // selector to be used
+   Long64_t       fFirst;     // first entry to process
+   Long64_t       fNum;       // number of entries to process
+   Long64_t       fCur;       // current entry
+   Bool_t         fStop;      // termination of run requested
 
-   Int_t    LoadDir();           // Load the directory pointed to by fElem
+   Int_t    LoadDir();        // Load the directory pointed to by fElem
 
 public:
    TEventIter();

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.71 2004/06/21 10:47:20 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.68 2004/06/03 10:03:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -437,7 +437,7 @@ void TCanvas::Build()
    // Get window identifier
    if (fCanvasID == -1 && fCanvasImp)
       fCanvasID = fCanvasImp->InitWindow();
-   if (fCanvasID == -1) return;
+   if (fCanvasID < 0) return;
 
    if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
    else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
@@ -733,7 +733,7 @@ TObject *TCanvas::DrawClonePad()
   TPad *selpad = (TPad*)gROOT->GetSelectedPad();
   TPad *pad = padsav;
   if (pad == this) pad = selpad;
-  if (fCanvasID == -1 || padsav == 0 || pad == this) {
+  if (fCanvasID < 0 || padsav == 0 || pad == this) {
      return DrawClone();
   }
   this->cd();
@@ -1265,7 +1265,7 @@ void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
 }
 
 //______________________________________________________________________________
-void TCanvas::Selected(TVirtualPad *pad, TObject *obj, Int_t event)
+void TCanvas::Selected(TPad *pad, TObject *obj, Int_t event)
 {
    // Emit Selected() signal.
 
@@ -1275,7 +1275,7 @@ void TCanvas::Selected(TVirtualPad *pad, TObject *obj, Int_t event)
    args[1] = (Long_t) obj;
    args[2] = event;
 
-   Emit("Selected(TVirtualPad*,TObject*,Int_t)", args);
+   Emit("Selected(TPad*,TObject*,Int_t)", args);
 }
 
 //______________________________________________________________________________
@@ -1402,6 +1402,9 @@ void TCanvas::SavePrimitive(ofstream &out, Option_t *option)
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
    }
+   if (GetShowEditor()) {
+      out<<"   "<<GetName()<<"->ToggleEditor();"<<endl;
+   }
    if (GetHighLightColor() != 5) {
       out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
    }
@@ -1506,6 +1509,9 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<endl;
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
+   }
+   if (GetShowEditor()) {
+      out<<"   "<<GetName()<<"->ToggleEditor();"<<endl;
    }
    if (invalid) SetName(" ");
 

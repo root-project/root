@@ -113,9 +113,6 @@ char *string;
   result.tagnum = -1;
   result.typenum = -1;
   result.ref = 0;
-#ifndef G__OLDIMPLEMENTATION2068
-  result.isconst = G__CONSTVAR;
-#endif
   if((string[0]=='"')||(string[0]=='\'')) {
     for(itemp=1;
 #ifndef G__OLDIMPLEMENTATION1631

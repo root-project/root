@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.3 2004/04/13 09:52:07 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.2 2002/09/14 00:35:05 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,9 +35,5 @@
 #pragma link C++ class TGColorDialog;
 #pragma link C++ class TGFontDialog;
 #pragma link C++ class TGFontDialog::FontProp_t;
-#pragma link C++ class TGDockableFrame;
-#pragma link C++ class TGUndockedFrame;
-#pragma link C++ class TGDockButton;
-#pragma link C++ class TGDockHideButton;
 
 #endif

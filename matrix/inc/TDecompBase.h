@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.8 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.7 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -86,8 +86,6 @@ public :
   virtual TMatrixD Invert     ();
 
   static  void     DiagProd   (const TVectorD &diag,Double_t tol,Double_t &d1,Double_t &d2);
-
-  void Print(Option_t *opt="") const;
 
   TDecompBase &operator= (const TDecompBase &source);
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.21 2004/04/11 18:18:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.20 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -92,7 +92,6 @@ public:
    TProofServ(int *argc, char **argv);
    virtual ~TProofServ();
 
-   TProof       *GetProof() const { return fProof; }
    const char   *GetService() const { return fService; }
    const char   *GetConfDir() const { return fConfDir; }
    const char   *GetConfFile() const { return fConfFile; }

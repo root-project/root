@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.37 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.34 2004/05/18 11:32:49 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -38,8 +38,8 @@
 #include "TProofDebug.h"
 #include "TTimer.h"
 #include "TMap.h"
-#include "TPerfStats.h"
-#include "TStatus.h"
+#include "TEnv.h"
+#include "TProofStats.h"
 
 #include "Api.h"
 
@@ -74,12 +74,16 @@ ClassImp(TProofPlayer)
 
 //______________________________________________________________________________
 TProofPlayer::TProofPlayer()
-   : fAutoBins(0), fOutput(0), fSelector(0), fSelectorClass(0),
-     fFeedbackTimer(0), fEvIter(0), fSelStatus(0)
 {
    // Default ctor.
 
+   fAutoBins      = 0;
    fInput         = new TList;
+   fOutput        = 0;
+   fSelector      = 0;
+   fSelectorClass = 0;
+   fFeedbackTimer = 0;
+   fEvIter        = 0;
 }
 
 //______________________________________________________________________________
@@ -132,7 +136,7 @@ void TProofPlayer::StoreOutput(TList *)
 }
 
 //______________________________________________________________________________
-void TProofPlayer::StoreFeedback(TObject *, TList *)
+void TProofPlayer::StoreFeedback(TSlave *, TList *)
 {
    MayNotUse("StoreFeedback");
 }
@@ -181,16 +185,9 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       Error("Process", "Cannot load: %s", selector_file );
       return -1;
    }
-
    fSelectorClass = fSelector->IsA();
+
    Int_t version = fSelector->Version();
-
-   fOutput = fSelector->GetOutputList();
-
-   TPerfStats::Start(fInput, fOutput);
-
-   fSelStatus = new TStatus;
-   fOutput->Add(fSelStatus);
 
    TCleanup clean(this);
    SetupFeedback();
@@ -212,18 +209,16 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          PDB(kLoop,1) Info("Process","Call Begin(0)");
          fSelector->Begin(0);
       }
-      if (fSelStatus->IsOk()) {
-         PDB(kLoop,1) Info("Process","Call SlaveBegin(0)");
-         fSelector->SlaveBegin(0);  // Init is called explicitly
-                                    // from GetNextEvent()
-      }
+      PDB(kLoop,1) Info("Process","Call SlaveBegin(0)");
+      fSelector->SlaveBegin(0);  // Init is called explicitly from GetNextEvent()
    }
 
    PDB(kLoop,1) Info("Process","Looping over Process()");
 
    // Loop over range
    Long64_t entry;
-   while (fSelStatus->IsOk() && (entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
+   while ((entry = fEvIter->GetNextEvent()) >= 0) {
+
 
       if(version == 0) {
          PDB(kLoop,3)Info("Process","Call ProcessCut(%lld)", entry);
@@ -246,21 +241,19 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // Finalize
 
-   if (fSelStatus->IsOk()) {
-      if (version == 0) {
+   if (version == 0) {
+      PDB(kLoop,1) Info("Process","Call Terminate()");
+      fSelector->Terminate();
+   } else {
+      PDB(kLoop,1) Info("Process","Call SlaveTerminate()");
+      fSelector->SlaveTerminate();
+      if (gProof != 0 && !gProof->IsMaster()) {
          PDB(kLoop,1) Info("Process","Call Terminate()");
          fSelector->Terminate();
-      } else {
-         PDB(kLoop,1) Info("Process","Call SlaveTerminate()");
-         fSelector->SlaveTerminate();
-         if (gProof != 0 && !gProof->IsMaster() && fSelStatus->IsOk()) {
-            PDB(kLoop,1) Info("Process","Call Terminate()");
-            fSelector->Terminate();
-         }
       }
    }
 
-   TPerfStats::Stop();
+   fOutput = fSelector->GetOutputList();
 
    return 0;
 }
@@ -342,6 +335,16 @@ ClassImp(TProofPlayerRemote)
 
 
 //______________________________________________________________________________
+TProofPlayerRemote::TProofPlayerRemote(TProof *proof)
+{
+   fProof         = proof;
+   fOutputLists   = 0;
+   fPacketizer    = 0;
+   fFeedbackLists = 0;
+   fProofStats    = 0;
+}
+
+//______________________________________________________________________________
 TProofPlayerRemote::~TProofPlayerRemote()
 {
    delete fOutput;      // owns the output list
@@ -371,9 +374,21 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    fOutput = new TList;
 
    if(fProof->IsMaster()){
-      TPerfStats::Start(fInput, fOutput);
+      Bool_t doHist = (fInput->FindObject("PROOF_StatsHist") != 0);
+      Bool_t doTrace = (fInput->FindObject("PROOF_StatsTrace") != 0);
+
+      if (doHist || doTrace) {
+         Int_t nslaves = fProof->GetListOfSlaves()->GetSize();
+         fProofStats = new TProofStats(nslaves, fOutput, doHist, doTrace);
+         fProofStats->SimpleEvent(TProofEvent::kStart);
+      }
    } else {
-      TPerfStats::Setup(fInput);
+      if (gEnv->GetValue("Proof.StatsHist", 0)) {
+         fInput->Add(new TNamed("PROOF_StatsHist",""));
+      }
+      if (gEnv->GetValue("Proof.StatsTrace", 0)) {
+         fInput->Add(new TNamed("PROOF_StatsTrace",""));
+      }
    }
 
    // If the filename does not contain "." assume class is compiled in
@@ -408,15 +423,8 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                             dset->GetDirectory() );
 
       delete fPacketizer;
-      if (fInput->FindObject("PROOF_NewPacketizer") != 0) {
-         Info("Process","!!! Using TPacketizer2 !!!");
-         fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
-                                        first, nentries, fInput);
-      } else {
-         PDB(kGlobal,1) Info("Process","Using Standard TPacketizer");
-         fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
-                                       first, nentries, fInput);
-      }
+      fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
+                                     first, nentries);
 
       if ( !fPacketizer->IsValid() ) {
          return -1;
@@ -450,7 +458,11 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
 
    if (fProof->IsMaster()) {
-      TPerfStats::Stop();
+      if (fProofStats != 0) {
+         fProofStats->SimpleEvent(TProofEvent::kStop);
+         delete fProofStats;
+         fProofStats=0;
+      }
    } else {
       TIter next(fOutput);
       TList *output = fSelector->GetOutputList();
@@ -480,13 +492,9 @@ void TProofPlayerRemote::MergeOutput()
    while ( (list = (TList *) next()) ) {
       Long_t offset = 0;
 
-      TObject *obj = fOutput->FindObject(list->GetName());
-
-      if (obj == 0) {
-         obj = list->First();
-         list->Remove(obj);
-         fOutput->Add(obj);
-      }
+      TObject *obj = list->First();
+      list->Remove(obj);
+      fOutput->Add(obj);
 
       if ( list->IsEmpty() ) continue;
 
@@ -562,20 +570,6 @@ TList *TProofPlayerRemote::MergeFeedback()
 {
    PDB(kFeedback,1) Info("MergeFeedback","Enter");
 
-   if ( gProof->IsMaster() ) {
-      // process local feedback objects
-
-      TList *fb = new TList;
-      TIter next(fFeedback);
-      while( TObjString *name = (TObjString*) next() ) {
-         TObject *o = fOutput->FindObject(name->GetName());
-         if (o != 0) fb->Add(o->Clone());
-      }
-
-      StoreFeedback(this, fb); // adopts fb
-   }
-
-
    if ( fFeedbackLists == 0 ) {
       PDB(kFeedback,1) Info("MergeFeedback","Leave (no output)");
       return 0;
@@ -638,7 +632,7 @@ TList *TProofPlayerRemote::MergeFeedback()
 }
 
 //______________________________________________________________________________
-void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
+void TProofPlayerRemote::StoreFeedback(TSlave *slave, TList *out)
 {
    PDB(kFeedback,1) Info("StoreFeedback","Enter");
 
@@ -689,12 +683,12 @@ void TProofPlayerRemote::SetupFeedback()
 {
    if (!gProof->IsMaster()) return; // Client does not need timer
 
-   fFeedback = (TList*) fInput->FindObject("FeedbackList");
+   TList *fb = (TList*) fInput->FindObject("FeedbackList");
 
    PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
-      fFeedback == 0 ? "NOT ":"");
+      fb == 0 ? "NOT ":"");
 
-   if (fFeedback == 0) return;
+   if (fb == 0) return;
 
    // OK, feedback was requested, setup the timer
 

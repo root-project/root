@@ -32,7 +32,7 @@ COMPILER      = gnu
 
 # Linker:
 LD            = build/unix/wingcc_ld.sh
-LDFLAGS       = $(OPT) -Wl,--enable-auto-image-base -Wl,--export-all-symbols \
+LDFLAGS       = $(OPT) --Wl,--enable-auto-image-base -Wl,--export-all-symbols \
                 -L/usr/X11R6/lib \
                 $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,-soname,

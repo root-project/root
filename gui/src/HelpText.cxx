@@ -1,8 +1,9 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.9 2004/04/24 11:00:04 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.8 2004/04/23 16:25:51 brun Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
 
+#if !defined(WIN32) || defined(GDK_WIN32) || defined(R__QT)
 const char gHelpAbout[] = "\
 ROOT is an OO framework for large scale scientific data\n\
 analysis and data mining. It has been developed at CERN with the\n\
@@ -307,4 +308,14 @@ All objects context menus contain the following items:\n\
  on the pointer and, in turn, inspect the pointed object,etc.\n\n\
  -Dump. Same as Inspect, except that the output is on stdout.\n\n\
 ";
-
+#else
+const char gHelpAbout[]         = "empty";
+const char gHelpBrowser[]       = "empry";
+const char gHelpGLViewer[]      = "empty";
+const char gHelpPostscript[]    = "empty";
+const char gHelpButtons[]       = "empty";
+const char gHelpGraphicsEditor[]= "empty";
+const char gHelpPullDownMenus[] = "empty";
+const char gHelpCanvas[]        = "empty";
+const char gHelpObjects[]       = "empty";
+#endif

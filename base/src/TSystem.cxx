@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.94 2004/07/04 17:48:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.88 2004/06/04 16:47:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -41,7 +41,6 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TPluginManager.h"
-#include "TNetFile.h"
 #include "TUrl.h"
 
 #include "compiledata.h"
@@ -53,6 +52,7 @@ const char *gProgPath;
 
 TSystem      *gSystem   = 0;
 TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
+
 
 ClassImp(TProcessEventTimer)
 
@@ -542,6 +542,7 @@ int TSystem::ClosePipe(FILE*)
 int TSystem::GetPid()
 {
    // Get process id.
+
    AbstractMethod("GetPid");
    return -1;
 }
@@ -586,24 +587,21 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
    TSystem *helper = 0;
    TUrl url(path, kTRUE);
 
-   // look for existing helpers
+   // look for existing helper
    TIter next(fHelpers);
    while ((helper = (TSystem*) next()))
-      if (helper->ConsistentWith(path, dirptr))
+      if ((!helper->GetDirPtr() && path &&
+           !strcmp(url.GetProtocol(), helper->GetName())) ||
+          (helper->GetDirPtr() && helper->GetDirPtr() == dirptr))
          return helper;
 
    if (!path)
       return 0;
 
    // create new helper
-   TRegexp re("^root.*:");  // also roots, rootk, etc
-   TString pname = path;
-   if (pname.Index(re) != kNPOS) {
-      // rootd daemon ...
-      helper = new TNetSystem(path);
-   } else if (!strcmp(url.GetProtocol(), "http") &&
-                     pname.BeginsWith("http")) {
-      // http ...
+   if (!strncmp(url.GetProtocol(), "root", 4)) {  // also roots and rootk
+
+   } else if (!strcmp(url.GetProtocol(), "http")) {
 
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
       if (h->LoadPlugin() == -1)
@@ -615,28 +613,6 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       fHelpers->Add(helper);
 
    return helper;
-}
-
-//______________________________________________________________________________
-Bool_t TSystem::ConsistentWith(const char *path, void *dirptr)
-{
-   // Check consistency of this helper with the one required
-   // by 'path' or 'dirptr'
-
-   Bool_t checkproto = kFALSE;
-   if (path) {
-      if (!GetDirPtr()) {
-         TUrl url(path, kTRUE);
-         if (!strncmp(url.GetProtocol(), GetName(), strlen(GetName())))
-            checkproto = kTRUE;
-      }
-   }
-
-   Bool_t checkdir = kFALSE;
-   if (GetDirPtr() && GetDirPtr() == dirptr)
-      checkdir = kTRUE;
-
-   return (checkproto || checkdir);
 }
 
 //______________________________________________________________________________
@@ -755,39 +731,6 @@ Bool_t TSystem::IsAbsoluteFileName(const char *dir)
    if (dir)
       return dir[0] == '/';
    return kFALSE;
-}
-
-//______________________________________________________________________________
-Bool_t TSystem::IsFileInIncludePath(const char *name)
-{
-   // Return true if 'name' is a file that can be found in the ROOT include
-   // path or the current directory.
-   // If 'name' contains any ACLiC style information (e.g. trailing +[+][g|O]),
-   // it will be striped off 'name'.
-
-   if (name==0) return kFALSE;
-   if (strlen(name)==0) return kFALSE;
-
-   TString aclicMode;
-   TString arguments;
-   TString io;
-   TString realname = SplitAclicMode(name, aclicMode, arguments, io);
-
-   TString fileLocation = DirName(realname);
-
-   TString incPath = gSystem->GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
-   incPath.Append(":").Prepend(" ");
-   incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
-   while ( incPath.Index(" :") != -1 ) {
-      incPath.ReplaceAll(" :",":");
-   }
-   incPath.Prepend(fileLocation+":.:");
-
-   const char *actual = Which(incPath,realname);
-
-   if (actual==0) return kFALSE;
-   else return kTRUE;
-
 }
 
 //______________________________________________________________________________
@@ -1259,7 +1202,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       l.Remove(idx+1);
    if (libs.Index(l) != kNPOS)
       return 1;
-   if (idx != kNPOS)
+   if (idx != kNPOS) 
       l.Remove(idx);
    if (l.BeginsWith("lib"))
       l.Replace(0, 3, "-l");
@@ -1391,7 +1334,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
 
    if ((opt.Length()==0) || (opt.First('S')!=kNPOS)) {
       if (!libs.IsNull()) libs.Append(" ");
-//#ifndef WIN32
+#ifndef WIN32
       const char *linked;
       if ((linked = GetLinkedLibraries())) {
          if (fLinkedLibs != LINKEDLIBS) {
@@ -1408,7 +1351,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
             libs.Append(linked);
          }
       } else
-//#endif
+#endif
          libs.Append(fLinkedLibs);
    }
 
@@ -2569,9 +2512,9 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
 
    char *arg = strchr(fname, '(');
    // special case for $(HOME)/aap.C(10)
-   while (arg && *arg && (arg > fname && *(arg-1) == '$') && *(arg+1))
+   while (arg && *(arg-1) == '$' && *(arg+1))
       arg = strchr(arg+1, '(');
-   if (arg && arg > fname) {
+   if (arg) {
       *arg = 0;
       char *t = arg-1;
       while (*t == ' ') {
@@ -2648,3 +2591,4 @@ void TSystem::CleanCompiledMacros()
    while ((lib = (TObjString*)next()))
       Unlink(lib->GetString().Data());
 }
+

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpResidual.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -75,10 +75,10 @@ TQpResidual::TQpResidual(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlo,TVectorD &ixu
   fMy = my;
   fMz = mz;
   
-  if (ixlo.GetNrows() > 0) fXloIndex.Use(ixlo.GetNrows(),ixlo.GetMatrixArray());
-  if (ixup.GetNrows() > 0) fXupIndex.Use(ixup.GetNrows(),ixup.GetMatrixArray());
-  if (iclo.GetNrows() > 0) fCloIndex.Use(iclo.GetNrows(),iclo.GetMatrixArray());
-  if (icup.GetNrows() > 0) fCupIndex.Use(icup.GetNrows(),icup.GetMatrixArray());
+  fXloIndex.Use(ixlo.GetNrows(),ixlo.GetMatrixArray());
+  fXupIndex.Use(ixup.GetNrows(),ixup.GetMatrixArray());
+  fCloIndex.Use(iclo.GetNrows(),iclo.GetMatrixArray());
+  fCupIndex.Use(icup.GetNrows(),icup.GetMatrixArray());
   fNxlo = ixlo.NonZeros();
   fNxup = ixup.NonZeros();
   fMclo = iclo.NonZeros();

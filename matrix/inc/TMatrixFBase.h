@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.14 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.12 2004/05/27 13:17:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -49,7 +49,7 @@ class TElementPosActionF;
 class TMatrixFBase : public TObject {
 
 private:
-  Float_t *GetElements();  // This function is now obsolete (and is not implemented) you should use TMatrix::GetMatrixArray().
+  Double_t *GetElements();  // This function is now obsolete (and is not implemented) you should use TMatrix::GetMatrixArray().
 
 protected:
   Int_t     fNrows;               // number of rows
@@ -83,7 +83,7 @@ public:
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
   enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-  TMatrixFBase() { fIsOwner = kTRUE;
+  TMatrixFBase() { SetBit(kStatus); fIsOwner = kTRUE;
                    fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
 
   virtual ~TMatrixFBase() {}
@@ -104,33 +104,30 @@ public:
   virtual        const Int_t    *GetColIndexArray() const = 0;
   virtual              Int_t    *GetColIndexArray()       = 0;
 
-  virtual              TMatrixFBase &SetRowIndexArray(Int_t *data) = 0;
-  virtual              TMatrixFBase &SetColIndexArray(Int_t *data) = 0;
-  virtual              TMatrixFBase &SetMatrixArray  (const Float_t *data,Option_t *option="");
-          inline       Float_t       SetTol          (Float_t tol);
+  virtual              void      SetRowIndexArray(Int_t *data) = 0;
+  virtual              void      SetColIndexArray(Int_t *data) = 0;
+  virtual              void      SetMatrixArray  (const Float_t *data,Option_t *option="");
+          inline       Float_t   SetTol       (Float_t tol);
 
   virtual void   Clear      (Option_t *option="") = 0;
 
-  inline  void   Invalidate ()       { SetBit(kStatus); }
-  inline  void   MakeValid  ()       { ResetBit(kStatus); }
-  inline  Bool_t IsValid    () const { return !TestBit(kStatus); }
+  inline  void   Invalidate ()       { ResetBit(kStatus); }
+  inline  void   MakeValid  ()       { SetBit(kStatus); }
+  inline  Bool_t IsValid    () const { return TestBit(kStatus); }
   inline  Bool_t IsOwner    () const { return fIsOwner; }
           Bool_t IsSymmetric() const;
 
-  virtual TMatrixFBase &GetSub         (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                        TMatrixFBase &target,Option_t *option="S") const = 0;
-  virtual TMatrixFBase &SetSub         (Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source) = 0;
+  virtual void SetSub          (Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source) = 0;
+  virtual void GetMatrix2Array (Float_t *data,Option_t *option="") const;
+  virtual void InsertRow       (Int_t row,Int_t col,const Float_t *v,Int_t n = -1);
+  virtual void ExtractRow      (Int_t row,Int_t col,      Float_t *v,Int_t n = -1) const;
 
-  virtual void          GetMatrix2Array(Float_t *data,Option_t *option="") const;
-  virtual TMatrixFBase &InsertRow      (Int_t row,Int_t col,const Float_t *v,Int_t n = -1);
-  virtual void          ExtractRow     (Int_t row,Int_t col,      Float_t *v,Int_t n = -1) const;
-
-  virtual TMatrixFBase &Shift          (Int_t row_shift,Int_t col_shift);
-  virtual TMatrixFBase &ResizeTo       (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
-  virtual TMatrixFBase &ResizeTo       (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
-  inline  TMatrixFBase &ResizeTo       (const TMatrixFBase &m) {
-                                         return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
-                                       }
+  virtual void Shift   (Int_t row_shift,Int_t col_shift);
+  virtual void ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
+  virtual void ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+  inline  void ResizeTo(const TMatrixFBase &m) {
+    ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
+  }
 
   virtual Double_t Determinant() const                          { AbstractMethod("Determinant()"); return 0.; }
   virtual void     Determinant(Double_t &d1,Double_t &d2) const { AbstractMethod("Determinant()"); d1 = 0.; d2 = 0.; }
@@ -169,9 +166,9 @@ public:
   virtual TMatrixFBase &Apply(const TElementActionF    &action);
   virtual TMatrixFBase &Apply(const TElementPosActionF &action);
 
-  virtual TMatrixFBase &Randomize(Float_t alpha,Float_t beta,Double_t &seed);
+  virtual void Randomize(Float_t alpha,Float_t beta,Double_t &seed);
 
-  ClassDef(TMatrixFBase,4) // Dense Matrix base class (single precision)
+  ClassDef(TMatrixFBase,2) // Dense Matrix base class (single precision)
 };
 
 Float_t TMatrixFBase::SetTol(Float_t newTol)

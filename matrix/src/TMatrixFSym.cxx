@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.13 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.10 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -159,14 +159,15 @@ void TMatrixFSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_l
   // Allocate new matrix. Arguments are number of rows, columns, row
   // lowerbound (0 default) and column lowerbound (0 default).
 
-  if (no_rows < 0 || no_cols < 0)
+  Invalidate();
+
+  if (no_rows <= 0 || no_cols <= 0)
   {
     Error("Allocate","no_rows=%d no_cols=%d",no_rows,no_cols);
-    Invalidate();
     return;
   }
 
-  MakeValid();
+  SetBit(kStatus);
   fNrows   = no_rows;
   fNcols   = no_cols;
   fRowLwb  = row_lwb;
@@ -175,12 +176,9 @@ void TMatrixFSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_l
   fIsOwner = kTRUE;
   fTol     = DBL_EPSILON;
 
-  if (fNelems > 0) {
-    fElements = New_m(fNelems);
-    if (init)
-      memset(fElements,0,fNelems*sizeof(Float_t));
-  } else
-    fElements = 0;
+  fElements = New_m(fNelems);
+  if (init)
+    memset(fElements,0,fNelems*sizeof(Float_t));
 }
 
 //______________________________________________________________________________
@@ -271,13 +269,12 @@ void TMatrixFSym::AtMultA(const TMatrixFSym &a,Int_t constr)
 }
 
 //______________________________________________________________________________ 
-TMatrixFSym &TMatrixFSym::Use(Int_t row_lwb,Int_t row_upb,Float_t *data)
+void TMatrixFSym::Use(Int_t row_lwb,Int_t row_upb,Float_t *data)
 {
   if (row_upb < row_lwb)
   {
     Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
-    Invalidate();
-    return *this;
+    return;
   }
 
   Clear();
@@ -288,12 +285,10 @@ TMatrixFSym &TMatrixFSym::Use(Int_t row_lwb,Int_t row_upb,Float_t *data)
   fNelems   = fNrows*fNcols;
   fElements = data;
   fIsOwner  = kFALSE;
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixFSym &TMatrixFSym::GetSub(Int_t row_lwb,Int_t row_upb,TMatrixFSym &target,Option_t *option) const
+TMatrixFSym TMatrixFSym::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) const
 {
   // Get submatrix [row_lwb..row_upb][row_lwb..row_upb]; The indexing range of the
   // returned matrix depends on the argument option:
@@ -305,18 +300,15 @@ TMatrixFSym &TMatrixFSym::GetSub(Int_t row_lwb,Int_t row_upb,TMatrixFSym &target
 
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("GetSub","row_lwb out of bounds");
-    target.Invalidate();
-    return target;
+    return TMatrixFSym();
   }
   if (row_upb < fRowLwb || row_upb > fRowLwb+fNrows-1) {
     Error("GetSub","row_upb out of bounds");
-    target.Invalidate();
-    return target;
+    return TMatrixFSym();
   }
   if (row_upb < row_lwb) {
     Error("GetSub","row_upb < row_lwb");
-    target.Invalidate();
-    return target;
+    return TMatrixFSym();
   }
 
   TString opt(option);
@@ -333,154 +325,60 @@ TMatrixFSym &TMatrixFSym::GetSub(Int_t row_lwb,Int_t row_upb,TMatrixFSym &target
     row_upb_sub = row_upb;
   }
 
-  target.ResizeTo(row_lwb_sub,row_upb_sub,row_lwb_sub,row_upb_sub);
+  TMatrixFSym sub(row_lwb_sub,row_upb_sub);
   const Int_t nrows_sub = row_upb_sub-row_lwb_sub+1;
 
-  if (target.GetRowIndexArray() && target.GetColIndexArray()) {
-    for (Int_t irow = 0; irow < nrows_sub; irow++) {
-      for (Int_t icol = 0; icol < nrows_sub; icol++) {
-        target(irow+row_lwb_sub,icol+row_lwb_sub) = (*this)(row_lwb+irow,row_lwb+icol);
-      }
-    }
-  } else {
-    const Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
-          Float_t *bp = target.GetMatrixArray();
+  const Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
+        Float_t *bp = sub.GetMatrixArray();
 
-    for (Int_t irow = 0; irow < nrows_sub; irow++) {
-      const Float_t *ap_sub = ap;
-      for (Int_t icol = 0; icol < nrows_sub; icol++) {
-        *bp++ = *ap_sub++;
-      }
-      ap += fNrows;
+  for (Int_t irow = 0; irow < nrows_sub; irow++) {
+    const Float_t *ap_sub = ap;
+    for (Int_t icol = 0; icol < nrows_sub; icol++) {
+      *bp++ = *ap_sub++;
     }
+    ap += fNrows;
   }
 
-  return target;
+  return sub;
 }
 
 //______________________________________________________________________________
-TMatrixFBase &TMatrixFSym::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                  TMatrixFBase &target,Option_t *option) const
+void TMatrixFSym::SetSub(Int_t row_lwb,const TMatrixFBase &source)
 {
-  // Get submatrix [row_lwb..row_upb][col_lwb..col_upb]; The indexing range of the
-  // returned matrix depends on the argument option:
-  //
-  // option == "S" : return [0..row_upb-row_lwb+1][0..col_upb-col_lwb+1] (default)
-  // else          : return [row_lwb..row_upb][col_lwb..col_upb]
-
-  Assert(IsValid());
-  if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
-    Error("GetSub","row_lwb out of bounds");
-    target.Invalidate();
-    return target;
-  }
-  if (col_lwb < fColLwb || col_lwb > fColLwb+fNcols-1) {
-    Error("GetSub","col_lwb out of bounds");
-    target.Invalidate();
-    return target;
-  }
-  if (row_upb < fRowLwb || row_upb > fRowLwb+fNrows-1) {
-    Error("GetSub","row_upb out of bounds");
-    target.Invalidate();
-    return target;
-  }
-  if (col_upb < fColLwb || col_upb > fColLwb+fNcols-1) {
-    Error("GetSub","col_upb out of bounds");
-    target.Invalidate();
-    return target;
-  }
-  if (row_upb < row_lwb || col_upb < col_lwb) {
-    Error("GetSub","row_upb < row_lwb || col_upb < col_lwb");
-    target.Invalidate();
-    return target;
-  }
-
-  TString opt(option);
-  opt.ToUpper();
-  const Int_t shift = (opt.Contains("S")) ? 1 : 0;
-
-  const Int_t row_lwb_sub = (shift) ? 0               : row_lwb;
-  const Int_t row_upb_sub = (shift) ? row_upb-row_lwb : row_upb;
-  const Int_t col_lwb_sub = (shift) ? 0               : col_lwb;
-  const Int_t col_upb_sub = (shift) ? col_upb-col_lwb : col_upb;
-
-  target.ResizeTo(row_lwb_sub,row_upb_sub,col_lwb_sub,col_upb_sub);
-  const Int_t nrows_sub = row_upb_sub-row_lwb_sub+1;
-  const Int_t ncols_sub = col_upb_sub-col_lwb_sub+1;
-
-  if (target.GetRowIndexArray() && target.GetColIndexArray()) {
-    for (Int_t irow = 0; irow < nrows_sub; irow++) {
-      for (Int_t icol = 0; icol < ncols_sub; icol++) {
-        target(irow+row_lwb_sub,icol+col_lwb_sub) = (*this)(row_lwb+irow,col_lwb+icol);
-      }
-    }
-  } else {
-    const Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNcols+(col_lwb-fColLwb);
-          Float_t *bp = target.GetMatrixArray();
-
-    for (Int_t irow = 0; irow < nrows_sub; irow++) {
-      const Float_t *ap_sub = ap;
-      for (Int_t icol = 0; icol < ncols_sub; icol++) {
-        *bp++ = *ap_sub++;
-      }
-      ap += fNcols;
-    }
-  }
-
-  return target;
-}
-
-//______________________________________________________________________________
-TMatrixFSym &TMatrixFSym::SetSub(Int_t row_lwb,const TMatrixFBase &source)
-{ 
   // Insert matrix source starting at [row_lwb][row_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source][row_lwb..row_lwb+nrows_source];
-    
+
   Assert(IsValid());
   Assert(source.IsValid());
-    
+
   if (!source.IsSymmetric()) {
     Error("SetSub","source matrix is not symmetric");
-    Invalidate();
-    return *this;
+    return;
   }
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("SetSub","row_lwb outof bounds");
-    Invalidate();
-    return *this;
+    return;
   }
   const Int_t nRows_source = source.GetNrows();
   if (row_lwb+nRows_source > fRowLwb+fNrows) {
     Error("SetSub","source matrix too large");
-    Invalidate();
-    return *this;
-  }
-  
-  if (source.GetRowIndexArray() && source.GetColIndexArray()) {
-    const Int_t rowlwb_s = source.GetRowLwb();
-    for (Int_t irow = 0; irow < nRows_source; irow++) {
-      for (Int_t icol = 0; icol < nRows_source; icol++) {
-        (*this)(row_lwb+irow,row_lwb+icol) = source(rowlwb_s+irow,rowlwb_s+icol);
-      }
-    }
-  } else {
-    const Float_t *bp = source.GetMatrixArray();
-          Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
-      
-    for (Int_t irow = 0; irow < nRows_source; irow++) {
-      Float_t *ap_sub = ap;
-      for (Int_t icol = 0; icol < nRows_source; icol++) {
-        *ap_sub++ = *bp++;
-      }
-      ap += fNrows;
-    }
+    return;
   }
 
-  return *this;
+  const Float_t *bp = source.GetMatrixArray();
+        Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
+
+  for (Int_t irow = 0; irow < nRows_source; irow++) {
+    Float_t *ap_sub = ap;
+    for (Int_t icol = 0; icol < nRows_source; icol++) {
+      *ap_sub++ = *bp++;
+    }
+    ap += fNrows;
+  }
 }
 
 //______________________________________________________________________________
-TMatrixFBase &TMatrixFSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source)
+void TMatrixFSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source)
 {
   // Insert matrix source starting at [row_lwb][col_lwb] in a symmetric fashion, thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source][row_lwb..row_lwb+nrows_source];
@@ -490,28 +388,24 @@ TMatrixFBase &TMatrixFSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixFBase
 
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("SetSub","row_lwb out of bounds");
-    Invalidate();
-    return *this;
+    return;
   }
   if (col_lwb < fColLwb || col_lwb > fColLwb+fNcols-1) {
     Error("SetSub","col_lwb out of bounds");
-    Invalidate();
-    return *this;
+    return;
   }
   const Int_t nRows_source = source.GetNrows();
   const Int_t nCols_source = source.GetNcols();
 
   if (row_lwb+nRows_source > fRowLwb+fNrows || col_lwb+nCols_source > fRowLwb+fNrows) {
     Error("SetSub","source matrix too large");
-    Invalidate();
-    return *this;
+    return;
   }
   if (col_lwb+nCols_source > fRowLwb+fNrows || row_lwb+nRows_source > fRowLwb+fNrows) {
     Error("SetSub","source matrix too large");
-    Invalidate();
-    return *this;
+    return;
   }
-  
+
   const Int_t rowlwb_s = source.GetRowLwb();
   const Int_t collwb_s = source.GetColLwb();
   if (row_lwb >= col_lwb) {
@@ -520,7 +414,7 @@ TMatrixFBase &TMatrixFSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixFBase
     for (irow = 0; irow < nRows_source; irow++) {
       for (Int_t icol = 0; col_lwb+icol <= row_lwb+irow &&
                              icol < nCols_source; icol++) {
-        (*this)(row_lwb+irow,col_lwb+icol) = source(irow+rowlwb_s,icol+collwb_s);
+        (*this)(row_lwb+irow-fRowLwb,col_lwb+icol-fRowLwb) = source(irow+rowlwb_s,icol+collwb_s);
       }
     }
 
@@ -528,64 +422,58 @@ TMatrixFBase &TMatrixFSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixFBase
     for (irow = 0; irow < nCols_source; irow++) {
       for (Int_t icol = nRows_source-1; row_lwb+icol > irow+col_lwb &&
                               icol >= 0; icol--) {
-        (*this)(col_lwb+irow,row_lwb+icol) = source(icol+rowlwb_s,irow+collwb_s);
+        (*this)(col_lwb+irow-fRowLwb,row_lwb+icol-fRowLwb) = source(icol+rowlwb_s,irow+collwb_s);
       }
     }
   } else {
 
   }
 
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixFBase &TMatrixFSym::SetMatrixArray(const Float_t *data,Option_t *option)
+void TMatrixFSym::SetMatrixArray(const Float_t *data,Option_t *option)
 {
   TMatrixFBase::SetMatrixArray(data,option);
   if (!this->IsSymmetric()) {
     Error("SetMatrixArray","Matrix is not symmetric after Set");
     Invalidate();
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixFBase &TMatrixFSym::Shift(Int_t row_shift,Int_t col_shift)
+void TMatrixFSym::Shift(Int_t row_shift,Int_t col_shift)
 {
   if (row_shift != col_shift) {
     Error("Shift","row_shift != col_shift");
     Invalidate();
   }
-  return TMatrixFBase::Shift(row_shift,col_shift);
+  TMatrixFBase::Shift(row_shift,col_shift);
 }
 
 //______________________________________________________________________________
-TMatrixFBase &TMatrixFSym::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
+void TMatrixFSym::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
 {
   if (nrows != ncols) {
     Error("ResizeTo","nrows != ncols");
     Invalidate();
-    return *this;
   }
-  return TMatrixFBase::ResizeTo(nrows,ncols);
+  TMatrixFBase::ResizeTo(nrows,ncols);
 }
 
 //______________________________________________________________________________
-TMatrixFBase &TMatrixFSym::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                    Int_t /*nr_nonzeros*/)
+void TMatrixFSym::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                           Int_t /*nr_nonzeros*/)
 {
   if (row_lwb != col_lwb) {
     Error("ResizeTo","row_lwb != col_lwb");
     Invalidate();
-    return *this;
   }
   if (row_upb != col_upb) {
     Error("ResizeTo","row_upb != col_upb");
     Invalidate();
-    return *this;
   }
-  return TMatrixFBase::ResizeTo(row_lwb,row_upb,col_lwb,col_upb);
+  TMatrixFBase::ResizeTo(row_lwb,row_upb,col_lwb,col_upb);
 }
 
 //______________________________________________________________________________
@@ -829,7 +717,7 @@ TMatrixFBase &TMatrixFSym::Apply(const TElementPosActionF &action)
 }
 
 //______________________________________________________________________________
-TMatrixFBase &TMatrixFSym::Randomize(Float_t alpha,Float_t beta,Double_t &seed)
+void TMatrixFSym::Randomize(Float_t alpha,Float_t beta,Double_t &seed)
 {
   // randomize matrix element values but keep matrix symmetric
 
@@ -837,8 +725,7 @@ TMatrixFBase &TMatrixFSym::Randomize(Float_t alpha,Float_t beta,Double_t &seed)
     
   if (fNrows != fNcols || fRowLwb != fColLwb) {
     Error("Randomize(Float_t,Float_t,Double_t &","matrix should be square");
-    Invalidate();
-    return *this;
+    return;
   }
   
   const Float_t scale = beta-alpha;
@@ -854,12 +741,10 @@ TMatrixFBase &TMatrixFSym::Randomize(Float_t alpha,Float_t beta,Double_t &seed)
       }
     }
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixFSym &TMatrixFSym::RandomizePD(Float_t alpha,Float_t beta,Double_t &seed)
+void TMatrixFSym::RandomizePD(Float_t alpha,Float_t beta,Double_t &seed)
 {
   // randomize matrix element values but keep matrix symmetric positive definite
 
@@ -867,8 +752,7 @@ TMatrixFSym &TMatrixFSym::RandomizePD(Float_t alpha,Float_t beta,Double_t &seed)
 
   if (fNrows != fNcols || fRowLwb != fColLwb) {
     Error("RandomizeSym(Float_t,Float_t,Double_t &","matrix should be square");
-    Invalidate();
-    return *this;
+    return;
   }
 
   const Float_t scale = beta-alpha;
@@ -894,8 +778,6 @@ TMatrixFSym &TMatrixFSym::RandomizePD(Float_t alpha,Float_t beta,Double_t &seed)
         ep[off2+i] = ep[off1+j];
     }
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
@@ -1057,24 +939,27 @@ void TMatrixFSym::Streamer(TBuffer &R__b)
   if (R__b.IsReading()) {
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-    Clear();
-    TMatrixFBase::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fElements = new Float_t[fNelems];
-    Int_t i;
-    for (i = 0; i < fNrows; i++) {
-      R__b.ReadFastArray(fElements+i*fNcols+i,fNcols-i);
-    }
-    // copy to Lower left triangle
-    for (i = 0; i < fNrows; i++) {
-      for (Int_t j = 0; j < i; j++) {
-        fElements[i*fNcols+j] = fElements[j*fNrows+i];
+      Clear();
+      TMatrixFBase::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+      fElements = new Float_t[fNelems];
+      Int_t i;
+      for (i = 0; i < fNrows; i++) {
+        R__b.ReadFastArray(fElements+i*fNcols+i,fNcols-i);
       }
-    }
-    if (fNelems <= kSizeMax) {
-      memcpy(fDataStack,fElements,fNelems*sizeof(Float_t));
-      delete [] fElements;
-      fElements = fDataStack;
-    }
+
+      if (fNelems <= kSizeMax) {
+        memcpy(fDataStack,fElements,fNelems*sizeof(Float_t));
+        delete [] fElements;
+        fElements = fDataStack;
+      }
+
+      // copy to Lower left triangle
+      for (i = 0; i < fNrows; i++) {
+        for (Int_t j = 0; j < i; j++) {
+          fElements[i*fNcols+j] = fElements[j*fNrows+i];
+        }
+      }
+      return;
   } else {
     TMatrixFBase::Class()->WriteBuffer(R__b,this);
     // Only write the Upper right triangle

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.58 2004/06/16 08:23:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.55 2004/03/12 00:30:43 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -45,7 +45,6 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fLast    = 0;
    fParent  = 0;
    fLabels  = 0;
-   fBits2   = 0;
    fTimeDisplay = 0;
 }
 
@@ -223,7 +222,6 @@ void TAxis::Copy(TObject &obj) const
    ((TAxis&)obj).fXmax   = fXmax;
    ((TAxis&)obj).fFirst  = fFirst;
    ((TAxis&)obj).fLast   = fLast;
-   ((TAxis&)obj).fBits2  = fBits2;
    fXbins.Copy(((TAxis&)obj).fXbins);
    ((TAxis&)obj).fTimeFormat   = fTimeFormat;
    ((TAxis&)obj).fTimeDisplay  = fTimeDisplay;
@@ -453,9 +451,7 @@ Int_t TAxis::FindBin(const char *label)
    //create list of labels if it does not exist yet
    if (!fLabels) {
       if (!fParent) return -1;
-      fLabels = new THashList(1,1);
-      fParent->SetBit(TH1::kCanRebin);
-      if (fXmax <= fXmin) fXmax = fXmin+1;
+      fLabels = new THashList(fNbins,1);
    }
 
    // search for label in the existing list
@@ -670,34 +666,6 @@ Bool_t TAxis::GetRotateTitle() const
    return TestBit(kRotateTitle) ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
-void TAxis::ImportAttributes(const TAxis *axis)
-{
-// Copy axis attributes to this 
-
-   SetTitle(axis->GetTitle());
-   SetNdivisions(axis->GetNdivisions());
-   SetAxisColor(axis->GetAxisColor());
-   SetLabelColor(axis->GetLabelColor());
-   SetLabelFont(axis->GetLabelFont());
-   SetLabelOffset(axis->GetLabelOffset());
-   SetLabelSize(axis->GetLabelSize());
-   SetTickLength(axis->GetTickLength());
-   SetTitleOffset(axis->GetTitleOffset());
-   SetTitleSize(axis->GetTitleSize());
-   SetTitleColor(axis->GetTitleColor());
-   SetTitleFont(axis->GetTitleFont());
-   SetBit(TAxis::kCenterTitle,   axis->TestBit(TAxis::kCenterTitle));
-   SetBit(TAxis::kCenterLabels,  axis->TestBit(TAxis::kCenterLabels));
-   SetBit(TAxis::kRotateTitle,   axis->TestBit(TAxis::kRotateTitle));
-   SetBit(TAxis::kNoExponent,    axis->TestBit(TAxis::kNoExponent));
-   SetBit(TAxis::kTickPlus,      axis->TestBit(TAxis::kTickPlus));
-   SetBit(TAxis::kTickMinus,     axis->TestBit(TAxis::kTickMinus));
-   SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
-   if (axis->GetDecimals())      SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2   
-   SetTimeFormat(axis->GetTimeFormat());
-}
-
 //___________________________________________________________________________
 void TAxis::RotateTitle(Bool_t rotate)
 {
@@ -772,7 +740,6 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fXmax    = xup;
    fFirst   = 0;
    fLast    = 0;
-   fBits2   = 0;
    char name[64];
    sprintf(name,"%s%s",GetName(),"x");
    TAttAxis::ResetAttAxis(name);
@@ -797,7 +764,6 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
    fXmax      = fXbins.fArray[fNbins];
    fFirst     = 0;
    fLast      = 0;
-   fBits2     = 0;
    char name[64];
    sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
@@ -822,37 +788,11 @@ void TAxis::Set(Int_t nbins, const Axis_t *xbins)
    fXmax      = fXbins.fArray[fNbins];
    fFirst     = 0;
    fLast      = 0;
-   fBits2     = 0;
    char name[64];
    sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();
-}
-
-//______________________________________________________________________________
-Bool_t TAxis::GetDecimals() const
-{
-   // Returns kTRUE if kDecimals bit is set, kFALSE otherwise.
-   // see TAxis::SetDecimals
-   
-   if ((fBits2 & kDecimals) != 0) return kTRUE;
-   else                           return kFALSE;
-}
-
-
-//______________________________________________________________________________
-void TAxis::SetDecimals(Bool_t dot)
-{
-// Set the Decimals flag
-// By default, blank characters are stripped, and then the
-// label is correctly aligned. The dot, if last character of the string, 
-// is also stripped, unless this option is specified.
-// One can disable the option by calling axis.SetDecimals(kTRUE).
-// The flag (in fBits2) is passed to the drawing function TGaxis::PaintAxis
-
-   if (dot) fBits2 |=  kDecimals;
-   else     fBits2 &= ~kDecimals;
 }
 
 //______________________________________________________________________________
@@ -914,7 +854,6 @@ void TAxis::SetMoreLogLabels(Bool_t more)
 Bool_t TAxis::GetNoExponent() const
 {
    // Returns kTRUE if kNoExponent bit is set, kFALSE otherwise.
-   // see TAxis::SetNoExponent
 
    return TestBit(kNoExponent) ? kTRUE : kFALSE;
 }

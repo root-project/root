@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.1 2004/03/11 18:06:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.1.2.1 2003/11/05 21:58:19 cvsuser Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -10,15 +10,25 @@
 //////////////////////////////////////////////////////////////////////////
 
 
+#ifndef ROOT_TProofDraw
 #include "TProofDraw.h"
+#endif
 
-
-#include "TError.h"
-#include "TH1F.h"
-#include "TStatus.h"
-#include "TTreeFormula.h"
-#include "TTreeFormulaManager.h"
+#ifndef ROOT_TTree
 #include "TTree.h"
+#endif
+
+#ifndef ROOT_TTreeFormula
+#include "TTreeFormula.h"
+#endif
+
+#ifndef ROOT_TTreeFormulaManager
+#include "TTreeFormulaManager.h"
+#endif
+
+#ifndef ROOT_TH1F
+#include "TH1F.h"
+#endif
 
 
 ClassImp(TProofDraw)
@@ -26,7 +36,7 @@ ClassImp(TProofDraw)
 
 //______________________________________________________________________________
 TProofDraw::TProofDraw()
-   : fStatus(0), fManager(0), fSelFormula(0), fVarXFormula(0), fHistogram(0)
+   : fManager(0), fSelFormula(0), fVarXFormula(0), fHistogram(0)
 {
 }
 
@@ -59,48 +69,42 @@ Info("Init","Enter tree = %p", tree);
 
    fSelFormula = new TTreeFormula("Selection", fSelection, tree);
    if (fSelFormula->GetNdim() == 0) {
-      SetError("Init", Form("selection invalid (%s)", fSelection.Data()));
+      Error("Init", "selection invalid (%s)", fSelection.Data());
       ClearFormulas();
-      return;
    }
 
    if (fSelFormula->IsString()) {
-      SetError("Init", Form("strings not supported, selection invalid (%s)", fSelection.Data()));
+      Error("Init", "strings not supported, selection invalid (%s)", fSelection.Data());
       ClearFormulas();
-      return;
    }
 
    if (fSelFormula->EvalClass() != 0) {
-      SetError("Init", Form("Objects not supported, selection invalid (%s)", fSelection.Data()));
+      Error("Init", "Objects not supported, selection invalid (%s)", fSelection.Data());
       ClearFormulas();
-      return;
    }
 
    fManager->Add(fSelFormula);
-
+   
 fSelFormula->Print();
 
    fVarXFormula = new TTreeFormula("VarX", fVarX, tree);
    if (fVarXFormula->GetNdim() == 0) {
-      SetError("Init", Form("varX invalid (%s)", fVarX.Data()));
+      Error("Init", "varX invalid (%s)", fVarX.Data());
       ClearFormulas();
-      return;
    }
 
    if (fVarXFormula->IsString()) {
-      SetError("Init", Form("strings not supported, varX invalid (%s)", fVarX.Data()));
+      Error("Init", "strings not supported, varX invalid (%s)", fVarX.Data());
       ClearFormulas();
-      return;
    }
 
    if (fVarXFormula->EvalClass() != 0) {
-      SetError("Init", Form("Objects not supported, varX invalid (%s)", fVarX.Data()));
+      Error("Init", "Objects not supported, varX invalid (%s)", fVarX.Data());
       ClearFormulas();
-      return;
    }
 
    fManager->Add(fVarXFormula);
-
+   
 fVarXFormula->Print();
 
    fManager->Sync();
@@ -113,12 +117,6 @@ fVarXFormula->Print();
 Bool_t TProofDraw::Notify()
 {
 Info("Notify","Enter");
-   if (fStatus == 0) {
-      fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      Assert(fStatus);
-   }
-
-   if (!fStatus->IsOk()) return kFALSE;
 
    if (fVarXFormula) fVarXFormula->UpdateFormulaLeaves();
    if (fSelFormula) fSelFormula->UpdateFormulaLeaves();
@@ -165,21 +163,21 @@ Bool_t TProofDraw::Process(int entry)
 
    fTree->LoadTree(entry);
    Int_t ndata = fManager->GetNdata();
-
+   
 //Info("Process","ndata = %d", ndata);
 
    for (Int_t i=0;i<ndata;i++) {
       Double_t w = fSelFormula->EvalInstance(i);
 
 //Info("Process","w[%d] = %f", i, w);
-
+      
       if (w == 0.0) continue;
       Double_t x = fVarXFormula->EvalInstance(i);
 
 //Info("Process","x[%d] = %f", i, x);
       fHistogram->Fill(x, w);
    }
-
+        
    return kTRUE;
 }
 
@@ -196,36 +194,12 @@ Info("SlaveTerminate","Enter");
 void TProofDraw::Terminate(void)
 {
 Info("Terminate","Enter");
-   if (fStatus == 0) {
-      fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      Assert(fStatus);
-   }
-
-   if (!fStatus->IsOk()) {
-      fStatus->Print();
-      return;
-   }
 
    fHistogram = (TH1F *) fOutput->FindObject("htemp");
    if (fHistogram == 0) {
       Error("Terminate","Did not find histogram?");
       return;
    }
-
+      
    fHistogram->Draw();
 }
-
-
-//______________________________________________________________________________
-void TProofDraw::SetError(const char *sub, const char *mesg)
-{
-   if (fStatus == 0) {
-      fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      Assert(fStatus);
-   }
-
-   TString m;
-   m.Form("%s::%s: %s", IsA()->GetName(), sub, mesg);
-   fStatus->Add(m);
-}
-

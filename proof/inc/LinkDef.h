@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.18 2004/06/25 17:27:09 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.15 2004/05/18 11:32:49 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,7 +20,6 @@
 #pragma link C++ global gProofDebugLevel;
 
 #pragma link C++ class TProof;
-#pragma link C++ class TSlaveInfo+;
 #pragma link C++ class TProofServ;
 #pragma link C++ class TProofDebug;
 #pragma link C++ class TProofLimitsFinder;
@@ -39,9 +38,7 @@
 #pragma link C++ class TCondor+;
 #pragma link C++ class TCondorSlave+;
 #pragma link C++ class TProofDraw+;
-#pragma link C++ class TDrawFeedback+;
-#pragma link C++ class TPerfStats;
-#pragma link C++ class TPerfEvent+;
-#pragma link C++ class TStatus+;
+#pragma link C++ class TProofStats;
+#pragma link C++ class TProofEvent+;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.13 2004/06/14 15:52:58 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.11 2004/01/15 18:13:35 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include <olectl.h>
 
 #define ID_SPLASHSCREEN      25
+#define MY_BUFSIZE         1024 // buffer size for console window titles
 
 static const char *gConception[] = {
    "Rene Brun",
@@ -627,10 +628,10 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
    HDC hDC;
    LOGFONT lf;
    static HFONT hFont;
-   const char bmpDir[] = "\\icons\\Splash.gif";
    HWND hwndFound;         // this is what is returned to the caller
-   char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
-   char pszOldWindowTitle[1024]; // contains original WindowTitle
+   char pszNewWindowTitle[MY_BUFSIZE]; // contains fabricated WindowTitle
+   char pszOldWindowTitle[MY_BUFSIZE]; // contains original WindowTitle
+   const char bmpDir[] = "\\icons\\Splash.gif";
    char FullBmpDir[256];
    char *RootSysDir;
    int xScreen;
@@ -686,21 +687,23 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
              SelectObject(hDC, hFont);
          DrawVersion(hDC);
          EndPaint(hWnd, &ps);
+         if(!gAbout) {
+            // fetch current window title
+            GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
+            // format a "unique" NewWindowTitle
+            wsprintf(pszNewWindowTitle,"%d/%d", GetTickCount(), GetCurrentProcessId());
+            // change current window title
+            SetConsoleTitle(pszNewWindowTitle);
+            // ensure window title has been updated
+            Sleep(40);
+            // look for NewWindowTitle
+            hwndFound=FindWindow(0, pszNewWindowTitle);
+            // restore original window title
+            ShowWindow(hwndFound, SW_RESTORE);
+            SetForegroundWindow(hwndFound);
+            SetConsoleTitle("ROOT session");
+         }
          gShow = TRUE;
-         // fetch current window title
-         GetConsoleTitle(pszOldWindowTitle, 1024);
-         // format a "unique" NewWindowTitle
-         wsprintf(pszNewWindowTitle,"%d/%d", GetTickCount(), GetCurrentProcessId());
-         // change current window title
-         SetConsoleTitle(pszNewWindowTitle);
-         // ensure window title has been updated
-         Sleep(40);
-         // look for NewWindowTitle
-         hwndFound=FindWindow(NULL, pszNewWindowTitle);
-         // restore original window title
-         ShowWindow(hwndFound, SW_RESTORE);
-         SetForegroundWindow(hwndFound);
-         SetConsoleTitle("ROOT session");
          break;
 
       default:

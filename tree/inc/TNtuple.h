@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.h,v 1.6 2003/06/25 13:39:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.h,v 1.5 2001/02/28 07:13:54 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -42,9 +42,7 @@ public:
 
    virtual void    Browse(TBrowser *b);
    virtual Int_t   Fill(const Float_t *x);
-           Int_t   Fill(Int_t x0) { return Fill((Float_t)x0); }
-           Int_t   Fill(Double_t x0) { return Fill((Float_t)x0); }
-   virtual Int_t   Fill(Float_t x0, Float_t x1=0, Float_t x2=0, Float_t x3=0,
+   virtual Int_t   Fill(Float_t x0, Float_t x1, Float_t x2=0, Float_t x3=0,
                         Float_t x4=0, Float_t x5=0, Float_t x6=0, Float_t x7=0,
                         Float_t x8=0, Float_t x9=0, Float_t x10=0,
                         Float_t x11=0, Float_t x12=0, Float_t x13=0,

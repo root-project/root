@@ -1,16 +1,10 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "Utility.h"
 #include "ObjectHolder.h"
-
-// ROOT
-#include "TClassEdit.h"
-
-// CINT
-#include "Api.h"
 
 
 //- data ------------------------------------------------------------------------
@@ -35,76 +29,4 @@ PyROOT::ObjectHolder* PyROOT::Utility::getObjectHolder( PyObject* self ) {
    }
 
    return 0;
-}
-
-
-void* PyROOT::Utility::getObjectFromHolderFromArgs( PyObject* argsTuple ) {
-   PyObject* self = PyTuple_GetItem( argsTuple, 0 );
-   Py_INCREF( self );
-
-   PyROOT::ObjectHolder* holder = getObjectHolder( self );
-   Py_DECREF( self );
-
-   if ( holder != 0 )
-      return holder->getObject();
-   return 0;
-}
-
-
-PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& typeName ) {
-   EDataType effType = kOther;
-
-   std::string shortName = TClassEdit::ShortType( G__TypeInfo( typeName.c_str() ).TrueName(), 1 );
-
-   if ( isPointer( typeName ) ) {
-      if ( shortName == "char" )
-         effType = kString;
-      else if ( shortName == "double" )
-         effType = kDoublePtr;
-      else if ( shortName == "float" )
-         effType = kFloatPtr;
-      else if ( shortName == "long" )
-         effType = kLongPtr;
-      else if ( shortName == "int" )
-         effType = kIntPtr;
-      else if ( shortName == "void" )
-         effType = kVoidPtr;
-      else
-         effType = kOther;
-   }
-   else if ( shortName == "bool" )
-      effType = kBool;
-   else if ( shortName == "char" )
-      effType = kChar;
-   else if ( shortName == "short" )
-      effType = kShort;
-   else if ( shortName == "int" )
-      effType = kInt;
-   else if ( shortName == "long" )
-      effType = kLong;
-   else if ( shortName == "float" )
-      effType = kFloat;
-   else if ( shortName == "double" )
-      effType = kDouble;
-   else if ( shortName == "void" )
-      effType = kVoid;
-   else
-      effType = kOther;
-
-   return effType;
-}
-
-
-bool PyROOT::Utility::isPointer( const std::string& tn ) {
-   bool isp = false;
-   for ( std::string::const_reverse_iterator it = tn.rbegin(); it != tn.rend(); ++it ) {
-      if ( *it == '*' || *it == '&' ) {
-         isp = true;
-         break;
-      }
-      else if ( isalnum( *it ) )
-         break;
-   }
-
-   return isp;
 }

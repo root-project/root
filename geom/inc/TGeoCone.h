@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.16 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.15 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -87,6 +87,7 @@ public:
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Int_t skipz=0);
@@ -159,6 +160,7 @@ public:
    virtual void          InspectShape() const;
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2, Int_t skipz=0);

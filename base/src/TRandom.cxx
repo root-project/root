@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.18 2003/11/23 16:13:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.17 2003/02/09 08:55:33 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -646,33 +646,6 @@ void TRandom::SetSeed(UInt_t seed)
   } else {
     fSeed = seed;
   }
-}
-   
-//______________________________________________________________________________
-void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t xlong)
-{
-   // generates random vectors, uniformly distributed over the surface 
-   // of a sphere of given radius. 
-   //   Input : xlong = sphere radius
-   //   Output: x,y,z a random 3-d vector of length xlong
-   // Method:  (based on CERNLIB RN3DIM)
-   // A random vector in the unit cube is generated  and is rejected if it lies outside the unit sphere. 
-   // This rejection technique uses on average about 6 random numbers per vector, where only two are
-   // needed in principle. However, it is faster than the classical two-number technique which requires 
-   // a square root, a sine, and a cosine. 
-
-   Double_t a=0,b=0,c=0,r2=1;
-   while (r2 > 0.25) {
-      a  = gRandom->Rndm() - 0.5;
-      b  = gRandom->Rndm() - 0.5;
-      c  = gRandom->Rndm() - 0.5;
-      r2 =  a*a+b*b+c*c;
-   } 
-	
-   Double_t rinv = xlong/TMath::Sqrt(r2);
-   x = a*rinv;
-   y = b*rinv;
-   z = c*rinv;
 }
 
 //______________________________________________________________________________

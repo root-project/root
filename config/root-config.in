@@ -6,13 +6,14 @@
 # Author: Fons Rademakers, 06/06/99
 
 arch=@architecture@
-platform=@platform@
 bindir=@bindir@
 libdir=@libdir@
 incdir=@incdir@
 features="@features@"
-
-if test "$platform" = "win32"; then
+if test "$arch" = "win32gdk"; then
+   arch="win32"
+fi
+if test "$arch" = "win32"; then
    bindir=`cygpath -u $bindir`
    libdir=`cygpath -u $libdir`
    incdir=`cygpath -u $incdir`
@@ -22,7 +23,7 @@ fi
 
 newlib="-lNew"
 rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
-          -lPostscript -lMatrix -lPhysics"
+          -lPostscript -lMatrix -lQuadp -lPhysics"
 rootglibs="-lGui"
 rootulibs="-u _G__cpp_setupG__Hist       \
            -u _G__cpp_setupG__Graf1      \
@@ -32,9 +33,10 @@ rootulibs="-u _G__cpp_setupG__Hist       \
            -u _G__cpp_setupG__Rint       \
            -u _G__cpp_setupG__PostScript \
            -u _G__cpp_setupG__Matrix     \
+           -u _G__cpp_setupG__Quadp      \
            -u _G__cpp_setupG__Physics"
 rootuglibs="-u _G__cpp_setupG__Gui1"
-if test "$platform" = "win32"; then
+if test "$arch" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Hist       \
               -include:_G__cpp_setupG__Graf1      \
               -include:_G__cpp_setupG__G3D        \
@@ -43,6 +45,7 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__Rint       \
               -include:_G__cpp_setupG__PostScript \
               -include:_G__cpp_setupG__Matrix     \
+              -include:_G__cpp_setupG__Quadp      \
               -include:_G__cpp_setupG__Physics"
    rootuglibs="-include:_G__cpp_setupG__Gui1"
 fi
@@ -248,25 +251,19 @@ freebsd4)
    ;;
 macosx)
    # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
    auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   if [ $macosx_minor -le 3 ]; then
-      forcelibs=$rootulibs
-      forceglibs=$rootuglibs
-   fi
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
    ;;
 macosxxlc)
    # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
    auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   if [ $macosx_minor -le 3 ]; then
-      forcelibs=$rootulibs
-      forceglibs=$rootuglibs
-   fi
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
    ;;
 hiux)
    # Hitachi HIUX
@@ -275,13 +272,6 @@ hiux)
    ;;
 win32)
    # Win32
-   auxcflags="-MD"
-   auxlibs=
-   forcelibs=$rootulibs
-   forceglibs=$rootuglibs
-   ;;
-win32old)
-   # Win32 old native interface
    auxcflags="-MD"
    auxlibs=
    forcelibs=$rootulibs
@@ -324,7 +314,7 @@ case $arch in
       auxldflags="--exceptions $auxldflags"
    fi
    ;;
-freebsd*|linux*)
+freebsd*)
    for f in $features ; do
       if test "x$f" = "xthread" ; then
          auxcflags="-pthread $auxcflags"
@@ -346,7 +336,7 @@ esac
 
 
 prefix=@prefix@
-if test "$platform" = "win32"; then
+if test "$arch" = "win32"; then
    prefix=`cygpath -u ${prefix}`
 fi
 exec_prefix=${prefix}
@@ -359,7 +349,7 @@ noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -376,12 +366,8 @@ while test $# -gt 0; do
 
   case $1 in
     --arch)
-      ### Output the arcitecture (compiler/OS combination)
+      ### Output the arcitecture
       out="$out $arch"
-      ;;
-    --platform)
-      ### Output the platform (OS)
-      out="$out $platform"
       ;;
     --has-*)
       ### Check for feature
@@ -399,7 +385,7 @@ while test $# -gt 0; do
       ;;
     --prefix=*)
       ### Set the prefix
-      if test "$platform" = "win32"; then
+      if test "$arch" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
       prefix=$optarg
@@ -407,7 +393,7 @@ while test $# -gt 0; do
       libdir=${prefix}/lib
       incdir=${prefix}/include
       ### We need to expand the path to backslash seperated path
-      if test "$platform" = "win32"; then
+      if test "$arch" = "win32"; then
          bindir=`cygpath -u $bindir`
          libdir=`cygpath -u $libdir`
          incdir=`cygpath -u $incdir`
@@ -422,7 +408,7 @@ while test $# -gt 0; do
       ;;
     --exec-prefix=*)
       ### Set the exec-prefix
-      if test "$platform" = "win32"; then
+      if test "$arch" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
       exec_prefix=$optarg
@@ -430,7 +416,7 @@ while test $# -gt 0; do
       bindir=${exec_prefix}/bin
       libdir=${exec_prefix}/lib
       ### We need to expand the path to backslash seperated path
-      if test "$platform" = "win32"; then
+      if test "$arch" = "win32"; then
          bindir=`cygpath -u $bindir`
          libdir=`cygpath -u $libdir`
       fi
@@ -470,7 +456,7 @@ while test $# -gt 0; do
       if test ${incdir} != /usr/include; then
          ### In case we're on a Win32 system, we need to expand the
          ### path to a backslash seperated path
-         if test "$platform" = "win32"; then
+         if test "$arch" = "win32"; then
             includes=-I\'`cygpath -w ${incdir}`\'
          else
             includes=-I${incdir}
@@ -504,7 +490,7 @@ while test $# -gt 0; do
       ### If we're on a win32 system, we need to change the -l prefix
       ### into a .lib suffix, and expand the paths to a backslash
       ### separated path.
-      if test "$platform" = "win32"; then
+      if test "$arch" = "win32"; then
          nlibs=`echo $libs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          libs=
          for i in $nlibs; do
@@ -537,7 +523,7 @@ while test $# -gt 0; do
       ### If we're on a win32 system, we need to change the -l prefix
       ### into a .lib suffix, and expand the paths to a backslash
       ### separated path.
-      if test "$platform" = "win32"; then
+      if test "$arch" = "win32"; then
          nlibs=`echo $glibs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          glibs=
          for i in $nlibs; do
@@ -574,8 +560,7 @@ while test $# -gt 0; do
       ### Print a help message
       echo "Usage: `basename $0` [options]"
       echo ""
-      echo "  --arch                Print the architecture (compiler/OS)"
-      echo "  --platform            Print the platform (OS)"
+      echo "  --arch                Print the architecture"
       echo "  --prefix[=dir]        Print or set prefix"
       echo "  --exec-prefix[=dir]   Print or set execution prefix"
       echo "  --libs                Print regular ROOT libraries"

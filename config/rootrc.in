@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.75 2004/06/25 16:49:09 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.72 2004/05/18 11:32:49 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -227,15 +227,6 @@ SSH.ErrorRetry:     "Connection closed by remote host"
 # Max number of retries for SSH in case of retry error (see above)
 SSH.MaxRetry:     100
 
-# Type of key to be used for RSA encryption:
-# 0 = local; 1 = SSL (default if openssl available)
-RSA.KeyType:  1
-
-# In case of 'RSA.KeyType: 1' this specifies the number of bits to
-# be used for the Blowfish key used to encrypt the exchanged information
-# Default 256, minimum 128, maximum 15912.
-# SSL.BFBits:   256
-
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/patch/file.root or
 # castor:/path/file.root. Extend in private .rootrc with a +Url.Special line.
@@ -253,7 +244,6 @@ Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^dcache:  TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^dcap:    TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^alien:   TAlienSystem  RAliEn  "TAlienSystem()"
-Plugin.TArchiveFile: .+[.]zip$ TZIPFile      Core    "TZIPFile(const char*,const char*,TFile*)"
 Plugin.TSQLServer:   ^mysql:   TMySQLServer  MySQL   "TMySQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB   "TSapDBServer(const char*,const char*,const char*)"
@@ -283,6 +273,7 @@ Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,con
 +Plugin.TVirtualX:   win32     TGWin32       Win32        "TGWin32(const char*,const char*)"
 +Plugin.TVirtualX:   win32gdk  TGWin32       Win32gdk     "TGWin32(const char*,const char*)"
 +Plugin.TVirtualX:   qt        TGQt          GQt          "TGQt(const char*,const char*)"
++Plugin.TVirtualX:   qtwin32   TQtThread     GQt          "TQtThread(const char*,const char*)"
 Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.9 2004/06/13 16:26:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.7 2004/06/01 14:41:54 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -48,19 +48,20 @@ public:              // public because of Sun CC bug
 private:
    Long64_t       fProcessed;    // number of entries processed
    TList         *fPackets;      // all processed packets
+   TProofStats   *fStat;         // PROOF runtime statistics
 
    Long64_t       fTotalEntries; // total number of entries to be distributed
 
    TList         *fFileNodes;    // nodes with files
    TList         *fUnAllocated;  // nodes with unallocated files
+   TObject       *fUnAllocNext;  // cursor in fUnAllocated
    TList         *fActive;       // nodes with unfinished files
+   TObject       *fActiveNext;   // cursor in fActive
    TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave
    TTimer        *fProgress;     // progress updates timer
 
    Long64_t       fPacketSize;   // global base packet size
    Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
-
-   Int_t          fMaxSlaveCnt;  // maximum number of slaves per filenode
 
    TPacketizer2();
    TPacketizer2(const TPacketizer2 &);    // no implementation, will generate
@@ -83,8 +84,7 @@ private:
 
 
 public:
-   TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
-                TList *input);
+   TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
    virtual ~TPacketizer2();
 
    Long64_t      GetEntriesProcessed() const { return fProcessed; }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.35 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.34 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -583,7 +583,18 @@ void TGeoTube::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
+   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTube(this, option);
+}
+
+//_____________________________________________________________________________
+void TGeoTube::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintTube(this, option, glmat);
 }
 
 //_____________________________________________________________________________
@@ -1334,7 +1345,18 @@ void TGeoTubeSeg::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
+   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTubs(this, option);
+}
+
+//_____________________________________________________________________________
+void TGeoTubeSeg::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintTubs(this, option, glmat);
 }
 
 //_____________________________________________________________________________

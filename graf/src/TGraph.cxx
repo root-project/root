@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.130 2004/06/22 16:18:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.128 2004/05/06 12:58:40 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 #include "TVirtualPad.h"
 #include "TVirtualUtilPad.h"
 #include "TVirtualHistPainter.h"
-#include "TBrowser.h"
 
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
@@ -498,13 +497,9 @@ void TGraph::Apply(TF1 *f)
 
 
 //______________________________________________________________________________
-void TGraph::Browse(TBrowser *b)
+void TGraph::Browse(TBrowser *)
 {
-   TString opt = gEnv->GetValue("TGraph.BrowseOption","");
-   if (opt.IsNull()) {
-      opt = b ? b->GetDrawOption() : "alp";
-   }
-    Draw(opt.Data());
+    Draw(gEnv->GetValue("TGraph.BrowseOption","alp"));
     gPad->Update();
 }
 
@@ -1050,12 +1045,6 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //
 //  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphasymmerrors
 //            University of Washington
-//
-// a little different approach to approximating the uncertainty in y because of the
-// errors in x, is to make it equal the error in x times the slope of the line.
-// The improvement, compared to the first method (f(x+ exhigh) - f(x-exlow))/2
-// is of (error of x)**2 order. This approach is called "effective variance method".  
-// This improvement has been made in version 4.00/08 by Anna Kreshuk.
 //
 //   Associated functions
 //   ====================

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.h,v 1.2 2004/06/02 15:42:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.h,v 1.1 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Apr 2004
 
 /*************************************************************************
@@ -178,8 +178,6 @@ public :
 
   virtual void     Det       (Double_t &/*d1*/,Double_t &/*d2*/)
                               { MayNotUse("Det(Double_t&,Double_t&)"); }
-
-  void Print(Option_t *opt ="") const; // *MENU*
 
   TDecompSparse &operator= (const TDecompSparse &source);
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.56 2004/07/01 04:55:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.52 2004/06/04 05:16:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -153,7 +153,7 @@ TDirectory::~TDirectory()
    TCollection::EmptyGarbageCollection();
 
    if (gDebug)
-      Info("~TDirectory", "dtor called for %s", GetName());
+      cerr << "TDirectory dtor called for "<< GetName() << endl;
 }
 
 //______________________________________________________________________________
@@ -820,16 +820,16 @@ TObject *TDirectory::Get(const char *namecycle)
 //     foo;1 : get cycle 1 of foo on file
 //
 //  The retrieved object should in principle derive from TObject.
-//  If not, the function TDirectory::GetObject should be called.
+//  If not, the function TDirectory::GetObjectAny should be called.
 //  However, this function will still work for a non-TObject, providing that
-//  the calling application cast the return type to the correct type (which
+//  the calling application cast the return type to the correct type (which 
 //  is the actual type of the object).
 //
 //  NOTE:
-//  The method GetObject offer better protection and avoid the need
+//  The method GetObjectAny offer better protection and avoid the need
 //  for any cast:
 //      MyClass *obj;
-//      directory->GetObject("some object",obj);
+//      directory->GetObjectAny("some object",obj);
 //      if (obj) { ... the object exist and inherits from MyClass ... }
 //
 //  VERY IMPORTANT NOTE:
@@ -904,7 +904,7 @@ TObject *TDirectory::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
-void *TDirectory::GetObjectUnchecked(const char *namecycle)
+void *TDirectory::GetObjectAnyUnchecked(const char *namecycle)
 {
 // return pointer to object identified by namecycle.
 // The returned object may or may not derive from TObject.
@@ -914,24 +914,24 @@ void *TDirectory::GetObjectUnchecked(const char *namecycle)
 //   cycle = "" or cycle = 9999 ==> apply to a memory object
 //
 //  VERY IMPORTANT NOTE:
-//  The calling application must cast the returned object to
+//  The calling application must cast the returned object to 
 //  the final type, eg
-//      MyClass *obj = (MyClass*)directory->GetObject("some object of MyClass");
+//      MyClass *obj = (MyClass*)directory->GetObjectAny("some object of MyClass");
 
-   return GetObjectChecked(namecycle,(TClass*)0);
+   return GetObjectAnyChecked(namecycle,(TClass*)0);
 }
 
 //_________________________________________________________________________________
-void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
+void *TDirectory::GetObjectAnyChecked(const char *namecycle, const char* classname)
 {
-// See documentation of TDirectory::GetObjectCheck(const char *namecycle, const TClass *cl)
+// See documentation of TDirectory::GetObjectAnyCheck(const char *namecycle, const TClass *cl)
 
-   return GetObjectChecked(namecycle,ROOT::GetROOT()->GetClass(classname));
+   return GetObjectAnyChecked(namecycle,ROOT::GetROOT()->GetClass(classname));
 }
 
 
 //____________________________________________________________________________
-void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
+void *TDirectory::GetObjectAnyChecked(const char *namecycle, const TClass* cl)
 {
 // return pointer to object identified by namecycle if and only if the actual
 // object is a type suitable to be stored as a pointer to a "cl"
@@ -942,15 +942,15 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
 //   cycle = "" or cycle = 9999 ==> apply to a memory object
 //
 //  VERY IMPORTANT NOTE:
-//  The calling application must cast the returned pointer to
+//  The calling application must cast the returned pointer to 
 //  the type described by the 2 arguments (i.e. cl):
-//      MyClass *obj = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
+//      MyClass *obj = (MyClass*)directory->GetObjectAnyChecked("some object of MyClass","MyClass"));
 //
-//  Note: We recommend using the method TDirectory::GetObject:
+//  Note: We recommend using the method TDirectory::GetObjectAny:
 //      MyClass *obj = 0;
 //      directory->GetObject("some object inheriting from MyClass",obj);
 //      if (obj) { ... we found what we are looking for ... }
-
+   
    Short_t  cycle;
    char     name[kMaxLen];
 
@@ -1291,8 +1291,8 @@ Int_t TDirectory::ReadKeys()
          // header key in the list.  To prevent further crashes (due to the deletion
          // below) we remove it explicit and warn of potential problems.
          Error("ReadKeys","Abnormal case while reading the header key.  The %s (%s) is probably corrupted.",IsA()->GetName(),GetName());
-
-         fKeys->Remove(headerkey);
+         
+         fKeys->Remove(headerkey); 
       }
       TKey *key;
       frombuf(buffer, &nkeys);
@@ -1570,8 +1570,6 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    //  The function returns the total number of bytes written to the directory.
    //  It returns 0 if the object cannot be written.
 
-   // BE CAREFUL! When this function is called, gDirectory may not be equal to this!
-
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
          // Do not print the error if the file already had a SysError.
@@ -1581,7 +1579,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    }
 
    if (!obj) return 0;
-
+   
    TString opt = option;
    opt.ToLower();
 
@@ -1607,17 +1605,17 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
       oname = newName;
    }
 
-   if (opt.Contains("overwrite")) {
+   if (opt.Contains("overwite")) {
       //One must use GetKey. FindObject would return the lowest cycle of the key!
       //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
-      key = (TKey*)gDirectory->GetKey(oname);
+      key = (TKey*)GetKey(oname);
       if (key) {
          key->Delete();
          delete key;
       }
    }
    if (opt.Contains("writedelete")) {
-      oldkey = (TKey*)gDirectory->GetKey(oname);
+      oldkey = (TKey*)GetKey(oname);
    }
    key = new TKey(obj, oname, bsize);
    if (newName) delete [] newName;
@@ -1630,7 +1628,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    fFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) return 0;
-
+   
    if (oldkey) {
       oldkey->Delete();
       delete oldkey;
@@ -1645,7 +1643,7 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const char *classname, const c
    // Write object from pointer of class classname in this directory
    // obj may not derive from TObject
    // see TDirectory::WriteObject for comments
-   //
+   // 
    // VERY IMPORTANT NOTE:
    //    The value passed as 'obj' needs to be from a pointer to the type described by classname
    //    For example with:
@@ -1661,14 +1659,14 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const char *classname, const c
    // We STRONGLY recommend to use
    //      TopClass *top = ....;
    //      directory->WriteObject(top,"name of object")
-
+   
    TClass *cl = ROOT::GetROOT()->GetClass(classname);
    if (!cl) {
       Error("WriteObjectAny","Unknown class: %s",classname);
       return 0;
    }
    return WriteObjectAny(obj,cl,name,option);
-}
+}   
 
 //______________________________________________________________________________
 Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option)
@@ -1717,14 +1715,14 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    if (opt.Contains("overwrite")) {
       //One must use GetKey. FindObject would return the lowest cycle of the key!
       //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
-      key = (TKey*)gDirectory->GetKey(oname);
+      key = (TKey*)GetKey(oname);
       if (key) {
          key->Delete();
          delete key;
       }
    }
    if (opt.Contains("writedelete")) {
-      oldkey = (TKey*)gDirectory->GetKey(oname);
+      oldkey = (TKey*)GetKey(oname);
    }
    key = new TKey(obj, cl, oname, bsize);
    if (newName) delete [] newName;

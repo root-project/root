@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.21 2004/06/25 17:27:09 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.19 2003/08/29 10:41:27 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -55,12 +55,11 @@ enum EMessageTypes {
    kPROOF_OUTPUTLIST,                    //return the output list from Process()
    kPROOF_AUTOBIN,                       //callback for auto binning
    kPROOF_CACHE,                         //cache and package handling messages
-   kPROOF_GETENTRIES,                    //report back number of entries to master
+   kPROOF_REPORTSIZE,                    //report back number of events to master
    kPROOF_PROGRESS,                      //event loop progress
    kPROOF_FEEDBACK,                      //intermediate version of objects
    kPROOF_STOPPROCESS,                   //stop or abort the current process call
-   kPROOF_HOSTAUTH,                      //HostAuth info follows
-   kPROOF_GETSLAVEINFO,                  //get slave info from master
+   kPROOF_SENDHOSTAUTH,                  //HostAuth info follows
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows
@@ -102,11 +101,7 @@ enum EMessageTypes {
    kROOTD_RFIO,                          //RFIO-like authentication follows
    kROOTD_NEGOTIA,                       //Negotiation follows
    kROOTD_RSAKEY,                        //RSA public key exchange
-   kROOTD_ENCRYPT,                       //An encrypted message follows
-   kROOTD_OPENDIR,                       //Open directory
-   kROOTD_FREEDIR,                       //Free directory
-   kROOTD_DIRENTRY,                      //Get directory entry
-   kROOTD_ACCESS                         //Test Access
+   kROOTD_ENCRYPT                        //An encrypted message follows
 };
 
 #endif

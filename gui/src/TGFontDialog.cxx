@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.3 2004/04/22 13:30:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.2 2004/04/15 09:16:49 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -100,8 +100,6 @@ static const char *gFontList[] = {
     0
 };
 
-
-ClassImp(TGFontDialog)
 
 //________________________________________________________________________________
 TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,

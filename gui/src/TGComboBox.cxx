@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.20 2004/07/07 09:23:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.17 2004/04/11 21:35:34 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 #include "TGPicture.h"
 #include "TGResourcePool.h"
 #include "Riostream.h"
-#include "TGTextEntry.h"
+
 
 ClassImp(TGComboBoxPopup)
 ClassImp(TGComboBox)
@@ -79,7 +79,7 @@ Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
 {
    // Handle mouse button event in combo box popup.
 
-   if (event->fType == kButtonPress && event->fCode == kButton1)
+   if (event->fType == kButtonRelease && event->fCode == kButton1)
       EndPopup();
    return kTRUE;
 }
@@ -132,63 +132,20 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
 
    fWidgetId  = id;
    fMsgWindow = p;
-   fTextEntry = 0;
-
-   fSelEntry = new TGTextLBEntry(this, new TGString(""), 0);
-   fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
-
-   AddFrame(fSelEntry, fLhs = new TGLayoutHints(kLHintsLeft |
-                                                kLHintsExpandY | kLHintsExpandX));
-   Init();
-}
-
-//______________________________________________________________________________
-TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
-                       UInt_t options, ULong_t back) :
-            TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
-{
-   //
-
-   fWidgetId  = id;
-   fMsgWindow = p;
-   fSelEntry = 0;
-
-   fTextEntry = new TGTextEntry(this, text, id);
-   fTextEntry->SetFrameDrawn(kFALSE);
-
-   AddFrame(fTextEntry, fLhs = new TGLayoutHints(kLHintsLeft |
-                                                kLHintsExpandY | kLHintsExpandX));
-   Init();
-}
-
-//______________________________________________________________________________
-TGComboBox::~TGComboBox()
-{
-   // Delete a combo box widget.
-
-   delete fDDButton;
-   delete fSelEntry;
-   delete fTextEntry;
-   delete fListBox;
-   delete fComboFrame;
-   delete fLhs;
-   delete fLhb;
-   delete fLhdd;
-}
-
-//______________________________________________________________________________
-void TGComboBox::Init()
-{
-   // init
-
    fBpic = fClient->GetPicture("arrow_down.xpm");
 
    if (!fBpic)
       Error("TGComboBox", "arrow_down.xpm not found");
 
+   fSelEntry = new TGTextLBEntry(this, new TGString(""), 0);
    fDDButton = new TGScrollBarElement(this, fBpic, kDefaultScrollBarWidth,
                                       kDefaultScrollBarWidth, kRaisedFrame);
 
+   fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
+
+   AddFrame(fSelEntry, fLhs = new TGLayoutHints(kLHintsLeft |
+                                                kLHintsExpandY | kLHintsExpandX));
+                                                //0, 0, 1, 0));
    AddFrame(fDDButton, fLhb = new TGLayoutHints(kLHintsRight |
                                                 kLHintsExpandY));
 
@@ -205,13 +162,27 @@ void TGComboBox::Init()
    fComboFrame->Resize(fComboFrame->GetDefaultSize());
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask |
-                        kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
+                    kButtonReleaseMask, kNone, kNone);
 
    // Drop down listbox of combo box should react to pointer motion
    // so it will be able to Activate() (i.e. highlight) the different
    // items when the mouse crosses.
    fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
                                       kPointerMotionMask);
+}
+
+//______________________________________________________________________________
+TGComboBox::~TGComboBox()
+{
+   // Delete a combo box widget.
+
+   delete fDDButton;
+   delete fSelEntry;
+   delete fListBox;
+   delete fComboFrame;
+   delete fLhs;
+   delete fLhb;
+   delete fLhdd;
 }
 
 //______________________________________________________________________________
@@ -244,8 +215,6 @@ void TGComboBox::SetTopEntry(TGLBEntry *e, TGLayoutHints *lh)
    // Set a new combo box value (normally update of text string in
    // fSelEntry is done via fSelEntry::Update()).
 
-   if (!fSelEntry) return;
-
    RemoveFrame(fSelEntry);
    fSelEntry->DestroyWindow();
    delete fSelEntry;
@@ -265,12 +234,10 @@ void TGComboBox::Select(Int_t id)
 
    e = fListBox->Select(id);
    if (e) {
-      if (fSelEntry) {
-         fSelEntry->Update(e);
-         Layout();
-         Selected(fWidgetId, id);
-         Selected(id);
-      }
+      fSelEntry->Update(e);
+      Layout();
+      Selected(fWidgetId, id);
+      Selected(id);
    }
 }
 
@@ -280,60 +247,19 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
    // Handle mouse button events in the combo box.
 
    if (event->fType == kButtonPress) {
-      Window_t child = (Window_t)event->fUser[0];  // fUser[0] = child window
-
-      if ( child == fDDButton->GetId()) { 
+      if ((Window_t)event->fUser[0] == fDDButton->GetId())   // fUser[0] = child window
          fDDButton->SetState(kButtonDown);
+   } else {
+      int      ax, ay;
+      Window_t wdummy;
 
-         if (fTextEntry && (child == fTextEntry->GetId())) {
-            return fTextEntry->HandleButton(event);
-         }
-         int      ax, ay;
-         Window_t wdummy;
+      fDDButton->SetState(kButtonUp);
+      gVirtualX->TranslateCoordinates(fId, (fComboFrame->GetParent())->GetId(),
+                                 0, fHeight, ax, ay, wdummy);
 
-         gVirtualX->TranslateCoordinates(fId, fComboFrame->GetParent()->GetId(),
-                                         0, fHeight, ax, ay, wdummy);
-   
-         fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
-         fDDButton->SetState(kButtonUp);
-
-      } else if (fTextEntry) {
-         return fTextEntry->HandleButton(event);
-      }
+      fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
    }
    return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGComboBox::HandleDoubleClick(Event_t *event)
-{
-   // handle double click in text entry
-
-   return fTextEntry ? fTextEntry->HandleDoubleClick(event) : kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGComboBox::HandleMotion(Event_t *event)
-{
-   // handle pointer motion in text entry
-
-   return fTextEntry ? fTextEntry->HandleMotion(event) : kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGComboBox::HandleSelection(Event_t *event)
-{
-   // handle selection  in text entry
-
-   return fTextEntry ? fTextEntry->HandleSelection(event) : kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGComboBox::HandleSelectionRequest(Event_t *event)
-{
-   // handle selection request in text entry
-
-   return fTextEntry ? fTextEntry->HandleSelectionRequest(event) : kTRUE;
 }
 
 //______________________________________________________________________________
@@ -350,16 +276,9 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
          switch (GET_SUBMSG(msg)) {
             case kCM_LISTBOX:
                e = fListBox->GetSelectedEntry();
-               if (fSelEntry) {
-                  fSelEntry->Update(e);
-               } else if (fTextEntry && 
-                          e->InheritsFrom(TGTextLBEntry::Class())) {
-                  TGTextLBEntry *te = (TGTextLBEntry*)e;
-                  fTextEntry->SetText(te->GetText()->GetString());
-               }
+               fSelEntry->Update(e);
                Layout();
                fComboFrame->EndPopup();
-               fDDButton->SetState(kButtonUp);
                SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_COMBOBOX),
                            fWidgetId, parm2);
                if (e->InheritsFrom(TGTextLBEntry::Class())) {
@@ -401,13 +320,7 @@ void TGComboBox::SavePrimitive(ofstream &out, Option_t *option)
 
    out << endl << "   // combo box" << endl;
    out << "   TGComboBox *";
-
-   if (!fTextEntry) {
-      out << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
-   } else {
-      out << GetName() << " = new TGComboBox(" << fParent->GetName() << ",";
-       out << '\"' <<  fTextEntry->GetText() << '\"' << "," <<fWidgetId;
-   }
+   out << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
 
    if (fBackground == GetWhitePixel()) {
       if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
@@ -435,6 +348,7 @@ void TGComboBox::SavePrimitive(ofstream &out, Option_t *option)
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
        << GetHeight() << ");" << endl;
    out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
+
 }
 
 //______________________________________________________________________________
@@ -453,6 +367,25 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    fComboFrame->SetHeight(25);
    Select(1);  // to have first entry selected
+}
+
+//______________________________________________________________________________
+Bool_t TGLineStyleComboBox::HandleButton(Event_t *event)
+{
+   // Handle mouse button events in a line style combo box.
+
+   if (event->fType == kButtonPress) {
+      if ((Window_t)event->fUser[0] == fDDButton->GetId())   // fUser[0] = child window
+         fDDButton->SetState(kButtonDown);
+   } else {
+      int      ax, ay;
+      Window_t wdummy;
+      fDDButton->SetState(kButtonUp);
+      gVirtualX->TranslateCoordinates(fId,(fComboFrame->GetParent())->GetId(),
+                                      0, fHeight, ax, ay, wdummy);
+      fComboFrame->PlacePopup(ax, ay, fWidth-2, fSelEntry->GetDefaultHeight()*4);
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________

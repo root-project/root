@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.38 2004/07/08 14:40:29 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.35 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -47,7 +47,6 @@
 #include <TEnv.h>
 #include <TFile.h>
 #include <TKey.h>
-#include <TGDockableFrame.h>
 
 
 enum ETestCommandIdentifiers {
@@ -67,11 +66,6 @@ enum ETestCommandIdentifiers {
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
    M_TEST_NEWMENU,
-
-   M_VIEW_ENBL_DOCK,
-   M_VIEW_ENBL_HIDE,
-   M_VIEW_DOCK,
-   M_VIEW_UNDOCK,
 
    M_HELP_CONTENTS,
    M_HELP_SEARCH,
@@ -226,7 +220,6 @@ RQ_OBJECT("TestMainFrame")
 
 private:
    TGMainFrame        *fMain;
-   TGDockableFrame    *fMenuDock;
    TGCompositeFrame   *fStatusFrame;
    TGCanvas           *fCanvasWindow;
    TileFrame          *fContainer;
@@ -235,7 +228,7 @@ private:
    TGColorSelect      *fColorSel;
 
    TGMenuBar          *fMenuBar;
-   TGPopupMenu        *fMenuFile, *fMenuTest, *fMenuView, *fMenuHelp;
+   TGPopupMenu        *fMenuFile, *fMenuTest, *fMenuHelp;
    TGPopupMenu        *fCascadeMenu, *fCascade1Menu, *fCascade2Menu;
    TGPopupMenu        *fMenuNew1, *fMenuNew2;
    TGLayoutHints      *fMenuBarLayout, *fMenuBarItemLayout, *fMenuBarHelpLayout;
@@ -577,11 +570,8 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 
    // Create menubar and popup menus. The hint objects are used to place
    // and group the different menu widgets with respect to eachother.
-   fMenuDock = new TGDockableFrame(fMain);
-   fMain->AddFrame(fMenuDock, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 0));
-   fMenuDock->SetWindowName("GuiTest Menu");
-
-   fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
+   fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,
+                                      0, 0, 1, 1);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
    fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
 
@@ -635,19 +625,6 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddSeparator();
    fMenuTest->AddPopup("&Cascaded menus", fCascadeMenu);
 
-   fMenuView = new TGPopupMenu(gClient->GetRoot());
-   fMenuView->AddEntry("&Dock", M_VIEW_DOCK);
-   fMenuView->AddEntry("&Undock", M_VIEW_UNDOCK);
-   fMenuView->AddSeparator();
-   fMenuView->AddEntry("Enable U&ndock", M_VIEW_ENBL_DOCK);
-   fMenuView->AddEntry("Enable &Hide", M_VIEW_ENBL_HIDE);
-   fMenuView->DisableEntry(M_VIEW_DOCK);
-
-   fMenuDock->EnableUndock(kTRUE);
-   fMenuDock->EnableHide(kTRUE);
-   fMenuView->CheckEntry(M_VIEW_ENBL_DOCK);
-   fMenuView->CheckEntry(M_VIEW_ENBL_HIDE);
-
    fMenuHelp = new TGPopupMenu(gClient->GetRoot());
    fMenuHelp->AddEntry("&Contents", M_HELP_CONTENTS);
    fMenuHelp->AddEntry("&Search...", M_HELP_SEARCH);
@@ -668,8 +645,6 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuFile->Connect("PoppedDown()", "TestMainFrame", this, "HandlePopdown()");
    fMenuTest->Connect("Activated(Int_t)", "TestMainFrame", this,
                       "HandleMenu(Int_t)");
-   fMenuView->Connect("Activated(Int_t)", "TestMainFrame", this,
-                      "HandleMenu(Int_t)");
    fMenuHelp->Connect("Activated(Int_t)", "TestMainFrame", this,
                       "HandleMenu(Int_t)");
    fCascadeMenu->Connect("Activated(Int_t)", "TestMainFrame", this,
@@ -683,13 +658,12 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuNew2->Connect("Activated(Int_t)", "TestMainFrame", this,
                       "HandleMenu(Int_t)");
 
-   fMenuBar = new TGMenuBar(fMenuDock, 1, 1, kHorizontalFrame);
+   fMenuBar = new TGMenuBar(fMain, 1, 1, kHorizontalFrame);
    fMenuBar->AddPopup("&File", fMenuFile, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Test", fMenuTest, fMenuBarItemLayout);
-   fMenuBar->AddPopup("&View", fMenuView, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Help", fMenuHelp, fMenuBarHelpLayout);
 
-   fMenuDock->AddFrame(fMenuBar, fMenuBarLayout);
+   fMain->AddFrame(fMenuBar, fMenuBarLayout);
 
    // Create TGCanvas and a canvas container which uses a tile layout manager
    fCanvasWindow = new TGCanvas(fMain, 400, 240);
@@ -760,17 +734,15 @@ TestMainFrame::~TestMainFrame()
    delete fMenuBarItemLayout;
    delete fMenuBarHelpLayout;
 
+   delete fMenuBar;
    delete fMenuFile;
    delete fMenuTest;
-   delete fMenuView;
    delete fMenuHelp;
    delete fCascadeMenu;
    delete fCascade1Menu;
    delete fCascade2Menu;
    delete fMenuNew1;
    delete fMenuNew2;
-   delete fMenuBar;
-   delete fMenuDock;
 
    delete fMain;
 }
@@ -894,38 +866,6 @@ void TestMainFrame::HandleMenu(Int_t id)
             fMenuTest->DeleteEntry(M_NEW_REMOVEMENU);
             fMenuTest->UnCheckEntry(M_TEST_NEWMENU);
          }
-         break;
-
-      case M_VIEW_ENBL_DOCK:
-         fMenuDock->EnableUndock(!fMenuDock->EnableUndock());
-         if (fMenuDock->EnableUndock()) {
-            fMenuView->CheckEntry(M_VIEW_ENBL_DOCK);
-            fMenuView->EnableEntry(M_VIEW_UNDOCK);
-         } else {
-            fMenuView->UnCheckEntry(M_VIEW_ENBL_DOCK);
-            fMenuView->DisableEntry(M_VIEW_UNDOCK);
-         }
-         break;
-
-      case M_VIEW_ENBL_HIDE:
-         fMenuDock->EnableHide(!fMenuDock->EnableHide());
-         if (fMenuDock->EnableHide()) {
-            fMenuView->CheckEntry(M_VIEW_ENBL_HIDE);
-         } else {
-            fMenuView->UnCheckEntry(M_VIEW_ENBL_HIDE);
-         }
-         break;
-
-       case M_VIEW_DOCK:
-         fMenuDock->DockContainer();
-         fMenuView->EnableEntry(M_VIEW_UNDOCK);
-         fMenuView->DisableEntry(M_VIEW_DOCK);
-         break;
-
-       case M_VIEW_UNDOCK:
-         fMenuDock->UndockContainer();
-         fMenuView->EnableEntry(M_VIEW_DOCK);
-         fMenuView->DisableEntry(M_VIEW_UNDOCK);
          break;
 
       default:
@@ -1680,7 +1620,7 @@ void TestSliders::CloseWindow()
    delete this;
 }
 
-void TestSliders::DoText(const char * /*text*/)
+void TestSliders::DoText(const char *text)
 {
    // Handle text entry widgets.
 

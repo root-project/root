@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.19 2004/06/25 18:42:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.17 2003/01/17 17:48:56 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -31,7 +31,6 @@ class TTreeFormula;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
-class TVirtualIndex;
 
 class TVirtualTreePlayer : public TObject {
 
@@ -42,12 +41,8 @@ private:
 public:
     TVirtualTreePlayer() { }
     virtual ~TVirtualTreePlayer() { }
-    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname) = 0;
     virtual TTree         *CopyTree(const char *selection, Option_t *option=""
                             ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
-    virtual Int_t          DrawScript(const char* wrapperPrefix, 
-                                      const char *macrofilename, const char *cutfilename, 
-                                      Option_t *option, Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          DrawSelect(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
@@ -68,7 +63,6 @@ public:
     virtual Double_t      *GetW() const = 0;
     virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
     virtual Int_t          MakeCode(const char *filename) = 0;
-    virtual Int_t          MakeProxy(const char *classname, const char *macrofilename = 0, const char *cutfilename = 0, Int_t maxUnrolling = 3) = 0;
     virtual TPrincipal    *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                            ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
     virtual Int_t          Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0) = 0;

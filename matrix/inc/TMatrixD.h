@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.37 2004/05/18 14:16:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.36 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -77,28 +77,25 @@ public:
   virtual       Int_t    *GetRowIndexArray()       { return 0; }
   virtual const Int_t    *GetColIndexArray() const { return 0; }
   virtual       Int_t    *GetColIndexArray()       { return 0; }
+  virtual       void      SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); }
+  virtual       void      SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); }
 
-  virtual       TMatrixDBase &SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
-  virtual       TMatrixDBase &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
+  virtual void     Clear      (Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
+                                                            else fElements = 0;  fNelems = 0; }
 
-  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
-                                                    else fElements = 0;  fNelems = 0; }
-
-          TMatrixD     &Use   (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Double_t *data);
-          TMatrixD     &Use   (Int_t nrows,Int_t ncols,Double_t *data);
-          TMatrixD     &Use   (TMatrixD &a);
-
-  virtual TMatrixDBase &GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                               TMatrixDBase &target,Option_t *option="S") const;
-          TMatrixD      GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-  virtual TMatrixDBase &SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
+          void     Use        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Double_t *data);
+          void     Use        (Int_t nrows,Int_t ncols,Double_t *data);
+          void     Use        (TMatrixDBase &a);
+          TMatrixD GetSub     (Int_t row_lwb,Int_t row_upb,
+                               Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
+  virtual void     SetSub     (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
 
   virtual Double_t Determinant() const;
   virtual void     Determinant(Double_t &d1,Double_t &d2) const;
 
   TMatrixD &Invert      (Double_t *det=0);
   TMatrixD &InvertFast  (Double_t *det=0);
-  TMatrixD &Transpose   (const TMatrixD &source);
+  TMatrixD &Transpose   (const TMatrixDBase &source);
   inline TMatrixD &T    () { return this->Transpose(*this); }
 
   TMatrixD &NormByColumn(const TVectorD &v,Option_t *option="D");
@@ -148,24 +145,12 @@ public:
 
 inline const Double_t *TMatrixD::GetMatrixArray() const { return fElements; }
 inline       Double_t *TMatrixD::GetMatrixArray()       { return fElements; }
-inline       TMatrixD &TMatrixD::Use           (Int_t nrows,Int_t ncols,Double_t *data)
-                                                        { return Use(0,nrows-1,0,ncols-1,data); }
-inline       TMatrixD &TMatrixD::Use           (TMatrixD &a)
-                                                        {
-                                                          Assert(a.IsValid());
-                                                          return Use(a.GetRowLwb(),a.GetRowUpb(),
-                                                                     a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray());
-                                                        }
-inline       TMatrixD  TMatrixD::GetSub        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                                Option_t *option) const
-                                                        {
-                                                          TMatrixD tmp;
-                                                          this->GetSub(row_lwb,row_upb,col_lwb,col_upb,tmp,option);
-                                                          return tmp;
-                                                        }
+inline       void      TMatrixD::Use           (Int_t nrows,Int_t ncols,Double_t *data) { Use(0,nrows-1,0,ncols-1,data); }
+inline       void      TMatrixD::Use           (TMatrixDBase &a) { Assert(a.IsValid());
+                                                                   Use(a.GetRowLwb(),a.GetRowUpb(),
+                                                                       a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
 
-inline Double_t TMatrixD::operator()(Int_t rown,Int_t coln) const
-{
+inline Double_t TMatrixD::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;
@@ -174,8 +159,7 @@ inline Double_t TMatrixD::operator()(Int_t rown,Int_t coln) const
   return (fElements[arown*fNcols+acoln]);
 }
 
-inline Double_t &TMatrixD::operator()(Int_t rown,Int_t coln)
-{
+inline Double_t &TMatrixD::operator()(Int_t rown,Int_t coln) {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;

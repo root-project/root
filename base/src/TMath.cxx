@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.71 2004/07/09 17:22:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.58 2004/04/28 12:19:28 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -27,27 +27,25 @@
 //   TMath::Pi = 3.14159265358979323846,
 //   TMath::E  = 2.7182818284590452354;
 
-const Int_t kWorkMax = 100;
 
 ClassImp(TMath)
 
 //______________________________________________________________________________
 #if defined(R__MAC) || defined(R__KCC)
-Double_t hypot(Double_t x, Double_t y)
-{
-   Double_t ax = TMath::Abs(x), ay = TMath::Abs(y);
-   Double_t amax, amin;
-   if(ax > ay){
-      amax = ax;
-      amin = ay;
-   } else {
-      amin = ax;
-      amax = ay;
-   }
-   if(amin == 0.0) return amax;
+Double_t hypot(Double_t x, Double_t y) {
+  Double_t ax = TMath::Abs(x), ay = TMath::Abs(y);
+  Double_t amax, amin;
+  if(ax > ay){
+    amax = ax;
+    amin = ay;
+  } else {
+    amin = ax;
+    amax = ay;
+  }
+  if(amin == 0.0) return amax;
 
-   Double_t f = amin/amax;
-   return amax*sqrt(1.0 + f*f);
+  Double_t f = amin/amax;
+  return amax*sqrt(1.0 + f*f);
 }
 #endif
 
@@ -237,50 +235,18 @@ Double_t TMath::Erfc(Double_t x)
 }
 
 //______________________________________________________________________________
-Double_t TMath::ErfInverse(Double_t x)
-{
-   // returns  the inverse error function
-   // x must be  <-1<x<1
-
-   Int_t kMaxit    = 50;
-   Double_t kEps   = 1e-14;
-   Double_t kConst = 0.8862269254527579;     // sqrt(pi)/2.0
-
-   if(TMath::Abs(x) <= kEps) return kConst*x;
-
-   // Newton iterations
-   Double_t erfi, derfi, Y0,Y1,DY0,DY1;
-   if(TMath::Abs(x) < 1.0) {
-      erfi  = kConst*TMath::Abs(x);
-      Y0    = TMath::Erf(0.9*erfi);
-      derfi = 0.1*erfi;
-      for (Int_t iter=0; iter<kMaxit; iter++) {
-         Y1  = 1. - TMath::Erfc(erfi);
-         DY1 = TMath::Abs(x) - Y1;
-         if (TMath::Abs(DY1) < kEps)  {if (x < 0) return -erfi; else return erfi;}
-         DY0    = Y1 - Y0;
-         derfi *= DY1/DY0;
-         Y0     = Y1;
-         erfi  += derfi;
-         if(TMath::Abs(derfi/erfi) < kEps) {if (x < 0) return -erfi; else return erfi;}
-      }
-   }
-   return 0; //did not converge
-}
-
-//______________________________________________________________________________
 Double_t TMath::Factorial(Int_t n)
 {
-   // Compute factorial(n).
+   // Compute factorial(n)
 
-   if(n <= 0) return 1.;
-   Double_t x = 1;
-   Int_t b = 0;
-   do {
-      b++;
-      x *= b;
-   } while(b!=n);
-   return x;
+  if(n <= 0) return 1.;
+  Double_t x=1;
+  Int_t b=0;
+  do {
+     b++;
+     x *= b;
+  } while(b!=n);
+  return x;
 }
 
 //______________________________________________________________________________
@@ -473,9 +439,7 @@ Double_t TMath::BreitWigner(Double_t x, Double_t mean, Double_t gamma)
 Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma, Bool_t norm)
 {
    // Calculate a gaussian function with mean and sigma.
-   // If norm=kTRUE (default is kFALSE) the result is divided
-   // by sqrt(2*Pi)*sigma.
-
+   // if norm=kTRUE (default is kFALSE) the result is divided by sqrt(2*Pi)*sigma
    if (sigma == 0) return 1.e30;
    Double_t arg = (x-mean)/sigma;
    Double_t res = TMath::Exp(-0.5*arg*arg);
@@ -603,40 +567,40 @@ Double_t TMath::Normalize(Double_t v[3])
    // This implementation (thanks Kevin Lynch <krlynch@bu.edu>) is protected
    // against possible overflows.
 
-   // Find the largest element, and divide that one out.
+  // Find the largest element, and divide that one out.
 
-   Double_t av0 = Abs(v[0]), av1 = Abs(v[1]), av2 = Abs(v[2]);
+  Double_t av0 = Abs(v[0]), av1 = Abs(v[1]), av2 = Abs(v[2]);
+  
+  Double_t amax, foo, bar;
+  // 0 >= {1, 2}
+  if( av0 >= av1 && av0 >= av2 ) {
+    amax = av0;
+    foo = av1;
+    bar = av2;
+  } 
+  // 1 >= {0, 2}
+  else if (av1 >= av0 && av1 >= av2) {
+    amax = av1;
+    foo = av0;
+    bar = av2;
+  }
+  // 2 >= {0, 1}
+  else {
+    amax = av2;
+    foo = av0;
+    bar = av1;
+  }
 
-   Double_t amax, foo, bar;
-   // 0 >= {1, 2}
-   if( av0 >= av1 && av0 >= av2 ) {
-      amax = av0;
-      foo = av1;
-      bar = av2;
-   }
-   // 1 >= {0, 2}
-   else if (av1 >= av0 && av1 >= av2) {
-      amax = av1;
-      foo = av0;
-      bar = av2;
-   }
-   // 2 >= {0, 1}
-   else {
-      amax = av2;
-      foo = av0;
-      bar = av1;
-   }
+  if(amax == 0.0)
+    return 0.;
 
-   if (amax == 0.0)
-      return 0.;
-
-   Double_t foofrac = foo/amax, barfrac = bar/amax;
-   Double_t d = amax * Sqrt(1.+foofrac*foofrac+barfrac*barfrac);
-
-   v[0] /= d;
-   v[1] /= d;
-   v[2] /= d;
-   return d;
+  Double_t foofrac = foo/amax, barfrac = bar/amax;
+  Double_t d = amax * Sqrt(1.+foofrac*foofrac+barfrac*barfrac);
+  
+  v[0] /= d;
+  v[1] /= d;
+  v[2] /= d;
+  return d;
 }
 
 //______________________________________________________________________________
@@ -705,16 +669,16 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
 */
 //End_Html
 
-   if (x<0)
+   if (x<0) 
      return 0;
-   else if (x == 0.0)
+   else if (x == 0.0) 
      return 1./Exp(par);
    else {
      Double_t lnpoisson = x*log(par)-par-LnGamma(x+1.);
      return Exp(lnpoisson);
    }
    // An alternative strategy is to transition to a Gaussian approximation for
-   // large values of par ...
+   // large values of par ... 
    //   else {
    //     return Gaus(x,par,Sqrt(par),kTRUE);
    //   }
@@ -1059,7 +1023,7 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
    return K / 2.506628 / sigma; // Normalize by dividing by sqrt(2*pi)*sigma.
 }
 
-//______________________________________________________________________________
+//___________________________________________________________________________//
 void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
 {
    // Computes the roots of a cubic polynomial
@@ -1067,70 +1031,70 @@ void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
    // a,b,c: references to the roots
    // Author: Jan Conrad
 
-   Double_t pi= TMath::Pi();
-   Int_t Threeroots = 0;
+  Double_t pi= TMath::Pi();
+  Int_t Threeroots = 0;
 
-   Double_t phi,q,r,s,t,p,D,R1,x,temp;
+  Double_t phi,q,r,s,t,p,D,R1,x,temp;
 
-   a = 0.0;
-   b = 0.0;
-   c = 0.0;
+  a = 0.0;
+  b = 0.0;
+  c = 0.0;
 
-   if (coef[3] == 0) return;
-   r = coef[2]/coef[3];
-   s = coef[1]/coef[3];
-   t = coef[0]/coef[3];
-   p = (3 * s - r*r)/3;
-   q = (2 * r*r*r)/27 - (r * s)/3 + t;
-   D = (p/3)*(p/3)*(p/3) + (q/2)*(q/2);
-   R1 = q/TMath::Abs(q) * TMath::Sqrt(TMath::Abs(p)/3);
-   if (p==0) {
-      q = 8.0;
-      a = TMath::Power(q,1./3.);
-      goto done;
-   }
+  if (coef[3] == 0) return;
+  r = coef[2]/coef[3];
+  s = coef[1]/coef[3];
+  t = coef[0]/coef[3];
+  p = (3 * s - r*r)/3;
+  q = (2 * r*r*r)/27 - (r * s)/3 + t;
+  D = (p/3)*(p/3)*(p/3) + (q/2)*(q/2);
+  R1 = q/TMath::Abs(q) * TMath::Sqrt(TMath::Abs(p)/3);
+  if (p==0) {
+     q = 8.0;
+     a = TMath::Power(q,1./3.);
+     goto done;
+  }
 
-   if ( p < 0) {
-      if (D <= 0) {
-         Threeroots=1;
-         phi = TMath::ACos(q/2/(R1*R1*R1));
-         a   = TMath::Cos(phi/3);
-         b   = TMath::Cos(phi/3 + (2 * pi)/3);
-         c   = TMath::Cos(phi/3 + (4 * pi)/3);
-      }  else {
-         x   = q/2/(R1*R1*R1);
-         phi = TMath::Log(x+TMath::Sqrt(x*x-1));
-         b   = TMath::CosH(phi/3);
-      }
-   } else {
+  if( p < 0) {
+    if (D <= 0) {
+       Threeroots=1;
+       phi = TMath::ACos(q/2/(R1*R1*R1));
+       a   = TMath::Cos(phi/3);
+       b   = TMath::Cos(phi/3 + (2 * pi)/3);
+       c   = TMath::Cos(phi/3 + (4 * pi)/3);
+    }  else {
+       x   = q/2/(R1*R1*R1);
+       phi = TMath::Log(x+TMath::Sqrt(x*x-1));
+       b   = TMath::CosH(phi/3);
+    }
+  } else {
       x   = q/2/(R1*R1*R1);
       phi = TMath::Log(x+TMath::Sqrt(x*x+1));
       b   = TMath::SinH(phi/3);
-   }
+  }
 
-   a = (-2*R1)*a-r/3;
-   b = (-2*R1)*b-r/3;
-   c = (-2*R1)*c-r/3;
+    a = (-2*R1)*a-r/3;
+    b = (-2*R1)*b-r/3;
+    c = (-2*R1)*c-r/3;
 
-done:
+  done:
 
-   if (Threeroots == 1) {
-      if (a > b){
-         temp=a;
-         a=b;
-         b=temp;
-      }
-      if (b > c) {
-         temp=b;
-         b=c;
-         c=temp;
-      }
-      if (a > b) {
-         temp=a;
-         a=b;
-         b=temp;
-      }
-   }
+  if (Threeroots == 1) {
+    if (a > b){
+       temp=a;
+       a=b;
+       b=temp;
+    }
+    if (b > c) {
+       temp=b;
+       b=c;
+       c=temp;
+    }
+    if (a > b) {
+       temp=a;
+       a=b;
+       b=temp;
+    }
+  }
 }
 
 //______________________________________________________________________________
@@ -1139,16 +1103,16 @@ Int_t TMath::LocMin(Int_t n, const Short_t *a)
    // Return index of array with the minimum element.
    // If more than one element is minimum returns first found.
 
-   if  (n <= 0) return -1;
-   Short_t xmin = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmin > a[i])  {
-          xmin = a[i];
-          loc = i;
-      }
-   }
-   return loc;
+  if  (n <= 0) return -1;
+  Short_t xmin = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmin > a[i])  {
+         xmin = a[i];
+         loc = i;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1157,16 +1121,16 @@ Int_t TMath::LocMin(Int_t n, const Int_t *a)
    // Return index of array with the minimum element.
    // If more than one element is minimum returns first found.
 
-   if  (n <= 0) return -1;
-   Int_t xmin = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmin > a[i])  {
+  if  (n <= 0) return -1;
+  Int_t xmin = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1175,16 +1139,16 @@ Int_t TMath::LocMin(Int_t n, const Float_t *a)
    // Return index of array with the minimum element.
    // If more than one element is minimum returns first found.
 
-   if  (n <= 0) return -1;
-   Float_t xmin = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmin > a[i])  {
+  if  (n <= 0) return -1;
+  Float_t xmin = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1193,16 +1157,16 @@ Int_t TMath::LocMin(Int_t n, const Double_t *a)
    // Return index of array with the minimum element.
    // If more than one element is minimum returns first found.
 
-   if  (n <= 0) return -1;
-   Double_t xmin = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmin > a[i])  {
+  if  (n <= 0) return -1;
+  Double_t xmin = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1211,16 +1175,16 @@ Int_t TMath::LocMin(Int_t n, const Long_t *a)
    // Return index of array with the minimum element.
    // If more than one element is minimum returns first found.
 
-   if  (n <= 0) return -1;
-   Long_t xmin = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmin > a[i])  {
+  if  (n <= 0) return -1;
+  Long_t xmin = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1229,16 +1193,16 @@ Int_t TMath::LocMin(Int_t n, const Long64_t *a)
    // Return index of array with the minimum element.
    // If more than one element is minimum returns first found.
 
-   if  (n <= 0) return -1;
-   Long64_t xmin = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmin > a[i])  {
+  if  (n <= 0) return -1;
+  Long64_t xmin = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1247,16 +1211,16 @@ Int_t TMath::LocMax(Int_t n, const Short_t *a)
    // Return index of array with the maximum element.
    // If more than one element is maximum returns first found.
 
-   if  (n <= 0) return -1;
-   Short_t xmax = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmax < a[i])  {
+  if  (n <= 0) return -1;
+  Short_t xmax = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1265,16 +1229,16 @@ Int_t TMath::LocMax(Int_t n, const Int_t *a)
    // Return index of array with the maximum element.
    // If more than one element is maximum returns first found.
 
-   if  (n <= 0) return -1;
-   Int_t xmax = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmax < a[i])  {
+  if  (n <= 0) return -1;
+  Int_t xmax = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1283,16 +1247,16 @@ Int_t TMath::LocMax(Int_t n, const Float_t *a)
    // Return index of array with the maximum element.
    // If more than one element is maximum returns first found.
 
-   if  (n <= 0) return -1;
-   Float_t xmax = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmax < a[i])  {
+  if  (n <= 0) return -1;
+  Float_t xmax = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1301,16 +1265,16 @@ Int_t TMath::LocMax(Int_t n, const Double_t *a)
    // Return index of array with the maximum element.
    // If more than one element is maximum returns first found.
 
-   if  (n <= 0) return -1;
-   Double_t xmax = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmax < a[i])  {
+  if  (n <= 0) return -1;
+  Double_t xmax = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1319,16 +1283,16 @@ Int_t TMath::LocMax(Int_t n, const Long_t *a)
    // Return index of array with the maximum element.
    // If more than one element is maximum returns first found.
 
-   if  (n <= 0) return -1;
-   Long_t xmax = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmax < a[i])  {
+  if  (n <= 0) return -1;
+  Long_t xmax = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
-      }
-   }
-   return loc;
+     }
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -1337,889 +1301,16 @@ Int_t TMath::LocMax(Int_t n, const Long64_t *a)
    // Return index of array with the maximum element.
    // If more than one element is maximum returns first found.
 
-   if  (n <= 0) return -1;
-   Long64_t xmax = a[0];
-   Int_t loc = 0;
-   for  (Int_t i = 1; i < n; i++) {
-      if (xmax < a[i])  {
+  if  (n <= 0) return -1;
+  Long64_t xmax = a[0];
+  Int_t loc = 0;
+  for  (Int_t i = 1; i < n; i++) {
+     if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
-      }
-   }
-   return loc;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Short_t *a, const Double_t *w)
-{
-   // Return the weighted mean of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t sum = 0;
-   Double_t sumw = 0;
-   if (w) {
-     for (Int_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
-         return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
      }
-     if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
-       return 0;
-     }
-   } else {
-     sumw = n;
-     for (Int_t i = 0; i < n; i++)
-       sum += a[i];
-   }
-
-   return sum/sumw;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Int_t *a, const Double_t *w)
-{
-   // Return the weighted mean of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t sum = 0;
-   Double_t sumw = 0;
-   if (w) {
-     for (Int_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
-         return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
-       return 0;
-     }
-   } else {
-     sumw = n;
-     for (Int_t i = 0; i < n; i++)
-       sum += a[i];
-   }
-
-   return sum/sumw;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Float_t *a, const Double_t *w)
-{
-   // Return the weighted mean of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t sum = 0;
-   Double_t sumw = 0;
-   if (w) {
-     for (Int_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
-         return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
-       return 0;
-     }
-   } else {
-     sumw = n;
-     for (Int_t i = 0; i < n; i++)
-       sum += a[i];
-   }
-
-   return sum/sumw;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Double_t *a, const Double_t *w)
-{
-   // Return the weighted mean of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t sum = 0;
-   Double_t sumw = 0;
-   if (w) {
-     for (Int_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
-         return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
-       return 0;
-     }
-   } else {
-     sumw = n;
-     for (Int_t i = 0; i < n; i++)
-       sum += a[i];
-   }
-
-   return sum/sumw;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Long_t *a, const Double_t *w)
-{
-   // Return the weighted mean of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t sum = 0;
-   Double_t sumw = 0;
-   if (w) {
-     for (Int_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
-         return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
-       return 0;
-     }
-   } else {
-     sumw = n;
-     for (Int_t i = 0; i < n; i++)
-       sum += a[i];
-   }
-
-   return sum/sumw;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Long64_t *a, const Double_t *w)
-{
-   // Return the weighted mean of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t sum = 0;
-   Double_t sumw = 0;
-   if (w) {
-     for (Int_t i = 0; i < n; i++) {
-       if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
-         return 0;
-       }
-       sum  += w[i]*a[i];
-       sumw += w[i];
-     }
-     if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
-       return 0;
-     }
-   } else {
-     sumw = n;
-     for (Int_t i = 0; i < n; i++)
-       sum += a[i];
-   }
-
-   return sum/sumw;
-}
-
-//______________________________________________________________________________
-Double_t TMath::GeomMean(Int_t n, const Short_t *a)
-{
-   // Return the geometric mean of an array a with length n.             
-   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
-
-   if (n <= 0) return 0;
-
-   Double_t logsum = 0.;
-   for (Int_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
-   }
-
-   return TMath::Exp(logsum/n);
-}
-
-//______________________________________________________________________________
-Double_t TMath::GeomMean(Int_t n, const Int_t *a)
-{
-   // Return the geometric mean of an array a with length n.
-   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
-
-   if (n <= 0) return 0;
-
-   Double_t logsum = 0.;
-   for (Int_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
-   }
-
-   return TMath::Exp(logsum/n);
-}
-
-//______________________________________________________________________________
-Double_t TMath::GeomMean(Int_t n, const Float_t *a)
-{  
-   // Return the geometric mean of an array a with length n.
-   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
-
-   if (n <= 0) return 0;
-
-   Double_t logsum = 0.;
-   for (Int_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
-   }
-
-   return TMath::Exp(logsum/n);
-}
-
-//______________________________________________________________________________
-Double_t TMath::GeomMean(Int_t n, const Double_t *a)
-{  
-   // Return the geometric mean of an array a with length n.
-   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
-
-   if (n <= 0) return 0;
-
-   Double_t logsum = 0.;
-   for (Int_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
-   }
-
-   return TMath::Exp(logsum/n);
-}
-
-//______________________________________________________________________________
-Double_t TMath::GeomMean(Int_t n, const Long_t *a)
-{  
-   // Return the geometric mean of an array a with length n.
-   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
-
-   if (n <= 0) return 0;
-
-   Double_t logsum = 0.;
-   for (Int_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
-   }
-
-   return TMath::Exp(logsum/n);
-}
-
-//______________________________________________________________________________
-Double_t TMath::GeomMean(Int_t n, const Long64_t *a)
-{  
-   // Return the geometric mean of an array a with length n.
-   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
-
-   if (n <= 0) return 0;
-
-   Double_t logsum = 0.;
-   for (Int_t i = 0; i < n; i++) {
-     if (a[i] == 0) return 0.;
-     Double_t absa = (Double_t) TMath::Abs(a[i]);
-     logsum += TMath::Log(absa);
-   }
-
-   return TMath::Exp(logsum/n);
-}
-
-//______________________________________________________________________________
-Double_t TMath::MedianSorted(Int_t n, Double_t *a)
-{
-   // Return the median of an array a in monotonic order with length n
-   // where median is a number which divides sequence of n numbers
-   // into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
-   // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
-   // WARNING; Input array a is modified by this function.
-
-   Int_t in, imin, imax;
-   Double_t  xm;
-
-   if  (n%2 == 0)  in = n / 2;
-   else            in = n / 2 + 1;
-
-   // find array element with maximum content
-   imax = TMath::LocMax(n,a);
-   xm = a[imax];
-
-   while (in < n) {
-      imin = TMath::LocMin(n,a);  // find array element with minimum content
-      a[imin] = xm;
-      in++;
-   }
-   imin = TMath::LocMin(n,a);
-   return a[imin];
-}
-
-
-//______________________________________________________________________________
-Short_t TMath::Median(Int_t n, const Short_t *a, const Double_t *w, Int_t *work)
-{
-   // Return the median of the array a where each entry i has weight w[i] .
-   // Both arrays have a length of at least n . The median is a number obtained
-   // from the sorted array a through
-   //
-   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
-   //
-   // sum_i=0,jl w[i] <= sumTot/2
-   // sum_i=0,jh w[i] >= sumTot/2
-   // sumTot = sum_i=0,n w[i]
-   //
-   // If w=0, the algorithm defaults to the median definition where it is
-   // a number that divides the sorted sequence into 2 halves.
-   // When n is odd, the median is kth element k = (n + 1) / 2.
-   // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
-   //
-   // If work is supplied, it is used to store the sorting index and assumed to be
-   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-   // or on the heap for n >= kWorkMax . 
-
-   if (n <= 0) return 0;
-
-   Double_t sumTot2 = n;
-   if (w) {
-     sumTot2 = 0.;
-     for (Int_t j = 0; j < n; j++) {
-       if (w[j] < 0) {
-         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
-         return 0;
-       }
-       sumTot2 += w[j];
-     }
-   }
-   sumTot2 /= 2.;
-
-   Int_t workLocal[kWorkMax];
-   Bool_t isAllocated = kFALSE;                                          
-
-   Int_t *ind;
-   if (work) {
-     ind = work;
-   } else {
-     ind = workLocal;
-     if (n > kWorkMax) {
-       isAllocated = kTRUE;
-       ind = new Int_t[n];
-     }
-   }
-
-   TMath::Sort(n,a,ind,kFALSE);
-
-   Double_t sum = 0.;
-   Int_t jl;
-   for (jl = 0; jl < n; jl++) {
-     if (w) sum += w[ind[jl]];
-     else   sum += 1.0;
-     if (sum >= sumTot2) break;
-   }
-
-   Int_t jh;
-   sum = 2.*sumTot2;
-   for (jh = n-1; jh >= 0; jh--) {
-     if (w) sum -= w[ind[jh]];
-     else   sum -= 1.0;
-     if (sum <= sumTot2) break;
-   }
-
-   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
-
-   if (isAllocated)
-      delete [] ind;
-   Short_t res = (Short_t)median;
-   return res;
-}
-
-//______________________________________________________________________________
-Int_t TMath::Median(Int_t n, const Int_t *a, const Double_t *w, Int_t *work)
-{
-   // Return the median of the array a where each entry i has weight w[i] .
-   // Both arrays have a length of at least n . The median is a number obtained
-   // from the sorted array a through
-   //
-   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
-   //
-   // sum_i=0,jl w[i] <= sumTot/2
-   // sum_i=0,jh w[i] >= sumTot/2
-   // sumTot = sum_i=0,n w[i]
-   //
-   // If w=0, the algorithm defaults to the median definition where it is
-   // a number that divides the sorted sequence into 2 halves.
-   // When n is odd, the median is kth element k = (n + 1) / 2.
-   // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
-   //
-   // If work is supplied, it is used to store the sorting index and assumed to be
-   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-   // or on the heap for n >= kWorkMax . 
-
-   if (n <= 0) return 0;
-
-   Double_t sumTot2 = n;
-   if (w) {
-     sumTot2 = 0.;
-     for (Int_t j = 0; j < n; j++) {
-       if (w[j] < 0) {
-         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
-         return 0;
-       }
-       sumTot2 += w[j];
-     }
-   }
-   sumTot2 /= 2.;
-
-   Int_t workLocal[kWorkMax];
-   Bool_t isAllocated = kFALSE;                                          
-
-   Int_t *ind;
-   if (work) {
-     ind = work;
-   } else {
-     ind = workLocal;
-     if (n > kWorkMax) {
-       isAllocated = kTRUE;
-       ind = new Int_t[n];
-     }
-   }
-
-   TMath::Sort(n,a,ind,kFALSE);
-
-   Double_t sum = 0.;
-   Int_t jl;
-   for (jl = 0; jl < n; jl++) {
-     if (w) sum += w[ind[jl]];
-     else   sum += 1.0;
-     if (sum >= sumTot2) break;
-   }
-
-   Int_t jh;
-   sum = 2.*sumTot2;
-   for (jh = n-1; jh >= 0; jh--) {
-     if (w) sum -= w[ind[jh]];
-     else   sum -= 1.0;
-     if (sum <= sumTot2) break;
-   }
-
-   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
-
-   if (isAllocated)
-      delete [] ind;
-   Int_t res = (Int_t)median;
-   return res;
-}
-
-//______________________________________________________________________________
-Float_t TMath::Median(Int_t n, const Float_t *a, const Double_t *w, Int_t *work)
-{
-   // Return the median of the array a where each entry i has weight w[i] .
-   // Both arrays have a length of at least n . The median is a number obtained
-   // from the sorted array a through
-   //
-   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
-   //
-   // sum_i=0,jl w[i] <= sumTot/2
-   // sum_i=0,jh w[i] >= sumTot/2
-   // sumTot = sum_i=0,n w[i]
-   //
-   // If w=0, the algorithm defaults to the median definition where it is
-   // a number that divides the sorted sequence into 2 halves.
-   // When n is odd, the median is kth element k = (n + 1) / 2.
-   // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
-   //
-   // If work is supplied, it is used to store the sorting index and assumed to be
-   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-   // or on the heap for n >= kWorkMax . 
-
-   if (n <= 0) return 0;
-
-   Float_t sumTot2 = n;
-   if (w) {
-     sumTot2 = 0.;
-     for (Int_t j = 0; j < n; j++) {
-       if (w[j] < 0) {
-         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
-         return 0;
-       }
-       sumTot2 += w[j];
-     }
-   }
-   sumTot2 /= 2.;
-
-   Int_t workLocal[kWorkMax];
-   Bool_t isAllocated = kFALSE;                                          
-
-   Int_t *ind;
-   if (work) {
-     ind = work;
-   } else {
-     ind = workLocal;
-     if (n > kWorkMax) {
-       isAllocated = kTRUE;
-       ind = new Int_t[n];
-     }
-   }
-
-   TMath::Sort(n,a,ind,kFALSE);
-
-   Float_t sum = 0.;
-   Int_t jl;
-   for (jl = 0; jl < n; jl++) {
-     if (w) sum += w[ind[jl]];
-     else   sum += 1.0;
-     if (sum >= sumTot2) break;
-   }
-
-   Int_t jh;
-   sum = 2.*sumTot2;
-   for (jh = n-1; jh >= 0; jh--) {
-     if (w) sum -= w[ind[jh]];
-     else   sum -= 1.0;
-     if (sum <= sumTot2) break;
-   }
-
-   Float_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
-
-   if (isAllocated)
-      delete [] ind;
-   return median;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Median(Int_t n, const Double_t *a, const Double_t *w, Int_t *work)
-{
-   // Return the median of the array a where each entry i has weight w[i] .
-   // Both arrays have a length of at least n . The median is a number obtained
-   // from the sorted array a through
-   //
-   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
-   //
-   // sum_i=0,jl w[i] <= sumTot/2
-   // sum_i=0,jh w[i] >= sumTot/2
-   // sumTot = sum_i=0,n w[i]
-   //
-   // If w=0, the algorithm defaults to the median definition where it is
-   // a number that divides the sorted sequence into 2 halves.
-   // When n is odd, the median is kth element k = (n + 1) / 2.
-   // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
-   //
-   // If work is supplied, it is used to store the sorting index and assumed to be
-   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-   // or on the heap for n >= kWorkMax . 
-
-   if (n <= 0) return 0;
-
-   Double_t sumTot2 = n;
-   if (w) {
-     sumTot2 = 0.;
-     for (Int_t j = 0; j < n; j++) {
-       if (w[j] < 0) {
-         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
-         return 0;
-       }
-       sumTot2 += w[j];
-     }
-   }
-   sumTot2 /= 2.;
-
-   Int_t workLocal[kWorkMax];
-   Bool_t isAllocated = kFALSE;                                          
-
-   Int_t *ind;
-   if (work) {
-     ind = work;
-   } else {
-     ind = workLocal;
-     if (n > kWorkMax) {
-       isAllocated = kTRUE;
-       ind = new Int_t[n];
-     }
-   }
-
-   TMath::Sort(n,a,ind,kFALSE);
-
-   Double_t sum = 0.;
-   Int_t jl;
-   for (jl = 0; jl < n; jl++) {
-     if (w) sum += w[ind[jl]];
-     else   sum += 1.0;
-     if (sum >= sumTot2) break;
-   }
-
-   Int_t jh;
-   sum = 2.*sumTot2;
-   for (jh = n-1; jh >= 0; jh--) {
-     if (w) sum -= w[ind[jh]];
-     else   sum -= 1.0;
-     if (sum <= sumTot2) break;
-   }
-
-   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
-
-   if (isAllocated)
-      delete [] ind;
-   return median;
-}
-
-//______________________________________________________________________________
-Long_t TMath::Median(Int_t n, const Long_t *a, const Double_t *w, Int_t *work)
-{
-   // Return the median of the array a where each entry i has weight w[i] .
-   // Both arrays have a length of at least n . The median is a number obtained
-   // from the sorted array a through
-   //
-   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
-   //
-   // sum_i=0,jl w[i] <= sumTot/2
-   // sum_i=0,jh w[i] >= sumTot/2
-   // sumTot = sum_i=0,n w[i]
-   //
-   // If w=0, the algorithm defaults to the median definition where it is
-   // a number that divides the sorted sequence into 2 halves.
-   // When n is odd, the median is kth element k = (n + 1) / 2.
-   // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
-   //
-   // If work is supplied, it is used to store the sorting index and assumed to be
-   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-   // or on the heap for n >= kWorkMax . 
-
-   if (n <= 0) return 0;
-
-   Double_t sumTot2 = n;
-   if (w) {
-     sumTot2 = 0.;
-     for (Int_t j = 0; j < n; j++) {
-       if (w[j] < 0) {
-         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
-         return 0;
-       }
-       sumTot2 += w[j];
-     }
-   }
-   sumTot2 /= 2.;
-
-   Int_t workLocal[kWorkMax];
-   Bool_t isAllocated = kFALSE;                                          
-
-   Int_t *ind;
-   if (work) {
-     ind = work;
-   } else {
-     ind = workLocal;
-     if (n > kWorkMax) {
-       isAllocated = kTRUE;
-       ind = new Int_t[n];
-     }
-   }
-
-   TMath::Sort(n,a,ind,kFALSE);
-
-   Double_t sum = 0.;
-   Int_t jl;
-   for (jl = 0; jl < n; jl++) {
-     if (w) sum += w[ind[jl]];
-     else   sum += 1.0;
-     if (sum >= sumTot2) break;
-   }
-
-   Int_t jh;
-   sum = 2.*sumTot2;
-   for (jh = n-1; jh >= 0; jh--) {
-     if (w) sum -= w[ind[jh]];
-     else   sum -= 1.0;
-     if (sum <= sumTot2) break;
-   }
-
-   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
-
-   if (isAllocated)
-      delete [] ind;
-   Long_t res = (Long_t)median;
-   return res;
-}
-
-//______________________________________________________________________________
-Long64_t TMath::Median(Int_t n, const Long64_t *a, const Double_t *w, Int_t *work)
-{
-   // Return the median of the array a where each entry i has weight w[i] .
-   // Both arrays have a length of at least n . The median is a number obtained
-   // from the sorted array a through
-   //
-   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
-   //
-   // sum_i=0,jl w[i] <= sumTot/2
-   // sum_i=0,jh w[i] >= sumTot/2
-   // sumTot = sum_i=0,n w[i]
-   //
-   // If w=0, the algorithm defaults to the median definition where it is
-   // a number that divides the sorted sequence into 2 halves.
-   // When n is odd, the median is kth element k = (n + 1) / 2.
-   // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
-   //
-   // If work is supplied, it is used to store the sorting index and assumed to be
-   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-   // or on the heap for n >= kWorkMax . 
-
-   if (n <= 0) return 0;
-
-   Double_t sumTot2 = n;
-   if (w) {
-     sumTot2 = 0.;
-     for (Int_t j = 0; j < n; j++) {
-       if (w[j] < 0) {
-         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
-         return 0;
-       }
-       sumTot2 += w[j];
-     }
-   }
-   sumTot2 /= 2.;
-
-   Int_t workLocal[kWorkMax];
-   Bool_t isAllocated = kFALSE;                                          
-
-   Int_t *ind;
-   if (work) {
-     ind = work;
-   } else {
-     ind = workLocal;
-     if (n > kWorkMax) {
-       isAllocated = kTRUE;
-       ind = new Int_t[n];
-     }
-   }
-
-   TMath::Sort(n,a,ind,kFALSE);
-
-   Double_t sum = 0.;
-   Int_t jl;
-   for (jl = 0; jl < n; jl++) {
-     if (w) sum += w[ind[jl]];
-     else   sum += 1.0;
-     if (sum >= sumTot2) break;
-   }
-
-   Int_t jh;
-   sum = 2.*sumTot2;
-   for (jh = n-1; jh >= 0; jh--) {
-     if (w) sum -= w[ind[jh]];
-     else   sum -= 1.0;
-     if (sum <= sumTot2) break;
-   }
-
-   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
-
-   if (isAllocated)
-      delete [] ind;
-   Long64_t res = (Long64_t)median;
-   return res;
-}
-
-//______________________________________________________________________________
-Double_t TMath::RMS(Int_t n, const Short_t *a)
-{
-   // Return the RMS of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t tot = 0, tot2 =0;
-   for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
-   Double_t n1 = 1./n;
-   Double_t mean = tot*n1;
-   Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
-   return rms;
-}
-
-//______________________________________________________________________________
-Double_t TMath::RMS(Int_t n, const Int_t *a)
-{
-   // Return the RMS of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t tot = 0, tot2 =0;
-   for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
-   Double_t n1 = 1./n;
-   Double_t mean = tot*n1;
-   Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
-   return rms;
-}
-
-//______________________________________________________________________________
-Double_t TMath::RMS(Int_t n, const Float_t *a)
-{
-   // Return the RMS of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t tot = 0, tot2 =0;
-   for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
-   Double_t n1 = 1./n;
-   Double_t mean = tot*n1;
-   Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
-   return rms;
-}
-
-//______________________________________________________________________________
-Double_t TMath::RMS(Int_t n, const Double_t *a)
-{
-   // Return the RMS of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t tot = 0, tot2 =0;
-   for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
-   Double_t n1 = 1./n;
-   Double_t mean = tot*n1;
-   Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
-   return rms;
-}
-
-//______________________________________________________________________________
-Double_t TMath::RMS(Int_t n, const Long_t *a)
-{
-   // Return the RMS of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t tot = 0, tot2 =0;
-   for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
-   Double_t n1 = 1./n;
-   Double_t mean = tot*n1;
-   Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
-   return rms;
-}
-
-//______________________________________________________________________________
-Double_t TMath::RMS(Int_t n, const Long64_t *a)
-{
-   // Return the RMS of an array a with length n.
-
-   if (n <= 0) return 0;
-
-   Double_t tot = 0, tot2 =0;
-   for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
-   Double_t n1 = 1./n;
-   Double_t mean = tot*n1;
-   Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
-   return rms;
+  }
+  return loc;
 }
 
 //______________________________________________________________________________
@@ -2537,20 +1628,10 @@ Bool_t TMath::IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y)
    return kFALSE;
 }
 
-#if defined(_MSC_VER) && (_MSC_VER<1300)
-#define SortImp SortImpStandalone
-template <class Element, class Index, class Size> 
-void SortImpStandalone(Size n1, const Element *a, 
-                       Index *index, Bool_t down) 
-#else
-template <class Element, class Index, class Size> 
-void TMath::SortImp(Size n1, const Element *a, 
-                    Index *index, Bool_t down) 
-#endif
+//_____________________________________________________________________________
+void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
 {
-   // Templated version of the Sort.
-
-   // Sort the n1 elements of the array a.of Element
+   // Sort the n1 elements of the Short_t array a.
    // In output the array index contains the indices of the sorted array.
    // If down is false sort in increasing order (default is decreasing order).
    // This is a translation of the CERNLIB routine sortzv (M101)
@@ -2558,9 +1639,9 @@ void TMath::SortImp(Size n1, const Element *a,
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Size i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Size i22 = 0;
-   Element ai;
+   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Int_t i22 = 0;
+   Short_t ai;
    n = n1;
    if (n <= 0) return;
    if (n == 1) {index[0] = 0; return;}
@@ -2614,20 +1695,6 @@ void TMath::SortImp(Size n1, const Element *a,
 }
 
 //_____________________________________________________________________________
-void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
-{
-   // Sort the n1 elements of the Short_t array a.
-   // In output the array index contains the indices of the sorted array.
-   // If down is false sort in increasing order (default is decreasing order).
-   // This is a translation of the CERNLIB routine sortzv (M101)
-   // based on the quicksort algorithm.
-   // NOTE that the array index must be created with a length >= n1
-   // before calling this function.
-
-   SortImp(n1,a,index,down);
-}
-
-//_____________________________________________________________________________
 void TMath::Sort(Int_t n1, const Int_t *a, Int_t *index, Bool_t down)
 {
    // Sort the n1 elements of the Int_t array a.
@@ -2638,7 +1705,59 @@ void TMath::Sort(Int_t n1, const Int_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   SortImp(n1,a,index,down);
+   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Int_t i22 = 0;
+   Int_t ai;
+   n = n1;
+   if (n <= 0) return;
+   if (n == 1) {index[0] = 0; return;}
+   for (i=0;i<n;i++) index[i] = i+1;
+   for (i1=2;i1<=n;i1++) {
+      i3 = i1;
+      i33 = index[i3-1];
+      ai  = a[i33-1];
+      while(1) {
+         i2 = i3/2;
+         if (i2 <= 0) break;
+         i22 = index[i2-1];
+         if (ai <= a[i22-1]) break;
+         index[i3-1] = i22;
+         i3 = i2;
+      }
+      index[i3-1] = i33;
+   }
+
+   while(1) {
+      i3 = index[n-1];
+      index[n-1] = index[0];
+      ai = a[i3-1];
+      n--;
+      if(n-1 < 0) {index[0] = i3; break;}
+      i1 = 1;
+      while(2) {
+         i2 = i1+i1;
+         if (i2 <= n) i22 = index[i2-1];
+         if (i2-n > 0) {index[i1-1] = i3; break;}
+         if (i2-n < 0) {
+            i222 = index[i2];
+            if (a[i22-1] - a[i222-1] < 0) {
+                i2++;
+                i22 = i222;
+            }
+         }
+         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
+         index[i1-1] = i22;
+         i1 = i2;
+      }
+   }
+   for (i=0;i<n1;i++) index[i]--;
+   if (!down) return;
+   n2 = n1/2;
+   for (i=0;i<n2;i++) {
+      iswap         = index[i];
+      index[i]      = index[n1-i-1];
+      index[n1-i-1] = iswap;
+   }
 }
 
 //_____________________________________________________________________________
@@ -2652,7 +1771,59 @@ void TMath::Sort(Int_t n1, const Float_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   SortImp(n1,a,index,down);
+   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Int_t i22 = 0;
+   Float_t ai;
+   n = n1;
+   if (n <= 0) return;
+   if (n == 1) {index[0] = 0; return;}
+   for (i=0;i<n;i++) index[i] = i+1;
+   for (i1=2;i1<=n;i1++) {
+      i3 = i1;
+      i33 = index[i3-1];
+      ai  = a[i33-1];
+      while(1) {
+         i2 = i3/2;
+         if (i2 <= 0) break;
+         i22 = index[i2-1];
+         if (ai <= a[i22-1]) break;
+         index[i3-1] = i22;
+         i3 = i2;
+      }
+      index[i3-1] = i33;
+   }
+
+   while(1) {
+      i3 = index[n-1];
+      index[n-1] = index[0];
+      ai = a[i3-1];
+      n--;
+      if(n-1 < 0) {index[0] = i3; break;}
+      i1 = 1;
+      while(2) {
+         i2 = i1+i1;
+         if (i2 <= n) i22 = index[i2-1];
+         if (i2-n > 0) {index[i1-1] = i3; break;}
+         if (i2-n < 0) {
+            i222 = index[i2];
+            if (a[i22-1] - a[i222-1] < 0) {
+                i2++;
+                i22 = i222;
+            }
+         }
+         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
+         index[i1-1] = i22;
+         i1 = i2;
+      }
+   }
+   for (i=0;i<n1;i++) index[i]--;
+   if (!down) return;
+   n2 = n1/2;
+   for (i=0;i<n2;i++) {
+      iswap         = index[i];
+      index[i]      = index[n1-i-1];
+      index[n1-i-1] = iswap;
+   }
 }
 
 //_____________________________________________________________________________
@@ -2666,7 +1837,59 @@ void TMath::Sort(Int_t n1, const Double_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   SortImp(n1,a,index,down);
+   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Int_t i22 = 0;
+   Double_t ai;
+   n = n1;
+   if (n <= 0) return;
+   if (n == 1) {index[0] = 0; return;}
+   for (i=0;i<n;i++) index[i] = i+1;
+   for (i1=2;i1<=n;i1++) {
+      i3 = i1;
+      i33 = index[i3-1];
+      ai  = a[i33-1];
+      while(1) {
+         i2 = i3/2;
+         if (i2 <= 0) break;
+         i22 = index[i2-1];
+         if (ai <= a[i22-1]) break;
+         index[i3-1] = i22;
+         i3 = i2;
+      }
+      index[i3-1] = i33;
+   }
+
+   while(1) {
+      i3 = index[n-1];
+      index[n-1] = index[0];
+      ai = a[i3-1];
+      n--;
+      if(n-1 < 0) {index[0] = i3; break;}
+      i1 = 1;
+      while(2) {
+         i2 = i1+i1;
+         if (i2 <= n) i22 = index[i2-1];
+         if (i2-n > 0) {index[i1-1] = i3; break;}
+         if (i2-n < 0) {
+            i222 = index[i2];
+            if (a[i22-1] - a[i222-1] < 0) {
+                i2++;
+                i22 = i222;
+            }
+         }
+         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
+         index[i1-1] = i22;
+         i1 = i2;
+      }
+   }
+   for (i=0;i<n1;i++) index[i]--;
+   if (!down) return;
+   n2 = n1/2;
+   for (i=0;i<n2;i++) {
+      iswap         = index[i];
+      index[i]      = index[n1-i-1];
+      index[n1-i-1] = iswap;
+   }
 }
 
 //_____________________________________________________________________________
@@ -2680,7 +1903,59 @@ void TMath::Sort(Int_t n1, const Long_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   SortImp(n1,a,index,down);
+   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Int_t i22 = 0;
+   Long_t ai;
+   n = n1;
+   if (n <= 0) return;
+   if (n == 1) {index[0] = 0; return;}
+   for (i=0;i<n;i++) index[i] = i+1;
+   for (i1=2;i1<=n;i1++) {
+      i3 = i1;
+      i33 = index[i3-1];
+      ai  = a[i33-1];
+      while(1) {
+         i2 = i3/2;
+         if (i2 <= 0) break;
+         i22 = index[i2-1];
+         if (ai <= a[i22-1]) break;
+         index[i3-1] = i22;
+         i3 = i2;
+      }
+      index[i3-1] = i33;
+   }
+
+   while(1) {
+      i3 = index[n-1];
+      index[n-1] = index[0];
+      ai = a[i3-1];
+      n--;
+      if(n-1 < 0) {index[0] = i3; break;}
+      i1 = 1;
+      while(2) {
+         i2 = i1+i1;
+         if (i2 <= n) i22 = index[i2-1];
+         if (i2-n > 0) {index[i1-1] = i3; break;}
+         if (i2-n < 0) {
+            i222 = index[i2];
+            if (a[i22-1] - a[i222-1] < 0) {
+                i2++;
+                i22 = i222;
+            }
+         }
+         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
+         index[i1-1] = i22;
+         i1 = i2;
+      }
+   }
+   for (i=0;i<n1;i++) index[i]--;
+   if (!down) return;
+   n2 = n1/2;
+   for (i=0;i<n2;i++) {
+      iswap         = index[i];
+      index[i]      = index[n1-i-1];
+      index[n1-i-1] = iswap;
+   }
 }
 
 //_____________________________________________________________________________
@@ -2694,21 +1969,59 @@ void TMath::Sort(Int_t n1, const Long64_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   SortImp(n1,a,index,down);
-}
+   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Int_t i22 = 0;
+   Long_t ai;
+   n = n1;
+   if (n <= 0) return;
+   if (n == 1) {index[0] = 0; return;}
+   for (i=0;i<n;i++) index[i] = i+1;
+   for (i1=2;i1<=n;i1++) {
+      i3 = i1;
+      i33 = index[i3-1];
+      ai  = a[i33-1];
+      while(1) {
+         i2 = i3/2;
+         if (i2 <= 0) break;
+         i22 = index[i2-1];
+         if (ai <= a[i22-1]) break;
+         index[i3-1] = i22;
+         i3 = i2;
+      }
+      index[i3-1] = i33;
+   }
 
-//_____________________________________________________________________________
-void TMath::Sort(Long64_t n1, const Long64_t *a, Long64_t *index, Bool_t down)
-{
-   // Sort the n1 elements of the Long64_t array a.
-   // In output the array index contains the indices of the sorted array.
-   // If down is false sort in increasing order (default is decreasing order).
-   // This is a translation of the CERNLIB routine sortzv (M101)
-   // based on the quicksort algorithm.
-   // NOTE that the array index must be created with a length >= n1
-   // before calling this function.
-
-   SortImp(n1,a,index,down);
+   while(1) {
+      i3 = index[n-1];
+      index[n-1] = index[0];
+      ai = a[i3-1];
+      n--;
+      if(n-1 < 0) {index[0] = i3; break;}
+      i1 = 1;
+      while(2) {
+         i2 = i1+i1;
+         if (i2 <= n) i22 = index[i2-1];
+         if (i2-n > 0) {index[i1-1] = i3; break;}
+         if (i2-n < 0) {
+            i222 = index[i2];
+            if (a[i22-1] - a[i222-1] < 0) {
+                i2++;
+                i22 = i222;
+            }
+         }
+         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
+         index[i1-1] = i22;
+         i1 = i2;
+      }
+   }
+   for (i=0;i<n1;i++) index[i]--;
+   if (!down) return;
+   n2 = n1/2;
+   for (i=0;i<n2;i++) {
+      iswap         = index[i];
+      index[i]      = index[n1-i-1];
+      index[n1-i-1] = iswap;
+   }
 }
 
 
@@ -2996,7 +2309,7 @@ Double_t TMath::BesselK0(Double_t x)
 
    // Parameters of the polynomial approximation
    const Double_t p1=-0.57721566,  p2=0.42278420,   p3=0.23069756,
-                  p4= 3.488590e-2, p5=2.62698e-3,   p6=1.0750e-4,    p7=7.4e-6;
+                  p4= 3.488590e-2, p5=2.62698e-3,   p6=1.0750e-4,    p7=7.4e-5;
 
    const Double_t q1= 1.25331414,  q2=-7.832358e-2, q3= 2.189568e-2,
                   q4=-1.062446e-2, q5= 5.87872e-3,  q6=-2.51540e-3,  q7=5.3208e-4;
@@ -3540,262 +2853,65 @@ Double_t TMath::StruveL1(Double_t x)
 }
 
 //______________________________________________________________________________
-Double_t TMath::Beta(Double_t p, Double_t q)
+Double_t TMath::Binomial(Int_t n,Int_t k) 
 {
-   // Calculates Beta-function Gamma(p)*Gamma(q)/Gamma(p+q) .
-
-   return TMath::Exp(TMath::LnGamma(p)+TMath::LnGamma(q)-TMath::LnGamma(p+q));
-}
-
-//______________________________________________________________________________
-Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b)
-{
-   // Continued fraction evaluation by modified Lentz's method
-   // used in calculation of incomplete Beta function.
-
-   Int_t itmax = 500;
-   Double_t eps = 3.e-7;
-   Double_t fpmin = 1.e-30;
-
-   Int_t m, m2;
-   Double_t aa, c, d, del, qab, qam, qap;
-   Double_t h;
-   qab = a+b;
-   qap = a+1.0;
-   qam = a-1.0;
-   c = 1.0;
-   d = 1.0 - qab*x/qap;
-   if (TMath::Abs(d)<fpmin) d=fpmin;
-   d=1.0/d;
-   h=d;
-   for (m=1; m<=itmax; m++) {
-      m2=m*2;
-      aa = m*(b-m)*x/((qam+ m2)*(a+m2));
-      d = 1.0 +aa*d;
-      if(TMath::Abs(d)<fpmin) d = fpmin;
-      c = 1 +aa/c;
-      if (TMath::Abs(c)<fpmin) c = fpmin;
-      d=1.0/d;
-      h*=d*c;
-      aa = -(a+m)*(qab +m)*x/((a+m2)*(qap+m2));
-      d=1.0+aa*d;
-      if(TMath::Abs(d)<fpmin) d = fpmin;
-      c = 1.0 +aa/c;
-      if (TMath::Abs(c)<fpmin) c = fpmin;
-      d=1.0/d;
-      del = d*c;
-      h*=del;
-      if (TMath::Abs(del-1)<=eps) break;
-   }
-   if (m>itmax) {
-      Info("BetaCf", "a or b too big, or itmax too small, a=%g, b=%g, x=%g, h=%g, itmax=%d",
-           a,b,x,h,itmax);
-   }
-   return h;
-}
-
-//______________________________________________________________________________
-Double_t TMath::BetaIncomplete(Double_t x, Double_t a, Double_t b)
-{
-   // Calculates the incomplete Beta-function.
-   //     --implementation by Anna Kreshuk
-
-   Double_t bt;
-   if ((x<0.0)||(x>1.0)) {
-      Error("BetaIncomplete", "X must between 0 and 1");
-      return 0.0;
-   }
-   if ((x==0.0)||(x==1.0)) {
-      bt=0.0;
-   } else {
-      bt = TMath::Power(x, a)*TMath::Power(1-x, b)/Beta(a, b);
-   }
-   if (x<(a+1)/(a+b+2)) {
-      return bt*BetaCf(x, a, b)/a;
-   }
-   else {
-      return (1 - bt*BetaCf(1-x, b, a)/b);
-   }
-}
-
-//______________________________________________________________________________
-Double_t TMath::Binomial(Int_t n,Int_t k)
-{
-   // Calculate the binomial coefficient n over k.
-
-   if(k==0 || n==k) return 1;
-   if(n<=0 || k<0 || n<k) return 0;
-
-   Int_t k1=TMath::Min(k,n-k);
-   Int_t k2=n-k1;
-   Double_t fact=k2+1;
-   for(Int_t i=k1;i>1;i--)
-      fact*=static_cast<Double_t>(k2+i)/i;
-   return fact;
-}
-
-//______________________________________________________________________________
-Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
-{
-   // Suppose an event occurs with probability _p_ per trial
-   // Then the probability P of its occuring _k_ or more times
-   // in _n_ trials is termed a cumulative binomial probability
-   // the formula is P = sum_from_j=k_to_n(TMath::Binomial(n, j)*
-   // *TMath::Power(p, j)*TMath::Power(1-p, n-j)
-   // For _n_ larger than 12 BetaIncomplete is a much better way
-   // to evaluate the sum than would be the straightforward sum calculation
-   // for _n_ smaller than 12 either method is acceptable
-   // ("Numerical Recipes")
-   //     --implementation by Anna Kreshuk
-
-   Double_t P = BetaIncomplete(p, Double_t(k), Double_t(n-k+1));
-   return P;
-}
-
-//______________________________________________________________________________
-Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
-{
-   // Computes the density function of F-distribution
-   // (probability function, integral of density, is computed in FDistI)
-   //
-   // parameters N and M stand for degrees of freedom of chi-squares
-   // mentioned above
-   // parameter F is the actual variable x of the density function p(x)
-   // and the point at which the density function is calculated.
-   //
-   //  about F distribution:
-   // F-distribution arises in testing whether two random samples
-   // have the same variance. It is the ratio of two chi-square
-   // distributions, with N and M degrees of freedom respectively,
-   // where each chi-square is first divided by it's number of degrees
-   // of freedom.
-   //     --implementation by Anna Kreshuk
-
-   if ((F<0)||(N<1)||(M<1)){
-      return 0;
-   } else {
-      Double_t Denom = TMath::Gamma(N/2)*TMath::Gamma(M/2)*TMath::Power(M+N*F, (N+M)/2);
-      Double_t Div = TMath::Gamma((N+M)/2)*TMath::Power(N, N/2)*TMath::Power(M, M/2)*TMath::Power(F, 0.5*N-1);
-      return Div/Denom;
-   }
-}
-
-//______________________________________________________________________________
-Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
-{
-   // Calculates the cumulative distribution function of F-distribution
-   // this function occurs in the statistical test of whether two observed
-   // samples have the same variance. For this test a certain statistic F, the ratio of
-   // observed dispersion fo the first sample to that of the second sample,
-   // is calculated. N and M stand for numbers of degrees of freedom in the samples
-   // 1-FDistI() is the significance level at which the hypothesis "1 has smaller
-   // variance than 2" can be rejected. A small numerical value of 1 - FDistI() implies
-   // a very significant rejection, in turn implying high confidence in the hypothesis
-   // "1 has variance greater than 2".
-   //     --implementation by Anna Kreshuk
-
-   Double_t FI = 1 - BetaIncomplete((M/(M+N*F)), M*0.5, N*0.5);
-   return FI;
+  // 
+  // Calculate the binomial coefficient
+  // n over k
+  
+  if(k==0 || n==k) return 1;
+  if(n<=0 || k<0 || n<k) return 0;
+  //
+  Int_t k1=TMath::Min(k,n-k);
+  Int_t k2=n-k1;
+  Double_t fact=k2+1;
+  for(Int_t i=k1;i>1;i--) 
+    fact*=static_cast<Double_t>(k2+i)/i;
+  return fact;
 }
 
 //______________________________________________________________________________
 Bool_t TMath::Permute(Int_t n, Int_t *a)
 {
-   // Simple recursive algorithm to find the permutations of
-   // n natural numbers, not necessarily all distinct
-   // adapted from CERNLIB routine PERMU
-   // The input array has to be initialised with a non descending
-   // sequence. The method returns kFALSE when
-   // all combinations are exhausted
-
-   Int_t i,itmp;
-   Int_t i1=-1;
-
-   // find rightmost upward transition
-   for(i=n-2; i>-1; i--) {
-      if(a[i]<a[i+1]) {
-         i1=i;
-         break;
-      }
-   }
-   // no more upward transitions, end of the story
-   if(i1==-1) return kFALSE;
-   else {
-      // find lower right element higher than the lower
-      // element of the upward transition
-      for(i=n-1;i>i1;i--) {
-         if(a[i] > a[i1]) {
-            // swap the two
-            itmp=a[i1];
-            a[i1]=a[i];
-            a[i]=itmp;
-            break;
-         }
-      }
-      // order the rest, in fact just invert, as there
-      // are only downward transitions from here on
-      for(i=0;i<(n-i1-1)/2;i++) {
-         itmp=a[i1+i+1];
-         a[i1+i+1]=a[n-i-1];
-         a[n-i-1]=itmp;
-      }
-   }
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Student(Double_t T, Double_t ndf)
-{
-   // Computes density function for Student's t- distribution
-   // (the probability function (integral of density) is computed in StudentI)
-   //
-   // First parameter stands for x - the actual variable of the
-   // density function p(x) and the point at which the density is calculated.
-   // Second parameter stands for number of degrees of freedom
-   //
-   // About Student distribution:
-   // Student's t-distribution is used for many significance tests, for example,
-   // for the Student's t-tests for the statistical significance of difference
-   // between two sample means and for confidence intervals for the difference
-   // between two population means.
-   //
-   // Example: suppose we have a random sample of size n drawn from normal
-   // distribution with mean Mu and st.deviation Sigma. Then the variable
-   //
-   //   t = (sample_mean - Mu)/(sample_deviation / sqrt(n))
-   //
-   // has Student's t-distribution with n-1 degrees of freedom
-   //
-   // NOTE that this function's second argument is number of degrees of freedom,
-   // not the sample size.
-   //
-   // As the number of degrees of freedom grows, t-distribution approaches
-   // Normal(0,1) distribution.
-   //     --implementation by Anna Kreshuk
-
-   if (ndf < 1) {
-      return 0;
-   }
-
-   Double_t r   = ndf;
-   Double_t rh  = 0.5*r;
-   Double_t rh1 = rh + 0.5;
-   Double_t Denom = TMath::Sqrt(r*TMath::Pi())*TMath::Gamma(rh)*TMath::Power(1+T*T/r, rh1);
-   return TMath::Gamma(rh1)/Denom;
-}
-
-//______________________________________________________________________________
-Double_t TMath::StudentI(Double_t T, Double_t ndf)
-{
-   // Calculates the cumulative distribution function of Student's t-distribution
-   // second parameter stands for number of degrees of freedom, not for the number
-   // of samples
-   // if x has Student's t-distribution, the function returns the probability of
-   // x being less than T
-   //     --implementation by Anna Kreshuk
-
-   Double_t r = ndf;
-
-   Double_t SI = (T>0) ? (1 - 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5)) : 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
-   return SI;
+  //
+  // simple recursive algorithm to find the permutations of
+  // n natural numbers, not necessarily all distinct
+  // adapted from CERNLIB routine PERMU
+  // The input array has to be initialised with a non descending 
+  // sequence. The method returns kFALSE when 
+  // all combinations are exhausted
+  
+  Int_t i,itmp;
+  Int_t i1=-1;
+  
+  // find rightmost upward transition 
+  for(i=n-2; i>-1; i--) {
+     if(a[i]<a[i+1]) {
+        i1=i;
+        break;
+     }
+  }
+  // no more upward transitions, end of the story
+  if(i1==-1) return kFALSE;
+  else {
+     // find lower right element higher than the lower
+     // element of the upward transition
+     for(i=n-1;i>i1;i--) {
+        if(a[i] > a[i1]) {
+           // swap the two
+	       itmp=a[i1];
+    	   a[i1]=a[i];
+           a[i]=itmp;
+           break;
+        }
+     }
+     // order the rest, in fact just invert, as there 
+     // are only downward transitions from here on
+     for(i=0;i<(n-i1-1)/2;i++) {
+        itmp=a[i1+i+1];
+        a[i1+i+1]=a[n-i-1];
+        a[n-i-1]=itmp;
+     }
+  }
+  return kTRUE;
 }

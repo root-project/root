@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.7 2004/06/29 06:49:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.5 2003/06/25 13:39:31 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -132,15 +132,15 @@ Int_t TNtuple::Fill()
 //______________________________________________________________________________
 Int_t TNtuple::Fill(const Float_t *x)
 {
-   // Fill a Ntuple with an array of floats
+//*-*-*-*-*-*-*-*-*Fill a Ntuple with an array of floats*-*-*-*-*-*-*-*-*-*
+//*-*              =====================================
 
+//*-*- Store array x into buffer
+  for (Int_t i=0;i<fNvar;i++)  {
+     fArgs[i] = x[i];
+  }
 
-   // Store array x into buffer
-   for (Int_t i=0;i<fNvar;i++)  {
-      fArgs[i] = x[i];
-   }
-
-   return TTree::Fill();
+  return TTree::Fill();
 }
 
 
@@ -149,7 +149,8 @@ Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
               ,Float_t x5,Float_t x6,Float_t x7,Float_t x8,Float_t x9
               ,Float_t x10,Float_t x11,Float_t x12,Float_t x13,Float_t x14)
 {
-   // Fill a Ntuple: Each Ntuple item is an argument
+//*-*-*-*-*-*-*-*-*Fill a Ntuple: Each Ntuple item is an argument*-*-*-*-*-*-*
+//*-*              ==============================================
 
    if (fNvar >  0) fArgs[0]  = x0;
    if (fNvar >  1) fArgs[1]  = x1;
@@ -173,9 +174,9 @@ Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
 //_______________________________________________________________________
 Int_t TNtuple::ReadFile(const char *filename)
 {
-   // Read from filename as many columns as variables in the ntuple
-   // the function returns the number of rows found in the file
-
+//  read from filename as many columns as variables in the ntuple
+// the function returns the number of rows found in the file
+      
    Int_t nlines = 0;
    ifstream in;
    in.open(filename);
@@ -212,7 +213,7 @@ void TNtuple::Streamer(TBuffer &b)
       for (Int_t i=0;i<fNvar;i++) {
          TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
          if (branch) branch->SetAddress(&fArgs[i]);
-      }
+      }      
    } else {
       TNtuple::Class()->WriteBuffer(b,this);
    }

@@ -31,7 +31,7 @@ endif
 # Compiler:
 CXX          := $(ICC)
 CC           := $(ICC)
-CXXFLAGS      = -wd1476 $(EXTRA_CXXFLAGS)
+CXXFLAGS      = $(EXTRA_CXXFLAGS)
 CFLAGS        = $(EXTRA_CFLAGS) -restrict
 CINTCXXFLAGS  = $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \

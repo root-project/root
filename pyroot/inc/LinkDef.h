@@ -5,6 +5,5 @@
 #pragma link off all functions;
 
 #pragma link C++ class TPython;
-#pragma link C++ class TPyReturn+;
 
 #endif

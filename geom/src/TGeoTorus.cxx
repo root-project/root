@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.9 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.8 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -503,7 +503,18 @@ void TGeoTorus::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
+   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTorus(this, option);
+}
+
+//_____________________________________________________________________________
+void TGeoTorus::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintTorus(this, option, glmat);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.68 2004/07/01 18:49:31 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.66 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -97,7 +97,7 @@
 //                     (/etc/grid-security/gridmap); (re)defines the    //
 //                     GRIDMAP environment variable.                    //
 //   -i                says we were started by inetd                    //
-//   -noauth           do not require client authentication             //
+//   -noauth           do not require client authentication             // 
 //   -p port#          specifies a different port to listen on          //
 //   -s <sshd_port>    specifies the port number for the sshd daemon    //
 //                     (deafult is 22)                                  //
@@ -147,7 +147,6 @@
 // 8: change in Kerberos authentication protocol
 // 9: change authentication cleaning protocol
 // 10: modified SSH protocol + support for server 'no authentication' mode
-// 11: added support for openSSL keys for encryption
 
 #include "config.h"
 #include "RConfig.h"
@@ -235,7 +234,7 @@ static std::string gRpdAuthTab;   // keeps track of authentication info
 static std::string gTmpDir;
 static std::string gUser;
 static EService gService         = kPROOFD;
-static int gProtocol             = 11;       // increase when protocol changes
+static int gProtocol             = 10;       // increase when protocol changes
 static int gRemPid               = -1;      // remote process ID
 static std::string gReadHomeAuthrc = "0";
 static int gInetdFlag            = 0;
@@ -294,18 +293,12 @@ const char *RerouteUser()
    if (getenv("HOME")) {
       conffile.insert(0,"/.");
       conffile.insert(0,getenv("HOME"));
-      // string::insert is buggy on some compilers (eg gcc 2.96):
-      // new length correct but data not always null terminated
-      conffile[conffile.length()] = 0;
       if (access(conffile.c_str(), R_OK))
          conffile = "";
    }
    if (!conffile.length()) {
       conffile.insert(0,"/etc/");
       conffile.insert(0,gConfDir);
-      // string::insert is buggy on some compilers (eg gcc 2.96):
-      // new length correct but data not always null terminated
-      conffile[conffile.length()] = 0;
    }
    if ((proofconf = fopen(conffile.c_str(), "r")) != 0) {
 
@@ -873,16 +866,16 @@ int main(int argc, char **argv)
      proofdparentid = getppid(); // Identifies this family
 
    // default job options
-   unsigned int options = kDMN_RQAUTH | kDMN_INCTKN |
+   unsigned int options = kDMN_RQAUTH | kDMN_INCTKN | 
                           kDMN_HOSTEQ | kDMN_SYSLOG ;
    // modify them if required
-   if (!requireauth)
+   if (!requireauth) 
       options &= ~kDMN_RQAUTH;
-   if (!inclusivetoken)
+   if (!inclusivetoken) 
       options &= ~kDMN_INCTKN;
-   if (!checkhostsequiv)
+   if (!checkhostsequiv) 
       options &= ~kDMN_HOSTEQ;
-   if (foregroundflag)
+   if (foregroundflag) 
       options &= ~kDMN_SYSLOG;
    RpdInit(gService, proofdparentid, gProtocol, options,
            reuseallow, sshdport,

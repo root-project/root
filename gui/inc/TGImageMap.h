@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.3 2001/11/08 20:33:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.2 2000/12/12 18:17:38 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -120,7 +120,7 @@ protected:
    ECursor     fCursorMouseOut;  // cursor shape out of regions
    Int_t       fLastVisited;     // id of the last visited region
    TGToolTip  *fMainTip;         // tooltip text for main region
-   TList      *fTrash;           // collect all objects that need to be cleaned up
+   TList      *fCleanup;         // collect all objects that need to be cleaned up
 
 public:
    TGImageMap(const TGWindow *p, const TGPicture *pic);

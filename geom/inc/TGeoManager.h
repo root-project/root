@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.49 2004/04/26 13:06:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.48 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -82,7 +82,6 @@ private :
    Bool_t                fPhiCut;           // flag for phi cuts
    Bool_t                fTimeCut;          // time cut for tracks
    Bool_t                fDrawExtra;        //! flag that the list of physical nodes has to be drawn
-   Bool_t                fMatrixTransform;  //! flag for using GL matrix
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
 
@@ -107,7 +106,6 @@ private :
    TGeoNode             *fNextNode;         //! next node that will be crossed
    TGeoVolume           *fMasterVolume;     // master volume
    TGeoHMatrix          *fCurrentMatrix;    //! current global matrix
-   TGeoHMatrix          *fGLMatrix;         // matrix to be used for view transformations
    TObjArray            *fUniqueVolumes;    //-> list of unique volumes
    TGeoShape            *fClippingShape;    //! clipping shape for raytracing
 
@@ -271,8 +269,6 @@ public:
                                      Double_t alpha, Double_t theta, Double_t phi);
    TGeoVolume            *MakePcon(const char *name, const TGeoMedium *medium,
                                       Double_t phi, Double_t dphi, Int_t nz);
-   TGeoVolume            *MakeParaboloid(const char *name, const TGeoMedium *medium,
-                                      Double_t rlo, Double_t rhi, Double_t dz);
    TGeoVolume            *MakePgon(const char *name, const TGeoMedium *medium,
                                       Double_t phi, Double_t dphi, Int_t nedges, Int_t nz);
    TGeoVolume            *MakeSphere(const char *name, const TGeoMedium *medium,
@@ -333,13 +329,11 @@ public:
    Double_t               GetStep() const              {return fStep;}
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
    Bool_t                 IsCheckingOverlaps() const   {return fSearchOverlaps;}
-   Bool_t                 IsMatrixTransform() const    {return fMatrixTransform;}
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change=kFALSE);
    Bool_t                 IsSameLocation() const {return fIsSameLocation;}
    Bool_t                 IsSamePoint(Double_t x, Double_t y, Double_t z) const;
    Bool_t                 IsStartSafe() const {return fStartSafe;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
-   void                   SetMatrixTransform(Bool_t on=kTRUE) {fMatrixTransform = on;}
    void                   SetStep(Double_t step) {fStep=step;}
    Bool_t                 IsCurrentOverlapping() const {return fCurrentOverlapping;}
    Bool_t                 IsEntering() const           {return fIsEntering;}
@@ -394,7 +388,6 @@ public:
    TGeoNode              *GetMother(Int_t up=1) const {return fCache->GetMother(up);}
    TGeoHMatrix           *GetHMatrix();
    TGeoHMatrix           *GetCurrentMatrix() const    {return fCache->GetCurrentMatrix();}
-   TGeoHMatrix           *GetGLMatrix() const         {return fGLMatrix;}
    TGeoNode              *GetCurrentNode() const      {return fCurrentNode;}
    Int_t                  GetCurrentNodeId() const;
    Double_t              *GetCurrentPoint() const     {return fPoint;}
@@ -469,7 +462,7 @@ public:
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 7)          // geometry manager
+  ClassDef(TGeoManager, 6)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;
