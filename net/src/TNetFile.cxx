@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.54 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.55 2004/11/03 22:54:53 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -154,14 +154,34 @@ Int_t TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t
 
    fSocket->Send(kROOTD_FSTAT);
 
-   char  msg[128];
+   char  msg[1024];
    Int_t kind;
-   fSocket->Recv(msg, 128, kind);
+   fSocket->Recv(msg, sizeof(msg), kind);
 
-   sscanf(msg, "%ld %lld %ld %ld", id, size, flags, modtime);
+   Int_t  mode, uid, gid, islink;
+   Long_t dev, ino;
 
-   if (*id == -1)
-      return 1;
+   if (fProtocol > 12) {
+      sscanf(msg, "%ld %ld %d %d %d %lld %ld %d", &dev, &ino, &mode,
+            &uid, &gid, size, modtime, &islink);
+      if (dev == -1)
+         return 1;
+      if (id)
+         *id = (dev << 24) + ino;
+      if (flags) {
+         *flags = 0;
+         if (mode & (kS_IXUSR|kS_IXGRP|kS_IXOTH))
+            *flags |= 1;
+         if (R_ISDIR(mode))
+            *flags |= 2;
+         if (!R_ISREG(mode) && !R_ISDIR(mode))
+            *flags |= 4;
+      }
+   } else {
+      sscanf(msg, "%ld %lld %ld %ld", id, size, flags, modtime);
+      if (*id == -1)
+         return 1;
+   }
 
    return 0;
 }
