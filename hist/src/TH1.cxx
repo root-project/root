@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.32 2000/12/22 12:44:33 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.33 2001/01/03 22:49:26 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3812,7 +3812,7 @@ void TH1::SetName(const char *name)
 }
 
 //______________________________________________________________________________
-void TH1::SetObject(const char *name, const char *title)
+void TH1::SetNameTitle(const char *name, const char *title)
 {
 // Change the name and title of this histogram
 //

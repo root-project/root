@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.3 2000/11/21 20:13:10 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.4 2000/12/13 15:13:46 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -92,7 +92,7 @@ protected:
    virtual void        SetMatrix(TRotMatrix *matrix=0) {fMatrix = matrix;}
    virtual void        SetName(const char *name);
    virtual void        SetParent(TNode *parent) {fParent=parent;}
-   virtual void        SetObject(const char *name, const char *title);
+   virtual void        SetNameTitle(const char *name, const char *title);
    virtual void        SetPosition( Double_t x=0, Double_t y=0, Double_t z=0) {fX=x; fY=y; fZ=z;}
    virtual void        SetVisibility(Int_t vis=1); // *MENU*
    virtual void        Sizeof3D() const;

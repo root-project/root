@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.3 2000/09/08 07:41:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.4 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -117,7 +117,7 @@ void TNamed::SetName(const char *name)
 }
 
 //______________________________________________________________________________
-void TNamed::SetObject(const char *name, const char *title)
+void TNamed::SetNameTitle(const char *name, const char *title)
 {
    // Change (i.e. set) all the TNamed parameters (name and title).
    // See also WARNING in SetName

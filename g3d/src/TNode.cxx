@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.4 2000/11/21 20:16:54 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.5 2000/12/13 15:13:48 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -687,7 +687,7 @@ void TNode::SetName(const char *name)
 }
 
 //______________________________________________________________________________
-void TNode::SetObject(const char *name, const char *title)
+void TNode::SetNameTitle(const char *name, const char *title)
 {
 // Change the name and title of this Node
 //

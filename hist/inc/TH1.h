@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.13 2001/01/03 22:49:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.14 2001/01/08 08:34:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -246,7 +246,7 @@ public:
     virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
     virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
     virtual void     SetName(const char *name); // *MENU*
-    virtual void     SetObject(const char *name, const char *title);
+    virtual void     SetNameTitle(const char *name, const char *title);
     virtual void     SetNdivisions(Int_t n=510, Option_t *axis="X");
     virtual void     SetNormFactor(Double_t factor=1) {fNormFactor = factor;}
     virtual void     SetStats(Bool_t stats=kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    virtual ULong_t  Hash() const { return fName.Hash(); }
    virtual Bool_t   IsSortable() const { return kTRUE; }
    virtual void     SetName(const char *name); // *MENU*
-   virtual void     SetObject(const char *name, const char *title);
+   virtual void     SetNameTitle(const char *name, const char *title);
    virtual void     SetTitle(const char *title=""); // *MENU*
    virtual void     ls(Option_t *option="") const;
    virtual void     Print(Option_t *option="") const;
