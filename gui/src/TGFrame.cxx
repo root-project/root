@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.56 2004/06/04 15:57:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.57 2004/06/18 10:20:59 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -682,6 +682,7 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
+   fCleanup       = kFALSE;
 
    if (fOptions & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
@@ -700,6 +701,7 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
+   fCleanup       = kFALSE;
 
    SetLayoutManager(new TGVerticalLayout(this));
 }
@@ -709,6 +711,7 @@ TGCompositeFrame::~TGCompositeFrame()
 {
    // Delete a composite frame.
 
+   if (fCleanup) Cleanup();
    if (fList) fList->Delete();
    delete fList;
    delete fLayoutManager;
@@ -792,6 +795,14 @@ void TGCompositeFrame::Cleanup()
          delete el->fLayout;
    }
    fList->Delete();
+}
+
+//______________________________________________________________________________
+void TGCompositeFrame::SetCleanup(Bool_t on)
+{
+   // If fCleanup is kTRUE Cleanup() method is called automatically at destructor
+
+   fCleanup = on;
 }
 
 //______________________________________________________________________________
