@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.15 2002/10/17 17:51:16 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.16 2002/10/21 16:47:02 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -539,6 +539,7 @@ void convert_directory(const char *dir)
      for (Int_t j=0;j<n;j++) {
         p->Fill(x+offsetx,y);
      }
+     //p->SetBinEntries(i,n);  //this one should be much faster (to be tested)
      Float_t content = q[lcont+kCON1+i];
      Float_t error   = TMath::Sqrt(q[lw+i]);
      p->SetBinContent(i,content);
