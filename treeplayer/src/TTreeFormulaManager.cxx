@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.4 2003/12/16 18:55:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.5 2004/07/19 19:48:47 brun Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -145,6 +145,11 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
          }
       }
    }
+   if (fCumulUsedVarDims) {
+      for(Int_t i0=0;i0<fCumulUsedVarDims->GetSize();++i0) {
+         fCumulUsedVarDims->AddAt(0,i0);
+      }
+   }
 
    TTreeFormula* current = 0;
 
@@ -187,6 +192,7 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
          for (k = kMAXFORMDIM; (k > 0) ; k--) {
             if (fVarDims[k]) {
                Int_t index = fVarDims[k]->At(i);
+               if (fCumulUsedVarDims->At(i)==1 && index) index = 1;
                if (fUsedSizes[k]==1 || (index!=1 && index<fUsedSizes[k]))
                  local_overall *= index;
                else local_overall *= fUsedSizes[k];

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.2 2004/08/03 05:25:03 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1751,8 +1751,8 @@ void TFormLeafInfoMultiVarDim::UpdateSizes(TArrayI *garr)
    for (Int_t i=0; i<fNsize; i++) {
       Int_t local = fSizes.At(i);
       Int_t global = garr->At(i);
-      if (global==0 || (local!=0 && local<global)) global = local;
-      garr->AddAt(local,i);
+      if (global==0 || local<global) global = local;
+      garr->AddAt(global,i);
    }
 }
 

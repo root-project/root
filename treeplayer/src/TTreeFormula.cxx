@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.150 2004/07/29 10:54:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.151 2004/08/03 05:25:03 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -318,7 +318,7 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
 }
 
 //______________________________________________________________________________
-Int_t TTreeFormula::RegisterDimensions(const char *info, Int_t code) 
+Int_t TTreeFormula::RegisterDimensions(const char *info, Int_t code)
 {
    // This method is used internally to decode the dimensions of the variables
 
@@ -384,7 +384,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
    if (elem->IsA() == TStreamerBasicPointer::Class()) {
 
       if (elem->GetArrayDim()>0) {
-         
+
          ndim = elem->GetArrayDim();
          size = elem->GetMaxIndex(0);
          vardim += RegisterDimensions(code, -1);
@@ -499,7 +499,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
          // then both are NOT the same so do the leaf title first:
          numberOfVarDim += RegisterDimensions( leaf_dim, code);
       } else if (branch_dim && strncmp(branch_dim,leaf_dim,strlen(branch_dim))==0
-                 && strlen(leaf_dim)>strlen(branch_dim) 
+                 && strlen(leaf_dim)>strlen(branch_dim)
                  && (leaf_dim+strlen(branch_dim))[0]=='[') {
          // we have extra info in the leaf title
          numberOfVarDim += RegisterDimensions( leaf_dim+strlen(branch_dim)+1, code);
@@ -2248,6 +2248,13 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
       // we can skip the modulo when virt_dim is 0.
       Int_t real_instance = 0;
       Int_t virt_dim;
+
+      Bool_t check = kFALSE;
+      if (codeindex<0) {
+         codeindex = 0;
+         check = kTRUE;
+      }
+
       Int_t max_dim = fNdimensions[codeindex];
       if ( max_dim ) {
          virt_dim = 0;
@@ -2261,6 +2268,13 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                local_index = ( instance / fManager->fCumulUsedSizes[virt_dim+1]);
                if (fIndexes[codeindex][0]==-2) {
                   // NOTE: Should we check that this is a valid index?
+                  if (check) {
+                     Int_t index_real_instance = fVarIndexes[codeindex][0]->GetRealInstance(local_index,-1);
+                     if (index_real_instance > fVarIndexes[codeindex][0]->fNdata[0]) {
+                        // out of bounds
+                        return fNdata[0]+1;
+                     }
+                  }
                   local_index = (Int_t)fVarIndexes[codeindex][0]->EvalInstance(local_index);
                }
                real_instance = local_index * fCumulSizes[codeindex][1];
@@ -2296,12 +2310,24 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
             case -1: {
                   local_index = 0;
                   Int_t virt_accum = 0;
+                  Int_t maxloop = fManager->fCumulUsedVarDims->GetSize();
                   do {
-                     virt_accum += fManager->fCumulUsedVarDims->At(local_index);
+                     virt_accum += fManager->fCumulUsedVarDims->GetArray()[local_index];
                      local_index++;
-                  } while( instance >= virt_accum );
-                  local_index--;
-                  instance -= (virt_accum - fManager->fCumulUsedVarDims->At(local_index));
+                  } while( instance >= virt_accum && local_index<maxloop);
+                  if (local_index==maxloop && (instance >= virt_accum)) {
+                     local_index--;
+                     instance = fNdata[0]+1; // out of bounds.
+                     if (check) return fNdata[0]+1;
+                  } else {
+                     local_index--;
+                     if (fManager->fCumulUsedVarDims->At(local_index)) {
+                        instance -= (virt_accum - fManager->fCumulUsedVarDims->At(local_index));
+                     } else {
+                        instance = fNdata[0]+1; // out of bounds.
+                        if (check) return fNdata[0]+1;
+                     }
+                  }
                   virt_dim ++;
                }
                break;
@@ -3257,7 +3283,7 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 }
 
 //______________________________________________________________________________
-char *TTreeFormula::PrintValue(Int_t mode, Int_t instance) const
+char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) const
 {
 //*-*-*-*-*-*-*-*Return value of variable as a string*-*-*-*-*-*-*-*
 //*-*            ====================================
@@ -3298,19 +3324,21 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance) const
       if (mode == 0) {
          //NOTE: This is terrible form ... but is forced upon us by the fact that we can not
          //use the mutable keyword AND we should keep PrintValue const.
-//          Int_t ndata = ((TTreeFormula*)this)->GetNdata();
-         Int_t real_instance = ((TTreeFormula*)this)->GetRealInstance(instance,0);
-//          fprintf(stderr,"for %s: ndata %d fNdata %d real_insta %d\n",
-//                  GetTitle(),ndata,fNdata[0], real_instance);
+         Int_t real_instance = ((TTreeFormula*)this)->GetRealInstance(instance,-1);
          if (real_instance<fNdata[0]) {
-            sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(instance));
+            sprintf(value,Form("%%%sg",decform),((TTreeFormula*)this)->EvalInstance(instance));
             char *expo = strchr(value,'e');
             if (expo) {
-               if (value[0] == '-') strcpy(expo-6,expo);
-               else                 strcpy(expo-5,expo);
+               // If there is an exponent we may be longer than planned.
+               // so let's trim off the excess precission!
+               UInt_t len = atoi(decform);
+               if (strlen(value)>len) {
+                  UInt_t off = strlen(value)-len;
+                  strcpy(expo-off,expo);
+               }
             }
          } else {
-            sprintf(value,"         ");
+            sprintf(value,Form(" %%%sc",decform),' ');
          }
       }
    }
@@ -3707,6 +3735,11 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                      info->SetSize(j,0);
                      if (size>fManager->fCumulUsedVarDims->GetSize()) fManager->fCumulUsedVarDims->Set(size);
                      fManager->fCumulUsedVarDims->AddAt(-1,j);
+                  } else if (fIndexes[i][info->GetVarDim()]>=0) {
+                     // There is an index and it is not too large
+                     info->SetSize(j,1);
+                     if (size>fManager->fCumulUsedVarDims->GetSize()) fManager->fCumulUsedVarDims->Set(size);
+                     fManager->fCumulUsedVarDims->AddAt(1,j);
                   }
                }
             }
@@ -3813,6 +3846,16 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                }
             }
             virt_dim++;
+         } else if (hasBranchCount2 && k==info->GetVarDim()) {
+
+            // nothing to do, at some point I thought this might be useful:
+            // if (fIndexes[i][k]>=0) {
+            //    index = info->GetSize(fIndexes[i][k]);
+            //    if (fManager->fUsedSizes[virt_dim]==1 || (index!=1 && index<fManager->fUsedSizes[virt_dim]) )
+            //      fManager->fUsedSizes[virt_dim] = index;
+            //    virt_dim++;
+            // }
+
          }
       }
    }

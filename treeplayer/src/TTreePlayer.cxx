@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.163 2004/07/30 07:44:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.164 2004/08/03 05:25:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -409,9 +409,9 @@ void TTreePlayer::DeleteSelectorFromFile()
 }
 
 //______________________________________________________________________________
-Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix, 
-                              const char *macrofilename, const char *cutfilename, 
-                              Option_t *option, Long64_t nentries, Long64_t firstentry) 
+Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
+                              const char *macrofilename, const char *cutfilename,
+                              Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Draw the result of a C++ script
    //
@@ -420,11 +420,11 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
    // should return a value that can be automatically cast to
    // respectively a double and a boolean.
    //
-   // Both methods will be executed in a context such that the 
-   // branch names can be used as C++ variables. This is 
-   // accomplished by generating a TTreeProxy (see MakeProxy) 
+   // Both methods will be executed in a context such that the
+   // branch names can be used as C++ variables. This is
+   // accomplished by generating a TTreeProxy (see MakeProxy)
    // and including the files in the proper location.
-   // 
+   //
    // If a cutfilename is specified, for each entry, we execute
    //   if (cutfilename()) htemp->Fill(macrofilename());
    // If no cutfilename is specified, for each entry we execute
@@ -434,36 +434,36 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
    // TTreePlayer::DrawSelect
 
    if (!macrofilename || strlen(macrofilename)==0) return 0;
-   
+
    TString aclicMode;
    TString arguments;
    TString io;
    TString realcutname;
    if (cutfilename && strlen(cutfilename))
       realcutname =  gSystem->SplitAclicMode(cutfilename, aclicMode, arguments, io);
-   
+
    // we ignore the aclicMode for the cutfilename!
    TString realname = gSystem->SplitAclicMode(macrofilename, aclicMode, arguments, io);
-   
+
    TString selname = wrapperPrefix;
-   
+
    TTreeProxyGenerator gp(fTree,realname,realcutname,selname,"",3);
-   
+
    selname = gp.GetFilename();
    if (aclicMode.Length()==0) {
       Warning("DrawScript","TTreeProxy does not work in interpreted mode yet.  The script will to compiled.");
       aclicMode = "+";
    }
    selname.Append(aclicMode);
-   
+
    Info("DrawScript",Form("Will process tree/chain using %s",selname.Data()));
    Long64_t result = fTree->Process(selname,option,nentries,firstentry);
-   
-   // could delete the file selname+".h" 
+
+   // could delete the file selname+".h"
    // However this would remove the optimization of avoiding a useless
    // recompilation if the user ask for the same thing twice!
-   
-   return result; 
+
+   return result;
 }
 
 //______________________________________________________________________________
@@ -808,11 +808,11 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 
    // Let's see if we have a filename as arguments instead of
    // a TTreeFormula expression.
-   
+
    TString possibleFilename = varexp0;
-   if ( possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0 
-       && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0 
-       && possibleFilename.Index("Iteration$")<0 
+   if ( possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
+       && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
+       && possibleFilename.Index("Iteration$")<0
        && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
       if (selection && strlen(selection) && !gSystem->IsFileInIncludePath(selection)) {
@@ -825,9 +825,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 
    } else {
       possibleFilename = selection;
-      if (possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0 
-          && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0 
-          && possibleFilename.Index("Iteration$")<0 
+      if (possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
+          && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
+          && possibleFilename.Index("Iteration$")<0
           && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
          Error("DrawSelect",
@@ -2010,12 +2010,12 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::MakeProxy(const char *classname, 
+Int_t TTreePlayer::MakeProxy(const char *classname,
                              const char *macrofilename, const char *cutfilename,
                              const char *option, Int_t maxUnrolling)
 {
    // Generate a skeleton analysis class for this Tree using TBranchProxy
-   // See TTree::MakeProxy or ROOT::TTreeProxyGenerator for a description 
+   // See TTree::MakeProxy or ROOT::TTreeProxyGenerator for a description
 
    if (macrofilename==0 || strlen(macrofilename)==0 ) {
       // We currently require a file name for the script
@@ -2326,8 +2326,8 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
 
 //______________________________________________________________________________
 Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
-                        Option_t * option,
-                       Long64_t nentries, Long64_t firstentry)
+                           Option_t * option,
+                           Long64_t nentries, Long64_t firstentry)
 {
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
    // then print only first 8 columns. If varexp = "*" print all columns.
@@ -2353,14 +2353,37 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    // all the formulas will be synchronized with the selection criterium
    // (see TTreePlayer::DrawSelect for more information).
    //
-   // If option contains
+   // The options string can contains the following parameters:
    //    lenmax=dd
-   // Where 'dd' is the maximum number of elements per array that should
-   // be printed.  If 'dd' is 0, all elements are printed (this is the default)
+   //       Where 'dd' is the maximum number of elements per array that should
+   //       be printed.  If 'dd' is 0, all elements are printed (this is the
+   //       default)
+   //    colsize=ss
+   //       Where 'ss' will be used as the default size for all the column
+   //       If this options is not specified, the default column size is 9
+   //    precision=pp
+   //       Where 'pp' will be used as the default 'precision' for the
+   //       printing format.
+   //    col=xxx
+   //       Where 'xxx' is colon (:) delimited list of printing format for
+   //       each column if no format is specified for a column, the default is
+   //       used.
+   // For example:
+   //   tree->Scan("a:b:c","","colsize=30 precision=3 col=::20.10");
+   // Will print 3 columns, the first 2 columns will be 30 characters long,
+   // the third columns will be 20 characters long.  The printing format used
+   // for the columns (assuming they are numbers) will be respectively:
+   //   %30.3g %30.3g %20.10g
+
 
    TString opt = option;
    opt.ToLower();
    UInt_t lenmax = 0;
+   UInt_t colDefaultSize = 9;
+   UInt_t colPrecision = 9;
+   vector<TString> colFormats;
+   vector<Int_t> colSizes;
+
    if (opt.Contains("lenmax=")) {
       int start = opt.Index("lenmax=");
       int numpos = start + strlen("lenmax=");
@@ -2372,6 +2395,64 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
 
       lenmax = atoi(num.Data());
    }
+   if (opt.Contains("colsize=")) {
+      int start = opt.Index("colsize=");
+      int numpos = start + strlen("colsize=");
+      int numlen = 0;
+      int len = opt.Length();
+      while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
+      TString num = opt(numpos,numlen);
+      opt.Remove(start,strlen("size")+numlen);
+
+      colDefaultSize = atoi(num.Data());
+      colPrecision = colDefaultSize;
+      if (colPrecision>18) colPrecision = 18;
+   }
+   if (opt.Contains("precision=")) {
+      int start = opt.Index("precision=");
+      int numpos = start + strlen("precision=");
+      int numlen = 0;
+      int len = opt.Length();
+      while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
+      TString num = opt(numpos,numlen);
+      opt.Remove(start,strlen("precision")+numlen);
+
+      colPrecision = atoi(num.Data());
+   }
+   TString defFormat = Form("%d.%d",colDefaultSize,colPrecision);
+   if (opt.Contains("col=")) {
+      int start = opt.Index("col=");
+      int numpos = start + strlen("col=");
+      int numlen = 0;
+      int len = opt.Length();
+      while( (numpos+numlen<len) &&
+             (isdigit(opt[numpos+numlen])
+              || opt[numpos+numlen]=='.'
+              || opt[numpos+numlen]==':')) numlen++;
+      TString flist = opt(numpos,numlen);
+      opt.Remove(start,strlen("col")+numlen);
+
+      int i = 0;
+      while(i<flist.Length() && flist[i]==':') {
+         colFormats.push_back(defFormat);
+         colSizes.push_back(colDefaultSize);
+         ++i;
+      }
+      for(; i<flist.Length(); ++i) {
+         int next = flist.Index(":",i);
+         if (next==i) {
+            colFormats.push_back(defFormat);
+         } else if (next==kNPOS) {
+            colFormats.push_back(flist(i,flist.Length()-i));
+            i = flist.Length();
+         } else {
+            colFormats.push_back(flist(i,next-i));
+            i = next;
+         }
+         UInt_t siz = atoi(colFormats[colFormats.size()-1].Data());
+         colSizes.push_back( siz ? siz : colDefaultSize );
+      }
+   }
 
    TTreeFormula **var;
    TString *cnames;
@@ -2379,7 +2460,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    Long64_t entry,entryNumber;
    Int_t i,nch;
    Int_t *index = 0;
-   Int_t ncols = 8;   // by default first 8 columns are printed only
+   UInt_t ncols = 8;   // by default first 8 columns are printed only
    ofstream out;
    Int_t lenfile = 0;
    char * fname = 0;
@@ -2403,13 +2484,19 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    }
    TObjArray *leaves = fTree->GetListOfLeaves();
    if (leaves==0) return 0;
-   Int_t nleaves = leaves->GetEntriesFast();
+   UInt_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
    Long64_t lastentry = firstentry + nentries -1;
    if (lastentry > fTree->GetEntriesFriend()-1) {
       lastentry  = fTree->GetEntriesFriend() -1;
       nentries   = lastentry - firstentry + 1;
+   }
+
+   UInt_t ui;
+   for(ui=colFormats.size();ui<ncols;++ui) {
+      colFormats.push_back(defFormat);
+      colSizes.push_back(colDefaultSize);
    }
 
 //*-*- Compile selection expression if there is one
@@ -2425,10 +2512,10 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
       cnames = new TString[ncols];
-      Int_t ncs = ncols;
+      UInt_t ncs = ncols;
       ncols = 0;
-      for (i=0;i<ncs;i++) {
-         TLeaf *lf = (TLeaf*)leaves->At(i);
+      for (ui=0;ui<ncs;++ui) {
+         TLeaf *lf = (TLeaf*)leaves->At(ui);
          if (lf->GetBranch()->GetListOfBranches()->GetEntries() > 0) continue;
          cnames[ncols] = lf->GetName();
          ncols++;
@@ -2441,16 +2528,16 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       cnames = new TString[ncols];
       index  = new Int_t[ncols+1];
       fSelector->MakeIndex(onerow,index);
-      for (i=0;i<ncols;i++) {
-         cnames[i] = fSelector->GetNameByIndex(onerow,index,i);
+      for (ui=0;ui<ncols;ui++) {
+         cnames[ui] = fSelector->GetNameByIndex(onerow,index,ui);
       }
    }
    var = new TTreeFormula* [ncols];
 
 //*-*- Create the TreeFormula objects corresponding to each column
-   for (i=0;i<ncols;i++) {
-      var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
-      fFormulaList->Add(var[i]);
+   for (ui=0;ui<ncols;ui++) {
+      var[ui] = new TTreeFormula("Var1",cnames[ui].Data(),fTree);
+      fFormulaList->Add(var[ui]);
    }
 
 //*-*- Create a TreeFormulaManager to coordinate the formulas
@@ -2486,8 +2573,10 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
 //*-*- Print header
    onerow = "***********";
    if (hasArray) onerow += "***********";
-   for (i=0;i<ncols;i++) {
-      onerow += Form("*%11.11s",var[i]->PrintValue(-2));
+
+   for (ui=0;ui<ncols;ui++) {
+      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
       out<<onerow.Data()<<"*"<<endl;
@@ -2495,8 +2584,9 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       printf("%s*\n",onerow.Data());
    onerow = "*    Row   ";
    if (hasArray) onerow += "* Instance ";
-   for (i=0;i<ncols;i++) {
-      onerow += Form("* %9.9s ",var[i]->PrintValue(-1));
+   for (ui=0;ui<ncols;ui++) {
+      TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
+      onerow += Form(numbFormat.Data(),var[ui]->PrintValue(-1));
    }
    if (fScanRedirect)
       out<<onerow.Data()<<"*"<<endl;
@@ -2504,8 +2594,9 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       printf("%s*\n",onerow.Data());
    onerow = "***********";
    if (hasArray) onerow += "***********";
-   for (i=0;i<ncols;i++) {
-      onerow += Form("*%11.11s",var[i]->PrintValue(-2));
+   for (ui=0;ui<ncols;ui++) {
+      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
       out<<onerow.Data()<<"*"<<endl;
@@ -2542,9 +2633,9 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
          } else {
 
             // let's print the max number of column
-            for (i=0;i<ncols;i++) {
-               if (ndata < var[i]->GetNdata() ) {
-                  ndata = var[i]->GetNdata();
+            for (ui=0;ui<ncols;ui++) {
+               if (ndata < var[ui]->GetNdata() ) {
+                  ndata = var[ui]->GetNdata();
                }
             }
             if (select && select->GetNdata()==0) ndata = 0;
@@ -2553,8 +2644,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       }
 
       if (lenmax && ndata>(int)lenmax) ndata = lenmax;
+      Bool_t loaded = kFALSE;
       for(int inst=0;inst<ndata;inst++) {
-         Bool_t loaded = kFALSE;
          if (select) {
             if (select->EvalInstance(inst) == 0) {
                continue;
@@ -2564,8 +2655,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
          else if (!loaded) {
             // EvalInstance(0) always needs to be called so that
             // the proper branches are loaded.
-            for (i=0;i<ncols;i++) {
-               var[i]->EvalInstance(0);
+            for (ui=0;ui<ncols;ui++) {
+               var[ui]->EvalInstance(0);
             }
             loaded = kTRUE;
          }
@@ -2573,9 +2664,10 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
          if (hasArray) {
             onerow += Form("* %8d ",inst);
          }
-         for (i=0;i<ncols;i++) {
-            if (var[i]->GetNdim()) onerow += Form("* %9.9s ",var[i]->PrintValue(0,inst));
-            else onerow += "*           ";
+         for (ui=0;ui<ncols;++ui) {
+            TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
+            if (var[ui]->GetNdim()) onerow += Form(numbFormat.Data(),var[ui]->PrintValue(0,inst,colFormats[ui].Data()));
+            else onerow += Form("* %*c ",colSizes[ui],' ');
          }
          fSelectedRows++;
          if (fScanRedirect)
@@ -2599,8 +2691,9 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    }
    onerow = "***********";
    if (hasArray) onerow += "***********";
-   for (i=0;i<ncols;i++) {
-      onerow += Form("*%11.11s",var[i]->PrintValue(-2));
+   for (ui=0;ui<ncols;ui++) {
+      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
       out<<onerow.Data()<<"*"<<endl;
