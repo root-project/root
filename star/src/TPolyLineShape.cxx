@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.2 2002/02/14 08:30:24 brun Exp $
 // Author: 
-// $Id: TPolyLineShape.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// $Id: TPolyLineShape.cxx,v 1.2 2002/02/14 08:30:24 brun Exp $
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -381,7 +381,7 @@ void TPolyLineShape::Paint(Option_t *opt)
     if (fLineFlag)  mode  = "L";
     if (fPointFlag) mode += "P";
 
-    view3D->SetLineAttr(GetColorAttribute(), GetSizeAttribute());
+    view3D->SetLineAttr(GetColorAttribute(), (Int_t)GetSizeAttribute());
     view3D->PaintPoints3D(GetPoints(), mode.Data());
   }
   if (!strstr(opt, "x3d")) {
@@ -392,7 +392,7 @@ void TPolyLineShape::Paint(Option_t *opt)
     }
     if (fLineFlag) {
          SetLineColor(GetColorAttribute());
-         SetLineWidth(GetSizeAttribute());
+         SetLineWidth((Width_t)GetSizeAttribute());
          PaintPoints(fPoints->Size());
     }
 
