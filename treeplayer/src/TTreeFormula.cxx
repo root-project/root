@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.115 2003/05/06 05:27:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.116 2003/06/10 19:07:04 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3163,7 +3163,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 //
 
    const Int_t kMAXSTRINGFOUND = 10;
-   Int_t i,pos,pos2,int1,int2,real_instance;
+   Int_t i,j,pos,pos2,int1,int2,real_instance;
    Float_t aresult;
    Double_t tab[kMAXFOUND];
    Double_t dexp;
@@ -3223,6 +3223,37 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
    for (i=0; i<fNoper; i++) {
       Int_t action = fOper[i];
 
+//*-*- an external function call
+      if (action >= kFunctionCall) {
+         int fno   = (action-kFunctionCall) / 1000;
+         int nargs = (action-kFunctionCall) % 1000;
+         
+         // Retrieve the function
+         TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
+         
+         // Set the arguments
+         TString args;
+         if (nargs) {
+            UInt_t argloc = pos-nargs;
+            for(j=0;j<nargs;j++,argloc++,pos--) {
+               if (TMath::IsNaN(tab[argloc])) {
+                  // TString would add 'nan' this is not what we want 
+                  // so let's do somethign else
+                  args += "(double)(0x8000000000000)";
+               } else {
+                  args += tab[argloc];
+               }
+               args += ',';
+            }
+            args.Remove(args.Length()-1);
+         }
+         pos++;
+         Double_t ret;
+         method->Execute(args,ret);
+         tab[pos-1] = ret; // check for the correct conversion!
+         
+         continue;
+      }
 //*-*- a tree string
       if (action >= 105000) {
          Int_t string_code = action-105000;

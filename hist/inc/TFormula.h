@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.16 2002/08/05 18:13:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.17 2002/10/31 07:27:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -29,6 +29,9 @@
 #ifndef ROOT_TBits
 #include "TBits.h"
 #endif
+#ifndef ROOT_TObjArray
+#include "TObjArray.h"
+#endif
 
 const Int_t kMAXFOUND = 200;
 
@@ -36,61 +39,80 @@ class TFormula : public TNamed {
 
 protected:
 
-  Int_t     fNdim;            //Dimension of function (1=1-Dim, 2=2-Dim,etc)
-  Int_t     fNpar;            //Number of parameters
-  Int_t     fNoper;           //Number of operators
-  Int_t     fNconst;          //Number of constants
-  Int_t     fNumber;          //formula number identifier
-  Int_t     fNval;            //Number of different variables in expression
-  Int_t     fNstring;         //Number of different constants character strings
-  TString   *fExpr;           //[fNoper] List of expressions
-  Int_t     *fOper;           //[fNoper] List of operators
-  Double_t  *fConst;          //[fNconst] Array of fNconst formula constants
-  Double_t  *fParams;         //[fNpar] Array of fNpar parameters
-  TString   *fNames;          //[fNpar] Array of parameter names
-  TBits     fAlreadyFound;    //! cache for information
+   Int_t      fNdim;            //Dimension of function (1=1-Dim, 2=2-Dim,etc)
+   Int_t      fNpar;            //Number of parameters
+   Int_t      fNoper;           //Number of operators
+   Int_t      fNconst;          //Number of constants
+   Int_t      fNumber;          //formula number identifier
+   Int_t      fNval;            //Number of different variables in expression
+   Int_t      fNstring;         //Number of different constants character strings
+   TString   *fExpr;            //[fNoper] List of expressions
+   Int_t     *fOper;            //[fNoper] List of operators
+   Double_t  *fConst;           //[fNconst] Array of fNconst formula constants
+   Double_t  *fParams;          //[fNpar] Array of fNpar parameters
+   TString   *fNames;           //[fNpar] Array of parameter names
+   TObjArray  fFunctions;       //Array of function calls to make
+   TBits      fAlreadyFound;    //! cache for information
+
+   void       ClearFormula(Option_t *option="");
+   Bool_t     IsInitialized() { return TestBit(kInitialized); }
+
+   enum {
+      kConstants    =  50000,
+      kStrings      =  80000,
+      kVariable     = 100000,
+      kFunctionCall = 200000
+   };
 
 public:
-    // TFormula status bits
-    enum {
-       kNotGlobal     = BIT(10)  // don't store in gROOT->GetListOfFunction
-    };
-           TFormula();
-           TFormula(const char *name,const char *formula);
-           TFormula(const TFormula &formula);
- virtual   ~TFormula();
- virtual void       Analyze(const char *schain, Int_t &err, Int_t offset=0);
- virtual Int_t      Compile(const char *expression="");
- virtual void       Copy(TObject &formula) const;
- virtual char       *DefinedString(Int_t code);
- virtual Double_t   DefinedValue(Int_t code);
- virtual Int_t      DefinedVariable(TString &variable);
- virtual Double_t   Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0);
- virtual Double_t   EvalPar(const Double_t *x, const Double_t *params=0);
- virtual Int_t      GetNdim() const {return fNdim;}
- virtual Int_t      GetNpar() const {return fNpar;}
- virtual Int_t      GetNumber() const {return fNumber;}
- Double_t           GetParameter(Int_t ipar) const;
- Double_t           GetParameter(const char *name) const;
- virtual Double_t  *GetParameters() const {return fParams;}
- virtual void       GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
- virtual const char *GetParName(Int_t ipar) const;
- virtual Int_t      GetParNumber(const char *name) const;
- virtual void       Print(Option_t *option="") const; // *MENU*
- virtual void       SetNumber(Int_t number) {fNumber = number;}
- virtual void       SetParameter(const char *name, Double_t parvalue);
- virtual void       SetParameter(Int_t ipar, Double_t parvalue);
- virtual void       SetParameters(const Double_t *params);
- virtual void       SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0
-                       ,Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,Double_t p9=0,Double_t p10=0); // *MENU*
- virtual void       SetParName(Int_t ipar, const char *name);
- virtual void       SetParNames(const char *name0="p0",const char *name1="p1",const char
-                            *name2="p2",const char *name3="p3",const char
-                            *name4="p4", const char *name5="p5",const char *name6="p6",const char *name7="p7",const char
-                            *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
- virtual void       Update() {;}
+   // TFormula status bits
+   enum {
+      kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction
+      kInitialized   = BIT(12)   // set to true once the formula has been 'compiled'
+   };
 
- ClassDef(TFormula,4)  //The formula base class  f(x,y,z,par)
+ 
+              TFormula();
+              TFormula(const char *name,const char *formula);
+              TFormula(const TFormula &formula);
+   virtual   ~TFormula();
+
+ public:
+   virtual void        Analyze(const char *schain, Int_t &err, Int_t offset=0);
+   virtual Bool_t      AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset=0);
+   virtual Int_t       Compile(const char *expression="");
+   virtual void        Copy(TObject &formula) const;
+   virtual void        Clear(Option_t *option="");
+   virtual char       *DefinedString(Int_t code);
+   virtual Double_t    DefinedValue(Int_t code);
+   virtual Int_t       DefinedVariable(TString &variable);
+   virtual Double_t    Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0);
+   virtual Double_t    EvalPar(const Double_t *x, const Double_t *params=0);
+   virtual Int_t       GetNdim() const {return fNdim;}
+   virtual Int_t       GetNpar() const {return fNpar;}
+   virtual Int_t       GetNumber() const {return fNumber;}
+   Double_t            GetParameter(Int_t ipar) const;
+   Double_t            GetParameter(const char *name) const;
+   virtual Double_t   *GetParameters() const {return fParams;}
+   virtual void        GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
+   virtual const char *GetParName(Int_t ipar) const;
+   virtual Int_t       GetParNumber(const char *name) const;
+   virtual void        Print(Option_t *option="") const; // *MENU*
+   virtual void        SetNumber(Int_t number) {fNumber = number;}
+   virtual void        SetParameter(const char *name, Double_t parvalue);
+   virtual void        SetParameter(Int_t ipar, Double_t parvalue);
+   virtual void        SetParameters(const Double_t *params);
+   virtual void        SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0,
+                                     Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,
+                                     Double_t p9=0,Double_t p10=0); // *MENU*
+   virtual void        SetParName(Int_t ipar, const char *name);
+   virtual void        SetParNames(const char *name0="p0",const char *name1="p1",const char
+                                   *name2="p2",const char *name3="p3",const char
+                                   *name4="p4", const char *name5="p5",const char *name6="p6",const char *name7="p7",const char
+                                   *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
+   virtual void        Update() {;}
+
+   ClassDef(TFormula,5)  //The formula base class  f(x,y,z,par)
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.38 2003/04/11 21:24:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.39 2003/06/11 05:19:28 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -17,6 +17,9 @@
 #include "TFormula.h"
 #include "TMath.h"
 #include "TRandom.h"
+#include "TFunction.h"
+#include "TMethodCall.h"
+#include "TObjString.h"
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -109,41 +112,45 @@ TFormula::TFormula(const char *name,const char *expression) :TNamed(name,express
 //*-*-*-*-*-*-*-*-*-*-*Normal Formula constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==========================
 
-  fExpr   = 0;
-  fOper   = 0;
-  fConst  = 0;
-  fParams = 0;
-  fNames  = 0;
-  fNval   = 0;
-  fNstring= 0;
+   fNdim   = 0;
+   fNpar   = 0;
+   fNoper  = 0;
+   fNconst = 0;
+   fNumber = 0;
+   fExpr   = 0;
+   fOper   = 0;
+   fConst  = 0;
+   fParams = 0;
+   fNstring= 0;
+   fNames  = 0;
+   fNval   = 0;
 
-  //eliminate blanks in expression
-  Int_t i,j,nch;
-  nch = strlen(expression);
-  char *expr = new char[nch+1];
-  j = 0;
-  for (i=0;i<nch;i++) {
-     if (expression[i] == ' ') continue;
-     if (i > 0 && (expression[i] == '*') && (expression[i-1] == '*')) {
-        expr[j-1] = '^';
-        continue;
-     }
-     expr[j] = expression[i]; j++;
+   //eliminate blanks in expression
+   Int_t i,j,nch;
+   nch = strlen(expression);
+   char *expr = new char[nch+1];
+   j = 0;
+   for (i=0;i<nch;i++) {
+      if (expression[i] == ' ') continue;
+      if (i > 0 && (expression[i] == '*') && (expression[i-1] == '*')) {
+         expr[j-1] = '^';
+         continue;
+      }
+      expr[j] = expression[i]; j++;
    }
-  expr[j] = 0;
-  if (j) SetTitle(expr);
-  delete [] expr;
-
-  if (Compile()) return;
-
+   expr[j] = 0;
+   if (j) SetTitle(expr);
+   delete [] expr;
+   
+   if (Compile()) return;
+   
 //*-*- Store formula in linked list of formula in ROOT
-
-  TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
-  if (old) {
-     gROOT->GetListOfFunctions()->Remove(old);
+                            
+   TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
+   if (old) {
+      gROOT->GetListOfFunctions()->Remove(old);
    }
-  gROOT->GetListOfFunctions()->Add(this);
-
+   gROOT->GetListOfFunctions()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -160,11 +167,156 @@ TFormula::~TFormula()
 
    gROOT->GetListOfFunctions()->Remove(this);
 
-   if (fExpr)   { delete [] fExpr;   fExpr   = 0;}
-   if (fOper)   { delete [] fOper;   fOper   = 0;}
-   if (fConst)  { delete [] fConst;  fConst  = 0;}
-   if (fParams) { delete [] fParams; fParams = 0;}
-   if (fNames)  { delete [] fNames;  fNames  = 0;}
+   ClearFormula();
+}
+
+
+//______________________________________________________________________________
+Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
+{
+//*-*-*-*-*-*-*-*-*Check if the chain as function call *-*-*-*-*-*-*-*-*-*-*
+//*-*              =======================================
+//*-*
+//*-*   If you overload this member function, you also HAVE TO
+//*-*   never call the constructor:
+//*-*
+//*-*     TFormula::TFormula(const char *name,const char *expression)
+//*-*
+//*-*   and write your won constructor 
+//*-*
+//*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+//*-*
+//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   should be similar to the implementation of the normal TFormula constructor
+//*-*
+//*-*   This is necessary because the normal TFormula constructor call indirectly
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   and DefaultVariable.
+//*-*
+
+   int i,j;
+
+   // We have to decompose the chain is 3 potential components:
+   //   namespace::functionName( args )
+
+   Ssiz_t argStart = chaine.First('(');
+   if (argStart<0) return false;
+   
+   TString functionName = chaine(0,argStart);
+
+   // This does not support template yet (where the scope operator might be in
+   // one of the template arguments
+   Ssiz_t scopeEnd = functionName.Last(':');
+   TString spaceName;
+   if (scopeEnd>0 && functionName[scopeEnd-1]==':') {
+      spaceName = functionName(0,scopeEnd-1);
+      functionName.Remove(0,scopeEnd+1);
+   }
+
+   // Now we need to count and decompose the actual arguments, we could also check the type
+   // of the arguments   
+   if (chaine[chaine.Length()-1] != ')') {
+      Error("We thought we had a function but we dont (in %s)\n",chaine.Data());
+   }
+   
+   TString args = chaine(argStart+1,chaine.Length()-2-argStart);
+   TObjArray argArr;
+   //fprintf(stderr,"args are '%s'\n",args.Data());
+
+   bool inString = false;
+   int paran = 0;
+   int brack = 0;
+   int prevComma = 0;
+   int nargs = 0;
+   for(i=0; i<args.Length(); i++) {
+      if (args[i]=='"') inString = !inString;
+      if (inString) continue;
+      
+      bool foundArg = false;
+      switch(args[i]) {
+         
+         case '(': paran++; break;
+         case ')': paran--; break;
+         case '[': brack++; break;
+         case ']': brack--; break;
+
+         case ',': if (paran==0 && brack==0) { foundArg = true; } break;
+      }
+      if ((i+1)==args.Length()) {
+         foundArg = true; i++;
+      }
+      if (foundArg) {
+         TString arg = args(prevComma,i-prevComma);
+            
+         // Here we could 
+         //   a) check the type
+         //fprintf(stderr,"found #%d arg %s\n",nargs,arg.Data());
+         
+         // We register the arg for later usage
+         argArr.Add(new TObjString(arg));
+         nargs++;
+         
+         prevComma = i+1;
+      };
+   }
+
+   if (nargs>999) { 
+      err = 7;
+      return false;
+   }
+
+   // Now we need to lookup the function and check its arguments.
+
+   // We have 2 choice ... parse more and replace x, y, z and [?] by 0.0 or
+   // or do the following silly thing:
+   TString proto;
+   for(j=0; j<nargs; j++) {
+      proto += "0.0,";
+   }
+   proto.Remove(proto.Length()-1);
+
+
+   TClass *ns = (spaceName.Length()) ? gROOT->GetClass(spaceName) : 0;
+
+   TMethodCall *method = new TMethodCall();
+   if (ns) {
+      method->Init(ns,functionName,proto);
+   } else {
+      method->Init(functionName,proto);      
+   }
+   
+   if (method->GetMethod()) {      
+
+      if (method->ReturnType() == TMethodCall::kOther) {
+         /*
+           Error("Compile",
+               "TFormula can only call interpreted and compiled function that returns a numerical type %s returns a %s\n",
+               method->GetMethodName(), method->GetMethod()->GetReturnTypeName());
+         */
+         err=29;
+         
+      } else {
+
+         fFunctions.Add(method);
+         
+         // Analyze the arguments
+         TIter next(&argArr);
+         TObjString *objstr;
+         while ( (objstr=(TObjString*)next()) ) {
+            Analyze(objstr->String(),err,offset);
+         }   
+         
+         fExpr[fNoper] = method->GetMethod()->GetPrototype();         
+         fOper[fNoper] = kFunctionCall + fFunctions.GetLast()*1000 + nargs;
+         fNoper++;
+         
+         return true;
+      }
+   } 
+   
+   delete method;
+
+   return false;
 }
 
 
@@ -259,6 +411,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     [2]        102
 //*-*     etc.
 //*-*
+//*-*   * functions calls
+//*-*
+//*-*    f0 200000  f1 200001  etc..
+//*-*
 //*-*   * errors :
 //*-*
 //*-*     1  : Division By Zero
@@ -280,6 +436,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*    26  : Unknown name
 //*-*    27  : Too many constants in expression
 //*-*    28  : strstr requires two arguments
+//*-*    29  : interpreted or compiled function have to return a numerical type
 //*-*    40  : '(' is expected
 //*-*    41  : ')' is expected
 //*-*    42  : '[' is expected
@@ -290,6 +447,21 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 */
 //End_Html
 //*-*
+//*-*   If you overload this member function, you also HAVE TO
+//*-*   never call the constructor:
+//*-*
+//*-*     TFormula::TFormula(const char *name,const char *expression)
+//*-*
+//*-*   and write your won constructor 
+//*-*
+//*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+//*-*
+//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   should be similar to the implementation of the normal TFormula constructor
+//*-*
+//*-*   This is necessary because the normal TFormula constructor call indirectly
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   and DefaultVariable.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -686,7 +858,7 @@ if (err==0) {
           } else {
               find=0;
               oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
-               if (oldformula && !oldformula->GetNumber()) {
+              if (oldformula && !oldformula->GetNumber()) {
                  Int_t nprior = fNpar;
                  Analyze(oldformula->GetTitle(),err,fNpar); // changes fNpar
                  fNpar = nprior;
@@ -1266,7 +1438,7 @@ if (err==0) {
                 if (nomb == 1 && virgule == 0) virgule = compt;
               }
             }
-            if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for atan2
+            if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for fmod
             else {
               ctemp = chaine(5,virgule-6);
               Analyze(ctemp.Data(),err,offset);
@@ -1276,6 +1448,14 @@ if (err==0) {
               fOper[fNoper] = 17;
               fNoper++;
             }
+          } else if (AnalyzeFunction(chaine,err,offset) || err) {
+             if (err) {
+                chaine_error = chaine;
+             } else {
+                // We have a function call. Note that all the work was already,
+                // eventually done in AnalyzeFuntion
+                //fprintf(stderr,"We found a foreign function in %s\n",chaine.Data());
+             }
           } else if (chaine(0,1) == "[" && chaine(lchain-1,1) == "]") {
             fExpr[fNoper] = chaine;
             fNoper++;
@@ -1400,6 +1580,8 @@ if (err==0) {
       case 26 : cout<<" Unknown name : \""<<(const char*)chaine_error<<"\""<<endl; break;
       case 27 : cout<<" Too many constants in expression"<<endl; break;
       case 28 : cout<<" strstr requires tow arguments"<<endl; break;
+      case 29 : cout<<" TFormula can only call interpreted and compiled functions that return a numerical type: \n"
+                    <<chaine_error<<endl; break;
       case 40 : cout<<" '(' is expected"<<endl; break;
       case 41 : cout<<" ')' is expected"<<endl; break;
       case 42 : cout<<" '[' is expected"<<endl; break;
@@ -1411,12 +1593,69 @@ if (err==0) {
 }
 
 //______________________________________________________________________________
+void TFormula::Clear(Option_t * /*option*/ ) 
+{
+//*-*-*-*-*-*-*-*-*Resets the objects*-*-*-*-*-*-*-*-*-*-*
+//*-*              ==================
+//*-*
+//*-* Resets the object to its state before compilation.
+//*-*
+
+   ClearFormula();
+}
+
+//______________________________________________________________________________
+void TFormula::ClearFormula(Option_t * /*option*/ ) 
+{
+//*-*-*-*-*-*-*-*-*Resets the objects*-*-*-*-*-*-*-*-*-*-*
+//*-*              ==================
+//*-*
+//*-* Resets the object to its state before compilation.
+//*-*
+
+   fNdim   = 0;
+   fNpar   = 0;
+   fNoper  = 0;
+   fNconst = 0;
+   fNumber = 0;
+   fNstring= 0;
+   fNval   = 0;
+
+   if (fExpr)   { delete [] fExpr;   fExpr   = 0;}
+   if (fOper)   { delete [] fOper;   fOper   = 0;}
+   if (fConst)  { delete [] fConst;  fConst  = 0;}
+   if (fParams) { delete [] fParams; fParams = 0;}
+   if (fNames)  { delete [] fNames;  fNames  = 0;}
+   fFunctions.Delete();
+   
+   // should we also remove the object from the list? 
+   // gROOT->GetListOfFunctions()->Remove(this);
+   // if we don't, what happens if it fails the new compilation?
+}
+
+//______________________________________________________________________________
 Int_t TFormula::Compile(const char *expression)
 {
 //*-*-*-*-*-*-*-*-*-*-*Compile expression already stored in fTitle*-*-*-*-*-*
 //*-*                  ===========================================
 //*-*
 //*-*   Loop on all subexpressions of formula stored in fTitle
+//*-*
+//*-*   If you overload this member function, you also HAVE TO
+//*-*   never call the constructor:
+//*-*
+//*-*     TFormula::TFormula(const char *name,const char *expression)
+//*-*
+//*-*   and write your won constructor 
+//*-*
+//*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+//*-*
+//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   should be similar to the implementation of the normal TFormula constructor
+//*-*
+//*-*   This is necessary because the normal TFormula constructor call indirectly
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   and DefaultVariable.
 //*-*
 //Begin_Html
 /*
@@ -1429,6 +1668,7 @@ Int_t TFormula::Compile(const char *expression)
   Int_t i,j,lc,valeur,err;
   TString ctemp;
 
+  ClearFormula();
 
 //*-*- If expression is not empty, take it, otherwise take the title
   if (strlen(expression)) SetTitle(expression);
@@ -1439,17 +1679,7 @@ Int_t TFormula::Compile(const char *expression)
   MAXOP   = 1000;
   MAXPAR  = 100;
   MAXCONST= 100;
-  if (fExpr)   { delete [] fExpr;   fExpr   = 0;}
-  if (fOper)   { delete [] fOper;   fOper   = 0;}
-  if (fConst)  { delete [] fConst;  fConst  = 0;}
-  if (fParams) { delete [] fParams; fParams = 0;}
-  if (fNames)  { delete [] fNames;  fNames  = 0;}
-  fNpar   = 0;
-  fNdim   = 0;
-  fNoper  = 0;
-  fNconst = 0;
-  fNstring= 0;
-  fNumber = 0;
+
   fExpr   = new TString[MAXOP];
   fOper   = new Int_t[MAXOP];
   fConst  = new Double_t[MAXCONST];
@@ -1599,6 +1829,7 @@ void TFormula::Copy(TObject &obj) const
 //*-*                  =================
 
    Int_t i;
+   obj.Clear(); // delete existing arrays in the copy.
    TNamed::Copy(obj);
    ((TFormula&)obj).fNdim   = fNdim;
    ((TFormula&)obj).fNpar   = fNpar;
@@ -1641,6 +1872,12 @@ void TFormula::Copy(TObject &obj) const
    for (i=0;i<fNconst;i++) ((TFormula&)obj).fConst[i]  = fConst[i];
    for (i=0;i<fNpar;i++)   ((TFormula&)obj).fParams[i] = fParams[i];
    for (i=0;i<fNpar;i++)   ((TFormula&)obj).fNames[i]  = fNames[i];
+
+   TIter next(&fFunctions);
+   TObject *fobj;
+   while ( (fobj = next()) ) {
+      ((TFormula&)obj).fFunctions.Add( fobj->Clone() );
+   }
 }
 
 //______________________________________________________________________________
@@ -1652,7 +1889,23 @@ char *TFormula::DefinedString(Int_t)
 //*-*   This member function is inactive in the TFormula class.
 //*-*   It may be redefined in derived classes.
 //*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*   If you overload this member function, you also HAVE TO
+//*-*   never call the constructor:
+//*-*
+//*-*     TFormula::TFormula(const char *name,const char *expression)
+//*-*
+//*-*   and write your won constructor 
+//*-*
+//*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+//*-*
+//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   should be similar to the implementation of the normal TFormula constructor
+//*-*
+//*-*   This is necessary because the normal TFormula constructor call indirectly
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   and DefaultVariable.
+//*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   return 0;
 }
 
@@ -1665,7 +1918,23 @@ Double_t TFormula::DefinedValue(Int_t)
 //*-*   This member function is inactive in the TFormula class.
 //*-*   It may be redefined in derived classes.
 //*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*   If you overload this member function, you also HAVE TO
+//*-*   never call the constructor:
+//*-*
+//*-*     TFormula::TFormula(const char *name,const char *expression)
+//*-*
+//*-*   and write your won constructor 
+//*-*
+//*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+//*-*
+//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   should be similar to the implementation of the normal TFormula constructor
+//*-*
+//*-*   This is necessary because the normal TFormula constructor call indirectly
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   and DefaultVariable.
+//*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   return 0;
 }
 
@@ -1676,6 +1945,22 @@ Int_t TFormula::DefinedVariable(TString &chaine)
 //*-*        =======================================================
 //*-*
 //*-*   This member function can be overloaded in derived classes
+//*-*
+//*-*   If you overload this member function, you also HAVE TO
+//*-*   never call the constructor:
+//*-*
+//*-*     TFormula::TFormula(const char *name,const char *expression)
+//*-*
+//*-*   and write your won constructor 
+//*-*
+//*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+//*-*
+//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   should be similar to the implementation of the normal TFormula constructor
+//*-*
+//*-*   This is necessary because the normal TFormula constructor call indirectly
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   and DefaultVariable.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -1706,13 +1991,13 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
 //*-*    otherwise parameters will be taken from the stored data members fParams
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
   Double_t xx[4];
   xx[0] = x;
   xx[1] = y;
   xx[2] = z;
   xx[3] = t;
   return EvalPar(xx);
-
 }
 
 //______________________________________________________________________________
@@ -1750,6 +2035,37 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
   pos2 = 0;
   for (i=0; i<fNoper; i++) {
     Int_t action = fOper[i];
+//*-*- an external function call
+    if (action >= kFunctionCall) {
+       int fno   = (action-kFunctionCall) / 1000;
+       int nargs = (action-kFunctionCall) % 1000;
+
+       // Retrieve the function
+       TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
+       
+       // Set the arguments
+       TString args;
+       if (nargs) {
+          UInt_t argloc = pos-nargs;
+          for(j=0;j<nargs;j++,argloc++,pos--) {
+             if (TMath::IsNaN(tab[argloc])) {
+                // TString would add 'nan' this is not what we want 
+                // so let's do somethign else
+                args += "(double)(0x8000000000000)";
+             } else {
+                args += tab[argloc];
+             }
+             args += ',';
+          }
+          args.Remove(args.Length()-1);
+       }
+       pos++;
+       Double_t ret;
+       method->Execute(args,ret);
+       tab[pos-1] = ret; // check for the correct conversion!
+
+       continue;
+    }
 //*-*- a variable
     if (action >= 110000) {
        pos++; tab[pos-1] = x[action-110000];
