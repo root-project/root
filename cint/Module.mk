@@ -14,8 +14,8 @@ CINTDIRM     := $(CINTDIR)/main
 CINTDIRT     := $(CINTDIR)/tool
 CINTDIRL     := $(CINTDIR)/lib
 
-##### check for gcc v3 #####
-ifeq ($(CXX),g++)
+##### check for g++ v3 #####
+ifneq ($(findstring g++,$(CXX)),)
 GCCVERS      := $(shell $(CXX) -v 2>&1 | \
                         awk '{ if ($$2 == "version") printf("%d\n",$$3) }')
 endif
