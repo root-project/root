@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.21 2003/12/10 14:23:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.22 2003/12/12 18:21:07 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1621,7 +1621,7 @@ void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
 
    TGText *txt = GetText();
    Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;
-   char *fn;    // file name
+   char *fn=0;    // file name
 
    if (fromfile) {
       const char *filename = txt->GetFileName();
