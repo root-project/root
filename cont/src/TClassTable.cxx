@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.13 2002/05/03 14:30:42 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.15 2002/05/09 20:22:00 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -54,10 +54,10 @@ namespace ROOT {
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
    public:
-#if !defined(__HP_aCC) || __HP_aCC >= 53000
-      typedef std::map<std::string,ClassRec_t*> IdMap_t;
-#else
+#ifdef R__GLOBALSTL
       typedef map<string,ClassRec_t*> IdMap_t;
+#else
+      typedef std::map<std::string,ClassRec_t*> IdMap_t;
 #endif
       typedef IdMap_t::key_type                 key_type;
       typedef IdMap_t::const_iterator           const_iterator;
@@ -77,12 +77,12 @@ namespace ROOT {
          fMap[key] = obj;
       }
 
-      mapped_type Find(const key_type &key) const { 
-         
+      mapped_type Find(const key_type &key) const {
+
          IdMap_t::const_iterator iter = fMap.find(key);
          mapped_type cl = 0;
          if (iter != fMap.end()) cl = iter->second;
-         return cl; 
+         return cl;
       }
 
       void Remove(const key_type &key) { fMap.erase(key); }
@@ -102,17 +102,17 @@ namespace ROOT {
    public:
       void Add(const char* key, ClassRec_t *&obj) {
          TObjString *realkey = new TObjString(key);
-         fMap.Add(realkey, (TObject*)obj); 
+         fMap.Add(realkey, (TObject*)obj);
       }
-      ClassRec_t* Find(const char* key) const { 
+      ClassRec_t* Find(const char* key) const {
          return (ClassRec_t*) fMap.FindObject(key);
       }
-      void Remove(const char* key) { 
+      void Remove(const char* key) {
          TObjString realkey(key);
-         TObject *actual = fMap.Remove(&realkey); 
+         TObject *actual = fMap.Remove(&realkey);
          delete actual;
       }
-      
+
 #endif
    };
 }
@@ -434,7 +434,7 @@ void ROOT::AddClass(const char *cname, Version_t id,
 }
 
 //______________________________________________________________________________
-void ROOT::ResetClassVersion(TClass* cl, const char* cname, Short_t newid) 
+void ROOT::ResetClassVersion(TClass* cl, const char* cname, Short_t newid)
 {
    // Update the version number.  This is called via the RootClassVersion macro
 
@@ -450,7 +450,7 @@ void ROOT::ResetClassVersion(TClass* cl, const char* cname, Short_t newid)
       } else {
          cl->SetClassVersion(newid);
       }
-   }  
+   }
 }
 
 

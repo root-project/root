@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.68 2002/05/03 14:30:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.70 2002/05/09 20:21:59 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -182,10 +182,10 @@ namespace ROOT {
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
    public:
-#if !defined(__HP_aCC) || __HP_aCC >= 53000
-      typedef std::map<std::string,TClass*> IdMap_t;
-#else
+#ifdef R__GLOBALSTL
       typedef map<string,TClass*> IdMap_t;
+#else
+      typedef std::map<std::string,TClass*> IdMap_t;
 #endif
       typedef IdMap_t::key_type                   key_type;
       typedef IdMap_t::const_iterator             const_iterator;
@@ -206,12 +206,12 @@ namespace ROOT {
          fMap[key] = obj;
       }
 
-      mapped_type Find(const key_type &key) const { 
-         
+      mapped_type Find(const key_type &key) const {
+
          IdMap_t::const_iterator iter = fMap.find(key);
          mapped_type cl = 0;
          if (iter != fMap.end()) cl = iter->second;
-         return cl; 
+         return cl;
       }
 
       void Remove(const key_type &key) { fMap.erase(key); }
@@ -229,17 +229,17 @@ namespace ROOT {
    public:
       void Add(const char* key, TClass *&obj) {
          TObjString *realkey = new TObjString(key);
-         fMap.Add(realkey, obj); 
+         fMap.Add(realkey, obj);
       }
-      TClass* Find(const char* key) const { 
+      TClass* Find(const char* key) const {
          return (TClass*) fMap.FindObject(key);
       }
-      void Remove(const char* key) { 
+      void Remove(const char* key) {
          TObjString realkey(key);
-         TObject *actual = fMap.Remove(&realkey); 
+         TObject *actual = fMap.Remove(&realkey);
          delete actual;
       }
-      
+
 #endif
    };
 }

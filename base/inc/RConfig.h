@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.38 2002/05/09 20:21:59 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.39 2002/05/09 22:54:19 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -273,13 +273,15 @@
 #ifdef __HP_aCC
 #   define R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__TEMPLATE_OVERLOAD_BUG
 #   if __HP_aCC >= 53000
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #      define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #      define R__TMPLTSTREAM     /* iostream implemented with templates */
+#   else
+#      define R__TEMPLATE_OVERLOAD_BUG
+#      define R__GLOBALSTL       /* STL in global name space */
 #   endif
 #endif
 
