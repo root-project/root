@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.45 2004/05/18 14:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.46 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1759,12 +1759,14 @@ void TVectorD::Streamer(TBuffer &R__b)
     if (R__v > 1) {
       Clear();
       TVectorD::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+      if (R__v < 2) MakeValid();
       return;
     }
     //====process old versions before automatic schema evolution
     TObject::Streamer(R__b);
     R__b >> fRowLwb;
     fNrows = R__b.ReadArray(fElements);
+    MakeValid();
     R__b.CheckByteCount(R__s, R__c, TVectorD::IsA());
   } else {
     TVectorD::Class()->WriteBuffer(R__b,this);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.18 2004/05/18 14:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.19 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1632,12 +1632,14 @@ void TVectorF::Streamer(TBuffer &R__b)
     if (R__v > 1) {
       Clear();
       TVectorF::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+      MakeValid();
       return;
     }
     //====process old versions before automatic schema evolution
     TObject::Streamer(R__b);
     R__b >> fRowLwb;
     fNrows = R__b.ReadArray(fElements);
+    MakeValid();
     R__b.CheckByteCount(R__s, R__c, TVectorF::IsA());
   } else {
     TVectorF::Class()->WriteBuffer(R__b,this);
@@ -1670,12 +1672,14 @@ void TVector::Streamer(TBuffer &R__b)
         R__b.ReadFastArray(fElements,fNrows);
       }
       R__b.CheckByteCount(R__s, R__c, TVector::IsA());
+      MakeValid();
       return;
     }
     //====process old version 1
     TObject::Streamer(R__b);
     R__b >> fRowLwb;
     fNrows = R__b.ReadArray(fElements);
+    MakeValid();
     R__b.CheckByteCount(R__s, R__c, TVector::IsA());
   } else {
     TVectorF::Class()->WriteBuffer(R__b,this);
