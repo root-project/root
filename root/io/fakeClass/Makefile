@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += testempty.root testbase.root 
+CLEAN_TARGETS += testempty.root testbase.root t01.out
 
 #Set the list of target to make while testing
 TEST_TARGETS += forwardDeclAndFake
