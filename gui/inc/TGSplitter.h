@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.8 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.9 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -60,7 +60,7 @@ protected:
    Bool_t      fLeft;           // true if frame is on the left of splitter
 
 public:
-   TGVSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 40,
+   TGVSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVSplitter() { }
@@ -91,7 +91,7 @@ protected:
    Bool_t      fAbove;          // true if frame is above the splitter
 
 public:
-   TGHSplitter(const TGWindow *p = 0, UInt_t w = 40, UInt_t h = 2,
+   TGHSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 2,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHSplitter() { }
