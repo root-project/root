@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.30 2003/03/11 09:58:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.31 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #endif
 
 // forward declarations
+class TVirtualGeoTrack;
 class TGeoNode;
 class TGeoNode;
 class TGeoVolume;
@@ -44,9 +45,12 @@ private :
    Double_t              fSafety;           //! safety radius from current point
    Double_t              fPhimin;           // lowest range for phi cut
    Double_t              fPhimax;           // highest range for phi cut
+   Double_t              fTmin;             //! lower time limit for tracks drawing
+   Double_t              fTmax;             //! upper time limit for tracks drawing
    Int_t                 fLevel;            //! current geometry level;
    Int_t                 fNNodes;           // total number of physical nodes
    TString               fPath;             //! path to current node
+   TString               fParticleName;     //! particles to be drawn
    Double_t              fNormal;           //! cosine of incident angle on current checked surface
    Double_t              fNormalChecked;    //! cosine of incident angle on next crossed surface
    Double_t             *fCldir;            //! unit vector to current closest shape
@@ -57,6 +61,10 @@ private :
    Int_t                 fVisOption;        // global visualization option
    Int_t                 fVisLevel;         // maximum visualization depth
    Int_t                 fNsegments;        // number of segments to approximate circles
+   Int_t                 fNtracks;          //  number of tracks
+   TVirtualGeoTrack     *fCurrentTrack;     //! current track
+   Int_t                 fNpdg;             // number of different pdg's stored
+   Int_t                 fPdgId[256];       // pdg conversion table
    Bool_t                fSearchOverlaps;   //! flag set when an overlapping cluster is searched
    Bool_t                fCurrentOverlapping; //! flags the type of the current node
    Bool_t                fLoopVolumes;      //! flag volume lists loop
@@ -71,13 +79,17 @@ private :
    Bool_t                fStreamVoxels;     // flag to allow voxelization I/O
    Bool_t                fIsGeomReading;    //! flag set when reading geometry
    Bool_t                fPhiCut;           // flag for phi cuts
+   Bool_t                fTimeCut;          // time cut for tracks
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
+
    TObjArray            *fMatrices;         //-> list of local transformations
    TObjArray            *fShapes;           //-> list of shapes
    TObjArray            *fVolumes;          //-> list of volumes
    TObjArray            *fGShapes;          //! list of runtime shapes
    TObjArray            *fGVolumes;         //! list of runtime volumes
+   TObjArray            *fTracks;           //-> list of tracks attached to geometry
+   TObjArray            *fPdgNames;         //-> list of pdg names for tracks
    TList                *fMaterials;        //-> list of materials
    TList                *fMedia;            //-> list of tracking media
    TObjArray            *fNodes;            //-> current branch of nodes
@@ -91,6 +103,7 @@ private :
    TGeoNode             *fNextNode;         //! next node that will be crossed
    TGeoVolume           *fMasterVolume;     // master volume
    TGeoHMatrix          *fCurrentMatrix;    //! current global matrix
+   TObjArray            *fUniqueVolumes;    //-> list of unique volumes
 
 //--- private methods
    void                   BuildCache(Bool_t dummy=kFALSE);
@@ -113,6 +126,7 @@ public:
    Int_t                  AddOverlap(const TNamed *ovlp);
    Int_t                  AddTransformation(const TGeoMatrix *matrix);
    Int_t                  AddShape(const TGeoShape *shape);
+   Int_t                  AddTrack(Int_t id, Int_t pdgcode, TObject *particle=0);
    Int_t                  AddVolume(TGeoVolume *volume);
    void                   ClearOverlaps();
    void                   SortOverlaps();
@@ -125,6 +139,8 @@ public:
    void                   GetBranchNames(Int_t *names) const;
    void                   GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const;
    void                   GetBranchOnlys(Int_t *isonly) const;
+   const char            *GetPdgName(Int_t pdg) const;
+   void                   SetPdgName(Int_t pdg, const char *name);
    Bool_t                 IsFolder() const { return kTRUE; }
    //--- visualization settings
    void                   BombTranslation(const Double_t *tr, Double_t *bombtr);
@@ -136,6 +152,8 @@ public:
    TVirtualGeoPainter    *GetGeomPainter();
    Int_t                  GetBombMode() const  {return fExplodedView;}
    void                   GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const;
+   Bool_t                 GetTminTmax(Double_t &tmin, Double_t &tmax) const;
+   Double_t               GetTmax() const {return fTmax;}
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
    Bool_t                 IsInPhiRange() const;
@@ -146,16 +164,21 @@ public:
    void                   SetNsegments(Int_t nseg); // *MENU*
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
    void                   SetTopVisible(Bool_t vis=kTRUE);
+   void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
    void                   SetVisLevel(Int_t level=3);   // *MENU*
    void                   SetVisOption(Int_t option=0); // *MENU*
    void                   SaveAttributes(const char *filename="tgeoatt.C"); // *MENU*
    void                   RestoreMasterVolume(); // *MENU*
 
    //--- geometry checking
+   void                   AnimateTracks(Double_t tmin=0, Double_t tmax=5E-8, Int_t nframes=200, Option_t *option="/*"); // *MENU*
    void                   CheckGeometry(Option_t *option="");
    void                   CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
+   void                   DrawTracks(Option_t *option=""); // *MENU*
+   void                   SetParticleName(const char *pname) {fParticleName=pname;}
+   const char            *GetParticleName() const {return fParticleName.Data();}
    void                   DrawPath(const char *path);
    void                   PrintOverlaps() const; // *MENU*
    void                   RandomPoints(const TGeoVolume *vol, Int_t npoints=10000, Option_t *option="");
@@ -253,10 +276,20 @@ public:
    Double_t               Safety();
    TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=0);
    TGeoNode              *Step(Bool_t is_geom=kTRUE, Bool_t cross=kTRUE);
+   void                   SetCurrentTrack(Int_t i) {fCurrentTrack = (TVirtualGeoTrack*)fTracks->At(i);}
+   void                   SetCurrentTrack(TVirtualGeoTrack *track) {fCurrentTrack=track;}
+   Int_t                  GetNtracks() const {return fNtracks;}
+   TVirtualGeoTrack      *GetCurrentTrack() {return fCurrentTrack;}
+   TVirtualGeoTrack      *GetLastTrack() {return (TVirtualGeoTrack *)fTracks->At(fNtracks-1);}
+   TVirtualGeoTrack      *GetTrack(Int_t index)         {return (index<fNtracks)?(TVirtualGeoTrack*)fTracks->At(index):0;}
+   Int_t                  GetTrackIndex(Int_t id) const;
+   TVirtualGeoTrack      *GetTrackOfId(Int_t id) const;
+   TVirtualGeoTrack      *GetParentTrackOfId(Int_t id) const;
    Int_t                  GetVirtualLevel();
    Bool_t                 GotoSafeLevel();
    Double_t               GetSafeDistance() const      {return fSafety;}
    Double_t               GetStep() const              {return fStep;}
+   Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
    Bool_t                 IsCheckingOverlaps() const   {return fSearchOverlaps;}
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z);
    Bool_t                 IsStartSafe() const {return fStartSafe;}
@@ -276,6 +309,7 @@ public:
    //--- cleaning
    void                   CleanGarbage();
    void                   ClearShape(const TGeoShape *shape);
+   void                   ClearTracks() {fTracks->Delete(); fNtracks=0;}
    void                   RemoveMaterial(Int_t index);
 
 
@@ -300,6 +334,8 @@ public:
    TObjArray             *GetListOfVolumes() const      {return fVolumes;}
    TObjArray             *GetListOfGVolumes() const     {return fGVolumes;} 
    TObjArray             *GetListOfShapes() const       {return fShapes;}
+   TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;} 
+   TObjArray             *GetListOfTracks() const       {return fTracks;}
 
    //--- modeler state getters/setters
    TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->UncheckedAt(level);}
@@ -344,6 +380,8 @@ public:
                             {fCache->MasterToLocalVect(master, local);}
    void                   MasterToLocalBomb(const Double_t *master, Double_t *local) const
                             {fCache->MasterToLocalBomb(master, local);}
+   void                   MasterToTop(const Double_t *master, Double_t *top) const;
+   void                   TopToMaster(const Double_t *top, Double_t *master) const;
 
    //--- general use getters/setters
    TGeoMaterial          *GetMaterial(const char *matname) const;
@@ -353,9 +391,12 @@ public:
    Int_t                  GetMaterialIndex(const char *matname) const;
 //   TGeoShape             *GetShape(const char *name) const;
    TGeoVolume            *GetVolume(const char*name) const;
+   TGeoVolume            *GetVolume(Int_t uid) const {return (TGeoVolume*)fUniqueVolumes->At(uid);}
+   Int_t                  GetUID(const char *volname) const;
    Int_t                  GetNNodes() {if (!fNNodes) CountNodes(); return fNNodes;}
    TGeoNodeCache         *GetCache() const         {return fCache;}
    void                   SetCache(const TGeoNodeCache *cache) {fCache = (TGeoNodeCache*)cache;}   
+   void                   SetAnimateTracks(Bool_t flag=kTRUE) {fIsGeomReading=flag;}
    virtual ULong_t        SizeOf(const TGeoNode *node, Option_t *option); // size of the geometry in memory
    void                   SelectTrackingMedia();
 
@@ -372,7 +413,7 @@ public:
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 4)          // geometry manager
+  ClassDef(TGeoManager, 5)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

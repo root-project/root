@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.15 2003/02/12 17:20:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.16 2003/02/17 11:57:30 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -30,6 +30,8 @@ class TGeoNode;
 class TGeoShape;
 class TGeoHMatrix;
 class TGeoManager;
+class TVirtualGeoTrack;
+class TParticle;
 class TObjArray;
 class TH2F;
 
@@ -61,6 +63,8 @@ public:
    virtual ~TVirtualGeoPainter();
 
    virtual void       AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys) = 0;
+   virtual TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *particle) = 0;
+   virtual void       AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset=kFALSE) = 0;
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="") = 0;
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const = 0;
@@ -74,15 +78,18 @@ public:
    virtual void       DrawCurrentPoint(Int_t color) = 0;
    virtual void       DrawPanel() = 0;
    virtual void       DrawPath(const char *path) = 0;
+   virtual void       EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *start, Double_t *end) {;}
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py) = 0;
    virtual Int_t      GetNsegments() const = 0; 
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const = 0;
    virtual Int_t      GetBombMode() const = 0; 
    virtual const char *GetDrawPath() const = 0; 
+   virtual void       GetViewAngles(Double_t &longitude, Double_t &latitude, Double_t &psi) {;}
    virtual Int_t      GetVisLevel() const = 0; 
    virtual Int_t      GetVisOption() const = 0; 
    virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;
-   virtual void       GrabFocus() = 0;
+   virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0) {;}
+   virtual Double_t  *GetViewBox() = 0;
    virtual Bool_t     IsExplodedView() const = 0;
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const = 0;
    virtual TH2F      *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,

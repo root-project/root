@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.24 2003/02/17 11:57:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.26 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -121,6 +121,7 @@ public:
    Bool_t          IsVisible() const {return TGeoAtt::IsVisible();}
    TGeoNode       *FindNode(const char *name) const;
    void            FindOverlaps() const;
+   Bool_t          FindMatrixOfDaughterVolume(TGeoVolume *vol) const;
    TObjArray      *GetNodes() {return fNodes;}
    Int_t           GetNdaughters() const;
    virtual Int_t   GetByteCount() const;

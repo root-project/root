@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.5 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.6 2002/10/03 13:19:09 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -57,8 +57,7 @@ public :
    TGeoMatrix(const char *name);
    virtual ~TGeoMatrix() {}
    
-   Bool_t               IsIdentity()    const {return ((!TestBit(kGeoTranslation))
-                            && (!TestBit(kGeoRotation)) && (!TestBit(kGeoScale)));}
+   Bool_t               IsIdentity()    const {return !TestBit(kGeoGenTrans);}
    Bool_t               IsTranslation() const {return TestBit(kGeoTranslation);}
    Bool_t               IsRotation()    const {return TestBit(kGeoRotation);}
    Bool_t               IsScale()       const {return TestBit(kGeoScale);}
@@ -322,6 +321,7 @@ public :
 
    void                       Clear(Option_t *option ="");
    void                       Multiply(TGeoMatrix *right);
+   void                       MultiplyLeft(TGeoMatrix *left);
 
    void                       SetTranslation(const Double_t *vect) 
                                  {memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}

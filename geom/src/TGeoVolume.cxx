@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.29 2003/03/11 09:58:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.31 2003/03/14 11:49:03 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -946,6 +946,36 @@ Bool_t TGeoVolume::Valid() const
 {
    return fShape->IsValidBox();
 }
+
+//_____________________________________________________________________________
+Bool_t TGeoVolume::FindMatrixOfDaughterVolume(TGeoVolume *vol) const
+{
+// Find a daughter node having VOL as volume and fill TGeoManager::fHMatrix
+// with its global matrix.
+   if (vol == this) return kTRUE;
+   Int_t nd = GetNdaughters();
+   if (!nd) return kFALSE;
+   TGeoHMatrix *global = gGeoManager->GetHMatrix();
+   TGeoNode *dnode;
+   TGeoVolume *dvol;
+   TGeoMatrix *local;
+   Int_t i;
+   for (i=0; i<nd; i++) {
+      dnode = GetNode(i);
+      dvol = dnode->GetVolume();
+      if (dvol == vol) {
+         local = dnode->GetMatrix();
+         global->MultiplyLeft(local);
+         return kTRUE;
+      }
+   }
+   for (i=0; i<nd; i++) {
+      dnode = GetNode(i);
+      dvol = dnode->GetVolume();
+      if (dvol->FindMatrixOfDaughterVolume(vol)) return kTRUE;
+   }
+   return kFALSE;
+}                    
 
 //_____________________________________________________________________________
 void TGeoVolume::VisibleDaughters(Bool_t vis)

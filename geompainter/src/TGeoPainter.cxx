@@ -22,6 +22,7 @@
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
+#include "TGeoTrack.h"
 #include "TGeoOverlap.h"
 #include "TGeoChecker.h"
 #include "TGeoPainter.h"
@@ -47,13 +48,13 @@ TGeoPainter::TGeoPainter()
    fTopVisible = kFALSE;
    fPaintingOverlaps = kFALSE;
    fVisVolumes = new TObjArray();
-   fCheckedNode = 0;
    fOverlap = 0;
    fMatrix = 0;
    memset(&fCheckedBox[0], 0, 6*sizeof(Double_t));
    
    if (gGeoManager) fGeom = gGeoManager;
    else Error("ctor", "No geometry loaded");
+   fCheckedNode = fGeom->GetTopNode();
    fChecker = new TGeoChecker(fGeom);
 }
 //______________________________________________________________________________
@@ -72,6 +73,42 @@ void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
    gSize3D.numSegs   += numsegs;
    gSize3D.numPolys  += numpolys;
 }      
+//______________________________________________________________________________
+TVirtualGeoTrack *TGeoPainter::AddTrack(Int_t id, Int_t pdgcode, TObject *particle)
+{
+// Create a primary TGeoTrack.
+   return (TVirtualGeoTrack*)(new TGeoTrack(id,pdgcode,0,particle));
+}
+
+//______________________________________________________________________________
+void TGeoPainter::AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset) 
+{
+// Average center of view of all painted tracklets and compute view box.
+   static Int_t npoints = 0;
+   static Double_t xmin[3] = {0,0,0};
+   static Double_t xmax[3] = {0,0,0};
+   Int_t i;
+   if (reset) {
+      memset(box, 0, 6*sizeof(Double_t));
+      memset(xmin, 0, 3*sizeof(Double_t));
+      memset(xmax, 0, 3*sizeof(Double_t));
+      npoints = 0;
+      return;
+   }      
+   if (npoints==0) {
+      for (i=0; i<3; i++) xmin[i]=xmax[i]=0;
+      npoints++;
+   }
+   npoints++;
+   Double_t  ninv = 1./Double_t(npoints); 
+   for (i=0; i<3; i++) {
+      box[i] += ninv*(point[i]-box[i]);
+      if (point[i]<xmin[i]) xmin[i]=point[i];
+      if (point[i]>xmax[i]) xmax[i]=point[i];
+      box[i+3] = 0.5*(xmax[i]-xmin[i]);
+   } 
+}
+   
 //______________________________________________________________________________
 void TGeoPainter::BombTranslation(const Double_t *tr, Double_t *bombtr)
 {
@@ -199,6 +236,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    TGeoNode *node = 0;
    Int_t nd = vol->GetNdaughters();
    Bool_t last = kFALSE;
+   fCheckedNode = fGeom->GetTopNode();
    switch (fVisOption) {
       case kGeoVisDefault:
          if (vis && (level<=fVisLevel)) { 
@@ -282,14 +320,14 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             fGeom->CdUp();
          }
          gPad->SetSelected(view);
-	 fCheckedNode = 0;      
+	 fCheckedNode = gGeoManager->GetTopNode();      
          return big;   
       default:
-	 fCheckedNode = 0;      
+	 fCheckedNode = gGeoManager->GetTopNode();      
          return big;
    }       
    if ((dist>maxdist) && !fGeom->GetLevel()) gPad->SetSelected(view);
-   fCheckedNode = 0;      
+   fCheckedNode = gGeoManager->GetTopNode();      
    return dist;
 }
 //______________________________________________________________________________
@@ -454,6 +492,36 @@ void TGeoPainter::DrawPath(const char *path)
    fGeom->GetTopVolume()->Draw();   
 }
 //______________________________________________________________________________
+void TGeoPainter::EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *start, Double_t *end)
+{
+// Estimate camera movement between tmin and tmax for best track display
+   if (!gPad) return;
+   TIter next(gPad->GetListOfPrimitives());
+   TVirtualGeoTrack *track;
+   TObject *obj;
+   Int_t ntracks = 0;
+   Double_t *point = 0;
+   AddTrackPoint(point, start, kTRUE);
+   while ((obj=next())) {
+      if (strcmp(obj->ClassName(), "TGeoTrack")) continue;
+      track = (TVirtualGeoTrack*)obj;
+      if (!track) continue;
+      ntracks++;
+      track->PaintCollect(tmin, start);
+   }
+   
+   if (!ntracks) return;
+   next.Reset();
+   AddTrackPoint(point, end, kTRUE);
+   while ((obj=next())) {
+      if (strcmp(obj->ClassName(), "TGeoTrack")) continue;
+      track = (TVirtualGeoTrack*)obj;
+      if (!track) continue;
+      track->PaintCollect(tmax, end);
+   }   
+}
+
+//______________________________________________________________________________
 void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px*/, Int_t /*py*/)
 {
 // Execute mouse actions on a given volume.
@@ -512,15 +580,28 @@ TGeoChecker *TGeoPainter::GetChecker()
 // Create/return geometry checker.
    if (!fChecker) fChecker = new TGeoChecker(fGeom);
    return fChecker;
-}    
+}
+ 
 //______________________________________________________________________________
-void TGeoPainter::GrabFocus()
+void TGeoPainter::GetViewAngles(Double_t &longitude, Double_t &latitude, Double_t &psi) 
+{
+   if (!gPad) return;
+   TView *view = gPad->GetView();
+   if (!view) return;
+   longitude = view->GetLongitude();
+   latitude = view->GetLatitude();
+   psi = view->GetPsi();
+}   
+
+//______________________________________________________________________________
+void TGeoPainter::GrabFocus(Int_t nfr, Double_t dlong, Double_t dlat, Double_t dpsi)
 {
 // Move focus to current volume
    if (!gPad) return;
    TView *view = gPad->GetView();
    if (!view) return;
    if (!fCheckedNode && !fPaintingOverlaps) {
+      printf("Woops!!!\n");
       TGeoBBox *box = (TGeoBBox*)fGeom->GetTopVolume()->GetShape();
       memcpy(&fCheckedBox[0], box->GetOrigin(), 3*sizeof(Double_t));
       fCheckedBox[3] = box->GetDX();
@@ -529,12 +610,15 @@ void TGeoPainter::GrabFocus()
    }      
    view->SetPerspective();
    Int_t nvols = fVisVolumes->GetEntriesFast();
-   Int_t nframes = 1;
-   if (nvols<1500) nframes=10;
-   if (nvols<1000) nframes=20;
-   if (nvols<200) nframes = 50;
-   if (nvols<100) nframes = 100;
-   view->MoveFocus(&fCheckedBox[0], fCheckedBox[3], fCheckedBox[4], fCheckedBox[5], nframes);
+   Int_t nframes = nfr;
+   if (nfr==0) {
+      nframes = 1;
+      if (nvols<1500) nframes=10;
+      if (nvols<1000) nframes=20;
+      if (nvols<200) nframes = 50;
+      if (nvols<100) nframes = 100;
+   }   
+   view->MoveFocus(&fCheckedBox[0], fCheckedBox[3], fCheckedBox[4], fCheckedBox[5], nframes, dlong, dlat, dpsi);
 }
 //______________________________________________________________________________
 Bool_t TGeoPainter::IsOnScreen(const TGeoNode *node) const

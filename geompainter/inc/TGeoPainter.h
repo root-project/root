@@ -35,6 +35,7 @@ typedef struct _x3d_points_ {
 } X3DPoints;   
 
 class TGeoHMatrix;
+class TVirtualGeoTrack;
 class TGeoChecker;
 class TGeoOverlap;
 class TH2F;
@@ -65,6 +66,8 @@ public:
    TGeoPainter();
    virtual ~TGeoPainter();
    virtual void       AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys);
+   virtual TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *part);
+   virtual void       AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset=kFALSE);
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr);
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
@@ -78,6 +81,7 @@ public:
    virtual void       DrawOnly(Option_t *option="");
    virtual void       DrawPanel();
    virtual void       DrawPath(const char *path);
+   virtual void       EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *start, Double_t *end);
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py);
    virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const;
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const 
@@ -89,7 +93,9 @@ public:
    virtual Int_t      GetVisLevel() const      {return fVisLevel;}
    virtual Int_t      GetVisOption() const     {return fVisOption;}
    Int_t              GetNsegments() const     {return fNsegments;}
-   virtual void       GrabFocus();
+   virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0);
+   virtual Double_t  *GetViewBox() {return &fCheckedBox[0];}
+   virtual void       GetViewAngles(Double_t &longitude, Double_t &latitude, Double_t &psi);
    virtual Bool_t     IsExplodedView() const {return ((fExplodedView==kGeoVisDefault)?kFALSE:kTRUE);}
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const;
    TH2F              *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
