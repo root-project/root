@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.118 2004/05/10 23:26:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.119 2004/05/11 10:49:22 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1948,8 +1948,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TPluginHandler *h;
    TFile *f = 0;
 
-   if (!strncmp(name, "root:", 5) || !strncmp(name, "roots:", 6) ||
-       !strncmp(name, "rootk:", 6)) {
+   if (!strncmp(name, "root", 4) && strchr(name,':')) {
       // If the url points to the local user on the localhost
       // do not operate network machinery
       Bool_t sameUser = kFALSE;
