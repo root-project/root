@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.10 2003/11/15 19:11:47 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.11 2004/03/11 11:02:55 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -39,21 +39,24 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDSet.h"
-#include "TList.h"
-#include "TROOT.h"
+
+#include "Riostream.h"
 #include "TClass.h"
 #include "TClassTable.h"
-#include "Riostream.h"
-#include "TFile.h"
-#include "TTree.h"
 #include "TCut.h"
-#include "TKey.h"
 #include "TError.h"
-#include "TVirtualProof.h"
+#include "TFile.h"
 #include "TGrid.h"
-#include "TGridResult.h"
 #include "TGridProof.h"
+#include "TGridResult.h"
+#include "TKey.h"
+#include "TList.h"
+#include "TROOT.h"
+#include "TTimeStamp.h"
+#include "TTree.h"
 #include "TUrl.h"
+#include "TVirtualPerfStats.h"
+#include "TVirtualProof.h"
 
 
 ClassImp(TDSetElementPfn)
@@ -574,7 +577,14 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
    // Returns number of entries in tree or objects in file. Returns -1 in
    // case of error
 
+   Double_t start = 0;
+   if (gPerfStats != 0) start = TTimeStamp();
+
    TFile *file = TFile::Open(filename);
+
+   if (gPerfStats != 0) {
+      gPerfStats->FileOpenEvent(file, filename, double(TTimeStamp())-start);
+   }
 
    if (file == 0) {
       ::SysError("TDSet::GetEntries", "cannot open file %s", filename);

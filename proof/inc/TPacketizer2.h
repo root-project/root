@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.7 2004/06/01 14:41:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.8 2004/06/01 17:53:46 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -48,15 +48,12 @@ public:              // public because of Sun CC bug
 private:
    Long64_t       fProcessed;    // number of entries processed
    TList         *fPackets;      // all processed packets
-   TProofStats   *fStat;         // PROOF runtime statistics
 
    Long64_t       fTotalEntries; // total number of entries to be distributed
 
    TList         *fFileNodes;    // nodes with files
    TList         *fUnAllocated;  // nodes with unallocated files
-   TObject       *fUnAllocNext;  // cursor in fUnAllocated
    TList         *fActive;       // nodes with unfinished files
-   TObject       *fActiveNext;   // cursor in fActive
    TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave
    TTimer        *fProgress;     // progress updates timer
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.34 2004/05/18 11:32:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.35 2004/05/30 23:14:18 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -38,8 +38,7 @@
 #include "TProofDebug.h"
 #include "TTimer.h"
 #include "TMap.h"
-#include "TEnv.h"
-#include "TProofStats.h"
+#include "TPerfStats.h"
 
 #include "Api.h"
 
@@ -185,9 +184,13 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       Error("Process", "Cannot load: %s", selector_file );
       return -1;
    }
-   fSelectorClass = fSelector->IsA();
 
+   fSelectorClass = fSelector->IsA();
    Int_t version = fSelector->Version();
+
+   fOutput = fSelector->GetOutputList();
+
+   TPerfStats::Start(fInput, fOutput);
 
    TCleanup clean(this);
    SetupFeedback();
@@ -253,7 +256,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
    }
 
-   fOutput = fSelector->GetOutputList();
+   TPerfStats::Stop();
 
    return 0;
 }
@@ -341,7 +344,6 @@ TProofPlayerRemote::TProofPlayerRemote(TProof *proof)
    fOutputLists   = 0;
    fPacketizer    = 0;
    fFeedbackLists = 0;
-   fProofStats    = 0;
 }
 
 //______________________________________________________________________________
@@ -374,21 +376,9 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    fOutput = new TList;
 
    if(fProof->IsMaster()){
-      Bool_t doHist = (fInput->FindObject("PROOF_StatsHist") != 0);
-      Bool_t doTrace = (fInput->FindObject("PROOF_StatsTrace") != 0);
-
-      if (doHist || doTrace) {
-         Int_t nslaves = fProof->GetListOfSlaves()->GetSize();
-         fProofStats = new TProofStats(nslaves, fOutput, doHist, doTrace);
-         fProofStats->SimpleEvent(TProofEvent::kStart);
-      }
+      TPerfStats::Start(fInput, fOutput);
    } else {
-      if (gEnv->GetValue("Proof.StatsHist", 0)) {
-         fInput->Add(new TNamed("PROOF_StatsHist",""));
-      }
-      if (gEnv->GetValue("Proof.StatsTrace", 0)) {
-         fInput->Add(new TNamed("PROOF_StatsTrace",""));
-      }
+      TPerfStats::Setup(fInput);
    }
 
    // If the filename does not contain "." assume class is compiled in
@@ -458,11 +448,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
 
    if (fProof->IsMaster()) {
-      if (fProofStats != 0) {
-         fProofStats->SimpleEvent(TProofEvent::kStop);
-         delete fProofStats;
-         fProofStats=0;
-      }
+      TPerfStats::Stop();
    } else {
       TIter next(fOutput);
       TList *output = fSelector->GetOutputList();
@@ -492,9 +478,13 @@ void TProofPlayerRemote::MergeOutput()
    while ( (list = (TList *) next()) ) {
       Long_t offset = 0;
 
-      TObject *obj = list->First();
-      list->Remove(obj);
-      fOutput->Add(obj);
+      TObject *obj = fOutput->FindObject(list->GetName());
+
+      if (obj == 0) {
+         obj = list->First();
+         list->Remove(obj);
+         fOutput->Add(obj);
+      }
 
       if ( list->IsEmpty() ) continue;
 

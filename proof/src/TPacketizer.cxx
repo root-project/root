@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.22 2004/05/18 11:32:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.13 2004/05/30 23:16:31 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 #include "TTimer.h"
 #include "TProofServ.h"
 #include "TProofPlayer.h"
-#include "TProofStats.h"
+#include "TPerfStats.h"
 #include "Riostream.h"
 
 
@@ -228,10 +228,6 @@ ClassImp(TPacketizer)
 TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num)
 {
    PDB(kPacketizer,1) Info("TPacketizer", "Enter");
-
-   TProof* proof = dynamic_cast<TProof*>(gProof);
-   TProofPlayerRemote* rplayer = dynamic_cast<TProofPlayerRemote*>(proof->GetPlayer());
-   fStat = rplayer->GetProofStats();
 
    fProcessed = 0;
    fMaxPerfIdx = 1;
@@ -573,6 +569,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
             RemoveActive(file);
 
             slstat->fCurFile = file;
+            file->GetNode()->IncSlaveCnt();
             TMessage m(kPROOF_REPORTSIZE);
             TDSetElement *elem = file->GetElement();
             m << dset->IsTree()
@@ -652,6 +649,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
       TSlaveStat *slavestat = (TSlaveStat*) fSlaveStats->GetValue( slave );
       TDSetElement *e = slavestat->fCurFile->GetElement();
+      slavestat->fCurFile->GetNode()->DecSlaveCnt();
       Long64_t entries;
 
       (*reply) >> entries;
@@ -733,21 +731,24 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
    if ( slstat->fCurElem != 0 ) {
       Double_t latency, proctime, proccpu;
+      Long64_t bytesRead = -1;
 
-      Int_t numev = slstat->fCurElem->GetNum();
+      Long64_t numev = slstat->fCurElem->GetNum();
       slstat->fProcessed += numev;
       fProcessed += numev;
 
       fPackets->Add(slstat->fCurElem);
       (*r) >> latency >> proctime >> proccpu;
+      // only read new info if available
+      if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
 
-      PDB(kPacketizer,2) Info("GetNextPacket","slave-%d (%s): %lld %7.3lf %7.3lf %7.3lf",
+      PDB(kPacketizer,2) Info("GetNextPacket","slave-%d (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
                               sl->GetOrdinal(), sl->GetName(),
-                              numev, latency, proctime, proccpu);
+                              numev, latency, proctime, proccpu, bytesRead);
 
-      if (fStat != 0) {
-         fStat->PacketEvent(sl->GetOrdinal(), sl->GetName(), slstat->fCurElem->GetFileName(),
-                            numev, latency, proctime, proccpu);
+      if (gPerfStats != 0) {
+         gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), slstat->fCurElem->GetFileName(),
+                            numev, latency, proctime, proccpu, bytesRead);
       }
 
       slstat->fCurElem = 0;
@@ -768,8 +769,8 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
    if ( file != 0 && file->IsDone() ) {
       file->GetNode()->DecSlaveCnt();
-      if (fStat != 0) {
-         fStat->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
+      if (gPerfStats != 0) {
+         gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
                           file->GetElement()->GetFileName(), kFALSE);
       }
       file = 0;
@@ -799,8 +800,8 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
       slstat->fCurFile = file;
       file->GetNode()->IncSlaveCnt();
-      if (fStat != 0) {
-         fStat->FileEvent(sl->GetOrdinal(), sl->GetName(),
+      if (gPerfStats != 0) {
+         gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(),
                           file->GetNode()->GetName(),
                           file->GetElement()->GetFileName(), kTRUE);
       }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.9 2004/05/30 23:16:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.10 2004/06/01 17:53:46 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -48,7 +48,6 @@ public:              // public because of Sun CC bug
 private:
    Long64_t       fProcessed;    // number of entries processed
    TList         *fPackets;      // all processed packets
-   TProofStats   *fStat;         // PROOF runtime statistics
 
    Long64_t       fTotalEntries; // total number of entries to be distributed
 

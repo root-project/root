@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.70 2004/04/11 18:18:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.71 2004/05/18 11:32:49 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -51,25 +51,27 @@
 #endif
 
 #include "TProofServ.h"
-#include "TProofLimitsFinder.h"
-#include "TProof.h"
-#include "TROOT.h"
-#include "TFile.h"
-#include "TSysEvtHandler.h"
-#include "TSystem.h"
-#include "TInterpreter.h"
-#include "TException.h"
-#include "TSocket.h"
+
 #include "TAuthenticate.h"
-#include "TStopwatch.h"
-#include "TMessage.h"
-#include "TUrl.h"
+#include "TDSetProxy.h"
 #include "TEnv.h"
 #include "TError.h"
-#include "TProofPlayer.h"
-#include "TDSetProxy.h"
-#include "TTimeStamp.h"
+#include "TException.h"
+#include "TFile.h"
+#include "TInterpreter.h"
+#include "TMessage.h"
+#include "TPerfStats.h"
 #include "TProofDebug.h"
+#include "TProof.h"
+#include "TProofLimitsFinder.h"
+#include "TProofPlayer.h"
+#include "TROOT.h"
+#include "TSocket.h"
+#include "TStopwatch.h"
+#include "TSysEvtHandler.h"
+#include "TSystem.h"
+#include "TTimeStamp.h"
+#include "TUrl.h"
 
 #include "compiledata.h"
 
@@ -443,11 +445,15 @@ TDSetElement *TProofServ::GetNextPacket()
 {
    // Get next range of entries to be processed on this server.
 
+   Long64_t bytesRead = 0;
+
+   if (gPerfStats != 0) bytesRead = gPerfStats->GetBytesRead();
+
    if (fCompute.Counter() > 0)
       fCompute.Stop();
 
    TMessage req(kPROOF_GETPACKET);
-   req << fLatency.RealTime() << fCompute.RealTime() << fCompute.CpuTime();
+   req << fLatency.RealTime() << fCompute.RealTime() << fCompute.CpuTime() << bytesRead;
 
    fLatency.Start();
    Int_t rc = fSocket->Send(req);

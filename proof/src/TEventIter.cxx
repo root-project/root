@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.11 2003/05/06 08:23:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.12 2004/02/19 00:11:19 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -17,14 +17,16 @@
 
 #include "TEventIter.h"
 
-#include "TDSet.h"
-#include "TKey.h"
-#include "TFile.h"
 #include "TCollection.h"
+#include "TDSet.h"
 #include "TError.h"
-#include "TTree.h"
-#include "TSelector.h"
+#include "TFile.h"
+#include "TKey.h"
 #include "TProofDebug.h"
+#include "TSelector.h"
+#include "TTimeStamp.h"
+#include "TTree.h"
+#include "TVirtualPerfStats.h"
 
 
 //------------------------------------------------------------------------
@@ -99,7 +101,17 @@ Int_t TEventIter::LoadDir()
       fFilename = fElem->GetFileName();
 
       TDirectory *dirsave = gDirectory;
+
+      Double_t start = 0;
+      if (gPerfStats != 0) start = TTimeStamp();
+
       fFile = TFile::Open(fFilename);
+
+      if (gPerfStats != 0) {
+         gPerfStats->FileOpenEvent(fFile, fFilename, double(TTimeStamp())-start);
+         fOldBytesRead = 0;
+      }
+
       if (dirsave) dirsave->cd();
 
       if (!fFile || fFile->IsZombie() ) {
@@ -178,6 +190,12 @@ Long64_t TEventIterObj::GetNextEvent()
    if ( fStop || fNum == 0 ) return -1;
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
+
+      if (gPerfStats != 0 && fFile != 0) {
+         Long64_t bytesRead = (Long64_t) fFile->GetBytesRead();
+         gPerfStats->SetBytesRead(bytesRead - fOldBytesRead);
+         fOldBytesRead = bytesRead;
+      }
 
       fElem = fDSet->Next();
 
@@ -285,6 +303,12 @@ Long64_t TEventIterTree::GetNextEvent()
    Bool_t attach = kFALSE;
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
+
+      if (gPerfStats != 0 && fFile != 0) {
+         Long64_t bytesRead = (Long64_t) fFile->GetBytesRead();
+         gPerfStats->SetBytesRead(bytesRead - fOldBytesRead);
+         fOldBytesRead = bytesRead;
+      }
 
       fElem = fDSet->Next();
 

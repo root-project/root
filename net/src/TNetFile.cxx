@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.46 2004/05/06 16:57:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.47 2004/05/26 10:34:04 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -62,15 +62,17 @@
 
 #include <errno.h>
 
-#include "TNetFile.h"
-#include "TROOT.h"
-#include "TPSocket.h"
-#include "TSystem.h"
-#include "TApplication.h"
-#include "TSysEvtHandler.h"
-#include "TEnv.h"
 #include "Bytes.h"
 #include "NetErrors.h"
+#include "TApplication.h"
+#include "TEnv.h"
+#include "TNetFile.h"
+#include "TPSocket.h"
+#include "TROOT.h"
+#include "TSysEvtHandler.h"
+#include "TSystem.h"
+#include "TTimeStamp.h"
+#include "TVirtualPerfStats.h"
 
 // fgClientProtocol is now in TAuthenticate
 
@@ -276,6 +278,9 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->Delay();
 
+   Double_t start = 0;
+   if (gPerfStats != 0) start = TTimeStamp();
+
    if (fSocket->Send(Form("%lld %d", fOffset, len), kROOTD_GET) < 0) {
       Error("ReadBuffer", "error sending kROOTD_GET command");
       result = kTRUE;
@@ -311,6 +316,11 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 #endif
 
 end:
+
+   if (gPerfStats != 0) {
+      gPerfStats->FileReadEvent(this, len, double(TTimeStamp())-start);
+   }
+
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->HandleDelayedSignal();
 

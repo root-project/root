@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.122 2004/05/26 07:38:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.123 2004/05/26 10:32:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -22,25 +22,27 @@
 #   include <sys/types.h>
 #endif
 
+#include "Bytes.h"
 #include "Riostream.h"
 #include "Strlen.h"
-#include "TFile.h"
-#include "TWebFile.h"
-#include "TNetFile.h"
-#include "TROOT.h"
-#include "TFree.h"
-#include "TKey.h"
-#include "TDatime.h"
-#include "TSystem.h"
-#include "TError.h"
-#include "Bytes.h"
-#include "TInterpreter.h"
-#include "TStreamerInfo.h"
 #include "TArrayC.h"
 #include "TClassTable.h"
-#include "TProcessUUID.h"
+#include "TDatime.h"
+#include "TError.h"
+#include "TFile.h"
+#include "TFree.h"
+#include "TInterpreter.h"
+#include "TKey.h"
+#include "TNetFile.h"
 #include "TPluginManager.h"
+#include "TProcessUUID.h"
 #include "TRegexp.h"
+#include "TROOT.h"
+#include "TStreamerInfo.h"
+#include "TSystem.h"
+#include "TTimeStamp.h"
+#include "TVirtualPerfStats.h"
+#include "TWebFile.h"
 
 
 TFile *gFile;                 //Pointer to current file
@@ -1078,6 +1080,10 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 
    if (IsOpen()) {
       ssize_t siz;
+
+      Double_t start = 0;
+      if (gPerfStats != 0) start = TTimeStamp();
+
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
       if (siz < 0) {
@@ -1092,6 +1098,9 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       fBytesRead  += siz;
       fgBytesRead += siz;
 
+      if (gPerfStats != 0) {
+         gPerfStats->FileReadEvent(this, len, double(TTimeStamp())-start);
+      }
       return kFALSE;
    }
    return kTRUE;

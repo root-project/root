@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.18 2004/03/12 14:54:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.19 2004/05/18 11:32:49 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -131,7 +131,6 @@ private:
    TList              *fOutputLists;   // results returned by slaves
    TList              *fFeedbackLists; // intermediate results
    TVirtualPacketizer *fPacketizer;    // transform TDSet into packets for slaves
-   TProofStats        *fProofStats;    // PROOF runtime statistics and trace
 
    virtual Bool_t      HandleTimer(TTimer *timer);
    TList              *MergeFeedback();
@@ -152,7 +151,6 @@ public:
    void           StoreOutput(TList *out);   // Adopts the list
    void           StoreFeedback(TSlave *slave, TList *out); // Adopts the list
    void           MergeOutput();
-   TProofStats   *GetProofStats() const { return fProofStats; }
    TDSetElement  *GetNextPacket(TSlave *slave, TMessage *r);
 
    ClassDef(TProofPlayerRemote,0)  // PROOF player running on master server

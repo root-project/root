@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.13 2004/03/11 06:17:43 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.14 2004/03/12 14:53:51 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -101,6 +101,7 @@
 #pragma link C++ global kMaxPixel;
 
 #pragma link C++ global gProof;
+#pragma link C++ global gPerfStats;
 
 #pragma link C++ enum EGuiConstants;
 #pragma link C++ enum EGEventType;
@@ -157,6 +158,8 @@
 #pragma link C++ class TVirtualMutex;
 #pragma link C++ class TLockGuard;
 #pragma link C++ class TVirtualProof;
+#pragma link C++ class TVirtualPerfStats;
+#pragma link C++ enum TVirtualPerfStats::EEventType;
 
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.
