@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.60 2004/06/10 05:15:43 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.61 2004/06/17 20:00:05 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3126,6 +3126,9 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
    if(!name1) return 0;
+   // no doc for internal classes
+   if (strstr(name1,"ROOT::")==name1) return 0;
+
    Int_t n = strlen(name1);
    if (!n) return 0;
    char *name = new char[n + 1];
