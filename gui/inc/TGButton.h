@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.4 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.5 2000/10/22 19:28:57 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -85,8 +85,6 @@ protected:
 
    virtual void   SetGroup(TGButtonGroup *group);
    virtual void   SetToggleButton(Bool_t) { }
-   virtual void  *GetSender() { return this; }  //used to set gTQSender
-
 
    static TGGC fgHibckgndGC;
 #ifdef R__SUNCCBUG
