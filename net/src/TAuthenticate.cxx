@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.69 2005/02/18 14:44:40 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.70 2005/02/28 17:28:12 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2204,7 +2204,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
       Info("ClearAuth", "ru:%d pt:%d cp:%d ns:%d rk:%d",
            fgAuthReUse,fgPromptUser,fgUsrPwdCrypt,NeedSalt,fgRSAKey);
 #ifdef R__WIN32
-   Crypt = 0;
+   NeedSalt = 0;
 #endif
    Int_t stat, kind;
 
