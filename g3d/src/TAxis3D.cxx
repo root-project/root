@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.2 2000/06/13 12:18:42 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 // ***********************************************************************
 // * C++ class library to paint 3D axice "arround" TView object
@@ -633,7 +633,7 @@ TAxis3D *TAxis3D::GetPadAxis(TVirtualPad *pad)
   if (!thisPad) thisPad = gPad;
   if (thisPad) {
     // Find axis in the current thisPad
-    obj = thisPad->GetPrimitive(TAxis3D::rulerName);
+    obj = thisPad->FindObject(TAxis3D::rulerName);
     if (!(obj && obj->InheritsFrom(Class()->GetName()))) obj = 0;
   }
   return (TAxis3D *)obj;

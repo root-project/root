@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.2 2000/06/13 11:02:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.3 2000/08/07 12:25:07 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -142,7 +142,7 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
   //    P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
   //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
   //
-  TObject *obj = gPad->GetPrimitive(name);
+  TObject *obj = gPad->FindObject(name);
   return AddEntry( obj, label, option );
 }
 
@@ -266,7 +266,7 @@ void TLegend::InsertEntry( const char* objectName, const char* label, Option_t* 
   // Add a new entry before the entry at the mouse position
 
   TLegendEntry* beforeEntry = GetEntry();   // get entry pointed to be mouse
-  TObject *obj = gPad->GetPrimitive( objectName );
+  TObject *obj = gPad->FindObject( objectName );
 
   // note either obj OR beforeEntry may be zero at this point
 

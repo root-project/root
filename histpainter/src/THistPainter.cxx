@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.13 2000/08/21 06:12:47 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.14 2000/08/27 20:05:05 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -766,7 +766,7 @@ void THistPainter::Paint(Option_t *option)
 // With the option "sames", you can rename a previous "stats" box 
 // and/or change its position with these lines:
 //
-//  Root > TPaveStats *st = (TPaveStats*)gPad->GetPrimitive("stats")
+//  Root > TPaveStats *st = (TPaveStats*)gPad->FindObject("stats")
 //  Root > st->SetName(newname)
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
@@ -2122,7 +2122,7 @@ void THistPainter::PaintFrame()
    RecalculateRange();
 
    if (Hoption.Lego || Hoption.Surf || Hoption.Contour == 14) {
-      TObject *frame = gPad->GetPrimitive("TFrame");
+      TObject *frame = gPad->FindObject("TFrame");
       if (frame) gPad->GetListOfPrimitives()->Remove(frame);
       return;
    }
@@ -3232,7 +3232,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //  Specify option "sames" to force painting statistics with option "same"
 //  When option "sames" is given, one can use the following technique
 //  to rename a previous "stats" box and/or change its position
-//  Root > TPaveStats *st = (TPaveStats*)gPad->GetPrimitive("stats")
+//  Root > TPaveStats *st = (TPaveStats*)gPad->FindObject("stats")
 //  Root > st->SetName(newname)
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
@@ -3240,7 +3240,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 
    static char t[64];
    Int_t dofit;
-   TPaveStats *stats  = (TPaveStats*)gPad->GetPrimitive("stats");
+   TPaveStats *stats  = (TPaveStats*)gPad->FindObject("stats");
    if (stats) {
       dofit  = stats->GetOptFit();
       dostat = stats->GetOptStat();
@@ -3383,7 +3383,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 
    static char t[64];
    Int_t dofit;
-   TPaveStats *stats  = (TPaveStats*)gPad->GetPrimitive("stats");
+   TPaveStats *stats  = (TPaveStats*)gPad->FindObject("stats");
    if (stats) {
       dofit  = stats->GetOptFit();
       dostat = stats->GetOptStat();
@@ -3874,7 +3874,7 @@ void THistPainter::PaintTitle()
 //*-*                    ========================
    if (Hoption.Same) return;
    Int_t nt = strlen(fH->GetTitle());
-   TPaveText *title  = (TPaveText*)gPad->GetPrimitive("title");
+   TPaveText *title  = (TPaveText*)gPad->FindObject("title");
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {
       if (title) delete title;
       return;

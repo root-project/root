@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.3 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.4 2000/09/06 14:13:10 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -77,6 +77,8 @@ public:
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        FillBuffer(char *&buffer);
+   virtual TObject    *FindObject(const char *name) const;
+   virtual TObject    *FindObject(TObject *obj) const;
    virtual TObject    *Get(const char *namecycle);
    virtual TFile      *GetFile() {return fFile;}
    virtual TKey       *GetKey(const char *name, const Short_t cycle=9999);

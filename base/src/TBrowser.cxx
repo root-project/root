@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -142,7 +142,7 @@ void TBrowser::Add(TObject *obj, const char *name)
 
    if (obj && fImp) {
       fImp->Add(obj, name);
-      obj->SetBit(kObjInCanvas);
+      obj->SetBit(kMustCleanup);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.11 2000/08/07 13:28:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.12 2000/08/31 17:05:44 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -817,7 +817,7 @@ TH1F *TGraph::GetHistogram()
    gPad->Modified();
    gPad->Update();
    if (fHistogram) return fHistogram;
-   TH1F *h1 = (TH1F*)gPad->GetPrimitive("hframe");
+   TH1F *h1 = (TH1F*)gPad->FindObject("hframe");
    return h1;
 }
 

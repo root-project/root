@@ -17,7 +17,7 @@
    na49title->SetFillColor(32);
    na49title->Draw();
    //
-   nageom = new TFile("na49.root");
+   TFile *nageom = new TFile("na49.root");
    TGeometry *n49 =(TGeometry*)gROOT->FindObject("na49");
    n49->SetBomb(1.2);
    n49->cd();     //Set current geometry
@@ -25,6 +25,7 @@
    n49->Draw();
    c1->Update();
    tof->cd();
+   TNode *TOFR1 = n49->GetNode("TOFR1");
    TOFR1->Draw();
    c1->Update();
 

@@ -1,6 +1,6 @@
-// $Id: TTable.cxx,v 1.3 2000/06/13 09:31:59 brun Exp $
+// $Id: TTable.cxx,v 1.4 2000/09/05 09:21:24 brun Exp $
 //
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.3 2000/06/13 09:31:59 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.4 2000/09/05 09:21:24 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -429,7 +429,7 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       if (!oldh1) {
          fNbins[0] = 100;
          if (gPad && opt.Contains("same")) {
-             TH1 *oldhtemp = (TH1*)gPad->GetPrimitive(hdefault);
+             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
              if (oldhtemp) {
                 fNbins[0] = oldhtemp->GetXaxis()->GetNbins();
                 fVmin[0]  = oldhtemp->GetXaxis()->GetXmin();
@@ -469,7 +469,7 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
          fNbins[1] = 40;
          if (opt.Contains("prof")) fNbins[1] = 100;
          if (opt.Contains("same")) {
-             TH1 *oldhtemp = (TH1*)gPad->GetPrimitive(hdefault);
+             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
              if (oldhtemp) {
                 fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
                 fVmin[1]  = oldhtemp->GetXaxis()->GetXmin();

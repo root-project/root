@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.2 2000/06/13 10:51:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.3 2000/08/10 14:03:59 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -84,7 +84,7 @@ TCutG::TCutG(const char *name, Int_t n)
 
 // Take name of cut variables from pad title if title contains ":"
    if (gPad) {
-      TPaveText *ptitle = (TPaveText*)gPad->GetPrimitive("title");
+      TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
       TText *ttitle = ptitle->GetLineWith(":");
       if (!ttitle) return;
@@ -116,7 +116,7 @@ TCutG::TCutG(const char *name, Int_t n, Float_t *x, Float_t *y)
 
 // Take name of cut variables from pad title if title contains ":"
    if (gPad) {
-      TPaveText *ptitle = (TPaveText*)gPad->GetPrimitive("title");
+      TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
       TText *ttitle = ptitle->GetLineWith(":");
       if (!ttitle) return;
@@ -148,7 +148,7 @@ TCutG::TCutG(const char *name, Int_t n, Double_t *x, Double_t *y)
 
 // Take name of cut variables from pad title if title contains ":"
    if (gPad) {
-      TPaveText *ptitle = (TPaveText*)gPad->GetPrimitive("title");
+      TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
       TText *ttitle = ptitle->GetLineWith(":");
       if (!ttitle) return;

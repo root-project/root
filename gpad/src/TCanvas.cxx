@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.6 2000/08/23 08:11:59 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.7 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -468,7 +468,7 @@ void TCanvas::Build()
       Range(0, 0, 1, 1);   //Pad range is set by default to [0,1] in x and y
       PaintBorder(GetFillColor(), kTRUE);    //Paint background
    }
-   SetBit(kObjInCanvas);
+   SetBit(kMustCleanup);
 #ifdef WIN32
    gVirtualX->UpdateWindow(1);
 #endif

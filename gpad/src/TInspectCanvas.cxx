@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.2 2000/08/30 16:55:14 rdm Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -316,7 +316,7 @@ void TInspectCanvas::Inspector(TObject *obj)
 
   inspect->InspectObject(obj);
   inspect->GetObjects()->Add(obj);
-  obj->SetBit(kObjInCanvas);
+  obj->SetBit(kMustCleanup);
 
   if (padsav) padsav->cd();
 }

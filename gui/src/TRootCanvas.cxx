@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -620,7 +620,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kOptionStatistics:
                      if (gStyle->GetOptStat()) {
                         gStyle->SetOptStat(0);
-                        delete gPad->GetPrimitive("stats");
+                        delete gPad->FindObject("stats");
                         fOptionMenu->UnCheckEntry(kOptionStatistics);
                      } else {
                         gStyle->SetOptStat(1);
@@ -632,7 +632,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kOptionHistTitle:
                      if (gStyle->GetOptTitle()) {
                         gStyle->SetOptTitle(0);
-                        delete gPad->GetPrimitive("title");
+                        delete gPad->FindObject("title");
                         fOptionMenu->UnCheckEntry(kOptionHistTitle);
                      } else {
                         gStyle->SetOptTitle(1);

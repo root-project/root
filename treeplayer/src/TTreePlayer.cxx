@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.19 2000/08/31 07:13:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.20 2000/09/06 06:07:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -873,7 +873,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
          fNbins[1] = 40;
          if (opt.Contains("prof")) fNbins[1] = 100;
          if (opt.Contains("same")) {
-             TH1 *oldhtemp = (TH1*)gPad->GetPrimitive(hdefault);
+             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
              if (oldhtemp) {
                 fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
                 fVmin[1]  = oldhtemp->GetXaxis()->GetXmin();
@@ -962,7 +962,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
          fNbins[1] = 20;
          fNbins[2] = 20;
          if (opt.Contains("same")) {
-             TH1 *oldhtemp = (TH1*)gPad->GetPrimitive(hdefault);
+             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
              if (oldhtemp) {
                 fNbins[2] = oldhtemp->GetXaxis()->GetNbins();
                 fVmin[2]  = oldhtemp->GetXaxis()->GetXmin();

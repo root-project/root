@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.5 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.6 2000/09/06 14:14:31 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -672,6 +672,23 @@ void TDirectory::FillBuffer(char *&buffer)
    tobuf(buffer, fSeekDir);
    tobuf(buffer, fSeekParent);
    tobuf(buffer, fSeekKeys);
+}
+
+//______________________________________________________________________________
+TObject *TDirectory::FindObject(TObject *) const
+{
+// find object in the list of memory objects
+   
+   Error("FindObject","Not yet implemented");
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TDirectory::FindObject(const char *name) const
+{
+// find object by name in the list of memory objects
+   
+   return fList->FindObject(name);
 }
 
 //______________________________________________________________________________

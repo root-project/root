@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ TetrisBox::TetrisBox(Int_t x, Int_t y, UInt_t type, TPad* pad) :
    fPad  = pad;
 
    //-------  append box to pad
-   SetBit(kObjInCanvas);
+   SetBit(kMustCleanup);
    SetBit(kCanDelete);
    pad->GetListOfPrimitives()->Add(this);
    SetXY(x,y);
