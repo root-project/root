@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.46 2001/08/10 13:37:45 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.47 2001/08/13 08:22:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -741,12 +741,14 @@ void THistPainter::Paint(Option_t *option)
 //    "FB"     : With LEGO or SURFACE, suppress the Front-Box
 //    "BB"     : With LEGO or SURFACE, suppress the Back-Box
 //    "SCAT"   : Draw a scatter-plot (default)
+//    "TEXT"   : Draw cell contents as text
+//    "[cutg]" : Draw only the sub-range selected by the TCutG named "cutg"
 //
 // Most options can be concatenated without spaces or commas, for example:
-//        h->Draw("E1SAME");
+//        h->Draw("E1 SAME");
 //
 // The options are not case sensitive:
-//	h->Draw("e1same");
+//	h->Draw("e1 same");
 //
 // The options "BOX", "COL" or "COLZ", use the color palette
 // defined in the current style (see TStyle::SetPalette)
@@ -1006,7 +1008,7 @@ void THistPainter::Paint(Option_t *option)
 //
 //
 //   The "SURFace" options
-//   ==================
+//   =====================
 //  In a surface plot, cell contents are represented as a mesh.
 //     The height of the mesh is proportional to the cell content.
 //
@@ -1077,6 +1079,21 @@ void THistPainter::Paint(Option_t *option)
 //  the item "colors" in the "VIEW" menu of the canvas toolbar.
 //  The color'a red, green, and blue values can be changed via TColor::SetRGB.
 //
+//   Drawing a sub-range of a 2-D histogram; the [cutg] option
+//   =========================================================
+//   Using a TCutG object, it is possible to draw a sub-range of a 2-D histogram.
+//   One must create a graphical cut (mouse or C++) and specify the name
+//   of the cut between [] in the Draw option.
+//   For example, with a TCutG named "cutg", one can call:
+//      myhist->Draw("surf1 [cutg]");
+//   See a complete example in the tutorial fit2a.C. This example produces
+//   the following picture:
+//
+//Begin_Html
+/*
+<img src="gif/h2_surf_cutg.gif">
+*/
+//End_Html
 //
 //   Drawing options for 3-D histograms
 //   ==================================
