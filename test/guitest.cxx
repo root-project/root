@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.33 2003/07/09 12:34:36 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.34 2003/07/10 07:41:01 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -631,13 +631,10 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
             0, 0, 1, 0));
 
    SetWindowName("GuiTest");
-
    MapSubwindows();
 
    // we need to use GetDefault...() to initialize the layout algorithm...
-   Resize(GetDefaultSize());
-   //Resize(400, 200);
-
+   Resize();   // resize to default size
    MapWindow();
 }
 
@@ -969,7 +966,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
       fCleanup->Add(tent);
       fF6->AddFrame(tent);
    }
-   fF6->Resize(fF6->GetDefaultSize());
+   fF6->Resize(); // resize to default size
 
    // another matrix with text and buttons
    fF7 = new TGGroupFrame(tf, "Tab Handling", kVerticalFrame);
@@ -1001,7 +998,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    AddFrame(fTab, fL5);
 
    MapSubwindows();
-   Resize(GetDefaultSize());
+   Resize();   // resize to default size
 
    // position relative to the parent's window
    Window_t wdum;
@@ -1323,7 +1320,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    AddFrame(f2, fL2);
 
    MapSubwindows();
-   Resize(GetDefaultSize());
+   Resize();   // resize to default size
 
    // position relative to the parent's window
    Window_t wdum;
@@ -1719,9 +1716,9 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
    Move(ax, ay);
 
    SetWindowName("List Dir Test");
-   Resize(GetDefaultSize());
    MapSubwindows();
    MapWindow();
+   Resize();
 }
 
 TestDirList::~TestDirList()
@@ -1783,7 +1780,6 @@ Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       }
       delete files;
    }
-
    return kTRUE;
 }
 
@@ -1827,14 +1823,14 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
              ax, ay, wdum);
    Move(ax, ay);
    SetWindowName("File List Test");
-   Resize(GetDefaultSize());
    MapSubwindows();
    MapWindow();
    fContents->SetDefaultHeaders();
    fContents->DisplayDirectory();
    fContents->AddFile("..");        // up level directory
-   fContents->Layout();
+   fContents->Resize();
    fContents->StopRefreshTimer();   // stop refreshing
+   Resize();
 }
 
 TestFileList::~TestFileList()
@@ -1868,7 +1864,7 @@ void TestFileList::DisplayFile(const TString &fname)
       // user data is a filename
       entry->SetUserData((void*)StrDup(fname.Data()));
    }
-   fContents->Layout();
+   Resize();
 }
 
 void TestFileList::DisplayDirectory(const TString &fname)
@@ -1880,7 +1876,7 @@ void TestFileList::DisplayDirectory(const TString &fname)
    fContents->ChangeDirectory(fname);
    fContents->DisplayDirectory();
    fContents->AddFile("..");  // up level directory
-   fContents->Layout();
+   Resize();
 }
 
 void TestFileList::DisplayObject(const TString& fname,const TString& name)
@@ -1910,7 +1906,7 @@ void TestFileList::DoMenu(Int_t mode)
    if (mode<10) {
       fContents->SetViewMode((EListViewMode)mode);
    } else {
-      delete this;
+      delete this;   // Close menu entry choosen
    }
 }
 
@@ -1919,7 +1915,8 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    // handle double click
 
    if (btn!=kButton1) return;
- 
+   gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kWatch));
+
    TString name(f->GetName());
    const char* fname = (const char*)f->GetUserData();
 
@@ -1930,6 +1927,7 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    } else {
       DisplayDirectory(name);
    }
+   gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kPointer));
 }
 
 Bool_t TestFileList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
@@ -2324,8 +2322,7 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
    SetTitle();
 
    MapSubwindows();
-
-   Resize(GetDefaultSize());
+   Resize();   // resize to default size
 
    // position relative to the parent's window
    Window_t wdum;
