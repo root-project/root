@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.2 2000/05/18 17:10:08 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1655,7 +1655,7 @@ Double_t TFormula::EvalPar(Double_t *x, Double_t *params)
           case  41 : tab[pos-1] = TMath::Abs(tab[pos-1]); break;
           case  42 : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; break;
           case  43 : tab[pos-1] = Double_t(Int_t(tab[pos-1])); break;
-          case  50 : tab[pos-1] = gRandom->Rndm(1); break;
+          case  50 : pos++; tab[pos-1] = gRandom->Rndm(1); break;
           case  60 : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
                             else tab[pos-1]=0; break;
           case  61 : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
