@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.4 2002/03/14 18:12:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.5 2002/03/25 16:24:02 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -324,8 +324,6 @@ void TTimeStamp::Set()
           * (unsigned __int64) (60 * 60 * 24)       // days
           * (unsigned __int64) (134764);            // # of days
 
-   timestamp->high = time.HighPart;
-   timestamp->low  = time.LowPart;
    fSec     = Int_t(time.QuadPart/(1000*1000*10));
    fNanoSec = Int_t(time.QuadPart - fSec) * 100;
 #else
