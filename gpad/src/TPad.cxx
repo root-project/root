@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.110 2003/08/26 16:25:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.111 2003/09/06 21:13:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2460,6 +2460,8 @@ void TPad::HighLight(Color_t color, Bool_t set)
 
    //do not highlight when printing on Postscript
    if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS)) return;
+   
+   if (color <= 0) return;
 
    AbsCoordinates(kTRUE);
 
