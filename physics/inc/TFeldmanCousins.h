@@ -1,72 +1,54 @@
-// @(#)root/physics:$Name:$:$Id:$
-// Author: Adrian Bevan   10/02/2002
-
-/*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
-
 #ifndef ROOT_TFeldmanCousins
 #define ROOT_TFeldmanCousins
 
 ////////////////////////////////////////////////////////////////////////////
 // TFeldmanCousins
 //
-// Class to calculate the CL upper limit using
+// class to calculate the CL upper limit using 
 // the Feldman-Cousins method as described in PRD V57 #7, p3873-3889
 //
-// The default confidence interval calculated using this method is 90%
-// This is set either by having a default the constructor, or using the
+// The default confidence interval calvculated using this method is 90% 
+// This is set either by having a default the constructor, or using the 
 // appropriate fraction when instantiating an object of this class (e.g. 0.9)
 //
 // The simple extension to a gaussian resolution function bounded at zero
-// has not been addressed as yet -> `time is of the essence' as they write
+// has not been addressed as yet -> `time is of the essence' as they write 
 // on the wall of the maze in that classic game ...
+//
+//    VARIABLES THAT CAN BE ALTERED   
+//    -----------------------------   
+// => depending on your desired precision: The intial values of fMuMin, 
+// fMuMax, fMuStep and fNMax are those used in the PRD:
+//   fMuMin = 0.0
+//   fMuMax = 50.0
+//   fMuStep= 0.005
+// but there is total flexibility in changing this should you desire.
 //
 // Author: Adrian Bevan, Liverpool University
 //
 // Copyright Liverpool University 2001       bevan@slac.stanford.edu
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
-#ifndef ROOT_TString
+#include "TObject.h"
 #include "TString.h"
-#endif
-
-
-////////////////////////////////////////
-//    VARIABLES THAT CAN BE ALTERED   //
-//    -----------------------------   //
-// depending on your desired precision//
-////////////////////////////////////////
-const Int_t    NMAX     = 50;         //maximum number of observed events
-const Double_t MUSTEP   = 0.005;      //step size to scan in mu
-
-///////////////////////////////////////////
-// Fixed variables and class declaration //
-///////////////////////////////////////////
-const Double_t MUMIN    = 0.0;
-const Double_t MUMAX    = (Double_t)NMAX;
-const Int_t    nNuSteps = (Int_t)((MUMAX - MUMIN)/MUSTEP);
 
 class TFeldmanCousins : public TObject {
-
-private:
-  Double_t fCL;
-  Double_t fUpperLimit;
-  Double_t fLowerLimit;
-  Double_t fNobserved;
-  Double_t fNbackground;
-
-  Int_t fQUICK;
+protected:
+  Double_t fCL;         // confidence level as a fraction [e.g. 90% = 0.9]
+  Double_t fUpperLimit; // the calculated upper limit
+  Double_t fLowerLimit; // the calculated lower limit
+  Double_t fNobserved;  // input number of observed events
+  Double_t fNbackground;// input number of background events
+  Double_t fMuMin;      // minimum value of signal to use in calculating the tables
+  Double_t fMuMax;      // maximum value of signal to use in calculating the tables
+  Double_t fMuStep;     // the step in signal to use when generating tables
+  Int_t    fNMuStep;    // = (int)(fMuStep)
+  Int_t    fNMax;       // = (int)(fMuMax)
+  Int_t    fQUICK;      // take a short cut to speed up the process of generating a
+                        // lut.  This scans from Nobserved-Nbackground-fMuMin upwards
+                        // assuming that UL > Nobserved-Nbackground.
+  
   ////////////////////////////////////////////////
   // calculate the poissonian probability for   //
   // a mean of mu+B events with a variance of N //
@@ -81,8 +63,7 @@ private:
   Int_t FindLimitsFromTable(Double_t mu);
 
 public:
-  TFeldmanCousins(TString options = "");
-  TFeldmanCousins(Double_t newCL, TString options = "");
+  TFeldmanCousins(Double_t newCL=0.9, TString options = "");
   virtual ~TFeldmanCousins();
 
   ////////////////////////////////////////////////
@@ -100,11 +81,26 @@ public:
   inline Double_t GetNbackground(void){ return fNbackground; }
   inline Double_t GetCL(void)         { return fCL;          }
 
-  inline void SetNobserved(Double_t NObs)  { fNobserved   = NObs;  }
-  inline void SetNbackground(Double_t Nbg) { fNbackground = Nbg;   }
-  inline void SetCL(Double_t newCL)        { fCL          = newCL; }
+  inline Double_t GetMuMin(void)      { return fMuMin;  }
+  inline Double_t GetMuMax(void)      { return fMuMax;  }
+  inline Double_t GetMuStep(void)     { return fMuStep; }
+  inline Double_t GetNMax(void)       { return fNMax;   }
+  
+  inline void SetNobserved(Double_t NObs)         { fNobserved   = NObs;  }
+  inline void SetNbackground(Double_t Nbg)        { fNbackground = Nbg;   }
+  inline void SetCL(Double_t newCL)               { fCL          = newCL; }
 
-  ClassDef(TFeldmanCousins,1)  // Calculate the confidence level using the Feldman-Cousins method
+  inline void SetMuMin(Double_t  newMin    = 0.0)    { fMuMin = newMin;  }
+  inline void SetMuMax(Double_t  newMax    = 50.0);
+  inline void SetMuStep(Double_t newMuStep = 0.005);
+
+  ClassDef(TFeldmanCousins,1)
 };
 
 #endif
+
+
+
+
+
+
