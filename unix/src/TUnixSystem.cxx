@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.23 2001/04/03 10:38:55 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.24 2001/04/06 14:17:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -75,6 +75,9 @@
     extern "C" int statfs(const char *file, struct statfs *buffer);
 #elif defined(R__LINUX) || defined(R__HPUX)
 #   include <sys/vfs.h>
+#elif defined(R__FBSD)
+#   include <sys/param.h>
+#   include <sys/mount.h>
 #else
 #   include <sys/statfs.h>
 #endif

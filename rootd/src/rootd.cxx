@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.32 2001/04/06 14:17:42 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.33 2001/04/24 14:40:12 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -146,6 +146,9 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #elif defined(linux) || defined(__hpux)
 #include <sys/vfs.h>
+#elif defined(__FreeBSD__)
+#include <sys/param.h>
+#include <sys/mount.h>
 #else
 #include <sys/statfs.h>
 #endif
