@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.33 2003/04/15 09:51:39 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.34 2004/02/22 11:31:17 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -176,6 +176,54 @@ TGraphErrors::TGraphErrors(const TH1 *h)
       fEY[i] = h->GetBinError(i+1);
    }
 }   
+
+//______________________________________________________________________________
+TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
+       : TGraph(100)
+{
+// GraphErrors constructor reading input from filename
+// filename is assumed to contain at least 3 columns of numbers
+// convention for format (default="%lg %lg %lg %lg)
+//  format = "%lg %lg"         read only 2 first columns into X,Y
+//  format = "%lg %lg %lg"     read only 3 first columns into X,Y and EY
+//  format = "%lg %lg %lg %lg" read only 4 first columns into X,Y,EX,EY
+
+   fEX = new Double_t[fNpoints];
+   fEY = new Double_t[fNpoints];
+   Double_t x,y,ex,ey;
+   FILE *fp = fopen(filename,"r");
+   if (!fp) {
+      MakeZombie();
+      Error("TGrapherrors", "Cannot open file: %s, TGraphErrors is Zombie",filename);
+      return;
+   }
+   // count number of columns in format
+   Int_t ncol = 0;
+   char *s = (char*)format;
+   while(s=(char*)strstr(s,"%")) {ncol++; s++;}
+   char line[80];
+   Int_t np = 0;
+   
+   while (fgets(line,80,fp)) {
+      if (ncol < 3) {
+         ex=ey=0;
+         sscanf(&line[0],format,&x, &y);
+      } else if(ncol <4) {
+         ex=0;
+         sscanf(&line[0],format,&x, &y, &ey);
+      } else {
+         sscanf(&line[0],format,&x, &y, &ex, &ey);
+      }
+      if (np >= fNpoints) Set(2*fNpoints);
+      SetPoint(np,x,y);
+      SetPointError(np,ex,ey);
+      np++;
+   }
+   Set(np);
+
+   fclose(fp);
+}
+
 //______________________________________________________________________________
 TGraphErrors::~TGraphErrors()
 {
