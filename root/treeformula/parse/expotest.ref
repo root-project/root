@@ -38,3 +38,5 @@ Processing runexpotest.C...
  fExpr[0] = var2e  action = 150 action param = 0 
  fExpr[1] = 3  action = 141 action param = 0 
  fExpr[2] = -  action = 2 action param = 0 
+              testing : e3 Ndim= 1, Npar= 0, Noper= 1
+ fExpr[0] = e3  action = 150 action param = 0 

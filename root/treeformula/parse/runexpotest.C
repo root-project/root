@@ -4,6 +4,7 @@ TTree *t = new TTree("T","T");
 float one,two;
 t->Branch("var1e",&one,"var1e/F");
 t->Branch("var2e",&two,"var2e/F");
+t->Branch("e3",&two,"e3/F");
 
 if (TClass::GetDict("TTreeFormula")==0) gSystem->Load("libTreePlayer");
 
@@ -27,5 +28,8 @@ f5->Print();
 
 TTreeFormula * f6= new TTreeFormula("testing","(var2e-3)",T);
 f6->Print();
+
+TTreeFormula * f7= new TTreeFormula("testing","e3",T);
+f7->Print();
 
 }
