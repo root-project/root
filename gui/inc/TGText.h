@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.2 2000/07/03 18:50:57 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -74,7 +74,7 @@ protected:
    Long_t       fColCount;       // number of columns in current line
    Long_t       fLongestLine;    // length of longest line
 
-   void     TGTextP();
+   void     Init();
    Bool_t   SetCurrentRow(Long_t row);
    void     LongestLine();
    Long_t   UpSearchBM(const char *actualLine, const char *searchPattern, Long_t len, Bool_t cs);
@@ -113,6 +113,8 @@ public:
 
    Long_t  GetLineLength(Long_t row);
    Long_t  GetLongestLine() const { return fLongestLine; }
+
+   void    ReTab(Long_t row);
 
    Bool_t  Search(TGLongPosition *foundPos, TGLongPosition start, const char *searchString,
                   Bool_t direction, Bool_t caseSensitive);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.3 2000/07/06 16:47:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.4 2000/07/07 00:29:49 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -168,10 +168,10 @@ void TGTextLine::DelChar(ULong_t pos)
    char *newstring;
    if ((fLength <= 0) || (pos > fLength))
       return;
-   newstring = new char[fLength -1];
+   newstring = new char[fLength];
    strncpy(newstring, fString, (UInt_t)pos-1);
    if (pos < fLength)
-      strncpy(newstring+pos-1, fString+pos, UInt_t(fLength-pos));
+      strncpy(newstring+pos-1, fString+pos, UInt_t(fLength-pos+1));
    delete fString;
    fString = newstring;
    fLength--;
@@ -212,7 +212,7 @@ char TGTextLine::GetChar(ULong_t pos)
 ClassImp(TGText)
 
 //______________________________________________________________________________
-void TGText::TGTextP()
+void TGText::Init()
 {
    // Common initialization method.
 
@@ -230,7 +230,7 @@ TGText::TGText()
 {
    // Create default (empty) text buffer.
 
-   TGTextP();
+   Init();
 }
 
 //______________________________________________________________________________
@@ -243,7 +243,7 @@ TGText::TGText(TGText *text)
    pos.fX = pos.fY = 0;
    end.fY = text->RowCount() - 1;
    end.fX = text->GetLineLength(end.fY) - 1;
-   TGTextP();
+   Init();
    InsText(pos, text, pos, end);
 }
 
@@ -255,7 +255,7 @@ TGText::TGText(const char *string)
    TGLongPosition pos;
 
    pos.fX = pos.fY = 0;
-   TGTextP();
+   Init();
    InsText(pos, string);
 }
 
@@ -328,9 +328,8 @@ Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
          // Expand tabs
          else if (c == 0x09) {
             *dst++ = '\t';
-            do
+            while (((dst-buf2) & 0x7) && (cnt++ < count-1))
                *dst++ = 16;  //*dst++ = ' ';
-            while (((dst-buf2) & 0x7) && (cnt++ < count-1));
          } else
             *dst++ = c;
          if (cnt++ >= count-1) break;
@@ -419,9 +418,8 @@ next:
       // Expand tabs
       else if (c == 0x09) {
          *dst++ = '\t';
-         do
+         while (((dst-buf2) & 0x7) && (cnt++ < kMaxLen-1))
             *dst++ = 16;  //*dst++ = ' ';
-         while (((dst-buf2) & 0x7) && (cnt++ < kMaxLen-1));
       } else
          *dst++ = c;
       if (cnt++ >= kMaxLen-1) break;
@@ -670,8 +668,7 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
       lineString = src->GetLine(start_src, len);
       fCurrent->InsText(ins_pos.fX, lineString);
       delete [] lineString;
-   } //else
-      //BreakLine(ins_pos);
+   }
    // [...] inserting possible lines
    pos.fY = start_src.fY+1;
    pos.fX = 0;
@@ -689,18 +686,12 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
       pos.fY = end_src.fY;
       pos.fX = 0;
       lineString = src->GetLine(pos, end_src.fX+1);
-//      if (lineString) {
-         fCurrent->fNext = new TGTextLine(lineString);
-         fCurrent->fNext->fPrev = fCurrent;
-         fCurrent = fCurrent->fNext;
-         fRowCount++;
-         fCurrentRow++;
-         delete [] lineString;
-//      } else {
-//         pos.fY = fCurrentRow;
-//         pos.fX = 0;
-//         BreakLine(pos);
-//      }
+      fCurrent->fNext = new TGTextLine(lineString);
+      fCurrent->fNext->fPrev = fCurrent;
+      fCurrent = fCurrent->fNext;
+      fRowCount++;
+      fCurrentRow++;
+      delete [] lineString;
    }
    // ok, now we have to add the rest of the first destination line
    if (restString) {
@@ -878,8 +869,8 @@ Long_t TGText::GetLineLength(Long_t row)
 
    if (!SetCurrentRow(row))
       return -1;
-   else
-      return (Long_t)fCurrent->GetLineLength();
+
+   return (Long_t)fCurrent->GetLineLength();
 }
 
 //______________________________________________________________________________
@@ -912,6 +903,55 @@ Bool_t TGText::SetCurrentRow(Long_t row)
    }
    fCurrentRow = row;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGText::ReTab(Long_t row)
+{
+   // Redo all tabs in a line. Needed after a new tab is inserted.
+
+   if (!SetCurrentRow(row))
+      return;
+
+   // first remove all special tab characters (16)
+   char *buffer;
+   ULong_t i = 0;
+
+   buffer = fCurrent->fString;
+   while (buffer[i] != '\0') {
+      if (buffer[i] == '\t') {
+         ULong_t j = i+1;
+         while (buffer[j] == 16 && buffer[j] != '\0')
+            j++;
+         strcpy(buffer+i+1, buffer+j);
+      }
+      i++;
+   }
+
+   char   c, *src, *dst, *buf2;
+   Long_t cnt;
+
+   buf2 = new char[kMaxLen+1];
+   buf2[kMaxLen] = '\0';
+   src = buffer;
+   dst = buf2;
+   cnt = 0;
+   while ((c = *src++)) {
+      // Expand tabs
+      if (c == 0x09) {
+         *dst++ = '\t';
+         while (((dst-buf2) & 0x7) && (cnt++ < kMaxLen-1))
+            *dst++ = 16;
+      } else
+         *dst++ = c;
+      if (cnt++ >= kMaxLen-1) break;
+   }
+   *dst = '\0';
+
+   fCurrent->fString = buf2;
+   fCurrent->fLength = strlen(buf2);
+
+   delete [] buffer;
 }
 
 //______________________________________________________________________________

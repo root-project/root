@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.2 2000/07/07 00:29:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.3 2000/07/07 00:34:17 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -520,10 +520,8 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
          pos.fX = ToObjXCoord(fVisible.fX+event->fX, pos.fY);
          if (pos.fX >= fText->GetLineLength(pos.fY))
             pos.fX = fText->GetLineLength(pos.fY);
-         if (fText->GetChar(pos) == 16)
-            do
-               pos.fX++;
-            while (fText->GetChar(pos) == 16);
+         while (fText->GetChar(pos) == 16)
+            pos.fX++;
 
          SetCurrent(pos);
       }
@@ -611,11 +609,22 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                break;
             case kKey_C:
                Copy();
+               if (fCurrent.fX == 0 && fCurrent.fY == fMarkedEnd.fY+1) {
+                  TGLongPosition pos;
+                  pos.fY = fClipText->RowCount();
+                  pos.fX = 0;
+                  fClipText->InsText(pos, 0);
+               }
                return kTRUE;
             case kKey_D:
                if (fIsMarked)
                   Cut();
                else {
+                  Long_t len = fText->GetLineLength(fCurrent.fY);
+                  if (fCurrent.fY == fText->RowCount()-1 && fCurrent.fX == len) {
+                     gVirtualX->Bell(0);
+                     return kTRUE;
+                  }
                   NextChar();
                   DelChar();
                }
@@ -678,6 +687,11 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                if (fIsMarked)
                   Cut();
                else {
+                  Long_t len = fText->GetLineLength(fCurrent.fY);
+                  if (fCurrent.fY == fText->RowCount()-1 && fCurrent.fX == len) {
+                     gVirtualX->Bell(0);
+                     return kTRUE;
+                  }
                   NextChar();
                   DelChar();
                }
@@ -784,7 +798,7 @@ void TGTextEdit::InsChar(char character)
 {
    // Insert a character in the text edit widget.
 
-   char *charstring;
+   char *charstring = 0;
    TGLongPosition pos;
 
    if (character == '\t') {
@@ -792,14 +806,27 @@ void TGTextEdit::InsChar(char character)
       pos.fY = fCurrent.fY;
       fText->InsChar(pos, '\t');
       pos.fX++;
-      for (int i = 0; i < 7; i++) {
-         fText->InsChar(pos,16);
+      while (pos.fX & 0x7)
          pos.fX++;
-         charstring = new char[9];
-         charstring[8] = '\0';
-         for (int j = 0; j < 8; j++)
-            charstring[j] = ' ';
+      fText->ReTab(pos.fY);
+      DrawRegion(0, (Int_t)ToScrYCoord(pos.fY), fCanvas->GetWidth(),
+                 UInt_t(ToScrYCoord(pos.fY+1) - ToScrYCoord(pos.fY)));
+      SetSBRange(kHorizontal);
+      if (ToScrXCoord(pos.fX, pos.fY) >= (Int_t)fCanvas->GetWidth()) {
+         if (pos.fX != fText->GetLineLength(fCurrent.fY))
+            SetHsbPosition((fVisible.fX+fCanvas->GetWidth()/2)/fScrollVal.fX);
+         else
+            SetHsbPosition(fVisible.fX/fScrollVal.fX+strlen(charstring));
       }
+      SetCurrent(pos);
+      return;
+#if 0
+      Int_t n = Int_t(pos.fX-fCurrent.fX);
+      charstring = new char[n+1];
+      charstring[n] = '\0';
+      for (int j = 0; j < n; j++)
+         charstring[j] = ' ';
+#endif
    } else {
       fText->InsChar(fCurrent, character);
       pos.fX = fCurrent.fX + 1;
@@ -847,6 +874,11 @@ void TGTextEdit::DelChar()
 {
    // Delete a character from the text edit widget.
 
+   if (fCurrent.fY == 0 && fCurrent.fX == 0) {
+      gVirtualX->Bell(0);
+      return;
+   }
+
    char *buffer;
    TGLongPosition pos, pos2;
    Long_t len;
@@ -857,11 +889,15 @@ void TGTextEdit::DelChar()
    if (fCurrent.fX > 0) {
       pos.fX--;
       if (fText->GetChar(pos) == 16) {
-         pos.fX = fCurrent.fX;
-         for (ULong_t t = 0; t < 8; t++) {
+         do {
+            pos.fX++;
             fText->DelChar(pos);
-            pos.fX--;
-         }
+            pos.fX -= 2;
+         } while (fText->GetChar(pos) != '\t');
+         pos.fX++;
+         fText->DelChar(pos);
+         pos.fX--;
+         fText->ReTab(pos.fY);
          DrawRegion(0, (Int_t)ToScrYCoord(pos.fY), fCanvas->GetWidth(),
                     UInt_t(ToScrYCoord(pos.fY+2)-ToScrYCoord(pos.fY)));
       } else {
@@ -970,6 +1006,11 @@ void TGTextEdit::PrevChar()
 {
    // Go to the previous character.
 
+   if (fCurrent.fY == 0 && fCurrent.fX == 0) {
+      gVirtualX->Bell(0);
+      return;
+   }
+
    TGLongPosition pos;
    Long_t len;
 
@@ -977,8 +1018,8 @@ void TGTextEdit::PrevChar()
    pos.fX = fCurrent.fX;
    if (fCurrent.fX > 0) {
       pos.fX--;
-      if (fText->GetChar(pos) == 16)
-         pos.fX = pos.fX - 7;
+      while (fText->GetChar(pos) == 16)
+         pos.fX--;
       if (ToScrXCoord(pos.fX, pos.fY) < 0) {
          if (fVisible.fX-(Int_t)fCanvas->GetWidth()/2 >= 0)
             SetHsbPosition((fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
@@ -1005,12 +1046,18 @@ void TGTextEdit::NextChar()
 {
    // Go to next character.
 
-   TGLongPosition pos;
    Long_t len = fText->GetLineLength(fCurrent.fY);
+
+   if (fCurrent.fY == fText->RowCount()-1 && fCurrent.fX == len) {
+      gVirtualX->Bell(0);
+      return;
+   }
+
+   TGLongPosition pos;
    pos.fY = fCurrent.fY;
    if (fCurrent.fX < len) {
       if (fText->GetChar(fCurrent) == '\t')
-         pos.fX = pos.fX + 8;
+         pos.fX = fCurrent.fX + 8 - (fCurrent.fX & 0x7);
       else
          pos.fX = fCurrent.fX + 1;
 
