@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.2 2000/06/05 07:31:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.3 2000/06/05 10:13:37 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -87,14 +87,14 @@ protected:
       Int_t         fPos;             // Current position in array fTabSize;
 
       //Text analysis and painting
-      FormSize Analyse(Float_t x, Float_t y, TextSpec_t spec, const Char_t* t,Int_t length);
+      FormSize Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t,Int_t length);
       FormSize Anal1(TextSpec_t spec, const Char_t* t,Int_t length);
 
-      void DrawLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2, TextSpec_t spec);
-      void DrawCircle(Float_t x1, Float_t y1, Float_t r, TextSpec_t spec);
-      void DrawParenthesis(Float_t x1, Float_t y1, Float_t r1, Float_t r2, Float_t phimin, Float_t phimax, TextSpec_t spec);
+      void DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec);
+      void DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec);
+      void DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, TextSpec_t spec);
 
-      FormSize FirstParse(Float_t angle, Float_t size, const Char_t *text);
+      FormSize FirstParse(Double_t angle, Double_t size, const Char_t *text);
 
       void Savefs(FormSize *fs);
       FormSize Readfs();
@@ -106,18 +106,18 @@ public:
       enum { kTextNDC = BIT(14) };
 
       TLatex();
-      TLatex(Coord_t x, Coord_t y, const char *text);
+      TLatex(Double_t x, Double_t y, const char *text);
       TLatex(const TLatex &text);
       virtual ~TLatex();
       void             Copy(TObject &text);
 
-      TLatex          *DrawLatex(Float_t x, Float_t y, const char *text);
-      Float_t          GetHeight();
+      TLatex          *DrawLatex(Double_t x, Double_t y, const char *text);
+      Double_t         GetHeight();
       virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
-      Float_t          GetXsize();
-      Float_t          GetYsize();
+      Double_t         GetXsize();
+      Double_t         GetYsize();
       virtual void     Paint(Option_t *option="");
-      virtual void     PaintLatex(Float_t x, Float_t y, Float_t angle, Float_t size, const char *text);
+      virtual void     PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
 
       virtual void     SavePrimitive(ofstream &out, Option_t *option);
       virtual void     SetIndiceSize(Float_t factorSize);
