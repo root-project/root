@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.20 2003/01/30 06:40:32 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.22 2003/08/23 00:08:13 rdm Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -9,14 +9,15 @@
 //  The Event class is a naive/simple example of an event structure.
 //     public:
 //        char           fType[20];
+//        char          *fEventName;         //run+event number in character format
 //        Int_t          fNtrack;
 //        Int_t          fNseg;
 //        Int_t          fNvertex;
 //        UInt_t         fFlag;
-//        Float_t        fTemperature;
+//        Double32_t     fTemperature;
 //        Int_t          fMeasures[10];
-//        Float_t        fMatrix[4][4];
-//        Float_t       *fClosestDistance; //[fNvertex] indexed array! 
+//        Double32_t     fMatrix[4][4];
+//        Double32_t    *fClosestDistance; //[fNvertex] indexed array! 
 //        EventHeader    fEvtHdr;
 //        TClonesArray  *fTracks;
 //        TRefArray     *fHighPt;            //array of High Pt tracks only
@@ -24,6 +25,7 @@
 //        TRef           fLastTrack;         //pointer to last track
 //        TRef           fHistoWeb;          //EXEC:GetHistoWeb reference to an histogram in a TWebFile
 //        TH1F          *fH;
+//        TBits          fTriggerBits;       //Bits triggered by this event.
 //
 //   The EventHeader class has 3 data members (integers):
 //     public:
@@ -50,10 +52,13 @@
 //        Float_t      fYlast;        //Y coordinate of the last point
 //        Float_t      fZfirst;       //Z coordinate of the first point
 //        Float_t      fZlast;        //Z coordinate of the last point
-//        Float_t      fCharge;       //Charge of this track
-//        Float_t      fVertex[3];    //Track vertex position
+//        Double32_t   fCharge;       //Charge of this track
+//        Double32_t   fVertex[3];    //Track vertex position
 //        Int_t        fNpoint;       //Number of points for this track
 //        Short_t      fValid;        //Validity criterion
+//        Int_t        fNsp;          //Number of points for this track with a special value
+//        Double32_t  *fPointValue;   //[fNsp] a special quantity for some point.
+//        TBits        fTriggerBits;  //Bits triggered by this track.
 //
 //   An example of a batch program to use the Event/Track classes is given
 //   in this directory: MainEvent.
@@ -231,7 +236,7 @@ void Event::SetRandomVertex() {
       fClosestDistance = 0;
       return;
    }
-   fClosestDistance = new Float_t[fNvertex];
+   fClosestDistance = new Double32_t[fNvertex];
    for (Int_t k = 0; k < fNvertex; k++ ) {
       fClosestDistance[k] = gRandom->Gaus(1,1);
    }
@@ -264,7 +269,7 @@ Track::Track(const Track &orig) : TObject(orig)
    fNpoint = orig.fNpoint;
    fNsp = orig.fNsp;
    if (fNsp) {
-      fPointValue = new Float_t[fNsp];
+      fPointValue = new Double32_t[fNsp];
       for(int i=0; i<fNsp; i++) {
          fPointValue[i] = orig.fPointValue[i];
       }
@@ -307,7 +312,7 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
    gRandom->Rannor(a,b);
    fZfirst = 50 + 5*a;
    fZlast  = 200 + 10*b;
-   fCharge = Float_t(Int_t(3*gRandom->Rndm(1)) - 1);
+   fCharge = Double32_t(Int_t(3*gRandom->Rndm(1)) - 1);
 
    fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
    fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
@@ -319,7 +324,7 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
    fNpoint = Int_t(60+10*gRandom->Rndm(1));
    fNsp = Int_t(3*gRandom->Rndm(1));
    if (fNsp) {
-      fPointValue = new Float_t[fNsp];
+      fPointValue = new Double32_t[fNsp];
       for(int i=0; i<fNsp; i++) {
          fPointValue[i] = i+1;
       }
