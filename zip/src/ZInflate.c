@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.1 2004/03/17 19:10:20 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.2 2004/04/15 11:53:54 brun Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -297,7 +297,7 @@ int R__Inflate_free OF((void));
    "uch *slide;" and then malloc'ed in the latter case.  The definition
    must be in unzip.h, included above. */
 
-uch R__slide [32768];
+static uch R__slide [32768];
 static unsigned wp;            /* current position in slide */
 
 
