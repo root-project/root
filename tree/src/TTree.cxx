@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.179 2004/02/13 07:12:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.180 2004/02/17 08:18:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3796,7 +3796,7 @@ void TTree::SetDirectory(TDirectory *dir)
 void TTree::SetEntries(Double_t n)
 {
   // Set number of entries in the Tree.
-  // This function should be called only when one filles each branch
+  // This function should be called only when one fills each branch
   // independently via TBranch::Fill without calling TTree::Fill
   // Calling TTree::SetEntries make sense only if the number of existing entries
   // is null. A Warning is issued otherwise
