@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.65 2001/04/23 14:06:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.66 2001/04/27 08:01:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -307,10 +307,19 @@ TTree::TTree(): TNamed()
 {
 //*-*-*-*-*-*-*-*-*-*-*Default Tree constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
+   fScanField      = 25;
+   fMaxEntryLoop   = 1000000000;
+   fMaxVirtualSize = 0;
    fDirectory      = 0;
+   fEntries        = 0;
+   fTotBytes       = 0;
+   fZipBytes       = 0;
+   fAutoSave       = 100000000;
+   fSavedBytes     = 0;
    fTotalBuffers   = 0;
    fChainOffset    = 0;
    fReadEntry      = -1;
+   fEstimate       = 1000000;
    fUpdate         = 0;
    fEventList      = 0;
    fPacketSize     = 100;
@@ -1846,6 +1855,19 @@ TFile *TTree::GetCurrentFile() const
 }
 
 //______________________________________________________________________________
+Stat_t TTree::GetEntriesFriend() const
+{
+// return number of entries of this Tree if not zero
+// otherwise return the number of entries in the first friend Tree.
+
+   if (fEntries) return fEntries;
+   if (!fFriends) return 0;
+   TFriendElement *fr = (TFriendElement*)fFriends->At(0);
+   if (!fr) return 0;
+   return fr->GetTree()->GetEntries();
+}
+
+//______________________________________________________________________________
 Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 {
 //*-*-*-*-*-*Read all branches of entry and return total number of bytes*-*-*
@@ -2300,7 +2322,7 @@ void TTree::Print(Option_t *option) const
   Printf("******************************************************************************");
 
   TString reg = "*";
-  if (strlen(option)) reg = option;
+  if (strlen(option) && strchr(option,'*')) reg = option;
   TRegexp re(reg,kTRUE);
   TIter next(((TTree*)this)->GetListOfBranches());
   TBranch *br;
@@ -2309,6 +2331,14 @@ void TTree::Print(Option_t *option) const
      TString s = br->GetName();
      if (s.Index(re) == kNPOS) continue;
      br->Print(option);
+  }
+  
+  //print friends if option "all"
+  if (!fFriends || !strstr(option,"all")) return;
+  TIter nextf(fFriends);
+  TFriendElement *fr;
+  while ((fr = (TFriendElement*)nextf())) {
+     fr->GetTree()->Print(option);
   }
 }
 
