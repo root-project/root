@@ -1,14 +1,17 @@
-void Run(const char* dllsuf="so") {
+void Run() {
 
-  TString library = ".L namespace.";
-  gROOT->ProcessLine(library+dllsuf);
-  library = ".L template.";
-  gROOT->ProcessLine(library+dllsuf);
-  library = ".L nstemplate.";
-  // gROOT->ProcessLine(library+dllsuf);
+  //TString library = ".L namespace.";
+  //gROOT->ProcessLine(library+dllsuf);
+  //library = ".L template.";
+  //gROOT->ProcessLine(library+dllsuf);
+  //library = ".L nstemplate.";
+  //// gROOT->ProcessLine(library+dllsuf);
 
-  library = ".L InheritMulti.";
-  gROOT->ProcessLine(library+dllsuf);
+  //library = ".L InheritMulti.";
+  //gROOT->ProcessLine(library+dllsuf);
+   gSystem->Load("./namespace");
+   gSystem->Load("./template");
+   gSystem->Load("./inheritMulti");
 
   namespace_driver();
   template_driver();

@@ -22,7 +22,7 @@ endif
 
 VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
 ifeq ($(PLATFORM),win32)
-LPWD := $(shell echo `pwd ` )
+LPWD := $(shell echo `pwd -P | sed -e 's/[a-zA-Z]://' -e 's?/cygdrive/[a-zA-Z]??' ` )
 else
 LPWD := $(shell echo `pwd -P`)
 endif
@@ -37,6 +37,10 @@ $(FILEDIR):
 
 $(LIBDIR):
 	$(CMDECHO)mkdir -p $(LIBDIR)
+
+.PHONY : directories
+
+DIRECTORIES = $(FILEDIR) $(LIBDIR)
 
 directories: $(FILEDIR) $(LIBDIR)
 
@@ -120,14 +124,13 @@ $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
 	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
 
-stlIoTest.log: directories $(TEST_DLL)
-#	$(CMDECHO) root.exe -q -l -b brun.C > stlIoTest.log 2>&1 
+stlIoTest.log: $(DIRECTORIES) $(TEST_DLL)
 	$(CMDECHO) root.exe -q -l -b brun.C 2>&1 | tee full.log | grep -v 'does not support' | grep -v 'did not support' > stlIoTest.log && ( cat full.log | grep 'not support'; echo )
 
 stlIoTest: stlIoTest.log
-	$(CMDECHO) diff -b stlIoTest.log stlIoTest.ref 
+	$(CMDECHO) diff -b stlIoTest.ref stlIoTest.log 
 
-stlNoLibTest.log: stlIoTest
+stlNoLibTest.log: $(FILEDIR)/vector.root readNoLib.C
 	$(CMDECHO) root.exe -q -b -l readNoLib.C\(\"$(FILEDIR)/vector.root\"\) > $@ 2>&1
 
 stlNoLibTest: stlNoLibTest.log

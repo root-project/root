@@ -22,12 +22,13 @@ int reader()
 {
   gSystem->Load("Foo");
 
-  gDebug = 2; 
+//  gDebug = 2; 
 
   Int_t  foo_     = 0;
   Int_t  foo_fFoo[3];
   TFile* file     = TFile::Open("file.root", "READ"); 
   TTree* tree     = (TTree*)file->Get("tree");
+  tree->SetMakeClass(1);
   tree->SetBranchAddress("foo", &foo_);
   tree->SetBranchAddress("foo.fFoo", &foo_fFoo);
   

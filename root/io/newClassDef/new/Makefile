@@ -42,7 +42,7 @@ main: $(SHARED_LIBS)
 newTest: newTest.log
 	$(CMDECHO) diff -b newTest.log newTest.ref
 newTest.log : main Run.C
-	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")" > newTest.log 2>&1
+	$(CMDECHO)root -q -l -b "Run.C" > newTest.log 2>&1
 #@echo "All test succeeded in `pwd`"
 
 $(DICTS) : %dict.C : %.h %linkdef.h

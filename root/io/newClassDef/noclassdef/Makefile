@@ -1,3 +1,4 @@
+SHELL=/bin/bash
 TEST_TARGETS += noclassdef
 CLEAN_TARGETS += local_clean
 
@@ -86,21 +87,13 @@ shared: libIotest.$(DllSuf)
 noclassdef:   driver$(ExeSuf)
 	$(CMDECHO)rm -f driver.output
 	$(CMDECHO)./driver$(ExeSuf) 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > driver.output 
-ifeq ($(PLATFORM),win32)
-	$(CMDECHO)diff good.win32.output driver.output
-else
-	$(CMDECHO)diff good.linux.output driver.output
-endif
+	$(CMDECHO)diff -bw good.linux.output driver.output
 #	@echo "All test succeeded in `pwd`"
 
 otest:   driver$(ExeSuf)
 	$(CMDECHO)rm -f odriver.output
 	$(CMDECHO)./driver$(ExeSuf) -readold 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > odriver.output 
-ifeq ($(PLATFORM),win32)
-	$(CMDECHO)diff good.win32.output odriver.output
-else
-	$(CMDECHO)diff good.linux.output odriver.output
-endif
+	$(CMDECHO)diff -bw good.linux.output odriver.output
 	$(CMDECHO)echo "Testing reading old succeeded in `pwd`"
 
 
@@ -160,12 +153,14 @@ mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTSYS)/bin/roo
 	$(CMDECHO)test `cat mydict.log | wc -l` == "1"; # mydict.log should only have one line!
 
 ifeq ($(PLATFORM),win32)
-libIotest.so: main.$(ObjSuf) mydict.$(ObjSuf)
-	$(CMDECHO)bindexplib $* $^ > libIotest.def
-	$(CMDECHO)lib -nologo -MACHINE:IX86 $^ -def:libIotest.def \
-                  $(OutPutOpt)libIotest.lib
-	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ libIotest.exp $(LIBS) \
-                   $(OutPutOpt)$@
+libIotest.dll: main.$(ObjSuf) mydict.$(ObjSuf)
+	$(BuildFromObjs)
+
+#	$(CMDECHO)bindexplib $* $^ > libIotest.def
+#	$(CMDECHO)lib -nologo -MACHINE:IX86 $^ -def:libIotest.def \
+#                  $(OutPutOpt)libIotest.lib
+#	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ libIotest.exp $(LIBS) \
+#                   $(OutPutOpt)$@
 else
 libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
 	$(CMDECHO)$(CXX) -g -shared -o libIotest.so -DSHARED $(CFLAGS) $(CXXFLAGS) main.cc mydict.cc $(LIBS) 

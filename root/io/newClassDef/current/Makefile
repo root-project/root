@@ -23,7 +23,7 @@ main: $(SHARED_LIBS) array_cxx.$(DllSuf)
 #	echo $(SHARED_LIBS)
 
 current_test.log : main Run.C
-	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")" > current_test.log 2>&1 
+	$(CMDECHO)root -q -l -b "Run.C" > current_test.log 2>&1 
 #	$(CMDECHO)echo "All test succeeded in `pwd`"
 
 currentTest: current_test.log

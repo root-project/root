@@ -7,8 +7,6 @@ Warning in <TClass::TClass>: no dictionary for class MkPV is available
 Warning in <TClass::TClass>: no dictionary for class MkMet is available
 Warning in <TClass::TClass>: no dictionary for class MkMuon is available
 Warning in <TClass::TClass>: no dictionary for class MkPart is available
-Warning in <TClass::TClass>: no dictionary for class TLorentzVector is available
-Warning in <TClass::TClass>: no dictionary for class TVector3 is available
 Warning in <TClass::TClass>: no dictionary for class MkEM is available
 Warning in <TClass::TClass>: no dictionary for class MkJet is available
 Warning in <TClass::TClass>: no dictionary for class MkJetcorr_muJCCB is available

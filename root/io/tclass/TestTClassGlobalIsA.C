@@ -1,3 +1,12 @@
+#ifdef R__WIN32
+#undef ROOT_TClass
+#define private public
+//#define TClass TClassFake
+#include "TClass.h"
+//#undef TClass
+#undef private
+#endif
+
 #include "TNamed.h"
 #include "TClass.h"
 #include <iostream>
@@ -42,11 +51,15 @@ void TestTClassGlobalIsA() {
       hasError = true;
    }
    if (hasError) gApplication->Terminate(1);
-
    
    // we are in a dictionary so we can do this (well not on windows though :( ).
+#ifndef R__WIN32
    cltobj->fIsA = 0;
    cltnam->fIsA = 0;
+#else
+   ((TClass*)cltobj)->fIsA = 0;
+   ((TClass*)cltnam)->fIsA = 0;
+#endif
 
    if ( cltnam != cltobj->GetActualClass(o) ) {
       std::cerr << "cltobj->IsA(o) does not return the object class\n";

@@ -4,7 +4,7 @@
 #include "TArrayI.h"
 #include "TBuffer.h"
 
-void write(TBuffer &buf) {
+void a_write(TBuffer &buf) {
 
   TArrayI * array = new TArrayI(20);
   for(int i=0; i<10; i++) {
@@ -20,7 +20,7 @@ void write(TBuffer &buf) {
 
 };
 
-void read(TBuffer &buf) {
+void a_read(TBuffer &buf) {
 
   buf.Reset();
   buf.SetReadMode();
@@ -47,7 +47,7 @@ void read(TBuffer &buf) {
 
 void array_driver() {
   TBuffer* buf = new TBuffer(TBuffer::kWrite);
-  write(*buf);
-  read(*buf);
+  a_write(*buf);
+  a_read(*buf);
   delete buf;
 }
