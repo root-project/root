@@ -66,12 +66,17 @@ all-freetype:   $(FREETYPELIB)
 
 clean-freetype:
 ifeq ($(PLATFORM),win32)
-		-@cd $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc && \
-		(unset MAKEFLAGS; \
-		nmake -nologo -f freetype.mak \
-		CFG="freetype - Win32 Release Multithreaded" clean)
+		-@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc) ]; then \
+			cd $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc; \
+			unset MAKEFLAGS; \
+			nmake -nologo -f freetype.mak \
+			CFG="freetype - Win32 Release Multithreaded" clean; \
+		fi)
 else
-		-@cd $(FREETYPEDIRS)/$(FREETYPEVERS) && $(MAKE) clean
+		-@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS) ]; then \
+			cd $(FREETYPEDIRS)/$(FREETYPEVERS); \
+			$(MAKE) clean; \
+		fi)
 endif
 
 clean::         clean-freetype
