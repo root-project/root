@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.171 2004/10/06 11:20:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.172 2004/10/13 05:36:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2888,12 +2888,15 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
   Double_t *weight = gTree->GetW();
   Double_t logEpsilon = -230;   // protect against negative probabilities
   Double_t logL = 0.0, prob;
+//printf("n=%lld, data1=%x, weight=%x\n",n,data1,weight);
 
   for(Long64_t i = 0; i < n; i++) {
+    if (weight[i] <= 0) continue;
     x[0] = data1[i];
     if (data2) x[1] = data2[i];
     if (data3) x[2] = data3[i];
     prob = fitfunc->EvalPar(x,par);
+//printf("i=%lld, x=%g, w=%g, prob=%g, logL=%g\n",i,x[0],weight[i],prob,logL);
     if(prob > 0) logL += TMath::Log(prob) * weight[i];
     else         logL += logEpsilon * weight[i];
   }
@@ -2920,6 +2923,9 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
 //             = "V" Verbose mode (default is between Q and V)
 //             = "E" Perform better Errors estimation using Minos technique
 //             = "M" More. Improve fit results
+//             = "D" Draw the projected histogram with the fitted function 
+//                   normalized to the number of selected rows
+//                   and multiplied by the bin width
 //
 //   You can specify boundary limits for some or all parameters via
 //        func->SetParLimits(p_number, parmin, parmax);
@@ -2971,6 +2977,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
   fTree->SetEstimate(TMath::Min(nent,nentries));
 
   Long64_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
+//printf("fTree=%x, v1=%x,w=%x\n",fTree,GetV1(),GetW());
 
   //if no selected entries return
   Long64_t nrows = GetSelectedRows();
@@ -2988,6 +2995,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
 
   // Create and set up the fitter
   gTree = fTree;
+//printf("nsel=%lld, data1=%x, weight=%x\n",nsel,GetV1(),GetW());
   tFitter = TVirtualFitter::Fitter(fTree);
   tFitter->Clear();
   tFitter->SetFCN(TreeUnbinnedFitLikelihood);
@@ -3075,6 +3083,25 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
 
    //reset estimate
    fTree->SetEstimate(oldEstimate);
+   
+   //if option "D" is specified, draw the projected histogram
+   //with the fitted function normalized to the number of selected rows
+   //and multiplied by the bin width
+   if (opt.Contains("d")) {
+      if (fHistogram->GetDimension() < 2) {
+         TH1 *hf = (TH1*)fHistogram->Clone("unbinnedFit");
+         hf->SetLineWidth(3);
+         hf->Reset();
+         Int_t nbins = fHistogram->GetXaxis()->GetNbins();
+         Double_t norm = ((Double_t)nsel)*fHistogram->GetXaxis()->GetBinWidth(1);
+         for (Int_t bin=1;bin<=nbins;bin++) {
+            Double_t func = norm*fitfunc->Eval(hf->GetBinCenter(bin));
+            hf->SetBinContent(bin,func);
+         }
+         fHistogram->GetListOfFunctions()->Add(hf,"lsame");
+      }
+      fHistogram->Draw();
+   }
 
    return nsel;
 }
