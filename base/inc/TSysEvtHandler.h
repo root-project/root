@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.2 2000/11/17 10:26:03 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -62,11 +62,13 @@ class TFileHandler : public TSysEvtHandler {
 
 protected:
    int  fFileNum;     //File descriptor
-   int  fMask;        //Event mask
+   int  fMask;        //Event mask, either bit 1 (read), 2 (write) or both can be set
 
    TFileHandler() { fFileNum = -1; } //For Dictionary()
 
 public:
+   enum { kRead = 1, kWrite = 2 };
+
    TFileHandler(int fd, int mask);
    virtual ~TFileHandler() { Remove(); }
    int             GetFd() const { return fFileNum; }
