@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.3 2001/01/16 17:23:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.4 2001/01/17 12:11:53 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -114,9 +114,9 @@ TCache::TPage *TCache::ReadPage(Seek_t offset)
    // check if there is a free page object in the free list and use that
    if (fFree->GetSize() > 0) {
       TPage *p = (TPage*) fFree->First();
-      fFile->Seek(offset);
       Int_t len = offset + fPageSize > fEOF ? Int_t(fEOF - offset) : fPageSize;
       if (len < 0) len = 0;
+      if (len) fFile->Seek(offset);
       if (len && fFile->ReadBuffer(p->Data(), len)) {
          fRecursive = kFALSE;
          return 0;
@@ -132,9 +132,9 @@ TCache::TPage *TCache::ReadPage(Seek_t offset)
    // if cache is not full, create new page and use it
    if (ULong_t(fCache->GetSize() * fPageSize) < fHighWater) {
       char *data = new char[fPageSize];
-      fFile->Seek(offset);
       Int_t len = offset + fPageSize > fEOF ? Int_t(fEOF - offset) : fPageSize;
       if (len < 0) len = 0;
+      if (len) fFile->Seek(offset);
       if (len && fFile->ReadBuffer(data, len)) {
          fRecursive = kFALSE;
          return 0;
