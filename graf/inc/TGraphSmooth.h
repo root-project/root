@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.h,v 1.13 2001/09/30 07:48:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.h,v 1.1 2001/10/01 06:48:34 brun Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -22,10 +22,6 @@
 #ifndef ROOT_TGraphSmooth
 #define ROOT_TGraphSmooth
 
-#include "TGraph.h"
-
-#include <iostream.h>
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TGraphSmooth                                                         //
@@ -33,6 +29,12 @@
 // Class for different regression smoothers                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#ifndef ROOT_TGraph
+#include "TGraph.h"
+#endif
+
+
 class TGraphSmooth: public TNamed {
 
    protected:
@@ -48,8 +50,8 @@ class TGraphSmooth: public TNamed {
       TGraphSmooth(const char *name);
 //      TGraphSmooth(const TGraphSmooth &smoothReg);   //??
       virtual ~TGraphSmooth();
-      
-      TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=0, 
+
+      TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=0,
                          Double_t yleft=0, Double_t yright=0, Int_t rule=0, Double_t f=0, Option_t *ties="mean");
       TGraph         *SmoothKern(TGraph *grin, Option_t *option="normal", Double_t bandwidth=0.5, Int_t nout=100, Double_t *xout=0);
       TGraph         *SmoothLowess(TGraph *grin, Option_t *option="",Double_t span=0.67, Int_t iter = 3, Double_t delta = 0);
@@ -68,7 +70,7 @@ class TGraphSmooth: public TNamed {
                          Double_t *xp, Double_t *yp, Int_t np, Int_t kernel, Double_t bw);
       static void     BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w, Int_t iper,
                          Double_t span, Double_t alpha, Double_t *smo, Double_t *sc);
-      static void     BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w, 
+      static void     BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
                          Double_t span, Int_t iper, Double_t vsmlsq, Double_t *smo, Double_t *acvr);
 
       ClassDef(TGraphSmooth,1) //Graph Smoother
