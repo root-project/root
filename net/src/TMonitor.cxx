@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.2 2000/11/27 10:46:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.3 2001/01/25 18:39:42 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -124,7 +124,8 @@ void TMonitor::Add(TSocket *sock, EInterest interest)
 {
    // Add socket to the monitor's active list. If interest=kRead then we
    // want to monitor the socket for read readiness, if interest=kWrite
-   // then we monitor the socket for write readiness.
+   // then we monitor the socket for write readiness, if interest=kRead|kWrite
+   // then we monitor both read and write readiness.
 
    fActive->Add(new TSocketHandler(this, sock, (Int_t)interest));
 }
