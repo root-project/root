@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.35 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.36 2002/11/05 11:37:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -254,10 +254,9 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (!gPad->IsVertical()) axisNumber = 1;
       }
       if (!strcmp(GetName(),"zaxis")) {
-         if (TestBit(kPalette)) axisNumber = 4;
-         else                   axisNumber = 3;
+         axisNumber = 3;
       }
-      if (view && axisNumber < 4) {
+      if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio1);
       } else {
          if (axisNumber == 1) {
@@ -285,7 +284,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       // No break !!!
 
    case kButton1Motion:
-      if (view && axisNumber < 4) {
+      if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio2);
       } else {
          gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
@@ -301,7 +300,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    break;
 
    case kButton1Up:
-      if (view && axisNumber < 4) {
+      if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio2);
          if (ratio1 > ratio2) {
             temp   = ratio1;
@@ -354,10 +353,6 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             ratio2 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
             xmin = ratio1;
             xmax = ratio2;
-            //if (gPad->GetLogy()) {
-            //   xmin = gPad->PadtoY(xmin);
-            //   xmax = gPad->PadtoY(xmax);
-            //}
          }
          if (xmin > xmax) {
             temp   = xmin;
@@ -381,20 +376,6 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                   hobj->SetBit(TH1::kIsZoomed);
                } else {
                   SetRange(bin1,bin2);
-               }
-            }
-            if (axisNumber == 4 && hobj) {
-               if (hobj->GetDimension() == 2) {
-           	  Float_t zmin = hobj->GetMinimum();
-         	  Float_t zmax = hobj->GetMaximum();
-          	  Float_t newmin = zmin + (zmax-zmin)*ratio1;
-         	  Float_t newmax = zmin + (zmax-zmin)*ratio2;
-         	  if(newmin < zmin)newmin = hobj->GetBinContent(hobj->GetMinimumBin());
-         	  if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
-         	  hobj->SetMinimum(newmin);
-         	  hobj->SetMaximum(newmax);
-                  hobj->SetBit(TH1::kIsZoomed);
-                  ResetBit(kPalette);
                }
             }
             gPad->Modified(kTRUE);
