@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.28 2004/12/07 14:36:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.29 2004/12/07 15:43:00 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -323,13 +323,6 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fLastActive = 0;
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
-   fMapSubwindows = kFALSE;
-
-   // SetLayoutManager(new TGColumnLayout(this, 0));
-
-   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask |
-                         kButtonMotionMask, kNone, kNone);
 }
 
 //______________________________________________________________________________
@@ -471,6 +464,8 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
 //______________________________________________________________________________
 TGLBEntry *TGLBContainer::Select(Int_t id)
 {
+   //
+
    return Select(id, kTRUE);
 }
 
@@ -581,6 +576,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
    TGPosition pos = GetPagePosition();
    Int_t x = pos.fX + event->fX;
    Int_t y = pos.fY + event->fY;
+   Bool_t activate = kFALSE;
 
    if (event->fCode == kButton4) {
       // scroll 2 lines up (a button down is always followed by a button up)
@@ -605,7 +601,10 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
             yf0 = f->GetY();
             xff = xf0 + f->GetWidth();
             yff = yf0 + f->GetHeight();
-            if (((x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)))  {
+            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) : 
+                        (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
+
+            if (activate)  {
                fLastActive = f;
                fLastActiveEl = el;
                f->Toggle();
@@ -632,8 +631,10 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
             yf0 = f->GetY();
             xff = xf0 + f->GetWidth();
             yff = yf0 + f->GetHeight();
+            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) : 
+                        (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
-            if (((x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)))  {
+            if (activate)  {
                f->Activate(kTRUE);
                fClient->NeedRedraw(this);
                fLastActive = f;
@@ -660,11 +661,16 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
 
    int xf0, yf0, xff, yff;
 
+   if (!fListBox->GetParent()->InheritsFrom("TGComboBoxPopup")) {
+      return kFALSE;
+   }
+
    TGLBEntry *f;
    TGFrameElement *el;
    TGPosition pos = GetPagePosition();
    Int_t x = pos.fX + event->fX;
    Int_t y = pos.fY + event->fY;
+   Bool_t activate = kFALSE;
 
    if (fMultiSelect) {
 
@@ -676,8 +682,10 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
             yf0 = f->GetY();
             xff = xf0 + f->GetWidth();
             yff = yf0 + f->GetHeight();
+            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) : 
+                        (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
-            if (((x > xf0 && x < xff) && (y > yf0 &&  y < yff))) {
+            if (activate) {
                if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
                   f->Toggle();
                   fClient->NeedRedraw(this);
@@ -696,8 +704,11 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          yf0 = f->GetY();
          xff = xf0 + f->GetWidth();
          yff = yf0 + f->GetHeight();
+         
+         activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) : 
+                        (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
-         if (((x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)))  {
+         if (activate)  {
             f->Activate(kTRUE);
             fClient->NeedRedraw(this);
             fLastActive = f;
@@ -781,6 +792,8 @@ void TGListBox::InitListBox()
    fVport = new TGViewPort(this, 6, 6, kChildFrame | kOwnBackground, fgWhitePixel);
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, 6);
    fLbc = new TGLBContainer(fVport, 10, 10, kVerticalFrame, fgWhitePixel);
+   fLbc->SetMapSubwindows(kFALSE);
+
    fLbc->Associate(this);
    fLbc->SetListBox(this);
    SetContainer(fLbc);
@@ -793,8 +806,7 @@ void TGListBox::InitListBox()
 
    fVScrollbar->AddInput(kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask);
-   fLbc->AddInput(kButtonPressMask | kButtonReleaseMask
-                  | kButtonMotionMask );
+   fLbc->AddInput(kButtonPressMask | kButtonReleaseMask );
 }
 
 //______________________________________________________________________________

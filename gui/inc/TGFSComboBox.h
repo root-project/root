@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.6 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.7 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
 
    virtual void Activate(Bool_t a);
    virtual void Update(TGLBEntry *e);
+   virtual void DrawCopy(Handle_t id, Int_t x, Int_t y);
 
    ClassDef(TGTreeLBEntry,0)  // TGFSComboBox entry
 };

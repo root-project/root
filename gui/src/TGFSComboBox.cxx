@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.10 2003/11/07 22:47:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.11 2004/04/20 14:48:01 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -127,33 +127,41 @@ void TGTreeLBEntry::Activate(Bool_t a)
 }
 
 //______________________________________________________________________________
-void TGTreeLBEntry::DoRedraw()
+void TGTreeLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Redraw the tree listbox entry.
+   // draw copy
 
    int ix, iy, lx, ly;
 
-   ix = 0;
-   iy = (fHeight - fPic->GetHeight()) >> 1;
-   lx = (int)(fPic->GetWidth() + 4);
-   ly = (int)((fHeight - (fTHeight+1)) >> 1);
+   ix = x;
+   iy = y + ((fHeight - fPic->GetHeight()) >> 1);
+   lx = x + (int)(fPic->GetWidth() + 4);
+   ly = y + (int)((fHeight - (fTHeight+1)) >> 1);
 
    if (fActive) {
-      if (fSelPic) fSelPic->Draw(fId, fNormGC, ix, iy);
+      if (fSelPic) fSelPic->Draw(id, fNormGC, ix, iy);
       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
-      gVirtualX->FillRectangle(fId, fNormGC, lx, ly, fTWidth, fTHeight+1);
+      gVirtualX->FillRectangle(id, fNormGC, lx, ly, fTWidth, fTHeight+1);
       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
    } else {
-      fPic->Draw(fId, fNormGC, ix, iy);
+      fPic->Draw(id, fNormGC, ix, iy);
       gVirtualX->SetForeground(fNormGC, fgWhitePixel);
-      gVirtualX->FillRectangle(fId, fNormGC, lx, ly, fTWidth, fTHeight+1);
+      gVirtualX->FillRectangle(id, fNormGC, lx, ly, fTWidth, fTHeight+1);
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
    }
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
-   fText->Draw(fId, fNormGC, lx, ly + max_ascent);
+   fText->Draw(id, fNormGC, lx, ly + max_ascent);
+}
+
+//______________________________________________________________________________
+void TGTreeLBEntry::DoRedraw()
+{
+   // Redraw the tree listbox entry.
+
+   DrawCopy(fId, 0, 0);
 }
 
 //______________________________________________________________________________
