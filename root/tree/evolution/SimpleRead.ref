@@ -1,0 +1,13 @@
+
+Processing SimpleRead.C...
+Warning in <TClass::TClass>: no dictionary for class Simple is available
+************************
+*    Row   * simple.fD *
+************************
+*        0 *         0 *
+*        1 *         1 *
+*        2 *         2 *
+*        3 *         0 *
+*        4 *         1 *
+*        5 *         2 *
+************************

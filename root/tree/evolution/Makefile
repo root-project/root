@@ -95,3 +95,16 @@ containerEvolution: containerEvolution.log ReadOld.log ReadVector.log ReadList.l
 	$(CMDECHO) diff -b -w ReadList.ref ReadList.log
 	$(CMDECHO) diff -b -w ReadNolib.ref ReadNolib.log
 	$(TestDiff)
+	
+SimpleOne.root: SimpleOne_C.$(DllSuf) SimpleWrite.C $(ROOTCORELIBS)
+	$(CMDECHO) root.exe -q -b -l 'SimpleWrite.C(1)' > SimpleWriteOne.log
+	
+SimpleTwo.root: SimpleTwo_C.$(DllSuf) SimpleWrite.C $(ROOTCORELIBS)
+	$(CMDECHO) root.exe -q -b -l 'SimpleWrite.C(2)' > SimpleWriteTwo.log
+	
+SimpleRead.log: SimpleOne.root SimpleTwo.root SimpleRead.C $(ROOTCORELIBS)
+	$(CMDECHO) root.exe -q -b -l SimpleRead.C > SimpleRead.log 2>&1
+
+SimpleTest: SimpleRead.log 
+	$(CMDECHO) diff -b -w SimpleRead.ref SimpleRead.log
+
