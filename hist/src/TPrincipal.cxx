@@ -11,7 +11,7 @@ Principal Components Analysis (PCA)
 <P>
 The current implementation is based on the LINTRA package from CERNLIB
 by R. Brun, H. Hansroul, and J. Kubler.
-The class has been implemented by Christian Holm Cristensen in August 2000.
+The class has been implemented by Christian Holm Christensen in August 2000.
 
 <P>
 
@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.9 2000/08/15 12:49:34 brun Exp $
-// $Date: 2000/08/15 12:49:34 $
+// $Id: TPrincipal.cxx,v 1.10 2000/08/17 09:44:42 brun Exp $
+// $Date: 2000/08/17 09:44:42 $
 // $Author: brun $
 
 #include "TPrincipal.h"
