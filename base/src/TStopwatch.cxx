@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.5 2002/06/13 13:42:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.6 2002/10/07 10:41:38 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -23,15 +23,15 @@
 
 #if defined(R__MAC)
 #   include <time.h>
-static clock_t gTicks = CLOCKS_PER_SEC;
+static Double_t gTicks = CLOCKS_PER_SEC;
 #elif defined(R__UNIX)
 #   include <sys/times.h>
 #   include <unistd.h>
-static clock_t gTicks = 0;
+static Double_t gTicks = 0;
 #elif defined(R__VMS)
 #   include <time.h>
 #   include <unistd.h>
-static clock_t gTicks = 1000;
+static Double_t gTicks = 1000;
 #elif defined(WIN32)
 #   include "TError.h"
     const Double_t gTicks = 1.0e-7;
@@ -47,7 +47,7 @@ TStopwatch::TStopwatch()
    // Create a stopwatch and start it.
 
 #ifdef R__UNIX
-   if (!gTicks) gTicks = (clock_t)sysconf(_SC_CLK_TCK);
+   if (!gTicks) gTicks = (Double_t)sysconf(_SC_CLK_TCK);
 #endif
    fState         = kUndefined;
    fTotalCpuTime  = 0;
