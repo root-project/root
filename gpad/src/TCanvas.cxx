@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.4 2000/07/12 15:20:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.5 2000/07/13 09:05:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -596,10 +596,11 @@ void TCanvas::Draw(Option_t *)
 
 
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
-   if (old) {
+   if (old == this) {
       Paint();
       return;
    }
+   if (old) gROOT->GetListOfCanvases()->Remove(old);
    if (fWindowWidth  == 0) fWindowWidth  = 800;
    if (fWindowHeight == 0) fWindowHeight = 600;
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
@@ -853,8 +854,8 @@ Int_t TCanvas::GetWindowTopX()
 {
    // Returns current top x position of window on screen.
 
-   fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
-                                 fWindowWidth, fWindowHeight);
+   if (fCanvasImp) fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
+                                                 fWindowWidth,fWindowHeight);
 
    return fWindowTopX;
 }
@@ -864,8 +865,8 @@ Int_t TCanvas::GetWindowTopY()
 {
    // Returns current top y position of window on screen.
 
-   fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
-                                 fWindowWidth, fWindowHeight);
+   if (fCanvasImp) fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
+                                                 fWindowWidth,fWindowHeight);
 
    return fWindowTopY;
 }
@@ -1403,7 +1404,7 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
    // Use this function to zoom in a canvas and naviguate via
    // the scroll bars.
 
-   fCanvasImp->SetCanvasSize(ww, wh);
+   if (fCanvasImp) fCanvasImp->SetCanvasSize(ww, wh);
 }
 
 //______________________________________________________________________________
@@ -1442,7 +1443,7 @@ void TCanvas::SetTitle(const char *title)
 //*-*                  ===============
 
    fTitle = title;
-   fCanvasImp->SetWindowTitle(title);
+   if (fCanvasImp) fCanvasImp->SetWindowTitle(title);
 }
 
 //______________________________________________________________________________
