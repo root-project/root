@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.75 2002/01/09 16:28:50 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.76 2002/01/09 16:33:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -211,6 +211,8 @@
 #include <stdio.h>
 #include <fstream.h>
 
+#include "snprintf.h"
+   
 #include "TTreePlayer.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -903,7 +905,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 	     }
 
 	     // scan the values one after the other
-	     for (int j=0;j<ncomma;j++) {
+	     for (j=0;j<ncomma;j++) {
 	       cdummy++;  // skip '(' or ','
 	       if (sscanf(cdummy," %lf ",&value) == 1) {
 		 cdummy=strchr(&cdummy[1],',');
@@ -935,8 +937,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		     else               ii=2; 
 		       
 		     if (ncols>ii) 
-		       //isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
-		       isize = sprintf(buffer,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 2:  // upper limit x-axis
 		     ii=0; 
@@ -945,8 +946,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		     else               ii=2; 
 		       
 		     if (ncols>ii) 
-		       //isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
-		       isize = sprintf(buffer,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 3:  // binning y-axis
 		     if (ncols<3) gEnv->SetValue("Hist.Binning.2D.y",(int)value);
@@ -961,16 +961,14 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		     else               ii=1;
 		       
 		     if (ncols>ii) 
-		       //isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
-		       isize = sprintf(buffer,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 5:  // upper limit y-axis
 		     ii=1; 
 		     if      (ncols==2) ii=0;
 		     else               ii=1;
 		     if (ncols>ii) 
-		       //isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
-		       isize = sprintf(buffer,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 6:  // binning z-axis
 		     gEnv->SetValue("Hist.Binning.3D.z",(int)value);
@@ -978,14 +976,12 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		   case 7:  // lower limit z-axis
 		     ii=0; 
 		     if (ncols>ii) 
-		       //isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
-		       isize = sprintf(buffer,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 8:  // upper limit z-axis
 		     ii=0; 
 		     if (ncols>ii) 
-		       //isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
-		       isize = sprintf(buffer,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   default:
 		     Error("DrawSelect","j>8");
