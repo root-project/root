@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.6 2001/02/23 14:02:22 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.7 2001/02/26 02:49:06 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -193,7 +193,7 @@ void TFTP::PrintError(const char *where, Int_t err) const
 }
 
 //______________________________________________________________________________
-Int_t TFTP::Recv(Int_t &status, EMessageTypes &kind)
+Int_t TFTP::Recv(Int_t &status, EMessageTypes &kind) const
 {
    // Return status from rootd server and message kind. Returns -1 in
    // case of error otherwise 8 (sizeof 2 words, status and kind).
@@ -240,7 +240,7 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
    // the case (e.g. due to a crash), you can force unlock it by prepending
    // the remoteName with a '-'.
 
-   if (!IsOpen()) return -1;
+   if (!IsOpen() || !file || !strlen(file)) return -1;
 
 #ifndef WIN32
    Int_t fd = open(file, O_RDONLY);
@@ -286,6 +286,9 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
       close(fd);
       return -1;
    }
+
+   Printf("<TFTP::PutFile>: sending file %s (%ld bytes, starting at %ld)",
+          file, size, restartat);
 
    TStopwatch timer;
    timer.Start();
@@ -394,7 +397,7 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
    // the case (e.g. due to a crash), you can force unlock it by prepending
    // the file name with a '-'.
 
-   if (!IsOpen()) return -1;
+   if (!IsOpen() || !file || !strlen(file)) return -1;
 
    if (!localName) {
       if (file[0] == '-')
@@ -435,18 +438,6 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
    if (restartat && (restartat >= size))
       restartat = 0;
 
-   // check file system space
-   Long_t id, bsize, blocks, bfree;
-   if (gSystem->GetFsInfo(file, &id, &bsize, &blocks, &bfree) == 0) {
-      Double_t space = (Double_t)bsize * (Double_t)bfree;
-      if (space < size - restartat) {
-         Error("GetFile", "not enough space to store file %s", localName);
-         // send urgent message to rootd to stop tranfer
-         return -1;
-      }
-   } else
-      Warning("GetFile", "could not determine if there is enough free space to store file");
-
    // open local file
    Int_t fd;
    if (!restartat) {
@@ -477,6 +468,18 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
       return -1;
    }
 
+   // check file system space
+   Long_t id, bsize, blocks, bfree;
+   if (gSystem->GetFsInfo(localName, &id, &bsize, &blocks, &bfree) == 0) {
+      Double_t space = (Double_t)bsize * (Double_t)bfree;
+      if (space < size - restartat) {
+         Error("GetFile", "not enough space to store file %s", localName);
+         // send urgent message to rootd to stop tranfer
+         return -1;
+      }
+   } else
+      Warning("GetFile", "could not determine if there is enough free space to store file");
+
    // seek to restartat position
    if (restartat) {
       if (lseek(fd, (off_t) restartat, SEEK_SET) < 0) {
@@ -487,6 +490,9 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
          return -1;
       }
    }
+
+   Printf("<TFTP::GetFile>: getting file %s (%ld bytes, starting at %ld)",
+          localName, sizel, restartat);
 
    TStopwatch timer;
    timer.Start();
@@ -597,7 +603,7 @@ Int_t TFTP::ChangeDirectory(const char *dir) const
    // file and it is < 1024 characters then the contents is echoed back.
    // Returns 0 in case of success and -1 in case of failure.
 
-   if (!IsOpen()) return -1;
+   if (!IsOpen() || !dir || !strlen(dir)) return -1;
 
    if (fSocket->Send(Form("%s", dir), kROOTD_CHDIR) < 0) {
       Error("ChangeDirectory", "error sending kROOTD_CHDIR command");
@@ -620,7 +626,7 @@ Int_t TFTP::ChangeDirectory(const char *dir) const
       }
    }
 
-   Printf("<TFTP::ChangeDirectory>: %s\n", mess);
+   Printf("<TFTP::ChangeDirectory>: %s", mess);
 
    return 0;
 }
@@ -628,42 +634,203 @@ Int_t TFTP::ChangeDirectory(const char *dir) const
 //______________________________________________________________________________
 Int_t TFTP::MakeDirectory(const char *dir) const
 {
+   // Make a remote directory. Anonymous users may not create directories.
+   // Returns 0 in case of success and -1 in case of failure.
+
+   if (!IsOpen() || !dir || !strlen(dir)) return -1;
+
+   if (fSocket->Send(Form("%s", dir), kROOTD_MKDIR) < 0) {
+      Error("MakeDirectory", "error sending kROOTD_MKDIR command");
+      return -1;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("MakeDirectory", "error receiving mkdir confirmation");
+      return -1;
+   }
+
+   Printf("<TFTP::MakeDirectory>: %s", mess);
+
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t TFTP::DeleteDirectory(const char *dir) const
 {
+   // Delete a remote directory. Anonymous users may not delete directories.
+   // Returns 0 in case of success and -1 in case of failure.
+
+   if (!IsOpen() || !dir || !strlen(dir)) return -1;
+
+   if (fSocket->Send(Form("%s", dir), kROOTD_RMDIR) < 0) {
+      Error("DeleteDirectory", "error sending kROOTD_RMDIR command");
+      return -1;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("DeleteDirectory", "error receiving rmdir confirmation");
+      return -1;
+   }
+
+   Printf("<TFTP::DeleteDirectory>: %s", mess);
+
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::ListDirectory(Option_t *) const
+Int_t TFTP::ListDirectory(Option_t *cmd) const
 {
+   // List remote directory. With cmd you specify the options and directory
+   // to be listed to ls. Returns 0 in case of success and -1 in case of
+   // failure.
+
+   if (!IsOpen()) return -1;
+
+   if (!cmd || !strlen(cmd))
+      cmd = "ls .";
+
+   if (fSocket->Send(Form("%s", cmd), kROOTD_LSDIR) < 0) {
+      Error("ListDirectory", "error sending kROOTD_LSDIR command");
+      return -1;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   do {
+      if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+         Error("ListDirectory", "error receiving lsdir confirmation");
+         return -1;
+      }
+      printf("%s", mess);
+   } while (what == kMESS_STRING);
+
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t TFTP::PrintDirectory() const
 {
+   // Print path of remote working directory. Returns 0 in case of succes and
+   // -1 in cse of failure.
+
+   if (!IsOpen()) return -1;
+
+   if (fSocket->Send("", kROOTD_PWD) < 0) {
+      Error("DeleteDirectory", "error sending kROOTD_PWD command");
+      return -1;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("PrintDirectory", "error receiving pwd confirmation");
+      return -1;
+   }
+
+   Printf("<TFTP::PrintDirectory>: %s", mess);
+
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::Rename(const char *file1, const char *file2) const
+Int_t TFTP::RenameFile(const char *file1, const char *file2) const
 {
+   // Rename a remote file. Anonymous users may not rename files.
+   // Returns 0 in case of success and -1 in case of failure.
+
+   if (!IsOpen()) return -1;
+
+   if (!file1 || !file2 || !strlen(file1) || !strlen(file2)) {
+      Error("RenameFile", "illegal file names specified");
+      return -1;
+   }
+
+   if (fSocket->Send(Form("%s %s", file1, file2), kROOTD_MV) < 0) {
+      Error("RenameFile", "error sending kROOTD_MV command");
+      return -1;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("RenameFile", "error receiving mv confirmation");
+      return -1;
+   }
+
+   Printf("<TFTP::RenameFile>: %s", mess);
+
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t TFTP::DeleteFile(const char *file) const
 {
+   // Delete a remote file. Anonymous users may not delete files.
+   // Returns 0 in case of success and -1 in case of failure.
+
+   if (!IsOpen()) return -1;
+
+   if (!file || !strlen(file)) {
+      Error("DeleteFile", "illegal file name specified");
+      return -1;
+   }
+
+   if (fSocket->Send(Form("%s", file), kROOTD_RM) < 0) {
+      Error("DeleteFile", "error sending kROOTD_RM command");
+      return -1;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("DeleteFile", "error receiving rm confirmation");
+      return -1;
+   }
+
+   Printf("<TFTP::DeleteFile>: %s", mess);
+
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::ChangeProtection(const char *file, Int_t mode) const
+Int_t TFTP::ChangePermission(const char *file, Int_t mode) const
 {
+   // Change permissions of a remote file. Anonymous users may not
+   // chnage permissions. Returns 0 in case of success and -1 in case
+   // of failure.
+
+   if (!IsOpen()) return -1;
+
+   if (!file || !strlen(file)) {
+      Error("ChangePermission", "illegal file name specified");
+      return -1;
+   }
+
+   if (fSocket->Send(Form("%s %d", file, mode), kROOTD_CHMOD) < 0) {
+      Error("ChangePermission", "error sending kROOTD_CHMOD command");
+      return -1;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("ChangePermission", "error receiving chmod confirmation");
+      return -1;
+   }
+
+   Printf("<TFTP::ChangePermission>: %s", mess);
+
    return 0;
 }
 

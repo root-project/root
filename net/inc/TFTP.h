@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.4 2001/02/23 14:02:22 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.5 2001/02/26 02:49:06 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -58,7 +58,7 @@ private:
    void   operator=(const TFTP &);  // idem
    void   Init(const char *url, Int_t parallel, Int_t wsize);
    void   PrintError(const char *where, Int_t err) const;
-   Int_t  Recv(Int_t &status, EMessageTypes &kind);
+   Int_t  Recv(Int_t &status, EMessageTypes &kind) const;
    void   SetMode(Int_t mode) { fMode = mode; }
 
    static Double_t fgBytesWrite;  //number of bytes sent by all TFTP objects
@@ -89,11 +89,11 @@ public:
    Int_t  ChangeDirectory(const char *dir) const;
    Int_t  MakeDirectory(const char *dir) const;
    Int_t  DeleteDirectory(const char *dir) const;
-   Int_t  ListDirectory(Option_t *opt = "") const;
+   Int_t  ListDirectory(Option_t *cmd = "") const;
    Int_t  PrintDirectory() const;
-   Int_t  Rename(const char *file1, const char *file2) const;
+   Int_t  RenameFile(const char *file1, const char *file2) const;
    Int_t  DeleteFile(const char *file) const;
-   Int_t  ChangeProtection(const char *file, Int_t mode) const;
+   Int_t  ChangePermission(const char *file, Int_t mode) const;
    Int_t  Close();
    void   Binary() { SetMode(kBinary); }
    void   Ascii() { SetMode(kAscii); }
@@ -104,11 +104,11 @@ public:
    void cd(const char *dir) const { ChangeDirectory(dir); }
    void mkdir(const char *dir) const { MakeDirectory(dir); }
    void rmdir(const char *dir) const { DeleteDirectory(dir); }
-   void ls(Option_t *opt = "") const { ListDirectory(opt); }
+   void ls(Option_t *cmd = "") const { ListDirectory(cmd); }
    void pwd() const { PrintDirectory(); }
-   void rename(const char *file1, const char *file2) const { Rename(file1, file2); }
+   void mv(const char *file1, const char *file2) const { RenameFile(file1, file2); }
    void rm(const char *file) const { DeleteFile(file); }
-   void chmod(const char *file, Int_t mode) const { ChangeProtection(file, mode); }
+   void chmod(const char *file, Int_t mode) const { ChangePermission(file, mode); }
    void bye() { Close(); }
    void bin() { Binary(); }
    void ascii() { Ascii(); }

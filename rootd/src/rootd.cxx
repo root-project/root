@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.28 2001/02/23 14:02:22 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.29 2001/02/26 02:49:07 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1665,6 +1665,169 @@ void RootdChdir(const char *dir)
 }
 
 //______________________________________________________________________________
+void RootdMkdir(const char *dir)
+{
+   // Make directory.
+
+   char buffer[kMAXPATHLEN];
+
+   if (gAnon) {
+      sprintf(buffer, "anonymous users may not create directories");
+      ErrorInfo("RootdMkdir: %s", buffer);
+   } else if (mkdir(dir, 0755) < 0) {
+      sprintf(buffer, "cannot create directory %s", dir);
+      Perror(buffer);
+      ErrorInfo("RootdMkdir: %s", buffer);
+   } else
+      sprintf(buffer, "created directory %s", dir);
+
+   NetSend(buffer, kROOTD_MKDIR);
+}
+
+//______________________________________________________________________________
+void RootdRmdir(const char *dir)
+{
+   // Delete directory.
+
+   char buffer[kMAXPATHLEN];
+
+   if (gAnon) {
+      sprintf(buffer, "anonymous users may not delete directories");
+      ErrorInfo("RootdRmdir: %s", buffer);
+   } else if (rmdir(dir) < 0) {
+      sprintf(buffer, "cannot delete directory %s", dir);
+      Perror(buffer);
+      ErrorInfo("RootdRmdir: %s", buffer);
+   } else
+      sprintf(buffer, "deleted directory %s", dir);
+
+   NetSend(buffer, kROOTD_RMDIR);
+}
+
+//______________________________________________________________________________
+void RootdLsdir(const char *cmd)
+{
+   // List directory.
+
+   char buffer[kMAXPATHLEN];
+
+   // make sure all commands start with ls (should use snprintf)
+   if (strlen(cmd) < 2 || strncmp(buffer, "ls", 2))
+      sprintf(buffer, "ls %s 2>/dev/null", cmd);
+   else
+      sprintf(buffer, "%s 2>/dev/null", cmd);
+
+   FILE *pf;
+   if ((pf = popen(buffer, "r")) == 0) {
+      sprintf(buffer, "error in popen");
+      Perror(buffer);
+      NetSend(buffer, kROOTD_LSDIR);
+      ErrorInfo("RootdLsdir: %s", buffer);
+      return;
+   }
+
+   // read output of ls
+   int  ch, i = 0, cnt = 0;
+//again:
+   for (ch = fgetc(pf); ch != EOF; ch = fgetc(pf)) {
+      buffer[i++] = ch;
+      cnt++;
+      if (i == kMAXPATHLEN-1) {
+         buffer[i] = 0;
+         NetSend(buffer, kMESS_STRING);
+         i = 0;
+      }
+   }
+   // this will be true if forked process was not yet ready to be read
+//   if (cnt == 0 && ch == EOF) goto again;
+
+   pclose(pf);
+
+   buffer[i] = 0;
+   NetSend(buffer, kROOTD_LSDIR);
+}
+
+//______________________________________________________________________________
+void RootdPwd()
+{
+   // Print path of working directory.
+
+   char buffer[kMAXPATHLEN];
+
+   if (!getcwd(buffer, kMAXPATHLEN)) {
+      sprintf(buffer, "current directory not readable");
+      Perror(buffer);
+      ErrorInfo("RootdPwd: %s", buffer);
+   }
+
+   NetSend(buffer, kROOTD_PWD);
+}
+
+//______________________________________________________________________________
+void RootdMv(const char *msg)
+{
+   // Rename a file.
+
+   char file1[kMAXPATHLEN], file2[kMAXPATHLEN], buffer[kMAXPATHLEN];
+   sscanf(msg, "%s %s", file1, file2);
+
+   if (gAnon) {
+      sprintf(buffer, "anonymous users may not rename files");
+      ErrorInfo("RootdMv: %s", buffer);
+   } else if (rename(file1, file2) < 0) {
+      sprintf(buffer, "cannot rename file %s to %s", file1, file2);
+      Perror(buffer);
+      ErrorInfo("RootdMv: %s", buffer);
+   } else
+      sprintf(buffer, "renamed file %s to %s", file1, file2);
+
+   NetSend(buffer, kROOTD_MV);
+}
+
+//______________________________________________________________________________
+void RootdRm(const char *file)
+{
+   // Delete a file.
+
+   char buffer[kMAXPATHLEN];
+
+   if (gAnon) {
+      sprintf(buffer, "anonymous users may not delete files");
+      ErrorInfo("RootdRm: %s", buffer);
+   } else if (unlink(file) < 0) {
+      sprintf(buffer, "cannot unlink file %s", file);
+      Perror(buffer);
+      ErrorInfo("RootdRm: %s", buffer);
+   } else
+      sprintf(buffer, "removed file %s", file);
+
+   NetSend(buffer, kROOTD_RM);
+}
+
+//______________________________________________________________________________
+void RootdChmod(const char *msg)
+{
+   // Delete a file.
+
+   char file[kMAXPATHLEN], buffer[kMAXPATHLEN];
+   int  mode;
+
+   sscanf(msg, "%s %d", file, &mode);
+
+   if (gAnon) {
+      sprintf(buffer, "anonymous users may not change file permissions");
+      ErrorInfo("RootdChmod: %s", buffer);
+   } else if (chmod(file, mode) < 0) {
+      sprintf(buffer, "cannot chmod file %s to 0%o", file, mode);
+      Perror(buffer);
+      ErrorInfo("RootdChmod: %s", buffer);
+   } else
+      sprintf(buffer, "changed permission of file %s to 0%o", file, mode);
+
+   NetSend(buffer, kROOTD_CHMOD);
+}
+
+//______________________________________________________________________________
 void RootdParallel()
 {
    // Handle initialization message from remote host. If size > 0 then
@@ -1746,6 +1909,27 @@ void RootdLoop()
             break;
          case kROOTD_CHDIR:
             RootdChdir(recvbuf);
+            break;
+         case kROOTD_MKDIR:
+            RootdMkdir(recvbuf);
+            break;
+         case kROOTD_RMDIR:
+            RootdRmdir(recvbuf);
+            break;
+         case kROOTD_LSDIR:
+            RootdLsdir(recvbuf);
+            break;
+         case kROOTD_PWD:
+            RootdPwd();
+            break;
+         case kROOTD_MV:
+            RootdMv(recvbuf);
+            break;
+         case kROOTD_RM:
+            RootdRm(recvbuf);
+            break;
+         case kROOTD_CHMOD:
+            RootdChmod(recvbuf);
             break;
          default:
             ErrorFatal(kErrBadOp, "RootdLoop: received bad opcode %d", kind);
