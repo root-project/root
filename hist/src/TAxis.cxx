@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.28 2002/02/04 23:27:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.29 2002/02/14 13:22:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -574,7 +574,7 @@ Axis_t TAxis::GetBinWidth(Int_t bin) const
 
 
 //______________________________________________________________________________
-void TAxis::GetCenter(Axis_t *center)
+void TAxis::GetCenter(Axis_t *center) const
 {
 //*-*-*-*-*-*-*-*-*Return an array with the center of all bins-*-*-*-*-*-*-*
 //*-*              ===========================================
@@ -583,7 +583,7 @@ void TAxis::GetCenter(Axis_t *center)
 }
 
 //______________________________________________________________________________
-void TAxis::GetLowEdge(Axis_t *edge)
+void TAxis::GetLowEdge(Axis_t *edge) const
 {
 //*-*-*-*-*-*-*-*-*Return an array with the lod edge of all bins-*-*-*-*-*-*-*
 //*-*              =============================================

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.19 2002/01/15 10:34:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.20 2002/02/04 23:27:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -84,16 +84,16 @@ public:
         virtual Axis_t   GetBinLowEdge(Int_t bin) const;
         virtual Axis_t   GetBinUpEdge(Int_t bin) const;
         virtual Axis_t   GetBinWidth(Int_t bin) const;
-        virtual void     GetCenter(Axis_t *center);
+        virtual void     GetCenter(Axis_t *center) const;
         THashList       *GetLabels() {return fLabels;}
-        virtual void     GetLowEdge(Axis_t *edge);
+        virtual void     GetLowEdge(Axis_t *edge) const;
                 Int_t    GetNbins() const { return fNbins; }
         virtual TObject *GetParent() const {return fParent;}
         virtual const char  *GetTicks() const;
         virtual Bool_t   GetTimeDisplay() const {return fTimeDisplay;}
         virtual const char  *GetTimeFormat() const {return fTimeFormat.Data();}
          const char     *GetTitle() const {return fTitle.Data();}
-              TArrayD   *GetXbins() {return &fXbins;}
+         const TArrayD  *GetXbins() const {return &fXbins;}
                  Int_t   GetFirst() const;
                  Int_t   GetLast() const;
                 Axis_t   GetXmin() const {return fXmin;}
