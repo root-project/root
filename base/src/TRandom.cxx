@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.5 2000/11/22 08:35:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.6 2001/04/20 06:17:51 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -459,7 +459,7 @@ Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
                 ((1         +6.06511919E3*u+6.94021044E5*v)*u);
        }
    }
-   Double_t res = mean + sigma*ranlan;
+   Double_t res = mpv + sigma*ranlan;
    return res;
 }
 

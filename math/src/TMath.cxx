@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.8 2001/03/07 16:49:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.9 2001/04/20 06:17:51 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -376,7 +376,7 @@ Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma)
    Double_t a2[2] = {-1.845568670,-4.284640743};
 
    if (sigma <= 0) return 0;
-   Double_t v = (x-mean)/sigma;
+   Double_t v = (x-mpv)/sigma;
    Double_t u, ue, us, den;
    if (v < -5.5) {
       u   = TMath::Exp(v+1.0);
