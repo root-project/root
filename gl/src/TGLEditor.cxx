@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.3 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -38,6 +38,7 @@ private:
 TGLMatView::TGLMatView(const TGWindow *parent, Window_t wid, TGLEditor *owner)
                :TGCompositeFrame(gClient, wid, parent), fOwner(owner)
 {
+   AddInput(kExposureMask | kStructureNotifyMask);
 }
 
 Bool_t TGLMatView::HandleConfigureNotify(Event_t *event)
