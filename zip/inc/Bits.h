@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.2 2003/09/15 08:48:13 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.3 2004/03/17 17:34:01 brun Exp $ */
 /* Author: */
 /*
 
@@ -263,8 +263,8 @@ void R__copy_block(char far *buf, unsigned len, int header)
 #endif
     }
     if (out_offset + len > out_size) {
-printf("out_offset=%d, len=%d, out_size=%d\n",out_offset,len,out_size);
         R__error("output buffer too small for in-memory compression");
+        if (verbose) fprintf(stderr, "R__zip: out_offset=%d, len=%d, out_size=%d\n",out_offset,len,out_size);
     } else {
         memcpy(out_buf + out_offset, buf, len);
         out_offset += len;
@@ -421,7 +421,7 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
   err = deflateInit(&stream, cxlevel);
   if (err != Z_OK) {
      printf("error in deflateInit (zlib)\n");
-     return; 
+     return;
   }
 
   err = deflate(&stream, Z_FINISH);
@@ -436,13 +436,13 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
   tgt[0] = 'Z';               /* Signature ZLib */
   tgt[1] = 'L';
   tgt[2] = (char) method;
- 
+
   in_size   = (unsigned) (*srcsize);
   out_size  = stream.total_out;             /* compressed size */
   tgt[3] = (char)(out_size & 0xff);
   tgt[4] = (char)((out_size >> 8) & 0xff);
   tgt[5] = (char)((out_size >> 16) & 0xff);
- 
+
   tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
   tgt[7] = (char)((in_size >> 8) & 0xff);
   tgt[8] = (char)((in_size >> 16) & 0xff);
