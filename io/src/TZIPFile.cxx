@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.2 2004/07/08 00:19:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.3 2004/07/19 09:42:41 rdm Exp $
 // Author: Fons Rademakers and Lassi Tuura  30/6/04
 
 /*************************************************************************
@@ -356,10 +356,9 @@ Int_t TZIPFile::SetCurrentMember()
 
    if (fMemberIndex > -1) {
       fCurMember = (TZIPMember *) fMembers->At(fMemberIndex);
-      if (fCurMember)
-         fMemberName = fCurMember->GetName();
-      else
+      if (!fCurMember)
          return -1;
+      fMemberName = fCurMember->GetName();
    } else {
       for (int i = 0; i < fMembers->GetEntriesFast(); i++) {
          TZIPMember *m = (TZIPMember *) fMembers->At(i);

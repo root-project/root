@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TZIPFile.h,v 1.1 2004/07/07 23:25:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TZIPFile.h,v 1.2 2004/07/08 09:12:59 brun Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************
@@ -54,7 +54,7 @@ protected:
 
    // ZIP archive constants
    enum EZIPConstants {
-     // - Archive version required (and made)
+      // - Archive version required (and made)
       kARCHIVE_VERSION     = 20,
 
       // - Magic header constants
