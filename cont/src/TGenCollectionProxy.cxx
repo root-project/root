@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.16 2005/03/10 22:26:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.17 2005/03/19 07:26:33 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -291,7 +291,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)  {
                 fKind = (EDataType)kBOOL_t;
              }
              fSize = ti.Size();
-             Assert(fKind>0 && fKind<0x16);
+             Assert(fKind>0 && fKind<0x16 || (fKind==-1&&(P&G__BIT_ISPOINTER)) );
           }
           else if ( P&G__BIT_ISENUM ) {
              fSize = sizeof(int);
