@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.10 2004/08/03 16:01:19 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.11 2005/03/09 18:19:27 brun Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -37,6 +37,8 @@
 #include "TBuffer3DTypes.h"
 
 #include "HelpText.h"
+
+#include <assert.h>
 
 const char gHelpX3DViewer[] = "\
      PRESS \n\
