@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.9 2002/06/14 10:29:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.10 2002/06/16 01:40:36 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -180,8 +180,8 @@ Int_t TDSet::Process(const char *selector, Long64_t nentries,
    if (TClassTable::GetDict("TProof")) {
       if (gROOT->ProcessLineFast("TProof::IsActive()")) {
          return (Int_t) gROOT->ProcessLineFast(
-            Form("TProof::This()->Process((TDSet *)0x%lx, \"%s\", %ld, %ld, (TEventList *)0x%lx);",
-            (Long_t)this, selector, nentries, first, (Long_t)evl));
+            Form("TProof::This()->Process((TDSet *)0x%lx, (const char*) 0x%lx, %ld, %ld, (TEventList *)0x%lx);",
+            (Long_t)this, (Long_t)selector, nentries, first, (Long_t)evl));
       } else {
          Error("Process", "no active PROOF session");
          return -1;
