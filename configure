@@ -649,7 +649,7 @@ fi
 # Check for posix thread library
 #
 case $platform in
-linux|linuxdeb|linuxicc|linuxecc)
+linux|linuxdeb|linuxicc|linuxia64*)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
     fi
