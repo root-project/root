@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.71 2002/05/30 23:00:33 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.72 2002/06/04 07:29:13 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -536,8 +536,11 @@ void ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl
    char tiName[512],tiFullname[512],objType[512]; 
    strcpy(tiName,ti.Name());
    strcpy(objType,ShortTypeName(tiName));
-   strcpy(tiFullname,ti.Fullname());
-   int isTObj = (ti.IsBase("TObject") || !strcmp(ti.Fullname(), "TObject"));
+   if(ti.Fullname())
+     strcpy(tiFullname,ti.Fullname());
+   else
+     tiFullname[0] = 0;
+   int isTObj = (ti.IsBase("TObject") || !strcmp(tiFullname, "TObject"));
    int isStre = (ti.HasMethod("Streamer"));
 
    long kase = P & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM); 
