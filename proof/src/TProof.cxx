@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.22 2002/04/19 18:24:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.23 2002/06/14 10:29:06 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1215,8 +1215,6 @@ Int_t TProof::Process(TDSet *set, const char *selector, Long64_t nentries,
 
    if (!fPlayer)
       fPlayer = new TProofPlayerRemote(this);
-
-   fPlayer->GetOutputList()->Delete();
 
    return fPlayer->Process(set, selector, nentries, first, evl);
 }
