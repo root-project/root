@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.9 2000/12/07 07:25:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.10 2001/01/22 09:43:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ const char *gRootName;
 const char *gProgPath;
 
 TSystem  *gSystem;
-TSysEvtHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
+TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
 
 ClassImp(TProcessEventTimer)
 

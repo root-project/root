@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.5 2001/01/22 09:43:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.6 2001/01/23 19:01:54 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -315,6 +315,6 @@ public:
 };
 
 R__EXTERN TSystem *gSystem;
-R__EXTERN TSysEvtHandler *gXDisplay;   // Display server (X11) input event handler
+R__EXTERN TFileHandler *gXDisplay;  // Display server (X11) input event handler
 
 #endif
