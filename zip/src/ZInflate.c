@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.10 2004/03/17 17:34:01 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.1 2004/03/17 19:10:20 brun Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -578,16 +578,13 @@ int R__huft_build(unsigned *b, unsigned n, unsigned s, ush *d, ush *e, struct hu
       r.b = (uch)(k - w);
       if (p >= v + n)
         r.e = 99;               /* out of values--invalid code */
-      else if (*p < s)
-      {
+      else if (*p < s) {
         r.e = (uch)(*p < 256 ? 16 : 15);    /* 256 is end-of-block code */
         r.v.n = *p++;           /* simple code is just the value */
-      }
-      else
-      {
+      } else if(e && d) {
         r.e = (uch)e[*p - s];   /* non-simple--look up in lists */
         r.v.n = d[*p++ - s];
-      }
+      } else return 1;
 
       /* fill code-like entries with r */
       f = 1 << (k - w);
