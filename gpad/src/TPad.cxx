@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.112 2003/09/12 07:45:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.113 2003/09/23 12:20:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -148,6 +148,7 @@ TPad::TPad(): TVirtualPad()
    fCrosshair  = 0;
    fCrosshairPos = 0;
    fPadView3D  = 0;
+   fMother     = (TPad*)gPad;
 
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
