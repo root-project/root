@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.112 2002/02/08 22:03:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.113 2002/02/10 10:13:15 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1282,7 +1282,7 @@ TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
    if (!cl) return 0;
    cl->BuildRealData(pointer);
    TStreamerInfo *sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
-   sinfo->ForceWriteInfo();
+   if(fDirectory) sinfo->ForceWriteInfo(fDirectory->GetFile());
 
    // Create StreamerInfo for all base classes
    TBaseClass *base;
@@ -1823,9 +1823,6 @@ Int_t TTree::Fill()
    Int_t nbytes = 0;
    Int_t nb = fBranches.GetEntriesFast();
    TBranch *branch;
-
-   if (fDirectory) TStreamerInfo::SetCurrentFile(fDirectory->GetFile());
-   else            TStreamerInfo::SetCurrentFile(0);
 
     //case of one single super branch. Automatically update
     // all the branch addresses if a new object was created
