@@ -1,5 +1,9 @@
 all: tests
-test: tests
+
+test: tests ;
+
+# The previous line contains just ';' in order to disable the implicit 
+# rule building an executable 'test' from test.C
 
 # The user directory should define
 # SUBDIRS listing any activated subdirectory
@@ -131,10 +135,10 @@ MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
 endif
 
 %.o: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log
 
 %.o: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log
 
 %.obj: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
@@ -143,19 +147,19 @@ endif
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
 
 %_cpp.$(DllSuf) : %.cpp
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_cpp.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_cpp.build.log
 
 %_C.$(DllSuf) : %.C
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_C.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_C.build.log
 
 %_cxx.$(DllSuf) : %.cxx
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_cxx.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_cxx.build.log
 
 %.log : run%.C
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
 define WarnFailTest
-	@echo Warning $@ has some known skipped failures "(in ./$(CURDIR))"
+	$(CMDECHO)echo Warning $@ has some known skipped failures "(in ./$(CURDIR))"
 endef
 
 define TestDiff
