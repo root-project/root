@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.60 2001/08/24 16:45:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.61 2001/09/25 07:58:15 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -644,8 +644,8 @@ const char *TBranchElement::GetTypeName() const
       return "Int_t";
    }
    if (fStreamerType <=0 || fStreamerType >= 60) return fClassName.Data();
-   const char *types[15] = {"","Char_t","Short_t","Int_t","Long_t","Float_t",
-      "Int_t","","Double_t","","","UChar_t","UShort_t","UInt_t","ULong_t"};
+   const char *types[16] = {"","Char_t","Short_t","Int_t","Long_t","Float_t",
+      "Int_t","","Double_t","","","UChar_t","UShort_t","UInt_t","ULong_t","UInt_t"};
    Int_t itype = fStreamerType%20;
    return types[itype];
 }
@@ -805,6 +805,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
           case 12:  {b.ReadFastArray((UShort_t*)fAddress, n); break;}
           case 13:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
           case 14:  {b.ReadFastArray((ULong_t*) fAddress, n); break;}
+          case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
        }
        return;
      } else if (fType <= 2) {     // branch in split mode
@@ -826,6 +827,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
              case 12:  {b.ReadFastArray((UShort_t*)fAddress, n); break;}
              case 13:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
              case 14:  {b.ReadFastArray((ULong_t*) fAddress, n); break;}
+             case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
           }
        } else {
           fNdata = 1;
@@ -1159,7 +1161,6 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
                fBranches.Add(branch);
             }
          } else {
-//printf("Making branch: %s, jd=%d, info=%s\n",branchname,jd,info->GetName());
             branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
             branch->SetParentName(cltop->GetName());
             branch->SetType(btype);
