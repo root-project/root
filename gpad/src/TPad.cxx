@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.161 2005/02/11 10:38:23 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.162 2005/02/14 15:07:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2829,7 +2829,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
                gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
             }
 
-            if (style > 3100) {
+            if (style >= 3100 && style < 4000) {
                Double_t xb[4], yb[4];
                xb[0] = x1; xb[1] = x1; xb[2] = x2; xb[3] = x2;
                yb[0] = y1; yb[1] = y2; yb[2] = y2; yb[3] = y1;
@@ -2876,7 +2876,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       if (option[0] == 's') {
          gVirtualPS->SetFillStyle(0);
       } else {
-         if (style0 > 3100) {
+         if (style0 >= 3100 && style0 < 4000) {
             Double_t xb[4], yb[4];
             xb[0] = x1; xb[1] = x1; xb[2] = x2; xb[3] = x2;
             yb[0] = y1; yb[1] = y2; yb[2] = y2; yb[3] = y1;
