@@ -37,6 +37,7 @@ void G__TypedefInfo::Init()
 ///////////////////////////////////////////////////////////////////////////
 void G__TypedefInfo::Init(const char *typenamein)
 {
+  char store_var_type = G__var_type;
   typenum = G__defined_typename(typenamein);
   if(-1!=typenum&&typenum<G__newtype.alltype) {
     tagnum = G__newtype.tagnum[typenum];
@@ -50,6 +51,7 @@ void G__TypedefInfo::Init(const char *typenamein)
     typenum= -1;
     isconst= 0;
   }
+  G__var_type = store_var_type;
 }
 ///////////////////////////////////////////////////////////////////////////
 void G__TypedefInfo::Init(int typenumin)
