@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.9 2002/09/30 17:31:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.10 2002/10/02 12:33:28 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -14,6 +14,19 @@
 // TRegexp                                                              //
 //                                                                      //
 // Regular expression class.                                            //
+//                                                                      //
+//   '^'             // start-of-line anchor                            //
+//   '$'             // end-of-line anchor                              //
+//   '.'             // matches any character                           //
+//   '['             // start a character class                         //
+//   ']'             // end a character class                           //
+//   '^'             // negates character class if 1st character        //
+//   '*'             // Kleene closure (matches 0 or more)              // 
+//   '+'             // Positive closure (1 or more)                    //
+//   '?'             // Optional closure (0 or 1)                       //
+//                                                                      //
+//   Standard classes like [:alnum:], [:alpha:], etc. are not supported,// 
+//   only [a-zA-Z], [^ntf] and so on.                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
