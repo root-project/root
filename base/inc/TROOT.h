@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.8 2000/11/21 12:23:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.9 2000/11/21 16:19:34 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -174,6 +174,7 @@ public:
    Bool_t            IsFolder() const {return kTRUE;}
    Bool_t            IsInterrupted() const { return fInterrupt; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing; }
+   Bool_t            IsProofServ() const { return fName == "Proofserv" ? kTRUE : kFALSE; }
    void              ls(Option_t *option="");
    Int_t             LoadClass(const char *classname, const char *libname);
    void              LoadMacro(const char *filename);
