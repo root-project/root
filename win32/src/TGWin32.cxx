@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.2 2001/05/29 06:57:42 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.3 2001/06/29 06:40:29 brun Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -654,9 +654,8 @@ void TGWin32::GetPlanes(Int_t &nplanes){
 //*-*                    ============================
 //*-*  nplanes     : number of bit planes
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   HDC  hDCGlobal= CreateCompatibleDC(NULL);
-
-   nplanes  = GetDeviceCaps(hDCGlobal,PLANES);
+   HDC  hDCGlobal= CreateDC("DISPLAY",NULL,NULL,NULL);
+   nplanes  = GetDeviceCaps(hDCGlobal,COLORRES);
    ReleaseDC(NULL,hDCGlobal);
 }
 
