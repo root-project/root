@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.3 2000/11/22 12:16:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.4 2000/11/22 15:47:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -207,7 +207,6 @@ public:
    virtual       ~TStreamerObjectPointer();
    TClass        *GetClass() {return fClassObject;}
    const char    *GetInclude() const;
-   ULong_t        GetMethod() {return (ULong_t)fClassObject;}
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() {return kTRUE;}
    
