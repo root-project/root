@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.43 2001/04/18 12:31:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.44 2001/04/20 17:56:51 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1573,6 +1573,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          fprintf(fp,"%s%-15s *%s;\n",head,leafobj->GetTypeName(), leafobj->GetName());
          continue;
       }
+      if (strlen(leaf->GetTypeName()) == 0) continue;
       if (leafcount) {
          len = leafcount->GetMaximum();
          strcpy(blen,leafcount->GetName());
@@ -1623,6 +1624,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+      if (strlen(leaf->GetTypeName()) == 0) continue;
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
       bname = branchname;
@@ -1749,10 +1751,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"   if (tree == 0) return;\n");
    fprintf(fp,"   fChain    = tree;\n");
    if (!opt.Contains("selector")) fprintf(fp,"   fCurrent = -1;\n");
+   fprintf(fp,"   fChain->SetMakeClass(1);\n");
    fprintf(fp,"\n");
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+      if (strlen(leaf->GetTypeName()) == 0) continue;
       len = leaf->GetLen();
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
@@ -1820,6 +1824,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+      if (strlen(leaf->GetTypeName()) == 0) continue;
       len = leaf->GetLen();
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
