@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.5 2002/07/31 21:59:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.6 2002/08/05 09:18:58 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
    enum {
       kNoHidden     = BIT(9)   // don't show '.' files and directories
    };
-     
+
    TBrowser(const char *name="Browser", const char *title="ROOT Object Browser");
    TBrowser(const char *name, const char *title, UInt_t width, UInt_t height);
    TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -65,6 +65,7 @@ public:
    void          Add(TObject *obj, const char *name = 0);
    virtual void  Create(TObject *obj = 0);      // Create this Browser
    void          ExecuteDefaultAction(TObject *obj);
+   void          DetachBrowserImp()            { fImp = 0; }
    TBrowserImp  *GetBrowserImp() const         { return fImp; }
    TContextMenu *GetContextMenu() const        { return fContextMenu; }
    Bool_t        GetRefreshFlag() const        { return fNeedRefresh; }
