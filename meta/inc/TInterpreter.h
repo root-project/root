@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.7 2001/12/21 09:37:25 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.8 2002/02/23 16:04:54 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -65,6 +65,7 @@ public:
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
    virtual void     EndOfLineAction() = 0;
+   virtual Int_t    GetExitCode() const = 0;
    virtual Int_t    GetMore() const = 0;
    virtual char    *GetPrompt() = 0;
    virtual const char *GetSharedLibs() = 0;

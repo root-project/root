@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.7 2001/12/19 07:15:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.8 2001/12/21 09:37:25 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -49,6 +49,7 @@ class TCint : public TInterpreter {
 
 private:
    Int_t           fMore;           //1 if more input is required
+   Int_t           fExitCode;       //value passed to exit() in interpreter
    char            fPrompt[64];     //proposed prompt string
    G__dictposition fDictPos;        //CINT dictionary context after init
    G__dictposition fDictPosGlobals; //CINT dictionary context after ResetGlobals()
@@ -69,6 +70,7 @@ public:
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
    void    EndOfLineAction();
+   Int_t   GetExitCode() const { return fExitCode; }
    Int_t   GetMore() const { return fMore; }
    char   *GetPrompt() { return fPrompt; }
    const char *GetSharedLibs();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.25 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.26 2002/02/23 16:04:54 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -633,7 +633,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
 out:
    if (error == TInterpreter::kExit) {
       gInterpreter->ResetGlobals();
-      Terminate(0);
+      Terminate(gInterpreter->GetExitCode());
    }
    if (err)
       *err = error;
