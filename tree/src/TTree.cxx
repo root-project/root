@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.189 2004/05/29 20:36:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.190 2004/06/04 08:35:37 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3239,6 +3239,8 @@ TTree *TTree::MergeTrees(TList *list)
       if (!newtree) {
          newtree = (TTree*)tree->CloneTree();
          continue;
+      } else {
+         tree->CopyAddresses(newtree);
       }
       Int_t nentries = (Int_t)tree->GetEntries();
       for (Int_t i=0;i<nentries;i++) {
