@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.12 2002/01/04 08:48:18 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.13 2002/01/23 15:48:05 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -488,7 +488,7 @@ void CurrentPiece::Erase()
 //  Game  board
 ///////////////////////////////////////////////////////////////////
 TetrisBoard::TetrisBoard(Float_t xlow, Float_t ylow,Float_t xup,Float_t yup) :
-   TPad("tetris_board","Tetris Board",xlow,ylow,xup,yup,11,4,-1)
+   TPad("tetris_board","Tetris Board",xlow,ylow,xup,yup,17,4,-1)
 {
    // Game board constructor.
 
@@ -693,8 +693,8 @@ PauseButton::PauseButton(Float_t xlow, Float_t ylow, Float_t xup, Float_t yup) :
    // Pause button constructor
 
    SetBorderSize(5);     //  decoration stuff....
-   SetTextSize(0.3);
-   SetFillColor(36);
+   SetTextSize(0.45);
+   SetFillColor(42);
 }
 
 void PauseButton::ExecuteEvent(Int_t event, Int_t, Int_t)
@@ -718,8 +718,8 @@ QuitButton::QuitButton(Float_t xlow, Float_t ylow, Float_t xup, Float_t yup) :
    // Quit button constructor
 
    SetBorderSize(5);   //  decoration stuff....
-   SetTextSize(0.3);
-   SetFillColor(36);
+   SetTextSize(0.45);
+   SetFillColor(42);
 }
 
 void QuitButton::ExecuteEvent(Int_t event, Int_t, Int_t)
@@ -740,8 +740,8 @@ NewGameButton::NewGameButton(Float_t xlow, Float_t ylow, Float_t xup, Float_t yu
    // New game button constructor
 
    SetBorderSize(5);
-   SetTextSize(0.3);
-   SetFillColor(36);
+   SetTextSize(0.45);
+   SetFillColor(42);
 }
 
 void NewGameButton::ExecuteEvent(Int_t event, Int_t, Int_t)
@@ -759,18 +759,18 @@ void NewGameButton::ExecuteEvent(Int_t event, Int_t, Int_t)
 //  InfoPad -
 ///////////////////////////////////////////////////////////////////
 InfoPad::InfoPad(const char* title, Float_t xlow, Float_t ylow, Float_t xup, Float_t yup)
-   : TPad("info_pad",title,xlow,ylow,xup,yup,14,4,-1), TAttText(22,0,2,71,0.65)
+   : TPad("info_pad",title,xlow,ylow,xup,yup,17,4,-1), TAttText(22,0,2,71,0.65)
 {
    // InfoPad constructor
 
    SetBit(kCanDelete);
 
    TText *text = new TText(xlow,yup,title);   // draw title of the information pad
-   text->SetTextSize(0.3*(yup-ylow));
+   text->SetTextSize(0.45*(yup-ylow));
    text->SetY(yup+0.2*text->GetTextSize());
    fMother->GetListOfPrimitives()->Add(text);
 
-   text = new TText(0.5,0.5,"0");          // this tex used to display fValue
+   text = new TText(0.5,0.5,"0");          // this text used to display fValue
    GetListOfPrimitives()->Add(text);
 
    fValue = 0;
@@ -783,9 +783,6 @@ void InfoPad::PaintModified()
    // Actions after pad was modified (resize event, user's Modified(kTRUE) ...)
 
    char    str[40];
-   UInt_t  w, h;
-
-   Float_t wW = XtoPixel(GetX2());    //  X size in pixels of the pad
 
    sprintf(str,"%d",fValue);
 
@@ -800,12 +797,9 @@ void InfoPad::PaintModified()
       text->SetTextAlign(GetTextAlign());
       text->SetTextColor(GetTextColor());
       text->SetTextAngle(GetTextAngle());
-      //TAttText::Modify();
+      text->TAttText::Modify();
 
-      // get text width and height (in pixels)
-      gVirtualX->GetTextExtent(w,h,(char*)text->GetTitle());
-      float x = 1-w/wW/2- 2*GetBorderSize()/wW;
-      text->SetX(x);        // draw right  side aligned
+      text->SetX(0.5);        // draw centered
       text->SetY(0.5);
    }
    TPad::PaintModified();
@@ -945,7 +939,7 @@ Tetris::Tetris() :
    fPause->Draw();
 
    fPiecesDropped = 0;
-   SetFillColor(31);
+   SetFillColor(21);
 
    fKeyHandler = new KeyHandler();
    fUpdateLevelTimer = new UpdateLevelTimer(60000);  // every  minute
