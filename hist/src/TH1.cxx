@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.159 2003/11/05 14:05:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.160 2003/11/07 08:59:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2046,7 +2046,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //   -  because the FCN is already multiplied by 2 in H1FitLikelihood
 //   -  if Hoption.User is specified, assume that the user has already set
 //   -  his minimization function via SetFCN.
-   arglist[0] = 1;
+   arglist[0] = TVirtualFitter::GetErrorDef();
    if (Foption.Like) {
       hFitter->SetFitMethod("H1FitLikelihood");
    } else {
@@ -2066,7 +2066,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       }
       we = 0.1*TMath::Abs(bl-al);
       if (we == 0) we = 0.3*TMath::Abs(par);
-//      if (we == 0) we = 1000*TMath::Abs(par);
       if (we == 0) we = binwidx;
       hFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
    }
