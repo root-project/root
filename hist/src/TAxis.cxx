@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.48 2003/09/12 09:18:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.49 2003/09/23 14:56:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -594,8 +594,8 @@ void TAxis::GetLowEdge(Axis_t *edge) const
 //______________________________________________________________________________
 const char *TAxis::GetTimeFormatOnly() const
 {
-   // Return *only* the time format dorm the string fTimeFormat
-   TString timeformat;
+   // Return *only* the time format from the string fTimeFormat
+   static TString timeformat;
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) {
       timeformat = fTimeFormat(0,IdF);
