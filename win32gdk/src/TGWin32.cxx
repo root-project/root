@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.67 2004/05/30 15:42:01 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.68 2004/06/09 16:19:40 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -6095,6 +6095,9 @@ void TGWin32::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
    MapEventMask(evmask, xevmask);
 
    if (grab) {
+      WindowAttributes_t wa;
+      GetWindowAttributes(id, wa);
+      if (wa.fMapState == kIsUnmapped) return;
       gdk_pointer_grab((GdkWindow *) id, owner_events, (GdkEventMask) xevmask,
                        (GdkWindow *) confine, (GdkCursor *) cursor,
                        GDK_CURRENT_TIME);
