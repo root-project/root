@@ -95,7 +95,6 @@ public:
    ClassDef(EventHeader,1)  //Event Header
 };
 
-typedef EventHeader Header;
 
 class Event : public TObject {
 
@@ -110,7 +109,7 @@ private:
    Int_t          fMeasures[10];
    Double32_t     fMatrix[4][4];
    Double32_t    *fClosestDistance;   //[fNvertex]
-   Header    fEvtHdr;
+   EventHeader    fEvtHdr;
    TClonesArray  *fTracks;            //->array with all tracks
    TRefArray     *fHighPt;            //array of High Pt tracks only
    TRefArray     *fMuons;             //array of Muon tracks only
@@ -148,7 +147,7 @@ public:
    Int_t         GetNvertex() const { return fNvertex; }
    UInt_t        GetFlag() const { return fFlag; }
    Double32_t    GetTemperature() const { return fTemperature; }
-   Header  *GetHeader() { return &fEvtHdr; }
+   EventHeader  *GetHeader() { return &fEvtHdr; }
    TClonesArray *GetTracks() const {return fTracks;}
    TRefArray    *GetHighPt() const {return fHighPt;}
    TRefArray    *GetMuons()  const {return fMuons;}

@@ -32,6 +32,8 @@ extern void G__set_cpp_environmentRtObjDict();
 #endif
 
 extern G__linked_taginfo G__RtObjDictLN_TClass;
+extern G__linked_taginfo G__RtObjDictLN_TBuffer;
+extern G__linked_taginfo G__RtObjDictLN_TMemberInspector;
 extern G__linked_taginfo G__RtObjDictLN_TObject;
 extern G__linked_taginfo G__RtObjDictLN_TNamed;
 extern G__linked_taginfo G__RtObjDictLN_RtObjlETNamedgR;

@@ -32,6 +32,8 @@ extern void G__set_cpp_environmentFooDict();
 #endif
 
 extern G__linked_taginfo G__FooDictLN_TClass;
+extern G__linked_taginfo G__FooDictLN_TBuffer;
+extern G__linked_taginfo G__FooDictLN_TMemberInspector;
 extern G__linked_taginfo G__FooDictLN_TObject;
 extern G__linked_taginfo G__FooDictLN_Foo;
 
