@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.12 2001/02/13 22:29:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.13 2001/02/26 02:46:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1389,7 +1389,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   cerr << "Creating shared library " << library << endl;
 
   // ======= Select the dictionary name
-  TString dict = BaseName( tmpnam(0) );
+  TString dict =BaseName( tmpnam(0) );
   // do a basename to remove /var/tmp
 
   // the file name end up in the file produced
@@ -1433,7 +1433,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
   for ( int i = 0; i < 6; i++ ) {
     char * name;
-    TString lookup = filename_noext;
+    TString lookup = BaseName( filename_noext );
     lookup.Append(extensions[i]);
     name = Which(incPath,lookup);
     if (name) {
@@ -1442,26 +1442,42 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     }
   }
   linkdefFile << "#pragma link C++ defined_in "<<filename_fullpath << ";" << endl;
-
   linkdefFile << endl;
   linkdefFile << "#endif" << endl;
   linkdefFile.close();
 
   // ======= Generate the three command lines
 
+  TString includes = GetIncludePath();
+  {
+    // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
+    TRegexp rel_inc("-I[^/\\$-][^:-]+");
+    Int_t len,pos;
+    pos = rel_inc.Index(includes,&len);
+    while( len != 0 ) {
+      TString sub = includes(pos,len);
+      sub.Remove(0,2);
+      sub = ConcatFileName( WorkingDirectory(), sub );
+      sub.Prepend("-I");
+      sub.Append(" ");
+      includes.Replace(pos,len,sub);
+      pos = rel_inc.Index(includes,&len);
+    } 
+  }
+  includes += " -I" + build_loc;
+  includes += " -I";
+  includes += WorkingDirectory();
+
   TString rcint = "rootcint -f ";
   rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
   rcint.Append(filename_fullpath).Append(" ").Append(linkdef);
 
   TString cmd = fMakeSharedLib;
-  // Replace(cmd,filename,library);
-  // NOTE: may want to add code to allow for \$SourceFiles to not be
-  //       interpreted
-  // we do not add filename because it is already include in dicth !
+  // we do not add filename because it is already included via the dictionary(in dicth) !
   // dict.Append(" ").Append(filename);
   cmd.ReplaceAll("$SourceFiles",dict);
   cmd.ReplaceAll("$ObjectFiles",dictObj);
-  cmd.ReplaceAll("$IncludePath",TString(GetIncludePath()) + " -I" + build_loc);
+  cmd.ReplaceAll("$IncludePath",includes);
   cmd.ReplaceAll("$SharedLib",library);
   cmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
   cmd.ReplaceAll("$LibName",libname);
@@ -1486,7 +1502,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   TString exec = tmpnam(0);
   testcmd.ReplaceAll("$SourceFiles",dict);
   testcmd.ReplaceAll("$ObjectFiles",dictObj);
-  testcmd.ReplaceAll("$IncludePath",GetIncludePath());
+  testcmd.ReplaceAll("$IncludePath",includes);
   testcmd.ReplaceAll("$ExeName",exec);
   testcmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
   testcmd.ReplaceAll("$BuildDir",build_loc);
@@ -1680,7 +1696,7 @@ void TSystem::SetSoExt(const char *SoExt)
 {
    // Set shared library extension, should be either .so, .sl, .a, .dll, etc.
 
-   fSoExt = SoExt;
+   fSoExt = SoExt; 
 }
 
 //______________________________________________________________________________
