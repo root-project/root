@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.6 2003/11/13 16:52:07 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.7 2003/11/13 23:31:24 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -190,7 +190,7 @@ public:
                                  Long64_t nentries = -1,
                                  Long64_t firstentry = 0,
                                  TEventList *evl = 0); // *MENU*
-   virtual void          Draw(const Option_t *) { /* TODO: proper fix */ }
+   virtual void          Draw(Option_t *) { /* TODO: proper fix */ }
    virtual Int_t         Draw(const char *varexp, const char *selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
