@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.5 2001/03/08 14:46:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.6 2001/06/22 16:10:16 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include "TClass.h"
 #include "Api.h"
 #include "G__ci.h"
-#include <iostream.h>
+#include "IOStream.h"
 
 
 ClassImpQ(TQConnection)

@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.22 2001/12/13 11:47:44 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.23 2002/01/21 14:01:29 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -16,8 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <fstream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
@@ -403,10 +403,10 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    Int_t iy1 = YtoPS(y1);
 
    Int_t WT = Int_t(0.5+(288/2.54)*gPad->GetAbsWNDC()*
-              fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1())));  
+              fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1())));
    Int_t HT = Int_t(0.5+(288/2.54)*gPad->GetAbsHNDC()*
-              fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1())));  
-   
+              fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1())));
+
    fLastCellRed     = 300;
    fLastCellGreen   = 300;
    fLastCellBlue    = 300;
@@ -1228,13 +1228,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.22 2001/12/13 11:47:44 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.23 2002/01/21 14:01:29 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.22 2001/12/13 11:47:44 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.23 2002/01/21 14:01:29 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1942,7 +1942,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.22 2001/12/13 11:47:44 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.23 2002/01/21 14:01:29 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from

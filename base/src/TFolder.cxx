@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.15 2002/01/04 10:20:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.16 2002/01/12 20:58:48 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -77,8 +77,7 @@
 */
 //End_Html
 
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "Strlen.h"
 #include "TFolder.h"
 #include "TBrowser.h"
@@ -102,7 +101,7 @@ TFolder::TFolder() : TNamed()
 //
 // This constructor should not be called by a user directly.
 // The normal way to create a folder is by calling TFolder::AddFolder
-   
+
    fFolders = 0;
    fIsOwner = kFALSE;
 }
@@ -255,7 +254,7 @@ TObject *TFolder::FindObject(const char *name) const
 // this folder.
 // name may be of the forms:
 //   A, specify a full pathname starting at the top ROOT folder
-//     //root/xxx/yyy/name 
+//     //root/xxx/yyy/name
 //
 //   B, specify a pathname starting with a single slash. //root is assumed
 //     /xxx/yyy/name
@@ -319,11 +318,11 @@ Bool_t TFolder::IsOwner()  const
 // folder ownership has been set via
 //   - TFolder::SetOwner
 //   - TCollection::SetOwner on the collection specified to TFolder::AddFolder
-   
+
    if (!fFolders) return kFALSE;
    return fFolders->IsOwner();
 }
-      
+
 //______________________________________________________________________________
 void TFolder::ls(Option_t *option) const
 {
@@ -429,4 +428,4 @@ void TFolder::SetOwner(Bool_t owner)
    if (!fFolders) fFolders = new TList();
    fFolders->SetOwner(owner);
 }
-   
+

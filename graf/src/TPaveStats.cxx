@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.2 2000/06/13 11:12:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.3 2000/11/21 20:27:15 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "IOStream.h"
 #include "TPaveStats.h"
 #include "TStyle.h"
 #include "TFile.h"
@@ -130,7 +130,7 @@ void TPaveStats::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TPaveStats::IsA());
       //====end of old versions
-      
+
    } else {
       TPaveStats::Class()->WriteBuffer(R__b,this);
    }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.6 2001/02/21 11:02:22 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -10,9 +10,8 @@
  *************************************************************************/
 
 #include <stdlib.h>
-#include <fstream.h>
-#include <iostream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TMarker.h"
@@ -278,7 +277,7 @@ void TMarker::Streamer(TBuffer &R__b)
       R__b >> x;  fX = x;
       R__b >> y;  fY = y;
       //====end of old versions
-      
+
    } else {
       TMarker::Class()->WriteBuffer(R__b,this);
    }

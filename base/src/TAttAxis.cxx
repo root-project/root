@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.2 2000/11/21 16:26:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.3 2002/01/16 15:30:54 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-
+#include "IOStream.h"
 #include "TFile.h"
 #include "TMath.h"
 #include "TAttAxis.h"
@@ -174,9 +173,9 @@ void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 //   Set the number of divisions for this axis
 //   if optim = kTRUE (default), the number of divisions will be
 //                      optimized around the specified value.
-//   if optim = kFALSE, or n < 0, the axis will be forced to use 
+//   if optim = kFALSE, or n < 0, the axis will be forced to use
 //                      exactly n divisions.
-   
+
 
    fNdivisions = n;
    if (!optim) fNdivisions = -TMath::Abs(n);
@@ -264,7 +263,7 @@ void TAttAxis::Streamer(TBuffer &R__b)
          R__b >> fTitleFont;
       }
       //====end of old versions
-      
+
    } else {
       TAttAxis::Class()->WriteBuffer(R__b,this);
    }

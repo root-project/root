@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.18 2001/12/18 15:43:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.19 2001/12/19 14:21:54 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -10,8 +10,8 @@
  *************************************************************************/
 
 #include <string.h>
-#include <fstream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TGraphErrors.h"
 #include "TStyle.h"
@@ -155,12 +155,12 @@ TGraphErrors::~TGraphErrors()
 }
 
 //______________________________________________________________________________
-void TGraphErrors::Apply(TF1 *f) 
+void TGraphErrors::Apply(TF1 *f)
 {
   // apply function to all the data points
   // y = f(x,y)
-  // 
-  // The error is calculated as ey=(f(x,y+ey)-f(x,y-ey))/2 
+  //
+  // The error is calculated as ey=(f(x,y+ey)-f(x,y-ey))/2
   // This is the same as error(fy) = df/dy * ey for small errors
   //
   // For generic functions the symmetric errors might become non-symmetric
@@ -177,7 +177,7 @@ void TGraphErrors::Apply(TF1 *f)
      ey=GetErrorY(i);
 
      SetPoint(i,x,f->Eval(x,y));
-     SetPointError(i,ex,TMath::Abs(f->Eval(x,y+ey) - f->Eval(x,y-ey))/2.);    
+     SetPointError(i,ex,TMath::Abs(f->Eval(x,y+ey) - f->Eval(x,y-ey))/2.);
   }
 }
 
@@ -191,8 +191,8 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
            else                xmin = fX[i]/3;
         } else {
           xmin = fX[i]-fEX[i];
-        } 
-     } 
+        }
+     }
      if (fX[i] +fEX[i] > xmax) xmax = fX[i]+fEX[i];
      if (fY[i] -fEY[i] < ymin) {
         if (gPad->GetLogy()) {
@@ -200,8 +200,8 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
            else                ymin = fY[i]/3;
         } else {
           ymin = fY[i]-fEY[i];
-        } 
-     } 
+        }
+     }
      if (fY[i] +fEY[i] > ymax) ymax = fY[i]+fEY[i];
   }
 }
@@ -232,9 +232,9 @@ Double_t TGraphErrors::GetErrorY(Int_t i) const
 Int_t TGraphErrors::InsertPoint()
 {
 // Insert a new point at the mouse position
-   
+
    Int_t ipoint = TGraph::InsertPoint();
-   
+
    Double_t *newEX = new Double_t[fNpoints];
    Double_t *newEY = new Double_t[fNpoints];
    Int_t i;
@@ -274,7 +274,7 @@ void TGraphErrors::Paint(Option_t *option)
    // if option "[]" is specified only the end vertical/horizonthal lines
    // of the error bars are drawn. This option is interesting to superimpose
    // systematic errors on top of a graph with statistical errors.
-     
+
    const Int_t BASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
@@ -295,14 +295,14 @@ void TGraphErrors::Paint(Option_t *option)
    if (strchr(option,'a')) axis = kTRUE;
    if (strchr(option,'A')) axis = kTRUE;
    if (axis) TGraph::Paint(option);
-      
+
    TAttLine::Modify();
 
    TArrow arrow;
    arrow.SetLineWidth(GetLineWidth());
    arrow.SetLineColor(GetLineColor());
    arrow.SetFillColor(GetFillColor());
-         
+
    symbolsize  = GetMarkerSize();
    sbase       = symbolsize*BASEMARKER*TMath::Max(gPad->GetWh(), gPad->GetWw())/600.;
    Int_t mark  = GetMarkerStyle();
@@ -342,7 +342,7 @@ void TGraphErrors::Paint(Option_t *option)
       }
       xr1 = x + s2x*cx;
       xr2 = gPad->XtoPad(fX[i] + ex);
-      if (xr1 < xr2) { 
+      if (xr1 < xr2) {
          if (arrowOpt) {
             arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
@@ -394,7 +394,7 @@ void TGraphErrors::Print(Option_t *) const
 Int_t TGraphErrors::RemovePoint()
 {
 // Delete point close to the mouse position
-   
+
    Int_t ipoint = TGraph::RemovePoint();
    if (ipoint < 0) return ipoint;
 
@@ -446,7 +446,7 @@ void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
       obj->SavePrimitive(out,"nodraw");
       out<<"   gre->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
    }
-   
+
    if (strstr(option,"multigraph")) {
       out<<"   multigraph->Add(gre);"<<endl;
       return;
@@ -459,9 +459,9 @@ void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
 void TGraphErrors::Set(Int_t n)
 {
 // Set number of points in the graph
-// Existing coordinates are preserved 
+// Existing coordinates are preserved
 // New coordinates and errors above fNpoints are preset to 0.
-   
+
    if (n < 0) n = 0;
    if (n == fNpoints) return;
    Double_t *x=0, *y=0, *ex=0, *ey=0;
@@ -547,7 +547,7 @@ void TGraphErrors::SetPointError(Double_t ex, Double_t ey)
       if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
    }
    if (ipoint == -2) return;
-   
+
    fEX[ipoint] = ex;
    fEY[ipoint] = ey;
    gPad->Modified();
@@ -601,7 +601,7 @@ void TGraphErrors::Streamer(TBuffer &b)
       }
       b.CheckByteCount(R__s, R__c, TGraphErrors::IsA());
       //====end of old versions
-      
+
    } else {
       TGraphErrors::Class()->WriteBuffer(b,this);
    }

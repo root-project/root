@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.2 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.3 2002/01/08 09:42:09 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -29,8 +29,7 @@
 #include "TSystem.h"
 #include "TObjString.h"
 #include "TFile.h"
-
-#include <fstream.h>
+#include "IOStream.h"
 
 const Int_t kIsClassTree = BIT(7);
 const Int_t kUsedByData  = BIT(11);
@@ -244,7 +243,7 @@ TClassTree::~TClassTree()
 //*-*                =============================
 
    for (Int_t i=0;i<fNclasses;i++) {
-      //delete fOptions[i]; 
+      //delete fOptions[i];
       if (fLinks[i]) fLinks[i]->Delete();
       //delete fLinks[i];
       //if (fDerived[i]) {delete [] fDerived[i]; fDerived[i] = 0;}

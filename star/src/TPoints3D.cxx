@@ -1,7 +1,7 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.2 2000/09/05 09:21:24 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.3 2000/12/13 15:13:54 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
-// $Id: TPoints3D.cxx,v 1.2 2000/09/05 09:21:24 brun Exp $
+// $Id: TPoints3D.cxx,v 1.3 2000/12/13 15:13:54 brun Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -21,9 +21,7 @@
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
 
-#include <fstream.h>
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TPoints3D.h"

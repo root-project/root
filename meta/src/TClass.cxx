@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.63 2001/12/18 08:48:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.64 2002/01/16 21:13:38 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -24,8 +24,7 @@
 
 //*-*x7.5 macros/layout_class
 
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TClass.h"
@@ -928,9 +927,9 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    // loop over all methods in this class (and its baseclasses) till
    // we find a TMethod with the same faddr
 
-   
+
    TMethod *m;
-   
+
    if (faddr == (Long_t)G__exec_bytecode) {
       // the method is actually interpreted, its address is
       // not a discriminant (it always point to the same
@@ -1012,7 +1011,7 @@ TMethod *TClass::GetClassMethod(Long_t faddr)
 TMethod *TClass::GetClassMethod(const char *name, const char* params)
 {
    // Look for a method in this class that has the name and
-   // signature 
+   // signature
 
    if (!fClassInfo) return 0;
 
@@ -1029,7 +1028,7 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
    TIter    next(GetListOfMethods());
    while ((m = (TMethod *) next())) {
      if (!strcmp(name,m->GetName())
-         &&!strcmp(request.GetSignature(),m->GetSignature())) 
+         &&!strcmp(request.GetSignature(),m->GetSignature()))
        return m;
    }
    return 0;
@@ -1342,18 +1341,18 @@ Bool_t TClass::IsCallingNew()
 Bool_t TClass::IsLoaded() const
 {
    // Return true if the shared library of this class is currently in the a
-   // process's memory.  Return false, after the shared library has been 
+   // process's memory.  Return false, after the shared library has been
    // unloaded or if this is a 'fake' class created from a file's StreamerInfo.
 
    return (GetImplFileLine()>=0 && !TestBit(kUnloaded));
 }
 
 //______________________________________________________________________________
-void TClass::SetUnloaded() 
+void TClass::SetUnloaded()
 {
-   // Call this method to indicate that the shared library containing this 
+   // Call this method to indicate that the shared library containing this
    // class's code has been removed (unloaded) from the process's memory
-  
+
    gInterpreter->SetClassInfo(this,kTRUE);
    SetBit(kUnloaded);
 }

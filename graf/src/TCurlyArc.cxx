@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.2 2000/06/13 10:47:27 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 //End_Html
 //________________________________________________________________________
 
-#include "iostream.h"
+#include "IOStream.h"
 #include "TCurlyArc.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"

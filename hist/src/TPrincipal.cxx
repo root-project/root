@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.18 2001/11/29 08:27:39 brun Exp $
-// $Date: 2001/11/29 08:27:39 $
+// $Id: TPrincipal.cxx,v 1.19 2002/01/04 08:07:38 brun Exp $
+// $Date: 2002/01/04 08:07:38 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -670,10 +670,7 @@ in the transformed space.
 #include "TDatime.h"
 #include "TBrowser.h"
 #include "TROOT.h"
-
-#include <fstream.h>
-#include <iostream.h>
-#include <iomanip.h>
+#include "IOStream.h"
 
 
 ClassImp(TPrincipal);
@@ -693,7 +690,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
     fCovarianceMatrix(nVariables,nVariables),
     fEigenVectors(nVariables,nVariables),
     fEigenValues(nVariables),
-    fOffDiagonal(nVariables), 
+    fOffDiagonal(nVariables),
     fStoreData(kFALSE)
 {
   // Ctor. Argument is number of variables in the sample of data
@@ -715,8 +712,8 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
   fNumberOfVariables  = nVariables;
   while (strlen(opt) > 0) {
     switch(*opt++) {
-    case 'N': 
-    case 'n': 
+    case 'N':
+    case 'n':
       fIsNormalised = kTRUE;
       break;
     case 'D':
@@ -918,8 +915,8 @@ With <IMG
   // Store data point in internal vector
   // If the vector isn't big enough to hold the new data, then
   // expand the vector by half it's size.
-  if (!fStoreData) 
-    return; 
+  if (!fStoreData)
+    return;
   Int_t size = fUserData.GetNrows();
   if (fNumberOfDataPoints * fNumberOfVariables > size)
     fUserData.ResizeTo(size + size/2);
@@ -986,7 +983,7 @@ const Double_t *TPrincipal::GetRow(Int_t row)
   if (row >= fNumberOfDataPoints)
     return 0;
 
-  if (!fStoreData) 
+  if (!fStoreData)
     return 0;
 
   Int_t index   = row  * fNumberOfVariables;
@@ -1193,8 +1190,8 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
   Double_t *d = new Double_t[fNumberOfVariables];
   for (i = 0; i < fNumberOfDataPoints; i++) {
 
-    // Zero arrays 
-    for (j = 0; j < fNumberOfVariables; j++) 
+    // Zero arrays
+    for (j = 0; j < fNumberOfVariables; j++)
       p[j] = d[j] = 0;
 
     // update the original data histogram

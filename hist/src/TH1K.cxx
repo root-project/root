@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.2 2001/02/21 15:55:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.3 2001/02/22 08:47:27 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -10,8 +10,8 @@
  *************************************************************************/
 
 #include <stdlib.h>
-#include <fstream.h>
-   
+
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TH1K.h"
 #include "TMath.h"
@@ -20,7 +20,7 @@
 //*-*                  ===============================
 //*-*
 //*-*  TH1K class supports the nearest K Neighbours method,
-//*-*       widely used in cluster analysis. 
+//*-*       widely used in cluster analysis.
 //*-*       This method is especially useful for small statistics.
 //*-*
 //*-*       In this method :
@@ -33,7 +33,7 @@
 //*-*             that DistanceToNearestKthNeighbour > BinWidth and K >=3
 //*-*
 //*-*  This class has been implemented by Victor Perevoztchikov <perev@bnl.gov>
-//*-*  
+//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 ClassImp(TH1K)
@@ -66,7 +66,7 @@ TH1K::TH1K(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 TH1K::~TH1K()
 {
 }
- 
+
 //______________________________________________________________________________
 Int_t TH1K::Fill(Axis_t x)
 {
@@ -137,10 +137,10 @@ Stat_t TH1K::GetBinError(Int_t bin) const
 //______________________________________________________________________________
 void   TH1K::Reset(Option_t *option)
 {
-  fNIn   =0; 
-  fReady = 0; 
+  fNIn   =0;
+  fReady = 0;
   TH1::Reset(option);
-} 
+}
 
 //______________________________________________________________________________
 void TH1K::SavePrimitive(ofstream &out, Option_t *option)
@@ -151,11 +151,11 @@ void TH1K::SavePrimitive(ofstream &out, Option_t *option)
    // - variable bin size not implemented
    // - Objects in list of functions not saved (fits)
    // - Contours not saved
-   
+
    char quote = '"';
    out<<"   "<<endl;
    out<<"   "<<"TH1 *";
-   
+
    out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
                  <<","<<GetXaxis()->GetNbins()
                  <<","<<GetXaxis()->GetXmin()
@@ -172,7 +172,7 @@ void TH1K::SavePrimitive(ofstream &out, Option_t *option)
    if (fOption.Length() != 0) {
       out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
    }
-   
+
    if (fNIn) {
       out<<"   Float_t Arr[]={"<<endl;
       for (int i=0; i<fNIn; i++) {
@@ -181,7 +181,7 @@ void TH1K::SavePrimitive(ofstream &out, Option_t *option)
          if (i%10 == 9)   {out<< endl;}
       }
       out<< endl;
-      out<<"   for(int i=0;i<" << fNIn << ";i++)"<<GetName()<<"->Fill(Arr[i]);"; 
+      out<<"   for(int i=0;i<" << fNIn << ";i++)"<<GetName()<<"->Fill(Arr[i]);";
       out<< endl;
    }
    SaveFillAttributes(out,GetName(),0,1001);
@@ -197,7 +197,7 @@ void TH1K::SavePrimitive(ofstream &out, Option_t *option)
       <<quote<<option<<quote<<");"<<endl;
    }
 }
- 
+
 
 //______________________________________________________________________________
 static int TH1K_fcompare(const void *f1,const void *f2)

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.10 2001/08/28 16:31:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.11 2001/12/10 21:13:50 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TPaveText.h"
 #include "TPaveLabel.h"

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.54 2001/12/14 13:32:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.55 2001/12/19 14:21:54 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -10,8 +10,8 @@
  *************************************************************************/
 
 #include <string.h>
-#include <fstream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TGraph.h"
 #include "TGaxis.h"
@@ -210,7 +210,7 @@ TGraph::TGraph(const TVector &vx, const TVector &vy)
 // A graph is build with the X coordinates taken from vx and Y coord from vy
 // The number of points in the graph is the minimum of number of points
 // in vx and vy.
-      
+
    Int_t n  = vx.GetNrows();
    Int_t ny = vy.GetNrows();
    if (ny < n) n = ny;
@@ -241,7 +241,7 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 // A graph is build with the X coordinates taken from vx and Y coord from vy
 // The number of points in the graph is the minimum of number of points
 // in vx and vy.
-      
+
    Int_t n  = vx.GetNrows();
    Int_t ny = vy.GetNrows();
    if (ny < n) n = ny;
@@ -281,13 +281,13 @@ TGraph::~TGraph()
 }
 
 //______________________________________________________________________________
-void TGraph::Apply(TF1 *f) 
+void TGraph::Apply(TF1 *f)
 {
   // apply function f to all the data points
   // f may be a 1-D function TF1 or 2-d function TF2
   // The Y values of the graph are replaced by the new values computed
   // using the function
-     
+
   for (Int_t i=0;i<fNpoints;i++) {
     fY[i] = f->Eval(fX[i],fY[i]);
   }
@@ -1258,7 +1258,7 @@ void TGraph::InitPolynom()
 Int_t TGraph::InsertPoint()
 {
 // Insert a new point at the mouse position
-   
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
@@ -2726,7 +2726,7 @@ void TGraph::RemoveFunction(TGraph *gr, TObject *obj)
 Int_t TGraph::RemovePoint()
 {
 // Delete point close to the mouse position
-   
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 

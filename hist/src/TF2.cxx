@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.9 2001/10/27 10:38:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.10 2001/12/07 07:10:17 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -16,7 +16,8 @@
 #include "TH2.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
-#include <fstream.h>
+#include "IOStream.h"
+
 
 ClassImp(TF2)
 
@@ -438,7 +439,7 @@ Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
 Bool_t TF2::IsInside(const Double_t *x) const
 {
 // Return kTRUE is the point is inside the function range
-   
+
    if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
    if (x[1] < fYmin || x[1] > fYmax) return kFALSE;
    return kTRUE;
@@ -698,14 +699,14 @@ void TF2::Streamer(TBuffer &R__b)
          fContour.Streamer(R__b);
       }
       R__b.CheckByteCount(R__s, R__c, TF2::IsA());
-      //====end of old versions 
-      
+      //====end of old versions
+
    } else {
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
-      
+
       TF2::Class()->WriteBuffer(R__b,this);
-      
+
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }
 }

@@ -1,13 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.1.1.2 2000/12/18 21:05:33 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.4 2001/02/07 08:18:15 brun Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
  * Copyright(c) 1998, FineSoft, All rights reserved. Valery Fine (Faine) *
  *************************************************************************/
 
-#include <iostream.h>
 #include <stdlib.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"

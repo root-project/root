@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.2 2000/11/10 12:14:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TAttFill.h"
 #include "TVirtualPad.h"

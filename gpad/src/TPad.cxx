@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.63 2002/01/07 18:06:17 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.64 2002/01/08 09:41:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,9 +11,8 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <fstream.h>
-#include <iostream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TSystem.h"
@@ -2241,7 +2240,7 @@ Color_t TPad::GetHighLightColor() const
 }
 
 //______________________________________________________________________________
-Int_t TPad::GetMaxPickDistance() 
+Int_t TPad::GetMaxPickDistance()
 {
    //static function (see also TPad::SetMaxPickDistance)
    return fgMaxPickDistance;
@@ -3978,7 +3977,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       }
       cname = lcname;
    }
-   
+
 //   Write pad parameters
    if (this != gPad->GetCanvas()) {
       out <<"  "<<endl;
@@ -4340,7 +4339,7 @@ void TPad::SetMaxPickDistance(Int_t maxPick)
    // its DistancetoPrimitive returns a value < fgMaxPickDistance
    // The default value is 5 pixels. Setting a smaller value will make
    // picking more precise but also more difficult
-   
+
    fgMaxPickDistance = maxPick;
 }
 

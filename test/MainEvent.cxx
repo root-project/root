@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.20 2001/11/19 21:13:45 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.21 2002/01/22 10:53:29 rdm Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -81,8 +81,8 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
-#include <iostream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TNetFile.h"

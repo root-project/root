@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.2 2001/11/28 14:43:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.3 2001/12/12 10:02:19 brun Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TExec.h"
 
@@ -131,7 +129,7 @@ void TExec::Exec(const char *command)
 // to execute the exec name if it contains a "." or a "(", otherwise
 // the command ".x execname.C" is executed.
 // The function returns the result of the user function/script.
-   
+
    if (command && (strlen(command) > 1))  gROOT->ProcessLine(command);
    else  {
       if (strlen(GetTitle()) > 0)         gROOT->ProcessLine(GetTitle());

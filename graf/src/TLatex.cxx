@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.24 2002/01/08 18:14:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.25 2002/01/12 08:52:34 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -10,8 +10,8 @@
  *************************************************************************/
 
 #include <stdio.h>
-#include <iostream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TLatex.h"
 #include "TVirtualPad.h"
@@ -1904,7 +1904,7 @@ void TLatex::SavePrimitive(ofstream &out, Option_t *)
    s.ReplaceAll("\"","\\\"");
    out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
    if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<endl;
-   
+
    SaveTextAttributes(out,"tex",11,0,1,62,1);
    SaveLineAttributes(out,"tex",1,1,1);
 

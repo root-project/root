@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.14 2001/10/03 16:45:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.15 2001/12/19 07:15:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -36,20 +36,12 @@
 #ifndef ROOT_TStorage
 #include "TStorage.h"
 #endif
+#ifndef ROOT_IOSFwd
+#include "IOSFwd.h"
+#endif
 
 #ifdef WIN32
 #undef RemoveDirectory
-#endif
-
-#if defined(R__ANSISTREAM)
-#include <iosfwd>
-using namespace std;
-#elif R__MWERKS
-template <class charT> class ios_traits;
-template <class charT, class traits> class basic_ofstream;
-typedef basic_ofstream<char, ios_traits<char> > ofstream;
-#else
-class ofstream;
 #endif
 
 class TList;

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.8 2001/06/22 16:10:19 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.9 2001/09/29 13:00:59 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -118,6 +118,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
+#include <stdio.h>
+
 #ifdef HAVE_CONFIG
 #include "config.h"
 #endif
@@ -135,20 +137,20 @@
 #include "Getline.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
+#include "IOStream.h"
 
 //Direct CINT include
 #include "DataMbr.h"
 
-
-#include <stdio.h>
-#include <iostream.h>
-#ifndef WIN32
-#  include <strstream.h>
+#if defined(R__ANSISTREAM)
+#  include <strstream>
 #else
-#  include <strstrea.h>
+#  ifndef R__WIN32
+#    include <strstream.h>
+#  else
+#    include <strstrea.h>
+#  endif
 #endif
-#include <fstream.h>
-#include <iomanip.h>            // setw()
 
 
 #define BUF_SIZE    1024        // must match value in C_Getline.c (for bounds checking)

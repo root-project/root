@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.16 2001/10/04 16:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.17 2002/01/05 17:15:09 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "Strlen.h"
 #include "TDirectory.h"
 #include "TMapFile.h"
@@ -705,9 +704,9 @@ TKey *TDirectory::FindKeyAny(const char *keyname) const
 {
    // Find key with name keyname in the current directory or
    // its subdirectories.
-   // NOTE that If a key is found, the directory containing the key becomes 
+   // NOTE that If a key is found, the directory containing the key becomes
    // the current directory
-   
+
    TDirectory *dirsav = gDirectory;
    Short_t  cycle;
    char     name[256];
@@ -763,7 +762,7 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
    //object may be already in the list of objects in memory
    TObject *obj = fList->FindObject(aname);
    if (obj) return obj;
-   
+
    TDirectory *dirsav = gDirectory;
    Short_t  cycle;
    char     name[256];

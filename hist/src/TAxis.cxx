@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.24 2002/01/07 18:08:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.25 2002/01/12 08:43:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream.h>
-#include <fstream.h>
+#include "IOStream.h"
 #include "TAxis.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
@@ -431,25 +430,25 @@ Int_t TAxis::FindBin(const char *label)
       if (!fParent) return -1;
       fLabels = new THashList(fNbins,1);
    }
-   
+
    // search for label in the existing list
    TObjString *obj = (TObjString*)fLabels->FindObject(label);
-   if (obj) return (Int_t)obj->GetUniqueID();      
-   
+   if (obj) return (Int_t)obj->GetUniqueID();
+
    //Not yet in the list. Can we rebin the histogram ?
    if (!fParent->TestBit(TH1::kCanRebin)) return -1;
-   
+
    // count number of labels in the list
    Int_t n = 0;
    TIter next(fLabels);
    while ((obj = (TObjString*)next())) {
       n++;
    }
-   TH1 *h = (TH1*)fParent;   
-   
+   TH1 *h = (TH1*)fParent;
+
    //may be we have to resize the histogram (doubling number of channels)
    if (n >= fNbins) h->LabelsInflate(GetName());
-   
+
    //add new label to the list: assign bin number
    obj = new TObjString(label);
    fLabels->Add(obj);
@@ -482,7 +481,7 @@ Int_t TAxis::FindFixBin(Axis_t x) const
 const char *TAxis::GetBinLabel(Int_t bin) const
 {
 // Return label for bin
-   
+
    if (!fLabels) return "";
    if (bin <= 0 || bin > fNbins) return "";
    TIter next(fLabels);
@@ -597,8 +596,8 @@ void TAxis::LabelsOption(Option_t *option)
 //         = "v" draw labels vertical
 //         = "u" draw labels up (end of label right adjusted)
 //         = "d" draw labels down (start of label left adjusted)
-   
-      
+
+
    if (!fLabels) {
       Warning("Sort","Cannot sort. No labels");
       return;
@@ -608,7 +607,7 @@ void TAxis::LabelsOption(Option_t *option)
       Error("Sort","Axis has no parent");
       return;
    }
-   
+
    h->LabelsOption(option,GetName());
 }
 
@@ -644,7 +643,7 @@ void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
          out<<"   "<<name<<subname<<"->SetBinLabel("<<obj->GetUniqueID()<<","<<quote<<obj->GetName()<<quote<<");"<<endl;
       }
    }
-   
+
    TAttAxis::SaveAttributes(out,name,subname);
 }
 
@@ -720,7 +719,7 @@ void TAxis::Set(Int_t nbins, const Axis_t *xbins)
 void TAxis::SetBinLabel(Int_t bin, const char *label)
 {
 // Set label for bin
-   
+
    if (!fLabels) fLabels = new THashList(fNbins,3);
    if (bin <= 0 || bin > fNbins) {
       Error("SetBinLabel","Illegal bin number: %d",bin);
@@ -758,7 +757,7 @@ void TAxis::SetRange(Int_t first, Int_t last)
 {
 //  Set the viewing range for the axis from bin first to last
 //  To set a range using the axis coordinates, use TAxis::SetRangeUser.
-   
+
    if (last == 0) last = fNbins;
    if (last > fNbins) last = fNbins;
    if (last  < first) first = 1;
@@ -833,7 +832,7 @@ void TAxis::Streamer(TBuffer &R__b)
          Int_t n = R__b.ReadArray(xbins);
          fXbins.Set(n);
          for (Int_t i=0;i<n;i++) fXbins.fArray[i] = xbins[i];
-         delete [] xbins;         
+         delete [] xbins;
       } else {
          R__b >> fXmin;
          R__b >> fXmax;
@@ -856,7 +855,7 @@ void TAxis::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TAxis::IsA());
       //====end of old versions
-      
+
    } else {
       TAxis::Class()->WriteBuffer(R__b,this);
    }

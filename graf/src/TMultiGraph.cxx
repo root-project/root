@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.3 2001/01/30 15:41:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.4 2002/01/03 13:08:48 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -14,9 +14,9 @@
 #include "TGraph.h"
 #include "TH1.h"
 #include "TVirtualPad.h"
+#include "IOStream.h"
 
 #include <ctype.h>
-#include <fstream.h>
 
 
 ClassImp(TMultiGraph)
@@ -75,7 +75,7 @@ TMultiGraph::~TMultiGraph()
 void TMultiGraph::Add(TGraph *graph)
 {
    // add a new graph to the list of graphs
-   
+
    if (!fGraphs) fGraphs = new TList();
    fGraphs->Add(graph);
 }
@@ -172,7 +172,7 @@ void TMultiGraph::Paint(Option_t *option)
   chopt[nch] = 0;
   Double_t *x, *y;
   TGraph *g;
-   
+
   l = strstr(chopt,"A");
   if (l) {
      *l = ' ';
@@ -268,7 +268,7 @@ void TMultiGraph::Paint(Option_t *option)
      }
      fHistogram->Paint();
    }
-  
+
    if (fGraphs) {
      TIter   next(fGraphs);
      while ((g = (TGraph*) next())) {

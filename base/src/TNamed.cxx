@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.6 2001/02/13 07:54:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.7 2001/02/13 11:10:44 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -21,8 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "Strlen.h"
 #include "TNamed.h"
 #include "TClass.h"

@@ -1,14 +1,10 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.8 2001/05/30 06:03:43 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.9 2001/09/18 06:00:56 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id:
-// $Log:
 
-#include <fstream.h>
-#include <iostream.h>
-#include <iomanip.h>
 #include <assert.h>
 #include <stdlib.h>
 
+#include "IOStream.h"
 #include "TCanvas.h"
 #include "TPad.h"
 #include "TCL.h"

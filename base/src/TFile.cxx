@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.44 2002/01/11 15:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.45 2002/01/15 00:50:12 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -21,6 +20,7 @@
 #   include <sys/types.h>
 #endif
 
+#include "IOStream.h"
 #include "Strlen.h"
 #include "TFile.h"
 #include "TWebFile.h"

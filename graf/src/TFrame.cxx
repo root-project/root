@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.2 2000/06/13 10:56:12 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TFrame.h"

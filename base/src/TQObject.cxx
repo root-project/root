@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.14 2001/12/21 08:46:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.15 2001/12/28 12:52:04 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -70,7 +70,7 @@
 #include "TError.h"
 #include "G__ci.h"
 #include "Api.h"
-#include <iostream.h>
+#include "IOStream.h"
 
 #ifdef HAVE_CONFIG
 #include "config.h"

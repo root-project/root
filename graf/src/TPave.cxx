@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.7 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.8 2001/12/10 21:13:50 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TPave.h"
 #include "TVirtualPad.h"
@@ -598,7 +597,7 @@ void TPave::Streamer(TBuffer &R__b)
       fName.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TPave::IsA());
       //====end of old versions
-      
+
    } else {
       TPave::Class()->WriteBuffer(R__b,this);
    }

@@ -1,10 +1,8 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.1.1.2 2000/12/18 21:05:33 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.3 2001/02/07 08:18:15 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.1.1.2 2000/12/18 21:05:33 fisyak Exp $
+// $Id: TVolumePosition.cxx,v 1.3 2001/02/07 08:18:15 brun Exp $
 
-#include <iostream.h>
-#include <iomanip.h>
-
+#include "IOStream.h"
 #include "TCL.h"
 #include "TVolumePosition.h"
 #include "TVolume.h"

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.2 2000/06/13 10:43:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.3 2001/01/19 17:51:18 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
@@ -232,7 +231,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       XP0L = gPad->AbsPixeltoX(P0xL);
       YP0L = gPad->AbsPixeltoY(P0yL);
    }
-   
+
    gPad->PaintLine(XP0,YP0,XP0L,YP0L);
 
 //*-*- Convert points to pad reference system

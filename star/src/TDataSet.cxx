@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.6 2001/04/30 19:19:48 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.10 2001/05/13 11:10:06 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,9 +19,9 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.6 2001/04/30 19:19:48 fine Exp $"
+    "$Id: TDataSet.cxx,v 1.10 2001/05/13 11:10:06 brun Exp $"
 };
-#include <iostream.h>
+#include "IOStream.h"
 #include "TSystem.h"
 #include "TDataSetIter.h"
 #include "TDataSet.h"
@@ -446,9 +446,9 @@ void TDataSet::ls(Int_t depth) const
 }
 //______________________________________________________________________________
 TDataSet *TDataSet::Instance() const
-{ 
+{
  // apply the class default ctor to instantiate a new object of the same kind.
- // This is a base method to be overriden by the classes 
+ // This is a base method to be overriden by the classes
  // derived from TDataSet (to support TDataSetIter::Mkdir for example)
  return instance();
 }
@@ -514,7 +514,7 @@ void TDataSet::PrintContents(Option_t *opt) const {
   // This is to allow to sepoarate navigation and the custom invormation
   // in the derived classes (see; TTable::PrintContents for example
   if (opt) { /* no used */ }
-  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());  
+  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
 }
 
 //______________________________________________________________________________
@@ -729,7 +729,7 @@ void TDataSet::Update(TDataSet* set,UInt_t opt)
       while ( ((oldset = (TDataSet *)nextold())!=0) && !found) {
         // if the "new" set does contain the dataset
         // with the same name as ours update it too
-        // (We do not update itself (oldset == newset) 
+        // (We do not update itself (oldset == newset)
         if ( (oldset != newset) && oldset->IsThisDir(newname) ) {
            oldset->Update(newset);
            found = kTRUE;

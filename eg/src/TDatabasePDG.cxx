@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.16 2001/11/22 07:38:22 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.17 2001/11/22 08:04:25 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG
@@ -12,10 +12,14 @@
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"
 
-#ifdef WIN32
-#include <strstrea.h>
+#if defined(R__ANSISTREAM)
+#  include <strstream>
 #else
-#include <strstream.h>
+#  ifndef R__WIN32
+#    include <strstream.h>
+#  else
+#    include <strstrea.h>
+#  endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////

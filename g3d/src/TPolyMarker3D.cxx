@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.10 2001/12/24 11:13:56 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.11 2002/01/20 10:02:41 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TView.h"
 #include "TStyle.h"
@@ -257,12 +255,12 @@ void TPolyMarker3D::ls(Option_t *option) const
    TROOT::IndentLevel();
    cout << "    TPolyMarker3D  N=" << Size() <<" Option="<<option<<endl;
 }
-   
+
 //______________________________________________________________________________
 Int_t TPolyMarker3D::Merge(TCollection *list)
 {
 // Merge polymarkers in the collection in this polymarker
-   
+
    if (!list) return 0;
    TIter next(list);
 
@@ -276,10 +274,10 @@ Int_t TPolyMarker3D::Merge(TCollection *list)
       }
       npoints += pm->Size();
    }
-   
+
    //extend this polymarker to hold npoints
    pm->SetPoint(npoints-1,0,0,0);
-   
+
    //merge all polymarkers
    next.Reset();
    while ((pm = (TPolyMarker3D*)next())) {
@@ -289,7 +287,7 @@ Int_t TPolyMarker3D::Merge(TCollection *list)
          SetPoint(i,p[3*i],p[3*i+1],p[3*i+2]);
       }
    }
-   
+
    return npoints;
 }
 

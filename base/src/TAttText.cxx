@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.8 2001/10/02 08:03:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.9 2001/11/19 17:39:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "Strlen.h"
 #include "TAttText.h"

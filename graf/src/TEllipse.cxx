@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.7 2001/03/23 17:11:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.8 2001/11/12 14:16:16 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -10,9 +10,8 @@
  *************************************************************************/
 
 #include <stdlib.h>
-#include <fstream.h>
-#include <iostream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TEllipse.h"
 #include "TVirtualPad.h"

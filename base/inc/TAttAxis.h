@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.4 2002/01/16 15:30:54 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -24,16 +24,8 @@
 #ifndef ROOT_Gtypes
 #include "Gtypes.h"
 #endif
-
-#if defined(R__ANSISTREAM)
-#include <iosfwd>
-using namespace std;
-#elif R__MWERKS
-template <class charT> class ios_traits;
-template <class charT, class traits> class basic_ofstream;
-typedef basic_ofstream<char, ios_traits<char> > ofstream;
-#else
-class ofstream;
+#ifndef ROOT_IOSFwd
+#include "IOSFwd.h"
 #endif
 
 

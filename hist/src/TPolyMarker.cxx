@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.7 2002/01/15 15:40:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.8 2002/01/20 10:11:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TPolyMarker.h"
@@ -141,12 +139,12 @@ void TPolyMarker::ls(Option_t *) const
    TROOT::IndentLevel();
    printf("TPolyMarker  N=%d\n",fN);
 }
-   
+
 //______________________________________________________________________________
 Int_t TPolyMarker::Merge(TCollection *list)
 {
 // Merge polymarkers in the collection in this polymarker
-  
+
    if (!list) return 0;
    TIter next(list);
 
@@ -160,10 +158,10 @@ Int_t TPolyMarker::Merge(TCollection *list)
       }
       npoints += pm->Size();
    }
-   
+
    //extend this polymarker to hold npoints
    pm->SetPoint(npoints-1,0,0);
-   
+
    //merge all polymarkers
    next.Reset();
    while ((pm = (TPolyMarker*)next())) {
@@ -174,7 +172,7 @@ Int_t TPolyMarker::Merge(TCollection *list)
          SetPoint(i,x[i],y[i]);
       }
    }
-   
+
    return npoints;
 }
 
@@ -241,7 +239,7 @@ void TPolyMarker::SetPoint(Int_t n, Double_t x, Double_t y)
    // set point number n
    // if n is greater than the current size, the arrays are automatically
    // extended
-   
+
    if (n < 0) return;
    if (!fX || !fY || n >= fN) {
       // re-allocate the object
@@ -330,7 +328,7 @@ void TPolyMarker::Streamer(TBuffer &R__b)
       fOption.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TPolyMarker::IsA());
       //====end of old versions
-      
+
    } else {
       TPolyMarker::Class()->WriteBuffer(R__b,this);
    }

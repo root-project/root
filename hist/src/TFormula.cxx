@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.26 2001/12/04 21:52:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.27 2002/01/19 08:25:13 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream.h>
 #include <math.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TFormula.h"
@@ -1501,7 +1501,7 @@ Int_t TFormula::Compile(const char *expression)
             fNstring--;
           }
        }
-       
+
      } else if (before_last_string) {
         // the i-2 element is a string not used in a string operation, let's down grade it
         // to a char array:
@@ -1987,7 +1987,7 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
 void TFormula::SetParName(Int_t ipar, const char *name)
 {
 // Set name of parameter number ipar
-   
+
    if (ipar <0 || ipar >= fNpar) return;
    fNames[ipar] = name;
 }

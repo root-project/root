@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.12 2001/12/11 14:22:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.13 2002/01/18 18:46:06 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -35,28 +35,14 @@
 #include "TRefCnt.h"
 #endif
 
+#ifndef ROOT_IOSFwd
+#include "IOSFwd.h"
+#endif
+
 #ifdef R__MWERKS
 #   ifdef Length
 #      undef Length
 #   endif
-#endif
-
-#if defined(R__ANSISTREAM)
-#   if defined(R__TMPLTSTREAM)
-#      include <iostream>
-#   else
-#      include <iosfwd>
-#   endif
-using namespace std;
-#elif R__MWERKS
-template <class charT> class ios_traits;
-template <class charT, class traits> class basic_istream;
-template <class charT, class traits> class basic_ostream;
-typedef basic_istream<char, ios_traits<char> > istream;
-typedef basic_ostream<char, ios_traits<char> > ostream;
-#else
-class istream;
-class ostream;
 #endif
 
 class TRegexp;

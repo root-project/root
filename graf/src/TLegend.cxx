@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.8 2001/08/13 08:24:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.9 2002/01/02 21:46:07 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -8,6 +8,8 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+#include <stdio.h>
 
 #include "TLatex.h"
 #include "TLine.h"
@@ -19,10 +21,8 @@
 #include "TMath.h"
 #include "TROOT.h"
 #include "TLegendEntry.h"
+#include "IOStream.h"
 
-#include <fstream.h>
-#include <stdio.h>
-#include <iostream.h>
 
 ClassImp(TLegend)
 
@@ -314,7 +314,7 @@ void TLegend::PaintPrimitives()
   if ( textsize == 0 ) {
     textsize = ( 1. - fEntrySeparation ) * yspace;
     textsize /= gPad->GetY2() - gPad->GetY1();
-    
+
     // find the max width and height (in pad coords) of one latex entry label
     Double_t maxentrywidth = 0, maxentryheight = 0;
     TIter nextsize(fPrimitives);
@@ -457,8 +457,8 @@ void TLegend::PaintPrimitives()
                              xsym + boxwidth*0.35, ysym + yspace*0.35);
         entryline.PaintLine( xsym - boxwidth*0.35, ysym - yspace*0.35,
                              xsym - boxwidth*0.35, ysym + yspace*0.35);
-      } else { 
-         entryline.Paint(); 
+      } else {
+         entryline.Paint();
       }
 
       entry->SetLineColor(lcolor);

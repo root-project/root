@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.29 2002/01/07 18:07:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.30 2002/01/15 10:24:17 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -11,10 +11,10 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <fstream.h>
 #include <time.h>
 #include <math.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TGaxis.h"
 #include "TVirtualPad.h"
@@ -111,7 +111,7 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fTitleOffset = 1;
    fTitleSize   = fLabelSize;
    fChopt       = "";
-   fName        = ""; 
+   fName        = "";
    fTitle       = "";
    fTimeFormat  = "";
    fFunctionName= "";
@@ -271,10 +271,10 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 }
 
 //______________________________________________________________________________
-Int_t TGaxis::GetMaxDigits() 
+Int_t TGaxis::GetMaxDigits()
 {
    // static function returning fgMaxDigits (See SetMaxDigits)
-   
+
    return fgMaxDigits;
 }
 
@@ -525,14 +525,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- and the WC coordinates in the pad
 
    Bool_t noExponent = TestBit(TAxis::kNoExponent);
-   
+
    Double_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
    Double_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
    Double_t RWxmin = gPad->GetX1();
    Double_t RWxmax = gPad->GetX2();
    Double_t RWymin = gPad->GetY1();
    Double_t RWymax = gPad->GetY2();
-   
+
    if(strchr(chopt,'G')) OptionLog  = 1;  else OptionLog  = 0;
    if(strchr(chopt,'B')) OptionBlank= 1;  else OptionBlank= 0;
    if(strchr(chopt,'V')) OptionVert = 1;  else OptionVert = 0;
@@ -563,7 +563,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
       }
    }
-   
+
 //*-*-              Set the grid length
 
    if (OptionGrid) {
@@ -584,7 +584,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       wmin += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
       wmax += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
    }
-   
+
 //*-*-              Determine number of divisions 1, 2 and 3
    N     = ndiv;
    N3A   = N/10000;
@@ -1239,7 +1239,7 @@ L110:
                   Xlabel = DXlabel*k;
                }
                if (OptionM)    Xlabel += 0.5*DXlabel;
- 
+
                if (!OptionText && !OptionTime) {
                   sprintf(LABEL,&CHCODED[0],Wlabel);
                   LABEL[28] = 0;
@@ -1734,7 +1734,7 @@ void TGaxis::SetFunction(const char *funcname)
 }
 
 //______________________________________________________________________________
-void TGaxis::SetMaxDigits(Int_t maxd) 
+void TGaxis::SetMaxDigits(Int_t maxd)
 {
    // static function to set fgMaxDigits
    //fgMaxDigits is the maximum number of digits permitted for the axis
@@ -1742,7 +1742,7 @@ void TGaxis::SetMaxDigits(Int_t maxd)
    //For example, to accept 6 digits number like 900000 on an axis
    //call TGaxis::SetMaxDigits(6). The default value is 5.
    //fgMaxDigits must be greater than 0.
-   
+
    fgMaxDigits = maxd;
    if (maxd < 1) fgMaxDigits = 1;
 }
@@ -1848,7 +1848,7 @@ void TGaxis::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TGaxis::IsA());
       //====end of old versions
-      
+
    } else {
       TGaxis::Class()->WriteBuffer(R__b,this);
    }

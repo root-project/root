@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.8 2002/01/15 15:40:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.9 2002/01/20 10:06:38 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TPolyLine.h"
@@ -189,7 +187,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t *x=0, *y=0;
 
    if (!gPad->IsEditable()) return;
-   
+
    Int_t np = Size();
 
    switch (event) {
@@ -367,12 +365,12 @@ void TPolyLine::ls(Option_t *) const
    TROOT::IndentLevel();
    printf("TPolyLine  N=%d\n",fN);
 }
-   
+
 //______________________________________________________________________________
 Int_t TPolyLine::Merge(TCollection *list)
 {
 // Merge polylines in the collection in this polyline
-   
+
    if (!list) return 0;
    TIter next(list);
 
@@ -386,10 +384,10 @@ Int_t TPolyLine::Merge(TCollection *list)
       }
       npoints += pl->Size();
    }
-   
+
    //extend this polyline to hold npoints
    pl->SetPoint(npoints-1,0,0);
-   
+
    //merge all polylines
    next.Reset();
    while ((pl = (TPolyLine*)next())) {
@@ -400,7 +398,7 @@ Int_t TPolyLine::Merge(TCollection *list)
          SetPoint(i,x[i],y[i]);
       }
    }
-   
+
    return npoints;
 }
 
@@ -490,7 +488,7 @@ void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
    // set point number n
    // if n is greater than the current size, the arrays are automatically
    // extended
-   
+
    if (n < 0) return;
    if (!fX || !fY || n >= fN) {
       // re-allocate the object
@@ -588,7 +586,7 @@ void TPolyLine::Streamer(TBuffer &b)
       fOption.Streamer(b);
       b.CheckByteCount(R__s, R__c, TPolyLine::IsA());
       //====end of old versions
-      
+
    } else {
       TPolyLine::Class()->WriteBuffer(b,this);
    }

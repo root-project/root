@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.8 2001/12/24 11:13:56 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.9 2002/01/20 10:02:41 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <fstream.h>
-#include <iostream.h>
-
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TPolyLine3D.h"
 #include "TVirtualPad.h"
@@ -397,12 +395,12 @@ void TPolyLine3D::ls(Option_t *option) const
    TROOT::IndentLevel();
    cout <<"PolyLine3D  N=" <<fN<<" Option="<<option<<endl;
 }
-   
+
 //______________________________________________________________________________
 Int_t TPolyLine3D::Merge(TCollection *list)
 {
 // Merge polylines in the collection in this polyline
-   
+
    if (!list) return 0;
    TIter next(list);
 
@@ -416,10 +414,10 @@ Int_t TPolyLine3D::Merge(TCollection *list)
       }
       npoints += pl->Size();
    }
-   
+
    //extend this polyline to hold npoints
    pl->SetPoint(npoints-1,0,0,0);
-   
+
    //merge all polylines
    next.Reset();
    while ((pl = (TPolyLine3D*)next())) {
@@ -429,7 +427,7 @@ Int_t TPolyLine3D::Merge(TCollection *list)
          SetPoint(i,p[3*i],p[3*i+1],p[3*i+2]);
       }
    }
-   
+
    return npoints;
 }
 

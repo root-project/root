@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.31 2001/12/19 07:15:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.32 2002/01/05 09:10:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -29,9 +29,8 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#include <fstream.h>
-#include <iostream.h>
 
+#include "IOStream.h"
 #include "TObject.h"
 #include "TFile.h"
 #include "TDirectory.h"
@@ -185,7 +184,7 @@ TObject::TObject(const TObject &obj)
       fBits |= kIsOnHeap;
    else
       fBits &= ~kIsOnHeap;
-   
+
    fBits &= ~kIsReferenced;
 
    if (fgObjectStat) TObjectTable::AddObj(this);
@@ -885,7 +884,7 @@ void TObject::Streamer(TBuffer &R__b)
       //and store it in the ProcessID map in gROOT
       if (!TestBit(kIsReferenced)) return;
       R__b >> pidf;
-      TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);   
+      TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);
       if (pid) pid->PutObjectWithID(this);
    } else {
       R__b.WriteVersion(TObject::IsA());

@@ -1,9 +1,9 @@
-// @(#)root/test:$Name:  $:$Id: tcollbm.cxx,v 1.3 2001/04/20 17:56:50 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tcollbm.cxx,v 1.4 2001/04/21 01:06:58 rdm Exp $
 // Author: Nikolay Root   05/07/98
 
 #include <stdlib.h>
-#include <iostream.h>
 
+#include "IOStream.h"
 #include "TCollection.h"
 #include "TSortedList.h"
 #include "TObjArray.h"

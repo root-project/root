@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.83 2002/01/19 11:04:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.84 2002/01/20 10:25:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -209,10 +209,10 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <fstream.h>
 
 #include "snprintf.h"
-   
+
+#include "IOStream.h"
 #include "TTreePlayer.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -622,7 +622,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //  In addition, the name of the histogram can be followed by up to 9
 //  numbers between '(' and ')', where the numbers describe the
 //  following:
-//  
+//
 //   1 - bins in x-direction
 //   2 - lower limit in x-direction
 //   3 - upper limit in x-direction
@@ -634,11 +634,11 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //  Example:
 //    tree.Draw("sqrt(x)>>hsqrt(500,10,20)"
 //          // plot sqrt(x) between 10 and 20 using 500 bins
-//    tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,,50,.1,.5)"  
+//    tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,,50,.1,.5)"
 //          // plot sqrt(x) against sin(y)
 //          // 100 bins in x-direction; lower limit on x-axis is 10; no upper limit
 //          //  50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5
-// 
+//
 //  By default, the specified histogram is reset.
 //  To continue to append data to an existing histogram, use "+" in front
 //  of the histogram name.
@@ -777,7 +777,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    if ( inElist && inElist->GetReapplyCut() ) {
       realSelection = realSelection && inElist->GetTitle();
    }
-   
+
 // what each variable should contain:
 //   varexp0   - original expression eg "a:b>>htest"
 //   hname     - name of new or old histogram
@@ -811,8 +811,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
          while (*hname == ' ') hname++; //skip ' '
       }
       j = strlen(hname) - 1;   // skip ' '  at the end
-      while (j) {            
-	if (hname[j] != ' ') break; 
+      while (j) {
+	if (hname[j] != ' ') break;
 	hname[j] = 0;
 	j--;
       }
@@ -822,18 +822,18 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 
 	 Int_t mustdelete=0;
 
-	 // parse things that follow the name of the histo between '(' and ')'. 
+	 // parse things that follow the name of the histo between '(' and ')'.
 	 // At this point hname contains the name of the specified histogram.
 	 //   Now the syntax is exended to handle an hname of the following format
 	 //   hname(nBIN [[,[xlow]][,xhigh]],...)
 	 //   so enclosed in brackets is the binning information, xlow, xhigh, and
 	 //   the same for the other dimensions
-	 
+
 	 char *pstart;    // pointer to '('
 	 char *pend;      // pointer to ')'
 	 char *cdummy;    // dummy pointer
 
-	 int ncomma;      // number of commas between '(' and ')', later number of arguments 
+	 int ncomma;      // number of commas between '(' and ')', later number of arguments
 	 int ncols;       // number of columns in varexpr
 
 	 int iindex[4];   // index
@@ -848,7 +848,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 	 static int size=10;   // buffer size; dynamically adjusted
 	 static char *buffer;  // temporary buffer
 	 int size_not_ok;      // set to 1 if size was not large enough
-	   
+
 
 	 pstart= strchr(hname,'(');
 	 pend =  strchr(hname,')');
@@ -857,7 +857,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 	   mustdelete=1;
 
 	   // check that there is only one open and close bracket
-	   if (pstart == strrchr(hname,'(')  &&  pend == strrchr(hname,')')) { 
+	   if (pstart == strrchr(hname,'(')  &&  pend == strrchr(hname,')')) {
 
 	     // count number of ',' between '(' and ')'
 	     ncomma=0;
@@ -903,73 +903,73 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		   isize=0;
 		   size_not_ok=0;
 		   if (!buffer) buffer = new char[size];
-		     
-		   if (size>0) buffer[0]='\0'; 
+
+		   if (size>0) buffer[0]='\0';
 
 		   switch (j) {  // do certain settings depending on position of argument
 		   case 0:  // binning x-axis
 		     if      (ncols<2) {
                         gEnv->SetValue("Hist.Binning.1D.x",(int)value);
                      } else if (ncols<3) {
-		        gEnv->SetValue("Hist.Binning.2D.x",(int)value); 
+		        gEnv->SetValue("Hist.Binning.2D.x",(int)value);
 		        gEnv->SetValue("Hist.Binning.2D.Prof",(int)value);
 		     } else {
 		        gEnv->SetValue("Hist.Binning.3D.x",(int)value);
 		        gEnv->SetValue("Hist.Binning.3D.Profx",(int)value);
 		     }
-		       
+
 		     break;
 		   case 1:  // lower limit x-axis
 		     ii=0;
 		     if      (ncols==1) ii=0;
 		     else if (ncols==2) ii=1;
-		     else               ii=2; 
-		       
-		     if (ncols>ii) 
+		     else               ii=2;
+
+		     if (ncols>ii)
 		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 2:  // upper limit x-axis
-		     ii=0; 
+		     ii=0;
 		     if      (ncols==1) ii=0;
 		     else if (ncols==2) ii=1;
-		     else               ii=2; 
-		       
-		     if (ncols>ii) 
+		     else               ii=2;
+
+		     if (ncols>ii)
 		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 3:  // binning y-axis
 		     if (ncols<3) gEnv->SetValue("Hist.Binning.2D.y",(int)value);
 		     else {
-		       gEnv->SetValue("Hist.Binning.3D.y",(int)value); 
-		       gEnv->SetValue("Hist.Binning.3D.Profy",(int)value); 
+		       gEnv->SetValue("Hist.Binning.3D.y",(int)value);
+		       gEnv->SetValue("Hist.Binning.3D.Profy",(int)value);
 		     }
 		     break;
 		   case 4:  // lower limit y-axis
-		     ii=1; 
+		     ii=1;
 		     if      (ncols==2) ii=0;
 		     else               ii=1;
-		       
-		     if (ncols>ii) 
+
+		     if (ncols>ii)
 		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 5:  // upper limit y-axis
-		     ii=1; 
+		     ii=1;
 		     if      (ncols==2) ii=0;
 		     else               ii=1;
-		     if (ncols>ii) 
+		     if (ncols>ii)
 		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 6:  // binning z-axis
 		     gEnv->SetValue("Hist.Binning.3D.z",(int)value);
 		     break;
 		   case 7:  // lower limit z-axis
-		     ii=0; 
-		     if (ncols>ii) 
+		     ii=0;
+		     if (ncols>ii)
 		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 8:  // upper limit z-axis
-		     ii=0; 
-		     if (ncols>ii) 
+		     ii=0;
+		     if (ncols>ii)
 		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   default:
@@ -977,7 +977,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		     break;
 		   }
 		   if (isize>size) {
-		     delete [] buffer; 
+		     delete [] buffer;
 		     buffer=0;
 		     size=isize+1;
 		     size_not_ok=1;
@@ -987,7 +987,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                     //next statement is wrong
                     //realSelection += buffer;
                  }
-	       }  // if sscanf == 1 
+	       }  // if sscanf == 1
 	     } // for j=0;j<ncomma;j++
 	   } else {
 	     Error("DrawSelect","Two open or close brackets found, hname=%s",hname);
@@ -1002,7 +1002,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 	   if (hname[j] != ' ') break; // skip ' '  at the end
 	   hname[j] = 0;
 	   j--;
-	 } 
+	 }
 
          oldh1 = (TH1*)gDirectory->Get(hname);  // if hname contains '(...)' the return values is NULL, which is what we want
          if (oldh1 && !hnameplus) oldh1->Reset();  // reset unless adding is wanted
@@ -1013,7 +1013,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
            }
            delete oldh1; oldh1=0;
 	 }
-	 
+
       } else { // if (i)                       // make selection list (i.e. varexp0 starts with ">>")
          elist = (TEventList*)gDirectory->Get(hname);
          if (!elist) {
@@ -1050,7 +1050,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    if (nentries > fTree->GetMaxEntryLoop()) nentries = fTree->GetMaxEntryLoop();
 
 //*-*- Decode varexp and selection
-   
+
    CompileVariables(varexp, realSelection.GetTitle());
    if (!fVar1 && !elist) return -1;
 
@@ -1140,7 +1140,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
          if (opt.Length() && opt[0] == 'e') h1->Sumw2();
       }
       fVar1->SetAxis(h1->GetXaxis());
-      
+
 
       EntryLoop(action, h1, nentries, firstentry, option);
 

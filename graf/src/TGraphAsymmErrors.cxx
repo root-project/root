@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.15 2001/12/18 15:43:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.16 2001/12/19 14:21:54 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -10,8 +10,8 @@
  *************************************************************************/
 
 #include <string.h>
-#include <fstream.h>
 
+#include "IOStream.h"
 #include "TROOT.h"
 #include "TGraphAsymmErrors.h"
 #include "TStyle.h"
@@ -176,12 +176,12 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
 }
 
 //______________________________________________________________________________
-void TGraphAsymmErrors::Apply(TF1 *f) 
+void TGraphAsymmErrors::Apply(TF1 *f)
 {
   // apply a function to all data points
   // y = f(x,y)
   //
-  // Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and 
+  // Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and
   // eyl = f(x,y)-f(x,y-eyl)
   //
   // Special treatment has to be applied for the functions where the
@@ -226,8 +226,8 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
            else                   xmin = fX[i]/3;
         } else {
           xmin = fX[i]-fEXlow[i];
-        } 
-     } 
+        }
+     }
      if (fX[i] +fEXhigh[i] > xmax) xmax = fX[i]+fEXhigh[i];
      if (fY[i] -fEYlow[i] < ymin) {
         if (gPad->GetLogy()) {
@@ -235,8 +235,8 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
            else                   ymin = fY[i]/3;
         } else {
           ymin = fY[i]-fEYlow[i];
-        } 
-     } 
+        }
+     }
      if (fY[i] +fEYhigh[i] > ymax) ymax = fY[i]+fEYhigh[i];
   }
 }
@@ -273,9 +273,9 @@ Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
 Int_t TGraphAsymmErrors::InsertPoint()
 {
 // Insert a new point at the mouse position
-   
+
    Int_t ipoint = TGraph::InsertPoint();
-   
+
    Double_t *newEXlow  = new Double_t[fNpoints];
    Double_t *newEYlow  = new Double_t[fNpoints];
    Double_t *newEXhigh = new Double_t[fNpoints];
@@ -446,7 +446,7 @@ void TGraphAsymmErrors::Print(Option_t *) const
 Int_t TGraphAsymmErrors::RemovePoint()
 {
 // Delete point close to the mouse position
-   
+
    Int_t ipoint = TGraph::RemovePoint();
    if (ipoint < 0) return ipoint;
 
@@ -575,7 +575,7 @@ void TGraphAsymmErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, 
       if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
    }
    if (ipoint == -2) return;
-   
+
    fEXlow[ipoint]  = exl;
    fEYlow[ipoint]  = eyl;
    fEXhigh[ipoint] = exh;
@@ -645,7 +645,7 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
       }
       b.CheckByteCount(R__s, R__c, TGraphAsymmErrors::IsA());
       //====end of old versions
-      
+
    } else {
       TGraphAsymmErrors::Class()->WriteBuffer(b,this);
    }
