@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.40 2001/06/05 11:34:33 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.41 2001/06/22 16:10:18 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -406,7 +406,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    binmin = fXaxis->GetFirst();
    binx1  = fXaxis->FindFixBin(x1);
 // special case if more than 1 bin in x per pixel
-   if (binx1-binx>1) {
+   if (binx1-binx>1 && fH->GetDimension() == 1) {
       Double_t binval=fH->GetBinContent(binx);
       Int_t binnear=binx;
       for (Int_t ibin=binx+1; ibin<binx1; ibin++) {
