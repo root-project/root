@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.94 2002/11/13 17:32:06 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.95 2002/11/24 14:02:00 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1382,21 +1382,28 @@ void TBranchElement::SetAddress(void *add)
       }
    }
 
+   TClass *clparent = gROOT->GetClass(GetParentName());
+   TClass *clm = gROOT->GetClass(GetClassName());
    if (fType == 31) {
       if (fClassName != fParentName) {
-         TClass *clparent = gROOT->GetClass(GetParentName());
-         TClass *clm = gROOT->GetClass(GetClassName());
          if (clparent != clm) {
             const char *clast = strchr(GetName(),'.');
             if (clast) {
                Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
                fOffset = clparent->GetDataMemberOffset(clast+1) - offsets[fID];
-               //printf("clast+1=%s, fOffset=%d\n",clast+1,fOffset);
+               //printf("clast+1=%s, fOffset=%d\n",clast,fOffset);
             }
          }
       }
+      return;
    }
-   if (nbranches == 0) return;
+   if (nbranches == 0) {
+      if (clparent) {
+         Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
+         fObject += clparent->GetDataMemberOffset(GetName() -offsets[fID]);
+      }
+      return;
+   }
    for (Int_t i=0;i<nbranches;i++)  {
       TBranch *abranch = (TBranch*)fBranches[i];
       //just in case a TBranch had been added to a TBranchElement!
@@ -1410,9 +1417,9 @@ void TBranchElement::SetAddress(void *add)
       Int_t btype = branch->GetType();
       Int_t mOffset = 0;
       Int_t memberOffset = 0;
-      TClass *clparent = gROOT->GetClass(branch->GetParentName());
+      clparent = gROOT->GetClass(branch->GetParentName());
       if (!clparent) clparent = cl;
-      TClass *clm = gROOT->GetClass(branch->GetClassName());
+      clm = gROOT->GetClass(branch->GetClassName());
       TStreamerInfo *info = branch->GetInfo();
 //printf("i=%d, clm=%s,clparent=%s, branch=%s, btype=%d, nb2=%d, info=%s, uuoff=%d\n",i,clm->GetName(),clparent->GetName(),branch->GetName(),btype,nb2,info->GetName(),cinfo->GetOffsets()[id]);
 
