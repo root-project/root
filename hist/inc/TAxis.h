@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.22 2002/10/31 07:27:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.23 2002/11/05 11:37:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -114,7 +114,7 @@ public:
         virtual void     SetRange(Int_t first=0, Int_t last=0);  // *MENU*
         virtual void     SetRangeUser(Axis_t ufirst, Axis_t ulast);  // *MENU*
         virtual void     SetTicks(Option_t *option="+"); // *MENU*
-        virtual void     SetTimeDisplay(Int_t value) {fTimeDisplay = value;} // *TOGGLE*
+        virtual void     SetTimeDisplay(Int_t value) {fTimeDisplay = (value != 0);} // *TOGGLE*
         virtual void     SetTimeFormat(const char *format="");  // *MENU*
         virtual void     UnZoom();  // *MENU*
 

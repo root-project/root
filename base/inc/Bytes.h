@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.10 2003/03/11 14:27:14 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.11 2003/03/20 13:07:16 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -253,7 +253,7 @@ inline void frombuf(char *&buf, Bool_t *x)
 {
    UChar_t x1;
    x1 = *buf++;
-   *x = (Bool_t) x1;
+   *x = (Bool_t) (x1 != 0);
 }
 
 inline void frombuf(char *&buf, UChar_t *x)
