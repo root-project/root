@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.44 2001/07/09 00:56:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.45 2001/07/27 13:12:03 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -394,7 +394,7 @@ TROOT::~TROOT()
 //  Under Windows, one has to restore the color palettes created by individual canvases
       fCanvases->Delete();    SafeDelete(fCanvases);    // first close canvases
 #endif
-      fFiles->Delete();       SafeDelete(fFiles);       // and files
+      fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
