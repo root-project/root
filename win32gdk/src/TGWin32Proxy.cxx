@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.7 2003/08/20 14:14:22 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.8 2003/08/21 10:25:15 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -52,7 +52,7 @@ VOID_METHOD_ARG1_LOCK(TGWin32,SetMarkerColor,Color_t,cindex)
 VOID_METHOD_ARG1(TGWin32,SetLineColor,Color_t,cindex,0)
 VOID_METHOD_ARG1(TGWin32,SetLineStyle,Style_t,linestyle,0)
 VOID_METHOD_ARG1(TGWin32,SetLineWidth,Width_t,width,0)
-VOID_METHOD_ARG1(TGWin32,SetTextAlign,Short_t,talign,0)
+VOID_METHOD_ARG1(TGWin32,SetTextAlign,Short_t,talign,1)
 VOID_METHOD_ARG1(TGWin32,SetTextSize,Float_t,textsize,1)
 VOID_METHOD_ARG1(TGWin32,SetTextColor,Color_t,cindex,1)
 VOID_METHOD_ARG1(TGWin32,SetTextFont,Font_t,fontnumber,1)
