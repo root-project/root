@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.4 2000/12/29 07:35:20 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.5 2001/01/12 11:24:36 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -45,6 +45,9 @@ public:
   inline Double_t & operator [] (int);
   // Set components by index.
 
+  inline Double_t x()  const;
+  inline Double_t y()  const;
+  inline Double_t z()  const;
   inline Double_t X()  const;
   inline Double_t Y()  const;
   inline Double_t Z()  const;
@@ -201,6 +204,9 @@ TVector3 operator * (const TMatrix &, const TVector3 &);
 Double_t & TVector3::operator[] (int i)       { return operator()(i); }
 Double_t   TVector3::operator[] (int i) const { return operator()(i); }
 
+inline Double_t TVector3::x()  const { return fX; }
+inline Double_t TVector3::y()  const { return fY; }
+inline Double_t TVector3::z()  const { return fZ; }
 inline Double_t TVector3::X()  const { return fX; }
 inline Double_t TVector3::Y()  const { return fY; }
 inline Double_t TVector3::Z()  const { return fZ; }
