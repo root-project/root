@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.31 2004/07/21 06:56:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.32 2004/08/05 08:01:56 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -322,6 +322,7 @@ void THStack::BuildStack()
    if (fStack) return;
    if (!fHists) return;
    Int_t nhists = fHists->GetSize();
+   if (!nhists) return;
    fStack = new TObjArray(nhists);
    Bool_t add = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
@@ -532,6 +533,7 @@ void THStack::Paint(Option_t *option)
 // See THistPainter::Paint for a list of valid options.
 
    if (!fHists) return;
+   if (!fHists->GetSize()) return;
 
    TString opt = option;
    opt.ToLower();
