@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.2 2003/09/23 15:26:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.3 2003/09/26 13:26:44 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand  17/09/2003
 
 /*************************************************************************
@@ -54,7 +54,14 @@ TCastorFile::TCastorFile(const char *url, Option_t *option, const char *ftitle,
    fIsCastor  = kFALSE;
    fWrittenTo = kFALSE;
 
-   Create(url, option, netopt);
+   // file is always created by stage_out_hsm() and therefore
+   // exists when opened by rootd
+   TString opt = option;
+   opt.ToUpper();
+   if (opt == "NEW" || opt == "CREATE")
+      opt = "RECREATE";
+
+   Create(url, opt, netopt);
 }
 
 //______________________________________________________________________________
