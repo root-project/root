@@ -22,6 +22,7 @@
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
+#include "TGeoOverlap.h"
 #include "TGeoChecker.h"
 #include "TGeoPainter.h"
 
@@ -44,8 +45,11 @@ TGeoPainter::TGeoPainter()
    fVisBranch = "";
    fVisLock = kFALSE;
    fTopVisible = kFALSE;
+   fPaintingOverlaps = kFALSE;
    fVisVolumes = new TObjArray();
    fCheckedNode = 0;
+   fOverlap = 0;
+   fMatrix = 0;
    memset(&fCheckedBox[0], 0, 6*sizeof(Double_t));
    
    if (gGeoManager) fGeom = gGeoManager;
@@ -123,7 +127,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    const Int_t maxdist = 5;
    
    TGeoBBox *box;
-   
+
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
@@ -139,6 +143,54 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    Int_t dist = big;
    Int_t id;
    
+   if (fPaintingOverlaps) {
+      TGeoVolume *crt;
+      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+         crt = fOverlap->GetVolume();
+         fMatrix = gGeoIdentity;
+         dist = crt->GetShape()->DistancetoPrimitive(px,py);
+         if (dist<maxdist) {
+            gPad->SetSelected(crt);
+            box = (TGeoBBox*)crt->GetShape();
+            fMatrix->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+            fCheckedBox[3] = box->GetDX();
+            fCheckedBox[4] = box->GetDY();
+            fCheckedBox[5] = box->GetDZ();
+            return 0;
+         }
+      }   
+      crt = fOverlap->GetNode(0)->GetVolume();
+      fMatrix = fOverlap->GetNode(0)->GetMatrix();
+      dist = crt->GetShape()->DistancetoPrimitive(px,py);
+      if (dist<maxdist) {
+         gPad->SetSelected(crt);
+         box = (TGeoBBox*)crt->GetShape();
+         fMatrix->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+         fCheckedBox[3] = box->GetDX();
+         fCheckedBox[4] = box->GetDY();
+         fCheckedBox[5] = box->GetDZ();
+         return 0;
+      }
+      if (!fOverlap->GetNode(1)) {
+         gPad->SetSelected(view);
+         return big;
+      }
+      crt = fOverlap->GetNode(1)->GetVolume();
+      fMatrix = fOverlap->GetNode(1)->GetMatrix();
+      dist = crt->GetShape()->DistancetoPrimitive(px,py);
+      if (dist<maxdist) {
+         gPad->SetSelected(crt);
+         box = (TGeoBBox*)crt->GetShape();
+         fMatrix->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+         fCheckedBox[3] = box->GetDX();
+         fCheckedBox[4] = box->GetDY();
+         fCheckedBox[5] = box->GetDZ();
+         return 0;
+      }      
+      gPad->SetSelected(view);
+      return dist;
+   }
+   
    if (fGeom->GetTopVolume() == vol) fGeom->CdTop();
    Int_t level = fGeom->GetLevel();
    TGeoNode *current = fGeom->GetCurrentNode();
@@ -153,12 +205,12 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             dist = vol->GetShape()->DistancetoPrimitive(px,py);
             if (dist<maxdist) {
                gPad->SetSelected(vol);
-	       fCheckedNode = current;
-	       box = (TGeoBBox*)vol->GetShape();
-	       fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-	       fCheckedBox[3] = box->GetDX();
-	       fCheckedBox[4] = box->GetDY();
-	       fCheckedBox[5] = box->GetDZ();
+	             fCheckedNode = current;
+	             box = (TGeoBBox*)vol->GetShape();
+	             fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+	             fCheckedBox[3] = box->GetDX();
+	             fCheckedBox[4] = box->GetDY();
+	             fCheckedBox[5] = box->GetDZ();
                return 0;
             }
          }
@@ -180,12 +232,12 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             dist = vol->GetShape()->DistancetoPrimitive(px, py);
             if (dist<maxdist) {
                gPad->SetSelected(vol);
-	       fCheckedNode = current;
-	       box = (TGeoBBox*)vol->GetShape();
-	       fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-	       fCheckedBox[3] = box->GetDX();
-	       fCheckedBox[4] = box->GetDY();
-	       fCheckedBox[5] = box->GetDZ();
+	             fCheckedNode = current;
+	             box = (TGeoBBox*)vol->GetShape();
+	             fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+	             fCheckedBox[3] = box->GetDX();
+	             fCheckedBox[4] = box->GetDY();
+	             fCheckedBox[5] = box->GetDZ();
                return 0;
             }
          }
@@ -203,11 +255,11 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          if (dist<maxdist) {
             gPad->SetSelected(vol);
             fCheckedNode = current;
-	    box = (TGeoBBox*)vol->GetShape();
-	    fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-	    fCheckedBox[3] = box->GetDX();
-	    fCheckedBox[4] = box->GetDY();
-	    fCheckedBox[5] = box->GetDZ();
+	          box = (TGeoBBox*)vol->GetShape();
+	          fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+	          fCheckedBox[3] = box->GetDX();
+	          fCheckedBox[4] = box->GetDY();
+	          fCheckedBox[5] = box->GetDZ();
             return 0;
          }
          break;
@@ -273,6 +325,10 @@ void TGeoPainter::Draw(Option_t *option)
 {
    TString opt = option;
    opt.ToLower();
+   fPaintingOverlaps = kFALSE;
+   fOverlap = 0;
+   if (fVisOption==kGeoVisOnly) fGeom->SetVisOption(kGeoVisDefault);
+   
    if (fVisLock) {
       fVisVolumes->Clear();
       fVisLock = kFALSE;
@@ -301,6 +357,43 @@ void TGeoPainter::Draw(Option_t *option)
    printf("--- number of nodes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
 //______________________________________________________________________________
+void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
+{
+   TString opt = option;
+   TGeoOverlap *overlap = (TGeoOverlap*)ovlp;
+   if (!overlap) return;
+   fPaintingOverlaps = kTRUE;
+   fOverlap = overlap;
+   opt.ToLower();
+   if (fVisLock) {
+      fVisVolumes->Clear();
+      fVisLock = kFALSE;
+   }   
+   Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
+   // Clear pad if option "same" not given
+   if (!gPad) {
+      if (!gROOT->GetMakeDefCanvas()) return;
+      (gROOT->GetMakeDefCanvas())();
+   }
+   if (!opt.Contains("same")) gPad->Clear();
+   // append this volume to pad
+   overlap->AppendPad(option);
+
+   // Create a 3-D view
+   TView *view = gPad->GetView();
+   if (!view) {
+      view = new TView(11);
+      view->SetAutoRange(kTRUE);
+      PaintOverlap(overlap, "range");
+      overlap->GetPolyMarker()->Draw("SAME");
+      view->SetAutoRange(kFALSE);
+      if (has_pad) gPad->Update();
+   }
+   if (!view->IsPerspective()) view->SetPerspective();
+   fVisLock = kTRUE;
+   printf("--- number of nodes on screen : %i\n", fVisVolumes->GetEntriesFast());
+}
+//______________________________________________________________________________
 void TGeoPainter::DrawOnly(Option_t *option)
 {
    TString opt = option;
@@ -309,6 +402,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
       fVisVolumes->Clear();
       fVisLock = kFALSE;
    }   
+   fPaintingOverlaps = kFALSE;
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
@@ -390,7 +484,25 @@ char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /
    const char *snull = "";
    if (!gPad) return (char*)snull;
    static char info[128];
-   sprintf(info,"%s, shape=%s", fGeom->GetPath(), volume->GetShape()->ClassName());
+   if (fPaintingOverlaps) {
+      if (!fOverlap) {
+         sprintf(info, "wrong overlapping flag");
+         return info;
+      }   
+      TString ovtype, name;
+      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+         ovtype="EXTRUSION";
+         if (volume==fOverlap->GetVolume()) name=volume->GetName();
+         else name=fOverlap->GetNode(0)->GetName();
+      } else {
+         ovtype = "OVERLAP";
+         if (volume==fOverlap->GetNode(0)->GetVolume()) name=fOverlap->GetNode(0)->GetName();
+         else name=fOverlap->GetNode(0)->GetName();
+      }   
+      sprintf(info, "%s: %s of %g", name.Data(), ovtype.Data(), fOverlap->GetOverlap());
+      return info;
+   }   
+   else sprintf(info,"%s, shape=%s", fGeom->GetPath(), volume->GetShape()->ClassName());
    return info;
 }
 //______________________________________________________________________________
@@ -453,8 +565,7 @@ void TGeoPainter::ModifiedPad() const
 //______________________________________________________________________________
 void TGeoPainter::Paint(Option_t *option)
 {
-// paint current geometry according to option
-//   printf("TGeoPainter::Paint()\n");
+// Paint current geometry according to option.
    if (!fGeom) return;
    if (fVisOption==kGeoVisOnly) {
       fGeom->GetCurrentNode()->Paint(option);
@@ -463,6 +574,49 @@ void TGeoPainter::Paint(Option_t *option)
    fGeom->CdTop();
    TGeoNode *top = fGeom->GetTopNode();
    top->Paint(option);
+   fVisLock = kTRUE;
+}
+//______________________________________________________________________________
+void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
+{
+// Paint an overlap.
+   if (!fGeom) return;
+   TGeoOverlap *overlap = (TGeoOverlap *)ovlp;
+   if (!overlap) return;
+   if (fOverlap != overlap) fOverlap = overlap;
+   TGeoHMatrix *hmat = new TGeoHMatrix(); // id matrix
+   TGeoVolume *vol = overlap->GetVolume();
+   TGeoNode *node1, *node2;
+   Bool_t isextrusion = overlap->TestBit(TGeoOverlap::kGeoExtrusion);
+   if (isextrusion) {
+      if (!fVisLock) fVisVolumes->Add(vol);
+      fOverlap->SetLineColor(3);
+      fOverlap->SetLineWidth(vol->GetLineWidth());
+      vol->GetShape()->PaintNext(hmat, option);
+      node1 = overlap->GetNode(0);
+      *hmat = node1->GetMatrix();
+      vol = node1->GetVolume();
+      if (!fVisLock) fVisVolumes->Add(vol);
+      fOverlap->SetLineColor(4);
+      fOverlap->SetLineWidth(vol->GetLineWidth());
+      vol->GetShape()->PaintNext(hmat, option);
+   } else {
+      node1 = overlap->GetNode(0);
+      vol = node1->GetVolume();
+      fOverlap->SetLineColor(3);
+      fOverlap->SetLineWidth(vol->GetLineWidth());
+      *hmat = node1->GetMatrix();
+      if (!fVisLock) fVisVolumes->Add(vol);
+      vol->GetShape()->PaintNext(hmat, option);
+      node2 = overlap->GetNode(1);
+      vol = node2->GetVolume();
+      fOverlap->SetLineColor(4);
+      fOverlap->SetLineWidth(vol->GetLineWidth());
+      *hmat = node2->GetMatrix();
+      if (!fVisLock) fVisVolumes->Add(vol);
+      vol->GetShape()->PaintNext(hmat, option);
+   }     
+   delete hmat;
    fVisLock = kTRUE;
 }
 //______________________________________________________________________________
@@ -509,8 +663,12 @@ void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glm
     z0 = z1 = buff->points[2];
 
     if (!rangeView) {
-      ((TAttLine*)vol)->Modify();  //Change line attributes only if necessary
-      ((TAttFill*)vol)->Modify();  //Change fill area attributes only if necessary
+      if (!fPaintingOverlaps) {
+         ((TAttLine*)vol)->Modify();  //Change line attributes only if necessary
+         ((TAttFill*)vol)->Modify();  //Change fill area attributes only if necessary
+      } else {
+         ((TAttLine*)fOverlap)->Modify();
+      }   
     }
 
     for (Int_t i = 0; i < buff->numSegs; i++) {
@@ -575,6 +733,15 @@ void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option, TGeoHMatrix *glma
 
    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
    if (c < 0) c = 0;
+   if (fPaintingOverlaps) {
+      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      } else {
+         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      }   
+   }   
 
 //*-* Allocate memory for segments *-*
 
@@ -703,6 +870,15 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
 
     Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
+   if (fPaintingOverlaps) {
+      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      } else {
+         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      }   
+   }   
 
 //*-* Allocate memory for segments *-*
 
@@ -837,7 +1013,15 @@ void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
 
     Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
-
+   if (fPaintingOverlaps) {
+      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      } else {
+         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      }   
+   }
 //*-* Allocate memory for segments *-*
 
     buff->segs = new Int_t[buff->numSegs*3];
@@ -994,6 +1178,15 @@ void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *g
 
     Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
+   if (fPaintingOverlaps) {
+      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      } else {
+         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      }   
+   }
 
 //*-* Allocate memory for segments *-*
 
@@ -1215,6 +1408,15 @@ void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
 
     Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
+   if (fPaintingOverlaps) {
+      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      } else {
+         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      }   
+   }
 
 //*-* Allocate memory for segments *-*
 
@@ -1644,7 +1846,9 @@ Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoi
    Double_t dlocal[3], dmaster[3];
    for (Int_t i=0; i<numpoints; i++) {
       dlocal[0]=points[3*i]; dlocal[1]=points[3*i+1]; dlocal[2]=points[3*i+2];
-      if (IsExplodedView())
+      if (fPaintingOverlaps) {
+         fMatrix->LocalToMaster(&dlocal[0], &dmaster[0]);
+      } else if (IsExplodedView())
          fGeom->LocalToMasterBomb(&dlocal[0], &dmaster[0]);
       else   
          fGeom->LocalToMaster(&dlocal[0], &dmaster[0]);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.13 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.14 2003/02/11 08:48:21 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -70,6 +70,7 @@ public:
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py) = 0;
    virtual void       Draw(Option_t *option="") = 0;
    virtual void       DrawOnly(Option_t *option="") = 0;
+   virtual void       DrawOverlap(void *ovlp, Option_t *option="") = 0;
    virtual void       DrawCurrentPoint(Int_t color) = 0;
    virtual void       DrawPanel() = 0;
    virtual void       DrawPath(const char *path) = 0;
@@ -101,6 +102,7 @@ public:
    virtual void       PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
+   virtual void       PaintOverlap(void *ovlp, Option_t *option="")  = 0;
    virtual void       PrintOverlaps() const = 0;
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) = 0;

@@ -36,6 +36,7 @@ typedef struct _x3d_points_ {
 
 class TGeoHMatrix;
 class TGeoChecker;
+class TGeoOverlap;
 class TH2F;
 
 class TGeoPainter : public TVirtualGeoPainter {
@@ -51,8 +52,11 @@ private:
    Int_t              fExplodedView;     // type of exploding current view
    Bool_t             fVisLock;          // lock for adding visible volumes
    Bool_t             fTopVisible;       // set top volume visible
+   Bool_t             fPaintingOverlaps; // lock overlaps painting
    const char        *fVisBranch;        // drawn branch
    TGeoNode          *fCheckedNode;      // checked node
+   TGeoOverlap       *fOverlap;          // current overlap
+   TGeoMatrix        *fMatrix;           // current local matrix in case of overlaps
    TGeoManager       *fGeom;             // geometry to which applies
    TGeoChecker       *fChecker;          // geometry checker
    TObjArray         *fVisVolumes;       // list of visible volumes
@@ -69,6 +73,7 @@ public:
    virtual void       DefaultColors();
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py);
    virtual void       Draw(Option_t *option="");
+   virtual void       DrawOverlap(void *ovlp, Option_t *option="");
    virtual void       DrawCurrentPoint(Int_t color);
    virtual void       DrawOnly(Option_t *option="");
    virtual void       DrawPanel();
@@ -105,6 +110,7 @@ public:
    void               PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
    void               PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
+   virtual void       PaintOverlap(void *ovlp, Option_t *option="");
    virtual void       PrintOverlaps() const;
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="");
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
