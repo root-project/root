@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.17 2001/08/10 10:03:12 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.18 2001/10/17 08:21:33 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -115,9 +115,11 @@ TClonesArray::~TClonesArray()
    if (fKeep) {
       for (Int_t i = 0; i < fKeep->fSize; i++) {
          // remove any possible entries from the ObjectTable
-         if (TObject::GetObjectStat() && gObjectTable && fClass->GetClassInfo())
-            gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-         ::operator delete(fKeep->fCont[i]);
+         if (fClass->GetClassInfo()) {
+            if (TObject::GetObjectStat() && gObjectTable)
+               gObjectTable->RemoveQuietly(fKeep->fCont[i]);
+            ::operator delete(fKeep->fCont[i]);
+         }
       }
    }
    SafeDelete(fKeep);
