@@ -1,3 +1,7 @@
+test:
+tests:
+	@echo $(PWD) has some failing directory (this makefile is not up to date)
+
 CXX = g++
 CXXFLAGS = $(shell root-config --cflags)
 LDFLAGS = $(shell root-config --libs)

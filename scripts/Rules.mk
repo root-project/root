@@ -129,13 +129,13 @@ endif
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
 
 %_cpp.$(DllSuf) : %.cpp
-	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\) > $*_cpp.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_cpp.build.log
 
 %_C.$(DllSuf) : %.C
-	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\) > $*_C.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_C.build.log
 
 %_cxx.$(DllSuf) : %.cxx
-	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\) > $*_cxx.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_cxx.build.log
 
 %.log : run%.C
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1

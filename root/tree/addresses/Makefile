@@ -44,6 +44,12 @@ Embedded_load_C.$(DllSuf) : buildEmbedded.C Embedded_load.C Embedded_objects.cpp
 Embedded.root: Embedded_load_C.$(DllSuf) embwrite.C
 	$(CMDECHO) root.exe -q -b -l embwrite.C > EmbeddedTest.write.log
 
+relations_load_C.$(DllSuf) : relations.h
+
+relations_write_C.$(DllSuf) : relations.h
+
+relations_read_C.$(DllSuf) : relations.h
+ 
 EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
 	$(CMDECHO) root.exe -q -b -l embread.C > EmbeddedTest.log
 

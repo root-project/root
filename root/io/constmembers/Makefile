@@ -7,8 +7,16 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+test:
+	@echo $(PWD) has a failing test FileInfoTest
 
+
+ifeq ($(FAIL),)
+FileInfoTest:
+	$(WarnFailTest)	
+else
 FileInfoTest: dict.o dictold.o
+endif
 
 dict.cxx: TFileInfo.h LinkDef.h $(ROOTSYS)/bin/rootcint
 	rootcint -f dict.cxx -c TFileInfo.h LinkDef.h
