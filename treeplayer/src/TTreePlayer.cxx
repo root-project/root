@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.52 2001/07/03 20:15:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.53 2001/07/16 21:09:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -237,6 +237,7 @@
 #include "TClass.h"
 #include "TVirtualPad.h"
 #include "TProfile.h"
+#include "TProfile2D.h"
 #include "TTreeFormula.h"
 #include "TGaxis.h"
 #include "TBrowser.h"
@@ -632,6 +633,13 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //  The option=prof is automatically selected in case of y:x>>pf
 //  where pf is an existing TProfile histogram.
 //
+//     Making a 2D Profile histogram
+//     ==========================
+//  In case of a 3-Dim expression, one can generate a TProfile2D histogram
+//  instead of a TH3F histogram by specyfying option=prof or option=profs.
+//  The option=prof is automatically selected in case of z:y:x>>pf
+//  where pf is an existing TProfile2D histogram.
+//
 //     Saving the result of Draw to a TEventList
 //     =========================================
 //  TTree::Draw can be used to fill a TEventList object (list of entry numbers)
@@ -793,8 +801,13 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
          profile = kTRUE;
          olddim = 2;
       }
-      if (opt.Contains("prof")) {
-         if (!profile) mustdelete = 1;
+      if (oldh1->InheritsFrom("TProfile2D")) {
+         profile = kTRUE;
+         olddim = 3;
+      }
+      if (opt.Contains("prof") && fDimension>1) { 
+        // ignore "prof" for 1D.
+         if (!profile || olddim != fDimension) mustdelete = 1;
       } else {
          if (olddim != fDimension) mustdelete = 1;
       }
@@ -1036,34 +1049,66 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
              if (!oldh1) action = -3;
          }
       }
-      TH3F *h3;
-      if (oldh1) {
-         h3 = (TH3F*)oldh1;
-      } else {
-         h3 = new TH3F(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
-         h3->SetLineColor(fTree->GetLineColor());
-         h3->SetFillColor(fTree->GetFillColor());
-         h3->SetFillStyle(fTree->GetFillStyle());
-         h3->SetMarkerStyle(fTree->GetMarkerStyle());
-         h3->SetMarkerColor(fTree->GetMarkerColor());
-         h3->SetMarkerSize(fTree->GetMarkerSize());
-         if (!opt.Contains("same"))h3->SetBit(TH1::kCanRebin);
-         if (!hkeep) {
-            h3->SetBit(kCanDelete);
-            h3->SetBit(TH1::kNoStats);
-            h3->SetDirectory(0);
+      if (profile || opt.Contains("prof")) {
+         TProfile2D *hp;
+         if (oldh1) {
+            action = 23;
+            hp = (TProfile2D*)oldh1;
+         } else {
+            if (action < 0) action = -23;
+            if (opt.Contains("profs"))
+               hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"s");
+            else
+               hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"");
+            if (!hkeep) {
+               hp->SetBit(kCanDelete);
+               hp->SetDirectory(0);
+            }
+            hp->SetLineColor(fTree->GetLineColor());
+            hp->SetLineWidth(fTree->GetLineWidth());
+            hp->SetLineStyle(fTree->GetLineStyle());
+            hp->SetFillColor(fTree->GetFillColor());
+            hp->SetFillStyle(fTree->GetFillStyle());
+            hp->SetMarkerStyle(fTree->GetMarkerStyle());
+            hp->SetMarkerColor(fTree->GetMarkerColor());
+            hp->SetMarkerSize(fTree->GetMarkerSize());
+            if (!opt.Contains("same"))hp->SetBit(TH1::kCanRebin);
          }
-      }
-      Int_t noscat = strlen(option);
-      if (opt.Contains("same")) noscat -= 4;
-      if (noscat) {
-         EntryLoop(action,h3,nentries, firstentry, option);
-         if (!fDraw && !opt.Contains("goff")) h3->Draw(option);
+            
+         EntryLoop(action,hp,nentries, firstentry, option);
+        
+         if (!fDraw && !opt.Contains("goff")) hp->Draw(option);
+         
       } else {
-         action = 13;
-         if (!oldh1 && !opt.Contains("same")) action = -13;
-         EntryLoop(action,h3,nentries, firstentry, option);
-         if (oldh1 && !fDraw && !opt.Contains("goff")) h3->Draw(option);
+         TH3F *h3;
+         if (oldh1) {
+            h3 = (TH3F*)oldh1;
+         } else {
+            h3 = new TH3F(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            h3->SetLineColor(fTree->GetLineColor());
+            h3->SetFillColor(fTree->GetFillColor());
+            h3->SetFillStyle(fTree->GetFillStyle());
+            h3->SetMarkerStyle(fTree->GetMarkerStyle());
+            h3->SetMarkerColor(fTree->GetMarkerColor());
+            h3->SetMarkerSize(fTree->GetMarkerSize());
+            if (!opt.Contains("same"))h3->SetBit(TH1::kCanRebin);
+            if (!hkeep) {
+               h3->SetBit(kCanDelete);
+               h3->SetBit(TH1::kNoStats);
+               h3->SetDirectory(0);
+            }
+         }
+         Int_t noscat = strlen(option);
+         if (opt.Contains("same")) noscat -= 4;
+         if (noscat) {
+            EntryLoop(action,h3,nentries, firstentry, option);
+            if (!fDraw && !opt.Contains("goff")) h3->Draw(option);
+         } else {
+            action = 13;
+            if (!oldh1 && !opt.Contains("same")) action = -13;
+            EntryLoop(action,h3,nentries, firstentry, option);
+            if (oldh1 && !fDraw && !opt.Contains("goff")) h3->Draw(option);
+         }
       }
 
 //*-* an Event List
@@ -2872,7 +2917,7 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
      for(i=0;i<nfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
   }
 //----------------------------------------------------------
-    else if (action ==  3) {
+  else if (action ==  3) {
      TH3 *h3 =(TH3*)obj;
      for(i=0;i<nfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
   }
@@ -2885,6 +2930,10 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
      pm3d->Draw();
      TH3 *h3 =(TH3*)obj;
      for(i=0;i<nfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+  }
+  else if (action == 23) {
+     TProfile2D *hp2 =(TProfile2D*)obj;
+     for(i=0;i<nfill;i++) hp2->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
   }
   else if (action < 0) {
      action = -action;
@@ -3057,6 +3106,26 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      pm3d->SetMarkerSize(fTree->GetMarkerSize());
      for (i=0;i<nfill;i++) { pm3d->SetPoint(i,fV3[i],fV2[i],fV1[i]);}
      if (!fDraw && !strstr(option,"goff")) pm3d->Draw();
+//__________________________2D Profile Histogram__________________
+  } else if (action == 23) {
+     for (i=0;i<nfill;i++) {
+        if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
+        if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
+        if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
+        if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
+        if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
+        if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
+     }
+     Int_t nchans = fNbins[1];
+     if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
+     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
+     if (fVmin[2] >= fVmax[2]) { fVmin[2] -= 1; fVmax[2] += 1;}
+     FindGoodLimits(nchans,fNbins[2],fVmin[2],fVmax[2], fVar3->IsInteger());
+
+     TProfile2D *hp = (TProfile2D*)obj;
+     hp->SetBins(fNbins[2],fVmin[2],fVmax[2],fNbins[1],fVmin[1],fVmax[1]);
+     for (i=0;i<nfill;i++) hp->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+     fHistogram = hp;
   }
 }
 
