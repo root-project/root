@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.30 2001/02/15 07:17:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.31 2001/02/22 11:03:57 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1772,7 +1772,7 @@ void THistPainter::PaintContour()
          }
          theColor = Int_t((ipoly+1)*Float_t(ncolors)/Float_t(ndivz));
          icol = gStyle->GetColorPalette(theColor);
-         fH->SetFillColor(icol);
+         if (ndivz > 2) fH->SetFillColor(icol);
          fH->TAttFill::Modify();
          gPad->PaintFillArea(iplus-iminus+1,&xp[iminus],&yp[iminus]);
          if (Hoption.List) {
