@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.8 2002/06/11 13:25:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.9 2002/07/09 21:11:25 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -182,7 +182,7 @@ TUUID::TUUID()
    Format(clockseq, timestamp);
 
    time_last = timestamp;
-   fUUIDNumber = 1<<31;
+   fUUIDIndex = 1<<31;
 }
 
 //______________________________________________________________________________
@@ -190,7 +190,7 @@ TUUID::~TUUID()
 {
    // delete this TUUID
 
-   //gROOT->GetUUIDs()->RemoveUUID(fUUIDNumber);
+   //gROOT->GetUUIDs()->RemoveUUID(fUUIDIndex);
 }
 
 //______________________________________________________________________________
@@ -240,7 +240,7 @@ void TUUID::SetFromString(const char *uuid)
    fNode[3]               = (UChar_t) node[3];
    fNode[4]               = (UChar_t) node[4];
    fNode[5]               = (UChar_t) node[5];
-   fUUIDNumber            = 1<<31;
+   fUUIDIndex             = 1<<31;
 }
 
 //______________________________________________________________________________
@@ -264,27 +264,29 @@ TUUID::TUUID(const char *uuid)
 //______________________________________________________________________________
 void TUUID::FillBuffer(char *&buffer)
 {
-// Stream UUID into output buffer
-   
+   // Stream UUID into output buffer.
+
    tobuf(buffer, fTimeLow);
    tobuf(buffer, fTimeMid);
    tobuf(buffer, fTimeHiAndVersion);
    tobuf(buffer, fClockSeqHiAndReserved);
    tobuf(buffer, fClockSeqLow);
-   for (Int_t i=0;i<6;i++) tobuf(buffer, fNode[i]);
+   for (Int_t i = 0; i < 6; i++)
+      tobuf(buffer, fNode[i]);
 }
 
 //______________________________________________________________________________
 void TUUID::ReadBuffer(char *&buffer)
 {
-// Stream UUID from input buffer
-   
+   // Stream UUID from input buffer.
+
    frombuf(buffer, &fTimeLow);
    frombuf(buffer, &fTimeMid);
    frombuf(buffer, &fTimeHiAndVersion);
    frombuf(buffer, &fClockSeqHiAndReserved);
    frombuf(buffer, &fClockSeqLow);
-   for (Int_t i=0;i<6;i++) frombuf(buffer, &fNode[i]);
+   for (Int_t i = 0; i < 6; i++)
+      frombuf(buffer, &fNode[i]);
 }
 
 //______________________________________________________________________________
