@@ -13,7 +13,7 @@ ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
-OutPutOpt     = -o 
+OutPutOpt     = -o # keep whitespace after "-o"
 
 ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
