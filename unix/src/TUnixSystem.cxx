@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.77 2003/11/23 12:10:04 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.78 2003/12/01 07:15:26 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -242,7 +242,7 @@ extern "C" {
 #include <fenv.h>
 #endif
 
-#if (defined(__ppc__) && defined(__APPLE__))
+#if defined(R__MACOSX) && !defined(_xlc_)
 #include <fenv.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -534,7 +534,7 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 #endif
 
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) && !defined(_xlc_)
    Long64_t oldmask;
    fegetenvd(oldmask);
 
@@ -576,7 +576,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 #endif
 
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) && !defined(_xlc_)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
    if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;

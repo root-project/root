@@ -271,6 +271,15 @@ macosx)
    auxlibs="$expl1 $expl2 -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    auxglibs=${auxlibs}
    ;;
+macosxxlc)
+   # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
+   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+   auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+   expl1="-u _G__cpp_setup_initializerG__Tree"
+   expl2="-u _G__cpp_setup_initializerG__G3D"
+   auxlibs="$expl1 $expl2 -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+   auxglibs=${auxlibs}
+   ;;
 hiux)
    # Hitachi HIUX
    auxcflags=

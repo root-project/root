@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.143 2003/08/15 18:52:50 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.144 2003/10/31 20:25:48 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3625,6 +3625,11 @@ int main(int argc, char **argv)
 #ifdef __INTEL_COMPILER
          argvv[argcc] = (char *)calloc(64, 1);
          sprintf(argvv[argcc], "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
+#endif
+#ifdef _xlc_
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D_xlc_=%ld", (long)_xlc_); argcc++;
+printf("-D_xlc_=%ld", (long)_xlc_); argcc++;
 #endif
 #ifdef __GNUC__
          argvv[argcc] = (char *)calloc(64, 1);

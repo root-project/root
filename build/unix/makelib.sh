@@ -72,9 +72,13 @@ elif [ $PLATFORM = "lynxos" ]; then
 elif [ $PLATFORM = "fbsd" ]; then
     # for aout: echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
     # for aout: $LD $SOFLAGS $LDFLAGS -o $LIB `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
-    echo $PLATFORM: $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR objs: $OBJS extra: $EXTRA exp:$EXPLLNKCORE
+    echo $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
     $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
 elif [ $PLATFORM = "macosx" ]; then
+   if [ $LD = "xlC" ]; then
+      # if we are using xlc, then the linker for shared libs is still g++
+      LD=g++
+   fi
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    # We need two library files: a .dylib to link to and a .so to load

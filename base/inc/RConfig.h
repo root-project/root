@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.56 2003/05/02 11:29:35 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.57 2003/08/14 15:54:49 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -252,6 +252,10 @@
 #if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
 #   define R__MACOSX
 #   define R__UNIX
+#   if defined(_xlc_)
+#      define ANSICPP
+#      define R__ANSISTREAM
+#   endif
 #endif
 
 #ifdef _HIUX_SOURCE

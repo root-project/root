@@ -146,6 +146,14 @@ CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/gcc3strm.cxx
 CINTS2       += $(MODDIRS)/longif3.cxx
 endif
+ifeq ($(CXX),xlC)
+ifeq ($(PLATFORM),macosx)
+CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
+CINTS2       += $(MODDIRS)/gcc3strm.cxx
+CINTS2       += $(MODDIRS)/longif3.cxx
+endif
+endif
 
 CINTS        := $(CINTS1) $(CINTS2)
 CINTO        := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)

@@ -1,0 +1,61 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for MacOS X, using IBM xl compilers
+
+PLATFORM      = macosx
+
+DEBUGFLAGS    = -g -O
+OPTFLAGS      = -O
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         = -qnoopt
+else
+OPT           = $(OPTFLAGS)
+NOOPT         = -qnoopt
+endif
+
+# Compiler:
+CXX           = xlC
+CC            = xlc
+CXXFLAGS      = -qpic -qchar=signed -D_xlc_ \
+		-qflttrap=overflow:zerodivide:invalid:enable \
+                -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
+CFLAGS        = -qpic -qchar=signed -D_xlc_ \
+		-qflttrap=overflow:zerodivide:invalid:enable \
+                -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS) 
+CINTCXXFLAGS  = -qpic -qchar=signed -D_xlc_ \
+		-qflttrap=overflow:zerodivide:enable \
+                -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
+		-DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
+CINTCFLAGS    = -qpic -qchar=signed -D_xlc_ \
+		-qflttrap=overflow:zerodivide:enable \
+                -DG__ANSI -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
+		$(EXTRA_CFLAGS) $(FINK_CFLAGS)
+
+# Linker:
+LD            = xlC
+LDFLAGS       = $(OPT) -Wl,-bind_at_load -Wl,-flat_namespace
+SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
+                -single_module -install_name $(LIBDIR)/
+SOEXT         = dylib
+
+# System libraries:
+SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
+CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
+
+# Fortran:
+F77           = xlf
+F77LIBS       = -lg2c
+
+# Override default in Makefile.config
+INSTALL      := cp -pPR
+INSTALLDATA  := cp -pPR
+
+# Extras
+FINK_DIR      = $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
+FINK_CXXFLAGS = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
+FINK_CFLAGS   = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
+FINK_LDFLAGS  = $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)
