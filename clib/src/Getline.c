@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.3 2000/06/16 15:23:01 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.4 2000/06/27 16:42:22 rdm Exp $ */
 /* Author: */
 
 /*
@@ -813,128 +813,141 @@ Getlinem(int mode, char *prompt)
                     search_term();      /* terminate and handle char */
                 }
             }
-#define gl_Meta_b   226
-#define gl_Meta_B   194
-#define gl_Meta_d   228
-#define gl_Meta_D   196
-#define gl_Meta_f   230
-#define gl_Meta_F   198
-#define gl_Ctrl_SPC   0
-#define gl_Ctrl_W    23
-#define gl_Ctrl_X    24
-            switch (c) {
-
-              case gl_Meta_b:                           /* M-b */
-              case gl_Meta_B:                           /* M-B */
-                gl_back_1_word();
-                break;
-              case gl_Meta_d:                           /* M-d */
-              case gl_Meta_D:                           /* M-D */
-                gl_kill_1_word();
-                break;
-              case gl_Meta_f:                           /* M-f */
-              case gl_Meta_F:                           /* M-F */
-                gl_fwd_1_word();
-                break;
-              case gl_Ctrl_SPC:                         /* ^SPC */
-                gl_set_mark();
-                break;
-              case gl_Ctrl_W:                           /* ^W  */
-                gl_wipe();
-                break;
-              case gl_Ctrl_X:                           /* ^X  */
-                gl_exch();
-                break;
-
-              case '\n': case '\r':                     /* newline */
-                gl_newline();
-                gl_cleanup();
-                return gl_buf;
-                /*NOTREACHED*/
-                break;
-              case '\001': gl_fixup(gl_prompt, -1, 0);          /* ^A */
-                break;
-              case '\002': gl_fixup(gl_prompt, -1, gl_pos-1);   /* ^B */
-                break;
-              case '\004':                                      /* ^D */
-                if (gl_cnt == 0) {
-                    gl_buf[0] = 0;
-                    gl_cleanup();
-                    gl_putc('\n');
-                    return gl_buf;
-                } else {
-                    gl_del(0);
-                }
-                break;
-              case '\005': gl_fixup(gl_prompt, -1, gl_cnt);     /* ^E */
-                break;
-              case '\006': gl_fixup(gl_prompt, -1, gl_pos+1);   /* ^F */
-                break;
-              case '\010': case '\177': gl_del(-1);     /* ^H and DEL */
-                break;
-              case '\t':                                        /* TAB */
-                if (gl_tab_hook) {
-                    tmp = gl_pos;
-                    loc = gl_tab_hook(gl_buf, strlen(gl_prompt), &tmp);
-                    if (loc >= 0 || tmp != gl_pos || loc == -2)
-                        gl_fixup(gl_prompt, loc, tmp);
-                }
-                break;
-              case '\013': gl_kill();                           /* ^K */
-                break;
-              case '\014': gl_redraw();                         /* ^L */
-                break;
-              case '\016':                                      /* ^N */
-                strcpy(gl_buf, hist_next());
-                if (gl_in_hook)
-                    gl_in_hook(gl_buf);
-                gl_fixup(gl_prompt, 0, BUF_SIZE);
-                break;
-              case '\017': gl_overwrite = !gl_overwrite;        /* ^O */
-                break;
-              case '\020':                                      /* ^P */
-                strcpy(gl_buf, hist_prev());
-                if (gl_in_hook)
-                    gl_in_hook(gl_buf);
-                gl_fixup(gl_prompt, 0, BUF_SIZE);
-                break;
-              case '\022': search_back(1);                      /* ^R */
-                break;
-              case '\023': search_forw(1);                      /* ^S */
-                break;
-              case '\024': gl_transpose();                      /* ^T */
-                break;
-              case '\025': gl_fixup(gl_prompt,-1,0); gl_kill(); /* ^U */
-                break;
-              case '\031': gl_yank();                           /* ^Y */
-                break;
-              case '\033':                              /* ansi arrow keys */
-                c = gl_getc();
-                if (c == '[') {
-                    switch(c = gl_getc()) {
-                      case 'A':                                 /* up */
-                        strcpy(gl_buf, hist_prev());
-                        if (gl_in_hook)
-                            gl_in_hook(gl_buf);
-                        gl_fixup(gl_prompt, 0, BUF_SIZE);
-                        break;
-                      case 'B':                                 /* down */
-                        strcpy(gl_buf, hist_next());
-                        if (gl_in_hook)
-                            gl_in_hook(gl_buf);
-                        gl_fixup(gl_prompt, 0, BUF_SIZE);
-                        break;
-                      case 'C': gl_fixup(gl_prompt, -1, gl_pos+1); /* right */
-                        break;
-                      case 'D': gl_fixup(gl_prompt, -1, gl_pos-1); /* left */
-                        break;
-                      default: gl_putc('\007');         /* who knows */
-                        break;
-                    }
-                } else
-                    gl_putc('\007');
-                break;
-              default:          /* check for a terminal signal */
+            /* NOTE:
+             * sometimes M-x turns on bit 8               ( M-x --> 'x' + 128  )
+             * sometimes M-x prepends an escape character ( M-x --> '\033','x' )
+             * both cases are handled ...
+             */
+            switch (c)
+            {
+            case 'b'+128:                           /* M-b */
+            case 'B'+128:                           /* M-B */
+                 gl_back_1_word();
+                 break;
+            case 'd'+128:                           /* M-d */
+            case 'D'+128:                           /* M-D */
+                 gl_kill_1_word();
+                 break;
+            case 'f'+128:                           /* M-f */
+            case 'F'+128:                           /* M-F */
+                 gl_fwd_1_word();
+                 break;
+            case '\000':                           /* ^SPC */
+                 gl_set_mark();
+                 break;
+            case '\027':                           /* ^W  */
+                 gl_wipe();
+                 break;
+            case '\030':                           /* ^X  */
+                 gl_exch();
+                 break;
+            case '\n':                             /* newline */
+            case '\r':
+                 gl_newline();
+                 gl_cleanup();
+                 return gl_buf;
+                 /*NOTREACHED*/
+                 break;
+            case '\001': gl_fixup(gl_prompt, -1, 0);          /* ^A */
+                 break;
+            case '\002': gl_fixup(gl_prompt, -1, gl_pos-1);   /* ^B */
+                 break;
+            case '\004':                                      /* ^D */
+                 if (gl_cnt == 0) {
+                      gl_buf[0] = 0;
+                      gl_cleanup();
+                      gl_putc('\n');
+                      return gl_buf;
+                 } else {
+                      gl_del(0);
+                 }
+                 break;
+            case '\005': gl_fixup(gl_prompt, -1, gl_cnt);     /* ^E */
+                 break;
+            case '\006': gl_fixup(gl_prompt, -1, gl_pos+1);   /* ^F */
+                 break;
+            case '\010': case '\177': gl_del(-1);     /* ^H and DEL */
+                 break;
+            case '\t':                                        /* TAB */
+                 if (gl_tab_hook) {
+                      tmp = gl_pos;
+                      loc = gl_tab_hook(gl_buf, strlen(gl_prompt), &tmp);
+                      if (loc >= 0 || tmp != gl_pos || loc == -2)
+                           gl_fixup(gl_prompt, loc, tmp);
+                 }
+                 break;
+            case '\013': gl_kill();                           /* ^K */
+                 break;
+            case '\014': gl_redraw();                         /* ^L */
+                 break;
+            case '\016':                                      /* ^N */
+                 strcpy(gl_buf, hist_next());
+                 if (gl_in_hook)
+                      gl_in_hook(gl_buf);
+                 gl_fixup(gl_prompt, 0, BUF_SIZE);
+                 break;
+            case '\017': gl_overwrite = !gl_overwrite;        /* ^O */
+                 break;
+            case '\020':                                      /* ^P */
+                 strcpy(gl_buf, hist_prev());
+                 if (gl_in_hook)
+                      gl_in_hook(gl_buf);
+                 gl_fixup(gl_prompt, 0, BUF_SIZE);
+                 break;
+            case '\022': search_back(1);                      /* ^R */
+                 break;
+            case '\023': search_forw(1);                      /* ^S */
+                 break;
+            case '\024': gl_transpose();                      /* ^T */
+                 break;
+            case '\025': gl_fixup(gl_prompt,-1,0); gl_kill(); /* ^U */
+                 break;
+            case '\031': gl_yank();                           /* ^Y */
+                 break;
+            case '\033':
+                 switch(c = gl_getc())
+                 {
+                 case 'b':                           /* M-b */
+                 case 'B':                           /* M-B */
+                      gl_back_1_word();
+                      break;
+                 case 'd':                           /* M-d */
+                 case 'D':                           /* M-D */
+                      gl_kill_1_word();
+                      break;
+                 case 'f':                           /* M-f */
+                 case 'F':                           /* M-F */
+                      gl_fwd_1_word();
+                      break;
+                 case '[':                                /* ansi arrow keys */
+                      switch(c = gl_getc())
+                      {
+                      case 'A':                           /* up */
+                           strcpy(gl_buf, hist_prev());
+                           if (gl_in_hook)
+                                gl_in_hook(gl_buf);
+                           gl_fixup(gl_prompt, 0, BUF_SIZE);
+                           break;
+                      case 'B':                          /* down */
+                           strcpy(gl_buf, hist_next());
+                           if (gl_in_hook)
+                                gl_in_hook(gl_buf);
+                           gl_fixup(gl_prompt, 0, BUF_SIZE);
+                           break;
+                      case 'C': gl_fixup(gl_prompt, -1, gl_pos+1);  /* right */
+                           break;
+                      case 'D': gl_fixup(gl_prompt, -1, gl_pos-1);  /* left */
+                           break;
+                      default:                                 /* who knows */
+                           gl_putc('\007');
+                           break;
+                      }
+                      break;
+                 default:
+                      gl_putc('\007');
+                 }
+                 break;
+            default:          /* check for a terminal signal */
 
 #if defined(unix) || defined(WIN32) || defined(R__MWERKS)
                 if (c > 0) {    /* ignore 0 (reset above) */
