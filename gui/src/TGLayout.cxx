@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.5 2003/12/02 00:08:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.6 2003/12/03 00:25:19 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -926,6 +926,6 @@ void TGListDetailsLayout::SavePrimitive(ofstream &out, Option_t *)
    // Save list details layout manager as a C++ statement(s) on out stream
 
    out << " new TGListDetailsLayout(" << fMain->GetName() << ","
-                                     << fSep << ")";
+                                     << fSep << "," << fWidth << ")";
 
 }

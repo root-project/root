@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.6 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.7 2003/12/03 00:25:19 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -254,10 +254,11 @@ public:
 
 class TGListDetailsLayout : public TGTileLayout {
 private:
-   UInt_t fWidth;
+   UInt_t fWidth; // width of listview container
+
 public:
-   TGListDetailsLayout(TGCompositeFrame *main, Int_t sep = 0) :
-      TGTileLayout(main, sep) { fWidth= 0; }
+   TGListDetailsLayout(TGCompositeFrame *main, Int_t sep = 0, UInt_t w = 0) :
+      TGTileLayout(main, sep) { fWidth = w; }
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
