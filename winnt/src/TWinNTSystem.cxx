@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.24 2001/11/28 16:05:42 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.25 2001/12/02 16:49:02 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1316,6 +1316,26 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    // skip leading blanks
    while (*patbuf == ' ')
       patbuf++;
+   
+   // skip leading ':'
+   while (*patbuf == ':')
+      patbuf++;
+    
+   // skip leading ';'
+   while (*patbuf == ';')
+      patbuf++;
+  
+   // Transform a Unix list of directory into a Windows list
+   // by changing the separator from ':' into ';'
+   for (q = (char*)patbuf; *q; q++) {
+      if ( *q == ':' ) {
+               // We are avoiding substitution in the case of
+               // ....;c:....
+         if ( ((q-2)>patbuf) && ( (*(q-2)!=';') || !isalpha(*(q-1)) ) )
+             *q=';';
+
+        }
+   }
 
    // any shell meta characters ?
    for (p = patbuf; *p; p++)
