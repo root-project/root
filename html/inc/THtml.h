@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.2 2000/09/05 09:21:23 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.3 2000/12/05 10:56:10 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -76,9 +76,9 @@ public:
     const char  *GetSourceDir()  { return fSourceDir; }
     const char  *GetOutputDir()  { return fOutputDir; }
     const char  *GetXwho() const { return fXwho.Data(); }
-          void   MakeAll(Bool_t force=kFALSE);
+          void   MakeAll(Bool_t force=kFALSE, const char *filter="*");
           void   MakeClass(const char *className, Bool_t force=kFALSE);
-          void   MakeIndex();
+          void   MakeIndex(const char *filter="*");
           void   MakeTree(const char *className, Bool_t force=kFALSE);
           void   SetEscape(char esc='\\') { fEsc = esc; }
           void   SetSourcePrefix(const char *prefix) { fSourcePrefix = prefix; }

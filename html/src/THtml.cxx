@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.3 2000/05/30 17:15:20 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.4 2000/10/04 16:32:43 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TSystem.h"
 #include "TString.h"
 #include "TInterpreter.h"
+#include "TRegexp.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -2423,14 +2424,23 @@ Bool_t THtml::IsWord( Int_t c )
 
 
 //______________________________________________________________________________
-void THtml::MakeAll( Bool_t force )
+void THtml::MakeAll( Bool_t force, const char *filter)
 {
-// It makes everything
+// It makes all the classes specified in the filter (by default "*")
+// To process all classes having a name starting with XX, do:
+//        html.MakeAll(kFALSE,"XX*");
+// if force=kFALSE (default), only the classes that have been modified since
+// the previous call to this function will be generated.
+// if force=kTRUE, all classes passing the filter will be processed.
 //
 
     Int_t i;
 
-    MakeIndex();
+    TString reg = filter;
+    TRegexp re(reg, kTRUE);
+    Int_t nOK = 0;
+
+    MakeIndex(filter);
 
     Int_t numberOfClasses    = gClassTable->Classes();
     const char **className = new const char* [numberOfClasses];
@@ -2439,11 +2449,16 @@ void THtml::MakeAll( Bool_t force )
     gClassTable->Init();
 
 
-    for( i = 0; i < numberOfClasses; i++ )
-        className[i] = gClassTable->Next();
+    for( i = 0; i < numberOfClasses; i++ ) {       
+      const char *cname = gClassTable->Next();
+      TString s = cname;
+      if (s.Index(re) == kNPOS) continue;
+      className[nOK] = cname;
+      nOK++;
+    }
 
-    for( i = 0; i < numberOfClasses; i++ ) {
-        sprintf( fCounter, "%5d", numberOfClasses - i );
+    for( i = 0; i < nOK; i++ ) {
+        sprintf( fCounter, "%5d", nOK - i );
         MakeClass( (char * ) className[i], force );
     }
 
@@ -2484,9 +2499,12 @@ void THtml::MakeClass(const char *className, Bool_t force )
 
 
 //______________________________________________________________________________
-void THtml::MakeIndex()
+void THtml::MakeIndex(const char *filter)
 {
    // It makes an index files
+   // by default makes an index of all classes (if filter="*")
+   // To generate an index for all classes starting with "XX", do
+   //    html.MakeIndex("XX*");
 
    CreateListOfTypes();
 
@@ -2506,15 +2524,22 @@ void THtml::MakeIndex()
    Int_t maxLen = 0;
    Int_t numberOfImpFiles = 0;
 
+   TString reg = filter;
+   TRegexp re(reg, kTRUE);
+   Int_t nOK = 0;
+   
    for( Int_t i = 0; i < numberOfClasses; i++ ) {
 
       // get class name
-      classNames[i] = gClassTable->Next();
-      len    = strlen( classNames[i] );
+      const char *cname = gClassTable->Next();
+      TString s = cname;
+      if (s.Index(re) == kNPOS) continue;
+      classNames[nOK] = cname;
+      len    = strlen( classNames[nOK] );
       maxLen = maxLen > len ? maxLen : len;
 
       // get class & filename
-      TClass *classPtr = GetClass( (const char * ) classNames[i] );
+      TClass *classPtr = GetClass( (const char * ) classNames[nOK] );
       const char *impname = classPtr->GetImplFileName();
 
       if( impname ) {
@@ -2522,32 +2547,34 @@ void THtml::MakeIndex()
 
          char *underline = strchr( fileNames[numberOfImpFiles], '_');
          if( underline )
-            strcpy( underline + 1, classNames[i] );
+            strcpy( underline + 1, classNames[nOK] );
          else {
             // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
             char *srcdir = strstr(fileNames[numberOfImpFiles], "/src/");
             if (srcdir) {
                strcpy(srcdir, "_");
                for (char *t = fileNames[numberOfImpFiles]; (t[0] = toupper(t[0])); t++) ;
-               strcat(srcdir, classNames[i]);
+               strcat(srcdir, classNames[nOK]);
             } else {
-               strcpy( fileNames[i], "USER_" );
-               strcat( fileNames[i], classNames[i] );
+               strcpy( fileNames[nOK], "USER_" );
+               strcat( fileNames[nOK], classNames[nOK] );
             }
          }
          numberOfImpFiles++;
       }
       else cout << "WARNING class:" << classNames[i] << " has no implementation file name !" << endl;
+
+      nOK++;
    }
    maxLen += kSpaceNum;
 
    // quick sort
-   SortNames( classNames, numberOfClasses );
+   SortNames( classNames, nOK );
    SortNames( (const char ** ) fileNames,  numberOfImpFiles );
 
    // create an index
-   CreateIndex( classNames, numberOfClasses );
-   CreateIndexByTopic( fileNames, numberOfClasses, maxLen );
+   CreateIndex( classNames, nOK);
+   CreateIndexByTopic( fileNames, nOK, maxLen );
 
    // free allocated memory
    delete [] classNames;
