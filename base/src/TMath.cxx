@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.4 2000/06/30 07:24:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.5 2000/06/30 09:02:57 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -111,11 +111,11 @@ Long_t TMath::NextPrime(Long_t x)
    if (x < 2)
       return 2;
    if (x == 3)
-      return 3; 
-    
+      return 3;
+
    if (x % 2 == 0)
       x++;
-    
+
    Long_t sqr = (Long_t) sqrt((Double_t)x) + 1;
 
    for (;;) {
@@ -592,19 +592,19 @@ Double_t TMath::KolmogorovProb(Double_t z)
    // NOTE: To compare two experimental distributions with m and n events,
    //       use z = sqrt(m*n/(m+n))*dn
    //
-   // Accuracy: The function is far too accurate for any imaginable application. 
+   // Accuracy: The function is far too accurate for any imaginable application.
    //           Probabilities less than 10^-15 are returned as zero.
    //           However, remember that the formula is only valid for "large" n.
    // Theta function inversion formula is used for z <= 1
    //
    // This function was translated by Rene Brun from PROBKL in CERNLIB
-   
+
    // cons[j] = -0.5*(PI*2*j-1)/2(**2
    const Double_t cons[3] = { -1.233700550136 , -11.10330496 , -30.84251376};
    // jf2[j] = -2* j**2
    const Double_t fj2[5]  = {-2. , -8. , -18. , -32. , -50.};
    const Double_t sqr2pi = 2.50662827463;
- 
+
    Double_t p = 0;
    Int_t j;
    if (z < 0.2) return 1;
@@ -1217,9 +1217,9 @@ ULong_t TMath::Hash(const void *txt, Int_t ntxt)
    // based on precalculated table of 256 specially selected
    // random numbers.
    //
-   //   For string:  i = TExMap::Hash(string,nstring);
-   //   For int:     i = TExMap::Hash(&intword,sizeof(int));
-   //   For pointer: i = TExMap::Hash(&pointer,sizeof(void*));
+   //   For string:  i = TMath::Hash(string,nstring);
+   //   For int:     i = TMath::Hash(&intword,sizeof(int));
+   //   For pointer: i = TMath::Hash(&pointer,sizeof(void*));
    //
    //   Limitation: for ntxt>256 calculates hash only from first 256 bytes
    //
@@ -1263,7 +1263,7 @@ ULong_t TMath::Hash(const void *txt, Int_t ntxt)
       ,0x3bc5b5cc,0x49a73349,0x356a7f67,0x1174f031,0x11d32634,0x4413d301,0x1dd285c4,0x3fae4800
    };
 
-   ntxt &= 255;
+   if (ntxt > 255) ntxt = 255;
 
    for ( ; ntxt--; uc++) {
       uu = uu<<1 ^ utab[(*uc) ^ ntxt];
