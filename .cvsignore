@@ -3,3 +3,4 @@ lib
 include
 work.pc
 work.pcl
+.def
