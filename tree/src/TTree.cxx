@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.70 2001/05/10 16:05:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.71 2001/05/11 09:31:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1793,11 +1793,13 @@ TBranch *TTree::GetBranch(const char *name)
       nb1 = lb->GetEntriesFast();
       for (j=0;j<nb1;j++) {
          b1 = (TBranch*)lb->UncheckedAt(j);
+         if (!b1) continue;
          if (!strcmp(b1->GetName(),name)) return b1;
          lb1 = b1->GetListOfBranches();
          nb2 = lb1->GetEntriesFast();
          for (k=0;k<nb2;k++) {
             b2 = (TBranch*)lb1->UncheckedAt(k);
+            if (!b2) continue;
             if (!strcmp(b2->GetName(),name)) return b2;
          }
       }
