@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.3 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.4 2004/12/07 15:34:27 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -53,7 +53,7 @@
 //       (also called 8-bit color monitors).                            //
 //       The 6x6x6 web palette provides very quick color index lookup   //
 //       and can be used for good quality convertion of images into     //
-//       2-D histograms.                                                // 
+//       2-D histograms.                                                //
 //                                                                      //
 //                                                                      //
 //  TPaletteEditor                                                      //
@@ -103,7 +103,7 @@ static UShort_t gWebBase[6] = { 0, 51, 102, 153, 204, 255 };
 class TWebPalette : public TImagePalette {
 
 private:
-   Int_t fCLUT[6][6][6];   // Color LookUp Table 
+   Int_t fCLUT[6][6][6];   // Color LookUp Table
 
 public:
    TWebPalette() : TImagePalette() {
@@ -128,7 +128,7 @@ public:
                fColorRed[i] = gWebBase[r] << 8;
                fColorGreen[i] = gWebBase[g] << 8;
                fColorBlue[i] = gWebBase[b] << 8;
-               fColorAlpha[i] = 1 << 16;
+               fColorAlpha[i] = 1 << 15;
                fCLUT[r][g][b] = i;
                i++;
             }
@@ -166,7 +166,7 @@ TImagePalette *gWebImagePalette = new TWebPalette();
 
 
 ////////////////////////////// Hist Palette ////////////////////////////////////
-static Double_t gDefHistP[50] =  { 
+static Double_t gDefHistP[50] =  {
       0.00,0.02,0.04,0.06,0.08,0.10,0.12,0.14,0.16,0.18,0.20,0.22,0.24,0.26,
       0.28,0.30,0.32,0.34,0.36,0.38,0.40,0.42,0.44,0.46,0.48,0.50,0.52,0.54,
       0.56,0.58,0.60,0.62,0.64,0.66,0.68,0.70,0.72,0.74,0.76,0.78,0.80,0.82,
@@ -342,8 +342,8 @@ Int_t TImagePalette::FindColor(UShort_t r, UShort_t g, UShort_t b)
    UInt_t min = 10000;
 
    for (UInt_t i = 0; i < fNumPoints; i++) {
-      d = TMath::Abs(r - ((fColorRed[i] & 0xff00) >> 8)) + 
-          TMath::Abs(g - ((fColorGreen[i] & 0xff00) >> 8)) + 
+      d = TMath::Abs(r - ((fColorRed[i] & 0xff00) >> 8)) +
+          TMath::Abs(g - ((fColorGreen[i] & 0xff00) >> 8)) +
           TMath::Abs(b - ((fColorBlue[i] & 0xff00) >> 8));
       if (d < min) {
          min = d;
