@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.14 2001/10/25 19:18:40 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.15 2001/11/16 02:47:36 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1848,7 +1848,7 @@ void TGX11::SetCharacterUp(Float_t chupx, Float_t chupy)
    else if (chupx == 0  && chupy == -1) fTextAngle = 180;
    else if (chupx == 1  && chupy ==  0) fTextAngle = 270;
    else {
-      fTextAngle = ((TMath::ACos(chupx/TMath::Sqrt(chupx*chupx +chupy*chupy))*180.)/3.14159)-90;
+      fTextAngle = ((TMath::ACos(chupx/TMath::Sqrt(chupx*chupx +chupy*chupy))*180.)/TMath::Pi())-90;
       if (chupy < 0) fTextAngle = 180 - fTextAngle;
       if (TMath::Abs(fTextAngle) <= 0.01) fTextAngle = 0;
    }
