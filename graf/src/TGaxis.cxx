@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.43 2003/04/03 15:31:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.44 2003/04/08 08:16:41 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1862,7 +1862,7 @@ void TGaxis::SetTimeFormat(const char *tformat)
    if (fTimeFormat.Index("%F")>=0 || fTimeFormat.IsNull()) return;
 
    // If the time offset not defined put the current one (in gStyle)
-   TDatime TimeOffset(gStyle->GetTimeOffset());
+   TDatime TimeOffset((UInt_t)gStyle->GetTimeOffset());
    fTimeFormat.Append("%F");
    fTimeFormat.Append(TimeOffset.AsSQLString());
 }

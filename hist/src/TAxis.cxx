@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.39 2003/01/10 10:38:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.40 2003/04/08 08:16:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -877,7 +877,7 @@ void TAxis::SetTimeFormat(const char *tformat)
    if (fTimeFormat.Index("%F")>=0 || fTimeFormat.IsNull()) return;
 
    // If the time offset not defined put the current one (in gStyle)
-   TDatime TimeOffset(gStyle->GetTimeOffset());
+   TDatime TimeOffset((UInt_t)gStyle->GetTimeOffset());
    fTimeFormat.Append("%F");
    fTimeFormat.Append(TimeOffset.AsSQLString());
 }
