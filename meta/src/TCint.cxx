@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.24 2001/06/21 15:53:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.25 2001/06/22 16:10:18 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -443,6 +443,24 @@ void TCint::SetClassInfo(TClass *cl)
    // Set pointer to CINT's G__ClassInfo in TClass.
 
    if (!cl->fClassInfo) {
+      // In the case where the class is not loaded and belong to a namespace
+      // or is nested, looking for the full class name is outputing a lots of
+      // (expected) error messages.  Currently the only way to avoid this is to
+      // specifically check that each level of nesting is already loaded.
+      char * classname = strdup(cl->GetName());
+      char * current = strstr(classname,"::");
+      while(current) {
+         *current = '\0';
+         G__ClassInfo info(classname);
+         if (! info.IsLoaded() ) {
+           delete classname;
+           return;
+         }
+         *current = ':';
+         current = strstr(current+1,"::");
+      }
+      delete classname;
+
       cl->fClassInfo = new G__ClassInfo(cl->GetName());
 
       //In case a class contains an external enum, the enum will be seen as a class
