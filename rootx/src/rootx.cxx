@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.5 2001/04/06 14:17:42 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.6 2001/06/22 16:10:21 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@
 # include <utmpx.h>
 # define STRUCT_UTMP struct utmpx
 # else
-# if defined(__linux) && defined(__powerpc) && (__GNUC_MINOR__ < 90)
+# if defined(__linux) && defined(__powerpc) && (__GNUC__ == 2) && (__GNUC_MINOR__ < 90)
    extern "C" {
 # endif
 # include <utmp.h>

@@ -21,8 +21,6 @@ CINTCXXFLAGS  = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS) \
 CINTCFLAGS    = -pipe -Wall -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
-GCCVERS      := $(shell $(CXX) -v 2>&1 | \
-                        awk '{ if ($$2 == "version") printf("%d\n",$$3) }')
 
 # Linker:
 LD            = g++

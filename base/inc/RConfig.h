@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.21 2001/05/11 17:13:09 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.22 2001/06/25 12:54:32 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -174,7 +174,7 @@
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
-#   if __GNUC_MINOR__ >= 90   /* egcs */
+#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__PPCEGCS
 #   endif
 #endif

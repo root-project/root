@@ -14,10 +14,21 @@ CINTDIRM     := $(CINTDIR)/main
 CINTDIRT     := $(CINTDIR)/tool
 CINTDIRL     := $(CINTDIR)/lib
 
+##### check for gcc v3 #####
+ifeq ($(CXX),g++)
+GCCVERS      := $(shell $(CXX) -v 2>&1 | \
+                        awk '{ if ($$2 == "version") printf("%d\n",$$3) }')
+endif
+
 ##### libCint #####
 CINTH        := $(wildcard $(MODDIRI)/*.h)
 CINTS1       := $(wildcard $(MODDIRS)/*.c)
 CINTS2       := $(wildcard $(MODDIRS)/*.cxx)
+
+CINTS1       += $(CINTDIRM)/G__setup.c
+
+CINTALLO     := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
+CINTALLDEP   := $(CINTALLO:.o=.d)
 
 CINTS1       := $(filter-out $(MODDIRS)/sunos.%,$(CINTS1))
 CINTS1       := $(filter-out $(MODDIRS)/dlfcn.%,$(CINTS1))
@@ -34,8 +45,6 @@ CINTS2       := $(filter-out $(MODDIRS)/vcstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/bcstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrmold.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/Apiifold.%,$(CINTS2))
-
-CINTS1       += $(CINTDIRM)/G__setup.c
 
 ifeq ($(CXX),KCC)
 CINTS2       += $(MODDIRS)/kccstrm.cxx
@@ -171,12 +180,12 @@ $(IOSENUMA):    $(CINTTMP) $(MAKEINFO)
 all-cint:       $(CINTLIB) $(CINT) $(CINTTMP) $(MAKECINT) $(IOSENUM)
 
 clean-cint:
-		@rm -f $(CINTTMPO) $(CINTO) $(CINTEXEO) $(MAKECINTO)
+		@rm -f $(CINTTMPO) $(CINTALLO) $(CINTEXEO) $(MAKECINTO)
 
 clean::         clean-cint
 
 distclean-cint: clean-cint
-		@rm -f $(CINTDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
+		@rm -f $(CINTALLDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
 		   $(CINT) $(CINTTMP) $(MAKECINT)
 
 distclean::     distclean-cint
