@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.1 2000/03/09 21:57:03 fine Exp $
+// $Id: TChair.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -23,7 +23,7 @@
 
 #include "TTable.h"
 
-class TChair : public TObject {
+class TChair : public TDataSet {
 
 private:
    TTable *fTable;
@@ -114,6 +114,15 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.2  2000/06/02 14:51:37  fine
+// new helper class to browse tables has been introduced
+//
+// Revision 1.1.1.1  2000/05/19 12:46:09  fisyak
+// CVS version of root 2.24.05 without history
+//
+// Revision 1.1.1.1  2000/05/16 17:00:49  rdm
+// Initial import of ROOT into CVS
+//
 // Revision 1.1  2000/03/09 21:57:03  fine
 // TChair class to be moved to ROOT later
 //

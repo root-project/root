@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.2 2000/06/05 07:31:21 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTable.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// $Id: TTable.h,v 1.2 2000/06/05 07:31:21 brun Exp $
 #ifndef ROOT_TTable
 #define ROOT_TTable
 
@@ -152,7 +152,7 @@ public:
 
    virtual   Int_t        GetColumnIndex(const Char_t *columnName) const;
    virtual  const Char_t *GetColumnName(Int_t columnIndex)      const;
-   virtual   UInt_t      *GetIndexArray(Int_t columnIndex)      const;
+   virtual   const UInt_t *GetIndexArray(Int_t columnIndex)     const;
    virtual   UInt_t       GetNumberOfColumns()                  const;
    virtual   UInt_t       GetOffset(Int_t columnIndex)          const;
    virtual   Int_t        GetOffset(const Char_t *columnName=0) const;
@@ -170,7 +170,6 @@ public:
 
 inline  void  *TTable::GetArray() const { return (void *)fTable;}
 
-inline  Bool_t TTable::IsFolder(){ return fList && fList->Last() ? kTRUE : kFALSE;}
 inline  void   TTable::Print(Option_t *) { Print((Char_t *)0,Int_t(0)); }
 
 inline  void   TTable::SetUsedRows(Int_t n) { fMaxIndex = n;}
