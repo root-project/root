@@ -5912,7 +5912,8 @@ char *result;
   char onefmt[G__LONGLINE],fmt[G__LONGLINE];
   char pformat[G__LONGLINE];
   short dig=0;
-  
+  int usedpara = 0;
+
   strcpy(pformat,(char *)G__int(libp->para[ifmt]));
   result[0]='\0';
   ipara=ifmt+1;
@@ -5933,14 +5934,14 @@ char *result;
 #ifndef G__OLDIMPLEMENTATION827
 	if(libp->para[ipara].obj.i) {
 	  G__PRINTF_ERROR(strlen(onefmt)+strlen(result)+
-	     strlen((char*)G__int(libp->para[ipara]))>=G__LONGLINE)
+	     strlen((char*)G__int(libp->para[usedpara]))>=G__LONGLINE)
 	  sprintf(fmt,"%%s%s",onefmt);
-	  sprintf(onefmt,fmt,result ,(char *)G__int(libp->para[ipara]));
+	  sprintf(onefmt,fmt,result ,(char *)G__int(libp->para[usedpara]));
 	  strcpy(result,onefmt);
         }
 #else
 	sprintf(fmt,"%%s%s",onefmt);
-	sprintf(onefmt,fmt,result ,(char *)G__int(libp->para[ipara]));
+	sprintf(onefmt,fmt,result ,(char *)G__int(libp->para[usedpara]));
 	strcpy(result,onefmt);
 #endif
 	ipara++;
@@ -5953,7 +5954,7 @@ char *result;
       if(fmtflag==1) {
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
-	sprintf(onefmt,fmt,result ,(char)G__int(libp->para[ipara]));
+	sprintf(onefmt,fmt,result ,(char)G__int(libp->para[usedpara]));
 	strcpy(result,onefmt);
 	ipara++;
 	ionefmt=0;
@@ -5966,8 +5967,9 @@ char *result;
 	onefmt[ionefmt-1]='s';
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
-	G__logicstring(libp->para[ipara++],dig,onefmt);
+	G__logicstring(libp->para[usedpara],dig,onefmt);
 	sprintf(result,fmt,result,onefmt);
+   ipara++;
 	ionefmt=0;
       }
       break;
@@ -5985,9 +5987,9 @@ char *result;
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
 #ifndef G__OLDIMPLEMENTATION1739
-	if('u'==libp->para[ipara].type) {
+	if('u'==libp->para[usedpara].type) {
 	  char llbuf[100];
-	  G__value *pval = &libp->para[ipara++];
+	  G__value *pval = &libp->para[usedpara]; ipara++;
 	  if(strcmp(G__struct.name[pval->tagnum],"G__longlong")==0) {
 	    sprintf(llbuf
 	    ,"G__printformatll((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
@@ -6003,16 +6005,16 @@ char *result;
 	    strcat(result,fmt);
 	  }
 	  else {
-	    sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+	    sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++;
 	    strcpy(result,onefmt);
 	  }
 	}
 	else {
-	  sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+	  sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++;
 	  strcpy(result,onefmt);
 	}
 #else
-	sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+	sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++;
 	strcpy(result,onefmt);
 #endif
 	ionefmt=0;
@@ -6029,9 +6031,9 @@ char *result;
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
 #ifndef G__OLDIMPLEMENTATION1913
-	if('u'==libp->para[ipara].type) {
+	if('u'==libp->para[usedpara].type) {
 	  char llbuf[100];
-	  G__value *pval = &libp->para[ipara++];
+	  G__value *pval = &libp->para[usedpara]; ipara++;
 	  if(strcmp(G__struct.name[pval->tagnum],"G__longdouble")==0) {
 	    sprintf(llbuf
 	    ,"G__printformatld((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
@@ -6040,16 +6042,16 @@ char *result;
 	    strcat(result,fmt);
 	  }
 	  else {
-	    sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
+	    sprintf(onefmt,fmt ,result,G__double(libp->para[usedpara])); ipara++;
 	    strcpy(result,onefmt);
 	  }
 	}
 	else {
-	  sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
+	  sprintf(onefmt,fmt ,result,G__double(libp->para[usedpara])); ipara++;
 	  strcpy(result,onefmt);
 	}
 #else
-	sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
+	sprintf(onefmt,fmt ,result,G__double(libp->para[usedpara])); ipara++;
 	strcpy(result,onefmt);
 #endif
 	ionefmt=0;
@@ -6076,15 +6078,19 @@ char *result;
       onefmt[ionefmt++]=pformat[ichar];
       break;
     case '%':
-      if(fmtflag==0) fmtflag=1;
-      else           fmtflag=0;
+      if(fmtflag==0) {
+        usedpara = ipara;
+        fmtflag=1;
+      } else {
+        fmtflag=0;
+      }
       onefmt[ionefmt++]=pformat[ichar];
       dig=0;
       break;
 #ifndef G__OLDIMPLEMENTATION1237
     case '*': /* printf("%*s",4,"*"); */
       if(fmtflag==1) {
-	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[ipara++]));
+	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[usedpara])); ipara++;
 	ionefmt = strlen(onefmt);
       }
       else {
@@ -6092,6 +6098,20 @@ char *result;
       }
       break;
 #endif
+    case '$':
+      if (fmtflag && dig) {
+         usedpara = dig + ifmt;
+         if (usedpara > libp->paran) {
+            /* this is an error! */
+            usedpara = ipara;
+         }
+         /* rewind the digit already printed */
+         while( ionefmt>=0 && isdigit(onefmt[ionefmt-1])) --ionefmt; 
+         dig=0;
+      } else {
+         onefmt[ionefmt++]=pformat[ichar];
+      }
+      break;
 #ifndef G__OLDIMPLEMENTATION1615
     case ' ':
     case '\t' : /* tab */
