@@ -41,6 +41,12 @@ enable_ttf=yes
 enable_venus=yes
 show_pkglist=no
 
+options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
+         enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
+         enable_sapdb enable_shadowpw enable_shared enable_soversion \
+         enable_srp enable_star enable_thread enable_ttf enable_venus \
+         enable_krb5"
+
 
 ######################################################################
 #
@@ -295,6 +301,7 @@ confhelp() {
     echo "   dcache          dCache support, requires dcap library from DESY"
     echo "   srp             SRP support, requires SRP source tree"
     echo "   afs             AFS support, requires AFS libs and objects"
+    echo "   krb5            Kerberos5 support, requires Kerberos libs"
     echo "   shadowpw        Shadow password support"
     echo "   pythia          Pythia5 EG support, requires libPythia"
     echo "   pythia6         Pythia6 EG support, requires libPythia6"
@@ -324,6 +331,7 @@ confhelp() {
     echo "   srp-incdir      SRP support, location header of t_server.h"
     echo "   srp-libdir      SRP support, location header of libsrp.a"
     echo "   afs             AFS support, location of AFS distribution"
+    echo "   krb5            Kerberos5 support, location of Kerberos distribution"
     echo "   sys-iconpath    Extra icon path"
     echo ""
     cat config/ARCHS
@@ -415,46 +423,30 @@ if test $# -gt 0 ; then
       # Enable/disable to turn on/off third party software linkage and
       # features
       #
-      --enable-shared)        enable_shared=yes     ;;
-      --disable-shared)       enable_shared=no      ;;
-      --enable-rpath)         enable_rpath=yes      ;;
-      --disable-rpath)        enable_rpath=no       ;;
-      --enable-star)          enable_star=yes       ;;
-      --disable-star)         enable_star=no        ;;
-      --enable-ttf)           enable_ttf=yes        ;;
-      --disable-ttf)          enable_ttf=no         ;;
-      --enable-opengl)        enable_opengl=yes     ;;
-      --disable-opengl)       enable_opengl=no      ;;
-      --enable-cern)          enable_cern=yes       ;;
-      --disable-cern)         enable_cern=no        ;;
-      --enable-mysql)         enable_mysql=yes      ;;
-      --disable-mysql)        enable_mysql=no       ;;
-      --enable-pgsql)         enable_pgsql=yes      ;;
-      --disable-pgsql)        enable_pgsql=no       ;;
-      --enable-sapdb)         enable_sapdb=yes      ;;
-      --disable-sapdb)        enable_sapdb=no       ;;
-      --enable-rfio)          enable_rfio=yes       ;;
-      --disable-rfio)         enable_rfio=no        ;;
-      --enable-dcache)        enable_dcache=yes     ;;
-      --disable-dcache)       enable_dcache=no      ;;
-      --enable-thread)        enable_thread=yes     ;;
-      --disable-thread)       enable_thread=no      ;;
-      --enable-srp)           enable_srp=yes        ;;
-      --disable-srp)          enable_srp=no         ;;
-      --enable-afs)           enable_afs=yes        ;;
-      --disable-afs)          enable_afs=no         ;;
-      --enable-krb5)          enable_krb5=yes       ;;
-      --disable-krb5)         enable_krb5=no        ;;
-      --enable-shadowpw)      enable_shadowpw=yes   ;;
-      --disable-shadowpw)     enable_shadowpw=no    ;;
-      --enable-pythia)        enable_pythia=yes     ;;
-      --disable-pythia)       enable_pythia=no      ;;
-      --enable-pythia6)       enable_pythia6=yes    ;;
-      --disable-pythia6)      enable_pythia6=no     ;;
-      --enable-venus)         enable_venus=yes      ;;
-      --disable-venus)        enable_venus=no       ;;
-      --enable-soversion)     enable_soversion=yes  ;;
-      --disable-soversion)    enable_soversion=no   ;;
+      --enable-*)
+	f=`echo $1 | sed -e 's/--//' -e 's/-/_/'`
+	eval $f=yes
+	for c in $options ; do
+	   if test "x$c" = "x$f" ; then
+	      f=""
+	   fi
+	done
+	if test "x$f" != "x" ; then
+	   echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;
+	fi
+	;;
+      --disable-*)
+	f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/'`
+	eval $f=no
+	for c in $options ; do
+	   if test "x$c" = "x$f" ; then
+	      f=""
+	   fi
+	done
+	if test "x$f" != "x" ; then
+	   echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;
+	fi
+	;;
       ################################################################
       #
       # Build steering option
@@ -1392,10 +1384,19 @@ if test "$prefix2" = "\$(ROOTSYS)" ; then
     libdir2=\$ROOTSYS/lib
     incdir2=\$ROOTSYS/include
 fi
+features=""
+for f in $options ; do
+    bar="$`echo $f`"
+    if test "x`eval echo $bar`" = "xyes" ; then
+       feat=`echo $f | sed 's/enable_//'`
+       features="$features $feat"
+    fi
+done
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@prefix@|$prefix2|"              \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@libdir@|$libdir2|"              \
+    -e "s|@features@|$features|"           \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT

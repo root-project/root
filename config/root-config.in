@@ -8,6 +8,7 @@
 arch=@architecture@
 libdir=@libdir@
 incdir=@incdir@
+features="@features@"
 if test "$arch" = "win32gdk"; then
    arch="win32"
 fi
@@ -268,7 +269,20 @@ win32)
    ;;
 esac
 
-### end of machine dependent settings ###
+
+### compiler dependent settings ###
+
+case $arch in
+*kcc)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+	 auxcflags="--thread_safe $auxcflags"
+	 auxldflags="--thread_safe $auxldflags"
+      fi
+   done
+esac
+
+### end of machine and compiler dependent settings ###
 
 
 prefix=@prefix@
@@ -285,7 +299,7 @@ noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -301,6 +315,24 @@ while test $# -gt 0; do
   esac
 
   case $1 in
+    --arch)
+      ### Output the arcitecture
+      out="$out $arch"
+      ;;
+    --has-*)
+      ### Check for feature
+      f=`echo $1 | sed 's/--has-//'`
+      for c in $features ; do
+         if test "x$c" = "x$f" ; then
+            out="$out yes"
+            break
+         fi
+         c=""
+      done
+      if test "x$c" = "x" ; then
+         out="$out no"
+      fi
+      ;;
     --prefix=*)
       ### Set the prefix
       if test "$arch" = "win32"; then
@@ -470,6 +502,7 @@ while test $# -gt 0; do
       ### Print a help message
       echo "Usage: `basename $0` [options]"
       echo ""
+      echo "  --arch                Print the architecture"
       echo "  --prefix[=dir]        Print or set prefix"
       echo "  --exec-prefix[=dir]   Print or set execution prefix"
       echo "  --libs                Print regular ROOT libraries"
@@ -483,6 +516,7 @@ while test $# -gt 0; do
       echo "  --noauxlibs           Do not print auxiliary/system libraries"
       echo "  --noauxcflags         Do not print auxiliary compiler flags"
       echo "  --noldflags           Do not print linker flags"
+      echo "  --has-<feature>       Test if <feature> is compiled in"
       echo "  --version             Print the ROOT version"
       exit 0
       ;;
