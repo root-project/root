@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.9 2002/08/05 12:07:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.10 2004/04/15 10:13:41 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef WIN32
+#undef GetCurrentTime
+#endif
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
