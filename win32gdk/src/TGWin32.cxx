@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.35 2003/12/13 16:01:27 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.36 2003/12/15 08:54:29 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -4219,7 +4219,7 @@ void TGWin32::ReadGIF(int x0, int y0, const char *file)
    int i, j, k, width, height, ncolor, irep, offset;
    float rr, gg, bb;
 
-   fd = fopen(file, "r");
+   fd = fopen(file, "r+b");
    if (!fd) {
       Error("ReadGIF", "unable to open GIF file");
       return;
