@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.6 2001/09/25 16:17:36 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.7 2001/09/26 15:51:29 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -345,7 +345,7 @@ void *CustomReAlloc1(void *ovp, size_t size)
    static const char *where = "CustomReAlloc1";
 
    if (ovp == 0)
-      return new char[size];
+      return ::operator new(size);
 
    if (!newInit)
       Fatal(where, "space was not allocated via custom new");
@@ -381,7 +381,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    static const char *where = "CustomReAlloc2";
 
    if (ovp == 0)
-      return new char[size];
+      return ::operator new(size);
 
    if (!newInit)
       Fatal(where, "space was not allocated via custom new");
