@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.101 2003/08/29 10:41:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.102 2003/09/05 12:55:11 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -324,6 +324,16 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fClasses     = 0;  // might be checked via TCint ctor
    fInterpreter = new TCint("C/C++", "CINT C/C++ Interpreter");
 
+   fVersion     = ROOT_RELEASE;
+   fVersionInt  = IVERSQ();
+   fVersionDate = IDATQQ();
+   fVersionTime = ITIMQQ();
+
+   fClasses     = new THashList(800,3);
+   fIdMap       = new IdMap_t;
+   fStreamerInfo= new TObjArray(100);
+   fClassGenerators = new TList;
+
    // initialize plugin manager early
    fPluginManager->LoadHandlersFromEnv(gEnv);
 
@@ -339,13 +349,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    TSystemDirectory *workdir = new TSystemDirectory("workdir",gSystem->WorkingDirectory());
 
-   fVersion     = ROOT_RELEASE;
-   fVersionInt  = IVERSQ();
-   fVersionDate = IDATQQ();
-   fVersionTime = ITIMQQ();
    fTimer       = 0;
    fApplication = 0;
-   fClasses     = new THashList(800,3);
    fColors      = new TObjArray(1000);
    fTypes       = 0;
    fGlobals     = 0;
@@ -363,10 +368,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fSpecials    = new TList;
    fBrowsables  = new TList;
    fCleanups    = new TList;
-   fIdMap       = new IdMap_t;
-   fStreamerInfo= new TObjArray(100);
    fMessageHandlers = new TList;
-   fClassGenerators = new TList;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
