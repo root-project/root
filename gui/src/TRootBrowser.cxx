@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.2 2000/08/04 13:15:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.3 2000/09/05 10:57:17 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TGListView.h"
 #include "TGListTree.h"
 #include "TGToolBar.h"
+#include "TGSplitter.h"
 #include "TGFSContainer.h"
 #include "TGMimeTypes.h"
 #include "TRootHelpDialog.h"
@@ -415,8 +416,8 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fHf = new TGHorizontalFrame(this, 10, 10);
 
-   fV2 = new TGVerticalFrame(fHf, 10, 10);
    fV1 = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
+   fV2 = new TGVerticalFrame(fHf, 10, 10);
    fTreeHdr = new TGCompositeFrame(fV1, 10, 10, kSunkenFrame);
    fListHdr = new TGCompositeFrame(fV2, 10, 10, kSunkenFrame);
 
@@ -437,9 +438,16 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fV1->Resize(fTreeHdr->GetDefaultWidth()+100, fV1->GetDefaultHeight());
 
-   lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 2, 0, 0);
+   lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
    fWidgets->Add(lo);
    fHf->AddFrame(fV1, lo);
+
+   TGVSplitter *splitter = new TGVSplitter(fHf);
+   splitter->SetFrame(fV1);
+   lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
+   fWidgets->Add(splitter);
+   fWidgets->Add(lo);
+   fHf->AddFrame(splitter, lo);
 
    lo = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY);
    fWidgets->Add(lo);
@@ -457,6 +465,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    fWidgets->Add(lo);
    fV1->AddFrame(fTreeView, lo);
+
 
    // Create list view (icon box)
 
