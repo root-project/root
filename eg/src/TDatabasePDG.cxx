@@ -1,10 +1,9 @@
-// @(#)root/eg:$Name:  $:$Id: TG3DatabasePDG.cc,v 1.5 2001/02/23 04:42:40 murat Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.5 2001/03/05 09:09:42 brun Exp $
 // Author: Pasha Murat   12/02/99
-
-#include <cstdlib>
 
 #include "TROOT.h"
 #include "TEnv.h"
+#include "TSystem.h"
 #include "TDatabasePDG.h"
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"
@@ -380,7 +379,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
   const char*  fn;
 
   if (FileName == "") {
-    sprintf(default_name,"%s/eg/src/pdg_table.txt",getenv("ROOTSYS"));
+    sprintf(default_name,"%s/eg/src/pdg_table.txt",gSystem->Getenv("ROOTSYS"));
     fn = gEnv->GetValue("Root.DatabasePDG",default_name);
   }
   else {
