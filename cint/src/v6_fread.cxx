@@ -68,6 +68,10 @@ char *buf;
 #ifndef G__OLDIMPLEMENTATION1855
      || strcmp(buf,"char")==0
 #endif
+#ifndef G__OLDIMPLEMENTATION1859
+     || strcmp(buf,"double")==0
+     || strcmp(buf,"float")==0
+#endif
 #ifndef G__OLDIMPLEMENTATION1419
      || strcmp(buf,"volatile")==0 
      || strcmp(buf,"register")==0 

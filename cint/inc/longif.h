@@ -83,11 +83,11 @@ typedef unsigned long G__uint64;
 #elif defined(_WIN32)||defined(_WINDOWS)||defined(_Windows)||defined(_WINDOWS_)
 
 #if defined(_MSC_VER)
-typedef _int64 G__int64;
-typedef unsigned _int64 G__uint64;
+typedef __int64 G__int64;
+typedef unsigned __int64 G__uint64;
 #elif defined(__BCPLUSPLUS__)
 typedef __int64 G__int64;
-typedef unsigned _int64 G__uint64;
+typedef unsigned __int64 G__uint64;
 #else
 typedef long long G__int64;
 typedef unsgined long long G__uint64;
@@ -344,7 +344,7 @@ class G__ulonglong {
 
   // assignment operators
 #ifndef G__OLDIMPLEMENTATION1144
-  G__ulonglong& operator=(const long x) { dat=(G__uint64)x; return(*this); }
+  G__ulonglong& operator=(long x) { dat=(G__uint64)x; return(*this); }
 #endif
   G__ulonglong& operator=(const G__ulonglong& x) { dat=x.dat; return(*this); }
   G__ulonglong& operator+=(const G__ulonglong& x) { dat+=x.dat; return(*this); }
@@ -495,16 +495,16 @@ inline int G__ateval(const G__ulonglong& a) {
 }
 int G__ateval(const char* x) {return(0);}
 int G__ateval(const void* x) {return(0);}
-int G__ateval(const double x) {return(0);}
-int G__ateval(const float x) {return(0);}
-int G__ateval(const char x) {return(0);}
-int G__ateval(const short x) {return(0);}
-int G__ateval(const int x) {return(0);}
-int G__ateval(const long x) {return(0);}
-int G__ateval(const unsigned char x) {return(0);}
-int G__ateval(const unsigned short x) {return(0);}
-int G__ateval(const unsigned int x) {return(0);}
-int G__ateval(const unsigned long x) {return(0);}
+int G__ateval(double x) {return(0);}
+int G__ateval(float x) {return(0);}
+int G__ateval(char x) {return(0);}
+int G__ateval(short x) {return(0);}
+int G__ateval(int x) {return(0);}
+int G__ateval(long x) {return(0);}
+int G__ateval(unsigned char x) {return(0);}
+int G__ateval(unsigned short x) {return(0);}
+int G__ateval(unsigned int x) {return(0);}
+int G__ateval(unsigned long x) {return(0);}
 
 
 #ifdef __MAKECINT__

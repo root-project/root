@@ -756,6 +756,13 @@ int type,tagnum,typenum,reftype,isconst;
     if(isupper(type)) {
       if((isconst&G__PCONSTVAR)&&G__PARANORMAL==reftype) 
 	strcpy(string+strlen(string)," *const");
+#ifdef G__OLDIMPLEMENTATION1859_YET
+      else if((isconst&G__PCONSTVAR)&&G__PARAREFERENCE==reftype) {
+	if((isconst&G__CONSTVAR)==0) strcpy(string+strlen(string)," const*&");
+	else strcpy(string+strlen(string),"*&");
+	reftype=G__PARANORMAL;
+      }
+#endif
       else 
 	strcpy(string+strlen(string),"*");
     }

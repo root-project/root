@@ -4519,11 +4519,13 @@ char *endoffunc;
 #endif
 
   /* return type reference */
-#ifndef G__OLDIMPLEMENTATION1112
+#ifdef G__OLDIMPLEMENTATION1859 /* questionable with 1859 */
+#ifndef G__OLDIMPLEMENTATION1112 /* questionable with 1859 */
   if(-1!=typenum&&G__PARAREFERENCE==G__newtype.reftype[typenum]) {
     reftype=G__PARAREFERENCE;
     typenum= -1;
   }
+#endif
 #endif
   if(G__PARAREFERENCE==reftype) {
     fprintf(fp,"      {\n");

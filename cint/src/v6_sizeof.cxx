@@ -828,8 +828,10 @@ int typenum;
       if(p) *p = '\0';
       p = strchr(buf,'\r');
       if(p) *p = '\0';
+#ifndef G__OLDIMPLEMENTATION1858
       p = strchr(buf,';');
       if(p) *(p+1) = '\0';
+#endif
 
 #ifndef G__OLDIMPLEMENTATION469
       if(flag) {

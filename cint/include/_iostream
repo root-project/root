@@ -99,16 +99,16 @@ std::istream& operator<<(std::istream& istr,std::G__CINT_NOSUPPORT& i) {
 template<class T> int G__ateval(const T& x) {return(0);}
 int G__ateval(const char* x) {return(0);}
 int G__ateval(const void* x) {return(0);}
-int G__ateval(const double x) {return(0);}
-int G__ateval(const float x) {return(0);}
-int G__ateval(const char x) {return(0);}
-int G__ateval(const short x) {return(0);}
-int G__ateval(const int x) {return(0);}
-int G__ateval(const long x) {return(0);}
-int G__ateval(const unsigned char x) {return(0);}
-int G__ateval(const unsigned short x) {return(0);}
-int G__ateval(const unsigned int x) {return(0);}
-int G__ateval(const unsigned long x) {return(0);}
+int G__ateval(double x) {return(0);}
+int G__ateval(float x) {return(0);}
+int G__ateval(char x) {return(0);}
+int G__ateval(short x) {return(0);}
+int G__ateval(int x) {return(0);}
+int G__ateval(long x) {return(0);}
+int G__ateval(unsigned char x) {return(0);}
+int G__ateval(unsigned short x) {return(0);}
+int G__ateval(unsigned int x) {return(0);}
+int G__ateval(unsigned long x) {return(0);}
 
 #if defined(G__ROOT) && !defined(__MAKECINT__)
 int G__ateval(const TString& x) {
