@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.127 2004/07/14 11:45:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.128 2004/07/16 23:06:23 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1382,11 +1382,11 @@ TClass *TROOT::LoadClass(const char *classname) const
       // The dictionary generation might change/delete classname
       TString clname(classname);
       (dict)();
-      return GetClass(clname.Data());
+      return GetClass(clname.Data(),kFALSE);
    }
 
    if (gInterpreter->AutoLoad(classname)) {
-      return GetClass(classname);
+      return GetClass(classname,kFALSE);
    }
 
    TIter next(fClassGenerators);
