@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.33 2001/10/22 07:12:13 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.34 2001/10/27 22:28:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -558,8 +558,8 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
     RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->at(index)) ;
 
     Double_t pstep(0) ;
-    Double_t pmin= par->getFitMin();
-    Double_t pmax= par->getFitMax();
+    Double_t pmin(0) ;
+    Double_t pmax(0) ;
 
     if(!par->isConstant()) {
 
@@ -574,15 +574,22 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
       pstep= par->getError();
       if(pstep <= 0) {
 	if (par->hasFitMin() && par->hasFitMax()) {
+	  pmin = par->getFitMin();
+	  pmax = par->getFitMax();
 	  pstep= 0.1*(pmax-pmin);
 	} else {
 	  pstep= 0.1*(par->getPlotMax()-par->getPlotMin()) ;
+	  if (pstep<=0) {
+	    pstep=1 ;
+	  }
 	}						  
 	if(!estimateSteps && verbose) {
 	  cout << "*** WARNING: no initial error estimate available for "
 	       << par->GetName() << ": using " << pstep << endl;
 	}
       }
+
+      
     } else {
       pmin = par->getVal() ;
       pmax = par->getVal() ;      

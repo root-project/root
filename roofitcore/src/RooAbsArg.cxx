@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.60 2001/10/22 07:12:12 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.61 2001/10/27 22:28:17 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -354,7 +354,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
   // is getDependents()
 
 
-  RooArgSet* parList = new RooArgSet("parameters") ;
+  RooArgSet parList("parameters") ;
 
   // Create and fill deep server list
   RooArgSet leafList("leafNodeServerList") ;
@@ -366,7 +366,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
   while (arg=(RooAbsArg*)sIter->Next()) {
 
     if (!nset || !arg->dependsOn(*nset)) {
-      parList->add(*arg) ;
+      parList.add(*arg) ;
     }
   }
   delete sIter ;
@@ -377,11 +377,13 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
   RooAbsArg* branch ;
   TIterator* bIter = branchList.createIterator() ;
   while(branch=(RooAbsArg*)bIter->Next()) {
-    branch->getParametersHook(nset, parList) ; 
+    branch->getParametersHook(nset, &parList) ; 
   }
   delete bIter ;
 
-  return parList ;
+  RooArgList tmp(parList) ;
+  tmp.sort() ;
+  return new RooArgSet(tmp) ;
 }
 
 

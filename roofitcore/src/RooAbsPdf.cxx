@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.49 2001/10/22 02:58:01 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.50 2001/10/27 22:28:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -668,11 +668,29 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions,
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
-  
+
+  // More sanity checks
+  Double_t nExpected(1) ;
+  if (stype==RelativeExpected) {
+    if (!canBeExtended()) {
+      cout << "RooAbsPdf::plotOn(" << GetName() 
+	   << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << endl ;
+      return frame ;
+    }
+    nExpected = expectedEvents() ;
+  }
+
   // Adjust normalization, if so requested
-  if (frame->getFitRangeNEvt() > 0 && stype != Raw) {    
-    if (stype==Relative) scaleFactor *= frame->getFitRangeNEvt() ;
-    scaleFactor*= frame->getFitRangeBinW() ;
+  if (stype != Raw) {    
+    
+    if (frame->getFitRangeNEvt() && stype==Relative) {
+      scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+    } else if (stype==RelativeExpected) {
+      scaleFactor *= nExpected ;
+    } else if (stype==NumEvent) {
+      scaleFactor /= nExpected ;
+    }
+    scaleFactor *= frame->getFitRangeBinW() ;
   }
   frame->updateNormVars(*frame->getPlotVar()) ;
 

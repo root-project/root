@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.15 2001/10/08 05:20:21 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.16 2001/10/17 05:04:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -291,4 +291,18 @@ Double_t RooResolutionModel::getNormSpecial(const RooArgSet* nset) const
   }
 
   return _normSpecial->getVal() ;
+}
+
+
+Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
+{
+  // Return the integral of this PDF over all elements of 'nset'. 
+  if (!nset) return 1 ;
+
+  syncNormalization(nset) ;
+  if (_verboseEval>1) cout << IsA()->GetName() << "::getNorm(" << GetName() 
+			   << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
+
+  Double_t ret = _norm->getVal() ;
+  return ret ;
 }

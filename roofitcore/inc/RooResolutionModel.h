@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.rdl,v 1.9 2001/10/05 07:01:50 verkerke Exp $
+ *    File: $Id: RooResolutionModel.rdl,v 1.10 2001/10/17 05:04:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -38,6 +38,7 @@ public:
   virtual void normLeafServerList(RooArgSet& list) const ;
 
   inline const RooFormulaVar& basis() const { return _basis?*_basis:*_identity ; }
+  Double_t getNorm(const RooArgSet* nset) const ;
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.55 2001/10/19 21:32:21 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.56 2001/10/27 22:28:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -54,7 +54,7 @@ ClassImp(RooAbsReal)
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(0), _plotMax(0)
+  _plotMin(0), _plotMax(0), _forceNumInt(kFALSE)
 {
   // Constructor with unit label
   setValueDirty() ;
@@ -64,7 +64,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 		       Double_t maxVal, const char *unit) :
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(minVal), _plotMax(maxVal)
+  _plotMin(minVal), _plotMax(maxVal), _forceNumInt(kFALSE)
 {
   // Constructor with plot range and unit label
   setValueDirty() ;
@@ -74,7 +74,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _unit(other._unit), _plotBins(other._plotBins), 
-  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
+  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value),
+  _forceNumInt(other._forceNumInt)
 {
 
   // Copy constructor
@@ -130,7 +131,7 @@ Int_t RooAbsReal::getAnalyticalIntegralWN(RooArgSet& allDeps, RooArgSet& analDep
 {
   // Default implementation of getAnalyticalIntegralWN for real valued objects defers to
   // normalization invariant getAnalyticalIntegral()
-  return getAnalyticalIntegral(allDeps,analDeps) ;
+  return _forceNumInt ? 0 : getAnalyticalIntegral(allDeps,analDeps) ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.38 2001/10/19 22:19:48 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.39 2001/10/27 22:28:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,6 +59,7 @@ public:
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
+  void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
 
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
@@ -78,7 +79,7 @@ public:
 
   RooPlot *frame() const;
 
-  enum ScaleType { Raw, Relative, NumEvent } ;
+  enum ScaleType { Raw, Relative, NumEvent, RelativeExpected } ;
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 
 			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const;
   virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L", 
@@ -157,6 +158,7 @@ protected:
   mutable Double_t _value ; // Cache for current value of object
   TString  _unit ;          // Unit for objects value
   TString  _label ;         // Plot label for objects value
+  Bool_t   _forceNumInt ;   // Force numerical integration if flag set
 
   friend class RooAbsPdf ;
   friend class RooConvolutedPdf ;
