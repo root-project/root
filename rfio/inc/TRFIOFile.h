@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.6 2002/01/27 17:23:19 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.7 2002/10/25 00:44:53 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -82,6 +82,7 @@ public:
    const char *GetDirEntry(void *dirp);
    Int_t       GetPathInfo(const char *path, Long_t *id, Long_t *size,
                            Long_t *flags, Long_t *modtime);
+   Bool_t      AccessPathName(const char *path, EAccessMode mode);
 
    ClassDef(TRFIOSystem,0)  // Directory handler for RFIO
 };

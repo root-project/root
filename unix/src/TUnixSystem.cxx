@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.50 2002/12/10 12:12:30 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.51 2002/12/20 02:29:08 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -828,6 +828,10 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the Unix access(2) function.
    // Attention, bizarre convention of return value!!
+
+   TSystem *helper = FindHelper(path);
+   if (helper)
+      return helper->AccessPathName(path, mode);
 
    if (::access(path, mode) == 0)
       return kFALSE;

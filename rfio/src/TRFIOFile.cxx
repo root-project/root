@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.20 2002/10/25 10:31:08 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.21 2002/12/10 02:19:46 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -540,4 +540,17 @@ Int_t TRFIOSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
       return 0;
    }
    return 1;
+}
+
+//______________________________________________________________________________
+Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
+{
+   // Returns FALSE if one can access a file using the specified access mode.
+   // Mode is the same as for the Unix access(2) function.
+   // Attention, bizarre convention of return value!!
+
+   if (::rfio_access(path, mode) == 0)
+      return kFALSE;
+   gSystem->SetErrorStr(::rfio_serror());
+   return kTRUE;
 }
