@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.7 2001/11/28 14:47:03 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.8 2001/12/02 15:11:32 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -99,6 +99,7 @@ TProcessID *TProcessID::AddProcessID()
    sprintf(name,"ProcessID%d",apid);
    pid->SetName(name);
    TUUID u;
+   apid = fgPIDs->GetEntriesFast();
    pid->SetTitle(u.AsString());
    return pid;
 }
@@ -198,7 +199,8 @@ TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
    
    if (!file) return 0;
    TObjArray *pids = file->GetListOfProcessIDs();
-   TProcessID *pid = (TProcessID *)pids->UncheckedAt(pidf);
+   TProcessID *pid = 0;
+   if (pidf < pids->GetSize()) pid = (TProcessID *)pids->UncheckedAt(pidf);
    if (pid) return pid;
    
    //check if fProcessIDs[uid] is set in file
@@ -213,12 +215,14 @@ TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
    pids->AddAtAndExpand(pid,pidf);
    pid->IncrementCount();
       //check that a similar pid is not already registered in fgPIDs
-   Int_t apid  = fgPIDs->IndexOf(pid);
-   if (apid < 0) {
-      apid = fgPIDs->GetEntriesFast();
-      fgPIDs->Add(pid);
-      pid->SetUniqueID(apid);
+   TIter next(fgPIDs);
+   TProcessID *p;
+   while ((p = (TProcessID*)next())) {
+      if (!strcmp(p->GetTitle(),pid->GetTitle())) return p;
    }
+   Int_t apid = fgPIDs->GetEntriesFast();
+   fgPIDs->Add(pid);
+   pid->SetUniqueID(apid);
    return pid;
 }
 
