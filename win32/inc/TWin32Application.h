@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Application.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Application.h,v 1.2 2001/04/22 16:00:56 rdm Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -43,13 +43,7 @@ private:
   DWORD  fIDCmdThread;
   HANDLE fhdCmdThread;
 
-  DWORD  fIDDlgThread;
-  HANDLE fhdDlgThread;
-
-
   Int_t   CreateCmdThread();
-  Int_t   CreateDlgThread();
-
 
 public:
 
@@ -60,7 +54,6 @@ public:
 
    BOOL    ExecCommand(TGWin32Command *command, Bool_t synch=kFALSE);   // To exec a command coming from the other threads
    DWORD   GetCmdThreadID(){return fIDCmdThread;}
-   DWORD   GetDlgThreadID(){return fIDDlgThread;}
    void    Show();
    void    Hide();
    void    Iconify();

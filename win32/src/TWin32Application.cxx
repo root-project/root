@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.3 2001/04/23 08:11:52 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.4 2001/06/29 06:40:29 brun Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -147,12 +147,11 @@ unsigned int ROOT_DlgLoop(HANDLE ThrSem)
 //______________________________________________________________________________
 TWin32Application::TWin32Application(const char *appClassName, int *argc,
                                      char **argv, void *options, int numOptions)
+                  : fIDCmdThread(NULL)
 {
    fApplicationName = appClassName;
    SetConsoleTitle(appClassName);
    CreateCmdThread();
-//   gVirtualX->Init();
-//   CreateDlgThread();
 }
 //______________________________________________________________________________
    TWin32Application::~TWin32Application() {
@@ -163,14 +162,6 @@ TWin32Application::TWin32Application(const char *appClassName, int *argc,
                                TerminateThread(fhdCmdThread, -1); ;
         CloseHandle(fhdCmdThread);
     }
-
-    if (fIDDlgThread) {
-        PostThreadMessage(fIDDlgThread,WM_QUIT,0,0);
-        if (WaitForSingleObject(fhdDlgThread,10000)==WAIT_FAILED)
-                               TerminateThread(fhdDlgThread, -1);
-        CloseHandle(fhdDlgThread);
-    }
-
 }
 
 //______________________________________________________________________________
@@ -197,30 +188,6 @@ Int_t TWin32Application::CreateCmdThread()
       int  erret = GetLastError();
       Error("CreatCmdThread", "Thread was not created");
       Printf(" %d \n", erret);
-  }
-
-  WaitForSingleObject(ThrSem, INFINITE);
-  CloseHandle(ThrSem);
-
-  return 0;
-}
-
-//______________________________________________________________________________
-Int_t TWin32Application::CreateDlgThread()
-{
-  HANDLE ThrSem;
-
-  //
-  //  Create thread to do the Dialogs loop
-  //
-
-  ThrSem = CreateSemaphore(NULL, 0, 1, NULL);
-
-  if (!(fhdDlgThread = CreateThread(NULL,0, (LPTHREAD_START_ROUTINE) ROOT_DlgLoop,
-                 (LPVOID) ThrSem, 0,  &fIDDlgThread))){
-      int  erret = GetLastError();
-      Error("CreatCmdThread", "Thread was not created");
-      Printf("%d \n", erret);
   }
 
   WaitForSingleObject(ThrSem, INFINITE);
