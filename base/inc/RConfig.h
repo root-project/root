@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.19 2001/04/25 14:38:14 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.20 2001/05/07 00:08:07 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -274,7 +274,7 @@
 #   endif
 #endif
 
-#ifdef VISUAL_CPLUSPLUS
+#ifdef _MSC_VER
 #   define R__VISUAL_CPLUSPLUS
 #   define NEED_STRING
 #   define NEED_STRCASECMP

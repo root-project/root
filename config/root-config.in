@@ -236,7 +236,7 @@ hiux)
    ;;
 win32)
    # Win32
-   auxcflags="-MD -DVISUAL_CPLUSPLUS"
+   auxcflags="-MD"
    auxlibs=
    auxglibs=${auxlibs}
    ;;
