@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.61 2001/08/10 13:44:26 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.62 2001/08/14 06:54:55 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1602,7 +1602,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       TFormLeafInfo *previnfo = 0;
       if (leaf->InheritsFrom("TLeafObject") ) {
          TBranchObject *bobj = (TBranchObject*)leaf->GetBranch();
-         cl = gROOT->GetClass(bobj->GetObjClassName());
+         cl = gROOT->GetClass(bobj->GetClassName());
          if (strlen(right)==0) strcpy(right,work);
       } else if (leaf->InheritsFrom("TLeafElement")) {
          TBranchElement *BranchEl = (TBranchElement *)leaf->GetBranch();
