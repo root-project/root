@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.30 2003/04/13 17:52:27 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.31 2003/05/01 17:16:57 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1560,6 +1560,7 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
              XDrawArc(fDisplay, gCws->window, gGCecho,
                       xlocp-radius, ylocp-radius,
                       2*radius, 2*radius, 0, 23040);
+             break;
 
          case 4 :
              XDrawLine(fDisplay, gCws->window, gGCecho,
@@ -1599,6 +1600,7 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
             XDrawArc(fDisplay, gCws->window, gGCecho,
                      xlocp-radius, ylocp-radius,
                      2*radius, 2*radius, 0, 23040);
+            break;
 
          case 4 :
             XDrawLine(fDisplay, gCws->window, gGCecho,
