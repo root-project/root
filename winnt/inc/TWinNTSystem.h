@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.11 2001/11/28 16:05:42 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.12 2002/02/26 17:57:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -131,9 +131,7 @@ public:
    void              SetShellName(const char *name=0);
 
    //---- EventLoop --------------------------------------------
-#ifndef GDK_WIN32
    Bool_t            ProcessEvents();
-#endif
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
    void              ExitLoop();
    void              InnerLoop();

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.6 2002/09/14 00:31:01 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.3 2002/02/21 11:30:17 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -34,6 +34,10 @@
 
 #else
 
+typedef ULong_t LPCRITICAL_SECTION;
+typedef unsigned long DWORD;
+typedef void* HANDLE;
+
 typedef unsigned long XID;
 typedef XID GdkDrawable;
 typedef XID GdkCursor;
@@ -48,12 +52,68 @@ struct GdkColor;
 struct GdkEvent;
 struct GdkImage;
 struct GdkPoint;
+struct GdkRectangle;
 
 #endif
 
 typedef unsigned long KeySym;
 
 #define None 0 /* universal null resource or null atom */
+
+struct ThreadParam_t {
+
+    HANDLE          hThrSem;
+    GdkDrawable    *Drawable;
+    GdkWindowAttr   xattr;
+    GdkGC          *GC;
+    GdkColor        color;
+    GdkGCValues     gcvals;
+    GdkEvent        event;
+    GdkRectangle    region;
+
+    signed char     dashes[32];
+    void           *pParam;
+    void           *pParam1;
+    void           *pParam2;
+    Int_t           iParam;
+    Int_t           iParam1;
+    Int_t           iParam2;
+    UInt_t          uiParam;
+    UInt_t          uiParam1;
+    UInt_t          uiParam2;
+    Long_t          lParam;
+    Long_t          lParam1;
+    Long_t          lParam2;
+    ULong_t         ulParam;
+    ULong_t         ulParam1;
+    ULong_t         ulParam2;
+    char            sParam[1024];
+    Int_t           x;
+    Int_t           x1;
+    Int_t           x2;
+    Int_t           y;
+    Int_t           y1;
+    Int_t           y2;
+    Int_t           w;
+    Int_t           h;
+    Int_t           xpos;
+    Int_t           ypos;
+    Int_t           angle1;
+    Int_t           angle2;
+    Bool_t          bFill;
+
+    char           *sRet;
+    Int_t           iRet;
+    Int_t           iRet1;
+    UInt_t          uiRet;
+    UInt_t          uiRet1;
+    Long_t          lRet;
+    Long_t          lRet1;
+    ULong_t         ulRet;
+    void           *pRet;
+    void           *pRet1;
+
+};
 
 struct XWindow_t {
    Int_t    open;                 // 1 if the window is open, 0 if not
@@ -76,9 +136,13 @@ struct XWindow_t {
 class TGWin32 : public TVirtualX {
 
 private:
-   Int_t      fMaxNumberOfWindows;    //Maximum number of windows
-   XWindow_t  *fWindows;               //List of windows
-   GdkCursor  *fCursors[kNumCursors];  //List of cursors
+   static LPCRITICAL_SECTION  flpCriticalSection; // pointer to critical section object
+   static DWORD            fIDThread;       // ID of the separate Thread to work out event loop
+   HANDLE           hGDKThread;
+   static ThreadParam_t    fThreadP;
+   Int_t            fMaxNumberOfWindows;    //Maximum number of windows
+   XWindow_t       *fWindows;               //List of windows
+   GdkCursor       *fCursors[kNumCursors];  //List of cursors
 
    void  CloseWindow1();
    void  ClearPixmap(GdkDrawable *pix);
@@ -108,6 +172,12 @@ private:
    void MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox = kTRUE);
    void MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox = kTRUE);
 
+   static DWORD __stdcall ThreadStub(void *Parameter) {
+        ((TGWin32*)Parameter)->GdkThread();
+        return 0;
+   }
+   void GdkThread();
+
 protected:
    GdkColormap  *fColormap;           //Default colormap, 0 if b/w
    Int_t      fScreenNumber;       //Screen number
@@ -130,7 +200,7 @@ public:
    virtual ~TGWin32();
 
    Bool_t    Init();
-   UInt_t    ExecCommand(TGWin32Command *);
+   UInt_t	 ExecCommand(TGWin32Command *);
    void      ClearWindow();
    void      ClosePixmap();
    void      CloseWindow();
@@ -147,6 +217,7 @@ public:
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    const char *DisplayName(const char *dpyName = 0);
    ULong_t   GetPixel(Color_t cindex);
+   static ULong_t   GetPixel(Drawable_t id, Int_t x, Int_t y);
    void      GetPlanes(Int_t &nplanes);
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);

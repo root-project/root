@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.33 2002/07/31 20:04:39 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.34 2002/08/19 16:37:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -251,13 +251,16 @@ TWinNTSystem::~TWinNTSystem()
 #ifdef GDK_WIN32
 unsigned __stdcall HandleConsoleThread(void *pArg )
 {
+
     while (1) {
         if(gROOT->GetApplication()) {
-            WaitForSingleObject(hEvent1, 10);
-            if(gROOT->GetApplication())
-                gROOT->GetApplication()->HandleTermInput();
+            WaitForSingleObject(hEvent1, INFINITE);
+            if(!gROOT->IsLineProcessing())
+                gApplication->HandleTermInput();
+            ResetEvent(hEvent1);
         }
     }
+
     _endthreadex( 0 );
     return 0;
 }
@@ -319,9 +322,10 @@ Bool_t TWinNTSystem::Init()
    fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
 
 #ifdef GDK_WIN32
-    hEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);
+    hEvent1 = CreateEvent(NULL, TRUE, FALSE, NULL);
     hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
         &thread1ID );
+
 #endif
 
     return kFALSE;
@@ -685,6 +689,21 @@ void TWinNTSystem::DispatchOneEvent(Bool_t)
 #else
 
 //______________________________________________________________________________
+Bool_t TWinNTSystem::ProcessEvents()
+{
+   // Events are processed by separate thread. Here we just return the
+   // interrupt value the might have been set in command thread.
+
+   Bool_t intr = gROOT->IsInterrupted();
+   gROOT->SetInterrupt(kFALSE);
+
+   if (!gROOT->IsBatch())
+      DispatchOneEvent(kTRUE);
+   
+   return intr;
+}
+
+//______________________________________________________________________________
 void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
  // Dispatch a single event via Command thread
@@ -692,14 +711,20 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    while (1) {
       fReadready  = fReadmask;
       fWriteready = fWritemask;
-      PulseEvent(hEvent1);
-      if ((gXDisplay) && gXDisplay->Notify()) {
-         if (fReadready.IsSet(gXDisplay->GetFd())) {
-            fReadready.Clr(gXDisplay->GetFd());
-            fNfd--;
-         }
-         if (!pendingOnly) {
-             return;
+      if(gROOT->IsLineProcessing()) {
+         SleepEx(5, TRUE);
+         return;
+      }
+      SetEvent(hEvent1);
+      if (gXDisplay) {
+         if(gXDisplay->Notify()) {
+            if (fReadready.IsSet(gXDisplay->GetFd())) {
+               fReadready.Clr(gXDisplay->GetFd());
+               fNfd--;
+            }
+            if (!pendingOnly) {
+               return;
+            }
          }
       }
       // check for file descriptors ready for reading/writing
@@ -730,7 +755,9 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
          if (CheckSignals(kTRUE))
-            if (!pendingOnly) return;
+             if (!pendingOnly) {
+                 return;
+             }
       fSigcnt = 0;
       fSignals.Zero();
 
@@ -743,7 +770,9 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
                return;
          }
 
-      if (pendingOnly) return;
+         if (pendingOnly) {
+             return;
+         }
    }
 
 }
@@ -1425,6 +1454,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
 {
    // Exit the application.
 
+   gVirtualX->CloseDisplay();
    if (mode)
       ::exit(code);
    else
