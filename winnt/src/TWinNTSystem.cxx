@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.43 2003/02/27 18:48:33 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.44 2003/02/27 21:55:08 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -663,6 +663,45 @@ void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
    // If ignore is true ignore the specified signal, else restore previous
    // behaviour.
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetFPEMask()
+{
+   // Return the bitmap of conditions that trigger a floating point exception.
+
+   Int_t mask = 0;
+   UInt_t oldmask = _statusfp( );
+
+   if (oldmask & _EM_INVALID  )   mask |= kInvalid;
+   if (oldmask & _EM_ZERODIVIDE)  mask |= kDivByZero;
+   if (oldmask & _EM_OVERFLOW )   mask |= kOverflow;
+   if (oldmask & _EM_UNDERFLOW)   mask |= kUnderflow;
+   if (oldmask & _EM_INEXACT  )   mask |= kInexact;
+
+   return mask;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::SetFPEMask(Int_t mask)
+{
+   // Set which conditions trigger a floating point exception.
+   // Return the previous set of conditions.
+
+   Int_t old = GetFPEMask();
+
+   UInt_t newm = 0;
+   if (mask & kInvalid  )   newm |= _EM_INVALID;
+   if (mask & kDivByZero)   newm |= _EM_ZERODIVIDE;
+   if (mask & kOverflow )   newm |= _EM_OVERFLOW;
+   if (mask & kUnderflow)   newm |= _EM_UNDERFLOW;
+   if (mask & kInexact  )   newm |= _EM_INEXACT;
+
+   UInt_t cm = _statusfp( );
+   cm &= ~newm;
+   _controlfp(cm , _MCW_EM);
+
+   return old;
 }
 
 #ifndef GDK_WIN32

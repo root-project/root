@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.15 2003/01/27 18:24:41 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.16 2003/02/27 18:48:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -147,6 +147,10 @@ public:
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
    BOOL              HandleConsoleEvent();
+
+   //---- Floating Point Exceptions Control
+   Int_t             GetFPEMask();
+   Int_t             SetFPEMask(Int_t mask = kDefaultMask);
 
    //---- Processes --------------------------------------------
    int               Exec(const char *shellcmd);
