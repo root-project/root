@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.7 2000/10/09 10:09:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.8 2000/10/09 13:45:37 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -33,6 +33,8 @@
 #include "TError.h"
 #include "Bytes.h"
 #include "TInterpreter.h"
+#include "TStreamerInfo.h"
+#include "TArrayC.h"
 #include "TClassTable.h"
 
 TFile *gFile;                 //Pointer to current file
@@ -57,7 +59,8 @@ TFile::TFile() : TDirectory()
    fWritten    = 0;
    fSumBuffer  = 0;
    fSum2Buffer = 0;
-
+   fClassIndex = 0;
+   
    if (gDebug)
       cerr << "TFile default ctor" <<endl;
 }
@@ -178,6 +181,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fSum2Buffer = 0;
    fBytesRead  = 0;
    fBytesWrite = 0;
+   fClassIndex = 0;
 
    if (!fOption.CompareTo("NET", TString::kIgnoreCase))
       return;
@@ -318,7 +322,7 @@ void TFile::Init(Bool_t create)
       fFree        = new TList;
       fBEGIN       = kBegin;    //First used word in file following the file header
       fEND         = fBEGIN;    //Pointer to end of file
-      new TFree(fBEGIN, max_file_size);  //Create new free list
+      new TFree(fFree, fBEGIN, max_file_size);  //Create new free list
 
 //*-* Write Directory info
       Int_t namelen= TNamed::Sizeof();
@@ -408,7 +412,10 @@ void TFile::Init(Bool_t create)
       }
    }
    gROOT->GetListOfFiles()->Add(this);
-
+   
+   fClassIndex = new TArrayC(gROOT->GetListOfStreamerInfo()->GetSize()+1);
+   if (!create) ReadStreamerInfo();
+   
    if (TClassTable::GetDict("TProof")) {
       if (gROOT->ProcessLineFast("TProof::IsActive()"))
          gROOT->ProcessLineFast(Form("TProof::This()->ConnectFile((TFile *)0x%lx);",
@@ -430,6 +437,10 @@ void TFile::Close(Option_t *)
 
    if (!IsOpen()) return;
 
+   if (IsWritable()) WriteStreamerInfo();
+   delete fClassIndex; 
+   fClassIndex = 0;
+   
    TCollection::StartGarbageCollection();
 
    TDirectory *cursav = gDirectory;
@@ -444,7 +455,7 @@ void TFile::Close(Option_t *)
    cd();      // Close() sets gFile = 0
 
    if (IsWritable()) {
-      TFree *f1 = (TFree*) GetListOfFree()->First();
+      TFree *f1 = (TFree*)fFree->First();
       if (f1) {
          WriteFree();       //*-*- Write free segments linked list
          WriteHeader();     //*-*- Now write file header
@@ -688,9 +699,10 @@ void TFile::MakeFree(Seek_t first, Seek_t last)
 //  where GAPSIZE = -(Number of bytes occupied by the record).
 //
 
-   TFree *f1      = (TFree*) GetListOfFree()->First();
+   TFree *f1      = (TFree*)fFree->First();
    if (!f1) return;
-   TFree *newfree = f1->AddFree(first,last);
+   TFree *newfree = f1->AddFree(fFree,first,last);
+   if(!newfree) return;
    Seek_t nfirst  = newfree->GetFirst();
    Seek_t nlast   = newfree->GetLast();
    Int_t nbytes   = Int_t (nfirst - nlast -1);
@@ -704,6 +716,7 @@ void TFile::MakeFree(Seek_t first, Seek_t last)
    Flush();
    delete [] psave;
 }
+
 
 //______________________________________________________________________________
 void TFile::Map()
@@ -843,6 +856,7 @@ void TFile::ReadFree()
    while(1) {
       TFree *afree = new TFree();
       afree->ReadBuffer(buffer);
+      fFree->Add(afree);
       if (afree->GetLast() > fEND) break;
    }
    delete headerfree;
@@ -888,7 +902,7 @@ void TFile::Recover()
       }
       if (nbytes < 0) {
          idcur -= nbytes;
-         if (fWritable) new TFree(idcur,idcur-nbytes-1);
+         if (fWritable) new TFree(fFree,idcur,idcur-nbytes-1);
          Seek(idcur);
          continue;
       }
@@ -916,7 +930,7 @@ void TFile::Recover()
       idcur += nbytes;
    }
    if (fWritable) {
-      new TFree(fEND,2000000000);
+      new TFree(fFree,fEND,2000000000);
       if (nrecov) Write();
    }
    delete [] header;
@@ -1032,6 +1046,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    }
 
    Int_t nbytes = TDirectory::Write(0, opt, bufsiz); // Write directory tree
+   WriteStreamerInfo();
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header
 
@@ -1112,7 +1127,7 @@ void TFile::WriteHeader()
 //*-*-*-*-*-*-*-*-*-*-*-*Write File Header*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =================
 //
-   TFree *lastfree = (TFree*)GetListOfFree()->Last();
+   TFree *lastfree = (TFree*)fFree->Last();
    if (lastfree) fEND  = lastfree->GetFirst();
    const char *root = "root";
    char *psave  = new char[kBegin];
@@ -1133,6 +1148,261 @@ void TFile::WriteHeader()
    WriteBuffer(psave, nbytes);
    Flush();
    delete [] psave;
+}
+
+//______________________________________________________________________________
+void TFile::MakeProject(const char *dirname, const char *classes, Option_t *option)
+{
+// Generate code in directory dirname for all classes specified in argument classes
+// If classes = "*" (default), the function generates an include file for each
+// class in the StreamerInfo list for which a TClass object does not exist.
+// One can restrict the list of classes to be generated by using expressions like:
+//   classes = "Ali*" generate code only for classes starting with Ali
+//   classes = "myClass" generate code for class MyClass only.
+//
+// if option = "new" (default) a new directory dirname is created.
+//                   If dirname already exist, an error message is printed
+//                   and the function returns.
+// if option = "recreate", then;
+//                   if dirname does not exist, it is created (like in "new")
+//                   if dirname already exist, all existing files in dirname 
+//                   are deleted before creating the new files.
+// if option = "update", then new classes are added to the existing directory.
+//                   Existing classes with the same name are replaced by the
+//                   new definition. If the directory dirname doest not exist,
+//                   same effect as "new".
+// if, in addition to one of the 3 above options, the option "++" is specified,
+// the function will generate:
+//   - a script called MAKE to build the shared lib
+//   - a LinkDef.h file
+//   - rootcint will be run to generate a dirnameProjectDict.cxx file
+//   - dirnameProjectDict.cxx will be compiled with the current options in compiledata.h
+//   - a shared lib dirname.so will be created.
+// example:
+//  file.MakeProject("demo","*","recreate++");
+//  - creates a new directory demo unless it already exist
+//  - clear the previous directory content
+//  - generate the xxx.h files for all classes xxx found in this file
+//    and not yet known to the CINT dictionary.
+//  - creates the build script MAKE
+//  - creates a LinkDef.h file
+//  - runs rootcint generating demoProjectDict.cxx
+//  - compiles demoProjectDict.cxx into demoProjectDict.o
+//  - generates a shared lib demo.so
+//  At this point, the shared lib can be dynamically linked to the current
+//  executable module with:
+//     gSystem->load("demo/demo.so");
+//
+
+   TString opt = option;
+   opt.ToLower();
+   void *dir = gSystem->OpenDirectory(dirname);
+   char path[256];
+      
+   if (opt.Contains("update")) {
+      // check that directory exist, if not create it
+      if (dir == 0) {
+         gSystem->mkdir(dirname);
+      }
+      
+   } else if (opt.Contains("recreate")) {
+      // check that directory exist, if not create it
+      if (dir == 0) {
+         gSystem->mkdir(dirname);
+      }      
+      // clear directory
+      while (dir) {
+         const char *afile = gSystem->GetDirEntry(dir);
+         if (afile == 0) break;
+         if (strcmp(afile,".") == 0) continue;
+         if (strcmp(afile,"..") == 0) continue;
+         sprintf(path,"%s/%s",dirname,afile);
+         gSystem->Unlink(path);
+      }
+        
+   } else {
+      // new is assumed
+      // if directory already exist, print error message and return
+      if (dir) {
+         Error("MakeProject","Cannot create directory:%s, already existing",dirname);
+         return;
+      }
+      gSystem->mkdir(dirname);
+   }
+
+   // we are now ready to generate the classes
+   // loop on all TStreamerInfo
+   TList *list = (TList*)Get("StreamerInfo");
+   if (list == 0) {
+      Error("MakeProject","File has no StreamerInfo");
+      return;
+   }
+      
+   // loop on all TStreamerInfo classes
+   TStreamerInfo *info;
+   TIter next(list);
+   Int_t ngener = 0;
+   while ((info = (TStreamerInfo*)next())) {
+      ngener += info->GenerateHeaderFile(dirname);
+   }
+   list->Delete();
+   delete list;
+   printf("MakeProject has generated %d classes in %s\n",ngener,dirname);
+   
+   // generate the shared lib
+   if (!opt.Contains("++")) return;
+   
+   // create the MAKE file by looping on all *.h files
+   // delete MAKE if it already exists
+   sprintf(path,"%s/MAKE",dirname);
+   FILE *fpMAKE = fopen(path,"w");
+   if (!fpMAKE) {
+      printf("Cannot open file:%s\n",path);
+      return;
+   }
+   
+   // add rootcint statement generating ProjectDict.cxx
+   fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c -I$ROOTSYS/include \\\n",dirname);
+   
+   // create the LinkDef.h file by looping on all *.h files
+   // delete LinkDef.h if it already exists
+   sprintf(path,"%s/LinkDef.h",dirname);
+   FILE *fp = fopen(path,"w");
+   if (!fp) {
+      printf("Cannot open path file:%s\n",path);
+      return;
+   }
+   fprintf(fp,"#ifdef __CINT__\n");
+   fprintf(fp,"#pragma link off all globals;\n");
+   fprintf(fp,"#pragma link off all classes;\n");
+   fprintf(fp,"#pragma link off all functions;\n");
+   fprintf(fp,"\n");
+   dir = gSystem->OpenDirectory(dirname);
+   while (dir) {
+      const char *afile = gSystem->GetDirEntry(dir);
+      if (afile == 0) break;
+      if(strcmp(afile,"LinkDef.h") == 0) continue;
+      if(strstr(afile,"ProjectDict.h") != 0) continue;
+      strcpy(path,afile);
+      char *h = strstr(path,".h");
+      if (!h) continue;
+      *h = 0;
+      fprintf(fp,"#pragma link C++ class %s+;\n",path);
+      fprintf(fpMAKE,"%s \\\n",afile);
+  }
+   fprintf(fp,"#endif\n");
+   fclose(fp);
+   fprintf(fpMAKE,"LinkDef.h\n");
+   
+   // add compilation line
+   strcpy(path,gSystem->GetMakeSharedLib());
+   char *optim = strstr(path,"-O ");
+   if (optim) (strncpy(optim,"  ",2)); // remove optimisation option
+   char *dollarInclude = strstr(path,"$IncludePath");
+   *dollarInclude = 0;
+   fprintf(fpMAKE,"%s \\\n",path);
+   fprintf(fpMAKE,"%s %sProjectDict.cxx\n",gSystem->GetIncludePath() ,dirname);
+     
+   // add line to generate the shared lib
+   char *compiler    = strstr(dollarInclude+1,"; ") +2;
+   char *objectFiles = strstr(compiler,"$ObjectFiles");
+   char *sharedLib   = strstr(objectFiles,"$SharedLib");
+   *objectFiles = 0;
+   *sharedLib   = 0;
+   fprintf(fpMAKE,"%s %sProjectDict.%s %s %s.%s\n",compiler,dirname,gSystem->GetObjExt(),objectFiles+12,dirname,gSystem->GetSoExt());
+      
+   fclose(fpMAKE);
+
+   // now execute the generated script compiling and generating the shared lib
+   strcpy(path,gSystem->WorkingDirectory());
+   gSystem->ChangeDirectory(dirname);
+   gSystem->Exec("chmod +x MAKE");
+   gSystem->Exec("MAKE");
+   gSystem->ChangeDirectory(path);
+   printf("Shared lib %s/%s.%s has been generated\n",dirname,dirname,gSystem->GetSoExt());   
+}
+                         
+//______________________________________________________________________________
+void TFile::ReadStreamerInfo(const char *name)
+{
+// Read the list of StreamerInfo from this file 
+// The key with name holding the list of TStreamerInfo objects is read.
+// The corresponding TClass objects are updated.
+   
+   TList *list = (TList*)Get(name);
+   if (list == 0) return;
+   if (gDebug > 0) printf("Calling ReadStreamerInfo for file: %s\n",GetName());
+      
+   // loop on all TStreamerInfo classes
+   TStreamerInfo *info;
+   TIter next(list);
+   while ((info = (TStreamerInfo*)next())) {
+      info->BuildCheck();
+      Int_t uid = info->GetNumber();
+      fClassIndex->fArray[uid] = 1;
+      if (gDebug > 1) printf(" -class: %s version: %d info read\n",info->GetName(), info->GetClassVersion());
+   }
+   fClassIndex->fArray[0] = 0;
+   list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
+   delete list;
+}
+
+//______________________________________________________________________________
+void TFile::ShowStreamerInfo(const char *name)
+{
+// Show the StreamerInfo of all classes written to this file.
+   
+   TList *list = (TList*)Get(name);
+   if (list == 0) {
+      printf("Cannot find a %s key on this file\n",name);
+      return;
+   }
+      
+   list->ls();
+   
+   list->Delete();
+   delete list;
+}
+
+//______________________________________________________________________________
+void TFile::WriteStreamerInfo(const char *name)
+{
+//  Write the list of TStreamerInfo as a single object in this file
+//  The class Streamer description for all classes written to this file
+//  is saved.
+//  see class TStreamerInfo
+   
+   //if (!gFile) return;
+   if (!fWritable) return;
+   if (!fClassIndex) return;
+   //no need to update the index if no new classes added to the file
+   if (fClassIndex->fArray[0] == 0) return;
+   if (gDebug > 0) printf("Calling WriteStreamerInfo for file: %s\n",GetName());
+   
+   // build a temporary list with the marked files
+   TIter next(gROOT->GetListOfStreamerInfo());
+   TStreamerInfo *info;
+   TList list;
+   
+   while ((info = (TStreamerInfo*)next())) {
+      Int_t uid = info->GetNumber();
+      if (fClassIndex->fArray[uid]) list.Add(info);
+      if (gDebug > 1) printf(" -class: %s info saved\n",info->GetName());
+   }
+   if (list.GetSize() == 0) return; 
+   fClassIndex->fArray[0] = 0;
+   
+   // always write with compression on
+   Int_t compress = fCompress;
+   fCompress = 1; 
+   TFile * fileSave = gFile;
+   TDirectory *dirSave = gDirectory;
+   gFile = this; 
+   gDirectory = this;      
+   list.Write(name,kSingleKey|kOverwrite);
+   gFile = fileSave;
+   gDirectory = dirSave;
+   fCompress = compress;
 }
 
 //______________________________________________________________________________
