@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.18 2003/10/29 10:57:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.19 2003/12/11 11:22:42 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -36,6 +36,8 @@ protected:
     Double_t    fZmin;            //Lower limit in Z (if set)
     Double_t    fZmax;            //Upper limit in Z (if set)
     Bool_t      fScaling;         //!True when TProfile2D::Scale is called
+    Stat_t      fTsumwz;          //Total Sum of weight*Z
+    Stat_t      fTsumwz2;         //Total Sum of weight*Z*Z
 static Bool_t   fgApproximate;    //bin error approximation option
 
    virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
@@ -111,7 +113,7 @@ public:
     virtual void    SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 
-    ClassDef(TProfile2D,4)  //Profile2D histogram class
+    ClassDef(TProfile2D,5)  //Profile2D histogram class
 };
 
 #endif

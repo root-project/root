@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.20 2003/10/29 10:57:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.21 2003/12/11 11:22:42 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -62,6 +62,7 @@ TProfile2D::TProfile2D() : TH2D()
 {
 //*-*-*-*-*-*Default constructor for Profile2D histograms*-*-*-*-*-*-*-*-*
 //*-*        ============================================
+   fTsumwz = fTsumwz2 = 0;
 }
 
 //______________________________________________________________________________
@@ -204,6 +205,7 @@ void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
    fZmin = zmin;
    fZmax = zmax;
    fScaling = kFALSE;
+   fTsumwz  = fTsumwz2 = 0;
 }
 
 //______________________________________________________________________________
@@ -257,6 +259,11 @@ void TProfile2D::Add(const TH1 *h1, Double_t c1)
    fTsumw2  += ac1*p1->fTsumw2;
    fTsumwx  += ac1*p1->fTsumwx;
    fTsumwx2 += ac1*p1->fTsumwx2;
+   fTsumwy  += ac1*p1->fTsumwy;
+   fTsumwy2 += ac1*p1->fTsumwy2;
+   fTsumwxy += ac1*p1->fTsumwxy;
+   fTsumwz  += ac1*p1->fTsumwz;
+   fTsumwz2 += ac1*p1->fTsumwz2;
 
 //*-*- Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny;
@@ -317,6 +324,11 @@ void TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    fTsumw2  = ac1*p1->fTsumw2      + ac2*p2->fTsumw2;
    fTsumwx  = ac1*p1->fTsumwx      + ac2*p2->fTsumwx;
    fTsumwx2 = ac1*p1->fTsumwx2     + ac2*p2->fTsumwx2;
+   fTsumwy  = ac1*p1->fTsumwy      + ac2*p2->fTsumwy;
+   fTsumwy2 = ac1*p1->fTsumwy2     + ac2*p2->fTsumwy2;
+   fTsumwxy = ac1*p1->fTsumwxy     + ac2*p2->fTsumwxy;
+   fTsumwz  = ac1*p1->fTsumwz      + ac2*p2->fTsumwz;
+   fTsumwz2 = ac1*p1->fTsumwz2     + ac2*p2->fTsumwz2;
 
 //*-*- Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny;
@@ -426,6 +438,8 @@ void TProfile2D::Copy(TObject &obj) const
    ((TProfile2D&)obj).fZmin = fZmin;
    ((TProfile2D&)obj).fZmax = fZmax;
    ((TProfile2D&)obj).fErrorMode = fErrorMode;
+   ((TProfile2D&)obj).fTsumwz  = fTsumwz;
+   ((TProfile2D&)obj).fTsumwz2 = fTsumwz2;
 }
 
 
@@ -477,7 +491,7 @@ void TProfile2D::Divide(const TH1 *h1)
    Double_t *cu1 = p1->GetW();
    Double_t *er1 = p1->GetW2();
    Double_t *en1 = p1->GetB();
-   Double_t c0,c1,w,z,x;
+   Double_t c0,c1,w,z,x,y;
    for (binx =0;binx<=nx+1;binx++) {
       for (biny =0;biny<=ny+1;biny++) {
          bin   = biny*(fXaxis.GetNbins()+2) + binx;
@@ -487,12 +501,18 @@ void TProfile2D::Divide(const TH1 *h1)
          else    w = 0;
          fArray[bin] = w;
          z = TMath::Abs(w);
-         x = fXaxis.GetBinCenter(bin);
+         x = fXaxis.GetBinCenter(binx);
+         y = fYaxis.GetBinCenter(biny);
          fEntries++;
          fTsumw   += z;
          fTsumw2  += z*z;
          fTsumwx  += z*x;
          fTsumwx2 += z*x*x;
+         fTsumwy  += z*y;
+         fTsumwy2 += z*y*y;
+         fTsumwxy += z*x*y;
+         fTsumwz  += z;
+         fTsumwz2 += z*z;
          Double_t e0 = fSumw2.fArray[bin];
          Double_t e1 = er1[bin];
          Double_t c12= c1*c1;
@@ -560,7 +580,7 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
    Double_t *er2 = p2->GetW2();
    Double_t *en1 = p1->GetB();
    Double_t *en2 = p2->GetB();
-   Double_t b1,b2,w,z,x,d1,d2;
+   Double_t b1,b2,w,z,x,y,d1,d2;
    d1 = c1*c1;
    d2 = c2*c2;
    for (binx =0;binx<=nx+1;binx++) {
@@ -572,12 +592,18 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
          else    w = 0;
          fArray[bin] = w;
          z = TMath::Abs(w);
-         x = fXaxis.GetBinCenter(bin);
+         x = fXaxis.GetBinCenter(binx);
+         y = fYaxis.GetBinCenter(biny);
          fEntries++;
          fTsumw   += z;
          fTsumw2  += z*z;
          fTsumwx  += z*x;
          fTsumwx2 += z*x*x;
+         fTsumwy  += z*y;
+         fTsumwy2 += z*y*y;
+         fTsumwxy += z*x*y;
+         fTsumwz  += z;
+         fTsumwz2 += z*z;
          Double_t e1 = er1[bin];
          Double_t e2 = er2[bin];
          Double_t b22= b2*b2*d2;
@@ -642,6 +668,8 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z)
    fTsumwy  += y;
    fTsumwy2 += y*y;
    fTsumwxy += x*y;
+   fTsumwz  += z;
+   fTsumwz2 += z*z;
    return bin;
 }
 
@@ -675,6 +703,8 @@ Int_t TProfile2D::Fill(Axis_t x, const char *namey, Axis_t z)
    fTsumwy  += y;
    fTsumwy2 += y*y;
    fTsumwxy += x*y;
+   fTsumwz  += z;
+   fTsumwz2 += z*z;
    return bin;
 }
 
@@ -707,6 +737,8 @@ Int_t TProfile2D::Fill(const char *namex, const char *namey, Axis_t z)
    fTsumwy  += y;
    fTsumwy2 += y*y;
    fTsumwxy += x*y;
+   fTsumwz  += z;
+   fTsumwz2 += z*z;
    return bin;
 }
 
@@ -740,6 +772,8 @@ Int_t TProfile2D::Fill(const char *namex, Axis_t y, Axis_t z)
    fTsumwy  += y;
    fTsumwy2 += y*y;
    fTsumwxy += x*y;
+   fTsumwz  += z;
+   fTsumwz2 += z*z;
    return bin;
 }
 
@@ -778,6 +812,8 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
    fTsumwy  += u*y;
    fTsumwy2 += u*y*y;
    fTsumwxy += u*x*y;
+   fTsumwz  += u*z;
+   fTsumwz2 += u*z*z;
    return bin;
 }
 
@@ -1261,7 +1297,12 @@ Int_t TProfile2D::Merge(TCollection *list)
       fTsumw2  += h->fTsumw2;
       fTsumwx  += h->fTsumwx;
       fTsumwx2 += h->fTsumwx2;
-   }
+      fTsumwy  += h->fTsumwy;
+      fTsumwy2 += h->fTsumwy2;
+      fTsumwxy += h->fTsumwxy;
+      fTsumwz  += h->fTsumwz;
+      fTsumwz2 += h->fTsumwz2;
+  }
 
    return nentries;
 }
@@ -1351,6 +1392,7 @@ void TProfile2D::Reset(Option_t *option)
 //*-*                =======================================
   TH2D::Reset(option);
   fBinEntries.Reset();
+  fTsumwz = fTsumwz2 = 0;  
 }
 
 //______________________________________________________________________________
