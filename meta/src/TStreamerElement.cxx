@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.69 2004/11/17 06:02:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.70 2004/11/17 08:46:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1336,9 +1336,10 @@ Int_t TStreamerSTL::GetSize() const
 {
    //returns size of STL container in bytes
 
-   UInt_t size = fSize;
-   // Older TStreamerSTL do not have a proper fSize
-   if (size==0) size = GetClassPointer()->Size();
+   // Since the STL collection might or might not be emulated and that the
+   // sizeof the object depends on this, let's just always retrieve the 
+   // current size!
+   UInt_t size = GetClassPointer()->Size();
 
    if (fArrayLength) return fArrayLength*size;
    return size;

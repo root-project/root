@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.155 2004/11/17 06:02:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.156 2004/11/17 08:46:43 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1158,6 +1158,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
          TStreamerElement *element = 0;
          Int_t type = BranchEl->GetStreamerType();
          switch(type) {
+            case TStreamerInfo::kBase:
             case TStreamerInfo::kObject:
             case TStreamerInfo::kTString:
             case TStreamerInfo::kTNamed:
@@ -1615,6 +1616,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                         clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
                   }
                   // NOTE clones can be zero!
+                  if (clones==0) {
+                     Warning("DefinedVariable","TClonesArray object was not retrievable for %s!",
+                        name.Data());
+                     return -1;
+                  }
                   TClass * inside_cl = clones->GetClass();
                   if (1 || inside_cl) cl = inside_cl;
                   // if inside_cl is nul ... we have a problem of inconsistency :(
@@ -1653,7 +1659,9 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                      previnfo = collectioninfo;
                      maininfo = collectioninfo;
 
-                  }
+                  } //else if (branch->GetStreamerType()==0) {
+
+                  //}
 
                   TClass * inside_cl = cl->GetCollectionProxy()->GetValueClass();
 
@@ -1737,7 +1745,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
                if (element) {
                   Int_t type = element->GetNewType();
-                  if (type<60) {
+                  if (type<60 && type!=0) {
                      // This is a basic type ...
                      if (numberOfVarDim>=1 && type>40) {
                         // We have a variable array within a variable array!
@@ -1781,7 +1789,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                         leafinfo = new TFormLeafInfoPointer(cl,offset,element);
                         mustderef = kTRUE;
                      }
-                  } else if (type == TStreamerInfo::kAny ||
+                  } else if (type == TStreamerInfo::kBase ||
+                             type == TStreamerInfo::kAny ||
                              type == TStreamerInfo::kSTL ||
                              type == TStreamerInfo::kObject ||
                              type == TStreamerInfo::kTString  ||
@@ -2019,7 +2028,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
             Int_t type = BranchEl->GetStreamerType();
             if (type==-1) {
                cl =  BranchEl->GetInfo()->GetClass();
-            } else if (type>60) {
+            } else if (type>60 || type==0) {
                // Case of an object data member.  Here we allow for the
                // variable name to be ommitted.  Eg, for Event.root with split
                // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")

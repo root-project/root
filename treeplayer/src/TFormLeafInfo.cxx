@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.7 2004/11/17 06:02:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.8 2004/11/17 08:46:43 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -639,6 +639,7 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
    } else {
       thisobj = GetObjectAddress((TLeafElement*)leaf, instance); // instance might be modified
    }
+   if (thisobj==0) return 0;
    return ReadValue(thisobj,instance);
 }
 
@@ -1143,7 +1144,9 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf) {
 
    if (fCounter) { return (Int_t)fCounter->ReadValue((char*)GetLocalValuePointer(leaf)); }
    Assert(fCollProxy);
-   TVirtualCollectionProxy::TPushPop helper(fCollProxy, GetLocalValuePointer(leaf) );
+   void *ptr = GetLocalValuePointer(leaf);
+   if (ptr==0) return 0;
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
    return (Int_t)fCollProxy->Size();
 }
 

@@ -8,6 +8,7 @@
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
+#include "TContainerConverters.h"
 
 //==========CPP macros
 
@@ -272,6 +273,16 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
             b.ReadVersion(&start, &count);
             b.SetBufferOffset(start+count+sizeof(UInt_t));
          }
+         break;
+      }
+
+      // skip Any Class not derived from TObject
+      case TStreamerInfo::kSkip + TStreamerInfo::kSTLp:
+      case TStreamerInfo::kSkip + TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:
+      case TStreamerInfo::kSkip + TStreamerInfo::kSTL:     {
+         if (fOldVersion<3) return 0;
+         b.ReadVersion(&start, &count);
+         b.SetBufferOffset(start+count+sizeof(UInt_t));
          break;
       }
 
@@ -551,7 +562,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
 #endif
 
       default:
-         //Error("ReadBufferClones","The element type %d is not supported yet\n",fType[i]);
+         // Warning("ReadBufferConv","The element type %d is not supported yet",fType[i]);
          return -1;
 
    }
