@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.85 2004/01/05 17:50:40 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.86 2004/01/19 18:31:13 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "RConfig.h"
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"

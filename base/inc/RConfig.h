@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.60 2004/01/10 10:52:29 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.61 2004/01/19 18:26:13 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -152,6 +152,9 @@
 #endif
 
 #if defined(linux)
+#   ifndef _LARGEFILE64_SOURCE
+#      define _LARGEFILE64_SOURCE
+#   endif
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
 #      ifndef R__GLIBC
@@ -161,6 +164,7 @@
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2
 #      define R__NONSCALARFPOS2
 #      define R__USESTHROW
+#      define R__SEEK64
 #   endif
 #endif
 
@@ -172,9 +176,6 @@
 #      define __i486__       /* turn off if you really want to run on an i386 */
 #   endif
 #   define NEED_SIGJMP
-#   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 1
-#      define R__SEEK64
-#   endif
 #endif
 
 #if defined(linux) && defined(__ia64__)

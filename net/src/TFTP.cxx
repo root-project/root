@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.18 2003/12/30 13:16:51 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.19 2004/01/19 18:31:13 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -18,6 +18,8 @@
 // and can use parallel sockets to improve performance over fat pipes.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#include "RConfig.h"
 
 #include <fcntl.h>
 #include <errno.h>

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.75 2003/12/11 11:23:07 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.76 2004/01/19 18:31:13 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -204,6 +204,7 @@
 // 8 -> 9: change in Kerberos authentication protocol
 
 #include "config.h"
+#include "RConfig.h"
 
 #include <ctype.h>
 #include <fcntl.h>

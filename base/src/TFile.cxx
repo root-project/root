@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.112 2004/01/19 18:55:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.113 2004/01/19 18:58:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -8,6 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+#include "RConfig.h"
+
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -224,13 +227,12 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
    Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
    Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
-   Bool_t devnull = kFALSE;
    if (!create && !recreate && !update && !read) {
       read    = kTRUE;
       fOption = "READ";
    }
 
-   const char *fname;
+   Bool_t devnull = kFALSE;
 
    if (!fname1 || !strlen(fname1)) {
       Error("TFile", "file name is not specified");
@@ -249,6 +251,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       SetBit(kDevNull);
    }
 
+   const char *fname;
    if ((fname = gSystem->ExpandPathName(fname1))) {
       SetName(fname);
       delete [] (char*)fname;
