@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.146 2004/12/13 15:49:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.147 2004/12/27 15:42:36 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2588,7 +2588,8 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
      fillarea = kTRUE;
      if (!OptionRot) {
         gxwork[0] = vxmin;
-        if (!OptionOne) gywork[0] = TMath::Max((Double_t)0,gPad->GetUymin());
+        if (!OptionOne) gywork[0] = TMath::Min(TMath::Max((Double_t)0,gPad->GetUymin())
+                                              ,gPad->GetUymax());
         else            gywork[0] = gPad->GetUymin();
         npt = 2;
         for (j=first; j<=last;j++) {
@@ -3527,7 +3528,7 @@ void TGraph::Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
       yorg = ruymin;
    } else {
      xorg = TMath::Max((Double_t)0,ruxmin);
-     yorg = TMath::Max((Double_t)0,ruymin);
+     yorg = TMath::Min(TMath::Max((Double_t)0,ruymin),gPad->GetUymax());
    }
 
    maxiterations = 20;
