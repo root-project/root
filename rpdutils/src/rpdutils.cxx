@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.44 2004/05/18 22:21:48 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.45 2004/05/18 23:43:47 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -111,6 +111,9 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #if defined(cygwingcc)
 #define F_LOCK F_WRLCK
 #define F_ULOCK F_UNLCK
+int ruserok(const char *, int, const char *, const char *) {
+   return 0;
+}
 static int fcntl_lockf(int fd, int op, off_t off)
 {
    flock fl;
