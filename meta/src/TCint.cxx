@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.20 2001/05/25 15:06:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.21 2001/05/29 19:07:32 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -449,7 +449,7 @@ void TCint::SetClassInfo(TClass *cl)
       //In case a class contains an external enum, the enum will be seen as a class
       //We must detect this special case and make the class a Zombie
       //Here we assume that a class has at least one method
-      if (cl->fClassInfo->NMethods() <= 0) {
+      if (cl->fClassInfo->NMethods() == 0) {
          cl->MakeZombie();
       }
       
