@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.34 2002/02/13 09:18:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.35 2002/04/03 13:33:59 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -831,6 +831,17 @@ void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax)
    if (fParMax) parmax = fParMax[ipar];
 }
 
+//______________________________________________________________________________
+Double_t TF1::GetProb() const
+{
+// return the fit probability
+   
+   Int_t ndf = fNpfits - fNpar;
+   if (ndf <= 0) return 0;
+   Double_t chi2 = fChisquare/ndf;
+   return TMath::Prob(chi2,ndf); //must use the normalized chisqaure
+}
+   
 //______________________________________________________________________________
 Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 {

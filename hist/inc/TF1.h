@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.20 2002/01/19 08:25:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.21 2002/03/02 04:40:08 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -105,7 +105,7 @@ public:
    virtual Double_t GetParError(Int_t ipar) const;
    virtual Double_t *GetParErrors() const {return fParErrors;}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax);
-   virtual Double_t GetProb() const {return TMath::Prob(fChisquare,fNpfits-fNpar);}
+   virtual Double_t GetProb() const;
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum); 
    virtual Double_t GetRandom();
    virtual void     GetRange(Double_t &xmin, Double_t &xmax);
