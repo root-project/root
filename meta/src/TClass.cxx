@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.109 2003/02/25 17:55:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.110 2003/02/28 20:26:51 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -79,9 +79,19 @@ void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, c
    TRealData   *rd;
    TDataMember *dm = cl->GetDataMember(mname);
    if (!dm || !dm->IsPersistent()) return;
-
-   char rname[256];
+   char rname[512];
    strcpy(rname,pname);
+   //take into account cases like TPaveStats->TPaveText->TPave->TBox
+   //check that member is in a derived class or an object in the class
+   if (cl != fRealDataClass) {
+      if (!fRealDataClass->InheritsFrom(cl)) {
+         char *dot = strchr(rname,'.');
+         if (!dot) return;
+         *dot = 0;
+         if (!fRealDataClass->GetDataMember(rname)) return;
+         *dot = '.';
+      }
+   }
    strcat(rname,mname);
    Int_t offset = Int_t((Long_t)add - (Long_t)fRealDataObject);
 
