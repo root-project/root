@@ -29,7 +29,7 @@ SOFLAGS       = -G
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl -lnsl -lsocket -lgen -L/usr/ucblib -lucb
+SYSLIBS       = -lm -ldl -lnsl -lsocket -lgen
 XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 
