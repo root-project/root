@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.3 2000/10/15 01:28:29 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.1.1.2 2001/05/01 12:57:18 fisyak Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -151,7 +151,16 @@ void TPadOpenGLView::MapOpenGL()
    gVirtualGL->EnableGL(kCULL_FACE);
 
    gVirtualGL->PolygonGLMode(kFRONT,kFILL);
+
+#ifdef Inventor
+   // "Default light" with Inventor is "native" Inventor
+   gVirtualGL->SetRootLight(kFALSE);
+#else
+   // "Default light" with no Inventor is "ROOT artificial" light
    gVirtualGL->SetRootLight(kTRUE);
+#endif
+
+
    gVirtualGL->FrontGLFace(kCCW);
 
 //*-* Create a main GL list to draw the scene
