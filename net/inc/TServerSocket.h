@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.2 2000/11/27 16:03:58 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -19,9 +19,9 @@
 //                                                                      //
 // This class implements server sockets. A server socket waits for      //
 // requests to come in over the network. It performs some operation     //
-// based on that request and then possibly returns a result to the      //
-// requester. The actual work is done via the TSystem class (either     //
-// TUnixSystem, TWin32System or TMacSystem).                            //
+// based on that request and then possibly returns a full duplex socket //
+// to the requester. The actual work is done via the TSystem class      //
+// (either TUnixSystem, TWin32System or TMacSystem).                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
