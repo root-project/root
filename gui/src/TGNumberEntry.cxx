@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.6 2003/12/15 08:54:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.7 2004/04/22 16:28:29 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1878,7 +1878,8 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
    // create gui elements
    fNumericEntry = new TGNumberEntryField(this, id, val, style, attr,
                                           limits, min, max);
-   fNumericEntry->Associate(parent);
+   fNumericEntry->Connect("ReturnPressed()", "TGNumberEntry", this, "ValueSet(Long_t)");
+   fNumericEntry->Associate(fMsgWindow);
    AddFrame(fNumericEntry, 0);
    fButtonUp = new TGRepeatFireButton(this, fPicUp, 1,
                                       fNumericEntry->IsLogStep());
@@ -1894,6 +1895,7 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
    Int_t charw = fNumericEntry->GetCharWidth("0123456789");
    Int_t w = charw * TMath::Abs(wdigits) / 10 + 8 + 2 * h / 3;
    SetLayoutManager(new TGNumberEntryLayout(this));
+   MapSubwindows();
    Resize(w, h);
 }
 
