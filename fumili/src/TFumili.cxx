@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.12 2003/08/08 17:28:29 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.13 2003/09/03 06:08:34 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -1483,7 +1483,7 @@ void TFumili::PrintResults(Int_t ikode,Double_t p) const
   if(fENDFLG<1)Printf((const char*)xsexpl.Data());
   Printf(" FCN=%g FROM FUMILI  STATUS=%-10s %9d CALLS OF FCN",
 	 p,ExitStatus.Data(),fNfcn);
-  Printf(" EDM=%g ",fGT);
+  Printf(" EDM=%g ",-fGT);
   Printf("  EXT PARAMETER              %-14s%-14s%-14s",
 	 (const char*)colhdu[0].Data()
 	 ,(const char*)colhdu[1].Data()
