@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.8 2001/12/04 12:02:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.9 2001/12/04 19:15:56 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -110,14 +110,16 @@ public:
    static Double_t Max(Double_t a, Double_t b);
 
    // Locate Min, Max
-   static Int_t  LocMin(Int_t n, Short_t *a);
-   static Int_t  LocMin(Int_t n, Int_t *a);
-   static Int_t  LocMin(Int_t n, Float_t *a);
-   static Int_t  LocMin(Int_t n, Double_t *a);
-   static Int_t  LocMax(Int_t n, Short_t *a);
-   static Int_t  LocMax(Int_t n, Int_t *a);
-   static Int_t  LocMax(Int_t n, Float_t *a);
-   static Int_t  LocMax(Int_t n, Double_t *a);
+   static Int_t  LocMin(Int_t n, const Short_t *a);
+   static Int_t  LocMin(Int_t n, const Int_t *a);
+   static Int_t  LocMin(Int_t n, const Float_t *a);
+   static Int_t  LocMin(Int_t n, const Double_t *a);
+   static Int_t  LocMin(Int_t n, const Long_t *a);
+   static Int_t  LocMax(Int_t n, const Short_t *a);
+   static Int_t  LocMax(Int_t n, const Int_t *a);
+   static Int_t  LocMax(Int_t n, const Float_t *a);
+   static Int_t  LocMax(Int_t n, const Double_t *a);
+   static Int_t  LocMax(Int_t n, const Long_t *a);
 
    // Range
    static Short_t  Range(Short_t lb, Short_t ub, Short_t x);
@@ -127,24 +129,27 @@ public:
    static Double_t Range(Double_t lb, Double_t ub, Double_t x);
 
    // Binary search
-   static Int_t BinarySearch(Int_t n, Short_t *array, Short_t value);
-   static Int_t BinarySearch(Int_t n, Short_t **array, Short_t value);
-   static Int_t BinarySearch(Int_t n, Int_t *array, Int_t value);
-   static Int_t BinarySearch(Int_t n, Int_t **array, Int_t value);
-   static Int_t BinarySearch(Int_t n, Float_t *array, Float_t value);
-   static Int_t BinarySearch(Int_t n, Float_t **array, Float_t value);
-   static Int_t BinarySearch(Int_t n, Double_t *array, Double_t value);
-   static Int_t BinarySearch(Int_t n, Double_t **array, Double_t value);
+   static Int_t BinarySearch(Int_t n, const Short_t *array, Short_t value);
+   static Int_t BinarySearch(Int_t n, const Short_t **array, Short_t value);
+   static Int_t BinarySearch(Int_t n, const Int_t *array, Int_t value);
+   static Int_t BinarySearch(Int_t n, const Int_t **array, Int_t value);
+   static Int_t BinarySearch(Int_t n, const Float_t *array, Float_t value);
+   static Int_t BinarySearch(Int_t n, const Float_t **array, Float_t value);
+   static Int_t BinarySearch(Int_t n, const Double_t *array, Double_t value);
+   static Int_t BinarySearch(Int_t n, const Double_t **array, Double_t value);
+   static Int_t BinarySearch(Int_t n, const Long_t *array, Long_t value);
+   static Int_t BinarySearch(Int_t n, const Long_t **array, Long_t value);
 
    // Hashing
    static ULong_t Hash(const void *txt, Int_t ntxt);
    static ULong_t Hash(const char *str);
 
    // Sorting
-   static void Sort(Int_t n, Short_t *a,  Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, Int_t *a,    Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, Float_t *a,  Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, Double_t *a, Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, const Short_t *a,  Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, const Int_t *a,    Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, const Float_t *a,  Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, const Double_t *a, Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, const Long_t *a,   Int_t *index, Bool_t down=kTRUE);
 
    // Advanced
    static Float_t *Cross(Float_t v1[3],Float_t v2[3],Float_t out[3]);     // Calculate the Cross Product of two vectors
