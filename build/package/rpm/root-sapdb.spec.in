@@ -1,0 +1,14 @@
+######################################################################
+#
+# sapdb Sub package 
+# 
+%package -n root-sapdb
+Group: ROOT
+Summary: @short@
+%description -n root-sapdb
+@long@
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n root-sapdb -f @files@
+
