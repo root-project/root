@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.5 2004/07/10 05:23:14 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.6 2004/08/20 21:02:10 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -373,7 +373,7 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
                case kShort_t:  {R__b.ReadFastArray((Short_t *)arr,R__n);} break;
                case kInt_t:    {R__b.ReadFastArray((Int_t   *)arr,R__n);} break;
                case kLong_t:   {R__b.ReadFastArray((Long_t  *)arr,R__n);} break;
-               case kLong64_t: {R__b.ReadFastArray((Long_t  *)arr,R__n);} break;
+               case kLong64_t: {R__b.ReadFastArray((Long64_t  *)arr,R__n);} break;
                case kFloat_t:  {R__b.ReadFastArray((Float_t *)arr,R__n);} break;
                case kDouble_t: {R__b.ReadFastArray((Double_t*)arr,R__n);} break;
 
@@ -382,8 +382,8 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
 
                case kUShort_t:  {R__b.ReadFastArray((Short_t *)arr,R__n);} break;
                case kUInt_t:    {R__b.ReadFastArray((Int_t   *)arr,R__n);} break;
-               case kULong_t:   {R__b.ReadFastArray((Long_t  *)arr,R__n);} break;
-               case kULong64_t: {R__b.ReadFastArray((Long_t  *)arr,R__n);} break;
+               case kULong_t:   {R__b.ReadFastArray((ULong_t  *)arr,R__n);} break;
+               case kULong64_t: {R__b.ReadFastArray((ULong64_t  *)arr,R__n);} break;
 
                case kDouble32_t: {
                   Double_t *where = (Double_t*)arr;
@@ -459,7 +459,7 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
                case kShort_t:  {R__b.WriteFastArray((Short_t *)arr,R__n);}  break;
                case kInt_t:    {R__b.WriteFastArray((Int_t   *)arr,R__n);}  break;
                case kLong_t:   {R__b.WriteFastArray((Long_t  *)arr,R__n);}  break;
-               case kLong64_t: {R__b.WriteFastArray((Long_t  *)arr,R__n);}  break;
+               case kLong64_t: {R__b.WriteFastArray((Long64_t  *)arr,R__n);}  break;
                case kFloat_t:  {R__b.WriteFastArray((Float_t *)arr,R__n);}  break;
                case kDouble_t: {R__b.WriteFastArray((Double_t*)arr,R__n);}  break;
 
@@ -467,8 +467,8 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
                case kUChar_t:   {R__b.WriteFastArray((Char_t  *)arr,R__n);}  break;
                case kUShort_t:  {R__b.WriteFastArray((Short_t *)arr,R__n);}  break;
                case kUInt_t:    {R__b.WriteFastArray((Int_t   *)arr,R__n);}  break;
-               case kULong_t:   {R__b.WriteFastArray((Long_t  *)arr,R__n);}  break;
-               case kULong64_t: {R__b.WriteFastArray((Long_t  *)arr,R__n);}  break;
+               case kULong_t:   {R__b.WriteFastArray((ULong_t  *)arr,R__n);}  break;
+               case kULong64_t: {R__b.WriteFastArray((ULong64_t  *)arr,R__n);}  break;
                   
                case kDouble32_t: {
                   Double_t *where = (Double_t*)arr;
