@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.31 2001/07/05 20:17:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.32 2001/07/09 07:47:47 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -225,9 +225,10 @@ Int_t TCint::ProcessLine(const char *line)
          // It checks whether the input line contains the "fantom" method
          // to synchronize user keyboard input and ROOT prompt line
 
-         if (strstr(line,fantomline))
+         if (strstr(line,fantomline)) {
+             G__free_tempobject();
              TCint::UpdateAllCanvases();
-         else
+         } else
              ret = G__process_cmd((char *)line, fPrompt, &fMore, 0, 0);
          gROOT->SetLineHasBeenProcessed();
       } else

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.64 2001/08/16 16:39:42 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.65 2001/09/19 05:51:41 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -649,24 +649,28 @@ public:
       if (!thisobj) return 0;
 
       TMethodCall::EReturnType r = fMethod->ReturnType();
+      Double_t result = 0;
       
       if (r == TMethodCall::kLong) {
          Long_t l;
          fMethod->Execute(thisobj, l);
-         return (Double_t) l;
-      }
-      if (r == TMethodCall::kDouble) {
+         result = (Double_t) l;
+
+      } else if (r == TMethodCall::kDouble) {
          Double_t d;
          fMethod->Execute(thisobj, d);
-         return (Double_t) d;
-      }
-      if (fNext) {
-        char * result = 0;
-        fMethod->Execute(thisobj, &result);
-        return fNext->ReadValue(result,instance);
+         result = (Double_t) d;
+
+      } if (fNext) {
+        char * char_result = 0;
+        fMethod->Execute(thisobj, &char_result);
+        result = fNext->ReadValue(char_result,instance);
+
       } else fMethod->Execute(thisobj);
 
-      return 0;
+      // Get rid of temporary return object.
+      gInterpreter->EndOfLineAction();
+      return result;
    }
 };
 
