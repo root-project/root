@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.19 2004/03/04 11:47:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.20 2004/04/15 10:13:41 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -276,6 +276,14 @@ void TGLineLBEntry::DoRedraw()
    // Redraw text listbox entry.
 
    TGTextLBEntry::DoRedraw();
+
+   if (fActive) {
+      gVirtualX->SetForeground(fLineGC->GetGC(), 
+                               fClient->GetResourcePool()->GetSelectedFgndColor());
+   } else {
+      gVirtualX->SetForeground(fLineGC->GetGC(), 
+                               fClient->GetResourcePool()->GetBlackColor());
+   }
    gVirtualX->DrawLine(fId, fLineGC->GetGC(), fTWidth + 5, fHeight/2,
                        fWidth - 5, fHeight/2);
 }
