@@ -28,10 +28,11 @@ The last argument is the number of files on each node.
 
 root [1] .X make_event_trees.C("/data1/tmp", 100000, 4)
 
-Create the TDSet for these files
+Create the TDSet for these files. In this example we have two
+slaves on one node, we ask for one file per slave:
 
 root [2] .L make_tdset.C
-root [3] TDSet *d = make_tdset("/data1/tmp",4,.5)
+root [3] TDSet *d = make_tdset("/data1/tmp",1)
 root [4] d->Print("a")
 OBJ: TDSet      type TTree      EventTree       in /    elements 2
 TDSetElement file='root://gluon.local//data1/tmp/event_tree_gluon.local_1.root' dir='' obj='' first=0 num=-1
