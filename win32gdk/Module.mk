@@ -87,7 +87,8 @@ $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMP)
 
 $(WIN32GDKDO):  $(WIN32GDKDS) $(FREETYPELIB)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(FREETYPEDIRI) \
-		   -I$(GDKDIRI) -I$(WIN32GDKDIR)/gdk/src/glib \
+		   -I$(WIN32GDKDIR)/gdk/src -I$(GDKDIRI) \
+		   -I$(WIN32GDKDIR)/gdk/src/glib \
 		   -o $@ -c $<
 
 all-win32gdk:   $(WIN32GDKLIB)
@@ -108,5 +109,6 @@ distclean::     distclean-win32gdk
 ##### extra rules #####
 $(WIN32GDKO1): %.o: %.cxx $(FREETYPELIB)
 	$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) \
-	   -I$(GDKDIRI) -I$(WIN32GDKDIR)/gdk/src/glib \
+	   -I$(WIN32GDKDIR)/gdk/src -I$(GDKDIRI) \
+	   -I$(WIN32GDKDIR)/gdk/src/glib \
 	   -o $@ -c $<
