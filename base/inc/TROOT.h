@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.9 2000/11/21 16:19:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.10 2000/11/27 10:42:27 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -184,7 +184,7 @@ public:
    void              ProcessLine(const char *line);
    void              ProcessLineSync(const char *line);
    Long_t            ProcessLineFast(const char *line);
-   void              Proof(const char *cluster = "localhost", Int_t port = 1093);
+   void              Proof(const char *cluster = "proof://localhost");
    Bool_t            ReadingObject() {return fReadingObject;}
    void              Reset(Option_t *option="");
    void              SaveContext();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.18 2000/11/21 12:23:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.19 2000/11/21 16:37:05 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1184,19 +1184,18 @@ Long_t TROOT::ProcessLineFast(const char *line)
 }
 
 //______________________________________________________________________________
-void TROOT::Proof(const char *cluster, Int_t port)
+void TROOT::Proof(const char *cluster)
 {
-   // Start PROOF session on a specific cluster (default is "localhost").
-   // The cluster configuration is defined either in the file .proof.conf,
-   // or $HOME/.proof.conf or /usr/local/proof/etc/proof.conf.
-   // The TProof object can be accessed via the gProof global. Creating a
-   // new TProof object will delete the current one.
+   // Start PROOF session on a specific cluster (default is
+   // "proof://localhost"). The TProof object can be accessed via
+   // the gProof global. Creating a new TProof object will delete
+   // the current one. For more on PROOF see the TProof ctor.
 
    // make sure libProof is loaded and TProof can be created
    if (gROOT->LoadClass("TProof","Proof")) return;
    if (gROOT->LoadClass("TTreePlayer","TreePlayer")) return;
 
-   ProcessLine(Form("new TProof(\"%s\", %d);", cluster, port));
+   ProcessLine(Form("new TProof(\"%s\");", cluster));
 }
 
 //______________________________________________________________________________
