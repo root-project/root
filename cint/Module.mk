@@ -121,15 +121,21 @@ CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(CXX),icc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/iccstrm.cxx
+CINTS2       += $(MODDIRS)/longif3.cxx
 endif
 ifeq ($(CXX),ecc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/iccstrm.cxx
+CINTS2       += $(MODDIRS)/longif3.cxx
 endif
 ifeq ($(GCC_MAJOR),3)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/gcc3strm.cxx
+CINTS2       += $(MODDIRS)/longif3.cxx
 endif
 
 CINTS        := $(CINTS1) $(CINTS2)
