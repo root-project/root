@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.3 2001/05/29 16:21:35 rdm Exp $
+// @(#)root/base:$Name: v3-03-05 $:$Id: TDatime.cxx,v 1.4 2001/12/10 14:46:06 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -48,7 +48,7 @@ TDatime::TDatime()
 TDatime::TDatime(Int_t date, Int_t time)
 {
    // Create a TDatime and set it to the specified date and time.
-   // See Set() about the date, time format.
+   // See Set(Int_t, Int_t) about the date, time format.
 
    Set(date, time);
 }
@@ -319,7 +319,8 @@ void TDatime::Streamer(TBuffer &b)
 //______________________________________________________________________________
 void TDatime::GetDateTime(UInt_t datetime, Int_t &date, Int_t &time)
 {
-   // Static function that returns the date and time
+   // Static function that returns the date and time. The input is
+   // in TDatime format (as obtained via TDatime::Get()).
    // Date is returned in the format 950223  February 23 1995.
    // Time is returned in the format 102459 10h 24m 59s.
 
