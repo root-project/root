@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Riostream.h,v 1.1 2002/01/23 17:46:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Riostream.h,v 1.1 2002/01/24 11:39:26 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************
@@ -25,6 +25,19 @@
 #   include <fstream.h>
 #   include <iostream.h>
 #   include <iomanip.h>
+#endif
+
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+std::ostream& operator<<(std::ostream& os, __int64 i)
+{
+   char buf[20];
+   sprintf(buf,"%I64d", i);
+   os << buf;
+   return os;
+}
+
+std::ostream& operator<<(std::ostream& os, unsigned __int64 i)
+{ return os << (__int64) i; }
 #endif
 
 #endif
