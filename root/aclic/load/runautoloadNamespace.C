@@ -1,0 +1,3 @@
+{
+MyNamespace::MyClass a;
+}

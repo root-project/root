@@ -1,0 +1,2 @@
+Library.MyNamespace@@MyClass: MyClass_cxx.so
+Library.MyRegularClass:       MyClass_cxx.so

@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 #  the name of the target is changed in the rules then the name should be changed accordingly in
 #  this list.
 
-TEST_TARGETS += autoload mytest
+TEST_TARGETS += autoloadNamespace autoload mytest
 
 # Searched for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -65,3 +65,8 @@ autoload.log: autoloadtest_C.$(DllSuf)
 
 autoload: autoload.log
 	$(TestDiff)
+
+autoloadNamespace: autoloadNamespace.log
+	$(TestDiff)
+
+autoloadNamespace.log: MyClass_cxx.$(DllSuf)
