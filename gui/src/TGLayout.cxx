@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.12 2004/01/23 15:38:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.13 2004/09/07 09:31:08 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -90,9 +90,6 @@ TGFrameElement::TGFrameElement(TGFrame *f, TGLayoutHints *l)
 TGFrameElement::~TGFrameElement()
 {
    // destructor. Decrease ref.count of fLayout
-
-   if (fFrame) fFrame->SetFrameElement(0);
-   if (fLayout) fLayout->fFE = 0;
 }
 
 //______________________________________________________________________________
