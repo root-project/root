@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.80 2002/05/04 16:07:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.81 2002/05/21 13:19:26 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2833,13 +2833,13 @@ void THistPainter::PaintH3(Option_t *option)
    char *cmd;
    if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"box")) {
       cmd = Form("TMarker3DBox::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
-      gROOT->ProcessLine(cmd);
    } else if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"iso")) {
       PaintH3Iso();
+      return;
    } else {
       cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
-      gROOT->ProcessLine(cmd);
    }
+   gROOT->ProcessLine(cmd);
 
    //Draw axis
    if (Hoption.Same) return;
@@ -3200,6 +3200,36 @@ Int_t THistPainter::PaintInitH()
 //______________________________________________________________________________
 void THistPainter::PaintH3Iso()
 {
+// Control function to draw a 3d histogram with Iso Surfaces.
+//
+// Thanks to the function IsoSurface of the TPainter3dAlgorithms class, this
+// function paints a Gouraud shaded 3d iso surface though a 3d histogram.
+// 
+// This first implementation paint one surface at the value computed as follow:
+// SumOfWeights/(NbinsX*NbinsY*NbinsZ)
+//
+// Example:
+//
+//  #include "TH3.h"
+//  #include "TRandom.h"
+//
+//  void hist3d() {
+//     TH3F *h3 = new TH3F("h3","h3",20,-2,2,20,-2,2,20,0,4);
+//     Double_t x, y, z;
+//     for (Int_t i=0;i<10000;i++) {
+//        gRandom->Rannor(x, y);
+//        z = x*x + y*y;
+//        h3->Fill(x,y,z);
+//     }
+//     h3->Draw("iso");
+//  }
+//
+//Begin_Html
+/*
+<img src="gif/PaintIso.gif">
+*/
+//End_Html
+
    const Double_t ydiff = 1;
    const Double_t yligh1 = 10;
    const Double_t qa = 0.15;
@@ -3207,26 +3237,17 @@ void THistPainter::PaintH3Iso()
    const Double_t qs = 0.8;
    Double_t fmin, fmax;
    Int_t i, irep;
-   Int_t ncolor = 20;
-   Int_t icol1 = 20;
+   Int_t nbcol = 28;
+   Int_t icol1 = 201;
    Int_t ic1 = icol1;
-   Int_t ic2 = ic1+ncolor;
-   Int_t ic3 = ic2+ncolor;
-   Double_t rh1 = 20.;
-   Double_t rh2 = 140.;
-   Double_t rh3 = 200.;
-   Double_t rs = 1.;
-   Double_t dd = 1./(2*ncolor);
+   Int_t ic2 = ic1+nbcol;
+   Int_t ic3 = ic2+nbcol;
 
+   TGaxis *axis = new TGaxis();
    TAxis *xaxis = fH->GetXaxis();
    TAxis *yaxis = fH->GetYaxis();
    TAxis *zaxis = fH->GetZaxis();
    
-   Double_t s[3];
-   s[0] = fH->GetMean();
-   s[1] = 0.5*s[0];
-   s[2] = 1.5*s[1];
-
    Int_t nx = fH->GetNbinsX();
    Int_t ny = fH->GetNbinsY();
    Int_t nz = fH->GetNbinsZ();
@@ -3246,32 +3267,63 @@ void THistPainter::PaintH3Iso()
    fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
    fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
 
+   Double_t s[3];
+   s[0] = fH->GetSumOfWeights()/(fH->GetNbinsX()*fH->GetNbinsY()*fH->GetNbinsZ());
+   s[1] = 0.5*s[0];
+   s[2] = 1.5*s[0];
+
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);                          
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintH3Iso", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   Double_t dcol = 0.5/Double_t(nbcol);
+   TColor *colref = gROOT->GetColor(fH->GetFillColor());
+   Float_t r, g, b, hue, light, satur;
+   colref->GetRGB(r,g,b);
+   TColor::RGBtoHLS(r,g,b,hue,light,satur);
    TColor *acol;
-   Float_t r, g, b;
-   for ( i=0 ; i<ncolor ; i++ ) {
-      TColor::HLStoRGB(rh1, .4+i*dd, rs, r, g, b);
-      acol = gROOT->GetColor(i+icol1);
-      acol->SetRGB(r, g, b);
-      TColor::HLStoRGB(rh2, .4+i*dd, rs, r, g, b);
-      acol = gROOT->GetColor(i+icol1+ncolor);
-      acol->SetRGB(r, g, b);
-      TColor::HLStoRGB(rh3, .4+i*dd, rs, r, g, b);
-      acol = gROOT->GetColor(i+icol1+2*ncolor);
+   for (Int_t col=0;col<nbcol;col++) {
+      acol = gROOT->GetColor(col+icol1);
+      TColor::HLStoRGB(hue, .4+col*dcol, satur, r, g, b);
       acol->SetRGB(r, g, b);
    }
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);                          
    fLego->InitMoveScreen(-1.1,1.1);
+
+   if (Hoption.BackBox) {
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      fLego->BackBox(90);
+   }
 
    fLego->LightSource(0, ydiff, 0, 0, 0, irep);
    fLego->LightSource(1, yligh1, 1, 1, 1, irep);
    fLego->SurfaceProperty(qa, qd, qs, 1, irep);
    fmin = ydiff*qa;
    fmax = ydiff*qa + (yligh1+0.1)*(qd+qs);
-   fLego->SetIsoSurfaceParameters(fmin, fmax, ncolor, ic1, ic2, ic3);
+   fLego->SetIsoSurfaceParameters(fmin, fmax, nbcol, ic1, ic2, ic3);
 
    fLego->IsoSurface(1, s, nx, ny, nz, x, y, z, "BF");  
 
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+
+   PaintTitle();
+
+   delete axis;
+   delete fLego; fLego = 0;
    delete [] x;
    delete [] y;
    delete [] z;
