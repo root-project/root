@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/sh 
 
 # Script to create auxiliary CINT dll's.
 # Called by main Makefile.
@@ -25,6 +25,10 @@ fi
 if [ $PLATFORM = "macosx" ]; then
    SOEXT=so
    AUXCXXFLAGS=-fno-inline
+fi
+if [ $PLATFORM = "win32" ]; then
+   EXESUF=.exe
+   CC=`pwd`/$CC
 fi
 
 
@@ -115,11 +119,14 @@ rm -f $STDFUNCDIR/G__c_stdfunc.c $STDFUNCDIR/G__c_stdfunc.h \
 
 ##### posix.dll #####
 
+
+if [ $PLATFORM != "win32" ]; then
+
 POSIXDIR=$CINTDIRL/posix
 
 pwd=`pwd`
 cd $POSIXDIR
-$CC $OPT -o mktypes mktypes.c
+$CC $OPT -o mktypes$EXESUF mktypes.c
 ./mktypes
 rm -f mktypes
 cp -f ../../include/systypes.h ../../include/sys/types.h
@@ -138,7 +145,6 @@ rename $CINTDIRI/posix
 rm -f $POSIXDIR/G__c_posix.c $POSIXDIR/G__c_posix.h $POSIXDIR/G__c_posix.o \
       $POSIXDIR/exten.o
 
-
 ##### ipc.dll #####
 
 IPCDIR=$CINTDIRL/ipc
@@ -152,6 +158,7 @@ rename $CINTDIRI/sys/ipc
 
 rm -f $IPCDIR/G__c_ipc.c $IPCDIR/G__c_ipc.h $IPCDIR/G__c_ipc.o
 
+fi
 
 ##### STL dlls #####
 
@@ -264,7 +271,7 @@ rename $CINTDIRS/queue
 #rename $CINTDIRS/valarray
 
 $CINT -w1 -zexception -n$STLDIR/G__cpp_exception.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/eh.h
+   -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/cinteh.h
 $CXX $OPT $CINTCXXFLAGS -I. -I$STLDIR $FAVOR_SYSINC -o $STLDIR/G__cpp_exception.o \
    -c $STLDIR/G__cpp_exception.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" exception.$SOEXT \
