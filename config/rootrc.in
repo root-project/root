@@ -138,6 +138,7 @@ Proofd.Authentication:  0
 Plugin.TVirtualFitter:      *  TFitter       Minuit       "TFitter(Int_t)"
 Plugin.TVirtualHistPainter: *  THistPainter  HistPainter  "THistPainter()"
 Plugin.TVirtualTreePlayer:  *  TTreePlayer   TreePlayer   "TTreePlayer()"
+Plugin.TVirtualTreeViewer:  *  TTreeViewer   TreeViewer   "TTreeViewer(const char*)"
 Plugin.TVirtualGeoPainter:  *  TGeoPainter   GeomPainter  "TGeoPainter()"
 Plugin.TVirtualPS:          *  TPostScript   Postscript   "TPostScript()"
 Plugin.TViewerX3D:          *  TViewerX3D    X3d          "TViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
