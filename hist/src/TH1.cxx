@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.125 2003/01/29 21:58:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.126 2003/01/31 11:21:16 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3386,9 +3386,9 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
             TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             Double_t error1 = GetBinError(bin);
-            cu  = f1->EvalPar(xx);
+            cu  = c1*f1->EvalPar(xx);
             if (TF1::RejectedPoint()) continue;
-            w = GetBinContent(bin)*c1*cu;
+            w = GetBinContent(bin)*cu;
             SetBinContent(bin,w);
             if (fSumw2.fN) {
                fSumw2.fArray[bin] = cu*cu*error1*error1;
