@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.140 2002/08/09 19:26:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.141 2002/08/23 08:53:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2582,7 +2582,9 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             }
             break;}
 
+
          // Class*   Class not derived from TObject
+         case kAnyP+kOffsetL:
          case kAnyP: {
             TClass *cle = aElement->GetClassPointer();
             Streamer_t pstreamer = aElement->GetStreamer();
@@ -2613,7 +2615,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                      }
                   } else {
                      for (Int_t j=0;j<fLength[i];j++) {
-                       obj[j] = (void*)b.ReadObject(0); // cle should be the parameter but ReadObject uses IsA for now
+                        obj[j] = (void*)b.ReadObject(0); // cle should be the parameter but ReadObject uses IsA for now
                      }
                   }
                }
@@ -2624,6 +2626,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          // Any Class not derived from TObject
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
+         case kOffsetL + kAny:
          case kAny: {Streamer_t pstreamer = aElement->GetStreamer();
                      if (pstreamer == 0) {
                         TClass *cle = aElement->GetClassPointer();
@@ -2656,10 +2659,14 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                               break;
                            }
                         }
-                        if (gDebug > 0) printf("Warning, Streamer is null\n");
+                        Int_t size = cle->Size();
                         for (kk=0;kk<nc;kk++) {
                            pointer = (char*)clones->UncheckedAt(kk);
-                           cle->ReadBuffer(b,pointer+offset);
+                           pointer += offset;
+                           for (Int_t j=0;j<fLength[i];j++) {
+                              cle->ReadBuffer(b,pointer);
+                              pointer += size;
+                           }
                         }
                         break;
                      }
@@ -3480,6 +3487,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
             break;}
 
          // Class*   Class not derived from TObject
+         case kAnyP+kOffsetL:
          case kAnyP: {
            Streamer_t pstreamer = aElement->GetStreamer();
            TClass *cle = aElement->GetClassPointer();
@@ -3512,14 +3520,20 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          // Any Class not derived from TObject
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
+         case kOffsetL + kAny:
          case kAny: {Streamer_t pstreamer = aElement->GetStreamer();
                      if (pstreamer == 0) {
                         //printf("ERROR, Streamer is null\n");
                         //aElement->ls();
                         TClass *cle = aElement->GetClassPointer();
+                        Int_t size = cle->Size();
                         for (Int_t k=0;k<nc;k++) {
                            pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-                           cle->WriteBuffer(b,pointer+fOffset[i],"");
+                           pointer += fOffset[i];
+                           for (Int_t j=0;j<fLength[i];j++) {
+                              cle->WriteBuffer(b,pointer,"");
+                              pointer += size;
+                           }
                         }
                         break;
                      }
