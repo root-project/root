@@ -1,4 +1,4 @@
-// @(#)root/mac:$Name$:$Id$
+// @(#)root/mac:$Name:  $:$Id: TMacSystem.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   24/12/95
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
    Bool_t          Init();
    //void            SetProgname(const char *name);
    //const char     *GetError();
-   const char     *Hostname();
+   const char     *HostName();
 
    //---- EventLoop
    //void            Run();

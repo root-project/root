@@ -1,4 +1,4 @@
-// @(#)root/mac:$Name$:$Id$
+// @(#)root/mac:$Name:  $:$Id: TMacSystem.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   24/12/95
 
 /*************************************************************************
@@ -322,7 +322,7 @@ void TMacSystem::SetupMenu()
 }
 
 //______________________________________________________________________________
-const char *TMacSystem::Hostname()
+const char *TMacSystem::HostName()
 {
    // Return the system's host name.
 
