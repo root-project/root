@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.4 2000/07/07 00:29:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.5 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
           UInt_t xMargin = 0, UInt_t yMargin = 0,
           UInt_t options = kSunkenFrame | kDoubleBorder,
           UInt_t sboptions = 0,
-          ULong_t back = fgWhitePixel);
+          ULong_t back = GetWhitePixel());
 
    virtual ~TGView();
 
@@ -140,7 +140,7 @@ private:
    TGView   *fView;  // pointer back to the view
 public:
    TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options = 0,
-               ULong_t back = fgWhitePixel);
+               ULong_t back = GetWhitePixel());
 
    Bool_t HandleSelectionRequest(Event_t *event)
         { fView->HandleSelectionRequest(event); return kTRUE; }

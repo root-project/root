@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TG3DLine.h,v 1.1 2000/09/29 08:51:57 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -34,13 +34,13 @@ class TGHorizontal3DLine : public TGFrame {
 public:
    TGHorizontal3DLine(const TGWindow *p, UInt_t w = 4, UInt_t h = 2,
                       UInt_t options = kChildFrame,
-                      ULong_t back = fgDefaultFrameBackground) :
+                      ULong_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options, back) { }
 
    virtual void DrawBorder() {
-      gVirtualX->DrawLine(fId, fgShadowGC(),  0, 0, fWidth-2, 0);
-      gVirtualX->DrawLine(fId, fgHilightGC(), 0, 1, fWidth-1, 1);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, 0, fWidth-1, 1);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  0, 0, fWidth-2, 0);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 0, 1, fWidth-1, 1);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, 0, fWidth-1, 1);
    }
 
    ClassDef(TGHorizontal3DLine,0)  //A horizontal 3D separator line
@@ -52,13 +52,13 @@ class TGVertical3DLine : public TGFrame {
 public:
    TGVertical3DLine(const TGWindow *p, UInt_t w = 2, UInt_t h = 4,
                     UInt_t options = kChildFrame,
-                    ULong_t back = fgDefaultFrameBackground) :
+                    ULong_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options, back) { }
 
    virtual void DrawBorder() {
-      gVirtualX->DrawLine(fId, fgShadowGC(),  0, 0, 0, fHeight-2);
-      gVirtualX->DrawLine(fId, fgHilightGC(), 1, 0, 1, fHeight-1);
-      gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, 1, fHeight-1);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  0, 0, 0, fHeight-2);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 0, 1, fHeight-1);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, 1, fHeight-1);
    }
 
    ClassDef(TGVertical3DLine,0)  //A vertical 3D separator line

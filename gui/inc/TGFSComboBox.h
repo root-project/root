@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.3 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -51,16 +51,16 @@ protected:
 
    static ULong_t        fgSelPixel;
    static FontStruct_t   fgDefaultFontStruct;
-#ifdef R__SUNCCBUG
-public:
-#endif
    static TGGC           fgDefaultGC;
 
 public:
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
+
    TGTreeLBEntry(const TGWindow *p, TGString *text, const TGPicture *pic,
-                 Int_t id, TGString *path = 0, GContext_t norm = fgDefaultGC(),
-                 FontStruct_t font = fgDefaultFontStruct,
-                 UInt_t options = kHorizontalFrame, ULong_t back = fgWhitePixel);
+                 Int_t id, TGString *path = 0, GContext_t norm = GetDefaultGC()(),
+                 FontStruct_t font = GetDefaultFontStruct(),
+                 UInt_t options = kHorizontalFrame, ULong_t back = GetWhitePixel());
    virtual ~TGTreeLBEntry();
 
    const TGString  *GetText() const { return fText; }
@@ -72,9 +72,6 @@ public:
    virtual void Activate(Bool_t a);
    virtual void Update(TGLBEntry *e);
 
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
-
    ClassDef(TGTreeLBEntry,0)  // TGFSComboBox entry
 };
 
@@ -84,7 +81,7 @@ class TGFSComboBox : public TGComboBox {
 public:
    TGFSComboBox(const TGWindow *p, Int_t id,
                 UInt_t options = kHorizontalFrame | kSunkenFrame |
-                kDoubleBorder, ULong_t back = fgWhitePixel);
+                kDoubleBorder, ULong_t back = GetWhitePixel());
 
    virtual void Update(const char *path);
 

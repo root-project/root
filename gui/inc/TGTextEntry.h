@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.6 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.7 2000/10/20 15:51:02 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -89,17 +89,17 @@ protected:
    static FontStruct_t  fgDefaultFontStruct;
    static TGGC          fgDefaultSelectedGC;
    static TGGC          fgDefaultSelectedBackgroundGC;
-#ifdef R__SUNCCBUG
-public:
-#endif
    static TGGC          fgDefaultGC;
 
 public:
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
+
    TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id = -1,
-               GContext_t norm = fgDefaultGC(),
-               FontStruct_t font = fgDefaultFontStruct,
+               GContext_t norm = GetDefaultGC()(),
+               FontStruct_t font = GetDefaultFontStruct(),
                UInt_t option = kSunkenFrame | kDoubleBorder,
-               ULong_t back = fgWhitePixel);
+               ULong_t back = GetWhitePixel());
 
    TGTextEntry(const TGWindow *parent, const char *text,  Int_t id = -1);
    TGTextEntry(const TString &contents, const TGWindow *parent,  Int_t id = -1);
@@ -172,9 +172,6 @@ public:
    virtual  void        CursorOutUp();                          //*SIGNAL*
    virtual  void        CursorOutDown();                        //*SIGNAL*
    virtual  void        DoubleClicked();                        //*SIGNAL*
-
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGTextEntry,0) // The TGTextEntry widget is a simple line editor for inputting text
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.2 2001/04/11 14:24:16 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -54,7 +54,7 @@ private:
 public:
    TRootEmbeddedCanvas(const char *name, const TGWindow *p, UInt_t w,
             UInt_t h, UInt_t options = kSunkenFrame | kDoubleBorder,
-            ULong_t back = fgDefaultFrameBackground);
+            ULong_t back = GetDefaultFrameBackground());
    virtual ~TRootEmbeddedCanvas();
 
    TCanvas   *GetCanvas() const { return fCanvas; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.2 2001/04/03 10:36:21 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 // select a filter (on file extensions).                                //
 // When creating a file dialog one passes a pointer to a TGFileInfo     //
 // object. When the TGFileDialog ctor returns the selected file name    //
-// can be found in the TGFileInfo::fFileName field. This string must    //
+// can be found in the TGFileInfo::fFilename field. This string must    //
 // be freed by the users.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////

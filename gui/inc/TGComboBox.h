@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.2 2000/10/09 19:15:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.3 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -50,7 +50,7 @@ protected:
 public:
    TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options = kVerticalFrame,
-                   ULong_t back = fgWhitePixel);
+                   ULong_t back = GetWhitePixel());
 
    virtual Bool_t HandleButton(Event_t *);
    void PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
@@ -76,7 +76,7 @@ protected:
 public:
    TGComboBox(const TGWindow *p, Int_t id,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
-              ULong_t back = fgWhitePixel);
+              ULong_t back = GetWhitePixel());
    virtual ~TGComboBox();
 
    virtual void DrawBorder();

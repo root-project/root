@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -40,7 +40,7 @@ protected:
 
 public:
    TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
-      UInt_t options = kChildFrame, ULong_t back = fgDefaultFrameBackground) :
+      UInt_t options = kChildFrame, ULong_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options, back) { fPic = pic; }
    ~TGIcon();
 

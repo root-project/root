@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.5 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.6 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -85,7 +85,7 @@ public:
              const TGPicture *bigpic, const TGPicture *smallpic,
              TGString *name, TGString **subnames, EListViewMode ViewMode,
              UInt_t options = kChildFrame,
-             ULong_t back = fgWhitePixel);
+             ULong_t back = GetWhitePixel());
    virtual ~TGLVEntry();
 
    virtual void SetViewMode(EListViewMode ViewMode);
@@ -131,7 +131,7 @@ protected:
 public:
    TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
                  UInt_t options = kSunkenFrame,
-                 ULong_t back = fgDefaultFrameBackground);
+                 ULong_t back = GetDefaultFrameBackground());
    virtual ~TGLVContainer();
 
    virtual void AddItem(TGLVEntry *item)
@@ -183,7 +183,7 @@ protected:
 public:
    TGListView(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options = kSunkenFrame | kDoubleBorder,
-              ULong_t back = fgDefaultFrameBackground);
+              ULong_t back = GetDefaultFrameBackground());
    virtual ~TGListView();
 
    virtual void   Layout();

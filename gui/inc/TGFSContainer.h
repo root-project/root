@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -71,7 +71,7 @@ protected:
 
 public:
    TGFileIcon(const TGWindow *p, const TGPicture *pic, const TGPicture *lpic,
-              UInt_t options = kChildFrame, ULong_t back = fgWhitePixel) :
+              UInt_t options = kChildFrame, ULong_t back = GetWhitePixel()) :
       TGIcon(p, pic, 0, 0, options, back) { fLpic = lpic; }
 };
 
@@ -96,7 +96,7 @@ public:
               const TGPicture *spic, const TGPicture *slpic,
               TGString *name, Int_t type, ULong_t size, Int_t uid, Int_t gid,
               EListViewMode viewMode, UInt_t options = kVerticalFrame,
-              ULong_t back = fgWhitePixel);
+              ULong_t back = GetWhitePixel());
 
    virtual void SetViewMode(EListViewMode viewMode);
 
@@ -132,7 +132,7 @@ protected:
 public:
    TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options = kSunkenFrame,
-                   ULong_t back = fgDefaultFrameBackground);
+                   ULong_t back = GetDefaultFrameBackground());
    virtual ~TGFileContainer();
 
    virtual Bool_t HandleTimer(TTimer *t);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.4 2001/01/10 09:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.5 2001/01/10 14:37:29 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -48,16 +48,16 @@ public:
    TGButtonGroup(TGWindow *parent,
                  const TString &title = "",
                  UInt_t options = kChildFrame | kVerticalFrame,
-                 GContext_t norm = fgDefaultGC(),
-                 FontStruct_t font = fgDefaultFontStruct,
-                 ULong_t back = fgDefaultFrameBackground);
+                 GContext_t norm = GetDefaultGC()(),
+                 FontStruct_t font = GetDefaultFontStruct(),
+                 ULong_t back = GetDefaultFrameBackground());
 
    TGButtonGroup(TGWindow *parent,
                  UInt_t r, UInt_t c, Int_t s = 0, Int_t h = 0 ,
                  const TString &title = "",
-                 GContext_t norm = fgDefaultGC(),
-                 FontStruct_t font = fgDefaultFontStruct,
-                 ULong_t back = fgDefaultFrameBackground);
+                 GContext_t norm = GetDefaultGC()(),
+                 FontStruct_t font = GetDefaultFontStruct(),
+                 ULong_t back = GetDefaultFrameBackground());
 
    virtual ~TGButtonGroup();
 
@@ -101,9 +101,9 @@ class TGVButtonGroup : public TGButtonGroup {
 public:
    TGVButtonGroup(TGWindow *parent,
                   const TString &title = "",
-                  GContext_t norm = fgDefaultGC(),
-                  FontStruct_t font = fgDefaultFontStruct,
-                  ULong_t back = fgDefaultFrameBackground) :
+                  GContext_t norm = GetDefaultGC()(),
+                  FontStruct_t font = GetDefaultFontStruct(),
+                  ULong_t back = GetDefaultFrameBackground()) :
       TGButtonGroup(parent, title, kChildFrame | kVerticalFrame,
                     norm, font, back) { }
 
@@ -118,9 +118,9 @@ class TGHButtonGroup : public TGButtonGroup {
 public:
    TGHButtonGroup(TGWindow *parent,
                   const TString &title = "",
-                  GContext_t norm = fgDefaultGC(),
-                  FontStruct_t font = fgDefaultFontStruct,
-                  ULong_t back = fgDefaultFrameBackground) :
+                  GContext_t norm = GetDefaultGC()(),
+                  FontStruct_t font = GetDefaultFontStruct(),
+                  ULong_t back = GetDefaultFrameBackground()) :
       TGButtonGroup(parent, title, kChildFrame | kHorizontalFrame,
                     norm, font, back) { }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.4 2000/10/08 14:27:54 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -56,7 +56,7 @@ protected:
 public:
    TGScrollBarElement(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
               UInt_t options = kRaisedFrame | kDoubleBorder,
-              ULong_t back = fgDefaultFrameBackground) :
+              ULong_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options | kOwnBackground, back)
       { fPic = pic; fState = kButtonUp; }
 
@@ -93,12 +93,15 @@ protected:
    static Int_t       fgScrollBarWidth;
 
 public:
+   static Pixmap_t  GetBckgndPixmap();
+   static Int_t     GetScrollBarWidth();
+
    TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                UInt_t options = kChildFrame,
-               ULong_t back = fgDefaultFrameBackground) :
+               ULong_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options | kOwnBackground, back)
             { fMsgWindow = p; fRepeat = 0; fGrabPointer = kTRUE;
-              SetBackgroundPixmap(fgBckgndPixmap); }
+              SetBackgroundPixmap(GetBckgndPixmap()); }
    virtual ~TGScrollBar();
 
    void           GrabPointer(Bool_t grab) { fGrabPointer = grab; }
@@ -125,13 +128,13 @@ class TGHScrollBar : public TGScrollBar {
 public:
    TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                 UInt_t options = kHorizontalFrame,
-                ULong_t back = fgDefaultFrameBackground);
+                ULong_t back = GetDefaultFrameBackground());
    virtual ~TGHScrollBar() { }
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
-                     { return TGDimension(fWidth, fgScrollBarWidth); }
+                     { return TGDimension(fWidth, GetScrollBarWidth()); }
    virtual void Layout();
 
    virtual void SetRange(Int_t range, Int_t page_size);
@@ -147,13 +150,13 @@ class TGVScrollBar : public TGScrollBar {
 public:
    TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                 UInt_t options = kVerticalFrame,
-                ULong_t back = fgDefaultFrameBackground);
+                ULong_t back = GetDefaultFrameBackground());
    virtual ~TGVScrollBar() { }
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
-                      { return TGDimension(fgScrollBarWidth, fHeight); }
+                      { return TGDimension(GetScrollBarWidth(), fHeight); }
    virtual void Layout();
 
    virtual void SetRange(Int_t range, Int_t page_size);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.2 2000/10/22 19:28:58 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -98,7 +98,7 @@ protected:
 public:
    TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t scale, Int_t id = -1,
                   UInt_t options = kChildFrame,
-                  ULong_t back = fgDefaultFrameBackground);
+                  ULong_t back = GetDefaultFrameBackground());
 
    virtual ~TGDoubleSlider() { }
 
@@ -135,7 +135,7 @@ protected:
 public:
    TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t scale, Int_t id = -1,
                    UInt_t options = kVerticalFrame,
-                   ULong_t back = fgDefaultFrameBackground);
+                   ULong_t back = GetDefaultFrameBackground());
    virtual ~TGDoubleVSlider();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -157,7 +157,7 @@ protected:
 public:
    TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t scale, Int_t id = -1,
                    UInt_t options = kHorizontalFrame,
-                   ULong_t back = fgDefaultFrameBackground);
+                   ULong_t back = GetDefaultFrameBackground());
    virtual ~TGDoubleHSlider();
 
    virtual Bool_t HandleButton(Event_t *event);

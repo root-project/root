@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.5 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.6 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -199,15 +199,15 @@ protected:
 
    static FontStruct_t  fgDefaultFontStruct;
    static TGGC          fgDefaultSelectedGC;
-#ifdef R__SUNCCBUG
-public:
-#endif
    static TGGC          fgDefaultGC;
 
 public:
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
+
    TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
-               GContext_t norm = fgDefaultGC(),
-               FontStruct_t font = fgDefaultFontStruct,
+               GContext_t norm = GetDefaultGC()(),
+               FontStruct_t font = GetDefaultFontStruct(),
                UInt_t options = 0);
    virtual ~TGMenuTitle() { if (fLabel) delete fLabel; }
 
@@ -215,9 +215,6 @@ public:
    virtual void   DoSendMessage();
    virtual Bool_t GetState() const { return fState; }
    virtual Int_t  GetHotKeyCode() const { return fHkeycode; }
-
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGMenuTitle,0)  // Menu title class
 };

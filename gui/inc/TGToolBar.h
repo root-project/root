@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.2 2000/09/07 00:33:33 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -49,7 +49,7 @@ private:
 public:
    TGToolBar(const TGWindow *p, UInt_t w, UInt_t h,
              UInt_t options = kHorizontalFrame,
-             ULong_t back = fgDefaultFrameBackground);
+             ULong_t back = GetDefaultFrameBackground());
    virtual ~TGToolBar();
 
    void AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing = 0);

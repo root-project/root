@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.4 2000/10/12 16:53:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.5 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -141,7 +141,7 @@ protected:
 
 public:
    TGListTree(TGWindow *p, UInt_t w, UInt_t h,
-              UInt_t options, ULong_t back = fgWhitePixel);
+              UInt_t options, ULong_t back = GetWhitePixel());
    virtual ~TGListTree();
 
    virtual Bool_t HandleButton(Event_t *event);

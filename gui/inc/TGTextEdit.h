@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.7 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.8 2000/12/13 15:13:50 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -79,11 +79,11 @@ protected:
 
 public:
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
-              UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
+              UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
+              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
-              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
+              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
 
    virtual ~TGTextEdit();
 
