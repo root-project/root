@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.17 2001/11/19 18:03:20 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.18 2001/11/21 19:36:36 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -341,6 +341,16 @@ Double_t RooAbsRealLValue::fitBinWidth() const
 }
 
 
+
+Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const 
+{
+  // Check if fit range is usable as plot range, i.e. it is neither
+  // open ended, nor empty
+  return (hasFitMin() && hasFitMax() && (getFitMin()!=getFitMax())) ;
+}
+
+
+
 TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel) const {
   // Create an empty 1D-histogram with appropriate scale and labels for this variable.
   // This method uses the default plot range which can be changed using the
@@ -348,34 +358,149 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   // changed with setPlotBins(). The caller takes ownership of the returned
   // object and is responsible for deleting it.
 
+  // Check if the fit range is usable as plot range
+  if (!fitRangeOKForPlotting()) {
+    cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+	 << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
+    return 0 ;
+  }
+
   RooArgList list(*this) ;
-  return (TH1F*)createHistogram(name, list, yAxisLabel);
+  Double_t xlo = getFitMin() ;
+  Double_t xhi = getFitMax() ;
+  Int_t nbins = getFitBins() ;
+  return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins);
 }
 
-TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel) const {
+TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel, Double_t xlo, Double_t xhi, Int_t nBins) const {
+  // Create an empty 1D-histogram with appropriate scale and labels for this variable.
+  // This method uses the default plot range which can be changed using the
+  // setPlotMin(),setPlotMax() methods, and the default binning which can be
+  // changed with setPlotBins(). The caller takes ownership of the returned
+  // object and is responsible for deleting it.
+
+  RooArgList list(*this) ;
+  return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nBins);
+}
+
+TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, 
+					Double_t* xlo, Double_t* xhi, Int_t* nBins) const {
   // Create an empty 2D-histogram with appropriate scale and labels for this variable (x)
   // and the specified y variable. This method uses the default plot ranges for x and y which
   // can be changed using the setPlotMin(),setPlotMax() methods, and the default binning which
   // can be changed with setPlotBins(). The caller takes ownership of the returned object
   // and is responsible for deleting it.
 
+  if ((!xlo && xhi) || (xlo || !xhi)) {
+    cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+	 << ") ERROR must specify either no range, or both limits" << endl ;
+    return 0 ;
+  }
+
+  Double_t xlo_fit[2] ;
+  Double_t xhi_fit[2] ;
+  Int_t nbins_fit[2] ;
+
+  Double_t *xlo2(xlo), *xhi2(xhi);
+  Int_t *nBins2(nBins) ;
+
+  if (!xlo2) {
+
+    if (!fitRangeOKForPlotting()) {
+      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+	   << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;      
+      return 0 ;
+    }
+    if (!yvar.fitRangeOKForPlotting()) {
+      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+	   << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
+      return 0 ;
+    }
+
+    xlo_fit[0] = getFitMin() ;
+    xhi_fit[0] = getFitMax() ;    
+
+    xlo_fit[1] = yvar.getFitMin() ;
+    xhi_fit[1] = yvar.getFitMax() ;
+
+    xlo2 = xlo_fit ;
+    xhi2 = xhi_fit ;
+  }
+  
+  if (!nBins2) {
+    nbins_fit[0] = getFitBins() ;
+    nbins_fit[1] = yvar.getFitBins() ;
+    nBins2 = nbins_fit ;
+  }
+
+
   RooArgList list(*this,yvar) ;
-  return (TH2F*)createHistogram(name, list, zAxisLabel);
+  return (TH2F*)createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2);
 }
 
-TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsReal &yvar, const RooAbsReal &zvar,
-				  const char *tAxisLabel) const {
+TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar,
+					const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins) const {
   // Create an empty 3D-histogram with appropriate scale and labels for this variable (x)
   // and the specified y,z variables. This method uses the default plot ranges for x,y,z which
   // can be changed using the setPlotMin(),setPlotMax() methods, and the default binning which
   // can be changed with setPlotBins(). The caller takes ownership of the returned object
   // and is responsible for deleting it.
 
+  if ((!xlo && xhi) || (xlo || !xhi)) {
+    cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+	 << ") ERROR must specify either no range, or both limits" << endl ;
+    return 0 ;
+  }
+
+  Double_t xlo_fit[3] ;
+  Double_t xhi_fit[3] ;
+  Int_t nbins_fit[3] ;
+
+  Double_t *xlo2(xlo), *xhi2(xhi) ;
+  Int_t* nBins2(nBins) ;
+  if (!xlo2) {
+
+    if (!fitRangeOKForPlotting()) {
+      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+	   << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;      
+      return 0 ;
+    }
+    if (!yvar.fitRangeOKForPlotting()) {
+      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+	   << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
+      return 0 ;
+    }
+    if (!zvar.fitRangeOKForPlotting()) {
+      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+	   << ") ERROR: fit range of " << zvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
+      return 0 ;
+    }
+
+    xlo_fit[0] = getFitMin() ;
+    xhi_fit[0] = getFitMax() ;    
+
+    xlo_fit[1] = yvar.getFitMin() ;
+    xhi_fit[1] = yvar.getFitMax() ;
+
+    xlo_fit[2] = zvar.getFitMin() ;
+    xhi_fit[2] = zvar.getFitMax() ;
+
+    xlo2 = xlo_fit ;
+    xhi2 = xhi_fit ;
+  }
+  
+  if (!nBins2) {
+    nbins_fit[0] = getFitBins() ;
+    nbins_fit[1] = yvar.getFitBins() ;
+    nbins_fit[2] = zvar.getFitBins() ;
+    nBins2 = nbins_fit ;
+  }
+
   RooArgList list(*this,yvar,zvar) ;
-  return (TH3F*)createHistogram(name, list, tAxisLabel);
+  return (TH3F*)createHistogram(name, list, tAxisLabel, xlo2, xhi2, nBins2);
 }
 
-TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel)
+TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins)
 {
   // Create a 1,2, or 3D-histogram with appropriate scale and labels.
   // Binning and ranges are taken from the variables themselves and can be changed by
@@ -412,18 +537,18 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   switch(dim) {
   case 1:
     histogram= new TH1F(histName.Data(), histTitle.Data(),
-			xyz[0]->getFitBins(), xyz[0]->getFitMin(), xyz[0]->getFitMax());
+			nBins[0], xlo[0], xhi[0]);
     break;
   case 2:
     histogram= new TH2F(histName.Data(), histTitle.Data(),
-			xyz[0]->getFitBins(), xyz[0]->getFitMin(), xyz[0]->getFitMax(),
-			xyz[1]->getFitBins(), xyz[1]->getFitMin(), xyz[1]->getFitMax());
+			nBins[0], xlo[0], xhi[0],
+			nBins[1], xlo[1], xhi[1]) ;
     break;
   case 3:
     histogram= new TH3F(histName.Data(), histTitle.Data(),
-			xyz[0]->getFitBins(), xyz[0]->getFitMin(), xyz[0]->getFitMax(),
-			xyz[1]->getFitBins(), xyz[1]->getFitMin(), xyz[1]->getFitMax(),
-			xyz[2]->getFitBins(), xyz[2]->getFitMin(), xyz[2]->getFitMax());
+			nBins[0], xlo[0], xhi[0],
+			nBins[1], xlo[1], xhi[1],
+			nBins[2], xlo[2], xhi[2]) ;			
     break;
   default:
     assert(0);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.22 2001/11/19 18:03:20 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.23 2001/11/22 01:07:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -696,7 +696,8 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   // create and fill a temporary histogram of this variable
   TString histName(GetName());
   histName.Append("_plot");
-  TH1F *hist= var->createHistogram(histName.Data(), "Events");
+  TH1F *hist= var->createHistogram(histName.Data(), "Events", 
+				   frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(), frame->GetNbinsX());
   if(0 == fillHistogram(hist,RooArgList(*var),cuts)) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: createHistogram() failed" << endl;

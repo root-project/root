@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.15 2001/11/20 03:53:06 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.16 2001/11/21 19:36:36 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -85,13 +85,19 @@ public:
   RooPlot *frame() const;
 
   // Create empty 1,2, and 3D histograms from a list of 1-3 RooAbsReals
-  TH1F *createHistogram(const char *name, const char *yAxisLabel= 0) const;
-  TH2F *createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel= 0) const;
-  TH3F *createHistogram(const char *name, const RooAbsReal &yvar, const RooAbsReal &zvar,
-			const char *tAxisLabel= 0) const;
-  static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel= 0);
+  TH1F *createHistogram(const char *name, const char *yAxisLabel) const ;
+  TH1F *createHistogram(const char *name, const char *yAxisLabel, Double_t xlo, Double_t xhi, Int_t nBins) const ;
+  TH2F *createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel=0, 
+			Double_t* xlo=0, Double_t* xhi=0, Int_t* nBins=0) const ;
+  
+  TH3F *createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar,
+			const char *tAxisLabel, Double_t* xlo=0, Double_t* xhi=0, Int_t* nBins=0) const ;
+  
+  static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins) ;
 
 protected:
+
+  Bool_t fitRangeOKForPlotting() const ;
 
   void copyCache(const RooAbsArg* source) ;
 
