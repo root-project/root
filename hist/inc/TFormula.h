@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.5 2000/11/24 10:23:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.6 2000/12/13 15:13:50 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -26,6 +26,9 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
+#ifndef ROOT_TBits
+#include "TBits.h"
+#endif
 
 const Int_t kMAXFOUND = 200;
 
@@ -45,6 +48,7 @@ protected:
   Double_t  *fConst;          //[fNconst] Array of fNconst formula constants
   Double_t  *fParams;         //[fNpar] Array of fNpar parameters
   TString   *fNames;          //[fNpar] Array of parameter names
+  TBits     fAlreadyFound;    //! cache for information
 
 public:
            TFormula();

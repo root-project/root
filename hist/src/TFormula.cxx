@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.10 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.11 2001/01/13 18:25:28 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 
 static Int_t MAXOP,MAXPAR,MAXCONST;
 const Int_t kMAXSTRINGFOUND = 10;
-static Int_t already_found[kMAXFOUND];
 
 ClassImp(TFormula)
 
@@ -666,8 +665,8 @@ if (err==0) {
                } else if ( k >= 0 ) {
                   fExpr[fNoper] = chaine;
                   fOper[fNoper] = 100000 + k;
-                  if (k <kMAXFOUND && !already_found[k]) {
-                     already_found[k] = 1;
+                  if (k <kMAXFOUND && !fAlreadyFound.TestBitNumber(k)) {
+                     fAlreadyFound.SetBitNumber(k);
                      fNval++;
                   }
                   fNoper++;
@@ -1355,7 +1354,7 @@ Int_t TFormula::Compile(const char *expression)
       fExpr[i] = "";
       fOper[i] = 0;
   }
-  for(i=0;i<kMAXFOUND;i++) already_found[i]=0;
+
 //*-*- Substitution of some operators to C++ style
 //*-*  ===========================================
   for (i=1; i<=chaine.Length(); i++) {
@@ -1375,20 +1374,24 @@ Int_t TFormula::Compile(const char *expression)
              if (chaine(i-1,2) == "--") {
                 chaine = chaine(0,i-1) + "+" + chaine(i+1,lc-i-1);
                 i=0;
-             } else
-                if (chaine(i-1,1) == "[") {
-                   for (j=1;j<=chaine.Length()-i;j++) {
-                     if (chaine(j+i-1,1) == "]" || j+i > chaine.Length()) break;
-                   }
-                   ctemp = chaine(i,j-1);
-                   valeur=0;
-                   sscanf(ctemp.Data(),"%d",&valeur);
-                   if (valeur >= fNpar) fNpar = valeur+1;
-                } else
-                   if (chaine(i-1,1) == " ") {
-                      chaine = chaine(0,i-1)+chaine(i,lc-i);
-                      i=0;
-                   }
+             } else 
+               if (chaine(i-1,2) == "->") {
+                  chaine = chaine(0,i-1) + "." + chaine(i+1,lc-i-1);
+                  i=0;
+               } else
+                  if (chaine(i-1,1) == "[") {
+                     for (j=1;j<=chaine.Length()-i;j++) {
+                        if (chaine(j+i-1,1) == "]" || j+i > chaine.Length()) break;
+                     }
+                     ctemp = chaine(i,j-1);
+                     valeur=0;
+                     sscanf(ctemp.Data(),"%d",&valeur);
+                     if (valeur >= fNpar) fNpar = valeur+1;
+                  } else
+                     if (chaine(i-1,1) == " ") {
+                       chaine = chaine(0,i-1)+chaine(i,lc-i);
+                       i=0;
+                     }
   }
   err = 0;
   Analyze((const char*)chaine,err);
