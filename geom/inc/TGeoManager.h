@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.4 2002/07/17 13:27:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -51,45 +51,46 @@ class TVirtualGeoPainter;
 class TGeoManager : public TNamed
 {
 private :
-   Double_t              fStep;             // step to be done from current point and direction
-   Double_t              fSafety;           // safety radius from current point
-   Int_t                 fLevel;            // current geometry level;
+   Double_t              fStep;             //! step to be done from current point and direction
+   Double_t              fSafety;           //! safety radius from current point
+   Int_t                 fLevel;            //! current geometry level;
    Int_t                 fNNodes;           // total number of physical nodes
-   TString               fPath;             // path to current node
-   Double_t             *fNormal;           // normal to shape at current intersection point
-   Double_t             *fNormalChecked;    // normal to current checked shape at intersection
-   Double_t             *fCldir;            // unit vector to current closest shape
-   Double_t             *fCldirChecked;     // unit vector to current checked shape
-   Double_t             *fPoint;            //[3] current point
-   Double_t             *fDirection;        //[3] current direction
-   Bool_t                fSearchOverlaps;   // flag set when an overlapping cluster is searched
-   Bool_t                fCurrentOverlapping; // flags the type of the current node
-   Bool_t                fLoopVolumes;      // flag volume lists loop
-   Bool_t                fStartSafe;        // flag a safe start for point classification
-   Bool_t                fIsEntering;       // flag if current step just got into a new node
-   Bool_t                fIsExiting;        // flag that current track is about to leave current node
-   Bool_t                fIsStepEntering;   // flag that next geometric step will enter new volume
-   Bool_t                fIsStepExiting;    // flaag that next geometric step will exit current volume
-   Bool_t                fIsOutside;        // flag that current point is outside geometry
-   Bool_t                fIsOnBoundary;     // flag that current point is on some boundary
-   Bool_t                fIsNullStep;       // flag that last geometric step was null
-   TGeoNodeCache        *fCache;            // cache for physical nodes
-   TVirtualGeoPainter   *fPainter;          // current painter
+   TString               fPath;             //! path to current node
+   Double_t             *fNormal;           //! normal to shape at current intersection point
+   Double_t             *fNormalChecked;    //! normal to current checked shape at intersection
+   Double_t             *fCldir;            //! unit vector to current closest shape
+   Double_t             *fCldirChecked;     //! unit vector to current checked shape
+   Double_t             *fPoint;            //![3] current point
+   Double_t             *fDirection;        //![3] current direction
+   Bool_t                fSearchOverlaps;   //! flag set when an overlapping cluster is searched
+   Bool_t                fCurrentOverlapping; //! flags the type of the current node
+   Bool_t                fLoopVolumes;      //! flag volume lists loop
+   Bool_t                fStartSafe;        //! flag a safe start for point classification
+   Bool_t                fIsEntering;       //! flag if current step just got into a new node
+   Bool_t                fIsExiting;        //! flag that current track is about to leave current node
+   Bool_t                fIsStepEntering;   //! flag that next geometric step will enter new volume
+   Bool_t                fIsStepExiting;    //! flaag that next geometric step will exit current volume
+   Bool_t                fIsOutside;        //! flag that current point is outside geometry
+   Bool_t                fIsOnBoundary;     //! flag that current point is on some boundary
+   Bool_t                fIsNullStep;       //! flag that last geometric step was null
+   TGeoNodeCache        *fCache;            //! cache for physical nodes
+   TVirtualGeoPainter   *fPainter;          //! current painter
+   TList                *fMatrices;         //-> list of local transformations
+   TList                *fShapes;           //-> list of shapes
+   TList                *fVolumes;          //-> list of volumes
+   TList                *fGShapes;          //-> list of runtime shapes
+   TList                *fGVolumes;         //-> list of runtime volumes
+   TList                *fMaterials;        //-> list of materials
+   TObjArray            *fNodes;            //-> current branch of nodes
+   UChar_t              *fBits;             //! bits used for voxelization
    TGeoVolume           *fCurrentVolume;    // current volume
    TGeoVolume           *fTopVolume;        // top level volume in geometry
    TGeoNode             *fCurrentNode;      // current node
    TGeoNode             *fTopNode;          // top physical node
-   TGeoNode             *fLastNode;         // last searched node
+   TGeoNode             *fLastNode;         //! last searched node
+   TGeoNode             *fNextNode;         //! next node that will be crossed
    TGeoVolume           *fMasterVolume;     // master volume
-   TGeoHMatrix          *fCurrentMatrix;    // current global matrix
-   TList                *fMatrices;         // list of local transformations
-   TList                *fShapes;           // list of shapes
-   TList                *fVolumes;          // list of volumes
-   TList                *fGShapes;           // list of runtime shapes
-   TList                *fGVolumes;          // list of runtime volumes
-   TList                *fMaterials;        // list of materials
-   TObjArray            *fNodes;            // current branch of nodes
-   UChar_t              *fBits;             // bits used for voxelization
+   TGeoHMatrix          *fCurrentMatrix;    //! current global matrix
 
 //--- private methods
    void                   BuildCache();
@@ -97,6 +98,7 @@ private :
    Int_t                  GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
                                             Int_t ncheck, Int_t *result);
    Bool_t                 IsLoopingVolumes() const     {return fLoopVolumes;}
+   void                   Init();
    void                   SetLoopVolumes(Bool_t flag=kTRUE) {fLoopVolumes=flag;}
    void                   Voxelize(Option_t *option = 0);
 
@@ -131,6 +133,7 @@ public:
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
    void                   ModifiedPad() const;
+   void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
    void                   SetExplodedView(UInt_t iopt=0); // *MENU*
    void                   SetNsegments(Int_t nseg);
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
@@ -237,6 +240,7 @@ public:
 
    //--- utilities
    Int_t                  CountNodes(TGeoVolume *vol=0, Int_t nlevels=1000);
+   static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
 
@@ -249,7 +253,10 @@ public:
 
    //--- modeler state getters/setters
    TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->At(level);}
+   TGeoNode              *GetNextNode() const         {return fNextNode;}
    TGeoNode              *GetMother(Int_t up=1) const {return fCache->GetMother(up);}
+   TGeoHMatrix           *GetHMatrix();
+   TGeoHMatrix           *GetCurrentMatrix() const    {return fCache->GetCurrentMatrix();}
    TGeoNode              *GetCurrentNode() const      {return fCurrentNode;}
    Double_t              *GetCurrentPoint() const     {return fPoint;}
    TGeoVolume            *GetCurrentVolume() const {return fCurrentNode->GetVolume();}

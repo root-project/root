@@ -383,7 +383,7 @@ void TGeoPainter::Paint(Option_t *option)
    fVisLock = kTRUE;
 }
 //______________________________________________________________________________
-void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView)
+void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glmat)
 {
 //*-*-*-*-*Paint 3-D shape in current pad with its current attributes*-*-*-*-*
 //*-*      ==========================================================
@@ -404,10 +404,14 @@ void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView)
     if (fGeom) {
        for (Int_t j = 0; j < buff->numPoints; j++) {
            dlocal[0]=point[3*j]; dlocal[1]=point[3*j+1]; dlocal[2]=point[3*j+2];
-           if (IsExplodedView()) 
-              fGeom->LocalToMasterBomb(&dlocal[0],&dmaster[0]);
-           else   
-              fGeom->LocalToMaster(&dlocal[0],&dmaster[0]);
+           if (glmat) {
+              glmat->LocalToMaster(&dlocal[0],&dmaster[0]);
+           } else {   
+              if (IsExplodedView()) 
+                 fGeom->LocalToMasterBomb(&dlocal[0],&dmaster[0]);
+              else   
+                 fGeom->LocalToMaster(&dlocal[0],&dmaster[0]);
+           }      
 //           printf("point %i : %g %g %g\n", j,dmaster[0],dmaster[1],dmaster[2]);
            point[3*j]=dmaster[0]; point[3*j+1]=dmaster[1]; point[3*j+2]=dmaster[2];
        }
@@ -448,7 +452,7 @@ void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView)
     }
 }
 //______________________________________________________________________________
-void TGeoPainter::PaintBox(TGeoVolume *vol, Option_t *option)
+void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint any type of box with 8 vertices
    const Int_t numpoints = 8;
@@ -458,7 +462,7 @@ void TGeoPainter::PaintBox(TGeoVolume *vol, Option_t *option)
    Float_t *points = new Float_t[3*numpoints];
    if (!points) return;
 
-   vol->GetShape()->SetPoints(points);
+   shape->SetPoints(points);
 
    Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
    if (!rangeView  && gPad->GetView3D()) gVirtualGL->PaintBrik(points);
@@ -467,7 +471,7 @@ void TGeoPainter::PaintBox(TGeoVolume *vol, Option_t *option)
  //            gNode->Local2Master(&points[3*i],&points[3*i]);
 
 
-   Int_t c = ((vol->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
+   Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
    if (c < 0) c = 0;
 
 //*-* Allocate memory for segments *-*
@@ -517,7 +521,7 @@ void TGeoPainter::PaintBox(TGeoVolume *vol, Option_t *option)
     }
 
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (strstr(option, "x3d")) {
         if(buff && buff->points && buff->segs)
@@ -536,7 +540,14 @@ void TGeoPainter::PaintBox(TGeoVolume *vol, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGeoPainter::PaintTube(TGeoVolume *vol, Option_t *option)
+void TGeoPainter::PaintCompositeShape(TGeoVolume *vol, Option_t *option)
+{
+// paint a composite shape
+   PaintBox(vol->GetShape(), option);
+}
+
+//______________________________________________________________________________
+void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint tubes
    Int_t i, j;
@@ -548,7 +559,7 @@ void TGeoPainter::PaintTube(TGeoVolume *vol, Option_t *option)
    Float_t *points = new Float_t[3*numpoints];
    if (!points) return;
 
-   vol->GetShape()->SetPoints(points);
+   shape->SetPoints(points);
 
    Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
    if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points, n, 2);
@@ -569,7 +580,7 @@ void TGeoPainter::PaintTube(TGeoVolume *vol, Option_t *option)
 
     buff->points = points;
 
-    Int_t c = ((vol->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
+    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
 
 //*-* Allocate memory for segments *-*
@@ -634,7 +645,7 @@ void TGeoPainter::PaintTube(TGeoVolume *vol, Option_t *option)
     }
 
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (strstr(option, "x3d")) {
         if(buff && buff->points && buff->segs)
@@ -652,7 +663,7 @@ void TGeoPainter::PaintTube(TGeoVolume *vol, Option_t *option)
     if (buff)           delete    buff;
 }
 //______________________________________________________________________________
-void TGeoPainter::PaintTubs(TGeoVolume *vol, Option_t *option)
+void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint tubes
    Int_t i, j;
@@ -664,7 +675,7 @@ void TGeoPainter::PaintTubs(TGeoVolume *vol, Option_t *option)
    Float_t *points = new Float_t[3*numpoints];
    if (!points) return;
 
-   vol->GetShape()->SetPoints(points);
+   shape->SetPoints(points);
 
    Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
    if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points,-n,2);
@@ -682,7 +693,7 @@ void TGeoPainter::PaintTubs(TGeoVolume *vol, Option_t *option)
 
     buff->points = points;
 
-    Int_t c = ((vol->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
+    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
 
 //*-* Allocate memory for segments *-*
@@ -756,7 +767,7 @@ void TGeoPainter::PaintTubs(TGeoVolume *vol, Option_t *option)
     }
 
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (strstr(option, "x3d")) {
         if(buff && buff->points && buff->segs)
@@ -774,14 +785,14 @@ void TGeoPainter::PaintTubs(TGeoVolume *vol, Option_t *option)
     if (buff)           delete    buff;
 }
 //______________________________________________________________________________
-void TGeoPainter::PaintSphere(TGeoVolume *vol, Option_t *option)
+void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint a sphere
    Int_t i, j;
-   const Int_t n = ((TGeoSphere*)vol->GetShape())->GetNumberOfDivisions()+1;
-   Double_t ph1 = ((TGeoSphere*)vol->GetShape())->GetPhi1();
-   Double_t ph2 = ((TGeoSphere*)vol->GetShape())->GetPhi2();
-   Int_t nz = ((TGeoSphere*)vol->GetShape())->GetNz()+1;
+   const Int_t n = ((TGeoSphere*)shape)->GetNumberOfDivisions()+1;
+   Double_t ph1 = ((TGeoSphere*)shape)->GetPhi1();
+   Double_t ph2 = ((TGeoSphere*)shape)->GetPhi2();
+   Int_t nz = ((TGeoSphere*)shape)->GetNz()+1;
    if (nz < 2) return;
    Int_t numpoints = 2*n*nz;
    if (numpoints <= 0) return;
@@ -789,7 +800,7 @@ void TGeoPainter::PaintSphere(TGeoVolume *vol, Option_t *option)
 
    Float_t *points = new Float_t[3*numpoints];
    if (!points) return;
-   vol->GetShape()->SetPoints(points);
+   shape->SetPoints(points);
 
    Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
    if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points, -n, nz);
@@ -813,7 +824,7 @@ void TGeoPainter::PaintSphere(TGeoVolume *vol, Option_t *option)
 
     buff->points = points;
 
-    Int_t c = ((vol->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
+    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
 
 //*-* Allocate memory for segments *-*
@@ -958,7 +969,7 @@ void TGeoPainter::PaintSphere(TGeoVolume *vol, Option_t *option)
     }
 
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (strstr(option, "x3d")) {
         if(buff && buff->points && buff->segs)
@@ -976,21 +987,21 @@ void TGeoPainter::PaintSphere(TGeoVolume *vol, Option_t *option)
     if (buff)           delete    buff;
 }
 //______________________________________________________________________________
-void TGeoPainter::PaintPcon(TGeoVolume *vol, Option_t *option)
+void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint a pcon
    Int_t i, j;
-   const Int_t n = ((TGeoPcon*)vol->GetShape())->GetNsegments()+1;
-   Int_t nz = ((TGeoPcon*)vol->GetShape())->GetNz();
+   const Int_t n = ((TGeoPcon*)shape)->GetNsegments()+1;
+   Int_t nz = ((TGeoPcon*)shape)->GetNz();
    if (nz < 2) return;
    Int_t numpoints =  nz*2*n;
    if (numpoints <= 0) return;
-   Double_t dphi = ((TGeoPcon*)vol->GetShape())->GetDphi();
+   Double_t dphi = ((TGeoPcon*)shape)->GetDphi();
    //*-* Allocate memory for points *-*
 
    Float_t *points = new Float_t[3*numpoints];
    if (!points) return;
-   vol->GetShape()->SetPoints(points);
+   shape->SetPoints(points);
 
    Bool_t rangeView = strcmp(option,"range")==0 ? kTRUE : kFALSE;
    if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points, -n, nz);
@@ -1014,7 +1025,7 @@ void TGeoPainter::PaintPcon(TGeoVolume *vol, Option_t *option)
 
     buff->points = points;
 
-    Int_t c = ((vol->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
+    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
 
 //*-* Allocate memory for segments *-*
@@ -1159,7 +1170,7 @@ void TGeoPainter::PaintPcon(TGeoVolume *vol, Option_t *option)
     }
 
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (strstr(option, "x3d")) {
         if(buff && buff->points && buff->segs)
@@ -1419,6 +1430,12 @@ void TGeoPainter::TestOverlaps(const char* path)
 {
 //--- Geometry overlap checker based on sampling. 
   fChecker->TestOverlaps(path);
+}   
+//______________________________________________________________________________
+Bool_t TGeoPainter::TestVoxels(TGeoVolume *vol)
+{
+// Check voxels efficiency per volume.
+   return fChecker->TestVoxels(vol);
 }   
 //______________________________________________________________________________
 void TGeoPainter::UnbombTranslation(const Double_t *tr, Double_t *bombtr)

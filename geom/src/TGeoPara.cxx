@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -51,6 +51,30 @@ TGeoPara::TGeoPara()
 TGeoPara::TGeoPara(Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
                    Double_t theta, Double_t phi)
            :TGeoBBox(0, 0, 0)
+{
+// Default constructor specifying minimum and maximum radius
+   SetBit(TGeoShape::kGeoPara);
+   fX = dx;
+   fY = dy;
+   fZ = dz;
+   fAlpha = alpha;
+   fTheta = theta;
+   fPhi = phi;
+   fTxy = TMath::Tan(alpha*kDegRad);
+   Double_t tth = TMath::Tan(theta*kDegRad);
+   Double_t ph  = phi*kDegRad;
+   fTxz = tth*TMath::Cos(ph);
+   fTyz = tth*TMath::Sin(ph);
+   if ((fX<0) || (fY<0) || (fZ<0)) {
+//      printf("para : %f %f %f\n", fX, fY, fZ);
+      SetBit(kGeoRunTimeShape);
+   }
+   else ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoPara::TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
+                   Double_t theta, Double_t phi)
+           :TGeoBBox(name, 0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
    SetBit(TGeoShape::kGeoPara);
@@ -327,6 +351,13 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return voldiv;
 }      
 //-----------------------------------------------------------------------------
+void TGeoPara::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   TGeoBBox::GetBoundingCylinder(param);
+}   
+//-----------------------------------------------------------------------------
 TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -357,12 +388,6 @@ void TGeoPara::InspectShape() const
    printf("    theta = %11.5f\n", fTheta);
    printf("    phi   = %11.5f\n", fPhi);
    TGeoBBox::InspectShape();
-}
-//-----------------------------------------------------------------------------
-void TGeoPara::Paint(Option_t *option)
-{
-// paint this shape according to option
-   TGeoBBox::Paint(option);
 }
 //-----------------------------------------------------------------------------
 void TGeoPara::NextCrossing(TGeoParamCurve *c, Double_t *point) const

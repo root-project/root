@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -62,6 +62,14 @@ TGeoBBox::TGeoBBox()
 //-----------------------------------------------------------------------------
 TGeoBBox::TGeoBBox(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
          :TGeoShape()
+{
+// Constructor
+   SetBit(TGeoShape::kGeoBox);
+   SetBoxDimensions(dx, dy, dz, origin);
+}
+//-----------------------------------------------------------------------------
+TGeoBBox::TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
+         :TGeoShape(name)
 {
 // Constructor
    SetBit(TGeoShape::kGeoBox);
@@ -202,26 +210,6 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return voldiv->Divide(divname, iaxis, ndiv, start, step);            
 }      
 //-----------------------------------------------------------------------------   
-void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
-{
-// set parameters of box
-   fDX = dx;
-   fDY = dy;
-   fDZ = dz;
-   for (Int_t i=0; i<3; i++) {
-      if (!origin) {
-         fOrigin[i] = 0.0;
-      } else {
-         fOrigin[i] = origin[i];
-      }
-   }
-   if ((fDX==0) && (fDY==0) && (fDZ==0)) return;
-   if ((fDX<0) || (fDY<0) || (fDZ<0)) {
-      SetBit(kGeoRunTimeShape);
-//      printf("box : %f %f %f\n", fDX, fDY, fDZ);
-   }
-}        
-//-----------------------------------------------------------------------------   
 void TGeoBBox::ComputeBBox()
 {
 // compute bounding box - already computed in this case
@@ -294,9 +282,9 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    for (i=0; i<3; i++) if ((point[i]*dir[i]>0)&&(saf[i]>0)) return kBig;
    Double_t smin[3], smax[3];
    for (i=0; i<3; i++) {
-      if (dir[i]==0) return kBig;
       smin[i] = 0;
       smax[i] = kBig;
+      if (dir[i]==0) continue;
       if (saf[i]<0) smax[i]=par[i]/TMath::Abs(dir[i]) - point[i]/dir[i];
       else {
          smin[i] = saf[i]/TMath::Abs(dir[i]);
@@ -314,6 +302,16 @@ Double_t TGeoBBox::DistToSurf(Double_t *point, Double_t *dir) const
 // computes the distance to next surface of the box along a ray
 // starting from given point to the given direction.
    return 0.0;
+}
+//-----------------------------------------------------------------------------
+void TGeoBBox::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   param[0] = 0.;                  // Rmin
+   param[1] = fDX*fDX+fDY*fDY;     // Rmax   
+   param[2] = 0.;                  // Phi1
+   param[3] = 360.;                // Phi2 
 }
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother) const
@@ -345,6 +343,11 @@ void TGeoBBox::InspectShape() const
    printf("    origin: x=%11.5f y=%11.5f z=%11.5f\n", fOrigin[0], fOrigin[1], fOrigin[2]);
 }
 //-----------------------------------------------------------------------------
+void TGeoBBox::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+{
+// computes next intersection point of curve c with this shape
+}
+//-----------------------------------------------------------------------------
 void TGeoBBox::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -352,12 +355,15 @@ void TGeoBBox::Paint(Option_t *option)
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
-   painter->PaintBox(vol, option);
+   painter->PaintBox(this, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoBBox::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoBBox::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
-// computes next intersection point of curve c with this shape
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintBox(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoBBox::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
@@ -366,6 +372,26 @@ Double_t TGeoBBox::Safety(Double_t *point, Double_t *spoint, Option_t *option) c
 // to option. The matching point on the shape is stored in spoint.
    return kBig;
 }
+//-----------------------------------------------------------------------------   
+void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
+{
+// set parameters of box
+   fDX = dx;
+   fDY = dy;
+   fDZ = dz;
+   for (Int_t i=0; i<3; i++) {
+      if (!origin) {
+         fOrigin[i] = 0.0;
+      } else {
+         fOrigin[i] = origin[i];
+      }
+   }
+   if ((fDX==0) && (fDY==0) && (fDZ==0)) return;
+   if ((fDX<0) || (fDY<0) || (fDZ<0)) {
+      SetBit(kGeoRunTimeShape);
+//      printf("box : %f %f %f\n", fDX, fDY, fDZ);
+   }
+}        
 //-----------------------------------------------------------------------------
 void TGeoBBox::SetDimensions(Double_t *param)
 {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.2 2002/07/17 13:27:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.3 2002/07/17 14:22:54 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -160,7 +160,7 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
       if (opt.Contains("many") && !node->IsOverlapping()) continue;
       if (opt.Contains("only") && node->IsOverlapping()) continue;
       ic = node->GetColour();
-      if (ic >= 128) ic = 0;
+      if ((ic<0) || (ic>=128)) ic = 0;
       marker = (TPolyMarker3D*)pm->At(ic);
       if (!marker) {
          marker = new TPolyMarker3D();
@@ -219,6 +219,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       start[0] = startx;
       start[1] = starty;
       start[2] = startz;
+//      printf("startpoint : %g, %g, %g\n", startx, starty, startz);
       phi = 2*TMath::Pi()*gRandom->Rndm();
       theta= TMath::ACos(1.-2.*gRandom->Rndm());
       dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
@@ -227,52 +228,75 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       fGeom->InitTrack(&start[0], &dir[0]);
       line = 0;
       startnode = fGeom->GetCurrentNode();
+//      if (startnode) printf("---first : %s\n", startnode->GetName());
+//      else printf("---first : NULL\n");
       if (fGeom->IsOutside()) startnode=0;
       vis1 = (startnode)?(startnode->IsOnScreen()):kFALSE;
       if (vis1) {
+//         printf(" visible, create segment\n");
          line = new TPolyLine3D(2);
          line->SetLineColor(startnode->GetVolume()->GetLineColor());
          line->SetPoint(ipoint++, startx, starty, startz);
          i++;
          pm->Add(line);
-      }
+      } //else printf(" invisible, no segment\n");
       // find the node that will be crossed first      
       fGeom->FindNextBoundary();
       fGeom->IsStepEntering();
       // find where we end-up
       endnode = fGeom->Step();
       if (fGeom->IsOutside()) endnode=0;
+//      if (endnode) printf("---end : %s\n", endnode->GetName());
+//      else printf("---end : NULL\n");
       step = fGeom->GetStep();
       vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
+//      if (vis2) printf(" end visible\n");
+//      else printf(" end invisible\n");
       is_entering = fGeom->IsEntering();
       is_null = fGeom->IsNullStep();
+//      printf("endpoint : %g, %g, %g  step: %g\n", fGeom->GetCurrentPoint()[0],
+//         fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2], step);
+//      printf("propagating...\n");
       while (step<1E10) {
          if (ipoint>0) {
+//            printf("  ending segment\n");
          // old visible node had an entry point -> finish segment
             line->SetPoint(ipoint, point[0], point[1], point[2]);
             ipoint = 0;
             line   = 0;
          }
-         if (is_entering && vis2 && (startnode!=endnode)) {
+         if (is_entering && vis2) {
             // create new segment
+//            printf("creating new segment for : %s\n", endnode->GetName());
             line = new TPolyLine3D(2);   
             line->SetLineColor(endnode->GetVolume()->GetLineColor());
             line->SetPoint(ipoint++, point[0], point[1], point[2]);
             i++;
             pm->Add(line);
-         }
+         } // else printf("   entering=%i vis2=%i - no segment\n", (Int_t)is_entering, (Int_t)vis2);
          // now see if we can make an other step
-         if (endnode==0) break;
-         if (is_null) break;
+         if (endnode==0) {
+//            printf("NULL. End track.\n");
+            break;
+         }   
+//         if (is_null) printf("null step, start:%f %f %f\n", fGeom->GetCurrentPoint()[0],
+//         fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2]);
+         // generate an extra step to cross boundary
          startnode = endnode;    
          fGeom->FindNextBoundary();
-         fGeom->IsStepEntering();
+//         fGeom->IsStepEntering();
          endnode = fGeom->Step();
          if (fGeom->IsOutside()) endnode=0;
          step = fGeom->GetStep();
          vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
          is_entering = fGeom->IsEntering();
          is_null = fGeom->IsNullStep();
+//         printf(" new step : %g point: %g, %g, %g\n", step, fGeom->GetCurrentPoint()[0],
+//            fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2]);
+//         if (is_entering) printf(" entering\n");
+//         else printf(" not entering, same node\n");
+//         if (endnode) printf("   node after step :  %s\n",   endnode->GetName());
+//         else printf("   NULL node after step\n");
       }      
    }   
    // draw all segments
@@ -411,15 +435,18 @@ void TGeoChecker::Test(Int_t npoints, Option_t *option)
    Double_t dx = ((TGeoBBox*)shape)->GetDX();
    Double_t dy = ((TGeoBBox*)shape)->GetDY();
    Double_t dz = ((TGeoBBox*)shape)->GetDZ();
+   Double_t ox = (((TGeoBBox*)shape)->GetOrigin())[0];
+   Double_t oy = (((TGeoBBox*)shape)->GetOrigin())[1];
+   Double_t oz = (((TGeoBBox*)shape)->GetOrigin())[2];
    Double_t *xyz = new Double_t[3*npoints];
    TStopwatch *timer = new TStopwatch();
    printf("Random box : %f, %f, %f\n", dx, dy, dz);
    timer->Start(kFALSE);
    Int_t i;
    for (i=0; i<npoints; i++) {
-      xyz[3*i] = -dx+2*dx*gRandom->Rndm();
-      xyz[3*i+1] = -dy+2*dy*gRandom->Rndm();
-      xyz[3*i+2] = -dz+2*dz*gRandom->Rndm();
+      xyz[3*i] = ox-dx+2*dx*gRandom->Rndm();
+      xyz[3*i+1] = oy-dy+2*dy*gRandom->Rndm();
+      xyz[3*i+2] = oz-dz+2*dz*gRandom->Rndm();
    }
    timer->Stop();
    printf("Generation time :\n");
@@ -561,6 +588,108 @@ void TGeoChecker::TestOverlaps(const char* path)
    delete pm;
    delete xyz;
    delete overlaps;
+}
+//-----------------------------------------------------------------------------
+Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints)
+{
+// count voxel timing
+   TStopwatch timer;
+   Double_t time;
+   TGeoShape *shape = vol->GetShape();
+   TGeoNode *node;
+   TGeoMatrix *matrix;
+   Double_t *point;
+   Double_t local[3];
+   Int_t *checklist;
+   Int_t ncheck;
+
+   timer.Start();
+   for (Int_t i=0; i<npoints; i++) {
+      point = xyz + 3*i;
+      if (!shape->Contains(point)) continue;
+      checklist = voxels->GetCheckList(point, ncheck);
+      if (!checklist) continue;
+      if (!ncheck) continue;
+      for (Int_t id=0; id<ncheck; id++) {
+         node = vol->GetNode(checklist[id]);
+         matrix = node->GetMatrix();
+         matrix->MasterToLocal(point, &local[0]);
+         if (node->GetVolume()->GetShape()->Contains(&local[0])) break;
+      }   
+   }
+   time = timer.CpuTime();
+   return time;
+}   
+//-----------------------------------------------------------------------------
+Bool_t TGeoChecker::TestVoxels(TGeoVolume *vol, Int_t npoints)
+{
+// Returns optimal voxelization type for volume vol.
+//   kFALSE - cartesian
+//   kTRUE  - cylindrical
+   TGeoVoxelFinder *voxels = vol->GetVoxels();
+   if (!voxels) return kFALSE;
+   gRandom= new TRandom3();
+   const TGeoShape *shape = vol->GetShape();
+   Double_t dx = ((TGeoBBox*)shape)->GetDX();
+   Double_t dy = ((TGeoBBox*)shape)->GetDY();
+   Double_t dz = ((TGeoBBox*)shape)->GetDZ();
+   Double_t ox = (((TGeoBBox*)shape)->GetOrigin())[0];
+   Double_t oy = (((TGeoBBox*)shape)->GetOrigin())[1];
+   Double_t oz = (((TGeoBBox*)shape)->GetOrigin())[2];
+   Double_t *xyz = new Double_t[3*npoints];
+   Int_t i;
+   // generate npoints
+   for (i=0; i<npoints; i++) {
+      xyz[3*i] = ox-dx+2*dx*gRandom->Rndm();
+      xyz[3*i+1] = oy-dy+2*dy*gRandom->Rndm();
+      xyz[3*i+2] = oz-dz+2*dz*gRandom->Rndm();
+   }
+   Bool_t voxtype = vol->IsCylVoxels();
+   Double_t time1, time2;
+   TGeoVoxelFinder *vox1, *vox2;
+   // build both voxelization types
+   if (voxtype) {
+      printf("   default voxelization was cylindrical.\n");
+      vox2 = voxels;
+      vox1 = new TGeoVoxelFinder(vol);
+      vox1->Voxelize("");
+      if (!vol->GetVoxels()) {
+         vol->SetVoxelFinder(voxels);
+         delete xyz;
+         return voxtype;
+      }   
+   } else {
+      printf("   default voxelization was cartesian.\n");
+      vox1 = voxels;
+      vox2 = new TGeoCylVoxels(vol);
+      vox2->Voxelize("");
+      if (!vol->GetVoxels()) {
+         vol->SetVoxelFinder(voxels);
+         delete xyz;
+         return voxtype;
+      }   
+   }   
+   // count both voxelization timings
+   time1 = CheckVoxels(vol, vox1, xyz, npoints);
+   time2 = CheckVoxels(vol, vox2, xyz, npoints);
+
+   printf("   --- time for XYZ : %g\n", time1);
+   printf("   --- time for cyl : %g\n", time2);
+
+   if (time1<time2) {
+      printf("   best : XYZ\n");
+      delete vox2;
+      vol->SetVoxelFinder(vox1);
+      vol->SetCylVoxels(kFALSE);
+      delete xyz;
+      return kFALSE;
+   }
+   printf("   best : cyl\n");
+   delete vox1;
+   vol->SetVoxelFinder(vox2);
+   vol->SetCylVoxels(kTRUE);
+   delete xyz;
+   return kTRUE;      
 }
 //-----------------------------------------------------------------------------
 void TGeoChecker::CreateTree(const char *treename, const char *filename)

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -44,14 +44,12 @@ public:
    TGeoSphere();
    TGeoSphere(Double_t rmin, Double_t rmax, Double_t theta1=0, Double_t theta2=180,
               Double_t phi1=0, Double_t phi2=360);
+   TGeoSphere(const char *name, Double_t rmin, Double_t rmax, Double_t theta1=0, Double_t theta2=180,
+              Double_t phi1=0, Double_t phi2=360);
    TGeoSphere(Double_t *param, Int_t nparam=6);
    // destructor
    virtual ~TGeoSphere();
    // methods
-   virtual Int_t         GetByteCount() const {return 42;}
-   void                  SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
-                                       Double_t theta2, Double_t phi1, Double_t phi2);
-   void                  SetNumberOfDivisions(Int_t p);
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
@@ -63,7 +61,8 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step) {return voldiv;}
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
-
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual Int_t         GetByteCount() const {return 42;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
    Int_t                 GetNumberOfDivisions() const {return fNseg;}
    Int_t                 GetNz() const   {return fNz;}
@@ -73,11 +72,15 @@ public:
    Double_t              GetTheta2() const {return fTheta2;}
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetPhi2() const {return fPhi2;}
-
    virtual void          InspectShape() const;
-   virtual void          Paint(Option_t *option);
+   virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   void                  SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
+                                       Double_t theta2, Double_t phi1, Double_t phi2);
+   void                  SetNumberOfDivisions(Int_t p);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.4 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.6 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -53,8 +53,8 @@ class TGeoNode : public TNamed,
                  public TGeoAtt
 {
 protected:
-   Int_t             fNovlp;          // number of overlaps
-   Int_t            *fOverlaps;       // list of indices for overlapping brothers
+   Int_t             fNovlp;          //! number of overlaps
+   Int_t            *fOverlaps;       //![fNovlp] list of indices for overlapping brothers
    TGeoVolume       *fVolume;         // volume associated with this
    TGeoVolume       *fMother;         // mother volume
 public:
@@ -84,12 +84,13 @@ public:
    Int_t             GetColour() const {return fVolume->GetLineColor();}
    virtual Int_t     GetIndex() const                    {return 0;}
    virtual TGeoPatternFinder *GetFinder() const          {return 0;}
-   TGeoVolume       *GetVolume() const                   {return fVolume;}
    Int_t             GetMedia() const                    {return fVolume->GetMedia();}
    TGeoVolume       *GetMotherVolume() const             {return fMother;}
    Int_t             GetNdaughters() const {return fVolume->GetNdaughters();}
    TObjArray        *GetNodes() const {return fVolume->GetNodes();}
    Int_t            *GetOverlaps(Int_t &novlp) const {novlp=fNovlp; return fOverlaps;}
+   TGeoVolume       *GetVolume() const                   {return fVolume;}
+   virtual Int_t     GetOptimalVoxels() const {return 0;}
    void              InspectNode() const; // *MENU*
    virtual Bool_t    IsFolder() const {return kTRUE;}
    Bool_t            IsOffset() const {return TObject::TestBit(kGeoNodeOffset);}
@@ -117,7 +118,7 @@ public:
    void              PrintOverlaps() const; // *MENU*
    void              VisibleDaughters(Bool_t vis);
 
-  ClassDef(TGeoNode, 0)               // base class for all geometry nodes
+  ClassDef(TGeoNode, 1)               // base class for all geometry nodes
 };
 
 /*************************************************************************
@@ -138,6 +139,7 @@ public:
    virtual ~TGeoNodeMatrix();
 
    virtual Int_t     GetByteCount() const;
+   virtual Int_t     GetOptimalVoxels() const;
    virtual Bool_t    IsFolder() const {return kTRUE;}
    virtual TGeoMatrix *GetMatrix() const   {return fMatrix;}
    virtual TGeoNode *MakeCopyNode() const;

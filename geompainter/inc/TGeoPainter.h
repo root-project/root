@@ -29,6 +29,7 @@
 #include "TGeoManager.h"
 #endif
 
+class TGeoHMatrix;
 class TGeoChecker;
 
 class TGeoPainter : public TVirtualGeoPainter {
@@ -75,13 +76,14 @@ public:
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const;
    virtual void       ModifiedPad() const;
    virtual void       Paint(Option_t *option="");
-   void               PaintShape(X3DBuffer *buff, Bool_t rangeView);
-   void               PaintBox(TGeoVolume *vol, Option_t *option="");
-   void               PaintTube(TGeoVolume *vol, Option_t *option="");
-   void               PaintTubs(TGeoVolume *vol, Option_t *option="");
-   void               PaintSphere(TGeoVolume *vol, Option_t *option="");
+   void               PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glmat);
+   void               PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
+   void               PaintCompositeShape(TGeoVolume *vol, Option_t *option="");
+   void               PaintTube(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
+   void               PaintTubs(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
+   void               PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
-   void               PaintPcon(TGeoVolume *vol, Option_t *option="");
+   void               PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    virtual void       RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option="");
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
@@ -95,6 +97,7 @@ public:
    virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const;   
    virtual void       Test(Int_t npoints, Option_t *option);
    virtual void       TestOverlaps(const char *path);
+   virtual Bool_t     TestVoxels(TGeoVolume *vol);
    virtual void       UnbombTranslation(const Double_t *tr, Double_t *bombtr);
 
   ClassDef(TGeoPainter,0)  //geometry painter

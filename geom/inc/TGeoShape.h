@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -12,11 +12,8 @@
 #ifndef ROOT_TGeoShape
 #define ROOT_TGeoShape
 
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
-#ifndef ROOT_X3DBuffer
-#include "X3DBuffer.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 
@@ -32,6 +29,7 @@ public:
 
 class TGeoBoolCombinator;
 class TGeoMatrix;
+class TGeoHMatrix;
 class TGeoVolume;
 
 /*************************************************************************
@@ -41,7 +39,7 @@ class TGeoVolume;
  *
  *************************************************************************/
 
-class TGeoShape : public TObject
+class TGeoShape : public TNamed
 {
 public:
 enum EShapeType {
@@ -73,20 +71,16 @@ static const Double_t kDegRad;   // conversion factor deg->rad
 static const Double_t kBig;      // infinity
 protected :
 // data members
-   Int_t                fShapeId;   // shape id
+   Int_t                 fShapeId;   // shape id
 // methods
 
 public:
    // constructors
    TGeoShape();
+   TGeoShape(const char *name);
    // destructor
    virtual ~TGeoShape();
    // methods
-   Int_t                 GetId() const  {return fShapeId;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const  = 0;
-   virtual const char   *GetName() const;
-   virtual Int_t         GetByteCount() const                          = 0;
-   void                  SetId(Int_t id) {fShapeId = id;}
 
    static Double_t       ClosenessToCorner(Double_t *point, Bool_t in, Double_t *vertex,
                                            Double_t *normals, Double_t *cldir);
@@ -103,22 +97,30 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step)   = 0; 
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) = 0;
+   virtual void          GetBoundingCylinder(Double_t *param) const = 0;
+   virtual Int_t         GetByteCount() const                          = 0;
+   Int_t                 GetId() const  {return fShapeId;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const  = 0;
+   virtual const char   *GetName() const;
    static Int_t          GetVertexNumber(Bool_t vx, Bool_t vy, Bool_t vz);
+   virtual Bool_t        IsCylType() const = 0;
    Bool_t                IsRunTimeShape() const {return TestBit(kGeoRunTimeShape);}
    Bool_t                IsValid() const {return !TestBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 
    virtual void          InspectShape() const                    = 0;
-   virtual void          Paint(Option_t *option)                 = 0;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const = 0;
+   virtual void          Paint(Option_t *option)                 = 0;
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option) = 0;
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const = 0;
-   virtual void          Sizeof3D() const                        = 0;
    virtual void          SetDimensions(Double_t *param)          = 0;
+   void                  SetId(Int_t id) {fShapeId = id;}
    virtual void          SetPoints(Double_t *buff) const         = 0;
    virtual void          SetPoints(Float_t *buff) const          = 0;
    void                  SetRuntime(Bool_t flag=kTRUE) {SetBit(kGeoRunTimeShape, flag);}
    Int_t                 ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const;
+   virtual void          Sizeof3D() const                        = 0;
    
-  ClassDef(TGeoShape, 0)           // base class for shapes
+  ClassDef(TGeoShape, 1)           // base class for shapes
 };
 
 #endif

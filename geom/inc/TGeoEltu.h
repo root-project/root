@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -31,12 +31,11 @@ public:
    // constructors
    TGeoEltu();
    TGeoEltu(Double_t a, Double_t b, Double_t dz);
+   TGeoEltu(const char *name, Double_t a, Double_t b, Double_t dz);
    TGeoEltu(Double_t *params);
    // destructor
    virtual ~TGeoEltu();
    // methods
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
@@ -48,11 +47,12 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
-
    virtual Double_t      GetA() const    {return fRmin;}
    virtual Double_t      GetB() const    {return fRmax;}
-   
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    virtual void          InspectShape() const;
+   virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetEltuDimensions(Double_t a, Double_t b, Double_t dz);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -46,6 +46,15 @@ TGeoPgon::TGeoPgon()
 //-----------------------------------------------------------------------------
 TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
          :TGeoPcon(phi, dphi, nz) 
+{
+// Default constructor
+   SetBit(TGeoShape::kGeoPgon);
+   fNedges = nedges;
+   ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
+         :TGeoPcon(name, phi, dphi, nz) 
 {
 // Default constructor
    SetBit(TGeoShape::kGeoPgon);
@@ -857,6 +866,29 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return voldiv;
 }      
 //-----------------------------------------------------------------------------
+void TGeoPgon::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   param[0] = fRmin[0];           // Rmin
+   param[1] = fRmax[0];           // Rmax
+   for (Int_t i=1; i<fNz; i++) {
+      if (fRmin[i] < param[0]) param[0] = fRmin[i];
+      if (fRmax[i] > param[1]) param[1] = fRmax[i];
+   }
+   Double_t divphi = fDphi/fNedges;
+   param[1] /= TMath::Cos(0.5*divphi*kDegRad);
+   param[0] *= param[0];
+   param[1] *= param[1];
+   if (fDphi==360.) {
+      param[2] = 0.;
+      param[3] = 360.;
+      return;
+   }   
+   param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1;     // Phi1
+   param[3] = param[2]+fDphi;                   // Phi2
+}   
+//-----------------------------------------------------------------------------
 void TGeoPgon::InspectShape() const
 {
    printf("*** TGeoPgon parameters ***\n");
@@ -871,7 +903,15 @@ void TGeoPgon::Paint(Option_t *option)
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
-   painter->PaintPcon(vol, option);
+   painter->PaintPcon(this, option);
+}
+//-----------------------------------------------------------------------------
+void TGeoPgon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintPcon(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
 void TGeoPgon::NextCrossing(TGeoParamCurve *c, Double_t *point) const

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.3 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.4 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -51,24 +51,18 @@ protected:
    };
    // data members
    Double_t              fDz;          // half length in Z
-   Double_t             *fTwist;       //[4] tangents of twist angles 
+   Double_t             *fTwist;       //! [4] tangents of twist angles 
    Double_t              fXY[8][2];    // list of vertices
 public:
    // constructors
    TGeoArb8();
    TGeoArb8(Double_t dz, Double_t *vertices=0);
+   TGeoArb8(const char *name, Double_t dz, Double_t *vertices=0);
    // destructor
    virtual ~TGeoArb8();
    // methods
    virtual void          ComputeBBox();
    void                  ComputeTwist();
-   virtual Int_t         GetByteCount() const {return 100;}
-   Double_t              GetDz() const {return fDz;}
-   Double_t             *GetVertices() {return &fXY[0][0];}
-   Bool_t                IsTwisted() const {return (fTwist==0)?kFALSE:kTRUE;}
-   void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
-   virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);
-   
    virtual Bool_t        Contains(Double_t *point) const;     
    Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t in) const;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
@@ -79,11 +73,18 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual Int_t         GetByteCount() const {return 100;}
+   Double_t              GetDz() const {return fDz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
+   Double_t             *GetVertices() {return &fXY[0][0];}
+   virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          InspectShape() const;
-   virtual void          Paint(Option_t *option);
+   Bool_t                IsTwisted() const {return (fTwist==0)?kFALSE:kTRUE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
+   virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
@@ -127,6 +128,9 @@ public:
    TGeoTrap();
    TGeoTrap(Double_t dz, Double_t theta, Double_t phi);
    TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
+            Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+            Double_t tl2, Double_t alpha2);
+   TGeoTrap(const char *name, Double_t dz, Double_t theta, Double_t phi, Double_t h1,
             Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
             Double_t tl2, Double_t alpha2);
    // destructor
@@ -173,6 +177,9 @@ public:
    // constructors
    TGeoGtra();
    TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
+            Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+            Double_t tl2, Double_t alpha2);
+   TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
             Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
             Double_t tl2, Double_t alpha2);
    // destructor

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.1 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.2 2002/07/17 13:27:59 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -14,10 +14,11 @@
 
 
 // forward declarations
+class TTree;
 class TGeoVolume;
+class TGeoVoxelFinder;
 class TGeoNode;
 class TGeoManager;
-class TTree;
 
 /*************************************************************************
  * TGeoChecker - A simple checker generating random points inside a 
@@ -43,6 +44,7 @@ public:
    virtual ~TGeoChecker();
    // methods
    void             CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
+   Double_t         CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints);
    void             CreateTree(const char *treename, const char *filename);
    void             Generate(UInt_t npoints=1000000);      // compute safety and fill the tree
    void             Raytrace(Double_t *startpoint, UInt_t npoints=1000000);
@@ -52,6 +54,7 @@ public:
    void             ShowPoints(Option_t *option="");
    void             Test(Int_t npoints, Option_t *option);
    void             TestOverlaps(const char *path);
+   Bool_t           TestVoxels(TGeoVolume *vol, Int_t npoints=1000000);
    
   ClassDef(TGeoChecker, 1)               // a simple geometry checker
 };

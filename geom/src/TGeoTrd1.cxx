@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -42,6 +42,23 @@ TGeoTrd1::TGeoTrd1()
 //-----------------------------------------------------------------------------
 TGeoTrd1::TGeoTrd1(Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
          :TGeoBBox(0,0,0)
+{
+// constructor. 
+   SetBit(kGeoTrd1);
+   fDx1 = dx1;
+   fDx2 = dx2;
+   fDy = dy;
+   fDz = dz;
+   if ((dx1<0) || (dx2<0) || (dy<0) || (dz<0)) {
+      SetBit(kGeoRunTimeShape);
+      printf("trd1 : dx1=%f, dx2=%f, dy=%f, dz=%f\n",
+              dx1,dx2,dy,dz);
+   }
+   else ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoTrd1::TGeoTrd1(const char *name, Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
+         :TGeoBBox(name, 0,0,0)
 {
 // constructor. 
    SetBit(kGeoTrd1);
@@ -366,6 +383,13 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return voldiv;
 }      
 //-----------------------------------------------------------------------------
+void TGeoTrd1::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   TGeoBBox::GetBoundingCylinder(param);
+}   
+//-----------------------------------------------------------------------------
 TGeoShape *TGeoTrd1::GetMakeRuntimeShape(TGeoShape *mother) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -397,12 +421,6 @@ void TGeoTrd1::InspectShape() const
    printf("    dy  = %11.5f\n", fDy);
    printf("    dz  = %11.5f\n", fDz);
    TGeoBBox::InspectShape();
-}
-//-----------------------------------------------------------------------------
-void TGeoTrd1::Paint(Option_t *option)
-{
-// paint this shape according to option
-   TGeoBBox::Paint(option);
 }
 //-----------------------------------------------------------------------------
 void TGeoTrd1::NextCrossing(TGeoParamCurve *c, Double_t *point) const

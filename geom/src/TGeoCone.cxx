@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -67,8 +67,19 @@ TGeoCone::TGeoCone(Double_t dz, Double_t rmin1, Double_t rmax1,
    SetConeDimensions(dz, rmin1, rmax1, rmin2, rmax2);
    if ((dz<0) || (rmin1<0) || (rmax1<0) || (rmin2<0) || (rmax2<0)) {
       SetBit(kGeoRunTimeShape);
-//      printf("cone : dz=%f, rmin1=%f, rmin2=%f, rmax1=%f, rmax2=%f\n",
-//              dz, rmin1, rmax1, rmin2, rmax2);
+   }
+   else ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoCone::TGeoCone(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1,
+                   Double_t rmin2, Double_t rmax2)
+         :TGeoBBox(name, 0, 0, 0)
+{
+// Default constructor specifying minimum and maximum radius
+   SetBit(TGeoShape::kGeoCone);
+   SetConeDimensions(dz, rmin1, rmax1, rmin2, rmax2);
+   if ((dz<0) || (rmin1<0) || (rmax1<0) || (rmin2<0) || (rmax2<0)) {
+      SetBit(kGeoRunTimeShape);
    }
    else ComputeBBox();
 }
@@ -523,6 +534,18 @@ TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return voldiv;
 }      
 //-----------------------------------------------------------------------------
+void TGeoCone::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2, dZ
+   param[0] = TMath::Min(fRmin1, fRmin2); // Rmin
+   param[0] *= param[0];
+   param[1] = TMath::Max(fRmax1, fRmax2); // Rmax
+   param[1] *= param[1];
+   param[2] = 0.;                         // Phi1
+   param[3] = 360.;                       // Phi1
+}
+//-----------------------------------------------------------------------------
 TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -563,6 +586,11 @@ void TGeoCone::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
+void TGeoCone::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+{
+// computes next intersection point of curve c with this shape
+}
+//-----------------------------------------------------------------------------
 void TGeoCone::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -570,12 +598,15 @@ void TGeoCone::Paint(Option_t *option)
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
-   painter->PaintTube(vol, option);
+   painter->PaintTube(this, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoCone::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoCone::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
-// computes next intersection point of curve c with this shape
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintTube(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoCone::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
@@ -752,6 +783,16 @@ TGeoConeSeg::TGeoConeSeg()
 TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1, 
                           Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
             :TGeoCone(dz, rmin1, rmax1, rmin2, rmax2)
+{
+// Default constructor specifying minimum and maximum radius
+   SetBit(TGeoShape::kGeoConeSeg);
+   SetConsDimensions(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
+   ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoConeSeg::TGeoConeSeg(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1, 
+                          Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
+            :TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2)
 {
 // Default constructor specifying minimum and maximum radius
    SetBit(TGeoShape::kGeoConeSeg);
@@ -1420,6 +1461,19 @@ TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
    return voldiv;
 }      
 //-----------------------------------------------------------------------------
+void TGeoConeSeg::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   param[0] = TMath::Min(fRmin1, fRmin2); // Rmin
+   param[0] *= param[0];
+   param[1] = TMath::Max(fRmax1, fRmax2); // Rmax
+   param[1] *= param[1];
+   param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1; // Phi1
+   param[3] = fPhi2;                        // Phi2
+   while (param[3]<param[2]) param[3]+=360.;
+}
+//-----------------------------------------------------------------------------
 TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -1469,7 +1523,15 @@ void TGeoConeSeg::Paint(Option_t *option)
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
-   painter->PaintTubs(vol, option);
+   painter->PaintTubs(this, option);
+}
+//-----------------------------------------------------------------------------
+void TGeoConeSeg::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintTubs(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
 void TGeoConeSeg::NextCrossing(TGeoParamCurve *c, Double_t *point) const

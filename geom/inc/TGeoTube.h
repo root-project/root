@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -38,12 +38,11 @@ public:
    // constructors
    TGeoTube();
    TGeoTube(Double_t rmin, Double_t rmax, Double_t dz);
+   TGeoTube(const char * name, Double_t rmin, Double_t rmax, Double_t dz);
    TGeoTube(Double_t *params);
    // destructor
    virtual ~TGeoTube();
    // methods
-   virtual Int_t         GetByteCount() const {return 48;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
 
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
@@ -59,14 +58,17 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
-
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual Int_t         GetByteCount() const {return 48;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    virtual Double_t      GetRmin() const {return fRmin;}
    virtual Double_t      GetRmax() const {return fRmax;}
    virtual Double_t      GetDz() const   {return fDz;}
-   
    virtual void          InspectShape() const;
-   virtual void          Paint(Option_t *option);
+   virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
@@ -100,18 +102,14 @@ public:
    TGeoTubeSeg();
    TGeoTubeSeg(Double_t rmin, Double_t rmax, Double_t dz, 
                Double_t phi1, Double_t phi2);
+   TGeoTubeSeg(const char * name, Double_t rmin, Double_t rmax, Double_t dz, 
+               Double_t phi1, Double_t phi2);
    TGeoTubeSeg(Double_t *params);
    // destructor
    virtual ~TGeoTubeSeg();
    // methods
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
-
-   virtual Int_t         GetByteCount() const {return 56;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-   Double_t              GetPhi1() const {return fPhi1;}
-   Double_t              GetPhi2() const {return fPhi2;}
-   
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
                                     Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2);
@@ -125,9 +123,15 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual Int_t         GetByteCount() const {return 56;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   Double_t              GetPhi1() const {return fPhi1;}
+   Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
-   virtual void          Paint(Option_t *option);
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2);
@@ -160,19 +164,14 @@ public:
    TGeoCtub();
    TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
             Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz);
+   TGeoCtub(const char *name, Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
+            Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz);
    TGeoCtub(Double_t *params);
    // destructor
    virtual ~TGeoCtub();
    // methods
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
-
-   virtual Int_t         GetByteCount() const {return 98;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-   Double_t             *GetNlow() const {return fNlow;}
-   Double_t             *GetNhigh() const {return fNhigh;}
-   Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
-   
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
@@ -181,6 +180,11 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual Int_t         GetByteCount() const {return 98;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   Double_t             *GetNlow() const {return fNlow;}
+   Double_t             *GetNhigh() const {return fNhigh;}
+   Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
    virtual void          InspectShape() const;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;

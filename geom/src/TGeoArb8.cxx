@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.5 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.7 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -120,25 +120,32 @@ TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
    }
 }
 //-----------------------------------------------------------------------------
+TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
+         :TGeoBBox(name, 0,0,0)
+{
+// constructor. If the array of vertices is not null, this should be
+// in the format : (x0, y0, x1, y1, ... , x7, y7) 
+   fDz = dz;
+   fTwist = 0;
+   if (vertices) {
+      for (Int_t i=0; i<8; i++) {
+         fXY[i][0] = vertices[2*i];
+         fXY[i][1] = vertices[2*i+1];
+      }
+      ComputeTwist();
+      ComputeBBox();
+   } else {
+      for (Int_t i=0; i<8; i++) {
+         fXY[i][0] = 0.0;
+         fXY[i][1] = 0.0;
+      }   
+   }
+}
+//-----------------------------------------------------------------------------
 TGeoArb8::~TGeoArb8()
 {
 // destructor
    if (fTwist) delete fTwist;
-}
-//-----------------------------------------------------------------------------
-void TGeoArb8::SetVertex(Int_t vnum, Double_t x, Double_t y)
-{
-//  set values for a given vertex
-   if (vnum<0 || vnum >7) {
-      Error("SetVertex", "Invalid vertex number");
-      return;
-   }
-   fXY[vnum][0] = x;
-   fXY[vnum][1] = y;
-   if (vnum == 7) {
-      ComputeTwist();
-      ComputeBBox();
-   }
 }
 //-----------------------------------------------------------------------------
 void TGeoArb8::ComputeBBox()
@@ -355,14 +362,18 @@ Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 {
 // compute distance from outside point to surface of the arb8
    Double_t snxt=kBig;
-   if (!TGeoBBox::Contains(point)) {
-      snxt=TGeoBBox::DistToIn(point,dir,3);
+   Double_t bpoint[3];
+   Int_t i;
+   for (i=0; i<3; i++) bpoint[i] = point[i]-fOrigin[i];
+   if (!TGeoBBox::Contains(&bpoint[0])) {
+      snxt=TGeoBBox::DistToIn(&bpoint[0],dir,3);
       if (snxt>1E20) return snxt;
    }   
    Double_t dist[5];
    // check lateral faces
-   for (Int_t i=0; i<4; i++) 
+   for (i=0; i<4; i++) {
       dist[i]=DistToPlane(point, dir, i, kFALSE);  
+   }   
    // check Z planes
    dist[4]=kBig;
    if (TMath::Abs(point[2])>fDz) {
@@ -422,7 +433,25 @@ TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
    return voldiv;
-}      
+}
+//-----------------------------------------------------------------------------
+void TGeoArb8::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   //--- first compute rmin/rmax
+   Double_t rmaxsq = 0;
+   Double_t rsq;
+   Int_t i;
+   for (i=0; i<8; i++) {
+      rsq = fXY[i][0]*fXY[i][0] + fXY[i][1]*fXY[i][1];
+      rmaxsq = TMath::Max(rsq, rmaxsq);
+   }
+   param[0] = 0.;                  // Rmin
+   param[1] = rmaxsq;              // Rmax
+   param[2] = 0.;                  // Phi1
+   param[3] = 360.;                // Phi2 
+}   
 //-----------------------------------------------------------------------------
 void TGeoArb8::InspectShape() const
 {
@@ -433,12 +462,6 @@ void TGeoArb8::InspectShape() const
              ip, fXY[ip][0], fXY[ip][1], fDz*((ip<4)?-1:1));
    }
    TGeoBBox::InspectShape();
-}
-//-----------------------------------------------------------------------------
-void TGeoArb8::Paint(Option_t *option)
-{
-// paint this shape according to option
-   TGeoBBox::Paint(option);
 }
 //-----------------------------------------------------------------------------
 void TGeoArb8::NextCrossing(TGeoParamCurve *c, Double_t *point) const
@@ -497,6 +520,21 @@ void TGeoArb8::SetPoints(Float_t *buff) const
    }
 }
 //-----------------------------------------------------------------------------
+void TGeoArb8::SetVertex(Int_t vnum, Double_t x, Double_t y)
+{
+//  set values for a given vertex
+   if (vnum<0 || vnum >7) {
+      Error("SetVertex", "Invalid vertex number");
+      return;
+   }
+   fXY[vnum][0] = x;
+   fXY[vnum][1] = y;
+   if (vnum == 7) {
+      ComputeTwist();
+      ComputeBBox();
+   }
+}
+//-----------------------------------------------------------------------------
 void TGeoArb8::Sizeof3D() const
 {
 // fill size of this 3-D object
@@ -523,7 +561,7 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
               Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
               Double_t tl2, Double_t alpha2)
 {
-// constructor. Have to work on it !!!!
+// constructor.
    fDz = dz;
    fTheta = theta;
    fPhi = phi;
@@ -555,8 +593,47 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
        (h2<0) || (bl2<0) || (tl2<0)) {
       SetBit(kGeoRunTimeShape);
-//      printf("trap : dz=%f, h1=%f, bl1=%f, tl1= %f, h2=%f, bl2=%f, tl2=%f\n",
-//             dz,h1,bl1,tl1,h2,bl2,tl2);
+   } 
+   else TGeoArb8::ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoTrap::TGeoTrap(const char *name, Double_t dz, Double_t theta, Double_t phi, Double_t h1,
+              Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+              Double_t tl2, Double_t alpha2)
+{
+// constructor with name
+   SetName(name);
+   fDz = dz;
+   fTheta = theta;
+   fPhi = phi;
+   fH1 = h1;
+   fH2 = h2;
+   fBl1 = bl1;
+   fBl2 = bl2;
+   fTl1 = tl1;
+   fTl2 = tl2;
+   fAlpha1 = alpha1;
+   fAlpha2 = alpha2;
+   for (Int_t i=0; i<8; i++) {
+      fXY[i][0] = 0.0;
+      fXY[i][1] = 0.0;
+   }   
+   Double_t tx = TMath::Tan(theta*kDegRad)*TMath::Cos(phi*kDegRad);
+   Double_t ty = TMath::Tan(theta*kDegRad)*TMath::Sin(phi*kDegRad);
+   Double_t ta1 = TMath::Tan(alpha1*kDegRad);
+   Double_t ta2 = TMath::Tan(alpha2*kDegRad);
+   fXY[0][0] = -dz*tx-h1*ta1-bl1;    fXY[0][1] = -dz*ty-h1;
+   fXY[1][0] = -dz*tx+h1*ta1-tl1;    fXY[1][1] = -dz*ty+h1;
+   fXY[2][0] = -dz*tx+h1*ta1+tl1;    fXY[2][1] = -dz*ty+h1;
+   fXY[3][0] = -dz*tx-h1*ta1+bl1;    fXY[3][1] = -dz*ty-h1;
+   fXY[4][0] = dz*tx-h2*ta2-bl2;    fXY[4][1] = dz*ty-h2;
+   fXY[5][0] = dz*tx+h2*ta2-tl2;    fXY[5][1] = dz*ty+h2;
+   fXY[6][0] = dz*tx+h2*ta2+tl2;    fXY[6][1] = dz*ty+h2;
+   fXY[7][0] = dz*tx-h2*ta2+bl2;    fXY[7][1] = dz*ty-h2;
+   ComputeTwist();
+   if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
+       (h2<0) || (bl2<0) || (tl2<0)) {
+      SetBit(kGeoRunTimeShape);
    } 
    else TGeoArb8::ComputeBBox();
 }
@@ -671,6 +748,61 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
               Double_t tl2, Double_t alpha2)
 {
 // constructor. 
+   fTheta = theta;
+   fPhi = phi;
+   fH1 = h1;
+   fH2 = h2;
+   fBl1 = bl1;
+   fBl2 = bl2;
+   fTl1 = tl1;
+   fTl2 = tl2;
+   fAlpha1 = alpha1;
+   fAlpha2 = alpha2;
+   Double_t x, y, dx, dy, dx1, dx2, th, ph, al1, al2;
+   al1 = alpha1*kDegRad;
+   al2 = alpha2*kDegRad;
+   th = theta*kDegRad;
+   ph = phi*kDegRad;
+   dx = 2*dz*TMath::Sin(th)*TMath::Cos(ph);
+   dy = 2*dz*TMath::Sin(th)*TMath::Sin(ph);
+   fDz = dz;
+   dx1 = 2*h1*TMath::Tan(al1);
+   dx2 = 2*h2*TMath::Tan(al2);
+
+   fTwistAngle = twist;
+
+   Int_t i;
+   for (i=0; i<8; i++) {
+      fXY[i][0] = 0.0;
+      fXY[i][1] = 0.0;
+   }   
+
+   fXY[0][0] = -bl1;                fXY[0][1] = -h1;
+   fXY[1][0] = -tl1+dx1;            fXY[1][1] = h1;
+   fXY[2][0] = tl1+dx1;             fXY[2][1] = h1;
+   fXY[3][0] = bl1;                 fXY[3][1] = -h1;
+   fXY[4][0] = -bl2+dx;             fXY[4][1] = -h2+dy;
+   fXY[5][0] = -tl2+dx+dx2;         fXY[5][1] = h2+dy;
+   fXY[6][0] = tl2+dx+dx2;          fXY[6][1] = h2+dy;
+   fXY[7][0] = bl2+dx;              fXY[7][1] = -h2+dy;
+   for (i=4; i<8; i++) {
+      x = fXY[i][0];
+      y = fXY[i][1];
+      fXY[i][0] = x*TMath::Cos(twist*kDegRad) + y*TMath::Sin(twist*kDegRad);
+      fXY[i][1] = -x*TMath::Sin(twist*kDegRad) + y*TMath::Cos(twist*kDegRad);      
+   }
+   ComputeTwist();
+   if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
+       (h2<0) || (bl2<0) || (tl2<0)) SetBit(kGeoRunTimeShape);
+   else TGeoArb8::ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoGtra::TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
+              Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+              Double_t tl2, Double_t alpha2)
+{
+// constructor. 
+   SetName(name);
    fTheta = theta;
    fPhi = phi;
    fH1 = h1;

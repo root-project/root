@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -46,13 +46,11 @@ public:
    // constructors
    TGeoPara();
    TGeoPara(Double_t dx, Double_t dy, Double_t dz, Double_t alpha, Double_t theta, Double_t phi);
+   TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Double_t alpha, Double_t theta, Double_t phi);
    TGeoPara(Double_t *param);
    // destructor
    virtual ~TGeoPara();
    // methods
-   virtual Int_t         GetByteCount() const {return 48;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
@@ -63,7 +61,9 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
-
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual Int_t         GetByteCount() const {return 48;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    Double_t              GetX() const  {return fX;}
    Double_t              GetY() const  {return fY;}
    Double_t              GetZ() const  {return fZ;}
@@ -73,9 +73,8 @@ public:
    Double_t              GetTxy() const {return fTxy;}
    Double_t              GetTxz() const {return fTxz;}
    Double_t              GetTyz() const {return fTyz;}
-
    virtual void          InspectShape() const;
-   virtual void          Paint(Option_t *option);
+   virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    virtual void          SetDimensions(Double_t *param);

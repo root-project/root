@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: LinkDef.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: LinkDef.h,v 1.3 2002/07/15 15:32:24 brun Exp $
 // Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,7 +19,10 @@
 #pragma link C++ global gGeoMatrixCache;
 
 #pragma link C++ class TGeoAtt+;
-#pragma link C++ class TGeoBoolCombinator+;
+#pragma link C++ class TGeoBoolNode+;
+#pragma link C++ class TGeoUnion+;
+#pragma link C++ class TGeoIntersection+;
+#pragma link C++ class TGeoSubtraction+;
 #pragma link C++ class TGeoMaterial+;
 #pragma link C++ class TGeoMixture+;
 #pragma link C++ class TGeoMatrix+;
@@ -32,6 +35,7 @@
 #pragma link C++ class TGeoIdentity+;
 #pragma link C++ class TGeoFinder+;
 #pragma link C++ class TGeoVoxelFinder+;
+#pragma link C++ class TGeoCylVoxels+;
 #pragma link C++ class TGeoPatternFinder+;
 #pragma link C++ class TGeoPatternX+;
 #pragma link C++ class TGeoPatternY+;

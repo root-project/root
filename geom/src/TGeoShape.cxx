@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.4 2002/07/15 15:56:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 
 #include "TGeoMatrix.h"
 #include "TGeoManager.h"
-#include "TGeoBoolCombinator.h"
 #include "TGeoVolume.h"
 #include "TGeoShape.h"
 #include "TVirtualGeoPainter.h"
@@ -99,6 +98,19 @@ TGeoShape::TGeoShape()
    gGeoManager->AddShape(this);
 }
 //-----------------------------------------------------------------------------
+TGeoShape::TGeoShape(const char *name)
+          :TNamed(name, "")
+{
+// Default constructor
+   fShapeId = 0;
+   if (!gGeoManager) {
+      gGeoManager = new TGeoManager("Geometry", "default geometry");
+      // gROOT->AddGeoManager(gGeoManager);
+   }
+   fShapeId = gGeoManager->GetListOfShapes()->GetSize();
+   gGeoManager->AddShape(this);
+}
+//-----------------------------------------------------------------------------
 TGeoShape::~TGeoShape()
 {
 // Destructor
@@ -107,7 +119,10 @@ TGeoShape::~TGeoShape()
 //-----------------------------------------------------------------------------
 const char *TGeoShape::GetName() const
 {
-   return ((TObject *)this)->ClassName();
+   if (!strlen(fName)) {
+      return ((TObject *)this)->ClassName();
+   }
+   return TNamed::GetName();
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -38,16 +38,11 @@ public:
    // constructors
    TGeoTrd2();
    TGeoTrd2(Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2, Double_t dz);
+   TGeoTrd2(const char *name, Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2, Double_t dz);
    TGeoTrd2(Double_t *params);
    // destructor
    virtual ~TGeoTrd2();
    // methods
-   virtual Int_t         GetByteCount() const {return 56;}
-   Double_t              GetDx1() const {return fDx1;}
-   Double_t              GetDx2() const {return fDx2;}
-   Double_t              GetDy1() const {return fDy1;}
-   Double_t              GetDy2() const {return fDy2;}
-   Double_t              GetDz() const  {return fDz;}
 
    virtual Bool_t        Contains(Double_t *point) const;
    virtual void          ComputeBBox();
@@ -59,11 +54,18 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual Int_t         GetByteCount() const {return 56;}
+   Double_t              GetDx1() const {return fDx1;}
+   Double_t              GetDx2() const {return fDx2;}
+   Double_t              GetDy1() const {return fDy1;}
+   Double_t              GetDy2() const {return fDy2;}
+   Double_t              GetDz() const  {return fDz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    void                  GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals) const;
    void                  GetOppositeCorner(Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals) const;
    virtual void          InspectShape() const;
-   virtual void          Paint(Option_t *option);
+   virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    virtual void          SetDimensions(Double_t *param);

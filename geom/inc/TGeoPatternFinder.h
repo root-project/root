@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -44,7 +44,7 @@ protected :
    Int_t               fNdivisions;     // number of divisions
    Int_t               fDivIndex;       // index of first div. node
    TGeoVolume         *fBasicCell;      // basic volume used for this pattern
-   TGeoMatrix         *fMatrix;         // generic matrix
+   TGeoMatrix         *fMatrix;         //! generic matrix
 
 public:
    // constructors
@@ -64,7 +64,7 @@ public:
    virtual void        SetBasicVolume(TGeoVolume *vol) {fBasicCell = vol;}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
 
-  ClassDef(TGeoPatternFinder, 0)              // patterns to divide volumes
+  ClassDef(TGeoPatternFinder, 1)              // patterns to divide volumes
 
 //***** Need to add class and globals to LinkDef.h *****
 };
@@ -307,7 +307,7 @@ class TGeoPatternCylPhi : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t           *fSinCos;          // table of sines/cosines
+   Double_t           *fSinCos;          //![2*fNdivisions] table of sines/cosines
 public:
    // constructors
    TGeoPatternCylPhi();

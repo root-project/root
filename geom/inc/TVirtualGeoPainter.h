@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.4 2002/07/16 17:11:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.5 2002/07/17 13:27:58 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 class TGeoVolume;
 class TGeoNode;
 class TGeoShape;
+class TGeoHMatrix;
 class TGeoManager;
 class TObjArray;
 
@@ -81,11 +82,12 @@ public:
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const = 0;
    virtual void       ModifiedPad() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
-   virtual void       PaintBox(TGeoVolume *vol, Option_t *option="") = 0;
-   virtual void       PaintTube(TGeoVolume *vol, Option_t *option="") = 0;
-   virtual void       PaintTubs(TGeoVolume *vol, Option_t *option="") = 0;
-   virtual void       PaintSphere(TGeoVolume *vol, Option_t *option="") = 0;
-   virtual void       PaintPcon(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintCompositeShape(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       PaintTube(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintTubs(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
    virtual void       RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) = 0;
@@ -102,6 +104,7 @@ public:
    virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const = 0;
    virtual void       Test(Int_t npoints, Option_t *option) = 0;
    virtual void       TestOverlaps(const char *path) = 0;
+   virtual Bool_t     TestVoxels(TGeoVolume *vol) = 0;
    virtual void       UnbombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
       
   ClassDef(TVirtualGeoPainter,0)  //Abstract interface for geometry painters

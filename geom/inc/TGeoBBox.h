@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -41,13 +41,11 @@ public:
    // constructors
    TGeoBBox();
    TGeoBBox(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
+   TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
    TGeoBBox(Double_t *param);
    // destructor
    virtual ~TGeoBBox();
    // methods
-   virtual Int_t         GetByteCount() const {return 36;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Bool_t        CouldBeCrossed(Double_t *point, Double_t *dir) const;
@@ -60,16 +58,20 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
-
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual Int_t         GetByteCount() const {return 36;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    virtual Double_t      GetDX() const  {return fDX;}
    virtual Double_t      GetDY() const  {return fDY;}
    virtual Double_t      GetDZ() const  {return fDZ;}
    virtual Double_t     *GetOrigin()    {return &fOrigin[0];}
-   
    virtual void          InspectShape() const;
+   virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual Bool_t        IsValidBox() const {return ((fDX<0)||(fDY<0)||(fDZ<0))?kFALSE:kTRUE;}
-   virtual void          Paint(Option_t *option);
+   virtual Bool_t        IsNullBox() const {return ((fDX==0)&&(fDY==0)&&(fDZ==0))?kTRUE:kFALSE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
    virtual void          SetDimensions(Double_t *param);

@@ -101,6 +101,7 @@ protected:
 public :
    TGeoTranslation();
    TGeoTranslation(Double_t dx, Double_t dy, Double_t dz);
+   TGeoTranslation(const char *name, Double_t dx, Double_t dy, Double_t dz);
    virtual ~TGeoTranslation() {}
    
    void                 Add(TGeoTranslation *other);
@@ -187,6 +188,7 @@ protected:
 public :
    TGeoScale();
    TGeoScale(Double_t sx, Double_t sy, Double_t sz);
+   TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
    virtual ~TGeoScale();
    
    void                       SetScale(Double_t sx, Double_t sy, Double_t sz);
@@ -214,6 +216,7 @@ public :
    TGeoCombiTrans();
    TGeoCombiTrans(const char *name);
    TGeoCombiTrans(Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot);
+   TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot);
 
    virtual ~TGeoCombiTrans();
    
@@ -244,7 +247,9 @@ public :
    TGeoGenTrans();
    TGeoGenTrans(const char *name);
    TGeoGenTrans(Double_t dx, Double_t dy, Double_t dz,
-                  Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot);
+                Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot);
+   TGeoGenTrans(const char *name, Double_t dx, Double_t dy, Double_t dz,
+                Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot);
    virtual ~TGeoGenTrans();
    
    void                 Clear(Option_t *option ="");

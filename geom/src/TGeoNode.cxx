@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.5 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.6 2002/07/17 13:27:58 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -401,6 +401,20 @@ Int_t TGeoNodeMatrix::GetByteCount() const
 //   if (fMatrix) count += fMatrix->GetByteCount();
    return count;
 }
+//-----------------------------------------------------------------------------
+Int_t TGeoNodeMatrix::GetOptimalVoxels() const
+{
+//--- Returns type of optimal voxelization for this node.
+// type = 0 -> cartesian
+// type = 1 -> cylindrical
+   Bool_t type = fVolume->GetShape()->IsCylType();
+   if (!type) return 0;
+   if (!fMatrix->IsRotAboutZ()) return 0;
+   const Double_t *transl = fMatrix->GetTranslation();
+   if (TMath::Abs(transl[0])>1E-10) return 0;
+   if (TMath::Abs(transl[1])>1E-10) return 0;
+   return 1;
+}   
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
 {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -39,6 +39,15 @@ TGeoEltu::TGeoEltu()
 //-----------------------------------------------------------------------------
 TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
            :TGeoTube(a, b, dz)
+{
+// Default constructor specifying X and Y semiaxis length
+   SetBit(TGeoShape::kGeoEltu);
+   SetEltuDimensions(a, b, dz);
+   ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoEltu::TGeoEltu(const char *name, Double_t a, Double_t b, Double_t dz)
+           :TGeoTube(name, a, b, dz)
 {
 // Default constructor specifying X and Y semiaxis length
    SetBit(TGeoShape::kGeoEltu);
@@ -249,6 +258,17 @@ TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    Error("Divide", "Division in all range not implemented");
    return voldiv;
 }      
+//-----------------------------------------------------------------------------
+void TGeoEltu::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   param[0] = 0.;                  // Rmin
+   param[1] = TMath::Max(fRmin, fRmax); // Rmax
+   param[1] *= param[1];
+   param[2] = 0.;                  // Phi1
+   param[3] = 360.;                // Phi2 
+}   
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother) const
 {

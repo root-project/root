@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.3 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 
 class TGeoVoxelFinder : public TGeoFinder
 {
-private:
+protected:
    TGeoVolume      *fVolume;          // volume to which applies
 
    Int_t             fNcandidates;    // number of candidates
@@ -46,32 +46,62 @@ public :
    TGeoVoxelFinder();
    TGeoVoxelFinder(TGeoVolume *vol);
    virtual ~TGeoVoxelFinder();
-   void                BuildBoundingBoxes();
+   virtual void        BuildVoxelLimits();
    virtual void        cd(Int_t idiv) {;}
    void                DaughterToMother(Int_t id, Double_t *local, Double_t *master) const;
-   Int_t              *GetCheckList(Double_t *point, Int_t &nelem);
+   virtual Double_t    Efficiency();
+   virtual Int_t      *GetCheckList(Double_t *point, Int_t &nelem);
    Bool_t              GetIndices(Double_t *point);
-   Bool_t              GetNextIndices(Double_t *point, Double_t *dir);
+   virtual Bool_t      GetNextIndices(Double_t *point, Double_t *dir);
    virtual TGeoMatrix *GetMatrix()              {return 0;}
    Int_t               GetPriority(Int_t iaxis) const {return fPriority[iaxis];}
    Int_t               GetNcandidates() const         {return fNcandidates;}
-   Int_t              *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
+   virtual Int_t      *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
    virtual TGeoNode   *FindNode(Double_t *point);
-   void                FindOverlaps(Int_t inode) const;
-   void                Print(Option_t *option="") const;
+   virtual void        FindOverlaps(Int_t inode) const;
+   virtual void        Print(Option_t *option="") const;
    void                PrintVoxelLimits(Double_t *point) const;
    Bool_t              Intersect(Int_t n1, Int_t *array1, Int_t n2, Int_t *array2,
                              Int_t n3, Int_t *array3, Int_t &nf, Int_t *result); 
    void                IntersectAndStore(Int_t n1, Int_t *array1, Int_t n2, Int_t *array2,
                              Int_t n3, Int_t *array3);
    virtual void        SetBasicVolume(TGeoVolume *vol) {} 
-   void                SortBoxes(Option_t *option="");
+   virtual void        SortAll(Option_t *option="");
    void                SortCrossedVoxels(Double_t *point, Double_t *dir);
    Bool_t              Union(Int_t n1, Int_t *array1, Int_t n2, Int_t *array2,
                              Int_t n3, Int_t *array3);
-   void                Voxelize(Option_t *option="");
+   virtual void        Voxelize(Option_t *option="");
 
   ClassDef(TGeoVoxelFinder, 1)                // voxel finder class
+};
+
+/*************************************************************************
+ * TGeoCylVoxels - Cylindrical voxels class 
+ *  
+ *************************************************************************/
+
+class TGeoCylVoxels : public TGeoVoxelFinder
+{
+private:
+
+public:
+   TGeoCylVoxels();
+   TGeoCylVoxels(TGeoVolume *vol);
+   virtual ~TGeoCylVoxels();
+   
+   virtual void        BuildVoxelLimits();
+   virtual Double_t    Efficiency();
+   virtual TGeoNode   *FindNode(Double_t *point);
+   virtual void        FindOverlaps(Int_t inode) const;
+   virtual Int_t      *GetCheckList(Double_t *point, Int_t &nelem);
+   virtual Bool_t      GetNextIndices(Double_t *point, Double_t *dir);
+   virtual Int_t      *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
+   Int_t               IntersectIntervals(Double_t vox1, Double_t vox2, Double_t phi1, Double_t phi2) const;
+   virtual void        Print(Option_t *option="") const;
+   virtual void        SortAll(Option_t *option="");
+   virtual void        Voxelize(Option_t *option);
+
+  ClassDef(TGeoCylVoxels, 1)                // cylindrical voxel class
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.4 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.5 2002/07/17 13:27:58 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -108,7 +108,6 @@ ClassImp(TGeoVolume)
 TGeoVolume::TGeoVolume()
 { 
 // dummy constructor
-   fUsageCount[0] = fUsageCount[1] = 0;
    fNodes    = 0;
    fShape    = 0;
    fMaterial = 0;
@@ -122,7 +121,6 @@ TGeoVolume::TGeoVolume(const char *name, TGeoShape *shape, TGeoMaterial *mat)
            :TNamed(name, "")
 {
 // default constructor
-   fUsageCount[0] = fUsageCount[1] = 0;
    fNodes    = 0;
    fShape    = shape;
    fMaterial = mat;
@@ -248,8 +246,9 @@ void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option
 {
 // Add a TGeoNodePos to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
-   if (!vol || !mat) {
-      Error("AddNodeMatrix", "Volume/matrix not defined");
+   TGeoMatrix *matrix = (mat==0)?gGeoIdentity:mat;
+   if (!vol) {
+      Error("AddNodeMatrix", "Volume is NULL");
       return;
    }
    if (!vol->IsValid()) {
@@ -264,12 +263,12 @@ void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option
       TGeoVolume *div_vol;
       for (Int_t idiv=0; idiv<fFinder->GetNdiv(); idiv++) {
          div_vol = fFinder->GetNodeOffset(idiv)->GetVolume();
-         div_vol->AddNode(vol, copy_no, mat, option);
+         div_vol->AddNode(vol, copy_no, matrix, option);
       }
       return;
    }
 
-   TGeoNodeMatrix *node = new TGeoNodeMatrix(vol, mat);
+   TGeoNodeMatrix *node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
    char *name = new char[strlen(vol->GetName())+7];
@@ -398,6 +397,16 @@ void TGeoVolume::DrawOnly(Option_t *option)
    painter->DrawOnly(option);   
 }
 //-----------------------------------------------------------------------------
+Bool_t TGeoVolume::OptimizeVoxels()
+{
+// Perform an exensive sampling to find which type of voxelization is
+// most efficient.
+   printf("Optimizing volume %s ...\n", GetName());
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return kFALSE;
+   return painter->TestVoxels(this);   
+}
+//-----------------------------------------------------------------------------
 void TGeoVolume::Paint(Option_t *option)
 {
 // paint volume
@@ -494,6 +503,22 @@ char *TGeoVolume::GetObjectInfo(Int_t px, Int_t py) const
    TGeoVolume *vol = (TGeoVolume*)this;
    return gGeoManager->GetGeomPainter()->GetVolumeInfo(vol, px, py);
 }
+//-----------------------------------------------------------------------------
+Bool_t TGeoVolume::GetOptimalVoxels() const
+{
+//--- Returns true if cylindrical voxelization is optimal.
+   Int_t nd = GetNdaughters();
+   if (!nd) return kFALSE;
+   Int_t id;
+   Int_t ncyl = 0;
+   TGeoNode *node;
+   for (id=0; id<nd; id++) {
+      node = (TGeoNode*)fNodes->At(id);
+      ncyl += node->GetOptimalVoxels();
+   }
+   if (ncyl>(nd/2)) return kTRUE;
+   return kFALSE;
+}      
 //-----------------------------------------------------------------------------
 void TGeoVolume::MakeCopyNodes(TGeoVolume *other)
 {
@@ -673,18 +698,12 @@ TGeoNode *TGeoVolume::GetNode(const char *name) const
    return 0;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoVolume::GetUsageCount(Int_t i) const
-{
-// check usage count 
-   return 0;
-}
-//-----------------------------------------------------------------------------
 Int_t TGeoVolume::GetByteCount() const
 {
 // get the total size in bytes for this volume
    Int_t count = 28+2+6+4+0;    // TNamed+TGeoAtt+TAttLine+TAttFill+TAtt3D
    count += strlen(GetName()) + strlen(GetTitle()); // name+title
-   count += 8+4+4+4+4+4; // fUsageCount[2] + fShape + fMaterial + fFinder + fField + fNodes
+   count += 4+4+4+4+4; // fShape + fMaterial + fFinder + fField + fNodes
    count += 8 + strlen(fOption.Data()); // fOption
    if (fShape) count += fShape->GetByteCount();
 //   if (fMaterial) count += fMaterial->GetByteCount();
@@ -720,6 +739,7 @@ void TGeoVolume::SetVisibility(Bool_t vis)
 {
 // set visibility of this volume
    TGeoAtt::SetVisibility(vis);
+   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
    gGeoManager->ModifiedPad();
 }   
 //-----------------------------------------------------------------------------
@@ -732,6 +752,7 @@ void TGeoVolume::VisibleDaughters(Bool_t vis)
 {
 // set visibility for daughters
    SetVisDaughters(vis);
+   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
    gGeoManager->ModifiedPad();
 }
 //-----------------------------------------------------------------------------
@@ -742,9 +763,37 @@ void TGeoVolume::Voxelize(Option_t *option)
       Error("Voxelize", "Bounding box not valid");
       return; 
    }   
-   if (fFinder || (!GetNdaughters())) return;
-   if (fVoxels) delete fVoxels;
-   fVoxels = new TGeoVoxelFinder(this);
+   // do not voxelize divided volumes
+   if (fFinder) return;
+   // or final leaves
+   Int_t nd = GetNdaughters();
+   if (!nd) return;
+   // delete old voxelization if any
+   if (fVoxels) {
+      delete fVoxels;
+      fVoxels = 0;
+   }   
+   // see if a given voxelization type is enforced
+   if (IsCylVoxels()) {
+      fVoxels = new TGeoCylVoxels(this);
+      fVoxels->Voxelize(option);
+      return;
+   } else {
+      if (IsXYZVoxels()) {
+         fVoxels = new TGeoVoxelFinder(this);
+         fVoxels->Voxelize(option);
+         return;
+      }
+   }      
+   // find optimal voxelization
+   Bool_t cyltype = GetOptimalVoxels();
+   if (cyltype) {
+//      fVoxels = new TGeoCylVoxels(this);
+      fVoxels = new TGeoVoxelFinder(this);
+//      printf("%s cyl. voxels\n", GetName());
+   } else {
+      fVoxels = new TGeoVoxelFinder(this);
+   }   
    fVoxels->Voxelize(option);
 //   if (fVoxels) fVoxels->Print();
 }

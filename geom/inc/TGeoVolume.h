@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.4 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.5 2002/07/17 13:27:58 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -62,21 +62,22 @@ class TGeoVolume : public TNamed,
 {
 protected :
    enum EGeoVolumeTypes {
-      kVolumeDiv     =  BIT(16),
-      kVolumeOverlap =  BIT(17),
-      kVolumeImportNodes=  BIT(18),
-      kVolumeMulti   = BIT(19)
+      kVolumeDiv     =     BIT(16),
+      kVolumeOverlap =     BIT(17),
+      kVolumeImportNodes = BIT(18),
+      kVolumeMulti   =     BIT(19),
+      kVoxelsXYZ     =     BIT(20),
+      kVoxelsCyl     =     BIT(21)
    };
 // data members
-   Double_t          fUsageCount[2];  // usage of this volume in tracking !!!
    TObjArray        *fNodes;          // array of nodes inside this volume
    TGeoShape        *fShape;          // shape
    TGeoMaterial     *fMaterial;       // material
-   TGeoVoxelFinder  *fVoxels;         // finder object for bounding boxes
+   TGeoVoxelFinder  *fVoxels;         //! finder object for bounding boxes
    TGeoPatternFinder *fFinder;        // finder object for divisions
 
-   TObject          *fField;          // !!! just a hook for now
-   TString           fOption;         // option - if any
+   TObject          *fField;          // just a hook for now
+   TString           fOption;         //! option - if any
 // methods
 public:
    // constructors
@@ -96,9 +97,9 @@ public:
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    Bool_t          IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
-   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
-   void            AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t *option="");
-   virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
+   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");       // most general case
+   void            AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset=0, Option_t *option="");
+   virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");
 
    virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Option_t *option="");
    virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Double_t start, Double_t step, Option_t *option="");
@@ -115,6 +116,8 @@ public:
    void            PrintVoxels() const; // *MENU*
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
    
+   Bool_t          IsCylVoxels() const {return TObject::TestBit(kVoxelsCyl);}
+   Bool_t          IsXYZVoxels() const {return TObject::TestBit(kVoxelsXYZ);}
    Bool_t          IsValid() const {return fShape->IsValid();} 
    Bool_t          IsVisible() const {return TGeoAtt::IsVisible();}
    TGeoNode       *FindNode(const char *name) const;
@@ -122,7 +125,6 @@ public:
    TObjArray      *GetNodes() {return fNodes;}
    Int_t           GetNdaughters() const;
    virtual Int_t   GetByteCount() const;
-   Double_t        GetUsageCount(Int_t i) const;
    TGeoMaterial   *GetMaterial() const               {return fMaterial;}
    Int_t           GetMedia() const                  {return fMaterial->GetMedia();}
    TObject        *GetField() const                  {return fField;}
@@ -133,6 +135,7 @@ public:
    TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->At(i);}
    Int_t           GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck) const;
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
+   Bool_t          GetOptimalVoxels() const;
    Option_t       *GetOption() const { return fOption.Data(); }
    TGeoShape      *GetShape() const                  {return fShape;}
    void            Gsord(Int_t iaxis)                {;}
@@ -141,11 +144,13 @@ public:
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
    TGeoVolume     *MakeCopyVolume();
    void            MakeCopyNodes(TGeoVolume *other);
+   Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
    void            RenameCopy(Int_t copy_no);
    void            SetAsTopVolume(); // *MENU*
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);// *MENU*
+   void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}
    void            SetMaterial(TGeoMaterial *material);
    void            SetNodes(TObjArray *nodes) {fNodes = nodes; TObject::SetBit(kVolumeImportNodes);}
    void            SetShape(TGeoShape *shape);

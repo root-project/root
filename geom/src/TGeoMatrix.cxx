@@ -215,7 +215,9 @@ void TGeoMatrix::SetDefaultName()
    if (IsScale()) type = 's';
    if (IsCombi()) type = 'c';
    if (IsGeneral()) type = 'g';
-   Int_t index = gGeoManager->GetListOfMatrices()->GetSize() - 1;
+   TList *matrices = gGeoManager->GetListOfMatrices();
+   Int_t index = 0;
+   if (matrices) index =matrices->GetSize() - 1;
    Int_t digits = 1;
    Int_t num = 10;
    while ((Int_t)(index/num)) {
@@ -231,7 +233,6 @@ TGeoTranslation::TGeoTranslation()
 {
 // Default constructor
    SetBit(kGeoTranslation);
-   SetDefaultName();
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0;
 }
 //-----------------------------------------------------------------------------
@@ -241,6 +242,15 @@ TGeoTranslation::TGeoTranslation(Double_t dx, Double_t dy, Double_t dz)
 // Default constructor defining the translation
    SetBit(kGeoTranslation);
    SetDefaultName();
+   SetTranslation(dx, dy, dz);
+   gGeoManager->AddTransformation(this);
+}
+//-----------------------------------------------------------------------------
+TGeoTranslation::TGeoTranslation(const char *name, Double_t dx, Double_t dy, Double_t dz)
+                :TGeoMatrix(name)
+{
+// Default constructor defining the translation
+   SetBit(kGeoTranslation);
    SetTranslation(dx, dy, dz);
    gGeoManager->AddTransformation(this);
 }
@@ -320,7 +330,6 @@ void TGeoTranslation::MasterToLocalBomb(const Double_t *master, Double_t *local)
 TGeoRotation::TGeoRotation()
 {
    SetBit(kGeoRotation);
-   SetDefaultName();
 // dummy ctor
 }
 //-----------------------------------------------------------------------------
@@ -515,16 +524,24 @@ TGeoScale::TGeoScale()
 {
 // default constructor
    SetBit(kGeoScale);
-   SetDefaultName();
    for (Int_t i=0; i<3; i++) fScale[i] = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoScale::TGeoScale(Double_t sx, Double_t sy, Double_t sz)
-          :TGeoMatrix()
+          :TGeoMatrix("")
 {
 // default constructor
    SetBit(kGeoScale);
    SetDefaultName();
+   SetScale(sx, sy, sz);
+   gGeoManager->AddTransformation(this);
+}
+//-----------------------------------------------------------------------------
+TGeoScale::TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz)
+          :TGeoMatrix(name)
+{
+// default constructor
+   SetBit(kGeoScale);
    SetScale(sx, sy, sz);
    gGeoManager->AddTransformation(this);
 }
@@ -560,7 +577,6 @@ TGeoCombiTrans::TGeoCombiTrans()
 {
 // dummy ctor
    SetBit(kGeoCombiTrans);
-   SetDefaultName();
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    fRotation = 0;
 }
@@ -582,6 +598,16 @@ TGeoCombiTrans::TGeoCombiTrans(Double_t dx, Double_t dy, Double_t dz, TGeoRotati
 // ctor
    SetBit(kGeoCombiTrans);
    SetDefaultName();
+   SetTranslation(dx, dy, dz);
+   SetRotation(rot);
+   gGeoManager->AddTransformation(this);
+}
+//-----------------------------------------------------------------------------
+TGeoCombiTrans::TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot)
+               :TGeoMatrix(name)
+{
+// ctor
+   SetBit(kGeoCombiTrans);
    SetTranslation(dx, dy, dz);
    SetRotation(rot);
    gGeoManager->AddTransformation(this);
@@ -619,7 +645,6 @@ TGeoGenTrans::TGeoGenTrans()
 {
 // dummy ctor
    SetBit(kGeoGenTrans);
-   SetDefaultName();
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    for (Int_t j=0; j<3; j++) fScale[j] = 1.0;
    fRotation = 0;
@@ -630,7 +655,6 @@ TGeoGenTrans::TGeoGenTrans(const char *name)
 {
 // ctor
    SetBit(kGeoGenTrans);
-   SetDefaultName();
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    for (Int_t j=0; j<3; j++) fScale[j] = 1.0;
    fRotation = 0;
@@ -643,6 +667,17 @@ TGeoGenTrans::TGeoGenTrans(Double_t dx, Double_t dy, Double_t dz,
 // ctor
    SetBit(kGeoGenTrans);
    SetDefaultName();
+   SetTranslation(dx, dy, dz);
+   SetScale(sx, sy, sz);
+   SetRotation(rot);
+}
+//-----------------------------------------------------------------------------
+TGeoGenTrans::TGeoGenTrans(const char *name, Double_t dx, Double_t dy, Double_t dz,
+                           Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot)
+             :TGeoCombiTrans(name)
+{
+// ctor
+   SetBit(kGeoGenTrans);
    SetTranslation(dx, dy, dz);
    SetScale(sx, sy, sz);
    SetRotation(rot);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -43,6 +43,8 @@ public:
    TGeoCone();
    TGeoCone(Double_t dz, Double_t rmin1, Double_t rmax1,
             Double_t rmin2, Double_t rmax2);
+   TGeoCone(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1,
+            Double_t rmin2, Double_t rmax2);
    TGeoCone(Double_t *params);
    // destructor
    virtual ~TGeoCone();
@@ -65,17 +67,20 @@ public:
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
 
+   virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 56;}
    virtual Double_t      GetDz() const    {return fDz;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    virtual Double_t      GetRmin1() const {return fRmin1;}
    virtual Double_t      GetRmax1() const {return fRmax1;}
    virtual Double_t      GetRmin2() const {return fRmin2;}
    virtual Double_t      GetRmax2() const {return fRmax2;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    
    virtual void          InspectShape() const;
-   virtual void          Paint(Option_t *option);
+   virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2);
@@ -110,6 +115,8 @@ public:
    TGeoConeSeg();
    TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1,
                Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
+   TGeoConeSeg(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1,
+               Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    TGeoConeSeg(Double_t *params);
    // destructor
    virtual ~TGeoConeSeg();
@@ -117,10 +124,6 @@ public:
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
 
-   virtual Int_t         GetByteCount() const {return 64;}
-   Double_t              GetPhi1() const {return fPhi1;}
-   Double_t              GetPhi2() const {return fPhi2;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
@@ -138,9 +141,15 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual Int_t         GetByteCount() const {return 64;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   Double_t              GetPhi1() const {return fPhi1;}
+   Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
-   virtual void          Paint(Option_t *option);
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);

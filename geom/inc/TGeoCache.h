@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.4 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.5 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -143,7 +143,7 @@ public:
    virtual Bool_t       DumpNodes();
    virtual void        *GetBranch() const {return fBranch;}
    virtual void        *GetMatrices() const {return fMatrices;}
-   virtual TGeoHMatrix *GetCurrentMatrix() const {return fGlobalMatrix;}
+   virtual TGeoHMatrix *GetCurrentMatrix() const;
    Int_t                GetCurrentNode() const {return fCurrentNode;}
    virtual TGeoNode    *GetMother(Int_t up=1) const;
    virtual TGeoNode    *GetNode() const;
@@ -843,6 +843,8 @@ inline void TGeoMatrixCache::MasterToLocalVect(Double_t *master, Double_t *local
                             {fHandlers[fHandler]->MasterToLocalVect(master, local);}
 inline void TGeoMatrixCache::MasterToLocalBomb(Double_t *master, Double_t *local) const
                             {fHandlers[fHandler]->MasterToLocalBomb(master, local);}
+inline TGeoHMatrix *TGeoNodeCache::GetCurrentMatrix() const
+                            {fMatrixPool->GetMatrix(fGlobalMatrix); return fGlobalMatrix;}
 inline void TGeoNodeCache::LocalToMaster(Double_t *local, Double_t *master) const
                             {fMatrixPool->LocalToMaster(local, master);}
 inline void TGeoNodeCache::LocalToMasterVect(Double_t *local, Double_t *master) const

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.5 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.6 2002/07/17 13:27:58 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -24,8 +24,7 @@
 //End_Html
 #include "TObject.h"
 #include "TGeoMatrix.h"
-#include "TGeoPara.h"
-#include "TGeoArb8.h"
+#include "TGeoBBox.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
 
@@ -64,6 +63,7 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
 // Default constructor
    if (!vol) return;
    fVolume  = vol;
+   fVolume->SetCylVoxels(kFALSE);
    fBoxes    = 0;
    fXb       = 0;
    fYb       = 0;
@@ -101,7 +101,7 @@ TGeoVoxelFinder::~TGeoVoxelFinder()
 //   printf("checklist...\n");
 }
 //-----------------------------------------------------------------------------
-void TGeoVoxelFinder::BuildBoundingBoxes()
+void TGeoVoxelFinder::BuildVoxelLimits()
 {
 // build the array of bounding boxes of the nodes inside
    Int_t nd = fVolume->GetNdaughters();
@@ -136,12 +136,12 @@ void TGeoVoxelFinder::BuildBoundingBoxes()
             if (pt[j] > xyz[2*j+1]) xyz[2*j+1]=pt[j];
          }
       }
-      fBoxes[6*id] = (xyz[1]-xyz[0])/2.;   // dX
-      fBoxes[6*id+1] = (xyz[3]-xyz[2])/2.; // dY
-      fBoxes[6*id+2] = (xyz[5]-xyz[4])/2.; // dZ
-      fBoxes[6*id+3] = (xyz[0]+xyz[1])/2.; // Ox
-      fBoxes[6*id+4] = (xyz[2]+xyz[3])/2.; // Oy
-      fBoxes[6*id+5] = (xyz[4]+xyz[5])/2.; // Oz
+      fBoxes[6*id]   = 0.5*(xyz[1]-xyz[0]); // dX
+      fBoxes[6*id+1] = 0.5*(xyz[3]-xyz[2]); // dY
+      fBoxes[6*id+2] = 0.5*(xyz[5]-xyz[4]); // dZ
+      fBoxes[6*id+3] = 0.5*(xyz[0]+xyz[1]); // Ox
+      fBoxes[6*id+4] = 0.5*(xyz[2]+xyz[3]); // Oy
+      fBoxes[6*id+5] = 0.5*(xyz[4]+xyz[5]); // Oz
    }
 }
 //-----------------------------------------------------------------------------
@@ -151,6 +151,48 @@ void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *mast
 // system of mother volume
    TGeoMatrix *mat = fVolume->GetNode(id)->GetMatrix();
    mat->LocalToMaster(local, master);
+}
+//-----------------------------------------------------------------------------
+Double_t TGeoVoxelFinder::Efficiency()
+{
+//--- Compute voxelization efficiency.
+   printf("Voxelization efficiency for %s\n", fVolume->GetName());
+   Double_t nd = Double_t(fVolume->GetNdaughters());
+   Double_t eff = 0;
+   Double_t effslice = 0;
+   Int_t id;
+   if (fPriority[0]) {
+      for (id=0; id<fIb[0]-1; id++) {  // loop on boundaries
+         effslice += fIndX[fOBx[id]];
+      }
+      if (effslice != 0) effslice = nd/effslice;
+      else printf("Woops : slice X\n");
+   }
+   printf("X efficiency : %g\n", effslice);
+   eff += effslice;
+   effslice = 0;
+   if (fPriority[1]) {
+      for (id=0; id<fIb[1]-1; id++) {  // loop on boundaries
+         effslice += fIndY[fOBy[id]];
+      }
+      if (effslice != 0) effslice = nd/effslice;
+      else printf("Woops : slice X\n");
+   }
+   printf("Y efficiency : %g\n", effslice);
+   eff += effslice;
+   effslice = 0;
+   if (fPriority[2]) {
+      for (id=0; id<fIb[2]-1; id++) {  // loop on boundaries
+         effslice += fIndZ[fOBz[id]];
+      }
+      if (effslice != 0) effslice = nd/effslice;
+      else printf("Woops : slice X\n");
+   }
+   printf("Z efficiency : %g\n", effslice);
+   eff += effslice;
+   eff /= 3.;
+   printf("Total efficiency : %g\n", eff);
+   return eff;
 }
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoVoxelFinder::FindNode(Double_t *point)
@@ -521,15 +563,18 @@ Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t *dir, Int_t &nche
    Int_t *list = fCheckList;
    ncheck = fNcandidates;
    if (fCurrentVoxel==0) {
+//      printf(">>> first voxel, %i candidates\n", ncheck);
       fCurrentVoxel++;
       return fCheckList;
    }
    fCurrentVoxel++;
+//   printf(">>> voxel %i\n", fCurrentVoxel);
    // Get slices for next voxel
 //   printf("before - fSices : %i %i %i\n", fSlices[0], fSlices[1], fSlices[2]);
    if (!GetNextIndices(point, dir)) {
 //      printf("exit\n");
       ncheck = 0;
+//      printf(">>> nothing else to check, END\n");
       return 0;
    }   
 //   printf("next slices : %i   %i  %i\n", fSlices[0], fSlices[1], fSlices[2]);
@@ -556,7 +601,7 @@ Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t *dir, Int_t &nche
    
    if (Union(nd[0], slicex, nd[1], slicey, nd[2], slicez)) {
       list += ncheck; 
-//      printf("   new candidates : %i-%i\n", fNcandidates, ncheck);
+//      printf(">>> new candidates : %i-%i\n", fNcandidates, ncheck);
       ncheck = fNcandidates - ncheck;
 //      for (Int_t i=0; i<ncheck; i++) printf("    %i\n", list[i]);
       return list;
@@ -1080,7 +1125,7 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, Int_t *array1,
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-void TGeoVoxelFinder::SortBoxes(Option_t *option)
+void TGeoVoxelFinder::SortAll(Option_t *)
 {
 // order bounding boxes along x, y, z
    Int_t nd = fVolume->GetNdaughters();
@@ -1097,7 +1142,7 @@ void TGeoVoxelFinder::SortBoxes(Option_t *option)
    zmin = (box->GetOrigin())[2] - box->GetDZ();
    zmax = (box->GetOrigin())[2] + box->GetDZ();
    if ((xmin>=xmax) || (ymin>=ymax) || (zmin>=zmax)) {
-      Error("SortBoxes", "wrong bounding box");
+      Error("SortAll", "wrong bounding box");
       printf("### volume was : %s\n", fVolume->GetName());
       return;
    }   
@@ -1130,7 +1175,7 @@ void TGeoVoxelFinder::SortBoxes(Option_t *option)
    }
    // now find priority
    if (ib < 2) {
-      Error("SortBoxes", "less than 2 boundaries on X !");
+      Error("SortAll", "less than 2 boundaries on X !");
       printf("### volume was : %s\n", fVolume->GetName());
       return;
    }   
@@ -1205,7 +1250,7 @@ void TGeoVoxelFinder::SortBoxes(Option_t *option)
    }
    // now find priority on Y
    if (ib < 2) {
-      Error("SortBoxes", "less than 2 boundaries on Y !");
+      Error("SortAll", "less than 2 boundaries on Y !");
       printf("### volume was : %s\n", fVolume->GetName());
       return;
    }   
@@ -1279,7 +1324,7 @@ void TGeoVoxelFinder::SortBoxes(Option_t *option)
    }      
    // now find priority on Z
    if (ib < 2) {
-      Error("SortBoxes", "less than 2 boundaries on Z !");
+      Error("SortAll", "less than 2 boundaries on Z !");
       printf("### volume was : %s\n", fVolume->GetName());
       return;
    }   
@@ -1342,7 +1387,6 @@ void TGeoVoxelFinder::SortBoxes(Option_t *option)
       fIndZ = new Int_t[current];
       memcpy(fIndZ, &ind[0], current*sizeof(Int_t));
    }   
-
    delete boundaries; boundaries=0;   
    delete index; index=0;
    delete temp; temp=0;
@@ -1352,7 +1396,9 @@ void TGeoVoxelFinder::SortBoxes(Option_t *option)
    if ((!fPriority[0]) && (!fPriority[1]) && (!fPriority[2])) {
       fVolume->SetVoxelFinder(0);
       delete this;
-   }
+   } else {
+//      Efficiency();
+   }   
 }
 //-----------------------------------------------------------------------------
 void TGeoVoxelFinder::Print(Option_t *) const
@@ -1446,7 +1492,950 @@ void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point) const
 void TGeoVoxelFinder::Voxelize(Option_t *option)
 {
 // Voxelize attached volume according to option
-   BuildBoundingBoxes();
-   SortBoxes();
+   BuildVoxelLimits();
+   SortAll();
+}
+//-----------------------------------------------------------------------------
+
+ClassImp(TGeoCylVoxels)
+
+
+//-----------------------------------------------------------------------------
+TGeoCylVoxels::TGeoCylVoxels()
+{
+// Default constructor
+}
+//-----------------------------------------------------------------------------
+TGeoCylVoxels::TGeoCylVoxels(TGeoVolume *vol)
+              :TGeoVoxelFinder(vol)
+{
+// Constructor
+   fVolume->SetCylVoxels(kTRUE);
+}
+//-----------------------------------------------------------------------------
+TGeoCylVoxels::~TGeoCylVoxels()
+{
+// Destructor
+}
+//-----------------------------------------------------------------------------
+void TGeoCylVoxels::BuildVoxelLimits()
+{
+//--- Compute boundary limits in R, Phi and Z coordinates for all daughters
+// of fVolume
+   Int_t id;
+   Int_t nd = fVolume->GetNdaughters();
+   TGeoNode *node;
+   Double_t bcyl[4];
+   if (fBoxes) delete fBoxes;
+   fBoxes = new Double_t[6*nd];
+   if (fCheckList) delete fCheckList;
+   fCheckList = new Int_t[nd];
+   Double_t vert[24];
+   Double_t pt[3];
+   Double_t xyz[6];
+   const Double_t *translation;
+   TGeoBBox *box = 0;
+   Double_t *origin;
+   Double_t dx, dy, dz, x0, y0;
+   Double_t orig[3];
+   TGeoShape *shape = 0;
+   TGeoMatrix *matrix = 0;
+   // loop all daughters
+   for (id=0; id<nd; id++) {
+      node = fVolume->GetNode(id);
+//      printf(" --%s--\n", node->GetName());
+      shape = node->GetVolume()->GetShape();
+//      shape->InspectShape();
+      box = (TGeoBBox*)shape;
+      origin = box->GetOrigin();
+      matrix = node->GetMatrix();
+      box->SetBoxPoints(&vert[0]);
+      for (Int_t point=0; point<8; point++) {
+         matrix->LocalToMaster(&vert[3*point], &pt[0]);
+         if (!point) {
+            xyz[0] = xyz[1] = pt[0];
+            xyz[2] = xyz[3] = pt[1];
+            xyz[4] = xyz[5] = pt[2];
+            continue;
+         }
+         for (Int_t j=0; j<3; j++) {
+            if (pt[j] < xyz[2*j]) xyz[2*j]=pt[j];
+            if (pt[j] > xyz[2*j+1]) xyz[2*j+1]=pt[j];
+         }
+      }
+      dx = 0.5*(xyz[1]-xyz[0]);
+      dy = 0.5*(xyz[3]-xyz[2]);
+      dz = 0.5*(xyz[5]-xyz[4]);
+      x0 = 0.5*(xyz[0]+xyz[1]);
+      y0 = 0.5*(xyz[2]+xyz[3]);
+      orig[0] = TMath::Abs(x0);
+      orig[1] = TMath::Abs(y0);
+      orig[2] = 0.5*(xyz[4]+xyz[5]);
+      fBoxes[6*id+4] = orig[2]-dz;
+      fBoxes[6*id+5] = orig[2]+dz;
+
+      if (matrix->IsIdentity()) {
+      // node has no rotation
+//         printf(" identity\n");
+         shape->GetBoundingCylinder(&bcyl[0]);
+         memcpy(fBoxes+6*id, &bcyl[0], 4*sizeof(Double_t));
+      } else {
+//         matrix->Print();
+         if (matrix->IsRotAboutZ()) {
+//            printf(" rotz\n");
+         // no rotation about other axis than Z
+            translation = matrix->GetTranslation();
+            if ((TMath::Abs(translation[0])<1E-10) && (TMath::Abs(translation[1])<1E-10)) {
+               // there is just a translation on Z (and possibly a rot. about Z)
+//               printf(" Z transl.\n");
+               shape->GetBoundingCylinder(&bcyl[0]);
+               // check if any rotation about Z
+               if (matrix->IsRotation()) {
+//                  printf(" + rot\n");
+                  // find phi rotation
+                  if ((bcyl[3]-bcyl[2])!=360) {
+                     Double_t phi = ((TGeoRotation *)matrix)->GetPhiRotation();
+                     bcyl[2] += phi;
+                     bcyl[3] += phi;
+                     if (bcyl[2]<0) {
+                        bcyl[2] += 360.;
+                        bcyl[3] += 360.;
+                     } else {
+                        if (bcyl[2]>360.) {   
+                           bcyl[2] -= 360.;
+                           bcyl[3] -=360.;
+                        }
+                     }      
+                  }
+               }
+            } else {
+            // translation is other than Z
+//               printf(" gen. translation\n");
+               memset(&xyz[0], 0, 6*sizeof(Double_t));
+               // origin of mother to local frame
+               matrix->MasterToLocal(&xyz[0], &xyz[3]);
+               x0 = TMath::Abs(xyz[3]);
+               y0 = TMath::Abs(xyz[4]);
+               dx = box->GetDX();
+               dy = box->GetDY();
+               bcyl[1] = (x0+dx)*(x0+dx)+(y0+dy)*(y0+dy);
+               if (x0<dx) {
+               // origin in X range
+//                  printf("   inside X\n");
+                  if (y0<dy) {
+                  // origin also in Y range
+                     bcyl[0] = 0.;
+                     bcyl[2] = 0.;
+                     bcyl[3] = 360.;
+                  } else {
+                  // origin outside Y range   
+//                     printf("   outside Y\n");
+                     bcyl[0] = y0-dy;
+                     bcyl[0] *= bcyl[0];
+                     // convert phi limits to MARS
+                     if (xyz[4]>0) {
+                        xyz[3] = -dx;
+                        xyz[4] = dy;
+                     } else {
+                        xyz[3] = dx;
+                        xyz[4] = -dy;
+                     }      
+                     matrix->LocalToMaster(&xyz[3], &xyz[0]);
+//                     printf("  at phi1: %g %g\n", xyz[0], xyz[1]);
+                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     xyz[3] = -xyz[3];
+                     matrix->LocalToMaster(&xyz[3], &xyz[0]);
+//                     printf("  at phi2: %g %g\n", xyz[0], xyz[1]);
+                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     if (bcyl[2]<0) bcyl[2]+=360.;
+                     while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;   
+                  }   
+               } else {
+               // origin outside X range
+//                  printf("   outside X\n");
+                  if (y0<dy) {
+                  // origin in Y range
+//                     printf("   inside Y\n");
+                     bcyl[0] = x0-dx;
+                     bcyl[0] *= bcyl[0];
+                     // convert phi limits to MARS
+                     if (xyz[3]>0) {
+                        xyz[3] = dx;
+                        xyz[4] = dy;
+                     } else {
+                        xyz[3] = -dx;
+                        xyz[4] = -dy;
+                     }      
+                     matrix->LocalToMaster(&xyz[3], &xyz[0]);
+//                     printf("  at phi1: %g %g\n", xyz[0], xyz[1]);
+                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     xyz[4] = -xyz[4];
+                     matrix->LocalToMaster(&xyz[3], &xyz[0]);
+//                     printf("  at phi2: %g %g\n", xyz[0], xyz[1]);
+                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     if (bcyl[2]<0) bcyl[2]+=360.;
+                     while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;   
+                  } else {
+                  // origin outside both X and Y range
+//                     printf("   outside XY\n");
+                     bcyl[0] = (x0-dx)*(x0-dx)+(y0-dy)*(y0-dy);  
+                     // convert phi limits to MARS
+                     if (xyz[3]>0) {
+                        xyz[3] = xyz[4];
+                        xyz[4] = dy;
+                        xyz[3]=(xyz[3]>0)?-dx:dx;
+                     } else {   
+                        xyz[3] = xyz[4];
+                        xyz[4] = -dy;
+                        xyz[3]=(xyz[3]>0)?-dx:dx;
+                     }   
+                     matrix->LocalToMaster(&xyz[3], &xyz[0]);
+//                     printf("  at phi1: %g %g\n", xyz[0], xyz[1]);
+                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     xyz[3] = -xyz[3];
+                     xyz[4] = -xyz[4];
+                     matrix->LocalToMaster(&xyz[3], &xyz[0]);
+//                     printf("  at phi2: %g %g\n", xyz[0], xyz[1]);
+                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     if (bcyl[2]<0) bcyl[2]+=360.;
+                     while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;   
+                  }   
+               }
+            }
+//            printf(" ---copy param\n");      
+            memcpy(&fBoxes[6*id], &bcyl[0], 4*sizeof(Double_t));
+         } else {
+         // general rotation matrix (not only about Z)
+//            printf("General tranformation for node %s\n", node->GetName());
+            bcyl[1] = (orig[0]+dx)*(orig[0]+dx)+(orig[1]+dy)*(orig[1]+dy);
+            if (orig[0]<dx) {
+               if (orig[1]<dy) {
+                  bcyl[0] = 0.;
+                  bcyl[2] = 0.;
+                  bcyl[3] = 360.;
+               } else {
+                  bcyl[0] = orig[1]-dy;
+                  bcyl[0] *= bcyl[0];
+                  if (y0>0) {
+                     bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[2], xyz[1]);   
+                     bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[2], xyz[0]);
+                  } else {    
+                     bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3], xyz[0]);   
+                     bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3], xyz[1]);
+                  }
+                  if (bcyl[2]<0) bcyl[2]+=360.;
+                  while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;
+               }
+            } else {
+               if (orig[1]<dy) {
+                  bcyl[0] = orig[0]-dx;
+                  bcyl[0] *= bcyl[0];
+                  if (x0>0) {
+                     bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[2], xyz[0]);   
+                     bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3], xyz[0]);
+                  } else {    
+                     bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3], xyz[1]);   
+                     bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[2], xyz[1]);
+                  }
+                  if (bcyl[2]<0) bcyl[2]+=360.;
+                  while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;
+               } else {
+                  bcyl[0] = (orig[0]-dx)*(orig[0]-dx)+(orig[1]-dy)*(orig[1]-dy);
+                  Int_t indx, indy;
+                  indy = (x0>0)?0:1;
+                  indx = (y0>0)?1:0; 
+                  bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[indy+2], xyz[indx]);
+                  bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3-indy], xyz[1-indx]);
+                  if (bcyl[2]<0) bcyl[2]+=360.;
+                  while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;
+               }
+            }         
+         }
+         memcpy(&fBoxes[6*id], &bcyl[0], 4*sizeof(Double_t));
+      }   
+//      printf("Limits for %s\n", node->GetName());
+//      printf(" R   : %g %g\n", fBoxes[6*id], fBoxes[6*id+1]);
+//      printf(" Phi : %g %g\n", fBoxes[6*id+2], fBoxes[6*id+3]);
+//      printf(" Z   : %g %g\n", fBoxes[6*id+4], fBoxes[6*id+5]);
+   }
+}
+//-----------------------------------------------------------------------------
+Double_t TGeoCylVoxels::Efficiency()
+{
+//--- Compute voxelization efficiency.
+   return 0;
+}
+//-----------------------------------------------------------------------------
+TGeoNode *TGeoCylVoxels::FindNode(Double_t *point)
+{
+//--- Find node containing point.
+   return 0;
+}
+//-----------------------------------------------------------------------------
+void TGeoCylVoxels::FindOverlaps(Int_t inode) const
+{
+// create the list of nodes for which the bboxes overlap with inode's bbox
+   if (!fBoxes) return;
+   Double_t xmin, xmax, ymin, ymax, zmin, zmax;
+   Double_t xmin1, xmax1, ymin1, ymax1, zmin1, zmax1;
+   Double_t ddx1, ddx2;
+   Int_t nd = fVolume->GetNdaughters();
+   Int_t *ovlps = 0;
+   Int_t *otmp = new Int_t[nd-1]; 
+   Int_t novlp = 0;
+   TGeoNode *node = fVolume->GetNode(inode);
+   xmin = fBoxes[6*inode];
+   xmax = fBoxes[6*inode+1];
+   ymin = fBoxes[6*inode+2];
+   ymax = fBoxes[6*inode+3];
+   zmin = fBoxes[6*inode+4];
+   zmax = fBoxes[6*inode+5];
+//   printf("overlaps for MANY node %s\n", node->GetName());
+
+//   printf("xmin=%g  xmax=%g\n", xmin, xmax);
+//   printf("ymin=%g  ymax=%g\n", ymin, ymax);
+//   printf("zmin=%g  zmax=%g\n", zmin, zmax);
+   Bool_t in = kFALSE;
+   //TGeoNode *node1;
+   // loop on brothers
+   for (Int_t ib=0; ib<nd; ib++) {
+      if (ib == inode) continue; // everyone overlaps with itself
+      in = kFALSE;
+      //node1 = fVolume->GetNode(ib);
+      xmin1 = fBoxes[6*ib];
+      xmax1 = fBoxes[6*ib+1];
+      ymin1 = fBoxes[6*ib+2];
+      ymax1 = fBoxes[6*ib+3];
+      zmin1 = fBoxes[6*ib+4];
+      zmax1 = fBoxes[6*ib+5];
+//      printf(" node %s\n", node1->GetName());
+//      printf("  xmin1=%g  xmax1=%g\n", xmin1, xmax1);
+//      printf("  ymin1=%g  ymax1=%g\n", ymin1, ymax1);
+//      printf("  zmin1=%g  zmax1=%g\n", zmin1, zmax1);
+
+
+      ddx1 = TMath::Abs(xmin1-xmax);
+      ddx2 = TMath::Abs(xmax1-xmin);
+         if ((ddx1<1E-6)||(ddx2<1E-6)) continue;
+//         if ((xmin1==xmin)||(xmax1==xmax)) in = kTRUE;
+         if (((xmin1>xmin)&&(xmin1<xmax))||((xmax1>xmin)&&(xmax1<xmax)) ||
+             ((xmin>xmin1)&&(xmin<xmax1))||((xmax>xmin1)&&(xmax<xmax1)))
+                in = kTRUE;
+      if (!in) continue;
+//      printf("x overlap...\n");
+      in = kFALSE;
+
+      if (ymax<360.) {
+         in = (IntersectIntervals(ymin, ymax, ymin1, ymax1)>0)?kTRUE:kFALSE;
+      } else {
+         if (ymax1<360.) {
+            in = (IntersectIntervals(ymin1, ymax1, ymin, ymax)>0)?kTRUE:kFALSE;  
+         } else {
+            in = (IntersectIntervals(ymin1, 360., ymin, ymax)>0)?kTRUE:kFALSE;
+            if (!in) in = (IntersectIntervals(360., ymax1, ymin, ymax)>0)?kTRUE:kFALSE;  
+         }
+      }         
+      if (!in) continue;
+//      printf("y overlap...\n");
+      in = kFALSE;
+
+      ddx1 = TMath::Abs(zmin1-zmax);
+      ddx2 = TMath::Abs(zmax1-zmin);
+         if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
+//         if ((zmin1==zmin)||(zmax1==zmax)) in = kTRUE;
+         if (((zmin1>zmin)&&(zmin1<zmax))||((zmax1>zmin)&&(zmax1<zmax)) ||
+             ((zmin>zmin1)&&(zmin<zmax1))||((zmax>zmin1)&&(zmax<zmax1)))
+                in = kTRUE;
+      if (!in) continue;
+//      printf("Overlapping %i\n", ib);
+      otmp[novlp++] = ib;
+   }
+   if (!novlp) {
+//      printf("---no overlaps for MANY node %s\n", node->GetName());
+      node->SetOverlaps(ovlps, 1);
+      return;
+   }
+   ovlps = new Int_t[novlp];
+   memcpy(ovlps, otmp, novlp*sizeof(Int_t));
+   delete otmp;
+   node->SetOverlaps(ovlps, novlp);
+//   printf("Overlaps for MANY node %s : %i\n", node->GetName(), novlp);
+}
+//-----------------------------------------------------------------------------
+Int_t *TGeoCylVoxels::GetCheckList(Double_t *point, Int_t &nelem)
+{
+//--- Get the list of nodes possibly containing a given point.
+   // convert the point to cylindrical coordinates
+   Double_t ptcyl[3];
+   ptcyl[0] = point[0]*point[0]+point[1]*point[1];
+   if (fPriority[1]) {
+      ptcyl[1] = TMath::ATan2(point[1], point[0])*TGeoShape::kRadDeg;
+      if (ptcyl[1]<0) ptcyl[1]+=360.;
+   }   
+   ptcyl[2] = point[2];
+   return TGeoVoxelFinder::GetCheckList(&ptcyl[0], nelem);
+}
+//-----------------------------------------------------------------------------
+Bool_t TGeoCylVoxels::GetNextIndices(Double_t *point, Double_t *dir)
+{
+// Get indices for next voxel
+   return kFALSE;
+/*
+   Int_t dind[3];
+   memcpy(&dind[0], &fSlices[0], 3*sizeof(Int_t));
+   Double_t dmin[3];
+   Double_t dircyl[3];
+   
+//   printf("GetNextIndices current slices : %i %i %i\n", fSlices[0], fSlices[1], fSlices[2]);
+   dmin[0] = dmin[1] = dmin[2] = TGeoShape::kBig;
+   TGeoBBox *box = (TGeoBBox*)fVolume->GetShape();
+   Double_t limit = TGeoShape::kBig;
+   Bool_t isXlimit=kFALSE, isYlimit=kFALSE, isZlimit=kFALSE;
+   Double_t dmstep = gGeoManager->GetStep();   
+   Double_t step = dmstep;
+//   printf("dmstep=%f\n", dmstep);
+   // first check Z
+   if (dir[2]!=0) {
+      if (fSlices[2]!=-2) {
+      // if there are slices on this axis, get distance to next slice.
+         dind[2]+=(dir[2]<0)?-1:1;
+         if (dind[2]<-1) return kFALSE;
+         if (dind[2]>fIb[2]-1) return kFALSE;
+//         printf("next slicez=%i : z= %f  point[2]=%f dir[2]=%f\n",dind[2],fZb[dind[2]+((dind[2]>fSlices[2])?0:1)], point[2], dir[2]); 
+         dmin[2] = (fZb[dind[2]+((dind[2]>fSlices[2])?0:1)]-point[2])/dir[2];
+//         printf("dz=%f\n", dmin[2]);
+         if (dmin[2]<dmstep) {
+            step = dmin[2];
+         } else    
+            isZlimit = kTRUE;
+         }   
+      } else {
+      // if no slicing on this axis, get distance to mother limit
+         limit = (box->GetOrigin())[2] + box->GetDZ()*((dir[2]<0)?-1:1);
+         dmin[2] = (limit-point[2])/dir[2];
+         isZlimit = kTRUE;
+      }
+   } 
+   // then check phi
+        
+   if (fSlices[1]!=-2) {
+   // if there are slices on this axis, get distance to next slice.
+      Double_t phi, a, t;
+      
+      // find target slice on phi accordind to cross product of position and direction vectors
+      Int_t shift = ((point[0]*dir[1]+point[1]*dir[0])>0)?1:-1;
+      dind[1] += shift;
+      if (dind[1]<0) dind[1]=fIb[1]-1;
+      if (dind[1]>fIb[1]-1) dind[1]=0;
+      if (shift<0) {
+         // target is second limit of previous voxel
+         phi = fYb[dind[1]+1];
+      } else {
+         phi = fYb[dind[1]];
+      }
+      t = TMath::Tan(phi*TGeoShape::kDegRad); 
+      a = dir[1]-dir[0]*t;
+      if (a!=0) {
+         dmin[1] = (point[0]*t-point[1])/a;
+         if (dmin[1]<0) dmin[1]=TGeoShape::kBig;
+      }   
+//      printf("next slicex=%i : x= %f  point[0]=%f dir[0]=%f\n",dind[0],fXb[dind[0]+((dind[0]>fSlices[0])?0:1)], point[0], dir[0]); 
+//      printf("dx=%f\n", dmin[0]);
+      isYlimit = (dmin[1]>dmstep)?kTRUE:kFALSE;
+   }
+   
+   // last check R !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   if (fSlices[0]!=-2) {
+   // if there are slices on this axis, get distance to next slice.
+      dind[0]+=(dir[0]<0)?-1:1;
+      if (dind[0]<-1) return kFALSE;
+      if (dind[0]>fIb[0]-1) return kFALSE;
+//         printf("next slicey=%i : y= %f  point[1]=%f dir[1]=%f\n",dind[1], fYb[dind[1]+((dind[1]>fSlices[1])?0:1)], point[1], dir[1]); 
+      dmin[0] = (fXb[dind[0]+((dind[0]>fSlices[0])?0:1)]-point[0])/dir[0];
+//         printf("dy=%f\n", dmin[1]);
+      isXlimit = (dmin[0]>dmstep)?kTRUE:kFALSE;
+   } else {
+   // if no slicing on this axis, get distance to mother limit
+      limit = (box->GetOrigin())[0] + box->GetDX()*((dir[0]<0)?-1:1);
+      dmin[0] = (limit-point[0])/dir[0];
+      isXlimit = kTRUE;
+   }
+   // now find minimum distance
+//   printf("dmin : %f %f %f\n", dmin[0], dmin[1], dmin[2]);
+   if (dmin[0]<dmin[1]) {
+      if (dmin[0]<dmin[2]) {
+      // next X
+//         printf("next slicex : %i isXlimit=%i\n", dind[0],(Int_t)isXlimit);
+         if (isXlimit) return kFALSE;
+         if (dind[0]<0) return kFALSE;
+         if (dind[0]>fIb[0]-2) return kFALSE;
+         fSlices[0] = dind[0];
+         if (fSlices[1]!=-2) {
+            if (fSlices[1]<0) return GetNextIndices(point, dir);
+            if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
+         }   
+         if (fSlices[2]!=-2) {
+            if (fSlices[2]<0) return GetNextIndices(point, dir);
+            if (fSlices[2]>fIb[2]-2) return GetNextIndices(point, dir);
+         }   
+         if (fIndX[fOBx[fSlices[0]]]>0) return kTRUE;
+         return GetNextIndices(point, dir);
+      } else {
+      // next Z
+//         printf("next slicez : %i isZlimit=%i\n", dind[2],(Int_t)isZlimit);
+         if (isZlimit) return kFALSE;
+         if (dind[2]<0) return kFALSE;
+         if (dind[2]>fIb[2]-2) return kFALSE;
+         fSlices[2] = dind[2];
+         if (fSlices[0]!=-2) {
+            if (fSlices[0]<0) return GetNextIndices(point, dir);
+            if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
+         }   
+         if (fSlices[1]!=-2) {
+            if (fSlices[1]<0) return GetNextIndices(point, dir);
+            if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
+         }   
+         if (fIndZ[fOBz[fSlices[2]]]>0) return kTRUE;
+         return GetNextIndices(point, dir);
+      }
+   } else {
+      if (dmin[1]<dmin[2]) {   
+      // next Y
+//         printf("next slicey : %i isYlimit=%i\n", dind[1], (Int_t)isYlimit);
+         if (isYlimit) return kFALSE;
+         if (dind[1]<0) return kFALSE;
+         if (dind[1]>fIb[1]-2) return kFALSE;
+         fSlices[1] = dind[1];
+         if (fSlices[0]!=-2) {
+            if (fSlices[0]<0) return GetNextIndices(point, dir);
+            if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
+         }   
+         if (fSlices[2]!=-2) {
+            if (fSlices[2]<0) return GetNextIndices(point, dir);
+            if (fSlices[2]>fIb[2]-2) return GetNextIndices(point, dir);
+         }   
+         if (fIndY[fOBy[fSlices[1]]]>0) return kTRUE;
+         return GetNextIndices(point, dir);
+      } else {
+      // next Z
+//         printf("next slicez : %i isZlimit=%i\n", dind[2], (Int_t)isZlimit);
+         if (isZlimit) return kFALSE;
+         if (dind[2]<0) return kFALSE;
+         if (dind[2]>fIb[2]-2) return kFALSE;
+         fSlices[2] = dind[2];
+         if (fSlices[0]!=-2) {
+            if (fSlices[0]<0) return GetNextIndices(point, dir);
+            if (fSlices[0]>fIb[0]-2) return GetNextIndices(point, dir);
+         }   
+         if (fSlices[1]!=-2) {
+            if (fSlices[1]<0) return GetNextIndices(point, dir);
+            if (fSlices[1]>fIb[1]-2) return GetNextIndices(point, dir);
+         }   
+         if (fIndZ[fOBz[fSlices[2]]]>0) return kTRUE;
+         return GetNextIndices(point, dir);
+      }
+   }
+*/   
 }
 
+//-----------------------------------------------------------------------------
+Int_t *TGeoCylVoxels::GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck)
+{
+//--- Get the list of nodes possibly crossed by a given ray.
+   return 0;
+}
+//-----------------------------------------------------------------------------
+Int_t TGeoCylVoxels::IntersectIntervals(Double_t vox1, Double_t vox2, Double_t phi1, Double_t phi2) const
+{
+// Intersect a phi voxel interval in range (0,360) with a node phi interval of
+// extended range. Returns 0 if no intersection, 1 if they do intersect and
+// 2 if they are identical.
+   if ((vox2-vox1)==360.) {
+      if ((phi2-phi1)==360.) return 2;
+      return 1;
+   }  
+   Double_t d11, d12; 
+   // check if first phi limit correspond to voxel
+   d11 = phi1-vox1;
+   if (TMath::Abs(d11)<1E-8) d11=0;
+   d12 = phi1-vox2;
+   if (TMath::Abs(d12)<1E-8) d12=0;
+   // check if second phi limit is in range (0, 360)
+   if (phi2>360.) {
+      if (d11>=0) {
+         if (d12<0) return 1;
+         d11 = vox1-phi2+360.;
+         if (d11>=0) return 0;
+         return 1;
+      }
+      return 1;
+   }
+   // both intervals are in range (0, 360)   
+   Double_t d22 = phi2-vox2;
+   if (TMath::Abs(d22)<1E-8) d22=0;
+   if ((d11==0.) && (d22==0.)) return 2;
+   if (d11>=0) {
+      if (d12<0) return 1;
+      return 0;
+   }
+   Double_t d21 = phi2-vox1;
+   if (TMath::Abs(d21)<1E-8) d21=0;
+   if (d21>0) return 1;
+   return 0;   
+}
+//-----------------------------------------------------------------------------
+void TGeoCylVoxels::Print(Option_t *) const
+{
+// Print info about voxels.
+   Int_t id;
+   printf("Voxels for volume %s (nd=%i)\n", fVolume->GetName(), fVolume->GetNdaughters());
+   printf("priority : x=%i y=%i z=%i\n", fPriority[0], fPriority[1], fPriority[2]);
+//   return;
+
+   printf("--- R voxels ---\n");
+   if (fPriority[0]) {
+      for (id=0; id<fIb[0]; id++) {
+         printf("%15.10f\n",TMath::Sqrt(fXb[id]));
+         if (id == (fIb[0]-1)) break;
+         printf("slice %i : %i\n", id, fIndX[fOBx[id]]);
+         for (Int_t j=0;j<fIndX[fOBx[id]]; j++) {
+            printf("%s  low, high:  %15.10f --- %15.10f \n", 
+            fVolume->GetNode(fIndX[fOBx[id]+j+1])->GetName(),
+            TMath::Sqrt(fBoxes[6*fIndX[fOBx[id]+j+1]]), 
+            TMath::Sqrt(fBoxes[6*fIndX[fOBx[id]+j+1]+1]));
+         }
+      }
+   }
+   printf("--- Phi voxels ---\n"); 
+   if (fPriority[1]) { 
+      for (id=0; id<fIb[1]; id++) {
+         printf("%15.10f\n", fYb[id]);
+         if (id == (fIb[1]-1)) break;
+         printf("slice %i : %i\n", id, fIndY[fOBy[id]]);
+         for (Int_t j=0;j<fIndY[fOBy[id]]; j++) {
+            printf("%s  low, high:  %15.10f --- %15.10f \n", 
+            fVolume->GetNode(fIndY[fOBy[id]+j+1])->GetName(),
+            fBoxes[6*fIndY[fOBy[id]+j+1]+2], fBoxes[6*fIndY[fOBy[id]+j+1]+3]);
+         }
+      }
+   }
+   
+   printf(" ---Z voxels---\n"); 
+   if (fPriority[2]) { 
+      for (id=0; id<fIb[2]; id++) {
+         printf("%15.10f\n", fZb[id]);
+         if (id == (fIb[2]-1)) break;
+         printf("slice %i : %i\n", id, fIndZ[fOBz[id]]);
+         for (Int_t j=0;j<fIndZ[fOBz[id]]; j++) {
+            printf("%s  low, high:  %15.10f --- %15.10f \n", 
+            fVolume->GetNode(fIndZ[fOBz[id]+j+1])->GetName(),
+            fBoxes[6*fIndZ[fOBz[id]+j+1]+4], fBoxes[6*fIndZ[fOBz[id]+j+1]+5]);
+         }
+      }
+   }
+}
+//-----------------------------------------------------------------------------
+void TGeoCylVoxels::SortAll(Option_t *)
+{
+// Order voxels along R, Phi, Z.
+//   printf("Sorting voxels for %s\n", fVolume->GetName());
+   Int_t nd = fVolume->GetNdaughters();
+   if (!nd) return;
+   Double_t *boundaries = new Double_t[6*nd];
+   Double_t rmin, rmax, pmin, pmax, zmin, zmax;
+   Double_t phi2;
+   Double_t bcyl[4];
+   TGeoShape *shape = fVolume->GetShape();
+   shape->GetBoundingCylinder(&bcyl[0]);
+   TGeoBBox *box = (TGeoBBox*)fVolume->GetShape();
+   // compute ranges on R, Phi, Z according to volume cylindrical limits
+   rmin = bcyl[0];
+   rmax = bcyl[1];
+   pmin = bcyl[2];
+   pmax = bcyl[3];
+   zmin = (box->GetOrigin())[2] - box->GetDZ();
+   zmax = (box->GetOrigin())[2] + box->GetDZ();
+   if ((rmin>=rmax) || (pmin>=pmax) || (zmin>=zmax)) {
+      Error("SortAll", "wrong bounding cylinder");
+      printf("### volume was : %s\n", fVolume->GetName());
+      return;
+   }   
+   Int_t id;
+   // compute boundaries coordinates on R, Phi and Z
+   for (id=0; id<nd; id++) {
+      // r boundaries
+      boundaries[2*id] = fBoxes[6*id];
+      boundaries[2*id+1] = fBoxes[6*id+1];
+      // phi boundaries
+      boundaries[2*id+2*nd] = fBoxes[6*id+2];
+      phi2 = fBoxes[6*id+3];
+      if (phi2>360.) phi2-=360.;
+      boundaries[2*id+2*nd+1] = phi2;
+      // z boundaries
+      boundaries[2*id+4*nd] = fBoxes[6*id+4];
+      boundaries[2*id+4*nd+1] = fBoxes[6*id+5];
+   }
+   Int_t *index = new Int_t[2*nd];
+   Int_t *ind = new Int_t[(2*nd+2)*(nd+1)]; // ind[fOBx[i]] = ndghts in slice fInd[i]--fInd[i+1]
+   Double_t *temp = new Double_t[2*nd+2];
+   Int_t current = 0;
+   Double_t xxmin, xxmax, xbmin, xbmax, ddx1, ddx2;
+   Int_t last;
+   Double_t db, dbv;
+   // sort r boundaries
+   Int_t ib = 0;
+   TMath::Sort(2*nd, &boundaries[0], &index[0], kFALSE);
+   last = index[0];
+   db = boundaries[last+1-2*last%2]-boundaries[last];
+   temp[ib++] = boundaries[last]; 
+   // compact common boundaries
+   for (id=1; id<2*nd; id++) {
+      dbv = boundaries[index[id]]-boundaries[last]; 
+      last = index[id];
+      if (dbv>1E-6) {
+      // we have to generate a new boundary
+         temp[ib++] = boundaries[last];
+         db = boundaries[last+1-2*last%2]-boundaries[last];
+      } else {
+         if (db<0) {
+      // just ignore this boundary that have to be compacted with an other
+            temp[ib-1] = boundaries[last];
+         }   
+      }   
+   }
+
+   // now find priority
+   if (ib < 2) {
+      Error("SortAll", "less than 2 boundaries on R !");
+      printf("### volume was : %s\n", fVolume->GetName());
+      return;
+   }   
+   if (ib == 2) {
+   // check range
+      if (((temp[0]-rmin)<1E-8) && ((temp[1]-rmax)>-1E-8)) {
+      // ordering on this axis makes no sense. Clear all arrays.
+         fPriority[0] = 0;
+         if (fIndX) delete[] fIndX; 
+         fIndX = 0;
+         if (fXb) delete[] fXb;   
+         fXb = 0;
+         if (fOBx) delete[] fOBx;  
+         fOBx = 0;
+      } else {
+         fPriority[0] = 1; // all in one slice
+      }
+   } else {
+      fPriority[0] = 2;    // check all
+   }
+   // store compacted boundaries
+   if (fPriority[0]) {
+      if (fXb) delete[] fXb;
+      fXb = new Double_t[ib];
+      memcpy(fXb, &temp[0], ib*sizeof(Double_t));
+      fIb[0] = ib;   
+
+      //now build the lists of nodes in each slice
+      memset(ind, 0, (2*nd+2)*(nd+1)*sizeof(Int_t));
+                     // ind[fOBx[i]+k] = index of dght k (k<ndghts)
+      if (fOBx) delete fOBx;
+      fOBx = 0;
+      fOBx = new Int_t[fIb[0]-1]; // offsets in ind
+      for (id=0; id<fIb[0]-1; id++) {
+         fOBx[id] = current; // offset of dght list
+         ind[current] = 0; // ndght in this slice
+         xxmin = fXb[id];
+         xxmax = fXb[id+1];
+         for (Int_t ic=0; ic<nd; ic++) {
+            xbmin = fBoxes[6*ic];   
+            xbmax = fBoxes[6*ic+1];
+            ddx1 = TMath::Abs(xbmin-xxmax);
+            ddx2 = TMath::Abs(xbmax-xxmin);
+            if ((xbmin==xxmin)||(xbmax==xxmax)) {
+               ind[current]++;
+               ind[current+ind[current]] = ic;
+               continue;
+            }
+            if ((ddx1<1E-8)||(ddx2<1E-8)) continue;
+            if (((xbmin>xxmin)&&(xbmin<xxmax))||((xbmax>xxmin)&&(xbmax<xxmax)) ||
+                ((xxmin>xbmin)&&(xxmin<xbmax))||((xxmax>xbmin)&&(xxmax<xbmax))) {
+               // daughter ic in interval
+               ind[current]++;
+               ind[current+ind[current]] = ic;
+            }
+         }
+         current += ind[current]+1;
+      }
+      
+      if (fIndX) delete fIndX;
+      fIndX = new Int_t[current];
+      memcpy(fIndX, &ind[0], current*sizeof(Int_t));
+   }   
+
+   // sort Phi boundaries
+   Int_t intersect;
+   ib = 0;
+   TMath::Sort(2*nd, &boundaries[2*nd], &index[0], kFALSE);
+   temp[ib++] = 0.; // always store phi=0 and phi=360 boundaries
+   // compact common boundaries
+   for (id=0; id<2*nd; id++) {
+      if (TMath::Abs(temp[ib-1]-boundaries[2*nd+index[id]])>1E-8) 
+         temp[ib++]=boundaries[2*nd+index[id]];
+   }
+   if (temp[ib-1]!=360.) temp[ib++]=360.;
+   // now find priority on Phi
+   if (ib < 2) {
+      Error("SortAll", "less than 2 boundaries on Phi !");
+      printf("### volume was : %s\n", fVolume->GetName());
+      return;
+   }   
+   if (ib == 2) {
+   // check range
+      intersect = IntersectIntervals(temp[0], temp[1], pmin, pmax);
+      if (intersect==2) {
+      // ordering on this axis makes no sense. Clear all arrays.
+         fPriority[1] = 0;
+         if (fIndY) delete[] fIndY; 
+         fIndY = 0;
+         if (fYb) delete[] fYb;   
+         fYb = 0;
+         if (fOBy) delete[] fOBy;  
+         fOBy = 0;
+      } else {
+         fPriority[1] = 1; // all in one slice
+      }
+   } else {
+      fPriority[1] = 2;    // check all
+   }
+   if (fPriority[1]) {
+      // store compacted boundaries
+      if (fYb) delete fYb;
+      fYb = new Double_t[ib];
+      memcpy(fYb, &temp[0], ib*sizeof(Double_t));
+      fIb[1] = ib;
+
+      memset(ind, 0, (2*nd+2)*(nd+1)*sizeof(Int_t));
+      current = 0;
+      if (fOBy) delete fOBy;
+      fOBy = 0;
+      fOBy = new Int_t[fIb[1]-1]; // offsets in ind
+      for (id=0; id<fIb[1]-1; id++) {
+      // loop voxels
+         fOBy[id] = current; // offset of dght list
+         ind[current] = 0; // ndght in this slice
+         xxmin = fYb[id];  // voxel limits
+         xxmax = fYb[id+1];
+         for (Int_t ic=0; ic<nd; ic++) {
+         // loop daughters
+            xbmin = fBoxes[6*ic+2];   
+            xbmax = fBoxes[6*ic+3];
+            intersect = IntersectIntervals(xxmin, xxmax, xbmin, xbmax);
+            if (intersect) {
+               ind[current]++;
+               ind[current+ind[current]] = ic;
+            }   
+         }
+         current += ind[current]+1;
+      }
+      if (fIndY) delete fIndY;
+      fIndY = new Int_t[current];
+      memcpy(fIndY, &ind[0], current*sizeof(Int_t));
+   }
+   
+   // sort z boundaries
+   ib = 0;
+   TMath::Sort(2*nd, &boundaries[4*nd], &index[0], kFALSE);
+   temp[ib++] = boundaries[4*nd+index[0]];
+   // compact common boundaries
+   for (id=1; id<2*nd; id++) {
+      if ((TMath::Abs(temp[ib-1]-boundaries[4*nd+index[id]]))>1E-10) 
+          temp[ib++]=boundaries[4*nd+index[id]];
+   }      
+   // now find priority on Z
+   if (ib < 2) {
+      Error("SortAll", "less than 2 boundaries on Z !");
+      printf("### volume was : %s\n", fVolume->GetName());
+      return;
+   }   
+   if (ib == 2) {
+   // check range
+      if (((temp[0]-zmin)<1E-10) && ((temp[1]-zmax)>-1E-10)) {
+      // ordering on this axis makes no sense. Clear all arrays.
+         fPriority[2] = 0;
+         if (fIndZ) delete[] fIndZ; 
+         fIndZ = 0;
+         if (fZb) delete[] fZb;   
+         fZb = 0;
+         if (fOBz) delete[] fOBz;  
+         fOBz = 0;
+      } else {
+         fPriority[2] = 1; // all in one slice
+      }
+   } else {
+      fPriority[2] = 2;    // check all
+   }
+
+   if (fPriority[2]) {
+      // store compacted boundaries
+      if (fZb) delete fZb;
+      fZb = new Double_t[ib];
+      memcpy(fZb, &temp[0], (ib)*sizeof(Double_t));
+      fIb[2] = ib;
+      
+      memset(ind, 0, (2*nd+2)*(nd+1)*sizeof(Int_t));
+      current = 0;
+      if (fOBz) delete fOBz;
+      fOBz = 0;
+      fOBz = new Int_t[fIb[2]-1]; // offsets in ind
+      for (id=0; id<fIb[2]-1; id++) {
+         fOBz[id] = current; // offset of dght list
+         ind[current] = 0; // ndght in this slice
+         xxmin = fZb[id];
+         xxmax = fZb[id+1];
+         for (Int_t ic=0; ic<nd; ic++) {
+            xbmin = fBoxes[6*ic+4];   
+            xbmax = fBoxes[6*ic+5];   
+            ddx1 = TMath::Abs(xbmin-xxmax);
+            ddx2 = TMath::Abs(xbmax-xxmin);
+            if ((xbmin==xxmin)||(xbmax==xxmax)) {
+               ind[current]++;
+               ind[current+ind[current]] = ic;
+               continue;
+            }
+            if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
+            if (((xbmin>xxmin)&&(xbmin<xxmax))||((xbmax>xxmin)&&(xbmax<xxmax)) ||
+                ((xxmin>xbmin)&&(xxmin<xbmax))||((xxmax>xbmin)&&(xxmax<xbmax))) {
+               // daughter ic in interval
+               ind[current]++;
+               ind[current+ind[current]] = ic;
+            }
+         }
+         current += ind[current]+1;
+      }
+      if (fIndZ) delete fIndZ;
+      fIndZ = new Int_t[current];
+      memcpy(fIndZ, &ind[0], current*sizeof(Int_t));
+   }   
+
+   delete boundaries; boundaries=0;   
+   delete index; index=0;
+   delete temp; temp=0;
+   delete ind;
+
+//   Print();
+   if ((!fPriority[0]) && (!fPriority[1]) && (!fPriority[2])) {
+      fVolume->SetVoxelFinder(0);
+      delete this;
+   } else {
+//      Efficiency();
+   }   
+}
+//-----------------------------------------------------------------------------
+void TGeoCylVoxels::Voxelize(Option_t *)
+{
+//--- Voxelize fVolume.
+//   printf("Voxelizing %s\n", fVolume->GetName());
+   Int_t nd = fVolume->GetNdaughters();
+   if (!nd) return;
+   BuildVoxelLimits();
+   SortAll();
+}

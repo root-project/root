@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToOut() implemented by Mihaela Gheata
 
@@ -52,6 +52,17 @@ TGeoSphere::TGeoSphere()
 TGeoSphere::TGeoSphere(Double_t rmin, Double_t rmax, Double_t theta1,
                        Double_t theta2, Double_t phi1, Double_t phi2)
            :TGeoBBox(0, 0, 0)
+{
+// Default constructor specifying minimum and maximum radius
+   SetBit(TGeoShape::kGeoSph);
+   SetSphDimensions(rmin, rmax, theta1, theta2, phi1, phi2);
+   ComputeBBox();
+   SetNumberOfDivisions(20);
+}
+//-----------------------------------------------------------------------------
+TGeoSphere::TGeoSphere(const char *name, Double_t rmin, Double_t rmax, Double_t theta1,
+                       Double_t theta2, Double_t phi1, Double_t phi2)
+           :TGeoBBox(name, 0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
    SetBit(TGeoShape::kGeoSph);
@@ -323,6 +334,31 @@ TGeoVolume *TGeoSphere::Divide(TGeoVolume *voldiv, const char *divname, Int_t ia
    return voldiv;
 }      
 //-----------------------------------------------------------------------------
+void TGeoSphere::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   Double_t smin = TMath::Sin(fTheta1*kDegRad);
+   Double_t smax = TMath::Sin(fTheta2*kDegRad);
+   if (smin>smax) {
+      Double_t a = smin;
+      smin = smax;
+      smax = a;
+   }   
+   param[0] = fRmin*smin; // Rmin
+   param[0] *= param[0];
+   if (((90.-fTheta1)*(fTheta2-90.))>=0) smax = 1.;
+   param[1] = fRmax*smax; // Rmax
+   param[1] *= param[1];
+   param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1; // Phi1
+   param[3] = fPhi2;
+   if ((param[3]-param[2])==360.) {         // Phi2
+      param[2] = 0.;
+      param[3] = 360.;
+   }   
+   while (param[3]<param[2]) param[3]+=360.;
+}
+//-----------------------------------------------------------------------------
 void TGeoSphere::InspectShape() const
 {
 // print shape parameters
@@ -343,7 +379,15 @@ void TGeoSphere::Paint(Option_t *option)
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
-   painter->PaintSphere(vol, option);
+   painter->PaintSphere(this, option);
+}
+//-----------------------------------------------------------------------------
+void TGeoSphere::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintSphere(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
 void TGeoSphere::NextCrossing(TGeoParamCurve *c, Double_t *point) const

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.4 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -71,6 +71,20 @@ TGeoTube::TGeoTube()
 //-----------------------------------------------------------------------------
 TGeoTube::TGeoTube(Double_t rmin, Double_t rmax, Double_t dz)
            :TGeoBBox(0, 0, 0)
+{
+// Default constructor specifying minimum and maximum radius
+   SetBit(TGeoShape::kGeoTube);
+   SetTubeDimensions(rmin, rmax, dz);
+   if ((fDz<0) || (fRmin<0) || (fRmax<0)) {
+      SetBit(kGeoRunTimeShape);
+//      if (fRmax<=fRmin) SetBit(kGeoInvalidShape);
+//      printf("tube : dz=%f rmin=%f rmax=%f\n", dz, rmin, rmax);
+   }
+   ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoTube::TGeoTube(const char *name, Double_t rmin, Double_t rmax, Double_t dz)
+           :TGeoBBox(name, 0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
    SetBit(TGeoShape::kGeoTube);
@@ -418,6 +432,18 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return voldiv->Divide(divname, iaxis, ndiv, start, step);
 }      
 //-----------------------------------------------------------------------------
+void TGeoTube::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2, dZ
+   param[0] = fRmin; // Rmin
+   param[0] *= param[0];
+   param[1] = fRmax; // Rmax
+   param[1] *= param[1];
+   param[2] = 0.;    // Phi1
+   param[3] = 360.;  // Phi1
+}
+//-----------------------------------------------------------------------------
 TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -457,7 +483,15 @@ void TGeoTube::Paint(Option_t *option)
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
-   painter->PaintTube(vol, option);
+   painter->PaintTube(this, option);
+}
+//-----------------------------------------------------------------------------
+void TGeoTube::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintTube(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
 void TGeoTube::NextCrossing(TGeoParamCurve *c, Double_t *point) const
@@ -609,6 +643,16 @@ TGeoTubeSeg::TGeoTubeSeg()
 TGeoTubeSeg::TGeoTubeSeg(Double_t rmin, Double_t rmax, Double_t dz,
                           Double_t phi1, Double_t phi2)
             :TGeoTube(rmin, rmax, dz)
+{
+// Default constructor specifying minimum and maximum radius
+   SetBit(TGeoShape::kGeoTubeSeg);
+   SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
+   ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoTubeSeg::TGeoTubeSeg(const char *name, Double_t rmin, Double_t rmax, Double_t dz,
+                          Double_t phi1, Double_t phi2)
+            :TGeoTube(name, rmin, rmax, dz)
 {
 // Default constructor specifying minimum and maximum radius
    SetBit(TGeoShape::kGeoTubeSeg);
@@ -1143,6 +1187,19 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
    return voldiv->Divide(divname, iaxis, ndiv, start, step);
 }      
 //-----------------------------------------------------------------------------
+void TGeoTubeSeg::GetBoundingCylinder(Double_t *param) const
+{
+//--- Fill vector param[4] with the bounding cylinder parameters. The order
+// is the following : Rmin, Rmax, Phi1, Phi2
+   param[0] = fRmin; // Rmin
+   param[0] *= param[0];
+   param[1] = fRmax; // Rmax
+   param[1] *= param[1];
+   param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1; // Phi1
+   param[3] = fPhi2;                        // Phi2
+   while (param[3]<param[2]) param[3]+=360.;
+}
+//-----------------------------------------------------------------------------
 TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -1184,7 +1241,15 @@ void TGeoTubeSeg::Paint(Option_t *option)
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
-   painter->PaintTubs(vol, option);
+   painter->PaintTubs(this, option);
+}
+//-----------------------------------------------------------------------------
+void TGeoTubeSeg::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintTubs(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
 void TGeoTubeSeg::NextCrossing(TGeoParamCurve *c, Double_t *point) const
@@ -1328,6 +1393,23 @@ TGeoCtub::TGeoCtub()
 TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                    Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
          :TGeoTubeSeg(rmin, rmax, dz, phi1, phi2)
+{         
+// ctor
+   fNlow = new Double_t[3];
+   fNhigh = new Double_t[3];
+   fNlow[0] = lx;
+   fNlow[1] = ly;
+   fNlow[2] = lz;
+   fNhigh[0] = tx;
+   fNhigh[1] = ty;
+   fNhigh[2] = tz;
+   SetBit(kGeoCtub);
+   ComputeBBox();
+}
+//-----------------------------------------------------------------------------
+TGeoCtub::TGeoCtub(const char *name, Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
+                   Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
+         :TGeoTubeSeg(name, rmin, rmax, dz, phi1, phi2)
 {         
 // ctor
    fNlow = new Double_t[3];
