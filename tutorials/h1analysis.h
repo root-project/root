@@ -9,6 +9,7 @@
 #ifndef h1analysis_h
 #define h1analysis_h
 
+#include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
 #include <TSelector.h>
@@ -329,9 +330,17 @@ class h1analysis : public TSelector {
    void    Begin(TTree *tree);
    void    Init(TTree *tree);
    Bool_t  Notify();
+   Bool_t  Process(Int_t entry) {return kTRUE;}
    Bool_t  ProcessCut(Int_t entry);
    void    ProcessFill(Int_t entry);
+   void    SetOption(const char *option) { fOption = option; }
+   void    SetObject(TObject *obj) { fObject = obj; }
+   void    SetInputList(TList *input) {fInput = input;}
+   TList  *GetOutputList() const { return fOutput; }
    void    Terminate();
+   
+   ClassDef(h1analysis,0);
+   
 };
 
 #endif
