@@ -1,0 +1,76 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   07-Mar-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+#ifndef ROO_VALUE
+#define ROO_VALUE
+
+#include <iostream.h>
+
+#include "TString.h"
+
+#include "RooFitCore/RooDerivedValue.hh"
+class RooArgSet ;
+class RooBlindBase ;
+
+class RooValue : public RooDerivedValue {
+public:
+  inline RooValue() { }
+  RooValue(const char *name, const char *title,
+  	   Double_t value, const char *unit= "", RooBlindBase* blinder=0) ;
+  RooValue(const char *name, const char *title,	
+	   Double_t minValue, Double_t maxValue, const char *unit= "", RooBlindBase* blinder=0);
+  RooValue(const char *name, const char *title,
+	   Double_t value, Double_t minValue, Double_t maxValue,
+	   const char *unit= "", RooBlindBase* blinder=0);
+  RooValue(const RooValue& other);
+  virtual ~RooValue();
+
+  virtual RooAbsArg& operator=(RooAbsArg& other) ;
+
+  virtual Bool_t isDerived() const { return kFALSE; }
+  RooArgSet* dependents() const { return 0 ;}
+
+  virtual operator Double_t&();
+  virtual operator Double_t() ;
+  virtual Double_t GetVar() { return _value ; }
+  inline Double_t GetError() const { return _error; }
+
+  virtual void Set(Double_t value, Double_t minValue, Double_t maxValue);
+  virtual void SetVar(Double_t value);
+  inline void SetError(Double_t value) { _error= value; }
+  virtual Double_t operator=(Double_t newValue);
+
+  inline Bool_t isConstant() const { return getAttribute("Constant") ; }
+  inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
+  inline Bool_t isProjected() const { return getAttribute("Projected") ; }
+  inline void setProjected(Bool_t value= kTRUE) { setAttribute("Projected",value);}
+  inline Bool_t useLimits() const { return getAttribute("UseLimits") ; }
+  inline void setLimits(Bool_t value= kTRUE) { setAttribute("UseLimits",value) ; }
+
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) ;
+
+  virtual void PrintToStream(ostream& stream, Option_t* = 0) ;
+  TString* format(Int_t sigDigits, const char *options) ;
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+
+protected:
+  Double_t _error;
+  RooBlindBase* _blinder ; //! unowned ptr
+  friend ostream& operator<<(ostream& os, RooValue &var);
+  Double_t chopAt(Double_t what, Int_t where) ;
+
+
+  ClassDef(RooValue,1) // a real-valued variable and its value
+};
+
+#endif

@@ -1,0 +1,73 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   07-Mar-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+#ifndef ROO_DERIVED_VALUE
+#define ROO_DERIVED_VALUE
+
+#include "RooFitCore/RooAbsArg.hh"
+class RooArgSet ;
+class TH1F ;
+
+class RooDerivedValue : public RooAbsArg {
+public:
+
+  inline RooDerivedValue() { }
+  RooDerivedValue(const char *name, const char *title, const char *unit= "") ;
+  RooDerivedValue(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
+  RooDerivedValue(const RooDerivedValue& other);
+  virtual ~RooDerivedValue();
+
+  RooAbsArg& operator=(RooAbsArg& other) ;
+
+  virtual Bool_t isDerived() const { return kTRUE; }
+  const RooArgSet* dependents() const { return 0 ;}
+  virtual Double_t GetVar() ;
+  virtual Double_t Evaluate() { return 0 ; }
+  inline Double_t GetMin() const { return _minValue; }
+  inline Double_t GetMax() const { return _maxValue; }
+  void SetMin(Double_t value) ;
+  void SetMax(Double_t value) ;
+  virtual Bool_t inRange(Double_t value) const;
+
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) ;
+  virtual void PrintToStream(ostream& stream, Option_t* = 0) ;
+
+  inline const Text_t *GetUnit() const { return _unit.Data(); }
+  inline void SetUnit(const char *unit) { _unit= unit; }
+  void SetLabel(const char *label);
+  const char *GetLabel() const;
+  // get/set the default number of bins to use when histogramming this variable
+
+  TH1F *createHistogram(const char *label, const char *axis, Int_t bins= 0);
+  TH1F *createHistogram(const char *label, const char *axis,
+			Double_t lo, Double_t hi, Int_t bins= 0);
+  inline Int_t defaultHistBins(Int_t newValue= 0) {
+    if(newValue > 0) _defaultHistBins= newValue;
+    return _defaultHistBins;
+  }
+
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) {} ;
+
+protected:
+  friend class RooDataSet ;
+
+  void updateLimits() ;
+
+  Double_t _minValue, _maxValue, _value ;
+  TString _unit, _label ;
+  Int_t _defaultHistBins ;
+
+  ClassDef(RooDerivedValue,1) // a real-valued variable and its value
+};
+
+#endif
