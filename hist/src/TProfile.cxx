@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.39 2003/05/11 15:36:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.40 2003/06/22 13:34:30 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -617,7 +617,9 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y)
    AddBinContent(bin, y);
    fSumw2.fArray[bin] += (Stat_t)y*y;
    fBinEntries.fArray[bin] += 1;
-   if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
+   if (bin == 0 || bin > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    fTsumw++;
    fTsumw2++;
    fTsumwx  += x;
@@ -640,7 +642,9 @@ Int_t TProfile::Fill(const char *namex, Axis_t y)
    AddBinContent(bin, y);
    fSumw2.fArray[bin] += (Stat_t)y*y;
    fBinEntries.fArray[bin] += 1;
-   if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
+   if (bin == 0 || bin > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    Axis_t x = fXaxis.GetBinCenter(bin);
    fTsumw++;
    fTsumw2++;
@@ -668,7 +672,9 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y, Stat_t w)
    AddBinContent(bin, z*y);
    fSumw2.fArray[bin] += z*y*y;
    fBinEntries.fArray[bin] += w;
-   if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
+   if (bin == 0 || bin > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -693,7 +699,9 @@ Int_t TProfile::Fill(const char *namex, Axis_t y, Stat_t w)
    AddBinContent(bin, z*y);
    fSumw2.fArray[bin] += z*y*y;
    fBinEntries.fArray[bin] += w;
-   if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
+   if (bin == 0 || bin > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    Axis_t x = fXaxis.GetBinCenter(bin);
    fTsumw   += z;
    fTsumw2  += z*z;

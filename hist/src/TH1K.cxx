@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.4 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.5 2002/01/24 11:39:29 rdm Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -86,7 +86,9 @@ Int_t TH1K::Fill(Axis_t x)
    Int_t bin;
    fEntries++;
    bin =fXaxis.FindBin(x);
-   if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
+   if (bin == 0 || bin > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    ++fTsumw;
    ++fTsumw2;
    fTsumwx  += x;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.154 2003/07/10 07:20:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.155 2003/08/07 07:37:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -426,6 +426,7 @@ TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc inst
 
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
+Bool_t TH1::fgStatOverflows= kFALSE;
 
 extern void H1InitGaus();
 extern void H1InitExpo();
@@ -1499,7 +1500,9 @@ Int_t TH1::Fill(Axis_t x)
    bin =fXaxis.FindBin(x);
    AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
-   if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
+   if (bin == 0 || bin > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    ++fTsumw;
    ++fTsumw2;
    fTsumwx  += x;
@@ -1529,7 +1532,9 @@ Int_t TH1::Fill(Axis_t x, Stat_t w)
    bin =fXaxis.FindBin(x);
    AddBinContent(bin, w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
-   if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
+   if (bin == 0 || bin > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    Stat_t z= (w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
@@ -1593,7 +1598,9 @@ void TH1::FillN(Int_t ntimes, const Axis_t *x, const Double_t *w, Int_t stride)
       if (w) ww = w[i];
       AddBinContent(bin, ww);
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
-      if (bin == 0 || bin > nbins) continue;
+      if (bin == 0 || bin > nbins) {
+         if (!fgStatOverflows) continue;
+      }
       Stat_t z= (ww > 0 ? ww : -ww);
       fTsumw   += z;
       fTsumw2  += z*z;
@@ -4101,6 +4108,16 @@ void  TH1::Smooth(Int_t ntimes)
 }
 
 
+// ------------------------------------------------------------------------
+void  TH1::StatOverflows(Bool_t flag)
+{
+//  if flag=kTRUE, underflows and overflows are used by the Fill functions
+//  in the computation of statistics (mean value, RMS).
+//  By default, underflows or overflows are not used.
+   
+   fgStatOverflows = flag;
+}   
+
 //_______________________________________________________________________
 void TH1::Streamer(TBuffer &b)
 {
@@ -4474,7 +4491,13 @@ Stat_t TH1::GetMean(Int_t axis) const
 {
 //   -*-*-*-*-*-*Return mean value of this histogram along the X axis*-*-*-*-*
 //               ====================================================
-
+//  Note that the mean value/RMS is computed using the bins in the currently
+//  defined range (see TAxis::SetRange). By default the range includes
+//  all bins from 1 to nbins included, excluding underflows and overflows.
+//  To force the underflows and overflows in the computation, one must
+//  call the static function TH1::StatOverflows(kTRUE) before filling
+//  the histogram.
+   
   if (axis <1 || axis > 3) return 0;
   Stat_t stats[10];
   for (Int_t i=4;i<10;i++) stats[i] = 0;
@@ -4489,6 +4512,12 @@ Stat_t TH1::GetRMS(Int_t axis) const
 {
 //   -*-*-*-*-*-*Return the Root Mean Square value of this histogram*-*-*-*-*
 //               ===================================================
+//  Note that the mean value/RMS is computed using the bins in the currently
+//  defined range (see TAxis::SetRange). By default the range includes
+//  all bins from 1 to nbins included, excluding underflows and overflows.
+//  To force the underflows and overflows in the computation, one must
+//  call the static function TH1::StatOverflows(kTRUE) before filling
+//  the histogram.
 
   if (axis <1 || axis > 3) return 0;
   Stat_t x, rms2, stats[10];
@@ -4505,17 +4534,24 @@ Stat_t TH1::GetRMS(Int_t axis) const
 //______________________________________________________________________________
 void TH1::GetStats(Stat_t *stats) const
 {
-   // fill the array stats from the contents of this histogram
-   // The array stats must be correctly dimensionned in the calling program.
-   // stats[0] = sumw
-   // stats[1] = sumw2
-   // stats[2] = sumwx
-   // stats[3] = sumwx2
-   //
-   // If no axis-subrange is specified (via TAxis::SetRange), the array stats
-   // is simply a copy of the statistics quantities computed at filling time.
-   // If a sub-range is specified, the function recomputes these quantities
-   // from the bin contents in the current axis range.
+// fill the array stats from the contents of this histogram
+// The array stats must be correctly dimensionned in the calling program.
+// stats[0] = sumw
+// stats[1] = sumw2
+// stats[2] = sumwx
+// stats[3] = sumwx2
+//
+// If no axis-subrange is specified (via TAxis::SetRange), the array stats
+// is simply a copy of the statistics quantities computed at filling time.
+// If a sub-range is specified, the function recomputes these quantities
+// from the bin contents in the current axis range.
+//
+//  Note that the mean value/RMS is computed using the bins in the currently
+//  defined range (see TAxis::SetRange). By default the range includes
+//  all bins from 1 to nbins included, excluding underflows and overflows.
+//  To force the underflows and overflows in the computation, one must
+//  call the static function TH1::StatOverflows(kTRUE) before filling
+//  the histogram.
 
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 

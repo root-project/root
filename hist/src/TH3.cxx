@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.36 2003/07/02 21:18:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.37 2003/07/07 20:52:08 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -194,9 +194,16 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z)
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
+      
+   if (biny == 0 || biny > fYaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
+   if (binz == 0 || binz > fZaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    return bin;
 }
 
@@ -222,9 +229,15 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
+   if (biny == 0 || biny > fYaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
+   if (binz == 0 || binz > fZaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    return bin;
 }
 
@@ -269,7 +282,9 @@ Int_t TH3::Fill(const char *namex, Axis_t y, const char *namez, Stat_t w)
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
    return bin;
 }
@@ -293,7 +308,9 @@ Int_t TH3::Fill(const char *namex, const char *namey, Axis_t z, Stat_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   if (binz == 0 || binz > fZaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    return bin;
 }
 
@@ -314,7 +331,9 @@ Int_t TH3::Fill(Axis_t x, const char *namey, const char *namez, Stat_t w)
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
    return bin;
@@ -337,9 +356,13 @@ Int_t TH3::Fill(Axis_t x, const char *namey, Axis_t z, Stat_t w)
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   if (binz == 0 || binz > fZaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    return bin;
 }
 
@@ -360,8 +383,12 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, const char *namez, Stat_t w)
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
+   if (biny == 0 || biny > fYaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
    return bin;
 }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.47 2003/07/02 21:18:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.48 2003/07/08 16:21:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -94,6 +94,7 @@ protected:
     TVirtualHistPainter *fPainter;  //!pointer to histogram painter
     static Int_t  fgBufferSize;     //!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
+    static Bool_t fgStatOverflows;  //!flag to use under/overflows in statistics
 
 private:
     Int_t   AxisChoice(Option_t *axis) const;
@@ -294,6 +295,7 @@ public:
     virtual void     Smooth(Int_t ntimes=1); // *MENU*
     static  void     SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes=1);
     static Double_t  SmoothMedian(Int_t n, Double_t *a);
+    static  void     StatOverflows(Bool_t flag=kTRUE);
     virtual void     Sumw2();
     void             UseCurrentStyle();
 

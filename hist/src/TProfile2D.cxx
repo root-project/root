@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.15 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.16 2003/02/25 14:17:03 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -576,8 +576,12 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z)
    AddBinContent(bin, z);
    fSumw2.fArray[bin] += (Stat_t)z*z;
    fBinEntries.fArray[bin] += 1;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
+   if (biny == 0 || biny > fYaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    ++fTsumw;
    ++fTsumw2;
    fTsumwx  += x;
@@ -606,7 +610,9 @@ Int_t TProfile2D::Fill(Axis_t x, const char *namey, Axis_t z)
    AddBinContent(bin, z);
    fSumw2.fArray[bin] += (Stat_t)z*z;
    fBinEntries.fArray[bin] += 1;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    Axis_t y = fYaxis.GetBinCenter(biny);
    ++fTsumw;
@@ -670,7 +676,9 @@ Int_t TProfile2D::Fill(const char *namex, Axis_t y, Axis_t z)
    fSumw2.fArray[bin] += (Stat_t)z*z;
    fBinEntries.fArray[bin] += 1;
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    Axis_t x = fYaxis.GetBinCenter(binx);
    ++fTsumw;
    ++fTsumw2;
@@ -704,8 +712,12 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
    AddBinContent(bin, u*z);
    fSumw2.fArray[bin] += u*z*z;
    fBinEntries.fArray[bin] += w;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
+   if (biny == 0 || biny > fYaxis.GetNbins()) {
+      if (!fgStatOverflows) return -1;
+   }
    fTsumw   += u;
    fTsumw2  += u*u;
    fTsumwx  += u*x;
