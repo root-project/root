@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.36 2001/05/09 13:30:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.37 2001/05/17 10:57:56 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -996,7 +996,9 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char *expandedfname)
 
   TClass *cla = GetClass(className);
   if ( cla ) {
-    result = strcmp( gSystem->BaseName(cla->GetDeclFileName()),fname ) == 0;
+    const char *decfile = gSystem->BaseName(cla->GetDeclFileName());
+    if(!decfile) return 0;
+    result = strcmp( decfile,fname ) == 0;
   }
   return result;
 }
