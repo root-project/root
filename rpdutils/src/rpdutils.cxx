@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.69 2005/02/18 09:51:21 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.70 2005/02/18 14:44:40 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -6388,19 +6388,22 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
    // If any problem with changing ugid's occurs, prints a warning trying anyhow
    // to read the password hash.
 
+   int rc = -1;
+   int len = 0, n = 0, fid = -1;
+
    // Check inputs
    if (!usr || !pass) {
       if (gDebug > 0)
          ErrorInfo("RpdRetrieveSpecialPass: invalid arguments:"
                    " us:%p, sp:%p", usr, pass);
-      return -1;
+      return rc;
    }
 
    struct passwd *pw = getpwnam(usr);
    if (!pw) {
       if (gDebug > 0)
          ErrorInfo("RpdRetrieveSpecialPass: user '%s' does not exist", usr);
-      return -1;
+      return rc;
    }
 
    // target and actual uid
@@ -6438,13 +6441,15 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
       if (GetErrno() != ENOENT) {
          ErrorInfo("RpdRetrieveSpecialPass: cannot stat password file"
                    " %s (errno: %d)", rootdpass, GetErrno());
-         return -1;
+         rc = -1;
+         goto back;
       } else {
          if (gDebug > 0)
             ErrorInfo("RpdRetrieveSpecialPass: file %s does not exists",
                       rootdpass);
          pass[0] = 0;
-         return 0;
+         rc = 0;
+         goto back;
       }
    }
    if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
@@ -6453,33 +6458,36 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
                 " 0%o (should be 0600)", rootdpass, (st.st_mode & 0777));
       ErrorInfo("RpdRetrieveSpecialPass: %d %d",
                 S_ISREG(st.st_mode),S_ISDIR(st.st_mode));
-      return -2;
+      rc = -2;
+      goto back;
    }
 
-   int fid = open(rootdpass, O_RDONLY);
-   if (fid == -1) {
+   if ((fid = open(rootdpass, O_RDONLY) == -1)) {
       ErrorInfo("RpdRetrieveSpecialPass: cannot open password file"
                 " %s (errno: %d)", rootdpass, GetErrno());
-      return -1;
+      rc = -1;
+      goto back;
    }
 
-   int n = 0;
    if ((n = read(fid, pass, lpwmax - 1)) <= 0) {
       close(fid);
       ErrorInfo("RpdRetrieveSpecialPass: cannot read password file"
                 " %s (errno: %d)", rootdpass, GetErrno());
-      return -1;
+      rc = -1;
+      goto back;
    }
    close(fid);
 
    // Get rid of special trailing chars 
-   int len = n;
+   len = n;
    while (len-- && (pass[len] == '\n' || pass[len] == 32))
       pass[len] = 0;
 
    // Null-terminate
    pass[++len] = 0;
+   rc = len;
 
+ back:
    // Change back uid's
    if (ouid == 0) {
       // set uid and gid
@@ -6492,7 +6500,7 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
    }
 
    // We are done
-   return len;
+   return rc;
 }
 
 } // namespace ROOT
