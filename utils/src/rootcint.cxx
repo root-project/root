@@ -32,9 +32,9 @@
 // latter case a complete compileable file is generated (including      //
 // the include statements). The first method also allows the            //
 // output to be appended to an already existing file (using >>).        //
-// The optional - behind the include file name tells rootcint to not    //
+// The optional - behind the header file name tells rootcint to not     //
 // generate the Streamer() method. A custom method must be provided     //
-// by the user in that case. For the ! and + options see below.         //
+// by the user in that case. For the + and ! options see below.         //
 // When using option -c also the interpreter method interface stubs     //
 // will be written to the output file (AxisDict.cxx in the above case). //
 // By default the output file will not be overwritten if it exists.     //
@@ -77,13 +77,12 @@
 // operator>>(TBuffer &b, MyClass *&obj) function. This is necessary to //
 // be able to write pointers to objects of classes not inheriting from  //
 // TObject. See for an example the source of the TArrayF class.         //
-// A trailing + in the class name tells rootcint to generate a          //
-// Streamer() with extra byte count information. This adds one int to   //
-// each object in the output buffer, but it allows for powerful error   //
-// correction in case a Streamer() method is out of sync compared to    //
-// the data on the file. The + option is mutual exclusive with both     //
-// the - and ! options.                                                 //
-// When this linkdef file is not specified a default version exporting  //
+// A trailing + in the class name tells rootcint to generate an         //
+// automatic Streamer(), i.e. a streamer that let ROOT do automatic     //
+// schema evolution. The + option is mutually exclusive with            //
+// both the - and ! options. For new classes the + option is the        //
+// preferred option. For legacy reasons it is not yet the default.      //
+// When the linkdef file is not specified a default version exporting   //
 // the classes with the names equal to the include files minus the .h   //
 // is generated.                                                        //
 //                                                                      //
@@ -91,7 +90,7 @@
 // 1) LinkDef.h must be the last argument on the rootcint command line. //
 // 2) Note that the LinkDef file name MUST contain the string:          //
 //    LinkDef.h, Linkdef.h or linkdef.h, i.e. NA49_LinkDef.h is fine    //
-//    just like, mylinkdef.h. Linkdef.h is case sensitive.              //
+//    just like, linkdef1.h. Linkdef.h is case sensitive.               //
 //                                                                      //
 // ----------- historical ---------                                     //
 //                                                                      //
@@ -137,20 +136,20 @@ const char *help =
 "\n"
 "Rootcint can be used like:\n"
 "\n"
-"  rootcint TAttAxis.h[+][-][!] ... [LinkDef.h] > AxisDict.cxx\n"
+"  rootcint TAttAxis.h[{+,-}][!] ... [LinkDef.h] > AxisDict.cxx\n"
 "\n"
 "or\n"
 "\n"
-"  rootcint [-f] AxisDict.cxx [-c] TAttAxis.h[+][-][!] ... [LinkDef.h]\n"
+"  rootcint [-f] AxisDict.cxx [-c] TAttAxis.h[{+,-}][!] ... [LinkDef.h]\n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
 "latter case a complete compileable file is generated (including\n"
 "the include statements). The first method also allows the\n"
 "output to be appended to an already existing file (using >>).\n"
-"The optional - behind the include file name tells rootcint\n"
+"The optional - behind the header file name tells rootcint\n"
 "to not generate the Streamer() method. A custom method must be\n"
-"provided by the user in that case. For the ! and + options see below.\n"
+"provided by the user in that case. For the + and ! options see below.\n"
 "When using option -c also the interpreter method interface stubs\n"
 "will be written to the output file (AxisDict.cxx in the above case).\n"
 "By default the output file will not be overwritten if it exists.\n"
@@ -193,12 +192,11 @@ const char *help =
 "operator>>(TBuffer &b, MyClass *&obj) method. This is necessary to\n"
 "be able to write pointers to objects of classes not inheriting from\n"
 "TObject. See for an example the source of the TArrayF class.\n"
-"A trailing + in the class name tells rootcint to generate a\n"
-"Streamer() with extra byte count information. This adds one int to\n"
-"each object in the output buffer, but it allows for powerful error\n"
-"correction in case a Streamer() method is out of sync compared to\n"
-"the data on the file. The + option is mutual exclusive with both\n"
-"the - and ! options.\n"
+"A trailing + in the class name tells rootcint to generate an\n"
+"automatic Streamer(), i.e. a streamer that let ROOT do automatic\n"
+"schema evolution. The + option is mutually exclusive with\n"
+"both the - and ! options. For new classes the + option is the\n"
+"preferred option. For legacy reasons it is not yet the default.\n"
 "When this linkdef file is not specified a default version exporting\n"
 "the classes with the names equal to the include files minus the .h\n"
 "is generated.\n"
@@ -207,7 +205,7 @@ const char *help =
 "1) LinkDef.h must be the last argument on the rootcint command line.\n"
 "2) Note that the LinkDef file name MUST contain the string:\n"
 "   LinkDef.h, Linkdef.h or linkdef.h, i.e. NA49_LinkDef.h is fine,\n"
-"   just like mylinkdef.h. Linkdef.h is case sensitive.\n";
+"   just like linkdef1.h. Linkdef.h is case sensitive.\n";
 
 #else
 #include <ertti.h>
@@ -238,6 +236,28 @@ int IsSTLContainer(G__DataMemberInfo &m)
        !strcmp(type, "map")      || !strcmp(type, "set")      ||
        !strcmp(type, "multimap") || !strcmp(type, "multiset"))
       return 1;
+   return 0;
+}
+
+//______________________________________________________________________________
+int IsStreamable(G__DataMemberInfo &m)
+{
+   // Is this member a Streamable object?
+
+   if ((m.Property() & G__BIT_ISSTATIC) ||
+         strncmp(m.Title(), "!", 1) == 0        ||
+         strcmp(m.Name(), "G__virtualinfo") == 0) return 0;
+   if (((m.Type())->Property() & G__BIT_ISFUNDAMENTAL) ||
+       ((m.Type())->Property() & G__BIT_ISENUM)) return 0;
+   if (IsSTLContainer(m)) return 1;
+   if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) return 1;
+   if ((m.Type())->HasMethod("Streamer")) {
+      char a[80];
+      int version;
+      sprintf(a, "%s::Class_Version()", m.Type()->Fullname());
+      version = (int)G__int(G__calc(a));
+      if (version > 0) return 1;
+   }
    return 0;
 }
 
@@ -304,22 +324,107 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
          } else if (m.Property() & G__BIT_ISARRAY) {
 
          } else {
-            printf("      { TString R__str; R__str.Streamer(R__b); ");
+            fprintf(fp, "      { TString R__str; R__str.Streamer(R__b); ");
             if (m.Property() & G__BIT_ISPOINTER)
-               printf("(*(%s = new string)) = R__str.Data(); }\n", m.Name());
+               fprintf(fp, "(*(%s = new string)) = R__str.Data(); }\n", m.Name());
             else
-               printf("%s = R__str.Data(); }\n", m.Name());
+               fprintf(fp, "%s = R__str.Data(); }\n", m.Name());
          }
       } else {
          // create write mode
          if (m.Property() & G__BIT_ISPOINTER)
-            printf("      { R__b.WriteString(%s->data());\n", m.Name());
+            fprintf(fp, "      { TString R__str = %s->data(); R__str.Streamer(R__b);}\n", m.Name());
          else
-            printf("      { R__b.WriteString(%s.data());\n", m.Name());
+            fprintf(fp, "      { TString R__str = %s.data(); R__str.Streamer(R__b);}\n", m.Name());
       }
       return 1;
    }
    return 0;
+}
+
+//______________________________________________________________________________
+int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
+{
+   // Create Streamer code for an STL container array. Returns 1 if data member
+   // was an STL container and if Streamer code has been created, 0 otherwise.
+
+   const char *stlc = m.Type()->TmpltName();
+   int len = 1;
+   for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
+
+   if (!strcmp(stlc, "vector") || !strcmp(stlc, "list") ||
+       !strcmp(stlc, "deque")) {
+      if (rwmode == 0) {
+         // create read code
+         fprintf(fp, "      {\n");
+         fprintf(fp, "         for (Int_t l=0;l<%d;l++) {\n",len);
+         const char *s = TemplateArg(m).Name();
+         if (!strncmp(s, "const ", 6)) s += 6;
+         if (m.Property() & G__BIT_ISPOINTER)
+            fprintf(fp, "            %s[l] = new %s<%s>;\n", m.Name(), stlc, s);
+         else
+            fprintf(fp, "            %s[l].clear();\n", m.Name());
+         fprintf(fp, "            int R__i, R__n;\n");
+         fprintf(fp, "            R__b >> R__n;\n");
+         fprintf(fp, "            for (R__i = 0; R__i < R__n; R__i++) {\n");
+         fprintf(fp, "               %s R__t;\n", s);
+         if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
+             (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
+             (TemplateArg(m).Property() & G__BIT_ISENUM)) {
+            if (TemplateArg(m).Property() & G__BIT_ISENUM)
+               fprintf(fp, "               R__b >> (Int_t&)R__t;\n");
+            else
+               fprintf(fp, "               R__b >> R__t;\n");
+         } else {
+            if (TemplateArg(m).HasMethod("Streamer"))
+               fprintf(fp, "               R__t.Streamer(R__b);\n");
+            else {
+               fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
+                       " method (need manual intervention)\n",
+                       m.MemberOf()->Name(), m.Name(), TemplateArg(m).Name());
+               fprintf(fp, "               //R__t.Streamer(R__b);\n");
+            }
+         }
+         if (m.Property() & G__BIT_ISPOINTER)
+            fprintf(fp, "               %s[l]->push_back(R__t);\n", m.Name());
+         else
+            fprintf(fp, "               %s[l].push_back(R__t);\n", m.Name());
+         fprintf(fp, "            }\n");
+         fprintf(fp, "         }\n");
+         fprintf(fp, "      }\n");
+      } else {
+         // create write code
+         fprintf(fp, "      {\n");
+         fprintf(fp, "         for (Int_t l=0;l<%d;l++) {\n",len);
+         if (m.Property() & G__BIT_ISPOINTER)
+            fprintf(fp, "            R__b << %s[l]->size();\n", m.Name());
+         else
+            fprintf(fp, "            R__b << %s[l].size();\n", m.Name());
+         fprintf(fp, "            %s<%s>::iterator R__k;\n", stlc, TemplateArg(m).Name());
+         if (m.Property() & G__BIT_ISPOINTER)
+            fprintf(fp, "            for (R__k = %s[l]->begin(); R__k != %s[l]->end(); ++R__k)\n",
+                    m.Name(), m.Name());
+         else
+            fprintf(fp, "            for (R__k = %s[l].begin(); R__k != %s[l].end(); ++R__k)\n",
+                    m.Name(), m.Name());
+         if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
+             (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
+             (TemplateArg(m).Property() & G__BIT_ISENUM)) {
+            if (TemplateArg(m).Property() & G__BIT_ISENUM)
+               fprintf(fp, "               R__b << (Int_t)*R__k;\n");
+            else
+               fprintf(fp, "               R__b << *R__k;\n");
+         } else {
+            if (TemplateArg(m).HasMethod("Streamer"))
+               fprintf(fp, "               (*R__k).Streamer(R__b);\n");
+            else
+               fprintf(fp, "               //(*R__k).Streamer(R__b);\n");
+         }
+         fprintf(fp, "         }\n");
+         fprintf(fp, "      }\n");
+      }
+   }
+   return 1;
 }
 
 //______________________________________________________________________________
@@ -330,18 +435,22 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 
    if (m.Type()->IsTmplt() && IsSTLContainer(m)) {
       const char *stlc = m.Type()->TmpltName();
+      if (m.Property() & G__BIT_ISARRAY) return STLContainerArrayStreamer(m,rwmode);
+
       if (!strcmp(stlc, "vector") || !strcmp(stlc, "list") ||
           !strcmp(stlc, "deque")) {
          if (rwmode == 0) {
             // create read code
             fprintf(fp, "      {\n");
+            const char *s = TemplateArg(m).Name();
+            if (!strncmp(s, "const ", 6)) s += 6;
             if (m.Property() & G__BIT_ISPOINTER)
-               fprintf(fp, "         %s = new %s;\n", m.Name(), m.Type()->Name());
+               fprintf(fp, "         %s = new %s<%s>;\n", m.Name(), stlc, s);
+            else
+               fprintf(fp, "         %s.clear();\n", m.Name());
             fprintf(fp, "         int R__i, R__n;\n");
             fprintf(fp, "         R__b >> R__n;\n");
             fprintf(fp, "         for (R__i = 0; R__i < R__n; R__i++) {\n");
-            const char *s = TemplateArg(m).Name();
-            if (!strncmp(s, "const ", 6)) s += 6;
             fprintf(fp, "            %s R__t;\n", s);
             if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
                 (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
@@ -408,6 +517,7 @@ int PointerToPointer(G__DataMemberInfo &m)
    return 0;
 }
 
+
 //______________________________________________________________________________
 void WriteArrayDimensions(int dim)
 {
@@ -459,12 +569,14 @@ void WriteClassName(G__ClassInfo &cl, int tmplt = 0)
    fprintf(fp, "   return \"%s\";\n}\n\n", cl.Fullname());
    if (!tmplt) {
       fprintf(fp, "// Static variable to hold initialization object\n");
-      fprintf(fp, "static %s::R__Init __gR__Init%s;\n\n",
-              cl.Fullname(), G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "static %s::R__Init __gR__Init%s(%d);\n\n",
+              cl.Fullname(), G__map_cpp_name((char *)cl.Fullname()),
+              cl.RootFlag());
    } else {
       fprintf(fp, "// Static variable to hold initialization object\n");
-      fprintf(fp, "static R__Init%s __gR__Init%s%s;\n\n", cl.Name(),
-              cl.TmpltName(), G__map_cpp_name((char *)cl.TmpltArg()));
+      fprintf(fp, "static R__Init%s __gR__Init%s%s(%d);\n\n", cl.Name(),
+              cl.TmpltName(), G__map_cpp_name((char *)cl.TmpltArg()),
+              cl.RootFlag());
    }
 }
 
@@ -564,9 +676,10 @@ void WriteStreamer(G__ClassInfo &cl)
       return;
    }
 
-   // see if we should generate Streamer with byte count code
+   // see if we should generate Streamer with extra byte count code
    int ubc = 0;
-   if ((cl.RootFlag() & G__USEBYTECOUNT)) ubc = 1;
+   //if ((cl.RootFlag() & G__USEBYTECOUNT)) ubc = 1;
+   ubc = 1;   // now we'll always generate byte count streamers
 
    // loop twice: first time write reading code, second time writing code
    for (int i = 0; i < 2; i++) {
@@ -781,6 +894,143 @@ void WriteStreamer(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
+void WriteAutoStreamer(G__ClassInfo &cl)
+{
+   // Write Streamer() method suitable for automatic schema evolution.
+
+   fprintf(fp, "//_______________________________________");
+   fprintf(fp, "_______________________________________\n");
+   fprintf(fp, "void %s::Streamer(TBuffer &R__b)\n{\n", cl.Fullname());
+   fprintf(fp, "   // Stream an object of class %s.\n\n", cl.Fullname());
+   fprintf(fp, "   if (R__b.IsReading()) {\n");
+   fprintf(fp, "      %s::Class()->ReadBuffer(R__b, this);\n", cl.Fullname());
+   fprintf(fp, "   } else {\n");
+   fprintf(fp, "      %s::Class()->WriteBuffer(R__b, this);\n", cl.Fullname());
+   fprintf(fp, "   }\n");
+   fprintf(fp, "}\n\n");
+}
+
+//______________________________________________________________________________
+void WriteStreamerBases(G__ClassInfo &cl)
+{
+   // Write Streamer() method for base classes of cl (unused)
+
+   fprintf(fp, "//_______________________________________");
+   fprintf(fp, "_______________________________________\n");
+   fprintf(fp, "void %s_StreamerBases(TBuffer &R__b, void *pointer)\n{\n",  cl.Fullname());
+   fprintf(fp, "   // Stream base classes of class %s.\n\n", cl.Fullname());
+   fprintf(fp, "   %s *obj = (%s*)pointer;\n", cl.Fullname(), cl.Fullname());
+   fprintf(fp, "   if (R__b.IsReading()) {\n");
+   G__BaseClassInfo br(cl);
+   while (br.Next())
+      if (br.HasMethod("Streamer")) {
+         fprintf(fp, "      obj->%s::Streamer(R__b);\n", br.Name());
+      }
+   fprintf(fp, "   } else {\n");
+   G__BaseClassInfo bw(cl);
+   while (bw.Next())
+      if (bw.HasMethod("Streamer")) {
+         fprintf(fp, "      obj->%s::Streamer(R__b);\n", bw.Name());
+      }
+   fprintf(fp, "   }\n");
+   fprintf(fp, "}\n\n");
+}
+
+//______________________________________________________________________________
+void WritePointersSTL(G__ClassInfo &cl)
+{
+   // Write interface function for STL members
+
+   char a[80];
+   int version;
+   sprintf(a, "%s::Class_Version()", cl.Fullname());
+   version = (int)G__int(G__calc(a));
+   if (version <= 0) return;
+
+   G__DataMemberInfo m(cl);
+
+   while (m.Next()) {
+      if ((m.Property() & G__BIT_ISSTATIC)) continue;
+      //member is a string
+      if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
+         fprintf(fp, "//_______________________________________");
+         fprintf(fp, "_______________________________________\n");
+         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p)\n",cl.Name(),m.Name());
+         fprintf(fp, "{\n");
+         if (m.Property() & G__BIT_ISPOINTER) {
+            fprintf(fp, "   %s %s = (%s)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+         } else {
+            fprintf(fp, "   %s &%s = *(%s *)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+         }
+         fprintf(fp, "   if (R__b.IsReading()) {\n");
+         STLStringStreamer(m,0);
+         fprintf(fp, "   } else {\n");
+         STLStringStreamer(m,1);
+         fprintf(fp, "   }\n");
+         fprintf(fp, "}\n\n");
+         continue;
+      }
+      
+      //member is STL container
+      if (!IsStreamable(m)) continue;
+         fprintf(fp, "//_______________________________________");
+         fprintf(fp, "_______________________________________\n");
+         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p)\n",cl.Name(),m.Name());
+         fprintf(fp, "{\n");
+         if (m.Property() & G__BIT_ISARRAY) {
+            fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+         } else {
+            if (m.Property() & G__BIT_ISPOINTER) {
+               fprintf(fp, "   %s %s = (%s)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+            } else {
+               fprintf(fp, "   %s &%s = *(%s *)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+            }
+         }
+         fprintf(fp, "   if (R__b.IsReading()) {\n");
+         if (m.Type()->IsTmplt() && IsSTLContainer(m)) {
+            STLContainerStreamer(m,0);
+         } else {
+            if (m.Property() & G__BIT_ISARRAY) {
+               int len = 1;
+               for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
+               fprintf(fp, "      for (Int_t l=0;l<%d;l++) {\n",len);
+               fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+               fprintf(fp, "      }\n");
+            } else {
+               if (m.Property() & G__BIT_ISPOINTER) {
+                  if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                  else                                fprintf(fp, "      R__b >> %s;\n",m.Name());
+               } else {
+                  fprintf(fp, "      %s.Streamer(R__b);\n",m.Name());
+               }
+            }
+         }
+         fprintf(fp, "   } else {\n");
+         if (m.Type()->IsTmplt() && IsSTLContainer(m)) {
+            STLContainerStreamer(m,1);
+         } else {
+            if (m.Property() & G__BIT_ISARRAY) {
+               int len = 1;
+               for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
+               fprintf(fp, "      for (Int_t l=0;l<%d;l++) {\n",len);
+               fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+               fprintf(fp, "      }\n");
+            } else {
+               if (m.Property() & G__BIT_ISPOINTER) {
+                  if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                  else                                fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
+               } else {
+                  fprintf(fp, "      %s.Streamer(R__b);\n",m.Name());
+               }
+            }
+         }
+         fprintf(fp, "   }\n");
+         fprintf(fp, "}\n\n");
+      //}
+   }
+}
+
+//______________________________________________________________________________
 void WriteShowMembers(G__ClassInfo &cl)
 {
    fprintf(fp, "//_______________________________________");
@@ -794,7 +1044,13 @@ void WriteShowMembers(G__ClassInfo &cl)
    // Inspect data members
    G__DataMemberInfo m(cl);
    char cdim[12], cvar[64];
-
+   char a[80];
+   int version;
+   sprintf(a, "%s::Class_Version()", cl.Fullname());
+   version = (int)G__int(G__calc(a));
+   int clflag = 1;
+   if (version <= 0 || cl.RootFlag() == 0) clflag = 0;
+   
    while (m.Next()) {
 
       // we skip:
@@ -833,6 +1089,21 @@ void WriteShowMembers(G__ClassInfo &cl)
             }
          } else {
             // we have an object
+            
+            //string
+            if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
+               if (m.Property() & G__BIT_ISPOINTER) {
+                  fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"*%s\", &%s);\n",
+                       m.Name(), m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"*%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+               } else {
+                  fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n",
+                          m.Name(), m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+               }
+               continue;
+            }
+            
             if (m.Property() & G__BIT_ISARRAY &&
                 m.Property() & G__BIT_ISPOINTER) {
                sprintf(cvar, "*%s", m.Name());
@@ -842,9 +1113,11 @@ void WriteShowMembers(G__ClassInfo &cl)
                }
                fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n", cvar,
                        m.Name());
+               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
             } else if (m.Property() & G__BIT_ISPOINTER) {
                fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"*%s\", &%s);\n",
                        m.Name(), m.Name());
+               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"*%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
             } else if (m.Property() & G__BIT_ISARRAY) {
                sprintf(cvar, "%s", m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
@@ -853,10 +1126,17 @@ void WriteShowMembers(G__ClassInfo &cl)
                }
                fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", %s);\n",
                        cvar, m.Name());
+               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(void*)&R__%s_%s);\n",cvar,cl.Name(),m.Name());
             } else {
-               if ((m.Type())->HasMethod("ShowMembers"))
+               if ((m.Type())->HasMethod("ShowMembers")) {
                   fprintf(fp, "   %s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
                           m.Name(), m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s.\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+               } else {
+                  fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n",
+                          m.Name(), m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+               }
             }
          }
       }
@@ -1337,6 +1617,7 @@ int main(int argc, char **argv)
    time_t t = time(0);
    fprintf(fp, "//\n// File generated by %s at %.24s.\n", argv[0], ctime(&t));
    fprintf(fp, "// Do NOT change. Changes will be lost next time file is generated\n//\n\n");
+   fprintf(fp, "#include \"TClass.h\"\n");
    fprintf(fp, "#include \"TBuffer.h\"\n");
    fprintf(fp, "#include \"TMemberInspector.h\"\n");
    fprintf(fp, "#include \"TError.h\"\n\n");
@@ -1424,9 +1705,15 @@ int main(int argc, char **argv)
          if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
 
             if (cl.HasMethod("Streamer")) {
-               if (!(cl.RootFlag() & G__NOSTREAMER))
-                  WriteStreamer(cl);
-               else
+               //WriteStreamerBases(cl);
+               WritePointersSTL(cl);
+               if (!(cl.RootFlag() & G__NOSTREAMER)) {
+                  if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
+                     WriteAutoStreamer(cl);
+                  } else {
+                     WriteStreamer(cl);
+                  }
+               } else
                   fprintf(stderr, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
             } else {
                fprintf(stderr, "Class %s: Streamer() not declared\n", cl.Fullname());
@@ -1473,9 +1760,12 @@ int main(int argc, char **argv)
 
       if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
          if (cl.HasMethod("Streamer")) {
-            if (!(cl.RootFlag() & G__NOSTREAMER))
-               WriteStreamer(cl);
-            else
+            if (!(cl.RootFlag() & G__NOSTREAMER)) {
+               if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/))
+                  WriteAutoStreamer(cl);
+               else
+                  WriteStreamer(cl);
+            } else
                fprintf(stderr, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
          } else {
             fprintf(stderr, "Class %s: Streamer() not declared\n", cl.Fullname());
