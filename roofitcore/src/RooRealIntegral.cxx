@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.71 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.72 2004/03/30 23:18:07 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -679,7 +679,7 @@ void RooRealIntegral::prepareACleanFunc() const
     if (arg->operMode()!=RooAbsArg::AClean) {
       _funcACleanBranchList.remove(*arg) ;
     } else {
-      arg->setOperMode(RooAbsArg::ADirty) ;
+      arg->setOperMode(RooAbsArg::ADirty, kFALSE) ;
     }
   }
 }

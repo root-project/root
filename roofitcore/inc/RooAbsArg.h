@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.76 2004/03/19 06:09:45 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.77 2004/03/19 06:25:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -159,7 +159,7 @@ protected:
   friend class RooAbsReal ;
 
   enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
-  void setOperMode(OperMode mode) { _operMode = mode ; operModeHook() ; }
+  void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
   virtual void operModeHook() {} ;
   inline OperMode operMode() const { return _operMode ; }
 

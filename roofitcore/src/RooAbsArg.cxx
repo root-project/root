@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.79 2004/03/12 21:14:37 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.80 2004/03/19 06:09:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1208,6 +1208,23 @@ void RooAbsArg::constOptimize(ConstOpCode opcode)
     server->constOptimize(opcode) ;
   }
   delete sIter ;
+}
+
+
+void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
+{
+  _operMode = mode ; 
+  operModeHook() ; 
+
+  // Propagate to all clients
+  if (mode==ADirty && recurseADirty) {
+    TIterator* iter = valueClientIterator() ;
+    RooAbsArg* client ;
+    while(client=(RooAbsArg*)iter->Next()) {
+      client->setOperMode(mode) ;
+    }
+    delete iter ;
+  }
 }
 
 
