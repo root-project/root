@@ -93,7 +93,7 @@ void InfoReadBuffer(int siz=10) {
 #if ROOT_VERSION_CODE<= 199169
       info->ReadBuffer(b, (char*)(&obj),-1);
 #else
-      info->ReadBuffer(b, pointer,-1, 1, 0, 0);
+      info->ReadBuffer(b, (char*)(&obj),-1, 1, 0, 0);
 #endif
    }
 
