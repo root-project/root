@@ -2719,13 +2719,13 @@ void astress_decomp()
     if (gVerbose)
       cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
               "Ordered singular numbers are Sig[21-k] = sqrt(k*(k-1))\n" <<endl;
-    class FillMatrix : public TElementPosActionD {
+    class FillMatrix2 : public TElementPosActionD {
       void Operation(Double_t &element) const
       	{ element = fJ>fI ? 0 : fI==fJ ? 21-fJ : -1; }
     public:
-      FillMatrix() {}
+      FillMatrix2() {}
     };
-    FillMatrix f;
+    FillMatrix2 f;
     TMatrixD A(21,20);
     A.Apply(f);
     ok &= test_svd_expansion(A);
