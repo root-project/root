@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.16 2001/02/02 11:18:33 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.17 2001/02/10 07:13:49 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@
 // with the amount of I/O, Real Time and Cpu Time.
 // One single number (ROOTMARKS) is also calculated showing the relative
 // performance of your machine compared to a reference machine
-// a DELL Inspiron 7500 (Pentium III 600 Mhz) with 256 MBytes of memory
+// a DELL Inspiron 7500 (Pentium III 650 Mhz) with 256 MBytes of memory
 // and 18 GBytes IDE disk.
 //
 // An example of output when all the tests run OK is shown below:
@@ -58,11 +58,11 @@
 //******************************************************************
 //*  Linux pcnotebrun 2.2.14 #2 Tue Mar 21 16:36:17 MET 2000 i68
 //******************************************************************
-//stress    : Total I/O =  628.6 Mbytes, I =  475.5, O = 153.1
-//stress    : Compr I/O =  597.7 Mbytes, I =  452.9, O = 144.7
-//stress    : Real Time =  92.93 seconds Cpu Time =  79.29 seconds
+//stress    : Total I/O =  630.9 Mbytes, I =  478.3, O = 152.6
+//stress    : Compr I/O =  600.3 Mbytes, I =  456.0, O = 144.3
+//stress    : Real Time =  86.47 seconds Cpu Time =  72.89 seconds
 //******************************************************************
-//*  ROOTMARKS = 200.5   *  Root2.25/00   20000613/1440
+//*  ROOTMARKS = 200.2   *  Root3.00/06   20010309/1847
 //******************************************************************
 //
 //_____________________________batch only_____________________
@@ -193,15 +193,15 @@ void stress(Int_t nevent)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t rt_dell_30   = 36.85;  //Pentium III 600 Mhz times with the native compiler
-   Float_t cp_dell_30   = 34.97;
-   Float_t rt_dell_1000 = 94.44;
-   Float_t cp_dell_1000 = 80.38;
+   Float_t rt_dell_30   = 32.00;  //Pentium III 650 Mhz times with the native compiler
+   Float_t cp_dell_30   = 29.88;
+   Float_t rt_dell_1000 = 86.56;
+   Float_t cp_dell_1000 = 72.94;
 #else
-   Float_t rt_dell_30   = 81.73;  //Pentium III 600 Mhz times with CINT
-   Float_t cp_dell_30   = 79.43;  //The difference is essentially coming from stress16
-   Float_t rt_dell_1000 = 155.37;
-   Float_t cp_dell_1000 = 142.56;
+   Float_t rt_dell_30   = 88.62;  //Pentium III 650 Mhz times with CINT
+   Float_t cp_dell_30   = 86.05;  //The difference is essentially coming from stress16
+   Float_t rt_dell_1000 = 161.38;
+   Float_t cp_dell_1000 = 147.95;
 #endif
    Float_t cp_dell = cp_dell_1000 - (cp_dell_1000 - cp_dell_30)*(1000-nevent)/(1000-30);
    Float_t rt_dell = rt_dell_1000 - (rt_dell_1000 - rt_dell_30)*(1000-nevent)/(1000-30);
