@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.2 2000/06/28 14:32:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.3 2000/10/02 10:44:28 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -153,6 +153,7 @@ public:
    static Double_t *Cross(Double_t v1[3],Double_t v2[3],Double_t out[3]);// Calculate the Cross Product of two vectors
    static Double_t  Erf(Double_t x);
    static Double_t  Erfc(Double_t x);
+   static Double_t  Freq(Double_t x);
    static Double_t  Gamma(Double_t z);
    static Double_t  Gamma(Double_t a,Double_t x);
    static Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1);
