@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: rsadef.h,v 1.2 2003/08/29 17:23:31 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: rsadef.h,v 1.3 2003/08/30 23:53:22 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -32,7 +32,7 @@ typedef	unsigned long rsa_LONG;		/* muss (MAXINT+1)^2 -1 fassen	*/
  */
 
 /*
- *	MAXINT		Maximale Zahl pro Elemenmt (muss int sein)
+ *	MAXINT		Maximale Zahl pro Element (muss int sein)
  *	MAXBIT		Maximales Bit von MAXINT
  *	LOWBITS		Anzahl der consekutiven low Bits von MAXINT
  *	HIGHBIT		Hoechsten Bit von MAXINT
@@ -40,25 +40,25 @@ typedef	unsigned long rsa_LONG;		/* muss (MAXINT+1)^2 -1 fassen	*/
  *	MAXLEN		Laenge der INT Array in jeder NUMBER
  */
 
-#define rsa_MAXINT		0xFFFF
+#define rsa_MAXINT	0xFFFF
 
 #if rsa_MAXINT == 99
-#define	rsa_MAXBIT		7
+#define	rsa_MAXBIT	7
 #define	rsa_LOWBITS 	2
 #endif
 #if rsa_MAXINT == 9
-#define	rsa_MAXBIT		4
+#define	rsa_MAXBIT	4
 #define	rsa_LOWBITS 	1
 #endif
 #if rsa_MAXINT == 1
-#define rsa_MAXBIT		1
+#define rsa_MAXBIT	1
 #endif
 #if rsa_MAXINT == 0xFF
-#define rsa_MAXBIT		8
+#define rsa_MAXBIT	8
 #define	rsa_TOINT(x)	((rsa_INT)(x))		/* ACHTUNG !!!!! */
 #endif
 #if rsa_MAXINT == 0xFFFF
-#define rsa_MAXBIT		16
+#define rsa_MAXBIT	16
 #define	rsa_TOINT(x)	((rsa_INT)(x))		/* ACHTUNG !!!!! */
 #endif
 
@@ -67,15 +67,15 @@ typedef	unsigned long rsa_LONG;		/* muss (MAXINT+1)^2 -1 fassen	*/
 #endif
 #ifndef	rsa_LOWBITS
 #if rsa_MAXINT == (1 << rsa_MAXBIT) - 1
-#define	rsa_LOWBITS		rsa_MAXBIT
+#define	rsa_LOWBITS	rsa_MAXBIT
 #else
 #include	"<< ERROR: rsa_LOWBITS must be defined >>"
 #endif
 #endif
 
-#define	rsa_MAXLEN		(300*8/(rsa_MAXBIT + 1))
-#define	rsa_STRLEN		(rsa_MAXLEN*rsa_MAXBIT/4)
-#define	rsa_HIGHBIT		(1 << (rsa_MAXBIT-1) )
+#define	rsa_MAXLEN	(300*8/(rsa_MAXBIT + 1))
+#define	rsa_STRLEN	(rsa_MAXLEN*rsa_MAXBIT/4)
+#define	rsa_HIGHBIT	(1 << (rsa_MAXBIT-1) )
 
 #if rsa_LOWBITS == rsa_MAXBIT
 #define	rsa_DIVMAX1(x)	((x) >> rsa_MAXBIT)
@@ -110,5 +110,3 @@ typedef struct {
 
 
 #endif
-
-
