@@ -11,8 +11,10 @@ NOOPT         =
 endif
 
 # Compiler:
-CXX           = /opt/WS5.0/bin/CC
-CC            = /opt/WS5.0/bin/cc
+#CXX           = /opt/WS5.0/bin/CC
+#CC            = /opt/WS5.0/bin/cc
+CXX           = CC
+CC            = cc
 CXXFLAGS      = -KPIC -I/usr/openwin/include -D__SunOS_5_6 -library=iostream,no%Cstd \
                  $(EXTRA_CXXFLAGS)
 CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS)
@@ -30,7 +32,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -lnsl -lsocket
-XLIBS         = ../lib/libXpm.a -L/usr/openwin/lib -lX11
+XLIBS         = -lXpm -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl
 
 # Fortran:
