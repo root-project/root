@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.45 2004/05/18 23:43:47 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.46 2004/05/19 07:15:36 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -2881,7 +2881,11 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
 
    // Ok, now use ruserok to find out if {host,ruser,user}
    // is trusted
+#ifdef __sgi
+   if (ruserok((char*)host,rootuser,(char*)ruser,(char*)user) == 0) {
+#else
    if (ruserok(host,rootuser,ruser,user) == 0) {
+#endif
       if (gDebug > 0)
          ErrorInfo("RpdCheckHostsEquiv: remote user %s authorized to"
                    " access %s's area",ruser,user);
