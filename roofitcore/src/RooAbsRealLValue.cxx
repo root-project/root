@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.18 2001/11/21 19:36:36 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.19 2001/11/28 00:29:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -73,17 +73,17 @@ Bool_t RooAbsRealLValue::inFitRange(Double_t value, Double_t* clippedValPtr) con
 
   // test this value against our upper fit limit
   if(hasFitMax() && value > getFitMax()) {
-    if(value - getFitMax() > 1e-6*range) {
+    if(value - getFitMax() > 1e-6) {
       if (clippedValPtr)
 	cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-	     << " rounded down to max limit " << getFitMax() << endl;
+	     << " rounded down to max limit " << getFitMax() << endl ;
     }
     clippedValue = getFitMax();
     inRange = kFALSE ;
   }
   // test this value against our lower fit limit
   if(hasFitMin() && value < getFitMin()) {
-    if(getFitMin() - value > 1e-6*range) {
+    if(getFitMin() - value > 1e-6) {
       if (clippedValPtr)
 	cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
 	     << " rounded up to min limit " << getFitMin() << endl;

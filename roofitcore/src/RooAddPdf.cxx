@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.29 2001/12/01 08:12:46 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.30 2001/12/02 08:13:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -410,7 +410,9 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
-  RooArgSet allAnalVars(allVars) ;
+  RooArgSet* allDepVars = getDependents(allVars) ;
+  RooArgSet allAnalVars(*allDepVars) ;
+  delete allDepVars ;
   TIterator* avIter = allVars.createIterator() ;
 
   Int_t n(0) ;
@@ -418,16 +420,19 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
     RooArgSet subAnalVars ;
     Int_t subCode = pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
-//     cout << "RooAddPdf::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << pdf->GetName() << ") = " << subCode << endl ;
+    //cout << "RooAddPdf::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << pdf->GetName() << ") = " << subCode << endl ;
 
     // If a dependent is not supported by any of the components, 
     // it is dropped from the combined analytic list
     avIter->Reset() ;
     RooAbsArg* arg ;
     while(arg=(RooAbsArg*)avIter->Next()) {
-      if (!subAnalVars.find(arg->GetName())) {
-	allAnalVars.remove(*arg,kTRUE) ;
+      if (!pdf->dependsOn(*arg) && (!normSet || !normSet->find(arg->GetName()))) {
+	//cout << "***RooAddPdf::getAI(" << GetName() << "): pdf #" << n << " needs factorization integral for " << arg->GetName() << endl ;
       }
+      if (!subAnalVars.find(arg->GetName()) && pdf->dependsOn(*arg)) {
+	allAnalVars.remove(*arg,kTRUE) ;
+      }	
     }
     n++ ;
   }
@@ -437,6 +442,8 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
     return 0 ;
   }
 
+  //cout << "RooAddPdf::getAI: common analytical components are " ; allAnalVars.Print("1") ;
+
   // Now retrieve the component codes for the common set of analytic dependents 
   _pdfIter->Reset() ;
   n=0 ;
@@ -444,20 +451,31 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   Bool_t allOK(kTRUE) ;
   while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
     RooArgSet subAnalVars ;
-    subCode[n] = pdf->getAnalyticalIntegralWN(allAnalVars,subAnalVars,normSet) ;
-//     cout << "RooAddPdf::getAI(" << GetName() << ") ITER2 subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
-    if (subCode[n]==0) {
+    RooArgSet* allAnalVars2 = pdf->getDependents(allAnalVars) ;
+    subCode[n] = pdf->getAnalyticalIntegralWN(*allAnalVars2,subAnalVars,normSet) ;
+    //cout << "RooAddPdf::getAI(" << GetName() << ") ITER2 subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
+    if (subCode[n]==0 && allAnalVars2->getSize()>0) {
       cout << "RooAddPdf::getAnalyticalIntegral(" << GetName() << ") WARNING: component PDF " << pdf->GetName() 
 	   << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually."
 	   << "   Distributed analytical integration disabled. Please fix PDF" << endl ;
       allOK = kFALSE ;
     }
+    delete allAnalVars2 ; 
     n++ ;
   }  
   if (!allOK) return 0 ;
 
   analVars.add(allAnalVars) ;
-  Int_t masterCode = _codeReg.store(subCode,_pdfList.getSize())+1 ;
+
+  // Construct and save supplemental normalization set = intSet - normSet
+  RooArgSet* snormSet = new RooArgSet ;
+  if (normSet) {
+    snormSet->add(*normSet) ;
+    snormSet->remove(allAnalVars,kTRUE,kTRUE) ;
+  } else {
+    snormSet->add(allAnalVars) ;
+  }
+  Int_t masterCode = _codeReg.store(subCode,_pdfList.getSize(),snormSet)+1 ;
 
   delete[] subCode ;
   delete avIter ;
@@ -473,13 +491,15 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
     return getVal(normSet) ;
   }
 
-  syncSuppNormList(normSet) ;
-
-  const Int_t* subCode = _codeReg.retrieve(code-1) ;
+  RooArgSet* snormSet ;
+  const Int_t* subCode = _codeReg.retrieve(code-1,snormSet) ;
   if (!subCode) {
     cout << "RooAddPdf::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code << endl ;
     assert(0) ;    
   }
+
+  syncSuppNormList(snormSet) ;
+  if (snormSet->getSize()==0) snormSet = 0 ;
 
   // Calculate the current value of this object  
   Double_t value(0) ;
@@ -505,6 +525,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 	if (pdf->isSelectedComp()) value += pdf->analyticalIntegralWN(subCode[i],normSet)*nExpected/snormVal ;
 	totExpected += nExpected ; 
       }
+      i++ ;
     }	    
     if (totExpected==0.) {
       cout << "RooAddPdf::analyticalIntegral(" << GetName() << ") WARNING: total number of expected events is 0" << endl ;
@@ -521,7 +542,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 	pdf = (RooAbsPdf*)_pdfIter->Next() ;
 	Double_t coefVal = coef->getVal(normSet) ;
 	if (coefVal) {
-	  snormVal = normSet ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
+	  snormVal = snormSet ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
 	  if (pdf->isSelectedComp()) value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal/snormVal ;      
 	  coefSum += coefVal ;
 	}

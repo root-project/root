@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.17 2001/10/22 02:58:01 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.18 2001/10/22 07:12:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -101,7 +101,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 
 
-RooProdPdf::RooProdPdf(const char* name, const char* title, RooArgList& pdfList, Double_t cutOff) :
+RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
@@ -282,6 +282,11 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
     delete pdfDepList ;
     n++ ;
   }
+
+//   cout << "RooProdPdf::getAI(" << GetName() << ") analytically integrates " ; analVars.Print("1") ;
+//   RooArgSet tmp(allVars) ;
+//   tmp.remove(analVars,kTRUE,kTRUE) ;
+//   cout << "RooProdPdf::getAI(" << GetName() << ") not integrated " ; tmp.Print("1") ;
 
   Int_t masterCode = _codeReg.store(subCode,_pdfList.getSize())+1 ;
   delete[] subCode ;

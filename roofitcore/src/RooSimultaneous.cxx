@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.26 2001/12/01 08:12:48 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.27 2001/12/05 18:01:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -379,9 +379,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   } 
       
   // If we don't project over the index, just do the regular plotOn
-  if (!projIndex) 
+  if (!projIndex) {
     return RooAbsPdf::plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
-
+  }
 
   // If we project over the index, plot using a temporary RooAddPdf
   // using the weights from the data as coefficients
@@ -400,7 +400,6 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
     
     // Instantiate a RRV holding this pdfs weight fraction
     RooRealVar *wgtVar = new RooRealVar(proxy->name(),"coef",wTable->getFrac(proxy->name())) ;
-    plotFrac += wgtVar->getVal() ;
     wgtCompList.addOwned(*wgtVar) ;
 
     // Add the PDF to list list
@@ -412,7 +411,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   RooAddPdf *plotVar = new RooAddPdf("plotVar","weighted sum of RS components",pdfCompList,wgtCompList) ;
 
   // Plot temporary function
-  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*plotFrac,stype,0,projSet) ;
+  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
 
   // Cleanup
   delete plotVar ;
