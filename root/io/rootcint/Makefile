@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
-TEST_TARGETS += mytest rootcintIntTest constMemberTest
+TEST_TARGETS += templateKeyword mytest rootcintIntTest constMemberTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -28,3 +28,8 @@ constMemberDict.cxx: constMember.h linkdef.h $(ROOTSYS)/bin/rootcint
 	$(CMDECHO) rootcint -f constMemberDict.cxx -c constMember.h linkdef.h 
 
 constMemberTest: constMemberDict.$(ObjSuf)
+
+templateKeyword.log: templateKeyword_C.$(DllSuf)
+
+templateKeyword: templateKeyword.log
+	$(TestDiff)
