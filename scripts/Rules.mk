@@ -36,6 +36,9 @@ $(TEST_TARGETS_DIR): %.test:
 $(CLEAN_TARGETS_DIR): %.clean:
 	@(cd $*; gmake --no-print-directory clean)
 
+ifneq ($(V),) 
+VERBOSE:=$(V)
+endif
 ifeq ($(VERBOSE),) 
    CMDECHO=@
 else
