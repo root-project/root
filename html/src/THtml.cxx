@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.37 2003/02/15 05:41:04 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.38 2003/04/24 06:25:30 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -622,10 +622,20 @@ ofstream classFile;
 
                   if (method) {
                      Int_t w = 0;
+		     Bool_t isctor=false;
+		     Bool_t isdtor=false;
                      if (method->GetReturnTypeName())
                         len = strlen(method->GetReturnTypeName());
                      else
                         len = 0;
+		     if (!strcmp(method->GetName(),classPtr->GetName()))
+			// it's a c'tor - Cint stores the class name as return type
+			isctor=true;
+		     if (!strcmp(Form("~%s",classPtr->GetName()),method->GetName()))
+			// it's a d'tor - Cint stores "void" as return type
+			isdtor=true;
+		     if (isctor || isdtor)
+			len=0;
 
                      if (kIsVirtual & method->Property())
                         len += 8;
@@ -637,13 +647,18 @@ ofstream classFile;
                         classFile << " ";
 
                      if (kIsVirtual & method->Property())
-                        classFile << "virtual ";
+			if (!isdtor)
+			   classFile << "virtual ";
+			else
+			   classFile << " virtual";
 
                      if (kIsStatic & method->Property())
                         classFile << "static ";
 
-                     strcpy(fLine, method->GetReturnTypeName());
-                     ExpandKeywords(classFile, fLine, classPtr, classFlag);
+		     if (!isctor && !isdtor){
+			strcpy(fLine, method->GetReturnTypeName());
+			ExpandKeywords(classFile, fLine, classPtr, classFlag);
+		     }
 
                      classFile << " " << tab << "<!--BOLD-->";
                      classFile << "<a href=\"#" << classPtr->GetName();
@@ -1282,7 +1297,7 @@ ofstream tempFile;
                                                 flag);
                                  *typeEnd = c2;
                                  while (typeEnd < key) {
-                                    if (*typeEnd == '*')
+                                    if (*typeEnd == '*' || *typeEnd == '&')
                                        out << *typeEnd;
                                     typeEnd++;
                                  }
@@ -1952,12 +1967,12 @@ ofstream outputFile;
             outputFile << "\" href=\"";
             outputFile << htmlFile;
             outputFile << "\">";
-            outputFile << classPtr->GetName();
+            ReplaceSpecialChars(outputFile, classPtr->GetName());
             outputFile << "</a> ";
             delete[]htmlFile;
             htmlFile = 0;
          } else
-            outputFile << classPtr->GetName();
+            ReplaceSpecialChars(outputFile, classPtr->GetName());
 
 
          // write title
