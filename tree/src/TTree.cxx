@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.128 2002/07/06 06:54:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.129 2002/07/09 10:24:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1139,11 +1139,16 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          Error("Bronch","TClonesArray with no class defined in branch: %s",name);
          return 0;
       }
+      G__ClassInfo* classinfo = clones->GetClass()->GetClassInfo();
+      if (!classinfo) {
+         Error("Bronch","TClonesArray with no dictionary defined in branch: %s",name);
+         return 0;
+      }
       if (splitlevel > 0) {
-         if (clones->GetClass()->GetClassInfo()->RootFlag() & 1)
+         if (classinfo->RootFlag() & 1)
             Warning("Bronch","Using split mode on a class: %s with a custom Streamer",clones->GetClass()->GetName());
       } else {
-         if (clones->GetClass()->GetClassInfo()->RootFlag() & 1) clones->BypassStreamer(kFALSE);
+         if (classinfo->RootFlag() & 1) clones->BypassStreamer(kFALSE);
          TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
          fBranches.Add(branch);
          return branch;
@@ -1151,6 +1156,10 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    }
 
    Bool_t hasCustomStreamer = kFALSE;
+   if (!cl->GetClassInfo()) {
+      Error("Bronch","Cannot find dictionary for class: %s",classname);
+      return 0;
+   }
    if (cl->GetClassInfo()->RootFlag() & 1)  hasCustomStreamer = kTRUE;
    if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer)) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
