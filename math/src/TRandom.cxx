@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.12 2002/07/16 13:09:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.13 2002/10/25 12:41:46 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -227,7 +227,7 @@ Double_t TRandom::Exp(Double_t tau)
 //
 //          exp( -t/tau )
 
-   Double_t x = Uniform();              // uniform on ( 0, 1 ]
+   Double_t x = Uniform();              // uniform on ] 0, 1 ]
    Double_t t = -tau * TMath::Log( x ); // convert to exponential distribution
    return t;
 }
@@ -237,12 +237,9 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
 {
 //      Return a number distributed following a gaussian with mean and sigma
 
-   // Local variables
    Double_t x, y, z, result;
 
-   do {
-     y = Rndm();
-   } while (!y);
+   y = Rndm();
    z = Rndm();
    x = z * 6.28318530717958623;
    result = mean + sigma*TMath::Sin(x)*TMath::Sqrt(-2*TMath::Log(y));
@@ -517,18 +514,15 @@ Double_t TRandom::PoissonD(Double_t mean)
    }
    return (Double_t)N;
 }
-
+   
 //______________________________________________________________________________
 void TRandom::Rannor(Float_t &a, Float_t &b)
 {
 //      Return 2 numbers distributed following a gaussian with mean=0 and sigma=1
 
-   // Local variables
    Double_t r, x, y, z;
 
-   do {
-     y = Rndm();
-   } while (!y);
+   y = Rndm();
    z = Rndm();
    x = z * 6.28318530717958623;
    r = TMath::Sqrt(-2*TMath::Log(y));
@@ -541,12 +535,9 @@ void TRandom::Rannor(Double_t &a, Double_t &b)
 {
 //      Return 2 numbers distributed following a gaussian with mean=0 and sigma=1
 
-   // Local variables
    Double_t r, x, y, z;
 
-   do {
-     y = Rndm();
-   } while (!y);
+   y = Rndm();
    z = Rndm();
    x = z * 6.28318530717958623;
    r = TMath::Sqrt(-2*TMath::Log(y));
@@ -575,29 +566,26 @@ Double_t TRandom::Rndm(Int_t)
 //  Produces uniformly-distributed floating points between 0 and 1.
 //  Identical sequence on all machines of >= 32 bits.
 //  Periodicity = 10**8
-//  Universal version (Fred james 1985).
-//  generates a number in [0,1]
+//  Universal version (Fred James 1985).
+//  generates a number in ]0,1]
 
    const Float_t kCONS = 4.6566128730774E-10;
    const Int_t kMASK31 = 2147483647;
    const Int_t kMASK24 = 2147483392;
 
-   fSeed *= 69069;
-      // keep only lower 31 bits
-   fSeed &= kMASK31;
-      // Set lower 8 bits to zero to assure exact float
-   UInt_t jy = (fSeed&kMASK24);
-   return Double_t(kCONS*jy);
+   fSeed *= 69069;      
+   fSeed &= kMASK31;            // keep only lower 31 bits      
+   UInt_t jy = (fSeed&kMASK24); // Set lower 8 bits to zero to assure exact float
+   if (jy) return Double_t(kCONS*jy);
+   return Rndm();
 }
 
 //______________________________________________________________________________
 void TRandom::RndmArray(Int_t n, Double_t *array)
 {
-  // Return an array of n random numbers uniformly distributed 
-  // between 0 and 1 not included
+  // Return an array of n random numbers uniformly distributed in ]0,1]
    
-  for(Int_t i=0; i<n; i++) 
-    do array[i]=Rndm(); while(0>=array[i] || array[i]>=1);
+  for(Int_t i=0; i<n; i++) array[i]=Rndm();
 }
    
 //______________________________________________________________________________
@@ -621,20 +609,18 @@ void TRandom::SetSeed(UInt_t seed)
 //______________________________________________________________________________
 Double_t TRandom::Uniform(Double_t x1)
 {
-// returns a uniform deviate on the interval ( 0, x1 ].
+// returns a uniform deviate on the interval  ]0, x1].
 
-   Double_t ans;
-   do { ans = Rndm(); } while( ans==0 );
+   Double_t ans = Rndm();
    return x1*ans;
 }
 
 //______________________________________________________________________________
 Double_t TRandom::Uniform(Double_t x1, Double_t x2)
 {
-// returns a uniform deviate on the interval ( x1, x2 ].
+// returns a uniform deviate on the interval ]x1, x2].
 
-   Double_t ans;
-   do { ans = Rndm(); } while( ans==0 );
+   Double_t ans= Rndm();
    return x1 + (x2-x1)*ans;
 }
 

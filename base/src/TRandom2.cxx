@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.2 2000/11/22 08:35:44 brun Exp $
 // Author: Rene Brun   04/03/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ void TRandom2::GetSeed2(UInt_t &seed1, UInt_t &seed2)
 Double_t TRandom2::Rndm(Int_t)
 {
 //  Machine independent random number generator.
-//  Produces uniformly-distributed floating points between 0 and 1.
+//  Produces uniformly-distributed floating points in [0,1]
 //  Identical sequence on all machines of >= 32 bits.
 //  Periodicity > 10**14
 

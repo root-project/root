@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.2 2000/11/21 16:37:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.3 2000/11/22 08:35:44 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -72,9 +72,8 @@ TRandom3::~TRandom3()
 Double_t TRandom3::Rndm(Int_t)
 {
 //  Machine independent random number generator.
-//  Produces uniformly-distributed floating points between 0 and 1.
+//  Produces uniformly-distributed floating points in [0,1]
 //  Method: Mersenne Twistor
-
 
     UInt_t y;
 
@@ -86,26 +85,21 @@ Double_t TRandom3::Rndm(Int_t)
     const UInt_t kLowerMask =       0x7fffffff;
     const UInt_t kMatrixA =         0x9908b0df;
 
-    //const UInt_t kMAG01[2] = {0x0,kMatrixA};
-
     if (fCount624 >= kN) {
       register Int_t i;
 
       for (i=0; i < kN-kM; i++) {
         y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
         fMt[i] = fMt[i+kM] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
-      //fMt[i] = fMt[i+kM] ^ (y >> 1) ^ kMAG01[y&0x1];
       }
 
       for (   ; i < kN-1    ; i++) {
         y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
         fMt[i] = fMt[i+kM-kN] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
-      //fMt[i] = fMt[i+kM-kN] ^ (y >> 1) ^ kMAG01[y&0x1];
       }
 
       y = (fMt[kN-1] & kUpperMask) | (fMt[0] & kLowerMask);
       fMt[kN-1] = fMt[kM-1] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
-    //fMt[kN-1] = fMt[kM-1] ^ (y >> 1) ^ kMAG01[y & 0x1];
       fCount624 = 0;
     }
 
@@ -115,7 +109,8 @@ Double_t TRandom3::Rndm(Int_t)
     y ^= ((y << 15) & kTemperingMaskC );
     y ^=  (y >> 18);
 
-    return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
+    if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
+    return Rndm();
 }
 
 //______________________________________________________________________________
