@@ -1,11 +1,13 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: $
+ *    File: $Id: RooBCPSin2bgDecay.rdl,v 1.1 2002/03/12 06:02:09 walkowia Exp $
  * Authors:
  *   WW, Wolfgang Walkowiak, UC Santa Cruz, walkowia@slac.stanford.edu
  * History:
  *   05-Mar-2002 WW Created initial version
+ *   12-Mar-2002 WW Added alphaD0 and rhoD0
+ *   13-Mar-2002 WW Added 2nd constructor for offset type scheme
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
@@ -24,16 +26,28 @@ public:
     // Constructors, assignment etc
     inline RooBCPSin2bgDecay() { }
     RooBCPSin2bgDecay(const char *name, const char *title, 
-		       RooRealVar& t, RooAbsCategory& tag,
-		       RooAbsCategory& mixState,
-		       RooAbsReal& tau, RooAbsReal& dm,
-		       RooAbsReal& avgMistag, RooAbsReal& CPeigenval,
-		       RooAbsReal& a, RooAbsReal& bPlus,
-		       RooAbsReal& bMinus, RooAbsReal& delMistag,
-		       const RooResolutionModel& model, 
-		       DecayType type=DoubleSided) ;
+		      RooRealVar& t, RooAbsCategory& tag,
+		      RooAbsCategory& mixState,
+		      RooAbsReal& tau, RooAbsReal& dm,
+		      RooAbsReal& avgMistag,
+		      RooAbsReal& a, RooAbsReal& bPlus,
+		      RooAbsReal& bMinus, RooAbsReal& delMistag,
+		      RooAbsReal& alphaD0, RooAbsReal& rhoD0,
+		      const RooResolutionModel& model, 
+		      DecayType type=DoubleSided) ;
     
-    RooBCPSin2bgDecay(const RooBCPSin2bgDecay& other, const char* name=0);
+     RooBCPSin2bgDecay(const char *name, const char *title, 
+		      RooRealVar& t, RooAbsCategory& tag,
+		      RooAbsCategory& mixState,
+		      RooAbsReal& tau, RooAbsReal& dm,
+		      RooAbsReal& avgMistag,
+		      RooAbsReal& a, RooAbsReal& bPlus,
+		      RooAbsReal& bMinus, RooAbsReal& delMistag,
+		      RooAbsReal& offsetD0,
+		      const RooResolutionModel& model, 
+		      DecayType type=DoubleSided) ;
+    
+   RooBCPSin2bgDecay(const RooBCPSin2bgDecay& other, const char* name=0);
     virtual TObject* clone(const char* newname) const 
 	{ return new RooBCPSin2bgDecay(*this,newname) ; }
     virtual ~RooBCPSin2bgDecay();
@@ -49,14 +63,20 @@ public:
     void initGenerator(Int_t code) ;
     void generateEvent(Int_t code) ;
     
+private:
+
+    void calcInternals(Double_t& dil, Double_t& dw, Double_t& off) const ;
+    void chooseBase(DecayType type, RooAbsReal& tau, RooAbsReal& dm) ;
+
 protected:
     
     RooRealProxy _absLambda ;
     RooRealProxy _argLambdaPlus ;
     RooRealProxy _argLambdaMinus ;
-    RooRealProxy _CPeigenval ;
     RooRealProxy _avgMistag ;
     RooRealProxy _delMistag ;
+    RooRealProxy _alphaD0 ;
+    RooRealProxy _rhoOffD0 ;
     RooRealProxy _t ;
     RooRealProxy _tau ;
     RooRealProxy _dm ;
@@ -66,7 +86,8 @@ protected:
     Double_t _genMixFrac ;
     Double_t _genFlavFracMix ;
     Double_t _genFlavFracUnmix ;
-    
+    Bool_t   _offsetImp;
+
     DecayType _type ;
     Int_t _basisExp ;
     Int_t _basisSin ;
@@ -76,6 +97,7 @@ protected:
 };
 
 #endif
+
 
 
 
