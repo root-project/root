@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.25 2002/06/18 22:19:22 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.26 2002/08/21 23:06:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -363,7 +363,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
   for (i=0 ; i<numEntries() ; i++) {
     const RooArgSet* row = get(i) ;
     if (!cloneVar || cloneVar->getVal()) {
-      rdh->set(*row,weight(),weightError()) ;
+      rdh->add(*row,weight()) ;
     }
   }
 
@@ -411,7 +411,9 @@ void RooDataHist::dump2()
   // Debug stuff, should go...
   Int_t i ;
   for (i=0 ; i<_arrSize ; i++) {
-    cout << "wgt[" << i << "] = " << _wgt[i] << "err[" << i << "] = " << _errLo[i] << " vol[" << i << "] = " << _binv[i] << endl ;
+    if (_wgt[i]!=0) {
+      cout << "wgt[" << i << "] = " << _wgt[i] << "err[" << i << "] = " << _errLo[i] << " vol[" << i << "] = " << _binv[i] << endl ;
+    }
   }
 }
 

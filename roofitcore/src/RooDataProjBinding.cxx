@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataProjBinding.cc,v 1.1 2001/10/27 22:28:20 verkerke Exp $
+ *    File: $Id: RooDataProjBinding.cc,v 1.2 2001/11/02 03:05:10 verkerke Exp $
  * Authors:
  *   DK, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -119,5 +119,6 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
     }
   }
 
+  if (wgtSum==0) return 0 ;
   return result / wgtSum ;
 }

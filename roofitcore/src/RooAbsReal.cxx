@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.82 2002/08/21 23:05:53 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.83 2002/08/27 00:53:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,7 +34,6 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooCustomizer.hh"
 #include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooScaledFunc.hh"
 #include "RooFitCore/RooDataProjBinding.hh"
 #include "RooFitCore/RooAddPdf.hh"
@@ -921,13 +920,14 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     delete bIter ;
 
     // If data set contains more rows than needed, make reduced copy first
-    RooDataSet* projDataSel = (RooDataSet*)projData;
+    RooAbsData* projDataSel = (RooAbsData*)projData;
+
 //     cout << "projDataNeededVars = " ; projDataNeededVars->Print("1") ;
 //     cout << "projData vars      = " ; projData->get()->Print("1") ;
 //     cout << "sliceSet           = " ; sliceSet.Print("1") ;
 
     if (projDataNeededVars->getSize()<projData->get()->getSize()) {
-
+      
       // Determine if there are any slice variables in the projection set
       RooArgSet* sliceDataSet = (RooArgSet*) sliceSet.selectCommon(*projData->get()) ;
       TString cutString ;
@@ -955,10 +955,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
       delete sliceDataSet ;
 
       if (!cutString.IsNull()) {
-	projDataSel = (RooDataSet*) ((RooDataSet*)projData)->reduce(*projDataNeededVars,cutString) ;
+	projDataSel = ((RooAbsData*)projData)->reduce(*projDataNeededVars,cutString) ;
 	cout << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << endl ;
       } else {
-	projDataSel = (RooDataSet*) ((RooDataSet*)projData)->reduce(*projDataNeededVars) ;
+	projDataSel = ((RooAbsData*)projData)->reduce(*projDataNeededVars) ;
       }
       cout << "RooAbsReal::plotOn(" << GetName() 
 	   << ") only the following components of the projection data will be used: " ; 
@@ -966,6 +966,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     }
 
     projectionCompList->find(GetName())->attachDataSet(*projDataSel) ;
+
     RooDataProjBinding projBind(*projection,*projDataSel,*plotVar) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);
 

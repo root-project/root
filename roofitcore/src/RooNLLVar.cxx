@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooNLLVar.cc,v 1.1 2002/08/21 23:06:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -79,7 +79,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   
   // include the extended maximum likelihood term, if requested
   if(_extended && firstEvent==0) {
-    result+= _pdfClone->extendedTerm(_dataClone->numEntries());
+    result+= _pdfClone->extendedTerm(_dataClone->numEntries(kTRUE));
   }    
 
   // If part of simultaneous PDF normalize probability over 
