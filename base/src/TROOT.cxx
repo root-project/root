@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.72 2002/05/10 21:32:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.73 2002/07/09 21:14:30 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -385,9 +385,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
 
    // by default, add the list of tasks, canvases and browsers in the Cleanups list
-   fCleanups->Add(fCanvases);
-   fCleanups->Add(fBrowsers);
-   fCleanups->Add(fTasks);
+   fCleanups->Add(fCanvases); fCanvases->SetBit(kMustCleanup);
+   fCleanups->Add(fBrowsers); fBrowsers->SetBit(kMustCleanup);
+   fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
 
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;

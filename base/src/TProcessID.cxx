@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.14 2002/05/18 08:43:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.15 2002/07/09 21:12:17 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -132,6 +132,7 @@ void TProcessID::Cleanup()
    // static function (called by TROOT destructor) to delete all TProcessIDs
 
    fgPIDs->Delete();
+   gROOT->GetListOfCleanups()->Remove(fgPIDs);
    delete fgPIDs;
 }
 
