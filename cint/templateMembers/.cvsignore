@@ -1,3 +1,5 @@
 opdict.*
 *.d
 *.log
+templateMembersDict.*
+templateMembers.ref

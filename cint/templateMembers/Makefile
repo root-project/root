@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log opdict.*
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log opdict.* templateMembersDict*
 
 #Set the list of target to make while testing
 TEST_TARGETS += mytest templateConstructorTest operatorTest templateMembers
@@ -42,7 +42,7 @@ templateMembers: templateMembers.log  templateMembers.ref
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 	@echo This failures is due to the odd object life time in CINT.
-	$(CMDECHO) diff -b -u templateMembers.ref templateMembers.log > templateMembers.diff.log || \
+	$(CMDECHO) diff -b templateMembers.ref templateMembers.log > templateMembers.diff.log || \
 		diff templateMembers.diff.log templateMembers.diff.ref
 else
 	$(TestDiff)

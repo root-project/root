@@ -1,27 +1,12 @@
---- templateMembers.ref	Tue May 18 17:01:59 2004
-+++ templateMembers.log	Tue May 18 17:01:58 2004
-@@ -16,18 +16,23 @@
- Derived shared_ptr<T>::f3(U) [with U = TemplateClass<Derived>, T = Base]
- Base::Base()
- Derived::Derived()
-+TemplateClass<T>::~TemplateClass() [with T = Derived]
-+Derived::~Derived()
-+Base::~Base()
- Derived::~Derived()
- Base::~Base()
--TemplateClass<T>::~TemplateClass() [with T = Derived]
- TemplateClass<U> shared_ptr<T>::f4(TemplateClass<U>) [with U = Derived, T = Base]
- TemplateClass<T>::TemplateClass() [with T = Derived]
- TemplateClass<T>::~TemplateClass() [with T = Derived]
- TemplateClass<T>::~TemplateClass() [with T = Derived]
-+TemplateClass<T>::~TemplateClass() [with T = Derived]
- void shared_ptr<T>::f5(const shared_ptr<U> &) [with U = Derived, T = Base]
- shared_ptr<T> shared_ptr<T>::f6(const shared_ptr<U> &) [with U = Derived, T = Base]
- shared_ptr<T>::~shared_ptr() [with T = Base]
-+shared_ptr<T>::~shared_ptr() [with T = Base]
- shared_ptr<T> shared_ptr<T>::f7(const shared_ptr<U> &) [with U = Derived, T = Base]
- shared_ptr<T>::~shared_ptr() [with T = Base]
-+shared_ptr<T>::~shared_ptr() [with T = Base]
- shared_ptr<T> &shared_ptr<T>::f8(const shared_ptr<U> &) [with U = Base, T = Base]
- shared_ptr<T> &shared_ptr<T>::f8(const shared_ptr<U> &) [with U = Derived, T = Base]
- shared_ptr<T> &shared_ptr<T>::n1(const shared_ptr<U> &) [with U = Base, T = Base]
+18a19,21
+> TemplateClass<T>::~TemplateClass() [with T = Derived]
+> Derived::~Derived()
+> Base::~Base()
+21d23
+< TemplateClass<T>::~TemplateClass() [with T = Derived]
+25a28
+> TemplateClass<T>::~TemplateClass() [with T = Derived]
+28a32
+> shared_ptr<T>::~shared_ptr() [with T = Base]
+29a34
+> shared_ptr<T>::~shared_ptr() [with T = Base]
