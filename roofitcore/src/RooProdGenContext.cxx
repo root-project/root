@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.7 2002/09/30 00:57:29 verkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.8 2003/04/28 20:42:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,7 +42,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   }
 
   // Factorize product in irreducible terms
-  TList* termList = model.factorizeProduct(deps) ;
+  TList* termList = model.factorizeProduct(vars) ;
   TIterator* termIter = termList->MakeIterator() ;
 
   RooAbsPdf* pdf ;
