@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.6 2001/09/20 13:24:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.7 2001/10/31 11:28:38 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #endif
 
 class TF1;
+class TAxis;
 
 class TGaxis : public TLine, public TAttText {
 
@@ -94,6 +95,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
              Double_t   GetWmin() const         {return fWmin;}
              Double_t   GetWmax()  const        {return fWmax;}
              Float_t    GetTickSize() const     {return fTickSize;}
+        virtual void    ImportAxisAttributes(TAxis *axis);
                 void    LabelsLimits(const char *label, Int_t &first, Int_t &last);
         static  void    Optimize(Double_t A1,  Double_t A2,  Int_t nold
                        ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID, Option_t *option="");

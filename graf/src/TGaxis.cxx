@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.24 2001/12/04 14:40:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.25 2001/12/17 17:06:52 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -269,6 +269,28 @@ Int_t TGaxis::GetMaxDigits()
    // static function returning fgMaxDigits (See SetMaxDigits)
    
    return fgMaxDigits;
+}
+
+//______________________________________________________________________________
+void TGaxis::ImportAxisAttributes(TAxis *axis)
+{
+// Copy TAxis attributes to this TGaxis
+
+   SetLineColor(axis->GetAxisColor());
+   SetTextColor(axis->GetTitleColor());
+   SetTextFont(axis->GetTitleFont());
+   SetLabelColor(axis->GetLabelColor());
+   SetLabelFont(axis->GetLabelFont());
+   SetLabelSize(axis->GetLabelSize());
+   SetLabelOffset(axis->GetLabelOffset());
+   SetTickSize(axis->GetTickLength());
+   SetTitle(axis->GetTitle());
+   SetTitleOffset(axis->GetTitleOffset());
+   SetTitleSize(axis->GetTitleSize());
+   SetBit(kCenterTitle, axis->TestBit(kCenterTitle));
+   SetBit(kRotateTitle, axis->TestBit(kRotateTitle));
+   SetBit(TAxis::kNoExponent,   axis->TestBit(TAxis::kNoExponent));
+   SetTimeFormat(axis->GetTimeFormat());
 }
 
 //______________________________________________________________________________
