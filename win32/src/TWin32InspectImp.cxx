@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TWin32InspectImp.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   09/12/96
 
 /*************************************************************************
@@ -124,7 +124,7 @@ void TWin32InspectImp::AddValues()
     char *line[3];
 
     line[kname] = " ";
-    line[kvalue] = new char[255];
+    line[kvalue] = new char[2048];
     line[ktitle] = " ";
 
     TClass *cl = fObject->IsA();
