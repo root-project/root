@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.rdl,v 1.2 2001/10/13 00:38:54 david Exp $
+ *    File: $Id: RooSimGenContext.rdl,v 1.3 2001/10/14 07:11:42 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -19,6 +19,7 @@
 
 class RooSimultaneous;
 class RooDataSet;
+class RooAbsCategoryLValue ;
 
 class RooSimGenContext : public RooAbsGenContext {
 public:
@@ -33,13 +34,14 @@ protected:
 
   RooSimGenContext(const RooSimGenContext& other) ;
 
-  const RooDataSet *_prototype;  // Prototype data set
-  const RooSimultaneous *_pdf ;  // Original PDF
-  TList _gcList ;                // List of component generator contexts
-  Bool_t _haveIdxProto ;         // Flag set if generation of index is requested
-  TString _idxCatName ;          // Name of index category
-  Int_t _numPdf ;                // Number of generated PDFs
-  Double_t* _fracThresh ;        //[_numPdf] Fraction threshold array
+  RooAbsCategoryLValue* _idxCat ; // Clone of index category
+  const RooDataSet *_prototype;   // Prototype data set
+  const RooSimultaneous *_pdf ;   // Original PDF
+  TList _gcList ;                 // List of component generator contexts
+  Bool_t _haveIdxProto ;          // Flag set if generation of index is requested
+  TString _idxCatName ;           // Name of index category
+  Int_t _numPdf ;                 // Number of generated PDFs
+  Double_t* _fracThresh ;         //[_numPdf] Fraction threshold array
 
   ClassDef(RooSimGenContext,0) // Context for generating a dataset from a PDF
 };

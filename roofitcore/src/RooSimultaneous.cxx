@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.20 2001/10/22 07:12:14 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.21 2001/10/27 22:28:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -445,19 +445,48 @@ RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const Ro
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, 
 					const RooDataSet *prototype, Bool_t verbose) const 
 {
+  _indexCat.arg().Print("v") ;
+
+  cout << "RooSimultaneous::genContext" << _indexCat.arg().GetName() << endl ;
   if (vars.find(_indexCat.arg().GetName())) {
     // Generating index category: return special sim-context
     return new RooSimGenContext(*this,vars,prototype,verbose) ;
-  } else {
-    // Not generaring index cat: return context for pdf associated with present index state
-    RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.arg().getLabel()) ;
-    if (!proxy) {
-      cout << "RooSimultaneous::genContext(" << GetName() 
-	   << ") ERROR: no PDF associated with current state (" 
-	   << _indexCat.arg().GetName() << ")" << endl ;
-      return 0 ;
+  } else if (_indexCat.arg().isDerived()) {
+    // Generating dependents of a derived index category
+    
+    // Determine if we none,any or all servers
+    TIterator* sIter = _indexCat.arg().serverIterator() ;
+    RooAbsArg* server ;
+    Bool_t anyServer(kFALSE), allServers(kTRUE) ;
+    while(server=(RooAbsArg*)sIter->Next()) {
+      if (vars.find(server->GetName())) {
+	anyServer=kTRUE ;
+      } else {
+	allServers=kFALSE ;
+      }
     }
-    return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,verbose) ;
+    delete sIter ;
+
+    if (allServers) {
+      // Use simcontext if we have all servers
+      return new RooSimGenContext(*this,vars,prototype,verbose) ;
+    } else if (!allServers && anyServer) {
+      // Abort if we have only part of the servers
+      cout << "RooSimultaneous::genContext: ERROR: generator request must include either all "
+	   << " components of the RooSimultaneous index category or none " << endl ;
+      return 0 ; 
+    } 
+    // Otherwise make single gencontext for current state
+  } 
+
+  // Not generating index cat: return context for pdf associated with present index state
+  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.arg().getLabel()) ;
+  if (!proxy) {
+    cout << "RooSimultaneous::genContext(" << GetName() 
+	 << ") ERROR: no PDF associated with current state (" 
+	 << _indexCat.arg().GetName() << ")" << endl ;
+    return 0 ;
   }
+  return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,verbose) ;
 }
 

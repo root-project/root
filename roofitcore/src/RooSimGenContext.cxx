@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.cc,v 1.3 2001/10/14 07:11:42 verkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.4 2001/10/27 22:28:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -33,21 +33,44 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   RooAbsGenContext(model,vars,prototype,verbose), _pdf(&model)
 {
   // Constructor. Build an array of generator contexts for each component PDF
+  cout << "RooSimGenContext::ctor" << endl ;
 
   // Determine if we are requested to generate the index category
   RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;
   RooArgSet pdfVars(vars) ;
-  Bool_t doGenIdx = pdfVars.remove(*idxCat,kTRUE,kTRUE) ;
-  if (!doGenIdx) {
-    cout << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
-	 << " generate the index category" << endl ;
-    _isValid = kFALSE ;
-    return ;
+  if (!idxCat->isDerived()) {
+    Bool_t doGenIdx = pdfVars.remove(*idxCat,kTRUE,kTRUE) ;
+    if (!doGenIdx) {
+      cout << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
+	   << " generate the index category" << endl ;
+      _isValid = kFALSE ;
+      return ;
+    }
+  } else {
+    TIterator* sIter = idxCat->serverIterator() ;
+    RooAbsArg* server ;
+    Bool_t anyServer(kFALSE), allServers(kTRUE) ;
+    while(server=(RooAbsArg*)sIter->Next()) {
+      if (vars.find(server->GetName())) {
+	anyServer=kTRUE ;
+	pdfVars.remove(*server,kTRUE,kTRUE) ;
+      } else {
+	allServers=kFALSE ;
+      }
+    }
+    delete sIter ;    
+
+    if (anyServer && !allServers) {
+      cout << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
+	   << " generate all components of a derived index category" << endl ;
+      _isValid = kFALSE ;
+      return ;
+    }
   }
 
   // We must either have the prototype or extended likelihood to determined
   // the relative fractions of the components
-  _haveIdxProto = prototype ? prototype->get()->find(idxCat->GetName())?kTRUE:kFALSE : 0 ;
+  _haveIdxProto = prototype ? kTRUE : kFALSE ;
   _idxCatName = idxCat->GetName() ;
   if (!_haveIdxProto && !model.canBeExtended()) {
     cout << "RooSimGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
@@ -88,6 +111,9 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
       _fracThresh[i] /= _fracThresh[_numPdf] ;
   }
   
+
+  // Clone the index category
+  _idxCat = (RooAbsCategoryLValue*) model._indexCat.arg().Clone() ;
 }
 
 
@@ -96,6 +122,7 @@ RooSimGenContext::~RooSimGenContext()
 {
   // Destructor. Delete all owned subgenerator contexts
   delete[] _fracThresh ;
+  delete _idxCat ;
   _gcList.Delete() ;
 }
 
@@ -103,6 +130,9 @@ RooSimGenContext::~RooSimGenContext()
 
 void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
 {
+  // Attach the index category clone to the event
+  _idxCat->recursiveRedirectServers(theEvent,kTRUE) ;
+
   // Forward initGenerator call to all components
   RooAbsGenContext* gc ;
   TIterator* iter = _gcList.MakeIterator() ;
@@ -124,8 +154,7 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   if (_haveIdxProto) {
 
     // Lookup pdf from selected prototype index state
-    RooAbsCategory* cat = (RooAbsCategory*) theEvent.find(_idxCatName) ;
-    ((RooAbsGenContext*)_gcList.FindObject(cat->getLabel()))->generateEvent(theEvent,remaining) ;
+    ((RooAbsGenContext*)_gcList.FindObject(_idxCat->getLabel()))->generateEvent(theEvent,remaining) ;
     
   
   } else {
@@ -137,7 +166,7 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       if (rand>_fracThresh[i] && rand<_fracThresh[i+1]) {
 	RooAbsGenContext* gen= ((RooAbsGenContext*)_gcList.At(i)) ;
 	gen->generateEvent(theEvent,remaining) ;
-	((RooCategory*)theEvent.find(_idxCatName))->setLabel(gen->GetName()) ;
+	_idxCat->setLabel(gen->GetName()) ;
 	return ;
       }
     }
