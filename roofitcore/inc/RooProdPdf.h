@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.13 2001/09/25 01:15:59 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.14 2001/10/05 07:01:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,6 +40,9 @@ public:
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
+  virtual Bool_t canBeExtended() const ;
+  virtual Double_t expectedEvents() const ; 
+
 protected:
 
   mutable RooAICRegistry _codeReg ; // Registry of component analytical integration codes
@@ -47,6 +50,7 @@ protected:
   Double_t _cutOff ;       //  Cutoff parameter for running product
   RooListProxy _pdfList ;  //  List of PDF components
   TIterator* _pdfIter ;    //! Iterator of PDF list
+  Int_t _extendedIndex ;   //  Index of extended PDF (if any) 
 
 private:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.26 2001/09/12 01:25:44 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.27 2001/09/17 18:48:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,6 +29,9 @@
 #include <fstream.h>
 #include <iomanip.h>
 #include "TH1.h"
+#include "TH2.h"
+#include "TMarker.h"
+#include "TGraph.h"
 #include "TStopwatch.h"
 #include "TFitter.h"
 #include "TMinuit.h"
@@ -629,6 +632,7 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
 }
 
 
+
 Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const 
 {
   // Return the likelihood of this PDF for the given dataset
@@ -657,6 +661,79 @@ Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const
 
   return result;
 }
+
+
+
+
+TH2F* RooFitContext::plotNLLContours(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3) 
+{
+  // Verify that both variables are floating parameters of PDF
+  Int_t index1= _floatParamList->index(&var1);
+  if(index1 < 0) {
+    cout << "RooFitContext::plotNLLContours(" << GetName() 
+	 << ") ERROR: " << var1.GetName() << " is not a floating parameter of PDF " << _pdfClone->GetName() << endl ;
+    return 0;
+  }
+
+  Int_t index2= _floatParamList->index(&var2);
+  if(index2 < 0) {
+    cout << "RooFitContext::plotNLLContours(" << GetName() 
+	 << ") ERROR: " << var2.GetName() << " is not a floating parameter of PDF " << _pdfClone->GetName() << endl ;
+    return 0;
+  }
+
+  // Ensure function is minimized. Perform MIGRAD with strategy 0 only.
+  fit("m0","cpds") ;
+
+  // create and draw a frame
+  TH2F *frame = var1.createHistogram("contourPlot", var2, "-log(likelihood)") ;
+  frame->SetStats(kFALSE);
+
+  // draw a point at the current parameter values
+  TMarker *point= new TMarker(var1.getVal(), var2.getVal(), 8);
+
+  // remember our original value of ERRDEF
+  Double_t errdef= gMinuit->fUp;
+
+  TGraph* graph1(0) ;
+  if(n1 > 0) {
+    // set the value corresponding to an n1-sigma contour
+    gMinuit->SetErrorDef(n1*n1*errdef);
+    // calculate and draw the contour
+    graph1= (TGraph*)gMinuit->Contour(25, index1, index2);
+  }
+
+  TGraph* graph2(0) ;
+  if(n2 > 0) {
+    // set the value corresponding to an n1-sigma contour
+    gMinuit->SetErrorDef(n2*n2*errdef);
+    // calculate and draw the contour
+    graph2= (TGraph*)gMinuit->Contour(25, index1, index2);
+    graph2->SetLineStyle(2);
+  }
+
+  TGraph* graph3(0) ;
+  if(n3 > 0) {
+    // set the value corresponding to an n1-sigma contour
+    gMinuit->SetErrorDef(n3*n3*errdef);
+    // calculate and draw the contour
+    graph3= (TGraph*)gMinuit->Contour(25, index1, index2);
+    graph3->SetLineStyle(3);
+  }
+  // restore the original ERRDEF
+  gMinuit->SetErrorDef(errdef);
+
+
+  // Draw all objects
+  frame->Draw();
+  point->Draw();
+  if (graph1) graph1->Draw();
+  if (graph2) graph2->Draw();
+  if (graph3) graph3->Draw();
+
+  return frame;
+}
+
 
 
 

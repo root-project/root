@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.32 2001/10/01 22:04:20 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.33 2001/10/05 07:01:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,23 +43,20 @@ public:
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0, Bool_t verbose=kFALSE) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Bool_t verbose=kFALSE) const;
 
+
+  // PDF specific plotting
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
 			  ScaleType stype=Relative, const RooArgSet* projSet=0) const;
+  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L") ;
+  virtual TH2F *plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, Double_t n1= 1, Double_t n2= 2, Double_t n3= 0) ;
+  virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
+			   Option_t *options = "NELU", Double_t xmin=0.65,
+			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
 
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
 
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
-  virtual void generateEvent(Int_t code);
-
-  // PDF-specific plotting & display
-  TH1F *Scan(RooDataSet* data, RooRealVar &param, Int_t bins= 0) { return 0 ; } 
-  TH1F *Scan(RooDataSet& data, RooRealVar &param, Int_t bins= 0) { return 0 ; } 
-  TH2F *PlotContours(RooRealVar& var1, RooRealVar& var2,
-		     Double_t n1= 1, Double_t n2= 2, Double_t n3= 0) { return 0 ; } 
-  TPaveText *Parameters(const char *label= "", Int_t sigDigits = 2,
-			Option_t *options = "NELU", Double_t xmin=0.65,
-                        Double_t xmax= 0.99,Double_t ymax=0.95) { return 0 ; } 
+  virtual void generateEvent(Int_t code);  
 
   // Interactions with a dataset  
   virtual const RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
@@ -72,6 +69,8 @@ public:
   void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value) ;
   void traceEvalPdf(Double_t value) const ;
+
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
 
   virtual Bool_t selfNormalized() const { return kFALSE ; }
 
@@ -91,6 +90,7 @@ private:
 
 protected:
 
+  friend class RooCutNorm ;
   RooAbsPdf(const RooAbsPdf& other, const char* name=0);
 
   friend class RooRealIntegral ;

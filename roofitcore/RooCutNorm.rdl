@@ -1,0 +1,48 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitTools
+ *    File: $Id$
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   10-Oct-2001 WV Created initial version
+ *
+ * Copyright (C) 2000 University of California
+ *****************************************************************************/
+#ifndef ROO_CUT_NORM
+#define ROO_CUT_NORM
+
+#include "RooFitCore/RooAbsPdf.hh"
+#include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooSetProxy.hh"
+
+class RooCutNorm : public RooAbsPdf {
+public:
+
+  RooCutNorm(const char *name, const char *title, const RooAbsReal& norm, 
+	     const RooAbsPdf& pdf, const RooArgList& depList, const RooArgList& cutDepList) ;
+  RooCutNorm(const RooCutNorm& other, const char* name=0) ;
+  virtual TObject* clone(const char* newname) const { return new RooCutNorm(*this,newname) ; }
+  virtual ~RooCutNorm() {} ;
+
+  Double_t evaluate() const { return 1.0 ; }
+  virtual Bool_t selfNormalized() const { return kTRUE ; }
+  virtual Bool_t canBeExtended() const { return kTRUE ; }
+  virtual Double_t expectedEvents() const ;
+
+protected:
+
+  mutable RooArgSet* _lastFracSet ;
+  mutable RooRealIntegral* _fracIntegral ;
+  RooRealProxy _pdf ;
+  RooRealProxy _n ;
+  RooSetProxy  _cutDepSet ;
+  RooSetProxy  _origDepSet ;
+
+  void syncFracIntegral() const ;
+
+  ClassDef(RooCutNorm,0) // Flat PDF introducing an extended likelihood term
+};
+
+#endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.12 2001/09/24 23:05:58 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.13 2001/09/25 01:15:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -16,88 +16,74 @@
 #include "TList.h"
 #include "RooFitCore/RooAddModel.hh"
 #include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooAddModel)
 ;
 
 
-RooAddModel::RooAddModel(const char *name, const char *title, RooRealVar& convVar) :
-  RooResolutionModel(name,title,convVar), 
-  _modelProxyIter(_modelProxyList.MakeIterator()),
-  _coefProxyIter(_coefProxyList.MakeIterator()),
-  _isCopy(kFALSE) 
-{
-  // Dummy constructor 
-}
-
-
 RooAddModel::RooAddModel(const char *name, const char *title,
-			 RooResolutionModel& model1) :
-  RooResolutionModel(name,title,model1.convVar()),
-  _modelProxyIter(_modelProxyList.MakeIterator()),
-  _coefProxyIter(_coefProxyList.MakeIterator()),
-  _isCopy(kFALSE) 
-{
-  // Constructor with one model
-  addLastModel(model1) ;    
-
-}
-
-
-RooAddModel::RooAddModel(const char *name, const char *title,
-			 RooResolutionModel& model1, 
-			 RooResolutionModel& model2, 
-			 RooAbsReal& coef1) : 
-  RooResolutionModel(name,title,model1.convVar()),
+			 const RooArgList& modelList, const RooArgList& coefList) :
+  RooResolutionModel(name,title,((RooResolutionModel*)modelList.at(0))->convVar()),
   _modelProxyIter(_modelProxyList.MakeIterator()),
   _coefProxyIter(_coefProxyList.MakeIterator()),
   _isCopy(kFALSE)
 {
-  // Check for consistency of convolution variables
-  if (&model1.convVar() != &model2.convVar()) {
-    cout << "RooAddModel::RooAddModel(" << GetName() << "): ERROR, input models " 
-	 << model1.GetName() << " and " << model2.GetName() 
-	 << " do not have the same convolution variable" << endl ;
+  // Check that lists have consistent size
+  if (modelList.getSize() != coefList.getSize() + 1) {
+    cout << "RooAddModel::ctor(" << GetName() 
+	 << ") ERROR: number of coefficients must be one less than number of models" << endl ;
     assert(0) ;
   }
 
-  // Constructor with two models
-  addModel(model1,coef1) ;
-  addLastModel(model2) ;    
+  // Loop over model list
+  RooAbsArg* refConvVar(0) ;
+  RooResolutionModel* model ;
+  TIterator* mIter = modelList.createIterator() ;
+  while(model=(RooResolutionModel*)mIter->Next()) {
 
-}
+    // Check that model is a RooResolutionModel
+    if (!dynamic_cast<RooResolutionModel*>(model)) {
+      cout << "RooAddModel::ctor(" << GetName() << ") ERROR: " << model->GetName() 
+	   << " is not a RooResolutionModel" << endl ;
+      assert(0) ;
+    }
 
+    // Check that all models use the same convolution variable
+    if (!refConvVar) {
+      refConvVar = &model->convVar() ;
+    } else {
+      if (&model->convVar() != refConvVar) {
+	cout << "RooAddModel::ctor(" << GetName() 
+	     << ") ERROR: models have inconsistent convolution variable" << endl ;
+	assert(0) ;
+      }
+    }
 
-RooAddModel::RooAddModel(const char *name, const char *title,
-			 RooResolutionModel& model1, 
-			 RooResolutionModel& model2, 
-			 RooResolutionModel& model3, 
-			 RooAbsReal& coef1,
-			 RooAbsReal& coef2) : 
-  RooResolutionModel(name,title,model1.convVar()),
-  _modelProxyIter(_modelProxyList.MakeIterator()),
-  _coefProxyIter(_coefProxyList.MakeIterator()),
-  _isCopy(kFALSE) 
-{
-  // Check for consistency of convolution variables
-  if (&model1.convVar() != &model2.convVar()) {
-    cout << "RooAddModel::RooAddModel(" << GetName() << "): ERROR, input models " 
-	 << model1.GetName() << " and " << model2.GetName() 
-	 << " do not have the same convolution variable" << endl ;
-    assert(0) ;
+    // Add model to proxy list
+    RooRealProxy *modelProxy = new RooRealProxy("model","model",this,*model) ;
+    _modelProxyList.Add(modelProxy) ;
   }
+  delete mIter ;
 
-  if (&model2.convVar() != &model3.convVar()) {
-    cout << "RooAddModel::RooAddModel(" << GetName() << "): ERROR, input models " 
-	 << model1.GetName() << " and " << model3.GetName() 
-	 << " do not have the same convolution variable" << endl ;
-    assert(0) ;
+
+  // Loop over coef list
+  RooAbsReal* coef ;
+  TIterator* cIter = coefList.createIterator() ;
+  while(coef=(RooAbsReal*)cIter->Next()) {
+
+    // Check that coef is a RooAbsReal
+    if (!dynamic_cast<RooAbsReal*>(coef)) {
+      cout << "RooAddModel::ctor(" << GetName() << ") ERROR: " << coef->GetName() 
+	   << " is not a RooAbsReal" << endl ;
+      assert(0) ;
+    }
+
+    // Add coefficient to proxy list
+    RooRealProxy *coefProxy = new RooRealProxy("coef","coef",this,*coef) ;
+    _coefProxyList.Add(coefProxy) ;
   }
-
-  // Constructor with 3 models
-  addModel(model1,coef1) ;
-  addModel(model2,coef2) ;
-  addLastModel(model3) ;    
+  delete cIter ;
 
 }
 
@@ -165,27 +151,6 @@ RooAddModel::~RooAddModel()
 
 
 
-void RooAddModel::addModel(RooResolutionModel& model, RooAbsReal& coef) 
-{  
-  // Add a model/coefficient pair to the model sum
-
-  RooRealProxy *modelProxy = new RooRealProxy("model","model",this,model) ;
-  RooRealProxy *coefProxy = new RooRealProxy("coef","coef",this,coef) ;
-  
-  _modelProxyList.Add(modelProxy) ;
-  _coefProxyList.Add(coefProxy) ;
-}
-
-
-void RooAddModel::addLastModel(RooResolutionModel& model) 
-{
-  // Specify the last model, whose coefficient is automatically 
-  // calculated from the normalization requirement
-  RooRealProxy *modelProxy = new RooRealProxy("model","model",this,model) ;
-  _modelProxyList.Add(modelProxy) ;
-}
-
-
 RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* owner) const
 {
   // Check that primary variable of basis functions is our convolution variable  
@@ -209,25 +174,23 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* ow
   newTitle.Append(" convoluted with basis function ") ;
   newTitle.Append(basis->GetName()) ;
 
-  RooAddModel* convSum = new RooAddModel(newName,newTitle,convVar()) ;
-
-  _coefProxyIter->Reset() ;
   _modelProxyIter->Reset() ;
-  RooRealProxy* coef ;
   RooRealProxy* model ;
-  while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
-    model = (RooRealProxy*)_modelProxyIter->Next() ;
-    
+  RooArgList modelList ;
+  while(model = (RooRealProxy*)_modelProxyIter->Next()) {       
     // Create component convolution
     RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis,owner) ;    
-    convSum->addModel(*conv,(RooAbsReal&)coef->arg()) ;
+    modelList.add(*conv) ;
   }
-  
-  // Create last component convolution
-  model = (RooRealProxy*)_modelProxyIter->Next() ;    
-  RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis,owner) ;    
-  convSum->addLastModel(*conv) ;
 
+  _coefProxyIter->Reset() ;
+  RooRealProxy* coef ;
+  RooArgList coefList ;  
+  while(coef = (RooRealProxy*)_coefProxyIter->Next()) {
+    coefList.add(coef->arg()) ;
+  }
+    
+  RooAddModel* convSum = new RooAddModel(newName,newTitle,modelList,coefList) ;
   convSum->changeBasis(basis) ;
   return convSum ;
 }
@@ -411,25 +374,6 @@ Bool_t RooAddModel::checkDependents(const RooArgSet* set) const
 }
 
 
-Int_t RooAddModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const 
-{
-  // Determine which part (if any) of given integral can be performed analytically.
-  // If any analytical integration is possible, return integration scenario code
-
-  // This model is by construction normalized
-  return 0 ;
-}
-
-
-Double_t RooAddModel::analyticalIntegral(Int_t code) const 
-{
-  // Return analytical integral defined by given scenario code
-
-  // This model is by construction normalized
-  return 1.0 ;
-}
-
-
 void RooAddModel::normLeafServerList(RooArgSet& list) const 
 {
   // Fill list with leaf server nodes of normalization integral 
@@ -476,3 +420,133 @@ void RooAddModel::syncNormalization(const RooArgSet* nset) const
   }
   
 }
+
+
+Bool_t RooAddModel::forceAnalyticalInt(const RooAbsArg& dep) const 
+{
+  // Force analytical integration of all dependents for non-convoluted resolution models
+  return (_basisCode==0) ;
+}
+
+
+Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+{
+  // Determine which part (if any) of given integral can be performed analytically.
+  // If any analytical integration is possible, return integration scenario code
+  //
+  // RooAddModel queries each component model for its analytical integration capability of the requested
+  // set ('allVars'). It finds the largest common set of variables that can be integrated
+  // by all components. If such a set exists, it reconfirms that each component is capable of
+  // analytically integrating the common set, and combines the components individual integration
+  // codes into a single integration code valid for RooAddModel.
+
+  // Analytical integrations are only supported in non-convoluted form
+  if (_basisCode!=0) {
+    return 0 ;
+  }
+
+  _modelProxyIter->Reset() ;
+  RooResolutionModel* model ;
+  RooArgSet allAnalVars(allVars) ;
+  TIterator* avIter = allVars.createIterator() ;
+
+  Int_t n(0) ;
+  // First iteration, determine what each component can integrate analytically
+  while(model=(RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg()) {
+    RooArgSet subAnalVars ;
+    Int_t subCode = model->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
+//     cout << "RooAddModel::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << model->GetName() << ") = " << subCode << endl ;
+
+    // If a dependent is not supported by any of the components, 
+    // it is dropped from the combined analytic list
+    avIter->Reset() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)avIter->Next()) {
+      if (!subAnalVars.find(arg->GetName())) {
+	allAnalVars.remove(*arg,kTRUE) ;
+      }
+    }
+    n++ ;
+  }
+
+  if (allAnalVars.getSize()==0) {
+    delete avIter ;
+    return 0 ;
+  }
+
+  // Now retrieve the component codes for the common set of analytic dependents 
+  _modelProxyIter->Reset() ;
+  n=0 ;
+  Int_t* subCode = new Int_t[_modelProxyList.GetSize()] ;
+  Bool_t allOK(kTRUE) ;
+  while(model=(RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg()) {
+    RooArgSet subAnalVars ;
+    subCode[n] = model->getAnalyticalIntegralWN(allAnalVars,subAnalVars,normSet) ;
+//     cout << "RooAddModel::getAI(" << GetName() << ") ITER2 subCode(" << n << "," << model->GetName() << ") = " << subCode[n] << endl ;
+    if (subCode[n]==0) {
+      cout << "RooAddModel::getAnalyticalIntegral(" << GetName() << ") WARNING: component model " << model->GetName() 
+	   << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually."
+	   << "   Distributed analytical integration disabled. Please fix model" << endl ;
+      allOK = kFALSE ;
+    }
+    n++ ;
+  }  
+  if (!allOK) return 0 ;
+
+  analVars.add(allAnalVars) ;
+  Int_t masterCode = _codeReg.store(subCode,_modelProxyList.GetSize())+1 ;
+
+  delete[] subCode ;
+  delete avIter ;
+  return masterCode ;
+}
+
+
+Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
+{
+  // Return analytical integral defined by given scenario code
+
+  if (code==0) return getVal() ;
+
+  const Int_t* subCode = _codeReg.retrieve(code-1) ;
+  if (!subCode) {
+    cout << "RooAddModel::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code << endl ;
+    assert(0) ;    
+  }
+
+  // Calculate the current value of this object  
+  Double_t value(0) ;
+
+  // Do running sum of coef/model pairs, calculate lastCoef.
+  _modelProxyIter->Reset() ;
+  _coefProxyIter->Reset() ;
+  RooAbsReal* coef ;
+  RooResolutionModel* model ;
+  Int_t i(0) ;
+    
+  // N models, N-1 coefficients
+  Double_t lastCoef(1) ;
+  while(coef=(RooAbsReal*)((RooRealProxy*)_coefProxyIter->Next())->absArg()) {
+    model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
+    Double_t coefVal = coef->getVal(normSet) ;
+    value += model->analyticalIntegralWN(subCode[i],normSet)*coefVal ;
+    lastCoef -= coefVal ;
+    i++ ;
+  }
+  
+  model = (RooResolutionModel*) ((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
+  value += model->analyticalIntegralWN(subCode[i],normSet)*lastCoef ;
+  
+  // Warn about coefficient degeneration
+  if (lastCoef<0 || lastCoef>1) {
+    cout << "RooAddModel::analyticalIntegral(" << GetName() 
+	 << " WARNING: sum of model coefficients not in range [0-1], value=" 
+	 << 1-lastCoef << endl ;
+  }     
+
+  return value ;
+}
+
+
+
+

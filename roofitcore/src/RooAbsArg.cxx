@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.51 2001/09/26 18:29:32 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.52 2001/10/03 16:16:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -383,6 +383,8 @@ RooArgSet* RooAbsArg::getDependents(const RooAbsData* set) const
   // function is responsible for deleting the returned argset.
   // The complement of this function is getDependents()
 
+  if (!set) return new RooArgSet ;
+
   return getDependents(set->get()) ;
 }
 
@@ -394,8 +396,9 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
   // supplied argset. The caller of this function is responsible 
   // for deleting the returned argset. The complement of this function 
   // is getDependents()
-
+  
   RooArgSet* depList = new RooArgSet("dependents") ;
+  if (!dataList) return depList ;
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
@@ -617,11 +620,11 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   while (oldServer=(RooAbsArg*)sIter->Next()) {
 
     newServer= oldServer->findNewServer(newSet, nameChange);
+    if (newServer && _verboseDirty) {
+      cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
+ 	   << " redirected from " << oldServer << " to " << newServer << endl ;
+    }
 
-//     if (newServer) {
-//       cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
-// 	   << " redirected from " << oldServer << " to " << newServer << endl ;
-//     }
     if (!newServer) {
       if (mustReplaceAll) {
 	cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
@@ -701,20 +704,20 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
   return newServer;
 }
 
-Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll) 
+Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange) 
 {
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
 
   Bool_t ret(kFALSE) ;
   
   // Do redirect on self
-  ret |= redirectServers(newSet,mustReplaceAll) ;
+  ret |= redirectServers(newSet,mustReplaceAll,nameChange) ;
 
   // Do redirect on servers
   TIterator* sIter = serverIterator() ;
   RooAbsArg* server ;
   while(server=(RooAbsArg*)sIter->Next()) {
-    ret |= server->recursiveRedirectServers(newSet,mustReplaceAll) ;
+    ret |= server->recursiveRedirectServers(newSet,mustReplaceAll,nameChange) ;
   }
   delete sIter ;
 

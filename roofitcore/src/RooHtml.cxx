@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHtml.cc,v 1.1 2001/10/04 00:37:18 david Exp $
+ *    File: $Id: RooHtml.cc,v 1.2 2001/10/05 07:01:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,7 @@
 #include <iostream.h>
 #include <fstream.h>
 #include <string.h>
+#include <strings.h>
 
 ClassImp(RooHtml)
   ;

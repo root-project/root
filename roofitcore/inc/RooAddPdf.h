@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.17 2001/09/28 21:59:28 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.18 2001/10/05 07:01:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,6 +29,7 @@ public:
   RooAddPdf(const char *name, const char *title);
   RooAddPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
+  RooAddPdf(const char *name, const char *title, const RooArgList& pdfList) ;
   RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList) ;
   RooAddPdf(const RooAddPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooAddPdf(*this,newname) ; }
@@ -42,7 +43,7 @@ public:
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
-  virtual Bool_t canBeExtended() const { return _haveLastCoef ; }
+  virtual Bool_t canBeExtended() const { return _haveLastCoef || _allExtendable ; }
   virtual Double_t expectedEvents() const ;
 
 
@@ -60,6 +61,7 @@ protected:
   TIterator* _coefIter ;   //! Iterator over coefficient list
 
   Bool_t _haveLastCoef ;   //  Flag indicating if last PDFs coefficient was supplied in the ctor
+  Bool_t _allExtendable ;  //  Flag indicating if all PDF components are extendable
 
 private:
 

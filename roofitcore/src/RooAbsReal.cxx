@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.46 2001/09/28 21:59:27 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.47 2001/10/03 16:16:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -708,18 +708,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   RooArgSet* projectionCompList ;
   const RooAbsReal *projection = createProjection(RooArgSet(*plotVar), &projectedVars, projectionCompList) ;
 
-//   projection->Print("v") ;
-
-//   RooArgSet depSet(*plotVar) ;
-//   RooArgSet pTN ;
-//   projection->treeNodeServerList(&pTN) ;
-//   TIterator* iter = pTN.createIterator() ;
-//   RooAbsArg* a ;
-//   while(a = (RooAbsArg*) iter->Next()) {
-//     cout << "dependent = " << a << " " << a->GetName() << endl ;
-//   }
-//   cout << "plotVar = " << plotVar << " " << plotVar->GetName() << endl ;
-
   // Reset name of projection to name of PDF to get appropriate curve name
   ((RooAbsArg*)projection)->SetName(GetName()) ;
   
@@ -1041,6 +1029,16 @@ RooPlot *RooAbsReal::frame() const {
   // y.plotOn(...) method, for example. The caller is responsible for deleting
   // the returned object.
 
+  // Plot range of variable may not be infinite or empty
+  if (getPlotMin()==getPlotMax()) {
+    cout << "RooAbsReal::frame(" << GetName() << ") ERROR: empty plot range" << endl ;
+    return 0 ;
+  }
+  if (RooNumber::isInfinite(getPlotMin())||RooNumber::isInfinite(getPlotMax())) {
+    cout << "RooAbsReal::frame(" << GetName() << ") ERROR: open ended plot range" << endl ;
+    return 0 ;
+  }
+
   return new RooPlot(*this);
 }
 
@@ -1146,5 +1144,7 @@ Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedA
   if(isMatched) matchedArgs.add(matched);
   return isMatched;
 }
+
+
 
 

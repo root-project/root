@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.14 2001/09/27 18:22:30 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.15 2001/09/28 21:59:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -28,14 +28,47 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 				 RooAbsCategoryLValue& indexCat) : 
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
-  _codeReg(10)
+  _codeReg(10),
+  _allExtendable(kTRUE)
 {
 }
+
+
+RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
+				 const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) :
+  RooAbsPdf(name,title), _numPdf(0.),
+  _indexCat("indexCat","Index category",this,indexCat),
+  _codeReg(10),
+  _allExtendable(kTRUE)
+{
+  if (pdfList.getSize() != indexCat.numTypes()) {
+    cout << "RooSimultaneous::ctor(" << GetName() 
+	 << " ERROR: Number PDF list entries must match number of index category states, no PDFs added" << endl ;
+    return ;    
+  }
+
+  // Iterator over PDFs and index cat states and add each pair
+  TIterator* pIter = pdfList.createIterator() ;
+  TIterator* cIter = indexCat.typeIterator() ;
+  RooAbsPdf* pdf ;
+  RooCatType* type ;
+  while (pdf=(RooAbsPdf*)pIter->Next()) {
+    type = (RooCatType*) cIter->Next() ;
+    addPdf(*pdf,type->GetName()) ;
+    if (!pdf->canBeExtended()) _allExtendable = kFALSE ;
+  }
+
+  delete pIter ;
+  delete cIter ;
+}
+
+
 
 RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name) : 
   RooAbsPdf(other,name),
   _indexCat("indexCat",this,other._indexCat), _numPdf(other._numPdf),
-  _codeReg(other._codeReg)
+  _codeReg(other._codeReg),
+  _allExtendable(other._allExtendable)
 {
   // Copy proxy list 
   TIterator* pIter = other._pdfProxyList.MakeIterator() ;
@@ -50,23 +83,6 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
 RooSimultaneous::~RooSimultaneous() 
 {
   _pdfProxyList.Delete() ;
-}
-
-
-
-const RooFitResult* RooSimultaneous::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
-{
-  TString opts = optOpt ;
-  opts.ToLower() ;
-
-  if (!opts.Contains("s")) {
-  // Fit this PDF to given data set using a regular fit context    
-    return RooAbsPdf::fitTo(data,fitOpt,optOpt) ;
-  } 
-
-  // Fit this PDF to given data set using a SimFit context
-  RooSimFitContext context(&data,this) ;
-  return context.fit(fitOpt,optOpt) ;  
 }
 
 
@@ -93,20 +109,15 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   _pdfProxyList.Add(proxy) ;
   _numPdf += 1.0 ;
 
+  if (!pdf.canBeExtended()) _allExtendable = kFALSE ;
+
   return kFALSE ;
 }
 
 
 
 Double_t RooSimultaneous::evaluate() const
-{
-//   // Require that all states have an associated PDF
-//   if (_pdfProxyList.GetSize() != _indexCat.arg().numTypes()) {
-//     cout << "RooSimultaneous::evaluate(" << GetName() 
-// 	 << "): ERROR, number of PDFs and number of index states do not match" << endl ;
-//     return 0 ;
-//   }
-
+{  
   // Retrieve the proxy by index name
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
   
@@ -114,6 +125,35 @@ Double_t RooSimultaneous::evaluate() const
 
   // Return the selected PDF value, normalized by the number of index states
   return ((RooAbsPdf*)(proxy->absArg()))->getVal(_lastNormSet) / _numPdf ;
+}
+
+
+Double_t RooSimultaneous::expectedEvents() const 
+{
+  // Retrieve the proxy by index name
+  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
+  
+  assert(proxy!=0) ;
+
+  // Return the selected PDF value, normalized by the number of index states
+  return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents() ;
+}
+
+
+
+const RooFitResult* RooSimultaneous::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
+{
+  TString opts = optOpt ;
+  opts.ToLower() ;
+
+  if (!opts.Contains("s")) {
+  // Fit this PDF to given data set using a regular fit context    
+    return RooAbsPdf::fitTo(data,fitOpt,optOpt) ;
+  } 
+
+  // Fit this PDF to given data set using a SimFit context
+  RooSimFitContext context(&data,this) ;
+  return context.fit(fitOpt,optOpt) ;  
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.46 2001/09/24 23:05:57 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.47 2001/09/27 18:22:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -120,6 +120,7 @@ public:
 
 protected:
 
+  friend class RooCutNorm ;
   friend class RooRealIntegral ;
   enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
   void setOperMode(OperMode mode) { _operMode = mode ; operModeHook() ; }
@@ -169,7 +170,7 @@ protected:
   friend class RooResolutionModel ;
   friend class RooSimultaneous ;
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
-  Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll) { return kFALSE ; } ;
   virtual void serverNameChangeHook(const RooAbsArg* oldServer, const RooAbsArg* newServer) { } ;
 

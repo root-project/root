@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.39 2001/10/03 16:16:30 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.40 2001/10/05 07:01:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -96,6 +96,7 @@
 #include <iostream.h>
 #include <math.h>
 #include "TObjString.h"
+#include "TPaveText.h"
 #include "TList.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -108,6 +109,8 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooPlot.hh"
+#include "RooFitCore/RooCurve.hh"
+#include "RooFitCore/RooNLLBinding.hh"
 
 ClassImp(RooAbsPdf) 
 ;
@@ -512,9 +515,34 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
   //     Shape : value, units, plot range
   //   Verbose : default binning and print label
 
-  RooAbsArg::printToStream(os,opt,indent);
+  if (opt == OneLine) { 
+    RooAbsArg::printToStream(os,opt,indent);
+  }
+
+  if (opt == Standard) {
+    os << ClassName() << "::" << GetName() << "(" ;
+    
+    RooArgSet* paramList = getParameters((RooArgSet*)0) ;
+    TIterator* pIter = paramList->createIterator() ;
+
+    Bool_t first=kTRUE ;
+    RooAbsArg* var ;
+    while(var=(RooAbsArg*)pIter->Next()) {
+      if (!first) {
+	os << "," ;
+      } else {
+	first=kFALSE ;
+      }
+      os << var->GetName() ;
+    }
+    os << ") = " << getVal(_lastNormSet) << endl ;
+
+    delete pIter ;
+    delete paramList ;
+  }
 
   if(opt >= Verbose) {
+    RooAbsArg::printToStream(os,opt,indent);
     os << indent << "--- RooAbsPdf ---" << endl;
     os << indent << "Cached value = " << _value << endl ;
     if (_norm) {
@@ -596,3 +624,116 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions,
 }
 
 
+
+RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions) 
+{
+  // Sanity checks on frame
+  if (plotSanityChecks(frame)) return frame ;
+  RooAbsReal* plotVar = frame->getPlotVar() ;
+
+  // Plot variable may not be a dependent 
+  RooArgSet* depSet = getDependents(data) ;
+  if (depSet->find(plotVar->GetName())) {
+    cout << "RooAbsPdf::plotNLLOn(" << GetName() << ") ERROR: plot variable " 
+	 << plotVar->GetName() << " cannot not be a dependent" << endl ;
+    delete depSet ;
+    return frame ;
+  }
+
+  // Clone for plotting
+  RooArgSet *cloneList = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+  RooAbsPdf* clone     = (RooAbsPdf*) cloneList->find(GetName()) ;
+  RooAbsRealLValue* cloneVar = (RooAbsRealLValue*) cloneList->find(plotVar->GetName()) ;
+
+  // Create NLL binding object
+  RooNLLBinding nllVar(*clone,*data,*cloneVar) ;
+
+  // Construct name and title of curve
+  TString name("curve_NLL[") ;
+  name.Append(GetName()) ;
+  name.Append(",") ;
+  name.Append(data->GetName()) ;
+  name.Append("]") ;
+
+  TString title("NLL of PDF '") ;
+  title.Append(GetTitle()) ;
+  title.Append("' with dataset '") ;
+  title.Append(data->GetTitle()) ;
+  title.Append("'") ;
+
+  // Create curve for NLL binding object
+  RooCurve* curve= new RooCurve(name, title, nllVar, 
+				plotVar->getPlotMin(), plotVar->getPlotMax(),plotVar->getPlotBins()) ;
+
+  // Add this new curve to the specified plot frame
+  frame->addPlotable(curve, drawOptions);
+
+  delete cloneList ;
+  return frame ;
+}
+
+
+
+RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *label,
+			    Int_t sigDigits, Option_t *options, Double_t xmin,
+			    Double_t xmax ,Double_t ymax) 
+{
+  
+  // parse the options
+  TString opts = options;
+  opts.ToLower();
+  Bool_t showConstants= opts.Contains("c");
+  Bool_t showLabel= (label != 0 && strlen(label) > 0);
+  
+  // calculate the box's size, adjusting for constant parameters
+  RooArgSet* params = getParameters(data) ;
+  TIterator* pIter = params->createIterator() ;
+  params->Print("v") ;
+
+  Int_t nPar= params->getSize();
+  Real_t ymin(ymax), dy(0.06);
+  Int_t index(nPar);
+  RooRealVar *var(0);
+  while(var=(RooRealVar*)pIter->Next()) {
+    if(showConstants || !var->isConstant()) ymin-= dy;
+  }
+
+  if(showLabel) ymin-= dy;
+
+  // create the box and set its options
+  TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
+  if(!box) return 0;
+  box->SetFillColor(0);
+  box->SetBorderSize(1);
+  box->SetTextAlign(12);
+  box->SetTextSize(0.04);
+  box->SetFillStyle(1001);
+  box->SetFillColor(0);
+  TText *text(0);
+  char buffer[512];
+  index= nPar;
+  pIter->Reset() ;
+  while(var=(RooRealVar*)pIter->Next()) {
+    if(var->isConstant() && !showConstants) continue;
+    TString *formatted= var->format(sigDigits, opts.Data());
+    text= box->AddText(formatted->Data());
+    delete formatted;
+  }
+  // add the optional label if specified
+  if(showLabel) text= box->AddText(label);
+
+  // Add box to frame 
+  frame->addObject(box) ;
+
+  delete pIter ;
+  delete params ;
+  return frame ;
+}
+
+
+
+TH2F* RooAbsPdf::plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3) 
+{
+  RooFitContext context(&data,this) ;
+  return context.plotNLLContours(var1,var2,n1,n2,n3) ;
+}
