@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.5 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.6 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -87,6 +87,7 @@ public:
    virtual Bool_t HandleTimer(TTimer *t);
    virtual void   Layout();
    TGShutterItem *GetSelectedItem() const { return fSelectedItem; }
+   TGShutterItem *GetItem(const char *name);
    virtual void   SetSelectedItem(TGShutterItem *item);
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 

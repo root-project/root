@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.5 2003/10/16 15:21:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.6 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -180,6 +180,26 @@ void TGShutter::SetSelectedItem(TGShutterItem *item)
 
    fSelectedItem = item;
    Layout();
+}
+
+//______________________________________________________________________________
+TGShutterItem *TGShutter::GetItem(const char *name)
+{
+   // returns a shutter item by name (name is hot string of shutter item) 
+
+   TGFrameElement *el;
+   TGShutterItem  *item = 0;
+
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      TGTextButton *btn;
+      item = (TGShutterItem *)el->fFrame;
+      btn = (TGTextButton*)item->GetButton();
+      if (btn->GetString() == name) return item;
+   }
+
+   return item;
 }
 
 //______________________________________________________________________________
