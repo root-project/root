@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.21 2000/12/19 19:24:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.22 2000/12/20 17:36:18 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -210,6 +210,7 @@ TClass::TClass(const char *name, Version_t cversion,
          fStreamerInfo->Add(info);
       }
       oldcl->GetStreamerInfos()->Clear();
+      gROOT->GetListOfClasses()->Remove(oldcl);
       delete oldcl;
    }
    gROOT->GetListOfClasses()->Add(this);
