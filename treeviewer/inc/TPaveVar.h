@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.h,v 1.2 2000/06/13 13:59:21 brun Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include "TPaveLabel.h"
 #endif
 #ifndef ROOT_TTreeViewer
-#include "TTreeViewer.h"
+#include "TTreeViewerOld.h"
 #endif
 
 
