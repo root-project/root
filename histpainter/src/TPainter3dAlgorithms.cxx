@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.15 2004/07/29 08:06:03 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.16 2004/09/29 07:19:51 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2155,17 +2155,21 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
     if (ab[8] < Hparam.ymin) ab[8] = Hparam.ymin;
 
     if (Hoption.Logx) {
-       ab[3]  = TMath::Log10(ab[3]);
-       ab[5]  = TMath::Log10(ab[5]);
+       if (ab[3] > 0) ab[3]  = TMath::Log10(ab[3]);
+       else           ab[3]  = Hparam.xmin;
+       if (ab[5] > 0) ab[5]  = TMath::Log10(ab[5]);
+       else           ab[5]  = Hparam.xmin;
     }
-	xval1l = Hparam.xmin;
-	xval2l = Hparam.xmax;
+    xval1l = Hparam.xmin;
+    xval2l = Hparam.xmax;
     if (Hoption.Logy) {
-       ab[4]  = TMath::Log10(ab[4]);
-       ab[8]  = TMath::Log10(ab[8]);
+       if (ab[4] > 0) ab[4]  = TMath::Log10(ab[4]);
+       else           ab[4]  = Hparam.ymin;
+       if (ab[8] > 0) ab[8]  = TMath::Log10(ab[8]);
+       else           ab[8]  = Hparam.ymin;
     }
-	yval1l = Hparam.ymin;
-	yval2l = Hparam.ymax;
+    yval1l = Hparam.ymin;
+    yval2l = Hparam.ymax;
 
 //*-*-       Transform the cell position in the required coordinate system
 
@@ -3681,8 +3685,14 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 
 	f[i*3 + 1] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt+ixa) + 0.5*xwid;
 	f[i*3 + 2] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt+iya) + 0.5*ywid;
-        if (Hoption.Logx) f[i*3 + 1] = TMath::Log10(f[i*3 + 1]);
-        if (Hoption.Logy) f[i*3 + 2] = TMath::Log10(f[i*3 + 2]);
+        if (Hoption.Logx) {
+            if (f[i*3 + 1] > 0) f[i*3 + 1] = TMath::Log10(f[i*3 + 1]);
+            else                f[i*3 + 1] = Hparam.xmin;
+	}
+        if (Hoption.Logy) {
+            if (f[i*3 + 2] > 0) f[i*3 + 2] = TMath::Log10(f[i*3 + 2]);
+            else                f[i*3 + 2] = Hparam.ymin;
+	}
 
 //*-*-     Transform the cell position in the required coordinate system
 
