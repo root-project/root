@@ -108,6 +108,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refTrackTrigger = RefClone(where,"hTrackTrigger");
    TH1F *refFiltTrackTrigger = RefClone(where,"hFiltTrackTrigger");
 
+   TH1F *refBreit = RefClone(where,"hBreit");
+
    // Loop with user code on all events and fill the ref histograms
    // The code below should produce identical results to the tree->Draw above
 
@@ -247,7 +249,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
             else               refTrackTrigger->Fill(nextbit);
          }
          if (bits.TestBitNumber(5)) refFiltTrackTrigger->Fill(t->GetPx());
-
+         refBreit->Fill(TMath::BreitWigner(t->GetPx(),3,2));
       }
    }
 

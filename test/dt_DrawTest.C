@@ -164,6 +164,11 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
                  "fTracks.fTriggerBits.TestBitNumber(5)",
                  "hFiltTrackTrigger", level>1 && gBranchStyle!=0);
 
+   DrawSkippable(tree,"TMath::BreitWigner(fPx,3,2)",
+                 "",
+                 "hBreit", level>1 && gBranchStyle!=0);
+   
+
 
    if (quietLevel<2) gBenchmark->Show("DrawTest");   
    else gBenchmark->Stop("DrawTest");  

@@ -16,6 +16,8 @@ REFFILE=dt_reference.root
 
 OUTPUT=>/dev/null
 
+files: $(DATAFILES)
+
 drawtest : $(DATAFILES) $(REFFILE) dt_RunDrawTest_C.$(DllSuf)
 
 Event.new.split0.root : Event$(ExeSuf) libEvent.$(DllSuf)
