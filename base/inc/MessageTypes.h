@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.5 2001/02/22 09:43:25 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.6 2001/02/23 14:02:22 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -76,7 +76,15 @@ enum EMessageTypes {
    kROOTD_SRPB,                          //SRP b follows
    kROOTD_SRPRESPONSE,                   //SRP final response
    kROOTD_PUTFILE,                       //store file
-   kROOTD_GETFILE                        //retrieve file
+   kROOTD_GETFILE,                       //retrieve file
+   kROOTD_CHDIR,                         //change directory
+   kROOTD_MKDIR,                         //make directory
+   kROOTD_RMDIR,                         //delete directory
+   kROOTD_LSDIR,                         //list directory
+   kROOTD_PWD,                           //pwd
+   kROOTD_MV,                            //rename file
+   kROOTD_RM,                            //delete file
+   kROOTD_CHMOD                          //change permission
 };
 
 #endif

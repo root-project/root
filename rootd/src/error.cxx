@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: error.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: error.cxx,v 1.2 2001/02/22 09:43:25 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -60,7 +60,7 @@ void ResetErrno()
 }
 
 //______________________________________________________________________________
-static void Perror(char *buf)
+void Perror(char *buf)
 {
    // Return in buf the message belonging to errno.
 

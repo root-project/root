@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.5 2001/02/22 15:18:56 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.6 2001/02/23 14:02:22 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -145,9 +145,9 @@ again:
    fParallel   = par;
    fWindowSize = wsize;
    fLastBlock  = 0;
-   fFileSize   = 0;
    fRestartAt  = 0;
    fBlockSize  = kDfltBlockSize;
+   fMode       = kBinary;
    fBytesWrite = 0;
    fBytesRead  = 0;
 
@@ -179,8 +179,9 @@ void TFTP::Print(Option_t *) const
    Printf("TCP window size:      %d", fWindowSize);
    Printf("Rootd protocol:       %d", fProtocol);
    Printf("Transfer block size:  %d", fBlockSize);
-   Printf("Bytes written:        %g", fBytesWrite);
-   Printf("Bytes read:           %g", fBytesRead);
+   Printf("Transfer mode:        %s", fMode ? "ascii" : "binary");
+   Printf("Bytes sent:           %g", fBytesWrite);
+   Printf("Bytes received:       %g", fBytesRead);
 }
 
 //______________________________________________________________________________
@@ -227,13 +228,17 @@ void TFTP::SetBlockSize(Int_t blockSize)
 }
 
 //______________________________________________________________________________
-Int_t TFTP::PutFile(const char *file, const char *remoteName)
+Seek_t TFTP::PutFile(const char *file, const char *remoteName)
 {
-   // Transfer binary file to remote host. Returns number of bytes
+   // Transfer file to remote host. Returns number of bytes
    // sent or < 0 in case of error. Error -1 connection is still
    // open, error -2 connection has been closed. In case of failure
    // fRestartAt is set to the number of bytes correclty transfered.
    // Calling PutFile() immediately afterwards will restart at fRestartAt.
+   // If this is not desired call SetRestartAt(0) before calling PutFile().
+   // If rootd reports that the file is locked, and you are sure this is not
+   // the case (e.g. due to a crash), you can force unlock it by prepending
+   // the remoteName with a '-'.
 
    if (!IsOpen()) return -1;
 
@@ -243,35 +248,41 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
    Int_t fd = open(file, O_RDONLY | O_BINARY);
 #endif
    if (fd < 0) {
-      Error("FilePut", "can't open %s", file);
+      Error("PutFile", "cannot open %s", file);
       return -1;
    }
 
    Long_t id, size, flags, modtime;
-   gSystem->GetPathInfo(file, &id, &size, &flags, &modtime);
-   if (flags > 1) {
-      Error("FilePut", "%s not a regular file (%ld)", file, flags);
-      close(fd);
-      return -1;
-   }
+   if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
+      if (flags > 1) {
+         Error("PutFile", "%s not a regular file (%ld)", file, flags);
+         close(fd);
+         return -1;
+      }
+   } else
+      Warning("PutFile", "could not stat file, assuming it is a regular file");
 
    if (!remoteName)
       remoteName = file;
 
    Long_t restartat = fRestartAt;
 
-   if (fSocket->Send(Form("%s %d %ld %ld", remoteName, fBlockSize, size,
-                     restartat), kROOTD_PUTFILE) < 0) {
-      Error("FilePut", "error sending kROOTD_PUTFILE command");
+   // check if restartat value makes sense
+   if (restartat && (restartat >= size))
+      restartat = 0;
+
+   if (fSocket->Send(Form("%s %d %d %ld %ld", remoteName, fBlockSize, fMode,
+                     size, restartat), kROOTD_PUTFILE) < 0) {
+      Error("PutFile", "error sending kROOTD_PUTFILE command");
       close(fd);
-      return -1;
+      return -2;
    }
 
    Int_t         stat;
    EMessageTypes kind;
 
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
-      PrintError("FilePut", stat);
+      PrintError("PutFile", stat);
       close(fd);
       return -1;
    }
@@ -294,7 +305,7 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
 #ifdef HAVE_MMAP
       char *buf = (char*) mmap(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
       if (buf == (char *) -1) {
-         Error("FilePut", "mmap of file %s failed", file);
+         Error("PutFile", "mmap of file %s failed", file);
          close(fd);
          return -1;
       }
@@ -303,8 +314,8 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
       while ((siz = read(fd, buf, left)) < 0 && TSystem::GetErrno() == EINTR)
          TSystem::ResetErrno();
       if (siz < 0 || siz != left) {
-         Error("FilePut", "error reading from file %s", file);
-         // SendUrgent message to rootd to stop tranfer
+         Error("PutFile", "error reading from file %s", file);
+         // Send urgent message to rootd to stop tranfer
          delete [] buf;
          close(fd);
          return -1;
@@ -312,7 +323,7 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
 #endif
 
       if (fSocket->SendRaw(buf+skip, left-skip) < 0) {
-         Error("FilePut", "error sending buffer");
+         Error("PutFile", "error sending buffer");
          // Send urgent message to rootd to stop transfer
 #ifdef HAVE_MMAP
          munmap(buf, left);
@@ -346,7 +357,7 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
 
    // get acknowlegdement from server that file was stored correctly
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
-      PrintError("FilePut", stat);
+      PrintError("PutFile", stat);
       close(fd);
       return -1;
    }
@@ -358,27 +369,259 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
    else
       speed = 0.0;
    if (speed > 524288)
-      Info("TFTP::PutFile", "%.3f seconds, %.2f Mbytes per second",
-           t, speed / 1048576);
+      Printf("<TFTP::PutFile>: %.3f seconds, %.2f Mbytes per second",
+             t, speed / 1048576);
    else if (speed > 512)
-      Info("TFTP::PutFile", "%.3f seconds, %.2f Kbytes per second",
-           t, speed / 1024);
+      Printf("<TFTP::PutFile>: %.3f seconds, %.2f Kbytes per second",
+             t, speed / 1024);
    else
-      Info("TFTP::PutFile", "%.3f seconds, %.2f bytes per second",
-           t, speed);
+      Printf("<TFTP::PutFile>: %.3f seconds, %.2f bytes per second",
+             t, speed);
 
-   return size - restartat;
+   return Seek_t(size - restartat);
 }
 
 //______________________________________________________________________________
-Int_t TFTP::GetFile(const char *file, const char *localName)
+Seek_t TFTP::GetFile(const char *file, const char *localName)
 {
-   return 0;
+   // Transfer file from remote host. Returns number of bytes
+   // received or < 0 in case of error. Error -1 connection is still
+   // open, error -2 connection has been closed. In case of failure
+   // fRestartAt is set to the number of bytes correclty transfered.
+   // Calling GetFile() immediately afterwards will restart at fRestartAt.
+   // If this is not desired call SetRestartAt(0) before calling GetFile().
+   // If rootd reports that the file is locked, and you are sure this is not
+   // the case (e.g. due to a crash), you can force unlock it by prepending
+   // the file name with a '-'.
+
+   if (!IsOpen()) return -1;
+
+   if (!localName) {
+      if (file[0] == '-')
+         localName = file+1;
+      else
+         localName = file;
+   }
+
+   Long_t restartat = fRestartAt;
+
+   if (fSocket->Send(Form("%s %d %d %ld", file, fBlockSize, fMode,
+                     restartat), kROOTD_GETFILE) < 0) {
+      Error("GetFile", "error sending kROOTD_GETFILE command");
+      return -2;
+   }
+
+   Int_t         stat;
+   EMessageTypes kind;
+
+   if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
+      PrintError("GetFile", stat);
+      return -1;
+   }
+
+   // get size of remote file
+   Long_t sizel;
+   Int_t  what;
+   char   mess[64];
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("GetFile", "error receiving remote file size");
+      return -2;
+   }
+   sscanf(mess, "%ld", &sizel);
+   Seek_t size = (Seek_t) sizel;
+
+   // check if restartat value makes sense
+   if (restartat && (restartat >= size))
+      restartat = 0;
+
+   // check file system space
+   Long_t id, bsize, blocks, bfree;
+   if (gSystem->GetFsInfo(file, &id, &bsize, &blocks, &bfree) == 0) {
+      Double_t space = (Double_t)bsize * (Double_t)bfree;
+      if (space < size - restartat) {
+         Error("GetFile", "not enough space to store file %s", localName);
+         // send urgent message to rootd to stop tranfer
+         return -1;
+      }
+   } else
+      Warning("GetFile", "could not determine if there is enough free space to store file");
+
+   // open local file
+   Int_t fd;
+   if (!restartat) {
+#ifndef WIN32
+      fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+#else
+      if (fMode == kBinary)
+         fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
+                   S_IREAD | S_IWRITE);
+      else
+         fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY,
+                   S_IREAD | S_IWRITE);
+#endif
+   } else {
+#ifndef WIN32
+      fd = open(localName, O_WRONLY, 0600);
+#else
+      if (fMode == kBinary)
+         fd = open(localName, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
+      else
+         fd = open(localName, O_WRONLY, S_IREAD | S_IWRITE);
+#endif
+   }
+
+   if (fd < 0) {
+      Error("GetFile", "cannot open %s", localName);
+      // send urgent message to rootd to stop tranfer
+      return -1;
+   }
+
+   // seek to restartat position
+   if (restartat) {
+      if (lseek(fd, (off_t) restartat, SEEK_SET) < 0) {
+         Error("GetFile", "cannot seek to position %ld in file %s",
+               restartat, localName);
+         // if cannot seek send urgent message to rootd to stop tranfer
+         close(fd);
+         return -1;
+      }
+   }
+
+   TStopwatch timer;
+   timer.Start();
+
+   char *buf = new char[fBlockSize];
+   char *buf2 = 0;
+   if (fMode == kAscii)
+      buf2 = new char[fBlockSize];
+
+   Seek_t pos = restartat & ~(fBlockSize-1);
+   Int_t skip = restartat - pos;
+
+   while (pos < size) {
+      Seek_t left = size - pos;
+      if (left > fBlockSize)
+         left = fBlockSize;
+
+      Int_t n;
+      while ((n = fSocket->RecvRaw(buf, Int_t(left-skip))) < 0 &&
+             TSystem::GetErrno() == EINTR)
+         TSystem::ResetErrno();
+
+      if (n != Int_t(left-skip)) {
+         Error("GetFile", "error receiving buffer of length %d, got %d",
+               Int_t(left-skip), n);
+         close(fd);
+         delete [] buf; delete [] buf2;
+         return -2;
+      }
+
+      // in case of ascii file, loop over buffer and remove \r's
+      ssize_t siz;
+      if (fMode == kAscii) {
+         Int_t i = 0, j = 0;
+         while (i < n) {
+            if (buf[i] == '\r')
+               i++;
+            else
+               buf2[j++] = buf[i++];
+         }
+         n = j;
+         while ((siz = write(fd, buf2, n)) < 0 && TSystem::GetErrno() == EINTR)
+            TSystem::ResetErrno();
+      } else {
+         while ((siz = write(fd, buf, n)) < 0 && TSystem::GetErrno() == EINTR)
+            TSystem::ResetErrno();
+      }
+
+      if (siz < 0) {
+         SysError("GetFile", "error writing file %s", localName);
+         // send urgent message to rootd to stop tranfer
+         close(fd);
+         delete [] buf; delete [] buf2;
+         return -1;
+      }
+
+      if (siz != n) {
+         Error("GetFile", "error writing all requested bytes to file %s, wrote %d of %d",
+               localName, siz, n);
+         // send urgent message to rootd to stop tranfer
+         close(fd);
+         delete [] buf; delete [] buf2;
+         return -1;
+      }
+
+      fBytesRead  += Int_t(left-skip);
+      fgBytesRead += Int_t(left-skip);
+
+      fRestartAt = pos;   // bytes correctly received up till now
+
+      pos += left;
+      skip = 0;
+   }
+
+   delete [] buf; delete [] buf2;
+
+#ifndef WIN32
+   fchmod(fd, 0644);
+#endif
+
+   close(fd);
+
+   fRestartAt = 0;
+
+   // provide timing numbers
+   Double_t speed, t = timer.RealTime();
+   if (t > 0)
+      speed = (size - restartat) / t;
+   else
+      speed = 0.0;
+   if (speed > 524288)
+      Printf("<TFTP::GetFile>: %.3f seconds, %.2f Mbytes per second",
+             t, speed / 1048576);
+   else if (speed > 512)
+      Printf("<TFTP::GetFile>: %.3f seconds, %.2f Kbytes per second",
+             t, speed / 1024);
+   else
+      Printf("<TFTP::GetFile>: %.3f seconds, %.2f bytes per second",
+             t, speed);
+
+   return Seek_t(size - restartat);
 }
 
 //______________________________________________________________________________
 Int_t TFTP::ChangeDirectory(const char *dir) const
 {
+   // Change the remote directory. If the remote directory contains a .message
+   // file and it is < 1024 characters then the contents is echoed back.
+   // Returns 0 in case of success and -1 in case of failure.
+
+   if (!IsOpen()) return -1;
+
+   if (fSocket->Send(Form("%s", dir), kROOTD_CHDIR) < 0) {
+      Error("ChangeDirectory", "error sending kROOTD_CHDIR command");
+      return -1;
+   }
+
+   Int_t what;
+   char  mess[1024];
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("ChangeDirectory", "error receiving chdir confirmation");
+      return -1;
+   }
+   if (what == kMESS_STRING) {
+      Printf("%s\n", mess);
+
+      if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+         Error("ChangeDirectory", "error receiving chdir confirmation");
+         return -1;
+      }
+   }
+
+   Printf("<TFTP::ChangeDirectory>: %s\n", mess);
+
    return 0;
 }
 
@@ -427,11 +670,15 @@ Int_t TFTP::ChangeProtection(const char *file, Int_t mode) const
 //______________________________________________________________________________
 Int_t TFTP::Close()
 {
-   // Close ftp connection.
+   // Close ftp connection. Returns 0 in case of success and -1 in case of
+   // failure.
 
    if (!IsOpen()) return -1;
 
-   fSocket->Send(kROOTD_CLOSE);
+   if (fSocket->Send(kROOTD_CLOSE) < 0) {
+      Error("Close", "error sending kROOTD_CLOSE command");
+      return -1;
+   }
 
    return 0;
 }

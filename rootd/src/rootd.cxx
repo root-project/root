@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.27 2001/02/22 15:37:47 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.28 2001/02/23 14:02:22 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -140,6 +140,18 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #include <sys/statfs.h>
 #endif
 
+#if defined(linux) || defined(__hpux) || defined(_AIX) || defined(__alpha) || \
+    defined(__sun) || defined(__sgi) || defined(__FreeBSD__)
+#define HAVE_MMAP
+#endif
+
+#ifdef HAVE_MMAP
+#   include <sys/mman.h>
+#ifndef MAP_FILE
+#define MAP_FILE 0           /* compatability flag */
+#endif
+#endif
+
 #if defined(linux)
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
@@ -224,6 +236,7 @@ const char kRootdTab[]     = "/usr/tmp/rootdtab";
 const char kRootdPass[]    = ".rootdpass";
 const char kSRootdPass[]   = ".srootdpass";
 const int  kMAXPATHLEN     = 1024;
+enum { kBinary, kAscii };
 
 int     gInetdFlag         = 0;
 int     gPort              = 0;
@@ -1279,16 +1292,16 @@ void RootdGet(const char *msg)
 //______________________________________________________________________________
 void RootdPutFile(const char *msg)
 {
-   // Receive a file from the remote client.
+   // Receive a file from the remote client (upload).
 
    char  file[kMAXPATHLEN];
    long  size, restartatl;
-   int   blocksize, forceopen = 0;
+   int   blocksize, mode, forceopen = 0;
    off_t restartat;
 
    gFtp = 1;   // rootd is used for ftp instead of file serving
 
-   sscanf(msg, "%s %d %ld %ld", file, &blocksize, &size, &restartatl);
+   sscanf(msg, "%s %d %d %ld %ld", file, &blocksize, &mode, &size, &restartatl);
 
    if (file[0] == '-') {
       forceopen = 1;
@@ -1323,19 +1336,27 @@ void RootdPutFile(const char *msg)
 
    // open local file
    int fd;
-   if (!restartat)
+   if (!restartat) {
 #ifndef WIN32
       fd = open(gFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 #else
-      fd = open(gFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
-                S_IREAD | S_IWRITE);
+      if (mode == kBinary)
+         fd = open(gFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
+                   S_IREAD | S_IWRITE);
+      else
+         fd = open(gFile, O_CREAT | O_TRUNC | O_WRONLY,
+                   S_IREAD | S_IWRITE);
 #endif
-   else
+   } else {
 #ifndef WIN32
       fd = open(gFile, O_WRONLY, 0600);
 #else
-      fd = open(gFile, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
+      if (mode == kBinary)
+         fd = open(gFile, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
+      else
+         fd = open(gFile, O_WRONLY, S_IREAD | S_IWRITE);
 #endif
+   }
 
    if (fd < 0) {
       Error(kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
@@ -1361,8 +1382,8 @@ void RootdPutFile(const char *msg)
    // seek to restartat position
    if (restartat) {
       if (lseek(fd, restartat, SEEK_SET) < 0) {
-         Error(kErrRestartSeek, "RootdPutFile: cannot seek to position %d in file %s",
-               restartat, gFile);
+         Error(kErrRestartSeek, "RootdPutFile: cannot seek to position %ld in file %s",
+               (long)restartat, gFile);
          close(fd);
          return;
       }
@@ -1375,6 +1396,9 @@ void RootdPutFile(const char *msg)
    gettimeofday(&started, 0);
 
    char *buf = new char[blocksize];
+   char *buf2 = 0;
+   if (mode == 1)
+      buf2 = new char[blocksize];
 
    long pos  = restartat & ~(blocksize-1);
    int  skip = int(restartat - pos);
@@ -1386,21 +1410,34 @@ void RootdPutFile(const char *msg)
 
       NetRecvRaw(buf, int(left-skip));
 
-      // in case of ascii file, loop here over buffer and remove \r's
-      // if (gType == kASCII) { } else { current write }
+      int n = int(left-skip);
 
+      // in case of ascii file, loop here over buffer and remove \r's
       ssize_t siz;
-      while ((siz = write(fd, buf, int(left-skip))) < 0 && GetErrno() == EINTR)
-         ResetErrno();
+      if (mode == kAscii) {
+         int i = 0, j = 0;
+         while (i < n) {
+            if (buf[i] == '\r')
+               i++;
+            else
+               buf2[j++] = buf[i++];
+         }
+         n = j;
+         while ((siz = write(fd, buf2, n)) < 0 && GetErrno() == EINTR)
+            ResetErrno();
+      } else {
+         while ((siz = write(fd, buf, n)) < 0 && GetErrno() == EINTR)
+            ResetErrno();
+      }
 
       if (siz < 0)
          ErrorSys(kErrFilePut, "RootdPutFile: error writing to file %s", gFile);
 
-      if (siz != int(left-skip))
+      if (siz != n)
          ErrorFatal(kErrFilePut, "RootdPutFile: error writing all requested bytes to file %s, wrote %d of %d",
-                    gFile, siz, left);
+                    gFile, siz, int(left-skip));
 
-      gBytesWritten += left-skip;
+      gBytesWritten += n;
 
       pos += left;
       skip = 0;
@@ -1411,7 +1448,7 @@ void RootdPutFile(const char *msg)
    // file stored ok
    NetSend(0, kROOTD_PUTFILE);
 
-   delete [] buf;
+   delete [] buf; delete [] buf2;
 
    fchmod(fd, 0644);
 
@@ -1437,6 +1474,194 @@ void RootdPutFile(const char *msg)
    else
       ErrorInfo("RootdPutFile: uploaded file %s (%ld bytes, %.3f seconds, "
                 "%.2f bytes/s)", gFile, size, t, speed);
+}
+
+//______________________________________________________________________________
+void RootdGetFile(const char *msg)
+{
+   // Send a file to a remote client (download).
+
+   char  file[kMAXPATHLEN];
+   long  restartatl;
+   int   blocksize, mode, forceopen = 0;
+   off_t restartat;
+
+   gFtp = 1;   // rootd is used for ftp instead of file serving
+
+   sscanf(msg, "%s %d %d %ld", file, &blocksize, &mode, &restartatl);
+
+   if (file[0] == '-') {
+      forceopen = 1;
+      strcpy(gFile, file+1);
+   } else
+      strcpy(gFile, file);
+
+   restartat = (off_t) restartatl;
+
+   // remove lock from file
+   if (forceopen)
+      RootdCloseTab(1);
+
+   // check if file is not in use by somebody and prevent from somebody
+   // using it before download is completed
+   if (!RootdCheckTab(0)) {
+      Error(kErrFileOpen, "RootdGetFile: file %s is already open in write mode", gFile);
+      return;
+   }
+
+   // open file for reading
+#ifndef WIN32
+   int fd = open(gFile, O_RDONLY);
+#else
+   int fd = open(gFile, O_RDONLY | O_BINARY);
+#endif
+   if (fd < 0) {
+      Error(kErrFileOpen, "RootdGetFile: cannot open file %s", gFile);
+      return;
+   }
+
+   struct stat st;
+   if (fstat(fd, &st)) {
+      Error(kErrFatal, "RootdGetFile: cannot get size of file %s", gFile);
+      close(fd);
+      return;
+   }
+   long size = st.st_size;
+
+   if (!S_ISREG(st.st_mode)) {
+      Error(kErrBadFile, "RoodGetFile: not a regular file %s", gFile);
+      close(fd);
+      return;
+   }
+
+   // check if restartat value makes sense
+   if (restartat && (restartat >= size))
+      restartat = 0;
+
+   // setup ok
+   NetSend(0, kROOTD_GETFILE);
+
+   char mess[64];
+   sprintf(mess, "%ld", size);
+   NetSend(mess, kROOTD_GETFILE);
+
+   struct timeval started, ended;
+   gettimeofday(&started, 0);
+
+   long pos  = restartat & ~(blocksize-1);
+   int  skip = int(restartat - pos);
+
+#ifndef HAVE_MMAP
+   char *buf = new char[blocksize];
+   lseek(fd, (off_t) pos, SEEK_SET);
+#endif
+
+   while (pos < size) {
+      long left = size - pos;
+      if (left > blocksize)
+         left = blocksize;
+#ifdef HAVE_MMAP
+      char *buf = (char*) mmap(0, (size_t) left, PROT_READ, MAP_FILE | MAP_SHARED,
+                               fd, (off_t) pos);
+      if (buf == (char *) -1)
+         ErrorFatal(kErrFileGet, "RootdGetFile: mmap of file %s failed", gFile);
+#else
+      int siz;
+      while ((siz = read(fd, buf, (int)left)) < 0 && GetErrno() == EINTR)
+         ResetErrno();
+      if (siz < 0 || siz != (int)left)
+         ErrorFatal(kErrFileGet, "RootdGetFile: error reading from file %s", gFile);
+#endif
+
+      NetSendRaw(buf+skip, int(left-skip));
+
+      gBytesRead += left-skip;
+
+      pos += left;
+      skip = 0;
+
+#ifdef HAVE_MMAP
+      munmap(buf, left);
+#endif
+   }
+
+   gettimeofday(&ended, 0);
+
+#ifndef HAVE_MMAP
+   delete [] buf;
+#endif
+
+   close(fd);
+
+   RootdCloseTab();
+
+   gDownloaded++;
+
+   double speed, t;
+   t = (ended.tv_sec + ended.tv_usec / 1000000.0) -
+       (started.tv_sec + started.tv_usec / 1000000.0);
+   if (t > 0)
+      speed = (size - restartat) / t;
+   else
+      speed = 0.0;
+   if (speed > 524288)
+      ErrorInfo("RootdGetFile: downloaded file %s (%ld bytes, %.3f seconds, "
+                "%.2f Mbytes/s)", gFile, size, t, speed / 1048576);
+   else if (speed > 512)
+      ErrorInfo("RootdGetFile: downloaded file %s (%ld bytes, %.3f seconds, "
+                "%.2f Kbytes/s)", gFile, size, t, speed / 1024);
+   else
+      ErrorInfo("RootdGetFile: downloaded file %s (%ld bytes, %.3f seconds, "
+                "%.2f bytes/s)", gFile, size, t, speed);
+}
+
+//______________________________________________________________________________
+void RootdChdir(const char *dir)
+{
+   // Change directory.
+
+   char buffer[kMAXPATHLEN + 256];
+
+   if (dir && *dir == '~') {
+      struct passwd *pw;
+      int i = 0;
+      const char *p = dir;
+
+      p++;
+      while (*p && *p != '/')
+         buffer[i++] = *p++;
+      buffer[i] = 0;
+
+      if ((pw = getpwnam(i ? buffer : gUser)))
+         sprintf(buffer, "%s%s", pw->pw_dir, p);
+      else
+         *buffer = 0;
+   } else
+      *buffer = 0;
+
+   if (chdir(*buffer ? buffer : (dir && *dir ? dir : "/")) == -1) {
+      sprintf(buffer, "cannot change directory to %s", dir);
+      Perror(buffer);
+      NetSend(buffer, kROOTD_CHDIR);
+      return;
+   } else {
+      FILE *msg;
+
+      if ((msg = fopen(".message", "r"))) {
+         int len = fread(buffer, 1, kMAXPATHLEN, msg);
+         fclose(msg);
+         if (len > 0 && len < 1024) {
+            buffer[len] = 0;
+            NetSend(buffer, kMESS_STRING);
+         }
+      }
+
+      if (!getcwd(buffer, kMAXPATHLEN)) {
+         if (*dir == '/')
+            sprintf(buffer, "%s", dir);
+      }
+      NetSend(buffer, kROOTD_CHDIR);
+   }
 }
 
 //______________________________________________________________________________
@@ -1515,6 +1740,12 @@ void RootdLoop()
             break;
          case kROOTD_PUTFILE:
             RootdPutFile(recvbuf);
+            break;
+         case kROOTD_GETFILE:
+            RootdGetFile(recvbuf);
+            break;
+         case kROOTD_CHDIR:
+            RootdChdir(recvbuf);
             break;
          default:
             ErrorFatal(kErrBadOp, "RootdLoop: received bad opcode %d", kind);
