@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.2 2000/07/11 17:11:14 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +249,7 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
     }
   }
   else if (!strcmp(option,"All")) {
-    for (Int_t i = 0; i<=numpart; i++) {
+    for (Int_t i = 0; i<numpart; i++) {
         new(Particles[i]) TParticle(
                             fPyjets->K[1][i] ,
                             fPyjets->K[0][i] ,

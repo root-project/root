@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name$:$Id$
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -89,7 +89,7 @@ TObjArray* TGenerator::ImportParticles(Option_t *option)
   fParticles->Clear();
   Int_t numpart = HEPEVT.nhep;
   if (!strcmp(option,"") || !strcmp(option,"Final")) {
-    for (Int_t i = 0; i<=numpart; i++) {
+    for (Int_t i = 0; i<numpart; i++) {
       if (HEPEVT.isthep[i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
@@ -115,7 +115,7 @@ TObjArray* TGenerator::ImportParticles(Option_t *option)
      }
   }
   else if (!strcmp(option,"All")) {
-    for (Int_t i = 0; i<=numpart; i++) {
+    for (Int_t i = 0; i<numpart; i++) {
       TParticle *p = new TParticle(
                                    HEPEVT.idhep[i],
                                    HEPEVT.isthep[i],
@@ -157,7 +157,7 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
   Particles.Clear();
   Int_t numpart = HEPEVT.nhep;
   if (!strcmp(option,"") || !strcmp(option,"Final")) {
-    for (Int_t i = 0; i<=numpart; i++) {
+    for (Int_t i = 0; i<numpart; i++) {
       if (HEPEVT.isthep[i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
@@ -182,7 +182,7 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
      }
   }
   else if (!strcmp(option,"All")) {
-    for (Int_t i = 0; i<=numpart; i++) {
+    for (Int_t i = 0; i<numpart; i++) {
       new(Particles[i]) TParticle(
                                    HEPEVT.idhep[i],
                                    HEPEVT.isthep[i],
