@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.162 2003/03/08 16:07:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.163 2003/03/11 01:18:47 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -809,8 +809,13 @@ void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
    // flag this class
    if (!file) return;
    TArrayC *cindex = file->GetClassIndex();
-   if (cindex->fArray[fNumber] && !force) return;
-   cindex->fArray[fNumber] = 1;
+   //the test below testing fArray[fNumber]>1 is to avoid a recursivity
+   //problem in some cases like:
+   //        class aProblemChild: public TNamed {
+   //        aProblemChild *canBeNull;
+   //        };
+   if ((cindex->fArray[fNumber] && !force) || cindex->fArray[fNumber]>1) return;
+   cindex->fArray[fNumber] = 2;
    cindex->fArray[0] = 1;
 
    // flag all its dependencies
