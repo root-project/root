@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.50 2004/09/13 10:03:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.51 2004/09/23 13:03:38 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1318,10 +1318,14 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
 //   if option "e" is specified, the errors are computed.
 //   if option "d" is specified, the projection is drawn in the current pad.
 //
-//   NOTE that if a TH1D named name exists in the current directory or pad,
+//   NOTE1: if a TH1D named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
 //
 //   code from Paola Collins & Hans Dijkstra
+//
+//   NOTE 2: The number of entries in the projected histogram is set to the
+//   number of entries of the parent histogram if all bins are selected,
+//   otherwise it is set to the sum of the bin contents.
 
   TString opt = option;
   opt.ToLower();
@@ -1427,7 +1431,7 @@ TH1 *TH3::Project3D(Option_t *option) const
    // To select a bin range along an axis, use TAxis::SetRange, eg
    //    h3.GetYaxis()->SetRange(23,56);
    //
-   // NOTE: The generated histogram is named th3name + option
+   // NOTE 1: The generated histogram is named th3name + option
    // eg if the TH3* h histogram is named "myhist", then
    // h->Project3D("xy"); produces a TH2D histogram named "myhist_xy"
    // if a histogram of the same type already exists, it is overwritten.
@@ -1435,7 +1439,11 @@ TH1 *TH3::Project3D(Option_t *option) const
    //    h->Project3D("xy");
    //    h->Project3D("xy2");
    //  will generate two TH2D histograms named "myhist_xy" and "myhist_xy2" 
-   
+   //
+   //  NOTE 2: The number of entries in the projected histogram is set to the
+   //  number of entries of the parent histogram if all bins are selected,
+   //  otherwise it is set to the sum of the bin contents.
+      
   TString opt = option; opt.ToLower();
   Int_t ixmin = fXaxis.GetFirst();
   Int_t ixmax = fXaxis.GetLast();
@@ -1799,7 +1807,8 @@ TH1 *TH3::Project3D(Option_t *option) const
         }
      }
   }
-  h->SetEntries(entries);
+  if (iymin <=1 && iymax >= ny && ixmin <=1 && ixmax >= nx) h1->SetEntries(fEntries);
+  else h1->SetEntries(entries);
   return h;
 }
 
