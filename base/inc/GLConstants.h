@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: GLConstants.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -107,12 +107,18 @@
                   ,abc_prefix##VIEWPORT,         abc_prefix##ZOOM_X,          abc_prefix##ZOOM_Y              \
                   ,abc_prefix##SMOOTH,           abc_prefix##FLAT
 
+#define GLConstants5(abc_prefix) \
+                  ,abc_prefix##POINTS, abc_prefix##LINES, abc_prefix##LINE_STRIP, abc_prefix##LINE_LOOP \
+                  ,abc_prefix##TRIANGLES, abc_prefix##TRIANGLE_STRIP, abc_prefix##TRIANGLE_FAN \
+                  ,abc_prefix##POLYGON
+
 
 #define GLConstants(abc_prefix) \
                              GLConstants1(abc_prefix) \
                              GLConstants2(abc_prefix) \
                              GLConstants3(abc_prefix) \
-                             GLConstants4(abc_prefix)
+                             GLConstants4(abc_prefix) \
+                             GLConstants5(abc_prefix)
 #endif
 
 
