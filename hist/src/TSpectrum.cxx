@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.14 2003/08/22 12:52:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.13 2003/07/11 09:42:22 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1608,7 +1608,7 @@ const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
             a = 1;
             
          else
-       	    a = TMath::Sqrt((Double_t)(a + nip));            
+       	    a = TMath::Sqrt(a + nip);            
 	 b = b / a;
 	 b = TMath::Exp(b);                        	                                                             
        	 sp = sp + b;
@@ -1622,7 +1622,7 @@ const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
             a = 1;
             
          else
-       	    a = TMath::Sqrt((Double_t)(a + nim));            
+       	    a = TMath::Sqrt(a + nim);            
 	 b = b / a;
 	 b = TMath::Exp(b);                        	                                                                      
        	 sm = sm + b;
@@ -2438,7 +2438,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
                a=1;
                
             else
-               a = TMath::Sqrt((Double_t)(a + nip));            
+               a = TMath::Sqrt(a + nip);            
                
             b = b / a;
             b = TMath::Exp(b);            
@@ -2454,7 +2454,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
                a = 1;
                
             else
-               a = TMath::Sqrt((Double_t)(a + nim));
+               a = TMath::Sqrt(a + nim);
                
 	    b = b / a;
             b = TMath::Exp(b);            	    

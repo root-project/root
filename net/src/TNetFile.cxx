@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.32 2003/05/05 09:36:27 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.33 2003/08/22 12:47:21 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -228,7 +228,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    }
 
    // Authenticate to remote rootd server
-   sec = gEnv->GetValue("Rootd.Authentication", (Int_t)TAuthenticate::kClear);
+   sec = gEnv->GetValue("Rootd.Authentication", TAuthenticate::kClear);
    if (!strcmp(fUrl.GetProtocol(), "roots"))
       sec = TAuthenticate::kSRP;
    if (!strcmp(fUrl.GetProtocol(), "rootk"))

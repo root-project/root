@@ -103,7 +103,7 @@ Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
      if (dpoint2 < dist) dist = (Int_t)dpoint2;
   }
   delete [] points;
-  return Int_t(TMath::Sqrt(Double_t(dist)));
+  return Int_t(TMath::Sqrt(Float_t(dist)));
 }
 //______________________________________________________________________________
 void TShape::Paint(Option_t *)

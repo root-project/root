@@ -874,8 +874,8 @@ TObject *THbookFile::ConvertProfile(Int_t id)
      for (Int_t j=0;j<n;j++) {
         p->Fill(x+offsetx,y);
      }
-     Double_t content = q[lcont+kCON1+i];
-     Double_t error   = TMath::Sqrt((Double_t)(q[lw+i]));
+     Float_t content = q[lcont+kCON1+i];
+     Float_t error   = TMath::Sqrt(q[lw+i]);
      p->SetBinContent(i,content);
      p->SetBinError(i,error);
   }

@@ -397,9 +397,9 @@ void TCanvas::Init()
    // Get some default from .rootrc. Used in fCanvasImp->InitWindow().
    fMoveOpaque      = gEnv->GetValue("Canvas.MoveOpaque", 0);
    fResizeOpaque    = gEnv->GetValue("Canvas.ResizeOpaque", 0);
-   fHighLightColor  = gEnv->GetValue("Canvas.HighLightColor", (Int_t)kRed);
-   fShowEventStatus = gEnv->GetValue("Canvas.ShowEventStatus", (Int_t)kFALSE);
-   fAutoExec        = gEnv->GetValue("Canvas.AutoExec", (Int_t)kTRUE);
+   fHighLightColor  = gEnv->GetValue("Canvas.HighLightColor", kRed);
+   fShowEventStatus = gEnv->GetValue("Canvas.ShowEventStatus", kFALSE);
+   fAutoExec        = gEnv->GetValue("Canvas.AutoExec", kTRUE);
 
    // Fill canvas ROOT data structure
    fXsizeUser = 0;

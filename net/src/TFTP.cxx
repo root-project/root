@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.12 2002/03/20 18:54:56 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.13 2003/08/22 12:39:03 brun Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -127,7 +127,7 @@ again:
    Recv(fProtocol, kind);
 
    // Authenticate to remote rootd server
-   sec = gEnv->GetValue("Rootd.Authentication", (Int_t)TAuthenticate::kClear);
+   sec = gEnv->GetValue("Rootd.Authentication", TAuthenticate::kClear);
    if (!strcmp(url.GetProtocol(), "roots"))
       sec = TAuthenticate::kSRP;
    if (!strcmp(url.GetProtocol(), "rootk"))

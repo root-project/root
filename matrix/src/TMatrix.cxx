@@ -689,7 +689,7 @@ TMatrix &TMatrix::Sqrt()
    Real_t *ep;
    for (ep = fElements; ep < fElements+fNelems; ep++)
       if (*ep >= 0)
-         *ep = TMath::Sqrt((Double_t)*ep);
+         *ep = TMath::Sqrt(*ep);
       else
          Error("Sqrt", "(%d,%d)-th element, %g, is negative, can't take the square root",
                (ep-fElements) % fNrows + fRowLwb,
@@ -951,7 +951,7 @@ TMatrix &TMatrix::NormByDiag(const TVector &v, Option_t *option)
      for (irow = 0; irow < fNrows; irow++) {
        Int_t icol;
        for (icol = 0; icol < fNcols; icol++) {
-         Double_t val = TMath::Sqrt((Double_t)TMath::Abs(pv[irow]*pv[icol]));
+         Double_t val = TMath::Sqrt(TMath::Abs(pv[irow]*pv[icol]));
          Assert(val != 0.0);
          mp[irow*fNcols+icol] /= val;
        }
@@ -960,7 +960,7 @@ TMatrix &TMatrix::NormByDiag(const TVector &v, Option_t *option)
      for (irow = 0; irow < fNrows; irow++) {
        Int_t icol;
        for (icol = 0; icol < fNcols; icol++) {
-         Double_t val = TMath::Sqrt((Double_t)TMath::Abs(pv[irow]*pv[icol]));
+         Double_t val = TMath::Sqrt(TMath::Abs(pv[irow]*pv[icol]));
          mp[irow*fNcols+icol] *= val;
        }
      }
@@ -1527,7 +1527,7 @@ Int_t TMatrix::Pdcholesky(const Real_t *a, Real_t *u, const Int_t n)
       if (k == j)
       {
         if (u[off_k+j] < 0) status = 1;
-        u[off_k+j] = TMath::Sqrt((Double_t)TMath::Abs(u[off_k+j]));
+        u[off_k+j] = TMath::Sqrt(TMath::Abs(u[off_k+j]));
       }
       else
         u[off_k+j] = u[off_k+j]/u[off_k+k];

@@ -1176,7 +1176,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     There are some rare cases when a few more bytes are required */
   if (obufptr - tgt > *tgtsize) {
     fprintf(stderr,"R__unzip: discrepancy (%d) with initial size: %ld, tgtsize=%d\n",
-            obufptr - tgt,isize,(int)(*tgtsize));
+            obufptr - tgt,isize,*tgtsize);
     *irep = obufptr - tgt;
     return;
   }

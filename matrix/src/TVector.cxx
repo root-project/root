@@ -663,7 +663,7 @@ TVector &TVector::Sqrt()
    Real_t *ep;
    for (ep = fElements; ep < fElements+fNrows; ep++)
       if (*ep >= 0)
-         *ep = TMath::Sqrt((Double_t)*ep);
+         *ep = TMath::Sqrt(*ep);
       else
          Error("Sqrt", "(%d)-th element, %g, is negative, can't take the square root",
                (ep-fElements) + fRowLwb, *ep);

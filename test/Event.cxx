@@ -287,7 +287,7 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
    gRandom->Rannor(px,py);
    fPx = px;
    fPy = py;
-   fPz = TMath::Sqrt((Double_t)(px*px+py*py));
+   fPz = TMath::Sqrt(px*px+py*py);
    fRandom = 1000*random;
    if (fRandom < 10) fMass2 = 0.106;
    else if (fRandom < 100) fMass2 = 0.8;
