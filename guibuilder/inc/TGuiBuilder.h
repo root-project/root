@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -28,11 +28,40 @@
 
 
 class TGShutter;
+class TGMdiMainFrame;
+class TGDockableFrame;
+class TGMdiMenuBar;
+class TGPopupMenu;
+class TGStatusBar;
+class TGuiBldDragManager;
+class TGToolBar;
+class TGMdiFrame;
+class TGuiBldEditor;
 
 class TGuiBuilder : public TVirtualGuiBld, public TGMainFrame {
 
 private:
-   TGShutter *fShutter;
+   TGuiBldDragManager *fManager;    // drag and drop manager
+
+   TGToolBar         *fToolBar;     // guibuider toolbar
+   TGShutter         *fShutter;     // widget palette
+   TGMdiMainFrame    *fMain;        // main mdi frame
+   TGDockableFrame   *fToolDock;    // dockable frame where toolbar is located 
+   TGDockableFrame   *fShutterDock; // dockable frame where widget palette is located  
+   TGMdiMenuBar      *fMenuBar;     // guibuildere menu bar
+   TGPopupMenu       *fMenuFile;    // "File" popup menu
+   TGPopupMenu       *fMenuWindow;  // "Window" popup menu
+   TGPopupMenu       *fMenuHelp;    // "Help" popup menu
+   TGStatusBar       *fStatusBar;   //  guibuilder status bar
+   TGFrame           *fSelected;    //  selected frame
+   TGMdiFrame        *fEditable;    //  mdi frame where editted frame is  located
+   TGuiBldEditor     *fEditor;      // frame property editor
+
+   void InitMenu();
+   void EnableLassoButtons(Bool_t on = kTRUE);
+   void EnableSelectedButtons(Bool_t on = kTRUE);
+   void EnableEditButtons(Bool_t on = kTRUE);
+   TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
 
 public:
    TGuiBuilder(const TGWindow *p = 0);
@@ -44,6 +73,19 @@ public:
    virtual void      HandleButtons();
    virtual void      Show() { MapRaised(); }
    virtual void      Hide() { UnmapWindow(); }
+   virtual void      ChangeSelected(TGFrame *f);
+   virtual void      Update();
+   virtual Bool_t    IsSelectMode() const;
+   virtual Bool_t    IsGrabButtonDown() const;
+   virtual Bool_t    OpenProject(Event_t *event = 0);
+   virtual Bool_t    SaveProject(Event_t *event = 0);
+   virtual Bool_t    NewProject(Event_t *event = 0);
+   virtual Bool_t    HandleKey(Event_t *event);
+   virtual void      HandleMenu(Int_t id);
+   virtual void      CloseWindow();
+   virtual void      HandleWindowClosed(Int_t id);
+
+   TGuiBldEditor    *GetEditor() const { return fEditor; }
 
    ClassDef(TGuiBuilder,0)  // gui builder
 };

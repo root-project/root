@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.1 2004/09/13 12:47:35 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.2 2004/09/14 09:57:58 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -115,7 +115,7 @@ public:
 
 //______________________________________________________________________________
 TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *editor) :
-                  TGVerticalFrame(p, 1, 1)
+                        TGVerticalFrame(p, 1, 1)
 {
    //
 
@@ -273,13 +273,13 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
    fBtnGroup->SetButton(kBldBorderRaised, opt & kRaisedFrame);
    fBtnGroup->SetButton(kBldBorderPlain, !(opt & kRaisedFrame) && !(opt & kSunkenFrame));
 
-   if (fBgndFrame) fBgndFrame->SetColor(fSelected->GetBackground());
-   if (fFgndFrame) fFgndFrame->SetColor(fSelected->GetForeground());
+   //if (fBgndFrame) fBgndFrame->SetColor(fSelected->GetBackground());
+   //if (fFgndFrame) fFgndFrame->SetColor(fSelected->GetForeground());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
-TGuiBldEditor::TGuiBldEditor() : TGMainFrame(gClient->GetDefaultRoot(), 1, 1)
+TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
 {
    //
 
@@ -310,6 +310,8 @@ TGuiBldEditor::TGuiBldEditor() : TGMainFrame(gClient->GetDefaultRoot(), 1, 1)
    MapSubwindows();
    Resize(239, 357);
    SetWindowName("Frame Property Editor");
+
+   fEmbedded = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -317,14 +319,6 @@ TGuiBldEditor::~TGuiBldEditor()
 {
    //
 
-}
-
-//______________________________________________________________________________
-Bool_t TGuiBldEditor::IsEmbedded() const
-{
-   //
-
-   return kFALSE;
 }
 
 //______________________________________________________________________________

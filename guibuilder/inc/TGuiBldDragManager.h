@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -35,6 +35,15 @@ class TGPopupMenu;
 class TGuiBldEditor;
 class TGuiBldQuickHandler;
 
+
+enum EActionType { kNoneAct, kPropertyAct, kEditableAct, kReparentAct,
+                   kDropAct, kCutAct, kCopyAct, kPasteAct, kCropAct,
+                   kCompactAct, kCompactGlobalAct, kLayUpAct, kLayDownAct,
+                   kCloneAct, kSaveAct, kGrabAct, kDeleteAct, kLeftAct,
+                   kRightAct, kUpAct, kDownAct, kEndEditAct, kReplaceAct,
+                   kGridAct, kBreakLayoutAct, kSwitchLayoutAct, kNewAct,
+                   kOpenAct, kLayoutHAct, kLayoutVAct, kUndoAct, kRedoAct, kSelectAct };
+
 class TGuiBldDragManager : public TVirtualDragManager, public TGFrame {
 
 friend class TGClient;
@@ -56,14 +65,16 @@ private:
    Bool_t         fDropStatus;         // kTRUE if drop was successfull
 
    void           Init();
+   void           DrawGrabRectangles(TGWindow *win = 0);
+   void           DrawGrabRect(Int_t i, Int_t x, Int_t y);
+   TGCompositeFrame *FindLayoutFrame(TGFrame *f);
+   Bool_t         IsSelectedVisible();
 
 public:
    TGFrame       *InEditable(Window_t id);
    void           SelectFrame(TGFrame *frame, Bool_t add = kFALSE);
    void           GrabFrame(TGFrame *frame);
    void           UngrabFrame();
-   void           DrawGrabRectangles(TGWindow *win = 0);
-   void           DrawGrabRect(Int_t i, Int_t x, Int_t y);
    Bool_t         CheckDragResize(Event_t *event);
    TList         *GetFramesInside(Int_t x0, Int_t y0, Int_t x, Int_t y);
    void           ToGrid(Int_t &x, Int_t &y);
@@ -98,6 +109,7 @@ public:
    void           Menu4Frame(TGFrame *, Int_t x, Int_t y);
    void           Menu4Lasso(Int_t x, Int_t y);
    void           CreatePropertyEditor();
+   void           SetPropertyEditor(TGuiBldEditor *e);
    void           DeletePropertyEditor();
    void           SetEditable(Bool_t on = kTRUE);
    void           DoRedraw();
@@ -127,7 +139,9 @@ public:
    void           HandleAction(Int_t act);
 
    Bool_t         IsMoveWaiting() const;
+   Bool_t         IsLassoDrawn() const { return fLassoDrawn; }
    TGFrame       *GetTarget() const { return fTarget; }
+   TGFrame       *GetSelected() const;
    void           Snap2Grid();
    void           SetGridStep(UInt_t step);
    UInt_t         GetGridStep();

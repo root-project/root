@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -30,20 +30,22 @@ class TGuiBldNameFrame;
 class TGuiBldBorderFrame;
 
 
-class TGuiBldEditor : public TGMainFrame {
+class TGuiBldEditor : public TGCompositeFrame {
 
 private:
    TGFrame              *fSelected;    // editted frame
    TGuiBldNameFrame     *fNameFrame;   // frame name
    TGuiBldHintsEditor   *fHintsFrame;  // frame hints
    TGuiBldBorderFrame   *fBorderFrame; // frame border
+   Bool_t                fEmbedded;
 
 public:
-   TGuiBldEditor();
+   TGuiBldEditor(const TGWindow *p = 0);
    virtual ~TGuiBldEditor();
 
    TGFrame *GetSelected() const { return fSelected; }
-   Bool_t   IsEmbedded() const;
+   Bool_t   IsEmbedded() const { return fEmbedded; }
+   void     SetEmbedded(Bool_t e = kTRUE) { fEmbedded = e; } 
    void     Hide();
    void     UpdateBorder(Int_t);
    void     UpdateBackground(Pixel_t col);

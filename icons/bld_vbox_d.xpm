@@ -1,0 +1,32 @@
+/* XPM */
+static char *bld_vbox_d[] = {
+/* width height num_colors chars_per_pixel */
+"    21    21        4            1",
+/* colors */
+". c #cdcdcd",
+"# c #989898",
+"a c #d6d6d6",
+"b c #989898",
+/* pixels */
+"....................#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".bbbbbbbbbbbbbbbbbbb#",
+"#####################",
+"....................#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".bbbbbbbbbbbbbbbbbbb#",
+"#####################",
+"....................#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".aaaaaaaaaaaaaaaaaab#",
+".bbbbbbbbbbbbbbbbbbb#",
+"#####################"
+};
