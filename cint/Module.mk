@@ -101,7 +101,7 @@ CINTS1       += $(MODDIRS)/macos.c
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),macosx)
-CINTS2       += $(MODDIRS)/libstrm.cxx
+CINTS2       += $(MODDIRS)/gcc3strm.cxx
 endif
 ifeq ($(PLATFORM),lynxos)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
