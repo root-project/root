@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.3 2000/09/29 07:13:27 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.4 2001/01/09 16:33:15 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -9,6 +9,8 @@
 //  The event is generated in the center-of-mass frame, 
 //  but the decay products are finally boosted
 //  using the betas of the original particle.
+//
+// see example of use in $ROOTSYS/tutorials/PhaseSpace.C
 
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
