@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.30 2001/04/10 16:30:10 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.31 2001/04/28 08:52:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2579,8 +2579,9 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       Int_t px2 = XtoPixel(x2);
       Int_t py1 = YtoPixel(y1);
       Int_t py2 = YtoPixel(y2);
-      if (px2 <= px1) px2 = px1+1; //box width must be at least one pixel 
-      if (py1 <= py2) py1 = py2+1;
+      //box width must be at least one pixel 
+      if (TMath::Abs(px2-px1) < 1) px2 = px1+1; 
+      if (TMath::Abs(py1-py2) < 1) py1 = py2+1;
       
       Int_t style = gVirtualX->GetFillStyle();
       if (style) {
