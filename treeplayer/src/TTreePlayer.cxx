@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.107 2002/09/25 21:06:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.108 2002/10/03 18:09:51 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -816,13 +816,15 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    char *hname = 0;
    char *hnamealloc = 0;
    i = 0;
-   for(UInt_t k=strlen(varexp0)-1;k>0;k--) {
-      if (varexp0[k]=='>' && varexp0[k-1]=='>') {
-         i = (int)( &(varexp0[k-1]) - varexp0 );  //  length of varexp0 before ">>"
-         hnamealloc = new char[strlen(&(varexp0[k+1]))+1];
-         hname = hnamealloc;
-         strcpy(hname,&(varexp0[k+1]));
-         break;
+   if (varexp0 && strlen(varexp0)) {
+      for(UInt_t k=strlen(varexp0)-1;k>0;k--) {
+         if (varexp0[k]=='>' && varexp0[k-1]=='>') {
+            i = (int)( &(varexp0[k-1]) - varexp0 );  //  length of varexp0 before ">>"
+            hnamealloc = new char[strlen(&(varexp0[k+1]))+1];
+            hname = hnamealloc;
+            strcpy(hname,&(varexp0[k+1]));
+            break;
+         }
       }
    }
    //   char *hname = (char*)strstr(varexp0,">>");
