@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.31 2002/11/20 14:38:35 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.32 2003/01/30 11:33:48 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2809,7 +2809,7 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
 
    TClass *cl = gROOT->GetClass(t, load);
    delete [] name;
-   return (cl && cl->GetDeclFileName() && strlen(cl->GetDeclFileName())?cl:0);
+   return (cl && cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ? cl : 0);
 }
 
 
@@ -3895,7 +3895,7 @@ void THtml::ExtractDocumentation(const char* cFileName, TList* listClassesFound)
       
 
       // iterate through characters
-      for(char* c=(cCommentEnd?cCommentEnd:fLine); *c && c-fLine<=fLen; c++) {
+      for(char* c=(cCommentEnd ? cCommentEnd : fLine); *c && c-fLine<=fLen; c++) {
          // skip leading spaces
          while (*c==' ') c++;
 
@@ -4189,7 +4189,7 @@ printf("WARNING Typedef %s -> %s in\n%s", strOldType.Data(), strNewType.Data(), 
                if (!strLastClassDoc.Length()) break;
 
                TString clname(c);
-               char* endClassName=strchr(clname.Data(),')');
+               char* endClassName= (char*)strchr(clname.Data(),')');
                while (*(endClassName-1)==' ') endClassName--;
                if (!endClassName) {
                   Warning("ExtractClassDocumentation",
@@ -4594,7 +4594,7 @@ Bool_t THtml::ParseWord(const char* begin, Int_t &step,
    while (isspace(*end)) end++;
    step=end-begin;
    begin=end;
-   const char* endAllowed=(allowedChars?&allowedChars[strlen(allowedChars)]:0);
+   const char* endAllowed=(allowedChars ? &allowedChars[strlen(allowedChars)] : 0);
    const char* cFound;
    while (IsName(*end) || allowedChars 
       && 0!=(cFound=strchr(allowedChars, *end)) && cFound!=endAllowed)
@@ -4612,7 +4612,7 @@ Bool_t THtml::ParseWord(const char* begin, Int_t &step,
    step=end-begin;
    begin=end;
    const char* cFound;
-   const char* endAllowed=(allowedChars?&allowedChars[strlen(allowedChars)]:0);
+   const char* endAllowed=(allowedChars ? &allowedChars[strlen(allowedChars)] : 0);
    while (IsName(*end) || allowedChars 
       && 0!=(cFound=strchr(allowedChars, *end)) && cFound!=endAllowed)
       end++;
@@ -4629,14 +4629,14 @@ Bool_t THtml::FindMethodImpl(TString strMethFullName, TList& listMethSameName,
 // remove those from the list that don't fit
 // Return kFALSE if error
 
-   TString strArg(listArgs.GetSize()?((TObjString*)listArgs.Last())->String():"");
+   TString strArg(listArgs.GetSize() ? ((TObjString*)listArgs.Last())->String() : "");
    TString strArgPart;
    Int_t iArgSize=listArgs.GetSize();
 #ifdef DEBUG_METH_PARSE
 printf("Parsing meth %s ... ",strMethFullName.Data());
 #endif
    TMethod* meth=(TMethod*)listMethSameName.First();
-   TClass* clmeth=meth?(TClass*)meth->GetClass():0;
+   TClass* clmeth=meth ? (TClass*)meth->GetClass() : 0;
    // args are in class's context, add "dummy" classdef ctx
    Bool_t bAddedDummyClassDef=!(parseStack.Context()==TParseStack::kBlock
       && parseStack.BlockSpec()==TParseStack::kClassDecl);
@@ -4725,7 +4725,7 @@ printf("Parsing meth %s ... ",strMethFullName.Data());
    if (listMethSameName.GetSize()==0) {
 #ifdef DEBUG_METH_NOTFOUND
       printf("PARSE METHOD Can't find method named %s with correct number of params (%c=%d) in line\n%s\n", 
-         strMethFullName.Data(), (done?'=':'>'), iArgSize, fLine);
+         strMethFullName.Data(), (done ? '=' : '>'), iArgSize, fLine);
 #endif
       return kFALSE;
    }

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.5 2001/07/06 07:34:39 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.6 2003/01/30 11:33:48 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -240,7 +240,6 @@ public:
             case kString: return "\"";
 	    default: return NULL;
             }
-            return NULL;
          }
 
       private:
@@ -540,7 +539,7 @@ public:
 
    const char* GetDoc(TDictionary* dict) const {
       TDocElement* de=GetDocElement(dict);
-      return de?de->GetDoc():0;
+      return de ? de->GetDoc() : 0;
    }
    TMap* MakeHelp(TClass* cl);
    TPaveText* GetDocPave(TDictionary* dict);
