@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.107 2003/12/30 20:43:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.108 2003/12/31 16:36:32 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1539,7 +1539,7 @@ void TFile::WriteHeader()
    Int_t nfree  = fFree->GetSize();
    memcpy(buffer, root, 4); buffer += 4;
    Int_t version = fVersion;
-   if (fEND > kStartBigFile) version += 1000000;
+   if (fEND > kStartBigFile) {version += 1000000; fUnits = 8;}
    tobuf(buffer, version);
    tobuf(buffer, (Int_t)fBEGIN);
    if (version < 1000000) {
@@ -1829,7 +1829,12 @@ void TFile::ReadStreamerInfo()
       }
       info->BuildCheck();
       Int_t uid = info->GetNumber();
-      if (uid >= 0) fClassIndex->fArray[uid] = 1;
+      Int_t asize = fClassIndex->GetSize();
+      if (uid >= asize && uid <100000) fClassIndex->Set(2*asize);
+      if (uid >= 0 && uid < fClassIndex->GetSize()) fClassIndex->fArray[uid] = 1;
+      else {
+         printf("ReadStreamerInfo, class:%s, illegal uid=%d\n",info->GetName(),uid);
+      }
       if (gDebug > 0) printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
    }
    fClassIndex->fArray[0] = 0;
