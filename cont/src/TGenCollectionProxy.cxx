@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.9 2004/11/04 10:51:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.10 2004/11/11 06:06:41 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TGenCollectionProxy
 //
-// Proxy around an arbitrary container, which implements basic 
+// Proxy around an arbitrary container, which implements basic
 // functionality and iteration.
 //
 // In particular this is used to implement splitting and abstract
@@ -33,7 +33,7 @@
 #include "Api.h"
 #include <iostream>
 
-#define MESSAGE(which,text)  
+#define MESSAGE(which,text)
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -42,15 +42,15 @@
 //
 //   Localoptimization class.
 //
-//   Collection proxies get copied. On copy we switch the type of the 
-//   proxy to the concrete STL type. The concrete types are optimized 
+//   Collection proxies get copied. On copy we switch the type of the
+//   proxy to the concrete STL type. The concrete types are optimized
 //   for element access.
 //
 //////////////////////////////////////////////////////////////////////////
 class TGenVectorProxy : public TGenCollectionProxy {
 public:
   /// Standard Destructor
-  TGenVectorProxy(const TGenCollectionProxy& c) : TGenCollectionProxy(c)  {  
+  TGenVectorProxy(const TGenCollectionProxy& c) : TGenCollectionProxy(c)  {
   }
   /// Standard Destructor
   virtual ~TGenVectorProxy() {
@@ -92,15 +92,15 @@ public:
 //
 //   Localoptimization class.
 //
-//   Collection proxies get copied. On copy we switch the type of the 
-//   proxy to the concrete STL type. The concrete types are optimized 
+//   Collection proxies get copied. On copy we switch the type of the
+//   proxy to the concrete STL type. The concrete types are optimized
 //   for element access.
 //
 //////////////////////////////////////////////////////////////////////////
 class TGenListProxy : public TGenVectorProxy {
 public:
   /// Standard Destructor
-  TGenListProxy(const TGenCollectionProxy& c) : TGenVectorProxy(c)  {  
+  TGenListProxy(const TGenCollectionProxy& c) : TGenVectorProxy(c)  {
   }
   /// Standard Destructor
   virtual ~TGenListProxy() {
@@ -129,18 +129,18 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // class TGenSetProxy
-//  
+//
 //   Localoptimization class.
 //
-//   Collection proxies get copied. On copy we switch the type of the 
-//   proxy to the concrete STL type. The concrete types are optimized 
+//   Collection proxies get copied. On copy we switch the type of the
+//   proxy to the concrete STL type. The concrete types are optimized
 //   for element access.
 //
 //////////////////////////////////////////////////////////////////////////
 class TGenSetProxy : public TGenVectorProxy {
 public:
   /// Standard Destructor
-  TGenSetProxy(const TGenCollectionProxy& c) : TGenVectorProxy(c)  {  
+  TGenSetProxy(const TGenCollectionProxy& c) : TGenVectorProxy(c)  {
   }
   /// Standard Destructor
   virtual ~TGenSetProxy() {
@@ -175,15 +175,15 @@ public:
 //
 //   Localoptimization class.
 //
-//   Collection proxies get copied. On copy we switch the type of the 
-//   proxy to the concrete STL type. The concrete types are optimized 
+//   Collection proxies get copied. On copy we switch the type of the
+//   proxy to the concrete STL type. The concrete types are optimized
 //   for element access.
 //
 //////////////////////////////////////////////////////////////////////////
 class TGenMapProxy : public TGenSetProxy {
 public:
   /// Standard Destructor
-  TGenMapProxy(const TGenCollectionProxy& c) : TGenSetProxy(c)  {  
+  TGenMapProxy(const TGenCollectionProxy& c) : TGenSetProxy(c)  {
   }
   /// Standard Destructor
   virtual ~TGenMapProxy() {
@@ -261,9 +261,9 @@ TGenCollectionProxy::Value::Value(const std::string& inside)  {
         fSize = sizeof(Int_t);
         fKind = kInt_t;
       }
-    } 
+    }
     else {
-      long P = ti.Property();      
+      long P = ti.Property();
       if ( P&G__BIT_ISPOINTER ) {
         fSize = sizeof(void*);
       }
@@ -280,8 +280,11 @@ TGenCollectionProxy::Value::Value(const std::string& inside)  {
       else if ( P&G__BIT_ISFUNDAMENTAL ) {
         TDataType *fundType = gROOT->GetType( intype.c_str() );
         fKind = (EDataType)fundType->GetType();
+        if ( 0 == strcmp("bool",fundType->GetFullTypeName()) )  {
+          fKind = (EDataType)kBOOL_t;
+        }
         fSize = ti.Size();
-        Assert(fKind>0 && fKind<20);
+        Assert(fKind>0 && fKind<0x16);
       }
       else if ( P&G__BIT_ISENUM ) {
         fSize = sizeof(int);
@@ -291,7 +294,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside)  {
       if (fType == TString::Class() && (fCase&G__BIT_ISPOINTER)) {
         fCase |= R__BIT_ISTSTRING;
       }
-    }    
+    }
   }
   if ( fSize == std::string::npos ) {
     if ( fType == 0 ) {
@@ -352,10 +355,10 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
   Env_t e;
   if ( iter_size > sizeof(e.buff) ) {
     Fatal("TGenCollectionProxy",
-          "%s %s are too large:%d bytes. Maximum is:%d bytes", 
-          "Iterators for collection", 
-          fClass->GetName(), 
-          iter_size, 
+          "%s %s are too large:%d bytes. Maximum is:%d bytes",
+          "Iterators for collection",
+          fClass->GetName(),
+          iter_size,
           sizeof(e.buff));
   }
 }
@@ -373,7 +376,7 @@ TGenCollectionProxy::~TGenCollectionProxy()   {
 }
 
 //______________________________________________________________________________
-TVirtualCollectionProxy* TGenCollectionProxy::Generate() const  { 
+TVirtualCollectionProxy* TGenCollectionProxy::Generate() const  {
   // Virtual copy constructor
   if ( !fClass ) Initialize();
   switch(fSTL_type)  {
@@ -393,7 +396,7 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const  {
 }
 
 //______________________________________________________________________________
-TGenCollectionProxy *TGenCollectionProxy::Initialize()  const { 
+TGenCollectionProxy *TGenCollectionProxy::Initialize()  const {
   // Proxy initializer
   TGenCollectionProxy* p = const_cast<TGenCollectionProxy*>(this);
   if ( fClass ) return p;
@@ -433,7 +436,7 @@ void TGenCollectionProxy::CheckFunctions()  const   {
 }
 
 //______________________________________________________________________________
-TGenCollectionProxy *TGenCollectionProxy::InitializeEx() { 
+TGenCollectionProxy *TGenCollectionProxy::InitializeEx() {
   // Proxy initializer
   fClass = gROOT->GetClass(fTypeinfo);
   if ( fClass )  {
@@ -445,6 +448,10 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx() {
     int num = TClassEdit::GetSplit(fClass->GetName(),inside,nested);
     if ( num > 1 )  {
       std::string nam;
+      if ( inside[0].find("stdext::hash_") != std::string::npos )
+        inside[0].replace(3,10,"::");
+      if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos )
+        inside[0].replace(0,16,"std::");
       fSTL_type = TClassEdit::STLKind(inside[0].c_str());
       int slong = sizeof(void*);
       switch ( fSTL_type )  {
@@ -492,7 +499,7 @@ TClass *TGenCollectionProxy::GetCollectionClass()  {
 
 //______________________________________________________________________________
 UInt_t TGenCollectionProxy::Sizeof() const  {
-   // Return the sizeof the collection object. 
+   // Return the sizeof the collection object.
    return fClass->Size();
 }
 
@@ -562,7 +569,7 @@ void* TGenCollectionProxy::At(UInt_t idx)   {
 
 //______________________________________________________________________________
 void TGenCollectionProxy::Clear(const char* opt)  {
-  // Clear the emulated collection.  
+  // Clear the emulated collection.
   if ( fEnv && fEnv->object )   {
     if ( fPointers && opt && *opt=='f' )  {
       size_t i, n = *(size_t*)fSize.invoke(fEnv);
@@ -612,7 +619,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )  {
       case TClassEdit::kMultiSet:
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
-        if ( fPointers ) 
+        if ( fPointers )
           Clear("force");
         else
           fClear.invoke(fEnv);
@@ -643,9 +650,9 @@ void TGenCollectionProxy::Commit(void* env)  {
     case TClassEdit::kDeque:
       return;
     case TClassEdit::kMap:
-    case TClassEdit::kMultiMap: 
+    case TClassEdit::kMultiMap:
     case TClassEdit::kSet:
-    case TClassEdit::kMultiSet: 
+    case TClassEdit::kMultiSet:
       if ( env )  {
         Env_t* e = (Env_t*)env;
         if ( e->object )   {
@@ -693,7 +700,7 @@ void TGenCollectionProxy::PopProxy() {
   if ( !fProxyList.empty() )  {
     Env_t* e = fProxyList.back();
     if ( --e->refCount <= 0 )  {
-      if ( e->temp ) 
+      if ( e->temp )
         ::operator delete(e->temp);
       delete e;
     }
@@ -745,6 +752,6 @@ void TGenCollectionProxy::Streamer(TBuffer &buff, void *objp, int /* siz */ ) {
 //______________________________________________________________________________
 void TGenCollectionProxy::operator()(TBuffer &b, void *objp) {
   // TClassStreamer IO overload
-  Streamer(b, objp, 0); 
+  Streamer(b, objp, 0);
 }
 
