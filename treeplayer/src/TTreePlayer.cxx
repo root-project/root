@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.170 2004/10/01 09:18:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.171 2004/10/06 11:20:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2706,11 +2706,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       out<<onerow.Data()<<"*"<<endl;
    else
       printf("%s*\n",onerow.Data());
-   if (select) {
-      cout << "==> " << fSelectedRows << " selected ";
-      if (fSelectedRows == 1) cout << "entry\n";
-      else cout << "entries\n";
-   }
+   if (select) Printf("==> %lld selected %s", fSelectedRows,
+                      fSelectedRows == 1 ? "entry" : "entries");
    if (fScanRedirect) printf("File <%s> created\n", fname);
 
 //*-*- delete temporary objects
