@@ -1190,6 +1190,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	break;
       }
     }
+#ifndef G__PHILIPPE27
+    else if (strcmp("register",paraname)==0) {
+      G__p_ifunc->ansi[func_now]=1;
+      isvoid=0;
+    }
+#endif
     else if(G__istypename(paraname) || strchr(paraname,'[')) {
       G__p_ifunc->ansi[func_now]=1;
       isvoid=0;
@@ -1313,8 +1319,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
     G__p_ifunc->entry[func_now].line_number = -1;
     G__p_ifunc->ispurevirtual[func_now]=0;
 #ifndef G__PHILIPPE0
-    /* Key the class comment off of ImplFileLine rather than ClassDef
+    /* Key the class comment off of Dictionary rather than ClassDef
      * because ClassDef is removed by a preprocessor */
+#ifndef G__OLDIMPLEMENTATION1360
     if(G__fons_comment && G__def_struct_member &&
        (strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
 	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
@@ -1325,6 +1332,18 @@ char *funcheader;   /* funcheader = 'funcname(' */
        )) {
       G__fsetcomment(&G__struct.comment[G__tagdefining]);
     }
+#else
+    if(G__fons_comment && G__def_struct_member &&
+       (strncmp(G__p_ifunc->funcname[func_now],"Dictionary",10)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"Dictionary(",11)==0
+#ifndef G__OLDIMPLEMENTATION1298
+	|| strncmp(G__p_ifunc->funcname[func_now],"Dictionary",10)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"Dictionary(",11)==0
+#endif
+       )) {
+      G__fsetcomment(&G__struct.comment[G__tagdefining]);
+    }
+#endif
 #endif
   }
 
@@ -2123,7 +2142,16 @@ int func_now;
 	G__prerun=0;
 	G__decl=1;
       }
+#ifndef G__OLDIMPLEMENTATION1354
+      {
+	struct G__ifunc_table *store_pifunc = G__p_ifunc;
+	G__p_ifunc = &G__ifunc;
+	*ifunc->para_default[func_now][iin] = G__getexpr(paraname);
+	G__p_ifunc = store_pifunc;
+      }
+#else
       *ifunc->para_default[func_now][iin] = G__getexpr(paraname);
+#endif
       G__prerun=store_prerun;
       G__decl=store_decl;
 #else
@@ -3479,8 +3507,9 @@ int recursive;
 	else if('C'==param_type) {
 	  if(p_ifunc->pentry[ifn]->filenum>=0) 
 	    funclist->p_rate[i] = G__STDCONVMATCH-G__C2P2FCONVMATCH;
-	  else
-	    funclist->p_rate[i] = G__STDCONVMATCH+G__C2P2FCONVMATCH;
+	  else {
+	    funclist->p_rate[i] = G__STDCONVMATCH+G__C2P2FCONVMATCH;/*???*/
+	  }
 	}
 	
 #else
@@ -3613,10 +3642,17 @@ int recursive;
     else
       funclist->rate += funclist->p_rate[i];
   }
-#ifndef G__OLDIMPLEMENTATION1260
-  if(G__NOMATCH!=funclist->rate && ((0==G__isconst && p_ifunc->isconst[ifn])
-     || (G__isconst && 0==p_ifunc->isconst[ifn]))
-     )
+#ifndef G__OLDIMPLEMENTATION1359
+  if(G__NOMATCH!=funclist->rate && 
+     ((0==G__isconst && (p_ifunc->isconst[ifn]&G__CONSTFUNC))
+      || (G__isconst && 0==(p_ifunc->isconst[ifn]&G__CONSTFUNC)))
+      )
+    funclist->rate += G__CVCONVMATCH;
+#else
+  if(G__NOMATCH!=funclist->rate && 
+     ((0==G__isconst && p_ifunc->isconst[ifn])
+      || (G__isconst && 0==p_ifunc->isconst[ifn]))
+      )
     funclist->rate += G__CVCONVMATCH;
 #endif
 }
@@ -3624,7 +3660,7 @@ int recursive;
 /***********************************************************************
 * int G__convert_param(libp,p_ifunc,ifn,i)
 **********************************************************************/
-void G__convert_param(libp,p_ifunc,ifn,pmatch)
+int G__convert_param(libp,p_ifunc,ifn,pmatch)
 struct G__param *libp;
 struct G__ifunc_table *p_ifunc; 
 int ifn;
@@ -4227,9 +4263,19 @@ struct G__funclist *pmatch;
 	}
 	break;
       }
+#ifndef G__OLDIMPLEMENTATION1365
+    case 'Q':
+      if('C'==param_type && p_ifunc->pentry[ifn]->filenum<0) {
+	G__genericerror("Limitation: Precompiled function can not get pointer to interpreted function as argument");
+	return(-1);
+      }
+#endif
     }
     
   }
+#ifndef G__OLDIMPLEMENTATION1365
+  return(0);
+#endif
 }
 
 /***********************************************************************
@@ -4538,7 +4584,11 @@ int recursive;
     return((struct G__ifunc_table*)NULL);
   }
 
-  if(ambiguous && G__EXACTMATCH!=bestmatch) {
+  if(ambiguous && G__EXACTMATCH!=bestmatch 
+#ifndef G__OLDIMPLEMENTATION1363
+     && !recursive
+#endif
+     ) {
     /* error, ambiguous overloading resolution */
     fprintf(G__serr,"Error: Ambiguous overload resolution (%x,%d)"
 	    ,bestmatch,ambiguous+1);
@@ -4569,7 +4619,12 @@ int recursive;
   }
 
   /* convert parameter */
+#ifndef G__OLDIMPLEMENTATION1365
+  if(G__convert_param(libp,p_ifunc,*pifn,match))
+    return((struct G__ifunc_table*)0);
+#else
   G__convert_param(libp,p_ifunc,*pifn,match);
+#endif
 
   G__funclist_delete(funclist);
   return(p_ifunc);
@@ -4671,6 +4726,9 @@ int memfunc_flag;
 #endif
 #ifndef G__OLDIMPLEMENTATION1312
   int specialflag=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1357
+  G__value *store_p_tempobject=0;
 #endif
 
 #ifdef G__NEWINHERIT
@@ -5608,6 +5666,9 @@ asm_ifunc_start:   /* loop compilation execution label */
     /* create temp object buffer */
     
     G__alloc_tempobject(p_ifunc->p_tagtable[ifn] ,p_ifunc->p_typetable[ifn]);
+#ifndef G__OLDIMPLEMENTATION1357
+    store_p_tempobject = &G__p_tempbuf->obj;
+#endif
     
     if(G__dispsource) {
 #ifndef G__FONS31
@@ -6009,8 +6070,9 @@ asm_ifunc_start:   /* loop compilation execution label */
     *result7 = G__interactivereturnvalue;
     G__interactivereturnvalue = G__null;
   }
-  
+
   G__templevel--;
+
 #ifdef G__ASM_DBG
   if(G__istrace>1) {
     if(G__istrace>G__templevel) {
@@ -6153,7 +6215,14 @@ asm_ifunc_start:   /* loop compilation execution label */
 
 	if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) {
 	  /* interpreted class */
+#ifndef G__OLDIMPLEMENTATION1357
+	  if(store_p_tempobject) 
+	    G__store_struct_offset = store_p_tempobject->obj.i;
+	  else 
+	    G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#else
 	  G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#endif
 	  if(G__dispsource) {
 	    fprintf(G__serr
 	    ,"\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s"
@@ -6207,9 +6276,20 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1274
 	  long offset=0;
 	  if(result7->tagnum == p_ifunc->p_tagtable[ifn]) {
+#ifndef G__OLDIMPLEMENTATION1357
+	    if(store_p_tempobject) 
+	      memcpy((void*)store_p_tempobject->obj.i
+		     ,(void*)(result7->obj.i)
+		     ,(size_t)G__struct.size[result7->tagnum]);
+	    else 
+	      memcpy((void*)G__p_tempbuf->obj.obj.i
+		     ,(void*)(result7->obj.i)
+		     ,(size_t)G__struct.size[result7->tagnum]);
+#else
 	    memcpy((void*)G__p_tempbuf->obj.obj.i
 		   ,(void*)(result7->obj.i)
 		   ,(size_t)G__struct.size[result7->tagnum]);
+#endif
 	  }
 	  else if(-1!=(offset=G__ispublicbase(p_ifunc->p_tagtable[ifn]
 					      ,result7->tagnum
@@ -6220,7 +6300,14 @@ asm_ifunc_start:   /* loop compilation execution label */
 		    ,result7->obj.i+offset);
 	    if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) {
 	      /* interpreted class */
+#ifndef G__OLDIMPLEMENTATION1357
+	      if(store_p_tempobject) 
+		G__store_struct_offset=store_p_tempobject->obj.i;
+	      else 
+		G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#else
 	      G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#endif
 	      G__getfunction(temp,&itemp,G__TRYCONSTRUCTOR);
 	    }
 	    else {
@@ -6237,7 +6324,12 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
 	}
 	
+#ifndef G__OLDIMPLEMENTATION1357
+	if(store_p_tempobject) *result7 = *store_p_tempobject;
+	else                   *result7 = G__p_tempbuf->obj;
+#else
 	*result7 = G__p_tempbuf->obj;
+#endif
 	
       }
       else {
@@ -6322,7 +6414,6 @@ asm_ifunc_start:   /* loop compilation execution label */
     result7->tagnum  = p_ifunc->p_tagtable[ifn];
     result7->typenum = p_ifunc->p_typetable[ifn];
   }
-  
   
   /**************************************************************
    * reset no exec flag
@@ -6495,6 +6586,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 
   G__exec_memberfunc=store_exec_memberfunc;
   G__security = store_security;
+
 
   return(1);
 }

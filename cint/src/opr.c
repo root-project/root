@@ -1538,6 +1538,9 @@ G__value *pios;
   int ig2;
   long store_struct_offset;
   int store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1355
+  int rdstateflag=0;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION975
   if(-1!=pios->tagnum&&'e'==G__struct.type[pios->tagnum]) return(pios->obj.i);
@@ -1565,6 +1568,9 @@ G__value *pios;
   /* call ios::rdstate() */
   sprintf(buf,"rdstate()" /* ,pios->obj.i */ );
   result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
+#ifndef G__OLDIMPLEMENTATION1355
+  if(ig2) rdstateflag=1;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1161
   if(0==ig2) {
@@ -1572,12 +1578,31 @@ G__value *pios;
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1355
+  if(0==ig2) {
+    sprintf(buf,"operator bool()" /* ,pios->obj.i */ );
+    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
+  }
+  if(0==ig2) {
+    sprintf(buf,"operator long()" /* ,pios->obj.i */ );
+    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
+  }
+  if(0==ig2) {
+    sprintf(buf,"operator short()" /* ,pios->obj.i */ );
+    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
+  }
+#endif
 
   /* restore environment */
   G__store_struct_offset = store_struct_offset;
   G__tagnum = store_tagnum;
+
 #ifdef G__ASM
-  if(G__asm_noverflow) {
+  if(G__asm_noverflow
+#ifndef G__OLDIMPLEMENTATION1355
+     && rdstateflag
+#endif
+     ) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
     if(G__asm_dbg) fprintf(G__serr,"%3x: OP1 '!'\n",G__asm_cp+1);
@@ -1592,7 +1617,12 @@ G__value *pios;
 
   /* test result */
   if(ig2) {
+#ifndef G__OLDIMPLEMENTATION1355
+    if(rdstateflag) return(!result.obj.i);
+    else            return(result.obj.i);
+#else
     return(!result.obj.i);
+#endif
   }
   else {
     G__genericerror("Limitation: Cint does not support full iostream functionality in this platform");

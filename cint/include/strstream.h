@@ -5,7 +5,7 @@
 
 #pragma ifndef G__STRSTREAM_H
 
-#pragma setstream
+#include <iostream.h>
 
 #ifndef G__STRSTREAM_H
 #define G__STRSTREAM_H

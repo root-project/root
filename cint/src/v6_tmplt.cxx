@@ -1341,6 +1341,9 @@ char *tagnamein;
   int scope_tagnum = -1;
   struct G__inheritance *baseclass;
   int parent_tagnum;
+#ifndef G__PHILIPPE24
+  int store_constvar = G__constvar;
+#endif
 #ifndef G__OLDIMPLEMENTATION770
 #define G__OLDIMPLEMENTATION778
 #ifndef G__OLDIMPLEMENTATION778
@@ -1580,6 +1583,9 @@ char *tagnamein;
 #ifndef G__OLDIMPLEMENTATION932
   G__def_tagnum = store_def_tagnum;
   G__tagdefining = store_tagdefining;
+#endif
+#ifndef G__PHILIPPE24
+  G__constvar = store_constvar;
 #endif
 
   /* free template argument lisst */

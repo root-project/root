@@ -26,6 +26,12 @@
 
 #include "common.h"
 
+#ifndef G__PHILIPPE28
+#ifndef G__TESTMAIN
+#include <sys/stat.h>
+#endif
+#endif
+
 #ifdef G__WIN32
 #include <windows.h>
 #endif
@@ -478,6 +484,32 @@ int G__matchfilename(i1,filename)
 int i1;
 char* filename;
 {
+#if !defined(G__PHILIPPE28) && !defined(__CINT__)
+
+#ifdef G__WIN32
+  char i1name[_MAX_PATH],fullfile[_MAX_PATH];
+#else 
+  struct stat statBufItem;  
+  struct stat statBuf;  
+#endif
+
+  if((strcmp(G__srcfile[i1].filename,filename)==0)) return(1);
+
+#ifdef G__WIN32
+  _fullpath( i1name, G__srcfile[i1].filename, _MAX_PATH ); 
+  _fullpath( fullfile, filename, _MAX_PATH );
+  if((stricmp(i1name, fullfile)==0)) return 1;
+#else
+  if (   ( 0 == stat( filename, & statBufItem ) )
+      && ( 0 == stat( G__srcfile[i1].filename, & statBuf ) ) 
+      && ( statBufItem.st_ino == statBuf.st_ino ) ) {
+     return 1;
+  }
+#endif
+  return 0;
+
+#else /* PHILIPPE28 */
+
   char *filenamebase;
   if((strcmp(G__srcfile[i1].filename,filename)==0)) return(1);
   filenamebase = G__strrstr(G__srcfile[i1].filename,"./");
@@ -508,6 +540,7 @@ char* filename;
     }
   }
   return(0);
+#endif /* PHILIPPE28 */
 }
 
 /******************************************************************

@@ -907,6 +907,9 @@ char *in;
     case ':': strcpy(out+j,"cL"); j+=2; break;
     case '"': strcpy(out+j,"dQ"); j+=2; break;
     case '\'': strcpy(out+j,"sQ"); j+=2; break;
+#ifndef G__PHILIPPE28
+    case '\\': strcpy(out+j,"fI"); j+=2; break;
+#endif
     default: out[j++]=c; break;
     }
     ++i;
@@ -5153,10 +5156,18 @@ G__incsetup setup_memfunc;
 {
   char *p;
   char buf[G__ONELINE];
-  if(0==size && 0!=G__struct.size[tagnum]) return(0);
+  if(0==size && 0!=G__struct.size[tagnum]
+#ifndef G__OLDIMPLEMENTATION1362
+     && 'n'!=G__struct.type[tagnum]
+#endif
+     ) return(0);
 
 #ifndef G__OLDIMPLEMENTATION1125
-  if(0!=G__struct.size[tagnum] && G__asm_dbg ) {
+  if(0!=G__struct.size[tagnum]
+#ifndef G__OLDIMPLEMENTATION1362
+     && 'n'!=G__struct.type[tagnum]
+#endif
+     && G__asm_dbg ) {
     fprintf(G__serr,"Warning: Try to reload %s from DLL. Ignored\n"
             ,G__fulltagname(tagnum,1));
     return(0);
@@ -5170,8 +5181,27 @@ G__incsetup setup_memfunc;
   if(comment) G__struct.comment[tagnum].filenum = -2;
   else        G__struct.comment[tagnum].filenum = -1;
 #endif
+#ifndef G__OLDIMPLEMENTATION1362
+  if(G__struct.incsetup_memvar[tagnum])
+    (*G__struct.incsetup_memvar[tagnum])();
+  if(G__struct.incsetup_memfunc[tagnum])
+    (*G__struct.incsetup_memfunc[tagnum])();
+  if(0==G__struct.memvar[tagnum]->allvar
+     || 'n'==G__struct.type[tagnum])
+    G__struct.incsetup_memvar[tagnum] = setup_memvar;
+  else
+    G__struct.incsetup_memvar[tagnum] = 0;
+  if(0==G__struct.memfunc[tagnum]->allifunc 
+     || 'n'==G__struct.type[tagnum]
+     || (-1!=G__struct.memfunc[tagnum]->pentry[0]->filenum
+	 && 2>=G__struct.memfunc[tagnum]->allifunc))
+    G__struct.incsetup_memfunc[tagnum] = setup_memfunc;
+  else 
+    G__struct.incsetup_memfunc[tagnum] = 0;
+#else
   G__struct.incsetup_memvar[tagnum] = setup_memvar;
   G__struct.incsetup_memfunc[tagnum] = setup_memfunc;
+#endif
 
   /* add template names */
   strcpy(buf,G__struct.name[tagnum]);
@@ -6455,7 +6485,12 @@ int link_stub;
 	  if ( statBufItem.st_ino == statBuf.st_ino ) {
 #else
 	  _fullpath( fullIndex, G__srcfile[ifile].filename, _MAX_PATH );
+#ifndef G__PHILIPPE28
+          /* Windows is case insensitive! */ 
+	  if (0==stricmp(fullItem,fullIndex)) {
+#else
 	  if (0==strcmp(fullItem,fullIndex)) {
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
@@ -6605,8 +6640,9 @@ int tagnum;
     store_asm_exec = G__asm_exec;
     G__asm_exec=0;
     store_var_type = G__var_type;
-#ifndef G__OLDIMPLEMENTATION1125
-    if(0==G__struct.memvar[tagnum]->allvar)
+#ifdef G__OLDIMPLEMENTATION1125_YET
+    if(0==G__struct.memvar[tagnum]->allvar
+       || 'n'==G__struct.type[tagnum])
       (*G__struct.incsetup_memvar[tagnum])();
 #else
     (*G__struct.incsetup_memvar[tagnum])();
@@ -6646,8 +6682,11 @@ int tagnum;
     store_asm_exec = G__asm_exec;
     G__asm_exec=0;
     store_var_type = G__var_type;
-#ifdef G__OLDIMPLEMENTATION1125_YET
-    if(0==G__struct.memfunc[tagnum]->allifunc)
+#ifdef G__OLDIMPLEMENTATION1125_YET /* G__PHILIPPE26 */
+    if(0==G__struct.memfunc[tagnum]->allifunc 
+       || 'n'==G__struct.type[tagnum]
+       || (-1!=G__struct.memfunc[tagnum]->pentry[0]->filenum
+	   && 2>=G__struct.memfunc[tagnum]->allifunc))
       (*G__struct.incsetup_memfunc[tagnum])();
 #else
     (*G__struct.incsetup_memfunc[tagnum])();

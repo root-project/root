@@ -2475,10 +2475,9 @@ struct G__var_array *varglobal,*varlocal;
 	  return(result);
 	}
 #endif
-	if((0==G__prerun || G__COMPILEDGLOBAL==var->statictype[ig15])&& 
-#ifndef G__OLDIMPLEMENTATION946
-	   !G__decl &&
-#endif
+#ifndef G__OLDIMPLEMENTATION1364
+	if(((0==G__prerun && !G__decl) 
+	    || G__COMPILEDGLOBAL==var->statictype[ig15]) && 
 	   (islower(var->type[ig15])||
 	    ('p'==G__var_type&&(var->constvar[ig15]&G__PCONSTVAR))||
 	    ('v'==G__var_type&&(var->constvar[ig15]&G__CONSTVAR)))) {
@@ -2486,6 +2485,17 @@ struct G__var_array *varglobal,*varlocal;
 	  G__var_type='p';
 	  return(result);
 	}
+#else
+	if((0==G__prerun || G__COMPILEDGLOBAL==var->statictype[ig15]) && 
+	   !G__decl &&
+	   (islower(var->type[ig15])||
+	    ('p'==G__var_type&&(var->constvar[ig15]&G__PCONSTVAR))||
+	    ('v'==G__var_type&&(var->constvar[ig15]&G__CONSTVAR)))) {
+	  G__changeconsterror(var->varnamebuf[ig15],"ignored const");
+	  G__var_type='p';
+	  return(result);
+	}
+#endif
       }
       
       /*************************************************
@@ -4194,7 +4204,11 @@ int objptr;  /* 1 : object , 2 : pointer */
 		   strchr(tagname,'*')|| strchr(tagname,'/')||
 		   strchr(tagname,'%')|| strchr(tagname,'&')||
 		   strchr(tagname,'|')|| strchr(tagname,'^')||
-		   strchr(tagname,'!') )) {
+		   strchr(tagname,'!')
+#ifndef G__OLDIMPLEMENTATION1351
+		   || strstr(tagname,"new ")
+#endif
+		   )) {
       result = G__getexpr(tagname);
       if(result.type) flag=1;
     }
@@ -5580,9 +5594,17 @@ int parameter00;
      ) {
     if(-1==result.tagnum) {
       G__var_type=result.type;
+#ifndef G__PHILIPPE21
+      if(0==G__const_noerror) {
+        /* to follow the example of other places .. Should printlinenum
+           be replaced by G__genericerror ? */
+#endif
       fprintf(G__serr
 	   ,"Warning: Automatic variable %s allocated in global scope",item);
       G__printlinenum();
+#ifndef G__PHILIPPE21
+      }
+#endif
     }
     else {
 #else
@@ -6480,8 +6502,15 @@ int parameter00;
 #endif
 #ifndef G__OLDIMPLEMENTATION1089
       /* Following code will never be used */
+#ifndef G__PHILIPPE21
+      if(0==G__const_noerror) {
+        /* the next comment seems obsolete. the code is sometimes used! */
+#endif
       fprintf(G__serr,"Error: Undeclared variable %s",item);
       G__genericerror((char*)NULL);
+#ifndef G__PHILIPPE21
+      }
+#endif
 #else
       fprintf(G__serr,"Warning: Undeclared symbol %s. Automatic variable allocated",item);
       G__printlinenum();

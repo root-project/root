@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION 5014044
-#define G__CINTVERSIONSTR  "5.14.44, Jul 18 2000"
+#define G__CINTVERSION 5014046
+#define G__CINTVERSIONSTR  "5.14.46, Aug 1 2000"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -1438,7 +1438,7 @@ extern G__EXPORT int G__get_no_exec G__P((void));
 extern G__EXPORT int G__get_no_exec_compile G__P((void));
 extern G__EXPORT void G__setdebugcond G__P((void));
 extern G__EXPORT int G__init_process_cmd G__P((void));
-extern G__EXPORT int G__process_cmd G__P((char *line,char *prompt,int *more));
+extern G__EXPORT int G__process_cmd G__P((char *line,char *prompt,int *more,int *err,G__value *rslt));
 extern G__EXPORT G__value G__exec_tempfile G__P((char *file));
 extern G__EXPORT G__value G__exec_text G__P((char *text));
 extern G__EXPORT void G__setothermain G__P((int othermain));
@@ -1469,8 +1469,8 @@ extern G__value (*G__GetSpecialObject) G__P((char *name,void *ptr));
 extern G__value (*G__GetSpecialObject) G__P((char *name));
 #endif
 int G__security_recover G__P((FILE *fout));
-extern G__EXPORT void G__add_setup_func G__P((char *libname, G__incsetup func));
-extern G__EXPORT void G__remove_setup_func G__P((char *libname));
+extern G__EXPORT void G__add_setup_func G__P((G__CONST char *libname, G__incsetup func));
+extern G__EXPORT void G__remove_setup_func G__P((G__CONST char *libname));
 extern int  G__call_setup_funcs G__P((void));
 extern void G__reset_setup_funcs G__P((void));
 extern char *G__cint_version G__P((void));

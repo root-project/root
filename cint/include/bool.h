@@ -6,6 +6,7 @@
 #undef true
 #undef false
 enum bool { FALSE = 0, false = 0, TRUE = 1, true = 1 };
+bool bool() { return false; }
 //typedef int bool;
 //const bool true=1;
 //const bool TRUE=1;

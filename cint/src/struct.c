@@ -488,7 +488,7 @@ int noerror;
 #ifndef G__OLDIMPLEMENTATION884
   if(strcmp(tagname,"bool")==0) {
     if(0==boolflag) {
-#ifndef G__OLDIMPLEMENTATINO913
+#ifndef G__OLDIMPLEMENTATION913
       long store_globalvarpointer=G__globalvarpointer;
       int store_tagdefining=G__tagdefining;
       int store_def_struct_member=G__def_struct_member;

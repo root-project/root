@@ -20,6 +20,10 @@
 
 #include "common.h"
 
+#ifndef G__PHILIPPE21
+extern int G__const_noerror;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION514
 /******************************************************************
 * static long G__getstaticobject()
@@ -49,7 +53,12 @@ static long G__getstaticobject()
     }
     var = var->next;
   } while(var);
+#ifndef G__PHILIPPE21
+  if(0==G__const_noerror) 
+    fprintf(G__serr,"Error: No memory for static %s ",temp);
+#else
   fprintf(G__serr,"Error: No memory for static %s ",temp);
+#endif
   G__genericerror((char*)NULL);
   return(0);
 }

@@ -903,6 +903,18 @@ int *piout;
 	      G__srcfile[null_entry].fp = G__ifile.fp;
 	    }
 #endif
+#ifndef G__PHILIPPE25
+#ifndef G__OLDIMPLEMENTATION952
+            G__srcfile[null_entry].included_from=G__ifile.filenum;
+#endif
+#ifndef G__OLDIMPLEMENTATION1207
+            G__srcfile[null_entry].ispermanentsl = 0;
+            G__srcfile[null_entry].initsl = (G__DLLINIT)NULL;
+#endif
+#ifndef G__OLDIMPLEMENTATION1273
+            G__srcfile[null_entry].hasonlyfunc = (struct G__dictposition*)NULL;
+#endif
+#endif /* G__PHILIPPE25 */
 	    G__ifile.filenum = null_entry;
 	  }
 	  else {
@@ -940,6 +952,19 @@ int *piout;
 		G__srcfile[G__nfile].fp = G__ifile.fp;
 	      }
 #endif
+#ifndef G__PHILIPPE25
+              /* Initilialize more of the data member see loadfile.c:1529 */
+#ifndef G__OLDIMPLEMENTATION952
+	      G__srcfile[G__nfile].included_from=G__ifile.filenum;
+#endif
+#ifndef G__OLDIMPLEMENTATION1207
+              G__srcfile[G__nfile].ispermanentsl = 0;
+              G__srcfile[G__nfile].initsl = (G__DLLINIT)NULL;
+#endif
+#ifndef G__OLDIMPLEMENTATION1273
+              G__srcfile[G__nfile].hasonlyfunc = (struct G__dictposition*)NULL;
+#endif
+#endif /* G__PHILIPPE25 */
 	      G__ifile.filenum = G__nfile;
 	      ++G__nfile;
 	    }
@@ -3214,6 +3239,9 @@ G__value G__exec_statement()
 		result=G__new_operator(statement);
 		spaceflag = -1;
 		iout=0;
+#ifndef G__OLDIMPLEMENTATION698
+		if(0==mparen) return(result);
+#endif
 	      }
 #else
 	      statement[iout++] = c ;
@@ -3271,6 +3299,26 @@ G__value G__exec_statement()
 	      iout=0;
 	      break;
 	    }
+#ifndef G__OLDIMPLEMENTATION1350
+	    if(strcmp(statement,"(new")==0) {
+	      c=G__fgetspace();
+	      if('('==c) {
+		fseek(G__ifile.fp,-1,SEEK_CUR);
+		statement[iout++] = ' ' ;
+		spaceflag |= 1;
+	      }
+	      else {
+		statement[iout++] = ' ' ;
+		statement[iout++]=c;
+		if(G__dispsource) G__disp_mask=1;
+		c=G__fgetstream_template(statement+iout,")");
+		spaceflag |= 1;
+		iout = strlen(statement);
+		statement[iout++]=c;
+	      }
+	      break;
+	    }
+#endif
 	    if(strcmp(statement,"goto")==0) {
 	      G__CHECK(G__SECURE_GOTO,1,return(G__null));
 	      c=G__fgetstream(statement,";"); /* get label */

@@ -2962,7 +2962,10 @@ int hash;
     *result7 = G__null;
     G__letint(result7,'i',G__process_cmd((char*)G__int(libp->para[0])
 					  ,(char*)G__int(libp->para[1])
-					  ,(int*)G__int(libp->para[2])));
+					  ,(int*)G__int(libp->para[2])
+					  ,(int*)G__int(libp->para[3])
+					  ,(G__value*)G__int(libp->para[4])
+					 ));
     G__security_recover(G__serr);
     return(1);
   }

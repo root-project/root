@@ -18,7 +18,7 @@ namespace std {
 
 #else // __MAKECINT__
 
-#ifdef G__STRING_DLL
+#pragma ifdef G__STRING_DLL
 
 
 #include <iostream>
@@ -36,7 +36,7 @@ std::istream& operator>>(std::istream& ist,std::string& x) {
 }
 
 
-#else // G__STRING_DLL
+#pragma else // G__STRING_DLL
 
 namespace std {
 
@@ -60,7 +60,7 @@ std::istream& operator>>(std::istream& ist,std::string& x) {
 }
 #endif // G__BORLAND
 
-#endif // G__STRING_DLL
+#pragma endif // G__STRING_DLL
 
 int G__ateval(const std::string& x) {
   std::cout << "(string 0x" << &x << ")\"" << x << "\"" << std::endl;

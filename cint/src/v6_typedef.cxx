@@ -1391,11 +1391,27 @@ int len;
     typename[len]='\0';
     fsetpos(G__ifile.fp,&pos);
     G__ifile.line_number=line;
+#ifndef G__PHILIPPE24
+    /* To know how much to rewind we need to know if there is a fakespace */
+    fseek(G__ifile.fp,-1,SEEK_CUR);
+    cin = G__fgetc();
+    if (cin=='*') {
+      /* we have a fake space */
+      fseek(G__ifile.fp,refrewind+1,SEEK_CUR);
+    } else {
+      fseek(G__ifile.fp,refrewind,SEEK_CUR);
+    }
+#else
     fseek(G__ifile.fp,refrewind,SEEK_CUR);
+#endif
     if(G__dispsource) G__disp_mask=1;
 #ifndef G__OLDIMPLEMENTATION1262
     cin2 = G__fgetc();
-    if(!isalnum(cin2)) {
+    if(!isalnum(cin2)
+#ifndef G__OLDIMPLEMENTATION1358
+       && '>'!=cin2
+#endif
+       ) {
       fseek(G__ifile.fp,-1,SEEK_CUR);
       if(G__dispsource) G__disp_mask=1;
     }

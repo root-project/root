@@ -45,8 +45,19 @@ char *new_name;
 #ifndef G__PHILIPPE12
   cin=G__fgetvarname(new_name,"&,;=():}");
   if (cin=='&') {
+#ifndef G__OLDIMPLEMENTATION1353
+    if(0==strcmp(new_name,"operator")) {
+      new_name[8] = cin;
+      cin=G__fgetvarname(new_name+9,",;=():}");
+    }
+    else {
+      strcat(new_name,"&");
+      cin = ' ';
+    }
+#else
     strcat(new_name,"&");
     cin = ' ';
+#endif
   }
 #else
   cin=G__fgetvarname(new_name,",;=():}");
@@ -244,6 +255,13 @@ char *new_name;
 	G__reftype=G__PARAREFERENCE;
 	G__constvar |= G__PCONSTVAR;
       }
+#ifndef G__PHILIPPE22
+      else if(strcmp(new_name,"*const&")==0) {
+	cin=G__fgetvarname(new_name+1,",;=():");
+	G__constvar |= G__PCONSTVAR;
+	G__reftype=G__PARAREFERENCE;
+      }
+#endif
 #ifndef G__OLDIMPLEMENTATION1216
       else if(strcmp(new_name,"volatile")==0) {
 	cin=G__fgetvarname(new_name,",;=():");
@@ -1433,6 +1451,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1322
             G__globalvarpointer = G__PVOID;
 #endif
+#ifndef G__PHILIPPE23
+	    G__def_struct_member = store_def_struct_member;
+#endif
             return;
           }
 #endif /* G__PHILIPPE9 */
@@ -2325,6 +2346,9 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 #ifndef G__OLDIMPLEMENTATION1322
 		G__globalvarpointer = G__PVOID;
+#endif
+#ifndef G__PHILIPPE21
+		G__prerun = store_prerun;
 #endif
 		return;
 	      }

@@ -12,8 +12,8 @@ std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i)
 	{return(std::WS(istr));}
 
 std::istream& operator>>(std::istream& istr,std::G__CINT_HEX& i) {
-  ostr.unsetf(ios::dec);
-  ostr.unsetf(ios::oct);
+  istr.unsetf(ios::dec);
+  istr.unsetf(ios::oct);
   istr.setf(ios::hex);
   return(istr);
 }
@@ -24,8 +24,8 @@ std::ostream& operator<<(std::ostream& ostr,std::G__CINT_DEC& i) {
   return(ostr);
 }
 std::istream& operator>>(std::istream& istr,std::G__CINT_DEC& i) {
-  ostr.unsetf(ios::hex);
-  ostr.unsetf(ios::oct);
+  istr.unsetf(ios::hex);
+  istr.unsetf(ios::oct);
   istr.setf(ios::dec);
   return(istr);
 }
@@ -36,8 +36,8 @@ std::ostream& operator<<(std::ostream& ostr,std::G__CINT_OCT& i) {
   return(ostr);
 }
 std::istream& operator>>(std::istream& istr,std::G__CINT_OCT& i) {
-  ostr.unsetf(ios::hex);
-  ostr.unsetf(ios::dec);
+  istr.unsetf(ios::hex);
+  istr.unsetf(ios::dec);
   istr.setf(ios::oct);
   return(istr);
 }
