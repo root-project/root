@@ -12,10 +12,10 @@ Globus Authentication has been tested for the moment only on Linux.
 
    The interface has been developed using GTK version 2.2.3 and tested on
    machines with version 2.0, 2.0.21b and 2.4.3; it should work with versions
-   2.x ; however, vanilla versions > 2.1.1 contain a bug which does not 
+   2.x ; however, vanilla versions 2.2.3 - 2.4.3 contain a bug which does not 
    allow to overload at the same time the defaults for the user certificate
-   and key files. A patch is provided which however requires access to the 
-   GTK source.
+   and key files. A patch has been provided by the Globus team (see Globus
+   bugzilla #892) which is shipped with ROOT.
 
    If your system does not have GTK installed, you do not need to install
    all the GTK bundles but only the GSI one, i.e.
@@ -49,18 +49,16 @@ Globus Authentication has been tested for the moment only on Linux.
        --with-globus-dir=<GTK_path>
 
    The 'configure' script checks if the used GTK needs the patch mentioned 
-   above. In such a case the path <GTK_source> containing the source of the
-   installed GTK should be given via
-
-       --with-globus-patch-dir=<GTK_source>
-
-   While running configure you should get the following printed
+   above. While running configure you should get the following printed
 
  ...
+Checking for globusdir ... no
+Checking for GLOBUS_LOCATION ... <Your_GLOBUS_LOCATION>
 Checking for openssl/x509.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for openssl/pem.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for globus_gss_assist.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for globus_gsi_credential.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
+Checking for gsi version ... yes
 Checking for libglobus_gss_assist_<flavour> ... <Your_GLOBUS_LOCATION>/lib
 Checking for libglobus_gssapi_gsi_<flavour> ... <Your_GLOBUS_LOCATION>/lib
 Checking for libssl_<flavour> ... <Your_GLOBUS_LOCATION>/lib
@@ -70,8 +68,6 @@ Checking for globus-user-env.sh ... <Your_GLOBUS_LOCATION>/etc
 Checking for grid-proxy-init ... <Your_GLOBUS_LOCATION>/bin
 Checking pkg_data_<flavour>_rtl.gpt ... <Your_GLOBUS_LOCATION>/etc/globus_packages/globus_gsi_credential
 Checking need for globus patch ... yes
-Checking for globus_i_gsi_credential.h ... <Your_GTK_SOURCE>/globus_gsi_credential-0.9/library
-Checking for version.h ... <Your_GTK_SOURCE>/globus_gsi_credential-0.9
 Checking for globus_gsi_system_config.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for globus_gsi_cert_utils.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Applying experimental patch to globus_gsi_credential.c
@@ -79,11 +75,7 @@ Applying experimental patch to globus_gsi_credential.c
 
    where <flavour> is either gcc32 or gcc32dbg, and <Your_GLOBUS_LOCATION>
    is the env $GLOBUS_LOCATION. 
-   The last 5 lines appear only if the patch is needed and activated.
-   Here <Your_GTK_SOURCE> is the sirectory containing the GTK source tree.
-   In this example the version of globus_gsi_credential to be patched was
-   0.9; the other version to be ptached are 0.5, 0.7 and 0.8; versions 0.1
-   and 0.2 do not need the patch. 
+   The last 3 lines appear only if the patch is needed and activated.
 
 3) Before running, after compilation/installation
 
@@ -331,5 +323,5 @@ May 27 12:49:46 pcepsft43 rootd[24031]: RootdLoop: kind:2004 -- buf:'/test.root 
    .6) mailto: gerardo.ganis@cern.ch.
 
 --------------------------------------------------------------------------------------
-Last update: October 20, 2003
+Last update: November 14, 2003
 
