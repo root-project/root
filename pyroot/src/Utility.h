@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.8 2004/10/30 06:26:43 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.9 2004/11/02 10:13:06 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -45,7 +45,7 @@ namespace PyROOT {
          kFloatPtr    = kPtrMask | kFloat,
          kLongPtr     = kPtrMask | kLong,
          kIntPtr      = kPtrMask | kInt,
-         kVoidPtr     = kPtrMask | kVoid,
+         kVoidPtr     = kPtrMask | kVoid
       };
 
       EDataType effectiveType( const std::string& typeName );
