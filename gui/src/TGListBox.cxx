@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.26 2004/10/22 07:31:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.27 2004/10/22 15:21:19 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -113,33 +113,38 @@ TGTextLBEntry::~TGTextLBEntry()
 }
 
 //______________________________________________________________________________
-void TGTextLBEntry::DoRedraw()
+void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Redraw text listbox entry.
+   // draw on window/pixmap
 
-   int x, y, max_ascent, max_descent;
+   int max_ascent, max_descent;
 
-   //if (fTextChanged) {
-   //   TGFrame::DoRedraw();
-   //   fTextChanged = kFALSE;
-   //}
-
-   x = 3;
-   y = (fHeight - fTHeight) >> 1;
+   x += 3;
+   y += (fHeight - fTHeight) >> 1;
+   GCValues_t gval;
+   GContext_t gc = gVirtualX->CreateGC(id, &gval);
 
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    if (fActive) {
-      SetBackgroundColor(fgDefaultSelectedBackground);
-      gVirtualX->ClearWindow(fId);
+      gVirtualX->SetForeground(gc, fgDefaultSelectedBackground);
+      gVirtualX->FillRectangle(id, gc, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
-      fText->Draw(fId, fNormGC, x, y + max_ascent);
+      fText->Draw(id, fNormGC, x, y + max_ascent);
    } else {
-      SetBackgroundColor(fBkcolor);
-      gVirtualX->ClearWindow(fId);
+      gVirtualX->SetForeground(gc, fBkcolor);
+      gVirtualX->FillRectangle(id, gc, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
-      fText->Draw(fId, fNormGC, x, y + max_ascent);
+      fText->Draw(id, fNormGC, x, y + max_ascent);
    }
+}
+
+//______________________________________________________________________________
+void TGTextLBEntry::DoRedraw()
+{
+   // Redraw text listbox entry.
+
+   DrawCopy(fId, 0, 0);
 }
 
 //______________________________________________________________________________
@@ -274,11 +279,11 @@ void TGLineLBEntry::SetLineWidth(Int_t width)
 }
 
 //______________________________________________________________________________
-void TGLineLBEntry::DoRedraw()
+void TGLineLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Redraw line style listbox entry.
+   // draw copy on window/pixmap
 
-   TGTextLBEntry::DoRedraw();
+   TGTextLBEntry::DrawCopy(id, x, y);
 
    if (fActive) {
       gVirtualX->SetForeground(fLineGC->GetGC(),
@@ -287,8 +292,16 @@ void TGLineLBEntry::DoRedraw()
       gVirtualX->SetForeground(fLineGC->GetGC(),
                                fClient->GetResourcePool()->GetBlackColor());
    }
-   gVirtualX->DrawLine(fId, fLineGC->GetGC(), fTWidth + 5, fHeight/2,
-                       fWidth - 5, fHeight/2);
+   gVirtualX->DrawLine(id, fLineGC->GetGC(), x + fTWidth + 5, y + fHeight/2,
+                       x + fWidth - 5, y + fHeight/2);
+}
+
+//______________________________________________________________________________
+void TGLineLBEntry::DoRedraw()
+{
+   // Redraw line style listbox entry.
+
+   DrawCopy(fId, 0, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -303,13 +316,14 @@ void TGLineLBEntry::DoRedraw()
 //______________________________________________________________________________
 TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
                              UInt_t options, ULong_t back) :
-   TGCompositeFrame(p, w, h, options, back)
+   TGContainer(p, w, h, options, back)
 {
    // Create a listbox container.
 
    fLastActive = 0;
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
+   fMapSubwindows = kFALSE;
 
    // SetLayoutManager(new TGColumnLayout(this, 0));
 
@@ -479,8 +493,10 @@ TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
       f = (TGLBEntry *) el->fFrame;
       if (f->EntryId() == id) {
          f->Activate(sel);
-         if (fMultiSelect == kFALSE && sel == kTRUE)
+         if (fMultiSelect == kFALSE && sel == kTRUE) {
             fLastActive = f;
+            fLastActiveEl = el;
+         }
          return f;
       }
    }
@@ -529,8 +545,9 @@ void TGLBContainer::GetSelectedEntries(TList *selected)
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
       f = (TGLBEntry *) el->fFrame;
-      if (f->IsActive())
+      if (f->IsActive()) {
          selected->Add(f);
+      }
    }
 }
 
@@ -549,6 +566,7 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
          ((TGLBEntry *)(el->fFrame))->Activate(kFALSE);
    }
    fLastActive = 0;
+   fLastActiveEl = 0;
 }
 
 //______________________________________________________________________________
@@ -556,8 +574,13 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
 {
    // Handle mouse button event in the listbox container.
 
+   int xf0, yf0, xff, yff;
+
    TGLBEntry *f;
    TGFrameElement *el;
+   TGPosition pos = GetPagePosition();
+   Int_t x = pos.fX + event->fX;
+   Int_t y = pos.fY + event->fY;
 
    if (event->fCode == kButton4) {
       // scroll 2 lines up (a button down is always followed by a button up)
@@ -578,17 +601,24 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
          TIter next(fList);
          while ((el = (TGFrameElement *) next())) {
             f = (TGLBEntry *) el->fFrame;
-            if (f->GetId() == (Window_t)event->fUser[0]) {    // fUser[0] == child window
+            xf0 = f->GetX();
+            yf0 = f->GetY();
+            xff = xf0 + f->GetWidth();
+            yff = yf0 + f->GetHeight();
+            if (((x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)))  {
                fLastActive = f;
+               fLastActiveEl = el;
                f->Toggle();
+               fClient->NeedRedraw(this);
                fChangeStatus = f->IsActive() ? 1 : 0;
                SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                            f->EntryId(), 0);
                break;
             }
          }
-      } else
+      } else {
          fChangeStatus = -1;
+      }
    } else {
       if (event->fType == kButtonPress) {
          if (fLastActive) {
@@ -598,9 +628,16 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
          TIter next(fList);
          while ((el = (TGFrameElement *) next())) {
             f = (TGLBEntry *) el->fFrame;
-            if (f->GetId() == (Window_t)event->fUser[0]) {    // fUser[0] == child window
+            xf0 = f->GetX();
+            yf0 = f->GetY();
+            xff = xf0 + f->GetWidth();
+            yff = yf0 + f->GetHeight();
+
+            if (((x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)))  {
                f->Activate(kTRUE);
                fLastActive = f;
+               fLastActiveEl = el;
+               fClient->NeedRedraw(this);
             } else {
                f->Activate(kFALSE);
             }
@@ -621,8 +658,13 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in listbox container.
 
+   int xf0, yf0, xff, yff;
+
    TGLBEntry *f;
    TGFrameElement *el;
+   TGPosition pos = GetPagePosition();
+   Int_t x = pos.fX + event->fX;
+   Int_t y = pos.fY + event->fY;
 
    if (fMultiSelect) {
 
@@ -630,7 +672,12 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          TIter next(fList);
          while ((el = (TGFrameElement *) next())) {
             f = (TGLBEntry *) el->fFrame;
-            if (f->GetId() == (Window_t)event->fUser[0]) {   // fUser[0] = child window
+            xf0 = f->GetX();
+            yf0 = f->GetY();
+            xff = xf0 + f->GetWidth();
+            yff = yf0 + f->GetHeight();
+
+            if (((x > xf0 && x < xff) && (y > yf0 &&  y < yff))) {
                if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
                   f->Toggle();
                   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
@@ -644,7 +691,12 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
       TIter next(fList);
       while ((el = (TGFrameElement *) next())) {
          f = (TGLBEntry *) el->fFrame;
-         if (f->GetId() == (Window_t)event->fUser[0]) {   // fUser[0] = child window
+         xf0 = f->GetX();
+         yf0 = f->GetY();
+         xff = xf0 + f->GetWidth();
+         yff = yf0 + f->GetHeight();
+
+         if (((x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)))  {
             f->Activate(kTRUE);
             fLastActive = f;
          } else {
@@ -730,6 +782,7 @@ void TGListBox::InitListBox()
    fLbc->Associate(this);
    fLbc->SetListBox(this);
    SetContainer(fLbc);
+   fLbc->fViewPort = fVport;
 
    AddFrame(fVport, 0);
    AddFrame(fVScrollbar, 0);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.18 2004/07/07 15:02:25 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.19 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -119,6 +119,8 @@ public:
    virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth, fTHeight+1); }
    const TGString *GetText() const { return fText; }
    void SetText(TGString *new_text);
+
+   virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
    virtual void Update(TGLBEntry *e)
        { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
    virtual void SavePrimitive(ofstream &out, Option_t *);
@@ -161,6 +163,7 @@ public:
    virtual void  SetLineStyle(Style_t style);
    TGGC         *GetLineGC() const { return fLineGC; }
    virtual void  Update(TGLBEntry *e);
+   virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
 
    ClassDef(TGLineLBEntry, 0)  // Line width listbox entry
 };
@@ -174,12 +177,13 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLBContainer : public TGCompositeFrame {
+class TGLBContainer : public TGContainer {
+
+friend class TGListBox;
 
 protected:
    TGLBEntry      *fLastActive;    // last active listbox entry in single selection listbox
    TGListBox      *fListBox;       // list box which contains this container
-   const TGWindow *fMsgWindow;     // window handling container messages
    Bool_t          fMultiSelect;   // true if multi selection is switched on
    Int_t           fChangeStatus;  // defines the changes (select or unselect) while the mouse
                                    // moves over a multi selectable list box
