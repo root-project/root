@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.7 2003/05/05 16:38:48 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.8 2003/05/15 14:26:01 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -357,7 +357,7 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
                fobs = hFitter->GetSumLog(icu);
             } else {
                fsub = -fu +cu*TMath::Log(fu);
-               fobs = TMath::Gamma(cu+1);
+               fobs = TMath::LnGamma(cu+1);
             }
             fsub -= fobs;
             f -= fsub;
