@@ -104,7 +104,11 @@ void AddRecursive(TDirectory *root,TDirectory* node) {
       root->cd();
       dact=root->mkdir(obj->GetName(),obj->GetTitle());
       dact->cd();
+      TObject *objsave = obj;
+      TKey    *keysave = key;      
       AddRecursive(dact,(TDirectory*)obj);
+      obj = objsave;
+      key = keysave;
     } else { //another object
       printf("anotherobjname=%s, title=%s\n",obj->GetName(),obj->GetTitle());
     }
