@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.209 2004/11/15 08:00:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.210 2004/11/15 21:42:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -6022,7 +6022,7 @@ void TH1C::SetBinsLength(Int_t n)
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
 
-   if (n < 0) n = fXaxis.GetNbins();
+   if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
    TArrayC::Set(n);
 }
@@ -6229,7 +6229,7 @@ void TH1S::SetBinsLength(Int_t n)
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
 
-   if (n < 0) n = fXaxis.GetNbins();
+   if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
    TArrayS::Set(n);
 }
@@ -6436,7 +6436,7 @@ void TH1I::SetBinsLength(Int_t n)
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
 
-   if (n < 0) n = fXaxis.GetNbins();
+   if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
    TArrayI::Set(n);
 }
@@ -6637,7 +6637,7 @@ void TH1F::SetBinsLength(Int_t n)
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
 
-   if (n < 0) n = fXaxis.GetNbins();
+   if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
    TArrayF::Set(n);
 }
@@ -6839,7 +6839,7 @@ void TH1D::SetBinsLength(Int_t n)
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
 
-   if (n < 0) n = fXaxis.GetNbins();
+   if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
    TArrayD::Set(n);
 }
