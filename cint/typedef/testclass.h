@@ -9,7 +9,7 @@ class LogicalFile;
 
 class testclass {
 public:  // functions
-  testclass(const dset::LogicalFile& lfile);
+  testclass(const dset::LogicalFile& lfile){};
 };
 
 #endif
