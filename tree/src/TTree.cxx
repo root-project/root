@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.69 2001/05/10 07:48:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.70 2001/05/10 16:05:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -295,7 +295,7 @@
 #include "TFriendElement.h"
 #include "TVirtualFitter.h"
 
-Int_t TTree::fgBranchStyle = 0;  //old TBranch style
+Int_t TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
 
 TTree *gTree;
 const Int_t kMaxLen = 512;
@@ -333,7 +333,7 @@ TTree::TTree(): TNamed()
 }
 
 //______________________________________________________________________________
-TTree::TTree(const char *name,const char *title, Int_t maxvirtualsize)
+TTree::TTree(const char *name,const char *title, Int_t splitlevel)
     :TNamed(name,title)
 {
 //*-*-*-*-*-*-*-*-*-*Normal Tree constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -341,10 +341,14 @@ TTree::TTree(const char *name,const char *title, Int_t maxvirtualsize)
 //
 //   The Tree is created in the current directory
 //   Use the various functions Branch below to add branches to this Tree.
-
+//
+// If the first character of title is a "/", the function assumes a folder name.
+// In this case, it creates automatically branches following the folder hierarchy.
+// splitlevel may be used in this case to control the split level.
+         
    fScanField      = 25;
    fMaxEntryLoop   = 1000000000;
-   fMaxVirtualSize = maxvirtualsize;
+   fMaxVirtualSize = 0;
    fDirectory      = gDirectory;
    fEntries        = 0;
    fTotBytes       = 0;
@@ -382,7 +386,7 @@ TTree::TTree(const char *name,const char *title, Int_t maxvirtualsize)
    gTree = this;
    if (strlen(title) > 2) {
       if (title[0] == '/') {
-         Branch(title+1);
+         Branch(title+1,32000,splitlevel);
       }
    }
 }
@@ -543,18 +547,9 @@ void TTree::AutoSave()
 }
 
 //______________________________________________________________________________
-Int_t TTree::Branch(TList *list, Int_t bufsize)
+Int_t TTree::Branch(TList *list, Int_t bufsize, Int_t splitlevel)
 {
 //   This new function creates one branch for each element in the list.
-//   Two cases are supported:
-//      list[i] is a TObject*: a TBranchObject is created with a branch name
-//                             being the name of the object.
-//      list[i] is a TClonesArray*: A TBranchClones is created.
-//      if list[i]->TestBit(TClonesArray::kNoSplit) is 1, the TClonesArray
-//      is not split.
-//      if list[i]->TestBit(TClonesArray::kForgetBits) is 1 and the TClonesArray
-//      is split, then no branches are created for the fBits and fUniqueID
-//      of the TObject part of the class referenced by the TClonesArray.
 //   The function returns the total number of branches created.
 
    if (list == 0) return 0;
@@ -562,14 +557,13 @@ Int_t TTree::Branch(TList *list, Int_t bufsize)
    Int_t nbranches = GetListOfBranches()->GetEntries();
    TObjLink *lnk = list->FirstLink();
 
-   Int_t splitlevel = 1;
    while (lnk) {
       obj = lnk->GetObject();
       if (obj->InheritsFrom(TClonesArray::Class())) {
          TClonesArray *clones = (TClonesArray*)obj;
-         splitlevel = 1;
-         if (clones->TestBit(TClonesArray::kForgetBits)) splitlevel = 2;
-         if (clones->TestBit(TClonesArray::kNoSplit))    splitlevel = 0;
+         //splitlevel = 1;
+         //if (clones->TestBit(TClonesArray::kForgetBits)) splitlevel = 2;
+         //if (clones->TestBit(TClonesArray::kNoSplit))    splitlevel = 0;
          Branch(clones->GetName(),lnk->GetObjectRef(),bufsize,splitlevel);
       } else {
          splitlevel = 0;
@@ -583,7 +577,7 @@ Int_t TTree::Branch(TList *list, Int_t bufsize)
 //______________________________________________________________________________
 Int_t TTree::Branch(const char *foldername, Int_t bufsize, Int_t splitlevel)
 {
-//   This new function creates one branch for each element in the folder.
+//   This function creates one branch for each element in the folder.
 //   The function returns the total number of branches created.
 
    TObject *ob = gROOT->FindObjectAny(foldername);
@@ -642,8 +636,10 @@ TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int
 //______________________________________________________________________________
 TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int_t splitlevel)
 {
-//*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchClones*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
+// Special constructor for TClonesArray.
+// Note that this function is only provided for backward compatibility.
+// The Branch or Bronch methods can automatically detect the case of TClonesArray.
+//
 //
 //    name:    global name of this BranchClones
 //    bufsize: buffersize in bytes of each individual data member buffer
@@ -696,7 +692,16 @@ TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int
 TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, Int_t bufsize, Int_t splitlevel)
 {
   // create a new branch with the object of class classname at address addobj.
-
+  //
+  // WARNING:
+  // Starting with Root version 3.01, the Branch function uses the new style
+  // branches (TBranchElement). To get the old behaviour, you can:
+  //   - call BranchOld or
+  //   - call TTree::SetBranchStyle(0)
+  // 
+  // Note that with the new style, classname does not need to derive from TObject.
+  // It must derived from TObject if teh branch style has been set to 0 (old)
+      
    if (fgBranchStyle == 1) {
       return Bronch(name,classname,addobj,bufsize,splitlevel);
    } else {
@@ -930,26 +935,19 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
 //
 //    WARNING about this new function
 //    ===============================
-//    This function is designed to replace the function TTree::Branch above
-//    in a future version of Root. This function is far more powerful than
-//    the Branch function. It supports the full C++, including STL and
-//    has the same behaviour in split or non-split mode.
+//    This function is designed to replace the function TTree::Branch above.
+//    This function is far more powerful than the Branch function.
+//    It supports the full C++, including STL and has the same behaviour
+//    in split or non-split mode. classname does not have to derive from TObject.
 //    The function is based on the new TStreamerInfo.
-//    The Root team encourages users to try this new function to write
-//    and read their existing classes. However, Trees written with this function
-//    cannot be analyzed yet with TTree::Draw, Scan or the Browsers.
-//    --------------------------------------------------------------------
 //
 //    Build a TBranchElement for an object of class classname.
 //    addobj is the address of a pointer to an object of class classname.
-//    IMPORTANT: classname doest not have to derive from TObject.
 //    The class dictionary must be available (ClassDef in class header).
 //
 //    This option requires access to the library where the corresponding class
 //    is defined. Accessing one single data member in the object implies
 //    reading the full object.
-//    See the next Branch constructor for a more efficient storage
-//    in case the entry consists of arrays of identical objects.
 //
 //    By default the branch buffers are stored in the same file as the Tree.
 //    use TBranch::SetFile to specify a different file

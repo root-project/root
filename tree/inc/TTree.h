@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.28 2001/04/28 07:47:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.29 2001/05/07 12:33:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -128,19 +128,19 @@ public:
     };
 
     TTree();
-    TTree(const char *name, const char *title, Int_t maxvirtualsize=0);
+    TTree(const char *name, const char *title, Int_t splitlevel=99);
     virtual ~TTree();
 
     virtual TFriendElement *AddFriend(const char *treename, const char *filename="");
     virtual void      AddTotBytes(Int_t tot) {fTotBytes += tot;}
     virtual void      AddZipBytes(Int_t zip) {fZipBytes += zip;}
     virtual void      AutoSave();
-    virtual Int_t     Branch(TList *list, Int_t bufsize=32000);
+    virtual Int_t     Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual Int_t     Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch  *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize=32000);
     virtual TBranch  *Branch(const char *name, void *clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
-    virtual TBranch  *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
-    virtual TBranch  *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
+    virtual TBranch  *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
+    virtual TBranch  *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch  *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual void      Browse(TBrowser *b);
     virtual void      BuildIndex(const char *majorname, const char *minorname);
