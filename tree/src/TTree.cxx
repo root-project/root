@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.13 2000/07/17 10:26:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.14 2000/07/18 16:35:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1412,18 +1412,18 @@ void TTree::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
 }
 
 //______________________________________________________________________________
-Int_t TTree::MakeAnal(const char *classname)
+Int_t TTree::MakeSelector(const char *selector)
 {
 //====>
-//*-*-*-*-*-*-*Generate skeleton analysis class for this Tree*-*-*-*-*-*-*
+//*-*-*-*-*-*-*Generate skeleton selector class for this Tree*-*-*-*-*-*-*
 //*-*          ==============================================
 //
-//   The following files are produced: anal.h and anal.C
-//   if classname is NULL, classname will be nameoftree.
+//   The following files are produced: selector.h and selector.C
+//   if selector is NULL, selector will be nameoftree.
 //
-//   The generated code in anal.h includes the following:
+//   The generated code in selector.h includes the following:
 //      - Identification of the original Tree and Input file name
-//      - Definition of analysis class anal(data and functions)
+//      - Definition of selector class (data and functions)
 //      - the following class functions:
 //         - constructor and destructor
 //         - void    Begin(TTree *tree)
@@ -1433,20 +1433,20 @@ Int_t TTree::MakeAnal(const char *classname)
 //         - void    ProcessFill(Int-t entry)
 //         - void    Terminate
 //
-//   The class anal derives from TSelector.
-//   The generated code in anal.C includes empty functions defined above:
+//   The class selector derives from TSelector.
+//   The generated code in selector.C includes empty functions defined above:
 //
 //   To use this function:
 //      - connect your Tree file (eg: TFile f("myfile.root");)
-//      - T->MakeAnal("anal");
+//      - T->MakeSelector("myselect");
 //    where T is the name of the Tree in file myfile.root
-//    and anal.h, anal.C the name of the files created by this function.
+//    and myselect.h, myselect.C the name of the files created by this function.
 //   In a Root session, you can do:
-//      Root > T->Process("anal.C")
+//      Root > T->Process("select.C")
 //
 //====>
 
-   return MakeClass(classname,"anal");
+   return MakeClass(selector,"selector");
 }
 
 //______________________________________________________________________________

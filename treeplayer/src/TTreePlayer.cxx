@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.14 2000/07/18 07:11:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.15 2000/07/18 16:35:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1355,8 +1355,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 //   The following files are produced: classname.h and classname.C
 //   if classname is NULL, classname will be nameoftree.
 //
-//   When the option "anal" is specified, the function generates the
-//   analysis class described in TTree::makeAnal.
+//   When the option "selector" is specified, the function generates the
+//   selector class described in TTree::MakeSelector.
 //
 //   The generated code in classname.h includes the following:
 //      - Identification of the original Tree and Input file name
@@ -1431,7 +1431,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"\n");
    fprintf(fp,"#include <TChain.h>\n");
    fprintf(fp,"#include <TFile.h>\n");
-   if (opt.Contains("anal")) fprintf(fp,"#include <TSelector.h>\n");
+   if (opt.Contains("selector")) fprintf(fp,"#include <TSelector.h>\n");
       
 // First loop on all leaves to generate dimension declarations
    Int_t len, lenb,l;
@@ -1452,7 +1452,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
 // second loop on all leaves to generate type declarations
    fprintf(fp,"\n");
-   if (opt.Contains("anal")) {
+   if (opt.Contains("selector")) {
       fprintf(fp,"class %s : public TSelector {\n",classname);
       fprintf(fp,"   public :\n");
       fprintf(fp,"   TTree          *fChain;   //pointer to the analyzed TTree or TChain\n");
@@ -1565,7 +1565,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 
 // generate class member functions prototypes
-   if (opt.Contains("anal")) {
+   if (opt.Contains("selector")) {
       fprintf(fp,"\n");
       fprintf(fp,"   %s(TTree *tree=0) {;}\n",classname) ;
       fprintf(fp,"   ~%s() {;}\n",classname);
@@ -1597,7 +1597,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 // generate code for class constructor
    fprintf(fp,"#ifdef %s_cxx\n",classname);
-   if (!opt.Contains("anal")) {
+   if (!opt.Contains("selector")) {
       fprintf(fp,"%s::%s(TTree *tree)\n",classname,classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// if parameter tree is not specified (or zero), connect the file\n");
@@ -1618,7 +1618,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 
 // generate code for class destructor()
-   if (!opt.Contains("anal")) {
+   if (!opt.Contains("selector")) {
       fprintf(fp,"%s::~%s()\n",classname,classname);
       fprintf(fp,"{\n");
       fprintf(fp,"   if (!fChain) return;\n");
@@ -1627,7 +1627,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"\n");
    }
 // generate code for class member function GetEntry()
-   if (!opt.Contains("anal")) {
+   if (!opt.Contains("selector")) {
       fprintf(fp,"Int_t %s::GetEntry(Int_t entry)\n",classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// Read contents of entry.\n");
@@ -1637,7 +1637,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"}\n");
    }
 // generate code for class member function LoadTree()
-   if (!opt.Contains("anal")) {
+   if (!opt.Contains("selector")) {
       fprintf(fp,"Int_t %s::LoadTree(Int_t entry)\n",classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// Set the environment to read one entry\n");
@@ -1661,7 +1661,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"//   Set branch addresses\n");
    fprintf(fp,"   if (tree == 0) return;\n");
    fprintf(fp,"   fChain    = tree;\n");
-   if (!opt.Contains("anal")) fprintf(fp,"   fCurrent = -1;\n");
+   if (!opt.Contains("selector")) fprintf(fp,"   fCurrent = -1;\n");
    fprintf(fp,"\n");
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
@@ -1740,7 +1740,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"\n");
 
 // generate code for class member function Show()
-   if (!opt.Contains("anal")) {
+   if (!opt.Contains("selector")) {
       fprintf(fp,"void %s::Show(Int_t entry)\n",classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// Print contents of entry.\n");
@@ -1751,7 +1751,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"}\n");
    }
 // generate code for class member function Cut()
-   if (!opt.Contains("anal")) {
+   if (!opt.Contains("selector")) {
       fprintf(fp,"Int_t %s::Cut(Int_t entry)\n",classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// This function may be called from Loop.\n");
@@ -1765,7 +1765,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"\n");
 
 //======================Generate classname.C=====================
-   if (!opt.Contains("anal")) {
+   if (!opt.Contains("selector")) {
       // generate code for class member function Loop()
       fprintf(fpc,"#define %s_cxx\n",classname);
       fprintf(fpc,"#include \"%s\"\n",thead);
@@ -1801,13 +1801,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"   }\n");
       fprintf(fpc,"}\n");
    }
-   if (opt.Contains("anal")) {
+   if (opt.Contains("selector")) {
       // generate usage comments and list of includes
       fprintf(fpc,"#define %s_cxx\n",classname);
       fprintf(fpc,"// The class definition in %s.h has been generated automatically\n",classname);
-      fprintf(fpc,"// by the Root utility TTree::MakeAnal.\n");
+      fprintf(fpc,"// by the Root utility TTree::MakeSelector.\n");
       fprintf(fpc,"//\n");
-      fprintf(fpc,"// The h1anal class is derived from the Root class TSelector.\n");
+      fprintf(fpc,"// This class is derived from the Root class TSelector.\n");
       fprintf(fpc,"// The following members functions are called by the TTree::Process functions.\n");
       fprintf(fpc,"//    Begin:       called everytime a loop on the tree starts.\n");
       fprintf(fpc,"//                 a convenient place to create your histograms.\n");
@@ -1902,12 +1902,12 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 //
 //   To use this function:
 //      - connect your Tree file (eg: TFile f("myfile.root");)
-//      - T->MakeCode("anal.C");
+//      - T->MakeCode("user.C");
 //    where T is the name of the Tree in file myfile.root
-//    and anal.C the name of the file created by this function.
+//    and user.C the name of the file created by this function.
 //
-//   NOTE: Since the implementation of this function, a new and better
-//         function TTreePlayer::MakeClass has been developped.
+//   NOTE: Since the implementation of this function, new and better
+//         function TTree::MakeClass and TTree::MakeSelector have been developped.
 //
 //          Author: Rene Brun
 //====>
