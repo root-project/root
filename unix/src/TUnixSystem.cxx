@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.55 2003/02/27 18:48:32 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.56 2003/04/03 13:46:51 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2190,8 +2190,8 @@ int TUnixSystem::SetSockOpt(int sock, int opt, int val)
          SysError("SetSockOpt", "ioctl(SIOCSPGRP)");
          return -1;
       }
-#else 
-      Error("GetSockOpt", "ioctl(SIOCGPGRP) not supported on cygwin/gcc");
+#else
+      Error("SetSockOpt", "ioctl(SIOCGPGRP) not supported on cygwin/gcc");
       return -1;
 #endif
       break;

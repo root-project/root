@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.88 2003/03/14 19:21:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.89 2003/04/03 13:46:49 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1929,6 +1929,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
    // Interface to system open. All arguments like in POSIX open().
+
 #ifdef R__WINGCC
    // ALWAYS use binary mode - even cygwin text should be in unix format
    // although this is posix default it has to be set explicitly
