@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.3 2000/08/09 08:41:22 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.4 2000/09/05 09:18:42 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
 
-// $Id: TDataSet.h,v 1.3 2000/08/09 08:41:22 brun Exp $
+// $Id: TDataSet.h,v 1.4 2000/09/05 09:18:42 brun Exp $
 #ifndef ROOT_TDataSet
 #define ROOT_TDataSet
 
@@ -117,6 +117,7 @@ class TDataSet : public TNamed
     virtual TDataSet  *FindDataSet(const Char_t *name,const Char_t *path="",Option_t *opt="") const;
     virtual TDataSet  *FindByPath(const Char_t *path) const;
     virtual TDataSet  *FindByName(const Char_t *name,const Char_t *path="",Option_t *opt="") const;
+            TObject   *FindObject(const char *name) const {return FindByName(name);}
     virtual TDataSet  *First() const;
             TObjArray   *GetObjArray() const { return (TObjArray *)fList; }
             TSeqCollection *GetCollection() const { return (TSeqCollection *)fList; }
