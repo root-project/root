@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.3 2002/05/18 08:43:30 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.4 2004/07/08 17:55:41 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -27,7 +27,7 @@ TInetAddress::TInetAddress()
    // Default ctor. Used in case of unknown host. Not a valid address.
 
    fHostname  = "UnknownHost";
-   fAddress   = 0;
+   AddAddress(0);
    fFamily    = -1;
    fPort      = -1;
 }
@@ -39,7 +39,7 @@ TInetAddress::TInetAddress(const char *host, UInt_t addr, Int_t family, Int_t po
    // be created via the friend classes TSystem, TServerSocket and TSocket.
    // Use the IsValid() method to check the validity of a TInetAddress.
 
-   fAddress = addr;
+   AddAddress(addr);
    if (!strcmp(host, "????"))
       fHostname = GetHostAddress();
    else
@@ -54,7 +54,6 @@ TInetAddress::TInetAddress(const TInetAddress &adr) : TObject(adr)
    // TInetAddress copy ctor.
 
    fHostname  = adr.fHostname;
-   fAddress   = adr.fAddress;
    fFamily    = adr.fFamily;
    fPort      = adr.fPort;
    fAddresses = adr.fAddresses;
@@ -69,7 +68,6 @@ TInetAddress& TInetAddress::operator=(const TInetAddress &rhs)
    if (this != &rhs) {
       TObject::operator=(rhs);
       fHostname  = rhs.fHostname;
-      fAddress   = rhs.fAddress;
       fFamily    = rhs.fFamily;
       fPort      = rhs.fPort;
       fAddresses = rhs.fAddresses;
@@ -87,10 +85,10 @@ UChar_t *TInetAddress::GetAddressBytes() const
 
    static UChar_t addr[4];
 
-   addr[0] = (UChar_t) ((fAddress >> 24) & 0xFF);
-   addr[1] = (UChar_t) ((fAddress >> 16) & 0xFF);
-   addr[2] = (UChar_t) ((fAddress >> 8) & 0xFF);
-   addr[3] = (UChar_t) (fAddress & 0xFF);
+   addr[0] = (UChar_t) ((fAddresses[0] >> 24) & 0xFF);
+   addr[1] = (UChar_t) ((fAddresses[0] >> 16) & 0xFF);
+   addr[2] = (UChar_t) ((fAddresses[0] >> 8) & 0xFF);
+   addr[3] = (UChar_t)  (fAddresses[0] & 0xFF);
 
    return addr;
 }
@@ -114,7 +112,7 @@ const char *TInetAddress::GetHostAddress() const
    // Returns the IP address string "%d.%d.%d.%d".
    // Copy string immediately, it will be reused.
 
-   return GetHostAddress(fAddress);
+   return GetHostAddress(fAddresses[0]);
 }
 
 //______________________________________________________________________________
@@ -130,7 +128,7 @@ void TInetAddress::Print(Option_t *) const
    int i = 0;
    AddressList_t::const_iterator ai;
    for (ai = fAddresses.begin(); ai != fAddresses.end(); ai++) {
-      if (!i) printf("Alternative addresses:");
+      if (!i) printf("%s:", fAddresses.size() == 1 ? "Address" : "Addresses");
       printf(" %s", GetHostAddress(*ai));
       i++;
    }
@@ -139,7 +137,7 @@ void TInetAddress::Print(Option_t *) const
    i = 0;
    AliasList_t::const_iterator ali;
    for (ali = fAliases.begin(); ali != fAliases.end(); ali++) {
-      if (!i) printf("Aliases:");
+      if (!i) printf("%s:", fAliases.size() == 1 ? "Alias" : "Aliases");
       printf(" %s", ali->Data());
       i++;
    }

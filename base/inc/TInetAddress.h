@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.6 2003/09/24 08:57:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.7 2004/07/08 17:55:41 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -58,7 +58,7 @@ private:
    UInt_t        fAddress;     // IP address in host byte order
    Int_t         fFamily;      // address family
    Int_t         fPort;        // port through which we are connected
-   AddressList_t fAddresses;   // list of alternative IP addresses in host byte order
+   AddressList_t fAddresses;   // list of all IP addresses in host byte order
    AliasList_t   fAliases;     // list of aliases
 
    TInetAddress(const char *host, UInt_t addr, Int_t family, Int_t port = -1);
@@ -71,7 +71,7 @@ public:
    TInetAddress &operator=(const TInetAddress &rhs);
    virtual ~TInetAddress() { }
 
-   UInt_t      GetAddress() const { return fAddress; }
+   UInt_t      GetAddress() const { return fAddresses[0]; }
    UChar_t    *GetAddressBytes() const;
    const char *GetHostAddress() const;
    const char *GetHostName() const { return (const char *) fHostname; }
