@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -61,8 +61,8 @@ public:
 
   virtual ~TMatrixFSym() { Clear(); Invalidate(); }
 
-  virtual const Float_t *GetElements  () const;
-  virtual       Float_t *GetElements  ();
+  virtual const Float_t *GetMatrixArray  () const;
+  virtual       Float_t *GetMatrixArray  ();
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); }
 
@@ -114,8 +114,8 @@ public:
   ClassDef(TMatrixFSym,1) // Symmetric Matrix class (single precision)
 };
 
-inline const Float_t  *TMatrixFSym::GetElements  () const { return fElements; }
-inline       Float_t  *TMatrixFSym::GetElements  ()       { return fElements; }
+inline const Float_t  *TMatrixFSym::GetMatrixArray  () const { return fElements; }
+inline       Float_t  *TMatrixFSym::GetMatrixArray  ()       { return fElements; }
 inline const Float_t  &TMatrixFSym::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;

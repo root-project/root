@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.4 2004/01/26 20:03:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.5 2004/01/26 21:15:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -211,7 +211,7 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
     if (fNrows == new_nrows && fRowLwb == lwb)
       return;
 
-    Float_t     *elements_old = GetElements();
+    Float_t     *elements_old = GetMatrixArray();
     const Int_t  nrows_old    = fNrows;
     const Int_t  rowLwb_old   = fRowLwb;
 
@@ -224,7 +224,7 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
     const Int_t nrows_copy  = rowUpb_copy-rowLwb_copy+1;
 
     const Int_t nelems_new = fNrows;
-    Float_t *elements_new = GetElements();
+    Float_t *elements_new = GetMatrixArray();
     if (nrows_copy > 0) {
       const Int_t rowOldOff = rowLwb_copy-rowLwb_old;
       const Int_t rowNewOff = rowLwb_copy-fRowLwb;
@@ -309,8 +309,8 @@ TVectorF TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) const
   TVectorF sub(row_lwb_sub,row_upb_sub);
   const Int_t nrows_sub = row_upb_sub-row_lwb_sub+1;
 
-  const Float_t *ap = this->GetElements()+(row_lwb-fRowLwb);
-        Float_t *bp = sub.GetElements();
+  const Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb);
+        Float_t *bp = sub.GetMatrixArray();
 
   for (Int_t irow = 0; irow < nrows_sub; irow++)
       *bp++ = *ap++;
@@ -337,8 +337,8 @@ void TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
     return;
   }
 
-  const Float_t *bp = source.GetElements();
-        Float_t *ap = this->GetElements()+(row_lwb-fRowLwb);
+  const Float_t *bp = source.GetMatrixArray();
+        Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb);
 
   for (Int_t irow = 0; irow < nRows_source; irow++)
     *ap++ = *bp++;
@@ -348,7 +348,7 @@ void TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
 TVectorF &TVectorF::Zero()
 {
   Assert(IsValid());
-  memset(this->GetElements(),0,fNrows*sizeof(Float_t));
+  memset(this->GetMatrixArray(),0,fNrows*sizeof(Float_t));
   return *this;
 }
 
@@ -359,7 +359,7 @@ TVectorF &TVectorF::Abs()
 
   Assert(IsValid());
 
-        Float_t *ep = this->GetElements();
+        Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep = TMath::Abs(*ep);
@@ -376,7 +376,7 @@ TVectorF &TVectorF::Sqr()
 
   Assert(IsValid());
 
-        Float_t *ep = this->GetElements();
+        Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep = (*ep) * (*ep);
@@ -393,7 +393,7 @@ TVectorF &TVectorF::Sqrt()
 
   Assert(IsValid());
 
-        Float_t *ep = this->GetElements();
+        Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     Assert(*ep >= 0);
@@ -412,7 +412,7 @@ Float_t TVectorF::Norm1() const
   Assert(IsValid());
 
   Float_t norm = 0;
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     norm += TMath::Abs(*ep++);
@@ -428,7 +428,7 @@ Float_t TVectorF::Norm2Sqr() const
   Assert(IsValid());
 
   Float_t norm = 0;
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     norm += (*ep) * (*ep);
@@ -446,7 +446,7 @@ Float_t TVectorF::NormInf() const
   Assert(IsValid());
 
   Float_t norm = 0;
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     norm = TMath::Max(norm,TMath::Abs(*ep++));
@@ -463,7 +463,7 @@ TVectorF &TVectorF::operator=(const TVectorF &source)
 
   if (this != &source && AreCompatible(*this,source)) {
     TObject::operator=(source);
-    memcpy(fElements,source.GetElements(),fNrows*sizeof(Float_t));
+    memcpy(fElements,source.GetMatrixArray(),fNrows*sizeof(Float_t));
   }
   return *this;
 }
@@ -486,7 +486,7 @@ TVectorF &TVectorF::operator=(const TMatrixFRow_const &mr)
 
   const Int_t inc   = mr.GetInc();
   const Float_t *rp = mr.GetPtr();              // Row ptr
-        Float_t *ep = this->GetElements();      // Vector ptr
+        Float_t *ep = this->GetMatrixArray();      // Vector ptr
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep++ = *rp;
@@ -515,7 +515,7 @@ TVectorF &TVectorF::operator=(const TMatrixFColumn_const &mc)
 
   const Int_t inc   = mc.GetInc();
   const Float_t *cp = mc.GetPtr();              // Column ptr
-        Float_t *ep = this->GetElements();      // Vector ptr
+        Float_t *ep = this->GetMatrixArray();      // Vector ptr
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep++ = *cp;
@@ -544,7 +544,7 @@ TVectorF &TVectorF::operator=(const TMatrixFDiag_const &md)
 
   const Int_t    inc = md.GetInc();
   const Float_t *dp  = md.GetPtr();              // Diag ptr
-        Float_t *ep  = this->GetElements();      // Vector ptr
+        Float_t *ep  = this->GetMatrixArray();      // Vector ptr
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep++ = *dp;
@@ -563,7 +563,7 @@ TVectorF &TVectorF::operator=(Float_t val)
 
   Assert(IsValid());
 
-        Float_t *ep = this->GetElements();
+        Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     *ep++ = val;
@@ -578,7 +578,7 @@ TVectorF &TVectorF::operator+=(Float_t val)
 
   Assert(IsValid());
 
-        Float_t *ep = this->GetElements();
+        Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     *ep++ += val;
@@ -593,7 +593,7 @@ TVectorF &TVectorF::operator-=(Float_t val)
 
   Assert(IsValid());
 
-        Float_t *ep = this->GetElements();
+        Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     *ep++ -= val;
@@ -608,7 +608,7 @@ TVectorF &TVectorF::operator*=(Float_t val)
 
   Assert(IsValid());
 
-        Float_t *ep = this->GetElements();
+        Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     *ep++ *= val;
@@ -627,8 +627,8 @@ TVectorF &TVectorF::operator+=(const TVectorF &source)
     return *this;
   }
 
-  const Float_t *sp = source.GetElements();
-        Float_t *tp = this->GetElements();
+  const Float_t *sp = source.GetMatrixArray();
+        Float_t *tp = this->GetMatrixArray();
   const Float_t * const tp_last = tp+fNrows;
   while (tp < tp_last)
     *tp++ += *sp++;
@@ -647,8 +647,8 @@ TVectorF &TVectorF::operator-=(const TVectorF &source)
     return *this;
   }
 
-  const Float_t *sp = source.GetElements();
-        Float_t *tp = this->GetElements();
+  const Float_t *sp = source.GetMatrixArray();
+        Float_t *tp = this->GetMatrixArray();
   const Float_t * const tp_last = tp+fNrows;
   while (tp < tp_last)
     *tp++ -= *sp++;
@@ -691,8 +691,8 @@ TVectorF &TVectorF::operator*=(const TMatrixF &a)
 
   Allocate(fNrows,fRowLwb);
 
-  const Float_t *mp = a.GetElements();     // Matrix row ptr
-        Float_t *tp = this->GetElements(); // Target vector ptr
+  const Float_t *mp = a.GetMatrixArray();     // Matrix row ptr
+        Float_t *tp = this->GetMatrixArray(); // Target vector ptr
 #ifdef CBLAS
   cblas_dgemv(CblasRowMajor,CblasNoTrans,a.GetNrows(),a.GetNcols(),1.0,mp,
               a.GetNcols(),elements_old,1,0.0,tp,1);
@@ -704,7 +704,7 @@ TVectorF &TVectorF::operator*=(const TMatrixF &a)
       sum += *sp++ * *mp++;
     *tp++ = sum;
   }
-  Assert(mp == a.GetElements()+a.GetNoElements());
+  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
   if (nrows_old <= kSizeMax)
@@ -734,7 +734,7 @@ TVectorF &TVectorF::operator*=(const TMatrixFSym &a)
   Float_t * const elements_old = new Float_t[nrows_old];
   memcpy(elements_old,fElements,nrows_old*sizeof(Float_t));
 
-  const Float_t *mp1 = a.GetElements(); // Matrix row ptr
+  const Float_t *mp1 = a.GetMatrixArray(); // Matrix row ptr
         Float_t *tp1 = fElements;       // Target vector ptr
 #ifdef CBLAS
   cblas_dsymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp1,
@@ -776,7 +776,7 @@ Bool_t TVectorF::operator==(Float_t val) const
 
   Assert(IsValid());
 
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     if (!(*ep++ == val))
@@ -792,7 +792,7 @@ Bool_t TVectorF::operator!=(Float_t val) const
 
   Assert(IsValid());
 
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     if (!(*ep++ != val))
@@ -808,7 +808,7 @@ Bool_t TVectorF::operator<(Float_t val) const
 
   Assert(IsValid());
 
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     if (!(*ep++ < val))
@@ -824,7 +824,7 @@ Bool_t TVectorF::operator<=(Float_t val) const
 
   Assert(IsValid());
 
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     if (!(*ep++ <= val))
@@ -840,7 +840,7 @@ Bool_t TVectorF::operator>(Float_t val) const
 
   Assert(IsValid());
 
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     if (!(*ep++ > val))
@@ -856,7 +856,7 @@ Bool_t TVectorF::operator>=(Float_t val) const
 
   Assert(IsValid());
 
-  const Float_t *ep = this->GetElements();
+  const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp)
     if (!(*ep++ >= val))
@@ -938,7 +938,7 @@ Bool_t operator==(const TVectorF &v1,const TVectorF &v2)
   // Check to see if two vectors are identical.
 
   if (!AreCompatible(v1,v2)) return kFALSE;
-  return (memcmp(v1.GetElements(),v2.GetElements(),v1.GetNrows()*sizeof(Float_t)) == 0);
+  return (memcmp(v1.GetMatrixArray(),v2.GetMatrixArray(),v1.GetNrows()*sizeof(Float_t)) == 0);
 }
 
 //______________________________________________________________________________
@@ -951,8 +951,8 @@ Float_t operator*(const TVectorF &v1,const TVectorF &v2)
     return 0.0;
   }
 
-  const Float_t *v1p = v1.GetElements();
-  const Float_t *v2p = v2.GetElements();
+  const Float_t *v1p = v1.GetMatrixArray();
+  const Float_t *v2p = v2.GetMatrixArray();
 
   Float_t sum = 0.0;
   const Float_t * const fv1p = v1p+v1.GetNrows();
@@ -1005,8 +1005,8 @@ TVectorF &Add(TVectorF &target,Float_t scalar,const TVectorF &source)
     return target;
   }
 
-  const Float_t *       sp  = source.GetElements();
-        Float_t *       tp  = target.GetElements();
+  const Float_t *       sp  = source.GetMatrixArray();
+        Float_t *       tp  = target.GetMatrixArray();
   const Float_t * const ftp = tp+target.GetNrows();
   while ( tp < ftp )
     *tp++ += scalar * (*sp++);
@@ -1025,8 +1025,8 @@ TVectorF &ElementMult(TVectorF &target,const TVectorF &source)
     return target;
   }
 
-  const Float_t *       sp  = source.GetElements();
-        Float_t *       tp  = target.GetElements();
+  const Float_t *       sp  = source.GetMatrixArray();
+        Float_t *       tp  = target.GetMatrixArray();
   const Float_t * const ftp = tp+target.GetNrows();
   while ( tp < ftp )
     *tp++ *= *sp++;
@@ -1045,8 +1045,8 @@ TVectorF &ElementDiv(TVectorF &target,const TVectorF &source)
     return target;
   }
 
-  const Float_t *       sp  = source.GetElements();
-        Float_t *       tp  = target.GetElements();
+  const Float_t *       sp  = source.GetMatrixArray();
+        Float_t *       tp  = target.GetMatrixArray();
   const Float_t * const ftp = tp+target.GetNrows();
   while ( tp < ftp )
     *tp++ /= *sp++;
@@ -1094,8 +1094,8 @@ void Compare(const TVectorF &v1,const TVectorF &v2)
   Float_t ndiff  = 0;       // Norm of the difference
   Int_t    imax  = 0;       // For the elements that differ most
   Float_t difmax = -1;
-  const Float_t *mp1 = v1.GetElements();    // Vector element pointers
-  const Float_t *mp2 = v2.GetElements();
+  const Float_t *mp1 = v1.GetMatrixArray();    // Vector element pointers
+  const Float_t *mp2 = v2.GetMatrixArray();
 
   for (Int_t i = 0; i < v1.GetNrows(); i++) {
     const Float_t mv1  = *mp1++;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.3 2004/01/26 12:15:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.4 2004/01/26 14:09:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -59,9 +59,9 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
 // Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
 // Fortran subroutine in EISPACK.
 
-  Double_t *pV = v.GetElements();
-  Double_t *pD = d.GetElements();
-  Double_t *pE = e.GetElements();
+  Double_t *pV = v.GetMatrixArray();
+  Double_t *pD = d.GetMatrixArray();
+  Double_t *pE = e.GetMatrixArray();
 
   const Int_t n = v.GetNrows();
 
@@ -189,9 +189,9 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
 // Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
 // Fortran subroutine in EISPACK.
 
-  Double_t *pV = v.GetElements();
-  Double_t *pD = d.GetElements();
-  Double_t *pE = e.GetElements();
+  Double_t *pV = v.GetMatrixArray();
+  Double_t *pD = d.GetMatrixArray();
+  Double_t *pE = e.GetMatrixArray();
 
   const Int_t n = v.GetNrows();
 

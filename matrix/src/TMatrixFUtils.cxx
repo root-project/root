@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatUtils.cxx,v 1.15 2002/12/10 14:00:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TMatrixFRow_const::TMatrixFRow_const(const TMatrixFBase &matrix,Int_t row)
   }
 
   fMatrix = &matrix;
-  fPtr = matrix.GetElements()+fRowInd*matrix.GetNcols();
+  fPtr = matrix.GetMatrixArray()+fRowInd*matrix.GetNcols();
   fInc = 1;
 }
 
@@ -62,7 +62,7 @@ void TMatrixFRow_const::Streamer(TBuffer &R__b)
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
     TMatrixFRow_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetElements()+fRowInd*fMatrix->GetNcols();
+    fPtr = fMatrix->GetMatrixArray()+fRowInd*fMatrix->GetNcols();
   } else {
     TMatrixFRow_const::Class()->WriteBuffer(R__b,this);
   }
@@ -158,7 +158,7 @@ void TMatrixFRow::operator=(const TVectorF &vec)
   }
 
   Float_t *rp = const_cast<Float_t *>(fPtr);
-  const Float_t *vp = vec.GetElements();
+  const Float_t *vp = vec.GetMatrixArray();
   for ( ; rp < fPtr+fMatrix->GetNcols(); rp += fInc)
     *rp = *vp++;
 }
@@ -211,7 +211,7 @@ TMatrixFColumn_const::TMatrixFColumn_const(const TMatrixFBase &matrix,Int_t col)
   }
 
   fMatrix = &matrix;
-  fPtr = matrix.GetElements()+fColInd;
+  fPtr = matrix.GetMatrixArray()+fColInd;
   fInc = matrix.GetNcols();
 }
 
@@ -224,7 +224,7 @@ void TMatrixFColumn_const::Streamer(TBuffer &R__b)
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
     TMatrixFColumn_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetElements()+fColInd;
+    fPtr = fMatrix->GetMatrixArray()+fColInd;
   } else {
     TMatrixFColumn_const::Class()->WriteBuffer(R__b,this);
   }
@@ -320,11 +320,11 @@ void TMatrixFColumn::operator=(const TVectorF &vec)
   }
 
   Float_t *cp = const_cast<Float_t *>(fPtr);
-  const Float_t *vp = vec.GetElements();
+  const Float_t *vp = vec.GetMatrixArray();
   for ( ; cp < fPtr+fMatrix->GetNoElements(); cp += fInc)
     *cp = *vp++;
 
-  Assert(vp == vec.GetElements()+vec.GetNrows());
+  Assert(vp == vec.GetMatrixArray()+vec.GetNrows());
 }
 
 //______________________________________________________________________________
@@ -368,7 +368,7 @@ TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixFBase &matrix,Int_t /*dummy*
   Assert(matrix.IsValid());
   fMatrix = &matrix;
   fNdiag  = TMath::Min(matrix.GetNrows(),matrix.GetNcols());
-  fPtr    = matrix.GetElements();
+  fPtr    = matrix.GetMatrixArray();
   fInc    = matrix.GetNcols()+1;
 }
 
@@ -381,7 +381,7 @@ void TMatrixFDiag_const::Streamer(TBuffer &R__b)
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
     TMatrixFDiag_const::Class()->ReadBuffer(R__b, this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetElements();
+    fPtr = fMatrix->GetMatrixArray();
   } else {
     TMatrixFDiag_const::Class()->WriteBuffer(R__b,this);
   }
@@ -476,8 +476,8 @@ void TMatrixFDiag::operator=(const TVectorF &vec)
   }
 
   Float_t *dp = const_cast<Float_t *>(fPtr);
-  const Float_t *vp = vec.GetElements();
-  for ( ; vp < vec.GetElements()+vec.GetNrows(); dp += fInc)
+  const Float_t *vp = vec.GetMatrixArray();
+  for ( ; vp < vec.GetMatrixArray()+vec.GetNrows(); dp += fInc)
     *dp = *vp++;
 }
 
@@ -520,7 +520,7 @@ TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixFBase &matrix,Int_t /*dummy*
 {
   Assert(matrix.IsValid());
   fMatrix = &matrix;
-  fPtr    = matrix.GetElements();
+  fPtr    = matrix.GetMatrixArray();
   fNelems = matrix.GetNoElements();
 }
 
@@ -533,7 +533,7 @@ void TMatrixFFlat_const::Streamer(TBuffer &R__b)
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
     TMatrixFFlat_const::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    fPtr = fMatrix->GetElements();
+    fPtr = fMatrix->GetMatrixArray();
   } else {
     TMatrixFFlat_const::Class()->WriteBuffer(R__b,this);
   }
@@ -629,7 +629,7 @@ void TMatrixFFlat::operator=(const TVectorF &vec)
   }
 
   Float_t *fp = const_cast<Float_t *>(fPtr);
-  const Float_t *vp = vec.GetElements();
+  const Float_t *vp = vec.GetMatrixArray();
   while (fp < fPtr+fMatrix->GetNoElements())
      *fp++ = *vp++;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.cxx,v 1.28 2003/12/11 13:39:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -37,7 +37,7 @@
 //______________________________________________________________________________
 Int_t TMatrixDCramerInv::Inv2x2(TMatrixD &m,Double_t *determ)
 {
-  Double_t *pM = m.GetElements();
+  Double_t *pM = m.GetMatrixArray();
 
   const Double_t det = pM[0] * pM[3] - pM[2] * pM[1];
 
@@ -60,7 +60,7 @@ Int_t TMatrixDCramerInv::Inv2x2(TMatrixD &m,Double_t *determ)
 //______________________________________________________________________________
 Int_t TMatrixDCramerInv::Inv3x3(TMatrixD &m,Double_t *determ)
 {
-  Double_t *pM = m.GetElements();
+  Double_t *pM = m.GetMatrixArray();
 
   const Double_t c00 = pM[4] * pM[8] - pM[5] * pM[7];
   const Double_t c01 = pM[5] * pM[6] - pM[3] * pM[8];
@@ -118,7 +118,7 @@ Int_t TMatrixDCramerInv::Inv3x3(TMatrixD &m,Double_t *determ)
 //______________________________________________________________________________
 Int_t TMatrixDCramerInv::Inv4x4(TMatrixD &m,Double_t *determ)
 {
-  Double_t *pM = m.GetElements();
+  Double_t *pM = m.GetMatrixArray();
 
   // Find all NECESSARY 2x2 dets:  (18 of them)
 
@@ -247,7 +247,7 @@ Int_t TMatrixDCramerInv::Inv4x4(TMatrixD &m,Double_t *determ)
 //______________________________________________________________________________
 Int_t TMatrixDCramerInv::Inv5x5(TMatrixD &m,Double_t *determ)
 {
-  Double_t *pM = m.GetElements();
+  Double_t *pM = m.GetMatrixArray();
 
   // Find all NECESSARY 2x2 dets:  (30 of them)
 
@@ -471,7 +471,7 @@ Int_t TMatrixDCramerInv::Inv5x5(TMatrixD &m,Double_t *determ)
 //______________________________________________________________________________
 Int_t TMatrixDCramerInv::Inv6x6(TMatrixD &m,Double_t *determ)
 {
-  Double_t *pM = m.GetElements();
+  Double_t *pM = m.GetMatrixArray();
 
   // Find all NECESSARY 2x2 dets:  (45 of them)
 

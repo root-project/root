@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -109,8 +109,8 @@ const TMatrixD TDecompLU::GetMatrix() const
 {
   TMatrixD L = fLU;
   TMatrixD U = fLU;
-  Double_t * const pU = U.GetElements();
-  Double_t * const pL = L.GetElements();
+  Double_t * const pU = U.GetMatrixArray();
+  Double_t * const pL = L.GetMatrixArray();
   const Int_t n = fLU.GetNcols();
   for (Int_t irow = 0; irow < n; irow++) {
     const Int_t off_row = irow*n;
@@ -125,7 +125,7 @@ const TMatrixD TDecompLU::GetMatrix() const
 
   // swap rows
 
-  Double_t * const pA = a.GetElements();
+  Double_t * const pA = a.GetMatrixArray();
   for (Int_t i = n-1; i >= 0; i--) {
     const Int_t j = fIndex[i];
     if (j != i) {
@@ -159,8 +159,8 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 
   const Int_t n = fLU.GetNrows();
 
-  const Double_t *pLU = fLU.GetElements();
-        Double_t *pb  = b.GetElements();
+  const Double_t *pLU = fLU.GetMatrixArray();
+        Double_t *pb  = b.GetMatrixArray();
 
   Int_t i;
 
@@ -216,7 +216,7 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
   }
 
   const Int_t     n   = fLU.GetNrows();
-  const Double_t *pLU = fLU.GetElements();
+  const Double_t *pLU = fLU.GetMatrixArray();
 
   Int_t i;
 
@@ -279,8 +279,8 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 
   const Int_t n = fLU.GetNrows();
 
-  const Double_t *pLU = fLU.GetElements();
-        Double_t *pb  = b.GetElements();
+  const Double_t *pLU = fLU.GetMatrixArray();
+        Double_t *pb  = b.GetMatrixArray();
 
   Int_t i;
 
@@ -341,7 +341,7 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
   const Int_t n   = fLU.GetNrows();
   const Int_t lwb = fLU.GetRowLwb();
 
-  const Double_t *pLU = fLU.GetElements();
+  const Double_t *pLU = fLU.GetMatrixArray();
 
   Int_t i;
 
@@ -443,7 +443,7 @@ Int_t TDecompLU::DecomposeLU(TMatrixD &lu,Int_t *index,Double_t &sign,
 // determinant, is +/- 1 for even/odd row permutations. .
 
   const Int_t     n     = lu.GetNcols();
-        Double_t *pLU   = lu.GetElements();
+        Double_t *pLU   = lu.GetMatrixArray();
 
   Double_t work[kWorkMax];
   Bool_t isAllocated = kFALSE;
@@ -551,7 +551,7 @@ Int_t TDecompLU::DecomposeLU(TMatrixD &lu,Int_t *index,Double_t &sign,
 // it is somewhat faster but less precise .
 
   const Int_t     n   = lu.GetNcols();
-        Double_t *pLU = lu.GetElements();
+        Double_t *pLU = lu.GetMatrixArray();
 
   sign    = 1.0;
   nrZeros = 0;
@@ -617,7 +617,7 @@ Int_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
 
   //Assert(lu.IsValid());
   const Int_t     n   = lu.GetNcols();
-        Double_t *pLU = lu.GetElements();
+        Double_t *pLU = lu.GetMatrixArray();
 
   //  Form inv(U).
 

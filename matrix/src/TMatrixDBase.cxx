@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -263,7 +263,7 @@ Bool_t TMatrixDBase::IsSymmetric() const
   if ((fNrows != fNcols) || (fRowLwb != fColLwb))
     return kFALSE;
 
-  const Double_t * const elem = GetElements();
+  const Double_t * const elem = GetMatrixArray();
   for (Int_t irow = 0; irow < fNrows; irow++) {
     const Int_t rowOff = irow*fNcols;
     Int_t colOff = 0;
@@ -277,7 +277,7 @@ Bool_t TMatrixDBase::IsSymmetric() const
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::GetMatrixElements(Double_t *data,Option_t *option) const 
+void TMatrixDBase::GetMatrix2Array(Double_t *data,Option_t *option) const 
 {
   // Copy matrix data to array . It is assumed that array is of size >= fNrows*fNcols
   // option indicates how the data is stored in the array:
@@ -290,7 +290,7 @@ void TMatrixDBase::GetMatrixElements(Double_t *data,Option_t *option) const
   TString opt = option;
   opt.ToUpper();
 
-  const Double_t * const elem = GetElements();
+  const Double_t * const elem = GetMatrixArray();
   if (opt.Contains("F")) {
     for (Int_t irow = 0; irow < fNrows; irow++) {
       const Int_t off1 = irow*fNcols;
@@ -305,7 +305,7 @@ void TMatrixDBase::GetMatrixElements(Double_t *data,Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::SetMatrixElements(const Double_t *data,Option_t *option) 
+void TMatrixDBase::SetMatrixArray(const Double_t *data,Option_t *option) 
 {
   // Copy array data to matrix . It is assumed that array is of size >= fNrows*fNcols
   // option indicates how the data is stored in the array:
@@ -318,7 +318,7 @@ void TMatrixDBase::SetMatrixElements(const Double_t *data,Option_t *option)
   TString opt = option;
   opt.ToUpper();
 
-  Double_t *elem = GetElements();
+  Double_t *elem = GetMatrixArray();
   if (opt.Contains("F")) {
     for (Int_t irow = 0; irow < fNrows; irow++) {
       const Int_t off1 = irow*fNcols;
@@ -360,7 +360,7 @@ void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols)
     if (fNrows == nrows && fNcols == ncols)
       return;
 
-    Double_t    *elements_old = GetElements();
+    Double_t    *elements_old = GetMatrixArray();
     const Int_t  nelems_old   = fNelems;
     const Int_t  nrows_old    = fNrows;
     const Int_t  ncols_old    = fNcols;
@@ -374,7 +374,7 @@ void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols)
     const Int_t nrows_copy = TMath::Min(fNrows,nrows_old); 
 
     const Int_t nelems_new = fNelems;
-    Double_t *elements_new = GetElements();
+    Double_t *elements_new = GetMatrixArray();
     if (ncols_old < fNcols) {
       for (Int_t i = nrows_copy-1; i >= 0; i--)
         Memcpy_m(elements_new+i*fNcols,elements_old+i*ncols_old,ncols_copy,
@@ -412,7 +412,7 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
         fRowLwb == row_lwb    && fColLwb == col_lwb)
        return;
 
-    Double_t    *elements_old = GetElements();
+    Double_t    *elements_old = GetMatrixArray();
     const Int_t  nelems_old   = fNelems;
     const Int_t  nrows_old    = fNrows;
     const Int_t  ncols_old    = fNcols;
@@ -432,7 +432,7 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
     const Int_t nrows_copy = rowUpb_copy-rowLwb_copy+1;
     const Int_t ncols_copy = colUpb_copy-colLwb_copy+1;
 
-    Double_t *elements_new = GetElements();
+    Double_t *elements_new = GetMatrixArray();
     if (nrows_copy > 0 && ncols_copy > 0) {
       const Int_t colOldOff = colLwb_copy-colLwb_old;
       const Int_t colNewOff = colLwb_copy-fColLwb;
@@ -467,7 +467,7 @@ Double_t TMatrixDBase::RowNorm() const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
         Double_t norm = 0;
 
@@ -493,7 +493,7 @@ Double_t TMatrixDBase::ColNorm() const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNcols;
         Double_t norm = 0;
 
@@ -519,7 +519,7 @@ Double_t TMatrixDBase::E2Norm() const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
         Double_t sum = 0;
 
@@ -586,7 +586,7 @@ Bool_t TMatrixDBase::operator==(Double_t val) const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
   for (; ep < fp; ep++)
     if (!(*ep == val))
@@ -602,7 +602,7 @@ Bool_t TMatrixDBase::operator!=(Double_t val) const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
   for (; ep < fp; ep++) 
     if (!(*ep != val))  
@@ -618,7 +618,7 @@ Bool_t TMatrixDBase::operator<(Double_t val) const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
   for (; ep < fp; ep++) 
     if (!(*ep < val))
@@ -634,7 +634,7 @@ Bool_t TMatrixDBase::operator<=(Double_t val) const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
   for (; ep < fp; ep++) 
     if (!(*ep <= val))
@@ -650,7 +650,7 @@ Bool_t TMatrixDBase::operator>(Double_t val) const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
   for (; ep < fp; ep++) 
     if (!(*ep > val))  
@@ -666,7 +666,7 @@ Bool_t TMatrixDBase::operator>=(Double_t val) const
 
   Assert(IsValid());
 
-  const Double_t *       ep = GetElements();
+  const Double_t *       ep = GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
   for (; ep < fp; ep++) 
     if (!(*ep >= val))
@@ -685,8 +685,8 @@ Double_t E2Norm(const TMatrixDBase &m1,const TMatrixDBase &m2)
     return -1.0;
   }
 
-  const Double_t *        mp1 = m1.GetElements();
-  const Double_t *        mp2 = m2.GetElements();
+  const Double_t *        mp1 = m1.GetMatrixArray();
+  const Double_t *        mp2 = m2.GetMatrixArray();
   const Double_t * const fmp1 = mp1+m1.GetNoElements();
 
   Double_t sum = 0.0;

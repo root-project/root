@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -65,7 +65,7 @@ Int_t TDecompQRH::Decompose(const TMatrixDBase &a)
   const Int_t colLwb = a.GetColLwb();
 
   fQ.ResizeTo(nRow,nCol);
-  memcpy(fQ.GetElements(),a.GetElements(),nRow*nCol*sizeof(Double_t));
+  memcpy(fQ.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
   fR.ResizeTo(nCol,nCol);
   if (nRow <= nCol) {
     fW.ResizeTo(nRow);
@@ -154,8 +154,8 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
   const Int_t nRCol = fR.GetNcols();
   Assert(b.GetNrows() >= nRCol);
 
-  const Double_t *pR = fR.GetElements();
-        Double_t *pb = b.GetElements();
+  const Double_t *pR = fR.GetMatrixArray();
+        Double_t *pb = b.GetMatrixArray();
 
   // Backward substitution
   for (Int_t i = nRCol-1; i >= 0; i--) {
@@ -209,8 +209,8 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
   const Int_t nRCol = fR.GetNcols();
   Assert(b.GetNrows() >= nRCol);
 
-  const Double_t *pR = fR.GetElements();
-        Double_t *pb = b.GetElements();
+  const Double_t *pR = fR.GetMatrixArray();
+        Double_t *pb = b.GetMatrixArray();
 
   // Backward substitution
   for (Int_t i = 0; i < nRCol; i++) {

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.2 2004/01/26 12:08:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.3 2004/01/26 12:15:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -71,7 +71,7 @@ Int_t TDecompSVD::Decompose(const TMatrixDBase &a)
   fV.ResizeTo(nRow,nCol); // In the end we only need the nColxnCol part
 
   fU.UnitMatrix();
-  memcpy(fV.GetElements(),a.GetElements(),nRow*nCol*sizeof(Double_t));
+  memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
 
   TVectorD offDiag(nCol);
 
@@ -342,8 +342,8 @@ void TDecompSVD::Diag_2(TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 //______________________________________________________________________________
 void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 {
-  Double_t *pS = sDiag.GetElements();
-  Double_t *pO = oDiag.GetElements();
+  Double_t *pS = sDiag.GetMatrixArray();
+  Double_t *pO = oDiag.GetMatrixArray();
 
   // determine shift parameter
   Double_t f = ((pS[k-1]-pS[k])*(pS[k-1]+pS[k])+(pO[k-1]-pO[k])*(pO[k-1]+pO[k]))/
@@ -405,9 +405,9 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
   const Int_t nCol_v = v.GetNcols();
   const Int_t nCol_u = u.GetNcols();
 
-  Double_t *pS = sDiag.GetElements();
-  Double_t *pV = v.GetElements();
-  Double_t *pU = u.GetElements();
+  Double_t *pS = sDiag.GetMatrixArray();
+  Double_t *pV = v.GetMatrixArray();
+  Double_t *pU = u.GetMatrixArray();
 
   // order singular values
 

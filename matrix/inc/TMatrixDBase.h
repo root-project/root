@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.2 2004/01/25 23:28:44 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.4 2004/01/26 20:03:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -48,6 +48,9 @@ class TMatrixDRow;
 class TMatrixFBase;
 class TMatrixDBase : public TObject {
 
+private:
+  Double_t *GetElements();  // This function is now obsolete (and is not implemented) you should use TMatrix::GetMatrixArray().   
+
 protected:
   Int_t     fNrows;               // number of rows
   Int_t     fNcols;               // number of columns
@@ -86,8 +89,8 @@ public:
           inline       Int_t     GetNcols     () const { return fNcols; }
           inline       Int_t     GetNoElements() const { return fNelems; }
           inline       Double_t  GetTol       () const { return fTol; }
-  virtual        const Double_t *GetElements  () const = 0;
-  virtual              Double_t *GetElements  ()       = 0;
+  virtual        const Double_t *GetMatrixArray  () const = 0;
+  virtual              Double_t *GetMatrixArray  ()       = 0;
           inline       Double_t  SetTol       (Double_t tol);
 
   virtual void Invalidate   ()       { fNrows = fNcols = fNelems = -1; }
@@ -95,8 +98,8 @@ public:
           Bool_t IsSymmetric() const;
 
   // Probably move this functionality to TMatrixDFlat
-  virtual void GetMatrixElements(      Double_t *data, Option_t *option="") const;
-  virtual void SetMatrixElements(const Double_t *data, Option_t *option="");
+  virtual void GetMatrix2Array(Double_t *data, Option_t *option="") const;
+  virtual void SetMatrixArray(const Double_t *data, Option_t *option="");
 
   virtual void Shift   (Int_t row_shift,Int_t col_shift);
   virtual void ResizeTo(Int_t nrows,Int_t ncols);

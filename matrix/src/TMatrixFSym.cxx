@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -48,7 +48,7 @@ TMatrixFSym::TMatrixFSym(Int_t no_rows,const Float_t *elements,Option_t *option)
   //             a[i,j] = elements[i*no_cols+j]
 
   Allocate(no_rows,no_rows);
-  SetMatrixElements(elements,option);
+  SetMatrixArray(elements,option);
   if (!IsSymmetric()) {
     Error("TMatrixFSym(Int_t,Float_t*,Option_t*)","matrix not symmetric");
     Invalidate();
@@ -60,7 +60,7 @@ TMatrixFSym::TMatrixFSym(Int_t row_lwb,Int_t row_upb,const Float_t *elements,Opt
 {
   const Int_t no_rows = row_upb-row_lwb+1;
   Allocate(no_rows,no_rows,row_lwb,row_lwb);
-  SetMatrixElements(elements,option);
+  SetMatrixArray(elements,option);
   if (!IsSymmetric()) {
     Error("TMatrixFSym(Int_t,Int_t,Float_t*,Option_t*)","matrix not symmetric");
     Invalidate();
@@ -186,17 +186,17 @@ void TMatrixFSym::AtMultA(const TMatrixF &a,Int_t constr)
     Allocate(a.GetNcols(),a.GetNcols(),a.GetColLwb(),a.GetColLwb(),1);
 
 #ifdef CBLAS
-  const Float_t *ap = a.GetElements();
-        Float_t *cp = this->GetElements();
+  const Float_t *ap = a.GetMatrixArray();
+        Float_t *cp = this->GetMatrixArray();
   cblas_dgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
                1.0,ap,a.GetNcols(),ap,a.GetNcols(),1.0,cp,fNcols);
 #else
   const Int_t nb     = a.GetNoElements();
   const Int_t ncolsa = a.GetNcols();
   const Int_t ncolsb = ncolsa;
-  const Float_t * const ap = a.GetElements();
+  const Float_t * const ap = a.GetMatrixArray();
   const Float_t * const bp = ap;
-        Float_t *       cp = this->GetElements();
+        Float_t *       cp = this->GetMatrixArray();
 
   const Float_t *acp0 = ap;           // Pointer to  A[i,0];
   while (acp0 < ap+a.GetNcols()) {
@@ -214,7 +214,7 @@ void TMatrixFSym::AtMultA(const TMatrixF &a,Int_t constr)
     acp0++;                           // Set acp0 to the (i+1)-th col
   }
 
-  Assert(cp == this->GetElements()+fNelems && acp0 == ap+ncolsa);
+  Assert(cp == this->GetMatrixArray()+fNelems && acp0 == ap+ncolsa);
 #endif
 }
 
@@ -230,17 +230,17 @@ void TMatrixFSym::AtMultA(const TMatrixFSym &a,Int_t constr)
   if (constr)
     Allocate(a.GetNcols(),a.GetNcols(),a.GetColLwb(),a.GetColLwb(),1);
 
-  const Float_t *ap1 = a.GetElements();
+  const Float_t *ap1 = a.GetMatrixArray();
   const Float_t *bp1 = ap1;
-        Float_t *cp1 = this->GetElements();
+        Float_t *cp1 = this->GetMatrixArray();
 
 #ifdef CBLAS
   cblas_dsymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                ap1,a.GetNcols(),bp1,a.GetNcols(),0.0,cp1,fNcols);
 #else
-  const Float_t *ap2 = a.GetElements();
+  const Float_t *ap2 = a.GetMatrixArray();
   const Float_t *bp2 = ap2;
-        Float_t *cp2 = this->GetElements();
+        Float_t *cp2 = this->GetMatrixArray();
   for (Int_t i = 0; i < fNrows; i++) {
     for (Int_t j = 0; j < fNcols; j++) {
       const Float_t b_ij = *bp1++;
@@ -340,8 +340,8 @@ TMatrixFSym TMatrixFSym::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) co
   TMatrixFSym sub(row_lwb_sub,row_upb_sub);
   const Int_t nrows_sub = row_upb_sub-row_lwb_sub+1;
 
-  const Float_t *ap = this->GetElements()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
-        Float_t *bp = sub.GetElements();
+  const Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
+        Float_t *bp = sub.GetMatrixArray();
 
   for (Int_t irow = 0; irow < nrows_sub; irow++) {
     const Float_t *ap_sub = ap;
@@ -373,8 +373,8 @@ void TMatrixFSym::SetSub(Int_t row_lwb,const TMatrixFSym &source)
     return;
   }
 
-  const Float_t *bp = source.GetElements();
-        Float_t *ap = this->GetElements()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
+  const Float_t *bp = source.GetMatrixArray();
+        Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNrows+(row_lwb-fRowLwb);
 
   for (Int_t irow = 0; irow < nRows_source; irow++) {
     Float_t *ap_sub = ap;
@@ -407,7 +407,7 @@ void TMatrixFSym::Determinant(Double_t &d1,Double_t &d2) const
 TMatrixFSym &TMatrixFSym::Zero()
 {
   Assert(IsValid());
-  memset(this->GetElements(),0,fNelems*sizeof(Float_t));
+  memset(this->GetMatrixArray(),0,fNelems*sizeof(Float_t));
 
   return *this;
 }
@@ -419,7 +419,7 @@ TMatrixFSym &TMatrixFSym::Abs()
 
   Assert(IsValid());
 
-  Float_t *ep = this->GetElements();
+  Float_t *ep = this->GetMatrixArray();
   const Float_t * const ep_last = ep+fNelems;
   while (ep < ep_last)
     *ep++ = TMath::Abs(*ep);
@@ -434,7 +434,7 @@ TMatrixFSym &TMatrixFSym::Sqr()
 
   Assert(IsValid());
 
-  Float_t *ep = this->GetElements();
+  Float_t *ep = this->GetMatrixArray();
   const Float_t * const ep_last = ep+fNelems;
   while (ep < ep_last)
     *ep++ = (*ep) * (*ep);
@@ -449,7 +449,7 @@ TMatrixFSym &TMatrixFSym::Sqrt()
 
   Assert(IsValid());
 
-  Float_t *ep = this->GetElements();
+  Float_t *ep = this->GetMatrixArray();
   const Float_t * const ep_last = ep+fNelems;
   while (ep < ep_last) {
     Assert(*ep >= 0);
@@ -466,7 +466,7 @@ TMatrixFSym &TMatrixFSym::UnitMatrix()
 
   Assert(IsValid());
 
-  Float_t *ep = this->GetElements();
+  Float_t *ep = this->GetMatrixArray();
   const Float_t * const ep_last = ep+fNelems;
   memset(ep,0,fNelems*sizeof(Float_t));
   while (ep < ep_last) {
@@ -515,8 +515,8 @@ TMatrixFSym &TMatrixFSym::NormByDiag(const TVectorF &v,Option_t *option)
   opt.ToUpper();
   const Int_t divide = (opt.Contains("D")) ? 1 : 0;
 
-  const Float_t *pV = v.GetElements();
-        Float_t *mp = this->GetElements();
+  const Float_t *pV = v.GetMatrixArray();
+        Float_t *mp = this->GetMatrixArray();
 
   if (divide) {
     for (Int_t irow = 0; irow < fNrows; irow++) {
@@ -549,7 +549,7 @@ TMatrixFSym &TMatrixFSym::operator=(const TMatrixFSym &source)
 
   if (this != &source) {
     TObject::operator=(source);
-    memcpy(this->GetElements(),source.fElements,fNelems*sizeof(Float_t));
+    memcpy(this->GetMatrixArray(),source.fElements,fNelems*sizeof(Float_t));
     fTol = source.GetTol();
   }
   return *this;
@@ -643,8 +643,8 @@ TMatrixFSym &TMatrixFSym::operator+=(const TMatrixFSym &source)
     return *this;
   }
 
-  const Float_t *sp  = source.GetElements();
-        Float_t *trp = this->GetElements(); // pointer to UR part and diagonal, traverse row-wise
+  const Float_t *sp  = source.GetMatrixArray();
+        Float_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
         Float_t *tcp = trp;                 // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < fNrows; i++) {
     sp  += i;
@@ -672,8 +672,8 @@ TMatrixFSym &TMatrixFSym::operator-=(const TMatrixFSym &source)
     return *this;
   }
 
-  const Float_t *sp  = source.GetElements();
-        Float_t *trp = this->GetElements(); // pointer to UR part and diagonal, traverse row-wise
+  const Float_t *sp  = source.GetMatrixArray();
+        Float_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
         Float_t *tcp = trp;                 // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < fNrows; i++) {
     sp  += i;
@@ -696,7 +696,7 @@ TMatrixFSym &TMatrixFSym::Apply(const TElementActionF &action)
   Assert(IsValid());
   
   Float_t val = 0;
-  Float_t *trp = this->GetElements(); // pointer to UR part and diagonal, traverse row-wise
+  Float_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
   Float_t *tcp = trp;                 // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < fNrows; i++) {
     trp += i;         // point to [i,i]
@@ -722,7 +722,7 @@ TMatrixFSym &TMatrixFSym::Apply(const TElementPosActionF &action)
   Assert(IsValid());
 
   Float_t val = 0;
-  Float_t *trp = this->GetElements(); // pointer to UR part and diagonal, traverse row-wise
+  Float_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
   Float_t *tcp = trp;                 // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < fNrows; i++) {
     action.fI = i+fRowLwb;
@@ -747,7 +747,7 @@ Bool_t operator==(const TMatrixFSym &m1,const TMatrixFSym &m2)
   // Check to see if two matrices are identical.
 
   if (!AreCompatible(m1,m2)) return kFALSE;
-  return (memcmp(m1.GetElements(),m2.GetElements(),
+  return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),
                  m1.GetNoElements()*sizeof(Float_t)) == 0);
 }
 
@@ -789,9 +789,9 @@ TMatrixFSym &Add(TMatrixFSym &target,Float_t scalar,const TMatrixFSym &source)
   const Int_t nrows   = target.GetNrows();
   const Int_t ncols   = target.GetNcols();
   const Int_t nelems  = target.GetNoElements();
-  const Float_t *sp  = source.GetElements();
-        Float_t *trp = target.GetElements(); // pointer to UR part and diagonal, traverse row-wise
-        Float_t *tcp = target.GetElements(); // pointer to LL part,              traverse col-wise
+  const Float_t *sp  = source.GetMatrixArray();
+        Float_t *trp = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Float_t *tcp = target.GetMatrixArray(); // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < nrows; i++) {
     sp  += i;
     trp += i;        // point to [i,i]
@@ -822,9 +822,9 @@ TMatrixFSym &ElementMult(TMatrixFSym &target,const TMatrixFSym &source)
   const Int_t nrows   = target.GetNrows();
   const Int_t ncols   = target.GetNcols();
   const Int_t nelems  = target.GetNoElements();
-  const Float_t *sp  = source.GetElements();
-        Float_t *trp = target.GetElements(); // pointer to UR part and diagonal, traverse row-wise
-        Float_t *tcp = target.GetElements(); // pointer to LL part,              traverse col-wise
+  const Float_t *sp  = source.GetMatrixArray();
+        Float_t *trp = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Float_t *tcp = target.GetMatrixArray(); // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < nrows; i++) {
     sp  += i;
     trp += i;        // point to [i,i]
@@ -854,9 +854,9 @@ TMatrixFSym &ElementDiv(TMatrixFSym &target,const TMatrixFSym &source)
   const Int_t nrows   = target.GetNrows();
   const Int_t ncols   = target.GetNcols();
   const Int_t nelems  = target.GetNoElements();
-  const Float_t *sp  = source.GetElements();
-        Float_t *trp = target.GetElements(); // pointer to UR part and diagonal, traverse row-wise
-        Float_t *tcp = target.GetElements(); // pointer to LL part,              traverse col-wise
+  const Float_t *sp  = source.GetMatrixArray();
+        Float_t *trp = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Float_t *tcp = target.GetMatrixArray(); // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < nrows; i++) {
     sp  += i;
     trp += i;        // point to [i,i]

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFLazy.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFLazy.cxx,v 1.3 2004/01/26 20:03:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -55,8 +55,8 @@ void MakeHaarMat(TMatrixF &m)
   // column-wise . Since we are row-wise, the transposed Haar is calculted
 
   TMatrixF mtr(no_cols,no_rows);
-        Float_t *cp    = mtr.GetElements();
-  const Float_t *m_end = mtr.GetElements()+no_rows*no_cols;
+        Float_t *cp    = mtr.GetMatrixArray();
+  const Float_t *m_end = mtr.GetMatrixArray()+no_rows*no_cols;
 
   Float_t norm_factor = 1/TMath::Sqrt((Float_t)no_rows);
 
@@ -120,7 +120,7 @@ void MakeHilbertMat(TMatrixF &m)
   const Int_t no_cols = m.GetNcols();
   Assert(no_rows > 0 && no_cols > 0);
 
-  Float_t *cp = m.GetElements();
+  Float_t *cp = m.GetMatrixArray();
   for (Int_t i = 0; i < no_rows; i++)
     for (Int_t j = 0; j < no_cols; j++)
       *cp++ = 1.0/(i+j+1.0);
@@ -156,7 +156,7 @@ void MakeHilbertMat(TMatrixFSym &m)
   const Int_t no_rows = m.GetNrows();
   Assert(no_rows > 0);
 
-  Float_t *cp = m.GetElements();
+  Float_t *cp = m.GetMatrixArray();
   for (Int_t i = 0; i < no_rows; i++)
     for (Int_t j = 0; j < no_rows; j++)
       *cp++ = 1.0/(i+j+1.0);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.2 2004/01/26 12:08:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.3 2004/01/26 14:09:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -87,9 +87,9 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
 // Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
 // Fortran subroutines in EISPACK.
    
-  Double_t *pV = v.GetElements();
-  Double_t *pO = ortho.GetElements();
-  Double_t *pH = H.GetElements();
+  Double_t *pV = v.GetMatrixArray();
+  Double_t *pO = ortho.GetMatrixArray();
+  Double_t *pH = H.GetMatrixArray();
 
   const Int_t n = v.GetNrows();
 
@@ -223,10 +223,10 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
   Double_t exshift = 0.0;
   Double_t p=0,q=0,r=0,s=0,z=0,t,w,x,y;
 
-  Double_t *pV = v.GetElements();
-  Double_t *pD = d.GetElements();
-  Double_t *pE = e.GetElements();
-  Double_t *pH = H.GetElements();
+  Double_t *pV = v.GetMatrixArray();
+  Double_t *pD = d.GetMatrixArray();
+  Double_t *pE = e.GetMatrixArray();
+  Double_t *pH = H.GetMatrixArray();
    
   // Store roots isolated by balanc and compute matrix norm
    
@@ -712,9 +712,9 @@ const TMatrixD TMatrixDEigen::GetEigenValues() const
 
   TMatrixD D(n,n);
 
-  Double_t *pD = D.GetElements();
-  const Double_t * const pd = fEigenValuesRe.GetElements();
-  const Double_t * const pe = fEigenValuesIm.GetElements();
+  Double_t *pD = D.GetMatrixArray();
+  const Double_t * const pd = fEigenValuesRe.GetMatrixArray();
+  const Double_t * const pe = fEigenValuesIm.GetMatrixArray();
 
   for (Int_t i = 0; i < n; i++) {
     const Int_t off_i = i*n;

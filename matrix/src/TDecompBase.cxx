@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.2 2004/01/26 12:08:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.3 2004/01/26 12:15:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -116,8 +116,8 @@
 //                                                                       //
 // Code for this could look as follows:                                  //
 // const TMatrixD ab = Abs(a);                                           //
-// const Int_t imax = TMath::LocMax(ab.GetNoElements(),ab.GetElements());//
-// const Double_t max_abs = ab.GetElements()[imax];                      //
+// const Int_t imax = TMath::LocMax(ab.GetNoElements(),ab.GetMatrixArray());//
+// const Double_t max_abs = ab.GetMatrixArray()[imax];                      //
 // const Double_t scale = TMath::Min(max_abs,1.);                        //
 // a.SetTol(a.GetTol()*scale);                                           //
 //                                                                       //
@@ -292,7 +292,7 @@ void TDecompBase::Invert(TMatrixDBase &inv)
     return;
   }
 
-  memset(inv.GetElements(),0,inv.GetNoElements()*sizeof(Double_t));
+  memset(inv.GetMatrixArray(),0,inv.GetNoElements()*sizeof(Double_t));
   TMatrixDDiag(inv,0) = 1.;
   MultiSolve(inv);
 }
@@ -338,7 +338,7 @@ Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t 
 // Define a Householder-transformation through the parameters up and b .
 
   const Int_t n = vc.GetNrows();
-  const Double_t * const vp = vc.GetElements();
+  const Double_t * const vp = vc.GetMatrixArray();
 
   Double_t c = TMath::Abs(vp[lp]);
   Int_t i;
@@ -381,7 +381,7 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
   }
 
   const Int_t inc_c = cr.GetInc();
-  const Double_t * const vp = vc.GetElements();
+  const Double_t * const vp = vc.GetMatrixArray();
         Double_t *       cp = cr.GetPtr();
 
   Double_t s = cp[lp*inc_c]*up;
@@ -410,7 +410,7 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
   }
 
   const Int_t inc_c = cc.GetInc();
-  const Double_t * const vp = vc.GetElements();
+  const Double_t * const vp = vc.GetMatrixArray();
         Double_t *       cp = cc.GetPtr();
 
   Double_t s = cp[lp*inc_c]*up;
@@ -438,8 +438,8 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
     return;
   }
 
-  const Double_t * const vp = vc.GetElements();
-        Double_t *       cp = cv.GetElements();
+  const Double_t * const vp = vc.GetMatrixArray();
+        Double_t *       cp = cv.GetMatrixArray();
 
   Double_t s = cp[lp]*up;
   Int_t i;

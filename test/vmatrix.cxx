@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.22 2004/01/26 16:20:56 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.23 2004/01/26 22:29:25 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -354,7 +354,7 @@ void stress_matrix_fill(Int_t rsize,Int_t csize)
     {
       TMatrixD *m1 = new TMatrixD(m);
       TMatrixD *m2 = new TMatrixD();
-      m2->Adopt(m1->GetRowLwb(),m1->GetRowUpb(),m1->GetColLwb(),m1->GetColUpb(),m1->GetElements());
+      m2->Adopt(m1->GetRowLwb(),m1->GetRowUpb(),m1->GetColLwb(),m1->GetColUpb(),m1->GetMatrixArray());
       ok &= VerifyMatrixIdentity(m,*m2,gVerbose,EPSILON);
       m2->Sqr();
       TMatrixD m3 = m; m3.Sqr();
@@ -1223,7 +1223,7 @@ void stress_sym_mm_multiplications(Int_t msize)
     if (gVerbose)
       cout << "\nTest inline multiplications of the UnitMatrix" << endl;
     TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
-    TMatrixDSym m_sym(-1,msize,m.GetElements());
+    TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
     TMatrixDSym u(TMatrixDBase::kUnit,m_sym);
     TMatrixD u2 = u * m_sym;
     ok &= VerifyMatrixIdentity(u2,m_sym,gVerbose,epsilon);
@@ -1237,7 +1237,7 @@ void stress_sym_mm_multiplications(Int_t msize)
       if (gVerbose)
         cout << "\n  Test m * m_sym == m_sym * m == m_sym * m_sym  multiplications" << endl;
       TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
-      TMatrixDSym m_sym(-1,msize,m.GetElements());
+      TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
       TMatrixD mm      = m * m;
       TMatrixD mm_sym1 = m_sym * m_sym;
       TMatrixD mm_sym2 = m     * m_sym;
@@ -1254,7 +1254,7 @@ void stress_sym_mm_multiplications(Int_t msize)
       TMatrixD m = n;
       n(1,3) = TMath::Pi();
       n(3,1) = TMath::Pi();
-      TMatrixDSym m_sym(-1,msize,m.GetElements());
+      TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
       TMatrixD nm1 = n * m_sym;
       TMatrixD nm2 = n * m;
       ok &= VerifyMatrixIdentity(nm1,nm2,gVerbose,epsilon);
@@ -1310,7 +1310,7 @@ void stress_sym_mm_multiplications(Int_t msize)
     TMatrixD mp(m,TMatrixDBase::kMult,p);
     TMatrixDSym m1 = m;
     TMatrixD m3(m,TMatrixDBase::kMult,p);
-    memcpy(m.GetElements(),m3.GetElements(),msize*msize*sizeof(Double_t));
+    memcpy(m.GetMatrixArray(),m3.GetMatrixArray(),msize*msize*sizeof(Double_t));
     ok &= VerifyMatrixIdentity(m,mp,gVerbose,epsilon);
     TMatrixD mp1(mt,TMatrixDBase::kTransposeMult,p);
     ok &= VerifyMatrixIdentity(m,mp1,gVerbose,epsilon);

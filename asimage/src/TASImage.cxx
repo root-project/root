@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.5 2002/08/23 14:51:44 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.6 2004/01/05 12:31:48 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -562,7 +562,7 @@ void TASImage::SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *
    // If palette is not defined (palette = 0) a default palette is used.
    // Any previously defined zooming is reset.
 
-   SetImage(imageData.GetElements(), width,
+   SetImage(imageData.GetMatrixArray(), width,
             imageData.GetNoElements() / width, palette);
 }
 

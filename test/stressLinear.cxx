@@ -500,7 +500,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
     {
       TMatrixD *m1a = new TMatrixD(m);
       TMatrixD *m2a = new TMatrixD();
-      m2a->Adopt(m1a->GetRowLwb(),m1a->GetRowUpb(),m1a->GetColLwb(),m1a->GetColUpb(),m1a->GetElements());
+      m2a->Adopt(m1a->GetRowLwb(),m1a->GetRowUpb(),m1a->GetColLwb(),m1a->GetColUpb(),m1a->GetMatrixArray());
       ok &= VerifyMatrixIdentity(m,*m2a,gVerbose,EPSILON);
       m2a->Sqr();
       TMatrixD m3 = m; m3.Sqr();
@@ -1505,7 +1505,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
     if (gVerbose)
       cout << "\nTest inline multiplications of the UnitMatrix" << endl;
     TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
-    TMatrixDSym m_sym(-1,msize,m.GetElements());
+    TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
     TMatrixDSym u(TMatrixDBase::kUnit,m_sym);
     TMatrixD u2 = u * m_sym;
     ok &= VerifyMatrixIdentity(u2,m_sym,gVerbose,epsilon);
@@ -1519,7 +1519,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
       if (gVerbose)
         cout << "\n  Test m * m_sym == m_sym * m == m_sym * m_sym  multiplications" << endl;
       TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
-      TMatrixDSym m_sym(-1,msize,m.GetElements());
+      TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
       TMatrixD mm      = m * m;
       TMatrixD mm_sym1 = m_sym * m_sym;
       TMatrixD mm_sym2 = m     * m_sym;
@@ -1536,7 +1536,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
       TMatrixD m = n;
       n(1,3) = TMath::Pi();
       n(3,1) = TMath::Pi();
-      TMatrixDSym m_sym(-1,msize,m.GetElements());
+      TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
       TMatrixD nm1 = n * m_sym;
       TMatrixD nm2 = n * m;
       ok &= VerifyMatrixIdentity(nm1,nm2,gVerbose,epsilon);
@@ -1592,7 +1592,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
     TMatrixD mp(ms,TMatrixDBase::kMult,p);
     TMatrixDSym m1 = ms;
     TMatrixD m3(ms,TMatrixDBase::kMult,p);
-    memcpy(ms.GetElements(),m3.GetElements(),msize*msize*sizeof(Double_t));
+    memcpy(ms.GetMatrixArray(),m3.GetMatrixArray(),msize*msize*sizeof(Double_t));
     ok &= VerifyMatrixIdentity(ms,mp,gVerbose,epsilon);
     TMatrixD mp1(mt,TMatrixDBase::kTransposeMult,p);
     ok &= VerifyMatrixIdentity(ms,mp1,gVerbose,epsilon);
@@ -2655,7 +2655,7 @@ class MakeMatrix : public TMatrixDLazy {
   void FillIn(TMatrixD& m) const {
     Assert( m.GetNrows() * m.GetNcols() == no_elems );
     const Double_t *ap = array;
-          Double_t *mp = m.GetElements();
+          Double_t *mp = m.GetMatrixArray();
     for (Int_t i = 0; i < no_elems; i++)
       *mp++ = *ap++;
   }

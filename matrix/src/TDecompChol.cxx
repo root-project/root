@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -68,8 +68,8 @@ Int_t TDecompChol::Decompose(const TMatrixDBase &a)
 {
   fU.ResizeTo(a);
   const Int_t     n  = a.GetNrows();
-  const Double_t *pA = a.GetElements();
-        Double_t *pU = fU.GetElements();
+  const Double_t *pA = a.GetMatrixArray();
+        Double_t *pU = fU.GetMatrixArray();
   for (Int_t irow = 0; irow < n; irow++)
   {
     const Int_t rowOff = irow*n;
@@ -127,8 +127,8 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 
   const Int_t n = fU.GetNrows();
 
-  const Double_t *pA = fU.GetElements();
-        Double_t *pb = b.GetElements();
+  const Double_t *pA = fU.GetMatrixArray();
+        Double_t *pb = b.GetMatrixArray();
 
   Int_t i;
   // step 1: Forward substitution
@@ -174,7 +174,7 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 
   const Int_t n = fU.GetNrows();
 
-  const Double_t *pA  = fU.GetElements();
+  const Double_t *pA  = fU.GetMatrixArray();
         Double_t *pcb = cb.GetPtr();
   const Int_t     inc = cb.GetInc();
 

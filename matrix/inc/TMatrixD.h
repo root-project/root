@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.27 2004/01/26 07:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.28 2004/01/26 11:28:07 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -69,8 +69,8 @@ public:
 
   virtual ~TMatrixD() { Clear(); Invalidate(); }
 
-  virtual const Double_t *GetElements  () const;
-  virtual       Double_t *GetElements  ();
+  virtual const Double_t *GetMatrixArray  () const;
+  virtual       Double_t *GetMatrixArray  ();
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); }
 
@@ -161,9 +161,9 @@ public:
   ClassDef(TMatrixD,3) // Matrix class (double precision)
 };
 
-inline const Double_t *TMatrixD::GetElements () const { return fElements; }
-inline       Double_t *TMatrixD::GetElements ()       { return fElements; }
-inline       void      TMatrixD::Adopt(TMatrixD &a) { Adopt(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetElements()); }
+inline const Double_t *TMatrixD::GetMatrixArray () const { return fElements; }
+inline       Double_t *TMatrixD::GetMatrixArray ()       { return fElements; }
+inline       void      TMatrixD::Adopt(TMatrixD &a) { Adopt(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
 inline const Double_t &TMatrixD::operator    ()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;

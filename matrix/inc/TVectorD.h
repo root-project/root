@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.24 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.25 2004/01/25 23:28:44 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -62,8 +62,8 @@ public:
   inline          Int_t     GetNrows     () const { return fNrows; }
   inline          Int_t     GetNoElements() const { return fNrows; }
 
-  inline          Double_t *GetElements  ()       { return fElements; }
-  inline const    Double_t *GetElements  () const { return fElements; }
+  inline          Double_t *GetMatrixArray  ()       { return fElements; }
+  inline const    Double_t *GetMatrixArray  () const { return fElements; }
 
   inline void     Invalidate () { fNrows = -1; }
   inline Bool_t   IsValid    () const { if (fNrows == -1) return kFALSE; return kTRUE; }
