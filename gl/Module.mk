@@ -103,4 +103,4 @@ $(GLO): %.o: %.cxx
 endif
 
 $(GLDIRS)/gl2ps.o: $(GLDIRS)/gl2ps.c
-	$(CC) $(OPT) -I$(GLDIRI) -o $@ -c $<
+	$(CC) $(OPT) -I$(OPENGLINCDIR) -I$(GLDIRI) -o $@ -c $<
