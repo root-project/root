@@ -18,17 +18,19 @@ stat=$?
 if [ "$TAR" = '' ] || [ $stat = 0 ]; then
    TAR="tar cvf"
    rm -f ../$TARFILE.gz
+   EXCLUDE=
 else
    TAR=$TAR" zcvf"
    rm -f ../$TARFILE.gz
    TARFILE=$TARFILE".gz"
+   EXCLUDE="--exclude CVS"
 fi
 
 cp -f main/src/rmain.cxx include/
 pwd=`pwd`
 dir=`basename $pwd`
 cd ..
-$TAR $TARFILE $dir/LICENSE $dir/README $dir/bin \
+$TAR $TARFILE $EXCLUDE $dir/LICENSE $dir/README $dir/bin \
    $dir/include $dir/lib $dir/cint/MAKEINFO $dir/cint/include \
    $dir/cint/lib $dir/cint/stl $dir/tutorials/*.C \
    $dir/test/*.cxx $dir/test/*.h $dir/test/Makefile* \
