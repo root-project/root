@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.2 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -25,13 +25,15 @@
 #include "TVirtualFitter.h"
 #endif
 
+class TMinuit;
 
 class TFitter : public TVirtualFitter {
 
 private:
    Int_t      fNlog;       //Number of elements in fSunLog
    Double_t  *fSumLog;     //Sum of logs (array of fNlog elements)
-
+   TMinuit   *fMinuit;     //pointer to the TMinuit object
+   
    public:
    TFitter(Int_t maxpar = 25);
    virtual ~TFitter();

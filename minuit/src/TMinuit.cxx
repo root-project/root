@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.23 2002/11/05 09:54:27 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.24 2002/11/05 10:38:03 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -748,6 +748,7 @@ void TMinuit::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, I
 //*-*          ===============================================
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    fFCN = fcn;
+   printf("SetFCN normal called for minuit=%x\n",this);
 }
 
 //______________________________________________________________________________
@@ -778,6 +779,7 @@ void TMinuit::SetFCN(void *fcn)
 //     this function is called by CINT instead of the function above
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+   printf("SetFCN interactive called for minuit=%x\n",this);
    if (!fcn) return;
 
    char *funcname = G__p2f2funcname(fcn);
