@@ -32,7 +32,7 @@ $TAR $TARFILE $dir/LICENSE $dir/README $dir/bin \
    $dir/cint/lib $dir/cint/stl $dir/tutorials/*.C \
    $dir/test/*.cxx $dir/test/*.h $dir/test/Makefile* \
    $dir/test/README $dir/macros $dir/icons $dir/system.rootrc
-if [ "$TAR" = '' ]; then
+if [ "$TAR" = '' ] || [ $stat = 0 ]; then
    gzip $TARFILE
 fi
 
