@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.31 2001/02/22 11:03:57 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.32 2001/02/23 10:31:28 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1378,6 +1378,7 @@ void THistPainter::PaintBoxes()
             else        z = Hparam.zmin;
          }
          if (z <= Hparam.zmin) continue;
+         if (z >  Hparam.zmax) z = Hparam.zmax;
          xup  = xcent*(z - Hparam.zmin)/dz + xk + xcent;
          xlow = 2*(xk + xcent) - xup;
          if (xup-xlow < dxmin) xup = xlow+dxmin;
@@ -3160,6 +3161,8 @@ void THistPainter::PaintScatterPlot()
          xk    = fXaxis->GetBinLowEdge(i);
          xstep = fXaxis->GetBinWidth(i);
          z     = fH->GetBinContent(bin);
+         if (z < zmin) z = zmin;
+         if (z > zmax) z = zmax;
          if (Hoption.Logz) {
             if (z > 0) z = TMath::Log10(z) - zmin;
          } else {
