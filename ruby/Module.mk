@@ -1,15 +1,17 @@
-# Module.mk for pyroot module
+# Module.mk for rubyroot module
+# Copyright (c) 2004 Rene Brun and Fons Rademakers
 #
-# Authors: Pere Mato, Wim Lavrijsen, 22/4/2004
+# Authors: Elias Athanasopoulos, 31/5/2004
 
-MODDIR       := ruby
-MODDIRS      := $(MODDIR)/src
-MODDIRI      := $(MODDIR)/inc
+MODDIR         := ruby
+MODDIRS        := $(MODDIR)/src
+MODDIRI        := $(MODDIR)/inc
 
 RUBYROOTDIR    := $(MODDIR)
 RUBYROOTDIRS   := $(RUBYROOTDIR)/src
 RUBYROOTDIRI   := $(RUBYROOTDIR)/inc
 
+##### libRuby #####
 RUBYROOTL      := $(MODDIRI)/LinkDef.h
 RUBYROOTDS     := $(MODDIRS)/G__Ruby.cxx
 RUBYROOTDO     := $(RUBYROOTDS:.cxx=.o)
@@ -24,33 +26,35 @@ RUBYROOTDEP    := $(RUBYROOTO:.o=.d) $(RUBYROOTDO:.o=.d)
 RUBYROOTLIB    := $(LPATH)/libRuby.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RUBYROOTH))
-ALLLIBS     += $(RUBYROOTLIB)
+ALLHDRS        += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RUBYROOTH))
+ALLLIBS        += $(RUBYROOTLIB)
 
 # include all dependency files
-INCLUDEFILES += $(RUBYROOTDEP)
+INCLUDEFILES   += $(RUBYROOTDEP)
 
 ##### local rules #####
 include/%.h:    $(RUBYROOTDIRI)/%.h
 		cp $< $@
 
-#$(ROOTPY):      $(ROOTPYS)
-#		cp $< $@
-
-$(RUBYROOTLIB):   $(RUBYROOTO) $(RUBYROOTDO) $(MAINLIBS) $(ROOTPY)
+$(RUBYROOTLIB): $(RUBYROOTO) $(RUBYROOTDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		"$(SOFLAGS)" libRuby.$(SOEXT) $@ \
-		"$(RUBYROOTO) $(RUBYROOTDO)" "$(RUBYLIBDIR) $(RUBYLIB)" \
-                "$(RUBYLIBFLAGS)"
+		   "$(SOFLAGS)" libRuby.$(SOEXT) $@ \
+		   "$(RUBYROOTO) $(RUBYROOTDO)" "$(RUBYLIBDIR) $(RUBYLIB)"
 
-$(RUBYROOTDS):    $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMP)
+$(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RUBYROOTH) $(RUBYROOTL)
 
-$(RUBYROOTDO):    $(RUBYROOTDS)
+$(RUBYROOTDO):  $(RUBYROOTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-ruby:     $(RUBYROOTLIB)
+all-ruby:       $(RUBYROOTLIB)
+
+map-ruby:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(RUBYROOTLIB) \
+		   -d $(RUBYROOTLIBDEP) -c $(RUBYROOTL)
+
+map::           map-ruby
 
 clean-ruby:
 		@rm -f $(RUBYROOTO) $(RUBYROOTDO)

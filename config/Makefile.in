@@ -116,7 +116,6 @@ PYTHONLIBFLAGS := @pythonlibflags@
 RUBYLIBDIR     := @rubylibdir@
 RUBYLIB        := @rubylib@
 RUBYINCDIR     := @rubyincdir@
-RUBYLIBFLAGS   := @rubylibflags@
 
 XMLLIBDIR      := @xmllibdir@
 XMLCLILIB      := @xmllib@
