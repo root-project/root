@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.9 2004/08/12 20:55:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.10 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -76,7 +76,8 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& ty
 
    std::string shortName = TClassEdit::ShortType( ti.TrueName(), 1 );
 
-   int mask = isPointer( typeName ) == 1 ? 0x10000 : 0;
+   const int isp = isPointer( typeName );
+   const int mask = isp == 1 ? kPtrMask : 0;
 
    if ( shortName == "bool" )
       effType = EDataType( (int) kBool | mask );
@@ -100,6 +101,8 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& ty
       effType = EDataType( (int) kDouble | mask );
    else if ( shortName == "void" )
       effType = EDataType( (int) kVoid | mask );
+   else if ( shortName == "string" && isp == 0 )
+      effType = kSTLString;
    else
       effType = kOther;
 

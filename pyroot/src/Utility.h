@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.7 2004/08/12 20:55:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.8 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -23,6 +23,8 @@ namespace PyROOT {
       void* getObjectFromHolderFromArgs( PyObject* argsTuple );
 
    // data/return types
+      const int kPtrMask = 0x10000000;
+
       enum EDataType {
          kBool        = 0x00000001,
          kChar        = 0x00000002,
@@ -37,12 +39,13 @@ namespace PyROOT {
          kOther       = 0x00000400,
          kLongLong    = 0x00000800,
          kEnum        = 0x00001000,
-         kString      = 0x00010000 | kChar,
-         kDoublePtr   = 0x00010000 | kDouble,
-         kFloatPtr    = 0x00010000 | kFloat,
-         kLongPtr     = 0x00010000 | kLong,
-         kIntPtr      = 0x00010000 | kInt,
-         kVoidPtr     = 0x00010000 | kVoid
+         kSTLString   = 0x00002000,
+         kString      = kPtrMask | kChar,
+         kDoublePtr   = kPtrMask | kDouble,
+         kFloatPtr    = kPtrMask | kFloat,
+         kLongPtr     = kPtrMask | kLong,
+         kIntPtr      = kPtrMask | kInt,
+         kVoidPtr     = kPtrMask | kVoid,
       };
 
       EDataType effectiveType( const std::string& typeName );

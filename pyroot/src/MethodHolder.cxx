@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.23 2004/10/24 06:08:14 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.24 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -584,20 +584,30 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
       execute( self, returnValue );
       return PyString_FromString( (char*) returnValue );
    }
+   case Utility::kChar: {
+      long buf = 0;
+      execute( self, buf );
+      char c[2]; c[1] = '\0';
+      c[0] = (char) buf;
+      return PyString_FromString( c );
+   }
    case Utility::kBool:
-   case Utility::kChar:
    case Utility::kShort:
-   case Utility::kInt:
-   case Utility::kUInt: {
+   case Utility::kInt: {
       long returnValue = 0;
       execute( self, returnValue );
       return PyInt_FromLong( returnValue );
    }
-   case Utility::kLong:
-   case Utility::kULong: {
+   case Utility::kLong: {
       long returnValue = 0;
       execute( self, returnValue );
       return PyLong_FromLong( returnValue );
+   }
+   case Utility::kUInt:
+   case Utility::kULong: {
+      unsigned long returnValue = 0;
+      execute( self, (long&)returnValue );
+      return PyLong_FromUnsignedLong( returnValue );
    }
    case Utility::kLongLong: {
       long returnValue = 0;
@@ -609,11 +619,16 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
       Py_INCREF( Py_None );
       return Py_None;
    }
+   case Utility::kSTLString: {
+      long address = 0;
+      execute( self, address );
+      return PyString_FromString( ((std::string*)address)->c_str() );
+   }
    case Utility::kOther: {
    // get a string representation of the return type
       TClass* cls = gROOT->GetClass( m_rtShortName.c_str() );
       if ( cls != 0 ) {
-         long address;
+         long address = 0;
          execute( self, address );
 
       // return null object if failed

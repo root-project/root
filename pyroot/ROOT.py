@@ -1,13 +1,14 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.11 2004/09/30 16:48:22 rdm Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.12 2004/10/30 06:26:43 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 10/28/04
+# Last: 11/01/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
 
 ## system modules
-import os, sys, exceptions, inspect, string, re
+import os, sys, exceptions, inspect, re
+import string as pystring
 import thread, time
 
 ## there's no version_info (nor inspect module) in 1.5.2
@@ -23,7 +24,11 @@ except:
   pass
 
 ## PyROOT C++ extension module
-from libPyROOT import * 
+dlflags = sys.getdlopenflags()
+if 0 <= pystring.find( sys.platform, 'linux' ):
+   sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
+from libPyROOT import *
+sys.setdlopenflags( dlflags )
 
 
 ## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
@@ -44,7 +49,7 @@ _orig_ehook = sys.excepthook
 
 ### helpers ---------------------------------------------------------------------
 def split( str ):
-   npos = string.find( str, ' ' )
+   npos = pystring.find( str, ' ' )
    if 0 <= npos:
       return str[:npos], str[npos+1:]
    else:
