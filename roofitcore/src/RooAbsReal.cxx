@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.59 2001/11/01 22:52:20 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.60 2001/11/07 23:14:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -751,6 +751,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
 	 << " projects variables " ; projectedVars.Print("1") ;
   }  
+  if (projDataNeededVars) {
+    cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
+	 << " projects with data variables " ; projDataNeededVars->Print("1") ;
+  }
 
   // Create projection integral
   RooArgSet* projectionCompList ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.21 2001/10/15 18:36:37 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.22 2001/10/22 07:12:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,7 +50,8 @@ public:
   const RooArgList& coefList() const { return _coefList ; }
 
   virtual RooPlot *plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_t* drawOptions="L",
-			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, const RooArgSet* projSet=0) const ;
+			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
+			      const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
 
 
 protected:
@@ -59,13 +60,18 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
+  void syncSuppNormList(const RooArgSet* nset) const ;
+  mutable RooArgSet* _lastSupNormSet ;
+
   mutable RooAICRegistry _codeReg ;  // Registry of component analytical integration codes
 
-  RooListProxy _pdfList ;  //  List of component PDFs
-  RooListProxy _coefList ; //  List of coefficients
-  TIterator* _pdfIter ;    //! Iterator over PDF list
-  TIterator* _coefIter ;   //! Iterator over coefficient list
-
+  RooListProxy _pdfList ;   //  List of component PDFs
+  RooListProxy _coefList ;  //  List of coefficients
+  mutable RooArgList _snormList ;  //  List of supplemental normalization factors
+  TIterator* _pdfIter ;     //! Iterator over PDF list
+  TIterator* _coefIter ;    //! Iterator over coefficient list
+  TIterator* _snormIter ;   //! Iterator over supplemental normalizations
+  
   Bool_t _haveLastCoef ;   //  Flag indicating if last PDFs coefficient was supplied in the ctor
   Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.37 2001/11/05 21:34:59 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.38 2001/11/08 19:59:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,6 +42,7 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "RooFitCore/RooDataSet.hh"
 
 ClassImp(RooFitContext)
 ;
@@ -250,6 +251,8 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 {
   // PDF/Dataset optimizer entry point
 
+  // Sync PDF state by evaluating it once now
+
   // Find PDF nodes that can be cached in the data set
   RooArgSet cacheList("cacheList") ;
 
@@ -267,7 +270,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 
   if (doPdf) {
     findCacheableBranches(_pdfClone,_dataClone,cacheList) ;
-  
+
     // Add cached branches from the data set
     _dataClone->cacheArgs(cacheList) ;
   }
@@ -306,9 +309,9 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       // Reattach PDF clone to newly trimmed dataset
       _pdfClone->attachDataSet(*trimData) ;
 
-      // Update normSet with components from trimData
+      // Refresh normSet pointer (same contents) to force a normalization sync in all PDF components
       delete _normSet ;
-      _normSet = (RooArgSet*) trimData->get()->snapshot(kFALSE) ;
+      _normSet = (RooArgSet*) _dataClone->get()->snapshot(kFALSE) ;      
       
       // WVE --- Is this still necessary now that we use RooNameSets? YES!!! --------
       //         Forces actual calculation of normalization of cached 
