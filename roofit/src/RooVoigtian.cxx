@@ -1,11 +1,11 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooVoigtian.cc,v 1.8 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.9 2004/11/29 21:15:51 wverkerke Exp $
  * Authors:                                                                  *
  *   TS, Thomas Schietinger, SLAC,           schieti@slac.stanford.edu       *
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

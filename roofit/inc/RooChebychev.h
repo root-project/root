@@ -1,11 +1,11 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooChebychev.rdl,v 1.3 2004/04/05 22:38:34 wverkerke Exp $
+ *    File: $Id: RooChebychev.rdl,v 1.4 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

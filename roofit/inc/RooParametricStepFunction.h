@@ -1,11 +1,11 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooParametricStepFunction.rdl,v 1.1 2004/04/01 22:57:36 wverkerke Exp $
+ *    File: $Id: RooParametricStepFunction.rdl,v 1.2 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
- * Copyright (c) 2000-2004, Stanford University. All rights reserved.        *
+ * Copyright (c) 2000-2005, Stanford University. All rights reserved.        *
  *           
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

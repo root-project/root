@@ -1,13 +1,13 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.cc,v 1.15 2004/11/29 21:15:50 wverkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.16 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

@@ -1,11 +1,11 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.cc,v 1.4 2004/11/29 13:38:00 wverkerke Exp $
+ *    File: $Id: RooBukinPdf.cc,v 1.5 2004/11/29 21:15:49 wverkerke Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

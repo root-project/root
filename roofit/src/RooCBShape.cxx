@@ -1,12 +1,12 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.cc,v 1.10 2004/11/29 21:15:49 wverkerke Exp $
+ *    File: $Id: RooCBShape.cc,v 1.11 2005/02/16 21:53:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
@@ -40,7 +40,7 @@ Double_t RooCBShape::ApproxErf(Double_t arg) const
 
 
 static const char rcsid[] =
-"$Id: RooCBShape.cc,v 1.10 2004/11/29 21:15:49 wverkerke Exp $";
+"$Id: RooCBShape.cc,v 1.11 2005/02/16 21:53:30 wverkerke Exp $";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,

@@ -1,12 +1,12 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBreitWigner.cc,v 1.8 2004/11/29 21:15:49 wverkerke Exp $
+ *    File: $Id: RooBreitWigner.cc,v 1.9 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          Colorado State University                        *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *

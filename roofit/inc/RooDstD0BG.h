@@ -1,14 +1,14 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.rdl,v 1.7 2004/04/05 22:38:34 wverkerke Exp $
+ *    File: $Id: RooDstD0BG.rdl,v 1.8 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
  *   CC, Chih-hsiang Cheng, Stanford         chcheng@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          RAL and Stanford University. All rights reserved.*
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

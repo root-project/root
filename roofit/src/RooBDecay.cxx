@@ -1,13 +1,13 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBDecay.cc,v 1.6 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooBDecay.cc,v 1.7 2004/11/29 21:15:48 wverkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

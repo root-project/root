@@ -1,14 +1,14 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.cc,v 1.12 2004/11/29 21:15:49 wverkerke Exp $
+ *    File: $Id: RooDstD0BG.cc,v 1.13 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
  *   CC, Chih-hsiang Cheng, Stanford         chcheng@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2004, Regents of the University of California          *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          RAL and Stanford University. All rights reserved.*
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
@@ -30,7 +30,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.12 2004/11/29 21:15:49 wverkerke Exp $";
+"$Id: RooDstD0BG.cc,v 1.13 2005/02/14 20:48:03 wverkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,
