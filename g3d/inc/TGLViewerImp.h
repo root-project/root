@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGLViewerImp.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGLViewerImp.h,v 1.2 2001/05/14 15:24:08 fine Exp $
 // Author: Valery Fine      23/05/97
 
 /*************************************************************************
@@ -52,6 +52,7 @@ public:
    virtual void   DeleteContext() { }
    virtual void   DeleteView();
    virtual void   HandleInput(EEventType button, Int_t x, Int_t y);
+   TPadOpenGLView *GetGLView();
    virtual void   MakeCurrent() { };
    virtual void   Paint(Option_t *opt="");
 
@@ -72,7 +73,9 @@ public:
 
 inline void TGLViewerImp::CreateStatusBar(Int_t) { }
 inline void TGLViewerImp::CreateStatusBar(Int_t *, Int_t) { }
+inline TPadOpenGLView *TGLViewerImp::GetGLView() { return fGLView;}
 inline void TGLViewerImp::SetStatusText(const char *, Int_t, Int_t) { }
 inline void TGLViewerImp::ShowStatusBar(Bool_t) { }
 
+// $log$
 #endif

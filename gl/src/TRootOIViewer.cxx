@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TRootOIViewer.cxx,v 1.4 2001/05/14 15:25:38 fine Exp $
 // Author: Valery Fine & Fons Rademakers   5/10/2000 and 28/4/2001
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "Buttons.h"
 #include "TVirtualPad.h"
 #include "TPadOpenGLView.h"
+#include "TView.h"
 #include "TVirtualGL.h"
 #include "TColor.h"
 #include "TSystem.h"
@@ -71,16 +72,19 @@ void InventorCallback(void *d, SoAction *action)
          glDisable(GL_COLOR_MATERIAL);
 
       } else if (action->isOfType(SoGetBoundingBoxAction::getClassTypeId())) {
-         Double_t minBound[3] = { -1000, -1000, -1000 };
-         Double_t maxBound[3] = {  1000,  1000,  1000 };
+        // define the default range
+         Float_t minBound[3]={-1000,-1000,-1000};
+         Float_t maxBound[3]={ 1000, 1000, 1000};
 
-         // currentViewer->GetGLView()->GetRange(minBound,maxBound);
+         // pick the "real" range provided by TPad object
+         currentViewer->GetGLView()->GetPad()->GetView()->GetRange(minBound,maxBound);
          if (minBound[0] == maxBound[0])
-            SoCacheElement::invalidate(action->getState());
-
+              SoCacheElement::invalidate(action->getState());
+  
          ((SoGetBoundingBoxAction *)action)->
-           extendBy(SbBox3f(minBound[0],minBound[1],minBound[2],
-                            maxBound[0],maxBound[2],maxBound[2]));
+            extendBy(SbBox3f(minBound[0],minBound[1],minBound[2]
+                            ,maxBound[0],maxBound[2],maxBound[2])
+                   );
       }
    }
 }
@@ -284,6 +288,7 @@ void TRootOIViewer::CreateViewer(const char *title)
    fInventorViewer = new SoXtExaminerViewer(fTopLevel);
    fInventorViewer->setSceneGraph(fRootNode);
    fInventorViewer->setTitle(title);
+   fInventorViewer->setSize(SbVec2s((short)GetWidth(), (short)GetHeight()));
 
    // Pick the background color
    TVirtualPad *thisPad = fGLView->GetPad();
