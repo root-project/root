@@ -1053,6 +1053,14 @@ fi
 #
 # Fleshin out paths
 #
+# First win32 does not support -L in ldflags, so remove @ldflags@.
+#
+if [ "$arch" = "win32" ]; then
+    sed -e "s|@ldflags@||"        \
+        < Makefile.tmp > Makefile.tmpp
+    mv Makefile.tmpp Makefile.tmp
+fi
+
 if [ -n "$haveconfig" ]; then
     ##################################################################
     #
@@ -1108,7 +1116,7 @@ else
     tutdir=\$\(ROOTSYS\)/tutorials
 
     sed -e "s|@useconfig@|FALSE|" \
-        -e "s|@cflags@||"          \
+        -e "s|@cflags@||"         \
         -e "s|@ldflags@||"        \
         < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
