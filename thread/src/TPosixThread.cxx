@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.5 2003/08/06 21:31:24 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.6 2004/07/08 11:52:32 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -38,6 +38,7 @@ Int_t TPosixThread::Run(TThread *th)
    pthread_attr_setdetachstate(attr, det);
    int ierr = pthread_create(&id, attr, &TThread::Fun, th);
    if (attr) pthread_attr_destroy(attr);
+   th->SetJoinId(id);
    return ierr;
 }
 
