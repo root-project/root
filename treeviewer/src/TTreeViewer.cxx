@@ -719,6 +719,7 @@ void TTreeViewer::BuildInterface()
    }
 
    fListView->Layout();
+   EmptyAll();
    // map the tree if it was supplied in the constructor
 
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
@@ -1697,6 +1698,7 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
          entry->SetUserData(new UInt_t(kLTBranchType));
          fLVContainer->AddThisItem(entry);
          entry->MapWindow();
+	 entry->SetAlias(textEntry->GetString());
       } else {
          pic = (gClient->GetMimeTypeList())->GetIcon("TLeaf",kFALSE);
          if (!pic) pic = gClient->GetPicture("leaf_t.xpm");
@@ -1706,6 +1708,7 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
          entry->SetUserData(new UInt_t(kLTDragType));
          fLVContainer->AddThisItem(entry);
          entry->MapWindow();
+	 entry->SetAlias(textEntry->GetString());
       }
    }
 
