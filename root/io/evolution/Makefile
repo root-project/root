@@ -23,7 +23,7 @@ data.root: MyClassOld_cxx.$(DllSuf)
 
 readold.log: MyClassOld_cxx.$(DllSuf) data.root
 	$(CMDECHO) root.exe -q -b -l readold.C > readold.log 2>&1
-	
+
 readnew.log: MyClass_C.$(DllSuf) data.root
 	$(CMDECHO) root.exe -q -b -l readnew.C > readnew.log 2>&1
 
@@ -36,3 +36,10 @@ ClassConvReadOld.log: ClassConvOld_cxx.$(DllSuf) ClassConv.root
 ClassConv.log: ClassConv.root ClassConvNew_cxx.$(DllSuf) ClassConvReadOld.log
 	$(CMDECHO) root.exe -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1 
 
+typedef.root : $(ROOTCORELIBS) typedefWrite_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l typedefWrite.C+ > typedefWrite.log
+
+typedef.log: typedef.root
+
+typedef: typedef.log
+	$(TestDiff)
