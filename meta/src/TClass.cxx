@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.145 2004/05/11 15:32:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.146 2004/05/14 15:03:53 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1433,6 +1433,22 @@ TRealData *TClass::GetRealData(const char *name) const
    return rd;
    //in principle, one could also take into account the opposite situation
    //where a member like *arr has been converted to arr[20]
+}
+
+//______________________________________________________________________________
+const char *TClass::GetSharedLibs()
+{
+   // Get the list of shared libraries containing the code for class cls.
+   // The first library in the list is the one containing the class, the
+   // others are the libraries the first one depends on. Returns 0
+   // in case the library is not found.
+
+   if (!gInterpreter) return 0;
+
+   if (fSharedLibs.IsNull())
+      fSharedLibs = gInterpreter->GetClassSharedLibs(fName);
+
+   return !fSharedLibs.IsNull() ? fSharedLibs : 0;
 }
 
 //______________________________________________________________________________

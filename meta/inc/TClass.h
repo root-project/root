@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.41 2004/02/25 14:03:37 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.42 2004/04/16 20:53:55 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -85,6 +85,7 @@ private:
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
    TClassStreamer    *fStreamer;        //pointer to streamer function
+   TString            fSharedLibs;      //shared libraries containing class code
 
    IsAFunc_t          fIsA;             //pointer to the class's IsA function.
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
@@ -190,6 +191,7 @@ public:
    ROOT::NewArrFunc_t GetNewArray() const;
    Int_t              GetNmethods();
    TRealData         *GetRealData(const char *name) const;
+   const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    TClassStreamer    *GetStreamer() const     { return fStreamer;    }
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo;}
