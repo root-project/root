@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.20 2001/07/04 17:23:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.21 2001/07/04 17:32:09 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -23,7 +23,8 @@ const Double_t kPI = 3.14159265358979323846;
 #else
 const Double_t kPI = TMath::Pi();
 #endif
-const Int_t kLatex = BIT(10);
+const Int_t kLatex      = BIT(10);
+const Int_t kPrintingPS = BIT(11); //set in TPad.h
 
 ClassImp(TLatex)
 
@@ -108,13 +109,14 @@ ClassImp(TLatex)
 //    #grave  = agrave
 //    #dot    = derivative
 //    #ddot   = double derivative
+//    #tilde  = tilde
 //
 //Begin_Html
 /*
 <img src="gif/latex_above.gif">
 */
 //End_Html
-//   #dot  #ddot  #hat  #check  #acute  #grave
+//   #dot  #ddot  #hat  #check  #acute  #grave  #tilde
 //
 //   ** Changing Style in Math Mode
 //   ------------------------------
@@ -343,7 +345,7 @@ const char *tab2[] = { "leq","/","infty","voidb","club","diamond","heart",
                  "arctop","lbar","arcbottom","topbar","void8", "bottombar","arcbar",
                  "ltbar","void04","void05","void06","GT","int" };
 
-const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
+const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde"};
 
       if (fError != 0) return FormSize(0,0,0);
 
@@ -591,7 +593,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                   }
                }
             }
-            for(k=0;k<8;k++) {
+            for(k=0;k<9;k++) {
                if (!OpFound && UInt_t(length)>i+strlen(tab3[k])) {
                   if (strncmp(&text[i+1],tab3[k],strlen(tab3[k]))==0) {
                      OpAbove=k;
@@ -1020,6 +1022,26 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                y1 = y-sub-fs1.Dessus() ;
                DrawLine(x2,y-3*sub-fs1.Dessus(),x1,y1,spec);
                DrawLine(x3,y-3*sub-fs1.Dessus(),x1,y1,spec);
+               break;
+            case 8: // tilde
+               x2 = x+fs1.Width()/2 ;
+               y2 = y -fs1.Dessus() ;
+               if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS)) y2 -= 2*sub;
+               {
+                  Double_t sinang  = TMath::Sin(spec.angle/180*kPI);
+                  Double_t cosang  = TMath::Cos(spec.angle/180*kPI);
+                  Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
+                  Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
+                  Double_t X  = gPad->AbsPixeltoX(Int_t((x2-Xorigin)*cosang+(y2-Yorigin)*sinang+Xorigin));
+                  Double_t Y  = gPad->AbsPixeltoY(Int_t((x2-Xorigin)*-sinang+(y2-Yorigin)*cosang+Yorigin));
+                  TText tilde;
+                  tilde.SetTextFont(fTextFont);
+                  tilde.SetTextColor(fTextColor);
+                  tilde.SetTextSize(0.9*spec.size);
+                  tilde.SetTextAlign(22);
+                  tilde.SetTextAngle(fTextAngle);
+                  tilde.PaintText(X,Y,"~");
+               }
                break;
            }
          }
@@ -1531,7 +1553,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    // Check if the Latex syntax is correct
 
    const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
-                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{",
+                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{",
                        "\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
                        "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{"}; // check for }
    const Char_t *kWord2[] = {"#color[","#font[","#sqrt[","\\color[","\\font[","\\sqrt["}; // check for ]{ + }
@@ -1540,12 +1562,12 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"} ;
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"} ;
    Int_t lkWord1[] = {4,4,2,2,7,6,6,4,4,4,
-                      5,5,5,5,6,7,7,7,
+                      5,5,5,5,6,7,7,7,7,
                       7,6,6,4,4,4,4,4,
                       5,5,5,5,6,7,7,7} ;
    Int_t lkWord2[] = {7,6,6,7,6,6} ;
    Int_t lkWord3[] = {6,6} ;
-   Int_t NkWord1 = 34, NkWord2 = 6, NkWord3 = 2 ;
+   Int_t NkWord1 = 35, NkWord2 = 6, NkWord3 = 2 ;
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
    Int_t lLeft2 = 4 ;
