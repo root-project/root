@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.17 2003/01/20 10:25:57 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.19 2003/08/23 00:08:12 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -298,7 +298,10 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
      printf("Error cannot open input file: %s\n",fname);
   }
   if (ier || quest[0]) {
-     fLun = 0;
+     fgLuns[fLun-10]=0; 
+     fLun  = 0;
+     fList = 0;
+     fKeys = 0;
      MakeZombie();
      return;
   }
@@ -322,6 +325,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
 THbookFile::~THbookFile()
 {
 
+   if (!fList) return;
    Close();
    delete fList;
    delete fKeys;
@@ -381,7 +385,8 @@ void THbookFile::Close(Option_t *)
 // Close the Hbook file
 
    if(!IsOpen()) return;
-
+   if (!fList) return;
+   
    gROOT->GetListOfBrowsables()->Remove(this);
 
    cd();
