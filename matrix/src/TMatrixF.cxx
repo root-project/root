@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.9 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.10 2004/03/21 21:15:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -2030,4 +2030,59 @@ void TMatrixF::Streamer(TBuffer &R__b)
   } else {
     TMatrixF::Class()->WriteBuffer(R__b,this);
   }
+}
+
+//______________________________________________________________________________
+void TMatrix::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TMatrix.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TMatrixF::Clear();
+         TMatrixF::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         if (fNelems <= kSizeMax) {
+            memcpy(fDataStack,fElements,fNelems*sizeof(Float_t));
+            delete [] fElements;
+            fElements = fDataStack;
+         }
+         return;
+      }
+      //====process old version 2
+      if (R__v > 1) {
+         TObject::Streamer(R__b);
+         R__b >> fNrows;
+         R__b >> fNcols;
+         R__b >> fNelems;
+         R__b >> fRowLwb;
+         R__b >> fColLwb;
+         Char_t isArray;
+         R__b >> isArray;
+         if (isArray) {
+            fElements = new Float_t[fNelems];
+            R__b.ReadFastArray(fElements,fNelems);
+         }
+         R__b.CheckByteCount(R__s, R__c, TMatrix::IsA());
+         if (fNelems <= kSizeMax) {
+            memcpy(fDataStack,fElements,fNelems*sizeof(Float_t));
+            delete [] fElements;
+            fElements = fDataStack;
+         }
+         return;
+      }
+      //====process old version 1
+      TObject::Streamer(R__b);
+      R__b >> fNrows;
+      R__b >> fNcols;
+      R__b >> fRowLwb;
+      R__b >> fColLwb;
+      fNelems = R__b.ReadArray(fElements);
+      R__b.CheckByteCount(R__s, R__c, TMatrix::IsA());
+      //====end of old versions
+
+   } else {
+      TMatrixF::Class()->WriteBuffer(R__b,this);
+   }
 }

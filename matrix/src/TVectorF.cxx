@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.10 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.11 2004/03/22 10:50:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1566,6 +1566,44 @@ void TVectorF::Streamer(TBuffer &R__b)
     R__b >> fRowLwb;
     fNrows = R__b.ReadArray(fElements);
     R__b.CheckByteCount(R__s, R__c, TVectorF::IsA());
+  } else {
+    TVectorF::Class()->WriteBuffer(R__b,this);
+  }
+}
+
+//______________________________________________________________________________
+void TVector::Streamer(TBuffer &R__b)
+{
+  // Stream an object of class TVector.
+
+  if (R__b.IsReading()) {
+    UInt_t R__s, R__c;
+    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
+    if (R__v > 2) {
+      Clear();
+      TVectorF::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+      return;
+    }
+    //====process old version 2
+    if (R__v > 1) {
+       Clear();
+       TObject::Streamer(R__b);
+       R__b >> fNrows;
+       R__b >> fRowLwb;
+       Char_t isArray;                           
+       R__b >> isArray;                             
+       if (fNrows) {
+          fElements = new Float_t[fNrows];
+          R__b.ReadFastArray(fElements,fNrows);
+       }
+       R__b.CheckByteCount(R__s, R__c, TVector::IsA());
+      return;
+    }
+    //====process old version 1
+    TObject::Streamer(R__b);
+    R__b >> fRowLwb;
+    fNrows = R__b.ReadArray(fElements);
+    R__b.CheckByteCount(R__s, R__c, TVector::IsA());
   } else {
     TVectorF::Class()->WriteBuffer(R__b,this);
   }
