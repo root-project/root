@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.5 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.6 2004/09/15 10:26:15 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -462,7 +462,7 @@ Bool_t TGMdiTitleBar::HandleButton(Event_t *event)
       switch (event->fCode) {
 
          case kButton1:
-            ((TGMainFrame *)((TGMdiMainFrame *)fMdiWin)->GetMainFrame())->Layout();
+            //((TGMainFrame *)((TGMdiMainFrame *)fMdiWin)->GetMainFrame())->Layout();
             fLeftButPressed = kFALSE;
             break;
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.8 2004/09/10 16:06:49 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.9 2004/09/15 10:26:15 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -238,7 +238,7 @@ Bool_t TGMdiMainFrame::RemoveMdiFrame(TGMdiFrame *frame)
 
    travel->GetDecorFrame()->RemoveFrame(frame);
 
-   UInt_t old_id = travel->GetDecorFrame()->GetId();
+   UInt_t old_id = frame->GetId();
 
    delete travel->fDecor;
    delete travel;

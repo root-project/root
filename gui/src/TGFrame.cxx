@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.84 2004/09/14 15:38:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.85 2004/09/16 21:22:15 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1281,7 +1281,7 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
          }
       }
    }
-   AddInput(kButtonPressMask); // to allow Drag and Drop
+   //AddInput(kButtonPressMask); // to allow Drag and Drop
    SetWindowName();
 }
 
