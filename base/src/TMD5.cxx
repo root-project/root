@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.8 2002/03/16 18:30:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.9 2002/07/01 22:58:31 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -54,6 +54,8 @@ TMD5::TMD5()
 
    fBits[0] = 0;
    fBits[1] = 0;
+
+   memset(fIn, 0, 64);
 
    memset(fDigest, 0, 16);
    fFinalized = kFALSE;

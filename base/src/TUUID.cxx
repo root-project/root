@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.12 2002/08/02 18:54:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.13 2002/08/14 06:48:55 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -435,7 +435,6 @@ void TUUID::GetNodeIdentifier()
       }
    }
    UChar_t seed[16];
-   memset(seed,0,16); //not all seeds set by getRandom!
    GetRandomInfo(seed);
    seed[0] |= 0x80;
    memcpy(fNode, seed, sizeof(fNode));
