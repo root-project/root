@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExponential.rdl,v 1.2 2001/01/23 19:36:16 verkerke Exp $
+ *    File: $Id: RooExponential.rdl,v 1.1 2001/08/23 00:47:20 bevan Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
@@ -35,7 +35,7 @@ protected:
   RooRealProxy x;
   RooRealProxy c;
 
-  Double_t evaluate(const RooArgSet * nset) const;
+  Double_t evaluate() const;
 
 //  void useParametersImpl();
 //  void initGenerator();

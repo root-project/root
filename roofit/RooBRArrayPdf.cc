@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBRArrayPdf.cc,v 1.1 2001/06/19 18:36:48 jback Exp $
+ *    File: $Id: RooBRArrayPdf.cc,v 1.2 2001/08/02 21:40:04 verkerke Exp $
  * Authors:
  *   JB, John Back, Queen Mary College, Univ London, jback@slac.stanford.edu
  * History:
@@ -112,7 +112,7 @@ void RooBRArrayPdf::addPdf(RooAbsPdf& pdf, RooAbsReal& coef)
   _coefProxyList.Add(coefProxy) ;
 }
 
-Double_t RooBRArrayPdf::evaluate(const RooArgSet* nset) const {
+Double_t RooBRArrayPdf::evaluate() const {
 
   // Calculate the current value of this object
   TIterator *pIter = _pdfProxyList.MakeIterator() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.cc,v 1.4 2001/06/19 18:36:49 jback Exp $
+ *    File: $Id: RooDircPdf.cc,v 1.5 2001/08/02 21:40:04 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -69,7 +69,7 @@ RooDircPdf::RooDircPdf(const RooDircPdf& other, const char* name) :
 //   relNorm = _relNormFun.Eval(cosTheta, drcMtm); // (core area)/(core + tail areas)
 //
 
-Double_t RooDircPdf::evaluate(const RooArgSet* nset) const
+Double_t RooDircPdf::evaluate() const
 {
  
   // First test if we have a valid mtm range and Cerenkov angle values...

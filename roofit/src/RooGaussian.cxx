@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGaussian.cc,v 1.5 2001/08/02 21:40:04 verkerke Exp $
+ *    File: $Id: RooGaussian.cc,v 1.6 2001/08/03 18:13:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,7 +41,7 @@ RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
 }
 
 
-Double_t RooGaussian::evaluate(const RooArgSet* nset) const
+Double_t RooGaussian::evaluate() const
 {
   Double_t arg= x - mean;  
   return exp(-0.5*arg*arg/(sigma*sigma)) ;

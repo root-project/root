@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.rdl,v 1.6 2001/08/01 01:25:02 verkerke Exp $
+ *    File: $Id: RooDircPdf.rdl,v 1.7 2001/08/02 21:40:04 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -51,7 +51,7 @@ protected:
   Bool_t _milliRadians ;
   Double_t _minMtmVal, _minThetaCVal;
   
-  Double_t evaluate(const RooArgSet* nset) const ;
+  Double_t evaluate() const ;
 
 private:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPDeltaTVar.cc,v 1.4 2001/08/02 21:40:05 verkerke Exp $
+ *    File: $Id: RooUnblindCPDeltaTVar.cc,v 1.5 2001/08/03 18:13:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,7 +47,7 @@ RooUnblindCPDeltaTVar::~RooUnblindCPDeltaTVar()
 }
 
 
-Double_t RooUnblindCPDeltaTVar::evaluate(const RooArgSet* nset) const
+Double_t RooUnblindCPDeltaTVar::evaluate() const
 {
   if ((const char*)_state=="Blind") {
     // Blinding active for this event

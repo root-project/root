@@ -2,7 +2,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBifurGauss.rdl,v 1.2 2001/07/31 05:58:10 verkerke Exp $
+ *    File: $Id: RooBifurGauss.rdl,v 1.3 2001/08/02 21:40:04 verkerke Exp $
  * Authors:
  *   Abi Soffer, Coloraro State University, abi@slac.stanford.edu
  * History:
@@ -39,7 +39,7 @@ protected:
   RooRealProxy sigmaL;
   RooRealProxy sigmaR;
 
-  Double_t evaluate(const RooArgSet* nset) const;
+  Double_t evaluate() const;
 
 private:
 
