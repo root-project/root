@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.56 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.57 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -880,7 +880,7 @@ TMatrixD &TMatrixD::Invert(Double_t *det)
     TDecompBase::DiagProd(diagv,fTol,d1,d2);
     d1 *= sign;
     if (TMath::Abs(d2) > 52.0) {
-      Error("Invert(Double_t *)","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
+      Warning("Invert(Double_t *)","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
       *det =  0.0;
     } else
       *det = d1*TMath::Power(2.0,d2);
@@ -967,7 +967,7 @@ TMatrixD &TMatrixD::InvertFast(Double_t *det)
         TDecompBase::DiagProd(diagv,fTol,d1,d2);
         d1 *= sign;
         if (TMath::Abs(d2) > 52.0) {
-          Error("Invert(Double_t *)","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
+          Warning("Invert(Double_t *)","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
           *det =  0.0;
         } else
           *det = d1*TMath::Power(2.0,d2);
