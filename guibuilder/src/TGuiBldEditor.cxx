@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -52,6 +52,7 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
    //
 
    fEditor = editor;
+   fEditDisabled = kTRUE;
    SetCleanup(kTRUE);
    TGFrame *frame = fEditor->GetSelected();
 
@@ -119,6 +120,7 @@ TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *edi
    //
 
    fEditor = editor;
+   fEditDisabled = kTRUE;
    SetCleanup(kTRUE);
 
    TGCompositeFrame *f = new TGHorizontalFrame(this);
@@ -207,6 +209,10 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
    //
 
    fEditor = editor;
+   fEditDisabled = kTRUE;
+   fBgndFrame = 0;
+   fFgndFrame = 0;
+
    SetCleanup(kTRUE);
 
    fBtnGroup = new TGButtonGroup(this,"Border Mode",kVerticalFrame | kFitWidth);
@@ -226,7 +232,7 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
    fBtnGroup->Connect("Pressed(Int_t)", "TGuiBldEditor", fEditor, "UpdateBorder(Int_t)");
    frame300->Connect("Pressed()", "TGuiBldEditor", fEditor, "UpdateBorder(=4)");
    frame300->Connect("Released()", "TGuiBldEditor", fEditor, "UpdateBorder(=5)");
-
+/*
    TGCompositeFrame *f = new TGGroupFrame(this,"Palette",kVerticalFrame | kFitWidth);
    TGHorizontalFrame *hf = new TGHorizontalFrame(f ,1, 1);
    f->AddFrame(hf);
@@ -250,6 +256,7 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
 
    f->Resize(44,86);
    AddFrame(f);
+*/
 }
 
 //______________________________________________________________________________
@@ -266,8 +273,8 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
    fBtnGroup->SetButton(kBldBorderRaised, opt & kRaisedFrame);
    fBtnGroup->SetButton(kBldBorderPlain, !(opt & kRaisedFrame) && !(opt & kSunkenFrame));
 
-   fBgndFrame->SetColor(fSelected->GetBackground());
-   fFgndFrame->SetColor(fSelected->GetForeground());
+   if (fBgndFrame) fBgndFrame->SetColor(fSelected->GetBackground());
+   if (fFgndFrame) fFgndFrame->SetColor(fSelected->GetForeground());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

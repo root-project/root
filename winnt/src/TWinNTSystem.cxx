@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.98 2004/07/26 22:59:21 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.99 2004/09/13 19:23:53 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -698,7 +698,7 @@ const char *TWinNTSystem::BaseName(const char *name)
       char *bslash = (char *)strrchr(&symbol[idx],'\\');
       char *rslash = (char *)strrchr(&symbol[idx],'/');
       if (cp = max(rslash, bslash)) {
-         return StrDup(cp);
+         return StrDup(++cp);
       }
       return StrDup(&symbol[idx]);
    }

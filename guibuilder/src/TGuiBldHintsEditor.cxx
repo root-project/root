@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -31,6 +31,8 @@ TGuiBldHintsEditor::TGuiBldHintsEditor(const TGWindow *p, TGuiBldEditor *e) :
                      TGVerticalFrame(p, 1, 1), fEditor(e)
 {
    //
+
+   fEditDisabled = kTRUE;
 
    // horizontal frame
    TGHorizontalFrame *frame3 = new TGHorizontalFrame(this,262,18,kHorizontalFrame);
