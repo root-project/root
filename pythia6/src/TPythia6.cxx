@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.4 2001/01/26 07:38:52 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.5 2001/04/06 17:16:00 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,18 +218,21 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
 //  This can be demanded explicitly by setting the option = "Final"
 //  If the option = "All", all the particles are stored.
 //
+
   if (particles == 0) return 0;
   TClonesArray &Particles = *particles;
   Particles.Clear();
   Int_t numpart = fPyjets->N;
+  Int_t nparts=0;
   if (!strcmp(option,"") || !strcmp(option,"Final")) {
     for (Int_t i = 0; i<numpart; i++) {
-      if (fPyjets->K[0][i] == 1) {
+
+    if (fPyjets->K[0][i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
 //
-        new(Particles[i]) TParticle(
-                            fPyjets->K[1][i] ,
+        new(Particles[nparts]) TParticle(
+			    fPyjets->K[1][i] ,
                             fPyjets->K[0][i] ,
                             fPyjets->K[2][i] ,
                             -1,
@@ -245,6 +248,9 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
                             fPyjets->V[1][i] ,
                             fPyjets->V[2][i] ,
                             fPyjets->V[3][i]);
+
+	//	if(gDebug) printf("%d %d %d! ",i,fPyjets->K[1][i],numpart);
+	nparts++;
       }
     }
   }
@@ -268,8 +274,10 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
                             fPyjets->V[2][i] ,
                             fPyjets->V[3][i]);
     }
+    nparts=numpart;
   }
-  return numpart;
+
+  return nparts;
 }
 
 //______________________________________________________________________________
