@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.11 2002/06/10 20:02:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.12 2002/06/16 08:37:28 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
 
 
 #if defined R__TEMPLATE_OVERLOAD_BUG
-template <> 
+template <>
 #endif
 inline TBuffer &operator>>(TBuffer &buf, TArrayD *&obj)
 {
@@ -68,9 +68,9 @@ inline TBuffer &operator>>(TBuffer &buf, TArrayD *&obj)
 }
 
 #if defined R__TEMPLATE_OVERLOAD_BUG
-template <> 
+template <>
 #endif
-inline TBuffer &operator<<(TBuffer &buf, const TArrayD *obj) 
+inline TBuffer &operator<<(TBuffer &buf, const TArrayD *obj)
 {
    // Write a TArrayD object into buffer
    return buf << (TArray*)obj;

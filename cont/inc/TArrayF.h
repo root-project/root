@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.12 2002/06/10 20:02:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.13 2002/06/16 08:37:28 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -51,12 +51,12 @@ public:
    void           Set(Int_t n, const Float_t *array);
    Float_t       &operator[](Int_t i);
    Float_t        operator[](Int_t i) const;
-     
+
    ClassDef(TArrayF,1)  //Array of floats
 };
 
 #if defined R__TEMPLATE_OVERLOAD_BUG
-template <> 
+template <>
 #endif
 inline TBuffer &operator>>(TBuffer &buf, TArrayF *&obj)
 {
@@ -67,9 +67,9 @@ inline TBuffer &operator>>(TBuffer &buf, TArrayF *&obj)
 }
 
 #if defined R__TEMPLATE_OVERLOAD_BUG
-template <> 
+template <>
 #endif
-inline TBuffer &operator<<(TBuffer &buf, const TArrayF *obj) 
+inline TBuffer &operator<<(TBuffer &buf, const TArrayF *obj)
 {
    // Write a TArrayF object into buffer
    return buf << (TArray*)obj;

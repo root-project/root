@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.4 2002/05/09 20:21:59 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.5 2002/06/16 08:37:28 brun Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public:
 };
 
 #if defined R__TEMPLATE_OVERLOAD_BUG
-template <> 
+template <>
 #endif
 inline TBuffer &operator>>(TBuffer &buf, TArray *&obj)
 {
@@ -69,7 +69,7 @@ inline TBuffer &operator>>(TBuffer &buf, TArray *&obj)
 }
 
 #if defined R__TEMPLATE_OVERLOAD_BUG
-template <> 
+template <>
 #endif
 TBuffer &operator<<(TBuffer &b, const TArray *obj);
 

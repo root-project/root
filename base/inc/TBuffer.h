@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.18 2002/06/05 10:52:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.19 2002/06/17 15:38:46 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -243,7 +243,7 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
    // since the pointer could be zero (so typeid(*obj) is not usable).
 
    TClass *cl = TBuffer::GetClass(typeid(Tmpl));
-   // ReadObject returns a TObject* ... this is WRONG in the case where 
+   // ReadObject returns a TObject* ... this is WRONG in the case where
    // the class does not inherit from TObject as a first base class.
    // So for now we cast to void* before casting to the actual type.
    obj = (Tmpl *) ( (void*) buf.ReadObject(cl) );
