@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.4 2002/04/26 08:46:10 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Author: Ivana Hrivnacova, 23/03/2002
 
 #ifndef ROOT_TVirtualMCApplication
@@ -24,6 +24,7 @@ class TVirtualMCApplication : public TNamed {
     // methods
     virtual void ConstructGeometry() = 0;
     virtual void InitGeometry() = 0;
+    virtual void AddParticles() {}
     virtual void GeneratePrimaries() = 0;
     virtual void BeginEvent() = 0;
     virtual void BeginPrimary() = 0;
@@ -33,8 +34,8 @@ class TVirtualMCApplication : public TNamed {
     virtual void FinishPrimary() = 0;
     virtual void FinishEvent() = 0;
     
-    virtual Double_t TrackingRmax() const = 0;
-    virtual Double_t TrackingZmax() const = 0;
+    virtual Double_t TrackingRmax() const { return DBL_MAX; }
+    virtual Double_t TrackingZmax() const { return DBL_MAX; } 
     virtual void     Field(const Double_t* x, Double_t* b) const = 0;
 
   private:
