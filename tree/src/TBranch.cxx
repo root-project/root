@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.23 2001/05/23 09:54:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.24 2001/07/10 16:09:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -202,9 +202,15 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
          } else if (*leaftype == 'D') {
             leaf = new TLeafD(leafname,leaftype);
          }
+         if (leaf->IsZombie()) {
+            delete leaf;
+            Error("TBranch","Illegal leaf:%s/%s",name,leaflist);
+            MakeZombie();
+            return;
+         }
          if (!leaf) {
-           Error("TLeaf","Illegal data type");
-           return;
+            Error("TLeaf","Illegal data type");
+            return;
          }
          leaf->SetBranch(this);
          leaf->SetAddress((char*)(fAddress+offset));

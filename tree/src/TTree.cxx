@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.90 2001/09/07 02:54:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.91 2001/09/22 10:06:55 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -657,6 +657,10 @@ TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int
 
    gTree = this;
    TBranch *branch = new TBranch(name,address,leaflist,bufsize);
+   if (branch->IsZombie()) {
+      delete branch;
+      return 0;
+   }
    fBranches.Add(branch);
    return branch;
 }

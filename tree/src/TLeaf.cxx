@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.3 2000/12/13 15:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.4 2001/04/09 08:13:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -52,6 +52,7 @@ TLeaf::TLeaf(const char *name, const char *)
 //     See the TTree and TBranch constructors for explanation of parameters.
 
    fLeafCount  = GetLeafCounter(fLen);
+   if (fLen == -1) {MakeZombie(); return;}
    fIsRange    = 0;
    fIsUnsigned = 0;
    fLenType    = 4;
@@ -153,6 +154,7 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
    for (i=0;i<nch;i++) {
       if (!isdigit(countname[i])) {
         delete [] countname;
+        countval = -1;
         return 0;
       }
    }
