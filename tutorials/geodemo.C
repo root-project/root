@@ -1,5 +1,6 @@
 // Author: M.Gheata  06/16/03
 Bool_t comments = kTRUE;
+Bool_t raytracing = kFALSE;
 
 //______________________________________________________________________________
 void geodemo ()
@@ -23,7 +24,7 @@ void geodemo ()
    gROOT->LoadMacro("rootgeom.C");
    bar = new TControlBar("vertical", "TGeo shapes",10,10);
    bar->AddButton("How to run  ","help()","Instructions for running this macro"); 
-   bar->AddButton("ROOTgeom    ","rootgeom()","A simple geometry example.");
+   bar->AddButton("ROOTgeom    ","rgeom()","A simple geometry example.");
    bar->AddButton("Box         ","box()","A box shape.");
    bar->AddButton("Tube        ","tube()","A tube with inner and outer radius");
    bar->AddButton("Tube segment","tubeseg()","A tube segment");
@@ -51,6 +52,19 @@ void geodemo ()
    gROOT->SaveContext();
    gRandom = new TRandom3();
 }
+
+//______________________________________________________________________________
+void rgeom()
+{
+   gROOT->GetListOfCanvases()->Delete();
+   rootgeom();
+   Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
+   if (is_raytracing != raytracing) {
+      gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
+      gPad->Modified();
+      gPad->Update()
+   }   
+}   
 
 //______________________________________________________________________________
 void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
@@ -1241,8 +1255,8 @@ void composite()
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    top->Draw();
-   MakePicture();
    gGeoManager->SetNsegments(20);
+   MakePicture();
    if (!comments) return;
    c->cd(2);
    TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
@@ -1389,13 +1403,19 @@ void align()
 //______________________________________________________________________________
 void MakePicture()
 {
-   gGeoManager->SetNsegments(80);
+//   gGeoManager->SetNsegments(80);
    TView *view = gPad->GetView();
    if (view) {
       view->RotateView(248,66);
       view->ShowAxis();
       if (comments) view->MoveViewCommand('k',1);
-   }      
+   }
+   Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
+   if (is_raytracing != raytracing) {
+      gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
+      gPad->Modified();
+      gPad->Update()
+   }   
 }
       
 //______________________________________________________________________________
@@ -1480,10 +1500,11 @@ Int_t randomColor()
 
 //______________________________________________________________________________
 void raytrace() {
+   raytracing = !raytracing;
+   if (!gGeoManager) return;
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
-   Bool_t is_raytracing = painter->IsRaytracing();
-   painter->SetRaytracing(!is_raytracing);
+   painter->SetRaytracing(raytracing);
    if (!gPad) return;
    gPad->Modified();
    gPad->Update();
