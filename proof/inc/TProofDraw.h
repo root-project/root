@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.10 2005/04/06 10:55:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.11 2005/04/06 11:03:17 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -261,5 +261,29 @@ public:
 
    ClassDef(TProofDrawListOfPolyMarkers3D,0)  //Tree drawing selector for PROOF
 };
+
+#ifndef __CINT__
+template <typename T>
+Long64_t TProofVectorContainer<T>::Merge(TCollection* list)
+{
+   // Adds all vectors holded by all TProofVectorContainers in the collection
+   // the vector holded by this TProofVectorContainer.
+   // Returns the total number of poins in the result or -1 in case of an error.
+
+   TIter next(list);
+
+   std::back_insert_iterator<std::vector<T> > ii(*fVector);
+   while (TObject* o = next()) {
+      TProofVectorContainer<T> *vh = dynamic_cast<TProofVectorContainer<T>*> (o);
+      if (!vh) {
+         Error("Merge",
+             "Cannot merge - an object which doesn't inherit from TProofVectorContainer<T> found in the list");
+         return -1;
+      }
+      std::copy(vh->GetVector()->begin(), vh->GetVector()->end(), ii);
+   }
+   return fVector->size();
+}
+#endif
 
 #endif
