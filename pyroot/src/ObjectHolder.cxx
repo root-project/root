@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id:  $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -63,7 +63,7 @@ PyROOT::ObjectHolder::~ObjectHolder() {
 //- public members -------------------------------------------------------------
 std::string PyROOT::ObjectHolder::repr() const {
    char buf[256];
-   std::sprintf( buf, "Instance of type %s at address %p",
+   sprintf( buf, "Instance of type %s at address %p",
       m_class->GetName(), (void*)m_object );
    return buf;
 }

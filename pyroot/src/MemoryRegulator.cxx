@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id:  $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -44,7 +44,7 @@ namespace {
 
    struct Init_PyROOT_NoneType {
       Init_PyROOT_NoneType() {
-         std::memset( &PyROOT_NoneType, 0, sizeof( PyROOT_NoneType ) );
+         memset( &PyROOT_NoneType, 0, sizeof( PyROOT_NoneType ) );
 
          PyROOT_NoneType.ob_type   = &PyType_Type;
          PyROOT_NoneType.ob_size   = 0;

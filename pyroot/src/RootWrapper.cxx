@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id:  $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -211,8 +211,9 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass, PyObject* dct ) 
    // construct method dispatchers
       if ( mtName == className ) {        // found a constructor
       // lookup dispatcher and store method
+         static const std::string initname("__init__");
          MethodDispatcher& md = (*(dispatcherCache.insert(
-            std::make_pair( "__init__", MethodDispatcher( "__init__" ) ) ).first)).second;
+            std::make_pair( initname, MethodDispatcher( "__init__" ) ) ).first)).second;
          md.addMethod( new ConstructorDispatcher( cls, mt ) );
       }
       else {                              // found a member function

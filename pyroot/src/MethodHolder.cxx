@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id:  $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -76,8 +76,8 @@ namespace {
       delete[] reinterpret_cast< char* >( buf );
 
    // copy the new string
-      char* p = new char[ std::strlen( s ) + 1 ];
-      std::strcpy( p, s );
+      char* p = new char[ strlen( s ) + 1 ];
+      strcpy( p, s );
 
    // store the new memory for deletion the next time around
       buf = reinterpret_cast< void* >( p );
@@ -98,11 +98,18 @@ namespace {
 
 
 // traits for python's array type codes
+ #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    template< class aType > struct tct {};
    template<> struct tct< int > { static const char tc = 'i'; };
    template<> struct tct< long > { static const char tc = 'l'; };
    template<> struct tct< float > { static const char tc = 'f'; };
    template<> struct tct< double > { static const char tc = 'd'; };
+#else
+   static char GetTct(int) { return 'i'; };
+   static char GetTct(long) { return 'l'; };
+   static char GetTct(float) { return 'f'; };
+   static char GetTct(double) { return 'd'; };
+#endif
 
 // pointer/array conversions
    bool voidarray_convert( PyObject* obj, G__CallFunc* func, void*& ) {
@@ -150,7 +157,12 @@ namespace {
       // determine buffer compatibility (use "buf" as a status flag)
          PyObject* tc = PyObject_GetAttrString( obj, const_cast< char* >( "typecode" ) );
          if ( tc != 0 ) {                    // for array objects
+   #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
             if ( PyString_AS_STRING( tc )[0] != tct< aType >::tc )
+   #else
+            if ( PyString_AS_STRING( tc )[0] != GetTct( (aType)0 ) )
+   #endif
+              
                buf = 0;                      // no match
             Py_DECREF( tc );
          }
@@ -171,6 +183,19 @@ namespace {
       return false;
    }
 
+   bool carray_convert_int( PyObject* obj, G__CallFunc* func, void*& ref) {
+     return carray_convert<int>(obj,func,ref);
+   }
+   bool carray_convert_long( PyObject* obj, G__CallFunc* func, void*& ref) {
+     return carray_convert<int>(obj,func,ref);
+   }
+   bool carray_convert_float( PyObject* obj, G__CallFunc* func, void*& ref) {
+     return carray_convert<int>(obj,func,ref);
+   }
+   bool carray_convert_double( PyObject* obj, G__CallFunc* func, void*& ref) {
+     return carray_convert<int>(obj,func,ref);
+   }
+ 
 
 // python C-API objects conversion
    static bool pyobject_convert( PyObject* obj, G__CallFunc* func, void*& ) {
@@ -187,7 +212,7 @@ namespace {
             isp = true;
             break;
          }
-         else if ( std::isalnum( *it ) )
+         else if ( isalnum( *it ) )
             break;
       }
 
@@ -251,10 +276,10 @@ namespace {
       ncp_t( "char*",              &cstring_convert                   ),
 
    // pointer types
-      ncp_t( "int*",               &carray_convert< int >             ),
-      ncp_t( "long*",              &carray_convert< long >            ),
-      ncp_t( "float*",             &carray_convert< float >           ),
-      ncp_t( "double*",            &carray_convert< double >          ),
+      ncp_t( "int*",               &carray_convert_int                ),
+      ncp_t( "long*",              &carray_convert_long               ),
+      ncp_t( "float*",             &carray_convert_float              ),
+      ncp_t( "double*",            &carray_convert_double             ),
 
    // default pointer type
       ncp_t( "void*",              &voidarray_convert                 ),
@@ -538,7 +563,7 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
          if ( rtname[i] == 'T' && ifirst == std::string::npos )
             ifirst = i;
 
-         if ( ! std::isalnum( rtname[i] ) &&
+         if ( ! isalnum( rtname[i] ) &&
               ( ifirst != std::string::npos && ilast == std::string::npos ) ) {
             ilast = i;
             break;
