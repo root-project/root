@@ -1,11 +1,12 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.6 2003/01/22 11:23:02 rdm Exp $
+# $Id: makerpmspec.sh,v 1.7 2005/03/21 21:34:37 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
 #
 ### echo %%% Some general variables 
+chmod a+x build/package/lib/*
 tgtdir=rpm
 
 ### echo %%% Packages ordered by preference
@@ -23,7 +24,7 @@ pkglist=`./configure --pkglist					\
 		  --disable-srp					\
 		  --disable-builtin-freetype			\
 		  --disable-builtin-afterimage			\
-		| sed -n 's/packages: //p'` 
+		| sed -n -e 's/packages: //p' -e 's/ttf-root-installer//'` 
 builddepends=`build/package/lib/makebuilddepend.sh rpm $pkglist`
 dpkglist="`echo $pkglist | sed -e 's/ *ttf-root[-a-z]* *//g' -e 's/ /, /g'`, root-ttf"
 
@@ -41,6 +42,7 @@ sed -e "s/@version@/${version}/" \
 
 # Write out sub-package information 
 for p in $pkglist ; do 
+    if test "x$p" = "xttf-root-installer" ; then continue ; fi
     echo "Adding package $p to spec file"
     short=`sed -n 's/Description: //p' < build/package/common/$p.control`
     long=`sed -n -e 's/^ \./ /' -e 's/^ //p' < build/package/common/$p.control`

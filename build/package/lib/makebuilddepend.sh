@@ -21,7 +21,7 @@ if test "x$1" = "xrpm" ; then
 	    *gl)							;;
 	    *globus)	echo -n ", libglobus-dev"			;;
 	    *hbook)	echo -n ", CERNLIB, gcc-g77"			;;
-	    *krb5)	echo -n ", krb5-devel|heimdal-devel"		;;
+	    *krb5)	echo -n ", krb5-devel"				;;
 	    *ldap)	echo -n ", openldap-devel"			;;
 	    *minuit)							;;
 	    *mlp)							;;
@@ -43,7 +43,7 @@ if test "x$1" = "xrpm" ; then
 	    *xml)	echo -n ", libxml2-devel"			;;
 	    root-proofd)						;;
 	    root-rootd)							;;
-	    root-xrootd) echo -n ", krb5-devel|heimdal-devel"		;;
+	    root-xrootd) echo -n ", krb5-devel"				;;
 	    ttf-root*)							;;
 	    *) 
 		echo "*** Warning *** Unknown package $i - please update $0" \

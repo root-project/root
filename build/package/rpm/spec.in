@@ -76,6 +76,7 @@ ROOT web-site: http://root.cern.ch
 	    --etcdir=%_sysconfdir/root			\
             --with-sys-iconpath=%_datadir/pixmaps 	
 make 
+make cintdlls
 
 #---------------------------------------------------------------------
 # The installation 
