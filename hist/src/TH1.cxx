@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.176 2004/04/30 10:57:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.177 2004/05/05 12:09:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -459,6 +459,8 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fXaxis.SetParent(this);
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
+   SetBarOffset(gStyle->GetBarOffset());
+   SetBarWidth(gStyle->GetBarWidth());
 }
 
 //______________________________________________________________________________
