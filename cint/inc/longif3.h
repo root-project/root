@@ -53,7 +53,7 @@ extern void G__set_cpp_environmentlongif();
 #ifdef G__NEWSTDHEADER
 #include <iostream>
 #else
-#include <iostream.h>
+#include <iostream>
 #endif
 #if !defined(__hpux) && !(defined(_MSC_VER) && (_MSC_VER<1200))
 namespace std {} using namespace std;
@@ -755,7 +755,7 @@ int G__ateval(unsigned long x) {return(0);}
 #ifdef G__NEWSTDHEADER
 #include <iostream>
 #else
-#include <iostream.h>
+#include <iostream>
 #endif
 #if !defined(__hpux) && !(defined(_MSC_VER) && (_MSC_VER<1200))
 using namespace std;
