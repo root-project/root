@@ -1,0 +1,5 @@
+
+Processing runArrayTest.C...
+Error in <TTreeFormula::TTreeFormula>: Index 40 for dimension #1 in ns[40].adc[2] is too high (max is 2)
+<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
+TH1.Print Name= h2, Entries= 100, Total sum= 100
