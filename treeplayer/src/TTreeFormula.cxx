@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.59 2001/08/07 06:45:02 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.60 2001/08/08 06:29:23 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -502,7 +502,7 @@ public:
               //either the clonesArrays or something inside the clonesArray
    TFormLeafInfoClones(TClass* classptr = 0, Long_t offset = 0,
                        TStreamerElement* element = &gFakeClonesElem,
-                       bool top = kFALSE) :
+                       Bool_t top = kFALSE) :
      TFormLeafInfo(classptr,offset,element),fTop(top) {};
    virtual Int_t     GetCounterValue(TLeaf* leaf);
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
