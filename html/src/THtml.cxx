@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.17 2002/01/31 07:27:11 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.18 2002/02/22 20:52:05 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -265,7 +265,7 @@ enum EFileType { kSource, kInclude, kTree };
 //   Root.Html.HomePage     ( default: ) - URL to the user defined home page
 //   Root.Html.Header       ( default: ) - location of user defined header
 //   Root.Html.Footer       ( default: ) - location of user defined footer
-//   Root.Htnl.Root         ( default: ) - URL of Root's class documentation
+//   Root.Html.Root         ( default: ) - URL of Root's class documentation
 //   Root.Html.SearchEngine ( default: ) - link to the search engine
 //   Root.Html.XWho         ( default: http://consult.cern.ch/xwho/people?) - URL stem of CERN's xWho system
 //
@@ -2345,7 +2345,9 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
             if (htmlFile) {
                out << "<a href=\"";
-               if (*dir && strncmp(htmlFile, "http://", 7))
+               if (*dir  
+		  && ( strncmp(htmlFile, "http://", 7) 
+		       || strncmp(htmlFile, "https://", 8)))
                   out << dir;
                out << htmlFile;
 
@@ -2445,7 +2447,9 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
                      if (htmlFile) {
                         out << "<a href=\"";
-                        if (*dir && strncmp(htmlFile, "http://", 7))
+                        if (*dir 
+			   && (strncmp(htmlFile, "http://", 7)
+			       || strncmp(htmlFile, "https://", 8)))
                            out << dir;
                         out << htmlFile;
                         if (cl->GetDataMember(keyword)) {
@@ -2476,8 +2480,9 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                               char *htmlFile2 = GetHtmlFileName(cm);
                               if (htmlFile2) {
                                  out << "<a href=\"";
-                                 if (*dir
-                                     && strncmp(htmlFile2, "http://", 7))
+                                 if (*dir 
+                                     && (strncmp(htmlFile2, "http://", 7)
+				         || strncmp(htmlFile2, "https://", 8)))
                                     out << dir;
                                  out << htmlFile2;
                                  out << "#" << cm->GetName() << ":";
@@ -2925,7 +2930,9 @@ void THtml::MakeClass(const char *className, Bool_t force)
 
    if (classPtr) {
       char *htmlFile = GetHtmlFileName(classPtr);
-      if (htmlFile && !strncmp(htmlFile, "http://", 7)) {
+      if (htmlFile 
+	  && !(strncmp(htmlFile, "http://", 7)
+	       || strncmp(htmlFile, "https://", 8))) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3043,7 +3050,9 @@ void THtml::MakeTree(const char *className, Bool_t force)
    if (classPtr) {
 
       char *htmlFile = GetHtmlFileName(classPtr);
-      if (htmlFile && !strncmp(htmlFile, "http://", 7)) {
+      if (htmlFile 
+	  && !(strncmp(htmlFile, "http://", 7)
+	       || strncmp(htmlFile, "https://", 8))) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3526,7 +3535,8 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
       if (*userHomePage) {
          out << "<a href=\"";
          if (*dir) {
-            if (strncmp(userHomePage, "http://", 7))
+            if (strncmp(userHomePage, "http://", 7)
+		|| strncmp(userHomePage, "https://", 8))
                out << dir;
          }
          out << userHomePage;
