@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.h,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name: v3-03-09 $:$Id: TPadOpenGLView.h,v 1.5 2001/10/04 16:52:47 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -52,6 +52,9 @@ class TPadOpenGLView : public TPadView3D
    EDrawMode     fCurrentMode;
 
    TGLViewerImp *fGLViewerImp;  // Pointer to the OpenGL viewer
+ protected:
+    friend class TGLViewerImp;
+    virtual void Disconnect(){fGLViewerImp = 0;}
 
  public:
     virtual void MapOpenGL();

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGLViewerImp.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name: v3-03-09 $:$Id: TGLViewerImp.cxx,v 1.2 2000/10/13 18:59:06 rdm Exp $
 // Author: Valery Fine      23/05/97
 
 /*************************************************************************
@@ -55,6 +55,13 @@ TGLViewerImp::TGLViewerImp(TPadOpenGLView *, const char *, Int_t, Int_t, UInt_t,
 //______________________________________________________________________________
 TGLViewerImp::~TGLViewerImp()
 {
+   // break view / viewer relationship
+   if (fGLView) {
+      TPadOpenGLView *view = fGLView;
+      fGLView = 0;
+      view->Disconnect();
+      delete view;
+   }
    fPaint    = kFALSE;
    // Delete the browser.
 
@@ -62,7 +69,16 @@ TGLViewerImp::~TGLViewerImp()
 }
 
 //______________________________________________________________________________
-void TGLViewerImp::DeleteView(){ if(fGLView) { delete fGLView; fGLView = 0;} }
+void TGLViewerImp::DeleteView()
+{ 
+   if(fGLView) { 
+      // some protection  to avoid a cross deleting 
+      // of the  "view" and "viewer"
+      TPadOpenGLView *view = fGLView;
+      fGLView = 0;
+      delete view; 
+   } 
+}
 
 //______________________________________________________________________________
 void TGLViewerImp::HandleInput(EEventType button, Int_t x, Int_t y)

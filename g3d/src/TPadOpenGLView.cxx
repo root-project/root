@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.7 2001/12/27 17:21:43 rdm Exp $
+// @(#)root/g3d:$Name: v3-03-09 $:$Id: TPadOpenGLView.cxx,v 1.8 2002/06/13 13:43:27 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -47,7 +47,7 @@
 // ClassImp(TPadOpenGLView)
 
 //____________________________________________________________________________
-TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad)
+TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad), fGLViewerImp(0)
 {
    fGLViewerImp = gVirtualGL->CreateGLViewerImp(this,pad->GetTitle(), pad->GetWw(), pad->GetWh());
    fGLViewerImp->CreateContext();
@@ -71,6 +71,7 @@ TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad)
     SetPad(pad);
 
     MapOpenGL();
+
 //*-* Set the indentity matrix as a extra rotations
     for (i=1;i<15;i++)  fExtraRotMatrix[i] = 0;
     for (i=0;i<16;i+=5) fExtraRotMatrix[i] = 1.0;
@@ -79,12 +80,18 @@ TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad)
 //____________________________________________________________________________
 TPadOpenGLView::~TPadOpenGLView()
 {
+    // Protect implementation
+
+    TGLViewerImp *viewer = fGLViewerImp;
+    fGLViewerImp = 0;
+    // break the view / viewer relationship
+    if (viewer) viewer->Disconnect();
     if (!fParent) {
-       delete fGLViewerImp;
+       delete viewer;
        return;
     }
 //*-*  Delete OpenGL lists;
-   if (fGLViewerImp) {
+   if (viewer) {
 #ifdef STEREO_GL
       if (fStereoFlag) {
          const char *turnStereo = gSystem->Getenv("OffRootStereo");
@@ -97,8 +104,7 @@ TPadOpenGLView::~TPadOpenGLView()
          //gVirtualGL->DeleteGLLists(fGLList,kGLListSize);
          fGLList =0;
       }
-      delete fGLViewerImp;
-      fGLViewerImp = 0;
+      delete viewer;
    }
 }
 
@@ -174,7 +180,7 @@ void TPadOpenGLView::MapOpenGL()
        for (UInt_t i=fGLList+kProject; i<=fGLLastList;i++) gVirtualGL->RunGLList(i);
    }
    gVirtualGL->EndGLList();
-   fGLViewerImp->SetStatusText("working...",4,TGLViewerImp::kStatusPopOut);
+  if  (fGLViewerImp) fGLViewerImp->SetStatusText("working...",4,TGLViewerImp::kStatusPopOut);
 }
 //______________________________________________________________________________
 void TPadOpenGLView::PushMatrix()

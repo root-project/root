@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGLViewerImp.h,v 1.2 2001/05/14 15:24:08 fine Exp $
+// @(#)root/g3d:$Name: v3-03-09 $:$Id: TGLViewerImp.h,v 1.3 2001/05/14 16:27:39 brun Exp $
 // Author: Valery Fine      23/05/97
 
 /*************************************************************************
@@ -34,10 +34,11 @@ class TPadOpenGLView;
 class TGLViewerImp  {
 
 protected:
+   friend class TPadOpenGLView;
    UInt_t               fDrawList;      // GL list used to redraw the contents
    TPadOpenGLView      *fGLView;        // Pointer to Pad GL View object
    Bool_t               fPaint;         // Allows "Refresh" OpenGL window
-
+   virtual void Disconnect(){ fGLView = 0;} // to be called from TPadOpenGLView dtor
 public:
    enum {kStatusPopIn, kStatusNoBorders, kStatusOwn, kStatusPopOut};
    TGLViewerImp();
