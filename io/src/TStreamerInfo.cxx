@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.136 2002/07/04 16:15:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.137 2002/07/18 11:10:34 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TArrayS.h"
 #include "TArrayL.h"
 #include "TError.h"
+#include "TRef.h"
 #include "TProcessID.h"
  
 Int_t   TStreamerInfo::fgCount = 0;
@@ -2159,9 +2160,14 @@ SWIT: switch (kase) {
 
          // skip Class    derived from TObject
          case kSkip + kObject:  {
-                                 UInt_t start, count;
-                                 b.ReadVersion(&start, &count);
-                                 b.SetBufferOffset(start+count+sizeof(UInt_t));
+                                 if (fClass == TRef::Class()) {
+                                    TRef refjunk;
+                                    refjunk.Streamer(b);
+                                 } else {
+                                    UInt_t start, count;
+                                    b.ReadVersion(&start, &count);
+                                    b.SetBufferOffset(start+count+sizeof(UInt_t));
+                                 }
                                  break;
                                 }
 
@@ -2756,9 +2762,15 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 
          // skip Class    derived from TObject
          case kSkip + kObject:  {
-            for (Int_t k=0;k<nc;k++) {
-               b.ReadVersion(&start, &count);
-               b.SetBufferOffset(start+count+sizeof(UInt_t));
+            Int_t k;
+            if (fClass == TRef::Class()) {
+               TRef refjunk;
+               for (k=0;k<nc;k++) refjunk.Streamer(b);
+            } else {
+               for (k=0;k<nc;k++) {
+                  b.ReadVersion(&start, &count);
+                  b.SetBufferOffset(start+count+sizeof(UInt_t));
+               }
             }
             break;}
 
