@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.54 2004/02/13 16:34:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.55 2004/03/26 17:35:38 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -869,6 +869,16 @@ void TApplication::ReturnPressed(char *text )
    // emit signal when return key was pressed
 
    Emit("ReturnPressed(char*)", text);
+}
+
+//______________________________________________________________________________
+void TApplication::SetNoechoMode(Bool_t)
+{
+   // set console mode:
+   //
+   //  mode = 0 - echo input symbols
+   //  mode = 1 - noecho input symbols
+
 }
 
 //______________________________________________________________________________

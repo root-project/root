@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.29 2004/04/20 09:27:03 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.30 2004/04/22 22:21:05 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -441,4 +441,15 @@ void TRint::Terminate(Int_t status)
 
       gSystem->Exit(status);
    }
+}
+
+//______________________________________________________________________________
+void TRint::SetNoechoMode(Bool_t mode)
+{
+   // set console mode:
+   //
+   //  mode = 0 - echo input symbols
+   //  mode = 1 - noecho input symbols
+
+   Gl_config("noecho", mode);
 }
