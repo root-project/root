@@ -1,5 +1,6 @@
-from ROOT import gROOT
 from ROOT import TCanvas, TF1, TPaveLabel, TPad, TText
+from ROOT import gROOT
+
 
 nut = TCanvas( 'nut', 'FirstSession', 100, 10, 700, 900 )
 nut.Range( 0, 0, 20, 24 )

@@ -16,7 +16,7 @@ from ROOT import gROOT, gBenchmark, gRandom, gSystem
 
 gROOT.Reset()
 
-# Create a new canvas.
+# Create a new canvas, and customize it.
 c1 = TCanvas( 'c1', 'Dynamic Filling Example', 200, 10, 700, 500 )
 c1.SetFillColor( 42 )
 c1.GetFrame().SetFillColor( 21 )
@@ -29,7 +29,8 @@ c1.GetFrame().SetBorderMode( -1 )
 # This file is now becoming the current directory.
 
 hfile = gROOT.FindObject( 'hsimple.root' )
-if hfile : hfile.Close()
+if hfile:
+   hfile.Close()
 hfile = TFile( 'hsimple.root', 'RECREATE', 'Demo ROOT file with histograms' )
 
 # Create some histograms, a profile histogram and an ntuple
@@ -38,35 +39,54 @@ hpxpy  = TH2F( 'hpxpy', 'py vs px', 40, -4, 4, 40, -4, 4 )
 hprof  = TProfile( 'hprof', 'Profile of pz versus px', 100, -4, 4, 0, 20 )
 ntuple = TNtuple( 'ntuple', 'Demo ntuple', 'px:py:pz:random:i' )
 
-#  Set canvas/frame attributes (save old attributes)
+# Set canvas/frame attributes.
 hpx.SetFillColor( 48 )
 
 gBenchmark.Start( 'hsimple' )
 
-# Fill histograms randomly
+# Initialize random number generator.
 gRandom.SetSeed()
 gauss, rndm = gRandom.Gaus, gRandom.Rndm
 
+# For speed, bind and cache the Fill member functions,
+histos = [ 'hpx', 'hpxpy', 'hprof', 'ntuple' ]
+for name in histos:
+   exec '%sFill = %s.Fill' % (name,name)
+
+# Fill histograms randomly.
 kUPDATE = 1000
-for i in xrange(25000) :
+for i in xrange( 25000 ):
+ # Generate random values.
    px = gauss()
    py = gauss()
    pz = px*px + py*py
    random = rndm(1)
-   hpx.Fill( px )
-   hpxpy.Fill( px, py )
-   hprof.Fill( px, pz )
-   ntuple.Fill( px, py, pz, random, i )
-   if i and i%kUPDATE == 0 :
-      if i == kUPDATE : hpx.Draw()
+
+ # Fill histograms.
+   hpxFill( px )
+   hpxpyFill( px, py )
+   hprofFill( px, pz )
+   ntupleFill( px, py, pz, random, i )
+
+ # Update display every kUPDATE events.
+   if i and i%kUPDATE == 0:
+      if i == kUPDATE:
+         hpx.Draw()
+
       c1.Modified()
       c1.Update()
-      if gSystem.ProcessEvents() :
+
+      if gSystem.ProcessEvents():            # allow user interrupt
          break
+
+# Destroy member functions cache.
+for name in histos:
+   exec 'del %sFill' % name
+del histos
 
 gBenchmark.Show( 'hsimple' )
 
-# Save all objects in this file
+# Save all objects in this file.
 hpx.SetFillColor( 0 )
 hfile.Write()
 hpx.SetFillColor( 48 )

@@ -2,9 +2,12 @@
 # This macro displays the physical ROOT file structure
 #
 
-from ROOT import gROOT, TCanvas, TPaveLabel, TPave, TLine, TArrow, TText, TPaveText
+from ROOT import TCanvas, TPaveLabel, TPave, TLine, TArrow, TText, TPaveText
+from ROOT import gROOT
+
 
 gROOT.Reset()
+
 c1 = TCanvas( 'c1', 'ROOT File description', 200, 10, 700, 550 )
 
 c1.Range( 0, -0.25, 21, 14 )

@@ -1,8 +1,9 @@
 # To see the output of this macro, click begin_html <a href="gif/tornado.gif" >here</a> end_html
 
-from ROOT import gROOT, gBenchmark
 from ROOT import TCanvas, TView, TPolyMarker3D, TPaveText
+from ROOT import gROOT, gBenchmark
 from math import cos, sin, pi
+
 
 gROOT.Reset()
 
@@ -22,7 +23,7 @@ rng = numberOfCircles * d
 view.SetRange( 0, 0, 0, 4.0*rng, 2.0*rng, rng )
 
 polymarkers = []
-for j in range( d, numberOfCircles * d, d ) :
+for j in range( d, numberOfCircles * d, d ):
 
  # create a PolyMarker3D
    pm3d = TPolyMarker3D( numberOfPoints )

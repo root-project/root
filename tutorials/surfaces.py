@@ -2,24 +2,27 @@
 # To see the output of this macro, click begin_html <a href="gif/surfaces.gif">here</a> end_html
 #
 
-import ROOT
+from ROOT import TCanvas, TPaveText, TPad, TF2
+from ROOT import gROOT, gStyle
 
-ROOT.gROOT.Reset()
-c1 = ROOT.TCanvas( 'c1', 'Surfaces Drawing Options', 200, 10, 700, 900 )
+
+gROOT.Reset()
+
+c1 = TCanvas( 'c1', 'Surfaces Drawing Options', 200, 10, 700, 900 )
 c1.SetFillColor( 42 )
-ROOT.gStyle.SetFrameFillColor( 42 )
-title = ROOT.TPaveText( .2, 0.96, .8, .995 )
+gStyle.SetFrameFillColor( 42 )
+title = TPaveText( .2, 0.96, .8, .995 )
 title.SetFillColor( 33 )
 title.AddText( 'Examples of Surface options' )
 title.Draw()
 
-pad1 = ROOT.TPad( 'pad1', 'Gouraud shading', 0.03, 0.50, 0.98, 0.95, 21 )
-pad2 = ROOT.TPad( 'pad2', 'Color mesh',      0.03, 0.02, 0.98, 0.48, 21 )
+pad1 = TPad( 'pad1', 'Gouraud shading', 0.03, 0.50, 0.98, 0.95, 21 )
+pad2 = TPad( 'pad2', 'Color mesh',      0.03, 0.02, 0.98, 0.48, 21 )
 pad1.Draw()
 pad2.Draw()
-#
+
 # We generate a 2-D function
-f2 = ROOT.TF2( 'f2', 'x**2 + y**2 - x**3 -8*x*y**4', -1, 1.2, -1.5, 1.5 )
+f2 = TF2( 'f2', 'x**2 + y**2 - x**3 -8*x*y**4', -1, 1.2, -1.5, 1.5 )
 f2.SetContour( 48 )
 f2.SetFillColor( 45 )
 

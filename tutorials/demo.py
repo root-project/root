@@ -1,18 +1,9 @@
-#--Setup the proper environment if in SEAL project and available SCRAM_ARCH-------------------
 import os, sys
-if 'SEAL' in os.environ : 
-  seal = os.environ['SEAL']
-  if 'SCRAM_ARCH' in os.environ : arch = os.environ['SCRAM_ARCH']
-  else                          : arch = 'rh73_gcc32'
-  sys.path.append(seal+'/'+ arch+'/lib')
-  sys.path.append(seal+'/src/Scripting/PyROOT/src')
-#--end Setup environment-----------------------------------------------------------------------
-
 import ROOT
 
-# To run, do an "execfile( '<path-to>/demos.py' )" or "python <path-to>/demos.py"
+# To run, do an "execfile( '<path-to>/demo.py' )" or "python <path-to>/demo.py"
 
-## allow running from another directory than the one where demo.py resides
+# enable running from another directory than the one where demo.py resides
 workdir = os.path.dirname( sys.argv[0] )
 if workdir:
    os.chdir( workdir )
@@ -24,8 +15,10 @@ if workdir:
 ROOT.gROOT.Reset()
 ROOT.gStyle.SetScreenFactor(1)   # if you have a large screen, select 1.2 or 1.4
 
-bar = ROOT.TControlBar( 'vertical', 'Demos' )
+bar = ROOT.TControlBar( 'vertical', 'Demos', 10, 10 )
 
+# The callbacks to python work by having CINT call the python interpreter through
+# the "TPython" class. Note the use of "raw strings."
 bar.AddButton( 'Help on Demos', r'TPython::Exec( "execfile( \'demoshelp.py\' )" );', 'Click Here For Help on Running the Demos' )
 bar.AddButton( 'browser',       r'TPython::Exec( "b = ROOT.TBrowser()" );',          'Start the ROOT browser' )
 bar.AddButton( 'framework',     r'TPython::Exec( "execfile( \'framework.py\' )" );', 'An Example of Object Oriented User Interface' )
@@ -42,13 +35,13 @@ bar.AddButton( 'graph',         r'TPython::Exec( "execfile( \'graph.py\' )" );',
 bar.AddButton( 'gerrors',       r'TPython::Exec( "execfile( \'gerrors.py\' )" );',   'Example of a Graph with Error Bars' )
 bar.AddButton( 'tornado',       r'TPython::Exec( "execfile( \'tornado.py\' )" );',   'Examples of 3-D PolyMarkers' )
 bar.AddButton( 'shapes',        r'TPython::Exec( "execfile( \'shapes.py\' )" );',    'The Geometry Shapes' )
-#bar.AddButton( 'geometry',      r'TPython::Exec( "execfile( \'geometry.py\' )" );',  'Creation of the NA49 Geometry File' )
-#bar.AddButton( 'na49view',      r'TPython::Exec( "execfile( \'na49view.py\' )" );',  'Two Views of the NA49 Detector Geometry' )
+bar.AddButton( 'geometry',      r'TPython::Exec( "execfile( \'geometry.py\' )" );',  'Creation of the NA49 Geometry File' )
+bar.AddButton( 'na49view',      r'TPython::Exec( "execfile( \'na49view.py\' )" );',  'Two Views of the NA49 Detector Geometry' )
 bar.AddButton( 'file',          r'TPython::Exec( "execfile( \'file.py\' )" );',      'The ROOT File Format' )
 bar.AddButton( 'fildir',        r'TPython::Exec( "execfile( \'fildir.py\' )" );',    'The ROOT File, Directories and Keys' )
 bar.AddButton( 'tree',          r'TPython::Exec( "execfile( \'tree.py\' )" );',      'The Tree Data Structure' )
 bar.AddButton( 'ntuple1',       r'TPython::Exec( "execfile( \'ntuple1.py\' )" );',   'Ntuples and Selections' )
-#bar.AddButton( 'rootmarks',     r'TPython::Exec( "execfile( \'rootmarks.py\' )" );', 'Prints an Estimated ROOTMARKS for Your Machine' )
+bar.AddButton( 'rootmarks',     r'TPython::Exec( "execfile( \'rootmarks.py\' )" );', 'Prints an Estimated ROOTMARKS for Your Machine' )
 bar.AddSeparator()       # not implemented
 bar.AddButton( 'make ntuple',   r'TPython::Exec( "execfile( \'mrt.py\' )" );',       'Convert a text file to an ntuple' )
 

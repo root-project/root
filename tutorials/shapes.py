@@ -2,18 +2,15 @@
 # To see the output of this macro, click begin_html <a href="gif/shapes.gif" >here</a> end_html
 #
 
-# WLAV, 1 issue remaining
-
 import ROOT
 
 ROOT.gROOT.Reset();
 c1 = ROOT.TCanvas( 'c1', 'Geometry Shapes', 200, 10, 700, 500 )
 
 # delete previous geometry objects in case this script is reexecuted
-gGeometry = ROOT.gROOT.GetGlobal( 'gGeometry', 1 )
-if gGeometry:
-   gGeometry.GetListOfNodes().Delete()
-   gGeometry.GetListOfShapes().Delete()
+if ROOT.gGeometry:
+   ROOT.gGeometry.GetListOfNodes().Delete()
+   ROOT.gGeometry.GetListOfShapes().Delete()
 
 #  Define some volumes
 brik = ROOT.TBRIK( 'BRIK', 'BRIK', 'void', 200, 150, 150 )
@@ -88,7 +85,7 @@ c1.Update()
 #  Draw the geometry using the x3d viewver.
 #  Note that this viewver may also be invoked from the "View" menu in
 #  the canvas tool bar
-c1.x3d()
+c1.x3d( 'ogl' )
 #
 # once in x3d viewer, type m to see the menu.
 # For example typing r will show a solid model of this geometry.

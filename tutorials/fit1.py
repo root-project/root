@@ -2,7 +2,8 @@
 # To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
 #
 
-from ROOT import gROOT, gBenchmark, TCanvas, TFile, TPaveText
+from ROOT import TCanvas, TFile, TPaveText
+from ROOT import gROOT, gBenchmark
 
 gROOT.Reset()
 c1 = TCanvas( 'c1', 'The Fit Canvas', 200, 10, 700, 500 )

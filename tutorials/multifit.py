@@ -10,11 +10,13 @@
 #  of parameters must be given. In this particular case, the initial values
 #  are taken from the result of the individual fits.
 
-from ROOT import gROOT, TH1F, TF1
+from ROOT import TH1F, TF1
+from ROOT import gROOT
 from array import array
 
 
 gROOT.Reset()
+
 x = ( 1.913521, 1.953769, 2.347435, 2.883654, 3.493567,
       4.047560, 4.337210, 4.364347, 4.563004, 5.054247,
       5.194183, 5.380521, 5.303213, 5.384578, 5.563983,

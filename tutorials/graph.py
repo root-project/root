@@ -2,11 +2,14 @@
 # To see the output of this macro, click begin_html <a href="gif/graph.gif">here</a>. end_html
 #
 
-from ROOT import gROOT, TCanvas, TGraph
+from ROOT import TCanvas, TGraph
+from ROOT import gROOT
 from math import sin
 from array import array
 
+
 gROOT.Reset()
+
 c1 = TCanvas( 'c1', 'A Simple Graph Example', 200, 10, 700, 500 )
 
 c1.SetFillColor( 42 )

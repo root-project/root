@@ -2,11 +2,15 @@
 # This macro displays the ROOT Directory data structure
 #
 
-from ROOT import gROOT, TCanvas, TPaveLabel, TPaveText, TText, TArrow, TLine
+from ROOT import TCanvas, TPaveLabel, TPaveText, TText, TArrow, TLine
+from ROOT import gROOT
+
 
 gROOT.Reset()
+
 c1 = TCanvas( 'c1', 'ROOT FilDir description', 700, 900 )
 c1.Range( 1, 1, 19, 24.5 )
+
 title = TPaveLabel( 4, 23, 16, 24.2, 'ROOT File/Directory/Key description' )
 title.SetFillColor( 16 )
 title.Draw()

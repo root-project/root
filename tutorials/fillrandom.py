@@ -2,10 +2,12 @@
 # To see the output of this macro, click begin_html <a href="gif/fillrandom.gif">here</a>. end_html
 #
 
-from ROOT import gROOT, gBenchmark
 from ROOT import TCanvas, TPad, TFormula, TF1, TPaveLabel, TH1F, TFile
+from ROOT import gROOT, gBenchmark
+
 
 gROOT.Reset()
+
 c1 = TCanvas( 'c1', 'The FillRandom example', 200, 10, 700, 900 )
 c1.SetFillColor( 18 )
 

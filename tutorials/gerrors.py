@@ -2,11 +2,12 @@
 # To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
 #
 
-from ROOT import gROOT
 from ROOT import TCanvas, TGraphErrors
+from ROOT import gROOT
 from array import array
 
-gROOT.Reset();
+
+gROOT.Reset()
 
 c1 = TCanvas( 'c1', 'A Simple Graph with error bars', 200, 10, 700, 500 )
 
