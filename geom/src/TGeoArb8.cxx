@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.29 2004/01/18 12:31:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.30 2004/01/18 16:19:37 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -292,7 +292,7 @@ Bool_t TGeoArb8::Contains(Double_t *point) const
    //SetPlaneVertices(point[2], &poly[0]);
    Double_t cf = 0.5*(fDz-point[2])/fDz;
    Int_t i,j;
-   for (Int_t i=0; i<4; i++) {
+   for (i=0; i<4; i++) {
       poly[2*i]   = fXY[i+4][0]+cf*(fXY[i][0]-fXY[i+4][0]);
       poly[2*i+1] = fXY[i+4][1]+cf*(fXY[i][1]-fXY[i+4][1]);
    }
