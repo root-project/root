@@ -51,6 +51,8 @@ CILIBS        = -lm -ltermcap -ldl
 #F77           = /opt/SUNWspro/bin/f77
 F77           = f77
 F77LIBS       = -lM77 -lF77 -lsunmath
+# Use this on Solaris 10 with F90 compiler
+#F77LIBS       = -lf77compat -lfui -lfsu -lsunperf -lsunmath
 
 # Override default in Makefile.config
 INSTALL      := cp -pR
