@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.26 2004/10/22 21:18:23 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.27 2005/02/03 08:46:53 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -13,13 +13,15 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "TF2.h"
-#include "TGraphAsymmErrors.h"
+#include "TGraph.h"
 #include "TGraph2D.h"
+#include "TMultiGraph.h"
 
 extern void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void Graph2DFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+extern void MultiGraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
 ClassImp(TFitter)
 
@@ -516,10 +518,6 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
    Foption_t Foption = grFitter->GetFitOption();
-   TGraphAsymmErrors *gra = 0;
-   if (gr->InheritsFrom(TGraphAsymmErrors::Class())) gra = (TGraphAsymmErrors*)gr;
-   
-   
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
@@ -542,16 +540,10 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
          f += fsum*fsum;
          continue;
       }
-      if (gra) {
-         exh  = gra->GetEXhigh()[bin];
-         exl  = gra->GetEXlow()[bin];
-         if (fsum<0) ey = gra->GetEYhigh()[bin];
-         else        ey = gra->GetEYlow()[bin];
-      } else {
-         exh = gr->GetErrorX(bin);
-         exl = exh;
-         ey  = gr->GetErrorY(bin);
-      }
+
+      exh = gr->GetEXhigh(bin);
+      exl = gr->GetEXlow(bin);
+      ey  = gr->GetErrorY(bin);
       if (exl < 0) exl = 0;
       if (exh < 0) exh = 0;
       if (ey < 0)  ey  = 0;
@@ -648,3 +640,77 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    }
    f2->SetNumberFitPoints(npfits);
 }
+
+//______________________________________________________________________________
+void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
+                       Double_t *u, Int_t /*flag*/)
+{
+
+   Double_t cu,eu,exh,exl,ey,eux,fu,fsum;
+   Double_t x[1];
+   //Double_t xm,xp;
+   Int_t bin, npfits=0;
+
+   TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
+   TMultiGraph *mg     = (TMultiGraph*)grFitter->GetObjectFit();
+   TF1 *f1   = (TF1*)grFitter->GetUserFunc();
+   Foption_t Foption = grFitter->GetFitOption();
+   TGraph *gr;
+   TIter next(mg->GetListOfGraphs());   
+
+   Int_t n;
+   Double_t *gx;
+   Double_t *gy;
+   //Double_t fxmin = f1->GetXmin();
+   //Double_t fxmax = f1->GetXmax();
+   npar           = f1->GetNpar();
+
+   f      = 0;
+
+   while ((gr = (TGraph*) next())) {
+      n        = gr->GetN();
+      gx   = gr->GetX();
+      gy   = gr->GetY();
+      for (bin=0;bin<n;bin++) {
+	 f1->InitArgs(x,u); //must be inside the loop because of TF1::Derivative calling InitArgs
+	 x[0] = gx[bin];
+	 if (!f1->IsInside(x)) continue;
+	 cu   = gy[bin];
+	 TF1::RejectPoint(kFALSE);
+	 fu   = f1->EvalPar(x,u);
+	 if (TF1::RejectedPoint()) continue;
+	 fsum = (cu-fu);
+	 npfits++;
+	 if (Foption.W1) {
+	    f += fsum*fsum;
+	    continue;
+	 }
+	 exh = gr->GetEXhigh(bin);
+	 exl = gr->GetEXlow(bin);
+	 ey  = gr->GetErrorY(bin);
+	 if (exl < 0) exl = 0;
+	 if (exh < 0) exh = 0;
+	 if (ey < 0)  ey  = 0;
+	 if (exh > 0 && exl > 0) {
+	    //Without the "variance method", we had the 6 next lines instead
+	    // of the line above.
+	    //xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
+	    //xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
+	    //Double_t fm,fp;
+	    //x[0] = xm; fm = f1->EvalPar(x,u);
+	    //x[0] = xp; fp = f1->EvalPar(x,u);
+	    //eux = 0.5*(fp-fm);
+	    
+	    //"Effective Variance" method introduced by Anna Kreshuk 
+	    // in version 4.00/08.	
+	    eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
+	 } else
+	    eux = 0.;
+	 eu = ey*ey+eux*eux;
+	 if (eu <= 0) eu = 1;
+	 f += fsum*fsum/eu;
+      }
+   }
+   f1->SetNumberFitPoints(npfits);
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.225 2005/03/03 08:19:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.226 2005/03/03 10:40:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1060,6 +1060,7 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
      Error("Chi2Test","for 1-d only");
      return 0;
   }
+
   //check number of channels
   if (nbins1 != nbins2){
      Error("Chi2Test","different number of channels");
@@ -1989,10 +1990,32 @@ Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xx
 //
 //  This function finds a pointer to the TF1 object with name fname
 //  and calls TH1::Fit(TF1 *f1,...)
-
-   TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
-   if (!f1) { Error("Fit", "Unknown function: %s",fname); return -1; }
-   return Fit(f1,option,goption,xxmin,xxmax);
+   char *linear;
+   linear=strstr(fname, "++");
+   TF1 *f1=0;
+   TF2 *f2=0;
+   TF3 *f3=0;
+   Int_t ndim=GetDimension();
+   if (linear){
+      if (ndim<2){
+	 f1=new TF1(fname, fname, xxmin, xxmax);
+	 return Fit(f1,option,goption,xxmin,xxmax);
+      }
+      else if (ndim<3){
+	 f2=new TF2(fname, fname);
+	 return Fit(f2,option,goption,xxmin,xxmax);
+      }
+      else{
+	 f3=new TF3(fname, fname);
+	 return Fit(f3,option,goption,xxmin,xxmax);
+      }
+   }
+   
+   else{
+      f1 = (TF1*)gROOT->GetFunction(fname);
+      if (!f1) { Printf("Unknown function: %s",fname); return -1; }
+      return Fit(f1,option,goption,xxmin,xxmax);
+   }
 }
 
 //______________________________________________________________________________
@@ -2189,19 +2212,20 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       Error("Fit", "function is zombie");
       return 0;
    }
+   
    npar = f1->GetNpar();
    if (npar <= 0) {
       Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
       return 0;
    }
-
+   
    // Check that function has same dimension as histogram
    if (f1->GetNdim() != GetDimension()) {
       Error("Fit","function %s dimension, %d, does not match histogram dimension, %d",
-            f1->GetName(), f1->GetNdim(), GetDimension());
+	    f1->GetName(), f1->GetNdim(), GetDimension());
       return 0;
    }
-
+ 
    hxfirst = fXaxis.GetFirst();
    hxlast  = fXaxis.GetLast();
    binwidx = fXaxis.GetBinWidth(hxlast);
@@ -2219,6 +2243,40 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    zmax    = fZaxis.GetBinLowEdge(hzlast) +binwidz;
 
 //   - Check if Minuit is initialized and create special functions
+
+
+   Int_t special = f1->GetNumber();
+   Bool_t linear = f1->IsLinear();
+   if (special==299+npar)
+      linear = kTRUE;
+   char l[] ="TLinearFitter";
+   Int_t strdiff = 0;
+   Bool_t IsSet = kFALSE;
+   if (TVirtualFitter::GetFitter()){
+      //Is a fitter already set? Is it linear?
+      IsSet=kTRUE;
+      strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
+   }
+   if (linear){
+      //
+      TClass *cl = gROOT->GetClass("TLinearFitter");
+      if (IsSet && strdiff!=0) {
+	 delete TVirtualFitter::GetFitter();
+	 IsSet=kFALSE;
+      }
+      if (!IsSet) {
+	 //TLinearFitter *lf=(TLinearFitter *)cl->New();
+	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
+      }
+   } else {
+      if (IsSet && strdiff==0){
+	 delete TVirtualFitter::GetFitter();
+	 IsSet=kFALSE;
+      }
+      if (!IsSet)	
+	 TVirtualFitter::SetFitter(0);	       
+   }
+
    TVirtualFitter *hFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
    hFitter->Clear();
 
@@ -2260,118 +2318,128 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    hFitter->SetYfirst(hyfirst); hFitter->SetYlast(hylast);
    hFitter->SetZfirst(hzfirst); hFitter->SetZlast(hzlast);
 
-//   - If case of a predefined function, then compute initial values of parameters
-   Int_t special = f1->GetNumber();
-   if (Foption.Bound) special = 0;
-   if      (special == 100)      H1InitGaus();
-   else if (special == 400)      H1InitGaus();
-   else if (special == 200)      H1InitExpo();
-   else if (special == 299+npar) H1InitPolynom();
 
-//   - Some initialisations
-   if (!Foption.Verbose) {
-      arglist[0] = -1;
-      hFitter->ExecuteCommand("SET PRINT", arglist,1);
-      arglist[0] = 0;
-      hFitter->ExecuteCommand("SET NOW",   arglist,0);
-   }
-
-//   - Set error criterion for chisquare or likelihood methods
-//   -  MINUIT ERRDEF should not be set to 0.5 in case of loglikelihood fit.
-//   -  because the FCN is already multiplied by 2 in H1FitLikelihood
-//   -  if Hoption.User is specified, assume that the user has already set
-//   -  his minimization function via SetFCN.
-   arglist[0] = TVirtualFitter::GetErrorDef();
-   if (Foption.Like) {
-      hFitter->SetFitMethod("H1FitLikelihood");
+   //Int_t special = f1->GetNumber();
+   
+   if (linear && !Foption.Bound && !Foption.Like && !Foption.Errors && !Foption.Gradient && !Foption.More){
+      hFitter->ExecuteCommand("FitHist", 0, 0);
    } else {
-      if (!Foption.User) hFitter->SetFitMethod("H1FitChisquare");
-   }
-   hFitter->ExecuteCommand("SET ERR",arglist,1);
-
-//   - Transfer names and initial values of parameters to Minuit
-   Int_t nfixed = 0;
-   for (i=0;i<npar;i++) {
-      par = f1->GetParameter(i);
-      f1->GetParLimits(i,al,bl);
-      if (al*bl != 0 && al >= bl) {
-         al = bl = 0;
-         arglist[nfixed] = i+1;
-         nfixed++;
+      //   - If case of a predefined function, then compute initial values of parameters
+      //Int_t special = f1->GetNumber();
+      if (Foption.Bound) special = 0;
+      if      (special == 100)      H1InitGaus();
+      else if (special == 400)      H1InitGaus();
+      else if (special == 200)      H1InitExpo();
+      //else if (special == 299+npar) H1InitPolynom();
+      
+      //   - Some initialisations
+      if (!Foption.Verbose) {
+	 arglist[0] = -1;
+	 hFitter->ExecuteCommand("SET PRINT", arglist,1);
+	 arglist[0] = 0;
+	 hFitter->ExecuteCommand("SET NOW",   arglist,0);
       }
-      we = 0.1*TMath::Abs(bl-al);
-      if (we == 0) we = 0.3*TMath::Abs(par);
-      if (we == 0) we = binwidx;
-      hFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
-   }
-   if(nfixed > 0)hFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
-
-//   - Set Gradient
-   if (Foption.Gradient) {
-      if (Foption.Gradient == 1) arglist[0] = 1;
-      else                       arglist[0] = 0;
-      hFitter->ExecuteCommand("SET GRAD",arglist,1);
-   }
-
-//   - Reset Print level
-   if (Foption.Verbose) {
-      arglist[0] = 0; hFitter->ExecuteCommand("SET PRINT", arglist,1);
-   }
-
-//   - Compute sum of squares of errors in the bin range
-   Double_t ey, sumw2=0;
-   for (i=hxfirst;i<=hxlast;i++) {
-      ey = GetBinError(i);
-      sumw2 += ey*ey;
-   }
-
-//   - Perform minimization
-   arglist[0] = TVirtualFitter::GetMaxIterations();
-   arglist[1] = sumw2*TVirtualFitter::GetPrecision();
-   fitResult = hFitter->ExecuteCommand("MIGRAD",arglist,2);
-   if (fitResult != 0) {
-     //   Abnormal termination, MIGRAD might not have converged on a
-     //   minimum.
-     if (!Foption.Quiet) {
-        Warning("Fit","Abnormal termination of minimization.");
-     }
-   }
-   if (Foption.More) {
-      hFitter->ExecuteCommand("IMPROVE",arglist,0);
-   }
-   if (Foption.Errors) {
-      hFitter->ExecuteCommand("HESSE",arglist,0);
-      hFitter->ExecuteCommand("MINOS",arglist,0);
-   }
-
-//   - Get return status
-   char parName[50];
-   for (i=0;i<npar;i++) {
-      hFitter->GetParameter(i,parName, par,we,al,bl);
-      if (!Foption.Errors) werr = we;
-      else {
-         hFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-         if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-         else                         werr = we;
+      
+      //   - Set error criterion for chisquare or likelihood methods
+      //   -  MINUIT ERRDEF should not be set to 0.5 in case of loglikelihood fit.
+      //   -  because the FCN is already multiplied by 2 in H1FitLikelihood
+      //   -  if Hoption.User is specified, assume that the user has already set
+      //   -  his minimization function via SetFCN.
+      arglist[0] = TVirtualFitter::GetErrorDef();
+      if (Foption.Like) {
+	 hFitter->SetFitMethod("H1FitLikelihood");
+      } else {
+	 if (!Foption.User) hFitter->SetFitMethod("H1FitChisquare");
       }
-      params[i] = par;
-      f1->SetParameter(i,par);
-      f1->SetParError(i,werr);
+      hFitter->ExecuteCommand("SET ERR",arglist,1);
+      
+      //   - Transfer names and initial values of parameters to Minuit
+      Int_t nfixed = 0;
+      for (i=0;i<npar;i++) {
+	 par = f1->GetParameter(i);
+	 f1->GetParLimits(i,al,bl);
+	 if (al*bl != 0 && al >= bl) {
+	    al = bl = 0;
+	    arglist[nfixed] = i+1;
+	    nfixed++;
+	 }
+	 we = 0.1*TMath::Abs(bl-al);
+	 if (we == 0) we = 0.3*TMath::Abs(par);
+	 if (we == 0) we = binwidx;
+	 hFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
+      }
+      if(nfixed > 0)hFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
+      
+      //   - Set Gradient
+      if (Foption.Gradient) {
+	 if (Foption.Gradient == 1) arglist[0] = 1;
+	 else                       arglist[0] = 0;
+	 hFitter->ExecuteCommand("SET GRAD",arglist,1);
+      }
+      
+      //   - Reset Print level
+      if (Foption.Verbose) {
+	 arglist[0] = 0; hFitter->ExecuteCommand("SET PRINT", arglist,1);
+      }
+      
+      //   - Compute sum of squares of errors in the bin range
+      Double_t ey, sumw2=0;
+      for (i=hxfirst;i<=hxlast;i++) {
+	 ey = GetBinError(i);
+	 sumw2 += ey*ey;
+      }
+      
+      //   - Perform minimization
+      arglist[0] = TVirtualFitter::GetMaxIterations();
+      arglist[1] = sumw2*TVirtualFitter::GetPrecision();
+      fitResult = hFitter->ExecuteCommand("MIGRAD",arglist,2);
+      if (fitResult != 0) {
+	 //   Abnormal termination, MIGRAD might not have converged on a
+	 //   minimum.
+	 if (!Foption.Quiet) {
+	    Warning("Fit","Abnormal termination of minimization.");
+	 }
+      }
+      if (Foption.More) {
+	 hFitter->ExecuteCommand("IMPROVE",arglist,0);
+      }
+      if (Foption.Errors) {
+	 hFitter->ExecuteCommand("HESSE",arglist,0);
+	 hFitter->ExecuteCommand("MINOS",arglist,0);
+      }
+      
+      //   - Get return status
+      char parName[50];
+      for (i=0;i<npar;i++) {
+	 hFitter->GetParameter(i,parName, par,we,al,bl);
+	 if (!Foption.Errors) werr = we;
+	 else {
+	    hFitter->GetErrors(i,eplus,eminus,eparab,globcc);
+	    if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
+	    else                         werr = we;
+	 }
+	 params[i] = par;
+	 f1->SetParameter(i,par);
+	 f1->SetParError(i,werr);
+      }
+      hFitter->GetStats(amin,edm,errdef,nvpar,nparx);
+      //     If Log Likelihood, compute an equivalent chisquare
+      //if (Foption.Like) amin = hFitter->Chisquare(npar, params, amin, params, 1);
+      if (Foption.Like) amin = hFitter->Chisquare(npar, params);
+      
+      f1->SetChisquare(amin);
+      f1->SetNDF(f1->GetNumberFitPoints()-npar+nfixed);
    }
-   hFitter->GetStats(amin,edm,errdef,nvpar,nparx);
+   //   - Print final values of parameters.
+   
 
-//   - Print final values of parameters.
+
    if (!Foption.Quiet) {
       if (Foption.Errors) hFitter->PrintResults(4,amin);
       else                hFitter->PrintResults(3,amin);
    }
 
-//     If Log Likelihood, compute an equivalent chisquare
-   //if (Foption.Like) amin = hFitter->Chisquare(npar, params, amin, params, 1);
-   if (Foption.Like) amin = hFitter->Chisquare(npar, params);
 
-   f1->SetChisquare(amin);
-   f1->SetNDF(f1->GetNumberFitPoints()-npar+nfixed);
 
 //   - Store fitted function in histogram functions list and draw
    if (!Foption.Nostore) {

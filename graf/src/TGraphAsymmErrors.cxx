@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.47 2005/01/20 15:28:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.48 2005/02/07 14:34:47 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -261,10 +261,10 @@ void TGraphAsymmErrors::Apply(TF1 *f)
 
   for (Int_t i=0;i<GetN();i++) {
      GetPoint(i,x,y);
-     exl=GetEXlow()[i];
-     exh=GetEXhigh()[i];
-     eyl=GetEYlow()[i];
-     eyh=GetEYhigh()[i];
+     exl=GetEXlow(i);
+     exh=GetEXhigh(i);
+     eyl=GetEYlow(i);
+     eyh=GetEYhigh(i);
 
      fxy = f->Eval(x,y);
      SetPoint(i,x,fxy);
@@ -703,6 +703,37 @@ Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
    if (fEYlow)  elow  = fEYlow[i];
    if (fEYhigh) ehigh = fEYhigh[i];
    return TMath::Sqrt(0.5*(elow*elow + ehigh*ehigh));
+}
+
+//______________________________________________________________________________
+Double_t TGraphAsymmErrors::GetEXhigh(Int_t i) const
+{
+   if (i<0 || i>fNpoints) return -1;
+   if (fEXhigh) return fEXhigh[i];
+   return -1;
+}
+
+//______________________________________________________________________________
+Double_t TGraphAsymmErrors::GetEXlow(Int_t i) const
+{
+   if (i<0 || i>fNpoints) return -1;
+   if (fEXlow) return fEXlow[i];
+   return -1;
+}
+//______________________________________________________________________________
+Double_t TGraphAsymmErrors::GetEYhigh(Int_t i) const
+{
+   if (i<0 || i>fNpoints) return -1;
+   if (fEYhigh) return fEYhigh[i];
+   return -1;
+}
+
+//______________________________________________________________________________
+Double_t TGraphAsymmErrors::GetEYlow(Int_t i) const
+{
+   if (i<0 || i>fNpoints) return -1;
+   if (fEYlow) return fEYlow[i];
+   return -1;
 }
 
 //______________________________________________________________________________

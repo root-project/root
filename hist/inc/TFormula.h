@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.25 2004/01/13 18:46:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.26 2004/08/11 07:59:20 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -56,6 +56,8 @@ protected:
    Double_t  *fParams;          //[fNpar] Array of fNpar parameters
    TString   *fNames;           //[fNpar] Array of parameter names
    TObjArray  fFunctions;       //Array of function calls to make
+   TObjArray  fLinearParts;     //! Linear parts if the formula is linear (contains '|')
+
    TBits      fAlreadyFound;    //! cache for information
 
    inline Int_t     *GetOper() const { return fOper; }
@@ -135,7 +137,8 @@ public:
    enum {
       kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction
       kInitialized   = BIT(12),  // set to true once the formula has been 'compiled'
-      kNormalized    = BIT(14)   // set to true if the function (ex gausn) is normalized
+      kNormalized    = BIT(14),   // set to true if the function (ex gausn) is normalized
+      kLinear        = BIT(16)    //set to true if the function is for linear fitting
    };
  
               TFormula();
@@ -155,6 +158,7 @@ public:
    virtual Int_t       DefinedVariable(TString &variable,Int_t &action);
    virtual Double_t    Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0);
    virtual Double_t    EvalPar(const Double_t *x, const Double_t *params=0);
+   virtual const TObject *GetLinearPart(Int_t i);
    virtual Int_t       GetNdim() const {return fNdim;}
    virtual Int_t       GetNpar() const {return fNpar;}
    virtual Int_t       GetNumber() const {return fNumber;}
@@ -165,8 +169,10 @@ public:
    virtual void        GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
    virtual const char *GetParName(Int_t ipar) const;
    virtual Int_t       GetParNumber(const char *name) const;
+   virtual Bool_t      IsLinear() {return TestBit(kLinear);}
    virtual Bool_t      IsNormalized() {return TestBit(kNormalized);}
    virtual void        Print(Option_t *option="") const; // *MENU*
+   virtual void        ProcessLinear(TString &replaceformula);
    virtual void        SetNumber(Int_t number) {fNumber = number;}
    virtual void        SetParameter(const char *name, Double_t parvalue);
    virtual void        SetParameter(Int_t ipar, Double_t parvalue);

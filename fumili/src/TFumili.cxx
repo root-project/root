@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.19 2004/10/22 13:03:39 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.20 2004/10/22 21:18:23 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -1975,10 +1975,10 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
 	eu = 1.;
       } else {
         if (gra) {
-           exh  = gra->GetEXhigh()[bin];
-           exl  = gra->GetEXlow()[bin];
-           if (cu < fu) ey = gra->GetEYhigh()[bin];
-           else         ey = gra->GetEYlow()[bin];
+           exh  = gra->GetEXhigh(bin);
+           exl  = gra->GetEXlow(bin);
+           if (cu < fu) ey = gra->GetEYhigh(bin);
+           else         ey = gra->GetEYlow(bin);
         } else {
            exh = gr->GetErrorX(bin);
            exl = exh;

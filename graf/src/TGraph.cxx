@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.149 2005/02/16 08:39:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.150 2005/02/21 16:57:15 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -956,8 +956,15 @@ Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, 
 //*-*        ============================================
 //  interface to TF1::Fit(TF1 *f1...
 
-   TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
-   if (!f1) { Printf("Unknown function: %s",fname); return -1; }
+   char *linear;
+   linear=strstr(fname, "++");
+   TF1 *f1=0;
+   if (linear)
+	 f1=new TF1(fname, fname, xmin, xmax);
+   else {
+      f1 = (TF1*)gROOT->GetFunction(fname);
+      if (!f1) { Printf("Unknown function: %s",fname); return -1; }
+   }
    return Fit(f1,option,"",xmin,xmax);
 }
 
@@ -1096,14 +1103,13 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
-
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    TF1 *fnew1;
-
+   
    // Check validity of function
    if (!f1) {
       Error("Fit", "function may not be null pointer");
@@ -1113,18 +1119,20 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       Error("Fit", "function is zombie");
       return 0;
    }
+   
    npar = f1->GetNpar();
    if (npar <= 0) {
       Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
       return 0;
    }
-
+   
    // Check that function has same dimension as graph
    if (f1->GetNdim() > 1) {
       Error("Fit", "function %s is not 1-D", f1->GetName());
       return 0;
    }
-
+   //}
+   
    Double_t *arglist = new Double_t[100];
 
    // Decode string choptin and fill fitOption structure
@@ -1141,7 +1149,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    fitOption.Nostore = 0;
    fitOption.Plus    = 0;
    fitOption.User    = 0;
-
+   fitOption.Nochisq = 0;
    TString opt = option;
    opt.ToUpper();
 
@@ -1155,7 +1163,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    if (opt.Contains("0")) fitOption.Nograph = 1;
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
-
+   if (opt.Contains("C")) fitOption.Nochisq = 1;
    xmin    = fX[0];
    xmax    = fX[fNpoints-1];
    ymin    = fY[0];
@@ -1174,118 +1182,167 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       xmin = rxmin;
       xmax = rxmax;
    }
-//*-*- Check if Minuit is initialized and create special functions
+
+   ///////////////
+   //set the fitter
+   //////////////
+
+   Int_t special = f1->GetNumber();
+   Bool_t linear = f1->IsLinear();
+   if (special == 299 + npar)
+      linear = kTRUE;
+
+   char l[] = "TLinearFitter";
+   Int_t strdiff = 0;
+   Bool_t IsSet = kFALSE;
+   if (TVirtualFitter::GetFitter()){
+      //Is a fitter already set? Is it linear?
+      IsSet = kTRUE;
+      strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
+   }
+   if (linear){
+      //
+      TClass *cl = gROOT->GetClass("TLinearFitter");
+      if (IsSet && strdiff!=0) {
+	 delete TVirtualFitter::GetFitter();
+	 IsSet = kFALSE;
+      }
+      if (!IsSet) {
+	//TLinearFitter *lf=(TLinearFitter *)cl->New();
+	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
+      }
+   } else {
+      if (IsSet && strdiff==0){
+	 delete TVirtualFitter::GetFitter();
+	 IsSet = kFALSE;
+      }
+      if (!IsSet)	
+	 TVirtualFitter::SetFitter(0);	       
+   }
    TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
    grFitter->Clear();
-
+   
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
    grFitter->SetUserFunc(f1);
    grFitter->SetFitOption(fitOption);
 
 //*-*- Is a Fit range specified?
+
    if (fitOption.Range) {
       f1->GetRange(xmin, xmax);
    } else {
       f1->SetRange(xmin, xmax);
    }
 
+
+
 //*-*- If case of a predefined function, then compute initial values of parameters
-   Int_t special = f1->GetNumber();
-   if (fitOption.Bound) special = 0;
-   if      (special == 100)      InitGaus(xmin,xmax);
-   else if (special == 400)      InitGaus(xmin,xmax);
-   else if (special == 200)      InitExpo(xmin,xmax);
-   else if (special == 299+npar) InitPolynom(xmin,xmax);
+/////// 
+   if (linear && !fitOption.Bound && !fitOption.Like && !fitOption.Errors){
+     grFitter->ExecuteCommand("FitGraph", 0, 0);
+     
+   } else {
 
-//*-*- Some initialisations
-   if (!fitOption.Verbose) {
-      arglist[0] = -1;
-      grFitter->ExecuteCommand("SET PRINT", arglist,1);
-      arglist[0] = 0;
-      grFitter->ExecuteCommand("SET NOW",   arglist,0);
-   }
-
-//*-*- Set error criterion for chisquare
-   arglist[0] = TVirtualFitter::GetErrorDef();
-   if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
-   fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
-   if (fitResult != 0) {
-      //   Abnormal termination, MIGRAD might not have converged on a
-      //   minimum.
+      //Int_t special = f1->GetNumber();
+      if (fitOption.Bound) special = 0;
+      if      (special == 100)      InitGaus(xmin,xmax);
+      else if (special == 400)      InitGaus(xmin,xmax);
+      else if (special == 200)      InitExpo(xmin,xmax);
+      else if (special == 299+npar) InitPolynom(xmin,xmax);
+      
+      //*-*- Some initialisations
+      if (!fitOption.Verbose) {
+	 arglist[0] = -1;
+	 grFitter->ExecuteCommand("SET PRINT", arglist,1);
+	 arglist[0] = 0;
+	 grFitter->ExecuteCommand("SET NOW",   arglist,0);
+      }
+      /////////////////////////////////////////////////////////      
+      //*-*- Set error criterion for chisquare
+      arglist[0] = TVirtualFitter::GetErrorDef();
+      if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
+      fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
+      if (fitResult != 0) {
+	 //   Abnormal termination, MIGRAD might not have converged on a
+	 //   minimum.
+	 if (!fitOption.Quiet) {
+	    Warning("Fit","Abnormal termination of minimization.");
+	 }
+	 delete [] arglist;
+	 return fitResult;
+      }
+      
+      //*-*- Transfer names and initial values of parameters to Minuit
+      Int_t nfixed = 0;
+      for (i=0;i<npar;i++) {
+	 par = f1->GetParameter(i);
+	 f1->GetParLimits(i,al,bl);
+	 if (al*bl != 0 && al >= bl) {
+	    al = bl = 0;
+	    arglist[nfixed] = i+1;
+	    nfixed++;
+	 }
+	 we  = 0.3*TMath::Abs(par);
+	 if (we <= TMath::Abs(par)*1e-6) we = 1;
+	 grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
+      }
+      if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
+      
+      //*-*- Reset Print level
       if (!fitOption.Quiet) {
-         Warning("Fit","Abnormal termination of minimization.");
+	 if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
+	 else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
       }
-      delete [] arglist;
-      return fitResult;
-   }
-
-//*-*- Transfer names and initial values of parameters to Minuit
-   Int_t nfixed = 0;
-   for (i=0;i<npar;i++) {
-      par = f1->GetParameter(i);
-      f1->GetParLimits(i,al,bl);
-      if (al*bl != 0 && al >= bl) {
-         al = bl = 0;
-         arglist[nfixed] = i+1;
-         nfixed++;
+      
+      //*-*- Compute sum of squares of errors in the bin range
+      Bool_t hasErrors = kFALSE;
+      Double_t ex, ey, sumw2=0;
+      for (i=0;i<fNpoints;i++) {
+	if(fX[i]<xmin || fX[i]>xmax) continue;
+	 ex = GetErrorX(i);
+	 ey = GetErrorY(i);
+	 if (ex > 0 || ey > 0) hasErrors = kTRUE;
+	 sumw2 += ey*ey;
       }
-      we  = 0.3*TMath::Abs(par);
-      if (we <= TMath::Abs(par)*1e-6) we = 1;
-      grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
-   }
-   if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
+      //*-*- Perform minimization
 
-//*-*- Reset Print level
-   if (!fitOption.Quiet) {
-      if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
-      else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
-   }
-
-//*-*- Compute sum of squares of errors in the bin range
-   Bool_t hasErrors = kFALSE;
-   Double_t ex, ey, sumw2=0;
-   for (i=0;i<fNpoints;i++) {
-      if (fX[i] < xmin || fX[i] > xmax) continue;
-      ex = GetErrorX(i);
-      ey = GetErrorY(i);
-      if (ex > 0 || ey > 0) hasErrors = kTRUE;
-      sumw2 += ey*ey;
-   }
-//*-*- Perform minimization
-   arglist[0] = TVirtualFitter::GetMaxIterations();
-   arglist[1] = sumw2*TVirtualFitter::GetPrecision();
-   grFitter->ExecuteCommand("MIGRAD",arglist,2);
-   if (fitOption.Errors) {
-      grFitter->ExecuteCommand("HESSE",arglist,0);
-      grFitter->ExecuteCommand("MINOS",arglist,0);
-   }
-
-   grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
-   f1->SetChisquare(amin);
-   Int_t ndf = f1->GetNumberFitPoints()-npar+nfixed;
-   f1->SetNDF(ndf);
-
-//*-*- Get return status
-   char parName[50];
-   for (i=0;i<npar;i++) {
-      grFitter->GetParameter(i,parName, par,we,al,bl);
-      if (!fitOption.Errors) werr = we;
-      else {
-         grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-         if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-         else                         werr = we;
+      arglist[0] = TVirtualFitter::GetMaxIterations();
+      arglist[1] = sumw2*TVirtualFitter::GetPrecision();
+      grFitter->ExecuteCommand("MIGRAD",arglist,2);
+      if (fitOption.Errors) {
+	 grFitter->ExecuteCommand("HESSE",arglist,0);
+	 grFitter->ExecuteCommand("MINOS",arglist,0);
       }
-      if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
-      f1->SetParameter(i,par);
-      f1->SetParError(i,werr);
+      
+      grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
+      f1->SetChisquare(amin);
+      Int_t ndf = f1->GetNumberFitPoints()-npar+nfixed;
+      f1->SetNDF(ndf);
+      
+      //////////////////////////////////////
+      
+      //*-*- Get return status
+      char parName[50];
+      for (i=0;i<npar;i++) {
+	 grFitter->GetParameter(i,parName, par,we,al,bl);
+	 if (!fitOption.Errors) werr = we;
+	 else {
+	    grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
+	    if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
+	    else                         werr = we;
+	 }
+	 if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
+	 f1->SetParameter(i,par);
+	 f1->SetParError(i,werr);
+      }
    }
-
 //*-*- Print final values of parameters.
    if (!fitOption.Quiet) {
       if (fitOption.Errors) grFitter->PrintResults(4,amin);
       else                  grFitter->PrintResults(3,amin);
    }
    delete [] arglist;
+
 
 //*-*- Store fitted function in histogram functions list and draw
    if (!fitOption.Nostore) {
@@ -1308,7 +1365,10 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       if (TestBit(kCanDelete)) return fitResult;
       if (gPad) gPad->Modified();
    }
+
+
    return fitResult;
+
 }
 
 //______________________________________________________________________________
@@ -1418,6 +1478,48 @@ Double_t TGraph::GetErrorY(Int_t) const
 
 }
 
+//______________________________________________________________________________
+Double_t TGraph::GetEXhigh(Int_t) const
+{
+//    This function is called by GraphFitChisquare.
+//    It always returns a negative value. Real implementation in TGraphErrors
+//    and TGraphAsymmErrors
+
+   return -1;
+
+}
+
+//______________________________________________________________________________
+Double_t TGraph::GetEXlow(Int_t) const
+{
+//    This function is called by GraphFitChisquare.
+//    It always returns a negative value. Real implementation in TGraphErrors
+//    and TGraphAsymmErrors
+
+   return -1;
+
+}
+//______________________________________________________________________________
+Double_t TGraph::GetEYhigh(Int_t) const
+{
+//    This function is called by GraphFitChisquare.
+//    It always returns a negative value. Real implementation in TGraphErrors
+//    and TGraphAsymmErrors
+
+   return -1;
+
+}
+
+//______________________________________________________________________________
+Double_t TGraph::GetEYlow(Int_t) const
+{
+//    This function is called by GraphFitChisquare.
+//    It always returns a negative value. Real implementation in TGraphErrors
+//    and TGraphAsymmErrors
+
+   return -1;
+
+}
 //______________________________________________________________________________
 TF1 *TGraph::GetFunction(const char *name) const
 {

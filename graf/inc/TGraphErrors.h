@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.18 2004/09/14 06:38:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.19 2004/10/20 12:00:04 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -60,6 +60,10 @@ public:
         Double_t        GetErrorY(Int_t bin) const;
         Double_t       *GetEX() const {return fEX;}
         Double_t       *GetEY() const {return fEY;}
+	Double_t        GetEXhigh(Int_t bin) const;
+	Double_t        GetEXlow(Int_t bin) const;
+	Double_t        GetEYhigh(Int_t bin) const;
+	Double_t        GetEYlow(Int_t bin) const;
         virtual void    Paint(Option_t *chopt="");
         virtual void    Print(Option_t *chopt="") const;
         virtual void    SavePrimitive(ofstream &out, Option_t *option);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.42 2005/02/16 08:39:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.43 2005/02/21 16:57:15 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -119,6 +119,10 @@ public:
         Double_t         *GetY() const {return fY;}
         virtual Double_t *GetEX() const {return 0;}
         virtual Double_t *GetEY() const {return 0;}
+	virtual Double_t GetEXhigh(Int_t bin) const;
+	virtual Double_t GetEXlow(Int_t bin) const;
+	virtual Double_t GetEYhigh(Int_t bin) const;
+	virtual Double_t GetEYlow(Int_t bin) const;
         TAxis            *GetXaxis() const ;
         TAxis            *GetYaxis() const ;
         virtual void     GetPoint(Int_t i, Double_t &x, Double_t &y) const;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.85 2005/02/18 17:16:59 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.86 2005/02/19 18:37:12 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -175,23 +175,30 @@ TFormula::TFormula(const char *name,const char *expression) :
       expr[j] = expression[i]; j++;
    }
    expr[j] = 0;
-  Bool_t gausNorm   = kFALSE;
-  Bool_t landauNorm = kFALSE;
-  if (j) {
-     TString chaine = expr;
-     // special case for normalized gaus
-     if (chaine.Contains("gausn")) {
-        gausNorm = kTRUE;
-        chaine.ReplaceAll("gausn","gaus");
-     }
-     // special case for normalized landau
-     if (chaine.Contains("landaun")) {
-        landauNorm = kTRUE;
-        chaine.ReplaceAll("landaun","landau");
-     }
-     SetTitle(chaine.Data());
-  }
+   Bool_t gausNorm   = kFALSE;
+   Bool_t landauNorm = kFALSE;
+   Bool_t linear = kFALSE;
+   
+   if (j) {
+      TString chaine = expr;
+      //special case for functions for linear fitting
+      if (chaine.Contains("++"))
+	  linear = kTRUE;
+      // special case for normalized gaus
+      if (chaine.Contains("gausn")) {
+	 gausNorm = kTRUE;
+	 chaine.ReplaceAll("gausn","gaus");
+      }
+      // special case for normalized landau
+      if (chaine.Contains("landaun")) {
+	 landauNorm = kTRUE;
+	 chaine.ReplaceAll("landaun","landau");
+      }
+      SetTitle(chaine.Data());
+   }
    delete [] expr;
+
+   if (linear)    SetBit(kLinear);
 
    if (Compile()) return;
 
@@ -1877,6 +1884,7 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    if (fParams) { delete [] fParams; fParams = 0;}
    if (fNames)  { delete [] fNames;  fNames  = 0;}
    fFunctions.Delete();
+   fLinearParts.Delete();
 
    // should we also remove the object from the list?
    // gROOT->GetListOfFunctions()->Remove(this);
@@ -1925,6 +1933,11 @@ Int_t TFormula::Compile(const char *expression)
 
   TString chaine = GetTitle();
 //  chaine.ToLower();
+
+//if the function is linear, process it and fill the array of linear parts
+  if (TestBit(kLinear)){
+	ProcessLinear(chaine);  
+  }
 
   MAXOP   = 1000;
   MAXPAR  = 100;
@@ -2688,6 +2701,14 @@ TString TFormula::GetExpFormula() const
 }
 
 //______________________________________________________________________________
+const TObject* TFormula::GetLinearPart(Int_t i)
+{
+   if (!fLinearParts.IsEmpty())
+      return fLinearParts.UncheckedAt(i);
+   return 0;
+}
+
+//______________________________________________________________________________
 Double_t TFormula::GetParameter(Int_t ipar) const
 {
   //return value of parameter number ipar
@@ -2760,6 +2781,103 @@ void TFormula::Print(Option_t *) const
    for (i=0;i<fNpar;i++) {
       Printf(" Par%3d  %20s = %g",i,GetParName(i),fParams[i]);
    }
+}
+
+//______________________________________________________________________________
+void TFormula::ProcessLinear(TString &formula)
+{   
+   //if the formula is for linear fitting, change the title to
+   //normal and fill the LinearParts array
+
+
+   TString formula2(formula);
+   char repl[20];
+   char *pch;
+   Int_t nf;
+   //replace "++" with "+[i]*"
+   pch=strstr(formula.Data(), "++");
+   if (pch) 
+      formula.Insert(0, "[0]*");
+   pch=strstr(formula.Data(), "++");
+   if (pch){ 
+      //if there are "++", replaces them with +[i]*
+      nf = 1;
+      while (pch){
+	 sprintf(repl, "+[%d]*", nf);
+	 Int_t offset = pch-formula.Data();
+	 formula.Replace(pch-formula.Data(), 2, repl, (nf)/10+5);
+	 pch = strstr(formula.Data()+offset, "++");   
+	 nf++;
+      }
+   } else {
+      //if there are no ++, create a new string with ++ instead of +[i]*
+      formula2=formula2(4, formula2.Length()-4);
+      pch=strchr(formula2.Data(), '[');
+      char repl[]="++";
+      nf = 1;
+      while (pch){
+	 Int_t offset = pch-formula2.Data()-1;
+	 formula2.Replace(pch-formula2.Data()-1, (nf)/10+5, repl, 2);
+	 pch = strchr(formula2.Data()+offset, '[');
+	 nf++;
+      }
+   }
+   
+   fLinearParts.Expand(nf);
+   //break up the formula and fill the array of linear parts
+   Int_t len=formula2.Capacity();
+   char *fstring;
+
+   TString replaceformula;
+   char *pattern=new char[5];
+   char *replacement=new char[6];
+   TString sstring(formula2, len + 50);
+   //pattern="x";
+   //replacement="[0]";
+   //replaceformula=sstring.ReplaceAll(pattern, 1, replacement, 3);
+   pattern = "x0";
+   replacement = "[0]";
+   sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
+   pattern = "y";
+   replacement = "[1]";
+   sstring = sstring.ReplaceAll(pattern, 1, replacement, 3);
+   pattern = "x1";
+   replacement = "[1]";
+   sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
+   pattern = "z";
+   replacement = "[2]";
+   sstring = sstring.ReplaceAll(pattern, 1, replacement, 3);
+   pattern = "x2";
+   replacement = "[2]";
+   sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
+   pattern = "x3";
+   replacement = "[3]";
+   sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
+   //careful not to replace the "x" in "exp"
+   fstring=strchr(sstring.Data(), 'x');
+   while (fstring){
+      replacement="[0]";
+      Int_t offset = fstring - sstring.Data();
+      if (*(fstring-1)!='e' && *(fstring+1)!='p')
+	 sstring.Replace(fstring-sstring.Data(), 1, replacement,3);
+      else
+	 offset++;
+      fstring = strchr(sstring.Data()+offset, 'x');   
+   }
+
+   //fill the array of functions
+   sstring = sstring.ReplaceAll("++", 2, "|", 1);
+   TObjArray *oa = sstring.Tokenize("|");
+   for (Int_t i=0; i<nf; i++) {
+      replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
+      TFormula *f = new TFormula("f", replaceformula.Data());
+      if (!f) {
+	 Error("TFormula", "f_linear not allocated");
+	 return;
+      }
+      fLinearParts.Add(f);
+   }
+   oa->Delete();
 }
 
 //______________________________________________________________________________

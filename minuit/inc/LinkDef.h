@@ -1,4 +1,4 @@
-/* @(#)root/minuit:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
+/* @(#)root/minuit:$Name:  $:$Id: LinkDef.h,v 1.2 2004/04/17 06:38:26 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,5 +18,6 @@
 
 #pragma link C++ class TMinuit+;
 #pragma link C++ class TFitter+;
+#pragma link C++ class TLinearFitter+;
 
 #endif

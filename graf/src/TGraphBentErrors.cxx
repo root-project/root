@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.11 2005/02/07 14:34:47 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.12 2005/03/01 09:33:46 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -205,10 +205,10 @@ void TGraphBentErrors::Apply(TF1 *f)
 
   for (Int_t i=0;i<GetN();i++) {
      GetPoint(i,x,y);
-     exl=GetEXlow()[i];
-     exh=GetEXhigh()[i];
-     eyl=GetEYlow()[i];
-     eyh=GetEYhigh()[i];
+     exl=GetEXlow(i);
+     exh=GetEXhigh(i);
+     eyl=GetEYlow(i);
+     eyh=GetEYhigh(i);
 
      fxy = f->Eval(x,y);
      SetPoint(i,x,fxy);
@@ -362,6 +362,38 @@ Double_t TGraphBentErrors::GetErrorY(Int_t i) const
    if (fEYlow)  elow  = fEYlow[i];
    if (fEYhigh) ehigh = fEYhigh[i];
    return TMath::Sqrt(0.5*(elow*elow + ehigh*ehigh));
+}
+
+//______________________________________________________________________________
+Double_t TGraphBentErrors::GetEXhigh(Int_t i) const
+{
+   if (i<0 || i>fNpoints) return -1;
+   if (fEXhigh) return fEXhigh[i];
+   return -1;
+}
+
+//______________________________________________________________________________
+Double_t TGraphBentErrors::GetEXlow(Int_t i) const
+{
+   if (i<0 || i>fNpoints) return -1;
+   if (fEXlow) return fEXlow[i];
+   return -1;
+}
+
+//______________________________________________________________________________
+Double_t TGraphBentErrors::GetEYhigh(Int_t i) const
+{
+   if (i<0 || i>fNpoints) return -1;
+   if (fEYhigh) return fEYhigh[i];
+   return -1;
+}
+
+//______________________________________________________________________________
+Double_t TGraphBentErrors::GetEYlow(Int_t i) const
+{
+   if (i<0 || i>fNpoints) return -1;
+   if (fEYlow) return fEYlow[i];
+   return -1;
 }
 
 //______________________________________________________________________________
