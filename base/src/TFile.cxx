@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.98 2003/07/22 16:10:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.99 2003/08/22 14:25:32 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -124,6 +124,14 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //  for each object written to this file.
 //  The function TFile::GetCompressionFactor returns the global
 //  compression factor for this file.
+//
+//  In case the file does not exist or is not a valid Root file,
+//  it is made a Zombie. One can detect this situation with a code like:
+//     TFile f("file.root");
+//     if ( f.IsZombie() ) {
+//     cout << "Error opening file" << endl;
+//     exit(-1);
+//     }else {
 //
 //  A ROOT file is a suite of consecutive data records with the following
 //    format (see also the TKey class);
