@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.39 2002/11/11 14:45:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.40 2002/11/15 22:20:51 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1453,7 +1453,7 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
-TObject *TBuffer::ReadObject(const TClass *clReq)
+TObject *TBuffer::ReadObject(const TClass * /*clReq*/)
 {
    // Read object from I/O buffer. clReq is NOT used.
    // The value returned is the address actual start in memory of the object.

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.100 2002/12/02 17:46:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.101 2002/12/02 18:41:17 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -529,7 +529,7 @@ void TClass::BuildRealData(void *pointer)
       BuildRealDataFake("",0,this);
       return;
    }
-   
+
    TObject *realDataObject = (TObject*)pointer;
 
    if ((!pointer) && (Property() & kIsAbstract)) return;
@@ -628,7 +628,7 @@ void TClass::BuildRealData(void *pointer)
 void TClass::BuildRealDataFake(const char *name, Int_t offset, TClass *cl)
 {
    // Build the list of real data for a fake class
-   
+
    TIter next(GetStreamerInfo()->GetElements());
    TStreamerElement *element;
    while ((element = (TStreamerElement*)next())) {
@@ -925,7 +925,7 @@ Int_t TClass::GetDataMemberOffset(const char *name) const
    //may be member is a pointer
    rd = (TRealData*)fRealData->FindObject(Form("*%s",name));
    if (rd) return rd->GetThisOffset();
-   
+
    //new attempt starting after the first "." if any
    const char *dot = strchr(name,'.');
    if (!dot) return 0;
@@ -933,9 +933,9 @@ Int_t TClass::GetDataMemberOffset(const char *name) const
    if (rd) return rd->GetThisOffset();
    rd = (TRealData*)fRealData->FindObject(Form("*%s",dot+1));
    if (rd) return rd->GetThisOffset();
-   
-   return 0; 
-}  
+
+   return 0;
+}
 
 //______________________________________________________________________________
 TList *TClass::GetListOfBases()
@@ -1726,7 +1726,7 @@ void TClass::SetUnloaded()
 }
 
 //______________________________________________________________________________
-TStreamerInfo *TClass::SetStreamerInfo(Int_t version, const char *info)
+TStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*info*/)
 {
    // Info is a string describing the names and types of attributes
    // written by the class Streamer function.

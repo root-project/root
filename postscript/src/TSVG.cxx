@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.5 2002/04/11 11:41:30 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.6 2002/09/10 13:17:42 brun Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -1055,14 +1055,14 @@ Int_t TSVG::YtoSVG(Double_t y)
 }
 
 //______________________________________________________________________________
-void TSVG::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
-                                 Double_t y1, Double_t y2)
+void TSVG::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
+                          Double_t)
 {
    Warning("TSVG::CellArrayBegin", "not yet implemented");
 }
 
 //______________________________________________________________________________
-void TSVG::CellArrayFill(Int_t r, Int_t g, Int_t b)
+void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
 {
    Warning("TSVG::CellArrayFill", "not yet implemented");
 }
@@ -1074,19 +1074,19 @@ void TSVG::CellArrayEnd()
 }
 
 //______________________________________________________________________________
-void TSVG::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
+void TSVG::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 {
    Warning("TSVG::DrawPolyMarker", "not yet implemented");
 }
 
 //______________________________________________________________________________
-void TSVG::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
+void TSVG::DrawPolyMarker(Int_t, Double_t *, Double_t *)
 {
    Warning("TSVG::DrawPolyMarker", "not yet implemented");
 }
 
 //______________________________________________________________________________
-void TSVG::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
+void TSVG::DrawPS(Int_t, Float_t *, Float_t *)
 {
    Warning("TSVG::DrawPS", "not yet implemented");
 }

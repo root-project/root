@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.5 2001/02/06 10:58:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.6 2001/04/09 08:11:43 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TLeafElement::~TLeafElement()
 }
 
 //______________________________________________________________________________
-TMethodCall *TLeafElement::GetMethodCall(const char *name)
+TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
 {
 //*-*-*-*-*-*-*-*Returns pointer to method corresponding to name*-*-*-*-*-*-*
 //*-*            ============================================

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.9 2001/02/07 08:18:15 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.9 2001/02/07 08:18:15 brun Exp $
+// $Id: TChair.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -39,7 +39,7 @@ protected:
 public:
 
    TChair(TTable *table){ fTable = table; }
-   TChair(const TChair &){assert(0);}
+   TChair(const TChair &org) : TDataSet(org) {assert(0);}
 //   TChair     &operator=(const TChair &rhs){ assert(0); return rhs;}
    virtual    ~TChair(){;}
 
@@ -119,6 +119,9 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.1  2002/05/27 16:26:59  rdm
+// rename star to table.
+//
 // Revision 1.9  2001/02/07 08:18:15  brun
 //
 // New version of the STAR classes compiling with no warnings.

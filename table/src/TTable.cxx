@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.2 2002/11/26 18:39:18 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,10 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.2  2002/11/26 18:39:18  brun
+// Corrections in libTable by Valery Fine to take into account
+// the new ROOT features with ClassDef/ClassImp, etc.
+//
 // Revision 1.1  2002/05/27 16:26:59  rdm
 // rename star to table.
 //
@@ -2081,6 +2085,8 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
      long len = b.Length() + (20+4) + (20+4) + 4;
      b.SetBufferOffset(len);
    }
+#else
+   if (version) { }
 #endif
    b >> fMaxIndex;         // fTableHeader->nok;          /* # rows filled */
    b >> rbytes;            /* number of bytes per row */
@@ -2200,7 +2206,7 @@ void TTable::Streamer(TBuffer &R__b)
             ioDescriptor =  new TTableDescriptor();
             ioDescriptor->Streamer(R__b);
           }
-          
+
           if (!currentDescriptor) {
             currentDescriptor = ioDescriptor;
             SetDescriptorPointer(currentDescriptor);
@@ -2209,7 +2215,7 @@ void TTable::Streamer(TBuffer &R__b)
             // Protection against of memory leak.
             delete currentDescriptor->fSecondDescriptor;
             currentDescriptor->fSecondDescriptor = ioDescriptor;
-          }          
+          }
           // compare two descriptors
           evolutionOn = (Bool_t)ioDescriptor->UpdateOffsets(currentDescriptor);
         }
@@ -2318,10 +2324,10 @@ void TTable::Update(TDataSet *set, UInt_t opt)
 
 //_______________________________________________________________________
 const char *TTable::TableDictionary(const char *className,const char *structName,TTableDescriptor *&ColDescriptors)
-{   
+{
    // Quiry the TClass instance for the C-stucture dicitonary
-   // This method is to be used form with TableImp CPP macro (see $ROOTSYS/table/inc/Ttypes.h 
-   if (className){/*NotUsed*/}; 
+   // This method is to be used form with TableImp CPP macro (see $ROOTSYS/table/inc/Ttypes.h
+   if (className){/*NotUsed*/};
    TClass *r = gROOT->GetClass(structName,1);
    ColDescriptors = new TTableDescriptor(r);
    return structName;

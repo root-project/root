@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.71 2002/10/11 13:25:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.73 2002/11/29 08:16:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1381,7 +1381,8 @@ void TFile::WriteHeader()
 }
 
 //______________________________________________________________________________
-void TFile::MakeProject(const char *dirname, const char *classes, Option_t *option)
+void TFile::MakeProject(const char *dirname, const char * /*classes*/,
+                        Option_t *option)
 {
 // Generate code in directory dirname for all classes specified in argument classes
 // If classes = "*" (default), the function generates an include file for each

@@ -657,9 +657,9 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.21 2002/01/24 11:39:29 rdm Exp $
-// $Date: 2002/01/24 11:39:29 $
-// $Author: rdm $
+// $Id: TPrincipal.cxx,v 1.22 2002/04/26 10:14:59 brun Exp $
+// $Date: 2002/04/26 10:14:59 $
+// $Author: brun $
 
 #include "TPrincipal.h"
 
@@ -1334,7 +1334,8 @@ void TPrincipal::MakePrincipals()
 }
 
 //____________________________________________________________________
-void TPrincipal::MakeRealCode(const char *filename, const char *classname, Option_t *opt)
+void TPrincipal::MakeRealCode(const char *filename, const char *classname,
+                              Option_t *)
 {
   // PRIVATE METHOD:
   // This is the method that actually generates the code for the
@@ -1693,7 +1694,7 @@ void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
 }
 
 //____________________________________________________________________
-void TPrincipal::Test(Option_t *opt)
+void TPrincipal::Test(Option_t *)
 {
   // Test the PCA, bye calculating the sum square of residuals
   // (see method SumOfSquareResiduals), and display the histogram

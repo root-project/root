@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.9 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.10 2002/10/25 01:23:38 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -367,7 +367,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
 
 //______________________________________________________________________________
-Bool_t TPacketizer::HandleTimer(TTimer *timer)
+Bool_t TPacketizer::HandleTimer(TTimer *)
 {
    TMessage m(kPROOF_PROGRESS);
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.2 2002/05/20 21:05:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.3 2002/05/23 06:50:56 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,7 +123,7 @@
 #include "TClass.h"
 
 #include "TFractionFitter.h"
-   
+
 TVirtualFitter *fractionFitter=0;
 
 ClassImp(TFractionFitter)
@@ -501,7 +501,7 @@ void TFractionFitter::GetResult(Int_t parm, Double_t& value, Double_t& error) co
    }
   char parname[100];
   Double_t vlow, vhigh;
-  
+
   fractionFitter->GetParameter(parm, parname, value, error, vlow, vhigh);
 }
 
@@ -552,7 +552,9 @@ void TFractionFitter::GetRanges(Int_t& minX, Int_t& maxX, Int_t& minY, Int_t& ma
 }
 
 //______________________________________________________________________________
-void TFractionFitter::ComputeFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* xx, Int_t flag) {
+void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
+                                 Double_t& f, Double_t* xx, Int_t flag)
+{
   // Used internally to compute the likelihood value.
 
   // normalise the fit parameters

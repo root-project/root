@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTablePoints.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTablePoints.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine   14/05/99  (E-mail: fine@bnl.gov)
 
 // ***********************************************************************
@@ -86,7 +86,7 @@ TTablePoints::TTablePoints(TTableSorter *sorter, Int_t keyIndex,Option_t *opt)
 }
 
 //______________________________________________________________________________
-Int_t TTablePoints::DistancetoPrimitive(Int_t px, Int_t py)
+Int_t TTablePoints::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
 //*-*-*-*-*-*-*Compute distance from point px,py to a 3-D points *-*-*-*-*-*-*
 //*-*          =====================================================

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.44 2002/06/27 23:58:02 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.45 2002/10/28 14:22:51 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -221,8 +221,12 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
+#ifndef F_LOCK
 #define F_LOCK             (LOCK_EX | LOCK_NB)
+#endif
+#ifndef F_ULOCK
 #define F_ULOCK             LOCK_UN
+#endif
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.17 2002/10/04 17:59:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.18 2002/10/05 09:27:45 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -90,10 +90,10 @@ THStack::~THStack()
 }
 
 //______________________________________________________________________________
-THStack::THStack(const THStack &hstack)
+THStack::THStack(const THStack &hstack) : TNamed(hstack)
 {
 // THStack copy constructor
-   
+
    fHistogram = 0;
    fMaximum = hstack.fMaximum;
    fMinimum = hstack.fMinimum;
@@ -115,7 +115,7 @@ void THStack::Add(TH1 *h1, Option_t *option)
    // add a new histogram to the list
    // Only 1-d and 2-d histograms currently supported.
    // A drawing option may be specified
-   
+
    if (!h1) return;
    if (h1->GetDimension() > 2) {
       Error("Add","THStack supports only 1-d and 2-d histograms");
@@ -284,10 +284,10 @@ Double_t THStack::GetMinimum(Option_t *option)
 }
 
 //______________________________________________________________________________
-TObjArray *THStack::GetStack() 
+TObjArray *THStack::GetStack()
 {
    // Return pointer to Stack. Build it if not yet done
-   
+
    BuildStack();
    return fStack;
 }
@@ -345,16 +345,16 @@ void THStack::Paint(Option_t *option)
 // as if the option "same" had been specified.
 //
 // if option "pads" is specified, the current pad/canvas is subdivided into
-// a number of pads equal to the number of histograms and each histogram 
+// a number of pads equal to the number of histograms and each histogram
 // is paint into a separate pad.
 //
 // See THistPainter::Paint for a list of valid options.
 
    if (!fHists) return;
-   
+
    TString opt = option;
    opt.ToLower();
-   
+
    if (opt.Contains("pads")) {
       Int_t npads = fHists->GetSize();
       TVirtualPad *padsav = gPad;
@@ -384,7 +384,7 @@ void THStack::Paint(Option_t *option)
       padsav->cd();
       return;
    }
-   
+
    // compute the min/max of each axis
    TH1 *h;
    TIter next(fHists);
@@ -398,7 +398,7 @@ void THStack::Paint(Option_t *option)
       if (h->GetYaxis()->GetXmin() < ymin) ymin = h->GetYaxis()->GetXmin();
       if (h->GetYaxis()->GetXmax() > ymax) ymax = h->GetYaxis()->GetXmax();
    }
-   
+
    char loption[32];
    sprintf(loption,"%s",opt.Data());
    char *nostack = strstr(loption,"nostack");
@@ -501,7 +501,7 @@ void THStack::SavePrimitive(ofstream &out, Option_t *option)
    if (fMaximum != -1111) {
       out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
    }
-   
+
    TH1 *h;
    if (fHists) {
       TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();

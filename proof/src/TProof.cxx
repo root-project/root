@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.34 2002/11/18 23:03:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.35 2002/11/28 18:38:12 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1084,7 +1084,7 @@ void TProof::HandleAsyncInput(TSocket *sl)
 }
 
 //______________________________________________________________________________
-void TProof::Limits(TSocket *s, TMessage &mess)
+void TProof::Limits(TSocket *, TMessage &)
 {
    // Calculate histogram limits after TTree::fEstimate entries have
    // been processed.
@@ -1846,6 +1846,7 @@ Int_t TProof::EnablePackage(const char *package)
    // if exists followed by the PROOF-INF/setup.C script.
    // Returns 0 in case of success and -1 in case of error.
 
+   if (package) { }  // place holder
    return 0;
 }
 

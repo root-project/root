@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.16 2002/11/15 14:53:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.17 2002/11/27 15:22:34 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -384,7 +384,7 @@ Bool_t TGListTree::HandleDoubleClick(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGListTree::HandleExpose(Event_t *event)
+Bool_t TGListTree::HandleExpose(Event_t * /*event*/)
 {
    // Handle expose event in the list tree.
 
@@ -645,7 +645,7 @@ void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t 
 }
 
 //______________________________________________________________________________
-void TGListTree::Home(Bool_t select)
+void TGListTree::Home(Bool_t /*select*/)
 {
    // Move content to the top.
 
@@ -653,7 +653,7 @@ void TGListTree::Home(Bool_t select)
 }
 
 //______________________________________________________________________________
-void TGListTree::End(Bool_t select)
+void TGListTree::End(Bool_t /*select*/)
 {
    // Move content to the bottom.
 
@@ -661,7 +661,7 @@ void TGListTree::End(Bool_t select)
 }
 
 //______________________________________________________________________________
-void TGListTree::PageUp(Bool_t select)
+void TGListTree::PageUp(Bool_t /*select*/)
 {
    // Move content one page up.
 
@@ -676,7 +676,7 @@ void TGListTree::PageUp(Bool_t select)
 }
 
 //______________________________________________________________________________
-void TGListTree::PageDown(Bool_t select)
+void TGListTree::PageDown(Bool_t /*select*/)
 {
    // Move content one page down.
 
@@ -690,7 +690,7 @@ void TGListTree::PageDown(Bool_t select)
 }
 
 //______________________________________________________________________________
-void TGListTree::LineUp(Bool_t select)
+void TGListTree::LineUp(Bool_t /*select*/)
 {
    // Move content one item-size up.
 
@@ -713,7 +713,7 @@ void TGListTree::LineUp(Bool_t select)
 }
 
 //______________________________________________________________________________
-void TGListTree::LineDown(Bool_t select)
+void TGListTree::LineDown(Bool_t /*select*/)
 {
    // Move content one item-size down.
 
@@ -808,7 +808,7 @@ void TGListTree::Search()
 //---- drawing functions
 
 //______________________________________________________________________________
-void TGListTree::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
+void TGListTree::DrawRegion(Int_t /*x*/, Int_t /*y*/, UInt_t /*w*/, UInt_t /*h*/)
 {
    // Redraw list tree.
 

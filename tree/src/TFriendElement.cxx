@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.7 2002/07/06 06:54:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.8 2002/08/09 22:35:03 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -196,10 +196,10 @@ TTree *TFriendElement::GetTree()
          if (!fTree->InheritsFrom(TTree::Class()) ) {
             fTree = 0;
          } else {
-            // Since we did NOT create it ourself, let's not 
+            // Since we did NOT create it ourself, let's not
             // take ownership of it.
             fOwnTree = kFALSE;
-         } 
+         }
       }
       return fTree;
    }
@@ -210,7 +210,7 @@ TTree *TFriendElement::GetTree()
 }
 
 //_______________________________________________________________________
-void TFriendElement::ls(Option_t *option) const
+void TFriendElement::ls(Option_t *) const
 {
 // List this friend element.
 

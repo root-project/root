@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.1 2002/11/15 16:04:57 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.2 2002/11/20 09:50:34 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -22,7 +22,7 @@ ClassImp(TPaletteAxis)
 
 //______________________________________________________________________________
 //
-// a TPaletteAxis object is used to display the color palette when 
+// a TPaletteAxis object is used to display the color palette when
 // drawing 2-d histograms.
 // The object is automatically created when drawing a 2-D histogram
 // when the option "z" is specified.
@@ -61,7 +61,7 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, T
    SetName("palette");
    TAxis *zaxis = fH->GetZaxis();
    fAxis.ImportAxisAttributes(zaxis);
-   if (gPad->GetView()) SetBit(kHasView);   
+   if (gPad->GetView()) SetBit(kHasView);
 }
 
 //______________________________________________________________________________
@@ -93,9 +93,9 @@ Int_t TPaletteAxis::DistancetoPrimitive(Int_t px, Int_t py)
    //check if mouse on the axis region
    Int_t plxmax = gPad->XtoAbsPixel(fX2);
    Int_t plymin = gPad->YtoAbsPixel(fY1);
-   Int_t plymax = gPad->YtoAbsPixel(fY2);         
+   Int_t plymax = gPad->YtoAbsPixel(fY2);
    if (px > plxmax && px < plxmax+30 && py >= plymax &&py <= plymin) return px-plxmax;
-   
+
    //otherwise check if inside the box
    return TBox::DistancetoPrimitive(px,py);
 }
@@ -170,7 +170,7 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TPaletteAxis::Paint(Option_t *option)
+void TPaletteAxis::Paint(Option_t *)
 {
 
    SetFillStyle(1001);
@@ -224,9 +224,9 @@ void TPaletteAxis::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPaletteAxis::SavePrimitive(ofstream &out, Option_t *)
+void TPaletteAxis::SavePrimitive(ofstream &, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out.
 }
 
 //______________________________________________________________________________

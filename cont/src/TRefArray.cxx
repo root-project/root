@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.15 2002/07/29 09:22:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.16 2002/08/20 15:17:36 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -65,7 +65,7 @@ TRefArray::TRefArray()
 //______________________________________________________________________________
 TRefArray::TRefArray(Int_t s, Int_t lowerBound)
 {
-   // Create an object array. Using s one can set the array size 
+   // Create an object array. Using s one can set the array size
    // and lowerBound can be used to set the array lowerbound
    // index (default is 0).
 
@@ -183,9 +183,9 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
       Error("AddAt", "out of bounds at %d in %x", idx, this);
       return;
    }
-   if (idx-fLowerBound >= fSize) 
+   if (idx-fLowerBound >= fSize)
       Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
-      
+
    fUIDs[idx-fLowerBound] = TProcessID::AssignID(obj);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
@@ -440,7 +440,7 @@ Int_t TRefArray::GetLast() const
 }
 
 //______________________________________________________________________________
-TObject **TRefArray::GetObjectRef(const TObject *obj) const
+TObject **TRefArray::GetObjectRef(const TObject *) const
 {
    // Return address of pointer obj.
 
@@ -464,7 +464,7 @@ UInt_t TRefArray::GetUID(Int_t at) const
 }
 
 //______________________________________________________________________________
-Int_t TRefArray::IndexOf(const TObject *obj) const
+Int_t TRefArray::IndexOf(const TObject *) const
 {
    // obj != 0 Return index of object in array.
    //          Returns lowerBound-1 in case array doesn't contain the obj.
@@ -585,7 +585,7 @@ void TRefArray::SetLast(Int_t last)
 }
 
 //______________________________________________________________________________
-void TRefArray::Sort(Int_t upto)
+void TRefArray::Sort(Int_t)
 {
    // If objects in array are sortable (i.e. IsSortable() returns true
    // for all objects) then sort array.
@@ -608,7 +608,7 @@ void TRefArray::Sort(Int_t upto)
 }
 
 //______________________________________________________________________________
-Int_t TRefArray::BinarySearch(TObject *op, Int_t upto)
+Int_t TRefArray::BinarySearch(TObject *, Int_t)
 {
    // Find object using a binary search. Array must first have been sorted.
    // Search can be limited by setting upto to desired index.

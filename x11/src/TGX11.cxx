@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.24 2002/07/17 14:59:56 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.25 2002/08/17 16:29:31 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -858,7 +858,7 @@ void TGX11::FindBestVisual()
 }
 
 //______________________________________________________________________________
-static Int_t DummyX11ErrorHandler(Display *disp, XErrorEvent *err)
+static Int_t DummyX11ErrorHandler(Display *, XErrorEvent *)
 {
    // Dummy error handler for X11. Used by FindUsableVisual().
 
@@ -891,8 +891,8 @@ void TGX11::FindUsableVisual(XVisualInfo *vlist, Int_t nitems)
          attr.colormap = XCreateColormap(fDisplay, root, vlist[i].visual, AllocNone);
       }
 
-      static XColor black_xcol = { 0, 0x0000, 0x0000, 0x0000, DoRed|DoGreen|DoBlue };
-      static XColor white_xcol = { 0, 0xFFFF, 0xFFFF, 0xFFFF, DoRed|DoGreen|DoBlue };
+      static XColor black_xcol = { 0, 0x0000, 0x0000, 0x0000, DoRed|DoGreen|DoBlue, 0 };
+      static XColor white_xcol = { 0, 0xFFFF, 0xFFFF, 0xFFFF, DoRed|DoGreen|DoBlue, 0 };
       XAllocColor(fDisplay, attr.colormap, &black_xcol);
       XAllocColor(fDisplay, attr.colormap, &white_xcol);
       attr.border_pixel = black_xcol.pixel;
@@ -3037,7 +3037,7 @@ void TGX11::UpdateWindow(int mode)
 }
 
 //______________________________________________________________________________
-void TGX11::Warp(int ix, int iy)
+void TGX11::Warp(int /*ix*/, int /*iy*/)
 {
    // Set pointer position.
    // ix       : New X coordinate of pointer

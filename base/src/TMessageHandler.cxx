@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   11/11/99
 
 /*************************************************************************
@@ -186,7 +186,7 @@ Bool_t TMessageHandler::Notify()
 }
 
 //______________________________________________________________________________
-void TMessageHandler::Print(Option_t *option) const
+void TMessageHandler::Print(Option_t *) const
 {
    // Print statistics for this message handler.
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.7 2002/07/16 08:06:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.8 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -48,8 +48,8 @@ public:
    virtual void     Copy(TObject &f3) const;
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
-   virtual void     DrawDerivative(Option_t *option="al") {;}
-   virtual void     DrawIntegral(Option_t *option="al") {;}
+   virtual void     DrawDerivative(Option_t * ="al") {;}
+   virtual void     DrawIntegral(Option_t * ="al") {;}
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
           Int_t     GetNpz() const {return fNpz;}
    virtual void     GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom);

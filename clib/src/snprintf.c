@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:$:$Id:$ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.1 2000/12/10 10:54:53 rdm Exp $ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*
@@ -235,7 +235,7 @@ static int snprintf_convert_ulong(char *buffer, size_t buf_size, int base,
 
    len = (tmp_buf + tmp_buf_len) - tmp_buf_ptr;
 
-   if (len <= buf_size) {
+   if (len <= (int)buf_size) {
       if (len < width) {
          if (width > (tmp_buf_ptr - tmp_buf))
             width = (tmp_buf_ptr - tmp_buf);
@@ -306,7 +306,7 @@ static int snprintf_convert_float(char *buffer, size_t buf_size,
    sprintf(print_buf, format_str, dbl_val);
    print_buf_len = strlen(print_buf);
 
-   if (print_buf_len > buf_size)
+   if (print_buf_len > (int)buf_size)
       print_buf_len = buf_size;
    strncpy(buffer, print_buf, print_buf_len);
    return print_buf_len;

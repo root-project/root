@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.34 2002/08/16 21:16:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.35 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -90,7 +90,7 @@ protected:
     TVirtualHistPainter *fPainter;  //!pointer to histogram painter
     static Int_t  fgBufferSize;     //!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
-    
+
 private:
     Int_t   AxisChoice(Option_t *axis) const;
     void    Build();
@@ -251,7 +251,7 @@ public:
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax);
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax,
                              Int_t nz, Axis_t zmin, Axis_t zmax);
-    virtual void     SetBinsLength(Int_t n=-1) {;} //refefined in derived classes
+    virtual void     SetBinsLength(Int_t = -1) { } //refefined in derived classes
     virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void     SetCellContent(Int_t binx, Int_t biny, Stat_t content);
     virtual void     SetCellError(Int_t binx, Int_t biny, Stat_t content);

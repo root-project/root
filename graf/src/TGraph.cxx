@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.86 2002/11/18 21:48:03 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.87 2002/11/30 10:36:06 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -288,7 +288,7 @@ TGraph::TGraph(const TH1 *h)
        : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 // Graph constructor importing its parameters from the TH1 object passed as argument
- 
+
    fFunctions = 0;
    fHistogram = 0;
    fNpoints   = 0;
@@ -324,11 +324,11 @@ TGraph::TGraph(const TH1 *h)
    SetMarkerSize(h->GetMarkerSize());
    SetMaximum(h->GetMaximumStored());
    SetMinimum(h->GetMinimumStored());
-   
+
    SetName(h->GetName());
-   SetTitle(h->GetTitle());   
+   SetTitle(h->GetTitle());
 }
-         
+
 
 //______________________________________________________________________________
 TGraph::TGraph(const TF1 *f, Option_t *option)
@@ -343,7 +343,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 //                at the fNpx points of f.
 // if option =="I", a TGraph is created with points computed with the integral
 //                at the fNpx+1 points of f and the integral is normalized to 1.
-    
+
    fFunctions = 0;
    fHistogram = 0;
    fNpoints   = 0;
@@ -354,7 +354,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
       return;
    }
    char coption = ' ';
-   if (option) coption = *option;   
+   if (option) coption = *option;
    fFunctions = new TList;
    fNpoints   = f->GetNpx();
    Double_t xmin = f->GetXmin();
@@ -375,34 +375,34 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
          else        fY[i] = integ + ((TF1*)f)->Integral(fX[i]-dx,fX[i]);
          integ = fY[i];
       } else if (coption == 'd' || coption == 'D') {
-         fX[i] = xmin + (i+0.5)*dx;         
+         fX[i] = xmin + (i+0.5)*dx;
          fY[i] = ((TF1*)f)->Derivative(fX[i]);
       } else {
-         fX[i] = xmin + (i+0.5)*dx;         
+         fX[i] = xmin + (i+0.5)*dx;
          fY[i] = ((TF1*)f)->Eval(fX[i]);
-      }  
+      }
    }
    if (integ != 0 && coption == 'I') {
       for (i=1;i<fNpoints;i++) fY[i] /= integ;
    }
-   
+
    SetLineColor(f->GetLineColor());;
    SetLineWidth(f->GetLineWidth());
    SetLineStyle(f->GetLineStyle());
    SetFillColor(f->GetFillColor());
    SetFillStyle(f->GetFillStyle());
-   
+
    SetName(f->GetName());
-   SetTitle(f->GetTitle());   
+   SetTitle(f->GetTitle());
 }
 
 //______________________________________________________________________________
-TGraph::TGraph(const char *filename, const char *format, Option_t *option)
+TGraph::TGraph(const char *filename, const char *format, Option_t *)
        : TNamed("Graph",filename), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 // Graph constructor reading input from filename
 // filename is assumed to contain at least two columns of numbers
-         
+
    fFunctions = 0;
    fHistogram = 0;
    fNpoints   = 0;
@@ -412,7 +412,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    fMinimum   = -1111;
    fFunctions = new TList;
    SetBit(kClipFrame);
-   
+
 
    Double_t x,y;
    FILE *fp = fopen(filename,"r");
@@ -433,8 +433,8 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    Set(np);
 
    fclose(fp);
-}   
-   
+}
+
 //______________________________________________________________________________
 TGraph::~TGraph()
 {
@@ -443,10 +443,10 @@ TGraph::~TGraph()
 
    delete [] fX;
    delete [] fY;
-   if (fFunctions) { 
+   if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      fFunctions->Delete(); 
-      delete fFunctions; 
+      fFunctions->Delete();
+      delete fFunctions;
    }
    fFunctions = 0;
    delete fHistogram;
@@ -667,7 +667,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       for (i=0;i<fNpoints;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
-         if (pxp < -kMaxPixel || pxp >= kMaxPixel || 
+         if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
              pyp < -kMaxPixel || pyp >= kMaxPixel) {
             BADCASE = kTRUE;
             continue;
@@ -730,7 +730,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
             pxp = x[i]+dpx;
             pyp = y[i]+dpy;
-            if (pxp < -kMaxPixel || pxp >= kMaxPixel || 
+            if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
                 pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
             gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
             gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
@@ -751,7 +751,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
             pxp = x[i]+dpx;
             pyp = y[i]+dpy;
-            if (pxp < -kMaxPixel || pxp >= kMaxPixel || 
+            if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
                 pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
             gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
             gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
@@ -808,7 +808,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (MIDDLE) {
          for(i=0;i<fNpoints;i++) {
-            if (BADCASE) continue;  //do not update if big zoom and points moved          
+            if (BADCASE) continue;  //do not update if big zoom and points moved
             fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
             fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
          }
@@ -818,11 +818,11 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (InheritsFrom("TCutG")) {
             //make sure first and last point are the same
             if (ipoint == 0) {
-               fX[fNpoints-1] = fX[0]; 
+               fX[fNpoints-1] = fX[0];
                fY[fNpoints-1] = fY[0];
             }
             if (ipoint == fNpoints-1) {
-               fX[0] = fX[fNpoints-1]; 
+               fX[0] = fX[fNpoints-1];
                fY[0] = fY[fNpoints-1];
             }
          }
@@ -1401,7 +1401,8 @@ TAxis *TGraph::GetYaxis() const
 }
 
 //______________________________________________________________________________
-void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
+                       Double_t *u, Int_t /*flag*/)
 {
 //*-*-*-*-*-*Minimization function for Graphs using a Chisquare method*-*-*-*-*
 //*-*        =========================================================
@@ -1612,13 +1613,13 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Int_t first, Int_t last)
     Int_t i, k, l, ifail;
     Double_t power;
     Double_t da[20], xk, yk;
-    
+
     if (last <= first) {
        first = 0;
        last  = fNpoints-1;
     }
     Int_t n = last-first+1;
-    
+
     if (m <= 2) {
        LeastSquareLinearFit(n, a[0], a[1], ifail, first, last);
        return;
@@ -1741,7 +1742,7 @@ void TGraph::Paint(Option_t *option)
 void TGraph::PaintFit(TF1 *fit)
 {
 //  Paint "stats" box with the fit info
-   
+
    Int_t dofit;
    TPaveStats *stats  = 0;
    TIter next(fFunctions);
@@ -1755,7 +1756,7 @@ void TGraph::PaintFit(TF1 *fit)
 
    if (stats) dofit  = stats->GetOptFit();
    else       dofit  = gStyle->GetOptFit();
-   
+
    if (!dofit) fit = 0;
    if (!fit) return;
    if (dofit  == 1) dofit  =  111;
@@ -1826,7 +1827,7 @@ void TGraph::PaintFit(TF1 *fit)
 
    if (!done) fFunctions->Add(stats);
    stats->Paint();
-} 
+}
 
 //______________________________________________________________________________
 void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
@@ -2015,7 +2016,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
      }
   }
   if (fit) PaintFit(fit);
-  
+
   rwxmin   = gPad->GetUxmin();
   rwxmax   = gPad->GetUxmax();
   rwymin   = gPad->GetUymin();
@@ -2041,7 +2042,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
   gywork  = new Double_t[2*npoints+10];
   gxworkl = new Double_t[2*npoints+10];
   gyworkl = new Double_t[2*npoints+10];
-  
+
   if (OptionLine || OptionFill) {
      x1       = x[0];
      xn       = x[npoints-1];
@@ -2361,7 +2362,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    if(opt.Contains("P")) OptionMark = 1;  else OptionMark = 0;
    if(opt.Contains("A")) OptionAxis = 1;  else OptionAxis = 0;
    if(opt.Contains("P0")) OptionMark = 10;
-   
+
    Int_t OptionFill2 = 0;
    if(opt.Contains("F") && opt.Contains("2")) {
       OptionFill = 0; OptionFill2 = 1;
@@ -2640,7 +2641,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               }
               gxwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
            }
-           if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { 
+           if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) {
               npt--;
               continue;
            }
@@ -3153,7 +3154,7 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 
    if (ipoint < 0) return -1;
    if (ipoint >= fNpoints) return -1;
-   
+
    fNpoints--;
    Double_t *newX = new Double_t[fNpoints];
    Double_t *newY = new Double_t[fNpoints];
@@ -3262,7 +3263,7 @@ void TGraph::SetEditable(Bool_t editable)
 {
 // if editable=kFALSE, the graph cannot be modified with the mouse
 //  by default a TGraph is editable
-   
+
    if (editable) ResetBit(kNotEditable);
    else          SetBit(kNotEditable);
 }

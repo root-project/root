@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.5 2002/08/12 19:50:12 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.6 2002/08/13 13:44:33 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 //   struct {                                                           //
 //      Float_t Wggs;                                                   //
 //      Float_t Am12;                                                   //
-//      Float_t Am34;                                                   //  
+//      Float_t Am34;                                                   //
 //      Float_t Am14;                                                   //
 //      Float_t Am32;                                                   //
 //      Float_t Ptpi[4];                                                //
@@ -85,7 +85,7 @@ THbookTree::~THbookTree()
 
 
 //______________________________________________________________________________
-Int_t THbookTree::GetEntry(Int_t entry, Int_t getall)
+Int_t THbookTree::GetEntry(Int_t entry, Int_t /*getall*/)
 {
    fReadEntry = entry;
    return fFile->GetEntry(entry,fID,fType,GetX());

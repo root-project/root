@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.137 2002/11/12 15:51:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.138 2002/11/24 14:04:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -554,7 +554,7 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
          Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
                  tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)",
                  t->GetEntries(),fEntries);
-      } 
+      }
    }
    return fe;
 }
@@ -1331,12 +1331,12 @@ TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
 }
 
 //______________________________________________________________________________
-TFile *TTree::ChangeFile(TFile *file) 
+TFile *TTree::ChangeFile(TFile *file)
 {
   // called by TTree::Fill when file has reached its maximum fgMaxTreeSize.
   // Create a new file. If the original file is named "myfile.root",
   // subsequent files are named "myfile_1.root", "myfile_2.root", etc.
-  // 
+  //
   // Return pointer to new file
   // Currently, the automatic change of file is restricted
   // to the case where the Tree is in the top level directory.
@@ -1354,23 +1354,23 @@ TFile *TTree::ChangeFile(TFile *file)
   // If the current file contains other objects like TH1 and TTree,
   // these objects are automatically moved to the new file.
   //
-  // IMPORTANT NOTE: 
+  // IMPORTANT NOTE:
   // Be careful when writing the final Tree header to the file!
   // Don't do:
   //  TFile *file = new TFile("myfile.root","recreate");
   //  TTree *T = new TTree("T","title");
   //  T->Fill(); //loop
-  //  file->Write();  
+  //  file->Write();
   //  file->Close();
   // but do the following:
   //  TFile *file = new TFile("myfile.root","recreate");
   //  TTree *T = new TTree("T","title");
   //  T->Fill(); //loop
   //  file = T->GetCurrentFile(); //to get the pointer to the current file
-  //  file->Write();  
+  //  file->Write();
   //  file->Close();
-  
-   
+
+
    file->cd();
    Write();
    Reset();
@@ -1387,7 +1387,7 @@ TFile *TTree::ChangeFile(TFile *file)
          char fcount[10];
          sprintf(fcount,"_%d",fFileNumber);
          strcat(fname,fcount);
-      } 
+      }
    } else {
       char *cdot = strrchr(fname,'.');
       if (cdot) {
@@ -1402,7 +1402,7 @@ TFile *TTree::ChangeFile(TFile *file)
    Int_t compress = file->GetCompressionLevel();
    TFile *newfile = TFile::Open(fname,"recreate","chain files",compress);
    Printf("Fill: Switching to new file: %s",fname);
-   
+
    // current directory may contain histograms and trees.
    // These objects must be moved to the new file
    TBranch *branch;
@@ -1436,7 +1436,7 @@ TFile *TTree::ChangeFile(TFile *file)
 }
 
 //______________________________________________________________________________
-TTree *TTree::CloneTree(Int_t nentries, Option_t *option)
+TTree *TTree::CloneTree(Int_t nentries, Option_t *)
 {
 // Create a clone of this tree and copy nentries
 // By default copy all entries
@@ -1825,7 +1825,7 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //     ===============================
 //
 //  Entry$:  A TTree::Draw formula can use the special variable Entry$
-//  to access the entry number being read.  For example to draw every 
+//  to access the entry number being read.  For example to draw every
 //  other entry use:
 //    tree.Draw("myvar","Entry$%2==0");
 //
@@ -1833,7 +1833,7 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //  Entries$  : return the total number of entries (== TTree::GetEntries())
 //  Length$   : return the total number of element of this formula for this
 //  		   entry (==TTreeFormula::GetNdata())
-//  Iteration$: return the current iteration over this formula for this 
+//  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //
 //     Making a Profile histogram
@@ -2002,7 +2002,7 @@ Int_t TTree::Fill()
       nbytes += branch->Fill();
    }
    fEntries++;
-   
+
    if (fTotBytes-fSavedBytes > fAutoSave) AutoSave();
 
    //check that output file is still below the maximum size.
@@ -2014,7 +2014,7 @@ Int_t TTree::Fill()
    if (file && file->GetEND() > (Double_t)fgMaxTreeSize) {
       if (fDirectory == (TDirectory*)file) ChangeFile(file);
    }
-   
+
    return nbytes;
 }
 
@@ -2266,11 +2266,11 @@ Bool_t TTree::GetBranchStatus(const char *branchname) const
    // return status of branch with name branchname
    // 0 if branch is not activated
    // 1 if branch is activated
-   
+
    TBranch *br = ((TTree*)this)->GetBranch(branchname);
    if (br) return (br->TestBit(kDoNotProcess) == 0);
    return 0;
-}    
+}
 
 //______________________________________________________________________________
 Int_t TTree::GetBranchStyle()
@@ -3119,14 +3119,14 @@ void TTree::RemoveFriend(TTree *oldFriend)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
       TTree *friend_t = fe->GetTree();
-      
+
       if (friend_t == oldFriend) {
          fFriends->Remove(fe);
          delete fe;
       }
    }
 }
-   
+
 //______________________________________________________________________________
 void TTree::Reset(Option_t *option)
 {

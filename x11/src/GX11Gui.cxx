@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.25 2002/09/14 00:31:02 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.26 2002/10/04 16:06:29 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2380,7 +2380,7 @@ char **TGX11::ListFonts(char *fontname, Int_t max, Int_t &count)
 
    char **fontlist;
    Int_t fontcount = 0;
-   fontlist = XListFonts(fDisplay, fontname, 10000, &fontcount);
+   fontlist = XListFonts(fDisplay, fontname, max, &fontcount);
    count = fontcount;
    return fontlist;
 }

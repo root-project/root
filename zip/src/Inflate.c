@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.4 2002/02/06 10:31:43 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.5 2002/07/18 23:40:47 rdm Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -529,7 +529,7 @@ int R__huft_build(unsigned *b, unsigned n, unsigned s, ush *d, ush *e, struct hu
         w += l[h++];            /* add bits already decoded */
 
         /* compute minimum size table less than or equal to *m bits */
-        z = (z = g - w) > (unsigned)*m ? *m : z;        /* upper limit */
+        z = (z = g - w) > (unsigned)*m ? (unsigned) *m : z;   /* upper limit */
         if ((f = 1 << (j = k - w)) > a + 1)     /* try a k-w bit table */
         {                       /* too few codes for k-w bit table */
           f -= a + 1;           /* deduct codes from patterns left */

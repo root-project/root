@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.33 2002/11/21 20:33:36 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.34 2002/11/22 13:13:50 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -447,7 +447,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
 }
 
 //______________________________________________________________________________
-void TRootIconList::Browse(TBrowser *b)
+void TRootIconList::Browse(TBrowser *)
 {
    // browse icon list
 
@@ -1642,7 +1642,7 @@ void TRootBrowser::Refresh(Bool_t force)
             BrowseObj(obj);
             fTreeLock = kFALSE;
          }
-      }    
+      }
       fClient->NeedRedraw(fLt);
    }
 }

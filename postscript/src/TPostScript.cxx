@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.30 2002/09/03 18:37:39 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.31 2002/11/13 17:04:39 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -355,7 +355,7 @@ void TPostScript::Off()
 }
 
 //______________________________________________________________________________
-void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
+void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
                                  Double_t y1, Double_t y2)
 {
    // Draw a Cell Array

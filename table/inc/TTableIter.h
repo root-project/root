@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableIter.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableIter.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/12/99
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TTableIter
 #define ROOT_TTableIter
-// $Id: TTableIter.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// $Id: TTableIter.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
 // Author                  Valerie Fine  (fine@bnl.gov)
 // Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
@@ -32,7 +32,7 @@ class TTableIter : public TObject {
        Int_t  fFirstIndx;
  protected:
    TTableIter(){;}
-   TTableIter(const TTableIter &){;}
+   TTableIter(const TTableIter &org) : TObject(org) {;}
 
  public:
    TTableIter(const TTableSorter *table, Float_t  &keyvalue);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.5 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.6 2002/01/24 11:39:28 rdm Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -456,7 +456,7 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
 }
 
 //______________________________________________________________________
-TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
+TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
         Double_t bass, Double_t span, Bool_t isPeriodic, Double_t *w)
 {
 //*-*-*-*-*-*-*-*-*Smooth data with Super smoother*-*-*-*-*-*-*-*-*-*-*-*
@@ -885,7 +885,7 @@ void TGraphSmooth::BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
 }
 
 //______________________________________________________________________
-void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
+void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &Ylow,
      Double_t &Yhigh, Int_t rule, Int_t iTies)
 {
 //*-*-*-*-*-*-*-*-*Sort data points and eliminate double x values*-*-*-*

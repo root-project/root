@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.19 2002/07/11 09:05:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.20 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -36,8 +36,8 @@ protected:
    Stat_t     fTsumwy;          //Total Sum of weight*Y
    Stat_t     fTsumwy2;         //Total Sum of weight*Y*Y
    Stat_t     fTsumwxy;         //Total Sum of weight*X*Y
-   
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
+
+   virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w);
 
 public:
@@ -73,9 +73,9 @@ public:
    virtual void    GetRandom2(Axis_t &x, Axis_t &y);
    virtual void    GetStats(Stat_t *stats) const;
    virtual Stat_t  Integral(Option_t *option="") const;
-   virtual Stat_t  Integral(Int_t, Int_t, Option_t *option="") const {return 0;}
+   virtual Stat_t  Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="") const;
-   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t *option="") const {return 0;}
+   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
    virtual Int_t   Merge(TCollection *list);
       TProfile    *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.15 2002/09/14 00:31:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.16 2002/10/04 16:06:28 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -97,7 +97,7 @@ public:
    virtual void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    virtual const char *DisplayName(const char * = 0) { return "batch"; }
    virtual Handle_t  GetNativeEvent() const { return 0; }
-   virtual ULong_t   GetPixel(Color_t cindex) { return 0; }
+   virtual ULong_t   GetPixel(Color_t cindex);
    virtual void      GetPlanes(Int_t &nplanes) { nplanes = 0; }
    virtual void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
@@ -320,6 +320,7 @@ inline void      TVirtualX::DrawText(Int_t, Int_t, Float_t, Float_t, const char 
 inline UInt_t    TVirtualX::ExecCommand(TGWin32Command *) { return 0; }
 inline Int_t     TVirtualX::GetDoubleBuffer(Int_t) { return 0; }
 inline void      TVirtualX::GetGeometry(Int_t, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) { x = y = 0; w = h = 0; }
+inline ULong_t   TVirtualX::GetPixel(Color_t) { return 0; }
 inline void      TVirtualX::GetRGB(Int_t, Float_t &r, Float_t &g, Float_t &b) { r = g = b = 0; }
 inline void      TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char *) { w = h = 0; }
 inline Window_t  TVirtualX::GetWindowID(Int_t) { return 0; }

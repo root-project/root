@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.3 2002/07/19 11:41:01 rdm Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.4 2002/11/26 18:39:17 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.3 2002/07/19 11:41:01 rdm Exp $
+// $Id: Ttypes.h,v 1.4 2002/11/26 18:39:17 brun Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -142,10 +142,10 @@ namespace ROOT {
 class TTable;
 namespace ROOT {
    template <class RootClass>
-      const ROOT::TTableInitBehavior<RootClass> *DefineBehavior(TTable*, RootClass*)
+      const TTableInitBehavior<RootClass> *DefineBehavior(TTable*, RootClass*)
       {
-         static ROOT::TTableInitBehavior<RootClass> behave;
-         return &behave;
+         TTableInitBehavior<RootClass> *behave = new TTableInitBehavior<RootClass>;
+         return behave;
       }
 }
 

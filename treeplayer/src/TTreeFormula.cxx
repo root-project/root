@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.103 2002/11/29 14:45:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.104 2002/12/01 08:33:08 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -102,7 +102,7 @@ public:
        fElementName = fElement->GetName();
      }
    };
-   TFormLeafInfo(const TFormLeafInfo& orig) {
+   TFormLeafInfo(const TFormLeafInfo& orig) : TObject(orig) {
       *this = orig; // default copy
       // change the pointers that need to be deep-copied
       if (fCounter) fCounter = fCounter->DeepCopy();
@@ -294,7 +294,7 @@ public:
       else return 0;
    }
    virtual Int_t GetSumOfSizes() {
-      // Total all the elements that are available for the current entry 
+      // Total all the elements that are available for the current entry
       // for the secondary variable dimension.
       if (fNext) return fNext->GetSumOfSizes();
       else return 0;
@@ -306,7 +306,7 @@ public:
       if (fNext) fNext->SetPrimaryIndex(index);
    }
    virtual void SetSize(Int_t index, Int_t val) {
-      if (fNext) fNext->SetSize(index, val);      
+      if (fNext) fNext->SetSize(index, val);
    }
    virtual void UpdateSizes(TArrayI *garr) {
       if (fNext) fNext->UpdateSizes(garr);
@@ -614,14 +614,14 @@ public:
    }
    virtual ~TFormLeafInfoDirect() { };
 
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
+   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/= 0) {
       Error("ReadValue","Should not be used in a TFormLeafInfoDirect");
       return 0;
    }
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) {
       return leaf->GetValue(instance);
    }
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) {
+   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t /*instance*/= 0) {
       if (leaf->IsA() != TLeafElement::Class()) {
          return leaf->GetValuePointer();
       } else {
@@ -657,7 +657,7 @@ public:
    virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoClones(*this);
    }
-   
+
    virtual Int_t     GetCounterValue(TLeaf* leaf);
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
@@ -698,7 +698,8 @@ Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance) {
 }
 
 //______________________________________________________________________________
-void* TFormLeafInfoClones::GetLocalValuePointer(TLeaf *leaf, Int_t instance) {
+void* TFormLeafInfoClones::GetLocalValuePointer(TLeaf *leaf, Int_t /*instance*/)
+{
    // Return the pointer to the clonesArray
 
    TClonesArray * clones;
@@ -903,7 +904,7 @@ public:
       return TFormLeafInfo::GetLocalValuePointer( from, instance);
    }
 
-   virtual void *GetLocalValuePointer( char *from, Int_t instance = 0) {
+   virtual void *GetLocalValuePointer(char *from, Int_t /*instance*/ = 0) {
 
       void *thisobj = from;
       if (!thisobj) return 0;
@@ -1011,7 +1012,7 @@ public:
         TFormLeafInfo ** next = &(fCounter2->fNext);
         while(*next != 0) next = &( (*next)->fNext);
         *next = new TFormLeafInfo(classptr,counterOffset,counter);
-        
+
      } else Error("Constructor","Called without a proper TStreamerElement");
   }
   TFormLeafInfoMultiVarDim() :
@@ -1019,14 +1020,14 @@ public:
      fDim(0),fVirtDim(-1),fPrimaryIndex(-1)
   {
   }
-  TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig) : TFormLeafInfo(orig) {     
+  TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig) : TFormLeafInfo(orig) {
      fNsize = orig.fNsize;
-     fSizes.Copy(fSizes); 
+     fSizes.Copy(fSizes);
      fCounter2 = orig.fCounter2?orig.fCounter2->DeepCopy():0;
-     fSumOfSizes = orig.fSumOfSizes;   
-     fDim = orig.fDim;             
-     fVirtDim = orig.fVirtDim;          
-     fPrimaryIndex = orig.fPrimaryIndex;      
+     fSumOfSizes = orig.fSumOfSizes;
+     fDim = orig.fDim;
+     fVirtDim = orig.fVirtDim;
+     fPrimaryIndex = orig.fPrimaryIndex;
   };
   virtual TFormLeafInfo* DeepCopy() const {
      return new TFormLeafInfoMultiVarDim(*this);
@@ -1043,7 +1044,7 @@ public:
      return res;
   }
 
-  virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) {
+  virtual Double_t  GetValue(TLeaf * /*leaf*/, Int_t /*instance*/ = 0) {
      /* The proper indexing and unwinding of index need to be done by prior leafinfo in the chain. */
      Error("GetValue","This should never be called");
      return 0;
@@ -1078,7 +1079,7 @@ public:
      }
   }
 
-  virtual Int_t GetPrimaryIndex() { 
+  virtual Int_t GetPrimaryIndex() {
      return fPrimaryIndex;
   }
   virtual Int_t GetVarDim() {
@@ -1130,16 +1131,16 @@ public:
 class TFormLeafInfoMultiVarDimDirect : public TFormLeafInfoMultiVarDim {
 public:
   TFormLeafInfoMultiVarDimDirect() : TFormLeafInfoMultiVarDim() {};
-  TFormLeafInfoMultiVarDimDirect(const TFormLeafInfoMultiVarDimDirect& orig) : 
-    TFormLeafInfoMultiVarDim(orig) {}      
+  TFormLeafInfoMultiVarDimDirect(const TFormLeafInfoMultiVarDimDirect& orig) :
+    TFormLeafInfoMultiVarDim(orig) {}
   virtual TFormLeafInfo* DeepCopy() const {
      return new TFormLeafInfoMultiVarDimDirect(*this);
   }
-  
+
   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) {
      return ((TLeafElement*)leaf)->GetValueSubArray(fPrimaryIndex,instance);
-  } 
-  virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
+  }
+  virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0) {
      Error("ReadValue","This should never be called");
      return 0;
   }
@@ -1172,7 +1173,7 @@ public:
    }
    virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoCast(*this);
-   }   
+   }
    virtual ~TFormLeafInfoCast() { };
 
 
@@ -1464,7 +1465,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
    TFormLeafInfoMultiVarDim * multi = dynamic_cast<TFormLeafInfoMultiVarDim * >(leafinfo);
    if (multi) {
       // With have a second variable dimensions
-      fManager->EnableMultiVarDims(); 
+      fManager->EnableMultiVarDims();
       multi->fDim = fNdimensions[code];
       return RegisterDimensions(code, -1, multi);
    }
@@ -2666,14 +2667,14 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                   TBranch *branch = leafcur->GetBranch();
                   TFormLeafInfo *leafinfo = 0;
                   if (branch->IsA()==TBranchElement::Class()
-                      && ((TBranchElement*)branch)->GetType()==31) { 
+                      && ((TBranchElement*)branch)->GetType()==31) {
                      // Case of a sub branch of a TClonesArray
                      TBranchElement *BranchEl = (TBranchElement*)branch;
                      TStreamerInfo *info = BranchEl->GetInfo();
                      TClass * mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
-                     TStreamerElement *element = 
+                     TStreamerElement *element =
                         (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
-                     leafinfo = new TFormLeafInfoClones(mother_cl, 0, element, kTRUE); 
+                     leafinfo = new TFormLeafInfoClones(mother_cl, 0, element, kTRUE);
                   }
 
                   Int_t clones_offset;
@@ -2682,13 +2683,13 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                   if (leafinfo) leafinfo->fNext = clonesinfo;
                   else leafinfo = clonesinfo;
                   branch->GetEntry(readentry);
-                  TClonesArray * clones = (TClonesArray*)leafinfo->GetLocalValuePointer(leafcur,0);                  
+                  TClonesArray * clones = (TClonesArray*)leafinfo->GetLocalValuePointer(leafcur,0);
                   delete leafinfo;
                   // If TClonesArray object does not exist we have no information, so let go
                   // on.  This is a weakish test since the TClonesArray object might exist in
                   // the next entry ... In other word, we ONLY rely on the information available
                   // in entry #0.
-                  if (!clones) continue;  
+                  if (!clones) continue;
                   TClass *sub_cl = clones->GetClass();
 
                   // Now that we finally have the inside class, let's query it.
@@ -3700,7 +3701,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             size = ((TBranchElement*)branchcount)->GetNdata();
 
             TBranchElement* branch = (TBranchElement*) leaf->GetBranch();
-            
+
             // NOTE: could be sped up
             if (fHasMultipleVarDim[i]) {// info && info->GetVarDim()>=0) {
                info = (TFormLeafInfo* )fDataMembers.At(i);

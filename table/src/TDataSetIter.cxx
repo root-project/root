@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.8 2002/01/24 11:39:30 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 
@@ -314,7 +314,7 @@ TObject  *TDataSetIter::FindObject(const TObject *dataset) const
   return ((TDataSetIter *)this)->FindByPointer((TDataSet *)dataset);
 }
 //______________________________________________________________________________
-TDataSet *TDataSetIter::FindByPointer(TDataSet *set,const Char_t *path,Option_t *opt)
+TDataSet *TDataSetIter::FindByPointer(TDataSet *set,const Char_t *path,Option_t *)
 {
   //
   // Check whether the object does belong the TDataSet defined with "path"

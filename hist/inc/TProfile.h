@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.19 2002/04/09 07:15:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.20 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -38,9 +38,9 @@ protected:
     Double_t    fYmax;            //Upper limit in Y (if set)
     Bool_t      fScaling;         //!True when TProfile::Scale is called
 
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
+   virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w);
-    
+
 private:
    Int_t Fill(Axis_t) { MayNotUse("Fill(Axis_t)"); return -1;}
    void FillN(Int_t, const Axis_t *, const Double_t *, Int_t) { MayNotUse("FillN(Int_t, Axis_t*, Double_t*, Int_t)"); }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.10 2002/07/16 08:06:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.11 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -49,8 +49,8 @@ public:
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    virtual TF1     *DrawCopy(Option_t *option="");
-   virtual void     DrawDerivative(Option_t *option="al") {;}
-   virtual void     DrawIntegral(Option_t *option="al") {;}
+   virtual void     DrawDerivative(Option_t * ="al") {;}
+   virtual void     DrawIntegral(Option_t * ="al") {;}
    virtual void     DrawF2(const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Int_t    GetContour(Double_t *levels=0);

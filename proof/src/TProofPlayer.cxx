@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.15 2002/11/18 23:03:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.16 2002/11/28 18:38:12 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -118,14 +118,14 @@ TList *TProofPlayer::GetOutputList() const
 }
 
 //______________________________________________________________________________
-void TProofPlayer::StoreOutput(TList *out)
+void TProofPlayer::StoreOutput(TList *)
 {
    MayNotUse("StoreOutput");
 }
 
 
 //______________________________________________________________________________
-void TProofPlayer::StoreFeedback(TSlave *slave, TList *out)
+void TProofPlayer::StoreFeedback(TSlave *, TList *)
 {
    MayNotUse("StoreFeedback");
 }
@@ -163,7 +163,7 @@ void TProofPlayer::Feedback(TList *objs)
 //______________________________________________________________________________
 Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                  Long64_t nentries, Long64_t first,
-                                 TEventList *evl)
+                                 TEventList * /*evl*/)
 {
    PDB(kGlobal,1) Info("Process","Enter");
 
@@ -234,7 +234,7 @@ void TProofPlayer::UpdateAutoBin(const char *name, Double_t& xmin, Double_t& xma
 }
 
 //______________________________________________________________________________
-TDSetElement *TProofPlayer::GetNextPacket(TSlave *slave, TMessage *r)
+TDSetElement *TProofPlayer::GetNextPacket(TSlave *, TMessage *)
 {
    MayNotUse("GetNextPacket");
    return 0;
@@ -292,7 +292,7 @@ TProofPlayerRemote::~TProofPlayerRemote()
 //______________________________________________________________________________
 Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                   Long64_t nentries, Long64_t first,
-                                  TEventList *evl)
+                                  TEventList * /*evl*/)
 {
    // Process specified TDSet on PROOF.
    // Returns -1 in case error, 0 otherwise.
@@ -583,7 +583,7 @@ void TProofPlayerRemote::StopFeedback()
 }
 
 //______________________________________________________________________________
-Bool_t TProofPlayerRemote::HandleTimer(TTimer *timer)
+Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 {
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
@@ -676,7 +676,7 @@ void TProofPlayerSlave::StopFeedback()
 
 
 //______________________________________________________________________________
-Bool_t TProofPlayerSlave::HandleTimer(TTimer *timer)
+Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 {
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 

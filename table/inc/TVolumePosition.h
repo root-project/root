@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.5 2001/12/11 08:16:26 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -36,8 +36,9 @@ class TVolumePosition  : public TObject {
  public:
         TVolumePosition(TVolume *node=0,Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
         TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const Text_t *matrixname);
-        TVolumePosition(const TVolumePosition&pos): fMatrix(pos.GetMatrix()),fNode(pos.GetNode()),fId(pos.GetId())
-                                                    {for (int i=0;i<3;i++) fX[i] = pos.GetX(i);}
+        TVolumePosition(const TVolumePosition &pos): TObject(pos),
+           fMatrix(pos.GetMatrix()),fNode(pos.GetNode()),fId(pos.GetId())
+           {for (int i=0;i<3;i++) fX[i] = pos.GetX(i);}
         virtual ~TVolumePosition(){;}
         virtual void        Browse(TBrowser *b);
         virtual Float_t    *Errmx2Master(const Float_t *localError, Float_t *masterError);

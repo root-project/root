@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.10 2002/04/19 18:24:01 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.11 2002/06/11 15:47:35 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -47,9 +47,9 @@ public:
    virtual void        Begin(TTree *) { }
    virtual Bool_t      Notify() { return kTRUE; }
    virtual const char *GetOption() const { return fOption.Data();}
-   virtual Bool_t      ProcessCut(int entry) { return kTRUE; }
-   virtual void        ProcessFill(int entry) { }
-   virtual Bool_t      Process(int entry) { return kFALSE; }
+   virtual Bool_t      ProcessCut(int /*entry*/) { return kTRUE; }
+   virtual void        ProcessFill(int /*entry*/) { }
+   virtual Bool_t      Process(int /*entry*/) { return kFALSE; }
    virtual void        SetOption(const char *option) { fOption = option; }
    virtual void        SetObject(TObject *obj) { fObject = obj; }
    virtual void        SetInputList(TList *input) { fInput = input; }

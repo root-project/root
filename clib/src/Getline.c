@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.11 2002/08/07 15:34:21 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.12 2002/08/07 17:14:47 rdm Exp $ */
 /* Author: */
 
 /*
@@ -1362,8 +1362,8 @@ Gl_histadd(char *buf)
         len = strlen(buf);
         if (strchr(p, '\n'))    /* previously line already has NL stripped */
             len--;
-        if (prev == 0 || strlen(prev) != len ||
-                            strncmp(prev, buf, len) != 0) {
+        if (prev == 0 || (int)strlen(prev) != len ||
+            strncmp(prev, buf, len) != 0) {
             hist_buf[hist_last] = hist_save(buf);
             prev = hist_buf[hist_last];
             hist_last = (hist_last + 1) % HIST_SIZE;

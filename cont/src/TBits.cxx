@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.7 2001/12/19 15:40:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.8 2002/01/08 16:04:24 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -27,7 +27,7 @@
 ClassImp(TBits)
 
 //______________________________________________________________________________
-TBits::TBits(UInt_t nbits) : fNbits(nbits) 
+TBits::TBits(UInt_t nbits) : fNbits(nbits)
 {
    // TBits constructor.  All bits set to 0
 
@@ -65,20 +65,20 @@ TBits& TBits::operator=(const TBits& rhs)
 }
 
 //______________________________________________________________________________
-TBits::~TBits() 
+TBits::~TBits()
 {
    // TBits destructor
-   
+
    delete [] fAllBits;
 }
 
 //______________________________________________________________________________
-void TBits::Compact() 
+void TBits::Compact()
 {
    // Reduce the storage used by the object to a minimun
-   
+
    UInt_t needed;
-   for(needed=fNbytes-1; 
+   for(needed=fNbytes-1;
        needed > 0 && fAllBits[needed]==0; ) { needed--; };
    needed++;
 
@@ -98,7 +98,7 @@ void TBits::Compact()
 UInt_t TBits::CountBits(UInt_t startBit) const
 {
    // Return number of bits set to 1 starting at bit startBit
-      
+
    const Int_t nbits[256] = {
              0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
              1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
@@ -143,7 +143,7 @@ UInt_t TBits::CountBits(UInt_t startBit) const
 UInt_t TBits::FirstNullBit(UInt_t startBit) const
 {
    // Return position of first null bit
-   
+
    const Int_t fbits[256] = {
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
@@ -161,15 +161,15 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,8};
-      
+
    UInt_t i;
    if (startBit == 0) {
       for(UInt_t i=0; i<fNbytes; i++) {
-         if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];      
+         if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];
       }
       return fNbits;
    }
-   if (startBit >= fNbits) return fNbits; 
+   if (startBit >= fNbits) return fNbits;
    UInt_t startByte = startBit/8;
    UInt_t ibit = startBit%8;
    if (ibit) {
@@ -179,7 +179,7 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
       startByte++;
    }
    for(i=startByte; i<fNbytes; i++) {
-      if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];      
+      if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];
    }
    return fNbits;
 }
@@ -188,7 +188,7 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
 UInt_t TBits::FirstSetBit(UInt_t startBit) const
 {
    // Return position of first non null bit
-   
+
    const Int_t fbits[256] = {
              8,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
              4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
@@ -206,11 +206,11 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
              4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
              5,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
              4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0};
-      
+
    UInt_t i;
    if (startBit == 0) {
       for(UInt_t i=0; i<fNbytes; i++) {
-         if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];      
+         if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];
       }
       return fNbits;
    }
@@ -224,13 +224,13 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
       startByte++;
    }
    for(i=startByte; i<fNbytes; i++) {
-      if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];      
+      if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];
    }
    return fNbits;
 }
 
 //______________________________________________________________________________
-void TBits::Paint(Option_t *option) 
+void TBits::Paint(Option_t *)
 {
    // Once implemented, it will draw the bit field as an histogram.
    // use the TVirtualPainter as the usual trick
@@ -238,10 +238,10 @@ void TBits::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TBits::Print(Option_t *option) const
+void TBits::Print(Option_t *) const
 {
    // Print the list of active bits
-   
+
    Int_t count = 0;
    for(UInt_t i=0; i<fNbytes; i++) {
       UChar_t val = fAllBits[i];
@@ -254,15 +254,15 @@ void TBits::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TBits::ResetAllBits(Bool_t value) 
+void TBits::ResetAllBits(Bool_t)
 {
-   // Reset all bits to 0 (false)
+   // Reset all bits to 0 (false).
 
    memset(fAllBits,0,fNbytes);
 }
 
 //______________________________________________________________________________
-void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value) 
+void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
 {
    // Set bit number 'bitnumber' to be value
 
@@ -275,14 +275,14 @@ void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
          memset(fAllBits+fNbytes ,0, new_size-fNbytes);
          fNbytes = new_size;
          delete old_location;
-      } 
+      }
       fNbits = bitnumber+1;
    }
    UInt_t  loc = bitnumber/8;
    UChar_t bit = bitnumber%8;
-   if (value) 
+   if (value)
       fAllBits[loc] |= (1<<bit);
-   else 
+   else
       fAllBits[loc] &= (0xFF ^ (1<<bit));
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.6 2001/01/16 16:15:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.7 2001/04/09 08:13:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -74,7 +74,7 @@ public:
     virtual Bool_t   IsOnTerminalBranch() const    { return kTRUE; }
     virtual Bool_t   IsRange() const    { return fIsRange; }
     virtual Bool_t   IsUnsigned() const { return fIsUnsigned; }
-    virtual void     PrintValue(Int_t i=0) const {;}
+    virtual void     PrintValue(Int_t =0) const {;}
     virtual void     ReadBasket(TBuffer &) {;}
     virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {;}
             Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.18 2002/09/18 12:13:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.19 2002/11/05 10:28:39 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -210,8 +210,8 @@ public:
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
    virtual void    DrawBorder();
-   virtual void    DrawCopy(Handle_t id,Int_t x, Int_t y) { }
-   virtual void    Activate(Bool_t a) {}
+   virtual void    DrawCopy(Handle_t /*id*/,Int_t /*x*/, Int_t /*y*/) { }
+   virtual void    Activate(Bool_t) { }
    virtual Bool_t  IsActive() const { return kFALSE; }
    virtual Bool_t  IsComposite() const { return kFALSE; }
 

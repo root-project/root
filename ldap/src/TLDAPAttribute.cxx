@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:$:$Id:$
+// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.cxx,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -35,11 +35,10 @@ TLDAPAttribute::TLDAPAttribute(const char *name, const char *value)
 
 //______________________________________________________________________________
 TLDAPAttribute::TLDAPAttribute(const TLDAPAttribute &attr)
-   : fNCount(attr.fNCount)
+   : TNamed(attr), fNCount(attr.fNCount)
 {
    // LDAP attribute copy ctor.
 
-   SetName(attr.GetName());
    fValues = new TList;
    fValues->SetOwner();
 

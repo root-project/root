@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.4 2002/09/16 07:53:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.5 2002/09/18 12:22:14 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -1262,7 +1262,7 @@ void TGColorDialog::UpdateHLSentries(ULong_t *c)
 }
 
 //________________________________________________________________________________
-Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
 {
    ULong_t color;
    Int_t h, l, s;

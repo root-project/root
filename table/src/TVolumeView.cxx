@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.2 2002/05/27 16:46:21 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.3 2002/08/20 10:51:50 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 #include <assert.h>
@@ -297,9 +297,9 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
   }
 }
 //_____________________________________________________________________________
-TVolumeView::TVolumeView(TVolumeView &viewNode):
-             TObjectSet(viewNode.GetName(),(TObject *)viewNode.GetPosition())
-            ,fListOfShapes(viewNode.GetListOfShapes())
+TVolumeView::TVolumeView(TVolumeView &viewNode): TAtt3D(viewNode),
+             TObjectSet(viewNode.GetName(),(TObject *)viewNode.GetPosition()),
+             fListOfShapes(viewNode.GetListOfShapes())
 { if (viewNode.IsOwner()) { viewNode.DoOwner(kFALSE); DoOwner(); } }
 
 //_____________________________________________________________________________

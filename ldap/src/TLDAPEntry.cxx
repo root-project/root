@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:$:$Id:$
+// @(#)root/ldap:$Name:  $:$Id: TLDAPEntry.cxx,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -27,7 +27,7 @@ TLDAPEntry::TLDAPEntry(const char *dn) : fNCount(0)
 }
 
 //______________________________________________________________________________
-TLDAPEntry::TLDAPEntry(const TLDAPEntry &e) : fNCount(e.fNCount)
+TLDAPEntry::TLDAPEntry(const TLDAPEntry &e) : TObject(e), fNCount(e.fNCount)
 {
    // Copy ctor.
 

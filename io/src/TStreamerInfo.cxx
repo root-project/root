@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.143 2002/11/01 19:12:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.145 2002/11/26 10:24:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 #include "TError.h"
 #include "TRef.h"
 #include "TProcessID.h"
- 
+
 Int_t   TStreamerInfo::fgCount = 0;
 Bool_t  TStreamerInfo::fgCanDelete = kTRUE;
 Bool_t  TStreamerInfo::fgOptimize  = kTRUE;
@@ -41,7 +41,7 @@ TStreamerElement *TStreamerInfo::fgElement = 0;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
-ClassImp(TStreamerInfo) 
+ClassImp(TStreamerInfo)
 
 //______________________________________________________________________________
 TStreamerInfo::TStreamerInfo()
@@ -359,11 +359,11 @@ void TStreamerInfo::BuildCheck()
    if (fClass) {
       array = fClass->GetStreamerInfos();
       TStreamerInfo *info = (TStreamerInfo *)array->At(fClassVersion);
-      // NOTE: Should we check if the already exsiting info is the same as 
+      // NOTE: Should we check if the already exsiting info is the same as
       // the current one?
       if (info) {fNumber = info->GetNumber(); SetBit(kCanDelete); return;}
-      if (fClass->GetListOfDataMembers() 
-         && (fClassVersion == fClass->GetClassVersion()) 
+      if (fClass->GetListOfDataMembers()
+         && (fClassVersion == fClass->GetClassVersion())
          && (fCheckSum != fClass->GetCheckSum())) {
             //give a last chance. Due to a new CINT behaviour with enums
             //verify the checksum ignoring members of type enum
@@ -513,7 +513,7 @@ void TStreamerInfo::BuildOld()
 
 
 //______________________________________________________________________________
-void TStreamerInfo::BuildUserInfo(const char *info)
+void TStreamerInfo::BuildUserInfo(const char * /*info*/)
 {
    // Build the I/O data structure for the current class version
 
@@ -951,7 +951,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
       //next statement required in case a class and one of its parent class
       //have data members with the same name
       if (dm->IsaPointer() && rdmc[0] == '*') rdmc++;
-      
+
       if (rdm->GetDataMember() != dm) continue;
       if (strcmp(rdmc,dm->GetName()) == 0) {
          offset   = rdm->GetThisOffset();
@@ -1003,7 +1003,7 @@ Int_t TStreamerInfo::GetSizeElements() const
 {
 //  return total size of all persistent elements of the class
 //  use GetSize if you want to get the real size in memory
-   
+
    TIter next(fElements);
    TStreamerElement *element;
    Int_t asize = 0;
@@ -1164,7 +1164,7 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[k]);}
       case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[k]);}
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[k]);}
-         // array counter //[n] 
+         // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
    }
    return 0;
@@ -1858,7 +1858,7 @@ SWIT: switch (kase) {
                           UShort_t pidf;
                           b >> pidf;
                           TFile* file = (TFile*)b.GetParent();
-                          TProcessID *pid = TProcessID::ReadProcessID(pidf,file);   
+                          TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
                           TObject *obj = (TObject*)pointer;
                           UInt_t gpid = pid->GetUniqueID();
                           UInt_t uid = (obj->GetUniqueID() & 0xffffff) + (gpid<<24);
@@ -1929,7 +1929,7 @@ SWIT: switch (kase) {
                         }
         case kOffsetL + kObject:  {
                          TFile *file = (TFile*)b.GetParent();
-                         if (file && file->GetVersion() < 30208) {kase = kStreamer; goto SWIT;} 
+                         if (file && file->GetVersion() < 30208) {kase = kStreamer; goto SWIT;}
                          TClass *cl = aElement->GetClassPointer();
                          if (cl->GetClassInfo()) {
                             Int_t size = cl->Size();
@@ -1953,7 +1953,7 @@ SWIT: switch (kase) {
                                } else {
                                   b.SetBufferOffset(start);
                                   cl->GetStreamerInfo()->ReadBuffer(b,(char*)obj,-1);
-                               } 
+                               }
                                obj = (TObject*)((char*)obj+size);
                             }
                          }
@@ -1975,7 +1975,7 @@ SWIT: switch (kase) {
                          }
                          Bool_t old = gROOT->ReadingObject();
                          gROOT->SetReadingObject(kTRUE);
-                         
+
                          Streamer_t pstreamer = aElement->GetStreamer();
                          if (pstreamer == 0) {
                             //Note that this does not work if the class has a custom Streamer
@@ -1999,7 +1999,7 @@ SWIT: switch (kase) {
                          }
                          gROOT->SetReadingObject(old);
                          break;
-                        }            
+                        }
          case kAnyP:// Class*   Class not derived from TObject and with no comment field
                         {
                          char **obj = (char**)(pointer+fOffset[i]);
@@ -2026,7 +2026,7 @@ SWIT: switch (kase) {
                                for (Int_t j=0;j<fLength[i];j++) {
                                   obj[j] = (char*)b.ReadObjectAny(cle);
                                }
-                            } 
+                            }
                          } else {
                             // The streamer is written for the data member NOT the class
                             // so we do not need to worry about the loop.
@@ -2038,7 +2038,7 @@ SWIT: switch (kase) {
                             (*pstreamer)(b,obj,0);
                          }
                          break;
-                        }            
+                        }
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
          case kOffsetL + kAny:
@@ -2282,7 +2282,7 @@ SWIT: switch (kase) {
          case kConvP + kUInt:   ConvBasicPointer(UInt_t)
          case kConvP + kULong:  ConvBasicPointer(ULong_t)
 
-         default: 
+         default:
            //Error("ReadBuffer","The element type %d is not supported yet\n",fType[i]);
            break;
       }
@@ -2429,15 +2429,15 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                   }
 
          // special case for TObject::fBits in case of a referenced object
-         case kBits: { 
+         case kBits: {
                for (Int_t k=0;k<nc;k++) {
                   UInt_t *x=(UInt_t*)((char*)clones->UncheckedAt(k)+offset); b >> *x;
-                  pointer = (char*)clones->UncheckedAt(k); 
+                  pointer = (char*)clones->UncheckedAt(k);
                   if ((*x & kIsReferenced) != 0) {
                      UShort_t pidf;
                      b >> pidf;
                      TFile* file = (TFile*)b.GetParent();
-                     TProcessID *pid = TProcessID::ReadProcessID(pidf,file);   
+                     TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
                      if (pid) {
                         TObject *obj = (TObject*)pointer;
                         UInt_t gpid = pid->GetUniqueID();
@@ -2547,7 +2547,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                }
             }
             break;}
-           
+
 
          // Special case for TString, TObject, TNamed
          case kTString: {
@@ -2623,7 +2623,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                      }
                   } else {
                      for (Int_t j=0;j<fLength[i];j++) {
-                        obj[j] = (char*)b.ReadObjectAny(cle); 
+                        obj[j] = (char*)b.ReadObjectAny(cle);
                      }
                   }
                }
@@ -2882,7 +2882,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                          b.SetBufferOffset(start + count + sizeof(UInt_t));
                          break;
                         }
-         default: 
+         default:
            //Error("ReadBufferClones","The element type %d is not supported yet\n",fType[i]);
            break;
       }
@@ -3048,7 +3048,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                      }
 
          // special case for TObject::fBits in case of a referenced object
-         case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
+         case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x;
                        if ((*x & kIsReferenced) != 0) {
                          TObject *obj = (TObject*)pointer;
                          TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID());
@@ -3170,7 +3170,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                              (*pstreamer)(b,obj,0);
                           } else {
                              TClass *cle = aElement->GetClassPointer();
-                             for (Int_t j=0;j<fLength[i];j++) {                             
+                             for (Int_t j=0;j<fLength[i];j++) {
                                 TClass *cl_actual = cle->GetActualClass(obj[j]);
                                 if (!cl_actual) cl_actual = cle;
                                 //Note that this does not work if the class has a custom Streamer
@@ -3191,7 +3191,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                                    Warning("WriteBuffer","The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
                                            GetName(),aElement->GetName(),cle->GetName());
                                 }
-                             } 
+                             }
                           }
                           break;
                         }
@@ -3271,7 +3271,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                          b.SetByteCount(pos,kTRUE);
                          break;
                         }
-         default: 
+         default:
            //Error("WriteBuffer","The element type %d is not supported yet\n",fType[i]);
            break;
       }
@@ -3379,7 +3379,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          // char*
          case kCharStar: {
                     for (Int_t k=0;k<nc;k++) {
-                       pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
+                       pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                        Int_t nch = 0;
                        char **f = (char**)(pointer+fOffset[i]);
                        char *af = *f;
@@ -3395,10 +3395,10 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                   }
 
          // special case for TObject::fBits in case of a referenced object
-         case kBits: { 
+         case kBits: {
                for (Int_t k=0;k<nc;k++) {
-                  pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
-                  UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
+                  pointer = (char*)clones->UncheckedAt(k)+baseOffset;
+                  UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x;
                   if ((*x & kIsReferenced) != 0) {
                       TObject *obj = (TObject*)pointer;
                       TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID());
@@ -3521,7 +3521,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                        Warning("WriteBuffer","The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
                                GetName(),aElement->GetName(),cle->GetName());
                     }
-                 } 
+                 }
               }
             }
             break;}
@@ -3594,7 +3594,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                          b.SetByteCount(pos,kTRUE);
                          break;
                         }
-         default: 
+         default:
            //Error("WriteBufferClones","The element type %d is not supported yet\n",fType[i]);
            break;
       }

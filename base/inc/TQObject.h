@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.18 2002/05/17 20:40:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.19 2002/07/19 11:41:01 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -251,8 +251,8 @@ namespace ROOT {
 
    inline const TQObjectInitBehavior *DefineBehavior(TQObject*, TQObject*)
    {
-      TQObjectInitBehavior *Default = new TQObjectInitBehavior;
-      return Default;
+      TQObjectInitBehavior *behave = new TQObjectInitBehavior;
+      return behave;
    }
 }
 

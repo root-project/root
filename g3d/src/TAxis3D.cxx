@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.10 2002/09/14 16:20:14 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.11 2002/10/31 07:27:34 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -110,7 +110,7 @@ TAxis3D::TAxis3D() : TNamed(TAxis3D::rulerName,"ruler"){
   InitSet();
 }
 //______________________________________________________________________________
-TAxis3D::TAxis3D(Option_t *option): TNamed(TAxis3D::rulerName,"ruler")
+TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::rulerName,"ruler")
 {
   fSelected = 0;
   InitSet();
@@ -176,9 +176,9 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //*-*  This member function is called when an axis is clicked with the locator
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   
+
  if (fSelected) fSelected->ExecuteEvent(event,px,py);
- 
+
  //  Execute action corresponding to the mouse event
 
    static Double_t x0, y0, x1, y1;

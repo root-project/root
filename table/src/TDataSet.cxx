@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.12 2002/01/24 11:39:30 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,7 +19,7 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.12 2002/01/24 11:39:30 rdm Exp $"
+    "$Id: TDataSet.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -177,7 +177,7 @@ TDataSet *TDataSet::GetRealParent(){
   return p;
 }
 //______________________________________________________________________________
-TDataSet::TDataSet(const TDataSet &pattern,EDataSetPass iopt)
+TDataSet::TDataSet(const TDataSet &pattern,EDataSetPass iopt) : TNamed(pattern)
 {
   //
   // Creates TDataSet (clone) with a topology similar with TDataSet *pattern
@@ -193,9 +193,6 @@ TDataSet::TDataSet(const TDataSet &pattern,EDataSetPass iopt)
   //   All new-created sets become the structural ones anyway.
   //
   //  cout << "ctor for " << GetName() << " - " << GetTitle() << endl;
-
-  SetName(pattern.GetName());
-  SetTitle(pattern.GetTitle());
 
   TDataSet *set = 0;
   TDataSetIter next((TDataSet *)&pattern);

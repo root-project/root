@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.30 2002/11/11 15:16:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.31 2002/11/11 21:19:50 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -512,14 +512,14 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
       Error("Divide","Coefficient of dividing profile cannot be zero");
       return;
    }
-   
+
    //THE ALGORITHM COMPUTING THE ERRORS IS WRONG. HELP REQUIRED
    printf("WARNING!!: The algorithm in TProfile::Divide computing the errors is not accurate\n");
    printf(" Instead of Divide(TProfile *h1, TProfile *h2, do:\n");
    printf("   TH1D *p1 = h1->ProjectionX();\n");
    printf("   TH1D *p2 = h2->ProjectionX();\n");
    printf("   p1->Divide(p2);\n");
-   
+
 //*-*- Reset statistics
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
 
@@ -899,7 +899,7 @@ void TProfile::LabelsInflate(Option_t *)
 }
 
 //___________________________________________________________________________
-void TProfile::LabelsOption(Option_t *option, Option_t *ax)
+void TProfile::LabelsOption(Option_t *option, Option_t * /*ax*/)
 {
 //  Set option(s) to draw axis with labels
 //  option = "a" sort by alphabetic order
@@ -1398,7 +1398,7 @@ void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 
 
 //______________________________________________________________________________
-void TProfile::SetBuffer(Int_t buffersize, Option_t *option)
+void TProfile::SetBuffer(Int_t buffersize, Option_t *)
 {
 // set the buffer size in units of 8 bytes (double)
 

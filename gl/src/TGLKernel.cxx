@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.6 2002/02/23 10:15:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.7 2002/02/23 15:50:36 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -93,7 +93,8 @@ void TGLKernel::ClearGLColor(Float_t *colors)
 }
 
 //______________________________________________________________________________
-void TGLKernel::ClearGL(UInt_t stereo) {
+void TGLKernel::ClearGL(UInt_t stereo)
+{
 #ifdef STEREO_GL
    if (stereo) {
       if (Int_t(stereo) < 0)
@@ -102,6 +103,7 @@ void TGLKernel::ClearGL(UInt_t stereo) {
          glDrawBuffer(GL_BACK_RIGHT);
    }
 #endif
+   if (stereo) { }
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

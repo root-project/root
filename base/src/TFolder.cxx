@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.19 2002/05/18 08:43:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.20 2002/08/09 21:22:18 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -229,7 +229,7 @@ const char *TFolder::FindFullPathName(const char *name) const
 
 
 //______________________________________________________________________________
-const char *TFolder::FindFullPathName(const TObject *obj) const
+const char *TFolder::FindFullPathName(const TObject *) const
 {
 // return the full pathname corresponding to subpath name
 // The returned path will be re-used by the next call to GetPath().

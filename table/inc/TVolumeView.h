@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.2 2002/05/27 16:46:21 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -76,7 +76,7 @@ public:
   ClassDef(TVolumeView,1)  // Special kind of TDataSet
 };
 
-inline void    TVolumeView::Add(TDataSet *dataset){ assert(0);}
+inline void    TVolumeView::Add(TDataSet * /*dataset*/){ assert(0);}
 inline void    TVolumeView::Add(TVolumeView *node){ TDataSet::Add(node);}
 inline Bool_t  TVolumeView::IsMarked() const { return TestBit(kMark); }
 inline TList  *TVolumeView::GetListOfShapes() const {return fListOfShapes;}

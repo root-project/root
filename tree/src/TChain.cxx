@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.57 2002/08/18 20:52:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.58 2002/11/05 13:21:03 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -429,7 +429,8 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
 }
 
 //______________________________________________________________________________
-TFriendElement *TChain::AddFriend(TTree *chain, const char* alias, Bool_t warn)
+TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
+                                  Bool_t /*warn*/)
 {
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,alias);
@@ -534,7 +535,7 @@ Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 //     getall = 1 : get all branches
 //
 // return the total number of bytes read
-   
+
    if (LoadTree(entry) < 0) return 0;
    return fTree->GetEntry(fReadEntry,getall);
 }
@@ -658,13 +659,13 @@ Int_t TChain::LoadTree(Int_t entry)
    // If entry belongs to the current tree return entry
    if (t == fTreeNumber) {
       // This need to be done first because it will set the friend tree's
-      // fReadEntry to the current one (which is possibly wrong).  The 
+      // fReadEntry to the current one (which is possibly wrong).  The
       // call to t->LoadTree inside the chain would fix that.
       fTree->LoadTree(fReadEntry);
       if (fFriends) {
          // The current tree as not change but some of its friend might.
 
-         //An Alternative would move this code to each of the function calling LoadTree 
+         //An Alternative would move this code to each of the function calling LoadTree
          //(and to overload a few more).
          TIter next(fFriends);
          TFriendElement *fe;
@@ -676,7 +677,7 @@ Int_t TChain::LoadTree(Int_t entry)
                TTree* old = t->GetTree();
 
                t->LoadTree(entry);
-               
+
                Int_t newNumber = ((TChain*)t)->GetTreeNumber();
                if (oldNumber!=newNumber) {
                   // We can not compare the tree pointers because they could be reused.
@@ -717,7 +718,7 @@ Int_t TChain::LoadTree(Int_t entry)
    fTree = (TTree*)fFile->Get(element->GetName());
    if (fTree==0) {
       // Now that we do not check during the addition, we need to check here!
-      Error("LoadTree","cannot find tree with name %s in file %s", 
+      Error("LoadTree","cannot find tree with name %s in file %s",
             element->GetName(),element->GetTitle());
       delete fFile; fFile = 0;
       return -4;
@@ -764,7 +765,7 @@ Int_t TChain::LoadTree(Int_t entry)
    if (cursav) cursav->cd();
 
    if (fFriends) {
-      //An Alternative would move this code to each of the function calling LoadTree 
+      //An Alternative would move this code to each of the function calling LoadTree
       //(and to overload a few more).
       TIter next(fFriends);
       TFriendElement *fe;
@@ -837,7 +838,7 @@ void TChain::ls(Option_t *option) const
    TIter next(fFiles);
    TChainElement *file;
    while ((file = (TChainElement*)next())) {
-      file->ls();
+      file->ls(option);
    }
 }
 
@@ -974,7 +975,7 @@ void TChain::Print(Option_t *option) const
 {
    // Print the header information of each Tree in the chain.
    // see TTree::Print for a list of options
-   
+
    TIter next(fFiles);
    TChainElement *element;
    while ((element = (TChainElement*)next())) {
@@ -1032,7 +1033,7 @@ void TChain::SetAutoDelete(Bool_t autodelete)
 //  When LoadTree loads a new Tree, the branches for which
 //  the address is set will have the option AutoDelete set
 //  For more details on AutoDelete, see TBranch::SetAutoDelete.
-            
+
    if (autodelete) SetBit(kAutoDelete,1);
    else            SetBit(kAutoDelete,0);
 }
@@ -1059,7 +1060,7 @@ void TChain::SetBranchAddress(const char *bname, void *add)
    if (fTreeNumber >= 0) {
        TBranch *br = fTree->GetBranch(bname);
        if (br) br->SetAddress(add);
-   }   
+   }
 }
 
 //_______________________________________________________________________
@@ -1085,7 +1086,7 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
    // Set also status in current Tree
    if (fTreeNumber >= 0) {
        fTree->SetBranchStatus(bname,status);
-   }   
+   }
 }
 
 //______________________________________________________________________________

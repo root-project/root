@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.110 2002/10/21 16:13:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.111 2002/11/27 21:54:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -395,7 +395,8 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
 }
 
 //______________________________________________________________________________
-TTree *TTreePlayer::CopyTree(const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
+                             Int_t firstentry)
 {
    // copy a Tree with selection
    // make a clone of this Tree header.
@@ -471,7 +472,8 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *option, Int_t nent
 }
 
 //_______________________________________________________________________
-void TTreePlayer::CreatePacketGenerator(Int_t nentries, Stat_t firstEntry)
+void TTreePlayer::CreatePacketGenerator(Int_t /*nentries*/,
+                                        Stat_t /*firstEntry*/)
 {
    // Create or reset the packet generator.
 
@@ -1600,7 +1602,7 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
 }
 
 //______________________________________________________________________________
-void TTreePlayer::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
+void TTreePlayer::Loop(Option_t *, Int_t, Int_t)
 {
 //*-*-*-*-*-*-*-*-*Loop on nentries of this tree starting at firstentry
 //*-*              ===================================================
@@ -1911,7 +1913,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       strcpy(branchname,branch->GetName());
       if ( branch->GetNleaves() <= 1 ) {
          if (branch->IsA() != TBranchObject::Class()) {
-            if (!leafcount) strcpy(branchname,leaf->GetTitle()); 
+            if (!leafcount) strcpy(branchname,leaf->GetTitle());
          }
       }
       bname = branchname;
@@ -3364,7 +3366,8 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 }
 
 //______________________________________________________________________________
-void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t *par, Int_t flag)
+void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
+                               Double_t &r, Double_t *par, Int_t /*flag*/)
 {
 // The fit function used by the unbinned likelihood fit.
 

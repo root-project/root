@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.9 2002/07/01 22:58:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.10 2002/08/15 18:15:44 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -266,6 +266,8 @@ void TMD5::ByteReverse(UChar_t *buf, UInt_t longs)
       *(UInt_t *) buf = t;
       buf += 4;
    } while (--longs);
+#else
+   if (buf || longs) { }
 #endif
 }
 

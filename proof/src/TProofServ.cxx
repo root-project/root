@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.32 2002/10/25 10:40:16 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.33 2002/11/18 23:03:40 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -481,7 +481,7 @@ TDSetElement *TProofServ::GetNextPacket()
 }
 
 //______________________________________________________________________________
-void TProofServ::GetOptions(int *argc, char **argv)
+void TProofServ::GetOptions(int * /*argc*/, char **argv)
 {
    // Get and handle command line options. Fixed format:
    // "proofserv"|"proofslave" <confdir>

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.7 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.8 2002/01/24 11:39:29 rdm Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -2247,7 +2247,7 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x)
 
 
 //____________________________________________________________________
-void TMultiDimFit::FindParameterization(Option_t *option)
+void TMultiDimFit::FindParameterization(Option_t *)
 {
   // Find the parameterization
   //
@@ -3187,7 +3187,7 @@ void TMultiDimFit::MakeParameterization()
 //____________________________________________________________________
 void TMultiDimFit::MakeRealCode(const char *filename,
 				const char *classname,
-				Option_t *opt)
+				Option_t *)
 {
   // PRIVATE METHOD:
   // This is the method that actually generates the code for the
@@ -3567,7 +3567,7 @@ void TMultiDimFit::Print(Option_t *option) const
 
 
 //____________________________________________________________________
-Bool_t TMultiDimFit::Select(const Int_t *iv)
+Bool_t TMultiDimFit::Select(const Int_t *)
 {
   // Selection method. User can override this method for specialized
   // selection of acceptable functions in fit. Default is to select
@@ -3701,8 +3701,8 @@ Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
 
 
 //____________________________________________________________________
-void mdfHelper(int& npar, double* divs, double& chi2,
-	       double* coeffs, int flag)
+void mdfHelper(int& /*npar*/, double* /*divs*/, double& chi2,
+	       double* coeffs, int /*flag*/)
 {
   // Helper function for doing the minimisation of Chi2 using Minuit
 

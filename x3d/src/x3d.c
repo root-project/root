@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.6 2001/05/16 16:23:23 rdm Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.7 2002/01/16 13:51:43 brun Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -1270,16 +1270,15 @@ int useroot = 0;
 
 
 
-static int CheckEvent(display, event, arg)
-Display *display;
-XEvent *event;
-char *arg;
+static int CheckEvent(Display *display, XEvent *event, char *arg)
 /******************************************************************************
    Check an event to see if it is one we are interested in.
    This is used by X to wake up our program once some interesting event
    happens.  Returns: 1 if we are interested, 0 if we are not.
 ******************************************************************************/
 {
+   if (display || arg) { } /* use unused arguments */
+
    if(event == NULL){
       fprintf(stderr, "WARNING: Null event in CheckEvent()!!\n");
       }
@@ -1433,7 +1432,7 @@ char string[TMPSTRLEN];
             break;
 
          case ClientMessage:
-              if (event.xclient.data.l[0] == wm_protocols[0])
+              if (event.xclient.data.l[0] == (long)wm_protocols[0])
                   /* WM_DELETE_WINDOW */
               {
               /*
@@ -1443,7 +1442,7 @@ char string[TMPSTRLEN];
                */
                   quitApplication = 1;
               }
-              else if (event.xclient.data.l[0] == wm_protocols[1])
+              else if (event.xclient.data.l[0] == (long)wm_protocols[1])
                   /* WM_SAVE_YOURSELF */
               {
 
@@ -2822,16 +2821,14 @@ long lastColor;
 
 
 
-static void BeginImage(o, g)
-Oinfo *o;
-Ginfo *g;
+static void BeginImage(Oinfo *o, Ginfo *g)
 /******************************************************************************
    Prepare to draw some x3d objects.
 ******************************************************************************/
 {
 
 /* Try to get rid of a few of the mode change glitches (several exist yet) */
-
+   if (o) { }  /* use unused argument */
    if(g->modeChanged){
       XSetPlaneMask(g->dpy, g->gc, AllPlanes);
       if((g->mono) || (g->depth == ONE)){
@@ -3353,7 +3350,7 @@ void x3d_update()
 
 int x3d_dispatch_event(unsigned long evnt)
 {
- 
+
    XEvent *event = (XEvent *)evnt;
    Ginfo *g = gGInfo;
    Oinfo *o = gOInfo;
@@ -3456,8 +3453,8 @@ double X, Y, Z;
 
    Ginfo *g = gGInfo;
    Oinfo *o = gOInfo;
-   
-   X = Y = Z = 0.0; 
+
+   X = Y = Z = 0.0;
 
    same = 1;
 

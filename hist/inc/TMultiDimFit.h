@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.2 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.3 2001/02/28 11:04:06 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit
@@ -25,22 +25,22 @@ class TBrowser;
 class TMultiDimFit : public TNamed {
 
 public:
-  enum EMDFPolyType { 
+  enum EMDFPolyType {
     kMonomials,
     kChebyshev,
     kLegendre
   };
-    
+
 private:
-  static TMultiDimFit* fgInstance; // Static instance 
+  static TMultiDimFit* fgInstance; // Static instance
 protected:
 
-  TVectorD     fQuantity;             // Training sample, dependent quantity 
-  TVectorD     fSqError;              // Training sample, error in quantity 
-  Double_t     fMeanQuantity;         // Mean of dependent quantity 
-  Double_t     fMaxQuantity;          // Max value of dependent quantity 
-  Double_t     fMinQuantity;          // Min value of dependent quantity 
-  Double_t     fSumSqQuantity;        // SumSquare of dependent quantity 
+  TVectorD     fQuantity;             // Training sample, dependent quantity
+  TVectorD     fSqError;              // Training sample, error in quantity
+  Double_t     fMeanQuantity;         // Mean of dependent quantity
+  Double_t     fMaxQuantity;          // Max value of dependent quantity
+  Double_t     fMinQuantity;          // Min value of dependent quantity
+  Double_t     fSumSqQuantity;        // SumSquare of dependent quantity
   Double_t     fSumSqAvgQuantity;     // Sum of squares away from mean
 
   TVectorD     fVariables;            // Training sample, independent variables
@@ -51,27 +51,27 @@ protected:
 
   Int_t        fSampleSize;           // Size of training sample
 
-  TVectorD     fTestQuantity;         // Test sample, dependent quantity  
-  TVectorD     fTestSqError;          // Test sample, Error in quantity  
+  TVectorD     fTestQuantity;         // Test sample, dependent quantity
+  TVectorD     fTestSqError;          // Test sample, Error in quantity
   TVectorD     fTestVariables;        // Test sample, independent variables
 
-  Int_t        fTestSampleSize;       // Size of test sample 
+  Int_t        fTestSampleSize;       // Size of test sample
 
   Double_t     fMinAngle;             // Min angle for acepting new function
   Double_t     fMaxAngle;             // Max angle for acepting new function
-  Int_t        fMaxTerms;             // Max terms expected in final expr. 
+  Int_t        fMaxTerms;             // Max terms expected in final expr.
   Double_t     fMinRelativeError;     // Min relative error accepted
   Int_t       *fMaxPowers;            // [fNVariables] maximum powers
   Double_t     fPowerLimit;           // Control parameter
 
 
   TMatrixD     fFunctions;            // Functions evaluated over sample
-  Int_t        fMaxFunctions;         // max number of functions 
+  Int_t        fMaxFunctions;         // max number of functions
   Int_t       *fFunctionCodes;        // [fMaxFunctions] acceptance code
   Int_t        fMaxStudy;             // max functions to study
 
   TMatrixD     fOrthFunctions;        // As above, but orthogonalised
-  TVectorD     fOrthFunctionNorms;    // Norm of the evaluated functions 
+  TVectorD     fOrthFunctionNorms;    // Norm of the evaluated functions
 
 
   Int_t       *fMaxPowersFinal;       // [fNVariables] maximum powers from fit;
@@ -87,9 +87,9 @@ protected:
 
   Int_t        fNCoefficients;        // Dimension of model coefficients
   TVectorD     fOrthCoefficients;     // The model coefficients
-  TMatrixD     fOrthCurvatureMatrix;  // Model matrix  
-  TVectorD     fCoefficients;         // Vector of the final coefficients 
-  TVectorD     fCoefficientsRMS;      // Vector of RMS of coefficients 
+  TMatrixD     fOrthCurvatureMatrix;  // Model matrix
+  TVectorD     fCoefficients;         // Vector of the final coefficients
+  TVectorD     fCoefficientsRMS;      // Vector of RMS of coefficients
   Double_t     fRMS;                  // Root mean square of fit
   Double_t     fChi2;                 // Chi square of fit
   Int_t        fParameterisationCode; // Exit code of parameterisation
@@ -98,50 +98,50 @@ protected:
   Double_t     fTestError;            // Error from test
   Double_t     fPrecision;            // Relative precision of param
   Double_t     fTestPrecision;        // Relative precision of test
-  Double_t     fCorrelationCoeff;     // Multi Correlation coefficient 
+  Double_t     fCorrelationCoeff;     // Multi Correlation coefficient
   TMatrixD     fCorrelationMatrix;    // Correlation matrix
   Double_t     fTestCorrelationCoeff; // Multi Correlation coefficient
 
-  TList*       fHistograms;           // List of histograms 
-  Byte_t       fHistogramMask;        // Bit pattern of hisograms used 
+  TList*       fHistograms;           // List of histograms
+  Byte_t       fHistogramMask;        // Bit pattern of hisograms used
 
   TVirtualFitter* fFitter;            //! Fit object (MINUIT)
 
-  EMDFPolyType fPolyType;             // Type of polynomials to use 
+  EMDFPolyType fPolyType;             // Type of polynomials to use
   Bool_t       fShowCorrelation;      // print correlation matrix
-  Bool_t       fIsUserFunction;       // Flag for user defined function 
-  Bool_t       fIsVerbose;            // 
+  Bool_t       fIsUserFunction;       // Flag for user defined function
+  Bool_t       fIsVerbose;            //
 
   virtual Double_t EvalFactor(Int_t p, Double_t x);
   virtual Double_t EvalControl(const Int_t *powers);
-  virtual void     MakeCoefficientErrors(); 
+  virtual void     MakeCoefficientErrors();
   virtual void     MakeCorrelation();
   virtual Double_t MakeGramSchmidt(Int_t function);
   virtual void     MakeCoefficients();
   virtual void     MakeCandidates();
   virtual void     MakeNormalized();
   virtual void     MakeParameterization();
-  virtual void     MakeRealCode(const char *filename, 
-				const char *classname, 
+  virtual void     MakeRealCode(const char *filename,
+				const char *classname,
 				Option_t   *option="");
   virtual Bool_t   Select(const Int_t *iv);
-  virtual Bool_t   TestFunction(Double_t squareResidual,  
+  virtual Bool_t   TestFunction(Double_t squareResidual,
 				Double_t dResidur);
 public:
-  TMultiDimFit(); 
-  TMultiDimFit(Int_t dimension, 
-	       EMDFPolyType type=kMonomials, 
-	       Option_t *option=""); 
+  TMultiDimFit();
+  TMultiDimFit(Int_t dimension,
+	       EMDFPolyType type=kMonomials,
+	       Option_t *option="");
   virtual ~TMultiDimFit();
 
   virtual void     AddRow(const Double_t *x, Double_t D, Double_t E=0);
   virtual void     AddTestRow(const Double_t *x, Double_t D, Double_t E=0);
   virtual void     Browse(TBrowser* b);
-  virtual void     Clear(Option_t *option=""); // *MENU* 
-  virtual void     Draw(Option_t *option="d") {}
-  virtual Double_t Eval(const Double_t *x, const Double_t *coeff=0); 
-  virtual void     FindParameterization(Option_t* option=""); // *MENU* 
-  virtual void     Fit(Option_t *option=""); // *MENU* 
+  virtual void     Clear(Option_t *option=""); // *MENU*
+  virtual void     Draw(Option_t * ="d") { }
+  virtual Double_t Eval(const Double_t *x, const Double_t *coeff=0);
+  virtual void     FindParameterization(Option_t* option=""); // *MENU*
+  virtual void     Fit(Option_t *option=""); // *MENU*
 
   Double_t         GetChi2()             const { return fChi2; }
   Double_t         GetError()            const { return fError; }
@@ -189,10 +189,10 @@ public:
   static TMultiDimFit* Instance()              { return fgInstance; }
   virtual Bool_t   IsFolder()            const { return kTRUE; }
   virtual Double_t MakeChi2(const Double_t* coeff=0);
-  virtual void     MakeCode(const char *functionName="MDF", Option_t *option=""); // *MENU* 
-  virtual void     MakeHistograms(Option_t* option="A"); // *MENU* 
-  virtual void     MakeMethod(const Char_t* className="MDF", Option_t* option=""); // *MENU* 
-  virtual void     Print(Option_t *option="ps") const; // *MENU* 
+  virtual void     MakeCode(const char *functionName="MDF", Option_t *option=""); // *MENU*
+  virtual void     MakeHistograms(Option_t* option="A"); // *MENU*
+  virtual void     MakeMethod(const Char_t* className="MDF", Option_t* option=""); // *MENU*
+  virtual void     Print(Option_t *option="ps") const; // *MENU*
 
   void             SetMaxAngle(Double_t angle=0);
   void             SetMaxFunctions(Int_t n) { fMaxFunctions = n; }
@@ -207,4 +207,4 @@ public:
   ClassDef(TMultiDimFit,1) // Multi dimensional fit class
 }
 ;
-#endif 
+#endif

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.19 2002/07/11 09:05:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.20 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -33,11 +33,11 @@
 class TH3 : public TH1, public TAtt3D {
 
 protected:
-   
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w) {return -2;} //may not use
+
+   virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
+   virtual Int_t    BufferFill(Axis_t, Axis_t, Stat_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-   
+
 public:
    TH3();
    TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
@@ -60,14 +60,14 @@ public:
            Int_t   Fill(const char*,const char*,Stat_t) {return -1;} //MayNotUse
    virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z);
    virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-   
+
    virtual Int_t   Fill(const char *namex, const char *namey, const char *namez, Stat_t w);
    virtual Int_t   Fill(const char *namex, Axis_t y, const char *namez, Stat_t w);
    virtual Int_t   Fill(const char *namex, const char *namey, Axis_t z, Stat_t w);
    virtual Int_t   Fill(Axis_t x, const char *namey, const char *namez, Stat_t w);
    virtual Int_t   Fill(Axis_t x, const char *namey, Axis_t z, Stat_t w);
    virtual Int_t   Fill(Axis_t x, Axis_t y, const char *namez, Stat_t w);
-   
+
    virtual void    FillRandom(const char *fname, Int_t ntimes=5000);
    virtual void    FillRandom(TH1 *h, Int_t ntimes=5000);
    virtual void    FitSlicesZ(TF1 *f1=0,Int_t binminx=1, Int_t binmaxx=0,Int_t binminy=1, Int_t binmaxy=0,
@@ -75,8 +75,8 @@ public:
    virtual void    GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z);
    virtual void    GetStats(Stat_t *stats) const;
    virtual Stat_t  Integral(Option_t *option="") const;
-   virtual Stat_t  Integral(Int_t, Int_t, Option_t *option="") const {return 0;}
-   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Option_t *option="") const {return 0;}
+   virtual Stat_t  Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
+   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
    virtual Int_t   Merge(TCollection *list);

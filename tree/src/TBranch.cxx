@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.46 2002/07/09 10:23:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.47 2002/07/17 22:06:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -690,7 +690,8 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 
 
 //______________________________________________________________________________
-Int_t TBranch::GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int_t nentries)
+Int_t TBranch::GetEntryExport(Int_t entry, Int_t /*getall*/,
+                              TClonesArray *list, Int_t nentries)
 {
 //*-*-*-*-*-*Read all leaves of entry and return total number of bytes*-*-*
 //*-* export buffers to real objects in the TClonesArray list.
@@ -754,7 +755,7 @@ TFile *TBranch::GetFile(Int_t mode)
    }
 
    if (fFileName.Length() == 0) return 0;
-   
+
    TString bFileName = fFileName;
 
    // check if branch file name is absolute or a URL (e.g. /castor/...,
@@ -1000,7 +1001,7 @@ void TBranch::SetBasketSize(Int_t buffsize)
 {
 // Set the basket size
 // The function makes sure that the basket size is greater than fEntryOffsetlen
-   
+
    if (buffsize < 100+fEntryOffsetLen) buffsize = 100+fEntryOffsetLen;
    fBasketSize = buffsize;
 }
@@ -1067,7 +1068,7 @@ void TBranch::SetFile(TFile *file)
    while ((basket = (TBasket*)nextb())) {
       basket->SetParent(file);
    }
-   
+
    //apply to sub-branches as well
    TIter next(GetListOfBranches());
    TBranch *branch;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.113 2002/11/18 21:48:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.114 2002/11/22 13:54:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -472,10 +472,10 @@ TH1::~TH1()
    if (!TestBit(kNotDeleted)) return;
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
    if (fBuffer)   {delete [] fBuffer;   fBuffer   = 0;}
-   if (fFunctions) { 
+   if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      fFunctions->Delete(); 
-      delete fFunctions; 
+      fFunctions->Delete();
+      delete fFunctions;
    }
    if (fDirectory) {
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
@@ -1771,7 +1771,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //        }
 //        return par[0] + par[1]*x[0];
 //     }
-//     
+//
 //     void exclude() {
 //        TF1 *f1 = new TF1("f1","[0] +[1]*x +gaus(2)",0,5);
 //        f1->SetParameters(6,-1,5,3,0.2);
@@ -3527,7 +3527,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    Int_t  nbinsz = fZaxis.GetNbins();
    Axis_t range = cxmax-cxmin;
    Axis_t xmin,xmax;
-   
+
     //recompute new axis limits by doubling the current range
    Int_t bin;
    if (x < cxmin) {
@@ -3875,7 +3875,7 @@ void  TH1::Smooth(Int_t ntimes)
       SetBinContent(i+1,XX[i]);
    }
    delete [] XX;
-   
+
    if (gPad) gPad->Modified();
 }
 
@@ -4026,13 +4026,13 @@ void TH1::Print(Option_t *option) const
 void TH1::Rebuild(Option_t *)
 {
 // Using the current bin info, recompute the arrays for contents and errors
-   
+
    SetBinsLength();
    if (fSumw2.fN) {
       fSumw2.Set(fNcells);
    }
 }
-   
+
 //______________________________________________________________________________
 void TH1::Reset(Option_t *option)
 {
@@ -4067,12 +4067,12 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    Bool_t nonEqiY = kFALSE;
    Bool_t nonEqiZ = kFALSE;
    Int_t i;
-   
+
    // Check if the histogram has equidistant X bins or not.  If not, we
-   // create an array holding the bins. 
+   // create an array holding the bins.
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
       nonEqiX = kTRUE;
-      out << "   Double_t xAxis[" << GetXaxis()->GetXbins()->fN 
+      out << "   Double_t xAxis[" << GetXaxis()->GetXbins()->fN
  	 << "] = {";
       for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
          if (i != 0) out << ", ";
@@ -4082,11 +4082,11 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    }
    // If the histogram is 2 or 3 dimensional, check if the histogram
    // has equidistant Y bins or not.  If not, we create an array
-   // holding the bins.  
-   if (fDimension > 1 && GetYaxis()->GetXbins()->fN && 
+   // holding the bins.
+   if (fDimension > 1 && GetYaxis()->GetXbins()->fN &&
        GetYaxis()->GetXbins()->fArray) {
       nonEqiY = kTRUE;
-      out << "   Double_t yAxis[" << GetYaxis()->GetXbins()->fN 
+      out << "   Double_t yAxis[" << GetYaxis()->GetXbins()->fN
  	  << "] = {";
       for (i = 0; i < GetYaxis()->GetXbins()->fN; i++) {
          if (i != 0) out << ", ";
@@ -4096,11 +4096,11 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    }
    // IF the histogram is 3 dimensional, check if the histogram
    // has equidistant Z bins or not.  If not, we create an array
-   // holding the bins.  
-   if (fDimension > 2 && GetZaxis()->GetXbins()->fN && 
+   // holding the bins.
+   if (fDimension > 2 && GetZaxis()->GetXbins()->fN &&
        GetZaxis()->GetXbins()->fArray) {
       nonEqiZ = kTRUE;
-      out << "   Double_t zAxis[" << GetZaxis()->GetXbins()->fN 
+      out << "   Double_t zAxis[" << GetZaxis()->GetXbins()->fN
  	 << "] = {";
       for (i = 0; i < GetZaxis()->GetXbins()->fN; i++) {
          if (i != 0) out << ", ";
@@ -4108,30 +4108,30 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
       }
       out << "}; " << endl;
    }
-     
+
    char quote = '"';
    out <<"   "<<endl;
    out <<"   "<<"TH1"<<" *";
 
-   out << GetName() << " = new " << ClassName() << "(" << quote 
+   out << GetName() << " = new " << ClassName() << "(" << quote
        << GetName() << quote << "," << quote<< GetTitle() << quote
        << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", xAxis";
-   else 
+   else
       out << "," << GetXaxis()->GetXmin()
 	  << "," << GetXaxis()->GetXmax();
    if (fDimension > 1) {
       out << "," << GetYaxis()->GetNbins();
-      if (nonEqiY) 
+      if (nonEqiY)
          out << ", yAxis";
-      else 
+      else
          out << "," << GetYaxis()->GetXmin()
 	     << "," << GetYaxis()->GetXmax();
    }
    if (fDimension > 2) {
       out << "," << GetZaxis()->GetNbins();
-      if (nonEqiZ) 
+      if (nonEqiZ)
          out << ", zAxis";
       else
          out << "," << GetZaxis()->GetXmin()
@@ -4165,7 +4165,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    if (fOption.Length() != 0) {
       out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
    }
-   
+
    // save bin contents
    Int_t bin;
    for (bin=0;bin<fNcells;bin++) {
@@ -4174,7 +4174,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
       }
    }
-   
+
    // save bin errors
    if (fSumw2.fN) {
       for (bin=0;bin<fNcells;bin++) {
@@ -4184,7 +4184,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
-   
+
    // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
@@ -4588,7 +4588,7 @@ Double_t TH1::GetContourLevel(Int_t level) const
 
 
 //______________________________________________________________________________
-void TH1::SetBuffer(Int_t buffersize, Option_t *option)
+void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)
 {
 // set the maximum number of entries to be kept in the buffer
 
@@ -5293,7 +5293,7 @@ void TH1C::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = fXaxis.GetNbins();
    fNcells = n;
    TArrayC::Set(n);
@@ -5497,7 +5497,7 @@ void TH1S::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = fXaxis.GetNbins();
    fNcells = n;
    TArrayS::Set(n);
@@ -5695,7 +5695,7 @@ void TH1F::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = fXaxis.GetNbins();
    fNcells = n;
    TArrayF::Set(n);
@@ -5894,7 +5894,7 @@ void TH1D::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = fXaxis.GetNbins();
    fNcells = n;
    TArrayD::Set(n);

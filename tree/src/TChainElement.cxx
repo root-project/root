@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.2 2000/12/26 14:23:05 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -74,7 +74,7 @@ void TChainElement::CreatePackets()
 }
 
 //_______________________________________________________________________
-void TChainElement::ls(Option_t *option) const
+void TChainElement::ls(Option_t *) const
 {
 // List files in the chain
 //

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.12 2002/08/05 16:45:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.13 2002/10/31 07:27:37 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -329,13 +329,13 @@ Int_t TProfile2D::BufferEmpty(Bool_t deleteBuffer)
      }
       THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
    }
-   
+
    Double_t *buffer = fBuffer; fBuffer = 0;
-   
+
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);
    }
-   
+
    if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
    else              { fBuffer = buffer; fBuffer[0] = 0;}
    return nbentries;
@@ -562,7 +562,7 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z)
 //*-*                  =======================================
 
    if (fBuffer) return BufferFill(x,y,z,1);
-   
+
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
@@ -689,7 +689,7 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 //*-*                  =======================================
 
    if (fBuffer) return BufferFill(x,y,z,w);
-   
+
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
@@ -723,7 +723,7 @@ Stat_t TProfile2D::GetBinContent(Int_t bin) const
 //*-*          ===========================================
 
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
-   
+
    if (bin < 0 || bin >= fNcells) return 0;
    if (fBinEntries.fArray[bin] == 0) return 0;
    return fArray[bin]/fBinEntries.fArray[bin];
@@ -736,7 +736,7 @@ Stat_t TProfile2D::GetBinEntries(Int_t bin) const
 //*-*          ===========================================
 
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
-   
+
    if (bin < 0 || bin >= fNcells) return 0;
    return fBinEntries.fArray[bin];
 }
@@ -748,7 +748,7 @@ Stat_t TProfile2D::GetBinError(Int_t bin) const
 //*-*          =========================================
 
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
-   
+
    if (bin < 0 || bin >= fNcells) return 0;
    Stat_t cont = fArray[bin];
    Stat_t sum  = fBinEntries.fArray[bin];
@@ -833,7 +833,7 @@ void TProfile2D::GetStats(Stat_t *stats) const
 void TProfile2D::LabelsDeflate(Option_t *ax)
 {
 // Reduce the number of bins for this axis to the number of bins having a label.
-   
+
    TAxis *axis = GetXaxis();
    if (ax[0] == 'y' || ax[0] == 'Y') axis = GetYaxis();
    if (!axis->GetLabels()) return;
@@ -846,18 +846,18 @@ void TProfile2D::LabelsDeflate(Option_t *ax)
    if (nbins < 2) nbins = 2;
    TProfile2D *hold = (TProfile2D*)Clone();
    hold->SetDirectory(0);
-   
+
    Int_t  nbxold = fXaxis.GetNbins();
    Double_t xmin = axis->GetXmin();
    Double_t xmax = axis->GetBinUpEdge(nbins);
-   axis->SetRange(0,0); 
+   axis->SetRange(0,0);
    axis->Set(nbins,xmin,xmax);
    Int_t  nbinsx = fXaxis.GetNbins();
    Int_t  nbinsy = fYaxis.GetNbins();
    Int_t ncells = (nbinsx+2)*(nbinsy+2);
    SetBinsLength(ncells);
-   fBinEntries.Set(ncells);   
-   fSumw2.Set(ncells);   
+   fBinEntries.Set(ncells);
+   fSumw2.Set(ncells);
 
    //now loop on all bins and refill
    Int_t bin,ibin,binx,biny;
@@ -869,8 +869,8 @@ void TProfile2D::LabelsDeflate(Option_t *ax)
          fBinEntries.fArray[ibin] = hold->fBinEntries.fArray[bin];
          fSumw2.fArray[ibin] = hold->fSumw2.fArray[bin];
       }
-   }   
-   delete hold;   
+   }
+   delete hold;
 }
 
 //___________________________________________________________________________
@@ -879,27 +879,27 @@ void TProfile2D::LabelsInflate(Option_t *ax)
 // Double the number of bins for axis.
 // Refill histogram
 // This function is called by TAxis::FindBin(const char *label)
-      
+
    TAxis *axis = GetXaxis();
    if (ax[0] == 'y' || ax[0] == 'Y') axis = GetYaxis();
    TProfile2D *hold = (TProfile2D*)Clone();
    hold->SetDirectory(0);
-   
+
    Int_t  nbxold = fXaxis.GetNbins();
    Int_t  nbyold = fYaxis.GetNbins();
    Int_t  nbins  = axis->GetNbins();
    Double_t xmin = axis->GetXmin();
    Double_t xmax = axis->GetXmax();
    xmax = xmin + 2*(xmax-xmin);
-   axis->SetRange(0,0); 
+   axis->SetRange(0,0);
    axis->Set(2*nbins,xmin,xmax);
    nbins *= 2;
    Int_t  nbinsx = fXaxis.GetNbins();
    Int_t  nbinsy = fYaxis.GetNbins();
    Int_t ncells = (nbinsx+2)*(nbinsy+2);
    SetBinsLength(ncells);
-   fBinEntries.Set(ncells);   
-   fSumw2.Set(ncells);   
+   fBinEntries.Set(ncells);
+   fSumw2.Set(ncells);
 
    //now loop on all bins and refill
    Int_t bin,ibin,binx,biny;
@@ -917,8 +917,8 @@ void TProfile2D::LabelsInflate(Option_t *ax)
             fSumw2.fArray[ibin] = 0;
          }
       }
-   }   
-   delete hold;   
+   }
+   delete hold;
 }
 
 //___________________________________________________________________________
@@ -932,7 +932,7 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
 //         = "v" draw labels vertical
 //         = "u" draw labels up (end of label right adjusted)
 //         = "d" draw labels down (start of label left adjusted)
-   
+
    TAxis *axis = GetXaxis();
    if (ax[0] == 'y' || ax[0] == 'Y') axis = GetYaxis();
    THashList *labels = axis->GetLabels();
@@ -971,7 +971,7 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
    if (opt.Contains(">")) sort = 1;
    if (opt.Contains("<")) sort = 2;
    if (sort < 0) return;
-   
+
    Int_t nx = fXaxis.GetNbins()+2;
    Int_t ny = fYaxis.GetNbins()+2;
    Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
@@ -988,7 +988,7 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
    }
    labels->Clear();
    if (sort > 0) {
-      //---sort by values of bins 
+      //---sort by values of bins
       Double_t *pcont = new Double_t[n+2];
       for (i=0;i<=n;i++) pcont[i] = 0;
       for (i=1;i<nx;i++) {
@@ -1076,13 +1076,13 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
          }
       }
    }
-   delete labold; 
+   delete labold;
    if (a)      delete [] a;
    if (sumw)   delete [] sumw;
    if (errors) delete [] errors;
    if (ent)    delete [] ent;
 }
-   
+
 //______________________________________________________________________________
 Int_t TProfile2D::Merge(TCollection *list)
 {
@@ -1090,13 +1090,13 @@ Int_t TProfile2D::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //The function returns the merged number of entries if the merge is 
+   //The function returns the merged number of entries if the merge is
    //successfull, -1 otherwise.
    //
    //IMPORTANT remark. The 2 axis x and y may have different number
    //of bins and different limits, BUT the largest bin width must be
    //a multiple of the smallest bin width.
-   
+
    if (!list) return 0;
    TIter next(list);
    Double_t umin,umax,vmin,vmax;
@@ -1113,14 +1113,14 @@ Int_t TProfile2D::Merge(TCollection *list)
    TProfile2D *h;
    Int_t nentries=0;
    Bool_t same = kTRUE;
-   while ((h=(TProfile2D*)next())) {     
+   while ((h=(TProfile2D*)next())) {
       if (!h->InheritsFrom(TProfile2D::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
          return -1;
       }
       //import statistics
       nentries += (Int_t)h->GetEntries();
-      
+
       // find min/max of the axes
       umin = h->GetXaxis()->GetXmin();
       umax = h->GetXaxis()->GetXmax();
@@ -1131,26 +1131,26 @@ Int_t TProfile2D::Merge(TCollection *list)
       if (nx != nbix || ny != nbiy ||
               umin != xmin || umax != xmax || vmin != ymin || vmax != ymax) {
          same = kFALSE;
-         if (umin < xmin) xmin = umin;  
-         if (umax > xmax) xmax = umax;  
-         if (vmin < ymin) ymin = vmin;  
-         if (vmax > ymax) ymax = vmax;  
-         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);     
-         if (h->GetYaxis()->GetBinWidth(1) > bwiy) bwiy = h->GetYaxis()->GetBinWidth(1);     
+         if (umin < xmin) xmin = umin;
+         if (umax > xmax) xmax = umax;
+         if (vmin < ymin) ymin = vmin;
+         if (vmax > ymax) ymax = vmax;
+         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);
+         if (h->GetYaxis()->GetBinWidth(1) > bwiy) bwiy = h->GetYaxis()->GetBinWidth(1);
       }
    }
-   
+
    //  if different binning compute best binning
    if (!same) {
       nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
       nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); while(nbiy > 100) nbiy /= 2;
       SetBins(nbix,xmin,xmax,nbiy,ymin,ymax);
    }
-   
+
    //merge bin contents and errors
    next.Reset();
    Int_t ibin, bin, binx, biny, ix, iy;
-   while ((h=(TProfile2D*)next())) {     
+   while ((h=(TProfile2D*)next())) {
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       for (biny=0;biny<=ny+1;biny++) {
@@ -1170,7 +1170,7 @@ Int_t TProfile2D::Merge(TCollection *list)
       fTsumwx  += h->fTsumwx;
       fTsumwx2 += h->fTsumwx2;
    }
-   
+
    return nentries;
 }
 
@@ -1208,7 +1208,7 @@ void TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t
 }
 
 //______________________________________________________________________________
-TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const 
+TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
 {
 //*-*-*-*-*Project this profile2D into a 2-D histogram along X,Y*-*-*-*-*-*-*
 //*-*      =====================================================
@@ -1302,10 +1302,10 @@ void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Doubl
 
 
 //______________________________________________________________________________
-void TProfile2D::SetBuffer(Int_t buffersize, Option_t *option)
+void TProfile2D::SetBuffer(Int_t buffersize, Option_t *)
 {
 // set the buffer size in units of 8 bytes (double)
-   
+
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
@@ -1374,7 +1374,7 @@ void TProfile2D::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TProfile2D::IsA());
       //====end of old versions
-      
+
    } else {
       TProfile2D::Class()->WriteBuffer(R__b,this);
    }

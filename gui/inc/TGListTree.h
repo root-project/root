@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.8 2002/10/10 17:09:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.10 2002/11/15 13:24:59 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -153,13 +153,13 @@ protected:
    virtual void Layout() {}
 
    void OnMouseOver(TGFrame*) { }
-   void CurrentChanged(Int_t x, Int_t y) { }
-   void CurrentChanged(TGFrame *f) { }
+   void CurrentChanged(Int_t /*x*/, Int_t /*y*/) { }
+   void CurrentChanged(TGFrame *) { }
    void ReturnPressed(TGFrame*) { }
-   void Clicked(TGFrame *entry, Int_t btn) { }
-   void Clicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y) { }
-   void DoubleClicked(TGFrame *entry, Int_t btn) { }
-   void DoubleClicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y) { }
+   void Clicked(TGFrame *, Int_t /*btn*/) { }
+   void Clicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) { }
+   void DoubleClicked(TGFrame *, Int_t /*btn*/) { }
+   void DoubleClicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) { }
 
 public:
    TGListTree(TGWindow *p, UInt_t w, UInt_t h,

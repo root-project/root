@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.13 2002/02/18 23:10:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.14 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -36,8 +36,8 @@ protected:
     Double_t    fZmin;            //Lower limit in Z (if set)
     Double_t    fZmax;            //Upper limit in Z (if set)
 
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w) {return -2;} //may not use
+   virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
+   virtual Int_t    BufferFill(Axis_t, Axis_t, Stat_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
 
 private:

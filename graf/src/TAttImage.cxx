@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.1 2002/08/09 13:56:00 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.2 2002/08/09 16:43:30 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -127,7 +127,7 @@ TImagePalette::TImagePalette(UInt_t numPoints)
 }
 
 //______________________________________________________________________________
-TImagePalette::TImagePalette(const TImagePalette &palette)
+TImagePalette::TImagePalette(const TImagePalette &palette) : TObject(palette)
 {
    // Copy constructor.
 

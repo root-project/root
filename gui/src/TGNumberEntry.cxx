@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.2 2001/09/18 15:31:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.3 2001/09/22 10:04:11 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -557,7 +557,7 @@ static void AppendFracZero(char *text, Int_t Digits)
 }
 
 //______________________________________________________________________________
-static Long_t MakeDateNumber(const char *text, Long_t Day,
+static Long_t MakeDateNumber(const char * /*text*/, Long_t Day,
                              Long_t Month, Long_t Year)
 {
    Day = TMath::Abs(Day);

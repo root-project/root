@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.9 2002/01/18 18:46:06 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.1 2002/03/07 01:48:32 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -396,8 +396,8 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
 
 #if defined(MEM_DEBUG)
    if (oldsize != storage_size(ovp))
-      fprintf(stderr, "<%s>: passed oldsize %d, should be %d\n", where,
-              oldsize, storage_size(ovp));
+      fprintf(stderr, "<%s>: passed oldsize %u, should be %u\n", where,
+              (unsigned int)oldsize, (unsigned int)storage_size(ovp));
 #endif
    if (oldsize == size)
       return ovp;

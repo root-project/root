@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.13 2002/09/16 10:57:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.14 2002/10/02 13:03:14 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -92,17 +92,18 @@ const char *TDSetElement::GetDirectory() const
    return fDirectory;
 }
 
-
 //______________________________________________________________________________
-void TDSetElement::Print(Option_t *option) const
+void TDSetElement::Print(Option_t *) const
 {
    // Print a TDSetElement.
 
    cout << IsA()->GetName()
-      << " file='" << fFileName
-      << "' dir='" << fDirectory
-      << "' obj='" << fObjName
-      << "' first=" << fFirst << " num=" << fNum << endl;
+        << " file='" << fFileName
+        << "' dir='" << fDirectory
+        << "' obj='" << fObjName
+        << "' first=" << fFirst
+        << " num=" << fNum
+        << endl;
 }
 
 

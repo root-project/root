@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.14 2002/11/07 05:20:39 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.15 2002/11/07 05:23:26 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 //  T->Draw("x","y<0"); // as in normal TTree::Draw
 //
 //  THbookFile can be browsed via TBrowser.
-//  
+//
 ////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -281,7 +281,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
   }
   char topdir[20];
   sprintf(topdir,"lun%d",fLun);
-  
+
   Int_t ier;
 #ifndef WIN32
   hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier,strlen(topdir),strlen(fname),1);
@@ -292,7 +292,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
   SetTitle(topdir);
   sprintf(topdir,"//lun%d",fLun);
   fCurDir = topdir;
-  
+
   if (ier) printf (" Error on hropen was %d \n", ier);
   if (quest[0]) {
      printf("Error cannot open input file: %s\n",fname);
@@ -302,7 +302,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
      MakeZombie();
      return;
   }
-  
+
   gROOT->GetListOfBrowsables()->Add(this,fname);
 
   fList = new TList();
@@ -322,7 +322,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
 THbookFile::~THbookFile()
 {
 
-   Close(); 
+   Close();
    delete fList;
    delete fKeys;
 }
@@ -335,8 +335,8 @@ void THbookFile::Browse(TBrowser *b)
    if( b ) {
         b->Add(fList, "memory");
         b->Add(fKeys, "IDs on disk");
-   } 
-   cd();  
+   }
+   cd();
 }
 
 //______________________________________________________________________________
@@ -351,9 +351,9 @@ Bool_t THbookFile::cd(const char *dirname)
 #else
        hcdir(PASSCHAR(fCurDir.Data()),PASSCHAR(" "));
 #endif
-       return kTRUE;      
+       return kTRUE;
    }
-   
+
    char cdir[512];
    Int_t i;
    for (i=0;i<512;i++) cdir[i] = ' ';
@@ -368,10 +368,10 @@ Bool_t THbookFile::cd(const char *dirname)
   for (i=510;i>=0;i--) {
      if (cdir[i] != ' ') break;
      cdir[i] = 0;
-  }  
-  fCurDir = cdir; 
+  }
+  fCurDir = cdir;
   printf("fCurdir=%s\n",fCurDir.Data());
-     
+
   return kTRUE;
 }
 
@@ -379,13 +379,13 @@ Bool_t THbookFile::cd(const char *dirname)
 void THbookFile::Close(Option_t *)
 {
 // Close the Hbook file
-   
+
    if(!IsOpen()) return;
 
    gROOT->GetListOfBrowsables()->Remove(this);
-   
+
    cd();
-   
+
    fList->Delete();
    fKeys->Delete();
    fgLuns[fLun-10] = 0;
@@ -436,7 +436,7 @@ TObject *THbookFile::Get(Int_t idd)
      printf("Error cannot find ID = %d\n",idd);
      return 0;
   }
-  
+
   int i999 = 999;
   // must delete any previous object with the same ID !!
   lcdir = hcbook[6];
@@ -526,11 +526,11 @@ Int_t THbookFile::GetEntryBranch(Int_t entry, Int_t id)
 //______________________________________________________________________________
 void THbookFile::InitLeaves(Int_t id, Int_t var, TTreeFormula *formula)
 {
-// This function is called from the first entry in TTreePlayer::InitLoop 
+// This function is called from the first entry in TTreePlayer::InitLoop
 // It analyzes the list of variables involved in the current query
 // and pre-process the internal Hbook tables to speed-up the search
 // at the next entries.
-   
+
   if (!formula) return;
    Int_t ncodes = formula->GetNcodes();
    for (Int_t i=1;i<=ncodes;i++) {
@@ -562,7 +562,7 @@ Bool_t THbookFile::IsOpen() const
 //______________________________________________________________________________
 void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
 {
-//  
+//
 #ifndef WIN32
   hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0,strlen(bname),4);
 #else
@@ -571,16 +571,17 @@ void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
 }
 
 //______________________________________________________________________________
-TFile *THbookFile::Convert2root(const char *rootname, Int_t lrecl, Option_t *option)
+TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
+                                Option_t *option)
 {
 // Convert this Hbook file to a Root file with name rootname.
 // if rootname="', rootname = hbook file name with .root instead of .hbook
-// By default, the Root file is connected and returned 
+// By default, the Root file is connected and returned
 // option:
 //       - "NO" do not connect the Root file
 //       - "C"  do not compress file (default is to compress)
 //       - "L"  do not convert names to lower case (default is to convert)
-   
+
    TString opt = option;
    opt.ToLower();
 
@@ -599,14 +600,14 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t lrecl, Option_t *opt
    sprintf(cmd,"h2root %s %s",GetName(),rfile);
    if (opt.Contains("c")) strcat (cmd," 0");
    if (opt.Contains("l")) strcat (cmd," 0");
-   
+
    gSystem->Exec(cmd);
-   
+
    if (opt.Contains("no")) return 0;
    TFile *f = new TFile(rfile);
    if (f->IsZombie()) {delete f; f = 0;}
    return f;
-}      
+}
 
 
 //______________________________________________________________________________
@@ -661,7 +662,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
   tree->SetType(1);
 
   char *bigbuf = tree->MakeX(500000);
-  
+
   gTree = tree;
 #ifndef WIN32
   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
@@ -735,7 +736,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
      branch->SetBlockName(block);
      branch->SetUniqueID(varNumber);
      varNumber++;
-     
+
      //NB: the information about isachar should be saved in the branch
      // to be done
      boolflag[i] = -10;
@@ -758,7 +759,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
   delete [] lenbool;
   delete [] boolarr;
   delete [] chtag_out;
-  
+
   return tree;
 }
 
@@ -983,7 +984,7 @@ void THbookFile::ls(const char *path) const
 #endif
        return;
    }
-   
+
 #ifndef WIN32
   hldir(PASSCHAR(path),PASSCHAR("T"),strlen(path),1);
 #else

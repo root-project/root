@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.1 2002/09/14 00:35:05 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -68,7 +68,7 @@ ClassImp(TGColorSelect)
 
 
 //________________________________________________________________________________
-TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t n) :
+TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
    TGFrame(p, 20, 20, kOwnBackground, color)
 {
    SetBackgroundColor(color);

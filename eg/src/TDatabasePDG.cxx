@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.18 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.19 2002/07/19 08:28:32 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG
@@ -613,7 +613,7 @@ void TDatabasePDG::Browse(TBrowser* b)
 
 
 //______________________________________________________________________________
-Int_t TDatabasePDG::WritePDGTable(const char *filename)
+Int_t TDatabasePDG::WritePDGTable(const char * /*filename*/)
 {
    // write contents of the particle DB into a file
 

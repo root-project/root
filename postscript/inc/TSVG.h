@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.h,v 1.0 2002/02/05 14:00:00 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.h,v 1.1 2002/02/14 18:01:59 brun Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -36,13 +36,13 @@ protected:
    Bool_t       fBoundingBox;     //True when the SVG header is printed
    Bool_t       fRange;           //True when a range has been defined
    Int_t        fYsizeSVG;        //Page's Y size in SVG units
-	
+
 public:
    TSVG();
    TSVG(const char *filename, Int_t type=-113);
    virtual ~TSVG();
 
-   void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2);  
+   void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2);
    void  CellArrayFill(Int_t r, Int_t g, Int_t b);
    void  CellArrayEnd();
    void  Close(Option_t *opt="");
@@ -69,7 +69,7 @@ public:
    void  SetLineColor( Color_t cindex=1);
    void  SetLineStyle(Style_t linestyle = 1);
    void  SetLineWidth(Width_t linewidth = 1);
-   void  SetLineScale(Float_t scale=3) {}
+   void  SetLineScale(Float_t =3) { }
    void  SetMarkerColor( Color_t cindex=1);
    void  SetTextColor( Color_t cindex=1);
    void  Text(Double_t x, Double_t y, const char *string);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.82 2002/09/19 13:54:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.83 2002/11/11 21:21:11 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -731,13 +731,13 @@ const char *TROOT::FindObjectClassName(const char *name) const
 }
 
 //______________________________________________________________________________
-const char *TROOT::FindObjectPathName(const TObject *obj) const
+const char *TROOT::FindObjectPathName(const TObject *) const
 {
-// Return path name of obj somewhere in the //root/.. path
-// The function returns the first occurence of the object in the list of folders
-// The returned string points to a static char array in TROOT.
-// If this function is called in a loop or recursively, it is the
-// user's responsability to copy this string in his area.
+   // Return path name of obj somewhere in the //root/... path.
+   // The function returns the first occurence of the object in the list
+   // of folders. The returned string points to a static char array in TROOT.
+   // If this function is called in a loop or recursively, it is the
+   // user's responsability to copy this string in his area.
 
    Error("FindObjectPathName","Not yet implemented");
    return "??";
@@ -1135,7 +1135,7 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 }
 
 //______________________________________________________________________________
-Int_t TROOT::IgnoreInclude(const char *fname, const char *expandedfname)
+Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
 {
   // Return true if the given include file correspond to a class that has
   // been loaded through a compiled dictionnary.

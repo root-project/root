@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.7 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.8 2002/01/24 11:39:27 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -381,11 +381,10 @@ void TQConnection::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TQConnection::Print(Option_t *option) const
+void TQConnection::Print(Option_t *) const
 {
    // Print TQConnection full method name and print all
    // signals connected to this connection.
-
 
    cout <<  "\t\t\t" << IsA()->GetName() << "\t" << fReceiver <<
             "\t" << GetName() << endl;

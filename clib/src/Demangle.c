@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Demangle.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Demangle.c,v 1.2 2001/02/20 18:18:32 rdm Exp $ */
 /* Author: */
 
 /* Demangler for GNU C++
@@ -336,7 +336,7 @@ cplus_demangle_opname (opname, result, options)
       if (opname[4] == '\0')
 	{
 	  /* Operator.  */
-	  for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+	  for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 	    {
 	      if (strlen (optable[i].in) == 2
 		  && memcmp (optable[i].in, opname + 2, 2) == 0)
@@ -353,7 +353,7 @@ cplus_demangle_opname (opname, result, options)
 	  if (opname[2] == 'a' && opname[5] == '\0')
 	    {
 	      /* Assignment. */
-	      for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+	      for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 		{
 		  if (strlen (optable[i].in) == 3
 		      && memcmp (optable[i].in, opname + 2, 3) == 0)
@@ -376,10 +376,10 @@ cplus_demangle_opname (opname, result, options)
       if (len >= 10 /* op$assign_ */
 	  && memcmp (opname + 3, "assign_", 7) == 0)
 	{
-	  for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+	  for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 	    {
 	      len1 = len - 10;
-	      if (strlen (optable[i].in) == len1
+	      if ((int)strlen (optable[i].in) == len1
 		  && memcmp (optable[i].in, opname + 10, len1) == 0)
 		{
 		  strcat (result, "operator");
@@ -392,10 +392,10 @@ cplus_demangle_opname (opname, result, options)
 	}
       else
 	{
-	  for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+	  for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 	    {
 	      len1 = len - 3;
-	      if (strlen (optable[i].in) == len1
+	      if ((int)strlen (optable[i].in) == len1
 		  && memcmp (optable[i].in, opname + 3, len1) == 0)
 		{
 		  strcat (result, "operator");
@@ -437,9 +437,9 @@ cplus_mangle_opname (opname, options)
   int len;
 
   len = strlen (opname);
-  for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+  for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
     {
-      if (strlen (optable[i].out) == len
+      if ((int)strlen (optable[i].out) == len
 	  && (options & DMGL_ANSI) == (optable[i].flags & DMGL_ANSI)
 	  && memcmp (optable[i].out, opname, len) == 0)
 	return ((char *)optable[i].in);
@@ -838,7 +838,7 @@ demangle_template (work, mangled, tname, trawname)
 
   (*mangled)++;
   /* get template name */
-  if ((r = consume_count (mangled)) == 0 || strlen (*mangled) < r)
+  if ((r = consume_count (mangled)) == 0 || (int)strlen (*mangled) < r)
     {
       return (0);
     }
@@ -1116,7 +1116,7 @@ demangle_class_name (work, mangled, declp)
   int success = 0;
 
   n = consume_count (mangled);
-  if (strlen (*mangled) >= n)
+  if ((int)strlen (*mangled) >= n)
   {
     demangle_arm_pt (work, mangled, n, declp);
     success = 1;
@@ -1568,14 +1568,13 @@ DESCRIPTION
  */
 
 static int
-arm_special (work, mangled, declp)
-     struct work_stuff *work;
-     const char **mangled;
-     string *declp;
+arm_special (struct work_stuff *work, const char **mangled, string *declp)
 {
   int n;
   int success = 1;
   const char *scan;
+
+  if (work) { }  /* not used */
 
   if (strncmp (*mangled, ARM_VTABLE_STRING, ARM_VTABLE_STRLEN) == 0)
     {
@@ -1734,7 +1733,7 @@ demangle_qualified (work, mangled, result, isfuncname, append)
       else
         {
 	  namelength = consume_count (mangled);
-      	  if (strlen (*mangled) < namelength)
+      	  if ((int)strlen (*mangled) < namelength)
 	    {
 	    /* Simple sanity check failed */
 	       success = 0;
@@ -1949,7 +1948,7 @@ do_type (work, mangled, result)
 		break;
 	      }
 	    n = consume_count (mangled);
-	    if (strlen (*mangled) < n)
+	    if ((int)strlen (*mangled) < n)
 	      {
 		success = 0;
 		break;
@@ -2509,10 +2508,10 @@ demangle_function_name (work, mangled, declp, scan)
       if (declp->p - declp->b >= 10 /* op$assign_ */
 	  && memcmp (declp->b + 3, "assign_", 7) == 0)
 	{
-	  for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+	  for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 	    {
 	      len = declp->p - declp->b - 10;
-	      if (strlen (optable[i].in) == len
+	      if ((int)strlen (optable[i].in) == len
 		  && memcmp (optable[i].in, declp->b + 10, len) == 0)
 		{
 		  string_clear (declp);
@@ -2525,10 +2524,10 @@ demangle_function_name (work, mangled, declp, scan)
 	}
       else
 	{
-	  for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+	  for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 	    {
 	      int len = declp->p - declp->b - 3;
-	      if (strlen (optable[i].in) == len
+	      if ((int)strlen(optable[i].in) == len
 		  && memcmp (optable[i].in, declp->b + 3, len) == 0)
 		{
 		  string_clear (declp);
@@ -2575,7 +2574,7 @@ demangle_function_name (work, mangled, declp, scan)
 	  /* Operator.  */
 	  for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
 	    {
-	      if (strlen (optable[i].in) == 2
+	      if ((int)strlen (optable[i].in) == 2
 		  && memcmp (optable[i].in, declp->b + 2, 2) == 0)
 		{
 		  string_clear (declp);
@@ -2592,7 +2591,7 @@ demangle_function_name (work, mangled, declp, scan)
 	      /* Assignment. */
 	      for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
 		{
-		  if (strlen (optable[i].in) == 3
+		  if ((int)strlen (optable[i].in) == 3
 		      && memcmp (optable[i].in, declp->b + 2, 3) == 0)
 		    {
 		      string_clear (declp);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.99 2002/11/28 21:16:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.100 2002/11/29 14:48:27 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1130,7 +1130,7 @@ void TBranchElement::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TBranchElement::PrintValue(Int_t len) const
+void TBranchElement::PrintValue(Int_t /*len*/) const
 {
 // Prints leaf value
 
