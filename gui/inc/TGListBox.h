@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.10 2001/12/10 01:07:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.8 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -40,9 +40,6 @@
 #endif
 #ifndef ROOT_TGScrollBar
 #include "TGScrollBar.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
 #endif
 
 class TGListBox;
@@ -225,8 +222,6 @@ public:
                                   { fLbc->SetMultipleSelections(multi); }
    virtual Bool_t GetMultipleSelections() const
                                   { return fLbc->GetMultipleSelections(); }
-   virtual Int_t GetNumberOfEntries() const
-                                  { return fLbc->GetList()->GetSize(); }
 
    TGFrame     *GetContainer() const { return fVport->GetContainer(); }
    TGViewPort  *GetViewPort() const { return fVport; }

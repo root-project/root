@@ -1909,49 +1909,6 @@ static int G__basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_bas
    return (1 || funcname || hash || result7 || libp);
 }
 
-static int G__basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_1_0(G__value * result7, const char *funcname, struct G__param *libp, int hash)
-{
-   basic_string < char,
-    char_traits < char >,
-    allocator < char > >*p = NULL;
-   switch (libp->paran) {
-   case 4:
-      p = new basic_string < char,
-       char_traits < char >,
-       allocator < char > >(
-                             *(string*) libp->para[0].ref, (string::size_type) G__int(libp->para[1])
-                             ,(string::size_type) G__int(libp->para[2]), *(allocator < char >*) libp->para[3].ref);
-      break;
-   case 3:
-      p = new basic_string < char,
-       char_traits < char >,
-       allocator < char > >(
-                             *(string*) libp->para[0].ref, (string::size_type) G__int(libp->para[1])
-                             ,(string::size_type) G__int(libp->para[2]));
-      break;
-   case 2:
-      p = new basic_string < char,
-       char_traits < char >,
-       allocator < char > >(*(string*) libp->para[0].ref, (string::size_type) G__int(libp->para[1]));
-      break;
-   case 1:
-      p = new basic_string < char,
-       char_traits < char >,
-       allocator < char > >(*(string*) libp->para[0].ref);
-      break;
-   case 0:
-      p = new basic_string < char,
-       char_traits < char >,
-       allocator < char > >();
-      break;
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   result7->type = 'u';
-   result7->tagnum = G__get_linked_tagnum(&G__LN_basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR);
-   return (1 || funcname || hash || result7 || libp);
-}
-
 static int G__basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_3_0(G__value * result7, const char *funcname, struct G__param *libp, int hash)
 {
    basic_string < char,
@@ -8307,11 +8264,6 @@ static void G__setup_memfuncbasic_stringlEcharcOchar_traitslEchargRcOallocatorlE
 {
    /* basic_string<char,char_traits<char>,allocator<char> > */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__LN_basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR));
-   G__memfunc_setup("basic_string<char,char_traits<char>,allocator<char> >", 5133, 
-		    G__basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_1_0, 
-		    105, G__get_linked_tagnum(&G__LN_basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR), 
-		    -1, 0, 1, 1, 1, 0,
-                    "u 'allocator<char>' - 11 allocator<char>() alloc", (char *) NULL, (void *) NULL, 0);
    G__memfunc_setup("basic_string<char,char_traits<char>,allocator<char> >", 5133, 
 		    G__basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_2_0, 
 		    105, G__get_linked_tagnum(&G__LN_basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR), 

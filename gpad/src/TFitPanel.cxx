@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.5 2001/08/07 13:44:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.2 2001/01/19 17:28:00 brun Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -163,10 +163,6 @@ TFitPanel::TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh)
    Update();
    SetEditable(kFALSE);
 
-   //add this TFitPanel to the list of cleanups such that in case
-   //the referenced object is deleted, its pointer be reset
-   gROOT->GetListOfCleanups()->Add(this);
-   
    fRefPad->cd();
 }
 
@@ -175,7 +171,6 @@ TFitPanel::~TFitPanel()
 {
 //*-*-*-*-*-*-*-*-*-*-*FitPanel default destructor*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===============================
-   gROOT->GetListOfCleanups()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -193,7 +188,6 @@ void TFitPanel::Apply(const char *action)
 //*-*-*-*-*-*-*-*-*-*Collect all options and fit histogram*-*-*-*-*-*-*
 //*-*                =====================================
 
-   if (!fObjectFit) return;
    if (!fRefPad) return;
    fRefPad->cd();
 
@@ -284,12 +278,12 @@ void TFitPanel::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (!fRefPad) return;
    fRefPad->cd();
+   fRefPad->GetCanvas()->FeedbackMode(kTRUE);
+   gVirtualX->SetLineWidth(2);
 
    switch (event) {
 
    case kButton1Down:
-      fRefPad->GetCanvas()->FeedbackMode(kTRUE);
-      gVirtualX->SetLineWidth(2);
       gVirtualX->SetLineColor(-1);
       if (done) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       done = kTRUE;
@@ -323,15 +317,6 @@ void TFitPanel::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
    }
-}
-
-//______________________________________________________________________________
-void TFitPanel::RecursiveRemove(TObject *obj)
-{
-//  when obj is deleted, clear fObjectFit if fObjectFit=obj
-   
-   TDialogCanvas::RecursiveRemove(obj);
-   if (obj == fObjectFit) fObjectFit = 0;
 }
 
 //______________________________________________________________________________

@@ -86,7 +86,7 @@ case "$1" in
 	# then
 	#     start-stop-daemon --stop --quiet --oknodo  \
 	#         --pidfile /var/run/root.pid  \
-	#         --exec @prefix@/sbin/root 2>/dev/null || true
+	#         --exec /usr/sbin/root 2>/dev/null || true
 	# fi
 	;;
 

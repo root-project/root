@@ -247,7 +247,7 @@ int main(int argc, char** argv)
   Double_t cp11r = timer.CpuTime();
   cptot += cp11r;
   printf("19 Clones2r: RT=%6.2f s  Cpu=%6.2f s\n",rt11r,cp11r);
-  Double_t cpref = 70.94;
+  Double_t cpref = 76.33;
   Double_t rootmarks = cpref*200/cptot;
 
   //delete temp file used for the benchmark
@@ -281,29 +281,29 @@ int main(int argc, char** argv)
   printf("******************************************************************************\n");
   printf("* vector<THit>                  %6.2f        1.91     %5.2f        4.57     *\n",cp1,cx3);
   printf("* vector<THit*>                 %6.2f        1.86     %5.2f        4.57     *\n",cp4,cx6);
-  printf("* TClonesArray(TObjHit)         %6.2f        1.62     %5.2f        6.74     *\n",cp7,cx9);
-  printf("* TClonesArray(TObjHit) split   %6.2f        1.62     %5.2f        6.73     *\n",cp7,cx11);
+  printf("* TClonesArray(TObjHit)         %6.2f        1.62     %5.2f        6.76     *\n",cp7,cx9);
+  printf("* TClonesArray(TObjHit) split   %6.2f        1.62     %5.2f        6.75     *\n",cp7,cx11);
   printf("******************************************************************************\n");
   printf("* Size of file in bytes         comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %8d   42053117   %8d    9211877    *\n",nbytes1,nbytes3);
-  printf("* vector<THit*>                 %8d   42078431   %8d    9213085    *\n",nbytes5,nbytes6);
-  printf("* TClonesArray(TObjHit)         %8d   39805839   %8d    5904218    *\n",nbytes8,nbytes9);
-  printf("* TClonesArray(TObjHit) split   %8d   39805839   %8d    5913737    *\n",nbytes10,nbytes11);
+  printf("* vector<THit>                  %8d   42053031   %8d    9213459    *\n",nbytes1,nbytes3);
+  printf("* vector<THit*>                 %8d   42079941   %8d    9215935    *\n",nbytes5,nbytes6);
+  printf("* TClonesArray(TObjHit)         %8d   39807325   %8d    5892837    *\n",nbytes8,nbytes9);
+  printf("* TClonesArray(TObjHit) split   %8d   39807325   %8d    5901163    *\n",nbytes10,nbytes11);
   printf("******************************************************************************\n");
   printf("* Time to write in seconds      comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        1.69    %6.2f        8.87     *\n",cp2w-cp1, cp3w-cp1);
-  printf("* vector<THit*>                 %6.2f        1.46    %6.2f        8.71     *\n",cp5w-cp1, cp6w-cp1);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.84    %6.2f        5.26     *\n",cp8w-cp1, cp9w-cp1);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.78    %6.2f        5.25     *\n",cp10w-cp1,cp11w-cp1);
+  printf("* vector<THit>                  %6.2f        1.69    %6.2f        9.74     *\n",cp2w-cp1, cp3w-cp1);
+  printf("* vector<THit*>                 %6.2f        1.60    %6.2f        9.69     *\n",cp5w-cp1, cp6w-cp1);
+  printf("* TClonesArray(TObjHit)         %6.2f        1.10    %6.2f        6.03     *\n",cp8w-cp1, cp9w-cp1);
+  printf("* TClonesArray(TObjHit) split   %6.2f        1.13    %6.2f        5.99     *\n",cp10w-cp1,cp11w-cp1);
   printf("******************************************************************************\n");
   printf("* Time to read in seconds       comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        2.29    %6.2f        3.21     *\n",cp2r,cp3r);
-  printf("* vector<THit*>                 %6.2f        2.10    %6.2f        3.12     *\n",cp5r,cp6r);
-  printf("* TClonesArray(TObjHit)         %6.2f        1.36    %6.2f        1.92     *\n",cp8r,cp9r);
-  printf("* TClonesArray(TObjHit) split   %6.2f        1.36    %6.2f        1.93     *\n",cp10r,cp11r);
+  printf("* vector<THit>                  %6.2f        2.29    %6.2f        3.46     *\n",cp2r,cp3r);
+  printf("* vector<THit*>                 %6.2f        2.10    %6.2f        3.32     *\n",cp5r,cp6r);
+  printf("* TClonesArray(TObjHit)         %6.2f        1.31    %6.2f        1.92     *\n",cp8r,cp9r);
+  printf("* TClonesArray(TObjHit) split   %6.2f        1.31    %6.2f        1.93     *\n",cp10r,cp11r);
   printf("******************************************************************************\n");
   printf("* Total CPU time              %8.2f    %8.2f                           *\n",cptot,cpref);
   printf("* Estimated ROOTMARKS         %8.2f      200.00                           *\n",rootmarks);
@@ -380,5 +380,4 @@ int main(int argc, char** argv)
 
    theApp->Run();
 
-   return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.82 2002/01/15 10:31:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.53 2001/06/21 10:03:16 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -13,7 +13,6 @@
 #include "TTreeFormula.h"
 #include "TTree.h"
 #include "TBranch.h"
-#include "TBranchObject.h"
 #include "TFunction.h"
 #include "TLeafC.h"
 #include "TLeafObject.h"
@@ -28,60 +27,13 @@
 #include "TBranchElement.h"
 #include "TLeafElement.h"
 #include "TArrayI.h"
-#include "TAxis.h"
-#include "TError.h"
 
 #include <stdio.h>
 #include <math.h>
 
 const Int_t kMaxLen     = 512;
-R__EXTERN TTree *gTree;
 
 ClassImp(TTreeFormula)
-
-//______________________________________________________________________________
-//
-// TTreeFormula now relies on a variety of TFormLeafInfo classes to handle the
-// reading of the information.  Here is the list of theses classes:
-//   TFormLeafInfo
-//   TFormLeafInfoDirect
-//   TFormLeafInfoClones
-//   TFormLeafInfoPointer
-//   TFormLeafInfoMethod
-//   TFormLeafInfoMultiVarDim
-//
-// The following method are available from the TFormLeafInfo interface:
-//
-//  AddOffset(Int_t offset, TStreamerElement* element)  
-//  GetCounterValue(TLeaf* leaf) : return the size of the array pointed to.
-//  GetObjectAddress(TLeafElement* leaf) : Returns the the location of the object pointed to.
-//  GetMultiplicity() : Returns info on the variability of the number of elements
-//  GetNdata(TLeaf* leaf) : Returns the number of elements
-//  GetNdata() : Used by GetNdata(TLeaf* leaf)
-//  GetValue(TLeaf *leaf, Int_t instance = 0) : Return the value
-//  GetValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value
-//  GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value of 'this' LeafInfo
-//  IsString()
-//  ReadValue(char *where, Int_t instance = 0) : Internal function to interpret the location 'where'
-//  Update() : react to the possible loading of a shared library.
-//  
-//  
-
-
-//______________________________________________________________________________
-//
-// This class is a small helper class to help in keeping track of the array 
-// dimensions encountered in the analysis of the expression.
-class DimensionInfo : public TObject {
-public:
-  Int_t fCode;
-  Int_t fSize;
-  TFormLeafInfoMultiVarDim* fMultiDim;
-  DimensionInfo(Int_t code, Int_t size, TFormLeafInfoMultiVarDim* multiDim) 
-    : fCode(code), fSize(size), fMultiDim(multiDim) {};
-  ~DimensionInfo() {};
-};
-
 
 //______________________________________________________________________________
 //
@@ -94,7 +46,7 @@ public:
    TFormLeafInfo(TClass* classptr = 0, Long_t offset = 0,
                  TStreamerElement* element = 0) :
      fClass(classptr),fOffset(offset),fElement(element),
-     fCounter(0), fNext(0),fMultiplicity(0) {
+     fCounter(0), fNext(0) {
      if (fClass) fClassName = fClass->GetName();
      if (fElement) {
        fElementName = fElement->GetName();
@@ -113,13 +65,8 @@ public:
    TFormLeafInfo    *fNext;    // follow this to grab the inside information
    TString fClassName;
    TString fElementName;
-protected:
-   Int_t fMultiplicity; 
-public:
 
    virtual void AddOffset(Int_t offset, TStreamerElement* element) {
-      // Increase the offset of this element.  This intended to be the offset
-      // from the start of the object to which the data member belongs.
       fOffset += offset;
       fElement = element;
       if (fElement ) {
@@ -127,12 +74,8 @@ public:
          fElementName.Append(".").Append(element->GetName());
       }
    }
-
    virtual Int_t     GetCounterValue(TLeaf* leaf);
-
    inline char*      GetObjectAddress(TLeafElement* leaf) {
-      // Returns the the location of the object pointed to.
-
       char* thisobj = 0;
       TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
       TStreamerInfo * info = branch->GetInfo();
@@ -184,36 +127,8 @@ public:
       } else thisobj = branch->GetObject();
       return thisobj;
    }
-
-   Int_t GetMultiplicity() {
-      // Reminder of the meaning of fMultiplicity:
-      //  -1: Only one or 0 element per entry but contains variable length array!
-      //   0: Only one element per entry, no variable length array
-      //   1: loop over the elements of a variable length array
-      //   2: loop over elements of fixed length array (nData is the same for all entry)
-     
-      // Currently only TFormLeafInfoCast uses this field.
-      return fMultiplicity;
-   }
-
-   // Currently only implemented in TFormLeafInfoCast
-   Int_t GetNdata(TLeaf* leaf) {
-     GetCounterValue(leaf);
-     GetValue(leaf);
-     return GetNdata();
-   }; 
-   virtual Int_t GetNdata() {
-     if (fNext) return fNext->GetNdata();
-     return 1;
-   }
-
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
-
    virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetValuePointer(char  *from, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer( char *from, Int_t instance = 0);
-
    virtual Bool_t    IsString() {
       if (fNext) return fNext->IsString();
       if (!fElement) return kFALSE;
@@ -221,48 +136,15 @@ public:
       switch (fElement->GetType()) {
         // basic types
       case kChar_t:
-        // This is new in ROOT 3.02/05
-         return kFALSE;
       case TStreamerInfo::kOffsetL + kChar_t:
-        // This is new in ROOT 3.02/05
-         return kTRUE;
-      case TStreamerInfo::kCharStar:
          return kTRUE;
       default:
          return kFALSE;
       }
    }
-
-   virtual Bool_t    IsInteger() const {
-      if (fNext) return fNext->IsInteger();
-      if (!fElement) return kFALSE;
-      switch (fElement->GetType()) {
-         // basic types
-      case kchar:
-      case kChar_t:
-      case kUChar_t:
-      case kShort_t:
-      case kUShort_t:
-      case kInt_t:
-      case kUInt_t:
-      case kLong_t:
-      case kULong_t:
-         return kTRUE;
-      case kFloat_t:
-      case kDouble_t:
-         return kFALSE;
-      default: 
-	 return kFALSE;
-      }
-   }
-
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
 
    virtual Bool_t    Update() {
-      // We reloading all cached information in case the underlying class
-      // information has changed (for example when changing from the 'fake'
-      // class to the real class.
-     
       if (fClass) {
         TClass * new_class = gROOT->GetClass(fClassName);
         if (new_class==fClass) {
@@ -328,218 +210,6 @@ Int_t TFormLeafInfo::GetCounterValue(TLeaf* leaf) {
    return (Int_t)fCounter->GetValue(leaf);
 }
 
-//______________________________________________________________________________
-void* TFormLeafInfo::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
-{
-   // returns the address of the value pointed to by the 
-   // TFormLeafInfo.
-
-   char *thisobj = 0;
-   if (leaf->InheritsFrom("TLeafObject") ) {
-      thisobj = (char*)((TLeafObject*)leaf)->GetObject();
-   } else {
-      thisobj = GetObjectAddress((TLeafElement*)leaf);
-   }
-   return GetLocalValuePointer(thisobj, instance);
-}
-
-void* TFormLeafInfo::GetValuePointer(TLeaf *leaf, Int_t instance)
-{
-   // returns the address of the value pointed to by the 
-   // serie of TFormLeafInfo.
-
-   char *thisobj = (char*)GetLocalValuePointer(leaf,instance);
-   if (fNext) return fNext->GetValuePointer(thisobj,instance);
-   else return thisobj;
-}
-
-//______________________________________________________________________________
-void* TFormLeafInfo::GetValuePointer(char *thisobj, Int_t instance)
-{
-   // returns the address of the value pointed to by the 
-   // TFormLeafInfo.
-
-   char *where = (char*)GetLocalValuePointer(thisobj,instance);
-   if (fNext) return fNext->GetValuePointer(where,instance);
-   else return where;
-}
-
-//______________________________________________________________________________
-void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
-{
-   // returns the address of the value pointed to by the 
-   // TFormLeafInfo.
-
-   switch (fElement->GetType()) {
-         // basic types
-      case kChar_t:
-      case kUChar_t:
-      case kShort_t:
-      case kUShort_t:
-      case kInt_t:
-      case kUInt_t:
-      case kLong_t:
-      case kULong_t:
-      case kFloat_t:
-      case kDouble_t:
-      case kchar:
-      case TStreamerInfo::kCounter:
-                      return (Int_t*)(thisobj+fOffset);
-
-         // array of basic types  array[8]
-      case TStreamerInfo::kOffsetL + kChar_t :
-         {Char_t *val   = (Char_t*)(thisobj+fOffset);   return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kShort_t:
-         {Short_t *val  = (Short_t*)(thisobj+fOffset);  return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kInt_t:
-         {Int_t *val    = (Int_t*)(thisobj+fOffset);    return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kLong_t:
-         {Long_t *val   = (Long_t*)(thisobj+fOffset);   return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kFloat_t:
-         {Float_t *val  = (Float_t*)(thisobj+fOffset);  return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kDouble_t:
-         {Double_t *val = (Double_t*)(thisobj+fOffset); return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kUChar_t:
-         {UChar_t *val  = (UChar_t*)(thisobj+fOffset);  return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kUShort_t:
-         {UShort_t *val = (UShort_t*)(thisobj+fOffset); return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kUInt_t:
-         {UInt_t *val   = (UInt_t*)(thisobj+fOffset);   return &(val[instance]);}
-      case TStreamerInfo::kOffsetL + kULong_t:
-         {ULong_t *val  = (ULong_t*)(thisobj+fOffset);  return &(val[instance]);}
-
-         // pointer to an array of basic types  array[n]
-      case TStreamerInfo::kOffsetP + kChar_t:
-         {Char_t **val   = (Char_t**)(thisobj+fOffset);   return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kShort_t:
-         {Short_t **val  = (Short_t**)(thisobj+fOffset);  return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kInt_t:
-         {Int_t **val    = (Int_t**)(thisobj+fOffset);    return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kLong_t:
-         {Long_t **val   = (Long_t**)(thisobj+fOffset);   return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kFloat_t:
-         {Float_t **val  = (Float_t**)(thisobj+fOffset);  return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kDouble_t:
-         {Double_t **val = (Double_t**)(thisobj+fOffset); return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kUChar_t:
-         {UChar_t **val  = (UChar_t**)(thisobj+fOffset);  return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kUShort_t:
-         {UShort_t **val = (UShort_t**)(thisobj+fOffset); return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kUInt_t:
-         {UInt_t **val   = (UInt_t**)(thisobj+fOffset);   return &((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kULong_t:
-         {ULong_t **val  = (ULong_t**)(thisobj+fOffset);  return &((*val)[instance]);}
-
-      case TStreamerInfo::kCharStar:
-         {char **stringp = (char**)(thisobj+fOffset); return *stringp;} 
-
-      case TStreamerInfo::kObjectp:
-      case TStreamerInfo::kObjectP:
-        {TObject **obj = (TObject**)(thisobj+fOffset);   return *obj; }
-
-      case TStreamerInfo::kObject:
-      case TStreamerInfo::kTString:
-      case TStreamerInfo::kTNamed:
-      case TStreamerInfo::kTObject:
-      case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
-      case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
-      case TStreamerInfo::kAny:
-        {TObject *obj = (TObject*)(thisobj+fOffset);   return obj; }
-
-      case kOther_t:
-      default:        return 0;
-   }
-
-}
-
-
-//______________________________________________________________________________
-Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
-{
-//*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
-//*-*            ====================================
-//
-
-   char *thisobj = 0;
-   if (leaf->InheritsFrom("TLeafObject") ) {
-      thisobj = (char*)((TLeafObject*)leaf)->GetObject();
-   } else {
-      thisobj = GetObjectAddress((TLeafElement*)leaf);
-   }
-   return ReadValue(thisobj,instance);
-}
-
-//______________________________________________________________________________
-Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
-{
-   if (fNext) return fNext->ReadValue(thisobj+fOffset,instance);
-   //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetType(),instance,1);
-   switch (fElement->GetType()) {
-         // basic types
-      case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+fOffset));
-      case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+fOffset));
-      case kShort_t:  return (Double_t)(*(Short_t*)(thisobj+fOffset));
-      case kUShort_t: return (Double_t)(*(UShort_t*)(thisobj+fOffset));
-      case kInt_t:    return (Double_t)(*(Int_t*)(thisobj+fOffset));
-      case kUInt_t:   return (Double_t)(*(UInt_t*)(thisobj+fOffset));
-      case kLong_t:   return (Double_t)(*(Long_t*)(thisobj+fOffset));
-      case kULong_t:  return (Double_t)(*(ULong_t*)(thisobj+fOffset));
-      case kFloat_t:  return (Double_t)(*(Float_t*)(thisobj+fOffset));
-      case kDouble_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
-      case kchar:     return (Double_t)(*(char*)(thisobj+fOffset));
-      case TStreamerInfo::kCounter:
-                      return (Double_t)(*(Int_t*)(thisobj+fOffset));
-
-         // array of basic types  array[8]
-      case TStreamerInfo::kOffsetL + kChar_t :
-         {Char_t *val   = (Char_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kShort_t:
-         {Short_t *val  = (Short_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kInt_t:
-         {Int_t *val    = (Int_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kLong_t:
-         {Long_t *val   = (Long_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kFloat_t:
-         {Float_t *val  = (Float_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kDouble_t:
-         {Double_t *val = (Double_t*)(thisobj+fOffset); return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kUChar_t:
-         {UChar_t *val  = (UChar_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kUShort_t:
-         {UShort_t *val = (UShort_t*)(thisobj+fOffset); return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kUInt_t:
-         {UInt_t *val   = (UInt_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
-      case TStreamerInfo::kOffsetL + kULong_t:
-         {ULong_t *val  = (ULong_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
-
-         // pointer to an array of basic types  array[n]
-      case TStreamerInfo::kOffsetP + kChar_t:
-         {Char_t **val   = (Char_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kShort_t:
-         {Short_t **val  = (Short_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kInt_t:
-         {Int_t **val    = (Int_t**)(thisobj+fOffset);    return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kLong_t:
-         {Long_t **val   = (Long_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kFloat_t:
-         {Float_t **val  = (Float_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kDouble_t:
-         {Double_t **val = (Double_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kUChar_t:
-         {UChar_t **val  = (UChar_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kUShort_t:
-         {UShort_t **val = (UShort_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kUInt_t:
-         {UInt_t **val   = (UInt_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
-      case TStreamerInfo::kOffsetP + kULong_t:
-         {ULong_t **val  = (ULong_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
-
-      case kOther_t:
-      default:        return 0;
-   }
-}
-
-//______________________________________________________________________________
 //
 // This class is a small helper class to implement reading a data member
 // on an object stored in a TTree.
@@ -559,17 +229,14 @@ public:
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) {
       return leaf->GetValue(instance);
    }
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) {
+   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0) {
       if (leaf->IsA() != TLeafElement::Class()) {
          return leaf->GetValuePointer();
       } else {
          return GetObjectAddress((TLeafElement*)leaf);
       }
    }
-   virtual void     *GetLocalValuePointer(char *thisobj, Int_t instance = 0) {
-      // Note this should probably never be executed.
-      return TFormLeafInfo::GetLocalValuePointer(thisobj,instance);
-   }
+
 };
 
 //______________________________________________________________________________
@@ -577,25 +244,14 @@ public:
 // This class is a small helper class to implement reading a data member
 // on a TClonesArray object stored in a TTree.
 
-
-static TStreamerElement gFakeClonesElem("begin","fake",0,
-                                        TStreamerInfo::kAny,"TClonesArray");
-
 class TFormLeafInfoClones : public TFormLeafInfo {
 public:
-   Bool_t fTop;  //If true, it indicates that the branch itself contains
-              //either the clonesArrays or something inside the clonesArray
    TFormLeafInfoClones(TClass* classptr = 0, Long_t offset = 0,
-                       TStreamerElement* element = &gFakeClonesElem,
-                       Bool_t top = kFALSE) :
-     TFormLeafInfo(classptr,offset,element),fTop(top) {};
+                       TStreamerElement* element = 0) :
+     TFormLeafInfo(classptr,offset,element) {};
    virtual Int_t     GetCounterValue(TLeaf* leaf);
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
 };
 
 //______________________________________________________________________________
@@ -603,7 +259,7 @@ Int_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf) {
    // Return the current size of the the TClonesArray
 
    if (!fCounter) return 1;
-   return (Int_t)fCounter->ReadValue((char*)GetLocalValuePointer(leaf)) + 1;
+   return (Int_t)fCounter->ReadValue((char*)GetValuePointer(leaf,0)) + 1;
 }
 //______________________________________________________________________________
 Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance) {
@@ -628,35 +284,13 @@ Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance) {
 }
 
 //______________________________________________________________________________
-void* TFormLeafInfoClones::GetLocalValuePointer(TLeaf *leaf, Int_t instance) {
-   // Return the pointer to the clonesArray
-
-   TClonesArray * clones;
-   if (fTop) {
-     if (leaf->InheritsFrom("TLeafObject") ) {
-        clones = (TClonesArray*)((TLeafObject*)leaf)->GetObject();
-     } else {
-        clones = (TClonesArray*)((TBranchElement*)leaf->GetBranch())->GetObject();
-     }
-   } else {
-     clones = (TClonesArray*)TFormLeafInfo::GetLocalValuePointer(leaf);
-   }
-   return clones;
-}
-
-//______________________________________________________________________________
-void* TFormLeafInfoClones::GetLocalValuePointer(char *where, Int_t instance) {
-   return TFormLeafInfo::GetLocalValuePointer(where,instance);
-}
-
-//______________________________________________________________________________
 Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
    // Return the value of the underlying data member inside the
    // clones array.
 
    if (fNext==0) return 0;
    Int_t len,index,sub_instance;
-   len = (fNext->fElement==0)? 0 : fNext->fElement->GetArrayLength();
+   len = fNext->fElement->GetArrayLength();
    if (len) {
       index = instance / len;
       sub_instance = instance % len;
@@ -664,8 +298,7 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
       index = instance;
       sub_instance = 0;
    }
-   TClonesArray *clones = (TClonesArray*)GetLocalValuePointer(leaf);
-
+   TClonesArray * clones = (TClonesArray*)GetValuePointer(leaf);
    // Note we take advantage of having only one physically variable
    // dimension:
    char * obj = (char*)clones->UncheckedAt(index);
@@ -673,54 +306,9 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
 }
 
 //______________________________________________________________________________
-void * TFormLeafInfoClones::GetValuePointer(TLeaf *leaf, Int_t instance) {
-   // Return the pointer to the clonesArray
-  
-   TClonesArray * clones = (TClonesArray*)GetLocalValuePointer(leaf);
-   if (fNext) {
-     // Same as in TFormLeafInfoClones::GetValue
-     Int_t len,index,sub_instance;
-     len = (fNext->fElement==0)? 0 : fNext->fElement->GetArrayLength();
-     if (len) {
-       index = instance / len;
-       sub_instance = instance % len;
-     } else {
-       index = instance;
-       sub_instance = 0;
-     }
-     return fNext->GetValuePointer((char*)clones->UncheckedAt(index),
-                                   sub_instance);
-   }
-   return clones;
-}
-
-//______________________________________________________________________________
-void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance) {
-   // Return the pointer to the clonesArray
-  
-  TClonesArray * clones = (TClonesArray*) where;
-   if (fNext) {
-     // Same as in TFormLeafInfoClones::GetValue
-     Int_t len,index,sub_instance;
-     len = (fNext->fElement==0)? 0 : fNext->fElement->GetArrayLength();
-     if (len) {
-       index = instance / len;
-       sub_instance = instance % len;
-     } else {
-       index = instance;
-       sub_instance = 0;
-     }
-     return fNext->GetValuePointer((char*)clones->UncheckedAt(index),
-                                   sub_instance);
-   }
-   return clones;
-}
-
-
-//______________________________________________________________________________
 //
 // This class is a small helper class to implement reading a data member
-// by following a pointer inside a branch of TTree.
+// on a TClonesArray object stored in a TTree.
 
 class TFormLeafInfoPointer : public TFormLeafInfo {
 public:
@@ -759,21 +347,20 @@ public:
       // Return the value of the underlying pointer data member
 
       if (!fNext) return 0;
-      char * where = (char*)GetLocalValuePointer(leaf,instance);
+      char * where = (char*)GetValuePointer(leaf,instance);
       return fNext->ReadValue(where,instance);
    };
 };
 
 //______________________________________________________________________________
 //
-// This class is a small helper class to implement executing a method of an 
-// object stored in a TTre
+// This class is a small helper class to implement reading a data member
+// on a TClonesArray object stored in a TTree.
 
 class TFormLeafInfoMethod : public TFormLeafInfo {
    TMethodCall *fMethod;
    TString fMethodName;
    TString fParams;
-   Double_t fResult;
 public:
 
    TFormLeafInfoMethod(TClass* classptr = 0, TMethodCall *method = 0) :
@@ -784,106 +371,35 @@ public:
       }
    };
 
-   virtual Bool_t    IsInteger() const {
-      TMethodCall::EReturnType r = fMethod->ReturnType();
-      if (r == TMethodCall::kLong) {
-	return kTRUE;
-      } else return kFALSE;
-   }
-
-   virtual Bool_t    IsString() {
-      TMethodCall::EReturnType r = fMethod->ReturnType();
-      return (r==TMethodCall::kString);
-   }
-
    virtual Bool_t Update() {
       if (!TFormLeafInfo::Update()) return kFALSE;
       delete fMethod;
       fMethod = new TMethodCall(fClass, fMethodName, fParams);
       return kTRUE;
    }
-
-   virtual void *GetLocalValuePointer( TLeaf *from, Int_t instance = 0) {
-      // This is implemented here because some compiler want ALL the 
-      // signature of an overloaded function to be re-implemented.
-      return TFormLeafInfo::GetLocalValuePointer( from, instance);
-   }
-
-   virtual void *GetLocalValuePointer( char *from, Int_t instance = 0) {
-
-      void *thisobj = from;
-      if (!thisobj) return 0;
-
-      TMethodCall::EReturnType r = fMethod->ReturnType();
-      fResult = 0;
-
-      if (r == TMethodCall::kLong) {
-         Long_t l;
-         fMethod->Execute(thisobj, l);
-         fResult = (Double_t) l;
-         // Get rid of temporary return object.
-         gInterpreter->ClearStack();
-         return &fResult;
-
-      } else if (r == TMethodCall::kDouble) {
-         Double_t d;
-         fMethod->Execute(thisobj, d);
-         fResult = (Double_t) d;
-         // Get rid of temporary return object.
-         gInterpreter->ClearStack();
-         return &fResult;
-
-      } else if (r == TMethodCall::kString) {
-         char *returntext = 0;
-         fMethod->Execute(thisobj,&returntext);
-         gInterpreter->ClearStack();
-         return returntext;
-
-      } else if (fNext) {
-         char * char_result = 0;
-         fMethod->Execute(thisobj, &char_result);
-         gInterpreter->ClearStack();
-         Warning("TTreeFormula","Temporary object have been deleted before possible usage!");
-         return char_result;
-
-      }
-      return 0;
-    }
-
    virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
       // Execute the method on the given address
 
       void *thisobj = where;
-      if (!thisobj) return 0;
-
       TMethodCall::EReturnType r = fMethod->ReturnType();
-      Double_t result = 0;
-      
+
       if (r == TMethodCall::kLong) {
          Long_t l;
          fMethod->Execute(thisobj, l);
-         result = (Double_t) l;
-
-      } else if (r == TMethodCall::kDouble) {
+         return (Double_t) l;
+      }
+      if (r == TMethodCall::kDouble) {
          Double_t d;
          fMethod->Execute(thisobj, d);
-         result = (Double_t) d;
-
-      } else if (r == TMethodCall::kString) {
-         char *returntext = 0;
-         fMethod->Execute(thisobj,&returntext);
-         result = (long) returntext;
-
-      } else if (fNext) {
-         char * char_result = 0;
-         fMethod->Execute(thisobj, &char_result);
-         result = fNext->ReadValue(char_result,instance);
-
+         return (Double_t) d;
+      }
+      if (fNext) {
+        char * result = 0;
+        fMethod->Execute(thisobj, &result);
+        return fNext->ReadValue(result,instance);
       } else fMethod->Execute(thisobj);
 
-      // Get rid of temporary return object.
-      gInterpreter->ClearStack();
-      return result;
+      return 0;
    }
 };
 
@@ -973,60 +489,6 @@ public:
 
 //______________________________________________________________________________
 //
-// This class is a small helper class to implement casting an object to a 
-// different type (equivalent to dynamic_cast) 
-
-class TFormLeafInfoCast : public TFormLeafInfo {
-public:
-   TClass *fCasted;     //! Pointer to the class we are trying to case to
-   TString fCastedName; //! Name of the class we are casting to.
-   Bool_t  fGoodCast;   //! Marked by ReadValue.
-   Bool_t  fIsTObject;  //! Indicated whether the fClass inherits from TObject.
-
-   TFormLeafInfoCast(TClass* classptr = 0, TClass* casted = 0) :
-     TFormLeafInfo(classptr),fCasted(casted),fGoodCast(kTRUE) {
-     if (casted) { fCastedName = casted->GetName(); };
-     fMultiplicity = -1;
-     fIsTObject = fClass->InheritsFrom(TObject::Class());
-   };
-   virtual ~TFormLeafInfoCast() { };
-
-   // Currently only implemented in TFormLeafInfoCast
-   virtual Int_t GetNdata() { 
-     if (!fGoodCast) return 0;
-     if (fNext) return fNext->GetNdata();
-     return 1;
-   }; 
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
-      if (!fNext) return 0;
-      
-      // First check that the real class inherits from the 
-      // casted class
-      // First assume TObject ...
-      if ( fIsTObject && !((TObject*)where)->InheritsFrom(fCasted) ) {
-         fGoodCast = kFALSE;
-         return 0;
-      } else {
-        // We know we have a TBranchElement and we need to find out the
-        // real class name.
-      }
-      fGoodCast = kTRUE;
-      return fNext->ReadValue(where,instance);
-   }
-
-   virtual Bool_t    Update() {
-     if (fCasted) {
-        TClass * new_class = gROOT->GetClass(fCastedName);
-        if (new_class!=fCasted) {
-           fCasted = new_class;
-        }
-     }       
-     return TFormLeafInfo::Update();
-   }
-};
-
-//______________________________________________________________________________
-//
 //     A TreeFormula is used to pass a selection expression
 //     to the Tree drawing routine. See TTree::Draw
 //
@@ -1046,7 +508,6 @@ TTreeFormula::TTreeFormula(): TFormula(),fMultiVarDim(kFALSE)
    fLookupType = 0;
    fNindex     = 0;
    fNcodes     = 0;
-   fAxis       = 0;
 }
 
 //______________________________________________________________________________
@@ -1062,7 +523,6 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    fLookupType   = new Int_t[fNindex];
    fNcodes       = 0;
    fMultiplicity = 0;
-   fAxis         = 0;
    Int_t i,j,k;
 
    for (j=0; j<kMAXCODES; j++) {
@@ -1081,42 +541,8 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       fVirtUsedSizes[k] = 1;
       fVarDims[k] = 0;
    }
-   
-   fDimensionSetup = new TList;
 
-   if (Compile(expression)) {fTree = 0; fNdim = 0; return; }
-   { 
-      // Now that we saw all the expressions and variables AND that
-      // we know whether arrays of chars are treated as string or
-      // not, we can properly setup the dimensions.
-      TIter next(fDimensionSetup);
-      Int_t last_code = -1;
-      Int_t virt_dim = 0;
-      Int_t high_dim = 0;
-      for(DimensionInfo * info; (info = (DimensionInfo*)next()); ) {
-         if (last_code!=info->fCode) {
-            // We know that the list is ordered by code number then by 
-            // dimension.  Thus a different code means that we need to
-            // restart at the lowest dimensions.
-            virt_dim = 0;
-            last_code = info->fCode;
-            high_dim = fNdimensions[last_code];
-            fNdimensions[last_code] = 0;
-         }
-         if (fOper[last_code]>=105000 && high_dim==(1+fNdimensions[last_code])) {
-            // We have a string used as a string (and not an array of number) 
-            info->fSize = 1; // Maybe this should actually do nothing!
-         } else {
-            DefineDimensions(info->fCode,info->fSize, info->fMultiDim, virt_dim);
-         }
-      }
-   }
-    
-   // Compile will set fMultiplicity to -1 in case one (or more) of the
-   // variable are casted.  Let's record this information.
-   Bool_t hasCast = (fMultiplicity==-1);
-   fMultiplicity = 0;
-     
+   if (Compile(expression)) {fTree = 0; return; }
    if (fNcodes >= kMAXFOUND) {
       Warning("TTreeFormula","Too many items in expression:%s",expression);
       fNcodes = kMAXFOUND;
@@ -1124,28 +550,11 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    SetName(name);
    for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
-  
+      //TLeaf *leaf = GetLeaf(i);
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-
-      if (fOper[i] >= 105000) {
-         // We have a string used as a string
-        
-         // This dormant portion of code would be used if (when?) we allow the histogramming
-         // of the integral content (as opposed to the string content) of strings 
-         // held in a variable size container delimited by a null (as opposed to 
-         // a fixed size container or variable size container whose size is controlled
-         // by a variable).  In GetNdata, we will then use strlen to grab the current length.
-         //fCumulSizes[i][fNdimensions[i]-1] = 1;
-         //fUsedSizes[fNdimensions[i]-1] = -TMath::Abs(fUsedSizes[fNdimensions[i]-1]);
-         //fUsedSizes[0] = - TMath::Abs( fUsedSizes[0]);
-
-         if (fNcodes == 1) {
-            // If the string is by itself, then it can safely be histogrammed as
-            // in a string based axis.  To histogram the number inside the string
-            // just make part of a useless expression (for example: mystring+0)
-            SetBit(kIsCharacter);
-         }
-      }      
+      if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
+      if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
+      if (IsString(i)) SetBit(kIsCharacter);
 
       // Reminder of the meaning of fMultiplicity:
       //  -1: Only one or 0 element per entry but contains variable length array!
@@ -1211,11 +620,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       // Case of a fixed length array that have one of its indices given
       // by a variable.
       fMultiplicity = 1;
-   } else if (fMultiplicity==0 && hasCast) {
-      fMultiplicity = -1;
    }
-
-    
 
 }
 
@@ -1225,7 +630,7 @@ TTreeFormula::~TTreeFormula()
 //*-*-*-*-*-*-*-*-*-*-*Tree Formula default destructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
 
-   fLeafNames.Delete();
+   fNames.Delete();
    fDataMembers.Delete();
    if (fLookupType) delete [] fLookupType;
    for (int j=0; j<fNcodes; j++) {
@@ -1239,14 +644,11 @@ TTreeFormula::~TTreeFormula()
       fVarDims[l] = 0;
    }
    if (fCumulUsedVarDims) delete fCumulUsedVarDims;
-   if (fDimensionSetup) {
-     fDimensionSetup->Delete();
-     delete fDimensionSetup;
-   }
+
 }
 
 //______________________________________________________________________________
-void TTreeFormula::DefineDimensions(const char *info, Int_t code) {
+void TTreeFormula::DefineDimensions(const char *info, Int_t code, Int_t& virt_dim) {
   // This method is used internally to decode the dimensions of the variables
 
    // We assume that there are NO white spaces in the info string
@@ -1267,7 +669,7 @@ void TTreeFormula::DefineDimensions(const char *info, Int_t code) {
 
       if (scanindex==0) size = -1;
 
-      DefineDimensions(code, size);
+      DefineDimensions(code, size, virt_dim);
 
       if (fNdimensions[code] >= kMAXFORMDIM) {
          // NOTE: test that fNdimensions[code] is NOT too big!!
@@ -1279,27 +681,9 @@ void TTreeFormula::DefineDimensions(const char *info, Int_t code) {
 
 }
 
-
 //______________________________________________________________________________
-void TTreeFormula::DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim) {
-   // This method is store the dimension information for later usage.
-
-   DimensionInfo * info = new DimensionInfo(code,size,multidim);
-   fDimensionSetup->Add(info);
-   fCumulSizes[code][fNdimensions[code]] = size;
-   fNdimensions[code] ++;
-}
-
-//______________________________________________________________________________
-void TTreeFormula::DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim) {
+void TTreeFormula::DefineDimensions(Int_t code, Int_t size, Int_t& virt_dim) {
    // This method is used internally to decode the dimensions of the variables
-
-   if (info) {
-      if (fIndexes[code][info->fDim]<0) {
-         info->fVirtDim = virt_dim;
-         if (!fVarDims[virt_dim]) fVarDims[virt_dim] = new TArrayI;
-      }
-   }
 
    Int_t vsize = 0;
 
@@ -1346,7 +730,7 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVa
 }
 
 //______________________________________________________________________________
-void TTreeFormula::DefineDimensions(Int_t code, TFormLeafInfo *leafinfo) {
+void TTreeFormula::DefineDimensions(Int_t code, TFormLeafInfo *leafinfo,  Int_t& virt_dim) {
    // This method is used internally to decode the dimensions of the variables
 
    Int_t ndim, size, current;
@@ -1379,21 +763,11 @@ void TTreeFormula::DefineDimensions(Int_t code, TFormLeafInfo *leafinfo) {
       ndim = elem->GetArrayDim();
       size = elem->GetMaxIndex(0);
 
-   } else if ( elem->GetType()== TStreamerInfo::kCharStar) {
-     
-      // When we implement being able to read the length from
-      // strlen, we will have:
-      // ndim = 1;
-      // size = -1;
-      // until then we more or so die:
-      ndim = 1;
-      size = 0;
-     
    } else return;
 
    current = 0;
    do {
-      DefineDimensions(code, size);
+      DefineDimensions(code, size, virt_dim);
 
       if (fNdimensions[code] >= kMAXFORMDIM) {
          // NOTE: test that fNdimensions[code] is NOT too big!!
@@ -1407,7 +781,7 @@ void TTreeFormula::DefineDimensions(Int_t code, TFormLeafInfo *leafinfo) {
 }
 
 //______________________________________________________________________________
-void TTreeFormula::DefineDimensions(Int_t code, TBranchElement *branch) {
+void TTreeFormula::DefineDimensions(Int_t code, TBranchElement *branch,  Int_t& virt_dim) {
    // This method is used internally to decode the dimensions of the variables
 
    TBranchElement * leafcount2 = branch->GetBranchCount2();
@@ -1420,11 +794,11 @@ void TTreeFormula::DefineDimensions(Int_t code, TBranchElement *branch) {
       info->fCounter = new TFormLeafInfoDirect(branch->GetBranchCount());
       info->fCounter2 = new TFormLeafInfoDirect(leafcount2);
       info->fDim = fNdimensions[code];
-      //if (fIndexes[code][info->fDim]<0) {
-      //  info->fVirtDim = virt_dim;
-      //  if (!fVarDims[virt_dim]) fVarDims[virt_dim] = new TArrayI;
-      //}
-      DefineDimensions(code,-1, info);
+      if (fIndexes[code][info->fDim]<0) {
+        info->fVirtDim = virt_dim;
+        if (!fVarDims[virt_dim]) fVarDims[virt_dim] = new TArrayI;
+      }
+      DefineDimensions(code,-1,virt_dim);
    }
 }
 
@@ -1483,50 +857,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    TBranch *branch=0, *tmp_branch=0;
 
    Bool_t final = kFALSE;
-
-   UInt_t paran_level = 0;
-   TObjArray castqueue;
-  
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
       // We will treated the terminator as a token.
       *current++ = cname[i];
-      
-      if (cname[i] == ')') {
-         if (paran_level==0) {
-            Error("DefinedVariable","Unmatched paranthesis in %s",name.Data());
-            return -1;
-         }
-         // Let's see if work is a classname.
-         *(--current) = 0;
-         TString cast_name = gInterpreter->TypeName(work);
-         TClass *cast_cl = gROOT->GetClass(cast_name);
-         if (cast_cl) {
-            // We must have a cast
-            castqueue.AddAtAndExpand(cast_cl,paran_level);
-            current = &(work[0]);
-            *current = 0;
-            //            Warning("DefinedVariable","Found cast to %s",cast_name.Data());
-            paran_level--;
-            continue;
-         } else if (gROOT->GetType(cast_name)) {
-            current = &(work[0]);
-            *current = 0;
-            Warning("DefinedVariable",
-                    "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
-            paran_level--;
-            continue;
-         }
-         // if it is not a cast, we just ignore the closing paranthesis.
-         paran_level--;
-      }
+
+      // Check if we have the beginning of a function call
       if (cname[i] == '(') {
-         if (current==work+1) {
-            // If the expression starts with a paranthesis, we are likely
-            // to have a cast operator inside. 
-            paran_level++;
-            current--;
-            continue;
-         } 
          // Right now we do not allow nested paranthesis
          i++;
          while( cname[i]!=')' && cname[i] ) {
@@ -1539,23 +875,45 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             *params = 0; params++;
          } else params = (char *) ")";
 
-         if (branch && !leaf) {
-            // We have a branch but not a leaf.  We are likely to have found
-            // the top of splitted branch.
-            if (BranchHasMethod(0,branch,work,params,readentry)) {
-               //fprintf(stderr,"Does have a method %s for %s.\n",work,branch->GetName());
-            }
-         }
-         
          // What we have so far might be a member function of one of the
-         // leaves that are not splitted (for example "GetNtrack" for the Event class).
+         // leaves that are not splitted (for example "GetNtrack" for the Event class.
+         TClass * cl = 0;
          TIter next (fTree->GetIteratorOnAllLeaves());
          TLeaf *leafcur;
          while (!leaf && (leafcur = (TLeaf*)next())) {
-            if (BranchHasMethod(leafcur,leafcur->GetBranch(),work,params,readentry)) {
-               //fprintf(stderr,"Does have a method %s for %s found in leafcur %s.\n",work,leafcur->GetBranch()->GetName(),leafcur->GetName());
-               leaf = leafcur;
+            // The following code is used somewhere else, we need to factor it out.
+            if (leafcur->InheritsFrom("TLeafObject") ) {
+               TLeafObject *lobj = (TLeafObject*)leafcur;
+               cl = lobj->GetClass();
+            } else if (leafcur->InheritsFrom("TLeafElement") ) {
+               TBranchElement *BranchEl = (TBranchElement *)leafcur->GetBranch();
+               Int_t type = BranchEl->GetStreamerType();
+               if (type==-1) {
+                  cl =  BranchEl->GetInfo()->GetClass();
+               } else if (type>60) {
+                  // Case of an object data member.  Here we allow for the
+                  // variable name to be ommitted.  Eg, for Event.root with split
+                  // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
+                  cl =  BranchEl->GetInfo()->GetClass();
+                  TStreamerElement* element = (TStreamerElement*)
+                    cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
+                  cl = element->GetClassPointer();
+               }
             }
+            if (cl && cl->GetClassInfo() && cl->GetMethodAllAny(work)) {
+               // Let's try to see if the function we found belongs to the current
+               // class.  Note that this implementation currently can not work if
+               // one the argument is another leaf or data member of the object.
+               // (Anyway we do NOT support this case).
+               TMethodCall *method = new TMethodCall(cl, work, params);
+               if (method->GetMethod()) {
+                  // We have a method that works.
+                  // We will use it.
+                  leaf = leafcur;
+               }
+               delete method;
+            }
+            cl = 0;
          }
          if (!leaf) {
             // This actually not really any error, we probably received something
@@ -1572,6 +930,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          strcpy(right,work);
          strcat(right,"(");
          strcat(right,params);
+         //         i++;
          final = kTRUE;
          break;
       }
@@ -1587,31 +946,14 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             branch = fTree->FindBranch(first);
             leaf = fTree->FindLeaf(first);
 
-            // Now look with the delimiter removed (we looked with it first
+            // Look with the delimiter removed (we look with it first
             // because a dot is allowed at the end of some branches).
             if (cname[i]) first[strlen(first)-1]='\0';
             if (!branch) branch = fTree->FindBranch(first);
             if (!leaf) leaf = fTree->FindLeaf(first);
 
-            if (branch && cname[i] == '.') {
-               // If we have a branch that match a name preceded by a dot
-               // then we assume we are trying to drill down the branch and thus
-               // do not check if the leaf (eventually found) is terminal
-              
-               if (leaf==0) { 
-                  // Note we do not know (yet?) what (if anything) to do
-                  // for a TBranchObject branch.
-                  if (branch->InheritsFrom(TBranchElement::Class())
-                      && ((TBranchElement*)branch)->GetType() == 3) {
-                     // We have a TClonesArray branch.
-                     leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
-                  }
-               }
-
-               // we reset work
-               current = &(work[0]);
-            } else if (leaf || branch) {
-               if (leaf && leaf->IsOnTerminalBranch()) {
+            if (leaf || branch) {
+               if (leaf && leaf->IsOnTerminalBranch() ) {
                   // This is a non-object leaf, it should NOT be specified more except for
                   // dimensions.
                   final = kTRUE;
@@ -1621,8 +963,67 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             } else {
                // What we have so far might be a data member of one of the
                // leaves that are not splitted (for example "fNtrack" for the Event class.
-               TLeaf *leafcur = GetLeafWithDatamember(first,work,readentry);
-               if (leafcur) {
+               TClass * cl = 0;
+               TIter next (fTree->GetIteratorOnAllLeaves());
+               TLeaf *leafcur;
+               while ((leafcur = (TLeaf*)next())) {
+                  // The following code is used somewhere else, we need to factor it out.
+                  if (leafcur->InheritsFrom("TLeafObject") &&
+                      leafcur->GetBranch()->GetListOfBranches()->Last()==0) {
+                     TLeafObject *lobj = (TLeafObject*)leafcur;
+                     cl = lobj->GetClass();
+                  } else if (leafcur->InheritsFrom("TLeafElement") && leafcur->IsOnTerminalBranch()) {
+                     TLeafElement * lElem = (TLeafElement*) leafcur;
+                     if (lElem->IsOnTerminalBranch()) {
+                        TBranchElement *BranchEl = (TBranchElement *)leafcur->GetBranch();
+                        Int_t type = BranchEl->GetStreamerType();
+                        if (type==-1) {
+                           cl =  BranchEl->GetInfo()->GetClass();
+                        } else if (type>60) {
+                           cl =  BranchEl->GetInfo()->GetClass();
+                           TStreamerElement* element = (TStreamerElement*)
+                             cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
+                           cl = element->GetClassPointer();
+                        }
+                     }
+                  }
+                  if (cl ==  TClonesArray::Class()) {
+                     // we have a unsplit TClonesArray leaves
+                     TStreamerElement * begin = new TStreamerElement("begin","fake",0,
+                                                                     TStreamerInfo::kAny,"TClonesArray");
+                     TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, begin);
+                     leafcur->GetBranch()->GetEntry(readentry);
+                     TClonesArray * clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
+                     cl = clones->GetClass();
+                     delete clonesinfo;
+                  }
+                  if (cl) {
+                     Int_t offset;
+                     TStreamerInfo* info =  cl->GetStreamerInfo();
+                     TStreamerElement* element = info?info->GetStreamerElement(first,offset):0;
+                     if (!element) {
+                        TIter next( cl->GetStreamerInfo()->GetElements() );
+                        TStreamerElement * curelem;
+                        while ((curelem = (TStreamerElement*)next())) {
+                           if (curelem->GetClassPointer() ==  TClonesArray::Class()) {
+                              Int_t clones_offset;
+                              cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
+                              TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
+                              TBranch *branch = leafcur->GetBranch();
+                              branch->GetEntry(readentry);
+                              TClonesArray * clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
+                              delete clonesinfo;
+                              TClass *sub_cl = clones->GetClass();
+                              element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                              if (element) break;
+                           } // if clones array
+                        } // loop on elements
+                     }
+                     if (element) break;
+                     else cl = 0;
+                  }
+               }
+               if (cl) {
                   leaf = leafcur;
                   branch = leaf->GetBranch();
                   if (leaf->IsOnTerminalBranch()) {
@@ -1631,20 +1032,9 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                      //We need to put the delimiter back!
                      if (cname[i]=='.') strcat(right,".");
                   };
-               } else if (cname[i] == '.') {
-                  // If we have a branch that match a name preceded by a dot
-                  // then we assume we are trying to drill down the branch 
-                  // Let look if one of the top level branch has a branch with the name
-                  // we are looking for.
-                  TBranch *branchcur;
-                  TIter next( fTree->GetListOfBranches() );
-                  while(!branch && (branchcur=(TBranch*)next()) ) {
-                     branch = branchcur->FindBranch(first);
-                  }
-                  if (branch) current = &(work[0]);
                }
             }
-         } else {  // correspond to if (leaf || branch) 
+         } else {
             if (final) {
                Error("TTreeFormula::DefinedVariable",
                      "Unexpected control flow!");
@@ -1656,8 +1046,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             if (cname[i]) work[strlen(work)-1] = '\0';
             sprintf(scratch,"%s.%s",first,work);
 
-            // First look for the current 'word' in the list of 
-            // leaf of the 
             if (branch) {
                tmp_leaf = branch->FindLeaf(work);
                if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
@@ -1680,8 +1068,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   tmp_leaf = branch->FindLeaf(work);
                   if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
                   if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
-                     // This is a non-object leaf, it should NOT be specified
-                     // more except for dimensions.
+                     // This is a non-object leaf, it should NOT be specified more except for
+                     // dimensions.
                      final = kTRUE;
                      leaf = tmp_leaf;
                   }
@@ -1695,8 +1083,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                leaf = tmp_leaf;
             } else {
                //We need to put the delimiter back!
-               if (strlen(work)) work[strlen(work)] = cname[i];
-               else --current;
+               work[strlen(work)] = cname[i];
             }
          }
       }
@@ -1717,8 +1104,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          strncat(dims,&cname[bracket],j-bracket);
          if (current!=work) *(--current) = '\0'; // remove bracket.
          --i;
-         // Skip dots that made be adjacent to the closing bracket
-         while (cname[i+1]=='.') i++; 
       }
    }
    // Copy the left over for later use.
@@ -1728,17 +1113,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
    if (!final && branch) { // NOTE: should we add && !leaf ???
       leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0);
-      if (!leaf) return -1;
       final = leaf->IsOnTerminalBranch();
    }
 
 
    if (leaf) { // We found a Leaf.
-
-      if (leaf->GetBranch() && leaf->GetBranch()->TestBit(kDoNotProcess)) {
-         ::Error("TTreeFormula","the branch \"%s\" has to be enabled to be used",leaf->GetBranch()->GetName());
-         return -1;
-      }
 
       // Save the information
 
@@ -1815,24 +1194,21 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       // change from tree to tree!.
       TTree *tleaf = leaf->GetBranch()->GetTree();
       fCodes[code] = tleaf->GetListOfLeaves()->IndexOf(leaf);
-      TNamed *named = new TNamed(leaf->GetName(),leaf->GetBranch()->GetName());
-      fLeafNames.AddAtAndExpand(named,code);
+      TNamed *named = new TNamed(leaf->GetName(),tleaf->GetName());
+      fNames.AddAtAndExpand(named,code);
       fLeaves.AddAtAndExpand(leaf,code);
 
       // Analyze the content of 'right'
 
-      // Try to find out the class (if any) of the object in the leaf.
+      Int_t virt_dim = 0;
+
       TClass * cl = 0;
-      TFormLeafInfo *maininfo = 0;
-      TFormLeafInfo *previnfo = 0;
       if (leaf->InheritsFrom("TLeafObject") ) {
-         TBranchObject *bobj = (TBranchObject*)leaf->GetBranch();
-         cl = gROOT->GetClass(bobj->GetClassName());
+         TLeafObject *lobj = (TLeafObject*)leaf;
+         cl = lobj->GetClass();
          if (strlen(right)==0) strcpy(right,work);
       } else if (leaf->InheritsFrom("TLeafElement")) {
          TBranchElement *BranchEl = (TBranchElement *)leaf->GetBranch();
-         TStreamerInfo *info = BranchEl->GetInfo();
-         TStreamerElement *element = 0;
          Int_t type = BranchEl->GetStreamerType();
          switch(type) {
             case TStreamerInfo::kObject:
@@ -1844,84 +1220,25 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             case TStreamerInfo::kAny:
             case TStreamerInfo::kObjectp:
             case TStreamerInfo::kObjectP: {
-              element = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
-              if (element) cl = element->GetClassPointer();
+              TStreamerInfo *info = BranchEl->GetInfo();
+              TStreamerElement *elem = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
+              if (elem) cl = elem->GetClassPointer();
             }
             break;
             case -1: {
+              TStreamerInfo *info = BranchEl->GetInfo();
               cl = info->GetClass();
             }
             break;
-         }
-         // If we have a got a class object, we need to verify whether it is on a split TClonesArray
-         // sub branch.
-         if (cl && BranchEl->GetBranchCount()) {
-           if (BranchEl->GetType()==31) {
-              // This is inside a TClonesArray.
-             
-              if (!element) {
-                 Warning("DefineVariable","Missing TStreamerElement in object in TClonesArray section");
-                 return -1;
-              }
-              TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
-              // The dimension needs to be handled!
-              DefineDimensions(code,clonesinfo);
-
-              maininfo = clonesinfo;
-              
-              // We skip some cases because we can assume we have an object.
-              Int_t offset;             
-              info->GetStreamerElement(element->GetName(),offset);
-              if (type == TStreamerInfo::kObjectp ||
-                             type == TStreamerInfo::kObjectP ||
-                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp ||
-                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP) {
-                 previnfo = new TFormLeafInfoPointer(cl,offset+BranchEl->GetOffset(),element);
-              } else {
-                 previnfo = new TFormLeafInfo(cl,offset+BranchEl->GetOffset(),element);
-              }
-              maininfo->fNext = previnfo;
-
-           }
          }
       }
       if (cl) {
          Int_t offset;
          Int_t nchname = strlen(right);
+         TFormLeafInfo *maininfo = 0;
+         TFormLeafInfo *previnfo = 0;
          TFormLeafInfo *leafinfo = 0;
          TStreamerElement* element;
-
-         // Let see if the leaf was attempted to be casted.
-         // Since there would have been something like
-         // ((cast_class*)leafname)->....  we need to use 
-         // paran_level+2
-         // Also we disable this functionality in case of TClonesArray
-         // because it is not yet allowed to have 'inheritance' (or virtuality)
-         // in play in a TClonesArray.
-         TClass * casted = (TClass*) castqueue.At(paran_level+2);
-         if (casted && cl != TClonesArray::Class()) {
-            if ( ! casted->InheritsFrom(cl) ) {
-               Error("DefinedVariable","%s does not inherit from %s.  Casting not possible!",
-                     casted->GetName(),cl->GetName());
-               return -1;
-            } 
-            leafinfo = new TFormLeafInfoCast(cl,casted);
-            fMultiplicity = -1;
-            if (maininfo==0) {
-               maininfo = leafinfo;
-            }
-            if (previnfo==0) {
-               previnfo = leafinfo;
-            } else {
-               previnfo->fNext = leafinfo;
-               previnfo = leafinfo;
-            }
-            leafinfo = 0;
-
-            cl = casted;
-            castqueue.AddAt(0,paran_level);
-         }
-               
          for (i=0, current = &(work[0]); i<=nchname;i++ ) {
             // We will treated the terminator as a token.
             if (right[i] == '(') {
@@ -1934,72 +1251,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                char *params = strchr(work,'(');
                if (params) {
                   *params = 0; params++;
-               } else params = (char *) ")";            
+               } else params = (char *) ")";
+
                if (cl->GetClassInfo()==0) {
                   Error("DefinedVariable","Class probably unavailable:%s",cl->GetName());
                   return -1;
                }
-               if (cl == TClonesArray::Class()) {
-                  // We are NEVER interested in the ClonesArray object but only
-                  // in its contents.
-                  // We need to retrieve the class of its content.
-
-                  TBranch *branch = leaf->GetBranch();
-                  branch->GetEntry(readentry);
-                  TClonesArray * clones;
-                  if (previnfo) clones = (TClonesArray*)previnfo->GetLocalValuePointer(leaf,0);
-                  else {
-                     if (branch==((TBranchElement*)branch)->GetMother() 
-                         || !leaf->IsOnTerminalBranch() ) {
-                        TClass *mother_cl;
-                        if (leaf->IsA()==TLeafObject::Class()) {
-                           // in this case mother_cl is not really used
-                           mother_cl = cl;
-                        } else {
-                           mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
-                        }
-
-                        TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0, 
-                                                                            &gFakeClonesElem,kTRUE);
-                        // The dimension needs to be handled!
-                        DefineDimensions(code,clonesinfo);
-                     
-                        previnfo = clonesinfo;
-                        maininfo = clonesinfo;
-                     
-                        clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
-                        //clones = *(TClonesArray**)((TBranchElement*)branch)->GetAddress();
-		     } else {       
-                        TClass *mother_cl;
-                        if (leaf->IsA()==TLeafObject::Class()) {
-                           // in this case mother_cl is not really used
-                           mother_cl = cl;
-                        } else {
-                           mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
-                        }
-
-                        TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
-                        // The dimension needs to be handled!
-                        DefineDimensions(code,clonesinfo);
-                     
-                        previnfo = clonesinfo;
-                        maininfo = clonesinfo;
-                     
-                        clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
-                     }
-                  }
-                  TClass * inside_cl = clones->GetClass();      
-                  if (1 || inside_cl) cl = inside_cl;
-                     
-               }
-
-               TMethodCall *method;
-               if (cl->GetClassInfo()==0) {
-                  Error("TTreeFormula","Can not call method %s on class without dictionary (%s)!",
-                        right,cl->GetName());
-                  return -1;
-               }
-               method = new TMethodCall(cl, work, params);
+               TMethodCall *method = new TMethodCall(cl, work, params);
                if (!method->GetMethod()) {
                   Error("TTreeFormula","Unknown method:%s",right);
                   return -1;
@@ -2011,11 +1269,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   case TMethodCall::kDouble:
                         leafinfo = new TFormLeafInfoMethod(cl,method);
                         break;
-                  case TMethodCall::kString:
-                        leafinfo = new TFormLeafInfoMethod(cl,method);
-                        // 0 will be replaced by -1 when we know how to use strlen
-                        DefineDimensions(code,0);
-                        break;                        
                   case TMethodCall::kOther:
                        {TString return_type = gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
                        leafinfo = new TFormLeafInfoMethod(cl,method);
@@ -2040,30 +1293,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                leafinfo = 0;
                current = &(work[0]);
                continue;
-            } else if (right[i] == ')') {
-               // We should have the end of a cast operator.  Let's introduce a TFormLeafCast
-               // in the chain.
-               TClass * casted = (TClass*) castqueue.At(--paran_level);
-               if (casted) {
-                  leafinfo = new TFormLeafInfoCast(cl,casted);
-                  fMultiplicity = -1;
-
-                  if (maininfo==0) {
-                     maininfo = leafinfo;
-                  }
-                  if (previnfo==0) {
-                     previnfo = leafinfo;
-                  } else {
-                     previnfo->fNext = leafinfo;
-                     previnfo = leafinfo;
-                  }
-                  leafinfo = 0;
-                  current = &(work[0]);
-
-                  cl = casted;
-                  continue;                 
-
-               }
             } else if (i > 0 && (right[i] == '.' || right[i] == '[' || right[i] == '\0') ) {
                // A delimiter happened let's see if what we have seen
                // so far does point to a data member.
@@ -2081,9 +1310,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   TBranch *branch = leaf->GetBranch();
                   branch->GetEntry(readentry);
                   TClonesArray * clones;
-                  if (previnfo) clones = (TClonesArray*)previnfo->GetLocalValuePointer(leaf,0);
+                  if (previnfo) clones = (TClonesArray*)previnfo->GetValuePointer(leaf,0);
                   else {
                      // we have a unsplit TClonesArray leaves
+                     TStreamerElement * begin = new TStreamerElement("begin","fake",0,
+                                                                     TStreamerInfo::kAny,"TClonesArray");
                      TClass *mother_cl;
                      if (leaf->IsA()==TLeafObject::Class()) {
                         // in this case mother_cl is not really used
@@ -2092,15 +1323,15 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                         mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
                      }
 
-                     TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
+                     TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0, begin);
                      // The dimension needs to be handled!
-                     DefineDimensions(code,clonesinfo);
+                     DefineDimensions(code,clonesinfo,virt_dim);
 
                      mustderef = kTRUE;
                      previnfo = clonesinfo;
                      maininfo = clonesinfo;
 
-                     clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
+                     clones = (TClonesArray*)clonesinfo->GetValuePointer(leaf,0);
                   }
                   TClass * inside_cl = clones->GetClass();
                   if (1 || inside_cl) cl = inside_cl;
@@ -2126,13 +1357,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                         TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
                         TClonesArray * clones;
                         leaf->GetBranch()->GetEntry(readentry);
-                        clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
+                        clones = (TClonesArray*)clonesinfo->GetValuePointer(leaf,0);
                         TClass *sub_cl = clones->GetClass();
                         element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
                         delete clonesinfo;
                         if (element) {
                            leafinfo = new TFormLeafInfoClones(cl,clones_offset,curelem);
-                           DefineDimensions(code,leafinfo);
+                           DefineDimensions(code,leafinfo,virt_dim);
                            if (maininfo==0) maininfo = leafinfo;
                            if (previnfo==0) previnfo = leafinfo;
                            else {
@@ -2195,7 +1426,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   return -1;
                }
 
-               DefineDimensions(code,leafinfo);
+               DefineDimensions(code,leafinfo,virt_dim);
                if (maininfo==0) {
                   maininfo = leafinfo;
                }
@@ -2252,12 +1483,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          leaf_dim++; // skip the '['
          if (!branch_dim || strncmp(branch_dim,leaf_dim,strlen(branch_dim))) {
             // then both are NOT the same so do the leaf title first:
-            DefineDimensions( leaf_dim, code);
+            DefineDimensions( leaf_dim, code, virt_dim);
          }
       }
       if (branch_dim) {
          // then both are NOT same so do the branch name next:
-         DefineDimensions( branch_dim, code);
+         DefineDimensions( branch_dim, code, virt_dim);
       }
 
       if (leaf->IsA() == TLeafElement::Class()) {
@@ -2271,29 +1502,17 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             fDataMembers.AddAtAndExpand(new TFormLeafInfoMultiVarDim(),code);
 
             // Feed the information into the Dimensions system
-            DefineDimensions( code, branch);
+            DefineDimensions( code, branch, virt_dim );
          }
       }
 
+      if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) return 5000+code;
+      if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) return 5000+code;
       if (IsString(code)) {
          if (fLookupType[code]==kDirect && leaf->InheritsFrom("TLeafElement")) {
             TBranchElement * br = (TBranchElement*)leaf->GetBranch();
-            if (br->GetType()==31) {
-               // sub branch of a TClonesArray
-               TStreamerInfo *info = br->GetInfo();
-               TClass* cl = info->GetClass();
-               TStreamerElement *element = (TStreamerElement *)info->GetElements()->At(br->GetID());
-               TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
-               Int_t offset;
-               info->GetStreamerElement(element->GetName(),offset);
-               clonesinfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
-               fDataMembers.AddAtAndExpand(clonesinfo,code);
-               fLookupType[code]=kDataMember;
-               
-            } else {
-               fDataMembers.AddAtAndExpand(new TFormLeafInfoDirect(br),code);
-               fLookupType[code]=kDataMember;
-            }
+            fDataMembers.AddAtAndExpand(new TFormLeafInfoDirect(br),code);
+            fLookupType[code]=kDataMember;
          }
          return 5000+code;
       }
@@ -2303,16 +1522,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 //*-*- May be a graphical cut ?
    TCutG *gcut = (TCutG*)gROOT->GetListOfSpecials()->FindObject(name.Data());
    if (gcut) {
-      if (gcut->GetObjectX()) {
-         if(!gcut->GetObjectX()->InheritsFrom(TTreeFormula::Class())) {
-            delete gcut->GetObjectX(); gcut->SetObjectX(0);
-         }
-      }
-      if (gcut->GetObjectY()) {
-         if(!gcut->GetObjectY()->InheritsFrom(TTreeFormula::Class())) {
-            delete gcut->GetObjectY(); gcut->SetObjectY(0);
-         }
-      }
       if (!gcut->GetObjectX()) {
          TTreeFormula *fx = new TTreeFormula("f_x",gcut->GetVarX(),fTree);
          gcut->SetObjectX(fx);
@@ -2334,177 +1543,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       return code;
    }
    return -1;
-}
-
-TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, 
-                                           const char* nextchoice,
-                                           UInt_t readentry) const {
-   // Return the leaf (if any) of the tree with contains an object containing
-   // a data member which has the name provided in the argument.
-
-   TClass * cl = 0;
-   TIter next (fTree->GetIteratorOnAllLeaves());
-   TLeaf *leafcur;
-   while ((leafcur = (TLeaf*)next())) {
-      // The following code is used somewhere else, we need to factor it out.
-
-      // Here since we are interested in data member, we want to consider on
-      // 'terminal' branch and leaf.
-      if (leafcur->InheritsFrom("TLeafObject") &&
-          leafcur->GetBranch()->GetListOfBranches()->Last()==0) {
-         TLeafObject *lobj = (TLeafObject*)leafcur;
-         cl = lobj->GetClass();
-      } else if (leafcur->InheritsFrom("TLeafElement") && leafcur->IsOnTerminalBranch()) {
-         TLeafElement * lElem = (TLeafElement*) leafcur;
-         if (lElem->IsOnTerminalBranch()) {
-            TBranchElement *BranchEl = (TBranchElement *)leafcur->GetBranch();
-            Int_t type = BranchEl->GetStreamerType();
-            if (type==-1) {
-               cl =  BranchEl->GetInfo()->GetClass();
-            } else if (type>60) {
-               // Case of an object data member.  Here we allow for the
-               // variable name to be ommitted.  Eg, for Event.root with split
-               // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-               cl =  BranchEl->GetInfo()->GetClass();
-               TStreamerElement* element = (TStreamerElement*)
-                 cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
-               cl = element->GetClassPointer();
-            }
-         }
-         
-      }
-      if (cl ==  TClonesArray::Class()) {
-         // We have a unsplit TClonesArray leaves
-         // In this case we assume that cl is the class in which the TClonesArray
-         // belongs.
-         TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0);
-         leafcur->GetBranch()->GetEntry(readentry);
-         TClonesArray * clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
-         cl = clones->GetClass();
-         delete clonesinfo;
-      }
-      if (cl) {
-         // Now that we have the class, let's check if the topchoice is of its datamember
-         // or if the nextchoice is a datamember of one of its datamember.
-         Int_t offset;
-         TStreamerInfo* info =  cl->GetStreamerInfo();
-         TStreamerElement* element = info?info->GetStreamerElement(topchoice,offset):0;
-         if (!element) {
-            TIter next( cl->GetStreamerInfo()->GetElements() );
-            TStreamerElement * curelem;
-            while ((curelem = (TStreamerElement*)next())) {
-               if (curelem->GetClassPointer() ==  TClonesArray::Class()) {
-                  // In case of a TClonesArray we need to load the data and read the
-                  // clonesArray object before being able to look into the class inside.
-                  // We need to do that because we are never interested in the TClonesArray
-                  // itself but only in the object inside.
-                  Int_t clones_offset;
-                  cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
-                  TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
-                  TBranch *branch = leafcur->GetBranch();
-                  branch->GetEntry(readentry);
-                  TClonesArray * clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
-                  delete clonesinfo;
-                  TClass *sub_cl = clones->GetClass();
-                  
-                  // Now that we finally have the inside class, let's query it.
-                  element = sub_cl->GetStreamerInfo()->GetStreamerElement(nextchoice,offset);
-                  if (element) break;
-               } // if clones array
-            } // loop on elements
-         }
-         if (element) break;
-         else cl = 0;
-      }
-   }
-   if (cl) {
-      return leafcur;
-   } else {
-      return 0;
-   }
-
-}
-
-Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
-                                     TBranch * branch,
-                                     const char* method,
-                                     const char* params,
-                                     UInt_t readentry) const {
-   // Return the leaf (if any) of the tree with contains an object of a class
-   // having a method which has the name provided in the argument.
-   
-   TClass *cl = 0;
-   TLeafObject* lobj = 0;
-
-   // The following code is used somewhere else, we need to factor it out.
-   if (branch->InheritsFrom(TBranchObject::Class()) ) {
-
-      lobj = (TLeafObject*)branch->GetListOfLeaves()->At(0);
-      cl = lobj->GetClass();      
-
-   } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
-      TBranchElement *BranchEl = (TBranchElement *)branch;
-      Int_t type = BranchEl->GetStreamerType();
-      if (type==-1) {
-         cl =  BranchEl->GetInfo()->GetClass();
-      } else if (type>60) {
-         // Case of an object data member.  Here we allow for the
-         // variable name to be ommitted.  Eg, for Event.root with split
-         // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-         cl =  BranchEl->GetInfo()->GetClass();
-         TStreamerElement* element = (TStreamerElement*)
-            cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
-         cl = element->GetClassPointer();
-      }
-   }
-   if (cl == TClonesArray::Class()) {
-      // We might be try to call a method of the top class inside a
-      // TClonesArray.
-      // Since the leaf was not terminal, we might have a splitted or
-      // unsplitted and/or top leaf/branch.
-      TClonesArray * clones = 0;
-      TBranch *branchcur = branch;
-      branchcur->GetEntry(readentry);
-      if (branch->InheritsFrom(TBranchObject::Class()) ) {
-         clones = (TClonesArray*)(lobj->GetObject());
-      } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
-         // We do not know exactly where the leaf of the TClonesArray is
-         // in the hierachy but we still need to get the correct class
-         // holder.
-         if (branchcur==((TBranchElement*)branchcur)->GetMother() 
-             || !leafcur || (!leafcur->IsOnTerminalBranch()) ) {
-            clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
-         }
-         if (clones==0) {
-            TBranch *branchcur = branch;
-            branchcur->GetEntry(readentry);
-            TClass * mother_cl;
-            mother_cl = ((TBranchElement*)branchcur)->GetInfo()->GetClass();
-
-            TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
-            // if (!leafcur) { leafcur = (TLeaf*)branch->GetListOfLeaves()->At(0); }
-            clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
-            // cl = clones->GetClass();
-            delete clonesinfo;
-         }
-      }
-      cl = clones->GetClass();
-   }
-   if (cl && cl->GetClassInfo() && cl->GetMethodAllAny(method)) {
-      // Let's try to see if the function we found belongs to the current
-      // class.  Note that this implementation currently can not work if
-      // one the argument is another leaf or data member of the object.
-      // (Anyway we do NOT support this case).
-      TMethodCall *methodcall = new TMethodCall(cl, method, params);
-      if (methodcall->GetMethod()) {
-         // We have a method that works.
-         // We will use it.
-         return kTRUE;
-      }
-      delete methodcall;
-   }
-   cl = 0;
-   return kFALSE;
 }
 
 Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
@@ -2662,6 +1700,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
    Int_t i,pos,pos2,int1,int2,real_instance;
    Float_t aresult;
    Double_t tab[kMAXFOUND];
+   Double_t param[kMAXFOUND];
    Double_t dexp;
    char *tab2[kMAXSTRINGFOUND];
 
@@ -2680,18 +1719,6 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 
       if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
       else if (real_instance>fNdata[0]) return 0;
-      if (fAxis) {
-         char * label;
-         // This portion is a duplicate (for speed reason) of the code 
-         // located  in the main for loop at "a tree string".
-         if (fLookupType[0]==kDirect) {
-            label = (char*)leaf->GetValuePointer();
-         } else {
-            label = (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);
-         }
-         Int_t bin = fAxis->FindBin(label);
-         return bin-0.5;
-      }
       switch(fLookupType[0]) {
          case kDirect: return leaf->GetValue(real_instance);
          case kMethod: return GetValueFromMethod(0,leaf);
@@ -2699,61 +1726,52 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
          default: return 0;
       }
    }
+   for(i=0;i<fNval;i++) {
+      if (fCodes[i] < 0) {
+         TCutG *gcut = (TCutG*)fMethods.At(i);
+         TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+         TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+         Double_t xcut = fx->EvalInstance(instance);
+         Double_t ycut = fy->EvalInstance(instance);
+         param[i] = gcut->IsInside(xcut,ycut);
+      } else {
+         TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
 
+         // Now let calculate what physical instance we really need.
+         // Some redundant code is used to speed up the cases where
+         // they are no dimensions.
+         real_instance = GetRealInstance(instance,i);
+
+         if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
+         else if (real_instance>fNdata[i]) return 0;
+         switch(fLookupType[i]) {
+            case kDirect: param[i] = leaf->GetValue(real_instance); break;
+            case kMethod: param[i] = GetValueFromMethod(i,leaf); break;
+            case kDataMember: param[i] = ((TFormLeafInfo*)fDataMembers.UncheckedAt(i))->
+                                GetValue(leaf,real_instance); break;
+            default: param[i] = 0;
+         }
+      }
+   }
    pos  = 0;
    pos2 = 0;
    for (i=0; i<fNoper; i++) {
       Int_t action = fOper[i];
-
 //*-*- a tree string
       if (action >= 105000) {
-         Int_t string_code = action-105000;
-         TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(string_code);
-
-         // Now let calculate what physical instance we really need.
-         real_instance = GetRealInstance(instance,string_code);
-         
-         if (!instance) leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
-         else if (real_instance>fNdata[string_code]) return 0;
-         
+         TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(action-105000);
+         leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
          pos2++;
-         if (fLookupType[string_code]==kDirect) {
-            tab2[pos2-1] = (char*)leafc->GetValuePointer();
+         if (fLookupType[i]==kDirect) {
+           tab2[pos2-1] = (char*)leafc->GetValuePointer();
          } else {
-            tab2[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,real_instance);
+           tab2[pos2-1] = (char*)GetLeafInfo(i)->GetValuePointer(leafc,0);
          }
          continue;
       }
 //*-*- a tree variable
       if (action >= 100000) {
-         Int_t code = action-100000;
-         Double_t param;
-
-         if (fCodes[code] < 0) {
-            TCutG *gcut = (TCutG*)fMethods.At(code);
-            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
-            TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-            Double_t xcut = fx->EvalInstance(instance);
-            Double_t ycut = fy->EvalInstance(instance);
-            param = gcut->IsInside(xcut,ycut);
-         } else {
-            TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(code);
-
-            // Now let calculate what physical instance we really need.
-            real_instance = GetRealInstance(instance,code);
-
-            if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-            else if (real_instance>fNdata[code]) return 0;
-
-            switch(fLookupType[code]) {
-               case kDirect: param = leaf->GetValue(real_instance); break;
-               case kMethod: param = GetValueFromMethod(code,leaf); break;
-               case kDataMember: param = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
-                                                   GetValue(leaf,real_instance); break;
-               default: param = 0;
-            }
-         }
-         tab[pos] = param; pos++;
+         pos++; tab[pos-1] = param[action-100000];
          continue;
       }
 //*-*- String
@@ -2904,9 +1922,6 @@ Int_t TTreeFormula::GetNdata()
    // new version of GetNData:
    // Possible problem: we only allow one variable dimension so far.
    if (fMultiplicity==0) return 1;
-   
-   // One way to deal with character strings is the following:
-   // if (TestBit(kIsCharacter)) return 1;
 
    if (fMultiplicity==2) return fCumulUsedSizes[0];
 
@@ -3035,14 +2050,6 @@ Int_t TTreeFormula::GetNdata()
                overall = 0;
             }
             fNdata[i] = size * fCumulSizes[i][1];
-         } else if (leafinfo->GetMultiplicity()==-1) {
-            TBranch *branch = leaf->GetBranch();
-            Int_t readentry = fTree->GetReadEntry();
-            if (readentry==-1) readentry=0;
-            branch->GetEntry(readentry);           
-            if (leafinfo->GetNdata(leaf)==0) {
-               overall = 0;               
-            }
          }
       }
 
@@ -3161,25 +2168,19 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
    // and this leaf is short, int or unsigned short, int
    // When a leaf is of type integer, the generated histogram is forced
    // to have an integer bin width
+
    if (fNoper > 1) return kFALSE;
 
    if (fLeaves.GetEntries() != 1) return kFALSE;
 
    TLeaf *leaf = (TLeaf*)fLeaves.At(code);
    if (!leaf) return kFALSE;
-   if (fAxis) return kTRUE;
-   TFormLeafInfo * info;
-   if (fLookupType[code]!=kDirect) {
-      info = GetLeafInfo(code);
-      return info->IsInteger();
-   }   
    if (!strcmp(leaf->GetTypeName(),"Int_t"))    return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"Short_t"))  return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UInt_t"))   return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UShort_t")) return kTRUE;
-   return kFALSE; 
+   return kFALSE;
 }
-
 
 //______________________________________________________________________________
 Bool_t TTreeFormula::IsString(Int_t code) const
@@ -3192,37 +2193,15 @@ Bool_t TTreeFormula::IsString(Int_t code) const
    TFormLeafInfo * info;
    switch(fLookupType[code]) {
    case kDirect:
-     if ( !leaf->IsUnsigned() && (leaf->InheritsFrom("TLeafC") || leaf->InheritsFrom("TLeafB") ) ) {
-        // Need to find out if it is an 'array' or a pointer.
-        if (leaf->GetLenStatic() > 1) return kTRUE;
-           
-        // Now we need to differantiate between a variable length array and
-        // a TClonesArray.
-        if (leaf->GetLeafCount()) {
-           const char* indexname = leaf->GetLeafCount()->GetName();
-           if (indexname[strlen(indexname)-1] == '_' ) {
-              // This in a clones array 
-             return kFALSE;
-           } else {
-              // this is a variable length char array
-              return kTRUE;
-           }
-        }
+     if ( !leaf->IsUnsigned() &&
+          (leaf->InheritsFrom("TLeafC") || leaf->InheritsFrom("TLeafB") ) ) {
+        return kTRUE;
      } else if (leaf->InheritsFrom("TLeafElement")) {
         TBranchElement * br = (TBranchElement*)leaf->GetBranch();
-        Int_t bid = br->GetID();
-        if (bid < 0) return kFALSE;
-        TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElements()->At(bid);
-        if (elem->GetType()== TStreamerInfo::kOffsetL +kChar_t) {
-           // Check whether a specific element of the string is specified!
-           if (fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
-           return kTRUE;
-        }
-        if ( elem->GetType()== TStreamerInfo::kCharStar) {
-           // Check whether a specific element of the string is specified!
-           if (fNdimensions[code] && fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
-           return kTRUE;
-        } 
+        TStreamerElement * elem = (TStreamerElement*)
+          br->GetInfo()->GetElements()->At(br->GetID());
+        if(elem->GetType()==kChar_t
+           || elem->GetType()== TStreamerInfo::kOffsetL +kChar_t) return kTRUE;
         return kFALSE;
      } else {
         return kFALSE;
@@ -3238,6 +2217,183 @@ Bool_t TTreeFormula::IsString(Int_t code) const
       return kFALSE;
    }
 
+}
+
+//______________________________________________________________________________
+void* TFormLeafInfo::GetValuePointer(TLeaf *leaf, Int_t instance)
+{
+
+   char *thisobj = 0;
+   if (leaf->InheritsFrom("TLeafObject") ) {
+      thisobj = (char*)((TLeafObject*)leaf)->GetObject();
+   } else {
+      thisobj = GetObjectAddress((TLeafElement*)leaf);
+   }
+
+   switch (fElement->GetType()) {
+         // basic types
+      case kChar_t:
+      case kUChar_t:
+      case kShort_t:
+      case kUShort_t:
+      case kInt_t:
+      case kUInt_t:
+      case kLong_t:
+      case kULong_t:
+      case kFloat_t:
+      case kDouble_t:
+      case kchar:
+      case TStreamerInfo::kCounter:
+                      return (Int_t*)(thisobj+fOffset);
+
+         // array of basic types  array[8]
+      case TStreamerInfo::kOffsetL + kChar_t :
+         {Char_t *val   = (Char_t*)(thisobj+fOffset);   return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kShort_t:
+         {Short_t *val  = (Short_t*)(thisobj+fOffset);  return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kInt_t:
+         {Int_t *val    = (Int_t*)(thisobj+fOffset);    return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kLong_t:
+         {Long_t *val   = (Long_t*)(thisobj+fOffset);   return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kFloat_t:
+         {Float_t *val  = (Float_t*)(thisobj+fOffset);  return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kDouble_t:
+         {Double_t *val = (Double_t*)(thisobj+fOffset); return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kUChar_t:
+         {UChar_t *val  = (UChar_t*)(thisobj+fOffset);  return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kUShort_t:
+         {UShort_t *val = (UShort_t*)(thisobj+fOffset); return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kUInt_t:
+         {UInt_t *val   = (UInt_t*)(thisobj+fOffset);   return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kULong_t:
+         {ULong_t *val  = (ULong_t*)(thisobj+fOffset);  return &(val[instance]);}
+
+         // pointer to an array of basic types  array[n]
+      case TStreamerInfo::kOffsetP + kChar_t:
+         {Char_t **val   = (Char_t**)(thisobj+fOffset);   return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kShort_t:
+         {Short_t **val  = (Short_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kInt_t:
+         {Int_t **val    = (Int_t**)(thisobj+fOffset);    return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kLong_t:
+         {Long_t **val   = (Long_t**)(thisobj+fOffset);   return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kFloat_t:
+         {Float_t **val  = (Float_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kDouble_t:
+         {Double_t **val = (Double_t**)(thisobj+fOffset); return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kUChar_t:
+         {UChar_t **val  = (UChar_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kUShort_t:
+         {UShort_t **val = (UShort_t**)(thisobj+fOffset); return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kUInt_t:
+         {UInt_t **val   = (UInt_t**)(thisobj+fOffset);   return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kULong_t:
+         {ULong_t **val  = (ULong_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+
+      case TStreamerInfo::kObjectp:
+      case TStreamerInfo::kObjectP:
+        {TObject **obj = (TObject**)(thisobj+fOffset);   return *obj; }
+
+      case TStreamerInfo::kObject:
+      case TStreamerInfo::kTString:
+      case TStreamerInfo::kTNamed:
+      case TStreamerInfo::kTObject:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
+      case TStreamerInfo::kAny:
+        {TObject *obj = (TObject*)(thisobj+fOffset);   return obj; }
+
+      case kOther_t:
+      default:        return 0;
+   }
+
+}
+
+
+//______________________________________________________________________________
+Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
+{
+//*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
+//*-*            ====================================
+//
+
+   char *thisobj = 0;
+   if (leaf->InheritsFrom("TLeafObject") ) {
+      thisobj = (char*)((TLeafObject*)leaf)->GetObject();
+   } else {
+      thisobj = GetObjectAddress((TLeafElement*)leaf);
+   }
+   return ReadValue(thisobj,instance);
+}
+
+//______________________________________________________________________________
+Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
+{
+   if (fNext) return fNext->ReadValue(thisobj+fOffset,instance);
+   //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetType(),instance,1);
+   switch (fElement->GetType()) {
+         // basic types
+      case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+fOffset));
+      case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+fOffset));
+      case kShort_t:  return (Double_t)(*(Short_t*)(thisobj+fOffset));
+      case kUShort_t: return (Double_t)(*(UShort_t*)(thisobj+fOffset));
+      case kInt_t:    return (Double_t)(*(Int_t*)(thisobj+fOffset));
+      case kUInt_t:   return (Double_t)(*(UInt_t*)(thisobj+fOffset));
+      case kLong_t:   return (Double_t)(*(Long_t*)(thisobj+fOffset));
+      case kULong_t:  return (Double_t)(*(ULong_t*)(thisobj+fOffset));
+      case kFloat_t:  return (Double_t)(*(Float_t*)(thisobj+fOffset));
+      case kDouble_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
+      case kchar:     return (Double_t)(*(char*)(thisobj+fOffset));
+      case TStreamerInfo::kCounter:
+                      return (Double_t)(*(Int_t*)(thisobj+fOffset));
+
+         // array of basic types  array[8]
+      case TStreamerInfo::kOffsetL + kChar_t :
+         {Char_t *val   = (Char_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kShort_t:
+         {Short_t *val  = (Short_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kInt_t:
+         {Int_t *val    = (Int_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kLong_t:
+         {Long_t *val   = (Long_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kFloat_t:
+         {Float_t *val  = (Float_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kDouble_t:
+         {Double_t *val = (Double_t*)(thisobj+fOffset); return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kUChar_t:
+         {UChar_t *val  = (UChar_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kUShort_t:
+         {UShort_t *val = (UShort_t*)(thisobj+fOffset); return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kUInt_t:
+         {UInt_t *val   = (UInt_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kULong_t:
+         {ULong_t *val  = (ULong_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+
+         // pointer to an array of basic types  array[n]
+      case TStreamerInfo::kOffsetP + kChar_t:
+         {Char_t **val   = (Char_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kShort_t:
+         {Short_t **val  = (Short_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kInt_t:
+         {Int_t **val    = (Int_t**)(thisobj+fOffset);    return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kLong_t:
+         {Long_t **val   = (Long_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kFloat_t:
+         {Float_t **val  = (Float_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kDouble_t:
+         {Double_t **val = (Double_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kUChar_t:
+         {UChar_t **val  = (UChar_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kUShort_t:
+         {UShort_t **val = (UShort_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kUInt_t:
+         {UInt_t **val   = (UInt_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kULong_t:
+         {ULong_t **val  = (ULong_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+
+      case kOther_t:
+      default:        return 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -3260,50 +2416,27 @@ char *TTreeFormula::PrintValue(Int_t mode) const
    } else if (mode == -1)
       sprintf(value, "%s", GetTitle());
 
-   if (fNstring && fNval==0 && fNoper==1) {
+   if (TestBit(kIsCharacter)) {
       if (mode == 0) {
          TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
          leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-         char * val = 0;
-         if (fLookupType[0]==kDirect) {
-            val = (char*)leaf->GetValuePointer();
-         } else {
-            val = (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);
-         }
-         if (val) {
-            strncpy(value, val, kMAXLENGTH-1);
-         } else {
-            //strncpy(value, " ", kMAXLENGTH-1);
-         }
-           
+         strncpy(value, (char*)leaf->GetValuePointer(), kMAXLENGTH-1);
          value[kMAXLENGTH-1] = 0;
       }
    } else {
       if (mode == 0) {
          //NOTE: This is terrible form ... but is forced upon us by the fact that we can not
          //use the mutable keyword AND we should keep PrintValue const.
-         Int_t ndata = ((TTreeFormula*)this)->GetNdata();
-         if (ndata) {
-            sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(0));
-            char *expo = strchr(value,'e');
-            if (expo) {
-               if (value[0] == '-') strcpy(expo-6,expo);
-               else                 strcpy(expo-5,expo);
-            }
-         } else {
-            sprintf(value,"         ");
+         ((TTreeFormula*)this)->GetNdata();
+         sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(0));
+         char *expo = strchr(value,'e');
+         if (expo) {
+            if (value[0] == '-') strcpy(expo-6,expo);
+            else                 strcpy(expo-5,expo);
          }
       }
    }
    return &value[0];
-}
-
-//______________________________________________________________________________
-void TTreeFormula::SetAxis(TAxis *axis)
-{
-   if (!axis) {fAxis = 0; return;}
-   if (TestBit(kIsCharacter)) fAxis = axis;
-   if (IsInteger()) axis->SetBit(TAxis::kIsInteger);
 }
 
 //______________________________________________________________________________
@@ -3348,13 +2481,9 @@ void TTreeFormula::UpdateFormulaLeaves()
 
    // A safer alternative would be to recompile the whole thing .... However
    // currently compile HAS TO be called from the constructor!
-
-   char names[512];
-   Int_t nleaves = fLeafNames.GetEntriesFast();
+   Int_t nleaves = fNames.GetEntriesFast();
    for (Int_t i=0;i<nleaves;i++) {
-      if (!fTree) continue;
-      sprintf(names,"%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
-      TLeaf *leaf = fTree->GetLeaf(names);
+      TLeaf *leaf = fTree->GetLeaf(fNames[i]->GetName());
       fLeaves[i] = leaf;
    }
    for (Int_t j=0; j<kMAXCODES; j++) {
@@ -3364,14 +2493,6 @@ void TTreeFormula::UpdateFormulaLeaves()
          }
       }
       if (fLookupType[j]==kDataMember) GetLeafInfo(j)->Update();
-      if (j<fNval && fCodes[j]<0) {
-         TCutG *gcut = (TCutG*)fMethods.At(j);
-         if (gcut) {
-           TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
-           TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-           if (fx) fx->UpdateFormulaLeaves();
-           if (fy) fy->UpdateFormulaLeaves();
-         }
-      }
    }
+
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.10 2001/08/21 17:29:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.8 2001/04/11 15:19:10 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -143,7 +143,7 @@ public:
    virtual void      SetTextSize(Float_t textsize);
    virtual void      UpdateWindow(Int_t mode);
    virtual void      Warp(Int_t ix, Int_t iy);
-   virtual Int_t     WriteGIF(char *name);
+   virtual void      WriteGIF(char *name);
    virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
    //---- Methods used for GUI -----
@@ -249,7 +249,6 @@ public:
                                       UInt_t w, UInt_t h);
    virtual void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    virtual void         SelectInput(Window_t id, UInt_t evmask);
-   virtual Window_t     GetInputFocus() { return kNone; }
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
    virtual void         SetPrimarySelectionOwner(Window_t id);
@@ -341,7 +340,7 @@ inline void      TVirtualX::SetTextMagnitude(Float_t) { }
 inline void      TVirtualX::SetTextSize(Float_t) { }
 inline void      TVirtualX::UpdateWindow(Int_t) { }
 inline void      TVirtualX::Warp(Int_t, Int_t) { }
-inline Int_t     TVirtualX::WriteGIF(char *) {return 0;}
+inline void      TVirtualX::WriteGIF(char *) { }
 inline void      TVirtualX::WritePixmap(Int_t, UInt_t, UInt_t, char *) { }
 
 //---- Methods used for GUI -----

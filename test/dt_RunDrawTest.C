@@ -73,11 +73,7 @@ Int_t Compare(TDirectory* from) {
          if (gInteractiveTest) {
             TCanvas * canv = new TCanvas();
             canv->Divide(2,1);
-            canv->cd(1); 
-            TString reftitle = "Ref: ";
-            reftitle.Append(ref->GetTitle());
-            ref->SetTitle(reftitle);
-            ref->Draw();
+            canv->cd(1); ref->Draw();
             canv->cd(2); draw->Draw();
             return 1;
          }
@@ -129,7 +125,7 @@ void dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
    }
 
    TFile *hfile = 0;
-   TTree *tree = 0;
+   TTree *tree;
    if (mode <3) {
       hfile = new TFile(from);
       tree = (TTree*)hfile->Get("T");

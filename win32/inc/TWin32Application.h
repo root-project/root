@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Application.h,v 1.3 2001/07/09 07:01:36 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Application.h,v 1.2 2001/04/22 16:00:56 rdm Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -48,7 +48,8 @@ private:
 public:
 
    TWin32Application() {};
-   TWin32Application(const char *appClassName, int *argc, char **argv);
+   TWin32Application(const char *appClassName, int *argc, char **argv,
+                   void *options, int numOptions);
    virtual ~TWin32Application();
 
    BOOL    ExecCommand(TGWin32Command *command, Bool_t synch=kFALSE);   // To exec a command coming from the other threads

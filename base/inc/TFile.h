@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.15 2001/12/02 15:15:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.11 2001/01/23 19:16:31 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -54,8 +54,7 @@ protected:
    TList      *fFree;             //Free segments linked list table
    TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
    TCache     *fCache;            //!Page cache used to reduce number of small I/O's
-   TObjArray  *fProcessIDs;       //!Array of pointers to TProcessIDs
-   
+
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
 
@@ -78,10 +77,6 @@ private:
    void operator=(const TFile &);
 
 public:
-   // TFile status bits
-   enum {
-      kHasReferences   = BIT(11)
-   };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
 
    TFile();
@@ -101,7 +96,6 @@ public:
    virtual Int_t     GetErrno() const;
    virtual void      ResetErrno() const;
    Int_t             GetFd() const { return fD; }
-   TObjArray        *GetListOfProcessIDs() const {return fProcessIDs;}
    TList            *GetListOfFree() const { return fFree; }
    virtual Int_t     GetNfree() const { return fFree->GetSize(); }
    Option_t         *GetOption() const { return fOption.Data(); }
@@ -120,7 +114,7 @@ public:
    virtual Bool_t    ReadBuffer(char *buf, Int_t len);
    virtual void      ReadFree();
    virtual void      ReadStreamerInfo();
-   virtual Int_t     Recover();
+   virtual void      Recover();
    virtual void      Seek(Seek_t offset, ERelativeTo pos = kBeg);
    virtual void      SetCompressionLevel(Int_t level=1);
    virtual void      SetEND(Seek_t last) { fEND = last; }
@@ -145,7 +139,7 @@ public:
    static void       SetFileBytesRead(Double_t bytes=0);
    static void       SetFileBytesWritten(Double_t bytes=0);
 
-   ClassDef(TFile,2)  //ROOT file
+   ClassDef(TFile,1)  //ROOT file
 };
 
 R__EXTERN TFile   *gFile;

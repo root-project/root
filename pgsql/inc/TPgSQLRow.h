@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLRow.h,v 1.1 2001/06/14 23:19:15 rdm Exp $
+// @(#)root/pgsql:$Name:$:$Id:$
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -30,6 +30,7 @@ class TPgSQLRow : public TSQLRow {
 private:
    PGresult *fResult;       // current result set
    ULong_t   fRowNum;       // row number
+   ULong_t   fFieldLength;  // length of a field in the row
 
    Bool_t  IsValid(Int_t field);
 

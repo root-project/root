@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.3 2000/12/26 14:24:39 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "TBox.h"
 #include "TGroupButton.h"

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.10 2001/10/01 17:46:51 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.7 2001/03/11 22:47:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -65,7 +65,6 @@ class TWinNTSystem : public TSystem {
 
 protected:
    HANDLE          fhProcess;         // Handle of the current process
-   HANDLE          fhTermInputEvent;  // Handle of "event" to suspend "dummy" terminal loop
    char           *fDirNameBuffer;    // The string buffer to hold path name
    WIN32_FIND_DATA  fFindFileData;    // Structure to look for files (aka OpenDir under UNIX)
 
@@ -75,16 +74,12 @@ protected:
    HIMAGELIST fhSmallIconList;  // List of the small icons
    HIMAGELIST fhNormalIconList; // List of the normal icons
 
-   void       CreateIcons();    // Create a list of the icons for ROOT appl
+   void                CreateIcons();            // Create a list of the icons for Root appl
 
-   // static functions providing semi-low level interface to raw WinNT
+  // static functions providing semi-low level interface to raw WinNT
    static const char  *WinNTHomedirectory(const char *user = 0);
    static int          WinNTWaitchild();
-#ifndef GDK_WIN32
    static int          WinNTSetitimer(TTimer *ti);
-#else
-   static int          WinNTSetitimer(Long_t ms);
-#endif
    static int          WinNTSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
                                   Long_t timeout);
    static void         WinNTSignal(ESignals sig, SigHandler_t h);
@@ -120,7 +115,7 @@ public:
    const char       *BaseName(const char *name);
    void              SetProgname(const char *name);
    const char       *GetError();
-   const char       *HostName();
+   const char       *Hostname();
 
    HIMAGELIST GetSmallIconList() { return fhSmallIconList; }
    HICON   GetSmallIcon(Int_t IconIdx) {return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }
@@ -131,12 +126,8 @@ public:
    void              SetShellName(const char *name=0);
 
    //---- EventLoop --------------------------------------------
-#ifndef GDK_WIN32
    Bool_t            ProcessEvents();
-#endif
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
-   void              ExitLoop();
-   void              InnerLoop();
 
    //---- Handling of system events
    void              CheckChilds();
@@ -205,9 +196,7 @@ public:
    TTime             Now();
    void              AddTimer(TTimer *ti);
    TTimer           *RemoveTimer(TTimer *ti);
-#ifdef GDK_WIN32
-   Bool_t            DispatchTimers(Bool_t mode);
-#endif
+//   void              DispatchTimers();
    Bool_t            DispatchSynchTimers();
    void              Sleep(UInt_t milliSec);
    Double_t          GetRealTime();

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.8 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.5 2001/05/28 16:24:06 brun Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
@@ -23,7 +23,8 @@
 #include "TRandom.h"
 #include "TGDoubleSlider.h"
 #include "TGaxis.h"
-#include "Riostream.h"
+
+#include <iostream.h>
 
 
 Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
@@ -174,7 +175,7 @@ void Viewer::DoButton()
                                        gRandom->Uniform(.8*ydiff)+.1*ydiff,
                                        gRandom->Uniform(.1*xdiff),
                                        gRandom->Uniform(.1*ydiff));
-      ellipse->SetFillColor(Color_t(gRandom->Uniform(10)));
+      ellipse->SetFillColor(gRandom->Uniform(10));
       ellipse->Draw();
       fCanvas->Modified();
       fCanvas->Update();
@@ -185,7 +186,7 @@ void Viewer::DoButton()
                            gRandom->Uniform(ydiff)+ymin,
                            gRandom->Uniform(xdiff)+xmin,
                            gRandom->Uniform(ydiff)+ymin);
-      box->SetFillColor(Color_t(gRandom->Uniform(10)));
+      box->SetFillColor(gRandom->Uniform(10));
       box->Draw();
       fCanvas->Modified();
       fCanvas->Update();
@@ -200,7 +201,7 @@ void Viewer::DoButton()
       x[2] = gRandom->Uniform(xdiff)+xmin;
       y[2] = gRandom->Uniform(ydiff)+ymin;
       TPolyLine* pl = new TPolyLine(4, x, y);
-      pl->SetLineColor(Color_t(gRandom->Uniform(10)));
+      pl->SetLineColor(gRandom->Uniform(10));
       pl->Draw();
       fCanvas->Modified();
       fCanvas->Update();
@@ -211,7 +212,7 @@ void Viewer::DoButton()
                                  gRandom->Uniform(ydiff)+ymin,
                                  gRandom->Uniform(xdiff)+xmin,
                                  gRandom->Uniform(ydiff)+ymin);
-      arrow->SetLineColor(Color_t(gRandom->Uniform(10)));
+      arrow->SetLineColor(gRandom->Uniform(10));
       arrow->Draw();
       fCanvas->Modified();
       fCanvas->Update();

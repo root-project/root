@@ -47,7 +47,7 @@ extern int G__list_stub G__P((FILE *fp));
 
 /* in src/xxx.c */
 /* struct G__var_array *G__rawvarentry G__P((char *name,int hash,int *ig15,struct G__var_array *memvar)); */
-/* int G__split G__P((char *line,char *string,int *argc,char **argv)); */
+int G__split G__P((char *line,char *string,int *argc,char **argv));
 int G__readsimpleline G__P((FILE *fp,char *line));
 #ifdef G__OLDIMPLEMENTATION451
 int G__readline G__P((FILE *fp,char *line,char *argbuf,int *argn,char **arg));
@@ -86,6 +86,7 @@ void G__DISPfgetc G__P((int c));
 void G__lockedvariable G__P((char *item));
 int G__lock_variable G__P((char *varname));
 int G__unlock_variable G__P((char *varname));
+int G__setbreakpoint G__P((char *breakline,char *breakfile));
 G__value G__interactivereturn G__P((void));
 void G__set_tracemode G__P((char *name));
 void G__del_tracemode G__P((char *name));
@@ -189,11 +190,9 @@ int G__btest G__P((int operator2,G__value lresult,G__value rresult));
 int G__fgetspace G__P((void));
 int G__fgetvarname G__P((char *string,char *endmark));
 int G__fgetname G__P((char *string,char *endmark));
-int G__getname G__P((char* source,int* isrc,char *string,char *endmark));
 int G__fdumpstream G__P((char *string,char *endmark));
 int G__fgetstream G__P((char *string,char *endmark));
 int G__fignorestream G__P((char *endmark));
-int G__ignorestream G__P((char *string,int* isrc,char *endmark));
 int G__fgetstream_new G__P((char *string,char *endmark));
 void G__fignoreline G__P((void));
 void G__fsetcomment G__P((struct G__comment_info *pcomment));
@@ -559,9 +558,6 @@ int G__createtemplateclass G__P((char *new_name,struct G__Templatearg *targ));
 struct G__Definedtemplateclass *G__defined_templateclass G__P((char *name));
 #ifndef G__OLDIMPLEMENTATION1560
 struct G__Definetemplatefunc *G__defined_templatefunc G__P((char *name));
-#endif
-#ifndef G__OLDIMPLEMENTATION1611
-struct G__Definetemplatefunc *G__defined_templatememfunc G__P((char *name));
 #endif
 void G__declare_template G__P((void));
 int G__gettemplatearglist G__P((char *paralist,struct G__Charlist *charlist,struct G__Templatearg *def_para,int *pnpara));

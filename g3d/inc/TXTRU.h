@@ -1,8 +1,8 @@
-//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.3 2000/12/13 15:13:47 brun Exp $
+//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.2 2000/09/14 07:03:44 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 ////////////////////////////////////////////////////////////////////////////
-// $Id: TXTRU.h,v 1.3 2000/12/13 15:13:47 brun Exp $
+// $Id: TXTRU.h,v 1.2 2000/09/14 07:03:44 brun Exp $
 //
 // TXTRU
 //
@@ -26,7 +26,7 @@ class TXTRU : public TShape {
  public:
    TXTRU();
    TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
-         Int_t nyx, Int_t nz);
+         const Int_t nyx, const Int_t nz);
    TXTRU(const TXTRU &xtru);
    virtual ~TXTRU();
    TXTRU& operator=(const TXTRU& rhs);

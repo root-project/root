@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.5 2001/01/27 08:50:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.4 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -77,7 +77,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    fUserData    = 0;
    fTip         = 0;
    fGroup       = 0;
-
+   
    fNormGC   = norm;
    fState    = kButtonUp;
    fStayDown = kFALSE;
@@ -153,7 +153,7 @@ void TGButton::SetGroup(TGButtonGroup *group)
 {
    // Sets new button-group for this button.
 
-   fGroup = group;
+   if (fGroup != group) fGroup = group;
 }
 
 //______________________________________________________________________________

@@ -46,17 +46,12 @@ char *argv[];
   
   while((string[i]!='\n')&&
 	(string[i]!='\r')&&
-	(string[i]!='\0')
-#ifdef G__OLDIMPLEMENTATION1616
-	&& (string[i]!=EOF)
-#endif
-	) i++;
+	(string[i]!='\0')&&
+	(string[i]!=EOF)) i++;
   string[i]='\0';
   line[i]='\0';
   lenstring=i;
-#ifdef G__OLDIMPLEMENTATION1616
   if(string[i]==EOF) n_eof=0;
-#endif
   argv[0]=line;
 
   *argc=0;
@@ -379,9 +374,6 @@ G__value *buf1,*buf2;
 	  
 	case 'h':
 	case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-	case 'g':
-#endif
 	  memcpy(
 	         (void *)(buf1->obj.i+var1->p[i])
 		 ,(void *)(buf2->obj.i+var2->p[i])
@@ -615,11 +607,6 @@ char *typename;
   case 'o':
     sprintf(vtype,"automatic");
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-    sprintf(vtype,"bool");
-    break;
-#endif
   default:
     sprintf(vtype,"unknown %s",ispointer);
     break;

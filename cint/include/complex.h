@@ -8,7 +8,6 @@
 #define G__COMPLEX_H
 
 #include <iostream.h>
-#include <math.h>
 
 class complex {
       public:

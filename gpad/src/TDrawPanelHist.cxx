@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.4 2001/08/07 13:44:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -181,10 +181,6 @@ TDrawPanelHist::TDrawPanelHist(const char *name, const char *title, UInt_t ww, U
    Update();
    SetEditable(kFALSE);
 
-   //add this TDrawPanelHist to the list of cleanups such that in case
-   //the referenced object is deleted, its pointer be reset
-   gROOT->GetListOfCleanups()->Add(this);
-   
    fRefPad->cd();
 }
 
@@ -192,7 +188,6 @@ TDrawPanelHist::TDrawPanelHist(const char *name, const char *title, UInt_t ww, U
 TDrawPanelHist::~TDrawPanelHist()
 {
    // DrawPanelHist destructor.
-   gROOT->GetListOfCleanups()->Remove(this);
 
 }
 
@@ -209,7 +204,6 @@ void TDrawPanelHist::Apply(const char *action)
 {
    // Collect all options and draw histogram.
 
-   if (!fHistogram) return;
    if (!fRefPad) return;
    fRefPad->cd();
 
@@ -289,7 +283,6 @@ void TDrawPanelHist::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    // We return in the first case.
    // When called by the slider,  px = 0 and py = 0
 
-   //if (event == kMouseLeave || event == kMouseEnter || (px && py)) {
    if (px && py) {
       SetCursor(kCross);
       return;
@@ -307,12 +300,12 @@ void TDrawPanelHist::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (!fRefPad) return;
    fRefPad->cd();
+   fRefPad->GetCanvas()->FeedbackMode(kTRUE);
+   gVirtualX->SetLineWidth(2);
 
    switch (event) {
 
    case kButton1Down:
-      fRefPad->GetCanvas()->FeedbackMode(kTRUE);
-      gVirtualX->SetLineWidth(2);
       gVirtualX->SetLineColor(-1);
       if (done) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       done = kTRUE;
@@ -366,15 +359,6 @@ void TDrawPanelHist::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
    }
-}
-
-//______________________________________________________________________________
-void TDrawPanelHist::RecursiveRemove(TObject *obj)
-{
-//  when obj is deleted, clear fHistogram if fHistogram=obj
-   
-   TDialogCanvas::RecursiveRemove(obj);
-   if (obj == fHistogram) fHistogram = 0;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLRow.cxx,v 1.1 2001/06/14 23:19:15 rdm Exp $
+// @(#)root/pgsql:$Name:$:$Id:$
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -19,8 +19,9 @@ TPgSQLRow::TPgSQLRow(void *res, ULong_t rowHandle)
 {
    // Single row of query result.
 
-   fResult = (PGresult *) res;
-   fRowNum = (ULong_t) rowHandle;
+   fResult      = (PGresult *) res;
+   fRowNum      = (ULong_t) rowHandle;
+   fFieldLength = 0;
 }
 
 //______________________________________________________________________________
@@ -40,8 +41,9 @@ void TPgSQLRow::Close(Option_t *)
    if (!fRowNum)
       return;
 
-   fResult = 0;
-   fRowNum = 0;
+   fResult      = 0;
+   fRowNum      = 0;
+   fFieldLength = 0;
 }
 
 //______________________________________________________________________________
@@ -64,14 +66,15 @@ ULong_t TPgSQLRow::GetFieldLength(Int_t field)
    if (!IsValid(field))
       return 0;
 
-   ULong_t fieldLength = (ULong_t) PQfsize(fResult, field);
+   if (!fFieldLength)
+      fFieldLength = (ULong_t) PQfsize(fResult, field);
 
-   if (!fieldLength) {
+   if (!fFieldLength) {
       Error("GetFieldLength", "cannot get field length");
       return 0;
    }
 
-   return fieldLength;
+   return fFieldLength;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.34 2002/02/02 11:54:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.23 2001/05/23 09:54:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 #include "TMessage.h"
 #include "TClonesArray.h"
 #include "TVirtualPad.h"
-#include "TSystem.h"
 
 TBranch *gBranch;
 
@@ -72,7 +71,6 @@ TBranch::TBranch(): TNamed()
    fEntries        = 0;
    fTotBytes       = 0;
    fZipBytes       = 0;
-   fSplitLevel     = 0;
    fNBasketRAM     = kMaxRAM+1;
    fBasketRAM      = new Int_t[kMaxRAM]; for (Int_t i=0;i<kMaxRAM;i++) fBasketRAM[i] = -1;
    fBasketEntry    = 0;
@@ -152,7 +150,6 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    fEntries        = 0;
    fTotBytes       = 0;
    fZipBytes       = 0;
-   fSplitLevel     = 0;
    fOffset         = 0;
    fNleaves        = 0;
    fAddress        = (char*)address;
@@ -205,15 +202,9 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
          } else if (*leaftype == 'D') {
             leaf = new TLeafD(leafname,leaftype);
          }
-         if (leaf->IsZombie()) {
-            delete leaf;
-            Error("TBranch","Illegal leaf:%s/%s",name,leaflist);
-            MakeZombie();
-            return;
-         }
          if (!leaf) {
-            Error("TLeaf","Illegal data type");
-            return;
+           Error("TLeaf","Illegal data type");
+           return;
          }
          leaf->SetBranch(this);
          leaf->SetAddress((char*)(fAddress+offset));
@@ -280,7 +271,7 @@ void TBranch::Browse(TBrowser *b)
       fLeaves.Browse(b);
    } else {
       // Get the name and strip any extra brackets
-      // in order to get the full arrays.
+      // in order to get the full arrays. 
       TString name = GetName();
       Int_t pos = name.First('[');
       if (pos!=kNPOS) name.Remove(pos);
@@ -440,14 +431,15 @@ Int_t TBranch::Fill()
            //Increase BasketEntry buffer of a minimum of 10 locations
            // and a maximum of 50 per cent of current size
          Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
-         fBasketEntry  = TStorage::ReAllocInt(fBasketEntry, newsize, fMaxBaskets);
-         fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
-#ifndef R__LARGEFILE64
-         fBasketSeek   = TStorage::ReAllocInt(fBasketSeek, newsize, fMaxBaskets);
-#else
-         fBasketSeek   = (Seek_t*)TStorage::ReAlloc(fBasketSeek,
-                             newsize*sizeof(Seek_t),fMaxBaskets*sizeof(Seek_t));
-#endif
+         Int_t *newbuf = (Int_t*)TStorage::ReAlloc(fBasketEntry,
+                         newsize*sizeof(Int_t),fMaxBaskets*sizeof(Int_t));
+         fBasketEntry  = newbuf;
+                newbuf = (Int_t*)TStorage::ReAlloc(fBasketBytes,
+                         newsize*sizeof(Int_t),fMaxBaskets*sizeof(Int_t));
+         fBasketBytes  = newbuf;
+         Seek_t *nseek = (Seek_t*)TStorage::ReAlloc(fBasketSeek,
+                         newsize*sizeof(Seek_t),fMaxBaskets*sizeof(Seek_t));
+         fBasketSeek   = nseek;
          fMaxBaskets   = newsize;
       }
       fBasketEntry[fWriteBasket] = fEntryNumber;
@@ -467,61 +459,49 @@ void TBranch::FillLeaves(TBuffer &b)
 }
 
 //______________________________________________________________________________
-TBranch *TBranch::FindBranch(const char* searchname)
+TBranch *TBranch::FindBranch(const char* branchname) 
 {
-   char brname[kMaxLen];
-   char longsearchname[kMaxLen];
+   char name[kMaxLen];
    TIter next(GetListOfBranches());
-
-   // For branches we allow for one level up to be prefixed to the
-   // name
-
-   strcpy(longsearchname,GetName());
-   char *dim = (char*)strstr(longsearchname,"[");
-   if (dim) dim[0]='\0';
-   strcat(longsearchname,".");
-   strcat(longsearchname,searchname);
-
+   
    TBranch *branch;
    while ((branch = (TBranch*)next())) {
-      strcpy(brname,branch->GetName());
-      dim = (char*)strstr(brname,"[");
+      strcpy(name,branch->GetName());
+      char *dim = (char*)strstr(name,"[");
       if (dim) dim[0]='\0';
-      if (!strcmp(searchname,brname)) return branch;
-
-      if (!strcmp(longsearchname,brname)) return branch;
+      if (!strcmp(branchname,name)) return branch;
    }
-
+   
    //search in list of friends
    return 0;
 }
 
 //______________________________________________________________________________
-TLeaf *TBranch::FindLeaf(const char* searchname)
+TLeaf *TBranch::FindLeaf(const char* searchname) 
 {
    char leafname[kMaxLen];
    char leaftitle[kMaxLen];
    char longname[kMaxLen];
    char longtitle[kMaxLen];
-
+   
    // For leaves we allow for one level up to be prefixed to the
    // name
-
+   
    TIter next (GetListOfLeaves());
    TLeaf *leaf;
    while ((leaf = (TLeaf*)next())) {
       strcpy(leafname,leaf->GetName());
       char *dim = (char*)strstr(leafname,"[");
       if (dim) dim[0]='\0';
-
+      
       if (!strcmp(searchname,leafname)) return leaf;
-
+      
       // The TLeafElement contains the branch name in its name,
       // let's use the title....
       strcpy(leaftitle,leaf->GetTitle());
       dim = (char*)strstr(leaftitle,"[");
       if (dim) dim[0]='\0';
-
+      
       if (!strcmp(searchname,leaftitle)) return leaf;
 
       TBranch * branch = leaf->GetBranch();
@@ -544,13 +524,13 @@ TLeaf *TBranch::FindLeaf(const char* searchname)
          // a sub-branch.  Since we do not see it through
          // TTree::GetListOfBranches, we need to see it indirectly.
          // This is the less sturdy part of this search ... it may
-         // need refining ...
+         // need refining ... 
          if (strstr(searchname,".")
-             && !strcmp(searchname,branch->GetName())) return leaf;
+             && !strcmp(searchname,branch->GetName())) return leaf;                
          //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
       }
    }
-
+   
    //search in list of friends
    return 0;
 }
@@ -576,7 +556,6 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    TDirectory *cursav = gDirectory;
    TFile *file = GetFile(0);
    basket = new TBasket();
-   basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
@@ -632,8 +611,6 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 //
 //  The function returns the number of bytes read from the input buffer.
 //  If entry does not exist or an I/O error occurs, the function returns 0.
-//
-//  See IMPORTANT REMARKS in TTree::GetEntry
 
    if (TestBit(kDoNotProcess) && !getall) return 0;
    //if (fReadEntry == entry) return 1;  //side effects in case user Clear his structures
@@ -743,39 +720,18 @@ TFile *TBranch::GetFile(Int_t mode)
 //  Return pointer to the file where branch buffers reside
 
    if (fDirectory) return fDirectory->GetFile();
+   TFile *file;
 
    // check if a file with this name is in the list of Root files
-   TFile *file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
+   file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
    if (file) {
       fDirectory = (TDirectory*)file;
       return file;
    }
 
-   TString bFileName = fFileName;
-
-   // check if branch file name is absolute or a URL (e.g. /castor/...,
-   // root://host/...)
-   char *bname = gSystem->ExpandPathName(fFileName.Data());
-   if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, "://")) {
-
-      // if not, get filename where tree header is stored
-      const char *tfn = fTree->GetCurrentFile()->GetName();
-
-      // if this is an absolute path or a URL then prepend this path
-      // to the branch file name
-      char *tname = gSystem->ExpandPathName(tfn);
-      if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, "://")) {
-         bFileName = gSystem->DirName(tname);
-         bFileName += "/";
-         bFileName += fFileName;
-      }
-      delete [] tname;
-   }
-   delete [] bname;
-
    // Open file (new file if mode = 1)
-   if (mode) file = TFile::Open(bFileName, "recreate");
-   else      file = TFile::Open(bFileName);
+   if (mode) file = TFile::Open(fFileName.Data(),"recreate");
+   else      file = TFile::Open(fFileName.Data());
    if (file->IsZombie()) {delete file; return 0;}
    fDirectory = (TDirectory*)file;
    return file;
@@ -921,8 +877,11 @@ void TBranch::Reset(Option_t *)
 //    Entries, max and min are reset
 //
 
-   Int_t nbaskets = fBaskets.GetEntries();
    fBaskets.Delete();
+   if (fBasketEntry) delete [] fBasketEntry;
+   if (fBasketBytes) delete [] fBasketBytes;
+   if (fBasketSeek)  delete [] fBasketSeek;
+   fBasketEntry    = 0;
    fReadBasket     = 0;
    fReadEntry      = -1;
    fWriteBasket    = 0;
@@ -930,15 +889,17 @@ void TBranch::Reset(Option_t *)
    fTotBytes       = 0;
    fZipBytes       = 0;
    fEntryNumber    = 0;
+   fBasketEntry    = new Int_t[fMaxBaskets];
+   fBasketBytes    = new Int_t[fMaxBaskets];
+   fBasketSeek     = new Seek_t[fMaxBaskets];
+   fBasketEntry[0] = fEntryNumber;
    for (Int_t i=0;i<fMaxBaskets;i++) {
-      if (fBasketBytes) fBasketBytes[i] = 0;
-      if (fBasketEntry) fBasketEntry[i] = 0;
-      if (fBasketSeek)  fBasketSeek[i]  = 0;
+      fBasketBytes[i] = 0;
+      fBasketEntry[i] = 0;
+      fBasketSeek[i]  = 0;
    }
-   if (nbaskets) {
-      TBasket *basket = new TBasket(GetName(),fTree->GetName(),this);
-      fBaskets.AddAt(basket,0);
-   }
+   TBasket *basket = new TBasket(GetName(),fTree->GetName(),this);
+   fBaskets.AddAt(basket,0);
 }
 
 //______________________________________________________________________________
@@ -978,16 +939,6 @@ void TBranch::SetAutoDelete(Bool_t autodel)
 }
 
 //______________________________________________________________________________
-void TBranch::SetBasketSize(Int_t buffsize)
-{
-// Set the basket size
-// The function makes sure that the basket size is greater than fEntryOffsetlen
-   
-   if (buffsize < 100+fEntryOffsetLen) buffsize = 100+fEntryOffsetLen;
-   fBasketSize = buffsize;
-}
-
-//______________________________________________________________________________
 void TBranch::SetBufferAddress(TBuffer *buf)
 {
    // Set address of this branch directly from a TBuffer to avoid streaming.
@@ -1020,74 +971,31 @@ void TBranch::SetCompressionLevel(Int_t level)
 //______________________________________________________________________________
 void TBranch::SetFile(TFile *file)
 {
-   // Set file where this branch writes/reads its buffers.
-   // By default the branch buffers reside in the file where the
-   // Tree was created.
-   // If the file name where the tree was created is an absolute
-   // path name or an URL (e.g. /castor/... or root://host/...)
-   // and if the fname is not an absolute path name or an URL then
-   // the path of the tree file is prepended to fname to make the
-   // branch file relative to the tree file. In this case one can
-   // move the tree + all branch files to a different location in
-   // the file system and still access the branch files.
-   // The ROOT file will be connected only when necessary.
-   // If called by TBranch::Fill (via TBasket::WriteFile), the file
-   // will be created with the option "recreate".
-   // If called by TBranch::GetEntry (via TBranch::GetBasket), the file
-   // will be opened in read mode.
-   // To open a file in "update" mode or with a certain compression
-   // level, use TBranch::SetFile(TFile *file).
-
+//  Set file where this branch writes/reads its buffers
+//
    if (file == 0) file = fTree->GetCurrentFile();
    fDirectory = (TDirectory*)file;
    if (file == fTree->GetCurrentFile()) fFileName = "";
    else                                 fFileName = file->GetName();
-
-   //apply to all existing baskets
-   TIter nextb(GetListOfBaskets());
-   TBasket *basket;
-   while ((basket = (TBasket*)nextb())) {
-      basket->SetParent(file);
-   }
-   
-   //apply to sub-branches as well
-   TIter next(GetListOfBranches());
-   TBranch *branch;
-   while ((branch = (TBranch*)next())) {
-      branch->SetFile(file);
-   }
 }
 
 //______________________________________________________________________________
 void TBranch::SetFile(const char *fname)
 {
-   // Set file where this branch writes/reads its buffers.
-   // By default the branch buffers reside in the file where the
-   // Tree was created.
-   // If the file name where the tree was created is an absolute
-   // path name or an URL (e.g. /castor/... or root://host/...)
-   // and if the fname is not an absolute path name or an URL then
-   // the path of the tree file is prepended to fname to make the
-   // branch file relative to the tree file. In this case one can
-   // move the tree + all branch files to a different location in
-   // the file system and still access the branch files.
-   // The ROOT file will be connected only when necessary.
-   // If called by TBranch::Fill (via TBasket::WriteFile), the file
-   // will be created with the option "recreate".
-   // If called by TBranch::GetEntry (via TBranch::GetBasket), the file
-   // will be opened in read mode.
-   // To open a file in "update" mode or with a certain compression
-   // level, use TBranch::SetFile(TFile *file).
+//  Set file where this branch writes/reads its buffers
+//  By default the branch buffers reside in the file where the Tree was created.
+//  Branches of the same Tree may be on different files.
+//
+//  The Root file will be connected only when necessary.
+//  If called by TBranch::Fill (via TBasket::WriteFile), the file
+//  will be created with the option "recreate".
+//  If called by TBranch::GetEntry (via TBranch::GetBasket), the file
+//  will be open in read mode.
+//
+//  To open a file in "update" mode, use TBranch::SetFile(TFile *file).
 
    fFileName  = fname;
    fDirectory = 0;
-
-   //apply to sub-branches as well
-   TIter next(GetListOfBranches());
-   TBranch *branch;
-   while ((branch = (TBranch*)next())) {
-      branch->SetFile(fname);
-   }
 }
 
 //_______________________________________________________________________
@@ -1102,22 +1010,21 @@ void TBranch::Streamer(TBuffer &b)
       gROOT->SetReadingObject(kTRUE);
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 5) {
-
          TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
 
-         fDirectory = gDirectory;
-         if (fFileName.Length() != 0) fDirectory = 0;
          TIter next(GetListOfLeaves());
          TLeaf *leaf;
          while ((leaf=(TLeaf*)next())) {
             leaf->SetBranch(this);
          }
+         fDirectory = gDirectory;
          fNleaves = fLeaves.GetEntriesFast();
-         if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
+         if (fFileName.Length() != 0) fDirectory = 0;
          gROOT->SetReadingObject(kFALSE);
          return;
       }
       //====process old versions before automatic schema evolution
+      gBranch = this;
       TNamed::Streamer(b);
       b >> fCompress;
       b >> fBasketSize;
@@ -1157,7 +1064,6 @@ void TBranch::Streamer(TBuffer &b)
          if (fFileName.Length() != 0) fDirectory = 0;
       }
       if (v < 4) SetAutoDelete(kTRUE);
-      if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
       gROOT->SetReadingObject(kFALSE);
       b.CheckByteCount(R__s, R__c, TBranch::IsA());
       //====end of old versions

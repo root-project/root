@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.11 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.7 2001/05/11 09:52:15 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -18,12 +18,10 @@
 //  if tolower = 2 same as tolower=1 except that the first character is also
 //                convertex to lower case
 /////////////////////////////////////////////////////////////////////////
-
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "Riostream.h"
+#include <iostream.h>
 #include "TFile.h"
 #include "TDirectory.h"
 #include "TTree.h"
@@ -108,7 +106,6 @@ void MAIN__() {}
 # define hij     hij_
 # define hix     hix_
 # define hijxy   hijxy_
-# define hije    hije_
 # define hcdir   hcdir_
 # define zitoh   zitoh_
 # define uhtoc   uhtoc_
@@ -142,7 +139,6 @@ void MAIN__() {}
 # define hij     HIJ
 # define hix     HIX
 # define hijxy   HIJXY
-# define hije    HIJE
 # define hcdir   HCDIR
 # define zitoh   ZITOH
 # define uhtoc   UHTOC
@@ -205,7 +201,6 @@ extern "C" float type_of_call hif(const int&,const int&);
 extern "C" float type_of_call hij(const int&,const int&,const int&);
 extern "C" void  type_of_call hix(const int&,const int&,const float&);
 extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
-extern "C" float type_of_call hije(const int&,const int&,const int&);
 #ifndef WIN32
 extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
 #else
@@ -294,14 +289,13 @@ int main(int argc, char **argv)
 
   char root_file_title[128];
   sprintf(root_file_title,"HBOOK file: %s converted to ROOT",file_in);
-  TFile* hfile= TFile::Open(file_out,"RECREATE",root_file_title,compress);
+  TFile hfile(file_out,"RECREATE",root_file_title,compress);
 
   convert_directory("//example");
 
-  hfile->Write();
-  hfile->ls();
-  hfile->Close();
-  delete hfile;
+  hfile.Write();
+  hfile.ls();
+  hfile.Close();
   return(0);
 }
 
@@ -476,18 +470,12 @@ void convert_directory(const char *dir)
   TH2F *h2 = new TH2F(idname,chtitl,ncx,xmin,xmax,ncy,ymin,ymax);
   Float_t offsetx = 0.5*(xmax-xmin)/ncx;
   Float_t offsety = 0.5*(ymax-ymin)/ncy;
-  Int_t lw = lq[lcont];
-  if (lw) h2->Sumw2();
 
   Float_t x,y;
   for (Int_t j=0;j<=ncy+1;j++) {
      for (Int_t i=0;i<=ncx+1;i++) {
         hijxy(id,i,j,x,y);
         h2->Fill(x+offsetx,y+offsety,hij(id,i,j));
-        if (lw) {
-           Double_t err2 = hije(id,i,j);
-           h2->SetCellError(i,j,err2);
-        }
      }
   }
   h2->SetEntries(nentries);

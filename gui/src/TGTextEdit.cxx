@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.13 2001/07/03 16:17:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.12 2001/06/27 16:54:25 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -727,7 +727,6 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
    TGTextView::HandleButton(event);
 
    if (event->fType == kButtonPress) {
-      SetFocus();
       if (event->fCode == kButton1 || event->fCode == kButton2) {
          pos.fY = ToObjYCoord(fVisible.fY + event->fY);
          if (pos.fY >= fText->RowCount())
@@ -997,50 +996,21 @@ Bool_t TGTextEdit::HandleCrossing(Event_t *event)
    if (event->fWindow != fCanvas->GetId())
       return kTRUE;
 
-   if (gVirtualX->GetInputFocus() != fCanvas->GetId()) {
-      if (event->fType == kEnterNotify) {
-         if (!fCurBlink)
-            fCurBlink = new TViewTimer(this, 500);
-         fCurBlink->Reset();
-         gSystem->AddTimer(fCurBlink);
-      } else {
-         if (fCurBlink) fCurBlink->Remove();
-         if (fCursorState == 2) {
-            DrawCursor(1);
-            fCursorState = 1;
-         }
+   if (event->fType == kEnterNotify) {
+      if (!fCurBlink)
+         fCurBlink = new TViewTimer(this, 500);
+      fCurBlink->Reset();
+      gSystem->AddTimer(fCurBlink);
+   } else {
+      if (fCurBlink) fCurBlink->Remove();
+      if (fCursorState == 2) {
+         DrawCursor(1);
+         fCursorState = 1;
       }
    }
 
    TGTextView::HandleCrossing(event);
 
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGTextEdit::HandleFocusChange(Event_t *event)
-{
-   // Handle focus change event in text edit widget.
-
-   if (event->fWindow != fCanvas->GetId())
-      return kTRUE;
-
-   // check this when porting to Win32
-   if ((event->fCode == kNotifyNormal) && (event->fState != kNotifyPointer)) {
-      if (event->fType == kFocusIn) {
-         if (!fCurBlink)
-            fCurBlink = new TViewTimer(this, 500);
-         fCurBlink->Reset();
-         gSystem->AddTimer(fCurBlink);
-      } else {
-         if (fCurBlink) fCurBlink->Remove();
-         if (fCursorState == 2) {
-            DrawCursor(1);
-            fCursorState = 1;
-         }
-      }
-      fClient->NeedRedraw(this);
-   }
    return kTRUE;
 }
 
@@ -1379,14 +1349,6 @@ void TGTextEdit::ScrollCanvas(Int_t new_top, Int_t direction)
    TGTextView::ScrollCanvas(new_top, direction);
 
    CursorOn();
-}
-
-//______________________________________________________________________________
-void TGTextEdit::SetFocus()
-{
-   // Gives the keyboard input focus to this text edit widget.
-
-   gVirtualX->SetInputFocus(fCanvas->GetId());
 }
 
 //______________________________________________________________________________

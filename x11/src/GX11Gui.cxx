@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.19 2001/08/21 17:29:39 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.17 2001/05/11 17:20:14 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -153,6 +153,11 @@ inline void AsmLong(Long_t i1, Long_t i2, Long_t &ll)
    conv.i[0] = (Int_t) i1;
    conv.i[1] = (Int_t) i2;
    ll = conv.l;
+}
+
+extern "C" {
+   static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err);
+   static Int_t RootX11IOErrorHandler(Display *);
 }
 
 //______________________________________________________________________________
@@ -1947,18 +1952,6 @@ void TGX11::SelectInput(Window_t id, UInt_t evmask)
    MapEventMask(evmask, xevmask);
 
    XSelectInput(fDisplay, (Window) id, xevmask);
-}
-
-//______________________________________________________________________________
-Window_t TGX11::GetInputFocus()
-{
-   // Returns the window id of the window having the input focus.
-
-   Window focus;
-   int    return_to;
-
-   XGetInputFocus(fDisplay, &focus, &return_to);
-   return (Window_t) focus;
 }
 
 //______________________________________________________________________________

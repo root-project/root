@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Alpha/Linux with gcc
 
 PLATFORM      = linux

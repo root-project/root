@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.23 2001/12/02 22:19:24 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.15 2001/05/23 09:52:11 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -49,7 +49,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
 #include "TClonesArray.h"
 #include "TMath.h"
 #include "TError.h"
@@ -99,10 +98,9 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
       Error("TClonesArray", "%s does not inherit from TObject", classname);
       return;
    }
-   char *name = new char[strlen(classname)+2];
-   sprintf(name, "%ss", classname);
+   char name[100];
+   sprintf(name,"%ss",classname);
    SetName(name);
-   delete [] name;
 
    fKeep = new TObjArray(s);
 
@@ -117,11 +115,9 @@ TClonesArray::~TClonesArray()
    if (fKeep) {
       for (Int_t i = 0; i < fKeep->fSize; i++) {
          // remove any possible entries from the ObjectTable
-         if (fClass->GetClassInfo()) {
-            if (TObject::GetObjectStat() && gObjectTable)
-               gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-            ::operator delete(fKeep->fCont[i]);
-         }
+         if (TObject::GetObjectStat() && gObjectTable)
+            gObjectTable->RemoveQuietly(fKeep->fCont[i]);
+         ::operator delete(fKeep->fCont[i]);
       }
    }
    SafeDelete(fKeep);
@@ -132,34 +128,13 @@ void TClonesArray::BypassStreamer(Bool_t bypass)
 {
    // When the kBypassStreamer bit is set, the automatically
    // generated Streamer can call directly TClass::WriteBuffer.
-   // Bypassing the Streamer improves the performance when writing/reading
-   // the objects in the TClonesArray. However there is a drawback:
-   // When a TClonesArray is written with split=0 bypassing the Streamer,
-   // the StreamerInfo of the class in the array being optimized,
-   // one cannot use later the TClonesArray with split>0. For example,
-   // there is a problem with the following scenario:
-   //  1- a class Foo has a TClonesArray of Bar objects
-   //  2- the Foo object is written with split=0 to Tree T1.
-   //     In this case the StreamerInfo for the class Bar is created
-   //     in optimized mode in such a way that data members of the same type
-   //     are written as an array improving the I/O performance.
-   //  3- in a new program, T1 is read and a new Tree T2 is created
-   //      with the object Foo in split>1
-   //  4- When the T2 branch is created, the StreamerInfo for the class Bar
-   //     is created with no optimization (mandatory for the split mode).
-   //     The optimized Bar StreamerInfo is going to be used to read
-   //     the TClonesArray in T1. The result will be Bar objects with
-   //     data member values not in the right sequence.
-   // The solution to this problem is to call BypassStreamer(kFALSE)
-   // for the TClonesArray. In this case, the normal Bar::Streamer function
-   // will be called. The BAR::Streamer function works OK independently
-   // if the Bar StreamerInfo had been generated in optimized mode or not.
 
    if (bypass)
       SetBit(kBypassStreamer);
    else
       ResetBit(kBypassStreamer);
 }
+
 
 //______________________________________________________________________________
 void TClonesArray::Compress()
@@ -223,7 +198,7 @@ void TClonesArray::Delete(Option_t *)
          delete fCont[i];
       }
 
-   // Protect against erroneously setting of owner bit.
+   // Protect against erroneously setting of owne bit.
    SetOwner(kFALSE);
 
    TObjArray::Clear();
@@ -298,7 +273,7 @@ void TClonesArray::ExpandCreate(Int_t n)
 void TClonesArray::ExpandCreateFast(Int_t n)
 {
    // Expand or shrink the array to n elements and create the clone
-   // objects by calling their default ctor. If n is less than the current size
+   // objects by caling their default ctor. If n is less than the current size
    // the array is shrinked and the allocated space is freed.
    // This routine is typically used to create a clonesarray into which
    // one can directly copy object data without going via the
@@ -380,8 +355,7 @@ void TClonesArray::Sort(Int_t upto)
    // If objects in array are sortable (i.e. IsSortable() returns true
    // for all objects) then sort array.
 
-   Int_t nentries = GetAbsLast()+1;
-   if (nentries <= 0 || fSorted) return;
+   if (GetAbsLast() == -1 || fSorted) return;
    for (Int_t i = 0; i < fSize; i++)
       if (fCont[i]) {
          if (!fCont[i]->IsSortable()) {
@@ -390,7 +364,7 @@ void TClonesArray::Sort(Int_t upto)
          }
       }
 
-   QSort(fCont, fKeep->fCont, 0, TMath::Min(nentries, upto-fLowerBound));
+   QSort(fCont, fKeep->fCont, 0, TMath::Min(fSize, upto-fLowerBound));
 
    fLast   = -2;
    fSorted = kTRUE;
@@ -406,7 +380,6 @@ void TClonesArray::Streamer(TBuffer &b)
    Int_t   nobjects;
    char    nch;
    TString s;
-   char classv[256];
    UInt_t R__s, R__c;
 
    if (b.IsReading()) {
@@ -420,16 +393,9 @@ void TClonesArray::Streamer(TBuffer &b)
       if (v > 1)
          fName.Streamer(b);
       s.Streamer(b);
-      strcpy(classv,s.Data());
-      Int_t clv = 0;
-      char *semicolon = strchr(classv,';');
-      if (semicolon) {
-         *semicolon = 0;
-         clv = atoi(semicolon+1);
-      }
-      TClass *cl = gROOT->GetClass(classv);
+      TClass *cl = gROOT->GetClass(s.Data());
       if (!cl) {
-         printf("TClonesArray::Streamer expecting class %s\n", classv);
+         printf("TClonesArray::Streamer expecting class %s\n", s.Data());
          b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
          return;
       }
@@ -455,7 +421,7 @@ void TClonesArray::Streamer(TBuffer &b)
       if (fKeep->GetSize() < nobjects)
          Expand(nobjects);
 
-      TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
+      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
       //must test on sinfo and not on fClass (OK when writing)
       if (CanBypassStreamer()) {
          for (Int_t i = 0; i < nobjects; i++) {
@@ -487,26 +453,16 @@ void TClonesArray::Streamer(TBuffer &b)
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
-      //Make sure TStreamerInfo is not optimized, otherwise it will not be
-      //possible to support schema evolution in read mode.
-      //In case the StreamerInfo has already been computed and optimized,
-      //one must disable the option BypassStreamer
-      Bool_t optim = TStreamerInfo::CanOptimize();
-      if (optim) TStreamerInfo::Optimize(kFALSE);
-      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
-      sinfo->ForceWriteInfo();
-      if (optim) TStreamerInfo::Optimize(kTRUE);
-      if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
-
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
-      sprintf(classv,"%s;%d",fClass->GetName(),fClass->GetClassVersion());
-      s = classv;
+      s = fClass->GetName();
       s.Streamer(b);
       nobjects = GetEntriesFast();
       b << nobjects;
       b << fLowerBound;
+      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      sinfo->ForceWriteInfo();
       if (CanBypassStreamer()) {
          sinfo->WriteBufferClones(b,this,nobjects,-1,0);
       } else {

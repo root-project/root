@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.11 2001/07/17 14:38:41 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.9 2001/06/26 10:21:14 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // This class implements threads. A thread is an execution environment  //
 // much lighter than a process. A single process can have multiple      //
 // threads. The actual work is done via the TThreadImp class (either    //
-// TPosixThread, TThreadSolaris or TThreadNT).                          //
+// TThreadPosix, TThreadSolaris or TThreadNT).                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,6 @@
 #include "TCanvas.h"
 #include "TError.h"
 #include "CallFunc.h"
-#include "TMethodCall.h"
 
 
 TThreadImp     *TThread::fgThreadImp = 0;
@@ -690,8 +689,8 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 //______________________________________________________________________________
 void TThread::XAction()
 {
-   char const acts[] = "PRTF CUPD CANV CDEL PDCD METH";
-   enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20,kMETH=25};
+   char const acts[] = "PRTF CUPD CANV CDEL PDCD";
+   enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20};
    int iact = strstr(acts,fgXAct) - acts;
 
    switch (iact) {
@@ -752,11 +751,7 @@ void TThread::XAction()
                                   *((Int_t*)(fgXArr[6])));
 
          break;
-      case kMETH:
-      ((TMethodCall *) fgXArr[1])->Execute((void*)(fgXArr[2]),(const char*)(fgXArr[3]));
-         break;      
-         
-         default:
+      default:
          fprintf(stderr,"TThread::XARequest. Wrong case\n");
    }
 

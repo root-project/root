@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.6 2001/08/15 15:01:54 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.4 2001/03/29 10:57:01 brun Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -57,7 +57,7 @@ TOrdCollection::~TOrdCollection()
    if (IsOwner())
       Delete();
 
-   ::operator delete(fCont);
+   delete [] fCont;
    fCont = 0;
    fSize = 0;
 }
@@ -128,7 +128,7 @@ void TOrdCollection::AddBefore(TObject *before, TObject *obj)
          AddFirst(obj);
          return;
       }
-      AddAt(obj, idx);
+      AddAt(obj, idx-1);
    }
 }
 
@@ -195,7 +195,7 @@ void TOrdCollection::Clear(Option_t *)
    if (IsOwner())
       Delete();
    else {
-      ::operator delete(fCont);
+      delete [] fCont;
       fCont = 0;
       Init(fCapacity);
       fSize = 0;
@@ -212,7 +212,7 @@ void TOrdCollection::Delete(Option_t *)
       if (obj && obj->IsOnHeap())
          TCollection::GarbageCollect(obj);
    }
-   ::operator delete(fCont);
+   delete [] fCont;
    fCont = 0;
    Init(fCapacity);
    fSize = 0;
@@ -275,7 +275,7 @@ void TOrdCollection::Init(Int_t capacity)
    // Initialize ordered collection.
 
    fCapacity = capacity;
-   fCont = (TObject**) ::operator new(fCapacity*sizeof(TObject*)); //new TObject* [fCapacity];
+   fCont = new TObject* [fCapacity];
    memset(fCont, 0, fCapacity*sizeof(TObject*));
    fGapStart = 0;
    fGapSize  = capacity;

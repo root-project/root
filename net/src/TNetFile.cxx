@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.24 2001/08/30 16:37:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.21 2001/02/26 02:48:21 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -34,8 +34,7 @@
 // Connecting to a rootd requires the remote user id and password.      //
 // TNetFile allows three ways for you to provide your login:            //
 //   1) Setting it globally via the static functions:                   //
-//         TAuthenticate::SetGlobalUser() and                           //
-//         TAuthenticate::SetGlobalPasswd()                             //
+//          TNetFile::SetUser() and TNetFile::SetPasswd()               //
 //   2) Getting it from the ~/.netrc file (same file as used by ftp)    //
 //   3) Command line prompt                                             //
 // The different methods will be tried in the order given above.        //
@@ -129,7 +128,6 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    EMessageTypes kind;
    Int_t sec, tcpwindowsize = 65535;
 
-   fSocket    = 0;
    fOffset    = 0;
    fErrorCode = -1;
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.12 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.8 2001/05/31 15:45:45 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <fstream.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TPaveText.h"
 #include "TPaveLabel.h"
@@ -426,7 +426,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
    }
    Double_t yfont;
    if (GetTextFont()%10 > 2)
-      yfont = (gPad->PixeltoY(Int_t(-textsize))-gPad->PixeltoY(0))/(y2-y1)*dy;
+      yfont = (gPad->PixeltoY(-textsize)-gPad->PixeltoY(0))/(y2-y1)*dy;
    else
       yfont = textsize*dy;
    Double_t ytext = fY2 + 0.5*yspace;
@@ -808,9 +808,6 @@ void TPaveText::SavePrimitive(ofstream &out, Option_t *)
    } else {
       out<<"pt = new "<<ClassName()<<"("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
       <<","<<quote<<fOption<<quote<<");"<<endl;
-   }
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   pt->SetName("<<quote<<GetName()<<quote<<");"<<endl;
    }
    if (fLabel.Length() > 0) {
       out<<"   pt->SetLabel("<<quote<<fLabel<<quote<<");"<<endl;

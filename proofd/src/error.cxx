@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: error.cxx,v 1.3 2002/01/20 14:23:53 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: error.cxx,v 1.1 2000/12/15 19:38:35 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -66,8 +66,7 @@ static void Perror(char *buf)
    // Return in buf the message belonging to errno.
 
    int len = strlen(buf);
-#if (defined(__sun) && defined (__SVR4)) || defined (__linux) || \
-   defined(_AIX) || defined(__MACH__)
+#if (defined(__sun) && defined (__SVR4)) || defined (__linux) || defined(_AIX)
    sprintf(buf+len, " (%s)", strerror(GetErrno()));
 #else
    if (GetErrno() >= 0 && GetErrno() < sys_nerr)

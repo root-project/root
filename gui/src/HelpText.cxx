@@ -1,9 +1,9 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.2 2000/09/08 07:41:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
 
-#if !defined(WIN32) || defined(GDK_WIN32)
+#ifndef WIN32
 const char gHelpAbout[] = "\
 ROOT is an OO framework for large scale scientific data\n\
 analysis and data mining. It has been developed at CERN with the\n\
@@ -113,8 +113,8 @@ object is, for example an histogram, the status line indicates the name\n\
 of the histogram, the position x,y in histogram coordinates, the channel\n\
 number and the channel content.\n\n\
 If you click on the left mouse button, the object->ExecuteEvent(event,px,py)\n\
-function is called.\n\n"
-"If you click with the right mouse button, a context menu (see TContextMenu)\n\
+function is called.\n\n\
+If you click with the right mouse button, a context menu (see TContextMenu)\n\
 with the list of possible actions for this object is shown. You will notice\n\
 that most graphics objects derive from one or several attribute classes \n\
 TAttLine, TAttFill, TAttText or TAttMarker.\n\
@@ -160,8 +160,8 @@ You can create the following graphics objects:\n\
  -A Pad. Click with the left button and freeze again with the left button.\n\
   The editor draws a rubber band box to suggest the outline of the pad.\n\n\
  -A PaveLabel. Proceed like for a pad. Type the label to be put in the box. \n\
-  Then type carriage return. The text will be redrawn to fill the box.\n\n"
-" -A PaveText or PavesText. Proceed like for a pad.\n\
+  Then type carriage return. The text will be redrawn to fill the box.\n\n\
+ -A PaveText or PavesText. Proceed like for a pad.\n\
   You can then click on the PaveText object with the right mouse button\n\
   and select the option AddText.\n\n\
  -A PolyLine. Click with the left button for the first point,\n\
@@ -215,8 +215,8 @@ Each canvas has a toolbar menu with the following items:\n\
                      a new canvas is created. See OpenGL canvas help.\n\
                      The 3-d picture can be interactively rotated, zoomed\n\
                      in wireframe, solid, hidden line or stereo mode.\n\n\
-   \"Options\" with the items:\n"
-"      <Event Status> toggles the identification of the objects when\n\
+   \"Options\" with the items:\n\
+      <Event Status> toggles the identification of the objects when\n\
                      moving the mouse.\n\
       <Statistics>   toggles the display of the histogram statistics box.\n\
       <Histo Title>  toggles the display of the histogram title.\n\
@@ -285,4 +285,5 @@ const char gHelpGraphicsEditor[]= "empty";
 const char gHelpPullDownMenus[] = "empty";
 const char gHelpCanvas[]        = "empty";
 const char gHelpObjects[]       = "empty";
+
 #endif

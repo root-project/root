@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.34 2002/01/27 15:55:56 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.27 2001/06/07 10:47:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
     defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD)
+    defined(R__MACOSX)
 #   include <dirent.h>
 #else
 #   include <sys/dir.h>
@@ -53,13 +53,13 @@
 #endif
 #if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || \
     defined(R__SGI) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
+    defined(R__LYNXOS) || defined(R__MACOSX)
 #   include <sys/ioctl.h>
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
+#if defined(R__LINUX) && !defined(R__MKLINUX)
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
@@ -73,7 +73,7 @@
 #elif defined(R__MACOSX)
 #   include <sys/mount.h>
     extern "C" int statfs(const char *file, struct statfs *buffer);
-#elif defined(R__LINUX) || defined(R__HPUX) || defined(R__HURD)
+#elif defined(R__LINUX) || defined(R__HPUX)
 #   include <sys/vfs.h>
 #elif defined(R__FBSD)
 #   include <sys/param.h>
@@ -321,7 +321,7 @@ const char *TUnixSystem::GetError()
 
    Int_t err = GetErrno();
 #if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
-    defined(R__FBSD) || defined(R__HURD)
+    defined(R__FBSD)
    return strerror(err);
 #else
    if (err < 0 || err >= sys_nerr)
@@ -768,7 +768,6 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
 
    if (::access(path, mode) == 0)
       return kFALSE;
@@ -1030,7 +1029,7 @@ char *TUnixSystem::Which(const char *search, const char *wfil, EAccessMode mode)
 {
    // Find location of file "wfil" in a search path.
    // The search path is specified as a : separated list of directories.
-   // User must delete returned string. Returns 0 in case file is not found.
+   // User must delete returned string.
 
    char name[kMAXPATHLEN], file[kMAXPATHLEN];
    const char *ptr;
@@ -1281,7 +1280,9 @@ void TUnixSystem::Unload(const char *module)
 #ifdef NOCINT
    UnixDynUnload(module);
 #else
-   if (module) { TSystem::Unload(module); }
+   if (module) { }
+   // should call CINT unload file here, but does not work for sl's yet.
+   Warning("Unload", "CINT does not support unloading shared libs");
 #endif
 }
 
@@ -1516,7 +1517,7 @@ char *TUnixSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(port, kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -1931,6 +1932,9 @@ static struct signal_map {
    { SIGUSR2,  0, 0, "user-defined signal 2" }
 };
 
+extern "C" {
+   static void sighandler(int sig);
+}
 
 //______________________________________________________________________________
 static void sighandler(int sig)
@@ -1970,12 +1974,10 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
       sigact.sa_handler = sighandler;
 #endif
       sigemptyset(&sigact.sa_mask);
-      sigact.sa_flags = 0;
 #if defined(SA_INTERRUPT)       // SunOS
-      sigact.sa_flags |= SA_INTERRUPT;
-#endif
-#if defined(SA_RESTART)
-      sigact.sa_flags |= SA_RESTART;
+      sigact.sa_flags = SA_INTERRUPT;
+#else
+      sigact.sa_flags = 0;
 #endif
       if (sigaction(gSignalMap[sig].code, &sigact,
                     gSignalMap[sig].oldhandler) < 0)
@@ -2010,10 +2012,10 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
          sigact.sa_flags = 0;
 #endif
          if (sigaction(gSignalMap[sig].code, &sigact, &oldsigact[sig]) < 0)
-            ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
+            ::SysError("TUnixSystem::UnixIgnoreInterrupt", "sigaction");
       } else {
          if (sigaction(gSignalMap[sig].code, &oldsigact[sig], 0) < 0)
-            ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
+            ::SysError("TUnixSystem::UnixIgnoreInterrupt", "sigaction");
       }
    }
 }
@@ -2216,7 +2218,7 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 #if defined(R__SUN) || defined(R__SGI) || defined(R__AIX) || \
     defined(R__HPUX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD)
+    defined(R__MACOSX)
    struct dirent *dp;
 #else
    struct direct *dp;
@@ -2333,7 +2335,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2420,7 +2422,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.12 2001/07/12 17:29:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.1.1.6 2001/04/13 13:06:11 fisyak Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -73,7 +73,7 @@ TObjArray::~TObjArray()
    if (IsOwner())
       Delete();
 
-   ::operator delete(fCont);
+   delete [] fCont;
    fCont = 0;
    fSize = 0;
 }
@@ -433,14 +433,14 @@ void TObjArray::Init(Int_t s, Int_t lowerBound)
    // Initialize a TObjArray.
 
    if (fCont && fSize != s) {
-      ::operator delete(fCont);
+      delete [] fCont;
       fCont = 0;
    }
 
    fSize = s;
 
    if (!fCont)
-      fCont = (TObject**) ::operator new(fSize*sizeof(TObject*)); //new TObject* [fSize];
+      fCont = new TObject* [fSize];
    memset(fCont, 0, fSize*sizeof(TObject*));
    fLowerBound = lowerBound;
    fLast = -1;
@@ -511,12 +511,9 @@ void TObjArray::SetLast(Int_t last)
    // Set index of last object in array, effectively truncating the
    // array. Use carefully since whenever last position has to be
    // recalculated, e.g. after a Remove() or Sort() it will be reset
-   // to the last non-empty slot. If last is -2 this will force the
-   // recalculation of the last used slot.
+   // to the last non-empty slot.
 
-   if (last == -2)
-      fLast = -2;
-   else if (BoundsOk("SetLast", last))
+   if (BoundsOk("SetLast", last))
       fLast = last - fLowerBound;
 }
 

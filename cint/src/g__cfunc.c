@@ -796,7 +796,6 @@ G__COMPLETIONLIST G__completionlist[] = {
 	{"G__tracemode",NULL},
 	{"G__gettracemode",NULL},
 	{"G__debugmode",NULL},
-	{"G__setbreakpoint",NULL},
 	{"G__stepmode",NULL},
 	{"G__getstepmode",NULL},
 #ifndef G__OLDIMPLEMENTATION1142
@@ -3561,7 +3560,6 @@ void G__list_sut(fp) FILE *fp; {
    fprintf(fp,"   int G__pause();\n");
    fprintf(fp,"   int G__tracemode(int on_off);\n");
    /* fprintf(fp,"   int G__breakline(int line);\n"); */
-   fprintf(fp,"   int G__setbreakpoint(char* line,char* file);\n");
    fprintf(fp,"   int G__stepmode(int on_off);\n");
    fprintf(fp,"   [anytype] G__calc(const char *expression);\n");
    fprintf(fp,"   [anytype] G__exec_text(const char *unnamedmacro);\n");

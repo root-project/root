@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.9 2001/12/07 21:58:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.7 2001/06/29 17:28:07 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -76,7 +76,6 @@ Bool_t    AreCompatible(const TVectorD &v1, const TVectorD &v2);
 
 class TVectorD : public TObject {
 
-friend class TMatrixD;
 friend class TMatrixDRow;
 friend class TMatrixDColumn;
 friend class TMatrixDDiag;
@@ -219,7 +218,7 @@ inline TVectorD &TVectorD::operator=(const TVectorD &source)
    return *this;
 }
 
-inline TVectorD::TVectorD(const TVectorD &another) : TObject()
+inline TVectorD::TVectorD(const TVectorD &another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());

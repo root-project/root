@@ -21,7 +21,7 @@
 
 #if defined(G__ANSIISOLIB)
 template<class T,class Allocator=allocator<T> >
-#elif defined(G__GNUC) && !defined(G__KCC)
+#elif defined(G__GNUC)
 template<class T,class Allocator=alloc>
 #elif defined(G__HPUX)
 template<class T,class Allocator=allocator>
@@ -32,7 +32,7 @@ class list {
  public:
   typedef T value_type;
   typedef Allocator allocator_type;
-#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__HPUX)
+#if defined(G__GNUC) || defined(G__HPUX)
   typedef void* void_pointer;
   //typedef __list_node<T> list_node;
   //typedef simple_alloc<list_node, Alloc> list_node_allocator;
@@ -152,7 +152,7 @@ class list {
     deque(InputIterator first, InputIterator last,
          const Allocator& = Allocator());
 #else
-#if (defined(G__GNUC) && !defined (G__KCC))
+#if defined(G__GNUC)
   list(const T* first,const T* last) ;
 #endif
   list(const_iterator first, const_iterator last) ;
@@ -182,193 +182,9 @@ class list {
   //friend void swap(list& x, list& y);
 #endif
 
-#ifndef G__NOALGORITHM
-  // Generic algorithm
-#if defined(G__GNUC) || defined(G__BORLAND) || defined(G__KCC)
-
-  // input iter
-  friend list::iterator 
-    find(list::iterator first,list::iterator last,const T& value);
-  // forward iter
-  friend list::iterator 
-    find_end(list::iterator first1,list::iterator last1,
-	     list::iterator first2,list::iterator last2);
-  friend list::iterator 
-    find_first_of(list::iterator first1,list::iterator last1,
-	          list::iterator first2,list::iterator last2);
-  friend list::iterator 
-    adjacent_find(list::iterator first,list::iterator last);
-  // input iter
-#if !defined(G__BORLAND)
-  friend list::difference_type
-    count(list::iterator first,list::iterator last,const T& value);
-#endif
-#if 0
-  friend pair<list::iterator,list::iterator>
-    mismatch(list::iterator first1,list::iterator last1,
-             list::iterator first2);
-#endif
-  friend bool
-    equal(list::iterator first1,list::iterator last1,
-          list::iterator first2);
-  // forward iter
-  friend list::iterator
-    search(list::iterator first1,list::iterator last1,
-           list::iterator first2,list::iterator last2);
-  friend list::iterator
-    search_n(list::iterator first,list::iterator last
-             ,list::size_type count,const T& value);
-  // input and output iter -> forward iter
-  friend list::iterator
-    copy(list::iterator first,list::iterator last,
-         list::iterator result);
-  // bidirectional iter
-  friend list::iterator
-    copy_backward(list::iterator first,list::iterator last,
-                  list::iterator result);
-  // just value_type
-  friend void swap(T& a,T& b);
-  // forward iter
-  friend list::iterator
-    swap_ranges(list::iterator first1,list::iterator last1,
-                list::iterator first2);
-  friend void iter_swap(list::iterator a,list::iterator b);
-  friend void replace(list::iterator first,list::iterator last,
-                      const T& old_value,const T& new_value);
-  // input, output iter -> forward iter
-  friend list::iterator 
-    replace_copy(list::iterator first,list::iterator last,
-                 list::iterator result,
-                 const T& old_value,const T& new_value);
-  // forward iter
-  friend void
-    fill(list::iterator first,list::iterator last,const T& value);
-#if (G__GNUC>=3) || defined (G__KCC)
-  friend void
-    fill_n(list::iterator first,list::size_type n,const T& value);
-#endif
-  friend list::iterator
-    remove(list::iterator first,list::iterator last,const T& value);
-  // input,output iter -> forward iter
-  friend list::iterator
-    remove_copy(list::iterator first,list::iterator last,
-                list::iterator result,const T& value);
-  friend list::iterator
-    unique(list::iterator first,list::iterator last);
-  friend list::iterator 
-    unique_copy(list::iterator first,list::iterator last,
-                list::iterator result);
-  friend void reverse(list::iterator first,list::iterator last);
-  friend list::iterator
-     reverse_copy(list::iterator first,list::iterator last,
-                  list::iterator result);
-  // forward iter
-  friend void rotate(list::iterator first,list::iterator mid,
-                     list::iterator last);
-  // forward iter
-  friend list::iterator 
-    rotate_copy(list::iterator first,list::iterator mid,
-                list::iterator last,list::iterator result);
-#if 0
-  // randomaccess iter
-  friend void random_shuffle(list::iterator first,list::iterator last);
-  // randomaccess iter
-  friend void sort(list::iterator first,list::iterator last);
-  friend void stable_sort(list::iterator first,list::iterator last);
-  friend void partial_sort(list::iterator first,list::iterator mid,
-                           list::iterator last);
-  friend list::iterator
-    partial_sort_copy(list::iterator first,list::iterator last,
-                      list::iterator result_first,
-                      list::iterator result_last);
-  friend void nth_element(list::iterator first,list::iterator nth,
-                          list::iterator last);
-#endif
-  // forward iter
-  friend list::iterator 
-    lower_bound(list::iterator first,list::iterator last,const T& value);
-  friend list::iterator 
-    upper_bound(list::iterator first,list::iterator last,const T& value);
-#if 0
-  friend pair<list::iterator,list::iterator>
-    equal_range(list::iterator first,list::iterator last,const T& value);
-#endif
-  friend bool binary_search(list::iterator first,list::iterator last,
-                            const T& value);
-  friend list::iterator merge(list::iterator first1,list::iterator last1,
-                                list::iterator first2,list::iterator last2,
-                                list::iterator result);
-  friend void inplace_merge(list::iterator first,list::iterator middle,
-                            list::iterator last);
-  friend bool includes(list::iterator first1,list::iterator last1,
-                       list::iterator first2,list::iterator last2);
-  friend list::iterator 
-    set_union(list::iterator first1,list::iterator last1,
-              list::iterator first2,list::iterator last2,
-              list::iterator result);
-  friend list::iterator 
-    set_intersection(list::iterator first1,list::iterator last1,
-                     list::iterator first2,list::iterator last2,
-                     list::iterator result);
-  friend list::iterator 
-    set_difference(list::iterator first1,list::iterator last1,
-                   list::iterator first2,list::iterator last2,
-                   list::iterator result);
-  friend list::iterator 
-    set_symmetric_difference(list::iterator first1,list::iterator last1,
-                             list::iterator first2,list::iterator last2,
-                             list::iterator result);
-#if 0
-  // random access
-  friend void push_heap(list::iterator first,list::iterator last);
-  friend void pop_heap(list::iterator first,list::iterator last);
-  friend void make_heap(list::iterator first,list::iterator last);
-  friend void sort_heap(list::iterator first,list::iterator last);
-#endif
-  // min,max, just value_type
-  friend const T& min(const T& a,const T& b);
-  friend const T& max(const T& a,const T& b);
-  // forward iter
-  friend list::iterator 
-    min_element(list::iterator first,list::iterator last);
-  friend list::iterator 
-    max_element(list::iterator first,list::iterator last);
-  // input iter
-  friend bool
-    lexicographical_compare(list::iterator first1,list::iterator last1,
-                            list::iterator first2,list::iterator last2);
-  // bidirectional iter
-  friend bool next_permutation(list::iterator first,list::iterator last);
-  friend bool prev_permutation(list::iterator first,list::iterator last);
-
-#elif defined(G__VISUAL)
-  friend void reverse(list::iterator first,list::iterator last);
-#if 0
-  friend void sort(list::iterator first,list::iterator last);
-#endif
-
-  friend list::iterator 
-    find(list::iterator first,list::iterator last,const T& value);
-  friend list::iterator
-    search(list::iterator first1,list::iterator last1,
-           list::iterator first2,list::iterator last2);
-  friend list::iterator
-    copy(list::iterator first,list::iterator last,
-         list::iterator result);
-  friend void
-    fill(list::iterator first,list::iterator last,const T& value);
-#if 0
-  friend list::iterator
-    remove(list::iterator first,list::iterator last,const T& value);
-  friend list::iterator
-    unique(list::iterator first,list::iterator last);
-#endif
-
-#endif // G__GNUC || G__BORLAND
-#endif // G__NOALGORITHM
 
   // Generic algorithm
-  //friend void reverse(list::iterator first,list::iterator last);
+  friend void reverse(list::iterator first,list::iterator last);
   //friend void reverse(list::reverse_iterator first,list::reverse_itetator last);
 
 

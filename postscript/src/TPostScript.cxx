@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.12 2001/07/04 14:17:17 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -16,8 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <fstream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
@@ -26,7 +26,8 @@
 #include "TStyle.h"
 #include "TMath.h"
 
-const char   kBackslash = '\\';
+char backslash = '\\';
+
 const Int_t  kMaxBuffer = 250;
 const Int_t  kLatex = BIT(10);
 
@@ -38,7 +39,7 @@ ClassImp(TPostScript)
 //*-*
 //*-*   Graphics interface to PostScript.
 //*-*
-//*-*  This code was initially developed in the context of HIGZ and PAW
+//*-*  This code was initially developped in the context of HIGZ and PAW
 //*-*  by Olivier Couet and Pierre Juillot.
 //*-*  It has been converted to a C++ class by Rene Brun.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -100,7 +101,7 @@ pointed by <B>c1</B>. </P> </LI>
 <PRE> <B>pad1-&gt;Print(&quot;xxx.ps&quot;)</B></PRE>
 
 <P>prints only the picture in the pad pointed by <B>pad1</B>. The size
-of the Postscript picture, by default, is computed to keep the aspect ratio
+of the Postcript picture, by default, is computed to keep the aspect ratio
 of the picture on the screen, where the size along x is always 20cm. You
 can set the size of the PostScript picture before generating the picture
 with a command such as: </P>
@@ -124,14 +125,14 @@ Note that you may have several Postscript files opened simultaneously.
 <H2>Special characters</H2>
 The following characters have a special action on the Postscript file:
 <PRE>
-       `   : go to Greek
+       `   : go to greek
        '   : go to special
        ~   : go to ZapfDingbats
        ?   : go to subscript
        ^   : go to superscript
        !   : go to normal level of script
        &   : backspace one character
-       #   : end of Greek or of ZapfDingbats
+       #   : end of greek or of ZapfDingbats
 </PRE>
 <P>These special characters are printed as such on the screen.
 To generate one of these characters on the Postscript file, you must escape it
@@ -200,7 +201,7 @@ Note that <b>c1-&gt;Update</b> must be called at the end of the first picture
 
 <b>// invoke Postscript viewer</b>
    gSystem-&gt;Exec("gs file.ps");
-}
+}   
 </pre>
 */
 //END_HTML
@@ -210,7 +211,7 @@ Note that <b>c1-&gt;Update</b> must be called at the end of the first picture
 //
 //Begin_Html <img src="gif/psexam.gif"> End_Html
 //
-//     The two following tables list the correspondence between the typed
+//     The two following tables list the correspondance between the typed
 //     character and its interpretation using the special characters given
 //     in TPostScript::Text. These tables are screen copies. True and better
 //     resolution PostScript files can be seen at Begin_Html <a href=ps/psexam.ps>psexam</a>, <a href=ps/pstable1.ps>pstable1</a> and <a href=ps/pstable2.ps>pstable2</a>. End_Html
@@ -363,149 +364,12 @@ void TPostScript::On()
 //______________________________________________________________________________
 void TPostScript::Off()
 {
-//*-*-*-*-*-*-*-*-*-*-*Deactivate an already open PostScript file*-*-*-*-*-*
+//*-*-*-*-*-*-*-*-*-*-*DeActivate an already open PostScript file*-*-*-*-*-*
 //*-*                  ==========================================
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*
 
    gVirtualPS = 0;
-}
-
-//______________________________________________________________________________
-void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
-                                 Double_t y1, Double_t y2)
-//*-*-*-*-*-*-*-*-*-*-*Draw a Cell Array*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =================
-//*-*
-//*-*  Drawing a PostScript Cell Array is in fact done thanks to three
-//*-*  procedures: CellArrayBegin, CellArrayFill, and CellArrayEnd.
-//*-*
-//*-*  CellArrayBegin: Initiate the Cell Array by writing the necessary
-//*-*                  PostScript procedures and the initial values of the
-//*-*                  required parameters. The input parameters are:
-//*-*                  W: number of boxes along the width.
-//*-*                  H: number of boxes along the height
-//*-*                  x1,x2,y1,y2: First box coordinates.
-//*-*  CellArrayFill:  Is called for each box of the Cell Array. The first
-//*-*                  box is the top left one and the last box is the
-//*-*                  bottom right one. The input parameters are the Red,
-//*-*                  Green, and Blue components of the box colour. These
-//*-*                  Levels are between 0 and 255.
-//*-*  CellArrayEnd:   Finishes the Cell Array.
-//*-*
-//*-* PostScript cannot handle arrays larger than 65535. So the Cell Array
-//*-* is drawn in several pieces.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*
-{
-   Int_t ix1 = XtoPS(x1);
-   Int_t iy1 = YtoPS(y1);
-
-   Int_t WT = Int_t(0.5+(288/2.54)*gPad->GetAbsWNDC()*
-              fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1())));
-   Int_t HT = Int_t(0.5+(288/2.54)*gPad->GetAbsHNDC()*
-              fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1())));
-
-   fLastCellRed     = 300;
-   fLastCellGreen   = 300;
-   fLastCellBlue    = 300;
-   fNBSameColorCell = 0;
-
-   fNbinCT = 0;
-   fNbCellW = W;
-   fNbCellLine = 0;
-   fMaxLines = 40000/(3*fNbCellW);
-//*-*- Define some paremeters
-   PrintStr("@/WT"); WriteInteger(WT)       ; PrintStr(" def"); // Cells width
-   PrintStr(" /HT"); WriteInteger(HT)       ; PrintStr(" def"); // Cells height   PrintStr("@/WT"); WriteInteger(ix2-ix1)  ; PrintStr(" def"); // Cells width
-   PrintStr(" /XS"); WriteInteger(ix1)      ; PrintStr(" def"); // X start
-   PrintStr(" /Y") ; WriteInteger(iy1)      ; PrintStr(" def"); // Y start
-   PrintStr(" /NX"); WriteInteger(W)        ; PrintStr(" def"); // Number of columns
-   PrintStr(" /NY"); WriteInteger(fMaxLines); PrintStr(" def"); // Number of lines
-//*-*- This PS procedure draws one cell.
-   PrintStr(" /DrawCell ");
-   PrintStr(   "{WT HT X Y bf");
-   PrintStr(   " /NBBD NBBD 1 add def");
-   PrintStr(   " NBBD NBB eq {exit} if");
-   PrintStr(   " /X WT X add def");
-   PrintStr(   " IX NX eq ");
-   PrintStr(      "{/Y Y HT sub def");
-   PrintStr(      " /X XS def");
-   PrintStr(      " /IX 0 def} if");
-   PrintStr(   " /IX IX 1 add def} def");
-//*-*- This PS procedure draws fMaxLines line. It takes care of duplicated
-//*-*- colors. Values "n" greater than 300 mean than the previous color
-//*-*- should be duplicated n-300 times.
-   PrintStr(" /DrawCT ");
-   PrintStr(   "{/NBB NX NY mul def");
-   PrintStr(   " /X XS def");
-   PrintStr(   " /IX 1 def");
-   PrintStr(   " /NBBD 0 def");
-   PrintStr(   " /RC 0 def /GC 1 def /BC 2 def");
-   PrintStr(   " 1 1 NBB ");
-   PrintStr(      "{/NB CT RC get def");
-   PrintStr(      " NB 301 ge ");
-   PrintStr(         "{/NBL NB 300 sub def");
-   PrintStr(         " 1 1 NBL ");
-   PrintStr(            "{DrawCell}");
-   PrintStr(         " for");
-   PrintStr(         " /RC RC 1 add def");
-   PrintStr(         " /GC RC 1 add def");
-   PrintStr(         " /BC RC 2 add def}");
-   PrintStr(         "{CT RC get 255 div CT GC get 255 div CT BC get 255 div c");
-   PrintStr(         " DrawCell");
-   PrintStr(         " /RC RC 3 add def");
-   PrintStr(         " /GC GC 3 add def");
-   PrintStr(         " /BC BC 3 add def} ifelse NBBD NBB eq {exit} if} for");
-   PrintStr(         " /Y Y HT sub def clear} def");
-
-   PrintStr(" /CT [");
-}
-
-//______________________________________________________________________________
-void TPostScript::CellArrayFill(Int_t r, Int_t g, Int_t b)
-{
-   if (fLastCellRed == r && fLastCellGreen == g && fLastCellBlue == b) {
-      fNBSameColorCell++;
-   } else {
-      if (fNBSameColorCell != 0 ) {
-         WriteInteger(fNBSameColorCell+300);
-	 fNBSameColorCell = 0;
-      }
-      WriteInteger(r);
-      WriteInteger(g);
-      WriteInteger(b);
-      fLastCellRed = r;
-      fLastCellGreen = g;
-      fLastCellBlue = b;
-   }
-
-   fNbinCT++;
-   if (fNbinCT == fNbCellW) {
-      fNbCellLine++;
-      fNbinCT = 0;
-   }
-
-   if (fNbCellLine == fMaxLines) {
-      if (fNBSameColorCell != 0) WriteInteger(fNBSameColorCell+300);
-      PrintStr("] def DrawCT /CT [");
-      fNbCellLine = 0;
-      fLastCellRed = 300;
-      fLastCellGreen = 300;
-      fLastCellBlue = 300;
-      fNBSameColorCell = 0;
-      fNbinCT = 0;
-   }
-}
-
-//______________________________________________________________________________
-void TPostScript::CellArrayEnd()
-{
-   if (fNBSameColorCell != 0 ) WriteInteger(fNBSameColorCell+300);
-   PrintStr("] def /NY");
-   WriteInteger(fNbCellLine);
-   PrintStr(" def DrawCT ");
 }
 
 
@@ -603,7 +467,7 @@ void TPostScript::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
 //*-*                  =========================
 //*-*  mode = -1  box looks as it is behind the screen
 //*-*  mode =  1  box looks as it is in front of the screen
-//*-*  border is the border size in already precomputed PostScript units
+//*-*  border is the bordersize in already precomputed PostScript units
 //*-*  dark  is the color for the dark part of the frame
 //*-*  light is the color for the light part of the frame
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -721,7 +585,7 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
 //*-*  Draw a polyline through  the points  xy.
 //*-*  If NN=1 moves only to point x,y.
 //*-*  If NN=0 the x,y are  written  in the PostScript file
-//*-*     according to the current transformation.
+//*-*     according to the current tranformation.
 //*-*  If NN>0 the line is clipped as a line.
 //*-*  If NN<0 the line is clipped as a fill area.
 //*-*
@@ -802,7 +666,7 @@ void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 //*-*  Draw a polyline through  the points  xy.
 //*-*  If NN=1 moves only to point x,y.
 //*-*  If NN=0 the x,y are  written  in the PostScript file
-//*-*     according to the current transformation.
+//*-*     according to the current tranformation.
 //*-*  If NN>0 the line is clipped as a line.
 //*-*  If NN<0 the line is clipped as a fill area.
 //*-*
@@ -901,7 +765,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
 
 //*-*-              Set the PostScript marker size
 
-  Double_t msize = 0.92*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
+  Double_t msize = 0.92*fMarkerSize*fXsize/20;
   markersize     = CMtoPS(msize);
   if (markerstyle == 1) markersize *= 0.1;
   if (markerstyle == 6) markersize *= 0.2;
@@ -966,7 +830,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
 
 //*-*-              Set the PostScript marker size
 
-  Double_t msize = 0.92*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
+  Double_t msize = 0.92*fMarkerSize*fXsize/20;
   markersize     = CMtoPS(msize);
   if (markerstyle == 1) markersize *= 0.1;
   if (markerstyle == 6) markersize *= 0.2;
@@ -1212,7 +1076,7 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 //______________________________________________________________________________
 void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Float_t *, Float_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Draw Fill area with hatch styles*-*-*-*-*-*-*-*-*-*-*
+//*-*-*-*-*-*-*-*-*-*-*-*Draw Fill area with hacth styles*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
 
    Warning("DrawHatch", "hatch fill style not yet implemented");
@@ -1221,20 +1085,20 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Float_t *, Float_t *)
 //______________________________________________________________________________
 void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Draw Fill area with hatch styles*-*-*-*-*-*-*-*-*-*-*
+//*-*-*-*-*-*-*-*-*-*-*-*Draw Fill area with hacth styles*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
 
    Warning("DrawHatch", "hatch fill style not yet implemented");
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.12 2001/07/04 14:17:17 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.12 2001/07/04 14:17:17 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1432,10 +1296,8 @@ void TPostScript::Initialize()
    if( format == 99 ) format = 0;
 //*-*
    PrintStr("%%Title: ");
-   const char *pstitle = gStyle->GetTitlePS();
-   if (!strlen(pstitle) && gPad) pstitle = gPad->GetMother()->GetTitle();
    PrintStr(GetName());
-   if(!strlen(pstitle) && fMode != 3) {;
+   if( fMode != 3) {;
       if ( fMode == 1 || fMode == 4) PrintFast(10," (Portrait");
       if ( fMode == 2 || fMode == 5) PrintFast(11," (Landscape");
       if ( format <= 99 ) {;
@@ -1452,14 +1314,13 @@ void TPostScript::Initialize()
       PrintStr("%%Pages: (atend)@");
    }
    else {
-      PrintStr(pstitle);
       PrintStr("@");
    }
 
-   PrintFast(24,"%%Creator: ROOT Version ");
+   PrintFast(23,"%%Creator: ROOT Version");
    PrintStr(gROOT->GetVersion());
    PrintStr("@");
-   PrintFast(16,"%%CreationDate: ");
+   PrintFast(15,"%%CreationDate:");
    TDatime t;
    PrintStr(t.AsString());
    PrintStr("@");
@@ -1531,8 +1392,8 @@ void TPostScript::Initialize()
 //*-*-     mode=3 encapsulated PostScript
 //*-*
    if (fMode == 3)  {
-      width   = 20;
-      heigth  = 20;
+      width   = fX2w;
+      heigth  = fY2w;
       format  = 4;
       fNXzone = 1;
       fNYzone = 1;
@@ -1763,13 +1624,10 @@ void TPostScript::NewPage()
   if(fType  == 113 && !fBoundingBox) {
      Bool_t psave = fPrinted;
      PrintStr("@%%BoundingBox: ");
-     Double_t xlow=0, ylow=0, xup=1, yup=1;
-     if (gPad) {
-        xlow = gPad->GetAbsXlowNDC();
-        xup  = xlow + gPad->GetAbsWNDC();
-        ylow = gPad->GetAbsYlowNDC();
-        yup  = ylow + gPad->GetAbsHNDC();
-     }
+     Double_t xlow = gPad->GetAbsXlowNDC();
+     Double_t xup  = xlow + gPad->GetAbsWNDC();
+     Double_t ylow = gPad->GetAbsYlowNDC();
+     Double_t yup  = ylow + gPad->GetAbsHNDC();
      WriteInteger(CMtoPS(fXsize*xlow));
      WriteInteger(CMtoPS(fYsize*ylow));
      WriteInteger(CMtoPS(fXsize*xup));
@@ -1942,7 +1800,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.12 2001/07/04 14:17:17 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
@@ -1952,7 +1810,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 //*-* Postscript functions are used, so on level 1 printers, patterns will
 //*-* not work. This is not a big problem because patterns are
 //*-* defined only if they are used, so if they are not used a PS level 1
-//*-* file will not be polluted by level 2 features, and in any case the old
+//*-* file will not be poluted by level 2 features, and in any case the old
 //*-* patterns used a lot of memory which made them almost unusable on old
 //*-* level 1 printers. Finally we should say that level 1 devices are
 //*-* becoming very rare. The official PostScript is now level 3 !
@@ -2302,37 +2160,36 @@ void TPostScript::SetMarkerColor( Color_t cindex )
 //______________________________________________________________________________
 void TPostScript::SetColor(Int_t color)
 {
-    // Set the current color.
+//*-*-*-*-*-*-*-*-*-*-*Set the current color*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ======================
+//*-*
 
-   if (color < 0) color = 0;
-   fCurrentColor = color;
-   TColor *col = gROOT->GetColor(color);
-   if (col)
-      SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
-   else
-      SetColor(1., 1., 1.);
+//  if (fCurrentColor == color) return;
+  if( color < 0) color = 0;
+  fCurrentColor = color;
+  TColor *col = gROOT->GetColor(color);
+  Bool_t white = kTRUE;
+  if (col) {
+     if( col->GetRed() == fRed && col->GetGreen() == fGreen && col->GetBlue() == fBlue) return;
+     fRed   = col->GetRed();
+     fGreen = col->GetGreen();
+     fBlue  = col->GetBlue();
+     white = kFALSE;
+  }
+  if (white) {fRed = fGreen = fBlue = 1;}
+  if( fRed <= 0 && fGreen <= 0 && fBlue <= 0 ) {
+     PrintFast(6," black");
+  }
+  else {
+     WriteReal(fRed);
+     WriteReal(fGreen);
+     WriteReal(fBlue);
+     PrintFast(2," c");
+  }
+
 }
 
-//______________________________________________________________________________
-void TPostScript::SetColor(Float_t r, Float_t g, Float_t b)
-{
-   // Set directly current color (don't go via TColor).
 
-   if (r == fRed && g == fGreen && b == fBlue) return;
-
-   fRed   = r;
-   fGreen = g;
-   fBlue  = b;
-
-   if (fRed <= 0 && fGreen <= 0 && fBlue <= 0 ) {
-      PrintFast(6," black");
-   } else {
-      WriteReal(fRed);
-      WriteReal(fGreen);
-      WriteReal(fBlue);
-      PrintFast(2," c");
-   }
-}
 
 //______________________________________________________________________________
 void TPostScript::SetTextColor( Color_t cindex )
@@ -2358,14 +2215,14 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
 //*-*
 //*-*  Note the special action of the following special characters:
 //*-*
-//*-*       ` : go to Greek
+//*-*       ` : go to greek
 //*-*       ' : go to special
 //*-*       ~ : go to ZapfDingbats
 //*-*       ? : go to subscript
 //*-*       ^ : go to superscript
 //*-*       ! : go to normal level of script
 //*-*       & : backspace one character
-//*-*       # : end of Greek or of ZapfDingbats
+//*-*       # : end of greek or of ZapfDingbats
 //*-*
 //*-*  Note1: This special characters have no effect on the screen.
 //*-*  Note2: To print one of the characters above in the Postscript file
@@ -2398,6 +2255,8 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
 
    const char *cflip = "`'\?^@#!~&";
    static const char *cflipc[] = {"120","47","77","136","100","43","41","176","46"};
+   Float_t psrap[15] = {0.920,1.000,0.920,0.910,0.920,0.920,0.925,1.000,1.000,
+                        1.000,1.000,0.920,1.000,0.964,1.0};
 
    static const char *psfont[] = {
     "/Times-Italic", "/Times-Bold", "/Times-BoldItalic",
@@ -2430,17 +2289,19 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Float_t tsize;
-   Float_t fontrap = 1.09; //scale down compared to X11
-   if (wh < hh)  tsize = fTextSize*wh/fontrap;
-   else          tsize = fTextSize*hh/fontrap;
+   if (wh < hh)  tsize = fTextSize*wh;
+   else          tsize = fTextSize*hh;
    Float_t ftsize;
 
    Int_t font     = abs(fTextFont)/10;
    if( font > 42 || font < 1) font = 1;
+   Float_t fontrap = 1.01;
+   if( font <= 14 && font >= 1) fontrap = fontrap*psrap[font-1];
    if (wh < hh) ftsize = fTextSize*fXsize*gPad->GetAbsWNDC();
    else         ftsize = fTextSize*fYsize*gPad->GetAbsHNDC();
 
-   Int_t fontsize = 4*CMtoPS(ftsize/fontrap);
+   Float_t rchh   = ftsize*fontrap;   //*-* rchh should be the text size in cm
+   Int_t fontsize = 4*CMtoPS(rchh);
    if( fontsize <= 0) return;
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
    Float_t tsizey = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(Int_t(tsize));
@@ -2486,7 +2347,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
       if( chars[i] == '@') {
          for (flip=0; flip<9;flip++) {
             if (chars[i+1] == cflip[flip]) {
-               newtext[j] = kBackslash;
+               newtext[j] = backslash;
                j++;
                strcpy(&newtext[j], cflipc[flip]);
                j = strlen(&newtext[0]);
@@ -2502,7 +2363,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
          if (chars[i] == cflip[6]) flip = 6;
          if (chars[i] == cflip[8]) flip = 8;
          if (flip) {
-            newtext[j] = kBackslash;
+            newtext[j] = backslash;
             j++;
             strcpy(&newtext[j], cflipc[flip]);
             j = strlen(&newtext[0]);
@@ -2531,15 +2392,15 @@ while (iold <= nchp ) {  //*-* loop on nchp old characters and look for backslas
 //*-* study the character following this backslash
 //*-*
    char2[inew] = 0;
-   if (newtext[iold-1] == kBackslash)  {
+   if (newtext[iold-1] == backslash)  {
       if ( iold == nchp) goto L60;
 //*-*
 //*-*-  1.1  the character following this backslash is also a backslash
 //*-*
-      if (newtext[iold] == kBackslash)  {
-         char2[inew] = kBackslash;  //*-*  copy both backslashes
+      if (newtext[iold] == backslash)  {
+         char2[inew] = backslash;  //*-*  copy both backslashes
          inew++;
-         char2[inew] = kBackslash;
+         char2[inew] = backslash;
          inew++;
          iold++;                 //*-* and go to the next character
          goto LOOPEND;
@@ -2548,7 +2409,7 @@ while (iold <= nchp ) {  //*-* loop on nchp old characters and look for backslas
 //*-*-  1.2  the character following this backslash is a parenthesis: ( or )
 //*-*
       if ( newtext[iold] == '('  || newtext[iold] == ')')  {
-         char2[inew] = kBackslash;        //*-* copy the backslash and the parenthesis
+         char2[inew] = backslash;        //*-* copy the backslash and the parenthesis
          inew++;
          char2[inew] = newtext[iold];
          inew++;
@@ -2595,7 +2456,7 @@ while (iold <= nchp ) {  //*-* loop on nchp old characters and look for backslas
             if( newtext[iold] != '0' || strncmp(&pstemp[0], &newtext[iold+1], 2)) continue;
             iadd = 1;
          }
-         char2[inew]   = kBackslash; //*-* OK:copy the backslash and the 2 following digits and add a 0
+         char2[inew]   = backslash; //*-* OK:copy the backslash and the 2 following digits and add a 0
          char2[inew+1] = '0';
          strncpy(&char2[inew+2], &newtext[iold+iadd], 2);
          inew += 4;
@@ -2620,18 +2481,18 @@ L60:
 //*-*-  1.6 this backslash is followed by nothing understandable in PostScript,
 //*-*-   it is an "isolated backslash" which will appear as \\.  Copy two backslashes
 //*-*
-      char2[inew] = kBackslash;
+      char2[inew] = backslash;
       inew++;
-      char2[inew] = kBackslash;
+      char2[inew] = backslash;
       inew++;
       goto LOOPEND;
    }
 //*-*
-//*-*- 2. find ( or ) not preceded by a backslash : include one backslash
+//*-*- 2. find ( or ) not preceeded by a backslash : include one backslash
 //*-*
    else if( newtext[iold-1] == '(' ||  newtext[iold-1] == ')')  {
-      if( i == 1 || newtext[iold-2] != kBackslash)  {
-         char2[inew] = kBackslash;
+      if( i == 1 || newtext[iold-2] != backslash)  {
+         char2[inew] = backslash;
          inew++;
          char2[inew] = newtext[iold-1];
          inew++;
@@ -2653,7 +2514,7 @@ LOOPEND:
 //*-*- now a third parsing to cut the text into pieces
 //*-*- for each piece of text, I define
 //*-*-      a. the string content = PIECE(I)
-//*-*-      b. the font # = IFNB(I)= font: roman, 12: Greek ,
+//*-*-      b. the font # = IFNB(I)= font: roman, 12: greek ,
 //*-*-                         14: ZapfdingBats
 //*-*-      c. the font size = IFNS(I)
 //*-*-      d. a level flag = LEVEL(I) = 1: normal
@@ -2697,7 +2558,7 @@ while (ich < nchp ) {
    else                 scape  = (char*)strchr(cflip, char2[ich-1]);
    if( scape )  {
       if ( *scape == cflip[0] ) {
-             greek = kTRUE;       //*-*- find ` : go to Greek
+             greek = kTRUE;       //*-*- find ` : go to greek
       }
       else  if( *scape == cflip[1] ) {
              special = kTRUE;     //*-*- find ' : go to special
@@ -2711,7 +2572,7 @@ while (ich < nchp ) {
              subscript   = kFALSE;
       }
       else  if( *scape == cflip[5] )  {
-         roman   = kTRUE;    //*-*- find # : end of special, Greek or of Zapf => go to roman
+         roman   = kTRUE;    //*-*- find # : end of special, greek or of Zapf => go to roman
          zapf    = kFALSE;
          special = kFALSE;
          greek   = kFALSE;
@@ -2730,14 +2591,14 @@ while (ich < nchp ) {
             nbas++;                            //*-* in the nchp-I remaining characters
          }
 //*-*
-//*-*- Since I have to backspace some text, (part of the preceding piece),
+//*-*- Since I have to backspace some text, (part of the preceeding piece),
 //*-*- I define two pieces:
 //*-*
 //*-*- a. the string which follows normally the & ( i.e. up to the next
 //*-*-    escape character)
 //*-*
-//*-*- b. the string to be backspaced, i.e. a part of the preceding piece so
-//*-*-    I create a new piece which is a copy the preceding with LBACK<0
+//*-*- b. the string to be backspaced, i.e. a part of the preceeding piece so
+//*-*-    I create a new piece which is a copy the preceeding with LBACK<0
 //*-*
          if (nt <= 0) return;
          lback[nt] = -nbas;       //*-* and the other parameters identical
@@ -2772,7 +2633,7 @@ while (ich < nchp ) {
       if( superscript || subscript) lback[nt-1] = 1;  //*-*set LBACK flag (1 for sub/uperscript)
 
 //*-*- END of this text: on the last character or on
-//*-*-      the last non escape which precedes an escape (but
+//*-*-      the last non escape which preceeds an escape (but
 //*-*-      the terminating escape character itself is not known)
       if( ich != nchp) scape = (char*)strchr(cflip, char2[ich]);
       if (TestBit(kLatex)) scape = 0;
@@ -2784,7 +2645,7 @@ while (ich < nchp ) {
             strncpy(pc, &char2[ideb-1], ilen);
             pc[ilen] = 0;
             if( char2[ifin-1] == ' ') {  //*-* if the last character is ' '
-               pc[ilen-1] = kBackslash;  //*-* it is replaced with \040
+               pc[ilen-1] = backslash;   //*-* it is replaced with \040
                strcpy(pc+ilen, "040");
             }
          }
@@ -2794,16 +2655,16 @@ while (ich < nchp ) {
             Int_t nts = nt;
 L120:        //*-* check if CHAR2 will not be cut in the middle of an octal code
             Int_t ib = 0;
-            if (char2[i2-3] == kBackslash ) ib = 1;
-            if (char2[i2-2] == kBackslash ) ib = 2;
-            if (char2[i2-1] == kBackslash ) ib = 3;
+            if (char2[i2-3] == backslash ) ib = 1;
+            if (char2[i2-2] == backslash ) ib = 2;
+            if (char2[i2-1] == backslash ) ib = 3;
             if (ib && i2-i1 == 73 && i2 != nchp) i2 += ib - 4;
             pc = piece[nt-1];                 //*-* copy CHAR2 in the piece number NT
             strncpy(pc, &char2[i1-1], i2-i1+1); //*-* with I2 readjusted
             pc[i2-i1+1] = 0;
             if( char2[i2-1] == ' ') {
                Int_t ilp  = strlen(pc);
-               pc[ilp]    = kBackslash;       //*-* if the last character is ' '
+               pc[ilp]    = backslash;        //*-* if the last character is ' '
                strcpy(pc+ilp+1, "040");       //*-* it is replaced with \040
             }
             if (i2 != ilen) {
@@ -2830,7 +2691,7 @@ L120:        //*-* check if CHAR2 will not be cut in the middle of an octal code
 //*-*-      one has:
 //*-*-      i-2: text normally output lback=0
 //*-*-      i-1 : text following in superscript mode
-//*-*-      i : part of the preceding (not printed) in which one
+//*-*-      i : part of the preceeding (not printed) in which one
 //*-*-          computes the backspace
 //*-*-      i+1: text following the backspace
 //*-*-      =>  since PIECE(i-1) and PIECE(I+1) are superposed;
@@ -2853,7 +2714,7 @@ L120:        //*-* check if CHAR2 will not be cut in the middle of an octal code
          }
       }
 
-//*-*-** 3. correct in the Greek text the 4 characters in the /Symbol font
+//*-*-** 3. correct in the greek text the 4 characters in the /Symbol font
 //*-*- which are not " at their correct place" w.r.t. the HIGZ official table
       if( ifnb[i] == 12)  {
          pc = piece[i];
@@ -2898,7 +2759,7 @@ L170:
       ipiece++;             //*-* loop on all pieces and add the length of each piece
       if( ipiece > nt) goto L250;
 //*-*
-//*-*-   2.1. ONE backspaced text: forget the piece to be backspaced
+//*-*-   2.1. ONE bakspaced text: forget the piece to be backspaced
 //*-*-        and the piece which follows
 //*-*
       if( lback[ipiece-1] == -1)  {
@@ -3009,7 +2870,7 @@ L260:                    //*-*-   now output the pieces
 //*-*
 //*-*- make the PostScript file:
 //*-*
-//*-*- 1. ONE backspace: output "piece" to be backspaced AND following piece
+//*-*- 1. ONE bakspace: output "piece" to be backspaced AND following piece
 //*-*-    first save current graphic state, compute backward distance,
 //*-*-       and move to that point
 //*-*
@@ -3024,7 +2885,7 @@ L260:                    //*-*-   now output the pieces
       PrintStr(lunps);
 
 //*-*- then, text following one backspace: backspace also 1/2 of text
-//*-*-   ( normally one character) print and restore preceding graphic state
+//*-*-   ( normally one character) print and restore preceeding graphic state
       Int_t fnb1   = ifnb[ipiece];
       const char *psfnb1 = psfont[fnb1-1];
       sprintf(lunps," %s findfont %d sf 0 %d rm ",  psfnb1, ifns[ipiece], level[ipiece]);
@@ -3044,7 +2905,7 @@ L260:                    //*-*-   now output the pieces
 //*-*-   2. Many Backspaces
 //*-*
    if( lback[ipiece-1] < -1)  {
-//*-*       first, protect against a number of backspaces larger than
+//*-*       first, protect against a number of bakspaces larger than
 //*-*       the total number of characters in the string to be
 //*-*       backspaced
       sprintf(lunps," %d /nbas exch def ", abs(lback[ipiece-1]));

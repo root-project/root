@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.3 2001/08/24 16:34:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 
 #include "TSQLServer.h"
 #include "TROOT.h"
-#include "TPluginManager.h"
 
 
 ClassImp(TSQLServer)
@@ -37,21 +36,30 @@ ClassImp(TSQLServer)
 TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 {
    // The db should be of the form:  <dbms>://<host>[:<port>][/<database>],
-   // e.g.:  mysql://pcroot.cern.ch:3456/test, oracle://srv1.cern.ch/main,
-   // pgsql://... or sapdb://...
+   // e.g.:  mysql://pcroot.cern.ch:3456/test, oracle://srv1.cern.ch/main or
+   // pgsql://...
    // The uid is the username and pw the password that should be used for
    // the connection. Depending on the <dbms> the shared library (plugin)
    // for the selected system will be loaded. When the connection could not
    // be opened 0 is returned.
 
-   TPluginHandler *h;
    TSQLServer *serv = 0;
 
-   if ((h = gROOT->GetPluginManager()->FindHandler("TSQLServer", db))) {
-      if (h->LoadPlugin() == -1)
+   if (!strncmp(db, "mysql", 5)) {
+      if (gROOT->LoadClass("TMySQLServer", "MySQL"))
          return 0;
       serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
-             "new %s(\"%s\", \"%s\", \"%s\")", h->GetClass(), db, uid, pw));
+             "new TMySQLServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
+   } else if (!strncmp(db, "pgsql", 5)) {
+      if (gROOT->LoadClass("TPgSQLServer", "PgSQL"))
+         return 0;
+      serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
+             "new TPgSQLServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
+   } else if (!strncmp(db, "oracle", 6)) {
+      if (gROOT->LoadClass("TOracleServer", "Oracle"))
+         return 0;
+      serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
+             "new TOracleServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
    }
    return serv;
 }

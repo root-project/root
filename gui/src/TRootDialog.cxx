@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name$:$Id$
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -187,9 +187,9 @@ void TRootDialog::Popup()
    Window_t wdum;
    int ax, ay;
    gVirtualX->TranslateCoordinates(fMain->GetId(), GetParent()->GetId(),
-                       (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1,
-                       (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1,
-                       ax, ay, wdum);
+                          (((TGFrame *) fMain)->GetWidth() - fWidth) >> 1,
+                          (((TGFrame *) fMain)->GetHeight() - fHeight) >> 1,
+                          ax, ay, wdum);
    Move(ax, ay);
    SetWMPosition(ax, ay);
 

@@ -171,7 +171,7 @@ extern long int sysconf(int name);
 
 #if defined(__SUNPRO_C) || defined(G__SUNPRO_C) 
 extern int putenv(char *string);
-#elif defined(G__GLIBC_) && (G__GLIBC_<=202)
+#elif defined(G__GLIBC_) && (G__GLIBC_<201)
 extern int putenv(char *string);
 #else
 extern int putenv(const char *string);
@@ -213,12 +213,10 @@ extern char *get_current_dir_name(void);
 extern pid_t getpgid(pid_t pid);
 #endif
 extern char *getwd(char *buf);
-#if defined(G__SUN) || defined(__sun)
-extern long setpgrp(void);
-#elif defined(G__FBSD) || defined(__FreeBSD__)
-extern int setpgrp(pid_t _pid, pid_t _pgrp);
-#else
+#if !defined(G__SUN) && !defined(__sun)
 extern int setpgrp(void);
+#else
+extern long setpgrp(void);
 #endif
 extern int symlink(const char *oldpath,const char *newpath);
 extern pid_t vfork(void);

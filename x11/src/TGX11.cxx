@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.17 2002/01/08 08:34:22 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.11 2001/05/31 15:42:38 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -272,8 +272,7 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fXEvent          = new XEvent;
 
    fMaxNumberOfWindows = 10;
-   //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
+   fWindows = new XWindow_t[fMaxNumberOfWindows];
    for (int i = 0; i < fMaxNumberOfWindows; i++)
       fWindows[i].open = 0;
 
@@ -308,8 +307,7 @@ TGX11::TGX11(const TGX11 &org)
    fXEvent          = new XEvent;
 
    fMaxNumberOfWindows = org.fMaxNumberOfWindows;
-   //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
+   fWindows = new XWindow_t[fMaxNumberOfWindows];
    for (i = 0; i < fMaxNumberOfWindows; i++) {
       fWindows[i].open          = org.fWindows[i].open;
       fWindows[i].double_buffer = org.fWindows[i].double_buffer;
@@ -353,7 +351,7 @@ TGX11::~TGX11()
    // Destructor.
 
    delete fXEvent;
-   if (fWindows) ::operator delete(fWindows);
+   if (fWindows) delete [] fWindows;
 
    Long_t     key, value;
    TExMapIter it(fColors);
@@ -1286,7 +1284,9 @@ void TGX11::RemoveWindow(ULong_t qwid)
 {
    // Remove a window created by Qt (like CloseWindow1()).
 
-   SelectWindow((int)qwid);
+   Int_t wid;
+
+   SelectWindow(qwid);
 
    if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
 
@@ -1300,7 +1300,7 @@ void TGX11::RemoveWindow(ULong_t qwid)
    gCws->open = 0;
 
    // make first window in list the current window
-   for (Int_t wid = 0; wid < fMaxNumberOfWindows; wid++)
+   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
       if (fWindows[wid].open) {
          gCws = &fWindows[wid];
          return;
@@ -1848,7 +1848,7 @@ void TGX11::SetCharacterUp(Float_t chupx, Float_t chupy)
    else if (chupx == 0  && chupy == -1) fTextAngle = 180;
    else if (chupx == 1  && chupy ==  0) fTextAngle = 270;
    else {
-      fTextAngle = ((TMath::ACos(chupx/TMath::Sqrt(chupx*chupx +chupy*chupy))*180.)/TMath::Pi())-90;
+      fTextAngle = ((TMath::ACos(chupx/TMath::Sqrt(chupx*chupx +chupy*chupy))*180.)/3.14159)-90;
       if (chupy < 0) fTextAngle = 180 - fTextAngle;
       if (TMath::Abs(fTextAngle) <= 0.01) fTextAngle = 0;
    }
@@ -1899,13 +1899,16 @@ void  TGX11::SetColor(GC gc, int ci)
 {
    // Set the foreground color in GC.
 
-   TColor *color = gROOT->GetColor(ci);
-   if (color)
-      SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
-   else
-      Warning("SetColor", "color with index %d not defined", ci);
-
    XColor_t &col = GetColor(ci);
+
+   if (!col.defined) {
+      TColor *color = gROOT->GetColor(ci);
+      if (color)
+         SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
+      else
+         Warning("SetColor", "color with index %d not defined", ci);
+   }
+
    if (fColormap && !col.defined) {
       col = GetColor(0);
    } else if (!fColormap && (ci < 0 || ci > 1)) {
@@ -2554,7 +2557,7 @@ void TGX11::SetOpacity(Int_t percent)
    }
    if (ncolors == 0) {
       XDestroyImage(image);
-      ::operator delete(orgcolors);
+      delete [] orgcolors;
       return;
    }
 
@@ -2582,7 +2585,7 @@ void TGX11::SetOpacity(Int_t percent)
       delete [] tmpc;
    }
    XDestroyImage(image);
-   ::operator delete(orgcolors);
+   delete [] orgcolors;
 }
 
 //______________________________________________________________________________
@@ -2594,7 +2597,7 @@ void TGX11::CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolor
    if (maxcolors == 0) {
       ncolors   = 0;
       maxcolors = 100;
-      orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
+      orgcolors = new ULong_t[maxcolors];
    }
 
    for (int i = 0; i < ncolors; i++)
@@ -2675,6 +2678,7 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
    // cindex     : color index
    // r,g,b      : red, green, blue intensities between 0.0 and 1.0
 
+
    if (fColormap) {
       XColor xcol;
       xcol.red   = (UShort_t)(r * kBIGGEST_RGB_VALUE);
@@ -2683,10 +2687,6 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
       xcol.flags = DoRed || DoGreen || DoBlue;
       XColor_t &col = GetColor(cindex);
       if (col.defined) {
-         // if color is already defined with same rgb just return
-         if (col.red  == xcol.red && col.green == xcol.green &&
-             col.blue == xcol.blue)
-            return;
          col.defined = kFALSE;
          if (fRedDiv == -1)
             XFreeColors(fDisplay, fColormap, &col.pixel, 1, 0);
@@ -2927,6 +2927,8 @@ extern "C" {
                   void (*get_scline) (int, int, Byte_t *), void (*pb)(Byte_t));
    int GIFdecode(Byte_t *GIFarr, Byte_t *PIXarr, int *Width, int *Height, int *Ncols, Byte_t *R, Byte_t *G, Byte_t *B);
    int GIFinfo(Byte_t *GIFarr, int *Width, int *Height, int *Ncols);
+   static void GetPixel(int y, int width, Byte_t *scline);
+   static void PutByte(Byte_t b);
 }
 
 //______________________________________________________________________________
@@ -3004,11 +3006,11 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
 
    // cleanup
    delete [] xcol;
-   ::operator delete(orgcolors);
+   delete [] orgcolors;
 }
 
 //______________________________________________________________________________
-Int_t TGX11::WriteGIF(char *name)
+void TGX11::WriteGIF(char *name)
 {
    // Writes the current window into GIF file.
 
@@ -3051,19 +3053,14 @@ Int_t TGX11::WriteGIF(char *name)
 
    out = fopen(name, "w+");
 
-   if (out) {
-      GIFencode(gCws->width, gCws->height,
+   GIFencode(gCws->width, gCws->height,
              ncol, r, g, b, scline, GetPixel, PutByte);
-      fclose(out);
-      i = 1;
-   } else {
-      Error("WriteGIF","cannot write file: %s",name);
-      i = 0;
-   }
+
+   fclose(out);
+
    delete [] R;
    delete [] G;
    delete [] B;
-   return i;
 }
 
 //______________________________________________________________________________

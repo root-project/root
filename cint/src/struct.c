@@ -177,11 +177,7 @@ int G__using_namespace()
 			      ,&astruct_offset,&astore_struct_offset,&aig15,0);
 
       /* copy variable information */
-#ifndef G__OLDIMPLEMENTATION1569
-      if(avar && ( avar!=var || aig15!= ig15 ) ) {
-#else
       if(avar) {
-#endif
 	int ii;
 #ifndef G__OLDIMPLEMENTATION1543
 	G__savestring(&avar->varnamebuf[aig15],var->varnamebuf[ig15]);
@@ -245,10 +241,8 @@ int enclosingtagnum;
 int env_tagnum;
 {
   int tagnum;
-#ifndef G__OLDIMPLEMENTATION1565
+#ifndef G__OLDIMPLEMENTATION621
   if(0>env_tagnum || 0>enclosingtagnum) return(0);
-#else
-  if(0>env_tagnum) return(0);
 #endif
   tagnum = G__struct.parent_tagnum[env_tagnum];
   while(-1!=tagnum) {
@@ -268,11 +262,7 @@ int enclosingtagnum;
 int env_tagnum;
 {
   int tagnum;
-#ifndef G__OLDIMPLEMENTATION1565
-  if(0>env_tagnum || 0>enclosingtagnum) return(0);
-#else
   if(0>env_tagnum) return(0);
-#endif
   tagnum = G__struct.parent_tagnum[env_tagnum];
   while(-1!=tagnum) {
     if (-1 != G__isanybase (enclosingtagnum, tagnum, 0)) return 1;
@@ -386,9 +376,7 @@ int G__defined_tagname(tagname,noerror)
 char *tagname;
 int noerror;
 {
-#ifdef G__OLDIMPLEMENTATION1593
   static int boolflag=0;
-#endif
   int i,len;
   char *p;
   char temp[G__LONGLINE];
@@ -508,16 +496,9 @@ int noerror;
     }
   }
 
-#ifndef G__OLDIMPLEMENTATION884 
-  /* THIS PART(884) MAY NOT BE NEEDED ANY MORE BY FIX 1604 */
+#ifndef G__OLDIMPLEMENTATION884
   if(strcmp(tagname,"bool")==0) {
-    if(
-#ifndef G__OLDIMPLEMENTATION1593
-       0==G__boolflag
-#else
-       0==boolflag
-#endif
-       ) {
+    if(0==boolflag) {
 #ifndef G__OLDIMPLEMENTATION913
       long store_globalvarpointer=G__globalvarpointer;
       int store_tagdefining=G__tagdefining;
@@ -525,9 +506,6 @@ int noerror;
       int store_def_tagnum=G__def_tagnum;
       int store_tagnum=G__tagnum;
       int store_cpp=G__cpp;
-#ifndef G__OLDIMPLEMENTATION1584
-      int store_globalcomp = G__globalcomp;
-#endif
       struct G__ifunc_table *store_ifunc = G__p_ifunc;
       G__cpp=0;
       G__globalvarpointer=G__PVOID;
@@ -537,16 +515,9 @@ int noerror;
       G__tagnum = -1;
       G__p_ifunc = &G__ifunc;
 #endif
-#ifndef G__OLDIMPLEMENTATION1593
-      G__boolflag=1;
-#else
       boolflag=1;
-#endif
       G__loadfile("bool.h");
       i=G__defined_tagname(tagname,noerror);
-#ifndef G__OLDIMPLEMENTATION1584
-      G__globalcomp = store_globalcomp;
-#endif
 #ifndef G__OLDIMPLEMENTATION913
       G__cpp=store_cpp;
       G__globalvarpointer=store_globalvarpointer;

@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.3 2001/11/04 17:29:34 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: O.Couet   16/07/99
 
 /*************************************************************************
@@ -78,25 +78,13 @@ protected:
         Bool_t       fRange;         //True when a range has been defined
         Bool_t       fZone;          //Zone indicator
         ofstream    *fStream;        //File stream identifier
-        char         fBuffer[512];   //PostScript file buffer
-        char         fPatterns[32];  //Indicate if pattern n is defined
-	Int_t        fNbinCT;        //Number of entries in the current Cell Array
-        Int_t        fNbCellW;       //Number of boxes per line
-        Int_t        fNbCellLine;    //Number of boxes in the current line
-        Int_t        fMaxLines;      //Maximum number of lines in a PS array
-	Int_t        fLastCellRed;   //Last red value
-	Int_t        fLastCellGreen; //Last green value
-	Int_t        fLastCellBlue;  //Last blue value
-	Int_t        fNBSameColorCell;//Number of boxes with the same color
+        char       fBuffer[512];   //PostScript file buffer
+        char       fPatterns[32];  //Indicate if pattern n is defined
 
-	
 public:
         TPostScript();
         TPostScript(const char *filename, Int_t type=-111);
         virtual     ~TPostScript();
-                void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2);
-                void  CellArrayFill(Int_t r, Int_t g, Int_t b);
-                void  CellArrayEnd();
                 void  Close(Option_t *opt="");
                 Int_t CMtoPS(Double_t u) {return Int_t(0.5 + 72*u/2.54);}
                 void  DefineMarkers();
@@ -132,7 +120,6 @@ public:
                 void  PrintFast(Int_t nch, const char *string="");
                 void  Range(Float_t xrange, Float_t yrange);
                 void  SetColor(Int_t color = 1);
-                void  SetColor(Float_t r, Float_t g, Float_t b);
                 void  Text(Double_t x, Double_t y, const char *string);
                 void  TextNDC(Double_t u, Double_t v, const char *string);
                 Int_t UtoPS(Double_t u);

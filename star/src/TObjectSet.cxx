@@ -1,10 +1,7 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.4 2001/05/14 06:44:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.4 2001/03/24 21:26:00 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TObjectSet.cxx,v 1.4 2001/05/14 06:44:09 brun Exp $
+// $Id: TObjectSet.cxx,v 1.4 2001/03/24 21:26:00 fine Exp $
 // $Log: TObjectSet.cxx,v $
-// Revision 1.4  2001/05/14 06:44:09  brun
-// Previous update of STAR classes from Valery was wrong.
-//
 // Revision 1.4  2001/03/24 21:26:00  fine
 // New method TDataSet::Intstance has been introduced
 //
@@ -71,8 +68,7 @@ TObjectSet::TObjectSet(TObject *obj,Bool_t makeOwner) : TDataSet("unknown","TObj
 //_____________________________________________________________________________
 TObjectSet::~TObjectSet()
 {
-  if (fObj && IsOwner()) delete fObj;
-  fObj = 0;
+// Attn.: virtual  TObject::Delete will be called via virtual dtor of TDataSet
 }
 
 //______________________________________________________________________________

@@ -31,23 +31,17 @@ MODULES       = build cint utils base cont meta net zip clib matrix new \
                 hist tree graf g3d gpad gui minuit histpainter proof \
                 treeplayer treeviewer physics postscript rint html eg
 
-ifeq ($(ARCH),win32)
-MODULES      += winnt win32 gl
-SYSTEMO       = $(WINNTO)
-SYSTEMDO      = $(WINNTDO)
-else
-ifeq ($(ARCH),win32gdk)
-MODULES      += winnt win32gdk gl
-SYSTEMO       = $(WINNTO)
-SYSTEMDO      = $(WINNTDO)
-else
+ifneq ($(ARCH),win32)
 MODULES      += unix x11 x3d rootx rootd proofd
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
-endif
+else
+MODULES      += winnt win32 gl
+SYSTEMO       = $(WINNTO)
+SYSTEMDO      = $(WINNTDO)
 endif
 ifneq ($(TTFINCDIR),)
-ifneq ($(TTFLIB),)
+ifneq ($(TTFLIBDIR),)
 MODULES      += x11ttf
 endif
 endif
@@ -59,25 +53,17 @@ endif
 endif
 endif
 ifneq ($(MYSQLINCDIR),)
-ifneq ($(MYSQLCLILIB),)
+ifneq ($(MYSQLLIBDIR),)
 MODULES      += mysql
 endif
 endif
 ifneq ($(PGSQLINCDIR),)
-ifneq ($(PGSQLCLILIB),)
+ifneq ($(PGSQLLIBDIR),)
 MODULES      += pgsql
-endif
-endif
-ifneq ($(SAPDBINCDIR),)
-ifneq ($(SAPDBCLILIB),)
-MODULES      += sapdb
 endif
 endif
 ifneq ($(SHIFTLIB),)
 MODULES      += rfio
-endif
-ifneq ($(DCAPLIB),)
-MODULES      += dcache
 endif
 ifneq ($(OSTHREADLIB),)
 MODULES      += thread
@@ -94,14 +80,13 @@ endif
 ifneq ($(STAR),)
 MODULES      += star
 endif
-ifneq ($(SRPUTILLIB),)
+ifneq ($(SRPDIR),)
 MODULES      += srputils
 endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
-                pythia6 venus star mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd
+MODULES      += unix winnt x11 x11ttf win32 gl rfio thread pythia pythia6 \
+                venus star mysql pgsql srputils x3d rootx rootd proofd
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
@@ -111,7 +96,7 @@ MODULES      += main   # must be last, $(ALLLIBS) must be fully formed
 
 LPATH         = lib
 
-ifneq ($(PLATFORM),win32)
+ifneq ($(ARCH),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 NEWLIBS      := -lNew
@@ -156,8 +141,7 @@ MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 MAKECINTDLLS  = build/unix/makecintdlls.sh
-MAKESTATIC    = build/unix/makestatic.sh
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 MAKELIB       = build/win/makelib.sh
 MAKEDIST      = build/win/makedist.sh
 MAKECOMPDATA  = build/win/compiledata.sh
@@ -223,7 +207,7 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
                 version html changelog install uninstall showbuild cintdlls \
-                static debian redhat \
+                debian redhat \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -260,11 +244,11 @@ config config/Makefile.:
 	   exit 1; \
 	fi)
 
-$(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
+$(COMPILEDATA): config/Makefile.$(ARCH)
 	@$(MAKECOMPDATA) $(COMPILEDATA) $(CXX) "$(OPT)" "$(CXXFLAGS)" \
 	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
 	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" "$(MAKESHAREDLIB)" \
-	   "$(MAKEEXE)" "$(ARCH)"
+	   "$(MAKEEXE)"
 
 $(MAKEINFO): config/Makefile.$(ARCH)
 	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC) "$(CPPPREP)"
@@ -323,7 +307,7 @@ redhat:
 	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
 	  echo "called root-v$$vers.source.tar.gz and put it in you RPM "
 	@echo "source directory (default /usr/src/rpm/SOURCES) and the "
-	@echo "spec-file root.spec in your RPM spec directory"
+	@echo "spec-file ../root.spec in your RPM spec directory"
 	@echo "(default /usr/src/RPM/SPECS). If you want to build outside"
 	@echo "the regular tree, please refer to the RPM documentation."
 	@echo "After that, do"
@@ -338,11 +322,11 @@ clean::
 
 ifeq ($(CXX),KCC)
 clean::
-	@(find . -name "ti_files" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@find . -name "ti_files" -exec rm -rf {} \; >/dev/null 2>&1
 endif
 ifeq ($(SUNCC5),true)
 clean::
-	@(find . -name "SunWS_cache" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@find . -name "SunWS_cache" -exec rm -rf {} \; >/dev/null 2>&1
 endif
 
 distclean:: clean
@@ -352,9 +336,7 @@ distclean:: clean
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
 	@rm -f tutorials/pca.C tutorials/*.so
-	@rm -f bin/roota lib/libRoot.a
-	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
-	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
+	@rm -f $(CINTDIR)/include/*.dl* $(CINTDIR)/stl/*.dll README/ChangeLog
 	@rm -rf htmldoc
 	-@cd test && $(MAKE) distclean
 
@@ -362,7 +344,7 @@ maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include system.rootrc config/Makefile.config \
-	   test/Makefile etc/system.rootrc etc/root.mimes
+	   test/Makefile etc/system.rootrc
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
@@ -371,10 +353,6 @@ cintdlls: $(CINTTMP)
 	@$(MAKECINTDLLS) $(PLATFORM) $(CINTTMP) $(MAKELIB) $(CXX) \
 	   $(CC) $(LD) "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
 	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)"
-
-static: rootlibs
-	@$(MAKESTATIC) $(PLATFORM) $(CXX) $(CC) $(LD) "$(LDFLAGS)" \
-	   "$(XLIBS)" "$(SYSLIBS)"
 
 importcint: distclean-cint
 	@$(IMPORTCINT)
@@ -404,7 +382,6 @@ install:
 	      $(INSTALL) $(BINDEXP)             $(DESTDIR)$(BINDIR); \
            fi; \
 	   $(INSTALL) bin/root-config           $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) bin/memprobe              $(DESTDIR)$(BINDIR); \
 	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
@@ -459,15 +436,15 @@ install:
 	   rm -rf $(DESTDIR)$(MACRODIR)/CVS; \
 	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
-	   $(INSTALLDATA) man/man1/*            $(DESTDIR)$(MANDIR); \
+	   $(INSTALLDATA) man/*                 $(DESTDIR)$(MANDIR); \
 	   rm -rf $(DESTDIR)$(MANDIR)/CVS; \
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
 	   rm -rf $(DESTDIR)$(ETCDIR)/CVS; \
-	   echo "Installing Autoconf macro in $(DESTDIR)$(ACLOCALDIR)"; \
-	   $(INSTALLDIR)                        $(DESTDIR)$(ACLOCALDIR); \
-	   $(INSTALLDATA) build/misc/root.m4    $(DESTDIR)$(ACLOCALDIR); \
+	   echo "Installing utils in $(DESTDIR)$(DATADIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(DATADIR); \
+	   $(INSTALLDATA) build/misc/*          $(DESTDIR)$(DATADIR); \
 	   rm -rf $(DESTDIR)$(DATADIR)/CVS; \
 	fi
 
@@ -487,7 +464,6 @@ uninstall:
 	      rm -f $(DESTDIR)$(BINDIR)/`basename $(BINDEXP)`; \
 	   fi; \
 	   rm -f $(DESTDIR)$(BINDIR)/root-config; \
-	   rm -f $(DESTDIR)$(BINDIR)/memprobe; \
 	   for i in $(ALLEXECS) ; do \
 	      rm -f $(DESTDIR)$(BINDIR)/`basename $$i`; \
 	   done; \
@@ -523,7 +499,7 @@ uninstall:
 	   rm -rf $(DESTDIR)$(TESTDIR); \
 	   rm -rf $(DESTDIR)$(DOCDIR); \
 	   rm -rf $(DESTDIR)$(MACRODIR); \
-	   for i in man/man1/* ; do \
+	   for i in man/* ; do \
 	      rm -fr $(DESTDIR)$(MANDIR)/`basename $$i`; \
 	   done; \
 	   if test -d $(DESTDIR)$(MANDIR) && \
@@ -581,25 +557,18 @@ showbuild:
 	@echo "FVENUSLIBDIR       = $(FVENUSLIBDIR)"
 	@echo "STAR               = $(STAR)"
 	@echo "XPMLIBDIR          = $(XPMLIBDIR)"
-	@echo "XPMLIB             = $(XPMLIB)"
 	@echo "TTFLIBDIR          = $(TTFLIBDIR)"
-	@echo "TTFLIB             = $(TTFLIB)"
 	@echo "TTFINCDIR          = $(TTFINCDIR)"
 	@echo "TTFFONTDIR         = $(TTFFONTDIR)"
-	@echo "OPENGLLIBDIR       = $(OPENGLLIBDIR)"
 	@echo "OPENGLULIB         = $(OPENGLULIB)"
 	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
-	@echo "DCAPLIB            = $(DCAPLIB)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"
-	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
-	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
-	@echo "SRPINCDIR          = $(SRPINCDIR)"
-	@echo "SRPUTILLIB         = $(SRPUTILLIB)"
+	@echo "SRPDIR             = $(SRPDIR)"
 	@echo "AFSDIR             = $(AFSDIR)"
 	@echo ""
 	@echo "INSTALL            = $(INSTALL)"

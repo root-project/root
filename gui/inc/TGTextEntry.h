@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.10 2001/08/21 17:33:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.7 2000/10/20 15:51:02 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -23,8 +23,6 @@
 // kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
 // Hitting the enter key will generate:                                 //
 // kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
-// Hitting the tab key will generate:                                   //
-// kC_TEXTENTRY, kTE_TAB, widget id, 0.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -135,7 +133,6 @@ public:
    virtual  void        InsertText(const char *text, Int_t pos);
             Bool_t      IsFrameDrawn() const       { return fFrameDrawn; }
             Bool_t      IsEdited() const           { return fEdited; }
-   virtual  void        Layout() { UpdateOffset(); }
             void        MarkWord(Int_t pos);
             Int_t       MaxMark() const { return fStartIX > fEndIX ? fStartIX : fEndIX; }
             Int_t       MinMark() const { return fStartIX < fEndIX ? fStartIX : fEndIX; }
@@ -165,13 +162,11 @@ public:
    virtual  Bool_t      HandleKey(Event_t *event);
    virtual  Bool_t      HandleFocusChange(Event_t *event);
    virtual  Bool_t      HandleSelection(Event_t *event);
-   virtual  Bool_t      HandleSelectionRequest(Event_t *event);
    virtual  Bool_t      HandleTimer(TTimer *t);
    virtual  Bool_t      HandleConfigureNotify(Event_t *event);
 
    virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
-   virtual  void        TabPressed();                           //*SIGNAL*
    virtual  void        CursorOutLeft();                        //*SIGNAL*
    virtual  void        CursorOutRight();                       //*SIGNAL*
    virtual  void        CursorOutUp();                          //*SIGNAL*
