@@ -109,12 +109,21 @@ char baseaccess;
 #ifndef G__OLDIMPLEMENTATION692
   isvirtualbase = (to_base->property[to_base->basen]&G__ISVIRTUALBASE); 
 #endif
+#ifndef G__OLDIMPLEMENTATION2151
+  if(to_base->property[to_base->basen]&G__ISVIRTUALBASE) {
+    isvirtualbase |= G__ISINDIRECTVIRTUALBASE;
+  }
+#endif
   basen=to_base->basen;
   for(i=0;i<from_base->basen;i++) {
     ++basen;
     to_base->basetagnum[basen] = from_base->basetagnum[i];
     to_base->baseoffset[basen] = offset+from_base->baseoffset[i];
-#ifndef G__OLDIMPLEMENTATION692
+#if !defined(G__OLDIMPLEMENTATION2151)
+    to_base->property[basen] 
+      = ((from_base->property[i]&(G__ISVIRTUALBASE|G__ISINDIRECTVIRTUALBASE)) 
+	  | isvirtualbase);
+#elif !defined(G__OLDIMPLEMENTATION692)
     to_base->property[basen] 
       = ((from_base->property[i]&G__ISVIRTUALBASE) | isvirtualbase);
 #else

@@ -1589,6 +1589,26 @@ char *argv[] ;
       G__break=0;
       G__setdebugcond();
       G__fprinterr(G__serr,"!!! return from main() function\n");
+#ifndef G__OLDIMPLEMENTATION2158
+#ifdef SIGALRM
+      if(G__RETURN_EXIT1==G__return) {
+	G__fprinterr(G__serr,
+	    "Press return or process will be terminated in %dsec by timeout\n"
+		     ,G__TIMEOUT);
+	signal(SIGALRM,G__timeout);
+	alarm(G__TIMEOUT);
+      }
+#endif
+#endif
+      G__pause();
+#ifndef G__OLDIMPLEMENTATION2158
+#ifdef SIGALRM
+      if(G__RETURN_EXIT1==G__return) {
+	alarm(0);
+	G__fprinterr(G__serr,"Time out cancelled\n");
+      }
+#endif
+#endif
       G__pause();
     }
     if(G__stepover) {
@@ -2197,6 +2217,9 @@ void G__platformMacro()
 #endif
 #if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux) /* DEC/Compac Alpha-OSF operating system */
   sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__add_macro(temp);
+#endif
+#ifdef __QNX__         /* QNX realtime OS */
+  sprintf(temp,"G__QNX=%ld",(long)__QNX__); G__add_macro(temp);
 #endif
   /***********************************************************************
    * compiler and library

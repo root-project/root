@@ -2162,7 +2162,9 @@ char *item;
       result3.tagnum = -1;
       result3.typenum = -1;
       result3.ref = 0;
-#ifndef G__OLDIMPLEMENTATION1259
+#if !defined(G__OLDIMPLEMENTATION2156)
+      result3.isconst = G__CONSTVAR + G__STATICCONST;
+#elif !defined(G__OLDIMPLEMENTATION1259)
       result3.isconst = G__CONSTVAR;
 #endif
       return(result3);
@@ -2249,7 +2251,9 @@ char *item;
     result3.typenum = -1;
     result3.ref = 0;
 #endif
-#ifndef G__OLDIMPLEMENTATION1259
+#if !defined(G__OLDIMPLEMENTATION2156)
+    result3.isconst = G__CONSTVAR + G__STATICCONST;
+#elif !defined(G__OLDIMPLEMENTATION1259)
     result3.isconst = G__CONSTVAR;
 #endif
     

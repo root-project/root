@@ -57,6 +57,7 @@ G__DataMemberInfo {
   int IsValid();
   int SetFilePos(const char* fname);
   int Next();
+  int Prev();
 
 #ifdef G__ROOTSPECIAL
   enum error_code { VALID, NOT_INT, NOT_DEF, IS_PRIVATE, UNKNOWN };

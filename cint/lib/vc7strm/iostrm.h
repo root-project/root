@@ -597,7 +597,10 @@ template<class _Elem,
   class _Traits,
   class T> inline
   basic_istream<_Elem, _Traits>& 
-  __cdecl operator>>(basic_istream<_Elem, _Traits>& _Istr, T& _Ch)
+#ifndef __QNX__
+  __cdecl 
+#endif
+  operator>>(basic_istream<_Elem, _Traits>& _Istr, T& _Ch)
   {	// extract a signed char
     return (_Istr >> _Ch);
   }

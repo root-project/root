@@ -3097,7 +3097,7 @@ long localmem;
 				  ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       {
-        long *pvos= G__store_struct_offset + G__asm_inst[pc+1];
+        long *pvos= (long*)(G__store_struct_offset + G__asm_inst[pc+1]);
 	if(*pvos<0) pc=G__asm_inst[pc+2];
 	else pc+=3;
       }
@@ -3107,6 +3107,36 @@ long localmem;
       goto pcode_parse_start;
 #endif
 #endif /* 2147 */
+
+
+#ifndef G__OLDIMPLEMENTATION2152
+    case G__VIRTUALADDSTROS:
+      /***************************************
+      * inst
+      * 0 VIRTUALADDSTROS
+      * 1 tagnum
+      * 2 baseclass
+      * 3 basen
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: VIRTUALADDSTROS %lx %lx\n"
+				  ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+3]);
+#endif
+      {
+	int tagnum = G__asm_inst[pc+1];
+	struct G__inheritance *baseclass 
+	  = (struct G__inheritance*)G__asm_inst[pc+2];
+	int basen = G__asm_inst[pc+3];
+	G__store_struct_offset+=G__getvirtualbaseoffset(G__store_struct_offset
+						     ,tagnum,baseclass,basen);
+      }
+      pc+=4;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+#endif /* 2152 */
 
 #ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:
@@ -11066,6 +11096,24 @@ int *start;
       break;
 #endif /* 2147 */
 
+#ifndef G__OLDIMPLEMENTATION2152
+    case G__VIRTUALADDSTROS:
+      /***************************************
+      * inst
+      * 0 VIRTUALADDSTROS
+      * 1 tagnum
+      * 2 baseclass
+      * 3 basen
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: VIRTUALADDSTROS %lx %lx\n",pc
+				  ,G__asm_inst[pc+1],G__asm_inst[pc+3]);
+#endif
+      /* no optimization */
+      pc+=4;
+      break;
+#endif /* 2152 */
+
 #ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:
       /***************************************
@@ -12458,6 +12506,23 @@ int isthrow;
       pc+=3;
       break;
 #endif /* 2147 */
+
+#ifndef G__OLDIMPLEMENTATION2152
+    case G__VIRTUALADDSTROS:
+      /***************************************
+      * inst
+      * 0 VIRTUALADDSTROS
+      * 1 tagnum
+      * 2 baseclass
+      * 3 basen
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(0==isthrow) fprintf(fout,"%3x: VIRTUALADDSTROS %lx %lx\n",pc
+			     ,G__asm_inst[pc+1],G__asm_inst[pc+3]);
+#endif
+      pc+=4;
+      break;
+#endif /* 2152 */
 
 #ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:

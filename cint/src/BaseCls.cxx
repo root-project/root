@@ -127,3 +127,27 @@ int G__BaseClassInfo::Next(int onlydirect)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+int G__BaseClassInfo::Prev() {
+  return(Next(1)); 
+}
+
+///////////////////////////////////////////////////////////////////////////
+int G__BaseClassInfo::Prev(int onlydirect)
+{
+  if(-1==basep) basep = G__struct.baseclass[derivedtagnum]->basen-1;
+  else --basep;
+#ifndef G__FONS56
+  if(onlydirect) {
+    while (IsValid() &&
+     !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT))
+      --basep;
+  }
+  // initialize base class so we can get name of baseclass
+  if (IsValid()) {
+     G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);
+     return 1;
+  }
+#endif
+  return(IsValid());
+}
+///////////////////////////////////////////////////////////////////////////

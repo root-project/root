@@ -524,6 +524,10 @@ G__eolcallback_t G__eolcallback;
 int G__throwingexception=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2155
+int G__do_setmemfuncenv = 0;
+#endif
+
 int G__scopelevel=0;
 int G__cintv6 = 0;
 

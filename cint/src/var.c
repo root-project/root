@@ -913,7 +913,7 @@ G__value *presult;
     ltype.tagnum = var->p_tagtable[ig15];
     ltype.typenum = var->p_typetable[ig15];
     ltype.obj.reftype.reftype = var->reftype[ig15];
-    if(!G__Isvalidassignment_val(&ltype,paran,var_type,presult)) {
+    if(!G__Isvalidassignment_val(&ltype,var->paran[ig15],paran,var_type,presult)) {
       G__fprinterr(G__serr,"Error: assignment type mismatch %s "
                     ,var->varnamebuf[ig15]);
       G__genericerror((char*)NULL);
@@ -928,6 +928,9 @@ G__value *presult;
      && -1!=var->p_tagtable[ig15] && -1!=presult->tagnum
      && var->p_tagtable[ig15]!=presult->tagnum 
      && -1!=G__ispublicbase(var->p_tagtable[ig15],presult->tagnum,(long)0)) {
+#ifndef G__OLDIMPLEMENTATION2154
+    if(paran) G__bc_REWINDSTACK(paran);
+#endif
 #ifdef G__ASM_DBG
     if(G__asm_dbg&&G__asm_noverflow) {
       G__fprinterr(G__serr,"%3x: CAST to %c\n",G__asm_cp,var->type[ig15]);
@@ -939,6 +942,9 @@ G__value *presult;
     G__asm_inst[G__asm_cp+3]=var->p_tagtable[ig15];
     G__asm_inst[G__asm_cp+4]=(var->reftype[ig15]==G__PARAREFERENCE)?1:0;
     G__inc_cp_asm(5,0);
+#ifndef G__OLDIMPLEMENTATION2154
+    if(paran) G__bc_REWINDSTACK(-paran);
+#endif
   }
 #endif
   /************************************
@@ -2388,7 +2394,11 @@ struct G__var_array *varglobal,*varlocal;
   else {
 #ifdef G__ASM
     if(G__asm_noverflow&&paran&&
-       G__store_struct_offset!=G__memberfunc_struct_offset) {
+       (G__store_struct_offset!=G__memberfunc_struct_offset
+#ifndef G__OLDIMPLEMENTATION2155
+	|| G__do_setmemfuncenv
+#endif
+	)) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif
@@ -2441,7 +2451,11 @@ struct G__var_array *varglobal,*varlocal;
   /* recover function call environment */
 #ifdef G__ASM
   if(G__asm_noverflow&&paran&&
-     G__store_struct_offset!=store_struct_offset) {
+     (G__store_struct_offset!=store_struct_offset
+#ifndef G__OLDIMPLEMENTATION2155
+      || G__do_setmemfuncenv
+#endif
+      )) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
@@ -3784,7 +3798,11 @@ struct G__var_array *varglobal,*varlocal;
   /* restore base environment */
 #ifdef G__ASM
   if(G__asm_noverflow&&paran&&
-     G__store_struct_offset!=G__memberfunc_struct_offset) {
+     (G__store_struct_offset!=G__memberfunc_struct_offset
+#ifndef G__OLDIMPLEMENTATION2155
+	|| G__do_setmemfuncenv
+#endif
+      )) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif
@@ -3803,7 +3821,11 @@ struct G__var_array *varglobal,*varlocal;
   /* recover function call environment */
 #ifdef G__ASM
   if(G__asm_noverflow&&paran&&
-     G__store_struct_offset!=store_struct_offset) {
+     (G__store_struct_offset!=store_struct_offset
+#ifndef G__OLDIMPLEMENTATION2155
+      || G__do_setmemfuncenv
+#endif
+      )) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
@@ -4583,6 +4605,9 @@ int objptr;  /* 1 : object , 2 : pointer */
 #ifndef G__OLDIMPLEMENTATION1681
   char *px;
 #endif
+#ifndef G__OLDIMPLEMENTATION2155
+  int store_do_setmemfuncenv;
+#endif
   
   /****************************************************
    * pointer access operators are removed at the
@@ -4967,6 +4992,11 @@ int objptr;  /* 1 : object , 2 : pointer */
    * called from following G__getvariable().
    *
    ****************************************************/
+#ifndef G__OLDIMPLEMENTATION2155
+  store_do_setmemfuncenv = G__do_setmemfuncenv;
+  G__do_setmemfuncenv = 1;
+#endif
+
   G__incsetup_memvar(G__tagnum);
   result=G__getvariable(membername,known2
 			,(struct G__var_array*)NULL
@@ -5003,6 +5033,9 @@ int objptr;  /* 1 : object , 2 : pointer */
     }
   }
   
+#ifndef G__OLDIMPLEMENTATION2155
+  G__do_setmemfuncenv = store_do_setmemfuncenv;
+#endif
   
   /****************************************************
    * restore G__tagnum and G__store_struct_offset 
@@ -5070,6 +5103,9 @@ int objptr;  /* 1 : object , 2 : pointer */
   G__value result;
 #ifndef G__OLDIMPLEMENTATION1259
   G__SIGNEDCHAR_T store_isconst;
+#endif
+#ifndef G__OLDIMPLEMENTATION2155
+  int store_do_setmemfuncenv;
 #endif
   
   /* add pointer operater if necessary */
@@ -5315,11 +5351,20 @@ int objptr;  /* 1 : object , 2 : pointer */
    * called from following G__letvariable().
    *
    ****************************************************/
+#ifndef G__OLDIMPLEMENTATION2155
+  store_do_setmemfuncenv = G__do_setmemfuncenv;
+  G__do_setmemfuncenv = 1;
+#endif
+
   G__incsetup_memvar(G__tagnum);
   result=G__letvariable(membername,expression
 			,(struct G__var_array*)NULL
 			,G__struct.memvar[G__tagnum]);
   
+#ifndef G__OLDIMPLEMENTATION2155
+  G__do_setmemfuncenv = store_do_setmemfuncenv;
+#endif
+
   /****************************************************
    * restore G__tagnum and G__store_struct_offset 
    * because evaluation is finished.
@@ -6485,7 +6530,17 @@ int parameter00;
 	else
 	  sprintf(ttt,"%s\\%x\\%x" ,varname,G__func_page,G__func_now);
 #endif
+#define G__OLDIMPLEMENTATION2156
+#ifndef G__OLDIMPLEMENTATION2156
+	if(G__cintv6) {
+	  if(result.isconst&G__STATICCONST) strcpy(varname,ttt);
+	  else sprintf(varname,"_%s",ttt);
+	}
+	else
+	  strcpy(varname,ttt);
+#else
 	strcpy(varname,ttt);
+#endif
 	/* BUG FIX, 25Feb94, ig15 was used */
 	G__hash(ttt,varhash,ig25)
 	var->statictype[var->allvar] = G__LOCALSTATICBODY;
@@ -6833,6 +6888,9 @@ int parameter00;
   G__dynconst=0;
 #endif
   var->constvar[ig15] = G__constvar ;
+#ifndef G__OLDIMPLEMENTATION2156
+  var->constvar[ig15] |= result.isconst&G__STATICCONST;
+#endif
   
   /* allocate variable and pointer */
   var->allvar++;

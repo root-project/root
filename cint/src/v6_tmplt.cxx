@@ -1618,6 +1618,7 @@ void G__declare_template()
      *4 template<class T> A<T>::B<T> f()
      *5 template<class T> A<T> f()
      *6 template<class T> A<T> A<T>::v;
+     *6'template<class T> A<T> A<T>::v = 0;
      *7 template<class T> A<T> { }  constructor
      *  also the return value could be a pointer or reference or const 
      *  or any combination of the 3
@@ -1628,9 +1629,13 @@ void G__declare_template()
     c = G__fgetname_template(temp2,"*&(;");
     while (c=='&'||c=='*') {
        /* we skip all the & and * we see and what's in between.
-          This should remove from the name of the function (what we are looking for)
+          This should be removed from the func name (what we are looking for)
           anything preceding combinations of *,& and const. */
+#ifndef G__OLDIMPLEMENTATION2157
+       c = G__fgetname_template(temp2,"*&(;=");
+#else
        c = G__fgetname_template(temp2,"*&(;");
+#endif
     }
 #else /* 2061 */
     c = G__fgetname_template(temp2,"(;");
@@ -1657,11 +1662,34 @@ void G__declare_template()
 	c = G__fgetstream(temp2+8,"(");
       }
     }
+#ifdef G__OLDIMPLEMENTATION2157_YET
+    if(isspace(c)) {
+      /* static member with initialization */
+      fsetpos(G__ifile.fp,&pos);
+      G__ifile.line_number = store_line_number;
+      if(G__dispsource) G__disp_mask=0;
+      G__createtemplatememfunc(temp);
+      /* skip body of member function template */
+      c = G__fignorestream("{;");
+      if(';'!=c) c = G__fignorestream("}");
+      G__freetemplatearg(targ);
+      return;
+    }
+#endif
+#ifndef G__OLDIMPLEMENTATION2157
+    if(';'==c || '='==c) ismemvar=1;
+#else
     if(';'==c) ismemvar=1;
-    if('('==c||';'==c) {
+#endif
+    if('('==c||';'==c
+#ifndef G__OLDIMPLEMENTATION2157
+       || '='==c
+#endif
+       ) {
       /*1 template<class T> A<T>::f()           ::f
        *3 template<class T> A<T> A<T>::f()      A<T>::f
        *6 template<class T> A<T> A<T>::v;       A<T>::v
+       *6'template<class T> A<T> A<T>::v=0;     A<T>::v
        *7 template<class T> A<T> { }  constructor
        *5 template<class T> A<T> f()            f        */
       p=strchr(temp2,':');
@@ -1684,6 +1712,13 @@ void G__declare_template()
     else if('<'==c) {
       /* Do nothing */
     }
+#ifdef G__OLDIMPLEMENTATION2157_YET
+    else if('='==c) {
+      /*6'template<class T> A<T> A<T>::v=0;     A<T>::v */
+      c = G__fignorestream(";");
+      ismemvar=1;
+    }
+#endif
     else { /* if(strncmp(temp,"::",2)==0) { */
       /*2 template<class T> A<T>::B<T> A<T>::f()  ::B<T>
        *4 template<class T> A<T>::B<T> f()        ::B<T> */

@@ -6407,6 +6407,11 @@ int memfunc_flag;
 	      G__store_struct_offset = store_inherit_offset + 
 		G__getvirtualbaseoffset(store_inherit_offset,G__tagnum
 					,baseclass,basen);
+#ifndef G__OLDIMPLEMENTATION2152
+	      if(G__cintv6) {
+		G__bc_VIRTUALADDSTROS(G__tagnum,baseclass,basen);
+	      }
+#endif
 	    }
 	    else {
 	      G__store_struct_offset
@@ -6434,6 +6439,11 @@ int memfunc_flag;
 	      G__store_struct_offset = store_inherit_offset + 
 		G__getvirtualbaseoffset(store_inherit_offset,G__tagnum
 					,baseclass,basen);
+#ifndef G__OLDIMPLEMENTATION2152
+	      if(G__cintv6) {
+		G__bc_VIRTUALADDSTROS(G__tagnum,baseclass,basen);
+	      }
+#endif
 	    }
 	    else {
 	      G__store_struct_offset

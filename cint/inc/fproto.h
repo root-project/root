@@ -7,7 +7,7 @@
  * Description:
  *  K&R style function prototype
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -911,7 +911,7 @@ void G__bc_delete_operator G__P((const char *expression,int isarray)) ;
 int G__bc_exec_try_bytecode G__P((int start,int stack,G__value *presult,long localmem)) ;
 int G__bc_exec_throw_bytecode G__P((G__value* pval));
 int G__bc_exec_typematch_bytecode G__P((G__value* catchtype,G__value* excptobj));
-int G__Isvalidassignment_val G__P((G__value* ltype,int lparan,int lvar_type,G__value* rtype));
+int G__Isvalidassignment_val G__P((G__value* ltype,int varparan,int lparan,int lvar_type,G__value* rtype));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION2136
@@ -922,6 +922,15 @@ void G__bc_setlinenum G__P((int line));
 
 #ifndef G__OLDIMPLEMENTATION2150
 void G__bc_Baseclassctor_vbase G__P((int tagnum));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2152
+void G__bc_VIRTUALADDSTROS G__P((int tagnum,struct G__inheritance* baseclas,int basen));
+void G__bc_cancel_VIRTUALADDSTROS();
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2154
+void G__bc_REWINDSTACK G__P((int n)) ;
 #endif
 
 G__value G__alloc_exceptionbuffer G__P((int tagnum));

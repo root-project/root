@@ -632,6 +632,12 @@ char *space;
 	sprintf(msg,"virtual ");
 	if(G__more(fout,msg)) return(1);
       }
+#ifndef G__OLDIMPLEMENTATION2151
+      if(baseclass->property[i]&G__ISINDIRECTVIRTUALBASE) {
+	sprintf(msg,"(virtual) ");
+	if(G__more(fout,msg)) return(1);
+      }
+#endif
       sprintf(msg,"%s %s"
 	      ,G__access2string(baseclass->baseaccess[i])
 	      ,G__fulltagname(baseclass->basetagnum[i],0));

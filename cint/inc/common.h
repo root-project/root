@@ -285,6 +285,7 @@
 #define G__PCONSTVAR      4
 #define G__PCONSTCONSTVAR 5
 #define G__CONSTFUNC      8
+#define G__STATICCONST 0x10
 
 /**************************************************************************
 * Class charasteristics
@@ -457,6 +458,7 @@
 #define G__MEMCPY             (long)0x7fff0050
 #define G__MEMSETINT          (long)0x7fff0051
 #define G__JMPIFVIRTUALOBJ    (long)0x7fff0052
+#define G__VIRTUALADDSTROS    (long)0x7fff0053
 
 #define G__PAUSE              (long)0x7fff00fe
 

@@ -2310,6 +2310,9 @@ G__value *defined;
     if(ig2==0) {
 #ifdef G__ASM
       if(G__asm_noverflow) {
+#ifndef G__OLDIMPLEMENTATION2152
+	G__bc_cancel_VIRTUALADDSTROS();
+#endif
 #ifdef G__ASM_IFUNC
 	G__inc_cp_asm(-3,0); 
 #else

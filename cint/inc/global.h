@@ -739,6 +739,10 @@ extern G__eolcallback_t G__eolcallback;
 extern int G__throwingexception;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2155
+extern int G__do_setmemfuncenv;
+#endif
+
 extern int G__scopelevel;
 extern int G__cintv6;
 

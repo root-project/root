@@ -315,6 +315,67 @@ int G__DataMemberInfo::Next()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
+#include <vector>
+#ifndef __hpux
+using namespace std;
+#endif
+int G__DataMemberInfo::Prev()
+{
+  struct G__var_array *var;
+  static vector<void*> prevbuf;
+  static int prevbufindex;
+  if(handle) {
+    if(-1==index) {
+      var = (struct G__var_array*)handle;
+      prevbuf.clear();
+      while(var) {
+	prevbuf.push_back((void*)var);
+	var = var->next;
+      } 
+      prevbufindex = prevbuf.size()-1;
+      handle = (long)prevbuf[prevbufindex];
+      var = (struct G__var_array*)handle;
+      index = var->allvar-1;
+    }
+    else {
+      var = (struct G__var_array*)handle;
+      --index;
+      if(index<0) { 
+	if(prevbufindex>0) {
+	  int t = var->tagnum;
+	  handle = (long)prevbuf[--prevbufindex];
+	  var = (struct G__var_array*)handle;
+	  index = var->allvar-1;
+	  var->tagnum=t;
+	}
+	else {
+	  handle=0;
+	  index = -1;
+	}
+      }
+    }
+    if(IsValid()) {
+      type.type = var->type[index];
+      type.tagnum=var->p_tagtable[index];
+      type.typenum=var->p_typetable[index];
+      type.reftype=var->reftype[index];
+#ifndef G__OLDIMPLEMENTATION1227
+      type.class_property=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION401
+      type.isconst=var->constvar[index];
+#endif
+      return(1);
+    }
+    else {
+      return(0);
+    }
+  }
+  else {
+    return(0);
+  }
+}
+///////////////////////////////////////////////////////////////////////////
 const char* G__DataMemberInfo::FileName() {
 #ifdef G__VARIABLEFPOS
   if(IsValid()) {

@@ -47,6 +47,8 @@ G__BaseClassInfo : public G__ClassInfo {
   int IsValid();
   int Next();
   int Next(int onlydirect);
+  int Prev();
+  int Prev(int onlydirect);
 
  private:
   long basep;

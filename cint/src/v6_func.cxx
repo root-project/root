@@ -3058,7 +3058,11 @@ int memfunc_flag;
   }
   /*DEBUG*/ /* fprintf(stderr,"\nSET %lx=%lx %lx %s\n",G__memberfunc_struct_offset,G__store_struct_offset,store_struct_offset,item); */
   if(G__asm_noverflow&&fpara.paran&&
-     G__store_struct_offset!=G__memberfunc_struct_offset) {
+     (G__store_struct_offset!=G__memberfunc_struct_offset
+#ifndef G__OLDIMPLEMENTATION2155
+      || G__do_setmemfuncenv
+#endif
+      )) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif

@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000018
-#define G__CINTVERSIONSTR  "6.0.18, Sep 29 2004"
+#define G__CINTVERSION      6000020
+#define G__CINTVERSIONSTR  "6.0.20, Oct 20 2004"
 #else
-#define G__CINTVERSION      50150154
-#define G__CINTVERSIONSTR  "5.15.154, Sep 29 2004"
+#define G__CINTVERSION      50150156
+#define G__CINTVERSIONSTR  "5.15.156, Oct 20 2004"
 #endif
 
 #define G__ALWAYS
@@ -35,7 +35,16 @@
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
+#define G__OLDIMPLEMENTATION2156
+
 #ifndef G__CINT_VER6
+#define G__OLDIMPLEMENTATION2155
+#define G__OLDIMPLEMENTATION2154
+#define G__OLDIMPLEMENTATION2153
+#define G__OLDIMPLEMENTATION2152
+#define G__OLDIMPLEMENTATION2151
+#define G__OLDIMPLEMENTATION2150
+#define G__OLDIMPLEMENTATION2148
 #define G__OLDIMPLEMENTATION2147
 #define G__OLDIMPLEMENTATION2146
 #define G__OLDIMPLEMENTATION2143
@@ -288,6 +297,12 @@
 #ifdef __SC__
 #ifndef G__SYMANTEC
 #define G__SYMANTEC
+#endif
+#endif
+
+#ifdef __QNX__
+#ifndef G__QNX
+#define G__QNX
 #endif
 #endif
 
@@ -1359,8 +1374,9 @@ extern "C" { /* extern C 3 */
 * structure for class inheritance
 *
 **************************************************************************/
-#define G__ISDIRECTINHERIT 0x0001
-#define G__ISVIRTUALBASE   0x0002
+#define G__ISDIRECTINHERIT         0x0001
+#define G__ISVIRTUALBASE           0x0002
+#define G__ISINDIRECTVIRTUALBASE   0x0004
 struct G__inheritance {
   int basen;
   short basetagnum[G__MAXBASE];
