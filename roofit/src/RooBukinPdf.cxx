@@ -2,7 +2,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.cc,v 1.3 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooBukinPdf.cc,v 1.4 2004/10/29 08:55:54 herent Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *
@@ -57,7 +57,7 @@ RooBukinPdf::RooBukinPdf(const char *name, const char *title,
   rho2("rho2","rho2",this,_rho2)
 {
   // Constructor
-  consts = 2*sqrt(2*log(2));
+  consts = 2*sqrt(2*log(2.));
 }
 
 
@@ -73,7 +73,7 @@ RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
 
 {
   // Copy constructor
-  consts = 2*sqrt(2*log(2));
+  consts = 2*sqrt(2*log(2.));
 }
 
 
@@ -87,11 +87,11 @@ Double_t RooBukinPdf::evaluate() const
   double fit_result = 0;
   
   hp=sigp*consts;
-  r3=log(2);
+  r3=log(2.);
   r4=sqrt(pow(xi,2)+1);
   r1=xi/r4;  
 
-  if(fabs(xi) > exp(-6)){
+  if(fabs(xi) > exp(-6.)){
     r5=xi/log(r4+xi);
   }
   else
@@ -108,7 +108,7 @@ Double_t RooBukinPdf::evaluate() const
 
   //--- Center
   else if(x < x2) {
-    if(fabs(xi) > exp(-6)) {
+    if(fabs(xi) > exp(-6.)) {
       r2=log(1 + 4 * xi * r4 * (x-Xp)/hp)/log(1+2*xi*(xi-r4));
       r2=-r3*(pow(r2,2));
     }
