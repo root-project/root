@@ -4,6 +4,7 @@
 #include "RootData.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TStreamerInfo.h"
 
 RootClassVersion(RootPCfix,3)
 
@@ -69,6 +70,8 @@ int main()
         result &= verifyVersion("RootPCnodict",1);
         //no class template wide version setting yet result &= verifyVersion("RootPCtemp<int>",5);
 
+        RootCaloHit::Class()->GetStreamerInfo()->ls();
+    
         return !result;
 }
 

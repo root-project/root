@@ -1,13 +1,9 @@
 all: tests
 test: tests
 
-SUBDIRS = arrayobject 
+SUBDIRS = arrayobject bigevent newClassDef namespacedict
 
-TEST_TARGETS = $(SUBDIRS:%=%.test)
+include ../Rules.mk
 
-tests: $(TEST_TARGETS)
-	@echo "All test succeeded in `pwd`"
 
-$(TEST_TARGETS): %.test:
-	@(cd $*; gmake test)
 

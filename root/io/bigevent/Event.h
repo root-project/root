@@ -26,15 +26,17 @@
 #include <deque>
 #include <string>
 
-#include <iostream.h>
+#include <iostream>
 
+//This is for portability of this test.  Do not try this at home!
+using namespace std;
 
 class TDirectory;
 
 class UShortVector: public vector<UShort_t> {
 
 private:
-   Int_t fNshorts;   //length of STL vector (duplicated info)
+   Int_t fNshorts;   //length of STL std::vector (duplicated info)
 
 public:
    UShortVector(){;}

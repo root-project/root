@@ -97,6 +97,21 @@ public:
    }
 };
 
+namespace Local {
+
+   class RootPCtop : public RootPCellID {
+   public:
+      RootPCtop() {};
+   };
+
+   class RootPCbottom : public RootPCtop {
+   public:
+      RootPCbottom() {};
+      RootPCtop var;
+   };
+
+}
+
 //inline Short_t GetClassVersion(RootPCellID*) { return 2; }
 // or template<> inline Short_t GetClassVersion<RootPCellID >(RootPCellID*) { return 2; }
 // or template<> inline Short_t GetClassVersion<RootPCellID >() { return 2; }

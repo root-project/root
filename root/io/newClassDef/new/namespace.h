@@ -19,9 +19,10 @@ namespace MySpace {
     ClassDef(A,1)
   };
 
-  class MyClass : public TObject {
+  class MyClass : public A {
   public:
     int a;
+    A b;
     MyClass() {};
     MyClass(int a_) : a(a_) {};
 #ifdef NESTING_PROBLEM_SOLVED

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TOffset.cxx,Exp $
+// @(#)root/base:$Name:  $:$Id: TOffset.cxx,v 1.1.1.1 2002/08/02 22:25:36 pcanal Exp $
 // Author: Victor Perev   08/05/02
 
 
@@ -133,7 +133,7 @@ const char *TOffset::GetName() const
  {TestVirt4  t; fgWhereVirt = ((char*)&t == &t.c);}
   
 //	Test Solaris bug
- { sol4Class t; fgSolBug = ((t.i4-(char*)&t) < sizeof(sol3Class));}
+ { sol4Class t; fgSolBug = ((t.i4-(char*)&t) < (int) sizeof(sol3Class));}
  
 
 

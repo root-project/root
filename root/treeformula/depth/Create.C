@@ -12,6 +12,7 @@ void Create() {
    Double_t a=1.88;
    br3->Branch("a",&a,"a/D");
    T->Fill();
+   T->Fill();
    T->Print();
    T->Write();
    T->Show(0);

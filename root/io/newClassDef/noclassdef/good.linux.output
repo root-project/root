@@ -14,7 +14,7 @@ mycell.id                     3
 mycell.base[4]                116         
 *mycellnull                   ->0         
 fUniqueID                     0           object unique identifier
-fBits                         33554432    bit field status word
+fBits                         50331648    bit field status word
 base 	t e s t 
 id 	3
 base 	n o d i 
@@ -67,7 +67,7 @@ mycell.id                     3
 mycell.base[4]                116         
 *mycellnull                   ->0         
 fUniqueID                     0           object unique identifier
-fBits                         33554432    bit field status word
+fBits                         50331648    bit field status word
 base 	t e s t 
 id 	3
 base 	n o d i 

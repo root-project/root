@@ -1,6 +1,6 @@
 all: tests
 
-SUBDIRS = treeformula aclic
+SUBDIRS = treeformula aclic tree io
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)

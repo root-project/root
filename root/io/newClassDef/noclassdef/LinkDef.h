@@ -4,7 +4,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class RootPCtemp<int>;
+#pragma link C++ class RootPCtemp<int>+;
 
 #pragma link C++ class RootData+;
 #pragma link C++ class RootCaloHit+;
@@ -19,4 +19,10 @@
 
 #pragma link C++ namespace ROOT;
 //#pragma link C++ function ROOT::ShowMembers(RootPCellID*, TMemberInspector&, char*);
+
+#pragma link C++ nestedclass;
+#pragma link C++ namespace Local;
+#pragma link C++ class Local::RootPCtop+;
+#pragma link C++ class Local::RootPCbottom+;
+
 #endif

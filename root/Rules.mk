@@ -1,17 +1,21 @@
 all: tests
 test: tests
 
-SUBDIRS =  
+TEST_TARGETS_DIR = $(SUBDIRS:%=%.test) 
+TEST_TARGETS += $(TEST_TARGETS_DIR)
 
-TEST_TARGETS = $(SUBDIRS:%=%.test) 
+CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 
 tests: $(TEST_TARGETS)
 	@echo "All test succeeded in `pwd`"
 
-$(TEST_TARGETS): %.test:
+$(TEST_TARGETS_DIR): %.test:
 	@(cd $*; gmake test)
 
-clean:
+$(CLEAN_TARGETS_DIR): %.clean:
+	@(cd $*; gmake clean)
+
+clean:  $(CLEAN_TARGETS_DIR)
 	rm -f main *Dict* Event.root *~ $(CLEAN_TARGET)
 
 
@@ -21,6 +25,8 @@ ARCH          = $(shell root-config --arch)
 PLATFORM      = $(ARCH)
 
 CXXFLAGS = $(shell root-config --cflags)
+ROOTLIBS     := $(shell root-config --nonew --libs)
+ROOTGLIBS    := $(shell root-config --nonew --glibs)
 
 ifeq ($(PLATFORM),win32)
 # Windows with the VC++ compiler
@@ -44,18 +50,15 @@ SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
                 advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib \
                 msvcirt.lib
 
-ROOTLIBS     := $(shell root-config --nonew --libs)
-ROOTGLIBS    := $(shell root-config --nonew --glibs)
 endif
 
 ifeq ($(ARCH),linux)
 # Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
 CXX           = g++
-CXXFLAGS      = -O -Wall -fPIC
+CXXFLAGS      += -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared
-CXX           =
 ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =

@@ -5,6 +5,8 @@ SUBDIRS = current featuretest new noclassdef
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)
 
+test: tests
+
 tests: $(TEST_TARGETS)
 	@echo "All test succeeded"
 

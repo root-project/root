@@ -3,6 +3,8 @@
 all: test
 
 test: ./Event ./libEvent.so
+	./Event 10 1 1 1
+	./Event 10 1 1 20
 
 Event : MainEvent.o Event.o EventDict.o
 	g++ -o Event MainEvent.o Event.o EventDict.o -L$(ROOTSYS)/lib \
@@ -19,4 +21,6 @@ Event.o: Event.cxx Event.h
 .cxx.o:
 	g++ -g -Wall -fPIC -I$(ROOTSYS)/include -c $<
 
- 
+clean:
+	rm -f Event libEvent.so *.o EventDict.cxx EventDict.h *~
+

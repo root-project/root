@@ -3,7 +3,9 @@ local_all: main
 
 include $(ROOTSYS)/test/Makefile
 
-arch := $(shell grep arch `which root-config` | head -1 | cut -d'=' -f2-)
+#arch := $(shell grep arch `which root-config` | head -1 | cut -d'=' -f2-)
+arch := $(shell root-config --arch)
+CXXFLAGS :=  $(patsubst -O,-g,$(CXXFLAGS))
 
 ifeq ("X","Y")
 CXXFLAGS := $(shell root-config --cflags)
