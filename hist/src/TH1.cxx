@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.5 2000/06/13 10:35:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.6 2000/06/15 06:51:49 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1318,6 +1318,7 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxm
       }
       we = 0.1*TMath::Abs(bl-al);
       if (we == 0) we = 0.3*TMath::Abs(par);
+//      if (we == 0) we = 1000*TMath::Abs(par);
       if (we == 0) we = binwidx;
       hFitter->SetParameter(i,gF1->GetParName(i),par,we,al,bl);
    }
@@ -1536,6 +1537,7 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
          }
       }
    }
+//printf("f=%g, npfits=%d\n",f,npfits);
    gF1->SetNumberFitPoints(npfits);
 }
 
@@ -1701,14 +1703,14 @@ void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
 //*-*   (E.Keil.  revised by B.Schorr, 23.10.1981.)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-    static Double_t zero = 0.;
-    static Double_t one = 1.;
-    static Int_t idim = 20;
+    const Double_t zero = 0.;
+    const Double_t one = 1.;
+    const Int_t idim = 20;
 
-    static Double_t  b[400]	/* was [20][20] */;
-    static Int_t i, k, l, ifail;
-    static Double_t power;
-    static Double_t da[20], xk, yk;
+    Double_t  b[400]	/* was [20][20] */;
+    Int_t i, k, l, ifail;
+    Double_t power;
+    Double_t da[20], xk, yk;
 
     if (m <= 2) {
        H1LeastSquareLinearFit(n, a[0], a[1], ifail);
@@ -1760,11 +1762,11 @@ void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifai
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    static Double_t xbar, ybar, x2bar;
-    static Int_t i, n;
-    static Double_t xybar;
-    static Double_t fn, xk, yk;
-    static Double_t det;
+    Double_t xbar, ybar, x2bar;
+    Int_t i, n;
+    Double_t xybar;
+    Double_t fn, xk, yk;
+    Double_t det;
 
     n     = TMath::Abs(ndata);
     ifail = -2;
@@ -1806,10 +1808,10 @@ void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k,
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
     Int_t a_dim1, a_offset, b_dim1, b_offset;
-    static Int_t nmjp1, i, j, l;
-    static Int_t im1, jp1, nm1, nmi;
-    static Double_t s1, s21, s22;
-    static Double_t one = 1.;
+    Int_t nmjp1, i, j, l;
+    Int_t im1, jp1, nm1, nmi;
+    Double_t s1, s21, s22;
+    const Double_t one = 1.;
 
     /* Parameter adjustments */
     b_dim1 = idim;

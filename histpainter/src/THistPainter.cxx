@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.3 2000/06/07 07:29:42 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.4 2000/06/13 09:52:03 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TRandom.h"
 #include "Hoption.h"
 #include "Hparam.h"
+
 
 //______________________________________________________________________________
 //   The histogram painter class
