@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.83 2003/12/30 14:20:07 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.84 2003/12/30 20:43:46 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1095,7 +1095,7 @@ int TUnixSystem::Unlink(const char *name)
    // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
    // -1 in case of failure.
 
-#if defined(R__SEEK64)
+#if defined(R__SEEK64) && !defined(R__WINGCC)
    struct stat64 finfo;
    if (stat64(name, &finfo) < 0)
       return -1;
@@ -2949,7 +2949,7 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long64_t *size,
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
-#if defined(R__SEEK64)
+#if defined(R__SEEK64) && !defined(R__WINGCC)
    struct stat64 statbuf;
    if (path != 0 && stat64(path, &statbuf) >= 0) {
 #else
