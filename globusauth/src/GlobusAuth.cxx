@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.16 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.17 2005/01/14 17:10:29 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -1061,8 +1061,8 @@ void GlobusCleanupShm()
                if ((rc == EINVAL) || (rc == EIDRM)) {
                   if (gDebug > 3)
                      Info("GlobusCleanupShm:",
-                          "credentials shared memory segment %s","
-                           already marked as destroyed");
+                          "credentials shared memory segment %s"
+                          "already marked as destroyed");
                } else {
                   Warning("GlobusCleanupShm:",
                           "unable to mark segment as destroyed (error: 0x%x)",
