@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.21 2004/04/22 18:23:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.22 2004/10/15 17:07:27 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "Riostream.h"
 
 
+ClassImp(TGFileItem)
 ClassImp(TGFileContainer)
 
 class TViewUpdateTimer : public TTimer {
@@ -380,7 +381,7 @@ Bool_t TGFileContainer::HandleTimer(TTimer *)
    FileStat_t sbuf;
 
    if (gSystem->GetPathInfo(fDirectory, sbuf) == 0)
-      if (fMtime != sbuf.fMtime) DisplayDirectory();
+      if (fMtime != (ULong_t)sbuf.fMtime) DisplayDirectory();
 
    return kTRUE;
 }
