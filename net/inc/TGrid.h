@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.6 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.7 2003/11/13 17:01:15 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -33,7 +33,11 @@
 #if !defined(__CINT__)
 #include <sys/stat.h>
 #endif
+
 #include <string>
+#ifdef R__GLOBALSTL
+namespace std { using ::string; }
+#endif
 
 #ifndef ROOT_TObject
 #include "TObject.h"
