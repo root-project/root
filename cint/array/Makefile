@@ -1,0 +1,27 @@
+# This is a template for all makefile.
+
+#Set the list of files to be delete by clean:
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
+
+#Set the list of target to make while testing
+TEST_TARGETS += array1test
+
+# adjust the location of Rules.mk as needed.
+include ../../root/Rules.mk
+
+mytest:
+	$(CMDECHO) echo mytest > /dev/null
+
+testWithFailure:
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+endif
+
+# Remember that sometest.log can be made automatically from
+# from runsometest.C
+
+array1test.short.log : array1test.log
+	$(CMDECHO) cat array1test.log | sed -e s/0x[^\ ]\*//g > $@
+
+array1test: array1test.short.log
+	$(TestDiff)
