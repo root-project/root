@@ -3,4 +3,4 @@
 All test succeeded in ./separateDict
 Running test in ./separateDictNamespace
 All test succeeded in ./separateDictNamespace
-All test succeeded in ./template</text></argument><argument name="prerequisites"><set/></argument><argument name="target_group"><text>.*</text></argument><argument name="exit_code"><integer>0</integer></argument><argument name="resources"><set/></argument></extension>
+All test succeeded in .</text></argument><argument name="prerequisites"><set/></argument><argument name="target_group"><text>.*</text></argument><argument name="exit_code"><integer>0</integer></argument><argument name="resources"><set/></argument></extension>
