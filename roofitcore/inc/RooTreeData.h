@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.20 2002/03/07 06:22:24 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.21 2002/04/08 21:06:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -79,7 +79,6 @@ public:
 			  Double_t xmax= 0.65,Double_t ymax=0.85) { 
     return statOn(frame,"NMR",label,sigDigits,options,xmin,xmax,ymax) ;
   }
-
 
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "") const;
 

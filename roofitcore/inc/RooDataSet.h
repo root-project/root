@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.43 2002/02/20 19:46:21 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.44 2002/03/01 19:57:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,6 +48,8 @@ public:
     return new RooDataSet(newName?newName:GetName(),newTitle?newTitle:GetTitle(),*get()) ; 
   }
 
+  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;
+
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.
   static RooDataSet *read(const char *filename, const RooArgList &variables,
@@ -57,6 +59,7 @@ public:
 
   void setWeightVar(const char* name=0) ;
   void setWeightVar(const RooAbsArg& arg) { setWeightVar(arg.GetName()) ; }
+  virtual Bool_t isWeighted() const { return _wgtVar ? kTRUE : kFALSE ; }
 
   virtual Double_t weight() const ; 
   virtual const RooArgSet* get(Int_t index) const;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.40 2002/04/04 00:17:09 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.41 2002/04/08 21:06:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1253,7 +1253,11 @@ void RooTreeData::printToStream(ostream& os, PrintOption opt, TString indent) co
 
   oneLinePrint(os,*this);
   if(opt >= Standard) {
-    os << indent << "  Contains " << numEntries(kTRUE) << " entries" << endl;
+    if (isWeighted()) {
+      os << indent << "  Contains " << numEntries(kFALSE) << " entries with a total weight of " << numEntries(kTRUE) << endl;
+    } else {
+      os << indent << "  Contains " << numEntries() << " entries" << endl;
+    }
     if(opt >= Shape) {
       os << indent << "  Defines ";
       TString deeper(indent);
