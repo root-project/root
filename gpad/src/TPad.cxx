@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.3 2000/06/12 15:48:03 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.4 2000/06/13 11:32:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3927,24 +3927,69 @@ void TPad::Streamer(TBuffer &b)
 
    UInt_t R__s, R__c;
    Int_t nch, nobjects;
+   Float_t single;
    TObject *obj;
    if (b.IsReading()) {
       Version_t v = b.ReadVersion(&R__s, &R__c);
-      if (v < 3) {   //old TPad derived from TWbox
-         b.ReadVersion();   //      TVirtualPad::Streamer(b)
-         b.ReadVersion();   //      TWbox::Streamer(b)
-         b.ReadVersion();   //      TBox::Streamer(b)
-         TObject::Streamer(b);
-         TAttLine::Streamer(b);
-         TAttFill::Streamer(b);
-         b >> fX1;
-         b >> fY1;
-         b >> fX2;
-         b >> fY2;
-         b >> fBorderSize;
-         b >> fBorderMode;
-         TAttPad::Streamer(b);
-      } else {  //new TPad
+      if (v < 5) {   //old TPad in single precision
+         if (v < 3) {   //old TPad derived from TWbox
+            b.ReadVersion();   //      TVirtualPad::Streamer(b)
+            b.ReadVersion();   //      TWbox::Streamer(b)
+            b.ReadVersion();   //      TBox::Streamer(b)
+            TObject::Streamer(b);
+            TAttLine::Streamer(b);
+            TAttFill::Streamer(b);
+            b >> single; fX1 = single;
+            b >> single; fY1 = single;
+            b >> single; fX2 = single;
+            b >> single; fY2 = single;
+            b >> fBorderSize;
+            b >> fBorderMode;
+            TAttPad::Streamer(b);
+         } else {  //new TPad
+            TVirtualPad::Streamer(b);
+            TAttPad::Streamer(b);
+            b >> single; fX1 = single;
+            b >> single; fY1 = single;
+            b >> single; fX2 = single;
+            b >> single; fY2 = single;
+            b >> fBorderSize;
+            b >> fBorderMode;
+         }
+         b >> fLogx;
+         b >> fLogy;
+         b >> fLogz;
+         b >> single; fXtoAbsPixelk = single;
+         b >> single; fXtoPixelk    = single;
+         b >> single; fXtoPixel     = single;
+         b >> single; fYtoAbsPixelk = single;
+         b >> single; fYtoPixelk    = single;
+         b >> single; fYtoPixel     = single;
+         b >> single; fUtoAbsPixelk = single;
+         b >> single; fUtoPixelk    = single;
+         b >> single; fUtoPixel     = single;
+         b >> single; fVtoAbsPixelk = single;
+         b >> single; fVtoPixelk    = single;
+         b >> single; fVtoPixel     = single;
+         b >> single; fAbsPixeltoXk = single;
+         b >> single; fPixeltoXk    = single;
+         b >> single; fPixeltoX     = single;
+         b >> single; fAbsPixeltoYk = single;
+         b >> single; fPixeltoYk    = single;
+         b >> single; fPixeltoY     = single;
+         b >> single; fXlowNDC      = single;
+         b >> single; fYlowNDC      = single;
+         b >> single; fWNDC         = single;
+         b >> single; fHNDC         = single;
+         b >> single; fAbsXlowNDC   = single;
+         b >> single; fAbsYlowNDC   = single;
+         b >> single; fAbsWNDC      = single;
+         b >> single; fAbsHNDC      = single;
+         b >> single; fUxmin        = single;
+         b >> single; fUymin        = single;
+         b >> single; fUxmax        = single;
+         b >> single; fUymax        = single;
+      } else {
          TVirtualPad::Streamer(b);
          TAttPad::Streamer(b);
          b >> fX1;
@@ -3953,41 +3998,41 @@ void TPad::Streamer(TBuffer &b)
          b >> fY2;
          b >> fBorderSize;
          b >> fBorderMode;
+         b >> fLogx;
+         b >> fLogy;
+         b >> fLogz;
+         b >> fXtoAbsPixelk;
+         b >> fXtoPixelk;
+         b >> fXtoPixel;
+         b >> fYtoAbsPixelk;
+         b >> fYtoPixelk;
+         b >> fYtoPixel;
+         b >> fUtoAbsPixelk;
+         b >> fUtoPixelk;
+         b >> fUtoPixel;
+         b >> fVtoAbsPixelk;
+         b >> fVtoPixelk;
+         b >> fVtoPixel;
+         b >> fAbsPixeltoXk;
+         b >> fPixeltoXk;
+         b >> fPixeltoX;
+         b >> fAbsPixeltoYk;
+         b >> fPixeltoYk;
+         b >> fPixeltoY;
+         b >> fXlowNDC;
+         b >> fYlowNDC;
+         b >> fWNDC;
+         b >> fHNDC;
+         b >> fAbsXlowNDC;
+         b >> fAbsYlowNDC;
+         b >> fAbsWNDC;
+         b >> fAbsHNDC;
+         b >> fUxmin;
+         b >> fUymin;
+         b >> fUxmax;
+         b >> fUymax;
       }
-      b >> fLogx;
-      b >> fLogy;
-      b >> fLogz;
-      b >> fXtoAbsPixelk;
-      b >> fXtoPixelk;
-      b >> fXtoPixel;
-      b >> fYtoAbsPixelk;
-      b >> fYtoPixelk;
-      b >> fYtoPixel;
-      b >> fUtoAbsPixelk;
-      b >> fUtoPixelk;
-      b >> fUtoPixel;
-      b >> fVtoAbsPixelk;
-      b >> fVtoPixelk;
-      b >> fVtoPixel;
-      b >> fAbsPixeltoXk;
-      b >> fPixeltoXk;
-      b >> fPixeltoX;
-      b >> fAbsPixeltoYk;
-      b >> fPixeltoYk;
-      b >> fPixeltoY;
-      b >> fXlowNDC;
-      b >> fYlowNDC;
-      b >> fWNDC;
-      b >> fHNDC;
-      b >> fAbsXlowNDC;
-      b >> fAbsYlowNDC;
-      b >> fAbsWNDC;
-      b >> fAbsHNDC;
-      b >> fUxmin;
-      b >> fUymin;
-      b >> fUxmax;
-      b >> fUymax;
-
+      
       if (!gPad) gPad = new TCanvas(GetName());
       if (readLevel == 0) fMother = (TPad*)gROOT->GetSelectedPad();
       else                fMother = (TPad*)gPad;
@@ -4025,8 +4070,13 @@ void TPad::Streamer(TBuffer &b)
       b >> fGridy;
       b >> fFrame;
       b >> fView;
-      b >> fTheta;
-      b >> fPhi;
+      if (v < 5) { 
+         b >> single; fTheta = single;
+         b >> single; fPhi   = single;
+      } else {
+         b >> fTheta;
+         b >> fPhi;
+      }
       fPadPointer = 0;
       b >> fNumber;
       b >> fAbsCoord;
