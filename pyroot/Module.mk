@@ -1,4 +1,5 @@
 # Module.mk for pyroot module
+# Copyright (c) 2004 Rene Brun and Fons Rademakers
 #
 # Authors: Pere Mato, Wim Lavrijsen, 22/4/2004
 
@@ -37,7 +38,7 @@ ROOTPYO      := $(ROOTPY:.py=.pyo)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
-ALLLIBS     += $(PYROOTLIB) $(ROOTPY) $(ROOTPYC) $(ROOTPYO)
+ALLLIBS     += $(PYROOTLIB)
 
 # include all dependency files
 INCLUDEFILES += $(PYROOTDEP)
@@ -49,7 +50,8 @@ include/%.h:    $(PYROOTDIRI)/%.h
 %.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS)
+$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS) $(ROOTPY) $(ROOTPYC) \
+                $(ROOTPYO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		"$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		"$(PYROOTO) $(PYROOTDO)" "$(PYTHONLIBDIR) $(PYTHONLIB)" \
@@ -62,7 +64,7 @@ $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMP)
 $(PYROOTDO):    $(PYROOTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-pyroot:     $(PYROOTLIB) $(ROOTPYO)
+all-pyroot:     $(PYROOTLIB)
 
 map-pyroot:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(PYROOTLIB) \
