@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.43 2001/11/22 01:07:11 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.44 2001/11/27 23:19:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -237,11 +237,17 @@ Bool_t RooFitContext::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose
 }
 
 
-
 void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
   ((RooRealVar*)_floatParamList->at(index))->setError(value) ;    
+}
+
+
+void RooFitContext::setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) 
+{
+  // Modify PDF parameter error by ordinal index (needed by MINUIT)
+  ((RooRealVar*)_floatParamList->at(index))->setAsymError(loVal,hiVal) ;    
 }
 
 
@@ -662,13 +668,16 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
   if(status == 0) {
     if (doStrat0) {
       Double_t stratArg(0.0) ;
+      if (verbose)  cout << "RooFitContext: executing SET STRATEGY 0" << endl ;
       _theFitter->ExecuteCommand("SET STR",&stratArg,1) ;
     }
 
+    if (verbose)  cout << "RooFitContext: executing MIGRAD" << endl ;
     status= _theFitter->ExecuteCommand("MIGRAD",arglist,2);
 
     if (doStrat0) {
       Double_t stratArg(1.0) ;
+      if (verbose)  cout << "RooFitContext: executing SET STRATEGY 1" << endl ;
       _theFitter->ExecuteCommand("SET STR",&stratArg,1) ;
     }
   }
@@ -676,12 +685,14 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
   // If the fit suceeded, follow with a HESSE analysis if requested
   if(status == 0 && performHesse) {
     arglist[0]= 250*nFree; // maximum iterations
+    if (verbose)  cout << "RooFitContext: executing HESSE" << endl ;
     status= _theFitter->ExecuteCommand("HESSE",arglist,1);
   }
 
   // If the fit suceeded, follow with a MINOS analysis if requested
   if(status == 0 && !migradOnly) {
     arglist[0]= 250*nFree; // maximum iterations
+    if (verbose)  cout << "RooFitContext: executing MINOS" << endl ;
     status= _theFitter->ExecuteCommand("MINOS",arglist,1);
   }
 
@@ -692,13 +703,13 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
     _theFitter->GetParameter(index, buffer, val, err, vlo, vhi);
     setPdfParamVal(index, val);
     _theFitter->GetErrors(index, eplus, eminus, eparab, globcc);
+
+    // Set the parabolic error
+    setPdfParamErr(index, eparab);
+
     if(eplus > 0 || eminus < 0) {
-    // Use the average asymmetric error, if it is available
-      setPdfParamErr(index, 0.5*(eplus-eminus));
-    }
-    else {
-    // Otherwise, use the parabolic error
-      setPdfParamErr(index, eparab);
+      // Store the asymmetric error, if it is available
+      setPdfParamErr(index, eminus,eplus);
     }
   }
 

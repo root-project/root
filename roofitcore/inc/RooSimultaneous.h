@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.18 2001/11/19 07:24:00 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.19 2001/11/29 01:12:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -53,14 +53,6 @@ public:
 
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
 			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const ; 
-  virtual RooPlot *plotCompOn(RooPlot *frame, RooAbsData* wdata, const RooArgSet& compSet, Option_t* drawOptions="L",
-			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, const RooArgSet* projSet=0) const;
-  virtual RooPlot *plotCompOn(RooPlot *frame, RooAbsData* wdata, const char* indexLabelList, Option_t* drawOptions="L",
-			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, const RooArgSet* projSet=0) const;
-  virtual RooPlot *plotCompSliceOn(RooPlot *frame, RooAbsData* wdata, const RooArgSet& compSet, const RooArgSet& sliceSet,
-				   Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative) const;
-  virtual RooPlot *plotCompSliceOn(RooPlot *frame, RooAbsData* wdata, const char* indexLabelList, const RooArgSet& sliceSet,
-				   Option_t* drawOptions="L",Double_t scaleFactor= 1.0, ScaleType stype=Relative) const;
   
 protected:
 

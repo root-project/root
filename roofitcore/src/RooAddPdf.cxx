@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.27 2001/11/15 08:46:30 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.28 2001/11/28 23:13:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -314,7 +314,7 @@ Double_t RooAddPdf::evaluate() const
       Double_t nExpected = pdf->expectedEvents() ;
       if (nExpected) {
 	snormVal = nset ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
-	value += pdf->getVal(nset)*nExpected/snormVal ;
+	if (pdf->isSelectedComp()) value += pdf->getVal(nset)*nExpected/snormVal ;
 	totExpected += nExpected ;
       }
     }	    
@@ -334,7 +334,7 @@ Double_t RooAddPdf::evaluate() const
 	Double_t coefVal = coef->getVal(nset) ;
 	if (coefVal) {
 	  snormVal = nset ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
-	  value += pdf->getVal(nset)*coefVal/snormVal ;
+	  if (pdf->isSelectedComp()) value += pdf->getVal(nset)*coefVal/snormVal ;
 	  coefSum += coefVal ;
 	}
       }
@@ -349,7 +349,7 @@ Double_t RooAddPdf::evaluate() const
 	Double_t coefVal = coef->getVal(nset) ;
 	if (coefVal) {
 	  snormVal = nset ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
-	  value += pdf->getVal(nset)*coefVal/snormVal ;
+	  if (pdf->isSelectedComp()) value += pdf->getVal(nset)*coefVal/snormVal ;
 	  lastCoef -= coef->getVal(nset) ;
 	}
       }
@@ -357,7 +357,7 @@ Double_t RooAddPdf::evaluate() const
       // Add last pdf with correct coefficient
       pdf = (RooAbsPdf*) _pdfIter->Next() ;
       snormVal = nset ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
-      value += pdf->getVal(nset)*lastCoef/snormVal;
+      if (pdf->isSelectedComp()) value += pdf->getVal(nset)*lastCoef/snormVal;
       
       // Warn about coefficient degeneration
       if (lastCoef<0 || lastCoef>1) {
@@ -591,105 +591,6 @@ Double_t RooAddPdf::expectedEvents() const
   }
 
   return expectedTotal;
-}
-
-
-
-
-RooPlot* RooAddPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_t* drawOptions,
-			       Double_t scaleFactor, ScaleType stype, const RooAbsData* projData, 
-			       const RooArgSet* projSet) const 
-{
-  // Plot only the PDF components listed in 'compSet' of this PDF on 'frame'. 
-  // See RooAbsReal::plotOn() for a description of the remaining arguments and other features
-
-  // Sanity checks
-  if (plotSanityChecks(frame)) return frame ;
-  
-  // Build a temporary consisting only of the components to be plotted
-  TString newName(GetName()) ;
-  TString newTitle("Components ") ;
-  newName.Append("[") ;
-
-  RooArgList plotPdfList ;
-  RooArgList plotCoefList ;
-  RooAbsPdf* pdf ;
-  RooAbsReal* coef ;
-  RooRealVar* lastCoefVar(0) ;
-  Double_t lastCoef(1-expectedEvents()) ;
-  Double_t coefPartSum(0) ;
-  Double_t coefSum(0) ;
-  Bool_t first(kTRUE) ;
-  _pdfIter->Reset() ;
-  _coefIter->Reset() ;
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
-
-    coef = (RooAbsReal*) _coefIter->Next() ;
-    if (!coef) {
-      lastCoefVar = new RooRealVar("lastCoef","lastCoef",lastCoef) ;
-      coef = lastCoefVar ;
-    }
-    if (compSet.find(pdf->GetName())) {
-      coefPartSum += coef->getVal() ;
-      plotPdfList.add(*pdf) ;
-      plotCoefList.add(*coef) ;
-
-      // Append name of component to name of pdf subset
-      if (first) {
-	first=kFALSE ;
-      } else {
-	newName.Append(",") ;
-	newTitle.Append(",") ;
-      }
-      newName.Append(pdf->GetName()) ;
-      newTitle.Append(pdf->GetName()) ;
-    }
-    coefSum += coef->getVal() ;
-  } 
-  newName.Append("]") ;
-  newTitle.Append(" of ") ;
-  newTitle.Append(GetTitle()) ;
-  
-  RooAddPdf* plotVar = new RooAddPdf(newName.Data(),newTitle.Data(),plotPdfList,plotCoefList) ;
-
-  // Plot temporary function
-  cout << "RooAddPdf::plotCompOn(" << GetName() << ") plotting components " ; plotPdfList.Print("1") ;
-  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*coefPartSum/coefSum,stype,projData,projSet) ;
-
-  // Cleanup
-  delete plotVar ;
-  if (lastCoefVar) delete lastCoefVar ;
-
-  return frame2 ;
-}
-
-
-RooPlot* RooAddPdf::plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, const RooArgSet& sliceSet,
-				    Option_t* drawOptions, Double_t scaleFactor, ScaleType stype, 
-				    const RooAbsData* projData) const 
-{
-  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
-  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
-  // by plotOn().
-
-  RooArgSet projectedVars ;
-  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
-  
-  // Take out the sliced variables
-  TIterator* iter = sliceSet.createIterator() ;
-  RooAbsArg* sliceArg ;
-  while(sliceArg=(RooAbsArg*)iter->Next()) {
-    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
-    if (arg) {
-      projectedVars.remove(*arg) ;
-    } else {
-      cout << "RooAddPdf::plotCompSliceOn(" << GetName() << ") slice variable " 
-	   << sliceArg->GetName() << " was not projected anyway" << endl ;
-    }
-  }
-  delete iter ;
-
-  return plotCompOn(frame,compSet,drawOptions,scaleFactor,stype,projData,&projectedVars) ;
 }
 
 

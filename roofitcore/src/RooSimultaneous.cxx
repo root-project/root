@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.24 2001/11/19 07:24:00 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.25 2001/11/29 01:12:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -312,6 +312,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
 
+  Bool_t projIndex(kFALSE) ;
+
   if (projectedVars.find(_indexCat.arg().GetName())) {
     // *** Error checking for a fundamental index category ***
   
@@ -328,6 +330,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 	   << "requested, but projection data set doesn't contain index category" << endl ;
       return frame ;
     }
+
+    projIndex=kTRUE ;
 
   } else if (_indexCat.arg().isDerived()) {
     // *** Error checking for a composite index category ***
@@ -371,173 +375,52 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
       return frame ;
     }
 
+    projIndex = kTRUE ;
   } 
       
-  // If OK, forward to RooAbsPf
-  return RooAbsPdf::plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
-}
+  // If we don't project over the index, just do the regular plotOn
+  if (!projIndex) 
+    return RooAbsPdf::plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
 
 
-
-
-
-RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const char* indexLabelList, Option_t* drawOptions,
-				     Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
-{
-  // Plot a selection of the defined PDF components. Components to be plotted are identified from string of
-  // comma separate labels of the index category. Supplied data set is used to weight the component PDFs with 
-  // the relative abundance of their associated index category state in that data set. 
-
-  RooArgSet allComponents ;
-
-  // Process comma separated index label list
-  char labelList[1024] ;
-  strcpy(labelList,indexLabelList) ;  
-  char* label  = strtok(labelList,",") ;
-  while(label) {
-    // Look for a pdf proxy with this labels name
-    RooRealProxy* proxy =  (RooRealProxy*) _pdfProxyList.FindObject(label) ;
-
-    // Add to list if found, ignore with warning otherwise
-    if (proxy) {
-      allComponents.add(proxy->arg()) ;
-    } else {
-      cout << "RooSimultaneous::plotCompOn(" << GetName() 
-	   << ") WARNING: There is no component PDF associated with index label " 
-	   << label << ", ignoring" << endl ;
-    }
-    label = strtok(0,",") ;
-  }
-
-  return plotCompOn(frame,wdata,allComponents,drawOptions,scaleFactor,stype,projSet) ;
-}
-
-
-
-RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const RooArgSet& compSet, Option_t* drawOptions,
-				     Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
-{
-  // Plot a selection of the defined PDF components. Components to be plotted are identified from the supplied
-  // set of component PDFs. The supplied data set is used to weight the component PDFs with 
-  // the relative abundance of their associated index category state in that data set. 
-
-  // Sanity checks
-  if (plotSanityChecks(frame)) return frame ;
+  // If we project over the index, plot using a temporary RooAddPdf
+  // using the weights from the data as coefficients
 
   // Calculate relative weight fractions of components
-  Roo1DTable* wTable = wdata->table(_indexCat.arg()) ;
+  Roo1DTable* wTable = projData->table(_indexCat.arg()) ;
 
   // Make a new expression that is the weighted sum of requested components
   RooArgList pdfCompList ;
   RooArgList wgtCompList ;
   RooAbsPdf* pdf ;
   RooRealProxy* proxy ;
-  TIterator* cIter = compSet.createIterator() ;
   TIterator* pIter = _pdfProxyList.MakeIterator() ;
   Double_t plotFrac(0) ;
-  while(pdf=(RooAbsPdf*)cIter->Next()) {
-
-    // Check if listed component is indeed contained in this PDF
-    if (!dependsOn(*pdf)) {
-      cout << "RooSimultaneous::plotCompOn(" << GetName() << ") WARNING " 
-	   << pdf->GetName() << " is not a component of this pdf, ignoring" << endl ;
-      continue ;
-    }
+  while(proxy=(RooRealProxy*)pIter->Next()) {
     
-    // Find proxy for this pdf (we need the proxy name to look up the weight table
-    pIter->Reset() ;
-    while(proxy=(RooRealProxy*)pIter->Next()) {
-      if (!TString(proxy->arg().GetName()).CompareTo(pdf->GetName())) break ;
-    }
-    
-    // Add pdf to plot list
-    pdfCompList.add(*pdf) ;
-
     // Instantiate a RRV holding this pdfs weight fraction
     RooRealVar *wgtVar = new RooRealVar(proxy->name(),"coef",wTable->getFrac(proxy->name())) ;
     plotFrac += wgtVar->getVal() ;
     wgtCompList.addOwned(*wgtVar) ;
+
+    // Add the PDF to list list
+    pdfCompList.add(proxy->arg()) ;
   }
   delete pIter ;
-  delete cIter ;
   delete wTable ;
-
-  // Did we select anything
-  if (plotFrac==0) {
-    cout << "RooSimultaneous::plotCompOn(" << GetName() << ") no components selected, plotting aborted" << endl ;
-    return frame ;
-  }
 
   RooAddPdf *plotVar = new RooAddPdf("plotVar","weighted sum of RS components",pdfCompList,wgtCompList) ;
 
   // Plot temporary function
-  cout << "RooSimultaneous::plotCompOn(" << GetName() << ") plotting components " ; pdfCompList.Print("1") ;
   RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*plotFrac,stype,0,projSet) ;
 
   // Cleanup
   delete plotVar ;
 
   return frame2 ;
-  
 }
 
 
-
-
-RooPlot* RooSimultaneous::plotCompSliceOn(RooPlot *frame, RooAbsData* wdata, const RooArgSet& compSet, const RooArgSet& sliceSet,
-					  Option_t* drawOptions, Double_t scaleFactor, ScaleType stype) const
-{
-  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
-  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
-  // by plotOn().
-
-  RooArgSet projectedVars ;
-  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
-  
-  // Take out the sliced variables
-  TIterator* iter = sliceSet.createIterator() ;
-  RooAbsArg* sliceArg ;
-  while(sliceArg=(RooAbsArg*)iter->Next()) {
-    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
-    if (arg) {
-      projectedVars.remove(*arg) ;
-    } else {
-      cout << "RooSimultaneous::plotCompSliceOn(" << GetName() << ") slice variable " 
-	   << sliceArg->GetName() << " was not projected anyway" << endl ;
-    }
-  }
-  delete iter ;
-
-  return plotCompOn(frame,wdata,compSet,drawOptions,scaleFactor,stype,&projectedVars) ;  
-}
-
-
-RooPlot* RooSimultaneous::plotCompSliceOn(RooPlot *frame, RooAbsData* wdata, const char* indexLabelList, const RooArgSet& sliceSet,
-					  Option_t* drawOptions,Double_t scaleFactor, ScaleType stype) const
-{
-  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
-  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
-  // by plotOn().
-
-  RooArgSet projectedVars ;
-  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
-  
-  // Take out the sliced variables
-  TIterator* iter = sliceSet.createIterator() ;
-  RooAbsArg* sliceArg ;
-  while(sliceArg=(RooAbsArg*)iter->Next()) {
-    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
-    if (arg) {
-      projectedVars.remove(*arg) ;
-    } else {
-      cout << "RooSimultaneous::plotCompSliceOn(" << GetName() << ") slice variable " 
-	   << sliceArg->GetName() << " was not projected anyway" << endl ;
-    }
-  }
-  delete iter ;
-
-  return plotCompOn(frame,wdata,indexLabelList,drawOptions,scaleFactor,stype,&projectedVars) ;  
-}
 
 
 

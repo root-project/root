@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.46 2001/11/14 18:42:36 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.47 2001/11/19 07:23:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,10 +49,25 @@ public:
   // PDF specific plotting
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
 			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const;
+
+  virtual RooPlot *plotCompOn(RooPlot *frame, const char* compNameList, Option_t* drawOptions="L",
+			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
+			      const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
+
+  virtual RooPlot *plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_t* drawOptions="L",
+			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
+			      const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
+
+  virtual RooPlot *plotCompSliceOn(RooPlot *frame, const char* compNameList, const RooArgSet& sliceSet,
+				   Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
+				   const RooAbsData* projData=0) const ;
+
   virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
 			     Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
+
   virtual TH2F *plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, 
 				Double_t n1= 1, Double_t n2= 2, Double_t n3= 0) ;
+
   virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
 			   Option_t *options = "NELU", Double_t xmin=0.65,
 			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
@@ -96,6 +111,9 @@ public:
 
   static void verboseEval(Int_t stat) { _verboseEval = stat ; }
 
+  inline Bool_t isSelectedComp() const { return _selectComp ; }
+
+
 private:
 
   // This forces definition copy ctor in derived classes 
@@ -124,6 +142,10 @@ protected:
   virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* dset) const { return kFALSE ; } ;
   virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* dset) const {} ;
 
+  virtual RooPlot *plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option_t* drawOptions="L",
+				    Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
+				    const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
+
   virtual void operModeHook() ;
 
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
@@ -138,6 +160,10 @@ protected:
   mutable Int_t _traceCount ;        // Number of traces remaining to print
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print
 
+  friend class RooAddPdf ;
+  void selectComp(Bool_t flag) { _selectComp = flag ; }
+  Bool_t _selectComp ;               // Component selection flag for RooAbsPdf::plotCompOn
+  
   ClassDef(RooAbsPdf,1) // Abstract PDF with normalization support
 };
 

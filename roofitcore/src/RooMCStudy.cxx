@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.2 2001/11/07 01:56:06 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.3 2001/11/19 07:23:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -85,7 +85,13 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   // Create data set containing parameter values, errors and pulls
   RooArgSet tmp2(*_fitParams) ;
   tmp2.add(*_nllVar) ;
+
+  // Mark all variable to store their errors in the dataset
+  tmp2.setAttribAll("StoreError",kTRUE) ;
+  tmp2.setAttribAll("StoreAsymError",kTRUE) ;
   _fitParData = new RooDataSet("fitParData","Fit Parameters DataSet",tmp2) ;
+  tmp2.setAttribAll("StoreError",kFALSE) ;
+  tmp2.setAttribAll("StoreAsymError",kFALSE) ;
 }
 
 

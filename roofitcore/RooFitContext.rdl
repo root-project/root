@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.rdl,v 1.14 2001/11/19 07:23:56 verkerke Exp $
+ *    File: $Id: RooFitContext.rdl,v 1.15 2001/11/27 23:19:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -65,6 +65,7 @@ protected:
   Double_t getPdfParamErr(Int_t index) ;	
   virtual Bool_t setPdfParamVal(Int_t index, Double_t value, Bool_t verbose=kFALSE) ;
   void setPdfParamErr(Int_t index, Double_t value) ;
+  void setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) ;
   
   
   // Prefit optimizer

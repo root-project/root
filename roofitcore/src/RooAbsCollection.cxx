@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.13 2001/10/19 22:19:48 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.14 2001/11/14 18:42:35 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,6 +19,7 @@
 #include <iomanip.h>
 #include <fstream.h>
 #include "TClass.h"
+#include "TRegexp.h"
 #include "RooFitCore/RooAbsCollection.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooFormula.hh"
@@ -496,6 +497,50 @@ RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl
 
   return sel ;
 }
+
+
+
+RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t verbose) const 
+{
+  // Create a subset of the current collection, consisting only of those
+  // elements with names matching the wildcard expressions in nameList,
+  // supplied as a comma separated list
+
+  // Create output set
+  TString selName(GetName()) ;
+  selName.Append("_selection") ;
+  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ; 
+  
+  TIterator* iter = createIterator() ;
+
+  char* buf = new char[strlen(nameList)+1] ;
+  strcpy(buf,nameList) ;
+  char* wcExpr = strtok(buf,",") ;
+  while(wcExpr) {
+    TRegexp rexp(wcExpr,kTRUE) ;
+    if (verbose) {
+      cout << "RooAbsCollection::selectByName(" << GetName() << ") processing expression '" << wcExpr << "'" << endl ;
+    }
+
+    iter->Reset() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (TString(arg->GetName()).Index(rexp)>=0) {
+	if (verbose) {
+	  cout << "RooAbsCollection::selectByName(" << GetName() << ") selected element " << arg->GetName() << endl ;
+	}
+	sel->add(*arg) ;
+      }
+    }
+    wcExpr = strtok(0,",") ;
+  }
+  delete iter ;
+  delete[] buf ;
+
+  return sel ;
+}
+
+
 
 
 

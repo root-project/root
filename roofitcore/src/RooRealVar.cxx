@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.31 2001/10/19 06:56:53 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.32 2001/11/19 07:23:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,7 +37,7 @@ Int_t  RooRealVar::_printSigDigits(5) ;
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(0), _fitBins(100)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _fitBins(100)
 {
   // Constructor with value and unit
   _value = value ;
@@ -48,7 +48,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(0), _fitBins(100)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _fitBins(100)
 {
   // Constructor with range and unit. Value is set to middle of range
 
@@ -61,7 +61,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(0), _fitBins(100)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _fitBins(100)
 {
   // Constructor with value, range and unit
   _value = value ;
@@ -72,6 +72,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   RooAbsRealLValue(other,name), 
   _error(other._error),
+  _asymErrLo(other._asymErrLo),
+  _asymErrHi(other._asymErrHi),
   _fitMin(other._fitMin),
   _fitMax(other._fitMax),
   _fitBins(other._fitBins)
@@ -191,6 +193,10 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   } else {
     // Extended mode: Read multiple tokens on a single line   
     Bool_t haveValue(kFALSE) ;
+    Bool_t haveConstant(kFALSE) ;
+    removeError() ;
+    removeAsymError() ;
+
     while(1) {      
       if (parser.atEOL()) break ;
       token=parser.readToken() ;
@@ -208,10 +214,26 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	if (parser.readDouble(error)) break ;
 	setError(error) ;
 
+	// Look for optional asymmetric error
+	TString tmp = parser.readToken() ;
+	if (tmp.CompareTo("(")) {
+	  // No error, but back token
+	  parser.putBackToken(tmp) ;
+	} else {
+	  // Have error
+	  Double_t asymErrLo, asymErrHi ;
+	  if (parser.readDouble(asymErrLo,kTRUE) ||
+	      parser.expectToken(",",kTRUE) || 
+	      parser.readDouble(asymErrHi,kTRUE) ||
+	      parser.expectToken(")",kTRUE)) break ;		      
+	  setAsymError(asymErrLo,asymErrHi) ;
+	}
+
       } else if (!token.CompareTo("C")) {
 
 	// Set constant
 	setConstant(kTRUE) ;
+	haveConstant = kTRUE ;
 
       } else if (!token.CompareTo("P")) {
 
@@ -229,7 +251,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	cout << "RooRealVar::readFromStream(" << GetName() 
 	     << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
 
-      } else if ((!token.CompareTo("F")) || (!token.CompareTo("L"))) {
+      } else if (!token.CompareTo("F")) {
 
 	// Next tokens are fit limits
 	Double_t fitMin, fitMax ;
@@ -241,9 +263,34 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	    parser.expectToken(":",kTRUE) ||
 	    parser.readInteger(fitBins,kTRUE) ||
 	    parser.expectToken(")",kTRUE)) break ;
+	//setFitBins(fitBins) ;
+	//setFitRange(fitMin,fitMax) ;
+	cout << "RooRealVar::readFromStream(" << GetName() 
+	     << ") WARNING: F(lo-hi:bins) token deprecated, use L(lo-hi) B(bins)" << endl ;	
+	if (!haveConstant) setConstant(kFALSE) ;
+
+      } else if (!token.CompareTo("L")) {
+
+	// Next tokens are fit limits
+	Double_t fitMin, fitMax ;
+	Int_t fitBins ;
+	if (parser.expectToken("(",kTRUE) ||
+	    parser.readDouble(fitMin,kTRUE) ||
+	    parser.expectToken("-",kTRUE) ||
+	    parser.readDouble(fitMax,kTRUE) ||
+	    parser.expectToken(")",kTRUE)) break ;
 	setFitRange(fitMin,fitMax) ;
+	if (!haveConstant) setConstant(kFALSE) ;
+
+      } else if (!token.CompareTo("B")) { 
+
+	// Next tokens are fit limits
+	Int_t fitBins ;
+	if (parser.expectToken("(",kTRUE) ||
+	    parser.readInteger(fitBins,kTRUE) ||
+	    parser.expectToken(")",kTRUE)) break ;
 	setFitBins(fitBins) ;
-	setConstant(kFALSE) ;
+	
       } else {
 	// Token is value
 	if (parser.convertToDouble(token,value)) { parser.zapToEnd() ; break ; }
@@ -272,38 +319,48 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
       sprintf(fmtErr,"%%.%de",(_printSigDigits+1)/2) ;
       if (_value>=0) os << " " ;
       os << Form(fmtVal,_value) ;
-      if (_error!=0 || !isConstant()) {
-	os << " +/- " << Form(fmtErr,_error) ;
+
+      if (hasError()) {
+	os << " +/- " << Form(fmtErr,getError()) ;
       } else {
 	os << setw(_printSigDigits+9) << " " ;
       }
+
+      if (hasAsymError()) {
+	os << " (" << Form(fmtErr,getAsymErrorLo())
+	   << ", " << Form(fmtErr,getAsymErrorHi()) << ")" ;
+      }
       os << " " ;
     } else {
-      os << format(_printSigDigits,"EF")->Data() << " " ;
+      os << format(_printSigDigits,"EFA")->Data() << " " ;
     }
 
     // Append limits if not constants
     if (isConstant()) {
       os << "C " ;
     }      
-    // Append plot limits
-    // os << "P(" << getPlotMin() << " - " << getPlotMax() << " : " << getPlotBins() << ") " ;      
 
     // Append fit limits if not +Inf:-Inf
-    os << "L(" ;
-    if(hasFitMin()) {
-      os << getFitMin();
+    if (hasFitMin() || hasFitMax()) {
+      os << "L(" ;
+      if(hasFitMin()) {
+	os << getFitMin();
+      }
+      else {
+	os << "-INF";
+      }
+      if(hasFitMax()) {
+	os << " - " << getFitMax() ;
+      }
+      else {
+	os << " - +INF";
+      }
+      os << ") " ;
     }
-    else {
-      os << "-INF";
+
+    if (getFitBins()!=100) {
+      os << "B(" << getFitBins() << ") " ;
     }
-    if(hasFitMax()) {
-      os << " - " << getFitMax() ;
-    }
-    else {
-      os << " - +INF";
-    }
-    os << " : " << getFitBins() << ") " ;
 
     // Add comment with unit, if unit exists
     if (!_unit.IsNull())
@@ -343,6 +400,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   Bool_t showUnit= opts.Contains("u");
   Bool_t tlatexMode= opts.Contains("l");
   Bool_t latexMode= opts.Contains("x");
+  Bool_t asymError= opts.Contains("a") ;
   Bool_t useErrorForPrecision= ((showError && !isConstant()) || opts.Contains("p")) && !opts.Contains("f") ;
   // calculate the precision to use
   if(sigDigits < 1) sigDigits= 1;
@@ -374,7 +432,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
     text->Append(buffer);
   }
   // append our error if requested and this variable is not constant
-  if(!isConstant() && showError) {
+  if(hasError() && showError) {
     if(tlatexMode) {
       text->Append(" #pm ");
     }
@@ -384,8 +442,18 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
     else {
       text->Append(" +/- ");
     }
-    sprintf(buffer, fmtErr, _error);
+    sprintf(buffer, fmtErr, getError());
     text->Append(buffer);
+
+    if (asymError && hasAsymError()) {
+      text->Append(" (") ;      
+      sprintf(buffer, fmtErr, getAsymErrorLo());
+      text->Append(buffer);
+      text->Append(", ") ;
+      sprintf(buffer, fmtErr, getAsymErrorHi());
+      text->Append(buffer);
+      text->Append(")") ;
+    }
   }
   // append our units if requested
   if(!_unit.IsNull() && showUnit) {
@@ -411,18 +479,44 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
   RooAbsReal::attachToTree(t,bufSize) ;
 
   // Attach/create additional branch for error
-  TString errName(GetName()) ;
-  errName.Append("_err") ;
-  TBranch* branch = t.GetBranch(errName) ;
-  if (branch) {     
-    t.SetBranchAddress(errName,&_error) ;
-  } else {
-    TString format(errName);
-    format.Append("/D");
-    t.Branch(errName, &_error, (const Text_t*)format, bufSize);
+  if (getAttribute("StoreError")) {
+    TString errName(GetName()) ;
+    errName.Append("_err") ;
+    TBranch* branch = t.GetBranch(errName) ;
+    if (branch) {     
+      t.SetBranchAddress(errName,&_error) ;
+    } else {
+      TString format(errName);
+      format.Append("/D");
+      t.Branch(errName, &_error, (const Text_t*)format, bufSize);
+    }
+  }
+
+  // Attach/create additional branches for asymmetric error
+  if (getAttribute("StoreAsymError")) {
+    TString loName(GetName()) ;
+    loName.Append("_aerr_lo") ;
+    TBranch* lobranch = t.GetBranch(loName) ;
+    if (lobranch) {     
+      t.SetBranchAddress(loName,&_asymErrLo) ;
+    } else {
+      TString format(loName);
+      format.Append("/D");
+      t.Branch(loName, &_asymErrLo, (const Text_t*)format, bufSize);
+    }
+
+    TString hiName(GetName()) ;
+    hiName.Append("_aerr_hi") ;
+    TBranch* hibranch = t.GetBranch(hiName) ;
+    if (hibranch) {     
+      t.SetBranchAddress(hiName,&_asymErrHi) ;
+    } else {
+      TString format(hiName);
+      format.Append("/D");
+      t.Branch(hiName, &_asymErrHi, (const Text_t*)format, bufSize);
+    }
   }
 }
-
 
 void RooRealVar::fillTreeBranch(TTree& t) 
 {
@@ -437,11 +531,24 @@ void RooRealVar::fillTreeBranch(TTree& t)
   }
   valBranch->Fill() ;
 
-  TString errName(GetName()) ;
-  errName.Append("_err") ;
-  TBranch* errBranch = t.GetBranch(errName) ;
-  if (errBranch) errBranch->Fill() ;
-  
+  if (getAttribute("StoreError")) {
+    TString errName(GetName()) ;
+    errName.Append("_err") ;
+    TBranch* errBranch = t.GetBranch(errName) ;
+    if (errBranch) errBranch->Fill() ;
+  }
+
+  if (getAttribute("StoreAsymError")) {
+    TString loName(GetName()) ;
+    loName.Append("_aerr_lo") ;
+    TBranch* loBranch = t.GetBranch(loName) ;
+    if (loBranch) loBranch->Fill() ;
+
+    TString hiName(GetName()) ;
+    hiName.Append("_aerr_hi") ;
+    TBranch* hiBranch = t.GetBranch(hiName) ;
+    if (hiBranch) hiBranch->Fill() ;
+  }
 }
 
 
@@ -452,8 +559,6 @@ void RooRealVar::copyCache(const RooAbsArg* source)
   // Warning: This function copies the cached values of source,
   //          it is the callers responsibility to make sure the cache is clean
 
-
-
   // Follow usual procedure for value
   RooAbsReal::copyCache(source) ;
 
@@ -462,6 +567,8 @@ void RooRealVar::copyCache(const RooAbsArg* source)
   if (other) {
     // Copy additional error value
     _error = other->_error ;
+    _asymErrLo = other->_asymErrLo ;
+    _asymErrHi = other->_asymErrHi ;
   }
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.cc,v 1.5 2001/11/09 02:08:06 verkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.6 2001/11/14 18:42:37 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -114,7 +114,6 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   // Clone the index category
   _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(kTRUE) ;
   _idxCat = (RooAbsCategoryLValue*) _idxCatSet->find(model._indexCat.arg().GetName()) ;
-  _idxCat->Print("v") ;
 }
 
 

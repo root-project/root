@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.23 2001/11/15 08:46:30 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.24 2001/11/28 23:13:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,13 +48,6 @@ public:
 
   const RooArgList& pdfList() const { return _pdfList ; }
   const RooArgList& coefList() const { return _coefList ; }
-
-  virtual RooPlot *plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_t* drawOptions="L",
-			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
-			      const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
-  virtual RooPlot *plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, const RooArgSet& sliceSet,
-				   Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
-				   const RooAbsData* projData=0) const ;
 
 
 protected:

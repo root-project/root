@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.31 2001/10/27 22:28:22 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.32 2001/11/19 07:23:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,8 +41,15 @@ public:
   // Parameter value and error accessors
   inline virtual Double_t getVal(const RooArgSet* nset=0) const { return _value ; }
   virtual void setVal(Double_t value);
-  inline Double_t getError() const { return _error; }
-  inline void setError(Double_t value) { _error= value; }
+  inline Double_t getError() const { return _error>=0?_error:0. ; }
+  inline Bool_t hasError() const { return (_error>=0) ; }
+  inline void setError(Double_t value) { _error= value ; }
+  inline void removeError() { _error = -1 ; }
+  inline Double_t getAsymErrorLo() const { return _asymErrLo<=0?_asymErrLo:0. ; }
+  inline Double_t getAsymErrorHi() const { return _asymErrHi>=0?_asymErrHi:0. ; }
+  inline Bool_t hasAsymError() const { return (_asymErrHi>=0 && _asymErrLo<=0) ; }
+  inline void removeAsymError() { _asymErrLo = 1 ; _asymErrHi = -1 ; }
+  inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; }
   RooErrorVar* errorVar() const ;
 
   // Set/get finite fit range limits
@@ -85,10 +92,12 @@ protected:
 
   Double_t chopAt(Double_t what, Int_t where) const ;
 
-  Double_t _fitMin ;  // Minimum of fit range
-  Double_t _fitMax ;  // Maximum of fit range
-  Int_t    _fitBins ; // Number of bins in fit range for binned fits
-  Double_t _error;    // Error associated with current value
+  Double_t _fitMin ;    // Minimum of fit range
+  Double_t _fitMax ;    // Maximum of fit range
+  Int_t    _fitBins ;   // Number of bins in fit range for binned fits
+  Double_t _error;      // Symmetric error associated with current value
+  Double_t _asymErrLo ; // Low side of asymmetric error associated with current value
+  Double_t _asymErrHi ; // High side of asymmetric error associated with current value
 
   ClassDef(RooRealVar,1) // Real-valued variable 
 };

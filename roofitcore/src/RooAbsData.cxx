@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.12 2001/10/19 22:19:48 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.13 2001/10/27 22:28:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -43,7 +43,7 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   RooAbsArg *var;
   while(0 != (var= (RooAbsArg*)iter->Next())) {
     if (!var->isFundamental()) {
-      cout << "RooDataSet::initialize(" << GetName() 
+      cout << "RooAbsSet::initialize(" << GetName() 
 	   << "): Data set cannot contain non-fundamental types, ignoring " 
 	   << var->GetName() << endl ;
     } else {

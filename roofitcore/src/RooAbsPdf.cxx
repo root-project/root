@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.56 2001/11/19 07:23:52 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.57 2001/11/19 23:09:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -133,7 +133,7 @@ Int_t RooAbsPdf::_verboseEval(0) ;
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
-  RooAbsReal(name,title), _norm(0), _lastNormSet(0)
+  RooAbsReal(name,title), _norm(0), _lastNormSet(0), _selectComp(kTRUE)
 {
   // Constructor with name and title only
   resetErrorCounters() ;
@@ -143,7 +143,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
 		     Double_t plotMin, Double_t plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _lastNormSet(0)
+  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _lastNormSet(0), _selectComp(kTRUE)
 {
   // Constructor with name, title, and plot range
   resetErrorCounters() ;
@@ -153,7 +153,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 
 
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) : 
-  RooAbsReal(other,name), _norm(0), _lastNormSet(0)
+  RooAbsReal(other,name), _norm(0), _lastNormSet(0), _selectComp(other._selectComp)
 {
   // Copy constructor
   resetErrorCounters() ;
@@ -746,6 +746,177 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions,
 
   return RooAbsReal::plotOn(frame,drawOptions,scaleFactor,Raw,projData,projSet) ;
 }
+
+
+
+
+RooPlot* RooAbsPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_t* drawOptions,
+			       Double_t scaleFactor, ScaleType stype, const RooAbsData* projData, 
+			       const RooArgSet* projSet) const 
+{
+  // Plot only the PDF components listed in 'compSet' of this PDF on 'frame'. 
+  // See RooAbsReal::plotOn() for a description of the remaining arguments and other features
+
+  // Sanity checks
+  if (plotSanityChecks(frame)) return frame ;
+
+  // Get complete set of tree branch nodes
+  RooArgSet branchNodeSet ;
+  branchNodeServerList(&branchNodeSet) ;
+
+  // Discard any non-PDF nodes
+  TIterator* iter = branchNodeSet.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!dynamic_cast<RooAbsPdf*>(arg)) {
+      branchNodeSet.remove(*arg) ;
+    }
+  }
+  delete iter ;
+
+  // Get list of directly selected nodes
+  RooArgSet* selNodes = (RooArgSet*) branchNodeSet.selectCommon(compSet) ;
+  cout << "RooAbsPdf::plotCompOn(" << GetName() << ") directly selected PDF components: " ;
+  selNodes->Print("1") ;
+  
+  return plotCompOnEngine(frame,selNodes,drawOptions,scaleFactor,stype,projData,projSet) ;
+}
+
+
+
+
+RooPlot* RooAbsPdf::plotCompOn(RooPlot *frame, const char* compNameList, Option_t* drawOptions,
+			       Double_t scaleFactor, ScaleType stype, const RooAbsData* projData, 
+			       const RooArgSet* projSet) const 
+{
+  // Plot only the PDF components listed in 'compSet' of this PDF on 'frame'. 
+  // See RooAbsReal::plotOn() for a description of the remaining arguments and other features
+
+  // Sanity checks
+  if (plotSanityChecks(frame)) return frame ;
+
+  // Get complete set of tree branch nodes
+  RooArgSet branchNodeSet ;
+  branchNodeServerList(&branchNodeSet) ;
+
+  // Discard any non-PDF nodes
+  TIterator* iter = branchNodeSet.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!dynamic_cast<RooAbsPdf*>(arg)) {
+      branchNodeSet.remove(*arg) ;
+    }
+  }
+  delete iter ;
+
+  // Get list of directly selected nodes
+  RooArgSet* selNodes = (RooArgSet*) branchNodeSet.selectByName(compNameList) ;
+  cout << "RooAbsPdf::plotCompOn(" << GetName() << ") directly selected PDF components: " ;
+  selNodes->Print("1") ;
+  
+  return plotCompOnEngine(frame,selNodes,drawOptions,scaleFactor,stype,projData,projSet) ;
+}
+
+
+RooPlot* RooAbsPdf::plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option_t* drawOptions,
+			       Double_t scaleFactor, ScaleType stype, const RooAbsData* projData, 
+			       const RooArgSet* projSet) const 
+{
+  // Get complete set of tree branch nodes
+  RooArgSet branchNodeSet ;
+  branchNodeServerList(&branchNodeSet) ;
+
+  // Discard any non-PDF nodes
+  TIterator* iter = branchNodeSet.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!dynamic_cast<RooAbsPdf*>(arg)) {
+      branchNodeSet.remove(*arg) ;
+    }
+  }
+
+  // Add all nodes below selected nodes
+  iter->Reset() ;
+  TIterator* sIter = selNodes->createIterator() ;
+  RooArgSet tmp ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    sIter->Reset() ;
+    RooAbsArg* selNode ;
+    while(selNode=(RooAbsArg*)sIter->Next()) {
+      if (selNode->dependsOn(*arg)) {
+	tmp.add(*arg,kTRUE) ;
+      }      
+    }      
+  }
+  delete sIter ;
+
+  // Add all nodes that depend on selected nodes
+  iter->Reset() ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (arg->dependsOn(*selNodes)) {
+      tmp.add(*arg,kTRUE) ;
+    }
+  }
+
+  tmp.remove(*selNodes,kTRUE) ;
+  tmp.remove(*this) ;
+  selNodes->add(tmp) ;
+  cout << "RooAbsPdf::plotCompOn(" << GetName() << ") indirectly selected PDF components: " ;
+  tmp.Print("1") ;
+
+  // Set PDF selection bits according to selNodes
+  iter->Reset() ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    Bool_t select = selNodes->find(arg->GetName()) ? kTRUE : kFALSE ;
+    ((RooAbsPdf*)arg)->selectComp(select) ;
+  }
+ 
+  // Plot function in selected state
+  frame = plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
+
+  // Reset PDF selection bits to kTRUE
+  iter->Reset() ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    ((RooAbsPdf*)arg)->selectComp(kTRUE) ;
+  }
+
+  delete selNodes ;
+  delete iter ;
+  return frame ;
+}
+
+
+
+
+RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const char* compNameList, const RooArgSet& sliceSet,
+				    Option_t* drawOptions, Double_t scaleFactor, ScaleType stype, 
+				    const RooAbsData* projData) const 
+{
+  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
+  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
+  // by plotOn().
+
+  RooArgSet projectedVars ;
+  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+  
+  // Take out the sliced variables
+  TIterator* iter = sliceSet.createIterator() ;
+  RooAbsArg* sliceArg ;
+  while(sliceArg=(RooAbsArg*)iter->Next()) {
+    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
+    if (arg) {
+      projectedVars.remove(*arg) ;
+    } else {
+      cout << "RooAddPdf::plotCompSliceOn(" << GetName() << ") slice variable " 
+	   << sliceArg->GetName() << " was not projected anyway" << endl ;
+    }
+  }
+  delete iter ;
+
+  return plotCompOn(frame,compNameList,drawOptions,scaleFactor,stype,projData,&projectedVars) ;
+}
+
+
 
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.rdl,v 1.8 2001/10/17 05:03:57 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.9 2001/11/14 18:42:35 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -63,6 +63,7 @@ public:
   Bool_t contains(const RooAbsArg& var) const { return (0 == find(var.GetName())) ? kFALSE:kTRUE; }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
+  RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
 
   // export subset of THashList interface
