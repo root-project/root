@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.69 2002/05/31 15:22:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.70 2002/06/14 20:30:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TVector.h"
 #include "TVectorD.h"
 #include "Foption.h"
+#include "TRandom.h"
 #include "TVirtualFitter.h"
 #include "TVirtualPad.h"
 #include "TVirtualHistPainter.h"
@@ -1187,6 +1188,10 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
 // In case of a TGraph object, the error in x is not set (ex=0).
 // same for ey, the error along y.
 //
+// If both ex and ey are null, a special algorithm is used to estimate the errors.
+// The function is evaluated at x+epsilon and x-epsilon (epsilon=range/1000)
+// and the error is set to the difference of these two values.
+//
 // The chisquare is computed as the sum of the quantity below at each point:
 //
 //                     (y - f(x))**2
@@ -1196,33 +1201,19 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
 // where x and y are the point coordinates
 //
    Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
-   Double_t dersum[25], grad[25];
-   static Double_t eysum[50];
    Double_t x[1], xx[1];
-   Double_t xm,xp,errormax;
-   Int_t bin, k, npfits, nparts, part;
+   Double_t xm,xp;
+   Int_t bin, npfits=0;
 
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
-   npar           = grF1->GetNpar();
-   Double_t cumin = gy[0];
-   Double_t cumax = gy[0];
-   if (flag == 2) for (k=0;k<npar;k++) dersum[k] = gin[k] = 0;
-   nparts = n/3;
-   if (nparts == 0)  nparts = 1;
-   if (nparts > 40)  nparts = 40;
-
    Double_t fxmin = grF1->GetXmin();
    Double_t fxmax = grF1->GetXmax();
-   Double_t dfx   = (fxmax - fxmin)/nparts;
-   if (gr->TestBit(TGraph::kFitInit)) {
-      for (part=0;part<nparts;part++) { eysum[part] = 0;}
-   }
+   npar           = grF1->GetNpar();
 
    grF1->InitArgs(x,u);
-   npfits = 0;
    f      = 0;
    for (bin=0;bin<n;bin++) {
       x[0] = gx[bin];
@@ -1231,55 +1222,26 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
       TF1::RejectPoint(kFALSE);
       fu   = grF1->EvalPar(x,u);
       if (TF1::RejectedPoint()) continue;
+      fsum = (cu-fu);
+      npfits++;
+      if (fitOption.W1) {
+         f += fsum*fsum;
+         continue;
+      }
       ex   = gr->GetErrorX(bin);
       ey   = gr->GetErrorY(bin);
-      if (fitOption.W1) {ex = 0; ey = 1;}
-      if (ey < 0) {
-         part = Int_t((x[0] - fxmin)/dfx);
-         if (part < 0) part = 0;
-         if (part >= nparts) part = nparts-1;
-         eu = 1;
-         if (gr->TestBit(TGraph::kFitInit)) {
-            eysum[part] += (cu-fu)*(cu-fu);
-            if (cu < cumin) cumin = cu;
-            if (cu > cumax) cumax = cu;
-         } else {
-            eu = eysum[part];
-            eu *= eu;
-         }
-      } else {
-         if (ex > 0) {
-            xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-            xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
-            xx[0] = xm; fm = grF1->EvalPar(xx,u);
-            xx[0] = xp; fp = grF1->EvalPar(xx,u);
-            eux = (fp-fm)/2;
-            eu = ey*ey +eux*eux;
-         } else {
-            eu = ey*ey;
-         }
-      }
+      if (ex < 0) ex = 0;
+      if (ey < 0) ey = 0;
+      if (ex == 0) ex = (fxmax-fxmin)*1e-3;
+      xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
+      xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+      xx[0] = xm; fm = grF1->EvalPar(xx,u);
+      xx[0] = xp; fp = grF1->EvalPar(xx,u);
+      eux = 0.5*(fp-fm);
+      eu = eux*eux;
+      if (ey) eu += ey*ey;
       if (eu <= 0) eu = 1;
-      if (flag == 2) {
-          for (k=0;k<npar;k++) dersum[k] += 1; //should be the derivative
-      }
-      npfits++;
-      if (flag == 2) {
-         for (k=0;k<npar;k++) grad[k] += dersum[k]*(fu-cu)/eu; dersum[k] = 0;
-      }
-      fsum = (cu-fu);
       f   += fsum*fsum/eu;
-   }
-
-//  make a better error estimate to be used in the next iterations
-   if (gr->TestBit(TGraph::kFitInit)) {
-      gr->ResetBit(TGraph::kFitInit);
-      errormax   = 0.2*(cumax-cumin);
-      for (part=0;part<nparts;part++) {
-         eysum[part] = TMath::Sqrt(eysum[part]);
-         if (eysum[part] > errormax) eysum[part] = errormax;
-         if (errormax < 0.2) eysum[part] = 1;
-      }
    }
    grF1->SetNumberFitPoints(npfits);
 }
