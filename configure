@@ -302,8 +302,6 @@ MEMPROBEOUT=bin/memprobe
 MIMEUNIXIN=config/mimes.unix.in
 MIMEWIN32IN=config/mimes.win32.in
 MIMEOUT=etc/root.mimes
-TMAKEIN=test/Makefile.in
-TMAKEOUT=test/Makefile
 
 
 ######################################################################
@@ -574,7 +572,6 @@ if test "x$noact" = "xno"; then
     cp -f $MAKEIN Makefile.tmp
     cp -f $CONFIN config.tmp
     cp -f $RCONFIN root-config.tmp
-    cp -f $TMAKEIN TMakefile.tmp
     cp -f $ROOTRCIN rootrc.tmp
     cp -f $MEMPROBEIN memprobe.tmp
 fi
@@ -1667,15 +1664,6 @@ sed \
     -e "s|@xpmlibdir@|$xpmlibdir|"          \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
-echo "done"
-
-#---------------------------------------------------------------------
-# test/Makefile
-#
-message "Writing $TMAKEOUT"
-sed -e "s|@architecture@|$arch|"           \
-    < TMakefile.tmp > $TMAKEOUT
-rm -f TMakefile.tmp
 echo "done"
 
 #---------------------------------------------------------------------

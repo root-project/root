@@ -6,7 +6,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-ARCH          = @architecture@
+ARCH          = $(shell root-config --arch)
 
 CXX           =
 ObjSuf        = o
