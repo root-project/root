@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.101 2004/05/18 04:55:29 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.102 2004/05/18 09:34:37 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3248,7 +3248,8 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    // Create socket
    int sock;
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "socket");
+      ::SysError("TUnixSystem::UnixTcpConnect", "socket (%s:%d)",
+                 hostname, port);
       return -1;
    }
 
@@ -3258,7 +3259,8 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    }
 
    if (connect(sock, (struct sockaddr*) &server, sizeof(server)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "connect");
+      ::SysError("TUnixSystem::UnixTcpConnect", "connect (%s:%d)",
+                 hostname, port);
       close(sock);
       return -1;
    }
