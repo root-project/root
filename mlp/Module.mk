@@ -7,23 +7,23 @@ MODDIR       := mlp
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-MLPDIR    := $(MODDIR)
-MLPDIRS   := $(MLPDIR)/src
-MLPDIRI   := $(MLPDIR)/inc
+MLPDIR       := $(MODDIR)
+MLPDIRS      := $(MLPDIR)/src
+MLPDIRI      := $(MLPDIR)/inc
 
-##### libMinuit #####
-MLPL      := $(MODDIRI)/LinkDef.h
-MLPDS     := $(MODDIRS)/G__MLP.cxx
-MLPDO     := $(MLPDS:.cxx=.o)
-MLPDH     := $(MLPDS:.cxx=.h)
+##### libMLP #####
+MLPL         := $(MODDIRI)/LinkDef.h
+MLPDS        := $(MODDIRS)/G__MLP.cxx
+MLPDO        := $(MLPDS:.cxx=.o)
+MLPDH        := $(MLPDS:.cxx=.h)
 
-MLPH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-MLPS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MLPO      := $(MLPS:.cxx=.o)
+MLPH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+MLPS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+MLPO         := $(MLPS:.cxx=.o)
 
-MLPDEP    := $(MLPO:.o=.d) $(MLPDO:.o=.d)
+MLPDEP       := $(MLPO:.o=.d) $(MLPDO:.o=.d)
 
-MLPLIB    := $(LPATH)/libMLP.$(SOEXT)
+MLPLIB       := $(LPATH)/libMLP.$(SOEXT)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MLPH))
@@ -36,26 +36,26 @@ INCLUDEFILES += $(MLPDEP)
 include/%.h:    $(MLPDIRI)/%.h
 		cp $< $@
 
-$(MLPLIB):   $(MLPO) $(MLPDO) $(MAINLIBS) $(MLPLIBDEP)
+$(MLPLIB):      $(MLPO) $(MLPDO) $(MAINLIBS) $(MLPLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMLP.$(SOEXT) $@ "$(MLPO) $(MLPDO)" \
 		   "$(MLPLIBEXTRA)"
 
-$(MLPDS):    $(MLPH) $(MLPL) $(ROOTCINTTMP)
+$(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MLPH) $(MLPL)
 
-$(MLPDO):    $(MLPDS)
+$(MLPDO):       $(MLPDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-mlp:     $(MLPLIB)
+all-mlp:        $(MLPLIB)
 
 clean-mlp:
 		@rm -f $(MLPO) $(MLPDO)
 
 clean::         clean-mlp
 
-distclean-mlp: clean-mlp
+distclean-mlp:  clean-mlp
 		@rm -f $(MLPDEP) $(MLPDS) $(MLPDH) $(MLPLIB)
 
 distclean::     distclean-mlp
