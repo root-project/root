@@ -47,6 +47,7 @@ protected:
    Int_t       fNpoints;     // Number of points in the data set
    Int_t       fNpx;         // Number of bins along X in fHistogram
    Int_t       fNpy;         // Number of bins along Y in fHistogram
+   Int_t       fMaxIter;     // Maximum number of iterations to find Delaunay t>
    Int_t       fSize;        //!Real size of fX, fY and fZ
    Double_t   *fX;           //[fNpoints]
    Double_t   *fY;           //[fNpoints] Data set to be plotted
@@ -119,6 +120,7 @@ public:
    void             SetMarginBinsContent(Double_t z=0.); // *MENU*
    void             SetMaximum(Double_t maximum=-1111); // *MENU*
    void             SetMinimum(Double_t minimum=-1111); // *MENU*
+   void             SetMaxIter(Int_t n=100000) {fMaxIter = n;} // *MENU*
    virtual void     SetName(const char *name); // *MENU*
    void             SetNpx(Int_t npx=40); // *MENU*
    void             SetNpy(Int_t npx=40); // *MENU*

@@ -159,6 +159,7 @@ TGraph2D::TGraph2D()
    fY         = 0;
    fZ         = 0;
    fZout      = 0;
+   fMaxIter   = 100000;
    fPainter   = 0;
    fFunctions = new TList;
 }
@@ -409,6 +410,7 @@ void TGraph2D::Build(Int_t n)
    fY         = new Double_t[fSize];
    fZ         = new Double_t[fSize];
    fZout      = 0;
+   fMaxIter   = 100000;
    fFunctions = new TList;
    fPainter   = 0;
 
@@ -930,6 +932,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
 
    // Add a TGraphDelaunay in the list of the fHistogram's functions
    TGraphDelaunay *dt = new TGraphDelaunay(this);
+   dt->SetMaxIter(fMaxIter);
    dt->SetMarginBinsContent(fZout);
    TList *hl = fHistogram->GetListOfFunctions();
    hl->Add(dt);
