@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.1 2002/09/06 19:58:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.2 2002/09/13 15:23:56 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -16,6 +16,7 @@
  *************************************************************************/
 
 #include "TConfidenceLevel.h"
+#include "TH1F.h"
 
 ClassImp(TConfidenceLevel)
 
@@ -362,3 +363,25 @@ Double_t TConfidenceLevel::Get5sProbability() const
    return result;
 }
 
+void  TConfidenceLevel::Draw(const Option_t*)
+{
+   // Display sort of a "canonical" -2lnQ plot.
+   // This results in a plot with 2 elements: 
+   // - The histogram of -2lnQ for background hypothesis (full)
+   // - The histogram of -2lnQ for signal and background hypothesis (dashed)
+   // The 2 histograms are respectively named b_hist and sb_hist.
+   TH1F h("TConfidenceLevel_Draw","",50,0,0);
+   for (Int_t i=0; i<fNMC; i++) {
+      h.Fill(-2*(fTSB[i]-fStot));
+      h.Fill(-2*(fTSS[i]-fStot));
+   }
+   TH1F* b_hist  = new TH1F("b_hist", "-2lnQ",50,h.GetXaxis()->GetXmin(),h.GetXaxis()->GetXmax());
+   TH1F* sb_hist = new TH1F("sb_hist","-2lnQ",50,h.GetXaxis()->GetXmin(),h.GetXaxis()->GetXmax());
+   for (Int_t i=0; i<fNMC; i++) {
+      b_hist->Fill(-2*(fTSB[i]-fStot));
+      sb_hist->Fill(-2*(fTSS[i]-fStot));
+   }
+   b_hist->Draw();
+   sb_hist->Draw("Same");
+   sb_hist->SetLineStyle(3);
+}

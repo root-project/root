@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.h,v 1.34 2002/08/16 21:16:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.h,v 1.1 2002/09/06 19:57:59 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TConfidenceLevel
@@ -37,6 +37,7 @@ class TConfidenceLevel : public TObject {
    inline void SetStot(Double_t in) { fStot = in; }
    inline void SetDtot(Int_t in) { fDtot = in; }
    inline Double_t GetStatistic() const { return -2 * (fTSD - fStot); } 
+   void Draw(const Option_t *option="");
    Double_t GetExpectedStatistic_b(Int_t sigma = 0) const;
    Double_t GetExpectedStatistic_sb(Int_t sigma = 0) const;
    Double_t CLb(bool use_sMC = kFALSE) const;
