@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.34 2004/07/05 17:52:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.35 2004/08/02 08:52:53 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -651,6 +651,36 @@ TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
          index += ls2;
       }
    }
+   return *this;
+}
+
+//______________________________________________________________________________
+TString &TString::Remove(EStripType st, char c)
+{
+   // Remove char c at begin and/or end of string (like Strip() but
+   // modifies directly the string.
+
+   Ssiz_t start = 0;             // Index of first character
+   Ssiz_t end = Length();        // One beyond last character
+   const char *direct = Data();  // Avoid a dereference w dumb compiler
+   Ssiz_t send = end;
+
+   if (st & kLeading)
+      while (start < end && direct[start] == c)
+         ++start;
+   if (st & kTrailing)
+      while (start < end && direct[end-1] == c)
+         --end;
+   if (end == start) {
+      Pref()->UnLink();
+      gNullStringRef->AddReference();
+      fData = gNullStringRef->Data();
+      return *this;
+   }
+   if (start)
+      Remove(0, start);
+   if (send != end)
+      Remove(send - start - (send - end), send - end);
    return *this;
 }
 

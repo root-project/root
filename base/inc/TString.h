@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.32 2004/07/01 18:45:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.33 2004/08/02 08:52:53 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -333,6 +333,7 @@ public:
    istream     &ReadToken(istream &str);                // Read separated by white space
    TString     &Remove(Ssiz_t pos);                     // Remove pos to end of string
    TString     &Remove(Ssiz_t pos, Ssiz_t n);           // Remove n chars starting at pos
+   TString     &Remove(EStripType s, char c);           // Like Strip() but changing string directly
    TString     &Replace(Ssiz_t pos, Ssiz_t n, const char *s);
    TString     &Replace(Ssiz_t pos, Ssiz_t n, const char *s, Ssiz_t ns);
    TString     &Replace(Ssiz_t pos, Ssiz_t n, const TString &s);
