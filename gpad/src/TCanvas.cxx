@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.13 2000/09/13 07:32:46 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.14 2000/09/13 10:32:18 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TGuiFactory.h"
 #include "TEnv.h"
 #include "TError.h"
+//#include "TExec.h"
 #include "TContextMenu.h"
 #include "TControlBar.h"
 #include "TInterpreter.h"
@@ -115,7 +116,7 @@ ClassImp(TCanvas)
 //
 
 //______________________________________________________________________________
-TCanvas::TCanvas() : TPad()
+TCanvas::TCanvas(Bool_t build) : TPad()
 {
    // Canvas default constructor.
 
@@ -716,7 +717,6 @@ void TCanvas::DrawClonePad()
   padsav->cd();
 }
 
-
 //______________________________________________________________________________
 void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
@@ -984,6 +984,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          fSelected    = sobj;
          fSelectedPad = spad;
       }
+      if (fAutoExec)        RunAutoExec();
       break;
 
    case kButton1Double:
@@ -1068,7 +1069,6 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
          Update();    // before calling update make sure gPad is reset
       }
-
       break;
 
 //*-*----------------------------------------------------------------------
