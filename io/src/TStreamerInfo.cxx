@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.13 2000/11/30 08:32:22 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.14 2000/12/02 16:26:49 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -137,8 +137,8 @@ void TStreamerInfo::Build()
       TDataMember *dmref = 0;
       if (dm->IsaPointer()) {
          const char *title = dm->GetTitle();
-         char *lbracket = strchr(title,'[');
-         char *rbracket = strchr(title,']');
+         const char *lbracket = strchr(title,'[');
+         const char *rbracket = strchr(title,']');
          if (lbracket && rbracket) {
             refcount = (TRealData*)fClass->GetListOfRealData()->FindObject(dm->GetArrayIndex());
             if (!refcount) {
