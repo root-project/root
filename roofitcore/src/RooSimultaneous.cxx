@@ -21,8 +21,9 @@
 // of the index category
 //
 // Extended likelihood fitting is supported if all components support
-// extended likelihood mode. The expected number of events for all PDFs
-// are summed to give the simultaneous PDF's expected events.
+// extended likelihood mode. As for the returned probability density,
+// the expected number of events for the PDF associated with the current
+// state of the index category is returned.
 
 #include "TObjString.h"
 #include "RooFitCore/RooSimultaneous.hh"
@@ -183,17 +184,16 @@ Double_t RooSimultaneous::evaluate() const
 
 Double_t RooSimultaneous::expectedEvents() const 
 {
-  // Return the number of expected events summed over all states of the index category.
+  // Return the number of expected events:
+  // the number of expected events of the PDF associated with the current index category state
 
-  Double_t expected(0);
-  const RooRealProxy *proxy(0);
-  TIterator *pdfIter= _pdfProxyList.MakeIterator();
-  while(0 != (proxy= (const RooRealProxy*)pdfIter->Next())) {
-    const RooAbsPdf *pdf= (const RooAbsPdf*)proxy->absArg();
-    expected+= pdf->expectedEvents();
-  }
-  delete pdfIter;
-  return expected;
+  // Retrieve the proxy by index name
+  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
+  
+  assert(proxy!=0) ;
+
+  // Return the selected PDF value, normalized by the number of index states
+  return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents() ;
 }
 
 
@@ -304,6 +304,12 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   // its index category via integration, plotOn() will abort if this is requested without 
   // providing a projection dataset
   
+  // Check if we have a projection dataset
+  if (!projData) {
+    cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: must have a projection dataset for index category" << endl ;
+    return frame ;
+  }
+
   // Make list of variables to be projected
   RooArgSet projectedVars ;
   if (projSet) {
@@ -314,16 +320,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
   Bool_t projIndex(kFALSE) ;
 
-  if (projectedVars.find(_indexCat.arg().GetName())) {
+  if (!_indexCat.arg().isDerived()) {
     // *** Error checking for a fundamental index category ***
-  
-    // Check if we have a projection dataset
-    if (!projData) {
-      cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over index category "
-	   << "requested, but no projection data set provided" << endl ;
-      return frame ;
-    }
-    
+    cout << "RooSim::plotOn: index is fundamental" << endl ;
+      
     // Check that the provided projection dataset contains our index variable
     if (!projData->get()->find(_indexCat.arg().GetName())) {
       cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over index category "
@@ -331,9 +331,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
       return frame ;
     }
 
-    projIndex=kTRUE ;
+    if (projectedVars.find(_indexCat.arg().GetName())) {
+      projIndex=kTRUE ;
+    }
 
-  } else if (_indexCat.arg().isDerived()) {
+  } else {
     // *** Error checking for a composite index category ***
 
     // Determine if any servers of the index category are in the projectedVars
@@ -349,14 +351,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
     }
     delete sIter ;
 
-    // If we project out any of the servers, we must have a projection dataset
-    if (anyServers && !projData) {
-      cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over derived index category "
-	   << "requested, but no projection dataset is provided" << endl ;
-      return frame ;      
-    }
-
-    // Now check that the projection dataset contains all the 
+    // Check that the projection dataset contains all the 
     // index category components we're projecting over
 
     // Determine if all projected servers of the index category are in the projection dataset
@@ -370,24 +365,72 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
     delete sIter ;
     
     if (!allServers) {      
-      cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over derived index category "
-	   << "requested, but projection dataset doesn't contain complete set of index category dependents" << endl ;
+      cout << "RooSimultaneous::plotOn(" << GetName() 
+	   << ") ERROR: Projection dataset doesn't contain complete set of index category dependents" << endl ;
       return frame ;
     }
 
     if (anyServers) projIndex = kTRUE ;
   } 
-      
+  
+  // Calculate relative weight fractions of components
+  Roo1DTable* wTable = projData->table(_indexCat.arg()) ;
+
   // If we don't project over the index, just do the regular plotOn
   if (!projIndex) {
-    return RooAbsPdf::plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
+
+    cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
+	 << " represents a slice in the index category ("  << _indexCat.arg().GetName() << ")" << endl ;
+
+    // Reduce projData: take out fitCat (component) columns and entries that don't match selected slice
+    // Construct cut string to only select projection data event that match the current slice
+
+    const RooAbsData* projDataTmp(projData) ;
+    if (projData) {
+      // Make list of categories columns to exclude from projection data
+      RooArgSet* indexCatComps = _indexCat.arg().getDependents(frame->getNormVars());
+      
+      // Make cut string to exclude rows from projection data
+      TString cutString ;
+      TIterator* compIter =  indexCatComps->createIterator() ;    
+      RooAbsCategory* idxComp ;
+      Bool_t first(kTRUE) ;
+      while(idxComp=(RooAbsCategory*)compIter->Next()) {
+	if (!first) {
+	  cutString.Append("&&") ;
+	} else {
+	  first=kFALSE ;
+	}
+	cutString.Append(Form("%s==%d",idxComp->GetName(),idxComp->getIndex())) ;
+      }
+      
+      // Make temporary projData without RooSim index category components
+      RooArgSet projDataVars(*projData->get()) ;
+      projDataVars.remove(*indexCatComps,kTRUE,kTRUE) ;
+      
+      projDataTmp = ((RooAbsData*)projData)->reduce(projDataVars,cutString) ;
+      delete indexCatComps ;
+    }
+
+    // Multiply scale factor with fraction of events in current state of index
+    RooPlot* retFrame =  RooAbsPdf::plotOn(frame,drawOptions,
+					   scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),
+					   stype,projDataTmp,projSet) ;
+    delete wTable ;
+    return retFrame ;
   }
 
   // If we project over the index, plot using a temporary RooAddPdf
   // using the weights from the data as coefficients
 
-  // Calculate relative weight fractions of components
-  Roo1DTable* wTable = projData->table(_indexCat.arg()) ;
+  // Make a deep clone of our index category
+  RooArgSet* idxCloneSet = (RooArgSet*) RooArgSet(_indexCat.arg()).snapshot(kTRUE) ;
+  RooAbsCategoryLValue* idxCatClone = (RooAbsCategoryLValue*) idxCloneSet->find(_indexCat.arg().GetName()) ;
+
+  // Build the list of indexCat components that are sliced
+  RooArgSet* idxCompSliceSet = _indexCat.arg().getDependents(frame->getNormVars()) ;
+  idxCompSliceSet->remove(projectedVars,kTRUE,kTRUE) ;
+  TIterator* idxCompSliceIter = idxCompSliceSet->createIterator() ;
 
   // Make a new expression that is the weighted sum of requested components
   RooArgList pdfCompList ;
@@ -396,29 +439,116 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   RooRealProxy* proxy ;
   TIterator* pIter = _pdfProxyList.MakeIterator() ;
   Double_t plotFrac(0) ;
+  Double_t sumWeight(0) ;
   while(proxy=(RooRealProxy*)pIter->Next()) {
-    
+
+    idxCatClone->setLabel(proxy->name()) ;
+
+    // Determine if this component is the current slice (if we slice)
+    Bool_t skip(kFALSE) ;
+    idxCompSliceIter->Reset() ;
+    RooAbsCategory* idxSliceComp ;
+    while(idxSliceComp=(RooAbsCategory*)idxCompSliceIter->Next()) {
+      RooAbsCategory* idxComp = (RooAbsCategory*) idxCloneSet->find(idxSliceComp->GetName()) ;
+      if (idxComp->getIndex()!=idxSliceComp->getIndex()) {
+	skip=kTRUE ;
+	break ;
+      }
+    }
+    if (skip) continue ;
+ 
     // Instantiate a RRV holding this pdfs weight fraction
     RooRealVar *wgtVar = new RooRealVar(proxy->name(),"coef",wTable->getFrac(proxy->name())) ;
     wgtCompList.addOwned(*wgtVar) ;
+    sumWeight += wTable->getFrac(proxy->name()) ;
 
     // Add the PDF to list list
     pdfCompList.add(proxy->arg()) ;
   }
-  delete pIter ;
-  delete wTable ;
 
   TString plotVarName(GetName()) ;
   RooAddPdf *plotVar = new RooAddPdf(plotVarName,"weighted sum of RS components",pdfCompList,wgtCompList) ;
 
-  // Plot temporary function
-  
-  cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
-       << " projects index variable " << _indexCat.arg().GetName() << " with data" << endl ;
-  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
+  // Fix appropriate coefficient normalization in plot function
+  RooArgSet* normSet = plotVar->getDependents(frame->getNormVars()) ;
+  if (projData) {
+    RooArgSet* tmp = (RooArgSet*) projData->get()->selectCommon(projectedVars) ;
+    normSet->remove(*tmp,kTRUE,kTRUE) ;
+    delete tmp ;
+  }
+  plotVar->fixCoefNormalization(*normSet) ;
+
+  RooAbsData* projDataTmp(0) ;
+  RooArgSet projSetTmp ;
+  if (projData) {
+    
+    // Construct cut string to only select projection data event that match the current slice
+    TString cutString ;
+    if (idxCompSliceSet->getSize()>0) {
+      idxCompSliceIter->Reset() ;
+      RooAbsCategory* idxSliceComp ;
+      Bool_t first(kTRUE) ;
+      while(idxSliceComp=(RooAbsCategory*)idxCompSliceIter->Next()) {
+	if (!first) {
+	  cutString.Append("&&") ;
+	} else {
+	  first=kFALSE ;
+	}
+	cutString.Append(Form("%s==%d",idxSliceComp->GetName(),idxSliceComp->getIndex())) ;
+      }
+    }
+
+    // Make temporary projData without RooSim index category components
+    RooArgSet projDataVars(*projData->get()) ;
+    RooArgSet* idxCatServers = _indexCat.arg().getDependents(frame->getNormVars()) ;
+    projDataVars.remove(*idxCatServers,kTRUE,kTRUE) ;
+
+    if (idxCompSliceSet->getSize()>0) {
+      projDataTmp = ((RooAbsData*)projData)->reduce(projDataVars,cutString) ;
+    } else {
+      projDataTmp = ((RooAbsData*)projData)->reduce(projDataVars) ;      
+    }
+
+    
+
+    if (projSet) {
+      projSetTmp.add(*projSet) ;
+      projSetTmp.remove(*idxCatServers,kTRUE,kTRUE);
+    }
+
+    
+    delete idxCatServers ;
+  }
+
+
+  if (_indexCat.arg().isDerived() && idxCompSliceSet->getSize()>0) {
+    cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
+	 << " represents a slice in index category components " ; idxCompSliceSet->Print("1") ;
+
+    RooArgSet* idxCompProjSet = _indexCat.arg().getDependents(frame->getNormVars()) ;
+    idxCompProjSet->remove(*idxCompSliceSet,kTRUE,kTRUE) ;
+    if (idxCompProjSet->getSize()>0) {
+      cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
+	   << " averages with data index category components " ; idxCompProjSet->Print("1") ;
+    }
+    delete idxCompProjSet ;
+  } else {
+    cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
+	 << " averages with data index category (" << _indexCat.arg().GetName() << ")" << endl ;
+  }
+
+  // Plot temporary function  
+  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*sumWeight,stype,projDataTmp,projSet?&projSetTmp:0) ;
 
   // Cleanup
+  delete pIter ;
+  delete wTable ;
+  delete idxCloneSet ;
+  delete idxCompSliceIter ;
+  delete idxCompSliceSet ;
   delete plotVar ;
+
+  if (projDataTmp) delete projDataTmp ;
 
   return frame2 ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.54 2002/02/13 02:50:08 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.55 2002/03/22 22:43:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,7 +51,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
   _jacList("jacList","Jacobian product term",this,kFALSE,kFALSE), 
   _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
-  _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE), _iconfig(config)
+  _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE), _iconfig((RooIntegratorConfig*)config)
 {
   // Constructor - Performs structural analysis of the integrand
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.rdl,v 1.5 2002/01/17 01:32:18 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.rdl,v 1.6 2002/03/07 06:22:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -16,6 +16,7 @@
 #include "TObject.h"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "RooFitCore/RooAbsData.hh"
 class RooAbsPdf ;
 class RooCategory ;
 
@@ -26,12 +27,24 @@ public:
   ~RooSimPdfBuilder() ;
 
   RooArgSet* createProtoBuildConfig() ;
+
+  const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents, 
+				  const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) ;
+
   const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
 				  const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
-    return buildPdf(buildConfig,dataSet,&auxSplitCats,verbose) ;
+    return buildPdf(buildConfig,*dataSet->get(),&auxSplitCats,verbose) ;
   }
+
+  const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
+				  const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
+    return buildPdf(buildConfig,dependents,&auxSplitCats,verbose) ;
+  }
+
   const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
-				  const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) ;
+				  const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) {
+    return buildPdf(buildConfig,*dataSet->get(),auxSplitCats,verbose) ;
+  }
   
   const RooArgSet& splitLeafList() { return _splitNodeList; }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.14 2002/03/07 06:22:23 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.15 2002/03/22 22:43:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -481,11 +481,10 @@ void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet)
 
 
 
-const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet,
+const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
 					    const RooArgSet* auxSplitCats, Bool_t verbose)
 {
   // Initialize needed components
-  const RooArgSet* dataVars = dataSet->get() ;
   const char* spaceChars = " \t" ;
 
   // Retrieve physics index category
@@ -494,7 +493,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   RooAbsCategoryLValue* physCat(0) ;
   if (strstr(buf," : ")) {
     const char* physCatName = strtok(buf,spaceChars) ;
-    physCat = dynamic_cast<RooAbsCategoryLValue*>(dataVars->find(physCatName)) ;
+    physCat = dynamic_cast<RooAbsCategoryLValue*>(dependents.find(physCatName)) ;
     if (!physCat) {
       cout << "RooSimPdfBuilder::buildPdf: ERROR physics index category " << physCatName 
 	   << " not found in dataset variables" << endl ;
@@ -584,7 +583,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
       stateList = 0 ;
     }
 
-    RooCategory* splitCat = dynamic_cast<RooCategory*>(dataVars->find(catName)) ;
+    RooCategory* splitCat = dynamic_cast<RooCategory*>(dependents.find(catName)) ;
     if (!splitCat) {
       cout << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << catName 
 	   << " is not a RooCategory in the dataset" << endl ;
@@ -766,7 +765,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	  {
 	    // Verify the validity of the parameter list and build the corresponding argset
 	    RooArgSet splitParamList ;
-	    RooArgSet* paramList = physModel->getParameters(dataVars) ;
+	    RooArgSet* paramList = physModel->getParameters(dependents) ;
 
 	    // wve -- add nodes to parameter list
 	    RooArgSet* compList = physModel->getComponents() ;
@@ -803,7 +802,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	     << (mode==Colon?":":"parameter list") << " after " << token << endl ;
       }
 
-      RooArgSet* paramSet = physModel->getParameters(dataVars) ;
+      RooArgSet* paramSet = physModel->getParameters(dependents) ;
     } else {
       cout << "RooSimPdfBuilder::buildPdf: no splitting rules for " << physModel->GetName() << endl ;
     }    
@@ -872,6 +871,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 
   if (auxSplitCloneSet) delete auxSplitCloneSet ;
   delete physIter ;
+
   return simPdf ;
 }
 

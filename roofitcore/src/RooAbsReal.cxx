@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.76 2002/03/07 06:22:19 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.77 2002/03/22 22:43:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -637,19 +637,29 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   
   // Make list of variables to be projected
   RooArgSet projectedVars ;
+  RooArgSet sliceSet ;
   if (projSet) {
     makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
 
     // Print list of non-projected variables
     if (frame->getNormVars()) {
-      RooArgSet sliceSet(*frame->getNormVars()) ;
-      sliceSet.remove(projectedVars,kTRUE) ;
-      sliceSet.remove(*sliceSet.find(frame->getPlotVar()->GetName())) ;
-      if (sliceSet.getSize()) {
+      RooArgSet *sliceSetTmp = getDependents(*frame->getNormVars()) ;
+      sliceSetTmp->remove(projectedVars,kTRUE,kTRUE) ;
+      sliceSetTmp->remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
+
+      if (projData) {
+	RooArgSet* tmp = (RooArgSet*) projData->get()->selectCommon(*projSet) ;
+	sliceSetTmp->remove(*tmp,kTRUE,kTRUE) ;
+	delete tmp ;
+      }
+
+      if (sliceSetTmp->getSize()) {
 	cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " 
 	     << frame->getPlotVar()->GetName() << " represents a slice in " ;
-	sliceSet.Print("1") ;
+	sliceSetTmp->Print("1") ;
       }
+      sliceSet.add(*sliceSetTmp) ;
+      delete sliceSetTmp ;
     }
   } else {
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
@@ -674,11 +684,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   // Inform user about projections
   if (projectedVars.getSize()) {
     cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
-	 << " projects variables " ; projectedVars.Print("1") ;
+	 << " integrates over variables " ; projectedVars.Print("1") ;
   }  
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
     cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
-	 << " projects with data variables " ; projDataNeededVars->Print("1") ;
+	 << " averages using data variables " ; projDataNeededVars->Print("1") ;
   }
 
 
@@ -731,8 +741,43 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
     // If data set contains more columns than needed, make reduced copy first
     RooDataSet* projDataSel((RooDataSet*)projData) ;
+//     cout << "projDataNeededVars = " ; projDataNeededVars->Print("1") ;
+//     cout << "projData vars      = " ; projData->get()->Print("1") ;
+//     cout << "sliceSet           = " ; sliceSet.Print("1") ;
+
     if (projDataNeededVars->getSize()<projData->get()->getSize()) {
-      projDataSel = (RooDataSet*) ((RooDataSet*)projData)->reduce(*projDataNeededVars) ;
+
+      // Determine if there are any slice variables in the projection set
+      RooArgSet* sliceDataSet = (RooArgSet*) sliceSet.selectCommon(*projData->get()) ;
+      TString cutString ;
+      if (sliceDataSet->getSize()>0) {
+	TIterator* iter = sliceDataSet->createIterator() ;
+	RooAbsArg* sliceVar ; 
+	Bool_t first(kTRUE) ;
+	while(sliceVar=(RooAbsArg*)iter->Next()) {
+	  if (!first) {
+	    cutString.Append("&&") ;
+	  } else {
+	    first=kFALSE ;	    
+	  }
+
+	  RooAbsRealLValue* real ;
+	  RooAbsCategoryLValue* cat ;	  
+	  if (real = dynamic_cast<RooAbsRealLValue*>(sliceVar)) {
+	    cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
+	  } else if (cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar)) {
+	    cutString.Append(Form("%s==%d",cat->GetName(),cat->getIndex())) ;	    
+	  }
+	}
+	delete iter ;
+      }
+      
+      if (!cutString.IsNull()) {
+	projDataSel = (RooDataSet*) ((RooDataSet*)projData)->reduce(*projDataNeededVars,cutString) ;
+	cout << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << endl ;
+      } else {
+	projDataSel = (RooDataSet*) ((RooDataSet*)projData)->reduce(*projDataNeededVars) ;
+      }
       cout << "RooAbsReal::plotOn(" << GetName() 
 	   << ") only the following components of the projection data will be used: " ; 
       projDataNeededVars->Print("1") ;

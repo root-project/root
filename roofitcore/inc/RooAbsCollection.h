@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.rdl,v 1.10 2001/12/01 08:12:46 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.11 2002/03/22 22:43:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -65,6 +65,7 @@ public:
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
   RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
+  Bool_t overlaps(const RooAbsCollection& otherColl) const ;
 
   // export subset of THashList interface
   inline TIterator* createIterator(Bool_t dir = kIterForward) const { return _list.MakeIterator(dir); }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.15 2001/12/01 08:12:45 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.16 2002/03/22 22:43:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -583,6 +583,22 @@ Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
   return kTRUE ;
 }
 
+
+Bool_t RooAbsCollection::overlaps(const RooAbsCollection& otherColl) const 
+{
+  // Check if this and other collection have common entries
+
+  TIterator* iter = createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (otherColl.find(arg->GetName())) {
+      delete iter ;
+      return kTRUE ;
+    }
+  }
+  delete iter ;
+  return kFALSE ;
+}
 
 
 RooAbsArg *RooAbsCollection::find(const char *name) const 

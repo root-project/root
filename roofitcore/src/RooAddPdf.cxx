@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.32 2002/02/06 22:34:56 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.33 2002/03/22 22:43:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -285,10 +285,14 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
     _lastCoefProjSet = (RooArgSet*)nset ;
     _lastCoefProjIntSet = (RooArgSet*)iset ;
 
+    // Check if null-transformation is requested
+    _doProjectCoefs = !nset->equals(_refCoefNorm) ;
+    if (!_doProjectCoefs) return ;
+    
     cout << "RooAddPdf::syncCoefProjList(" << GetName() << ") updating PDF projection integrals" << endl ;
     cout << "  current normalization  : "  ; nset->Print("1") ;
     cout << "  reference normalization: "  ; _refCoefNorm.Print("1") ; 
-    
+
     // Recalculate projection integrals of PDFs 
     _pdfProjList.removeAll() ;
     _pdfIter->Reset() ;
@@ -416,7 +420,7 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset) const
   }
 
   // Stop here if not projection is required
-  if (!_projectCoefs) return ;
+  if (!_projectCoefs || !_doProjectCoefs) return ;
 
   Double_t coefSum(0) ;
   for (i=0 ; i<_pdfList.getSize() ; i++) {
