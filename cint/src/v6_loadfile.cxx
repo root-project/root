@@ -288,6 +288,10 @@ char *item;
 
   buf[0]='\0';
 
+#ifdef G__NOMAKEINFO
+  return("");
+#endif
+
 #ifndef G__OLDIMPLEMENTATION466
   /****************************************************************
   * Environment variable overrides MAKEINFO file if exists.

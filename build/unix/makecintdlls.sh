@@ -28,8 +28,9 @@ CINTDIRI=cint/include
 CINTDIRS=cint/stl
 
 clean() {
-   rm -f $CINTDIRI/long.dl
+   rm -f $CINTDIRI/long.dll
    rm -f $CINTDIRI/stdfunc.dll
+   rm -f $CINTDIRI/stdcxxfunc.dll
    rm -f $CINTDIRI/posix.dll
    rm -f $CINTDIRI/sys/types.h
    rm -f $CINTDIRI/sys/ipc.dll
@@ -63,22 +64,22 @@ if [ $PLATFORM = "clean" ]; then
    exit 0;
 fi
 
-##### long.dl (note .dl not .dll) #####
+##### long.dll #####
 
 LONGDIR=$CINTDIRL/longlong
 
 $CINT -w1 -zlong -n$LONGDIR/G__cpp_long.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longlong.h
+   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longlong.h $LONGDIR/longdbl.h
 $CXX $OPT $CINTCXXFLAGS -I. -Icint -o $LONGDIR/G__cpp_long.o \
    -c $LONGDIR/G__cpp_long.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" long.$SOEXT $CINTDIRI/long.$SOEXT \
    $LONGDIR/G__cpp_long.o
-mv $CINTDIRI/long.$SOEXT $CINTDIRI/long.dl
+rename $CINTDIRI/long
 
 rm -f $LONGDIR/G__cpp_long.cxx $LONGDIR/G__cpp_long.h $LONGDIR/G__cpp_long.o
 
 
-##### stdfunc.dll #####
+##### stdfunc.dll  & stdcxxfunc.dll #####
 
 STDFUNCDIR=$CINTDIRL/stdstrct
 
@@ -90,9 +91,17 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" stdfunc.$SOEXT \
    $CINTDIRI/stdfunc.$SOEXT "$STDFUNCDIR/G__c_stdfunc.o"
 rename $CINTDIRI/stdfunc
 
-rm -f $STDFUNCDIR/G__c_stdfunc.c $STDFUNCDIR/G__c_stdfunc.h \
-      $STDFUNCDIR/G__c_stdfunc.o
+$CINT -w1 -zstdcxxfunc -n$STDFUNCDIR/G__c_stdcxxfunc.cxx -D__MAKECINT__ \
+   -DG__MAKECINT -c-1 -A -Z0 $STDFUNCDIR/stdcxxfunc.h
+$CXX $OPT $CINTCXXFLAGS -I. -Icint -o $STDFUNCDIR/G__c_stdcxxfunc.o \
+   -c $STDFUNCDIR/G__c_stdcxxfunc.cxx
+$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" stdcxxfunc.$SOEXT \
+   $CINTDIRI/stdcxxfunc.$SOEXT "$STDFUNCDIR/G__c_stdcxxfunc.o"
+rename $CINTDIRI/stdcxxfunc
 
+rm -f $STDFUNCDIR/G__c_stdfunc.c $STDFUNCDIR/G__c_stdfunc.h \
+      $STDFUNCDIR/G__c_stdfunc.o $STDFUNCDIR/G__c_stdcxxfunc.cxx \
+      $STDFUNCDIR/G__c_stdcxxfunc.h $STDFUNCDIR/G__c_stdcxxfunc.o
 
 ##### posix.dll #####
 

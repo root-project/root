@@ -86,7 +86,6 @@ void G__DISPfgetc G__P((int c));
 void G__lockedvariable G__P((char *item));
 int G__lock_variable G__P((char *varname));
 int G__unlock_variable G__P((char *varname));
-int G__setbreakpoint G__P((char *breakline,char *breakfile));
 G__value G__interactivereturn G__P((void));
 void G__set_tracemode G__P((char *name));
 void G__del_tracemode G__P((char *name));

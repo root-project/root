@@ -290,12 +290,43 @@ char *item;
 #endif
        ) {
 #endif
+#ifndef G__OLDIMPLEMENTATION1571
+      char *p = strchr(item,'(');
+      if(p) {
+	char tmp[G__ONELINE];
+	strcpy(tmp,item);
+	p = G__strrstr(tmp,"::");
+	if(p) {
+	  *p = 0; p+=2;
+	  G__fprinterr(G__serr,
+		       "Error: Function %s is not defined in %s ",p,tmp);
+	}
+	else {
+	  G__fprinterr(G__serr,
+		       "Error: Function %s is not defined in current scope ",item[0]=='$'?item+1:item);
+	}
+      }
+      else {
+	char tmp[G__ONELINE];
+	strcpy(tmp,item);
+	if(p) {
+	  *p = 0; p+=2;
+	  G__fprinterr(G__serr,
+		       "Error: Symbol %s is not defined in %s ",p,tmp);
+	}
+	else {
+	  G__fprinterr(G__serr,
+		       "Error: Symbol %s is not defined in current scope ",item[0]=='$'?item+1:item);
+	}
+      }
+#else
 #ifdef G__ROOT
       G__fprinterr(G__serr,
 	      "Error: No symbol %s in current scope ",item[0]=='$'?item+1:item);
 #else
       G__fprinterr(G__serr,
 	      "Error: No symbol %s in current scope ",item);
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1519
       G__genericerror((char*)NULL);

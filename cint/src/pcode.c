@@ -6407,6 +6407,9 @@ int G__clear_asm()
 ******************************************************************/
 int G__asm_clear()
 {
+#ifndef G__OLDIMPLEMENTATION1570
+  if(G__asm_clear_mask) return(0);
+#endif
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CL  FILE:%s LINE:%d\n" ,G__asm_cp
 			 ,G__ifile.name ,G__ifile.line_number);

@@ -4,3 +4,10 @@ make.exe -f Makestdfunc
 move stdfunc.dll ..\..\include\stdfunc.dll
 del G__*
 del Makestdfunc
+
+del ..\..\include\stdcxxfunc.dll
+makecint -mk Makestdcxxfunc -dl stdcxxfunc.dll -H stdcxxfunc.h -cint -Z0
+make.exe -f Makestdcxxfunc 
+move stdcxxfunc.dll ..\..\include\stdcxxfunc.dll
+del G__*
+del Makestdcxxfunc

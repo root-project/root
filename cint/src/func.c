@@ -844,6 +844,9 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION1515
   int oprp=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1570
+  int store_cp_asm=0;
+#endif
 
   store_exec_memberfunc = G__exec_memberfunc;
   store_memberfunc_tagnum = G__memberfunc_tagnum;
@@ -1331,6 +1334,11 @@ int memfunc_flag;
     G__asm_inst[G__asm_cp]=G__SETMEMFUNCENV;
     G__inc_cp_asm(1,0);
   }
+#ifndef G__OLDIMPLEMENTATION1570
+  if(G__asm_noverflow && fpara.paran) {
+    store_cp_asm = G__asm_cp;
+  }
+#endif
 #endif
   /* restore base environment */
   store_struct_offset = G__store_struct_offset;
@@ -2246,7 +2254,16 @@ int memfunc_flag;
   
 
   if(!G__oprovld) {
+#ifndef G__OLDIMPLEMENTATION1570
+    if(G__asm_noverflow && fpara.paran) {
+      G__asm_cp=store_cp_asm;
+    }
+    G__asm_clear_mask = 1;
+#endif
     result3 = G__execfuncmacro(item,known3);
+#ifndef G__OLDIMPLEMENTATION1570
+    G__asm_clear_mask = 0;
+#endif
     if(*known3) {
 #ifndef G__OLDIMPLEMENTATION405
       if(nindex&&isupper(result3.type)) {
@@ -3707,6 +3724,14 @@ int hash;
     return(1);
   }
 #endif
+
+#ifndef G__OLDIMPLEMENTATION564
+  if(strcmp(funcname,"G__setbreakpoint")==0) {
+    if(G__no_exec_compile) return(1);
+    G__letint(result7,'i',(long)G__setbreakpoint((char*)G__int(libp->para[0]),(char*)G__int(libp->para[0])));
+    return(1);
+  }
+#endif
   
 #ifndef G__OLDIMPLEMENTATION564
   if(strcmp(funcname,"G__tracemode")==0||
@@ -4047,7 +4072,6 @@ char *result;
   
   return(result);
 }
-
 
 #ifndef G__OLDIMPLEMENTATION564
 /******************************************************************

@@ -177,7 +177,11 @@ int G__using_namespace()
 			      ,&astruct_offset,&astore_struct_offset,&aig15,0);
 
       /* copy variable information */
+#ifndef G__OLDIMPLEMENTATION1569
+      if(avar && ( avar!=var || aig15!= ig15 ) ) {
+#else
       if(avar) {
+#endif
 	int ii;
 #ifndef G__OLDIMPLEMENTATION1543
 	G__savestring(&avar->varnamebuf[aig15],var->varnamebuf[ig15]);

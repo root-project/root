@@ -463,6 +463,10 @@ int G__multithreadlibcint = 0;
 void (*G__emergencycallback)();
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1570
+int G__asm_clear_mask = 0;
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

@@ -676,6 +676,10 @@ extern int G__multithreadlibcint ;
 extern void (*G__emergencycallback)();
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1570
+extern int G__asm_clear_mask;
+#endif
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

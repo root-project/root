@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015008
-#define G__CINTVERSIONSTR  "5.15.08, July 20 2001"
+#define G__CINTVERSION      5015009
+#define G__CINTVERSIONSTR  "5.15.09, Aug 6 2001"
 
 
 /**********************************************************************
@@ -1772,6 +1772,7 @@ extern G__EXPORT int G__security_recover G__P((FILE* fout));
 extern G__EXPORT void G__breakkey G__P((int signame));
 extern G__EXPORT int G__stepmode G__P((int stepmode));
 extern G__EXPORT int G__tracemode G__P((int tracemode));
+extern G__EXPORT int G__setbreakpoint G__P((char *breakline,char *breakfile));
 extern G__EXPORT int G__getstepmode G__P(());
 extern G__EXPORT int G__gettracemode G__P(());
 extern G__EXPORT int G__printlinenum G__P((void));
