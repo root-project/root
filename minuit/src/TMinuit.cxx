@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.8 2001/05/04 13:20:53 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.9 2001/05/29 07:20:52 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 //*-*     format statements and to print on currently defined output file.*
 //*-*   - The derived class TMinuitOld contains obsolete routines from    *
 //*-*     the Fortran based version.                                      *
-//*-*   - The functions SetObjFit(TObject *obj) and GetObjFit() can be    *
+//*-*   - The functions SetObjectFit(TObject *obj)/GetObjectFit() can be  *
 //*-*     used inside the FCN function to set/get a referenced object     *
 //*-*     instead of using global variables.                              *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
