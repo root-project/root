@@ -382,11 +382,20 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
 */
             if (!strstr(s,"AEPAXI@Z") && !strstr(s,"real@"))
             {
-              fprintf(fout, "\t%s", s);
               SectChar = pSectionHeaders[pSymbolTable->SectionNumber-1].Characteristics;
-              if (!pSymbolTable->Type  && (SectChar & IMAGE_SCN_MEM_WRITE)) // Read only (i.e. constants) must be excluded
-                                                          fprintf(fout, " \t DATA");
-              fprintf(fout, "\n");
+              if (!pSymbolTable->Type  && (SectChar & IMAGE_SCN_MEM_WRITE)) {
+                 // Read only (i.e. constants) must be excluded
+                 fprintf(fout, "\t%s", s);
+                 fprintf(fout, " \t DATA");
+                 fprintf(fout, "\n");
+              } else {
+                 if ( pSymbolTable->Type  || !(SectChar & IMAGE_SCN_MEM_READ)) {
+                    fprintf(fout, "\t%s", s);
+                    fprintf(fout, "\n");
+                 } else {
+//                    printf(" strange symbol: %s \n",s);
+                 }
+              }
             }
           }
         }
