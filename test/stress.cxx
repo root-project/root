@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.12 2000/11/21 20:46:00 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.13 2001/01/05 21:06:03 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -450,7 +450,7 @@ void stress5()
    FILE *fp = fopen("stress.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 1160;
+   Int_t nlinesGood = 966;
    while (fgets(line,255,fp)) {
       nlines++;
    }
