@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.5 2000/11/21 16:23:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.6 2001/02/28 11:04:05 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -132,6 +132,8 @@ Double_t        *GetTnorm() {return fTnorm;}
     virtual void ShowAxis();                      // *MENU*
     virtual void ToggleZoom(TVirtualPad *pad=0);
     virtual void ZoomMove();                      // *MENU*
+    virtual void Zoom();                          // *MENU*
+    virtual void UnZoom();                        // *MENU*
 
    ClassDef(TView,2)  //3-D View
 };
@@ -143,6 +145,8 @@ inline void TView::ShowAxis(){ToggleRulers(); }
 inline void TView::Side()    {SideView();}
 inline void TView::Top()     {TopView();}
 inline void TView::ZoomMove(){ToggleZoom();}
+inline void TView::Zoom()    {ZoomView();}
+inline void TView::UnZoom()  {UnzoomView();}
 
 #endif
 
