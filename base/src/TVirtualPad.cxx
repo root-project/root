@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -44,8 +44,8 @@ TVirtualPad::TVirtualPad() : TAttPad()
 }
 
 //______________________________________________________________________________
-TVirtualPad::TVirtualPad(const char *, const char *, Float_t,
-           Float_t, Float_t, Float_t, Color_t color, Short_t , Short_t)
+TVirtualPad::TVirtualPad(const char *, const char *, Double_t,
+           Double_t, Double_t, Double_t, Color_t color, Short_t , Short_t)
           : TAttPad()
 {
    // VirtualPad constructor
