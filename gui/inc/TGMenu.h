@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.9 2002/05/30 21:27:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.10 2002/06/12 16:46:11 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -116,6 +116,7 @@ protected:
    TGMenuEntry       *fCurrent;       // currently selected menu entry
    Bool_t             fStick;         // stick mode (popup menu stays sticked on screen)
    Bool_t             fHasGrab;       // true if menu has grabbed pointer
+   Bool_t             fPoppedUp;      // true if menu is currently popped up
    UInt_t             fXl;            // Max width of all menu entries
    UInt_t             fWidth;         // width of popup menu
    UInt_t             fHeight;        // height of popup menu
@@ -171,7 +172,8 @@ public:
    virtual Bool_t IsEntryChecked(Int_t id);
    virtual void   RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast);
    virtual Bool_t IsEntryRChecked(Int_t id);
-   virtual void   PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_pointer);
+   virtual void   PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode,
+                            Bool_t grab_pointer);
    virtual Int_t  EndMenu(void *&userData);
    virtual void   DeleteEntry(Int_t id);
    virtual void   DeleteEntry(TGMenuEntry *entry);
@@ -185,6 +187,8 @@ public:
    virtual Bool_t  HandleTimer(TTimer *t);
    virtual void    Associate(const TGWindow *w) { fMsgWindow = w; }
 
+   virtual void PoppedUp() { Emit("PoppedUp()"); }  //*SIGNAL
+   virtual void PoppedDown() { Emit("PoppedDown()"); }  //*SIGNAL
    virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
    virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
    virtual void Activate(Bool_t) { }
