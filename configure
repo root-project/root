@@ -289,6 +289,7 @@ confhelp() {
     echo "   pgsql           PostgreSQL support, requires libpq"
     echo "   sapdb           SapDB support, requires libsqlod and libsqlrte"
     echo "   rfio            SHIFT support, requires libshift.a from CERN"
+    echo "   dcache          dCache support, requires dcap library from DESY"
     echo "   srp             SRP support, requires SRP source tree"
     echo "   afs             AFS support, requires AFS libs and objects"
     echo "   pythia          Pythia5 EG support, requires libPythia"
@@ -314,6 +315,7 @@ confhelp() {
     echo "   venus-libdir    VENUS support, location of libVenus"
     echo "   cern-libdir     HBOOK converter, location of CERNLIB libraries"
     echo "   shift-libdir    RFIO support, location of libshift"
+    echo "   dcap-libdir     dCache support, location of libdcap"
     echo "   srp             Secure Remote Passwd support, location of SRP distribution"
     echo "   srp-incdir      SRP support, location header of t_server.h"
     echo "   srp-libdir      SRP support, location header of libsrp.a"
@@ -397,6 +399,7 @@ if test $# -gt 0 ; then
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
       --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
+      --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
@@ -427,6 +430,8 @@ if test $# -gt 0 ; then
       --disable-sapdb)        enable_sapdb=no       ;;
       --enable-rfio)          enable_rfio=yes       ;;
       --disable-rfio)         enable_rfio=no        ;;
+      --enable-dcache)        enable_dcache=yes     ;;
+      --disable-dcache)       enable_dcache=no      ;;
       --enable-thread)        enable_thread=yes     ;;
       --disable-thread)       enable_thread=no      ;;
       --enable-srp)           enable_srp=yes        ;;
@@ -860,8 +865,8 @@ fi
 if test ! "x$enable_rfio" = "xno" ; then
     check_library "libshift shift" "$enable_shared" "$shiftlibdir" \
 	$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
-        /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
-        /usr/local/lib/shift /usr/lib /usr/local/lib
+	/opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
+	/usr/local/lib/shift /usr/lib /usr/local/lib
     shiftlib=$found_lib
     shiftlibdir=$found_dir
 
@@ -871,6 +876,26 @@ if test ! "x$enable_rfio" = "xno" ; then
         case $platform in
            linux*) shiftlib="$shiftlib -lnsl" ;;
         esac
+    fi
+fi
+
+######################################################################
+#
+### echo %%% dCache Support - Third party libraries
+#
+# (See http://www-dcache.desy.de)
+#
+# Check for libdcap
+#
+if test ! "x$enable_dcache" = "xno" ; then
+    check_library "libdcap" "$enable_shared" "$dcaplibdir" \
+	/afs/desy.de/products/dcache/lib /products/dcache/lib \
+	/opt/dcache/lib /usr/lib /usr/local/lib
+    dcaplib=$found_lib
+    dcaplibdir=$found_dir
+
+    if test "x$dcaplib" = "x"; then
+        enable_dcache="no"
     fi
 fi
 
@@ -1211,6 +1236,8 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@cernlibs@|$cernlib|"            \
     -e "s|@shiftlibdir@|$shiftlibdir|"     \
     -e "s|@shiftlib@|$shiftlib|"           \
+    -e "s|@dcaplibdir@|$dcaplibdir|"       \
+    -e "s|@dcaplib@|$dcaplib|"             \
     -e "s|@srplib@|$srplib|"               \
     -e "s|@srpincdir@|$srpincdir|"         \
     -e "s|@srplibdir@|$srplibdir|"         \

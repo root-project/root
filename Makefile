@@ -76,6 +76,9 @@ endif
 ifneq ($(SHIFTLIB),)
 MODULES      += rfio
 endif
+ifneq ($(DCAPLIB),)
+MODULES      += dcache
+endif
 ifneq ($(OSTHREADLIB),)
 MODULES      += thread
 endif
@@ -590,6 +593,7 @@ showbuild:
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
+	@echo "DCAPLIB            = $(DCAPLIB)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"
 	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"

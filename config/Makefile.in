@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile definitions included by the top Makefile
 
 ARCH           := @architecture@
@@ -61,6 +61,9 @@ SAPDBINCDIR    := @sapdbincdir@
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
 
+DCAPLIBDIR     := @dcaplibdir@
+DCAPLIB        := @dcaplib@
+
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@
 
@@ -78,7 +81,7 @@ SRPUTILLIB     := @srputillib@
 SRPUTILINCDIR  := @srputilincdir@
 
 AFSLIB         := @afslib@
-AFSLIBDIR      := @afslibdir@	
+AFSLIBDIR      := @afslibdir@
 
 STAR           := @enable_star@
 

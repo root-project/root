@@ -114,6 +114,7 @@ Rint.History:            $(HOME)/.root_hist
 
 # Plugin library handlers
 +Plugin.TFile:       ^rfio:    TRFIOFile     RFIO
++Plugin.TFile:       ^dcache:  TDCacheFile   DCache
 +Plugin.TSQLServer:  ^mysql:   TMySQLServer  MySQL
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL
 +Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB
