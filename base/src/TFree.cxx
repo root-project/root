@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TFree.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include "TFree.h"
-#include "TFile.h"
+#include "TList.h"
 #include "Bytes.h"
 
 ClassImp(TFree)
@@ -39,17 +39,17 @@ TFree::TFree()
 }
 
 //______________________________________________________________________________
-TFree::TFree(Seek_t first, Seek_t last)
+TFree::TFree(TList *lfree, Seek_t first, Seek_t last)
 {
 //*-*-*-*-*-*-*-*-*-*-*Constructor for a FREE segment*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============================
    fFirst = first;
    fLast  = last;
-   gFile->GetListOfFree()->Add(this);
+   lfree->Add(this);
 }
 
 //______________________________________________________________________________
-TFree *TFree::AddFree(Seek_t first, Seek_t last)
+TFree *TFree::AddFree(TList *lfree, Seek_t first, Seek_t last)
 {
 //*-*-*-*-*-*-*-*-*-*Add a new free segment to the list of free segments*-*-*
 //*-*                ===================================================
@@ -67,11 +67,11 @@ TFree *TFree::AddFree(Seek_t first, Seek_t last)
       Seek_t curlast  = idcur->GetLast();
       if (curlast == first-1) {
          idcur->SetLast(last);
-         TFree *idnext = (TFree*)gFile->GetListOfFree()->After(idcur);
+         TFree *idnext = (TFree*)lfree->After(idcur);
          if (idnext == 0) return idcur;
          if (idnext->GetFirst() > last+1) return idcur;
          idcur->SetLast( idnext->GetLast() );
-         gFile->GetListOfFree()->Remove(idnext);
+         lfree->Remove(idnext);
          return idcur;
       }
       if (curfirst == last+1) {
@@ -82,10 +82,10 @@ TFree *TFree::AddFree(Seek_t first, Seek_t last)
          TFree * newfree = new TFree();
          newfree->SetFirst(first);
          newfree->SetLast(last);
-         gFile->GetListOfFree()->AddBefore(idcur, newfree);
+         lfree->AddBefore(idcur, newfree);
          return newfree;
       }
-      idcur = (TFree*)gFile->GetListOfFree()->After(idcur);
+      idcur = (TFree*)lfree->After(idcur);
    }
    return 0;
 }
@@ -110,7 +110,7 @@ void TFree::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-TFree *TFree::GetBestFree(Int_t nbytes)
+TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
 {
 //*-*-*-*-*-*-*-*-*-*Return the best free segment where to store nbytes*-*-*-*
 //*-*                ==================================================
@@ -121,7 +121,7 @@ TFree *TFree::GetBestFree(Int_t nbytes)
       Int_t nleft = Int_t(idcur->fLast - idcur->fFirst +1);
       if (nleft == nbytes) return idcur;             //*-* found an exact match
       if(nleft > nbytes+3) if (idcur1 == 0) idcur1=idcur;
-      idcur = (TFree*)gFile->GetListOfFree()->After(idcur);
+      idcur = (TFree*)lfree->After(idcur);
    } while (idcur !=0);
    return idcur1;                                    //*-* return first segment >nbytes
 }
@@ -135,5 +135,4 @@ void TFree::ReadBuffer(char *&buffer)
    frombuf(buffer, &version);
    frombuf(buffer, &fFirst);
    frombuf(buffer, &fLast);
-   gFile->GetListOfFree()->Add(this);
 }
