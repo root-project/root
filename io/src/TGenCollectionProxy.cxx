@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.17 2005/03/19 07:26:33 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.18 2005/03/19 23:10:53 rdm Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -207,7 +207,6 @@ TGenCollectionProxy::Value::Value(const Value& copy)  {
 //______________________________________________________________________________
 TGenCollectionProxy::Value::Value(const std::string& inside_type)  {
   std::string inside = (inside_type.find("const ")==0) ? inside_type.substr(6) : inside_type;
-  fType = 0;
   fCase = 0;
   fCtor = 0;
   fDtor = 0;
@@ -535,7 +534,7 @@ Bool_t TGenCollectionProxy::HasPointers() const   {
 //______________________________________________________________________________
 TClass *TGenCollectionProxy::GetValueClass()  {
    // Return a pointer to the TClass representing the content.
-   return fValue ? fValue->fType : 0;
+   return fValue ? fValue->fType.GetClass() : 0;
 }
 
 //______________________________________________________________________________

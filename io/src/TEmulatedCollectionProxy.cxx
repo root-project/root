@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.8 2005/03/10 22:26:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.9 2005/03/11 21:25:11 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name)
 : TGenCollectionProxy(typeid(std::vector<char>), sizeof(std::vector<char>::iterator))
 {
   fName = cl_name;
-  Initialize();
+  this->TEmulatedCollectionProxy::InitializeEx();
 }
 
 /// Standard destructor

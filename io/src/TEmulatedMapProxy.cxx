@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.3 2004/11/03 16:13:38 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.4 2005/01/19 18:30:58 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -42,7 +42,7 @@ TEmulatedMapProxy::TEmulatedMapProxy(const char* cl_name)
 : TEmulatedCollectionProxy(cl_name)
 {
   fName = cl_name;
-  Initialize();
+  this->TEmulatedCollectionProxy::InitializeEx();
   if ( !(fSTL_type == TClassEdit::kMap || fSTL_type == TClassEdit::kMultiMap) )  {
     Fatal("TEmulatedMapProxy","Class %s is not a map-type!",fName.c_str());
   }

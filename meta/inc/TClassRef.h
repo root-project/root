@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.2 2005/03/20 21:25:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.3 2005/03/21 15:15:47 rdm Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -42,11 +42,11 @@ public:
 
    ~TClassRef();
 
-   TClass *GetClass();
+   TClass *GetClass()  const;
    void Reset() { fClassPtr = 0; }
 
-   TClass* operator->() { return GetClass(); }
-   operator TClass*() { return GetClass(); }
+   TClass* operator->() const { return GetClass(); }
+   operator TClass*() const { return GetClass(); }
 
 };
 

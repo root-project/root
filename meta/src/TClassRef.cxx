@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.1 2005/03/20 19:35:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.2 2005/03/21 15:15:47 rdm Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -76,12 +76,11 @@ TClassRef::~TClassRef()
 }
 
 //______________________________________________________________________________
-TClass *TClassRef::GetClass()
+TClass *TClassRef::GetClass()  const
 {
    // Return the current TClass object corresponding to fClassName.
-
    if (fClassPtr) return fClassPtr;
-   fClassPtr = TClass::GetClass(fClassName.Data());
-   if (fClassPtr) fClassPtr->AddRef(this);
+   (const_cast<TClassRef*>(this))->fClassPtr = TClass::GetClass(fClassName.Data());
+   if (fClassPtr) fClassPtr->AddRef(const_cast<TClassRef*>(this));
    return fClassPtr;
 }

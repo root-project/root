@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.7 2004/10/29 18:03:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.8 2004/11/05 14:32:35 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -23,12 +23,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TClass.h"
+#include "TClassRef.h"
 #include "TDataType.h"
 
 
 class TVirtualCollectionProxy {
 protected:
-   TClass *fClass;
+   TClassRef fClass;
    virtual void SetValueClass(TClass *newcl) = 0;
    friend class TClass;
 
@@ -43,7 +44,7 @@ public:
       inline ~TPushPop() { fProxy->PopProxy(); }
    };
 
-   TVirtualCollectionProxy() : fClass(0) {};
+   TVirtualCollectionProxy() : fClass() {};
    TVirtualCollectionProxy(TClass *cl) : fClass(cl) {};
   
    virtual TVirtualCollectionProxy* Generate() const = 0; // Returns an object of the actual CollectionProxy class
@@ -51,8 +52,12 @@ public:
 
    virtual TClass   *GetCollectionClass() { return fClass; } // Return a pointer to the TClass representing the container
 
-   virtual void     *New() const { return fClass==0?0:fClass->New(); }                 // Return a new container object
-   virtual void     *New(void *arena) const { return fClass==0?0:fClass->New(arena); } // Execute the container constructor
+   virtual void     *New() const {                // Return a new container object
+     return fClass.GetClass()==0 ? 0 : fClass->New();
+   }
+   virtual void     *New(void *arena) const {     // Execute the container constructor
+     return fClass.GetClass()==0 ? 0 : fClass->New(arena);
+   }
 
    virtual UInt_t    Sizeof() const = 0; // Return the sizeof the collection object.
 

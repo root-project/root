@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.5 2005/02/25 17:06:34 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.6 2005/03/08 21:23:25 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -63,7 +63,7 @@ public:
     ROOT::DesFunc_t fDtor;      // Method cache for containee destructor
     ROOT::DelFunc_t fDelete;    // Method cache for containee delete
     unsigned int    fCase;      // type of data of Value_type
-    TClass*         fType;      // TClass of Value_type in collection
+    TClassRef       fType;      // TClass reference of Value_type in collection
     EDataType       fKind;      // kind of ROOT-fundamental type 
     size_t          fSize;      // fSize of the contained object
 
@@ -223,7 +223,7 @@ protected:
   Info_t        fTypeinfo;  // Type information
 
   /// Late initialization of collection proxy
-  virtual TGenCollectionProxy* Initialize() const;
+  TGenCollectionProxy* Initialize() const;
   /// Some hack to avoid const-ness
   virtual TGenCollectionProxy* InitializeEx();
   /// Call to delete/destruct individual contained item
