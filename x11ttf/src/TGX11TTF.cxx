@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.6 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.7 2002/08/23 14:49:23 rdm Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -123,6 +123,16 @@ inline Long_t TTCeil(Long_t x) { return (x + 63) & -64; }
 
 
 //______________________________________________________________________________
+TGX11TTF::TGX11TTF()
+{
+   fFontCount = 0;
+   fCharCache = 0; 
+   fLRU = 0;
+   fRotMatrix = 0;
+   fEngine = 0;
+}
+   
+//______________________________________________________________________________
 TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 {
    // Create copy of TGX11 but now use TrueType fonts.
@@ -178,9 +188,11 @@ TGX11TTF::~TGX11TTF()
 
    delete fRotMatrix;
 
+   if (!fEngine) return;
    TT_Done_FreeType(*fEngine);
    delete fEngine;
 
+   if (!fCharCache) return;
    ClearCache();
    delete fCharCache;
    delete fLRU;

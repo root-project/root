@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.6 2002/09/10 13:17:42 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.7 2002/12/02 18:50:05 rdm Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -156,6 +156,7 @@ void TSVG::Close(Option_t *)
 {
    // Close a SVG file
    if (!gVirtualPS) return;
+   if (!fStream) return;
    if (gPad) gPad->Update();
    PrintStr("</svg>@");
 

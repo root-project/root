@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.3 2002/02/22 08:30:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.4 2002/04/11 11:41:31 rdm Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -33,6 +33,7 @@ ClassImp(TVirtualPS)
 TVirtualPS::TVirtualPS()
 {
    // VirtualPS default constructor
+   fStream = 0;
 }
 
 //______________________________________________________________________________

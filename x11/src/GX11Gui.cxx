@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.26 2002/10/04 16:06:29 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.27 2002/12/02 18:50:12 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1287,6 +1287,7 @@ Int_t TGX11::EventsPending()
 {
    // Returns number of pending events.
 
+   if (!fDisplay) return 0;
    return XPending(fDisplay);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.48 2002/12/02 18:50:06 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.49 2003/01/15 18:43:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -269,6 +269,7 @@ TBranch::~TBranch()
    }
    fTree        = 0;
    fDirectory   = 0;
+   gBranch      = 0;
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.15 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.16 2002/02/07 10:47:33 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -183,7 +183,7 @@ TNode::~TNode()
 
    //if (!gGeometry) return;
    if (fParent)     fParent->GetListOfNodes()->Remove(this);
-   else    gGeometry->GetListOfNodes()->Remove(this);
+   else    {if (gGeometry) gGeometry->GetListOfNodes()->Remove(this);}
    if (fNodes) fNodes->Delete();
    if (gGeometry && gGeometry->GetCurrentNode() == this) gGeometry->SetCurrentNode(0);
    delete fNodes;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.11 2002/07/13 16:38:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.12 2002/11/11 16:23:16 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -88,6 +88,7 @@ protected:
    TGPopupMenu      *fPopup;     // pointer to popup menu (in case of cascading menus)
 
 public:
+   TGMenuEntry() {fUserData=0; fLabel=0; fPic=0; fPopup=0;}
    virtual ~TGMenuEntry() { if (fLabel) delete fLabel; }
 
    Int_t          GetEntryId() const { return fEntryId; }

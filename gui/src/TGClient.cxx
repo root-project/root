@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.17 2002/04/22 18:24:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.18 2002/06/12 16:46:11 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -247,6 +247,12 @@ TGClient::TGClient(const char *dpyName)
    // the complete GUI system, i.e., graphics contexts, fonts, etc. for all
    // widgets.
 
+   fRoot         = 0;
+   fPicturePool  = 0;
+   fMimeTypeList = 0;
+   fWlist        = 0;
+   fPlist        = 0;
+   fUWHandlers   = 0;
    if (gClient) {
       Error("TGClient", "only one instance of TGClient allowed");
       return;
@@ -786,6 +792,7 @@ Bool_t TGClient::ProcessOneEvent()
 
    Event_t event;
 
+   if (!fRoot) return kFALSE;
    if (gVirtualX->EventsPending()) {
       gVirtualX->NextEvent(event);
 #ifdef GDK_WIN32

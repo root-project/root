@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.2 2001/02/17 11:42:23 rdm Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -101,7 +101,7 @@ private:
    void    SetRotationMatrix(Float_t angle);
 
 public:
-   TGX11TTF() { fCharCache = 0; fLRU = 0; }
+   TGX11TTF();
    TGX11TTF(const TGX11 &org);
    virtual ~TGX11TTF();
 

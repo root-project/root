@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.8 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.9 2002/12/02 18:50:01 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -346,6 +346,7 @@ TQConnection::~TQConnection()
       if (list->IsEmpty()) SafeDelete(list);   // delete empty list
    }
 
+   if (!fSlot) return;
    fSlot->RemoveReference();  // decrease references to slot
 
    if (fSlot->References() <=0) {

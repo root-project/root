@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.32 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.33 2002/12/04 11:23:06 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -309,6 +309,7 @@ void TPostScript::Close(Option_t *)
    // Close a PostScript file
 
    if (!gVirtualPS) return;
+   if (!fStream) return;
    if (gPad) gPad->Update();
    if( fMode != 3) {
       SaveRestore(-1);
