@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.2 2000/06/11 12:07:48 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -30,7 +30,7 @@ TUrl::TUrl(const char *url)
    // Parse url character string and split in its different subcomponents.
    // Use IsValid() to check if URL is legal.
    //
-   // url: [proto://]host[:port][/file.ext][#anchor][?options]
+   // url: [proto://]host[:port]/file.ext[#anchor][?options]
    //
    // Known protocols: http, root, ftp, news, file, rfio, hpss (default http)
    // Default ports: http=80, root=1094, ftp=20, news=119.
@@ -86,7 +86,7 @@ TUrl::TUrl(const char *url)
       *s = sav;
       if (!fProtocol.CompareTo("http"))
          fPort = 80;
-      else if (!fProtocol.CompareTo("root"))
+      else if (!fProtocol.CompareTo("root") || !fProtocol.CompareTo("roots"))
          fPort = 1094;
       else if (!fProtocol.CompareTo("ftp"))
          fPort = 20;
@@ -224,10 +224,11 @@ const char *TUrl::GetUrl()
       }
 
       Bool_t deflt = kTRUE;
-      if ((!fProtocol.CompareTo("http") && fPort != 80)   ||
-          (!fProtocol.CompareTo("root") && fPort != 1094) ||
-          (!fProtocol.CompareTo("ftp")  && fPort != 20)   ||
-          (!fProtocol.CompareTo("news") && fPort != 119))
+      if ((!fProtocol.CompareTo("http")  && fPort != 80)   ||
+          (!fProtocol.CompareTo("root")  && fPort != 1094) ||
+          (!fProtocol.CompareTo("roots") && fPort != 1094) ||
+          (!fProtocol.CompareTo("ftp")   && fPort != 20)   ||
+          (!fProtocol.CompareTo("news")  && fPort != 119))
          deflt = kFALSE;
       if (!deflt) {
          char p[10];

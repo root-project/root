@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.3 2000/06/11 12:07:48 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.4 2000/07/24 18:21:50 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -15,10 +15,11 @@
 //                                                                      //
 // A TNetFile is like a normal TFile except that it reads and writes    //
 // its data via a rootd server (for more on the rootd daemon see the    //
-// source files ROOTD_*.cxx). TNetFile file names are in standard URL   //
-// format with protocol "root". The following are valid TNetFile URL's: //
+// source files root/rootd/src/*.cxx). TNetFile file names are in       //
+// standard URL format with protocol "root" or "roots". The following   //
+// are valid TNetFile URL's:                                            //
 //                                                                      //
-//    root://hpsalo/files/aap.root                                      //
+//    roots://hpsalo/files/aap.root                                     //
 //    root://hpbrun.cern.ch/root/hsimple.root                           //
 //    root://pcna49a:5151/~na49/data/run821.root                        //
 //    root://pcna49d.cern.ch:5050//v1/data/run810.root                  //
@@ -37,7 +38,15 @@
 //   2) Getting it from the ~/.netrc file (same file as used by ftp)    //
 //   3) Command line prompt                                             //
 // The different methods will be tried in the order given above.        //
-// On machines with AFS rootd will authenticate using AFS.              //
+// On machines with AFS rootd will authenticate using AFS (if it was    //
+// compiled with AFS support).                                          //
+//                                                                      //
+// If the protocol was specified as "roots" a secure authetication      //
+// method will be used. The secure method uses the SRP, Secure Remote   //
+// Passwords, package. SRP uses a so called "asymmetric key exchange    //
+// protocol" in which no passwords are ever send over the wire. This    //
+// protocol is safe against all known security attacks. For more see    //
+// http://root.cern.ch/root/NetFile.html.                               //
 //                                                                      //
 // The rootd daemon lives in the directory $ROOTSYS/bin. It can be      //
 // started either via inetd or by hand from the command line (no need   //
@@ -98,7 +107,8 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
 {
    // Create a NetFile object. A net file is the same as a TFile
    // except that it is being accessed via a rootd server. The url
-   // argument must be of the form: root://host.dom.ain/file.root.
+   // argument must be of the form: root[s]://host.dom.ain/file.root.
+   // When protocol is "roots" try using secure authentication.
    // If the file specified in the URL does not exist, is not accessable
    // or can not be created the kZombie bit will be set in the TNetFile
    // object. Use IsZombie() to see if the file is accessable.
@@ -152,7 +162,10 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
 
    // Authenticate to remote rootd server
    if (!Authenticate()) {
-      Error("TNetFile", "autentication failed for host %s", fUrl.GetHost());
+      if (!strcmp(fUrl.GetProtocol(), "roots"))
+         Error("TNetFile", "secure authentication failed for host %s", fUrl.GetHost());
+      else
+         Error("TNetFile", "authentication failed for host %s", fUrl.GetHost());
       goto zombie;
    }
 
@@ -227,7 +240,8 @@ Bool_t TNetFile::Authenticate()
    fUser = user;
 
    // if not anonymous login try to use secure authentication
-   if (strcmp(fUser, "anonymous") && strcmp(fUser, "rootd")) {
+   if (!strcmp(fUrl.GetProtocol(), "roots") &&
+       fUser.CompareTo("anonymous") && fUser.CompareTo("rootd")) {
       if (!fgSecAuthHook) {
          char *p;
          char *lib = Form("%s/lib/libSRPAuth", gRootDir);
@@ -242,6 +256,9 @@ Bool_t TNetFile::Authenticate()
             return kFALSE;
          if (st == 1)
             return kTRUE;
+      } else {
+         Error("Authenticate", "no support for secure authentication available");
+         return kFALSE;
       }
    }
 
