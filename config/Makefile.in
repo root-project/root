@@ -46,6 +46,10 @@ OPENGLULIB     := @openglulib@
 OPENGLLIB      := @opengllib@
 OPENGLINCDIR   := @openglincdir@
 
+OPENIVLIBDIR   := @openivlibdir@
+OPENIVLIB      := @openivlib@
+OPENIVINCDIR   := @openivincdir@
+
 CERNLIBDIR     := @cernlibdir@
 CERNLIBS       := @cernlibs@
 

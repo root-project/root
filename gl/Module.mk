@@ -21,11 +21,10 @@ ifeq ($(ARCH),win32gdk)
 GLS          += TRootGLKernel.cxx TRootWin32GLViewer.cxx
 else
 GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
-ifneq ($(IVROOT),)
+ifneq ($(OPENIVLIB),)
 GLS          += TRootOIViewer.cxx
-IVLIBDIR     := -L$(IVROOT)/usr/lib
-IVLIB        := -lInventor -lInventorXt -lXm -lXt -lXext -lX11
-IVINCDIR     := $(IVROOT)/usr/include
+IVFLAGS      := -DR__OPENINVENTOR -I$(OPENIVINCDIR)
+IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) -lXm -lXt -lXext -lX11
 endif
 endif
 endif
@@ -48,16 +47,10 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-ifneq ($(IVROOT),)
 $(GLLIB):       $(GLO) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO)" \
-		   "$(GLLIBEXTRA) $(IVLIBDIR) $(IVLIB)"
-else
-$(GLLIB):       $(GLO) $(MAINLIBS) $(GLLIBDEP)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO)" "$(GLLIBEXTRA)"
-endif
+		   "$(GLLIBEXTRA) $(IVLIBS)"
 
 all-gl:         $(GLLIB)
 
@@ -72,11 +65,6 @@ distclean-gl:   clean-gl
 distclean::     distclean-gl
 
 ##### extra rules ######
-ifneq ($(IVROOT),)
-$(GLO): %.o: %.cxx
-	$(CXX) $(OPT) -DR__OPENINVENTOR $(CXXFLAGS) -I$(OPENGLINCDIR) \
-	   -I$(IVINCDIR) -o $@ -c $<
-else
 ifeq ($(ARCH),win32gdk)
 $(GLO): %.o: %.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) -I$(WIN32GDKDIR)/gdk/inc \
@@ -84,7 +72,6 @@ $(GLO): %.o: %.cxx
 	   -o $@ -c $<
 else
 $(GLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) -o $@ -c $<
-endif
+	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) $(IVFLAGS) -o $@ -c $<
 endif
 

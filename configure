@@ -25,6 +25,7 @@ enable_dcache=yes
 enable_krb5=yes
 enable_mysql=yes
 enable_opengl=yes
+enable_openiv=yes
 enable_pgsql=yes
 enable_pythia=yes
 enable_pythia6=yes
@@ -46,7 +47,7 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
          enable_srp enable_star enable_thread enable_ttf enable_venus \
-         enable_krb5 enable_exceptions"
+         enable_krb5 enable_exceptions enable_openiv"
 
 
 ######################################################################
@@ -294,6 +295,7 @@ confhelp() {
     echo "   star            Build STAR contrib library"
     echo "   ttf             True Type Font support, requires libtff"
     echo "   opengl          OpenGL support, requires libGL and libGLU"
+    echo "   openiv          OpenInventor support, requires libInventor and libInventorXt"
     echo "   cern            CERNLIB usage, build h2root and g2root"
     echo "   mysql           MySQL support, requires libmysqlclient"
     echo "   pgsql           PostgreSQL support, requires libpq"
@@ -316,6 +318,8 @@ confhelp() {
     echo "   ttf-fontdir     TTF support, location of TTF fonts"
     echo "   opengl-incdir   OpenGL support, location of GL/gl.h"
     echo "   opengl-libdir   OpenGL support, location of libGL"
+    echo "   openiv-incdir   OpenInventor support, location of Inventor/SoType.h"
+    echo "   openiv-libdir   OpenInventor support, location of libInventor"
     echo "   mysql-incdir    MySQL support, location of mysql.h"
     echo "   mysql-libdir    MySQL support, location of libmysqlclient"
     echo "   pgsql-incdir    PostgreSQL support, location of libpq-fe.h"
@@ -402,6 +406,8 @@ if test $# -gt 0 ; then
       --with-ttf-fontdir=*)    ttffontdir=$optarg    ; enable_ttf="yes"     ;;
       --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
       --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
+      --with-openiv-incdir=*)  openivincdir=$optarg  ; enable_openiv="yes"  ;;
+      --with-openiv-libdir=*)  openivlibdir=$optarg  ; enable_openiv="yes"  ;;
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
@@ -632,7 +638,7 @@ fi
 # (see mesa3d.org)
 #
 if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
-    # Check for Mesa OpenGL compatible include and library
+    # Check for OpenGL compatible include and library
     check_header "GL/gl.h" "$openglincdir" $OPENGL $OPENGL/include \
 	/usr/include /usr/include/X11 /usr/X11/include \
 	/usr/X11R6/include /usr/local/include/X11 \
@@ -661,9 +667,56 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
     openglulibdir=$found_dir
 
     if test "x$openglincdir" = "x" || \
-	test "x$opengllib" = "x" || \
-        test "x$openglulib" = "x" ; then
+       test "x$opengllib" = "x" || \
+       test "x$openglulib" = "x" ; then
         enable_opengl="no"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% OpenInventor Support - Third party libraries
+#
+# (see http://oss.sgi.com/projects/inventor/)
+#
+if test "x$enable_opengl" = "no" ; then
+    enable_openiv="no"
+fi
+if test ! "x$enable_openiv" = "no" && test ! "$platform" = "win32" ; then
+    # Check for OpenInventor compatible include and library
+    check_header "Inventor/SoType.h" "$openivincdir" $IVROOT $IVROOT/include \
+	$IVROOT/usr/include /usr/include /usr/include/X11 /usr/X11/include \
+	/usr/X11R6/include /usr/local/include/X11 \
+	/usr/local/X11R6/include /usr/local/include \
+	/usr/include/inventor /usr/local/include/inventor \
+	/usr/inventor/include /usr/local/inventor/include \
+	/usr/inventor/usr/include /usr/local/inventor/usr/include \
+	/usr/local/inventor /opt/inventor /opt/inventor/include \
+	/opt/inventor/usr/include
+    openivinc=$found_hdr
+    openivincdir=$found_dir
+
+    openivlibdirs="$IVROOT $IVROOT/lib $IVROOT/usr/lib /usr/lib /usr/local/lib \
+	/usr/lib/X11 /usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
+        /usr/X11/lib /usr/lib/inventor /usr/local/lib/inventor \
+	/usr/inventor/lib /usr/inventor/usr/lib /usr/local/inventor/lib \
+	/usr/local/inventor/usr/lib /usr/inventor /usr/local/inventor \
+	/opt/inventor /opt/inventor/lib /opt/inventor/usr/lib"
+
+    keep=$openivlibdir
+    check_library "libInventor" "$enable_shared" \
+	"$openivlibdir" $openivlibdirs
+    openivlib=$found_lib
+    openivlibdir=$found_dir
+
+    check_library "libInventorXt" "$enable_shared" \
+	"$keep" $openivlibdirs
+    openivlib="$openivlib $found_lib"
+    openivlibdir="$openivlibdir $found_dir"
+
+    if test "x$openivincdir" = "x" || \
+       test "x$openivlib" = "x" ; then
+        enable_openiv="no"
     fi
 fi
 
@@ -1180,24 +1233,6 @@ if test "x$show_pkglist" = "xyes" ; then
     # print out the package list and exit
     echo "packages: $pkglist"
     exit 0
-
-    #      echo "AFS:                           $enable_afs"
-    #      echo "HBOOK conversion applications: $enable_cern"
-    #      echo "MySQL:                         $enable_mysql"
-    #      echo "OpenGL:                        $enable_opengl"
-    #      echo "PostGreSQL:                    $enable_pgsql"
-    #      echo "Pythia5 event generator:       $enable_pythia"
-    #      echo "Pythia6 event generator:       $enable_pythia6"
-    #      echo "SHIFT:                         $enable_rfio"
-    #      echo "Run-time path information:     $enable_rpath"
-    #      echo "SapDB:                         $enable_sapdb"
-    #      echo "Shared third party libraries:  $enable_shared"
-    #      echo "Version # in SO name:          $enable_soversion"
-    #      echo "SRP:                           $enable_srp"
-    #      echo "STAR extra library:            $enable_star"
-    #      echo "POSIX Threads:                 $enable_thread"
-    #      echo "True Type Fonts:               $enable_ttf"
-    #      echo "Venus Event Generator:         $enable_venus"
 fi
 
 ######################################################################
@@ -1361,6 +1396,9 @@ sed -e "s|@architecture@|$arch|"            \
     -e "s|@opengllibdir@|$opengllibdir|"    \
     -e "s|@openglulib@|$openglulib|"        \
     -e "s|@opengllib@|$opengllib|"          \
+    -e "s|@openivincdir@|$openivincdir|"    \
+    -e "s|@openivlibdir@|$openivlibdir|"    \
+    -e "s|@openivlib@|$openivlib|"          \
     -e "s|@mysqlincdir@|$mysqlincdir|"      \
     -e "s|@mysqllibdir@|$mysqllibdir|"      \
     -e "s|@mysqllib@|$mysqllib|"            \
