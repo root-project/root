@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.58 2004/03/22 15:06:30 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.59 2004/04/21 15:06:45 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -460,6 +460,37 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
          // write a HTML header for the classFile file
          WriteHtmlHeader(classFile, classPtr->GetName(), classPtr);
+
+         // show box with lib, include
+         // needs to go first to allow title on the left
+         const char* lib=classPtr->GetSharedLibs();
+         const char* incl=classPtr->GetDeclFileName();
+         if (incl) incl=gSystem->BaseName(incl);
+         if (lib && strlen(lib)|| incl && strlen(incl)) {
+            classFile << "<table cellpadding=\"2\" border=\"1\" style=\"float:right;\"><tr><td>";
+            if (lib) {
+               char* libDup=StrDup(lib);
+               char* libDupSpace=strchr(libDup,' ');
+               if (libDupSpace) *libDupSpace=0;
+               char* libDupEnd=libDup+strlen(libDup);
+               while (libDupEnd!=libDup)
+                  if (*(--libDupEnd)=='.') {
+                     *libDupEnd=0;
+                     break;
+                  }
+               classFile << "library: "
+                         << libDup;
+               delete[] libDup;
+            }
+            if (incl) {
+               if (lib)
+                  classFile << "<br/>";
+               classFile << "#include \""
+                         << incl << "\"";
+            }
+            classFile << "</td></tr></table>"
+                      << std::endl;
+         }
 
          // make a link to the description
          classFile << "<!--BEGIN-->" << endl;
@@ -1016,7 +1047,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
       filename = StrDup(tmp1, 16);
       strcat(filename, ".cxx.html");
 
-ofstream tempFile;
+      ofstream tempFile;
       tempFile.open(filename, ios::out);
 
       if (dirname)
