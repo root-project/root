@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.17 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.18 2003/11/07 20:58:02 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -1161,9 +1161,6 @@ void TGButton::SavePrimitive(ofstream &out, Option_t *option)
       out << "   " << GetName() << "->SetCommand(" << quote << fCommand
           << quote << ");" << endl;
    }
-   //if (fGroup) {
-   //    out << "   if (" << GetName() << ") { };" << endl;
-   //}
 }
 
 //______________________________________________________________________________
@@ -1178,7 +1175,7 @@ void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
    char *outext = new char[lentext+2];
    Int_t i=0;
    while (lentext) {
-      if (i == hotpos-1) {
+      if (hotpos && (i == hotpos-1)) {
          outext[i] = '&';
          i++;
       }
@@ -1237,7 +1234,7 @@ void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
    delete [] outext;
 
    out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
-       << ");" 	<< endl;
+       << ");" << endl;
 
    TGButton::SavePrimitive(out,option);
 }
@@ -1303,7 +1300,7 @@ void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
 
 
    while (lentext) {
-      if (i == hotpos-1) {
+      if (hotpos && (i == hotpos-1)) {
          outext[i] = '&';
          i++;
       }
@@ -1341,7 +1338,7 @@ void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
       }
    }
 
-   if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
+   if (GetOptions() == kChildFrame) {
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
@@ -1376,7 +1373,7 @@ void TGRadioButton::SavePrimitive(ofstream &out, Option_t *option)
    Int_t i=0;
 
    while (lentext) {
-      if (i == hotpos-1) {
+      if (hotpos && (i == hotpos-1)) {
          outext[i] = '&';
          i++;
       }
@@ -1411,7 +1408,7 @@ void TGRadioButton::SavePrimitive(ofstream &out, Option_t *option)
       }
    }
 
-   if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
+   if (GetOptions() == (kChildFrame)) {
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {

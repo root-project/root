@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.4 2001/12/29 13:58:24 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.5 2003/01/12 11:06:35 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TList.h"
 #include "TMath.h"
 #include "Rtypes.h"
+#include "Riostream.h"
 
 
 ClassImp(TGTableLayout)
@@ -603,4 +604,96 @@ TGDimension TGTableLayout::GetDefaultSize() const
       for (row = 0; row < fNrows; ++row) size.fHeight += fRow[row].fDefSize;
 
    return size;
+}
+
+// ________________________________________________________________________
+void TGTableLayoutHints::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save layout hints as a C++ statement(s) on output stream out
+
+   TString hints;
+   UInt_t pad = GetPadLeft()+GetPadRight()+GetPadTop()+GetPadBottom();
+
+   if (!GetLayoutHints()) return;
+
+   if ((fLayoutHints == kLHintsNormal) && (pad == 0)) return;
+
+   if (fLayoutHints & kLHintsLeft) {
+      if (hints.Length() == 0) hints  = "kLHintsLeft";
+      else                     hints += " | kLHintsLeft";
+   }
+   if (fLayoutHints & kLHintsCenterX) {
+      if  (hints.Length() == 0) hints  = "kLHintsCenterX";
+      else                     hints += " | kLHintsCenterX";
+   }
+   if (fLayoutHints & kLHintsRight) {
+      if (hints.Length() == 0) hints  = "kLHintsRight";
+      else                     hints += " | kLHintsRight";
+   }
+   if (fLayoutHints & kLHintsTop) {
+      if (hints.Length() == 0) hints  = "kLHintsTop";
+      else                     hints += " | kLHintsTop";
+   }
+   if (fLayoutHints & kLHintsCenterY) {
+      if (hints.Length() == 0) hints  = "kLHintsCenterY";
+      else                     hints += " | kLHintsCenterY";
+   }
+   if (fLayoutHints & kLHintsBottom) {
+      if (hints.Length() == 0) hints  = "kLHintsBottom";
+      else                     hints += " | kLHintsBottom";
+   }
+   if (fLayoutHints & kLHintsExpandX) {
+      if (hints.Length() == 0) hints  = "kLHintsExpandX";
+      else                     hints += " | kLHintsExpandX";
+   }
+   if (fLayoutHints & kLHintsExpandY) {
+      if (hints.Length() == 0) hints  = "kLHintsExpandY";
+      else                     hints += " | kLHintsExpandY";
+   }
+   if (fLayoutHints & kLHintsShrinkX) {
+      if (hints.Length() == 0) hints  = "kLHintsShrinkX";
+      else                     hints += " | kLHintsShrinkX";
+   }
+   if (fLayoutHints & kLHintsShrinkY) {
+      if (hints.Length() == 0) hints  = "kLHintsShrinkY";
+      else                     hints += " | kLHintsShrinkY";
+   }
+   if (fLayoutHints & kLHintsFillX) {
+      if (hints.Length() == 0) hints  = "kLHintsFillX";
+      else                     hints += " | kLHintsFillX";
+   }
+   if (fLayoutHints & kLHintsFillY) {
+      if (hints.Length() == 0) hints  = "kLHintsFillY";
+      else                     hints += " | kLHintsFillY";
+   }
+   out << ", new TGTableLayoutHints(" << GetAttachLeft() << "," << GetAttachRight()
+       << "," << GetAttachTop()  << "," << GetAttachBottom()
+       << "," << hints;
+
+   if (pad) {
+      out << "," << GetPadLeft() << "," << GetPadRight()
+          << "," << GetPadTop()  << "," << GetPadBottom();
+    }
+    out << ")";
+}
+
+// __________________________________________________________________________
+void TGTableLayout::SavePrimitive(ofstream &out, Option_t *)
+{
+
+   // Save vertical layout manager as a C++ statement(s) on output stream
+
+   out << " new TGTableLayout(" << fMain->GetName() << "," << fNrows << "," << fNcols;
+
+   if (fSep) {
+      if (fHomogeneous == kTRUE)
+         out << ", kTRUE";
+      else
+         out << ", kFALSE";
+   out << fSep;
+   }
+   out  << ")";
+   // hints parameter is not used/saved currently
+
 }
