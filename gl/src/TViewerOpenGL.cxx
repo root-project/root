@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.12 2004/08/21 07:06:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.13 2004/09/03 12:52:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -224,7 +224,7 @@ void TViewerOpenGL::SwapBuffers()const
 Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 {
    if (event->fType == kButtonPress && event->fCode == kButton1) {
-      if(fMode == kNav) {
+      if(fMode == kNav || fMode == kMat) {
          TPoint pnt(event->fX, event->fY);
          fArcBall->Click(pnt);
          fPressed = kTRUE;
@@ -241,11 +241,18 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
             }
          }
       } 
-   } else if (event->fType == kButtonPress && event->fCode == kButton3 && fMode == kNav) {
+   } else if (event->fType == kButtonPress && event->fCode == kButton3 && (fMode == kNav || fMode == kMat)) {
       if (TGLSceneObject *scObj = TestSelection(event)) {
-         if (!fContextMenu)
-            fContextMenu = new TContextMenu("glcm", "glcm");
-         fContextMenu->Popup(event->fXRoot, event->fYRoot, scObj->GetRealObject());
+         if(fMode == kNav)
+	 {
+            if (!fContextMenu)
+               fContextMenu = new TContextMenu("glcm", "glcm");
+            fContextMenu->Popup(event->fXRoot, event->fYRoot, scObj->GetRealObject());
+	 } else {
+            scObj->ResetTransparency();
+            gVirtualGL->Invalidate(&fRender);
+            DrawObjects();
+	 }
       }
    } else if (event->fType == kButtonRelease) {
       if (event->fCode == kButton1) {
@@ -311,6 +318,9 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
       gVirtualGL->PolygonGLMode(kFRONT_AND_BACK, kLINE);
       gVirtualGL->SetGLLineWidth(1.5f);
       DrawObjects();
+   case kKey_T:
+   case kKey_t:
+      fMode = kMat;
    } 
    
    return kTRUE;
@@ -320,7 +330,7 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
 Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 {
    if (fPressed)
-      if (fMode == kNav) {
+      if (fMode == kNav || fMode == kMat) {
          TPoint pnt(event->fX, event->fY);
          fArcBall->Drag(pnt);
          DrawObjects();
@@ -432,6 +442,7 @@ void TViewerOpenGL::Show()
 //______________________________________________________________________________
 void TViewerOpenGL::CloseWindow()
 {
+   fPad->SetViewer3D(0);
    delete this;
 }
 
@@ -576,6 +587,8 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                fConf = kPERSP;
                fRender.SetActive(fConf);
                DrawObjects();
+               if(fMode != kMat && fMode != kNav)
+                  fMode = kNav;
             }
             break;
          case kGLExit:

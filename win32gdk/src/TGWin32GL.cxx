@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.2 2004/08/09 22:11:00 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.3 2004/08/16 10:00:45 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -118,7 +118,9 @@ ULong_t TGWin32GL::CreateContext(Window_t wind)
    //
 
    HDC hdc = GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)wind));
-   return (ULong_t)::wglCreateContext(hdc);
+   ULong_t retVal = (ULong_t)wglCreateContext(hdc);
+   ReleaseDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)wind), hdc);
+   return retVal;
 }
 
 //______________________________________________________________________________
@@ -136,6 +138,7 @@ void TGWin32GL::MakeCurrent(Window_t wind, ULong_t ctx)
 
    HDC hdc = GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)wind));
    ::wglMakeCurrent(hdc,(HGLRC) ctx);
+   ReleaseDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)wind), hdc);
 }
 
 //______________________________________________________________________________
@@ -146,5 +149,5 @@ void TGWin32GL::SwapBuffers(Window_t wind)
    HDC hdc = GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)wind));
    ::wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
    ::glFinish();
+   ReleaseDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)wind), hdc);
 }
-
