@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.1 2000/11/27 10:35:05 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -44,8 +44,8 @@ private:
    TString   fRemote;    // remote host to which we want to connect
    TSocket  *fSocket;    // connection to remote daemon
 
-   static const char   *fgUser;
-   static const char   *fgPasswd;
+   static char         *fgUser;
+   static char         *fgPasswd;
    static SecureAuth_t  fgSecAuthHook;
 
    Bool_t CheckNetrc(char *&user, char *&passwd);

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.1 2000/11/27 10:35:05 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -32,8 +32,8 @@
 
 R__EXTERN const char *kRootdErrStr[];
 
-const char  *TAuthenticate::fgUser;
-const char  *TAuthenticate::fgPasswd;
+char *TAuthenticate::fgUser;
+char *TAuthenticate::fgPasswd;
 SecureAuth_t TAuthenticate::fgSecAuthHook;
 
 
