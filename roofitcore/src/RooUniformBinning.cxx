@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUniformBinning.cc,v 1.1 2002/03/07 06:22:24 verkerke Exp $
+ *    File: $Id: RooUniformBinning.cc,v 1.2 2002/03/11 07:41:02 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -19,6 +19,7 @@ ClassImp(RooUniformBinning)
 
 RooUniformBinning::RooUniformBinning() 
 {  
+  _array = 0 ;
 }
 
 RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins) : _nbins(nBins), _array(0)
