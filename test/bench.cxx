@@ -533,9 +533,7 @@ int main(int, char**)
   cptot += cp2wMAPS;
   printf("2 map*     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wMAPS-rt1MAPS,cp2wMAPS-cp1MAPS,nbytes1MAPS,cx);
   timer.Start(kTRUE);
-#ifndef R__ALPHA
   STLhit_mapstar->ReadTree();
-#endif
   timer.Stop();
   Double_t rt2rMAPS = timer.RealTime();
   Double_t cp2rMAPS = timer.CpuTime();
@@ -550,9 +548,7 @@ int main(int, char**)
   cptot += cp3wMAPS;
   printf("4 map*     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wMAPS-rt1MAPS,cp3wMAPS-cp1MAPS,nbytes3MAPS,cx3MAPS);
   timer.Start(kTRUE);
-#ifndef R__ALPHA
   STLhit_mapstar->ReadTree();
-#endif
   timer.Stop();
   Double_t rt3rMAPS = timer.RealTime();
   Double_t cp3rMAPS = timer.CpuTime();
@@ -577,9 +573,7 @@ int main(int, char**)
   cptot += cp2wMMAPS;
   printf("2 multimap*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wMMAPS-rt1MMAPS,cp2wMMAPS-cp1MMAPS,nbytes1MMAPS,cx);
   timer.Start(kTRUE);
-#ifndef R__ALPHA
   STLhit_multimapstar->ReadTree();
-#endif
   timer.Stop();
   Double_t rt2rMMAPS = timer.RealTime();
   Double_t cp2rMMAPS = timer.CpuTime();
@@ -593,18 +587,13 @@ int main(int, char**)
   cptot += cp3wMMAPS;
   printf("4 multimap*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wMAPS-rt1MAPS,cp3wMAPS-cp1MAPS,nbytes3MAPS,cx3MAPS);
   timer.Start(kTRUE);
-#ifndef R__ALPHA
   STLhit_multimapstar->ReadTree();
-#endif
   timer.Stop();
   Double_t rt3rMMAPS = timer.RealTime();
   Double_t cp3rMMAPS = timer.CpuTime();
   cptot += cp3rMMAPS;
   printf("5 multimap* : RT=%6.2f s  Cpu=%6.2f s\n",rt3rMMAPS,cp3rMMAPS);
   delete STLhit_multimapstar;
-#ifdef R__ALPHA
-  printf("/n======> map and multimap do not work on alpha. test is disabled<===\n\n");
-#endif
   
   //testing TClonesArray of TObjHit deriving from THit
   timer.Start();
