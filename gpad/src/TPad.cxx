@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.42 2001/07/17 09:09:08 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.43 2001/08/07 07:05:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4335,7 +4335,7 @@ void TPad::UseCurrentStyle()
 
    TPaveText *stats  = (TPaveText*)FindObject("stats");
    if (stats) {
-      stats->SetFillColor(gStyle->GetStatStyle());
+      stats->SetFillStyle(gStyle->GetStatStyle());
       stats->SetFillColor(gStyle->GetStatColor());
       stats->SetTextFont(gStyle->GetStatFont());
       stats->SetTextColor(gStyle->GetStatTextColor());
