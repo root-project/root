@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.35 2004/08/21 07:05:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.36 2004/09/01 14:35:33 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -72,13 +72,13 @@ const TGGC   *TGCheckButton::fgDefaultGC = 0;
 const TGFont *TGRadioButton::fgDefaultFont = 0;
 const TGGC   *TGRadioButton::fgDefaultGC = 0;
 
+Window_t TGButton::fgReleaseBtn = 0;
 
-
-ClassImpQ(TGButton)
-ClassImpQ(TGTextButton)
-ClassImpQ(TGPictureButton)
-ClassImpQ(TGCheckButton)
-ClassImpQ(TGRadioButton)
+ClassImp(TGButton)
+ClassImp(TGTextButton)
+ClassImp(TGPictureButton)
+ClassImp(TGCheckButton)
+ClassImp(TGRadioButton)
 
 
 //______________________________________________________________________________
@@ -108,6 +108,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
                     kNone, kNone);
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -125,9 +126,11 @@ TGButton::~TGButton()
 }
 
 //______________________________________________________________________________
-void TGButton::SetState(EButtonState state)
+void TGButton::SetState(EButtonState state, Bool_t emit)
 {
    // Set button state.
+
+   Bool_t was = !IsDown();   // kTRUE if button was off
 
    if (state != fState) {
       switch (state) {
@@ -143,7 +146,8 @@ void TGButton::SetState(EButtonState state)
             break;
       }
       fState = state;
-      fClient->NeedRedraw(this);
+      DoRedraw();
+      if (emit) EmitSignals(was);
    }
 }
 
@@ -157,6 +161,7 @@ void TGButton::SetDown(Bool_t on)
 
    on ? SetState(kButtonDown) : SetState(kButtonUp);
 }
+
 //______________________________________________________________________________
 void TGButton::SetGroup(TGButtonGroup *group)
 {
@@ -165,13 +170,13 @@ void TGButton::SetGroup(TGButtonGroup *group)
    fGroup = group;
 }
 
+
 //______________________________________________________________________________
 Bool_t TGButton::HandleButton(Event_t *event)
 {
    // Handle mouse button event.
 
    Bool_t click = kFALSE;
-   Bool_t was = !IsDown();   // kTRUE if button was off
 
    if (fTip) fTip->Hide();
 
@@ -183,17 +188,28 @@ Bool_t TGButton::HandleButton(Event_t *event)
    // We don't need to check the button number as GrabButton will
    // only allow button1 events
    if (event->fType == kButtonPress) {
-      if (fState == kButtonEngaged) return kTRUE;
-      SetState(kButtonDown);
+      fgReleaseBtn = 0;
+
+      if (fState == kButtonEngaged) {
+         return kTRUE;
+      }
+      if (in) SetState(kButtonDown, kTRUE);
    } else { // ButtonRelease
-      if ((fState == kButtonEngaged) && in) {
+      if (fState == kButtonEngaged) {
+         //if (in) SetState(kButtonUp, kTRUE);
          click = kTRUE;
       } else {
          click = (fState == kButtonDown) && in;
          if (click && fStayDown) {
-           SetState(kButtonEngaged);
+            if (in) {
+               SetState(kButtonEngaged, kTRUE);
+               fgReleaseBtn = 0;
+            }
          } else {
-           SetState(kButtonUp);
+            if (in) {
+               SetState(kButtonUp, kTRUE);
+               fgReleaseBtn = fId;
+            }
          }
       }
    }
@@ -204,9 +220,6 @@ Bool_t TGButton::HandleButton(Event_t *event)
                            (Long_t) fUserData);
    }
 
-   if (in) {
-      EmitSignals(was);
-   }
    return kTRUE;
 }
 
@@ -215,7 +228,7 @@ void TGButton::EmitSignals(Bool_t was)
 {
    //
 
-   Bool_t now = !IsDown();          // kTRUE if button now is off
+   Bool_t now = !IsDown();       // kTRUE if button now is off
 
    // emit signals
    if (was && !now) {
@@ -241,7 +254,7 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
          fTip->Hide();
    }
 
-   if (fgDbw != event->fWindow) return kTRUE;
+   if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow)) return kTRUE;
 
    if (!(event->fState & (kButton1Mask | kButton2Mask | kButton3Mask)))
       return kTRUE;
@@ -249,9 +262,9 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
    if (fState == kButtonEngaged || fState == kButtonDisabled) return kTRUE;
 
    if (event->fType == kEnterNotify) {
-      SetState(kButtonDown);
+      SetState(kButtonDown, kTRUE); 
    } else {
-      SetState(kButtonUp);
+      SetState(kButtonUp, kTRUE);
    }
    return kTRUE;
 }
@@ -365,6 +378,7 @@ void TGTextButton::Init()
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
       }
    }
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -375,6 +389,9 @@ TGTextButton::~TGTextButton()
    if (fHKeycode) {
       const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
       main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
+      main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+      main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+      main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
    }
    if (fLabel) delete fLabel;
    if (fHasOwnFont) delete fClient->GetGCPool()->FindGC(fNormGC);
@@ -389,8 +406,12 @@ void TGTextButton::SetText(TGHotString *new_label)
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
    if (fLabel) {
-      if (fHKeycode)
+      if (fHKeycode) {
          main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+      }
       delete fLabel;
    }
 
@@ -454,6 +475,10 @@ void TGTextButton::DoRedraw()
       fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
    } else {
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
+   }
+
+   if (IsDown()) {
+      gSystem->Sleep(100);
    }
 }
 
@@ -597,6 +622,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -626,6 +652,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -648,6 +675,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -697,13 +725,10 @@ void TGPictureButton::DoRedraw()
 //______________________________________________________________________________
 TGCheckButton::TGCheckButton(const TGWindow *p, TGHotString *s, Int_t id,
                              GContext_t norm, FontStruct_t font, UInt_t option)
-   : TGButton(p, id, norm, option)
+   : TGTextButton(p, s, id, norm, font, option)
 {
    // Create a check button widget. The hotstring will be adopted and deleted
    // by the check button.
-
-   fLabel = s;
-   fFontStruct = font;
 
    Init();
 }
@@ -711,12 +736,9 @@ TGCheckButton::TGCheckButton(const TGWindow *p, TGHotString *s, Int_t id,
 //______________________________________________________________________________
 TGCheckButton::TGCheckButton(const TGWindow *p, const char *s, Int_t id,
                              GContext_t norm, FontStruct_t font, UInt_t option)
-   : TGButton(p, id, norm, option)
+   : TGTextButton(p, s, id, norm, font, option)
 {
    // Create a check button widget.
-
-   fLabel = new TGHotString(s);
-   fFontStruct = font;
 
    Init();
 }
@@ -724,13 +746,9 @@ TGCheckButton::TGCheckButton(const TGWindow *p, const char *s, Int_t id,
 //______________________________________________________________________________
 TGCheckButton::TGCheckButton(const TGWindow *p, const char *s, const char *cmd,
                              Int_t id, GContext_t norm, FontStruct_t font,
-                             UInt_t option) : TGButton(p, id, norm, option)
+                             UInt_t option) : TGTextButton(p, s, cmd, id, norm, font, option)
 {
    // Create a check button widget.
-
-   fLabel = new TGHotString(s);
-   fFontStruct = font;
-   fCommand = cmd;
 
    Init();
 }
@@ -760,6 +778,7 @@ void TGCheckButton::Init()
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
       }
    }
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -767,28 +786,24 @@ TGCheckButton::~TGCheckButton()
 {
    // Delete a check button.
 
-   if (fHKeycode) {
-      const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-      main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
-   }
-   if (fLabel) delete fLabel;
 }
 
 //______________________________________________________________________________
-void TGCheckButton::PSetState(EButtonState state)
+void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
 {
    // Set check button state.
 
    if (state != fState) {
       fState = state;
 
-      // button signals
-      if (fState == kButtonUp)   Released();            // emit Released
-      if (fState == kButtonDown) Pressed();             // emit Pressed
-      Clicked();                                        // emit Clicked
-      Toggled(fState == kButtonDown);                   // emit Toggled
-
-      fClient->NeedRedraw(this);
+      if (emit) {
+         // button signals
+         if (fState == kButtonUp)   Released();            // emit Released
+         if (fState == kButtonDown) Pressed();             // emit Pressed
+         Clicked();                                        // emit Clicked
+         Toggled(fState == kButtonDown);                   // emit Toggled
+      }
+      DoRedraw();
    }
 }
 
@@ -806,10 +821,12 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
    // We don't need to check the button number as GrabButton will
    // only allow button1 events
    if (event->fType == kButtonPress) {
-      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp);
+      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kTRUE);
+      fgReleaseBtn = 0;
    } else { // ButtonRelease
       click = (fState != fPrevState);
       fPrevState = fState;
+      fgReleaseBtn = fId;
    }
    if (click) {
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
@@ -833,7 +850,7 @@ Bool_t TGCheckButton::HandleCrossing(Event_t *event)
          fTip->Hide();
    }
 
-   if (fgDbw != event->fWindow) return kTRUE;
+   if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow)) return kTRUE;
 
    if (!(event->fState & (kButton1Mask | kButton2Mask | kButton3Mask)))
       return kTRUE;
@@ -841,9 +858,9 @@ Bool_t TGCheckButton::HandleCrossing(Event_t *event)
    if (fState == kButtonDisabled) return kTRUE;
 
    if (event->fType == kEnterNotify) {
-      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp);
+      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kTRUE);
    } else {
-      PSetState(fPrevState);
+      PSetState(fPrevState, kTRUE);
    }
    return kTRUE;
 }
@@ -868,7 +885,7 @@ Bool_t TGCheckButton::HandleKey(Event_t *event)
    // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
-      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp);
+      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kTRUE);
    } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) {
       click = (fState != fPrevState);
       fPrevState = fState;
@@ -955,13 +972,10 @@ const TGGC &TGCheckButton::GetDefaultGC()
 //______________________________________________________________________________
 TGRadioButton::TGRadioButton(const TGWindow *p, TGHotString *s, Int_t id,
                              GContext_t norm, FontStruct_t font, UInt_t option)
-   : TGButton(p, id, norm, option)
+   : TGTextButton(p, s, id, norm, font, option)
 {
    // Create a radio button widget. The hotstring will be adopted and deleted
    // by the radio button.
-
-   fLabel = s;
-   fFontStruct = font;
 
    Init();
 }
@@ -969,12 +983,9 @@ TGRadioButton::TGRadioButton(const TGWindow *p, TGHotString *s, Int_t id,
 //______________________________________________________________________________
 TGRadioButton::TGRadioButton(const TGWindow *p, const char *s, Int_t id,
                              GContext_t norm, FontStruct_t font, UInt_t option)
-   : TGButton(p, id, norm, option)
+   : TGTextButton(p, s, id, norm, font, option)
 {
    // Create a radio button widget.
-
-   fLabel = new TGHotString(s);
-   fFontStruct = font;
 
    Init();
 }
@@ -982,13 +993,9 @@ TGRadioButton::TGRadioButton(const TGWindow *p, const char *s, Int_t id,
 TGRadioButton::TGRadioButton(const TGWindow *p, const char *s, const char *cmd,
                              Int_t id, GContext_t norm,
                              FontStruct_t font, UInt_t option)
-    : TGButton(p, id, norm, option)
+    : TGTextButton(p, s, cmd, id, norm, font, option)
 {
    // Create a radio button widget.
-
-   fLabel = new TGHotString(s);
-   fFontStruct = font;
-   fCommand = cmd;
 
    Init();
 }
@@ -1028,6 +1035,7 @@ void TGRadioButton::Init()
    if (fParent->IsA()->InheritsFrom(TGButtonGroup::Class())) {
       ((TGButtonGroup*)fParent)->SetRadioButtonExclusive(kTRUE);
    }
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -1035,30 +1043,26 @@ TGRadioButton::~TGRadioButton()
 {
    // Delete a radio button.
 
-   if (fHKeycode) {
-      const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-      main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
-   }
    if (fOn)  fClient->FreePicture(fOn);
    if (fOff) fClient->FreePicture(fOff);
-   if (fLabel) delete fLabel;
 }
 
 //______________________________________________________________________________
-void TGRadioButton::PSetState(EButtonState state)
+void TGRadioButton::PSetState(EButtonState state, Bool_t emit)
 {
    // Set radio button state.
 
    if (state != fState) {
       fPrevState = fState = state;
 
-      // button signals
-      if (fState == kButtonUp)   Released();          // emit Released
-      if (fState == kButtonDown) Pressed();           // emit Pressed
-      Clicked();                                      // emit Clicked
-      Toggled(fState == kButtonDown);                 // emit Toggled
-
-      fClient->NeedRedraw(this);
+      if (emit) {
+         // button signals
+         if (fState == kButtonUp)   Released();          // emit Released
+         if (fState == kButtonDown) Pressed();           // emit Pressed
+         Clicked();                                      // emit Clicked
+         Toggled(fState == kButtonDown);                 // emit Toggled
+      }
+      DoRedraw();
    }
 }
 
@@ -1074,13 +1078,15 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
    // We don't need to check the button number as GrabButton will
    // only allow button1 events
    if (event->fType == kButtonPress) {
-      PSetState(kButtonDown);
+      fgReleaseBtn = 0;
+      PSetState(kButtonDown, kTRUE);
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                            fWidgetId, (Long_t) fUserData);
    } else { // ButtonRelease
       fPrevState = fState;
+      fgReleaseBtn = fId;
    }
 
    return kTRUE;
@@ -1098,7 +1104,7 @@ Bool_t TGRadioButton::HandleCrossing(Event_t *event)
          fTip->Hide();
    }
 
-   if (fgDbw != event->fWindow) return kTRUE;
+   if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow)) return kTRUE;
 
    if (!(event->fState & (kButton1Mask | kButton2Mask | kButton3Mask)))
       return kTRUE;
@@ -1106,9 +1112,9 @@ Bool_t TGRadioButton::HandleCrossing(Event_t *event)
    if (fState == kButtonDisabled) return kTRUE;
 
    if (event->fType == kEnterNotify) {
-      PSetState(kButtonDown);
+      PSetState(kButtonDown, kTRUE);
    } else {
-      PSetState(fPrevState);
+      PSetState(fPrevState, kTRUE);
    }
    return kTRUE;
 }
@@ -1131,7 +1137,7 @@ Bool_t TGRadioButton::HandleKey(Event_t *event)
    // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
-      PSetState(kButtonDown);
+      PSetState(kButtonDown, kTRUE);
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),

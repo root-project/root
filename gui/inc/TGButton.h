@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.22 2004/05/03 12:56:16 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.23 2004/06/10 14:25:39 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -89,6 +89,8 @@ protected:
    static const TGGC *fgDefaultGC;
    static const TGGC *fgHibckgndGC;
 
+   static Window_t fgReleaseBtn; // the last released button 
+
 public:
    static const TGGC   &GetDefaultGC();
    static const TGGC   &GetHibckgndGC();
@@ -103,7 +105,7 @@ public:
    virtual void        *GetUserData() const { return fUserData; }
    virtual void         SetToolTipText(const char *text, Long_t delayms = 1000);
    virtual TGToolTip   *GetToolTip() const { return fTip; }
-   virtual void         SetState(EButtonState state);
+   virtual void         SetState(EButtonState state, Bool_t emit = kFALSE);
    virtual EButtonState GetState() const { return fState; }
    virtual void         AllowStayDown(Bool_t a) { fStayDown = a; }
    TGButtonGroup       *GetGroup() const { return fGroup; }
@@ -203,16 +205,13 @@ public:
 };
 
 
-class TGCheckButton : public TGButton {
+class TGCheckButton : public TGTextButton {
 
 protected:
-   TGHotString    *fLabel;         // check button label
-   Int_t           fHKeycode;      // hotkey
-   FontStruct_t    fFontStruct;    // font to draw label
    EButtonState    fPrevState;     // previous check button state
 
    void Init();
-   void PSetState(EButtonState state);
+   void PSetState(EButtonState state, Bool_t emit);
    virtual void DoRedraw();
 
    static const TGFont *fgDefaultFont;
@@ -243,25 +242,22 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t IsToggleButton() const { return kTRUE; }
-   virtual void   SetState(EButtonState state) { PSetState(fPrevState = state); }
+   virtual void   SetState(EButtonState state, Bool_t emit = kFALSE) { PSetState(fPrevState = state, emit); }
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGCheckButton,0)  // A check button widget
 };
 
 
-class TGRadioButton : public TGButton {
+class TGRadioButton : public TGTextButton {
 
 protected:
-   TGHotString       *fLabel;       // radio button label
-   Int_t              fHKeycode;    // hotkey
    EButtonState       fPrevState;   // radio button state
    const TGPicture   *fOn;          // button ON picture
    const TGPicture   *fOff;         // button OFF picture
-   FontStruct_t       fFontStruct;  // font to draw label
 
    void Init();
-   void PSetState(EButtonState state);
+   void PSetState(EButtonState state, Bool_t emit);
    virtual void DoRedraw();
 
    static const TGFont *fgDefaultFont;
@@ -291,7 +287,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
-   virtual void SetState(EButtonState state) { PSetState(fPrevState = state); }
+   virtual void SetState(EButtonState state, Bool_t emit = kFALSE) { PSetState(fPrevState = state, emit); }
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
