@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.10 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.11 2003/10/20 08:46:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -51,9 +51,9 @@ public:
    virtual Bool_t        Contains(Double_t *point) const;
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0) const;
+                                   Double_t step=kBig, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0) const;
+                                   Double_t step=kBig, Double_t *safe=0) const;
    Double_t              DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_t c1, Double_t s1,
                                     Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);

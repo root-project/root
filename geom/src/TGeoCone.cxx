@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.23 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.24 2003/11/28 13:52:35 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -240,10 +240,15 @@ Double_t TGeoCone::DistToOutS(Double_t *point, Double_t *dir, Double_t dz,
    // compute distance to surface 
    // Do Z
    Double_t sz = kBig;
-   if (dir[2]>0) 
+   if (dir[2]>0) {
       sz = (dz-point[2])/dir[2];
-   else
-      if (dir[2]<0) sz = -(dz+point[2])/dir[2];
+      if (sz<=0) return 0.;
+   } else {
+      if (dir[2]<0) {
+         sz = -(dz+point[2])/dir[2];
+         if (sz<=0) return 0.;
+      }
+   }      
    // Do Rmin
    Double_t sr1=kBig, sr2=kBig;
    Double_t b,delta, znew;
@@ -1179,9 +1184,12 @@ Double_t TGeoConeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t dz, Do
    Double_t sz = kBig;
    if (dir[2]>0) {
       sz = (dz-point[2])/dir[2];
+      if (sz<=0) return 0.;
    } else {
-      if (dir[2]<0) 
+      if (dir[2]<0) {
          sz = -(dz+point[2])/dir[2];
+         if (sz<=0) return 0.;
+      }   
    }
    // check conical surfaces
    Double_t sr1 = TGeoConeSeg::DistToCons(point, dir, rmin1, -dz, rmin2, dz, phi1, phi2);
@@ -1214,9 +1222,12 @@ Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doub
    Double_t sz = kBig;
    if (dir[2]>0) {
       sz = (fDz-point[2])/dir[2];
+      if (sz<=0) return 0.;
    } else {
-      if (dir[2]<0) 
+      if (dir[2]<0) {
          sz = -(fDz+point[2])/dir[2];
+         if (sz<=0) return 0.;
+      }   
    }
    // check conical surfaces
    Double_t sr1 = TGeoConeSeg::DistToCons(point, dir, fRmin1, -fDz, fRmin2, fDz, fPhi1, fPhi2);

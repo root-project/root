@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.27 2003/10/20 08:46:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.28 2003/11/28 13:52:35 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -237,10 +237,15 @@ Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Dou
    // compute distance to surface 
    // Do Z
    Double_t sz = kBig;
-   if (dir[2]>1E-20) 
+   if (dir[2]>0) {
       sz = (dz-point[2])/dir[2];
-   else
-      if (dir[2]<-1E-20) sz = -(dz+point[2])/dir[2];
+      if (sz<=0.) return 0.; 
+   } else {
+      if (dir[2]<0) {
+         sz = -(dz+point[2])/dir[2];
+         if (sz<=0.) return 0.;
+      }
+   }      
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
    if (TMath::Abs(nsq)<1E-10) return sz;
@@ -282,10 +287,15 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t rsq=point[0]*point[0]+point[1]*point[1];
    // Do Z
    Double_t sz = kBig;
-   if (dir[2]>1E-20) 
+   if (dir[2]>0) { 
       sz = (fDz-point[2])/dir[2];
-   else
-      if (dir[2]<-1E-20) sz = -(fDz+point[2])/dir[2];
+      if (sz<=0.) return 0.;      
+   } else {
+      if (dir[2]<0) {
+         sz = -(fDz+point[2])/dir[2];
+         if (sz<=0.) return 0.; 
+      }
+   }           
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
    if (TMath::Abs(nsq)<1E-10) return sz;
@@ -306,8 +316,7 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       sr=-b+d;
       if (sr>0) return TMath::Min(sz,sr);
    }
-   Error("DistToOutS","cannot exit tube !");
-   return kBig;      
+   return 0.;      
 }
 
 //_____________________________________________________________________________
@@ -955,10 +964,15 @@ Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, 
    // compute distance to surface 
    // Do Z
    Double_t sz = kBig;
-   if (dir[2]>1E-20) 
+   if (dir[2]>0) {
       sz = (dz-point[2])/dir[2];
-   else
-      if (dir[2]<-1E-20) sz = -(dz+point[2])/dir[2];
+      if (sz<=0) return 0.;
+   } else {
+      if (dir[2]<0) {
+         sz = -(dz+point[2])/dir[2];
+         if (sz<=0) return 0.;
+      }
+   }      
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];  
    // track parralel to Z

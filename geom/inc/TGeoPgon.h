@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.10 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.11 2003/11/28 13:52:35 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -40,7 +40,9 @@ protected:
    Double_t              Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_t &b) const;
    Double_t              Rproj(Double_t z,Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const; 
    Bool_t                SliceCrossing(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
+   Bool_t                SliceCrossingIn(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
    Bool_t                SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
+   Bool_t                SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
 
 public:
    // constructors
@@ -55,11 +57,10 @@ public:
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax);
-   Double_t              DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect) const;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0) const;
+                                   Double_t step=kBig, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0) const;
+                                   Double_t step=kBig, Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

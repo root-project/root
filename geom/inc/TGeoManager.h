@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.39 2003/10/20 08:46:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.40 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -290,6 +290,7 @@ public:
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    Double_t              *FindNormal(Bool_t forward=kTRUE);
+   Double_t              *FindNormalFast();
    TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
    TGeoNode              *InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz);
    Double_t               Safety(Bool_t inside=kFALSE);

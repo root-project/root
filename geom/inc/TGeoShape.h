@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.16 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.17 2003/11/28 13:52:35 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -87,9 +87,9 @@ public:
    virtual Bool_t        CouldBeCrossed(Double_t *point, Double_t *dir) const = 0;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py) = 0;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0) const = 0;
+                                   Double_t step=kBig, Double_t *safe=0) const = 0;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0) const = 0;
+                                   Double_t step=kBig, Double_t *safe=0) const = 0;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step)   = 0; 
    virtual const char   *GetAxisName(Int_t iaxis) const = 0;
