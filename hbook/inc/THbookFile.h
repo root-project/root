@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.3 2002/02/20 16:57:30 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.4 2002/04/19 07:39:30 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -67,6 +67,7 @@ public:
    void              InitLeaves(Int_t id, Int_t var, TTreeFormula *formula);
    Bool_t            IsFolder() const { return kTRUE; }
    virtual void      ls(const char *path="") const;
+   virtual void      SetBranchAddress(Int_t id, const char *bname, void *add);
 
    ClassDef(THbookFile,1)  //ROOT interface to Hbook/PAW files
 };

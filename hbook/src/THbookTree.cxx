@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.2 2002/02/20 16:57:31 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.3 2002/03/26 07:04:58 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -59,6 +59,7 @@ THbookTree::~THbookTree()
 //______________________________________________________________________________
 Int_t THbookTree::GetEntry(Int_t entry, Int_t getall)
 {
+   fReadEntry = entry;
    return fFile->GetEntry(entry,fID,fType,GetX());
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.7 2002/02/21 09:51:24 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.8 2002/04/19 07:39:31 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -528,6 +528,17 @@ void THbookFile::InitLeaves(Int_t id, Int_t var, TTreeFormula *formula)
 
 
 //______________________________________________________________________________
+void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
+{
+//  
+#ifndef WIN32
+  hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0,strlen(bname),4);
+#else
+  hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0);
+#endif
+}
+
+//______________________________________________________________________________
 TFile *THbookFile::Convert2root(const char *rootname, Int_t lrecl, Option_t *option)
 {
 // Convert this Hbook file to a Root file with name rootname.
@@ -626,6 +637,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0);
 #endif
 
+  UInt_t varNumber = 0;
   Int_t golower  = 1;
   for(i=0; i<nvar;i++) {
      memset(name,' ',sizeof(name));
@@ -672,6 +684,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
      else            ischar = 0;
 
      if (ischar != oldischar || strcmp(oldblock,block) != 0) {
+        varNumber = 0;
         strcpy(oldblock,block);
         oldischar = ischar;
         Long_t add= (Long_t)&bigbuf[bufpos];
@@ -688,7 +701,9 @@ TObject *THbookFile::ConvertCWN(Int_t id)
      THbookBranch *branch = new THbookBranch(name,(void*)&bigbuf[bufpos],fullname,bufsize);
      tree->GetListOfBranches()->Add(branch);
      branch->SetBlockName(block);
-
+     branch->SetUniqueID(varNumber);
+     varNumber++;
+     
      //NB: the information about isachar should be saved in the branch
      // to be done
      boolflag[i] = -10;
