@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.13 2002/12/14 15:14:33 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.15 2003/02/11 12:29:07 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -3090,7 +3090,7 @@ void TGWin32::QueryPointer(Window_t id, Window_t & rootw,
    rootw = (Window_t) fThreadP.pRet;
    childw = (Window_t) fThreadP.pRet1;
    mask = 0L;
-   MapEventMask(mask, fThreadP.uiRet, kFALSE);
+   MapModifierState(mask, fThreadP.uiRet, kFALSE);
    LeaveCriticalSection(flpCriticalSection);
 }
 

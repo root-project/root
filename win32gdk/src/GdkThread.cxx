@@ -861,9 +861,10 @@ void TGWin32::GdkThread( )
                 {
                 POINT mousePt, sPt, currPt;
                 HWND chw, window;
-                UInt_t ev_mask = 0;
+                UInt_t mask = 0;
+                BYTE kbd[256];
 
-                window = (HWND) GDK_DRAWABLE_XID((GdkWindow *) fThreadP.Drawable);
+                window = (HWND) GDK_DRAWABLE_XID((GdkWindow *)fThreadP.Drawable);
                 fThreadP.pRet = GDK_ROOT_PARENT();
                 GetCursorPos(&currPt);
                 chw = ChildWindowFromPoint(window, currPt);
@@ -876,9 +877,24 @@ void TGWin32::GdkThread( )
                 fThreadP.x1 = sPt.x;
                 fThreadP.y1 = sPt.y;
                 fThreadP.pRet1 = gdk_xid_table_lookup(chw);
-                if (fThreadP.pRet1)
-                    fThreadP.uiRet = (UInt_t) gdk_window_get_events((GdkWindow *) fThreadP.pRet1);
-                }
+                GetKeyboardState (kbd);
+                mask = 0;
+                if (kbd[VK_SHIFT] & 0x80)
+                        mask |= GDK_SHIFT_MASK;
+                if (kbd[VK_CAPITAL] & 0x80)
+                        mask |= GDK_LOCK_MASK;
+                if (kbd[VK_CONTROL] & 0x80)
+                        mask |= GDK_CONTROL_MASK;
+                if (kbd[VK_MENU] & 0x80)
+                        mask |= GDK_MOD1_MASK;
+                if (kbd[VK_LBUTTON] & 0x80)
+                        mask |= GDK_BUTTON1_MASK;
+                if (kbd[VK_MBUTTON] & 0x80)
+                        mask |= GDK_BUTTON2_MASK;
+                if (kbd[VK_RBUTTON] & 0x80)
+                        mask |= GDK_BUTTON3_MASK;
+                fThreadP.uiRet = mask;
+                }                
                 break;
 
             case WIN32_GDK_FONT_FULLNAME_GET:
