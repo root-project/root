@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.77 2004/10/29 16:07:32 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.78 2005/02/28 17:28:11 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -104,7 +104,7 @@
 #   endif
 #endif
 
-#if defined(__sun) && !defined(linux)
+#if defined(__sun) && !(defined(linux) || defined(__FCC_VERSION))
 #   ifdef __SVR4
 #      define R__SOLARIS
 #      define R__SEEK64
@@ -131,6 +131,16 @@
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__SUNGCC3
 #   endif
+#endif
+
+#if defined(__FCC_VERSION)    /* Solaris with Fujitsu compiler */
+#   define R__SOLARIS
+#   define R__SEEK64
+#   define ANSICPP
+#   define R__UNIX
+#   define NEED_STRING
+#   define NEED_SIGJMP
+#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #endif
 
 #if defined(__sgi) && !defined(linux)
