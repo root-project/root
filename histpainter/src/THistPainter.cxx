@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.170 2004/04/06 21:36:47 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.171 2004/04/15 16:41:23 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -573,7 +573,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    for (Int_t i=0;i<nch;i++) chopt[i] = toupper(chopt[i]);
    if (fH->GetDimension() > 1) Hoption.Scat = 1;
    if (!nch) Hoption.Hist = 1;
-   if (fH->GetSumw2N()) Hoption.Error = 1;
    if (fFunctions->First()) Hoption.Func = 2;
    if (fH->GetSumw2N()) Hoption.Error = 2;
 
