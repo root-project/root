@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.22 2003/08/23 00:08:13 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.23 2003/12/27 16:13:48 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -332,6 +332,14 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
       fPointValue = 0;
    }
    fValid  = Int_t(0.6+gRandom->Rndm(1));
+}
+
+//______________________________________________________________________________
+void Track::Clear(Option_t * /*option*/)
+{
+   fTriggerBits.Clear(); 
+   delete [] fPointValue; 
+   fPointValue=0; 
 }
 
 //______________________________________________________________________________
