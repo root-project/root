@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.47 2004/04/20 15:17:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.48 2004/04/20 15:33:38 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1570,7 +1570,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
          sscanf(CmdInfo, "%s %d %s %s", cd1, &id3, pipe, dum);
          snprintf(SecName, kMAXPATHLEN, "%d -1 0 %s %d %s %d",
                   -gSystem->GetPid(), pipe,
-                 strlen(User), User.Data(), fgClientProtocol);
+                 (int)strlen(User), User.Data(), fgClientProtocol);
          newsock->Send(SecName, kROOTD_SSH);
          if (level > 1) {
             // Improved diagnostics

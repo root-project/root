@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.63 2004/04/20 15:21:50 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.64 2004/04/20 21:32:02 brun Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -236,33 +236,6 @@ static int gMaster               =-1;
 
 using namespace ROOT;
 
-//--- Machine specific routines ------------------------------------------------
-
-#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) || \
-    defined(cygwingcc)
-static int setresgid(gid_t r, gid_t e, gid_t)
-{
-   if (setgid(r) == -1)
-      return -1;
-   return setegid(e);
-}
-
-static int setresuid(uid_t r, uid_t e, uid_t)
-{
-   if (setuid(r) == -1)
-      return -1;
-   return seteuid(e);
-}
-#else
-#if defined(linux) && !defined(HAS_SETRESUID)
-extern "C" {
-   int setresgid(gid_t r, gid_t e, gid_t s);
-   int setresuid(uid_t r, uid_t e, uid_t s);
-}
-#endif
-#endif
-
-//
 //--- Error handlers -----------------------------------------------------------
 
 //______________________________________________________________________________
@@ -358,7 +331,7 @@ const char *RerouteUser()
          //    user <name> on <node>
          //
          if (nword >= 4 && strcmp(word[0], "user") == 0 &&
-             strcmp(word[1], gUser.c_str()) == 0 && 
+             strcmp(word[1], gUser.c_str()) == 0 &&
              strcmp(word[2], "on") == 0) {
             // user <name> on <node>
             strcpy(user_on_node, word[3]);
@@ -418,7 +391,7 @@ void ProofdExec()
 
    // Remote Host
    NetGetRemoteHost(gOpenHost);
-   
+
    // Socket descriptor
    int SockFd = NetGetSockFd();
 
@@ -545,7 +518,7 @@ void ProofdExec()
 #   else
    if (getenv("LD_LIBRARY_PATH")) {
       ldpath = new char[32+gConfDir.length()+strlen(getenv("LD_LIBRARY_PATH"))];
-      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib:%s", 
+      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib:%s",
                       gConfDir.c_str(), getenv("LD_LIBRARY_PATH"));
    } else {
       ldpath = new char[32+gConfDir.length()];
@@ -891,7 +864,7 @@ int main(int argc, char **argv)
       // Also initialize the network connection - create the socket
       // and bind our well-know address to it.
 
-      if (!foregroundflag) 
+      if (!foregroundflag)
          DaemonStart(1, 0, gService);
 
       NetInit(gService, port1, port2, tcpwindowsize);

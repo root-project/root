@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.85 2004/04/20 15:21:50 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.86 2004/04/20 21:32:02 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -343,33 +343,6 @@ static int gReadOnly             = 0;
 
 using namespace ROOT;
 
-//--- Machine specific routines ------------------------------------------------
-
-#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) || \
-    defined(cygwingcc)
-static int setresgid(gid_t r, gid_t e, gid_t)
-{
-   if (setgid(r) == -1)
-      return -1;
-   return setegid(e);
-}
-
-static int setresuid(uid_t r, uid_t e, uid_t)
-{
-   if (setuid(r) == -1)
-      return -1;
-   return seteuid(e);
-}
-#else
-#if defined(linux) && !defined(HAS_SETRESUID)
-extern "C" {
-   int setresgid(gid_t r, gid_t e, gid_t s);
-   int setresuid(uid_t r, uid_t e, uid_t s);
-}
-#endif
-#endif
-
-
 //--- Error handlers -----------------------------------------------------------
 
 //______________________________________________________________________________
@@ -687,9 +660,9 @@ again:
       unsigned long ino = inode;
       char *tmsg = msg;
       int lmsg = strlen(gFile) + gUser.length() + strlen(smode) + 40;
-      if (lmsg > kMAXPATHLEN) 
-         tmsg = new char[lmsg]; 
-      sprintf(tmsg, "%s %lu %lu %s %s %d\n", 
+      if (lmsg > kMAXPATHLEN)
+         tmsg = new char[lmsg];
+      sprintf(tmsg, "%s %lu %lu %s %s %d\n",
                    gFile, dev, ino, smode, gUser.c_str(), (int) getpid());
       write(fid, tmsg, strlen(tmsg));
       if (tmsg && tmsg != msg)
@@ -776,7 +749,7 @@ again:
                        msg, dev, ino, gmode, user, pid);
          }
          if (stale || (!force && mypid == pid) ||
-            (force && device == dev && inode == ino && 
+            (force && device == dev && inode == ino &&
              !strcmp(gUser.c_str(), user))) {
             if (n >= flast) {
                siz = int(s - fbuf);
@@ -855,7 +828,7 @@ void RootdClose()
 
    if (gDebug > 0)
       ErrorInfo("RootdClose: file %s closed, rd=%g, wr=%g, rx=%g, tx=%g",
-                gFile, gBytesRead, gBytesWritten, 
+                gFile, gBytesRead, gBytesWritten,
                 NetGetBytesRecv(), NetGetBytesSent());
    else
       ErrorInfo("Rootd: file %s closed, rd=%g, wr=%g, rx=%g, tx=%g", gFile,
@@ -1938,7 +1911,7 @@ int main(int argc, char **argv)
    // Init error handlers
    RpdSetErrorHandler(Err, ErrSys, ErrFatal);
 
-   // function for dealing with SIGPIPE signals 
+   // function for dealing with SIGPIPE signals
    // (used by NetSetOptions() in rpdutils/net.cxx)
    NetSetSigPipeHook(SigPipe);
 
@@ -2227,7 +2200,7 @@ int main(int argc, char **argv)
       // and bind our well-know address to it.
 
       int fdkeep = NetInit(gService, port1, port2, tcpwindowsize);
-      if (!foregroundflag) 
+      if (!foregroundflag)
          DaemonStart(1, fdkeep, gService);
    }
 
