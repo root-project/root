@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.2 2004/01/27 06:36:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -56,8 +56,10 @@ friend class TMatrixF;
 friend class TMatrixFSym;
 friend class TVectorF;
 
-private:
+protected:
   virtual void Operation(Float_t &element) const = 0;
+
+private:
   void operator=(const TElementActionF &) { }
 };
 
@@ -82,9 +84,9 @@ friend class TVectorF;
 protected:
   mutable Int_t fI; // i position of element being passed to Operation()
   mutable Int_t fJ; // j position of element being passed to Operation()
+  virtual void Operation(Float_t &element) const = 0;
 
 private:
-  virtual void Operation(Float_t &element) const = 0;
   void operator=(const TElementPosActionF &) { }
 };
 

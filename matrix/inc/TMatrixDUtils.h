@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.18 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.19 2004/01/27 06:36:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -56,8 +56,10 @@ friend class TMatrixD;
 friend class TMatrixDSym;
 friend class TVectorD;
 
-private:
+protected:
   virtual void Operation(Double_t &element) const = 0;
+
+private:
   void operator=(const TElementActionD &) { }
 };
 
@@ -82,9 +84,9 @@ friend class TVectorD;
 protected:
   mutable Int_t fI; // i position of element being passed to Operation()
   mutable Int_t fJ; // j position of element being passed to Operation()
+  virtual void Operation(Double_t &element) const = 0;
 
 private:
-  virtual void Operation(Double_t &element) const = 0;
   void operator=(const TElementPosActionD &) { }
 };
 
