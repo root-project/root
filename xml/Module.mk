@@ -11,7 +11,7 @@ XMLDIR       := $(MODDIR)
 XMLDIRS      := $(XMLDIR)/src
 XMLDIRI      := $(XMLDIR)/inc
 
-##### libRXML #####
+##### libXMLIO #####
 XMLL         := $(MODDIRI)/LinkDef.h
 XMLDS        := $(MODDIRS)/G__XML.cxx
 XMLDO        := $(XMLDS:.cxx=.o)
@@ -23,7 +23,7 @@ XMLO         := $(XMLS:.cxx=.o)
 
 XMLDEP       := $(XMLO:.o=.d) $(XMLDO:.o=.d)
 
-XMLLIB       := $(LPATH)/libRXML.$(SOEXT)
+XMLLIB       := $(LPATH)/libXMLIO.$(SOEXT)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(XMLH))
@@ -38,8 +38,7 @@ include/%.h:    $(XMLDIRI)/%.h
 
 $(XMLLIB):      $(XMLO) $(XMLDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRXML.$(SOEXT) $@ "$(XMLO) $(XMLDO)"
-#		   "$(XMLLIBDIR) $(XMLCLILIB)"
+		   "$(SOFLAGS)" libXMLIO.$(SOEXT) $@ "$(XMLO) $(XMLDO)"
 
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
@@ -65,6 +64,3 @@ distclean-xml:  clean-xml
 
 distclean::     distclean-xml
 
-##### extra rules ######
-#$(XMLO): %.o: %.cxx
-#	$(CXX) $(OPT) $(CXXFLAGS) -I$(XMLINCDIR) -o $@ -c $<
