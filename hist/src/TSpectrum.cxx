@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -625,6 +625,7 @@ Int_t TSpectrum::Search1(float *spectrum,int size,double sigma)
        s = 0;
        f = 0;
       for(l=lmin;l<=lmax;l++) {
+         if(i+l-PEAK_WINDOW/2 >= size) break;
          a  = spectrum[i+l-PEAK_WINDOW/2];
          s += a*filter[l];
          f += a*filter[l]*filter[l];
