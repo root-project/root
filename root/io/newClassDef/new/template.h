@@ -1,4 +1,5 @@
 #include "TObject.h"
+#include "TNamed.h"
 #include "vector"
 
 template <class T> class MyTemplate : public TObject {
@@ -58,6 +59,40 @@ class MyPairTemplate<int, double> : public TObject {
 
   typedef MyPairTemplate<int, double> type;
   ClassDef(type,2)
+};     
+
+
+// le tableau abstrait de base
+class RtbVArray : public TNamed
+{ 
+  //       ...     
+ private:     
+  ClassDef(RtbVArray,1);
+} ;
+
+
+// la variante template pour eviter les casts a l'utilisateur
+template <class T>
+class RtbVTArray : public RtbVArray
+{ 
+  //...
+ private:      
+  ClassDef(RtbVTArray,1);
+} ;
+
+// une implementation concrete
+template <class T>
+class RtbCArray : public RtbVTArray<T>
+{ 
+  // ...
+ private:      
+ ClassDef(RtbCArray,1);
+} ;
+
+// une classe etrangere
+class RtbLorentzVector
+{ 
+  //...     
 };
 
 void template_driver();
