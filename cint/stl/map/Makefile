@@ -17,10 +17,12 @@ mapTest: dict.o testing.o
 stringMap.log :stringMap.cxx
 	$(CMDECHO) root.exe -q -b -l stringMap.cxx  > stringMap.log
 
+stringMap.log: stringMapLoad_cxx.$(DllSuf)
+
 stringMapTest: stringMap.log
 	$(CMDECHO) diff -b stringMap.log stringMap.ref
 
-badstringMap.log : badstringMap.cxx MyClass_C.$(DllSuf)
+badstringMap.log : stringMapLoad_cxx.$(DllSuf) badstringMap.cxx MyClass_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l badstringMap.cxx  > badstringMap.log
 
 badstringMapTest: badstringMap.log
