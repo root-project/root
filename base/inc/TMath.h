@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.18 2002/07/02 06:43:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.19 2002/07/09 15:57:02 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -321,6 +321,10 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
        extern "C" { int finite(double); }
+#   endif
+#   if defined(R__GLIBC) && defined(__STRICT_ANSI__)
+#      define finite __finite
+#      define isnan  __isnan
 #   endif
 #else
 // don't want to include complete <math.h>
