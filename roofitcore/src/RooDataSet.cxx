@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.14 2001/04/14 00:43:19 davidk Exp $
+ *    File: $Id: RooDataSet.cc,v 1.15 2001/04/18 20:38:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -225,14 +225,14 @@ void RooDataSet::add(const RooArgSet& data) {
   Fill();
 }
 
-RooPlot *RooDataSet::plot(RooAbsReal& var, const char* cuts, const char* opts) const {
+RooPlot *RooDataSet::plot(const RooAbsReal& var, const char* cuts, Option_t* drawOptions) const {
   // Create an empty frame for the specified variable and add to it a histogram of
-  // its distribution calculated with our dataset.
+  // the variable's distribution calculated with our dataset.
 
-  return plot(new RooPlot(var), cuts, opts);
+  return plot(new RooPlot(var), cuts, drawOptions);
 }
 
-RooPlot *RooDataSet::plot(RooPlot *frame, const char* cuts, const char* opts) const {
+RooPlot *RooDataSet::plot(RooPlot *frame, const char* cuts, Option_t* drawOptions) const {
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
     return 0;
@@ -244,18 +244,23 @@ RooPlot *RooDataSet::plot(RooPlot *frame, const char* cuts, const char* opts) co
     return 0;
   }
   // create a temporary histogram of this variable
-  TH1F *hist= Plot(*var, cuts);
-  // add it to our plot
-  frame->addHistogram(hist,opts);
+  TH1F *hist= createHistogram(*var, cuts, "plot");
+  // add it to our plot (converted to a RooHist object with Poisson errors)
+  frame->addHistogram(hist,drawOptions);
   // cleanup
   delete hist;
 
   return frame;  
 }
 
-TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts) const
+TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const char *name) const
 {
-  // Plot distribution given variable for this data set 
+  // Create a TH1F histogram of the distribution of the specified variable
+  // using this dataset. Apply any cuts to select which events are used.
+  // The variable being plotted can either be contained directly in this
+  // dataset, or else be a function of the variables in this dataset.
+  // The histogram will be created using RooAbsReal::createHistogram() with
+  // the name provided (with our dataset name prepended).
 
   // Create selection formula if selection cuts are specified
   RooFormula* select(0) ;
@@ -285,7 +290,10 @@ TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts) const
     plotVar->redirectServers(const_cast<RooArgSet&>(_vars)) ;
   }
 
-  TH1F *histo= plotVar->createHistogram("dataset", "Events");
+  TString histName(name);
+  histName.Prepend("_");
+  histName.Prepend(fName);
+  TH1F *histo= plotVar->createHistogram(histName.Data(), "Events");
 
   // Dump contents   
   Int_t nevent= (Int_t)GetEntries();
@@ -548,7 +556,7 @@ RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,
 
 	// Read single line
 	Bool_t readError = data->_vars.readFromStream(file,kTRUE,verbose) ;
-	data->_vars.writeToStream(cout,kTRUE) ;
+	//data->_vars.writeToStream(cout,kTRUE) ;
 
 	// Stop at end of file or on read error
 	if(file.eof()) break ;	
@@ -582,8 +590,6 @@ RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,
 	origIndexCat->defineType(type->GetName(),type->getVal()) ;
       }
   }
-  
-
   cout << "RooDataSet::read: read " << data->GetEntries()
        << " events (ignored " << outOfRange << " out of range events)" << endl;
   return data;

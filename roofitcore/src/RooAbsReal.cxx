@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.7 2001/04/11 23:25:26 davidk Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.8 2001/04/18 20:38:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -197,47 +197,49 @@ Bool_t RooAbsReal::isValid(Double_t value) const {
 
 
 
-TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
-				  Int_t bins) {
-  // Create a 1D-histogram with appropriate scale and labels for this variable
+TH1F *RooAbsReal::createHistogram(const char *label, const char *axis, Int_t bins) {
+  // Create a 1D-histogram with appropriate scale and labels for this variable.
+
   return createHistogram(label, axis, _plotMin, _plotMax, bins);
 }
 
 TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
 				  Double_t lo, Double_t hi, Int_t bins) {
-  // Create a 1D-histogram with appropriate scale and labels for this variable
-  char buffer[256];
-  if(label) {
-    sprintf(buffer, "%s:%s", label, fName.Data());
-  }
-  else {
-    sprintf(buffer, "%s", fName.Data());
-  }
+  // Create a 1D-histogram with appropriate scale and labels for this variable.
+
+  TString histName(label);
+  if(!histName.IsNull()) histName.Append("_");
+  histName.Append(fName);
+
   // use the default binning, if no override is specified
   if(bins <= 0) bins= getPlotBins();
-  TH1F* histogram= new TH1F(buffer, fTitle, bins, lo, hi);
+  TH1F* histogram= new TH1F(histName.Data(), fTitle, bins, lo, hi);
   if(!histogram) {
-    cout << fName << ": unable to create new histogram" << endl;
+    cout << fName << "::createHistogram: unable to create a new histogram" << endl;
     return 0;
   }
-  const char *unit= getUnit();
-  if(*unit) {
-    sprintf(buffer, "%s (%s)", fTitle.Data(), unit);
-    histogram->SetXTitle(buffer);
+
+  // Set the x-axis title from our own title, adding units if we have them.
+  TString xTitle(fTitle);
+  if(strlen(getUnit())) {
+    xTitle.Append(" (");
+    xTitle.Append(getUnit());
+    xTitle.Append(")");
   }
-  else {
-    histogram->SetXTitle((Text_t*)fTitle.Data());
-  }
-  if(axis) {
+  histogram->SetXTitle(xTitle.Data());
+
+  // Set the y-axis title if given one
+  if(strlen(axis)) {
+    TString yTitle(axis);
     Double_t delta= (_plotMax-_plotMin)/bins;
-    if(unit) {
-      sprintf(buffer, "%s / %g %s", axis, delta, unit);
+    yTitle.Append(Form(" %g",delta));
+    if(strlen(getUnit())) {
+      yTitle.Append(" ");
+      yTitle.Append(getUnit());
     }
-    else {
-      sprintf(buffer, "%s / %g", axis, delta);
-    }
-    histogram->SetYTitle(buffer);
+    histogram->SetYTitle(yTitle.Data());
   }
   return histogram;
 }
+
 

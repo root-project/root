@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.9 2001/04/14 00:43:19 davidk Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.10 2001/04/18 20:38:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -61,9 +61,9 @@ public:
   Roo1DTable* Table(RooAbsCategory& cat, const char* cuts="", const char* opts="") ;
 
   // Plot the distribution of a real valued arg
-  TH1F* Plot(RooAbsReal& var, const char* cuts="") const;	 
-  RooPlot *plot(RooAbsReal& var, const char* cuts="", const char* opts="") const;
-  RooPlot *plot(RooPlot *frame, const char* cuts="", const char* opts="") const;
+  RooPlot *plot(const RooAbsReal& var, const char* cuts="", Option_t* drawOptions="P") const;
+  RooPlot *plot(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
+  TH1F* createHistogram(const RooAbsReal& var, const char* cuts="", const char *name= "hist") const;	 
  
   // Printing interface (human readable)
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPrintable.cc,v 1.1 2001/04/11 00:57:09 davidk Exp $
+ *    File: $Id: RooPrintable.cc,v 1.2 2001/04/11 23:25:27 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,7 +21,7 @@
 ClassImp(RooPrintable)
 
 static const char rcsid[] =
-"$Id: RooPrintable.cc,v 1.1 2001/04/11 00:57:09 davidk Exp $";
+"$Id: RooPrintable.cc,v 1.2 2001/04/11 23:25:27 davidk Exp $";
 
 void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print information about this object to the specified stream. The possible
@@ -77,11 +77,15 @@ void RooPrintable::oneLinePrint(ostream& os, const TNamed &named) {
 }
 
 ostream &RooPrintable::defaultStream(ostream *os) {
-  // Return a reference to the default stream to use in Print(). Use the optional
-  // parameter to specify a new default stream. This method allows subclasses to
-  // provide an inline implementation of Print() without pulling in iostream.h.
+  // Return a reference to the current default stream to use in
+  // Print(). Use the optional parameter to specify a new default
+  // stream (a reference to the old one is still returned). This
+  // method allows subclasses to provide an inline implementation of
+  // Print() without pulling in iostream.h.
 
   static ostream *_defaultStream = &cout;
+
+  ostream& _oldDefault= *_defaultStream;
   if(0 != os) _defaultStream= os;
-  return *_defaultStream;
+  return _oldDefault;
 }

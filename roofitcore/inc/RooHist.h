@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlotWithErrors.rdl,v 1.1 2001/03/28 19:21:48 davidk Exp $
+ *    File: $Id: RooHist.rdl,v 1.1 2001/04/11 00:57:09 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -13,19 +13,29 @@
 #define ROO_HIST
 
 #include "TGraphAsymmErrors.h"
+#include "RooFitCore/RooPrintable.hh"
 
-class RooHist : public TGraphAsymmErrors {
+class TH1;
+
+class RooHist : public TGraphAsymmErrors, public RooPrintable {
 public:
   RooHist(Double_t nSigma= 1);
+  RooHist(const TH1 &data, Double_t nSigma= 1);
   virtual ~RooHist();
   // add a datapoint for a bin with n entries, using a Poisson error
-  void addBin(Float_t binCenter, Int_t n);
+  void addBin(Axis_t binCenter, Int_t n);
   // add a datapoint for the asymmetry (n1-n2)/(n1+n2), using a binomial error
-  void addAsymmetryBin(Float_t binCenter, Int_t n1, Int_t n2);
+  void addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2);
   // return the maximum extent of an error bar
   inline Float_t getPlotMax() { return _ymax; }
-private:
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  inline virtual void Print(Option_t *options= 0) const {
+    printToStream(defaultStream(),parseOptions(options));
+  }
+protected:
   void initialize();
+  Int_t roundBin(Stat_t y);
+private:
   Double_t _nSigma,_ymax;
   ClassDef(RooHist,1) // a plot with error bars
 };
