@@ -441,13 +441,16 @@ distclean:: clean
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	@$(MAKECINTDLLS) clean
+	@(find . -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
-	   test/Makefile $(ROOTRC) $(ROOTMAP) etc/root.mimes \
+	   test/Makefile $(ROOTRC) $(ROOTMAP) etc/system.rootauthrc \
+	   etc/system.rootdaemonrc etc/root.mimes \
 	   build/misc/root-help.el
 
 version: $(CINTTMP)
