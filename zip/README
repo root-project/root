@@ -19,7 +19,12 @@ zlib is now used in TPDF to compress the "stream" part of PDF files.
 
 The ROOT compress functions R__zip and R__unzip have also been modified
 in order to use zlib. Some performance tests (on a P4 2.4GHz) showed that 
-the zlib version is 7.6% slower in writing and 13.6% faster in reading.
-Because of the poor performances in writing, the zlib versions of R__zip
-and R__unzip have not been activated. To activate them it is enough to 
-define R__ZLIB in the files zip/src/Inflate.c and zip/inc/Bits.h.
+the zlib version is as fast as the current ROOT zip functions.
+To activate the new zlib it is enough to define R__ZLIB in the files 
+zip/src/ZInflate.c and zip/inc/Bits.h.
+However some work is still required in ROOT Trees before activating
+the new zlib option R__ZLIB. When this option is activated, the new version
+of ROOT can read old files, but we still have problems with some Tree
+configurations when reading files written with R__ZLIB with old versions
+of ROOT.
+
