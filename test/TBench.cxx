@@ -10,7 +10,11 @@
 #include "TBench.h"
 
 THit hit;
-const char *demofile = "/tmp/bench.root";
+#ifdef R__WIN32
+ const char *demofile = "$TMP/bench.root";
+#else
+ const char *demofile = "/tmp/bench.root";
+#endif
 
 //-------------------------------------------------------------
 ClassImp(THit)
