@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.143 2005/02/07 18:02:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.144 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -393,9 +393,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove Collections",fCleanups);
    fRootFolder->AddFolder("StreamerInfo","List of Active StreamerInfo Classes",fStreamerInfo);
    fRootFolder->AddFolder("SecContexts","List of Security Contexts",fSecContexts);
+   fRootFolder->AddFolder("PROOF Sessions", "List of PROOF sessions",fProofs);
    fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
-   fRootFolder->AddFolder("PROOF Sessions", "List of PROOF sessions",fProofs);
 
    // by default, add the list of files, tasks, canvases and browsers in the Cleanups list
    fCleanups->Add(fCanvases); fCanvases->SetBit(kMustCleanup);
