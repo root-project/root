@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.46 2001/04/06 16:47:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.47 2001/04/21 12:23:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -848,9 +848,9 @@ void TH1::Copy(TObject &obj)
    fXaxis.Copy(((TH1&)obj).fXaxis);
    fYaxis.Copy(((TH1&)obj).fYaxis);
    fZaxis.Copy(((TH1&)obj).fZaxis);
-   ((TH1&)obj).fXaxis.SetParent(this);
-   ((TH1&)obj).fYaxis.SetParent(this);
-   ((TH1&)obj).fZaxis.SetParent(this);
+   ((TH1&)obj).fXaxis.SetParent(&obj);
+   ((TH1&)obj).fYaxis.SetParent(&obj);
+   ((TH1&)obj).fZaxis.SetParent(&obj);
    fContour.Copy(((TH1&)obj).fContour);
    fSumw2.Copy(((TH1&)obj).fSumw2);
 //   fFunctions->Copy(((TH1&)obj).fFunctions);
@@ -1462,7 +1462,7 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxm
 //*-*
 //  This function finds a pointer to the TF1 object with name fname
 //  and calls TH1::Fit(TF1 *f1,...)
-   
+
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
    if (!f1) { Error("Fit", "Unknown function: %s",fname); return; }
    Fit(f1,option,goption,xxmin,xxmax);
@@ -1544,7 +1544,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //*-*   Access to the fit results
 //*-*   =========================
 //*-*  If the histogram is made persistent, the list of
-//*-*  associated functions is also persistent. Given a pointer (see above) 
+//*-*  associated functions is also persistent. Given a pointer (see above)
 //*-*  to an associated function myfunc, one can retrieve the function/fit
 //*-*  parameters with calls such as:
 //*-*    Double_t chi2 = myfunc->GetChisquare();
@@ -1558,7 +1558,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
    Double_t params[100], arglist[100];
    TF1 *fnew1;
    TF2 *fnew2;
-   TF3 *fnew3; 
+   TF3 *fnew3;
 
    xfirst  = fXaxis.GetFirst();
    xlast   = fXaxis.GetLast();
@@ -2292,7 +2292,7 @@ Stat_t TH1::GetBinContent(Int_t) const
 //*-*-*-*-*-*-*Return content of bin number bin
 //*-*          ================================
 // Implemented in TH1C,S,F,D
-   
+
    AbstractMethod("GetBinContent");
    return 0;
 }
@@ -2303,7 +2303,7 @@ Stat_t TH1::GetBinContent(Int_t binx, Int_t biny) const
 //*-*-*-*-*-*-*Return content of bin number binx, biny
 //*-*          =======================================
 // NB: Function to be called for 2-d histograms only
-   
+
    Int_t bin = GetBin(binx,biny);
    return GetBinContent(bin);
 }
@@ -2314,7 +2314,7 @@ Stat_t TH1::GetBinContent(Int_t binx, Int_t biny, Int_t binz) const
 //*-*-*-*-*-*-*Return content of bin number binx,biny,binz
 //*-*          ===========================================
 // NB: Function to be called for 3-d histograms only
-  
+
    Int_t bin = GetBin(binx,biny,binz);
    return GetBinContent(bin);
 }
@@ -2634,7 +2634,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
 //  Ex:  h->SetBit(TH1::kCanRebin);
 
    if (!TestBit(kCanRebin)) return;
-   char achoice = toupper(ax[0]); 
+   char achoice = toupper(ax[0]);
    TAxis *axis = &fXaxis;
    if (achoice == 'Y') axis = &fYaxis;
    if (achoice == 'Z') axis = &fZaxis;
@@ -2643,7 +2643,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    Int_t  nbinsx = fXaxis.GetNbins();
    Int_t  nbinsy = fYaxis.GetNbins();
    Int_t  nbinsz = fZaxis.GetNbins();
-   Axis_t range = cxmax-cxmin; 
+   Axis_t range = cxmax-cxmin;
 
     //recompute new axis limits by doubling the current range
    Int_t bin;
@@ -2975,12 +2975,12 @@ void TH1::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =====================
-   if (b.IsReading()) { 
+   if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH1::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         
+
          fXaxis.SetParent(this);
          fYaxis.SetParent(this);
          fZaxis.SetParent(this);
@@ -3034,7 +3034,7 @@ void TH1::Streamer(TBuffer &b)
          if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
       }
       b.CheckByteCount(R__s, R__c, TH1::IsA());
-      
+
    } else {
       TH1::Class()->WriteBuffer(b,this);
    }
@@ -3144,11 +3144,11 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    //Note the following restrictions in the code generated:
    // - variable bin size not implemented
    // - Objects in list of functions not saved (fits)
-   
+
    char quote = '"';
    out<<"   "<<endl;
    out<<"   "<<"TH1"<<" *";
-   
+
    out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
                  <<","<<GetXaxis()->GetNbins()
                  <<","<<GetXaxis()->GetXmin()
@@ -3213,7 +3213,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          out<<"   "<<GetName()<<"->SetContourLevel("<<bin<<","<<GetContourLevel(bin)<<");"<<endl;
       }
    }
-      
+
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
    SaveMarkerAttributes(out,GetName(),1,1,1);
@@ -4017,7 +4017,7 @@ Stat_t TH1::GetBinError(Int_t binx, Int_t biny) const
 //*-*-*-*-*-*-*Return error of bin number binx, biny
 //*-*          =====================================
 // NB: Function to be called for 2-d histograms only
-   
+
    Int_t bin = GetBin(binx,biny);
    return GetBinError(bin);
 }
@@ -4028,7 +4028,7 @@ Stat_t TH1::GetBinError(Int_t binx, Int_t biny, Int_t binz) const
 //*-*-*-*-*-*-*Return error of bin number binx,biny,binz
 //*-*          =========================================
 // NB: Function to be called for 3-d histograms only
-  
+
    Int_t bin = GetBin(binx,biny,binz);
    return GetBinError(bin);
 }
@@ -4039,7 +4039,7 @@ Stat_t TH1::GetCellContent(Int_t binx, Int_t biny) const
 //*-*-*-*-*-*-*Return content of bin number binx, biny
 //*-*          =====================================
 // NB: Function to be called for 2-d histograms only
-   
+
    Int_t bin = GetBin(binx,biny);
    return GetBinContent(bin);
 }
@@ -4050,7 +4050,7 @@ Stat_t TH1::GetCellError(Int_t binx, Int_t biny) const
 //*-*-*-*-*-*-*Return error of bin number binx, biny
 //*-*          =====================================
 // NB: Function to be called for 2-d histograms only
-   
+
    Int_t bin = GetBin(binx,biny);
    return GetBinError(bin);
 }
@@ -4510,10 +4510,10 @@ TH1F::TH1F(const TVector &v)
 {
 // Create a histogram from a TVector
 // by default the histogram name is "TVector" and title = ""
-   
+
    for (Int_t i=0;i<v.GetNrows();i++) {
       SetBinContent(i+1,v(i));
-   }      
+   }
 }
 
 //______________________________________________________________________________
@@ -4669,10 +4669,10 @@ TH1D::TH1D(const TVectorD &v)
 {
 // Create a histogram from a TVector
 // by default the histogram name is "TVector" and title = ""
-   
+
    for (Int_t i=0;i<v.GetNrows();i++) {
       SetBinContent(i+1,v(i));
-   }      
+   }
 }
 
 //______________________________________________________________________________
