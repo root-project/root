@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.7 2000/08/23 17:01:20 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.8 2000/09/01 20:37:05 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -66,8 +66,8 @@ extern "C" void TCint_UpdateClassInfo(char* c ,Long_t l) {
   TCint::UpdateClassInfo(c,l);
 }
 
-extern "C" void* TCint_FindObject(char * c, G__ClassInfo *ci, void ** p1, void ** p2) {
-  return TCint::FindObject(c,ci,p1,p2);
+extern "C" void* TCint_FindSpecialObject(char * c, G__ClassInfo *ci, void ** p1, void ** p2) {
+  return TCint::FindSpecialObject(c,ci,p1,p2);
 }
 // It is a "fantom" method to synchronize user keyboard input
 // and ROOT prompt line (for WIN32)
@@ -87,7 +87,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
    G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
-   G__InitGetSpecialObject(&TCint_FindObject);
+   G__InitGetSpecialObject(&TCint_FindSpecialObject);
 
    ResetAll();
 #ifndef WIN32
@@ -692,15 +692,16 @@ const char *TCint::TypeName(const char *typeDesc)
 }
 
 //______________________________________________________________________________
-void *TCint::FindObject(char *item, G__ClassInfo *type, void **prevObj,
+void *TCint::FindSpecialObject(char *item, G__ClassInfo *type, void **prevObj,
                         void **assocPtr)
 {
    // Static function called by CINT when it finds an un-indentified object.
    // This function tries to find the UO in the ROOT files, directories, etc.
    // This functions has been registered by the TCint ctor.
 
-   if (!*prevObj || *assocPtr != gDirectory)
-      *prevObj = gROOT->FindObject(item, *assocPtr);
+   if (!*prevObj || *assocPtr != gDirectory) {
+      *prevObj  = gROOT->FindSpecialObject(item,*assocPtr);
+   }
 
    if (*prevObj) type->Init(((TObject *)*prevObj)->ClassName());
    return *prevObj;
