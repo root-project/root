@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.15 2003/11/26 21:48:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.16 2004/04/17 06:39:55 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -123,9 +123,9 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    SetFuncProto(fFuncNotif,fClass,"Notify","");
    SetFuncProto(fFuncSlTerm,fClass,"SlaveTerminate","",kFALSE);
    SetFuncProto(fFuncTerm,fClass,"Terminate","");
-   SetFuncProto(fFuncCut,fClass,"ProcessCut","Int_t",kFALSE);
-   SetFuncProto(fFuncFill,fClass,"ProcessFill","Int_t",kFALSE);
-   SetFuncProto(fFuncProc,fClass,"Process","Int_t",kFALSE);
+   SetFuncProto(fFuncCut,fClass,"ProcessCut","Long64_t",kFALSE);
+   SetFuncProto(fFuncFill,fClass,"ProcessFill","Long64_t",kFALSE);
+   SetFuncProto(fFuncProc,fClass,"Process","Long64_t",kFALSE);
    SetFuncProto(fFuncOption,fClass,"SetOption","const char*");
    SetFuncProto(fFuncObj,fClass,"SetObject","TObject*");
    SetFuncProto(fFuncInp,fClass,"SetInputList","TList*");
@@ -201,13 +201,13 @@ Bool_t TSelectorCint::Notify()
    // Invoke the Notify function via the interpreter
    if ( gDebug > 2 )
       Info("Notify","Call Notify");
-   Int_t sel = fFuncNotif->ExecInt(fIntSelector);
+   Long64_t sel = fFuncNotif->ExecInt(fIntSelector);
    return (Bool_t)sel;
 }
 
 
 //______________________________________________________________________________
-Bool_t TSelectorCint::ProcessCut(Int_t entry)
+Bool_t TSelectorCint::ProcessCut(Long64_t entry)
 {
    // Invoke the ProcessCut function via the interpreter
    if (gDebug > 3)
@@ -226,7 +226,7 @@ Bool_t TSelectorCint::ProcessCut(Int_t entry)
 
 
 //______________________________________________________________________________
-void TSelectorCint::ProcessFill(Int_t entry)
+void TSelectorCint::ProcessFill(Long64_t entry)
 {
    // Invoke the ProcessFill function via the interpreter
    if (gDebug > 3)
@@ -243,7 +243,7 @@ void TSelectorCint::ProcessFill(Int_t entry)
 
 
 //______________________________________________________________________________
-Bool_t TSelectorCint::Process(Int_t entry)
+Bool_t TSelectorCint::Process(Long64_t entry)
 {
    // Invoke the ProcessCut function via the interpreter
    if ( gDebug > 3 )

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.2 2004/07/09 01:34:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.3 2004/07/15 22:46:38 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -159,7 +159,7 @@ Info("SlaveBegin","Enter tree = %p", tree);
 
 
 //______________________________________________________________________________
-Bool_t TProofDraw::Process(int entry)
+Bool_t TProofDraw::Process(Long64_t entry)
 {
 //Info("Process","Enter entry = %d", entry);
 

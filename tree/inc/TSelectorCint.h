@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.9 2003/09/23 14:51:16 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.10 2003/09/23 17:20:06 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -62,9 +62,9 @@ public:
    virtual void        Begin(TTree *tree);
    virtual void        SlaveBegin(TTree *);
    virtual Bool_t      Notify();
-   virtual Bool_t      ProcessCut(Int_t entry);
-   virtual void        ProcessFill(Int_t entry);
-   virtual Bool_t      Process(Int_t entry);
+   virtual Bool_t      ProcessCut(Long64_t entry);
+   virtual void        ProcessFill(Long64_t entry);
+   virtual Bool_t      Process(Long64_t entry);
    virtual void        SetOption(const char *option);
    virtual void        SetObject(TObject *obj);
    virtual void        SetInputList(TList *input);

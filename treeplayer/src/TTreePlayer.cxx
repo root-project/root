@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.160 2004/07/14 00:19:12 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.161 2004/07/20 09:40:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -313,8 +313,8 @@ TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, co
 }
 
 //______________________________________________________________________________
-TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
-                             Int_t firstentry)
+TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentries,
+                             Long64_t firstentry)
 {
    // copy a Tree with selection
    // make a clone of this Tree header.
@@ -350,10 +350,10 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    TTree *tree = fTree->CloneTree(0);
    if (tree == 0) return 0;
 
-   Int_t entry,entryNumber;
-   Int_t lastentry = firstentry + nentries -1;
+   Long64_t entry,entryNumber;
+   Long64_t lastentry = firstentry + nentries -1;
    if (lastentry > fTree->GetEntriesFast()-1) {
-      lastentry  = (Int_t)fTree->GetEntriesFast() -1;
+      lastentry  = fTree->GetEntriesFast() -1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -372,7 +372,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
-      Int_t localEntry = fTree->LoadTree(entryNumber);
+      Long64_t localEntry = fTree->LoadTree(entryNumber);
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
@@ -409,9 +409,9 @@ void TTreePlayer::DeleteSelectorFromFile()
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::DrawScript(const char* wrapperPrefix, 
+Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix, 
                               const char *macrofilename, const char *cutfilename, 
-                              Option_t *option, Int_t nentries, Int_t firstentry) 
+                              Option_t *option, Long64_t nentries, Long64_t firstentry) 
 {
    // Draw the result of a C++ script
    //
@@ -457,7 +457,7 @@ Int_t TTreePlayer::DrawScript(const char* wrapperPrefix,
    selname.Append(aclicMode);
    
    Info("DrawScript",Form("Will process tree/chain using %s",selname.Data()));
-   Int_t result = fTree->Process(selname,option,nentries,firstentry);
+   Long64_t result = fTree->Process(selname,option,nentries,firstentry);
    
    // could delete the file selname+".h" 
    // However this would remove the optimization of avoiding a useless
@@ -467,7 +467,7 @@ Int_t TTreePlayer::DrawScript(const char* wrapperPrefix,
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ============================================
@@ -837,7 +837,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       }
    }
 
-   Int_t oldEstimate  = fTree->GetEstimate();
+   Long64_t oldEstimate  = fTree->GetEstimate();
    TEventList *elist  = fTree->GetEventList();
    TNamed *cvarexp    = (TNamed*)fInput->FindObject("varexp");
    TNamed *cselection = (TNamed*)fInput->FindObject("selection");
@@ -848,7 +848,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    if (nentries > fTree->GetMaxEntryLoop()) nentries = fTree->GetMaxEntryLoop();
 
    // invoke the selector
-   Int_t nrows = Process(fSelector,option,nentries,firstentry);
+   Long64_t nrows = Process(fSelector,option,nentries,firstentry);
 
    fSelectedRows = nrows;
    fDimension = fSelector->GetDimension();
@@ -937,7 +937,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
+Long64_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Fit  a projected item(s) from a Tree*-*-*-*-*-*-*-*-*-*
 //*-*              ======================================
@@ -960,7 +960,7 @@ Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *sele
    if (option) sprintf(opt,"%s",option);
    else        strcpy(opt,"goff");
 
-   Int_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
+   Long64_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
 
    delete [] opt;
 
@@ -1006,9 +1006,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 //    - Definition of analysis class (data and functions)
 //    - the following class functions:
 //       - constructor (connecting by default the Tree file)
-//       - GetEntry(Int_t entry)
+//       - GetEntry(Long64_t entry)
 //       - Init(TTree *tree) to initialize a new TTree
-//       - Show(Int_t entry) to read and Dump entry
+//       - Show(Long64_t entry) to read and Dump entry
 //
 // The generated code in classname.C includes only the main
 // analysis function Loop.
@@ -1103,7 +1103,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 	   TChain *chain = (TChain*)fTree;
 	   Int_t ntrees = chain->GetNtrees();
 	   for (Int_t file=0;file<ntrees;file++) {
-		   Int_t first = chain->GetTreeOffset()[file];
+		   Long64_t first = chain->GetTreeOffset()[file];
 		   chain->LoadTree(first);
 		   for (l=0;l<nleaves;l++) {
 			   TObjString *obj = (TObjString*)leafs->At(l);
@@ -1357,7 +1357,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   void    SlaveBegin(TTree *tree);\n");
       fprintf(fp,"   void    Init(TTree *tree);\n");
       fprintf(fp,"   Bool_t  Notify();\n");
-      fprintf(fp,"   Bool_t  Process(Int_t entry);\n");
+      fprintf(fp,"   Bool_t  Process(Long64_t entry);\n");
       fprintf(fp,"   void    SetOption(const char *option) { fOption = option; }\n");
       fprintf(fp,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
       fprintf(fp,"   void    SetInputList(TList *input) {fInput = input;}\n");
@@ -1373,13 +1373,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"\n");
       fprintf(fp,"   %s(TTree *tree=0);\n",classname);
       fprintf(fp,"   ~%s();\n",classname);
-      fprintf(fp,"   Int_t  Cut(Int_t entry);\n");
-      fprintf(fp,"   Int_t  GetEntry(Int_t entry);\n");
-      fprintf(fp,"   Int_t  LoadTree(Int_t entry);\n");
-      fprintf(fp,"   void   Init(TTree *tree);\n");
-      fprintf(fp,"   void   Loop();\n");
-      fprintf(fp,"   Bool_t Notify();\n");
-      fprintf(fp,"   void   Show(Int_t entry = -1);\n");
+      fprintf(fp,"   Int_t    Cut(Long64_t entry);\n");
+      fprintf(fp,"   Int_t    GetEntry(Long64_t entry);\n");
+      fprintf(fp,"   Long64_t LoadTree(Long64_t entry);\n");
+      fprintf(fp,"   void     Init(TTree *tree);\n");
+      fprintf(fp,"   void     Loop();\n");
+      fprintf(fp,"   Bool_t   Notify();\n");
+      fprintf(fp,"   void     Show(Long64_t entry = -1);\n");
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
       fprintf(fp,"#endif\n");
@@ -1451,7 +1451,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 // generate code for class member function GetEntry()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"Int_t %s::GetEntry(Int_t entry)\n",classname);
+      fprintf(fp,"Int_t %s::GetEntry(Long64_t entry)\n",classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// Read contents of entry.\n");
 
@@ -1461,11 +1461,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 // generate code for class member function LoadTree()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"Int_t %s::LoadTree(Int_t entry)\n",classname);
+      fprintf(fp,"Long64_t %s::LoadTree(Long64_t entry)\n",classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// Set the environment to read one entry\n");
       fprintf(fp,"   if (!fChain) return -5;\n");
-      fprintf(fp,"   Int_t centry = fChain->LoadTree(entry);\n");
+      fprintf(fp,"   Long64_t centry = fChain->LoadTree(entry);\n");
       fprintf(fp,"   if (centry < 0) return centry;\n");
       fprintf(fp,"   if (fChain->IsA() != TChain::Class()) return centry;\n");
       fprintf(fp,"   TChain *chain = (TChain*)fChain;\n");
@@ -1614,7 +1614,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
 // generate code for class member function Show()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"void %s::Show(Int_t entry)\n",classname);
+      fprintf(fp,"void %s::Show(Long64_t entry)\n",classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// Print contents of entry.\n");
       fprintf(fp,"// If entry is not specified, print current entry\n");
@@ -1625,7 +1625,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    }
 // generate code for class member function Cut()
    if (!opt.Contains("selector")) {
-      fprintf(fp,"Int_t %s::Cut(Int_t entry)\n",classname);
+      fprintf(fp,"Int_t %s::Cut(Long64_t entry)\n",classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// This function may be called from Loop.\n");
       fprintf(fp,"// returns  1 if entry is accepted.\n");
@@ -1670,10 +1670,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//    fChain->GetEntry(jentry);       //read all branches\n");
       fprintf(fpc,"//by  b_branchname->GetEntry(ientry); //read only this branch\n");
       fprintf(fpc,"   if (fChain == 0) return;\n");
-      fprintf(fpc,"\n   Int_t nentries = Int_t(fChain->GetEntriesFast());\n");
+      fprintf(fpc,"\n   Long64_t nentries = fChain->GetEntriesFast();\n");
       fprintf(fpc,"\n   Int_t nbytes = 0, nb = 0;\n");
-      fprintf(fpc,"   for (Int_t jentry=0; jentry<nentries;jentry++) {\n");
-      fprintf(fpc,"      Int_t ientry = LoadTree(jentry);\n");
+      fprintf(fpc,"   for (Long64_t jentry=0; jentry<nentries;jentry++) {\n");
+      fprintf(fpc,"      Long64_t ientry = LoadTree(jentry);\n");
       fprintf(fpc,"      if (ientry < 0) break;\n");
       fprintf(fpc,"      nb = fChain->GetEntry(jentry);   nbytes += nb;\n");
       fprintf(fpc,"      // if (Cut(ientry) < 0) continue;\n");
@@ -1735,7 +1735,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"}\n");
       // generate code for class member function Process
       fprintf(fpc,"\n");
-      fprintf(fpc,"Bool_t %s::Process(Int_t entry)\n",classname);
+      fprintf(fpc,"Bool_t %s::Process(Long64_t entry)\n",classname);
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The Process() function is called for each entry in the tree (or possibly\n"
                   "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
@@ -1994,9 +1994,9 @@ Int_t TTreePlayer::MakeCode(const char *filename)
    fprintf(fp,"//       To read only selected branches, Insert statements like:\n");
    fprintf(fp,"// %s->SetBranchStatus(\"*\",0);  // disable all branches\n",fTree->GetName());
    fprintf(fp,"// %s->SetBranchStatus(\"branchname\",1);  // activate branchname\n",GetName());
-   fprintf(fp,"\n   Int_t nentries = %s->GetEntries();\n",fTree->GetName());
+   fprintf(fp,"\n   Long64_t nentries = %s->GetEntries();\n",fTree->GetName());
    fprintf(fp,"\n   Int_t nbytes = 0;\n");
-   fprintf(fp,"//   for (Int_t i=0; i<nentries;i++) {\n");
+   fprintf(fp,"//   for (Long64_t i=0; i<nentries;i++) {\n");
    fprintf(fp,"//      nbytes += %s->GetEntry(i);\n",fTree->GetName());
    fprintf(fp,"//   }\n");
    fprintf(fp,"}\n");
@@ -2029,7 +2029,7 @@ Int_t TTreePlayer::MakeProxy(const char *classname,
 }
 
 //______________________________________________________________________________
-TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Interface to the Principal Components Analysis class*-*-*
 //*-*              ====================================================
@@ -2054,16 +2054,17 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    TString opt = option;
    opt.ToLower();
    TPrincipal *principal = 0;
-   Int_t entry,entryNumber,i,nch;
+   Long64_t entry,entryNumber;
+   Int_t i,nch;
    Int_t *index = 0;
    Int_t ncols = 8;   // by default first 8 columns are printed only
    TObjArray *leaves = fTree->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
-   Int_t lastentry = firstentry + nentries -1;
+   Long64_t lastentry = firstentry + nentries -1;
    if (lastentry > fTree->GetEntriesFriend()-1) {
-      lastentry  = (Int_t)fTree->GetEntriesFriend() -1;
+      lastentry  = fTree->GetEntriesFriend() -1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -2124,7 +2125,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
-      Int_t localEntry = fTree->LoadTree(entryNumber);
+      Long64_t localEntry = fTree->LoadTree(entryNumber);
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
@@ -2179,7 +2180,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries, Int_t firstentry)
+Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
 //*-*              ================================================
@@ -2194,13 +2195,13 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
 //
-//     Bool_t TSelector::ProcessCut(Int_t tentry). This function is called
+//     Bool_t TSelector::ProcessCut(Long64_t tentry). This function is called
 //          before processing tentry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise. tentry is the entry number in the current Tree.
 //
-//     void TSelector::ProcessFill(Int_t tentry). This function is called for
+//     void TSelector::ProcessFill(Long64_t tentry). This function is called for
 //          all selected events. User fills histograms in this function.
 //
 //     void TSelector::Terminate(). This function is called at the end of
@@ -2233,12 +2234,12 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
    fSelectorFromFile = selector;
    fSelectorClass    = selector->IsA();
 
-   Int_t nsel = Process(selector,opt,nentries,firstentry);
+   Long64_t nsel = Process(selector,opt,nentries,firstentry);
    return nsel;
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries, Int_t firstentry)
+Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this tree executing the code in selector*-*-*-*-*
 //*-*              ================================================
@@ -2251,13 +2252,13 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
 //
-//     Bool_t TSelector::ProcessCut(Int_t tentry). This function is called
+//     Bool_t TSelector::ProcessCut(Long64_t tentry). This function is called
 //          before processing tentry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise. tentry is the entry number in the current Tree.
 //
-//     void TSelector::ProcessFill(Int_t tentry). This function is called for
+//     void TSelector::ProcessFill(Long64_t tentry). This function is called for
 //          all selected events. User fills histograms in this function.
 //
 //     void TSelector::Terminate(). This function is called at the end of
@@ -2267,9 +2268,9 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 //  of the EventList, starting at firstentry, otherwise the loop is on the
 //  specified Tree entries.
 
-   Int_t lastentry = firstentry + nentries - 1;
+   Long64_t lastentry = firstentry + nentries - 1;
    if (lastentry > fTree->GetEntriesFriend()-1) {
-      lastentry  = (Int_t)fTree->GetEntriesFriend() - 1;
+      lastentry  = fTree->GetEntriesFriend() - 1;
       nentries   = lastentry - firstentry + 1;
    }
    TEventList *elist = fTree->GetEventList();
@@ -2324,9 +2325,9 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
+Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
                         Option_t * option,
-                       Int_t nentries, Int_t firstentry)
+                       Long64_t nentries, Long64_t firstentry)
 {
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
    // then print only first 8 columns. If varexp = "*" print all columns.
@@ -2375,7 +2376,8 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
    TTreeFormula **var;
    TString *cnames;
    TString onerow;
-   Int_t entry,entryNumber,i,nch;
+   Long64_t entry,entryNumber;
+   Int_t i,nch;
    Int_t *index = 0;
    Int_t ncols = 8;   // by default first 8 columns are printed only
    ofstream out;
@@ -2400,12 +2402,13 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
       }
    }
    TObjArray *leaves = fTree->GetListOfLeaves();
+   if (leaves==0) return 0;
    Int_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
-   Int_t lastentry = firstentry + nentries -1;
+   Long64_t lastentry = firstentry + nentries -1;
    if (lastentry > fTree->GetEntriesFriend()-1) {
-      lastentry  = (Int_t)fTree->GetEntriesFriend() -1;
+      lastentry  = fTree->GetEntriesFriend() -1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -2517,7 +2520,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
         entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
-      Int_t localEntry = fTree->LoadTree(entryNumber);
+      Long64_t localEntry = fTree->LoadTree(entryNumber);
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
@@ -2618,7 +2621,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
 
 //______________________________________________________________________________
 TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
-                               Option_t *, Int_t nentries, Int_t firstentry)
+                               Option_t *, Long64_t nentries, Long64_t firstentry)
 {
    // Loop on Tree and return TSQLResult object containing entries passing
    // selection. If varexp is 0 (or "") then print only first 8 columns.
@@ -2629,16 +2632,17 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    TTreeFormula **var;
    TString *cnames;
    TString onerow;
-   Int_t entry,entryNumber,i,nch;
+   Long64_t entry,entryNumber;
+   Int_t i,nch;
    Int_t *index = 0;
    Int_t ncols = 8;   // by default first 8 columns are printed only
    TObjArray *leaves = fTree->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
-   Int_t lastentry = firstentry + nentries -1;
+   Long64_t lastentry = firstentry + nentries -1;
    if (lastentry > fTree->GetEntriesFriend()-1) {
-      lastentry  = (Int_t)fTree->GetEntriesFriend() -1;
+      lastentry  = fTree->GetEntriesFriend() -1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -2695,7 +2699,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
-      Int_t localEntry = fTree->LoadTree(entryNumber);
+      Long64_t localEntry = fTree->LoadTree(entryNumber);
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
@@ -2733,7 +2737,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
 }
 
 //_______________________________________________________________________
-void TTreePlayer::SetEstimate(Int_t n)
+void TTreePlayer::SetEstimate(Long64_t n)
 {
 //*-*-*-*-*-*-*-*-*Set number of entries to estimate variable limits*-*-*-*
 //*-*              ================================================
@@ -2780,7 +2784,7 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
   TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
   fitfunc->InitArgs(x,par);
 
-  Int_t n = gTree->GetSelectedRows();
+  Long64_t n = gTree->GetSelectedRows();
   Double_t  *data1 = gTree->GetV1();
   Double_t  *data2 = gTree->GetV2();
   Double_t  *data3 = gTree->GetV3();
@@ -2789,7 +2793,7 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
   Double_t logL = 0.0, prob;
   Double_t sum = fitfunc->GetChisquare();
 
-  for(Int_t i = 0; i < n; i++) {
+  for(Long64_t i = 0; i < n; i++) {
     x[0] = data1[i];
     if (data2) x[1] = data2[i];
     if (data3) x[2] = data3[i];
@@ -2803,7 +2807,7 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
 
 
 //______________________________________________________________________________
-Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Int_t nentries, Int_t firstentry)
+Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*Unbinned fit of one or more variable(s) from a Tree*-*-*-*-*-*
 //*-*        ===================================================
@@ -2866,14 +2870,14 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
   // Spin through the data to select out the events of interest
   // Make sure that the arrays V1,etc are created large enough to accomodate
   // all entries
-  Int_t oldEstimate = fTree->GetEstimate();
-  Int_t nent = Int_t(fTree->GetEntriesFriend());
+  Long64_t oldEstimate = fTree->GetEstimate();
+  Long64_t nent = fTree->GetEntriesFriend();
   fTree->SetEstimate(TMath::Min(nent,nentries));
 
-  Int_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
+  Long64_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
 
   //if no selected entries return
-  Int_t nrows = GetSelectedRows();
+  Long64_t nrows = GetSelectedRows();
   if (nrows <= 0) {
      Error("UnbinnedFit", "Cannot fit: no entries selected");
      return 0;

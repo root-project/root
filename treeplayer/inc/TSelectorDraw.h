@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.7 2003/07/22 21:15:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.8 2003/10/07 11:10:36 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -45,22 +45,22 @@ protected:
     TObject       *fTreeElist;      //  pointer to Tree Event list
     TH1           *fOldHistogram;   //! Pointer to previously used histogram
     Int_t          fAction;         //! Action type
-    Int_t          fDraw;           //! Last entry loop number when object was drawn
+    Long64_t       fDraw;           //! Last entry loop number when object was drawn
     Int_t          fNfill;          //! Total number of histogram fills
     Int_t          fMultiplicity;   //  Indicator of the variability of the size of entries
     Int_t          fDimension;      //  Dimension of the current expression
-    Int_t          fSelectedRows;   //  Number of selected entries
-    Int_t          fOldEstimate;    //  value of Tree fEstimate when selector is called
+    Long64_t       fSelectedRows;   //  Number of selected entries
+    Long64_t       fOldEstimate;    //  value of Tree fEstimate when selector is called
     Int_t          fForceRead;      //  Forec Read flag
     Int_t          fNbins[4];       //  Number of bins per dimension
     Double_t       fVmin[4];        //  Minima of varexp columns
     Double_t       fVmax[4];        //  Maxima of varexp columns
     Double_t       fWeight;         //  Tree weight (see TTree::SetWeight)
-    Double_t      *fV1;             //[fSelectedRows]Local buffer for variable 1
-    Double_t      *fV2;             //[fSelectedRows]Local buffer for variable 2
-    Double_t      *fV3;             //[fSelectedRows]Local buffer for variable 3
-    Double_t      *fV4;             //[fSelectedRows]Local buffer for variable 4
-    Double_t      *fW;              //[fSelectedRows]Local buffer for weights
+    Double_t      *fV1;             //![fSelectedRows]Local buffer for variable 1
+    Double_t      *fV2;             //![fSelectedRows]Local buffer for variable 2
+    Double_t      *fV3;             //![fSelectedRows]Local buffer for variable 3
+    Double_t      *fV4;             //![fSelectedRows]Local buffer for variable 4
+    Double_t      *fW;              //![fSelectedRows]Local buffer for weights
     Bool_t         fVar1Multiple;   //  true if var1 has a variable index
     Bool_t         fVar2Multiple;   //  true if var2 has a variable index
     Bool_t         fVar3Multiple;   //  true if var3 has a variable index
@@ -88,7 +88,7 @@ public:
     virtual Int_t     GetNfill() const {return fNfill;}
     TH1              *GetOldHistogram() const {return fOldHistogram;}
     TTreeFormula     *GetSelect() const    {return fSelect;}
-    virtual Int_t     GetSelectedRows() const {return fSelectedRows;}
+    virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
     TTreeFormula     *GetVar1() const {return fVar1;}
     TTreeFormula     *GetVar2() const {return fVar2;}
     TTreeFormula     *GetVar3() const {return fVar3;}
@@ -100,11 +100,11 @@ public:
     virtual Double_t *GetW() const    {return fW;}
     virtual void      MakeIndex(TString &varexp, Int_t *index);
     virtual Bool_t    Notify();
-    virtual Bool_t    Process(Int_t /*entry*/) { return kFALSE; }
-    virtual void      ProcessFill(Int_t entry);
-    virtual void      ProcessFillMultiple(Int_t entry);
-    virtual void      ProcessFillObject(Int_t entry);
-    virtual void      SetEstimate(Int_t n);
+    virtual Bool_t    Process(Long64_t /*entry*/) { return kFALSE; }
+    virtual void      ProcessFill(Long64_t entry);
+    virtual void      ProcessFillMultiple(Long64_t entry);
+    virtual void      ProcessFillObject(Long64_t entry);
+    virtual void      SetEstimate(Long64_t n);
     virtual void      TakeAction();
     virtual void      TakeEstimate();
     virtual void      Terminate();

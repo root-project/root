@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.21 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.22 2004/07/09 01:34:51 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -85,11 +85,11 @@ public:
    TProofPlayer();
    virtual ~TProofPlayer();
 
-   virtual Int_t     Process(TDSet *set,
+   virtual Long64_t  Process(TDSet *set,
                              const char *selector, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0,
                              TEventList *evl = 0);
-   virtual Int_t     DrawSelect(TDSet *set, const char *varexp,
+   virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,
                                 const char *selection, Option_t *option = "",
                                 Long64_t nentries = -1, Long64_t firstentry = 0);
 
@@ -148,7 +148,7 @@ public:
                                            fFeedbackLists(0), fPacketizer(0) {}
    ~TProofPlayerRemote();   // Owns the fOutput list
 
-   Int_t          Process(TDSet *set, const char *selector,
+   Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0, TEventList *evl = 0);
    void           StopProcess(Bool_t abort);
@@ -178,7 +178,7 @@ public:
    TProofPlayerSlave();
    TProofPlayerSlave(TSocket *socket);
 
-   Int_t    DrawSelect(TDSet *set, const char *varexp,
+   Long64_t    DrawSelect(TDSet *set, const char *varexp,
                        const char *selection, Option_t *option = "",
                        Long64_t nentries = -1, Long64_t firstentry = 0);
 

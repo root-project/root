@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.15 2002/11/26 08:45:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.16 2003/12/27 16:14:31 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -211,7 +211,7 @@ Int_t TBranchClones::Fill()
 }
 
 //______________________________________________________________________________
-Int_t TBranchClones::GetEntry(Int_t entry, Int_t getall)
+Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
 {
 //*-*-*-*-*Read all branches of a BranchClones and return total number of bytes
 //*-*      ====================================================================

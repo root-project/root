@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.16 2003/09/23 14:51:16 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.17 2003/09/23 17:20:06 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -51,9 +51,9 @@ public:
    virtual Bool_t      Notify() { return kTRUE; }
    virtual const char *GetOption() const { return fOption; }
    virtual Int_t       GetStatus() const { return fStatus; }
-   virtual Bool_t      ProcessCut(Int_t /*entry*/) { return kTRUE; }
-   virtual void        ProcessFill(Int_t /*entry*/) { }
-   virtual Bool_t      Process(Int_t /*entry*/) { return kFALSE; }
+   virtual Bool_t      ProcessCut(Long64_t /*entry*/) { return kTRUE; }
+   virtual void        ProcessFill(Long64_t /*entry*/) { }
+   virtual Bool_t      Process(Long64_t /*entry*/) { return kFALSE; }
    virtual void        SetOption(const char *option) { fOption = option; }
    virtual void        SetObject(TObject *obj) { fObject = obj; }
    virtual void        SetInputList(TList *input) { fInput = input; }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.137 2004/06/09 21:51:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.138 2004/06/22 15:36:42 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -151,8 +151,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
              || fStreamerType > 15) fEntryOffsetLen = 1000;
    if (basketsize < 100+fEntryOffsetLen) basketsize = 100+fEntryOffsetLen;
    fBasketSize     = basketsize;
-   fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
+   fBasketEntry    = new Long64_t[fMaxBaskets];
    fBasketSeek     = new Long64_t[fMaxBaskets];
 
    for (Int_t i=0;i<fMaxBaskets;i++) {
@@ -367,8 +367,8 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
 
    if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
-   fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
+   fBasketEntry    = new Long64_t[fMaxBaskets];
    fBasketSeek     = new Long64_t[fMaxBaskets];
 
    for (Int_t i=0;i<fMaxBaskets;i++) {
@@ -463,8 +463,8 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
 
    if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
-   fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
+   fBasketEntry    = new Long64_t[fMaxBaskets];
    fBasketSeek     = new Long64_t[fMaxBaskets];
 
    fBasketEntry[0] = fEntryNumber;
@@ -1076,7 +1076,7 @@ Int_t TBranchElement::GetDataMemberOffset(const TClass *cl, const char *name)
 }
 
 //______________________________________________________________________________
-Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
+Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 {
 //*-*-*-*-*Read all branches of a BranchElement and return total number of bytes
 //*-*      ====================================================================
@@ -1132,7 +1132,7 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
 
    if (fTree->Debug() > 0) {
       if (entry >= fTree->GetDebugMin() && entry <= fTree->GetDebugMax()) {
-         printf("GetEntry: %d, branch=%s, nbytes=%d\n",entry,GetName(),nbytes);
+         printf("GetEntry: %lld, branch=%s, nbytes=%d\n",entry,GetName(),nbytes);
       }
    }
    return nbytes;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.33 2004/06/21 06:05:05 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.34 2004/07/02 21:50:20 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -874,7 +874,7 @@ Bool_t TSelectorDraw::Notify()
 }
 
 //______________________________________________________________________________
-void TSelectorDraw::ProcessFill(Int_t entry)
+void TSelectorDraw::ProcessFill(Long64_t entry)
 {
    // Called in the entry loop for all entries accepted by Select.
 
@@ -915,7 +915,7 @@ void TSelectorDraw::ProcessFill(Int_t entry)
 }
 
 //______________________________________________________________________________
-void TSelectorDraw::ProcessFillMultiple(Int_t /*entry*/)
+void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
 {
    // Called in the entry loop for all entries accepted by Select.
    // Complex case with multiplicity.
@@ -989,7 +989,7 @@ void TSelectorDraw::ProcessFillMultiple(Int_t /*entry*/)
 }
 
 //______________________________________________________________________________
-void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
+void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
 {
    // Called in the entry loop for all entries accepted by Select.
    // Case where the only variable returns an object (or pointer to).
@@ -1054,7 +1054,7 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
 }
 
 //_______________________________________________________________________
-void TSelectorDraw::SetEstimate(Int_t)
+void TSelectorDraw::SetEstimate(Long64_t)
 {
    // Set number of entries to estimate variable limits.
 
@@ -1083,7 +1083,7 @@ void TSelectorDraw::TakeAction()
    //__________________________Event List______________________________
    else if (fAction ==  5) {
       TEventList *elist = (TEventList*)fObject;
-      Int_t enumb = fTree->GetChainOffset() + fTree->GetReadEntry();
+      Long64_t enumb = fTree->GetChainOffset() + fTree->GetReadEntry();
       if (elist->GetIndex(enumb) < 0) elist->Enter(enumb);
    }
    //__________________________2D scatter plot_______________________

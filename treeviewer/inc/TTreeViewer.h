@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.14 2003/11/10 10:48:43 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.15 2003/11/25 13:17:33 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -203,14 +203,14 @@ public:
    void          Message(const char* msg);
    void          NewExpression();                                // *MENU*
    void          PrintEntries();
-   Int_t         Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+   Long64_t      Process(const char* filename, Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
    Bool_t        ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void          RemoveItem();
    void          RemoveLastRecord();                             // *MENU*
    void          SaveSource(const char* filename="", Option_t *option="");            // *MENU*
    void          SetHistogramTitle(const char *title);
    void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}
-   void          SetCurrentRecord(Int_t entry);
+   void          SetCurrentRecord(Long64_t entry);
    void          SetGrOpt(const char *option);
    void          SetNexpressions(Int_t expr);
    void          SetRecordName(const char *name);                // *MENU*

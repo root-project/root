@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.26 2003/12/08 15:55:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.27 2003/12/30 13:16:51 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -80,8 +80,8 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
    fBasketSize     = basketsize;
    fAddress        = (char*)addobj;
    fClassName      = classname;
-   fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
+   fBasketEntry    = new Long64_t[fMaxBaskets];
    fBasketSeek     = new Long64_t[fMaxBaskets];
    fOldObject      = 0;
 
@@ -158,7 +158,7 @@ Int_t TBranchObject::Fill()
 }
 
 //______________________________________________________________________________
-Int_t TBranchObject::GetEntry(Int_t entry, Int_t getall)
+Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 {
 //*-*-*-*-*Read all branches of a BranchObject and return total number of bytes
 //*-*      ====================================================================

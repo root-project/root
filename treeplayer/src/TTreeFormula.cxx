@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.148 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.149 2004/07/19 19:48:47 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -564,7 +564,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    if (!fTree) return -1;
    // Later on we will need to read one entry, let's make sure
    // it is a real entry.
-   Int_t readentry = fTree->GetReadEntry();
+   Long64_t readentry = fTree->GetReadEntry();
    if (readentry==-1) readentry=0;
    fNpar = 0;
    Int_t nchname = name.Length();
@@ -1963,7 +1963,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
 TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                                            const char* nextchoice,
-                                           UInt_t readentry) const {
+                                           Long64_t readentry) const {
 
    // Return the leaf (if any) which contains an object containing
    // a data member which has the name provided in the arguments.
@@ -2129,7 +2129,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
                                      TBranch * branch,
                                      const char* method,
                                      const char* params,
-                                     UInt_t readentry) const {
+                                     Long64_t readentry) const {
    // Return the leaf (if any) of the tree with contains an object of a class
    // having a method which has the name provided in the argument.
 
@@ -2544,7 +2544,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          result in the branch being potentially not read in. */                                 \
       if (haveSeenBooleanOptimization) {                                                        \
          TBranch *br = leaf->GetBranch();                                                       \
-         Int_t treeEntry = br->GetTree()->GetReadEntry();                                       \
+         Long64_t treeEntry = br->GetTree()->GetReadEntry();                                       \
          if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                        \
       }                                                                                         \
       if (real_instance>fNdata[code]) return 0;                                                 \
@@ -2908,7 +2908,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                   // result in the branch being potentially not read in.
                   if (haveSeenBooleanOptimization) {
                      TBranch *br = leafc->GetBranch();
-                     Int_t treeEntry = br->GetTree()->GetReadEntry();
+                     Long64_t treeEntry = br->GetTree()->GetReadEntry();
                      if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
                   }
                   if (real_instance>fNdata[string_code]) return 0;
@@ -3632,7 +3632,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          if (leaf->IsA() == TLeafElement::Class()) {
             //if branchcount address not yet set, GetEntry will set the address
             // read branchcount value
-            Int_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
+            Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
             if (!branchcount->GetAddress()) branchcount->GetEntry(readentry);
             else branchcount->TBranch::GetEntry(readentry);
@@ -3673,7 +3673,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                //}
             }
          } else {
-            Int_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
+            Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
             branchcount->GetEntry(readentry);
             size = leaf->GetLen() / leaf->GetLenStatic();
@@ -3716,7 +3716,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          TFormLeafInfo *leafinfo = (TFormLeafInfo*)fDataMembers.UncheckedAt(i);
          if (leafinfo->HasCounter()) {
             TBranch *branch = leaf->GetBranch();
-            Int_t readentry = branch->GetTree()->GetReadEntry();
+            Long64_t readentry = branch->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
             branch->GetEntry(readentry);
             size = (Int_t) leafinfo->GetCounterValue(leaf);
@@ -3757,7 +3757,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             }
          } else if (leafinfo->GetMultiplicity()==-1) {
             TBranch *branch = leaf->GetBranch();
-            Int_t readentry = branch->GetTree()->GetReadEntry();
+            Long64_t readentry = branch->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
             branch->GetEntry(readentry);
             if (leafinfo->GetNdata(leaf)==0) {

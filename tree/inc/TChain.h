@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.36 2004/06/05 05:19:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.37 2004/06/22 06:42:11 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -39,7 +39,7 @@ protected:
     Int_t       fTreeOffsetLen;     //  Current size of fTreeOffset array
     Int_t       fNtrees;            //  Number of Trees
     Int_t       fTreeNumber;        //! Current Tree number in fTreeOffset table
-    Int_t       *fTreeOffset;       //[fTreeOffsetLen]Array of variables
+    Long64_t    *fTreeOffset;       //[fTreeOffsetLen]Array of variables
     Int_t        fMaxCacheSize;     //! Max cache size passed to TFile's
     Int_t        fPageSize;         //! Cache page size passed to TFile's
     Bool_t       fCanDeleteRefs;    //! if true, TProcessIDs are deleted when closing a file
@@ -60,8 +60,8 @@ public:
     virtual ~TChain();
 
     virtual Int_t     Add(TChain *chain);
-    virtual Int_t     Add(const char *name, Int_t nentries=kBigNumber);
-    virtual Int_t     AddFile(const char *name, Int_t nentries=kBigNumber);
+    virtual Int_t     Add(const char *name, Long64_t nentries=kBigNumber);
+    virtual Int_t     AddFile(const char *name, Long64_t nentries=kBigNumber);
     virtual TFriendElement *AddFriend(const char *chainname, const char *dummy="");
     virtual TFriendElement *AddFriend(const char *chainname, TFile *dummy);
     virtual TFriendElement *AddFriend(TTree *chain, const char *alias, Bool_t warn = kFALSE);
@@ -69,16 +69,16 @@ public:
     virtual void      CanDeleteRefs(Bool_t flag=kTRUE);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
-    virtual Int_t     Draw(const char *varexp, const TCut &selection, Option_t *option=""
-                       ,Int_t nentries=kBigNumber, Int_t firstentry=0);
-    virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
-                     ,Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
+    virtual Long64_t  Draw(const char *varexp, const TCut &selection, Option_t *option=""
+                       ,Long64_t nentries=kBigNumber, Long64_t firstentry=0);
+    virtual Long64_t  Draw(const char *varexp, const char *selection, Option_t *option=""
+                     ,Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
     virtual Int_t     Fill() {MayNotUse("Fill()"); return -1;}
     virtual TBranch  *GetBranch(const char *name);
-    virtual Int_t     GetChainEntryNumber(Int_t entry) const;
+    virtual Long64_t  GetChainEntryNumber(Long64_t entry) const;
             Int_t     GetNtrees() const {return fNtrees;}
-    virtual Double_t  GetEntries() const;
-    virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
+    virtual Long64_t  GetEntries() const;
+    virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall=0);
     virtual Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0);
     TFile            *GetFile() const;
     TLeaf            *GetLeaf(const char *name);
@@ -92,18 +92,18 @@ public:
     TList            *GetStatus() const {return fStatus;}
     TTree            *GetTree() const {return fTree;}
             Int_t     GetTreeNumber() const {return fTreeNumber;}
-            Int_t    *GetTreeOffset() const {return fTreeOffset;}
+            Long64_t *GetTreeOffset() const {return fTreeOffset;}
             Int_t     GetTreeOffsetLen() const {return fTreeOffsetLen;}
     virtual Double_t  GetWeight() const;
-            Int_t     LoadTree(Int_t entry);
-    virtual void      Loop(Option_t *option="",Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
+            Long64_t  LoadTree(Long64_t entry);
+    virtual void      Loop(Option_t *option="",Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="") const;
-    virtual Int_t     Merge(const char *name);
-    virtual Int_t     Merge(TCollection *list);
-    virtual Int_t     Merge(TFile *file, Int_t basketsize, Option_t *option="");
+    virtual Long64_t  Merge(const char *name);
+    virtual Long64_t  Merge(TCollection *list);
+    virtual Long64_t  Merge(TFile *file, Int_t basketsize, Option_t *option="");
     virtual void      Print(Option_t *option="") const;
-    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
-    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=kBigNumber, Int_t firstentry=0);
+    virtual Long64_t  Process(const char *filename,Option_t *option="", Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
+    virtual Long64_t  Process(TSelector *selector,Option_t *option="",  Long64_t nentries=kBigNumber, Long64_t firstentry=0);
     virtual void      Reset(Option_t *option="");
     virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
     virtual void      SetBranchAddress(const char *bname,void *add);
@@ -114,7 +114,7 @@ public:
     virtual void      SetWeight(Double_t w=1, Option_t *option="");
     virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
 
-    ClassDef(TChain,4)  //A chain of TTrees
+    ClassDef(TChain,5)  //A chain of TTrees
 };
 
 inline void TChain::Draw(Option_t *opt)

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.20 2004/07/08 08:08:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.21 2004/07/20 09:40:19 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -44,18 +44,18 @@ public:
     virtual ~TVirtualTreePlayer() { }
     virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname) = 0;
     virtual TTree         *CopyTree(const char *selection, Option_t *option=""
-                            ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
-    virtual Int_t          DrawScript(const char* wrapperPrefix, 
+                            ,Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
+    virtual Long64_t       DrawScript(const char* wrapperPrefix, 
                                       const char *macrofilename, const char *cutfilename, 
-                                      Option_t *option, Int_t nentries, Int_t firstentry) = 0;
-    virtual Int_t          DrawSelect(const char *varexp, const char *selection, Option_t *option
-                            ,Int_t nentries, Int_t firstentry) = 0;
-    virtual Int_t          Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
-                            ,Int_t nentries, Int_t firstentry) = 0;
+                                      Option_t *option, Long64_t nentries, Long64_t firstentry) = 0;
+    virtual Long64_t       DrawSelect(const char *varexp, const char *selection, Option_t *option
+                            ,Long64_t nentries, Long64_t firstentry) = 0;
+    virtual Long64_t       Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
+                            ,Long64_t nentries, Long64_t firstentry) = 0;
     virtual Int_t          GetDimension() const = 0;
     virtual TH1           *GetHistogram() const = 0;
     virtual Int_t          GetNfill() const = 0;
-    virtual Int_t          GetSelectedRows() const = 0;
+    virtual Long64_t       GetSelectedRows() const = 0;
     virtual TTreeFormula  *GetSelect() const = 0;
     virtual TTreeFormula  *GetVar1() const = 0;
     virtual TTreeFormula  *GetVar2() const = 0;
@@ -72,18 +72,18 @@ public:
                                      const char *macrofilename = 0, const char *cutfilename = 0, 
                                      const char *option = 0, Int_t maxUnrolling = 3) = 0;
     virtual TPrincipal    *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
-                           ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
-    virtual Int_t          Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0) = 0;
-    virtual Int_t          Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0) = 0;
-    virtual Int_t          Scan(const char *varexp, const char *selection, Option_t *option
-                            ,Int_t nentries, Int_t firstentry) = 0;
+                           ,Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
+    virtual Long64_t       Process(const char *filename,Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
+    virtual Long64_t       Process(TSelector *selector,Option_t *option="",  Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
+    virtual Long64_t       Scan(const char *varexp, const char *selection, Option_t *option
+                            ,Long64_t nentries, Long64_t firstentry) = 0;
     virtual TSQLResult    *Query(const char *varexp, const char *selection, Option_t *option
-                            ,Int_t nentries, Int_t firstentry) = 0;
-    virtual void           SetEstimate(Int_t n) = 0;
+                            ,Long64_t nentries, Long64_t firstentry) = 0;
+    virtual void           SetEstimate(Long64_t n) = 0;
     virtual void           SetTree(TTree *t) = 0;
     virtual void           StartViewer(Int_t ww, Int_t wh) = 0;
-    virtual Int_t          UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
-                            ,Int_t nentries, Int_t firstentry) = 0;
+    virtual Long64_t       UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
+                            ,Long64_t nentries, Long64_t firstentry) = 0;
     virtual void           UpdateFormulaLeaves() = 0;
 
    static  TVirtualTreePlayer *TreePlayer(TTree *obj);

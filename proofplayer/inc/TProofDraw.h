@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.2 2004/04/06 21:24:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.3 2004/07/09 01:34:51 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -53,7 +53,7 @@ public:
    virtual void        Begin(TTree *);
    virtual void        SlaveBegin(TTree *);
    virtual Bool_t      Notify();
-   virtual Bool_t      Process(Int_t /*entry*/);
+   virtual Bool_t      Process(Long64_t /*entry*/);
    virtual void        SlaveTerminate();
    virtual void        Terminate();
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.30 2004/07/08 08:09:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.31 2004/07/20 09:40:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -46,7 +46,7 @@ protected:
     Bool_t         fScanRedirect;    //  Switch to redirect TTree::Scan output to a file
     const char    *fScanFileName;    //  Name of the file where Scan is redirected
     Int_t          fDimension;       //  Dimension of the current expression
-    Int_t          fSelectedRows;    //  Number of selected entries
+    Long64_t       fSelectedRows;    //  Number of selected entries
     TH1           *fHistogram;       //! Pointer to histogram used for the projection
     TSelectorDraw *fSelector;        //! Pointer to current selector
     TSelector     *fSelectorFromFile;//! Pointer to a user defined selector created by this TTreePlayer object 
@@ -66,20 +66,20 @@ public:
 
     virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname);
     virtual TTree    *CopyTree(const char *selection, Option_t *option
-                       ,Int_t nentries, Int_t firstentry);
-    virtual Int_t     DrawScript(const char* wrapperPrefix, 
+                       ,Long64_t nentries, Long64_t firstentry);
+    virtual Long64_t  DrawScript(const char* wrapperPrefix, 
                                  const char *macrofilename, const char *cutfilename, 
-                                 Option_t *option, Int_t nentries, Int_t firstentry);
-    virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option
-                                 ,Int_t nentries, Int_t firstentry);
-    virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,
-                          Option_t *goption ,Int_t nentries, Int_t firstentry);
+                                 Option_t *option, Long64_t nentries, Long64_t firstentry);
+    virtual Long64_t  DrawSelect(const char *varexp, const char *selection, Option_t *option
+                                 ,Long64_t nentries, Long64_t firstentry);
+    virtual Long64_t  Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,
+                          Option_t *goption ,Long64_t nentries, Long64_t firstentry);
     virtual Int_t     GetDimension() const {return fDimension;}
     TH1              *GetHistogram() const {return fHistogram;}
     virtual Int_t     GetNfill() const {return fSelector->GetNfill();}
     const char       *GetScanFileName() const {return fScanFileName;}
     TTreeFormula     *GetSelect() const    {return fSelector->GetSelect();}
-    virtual Int_t     GetSelectedRows() const {return fSelectedRows;}
+    virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
     TSelector        *GetSelector() const {return fSelector;}
     TTreeFormula     *GetVar1() const {return fSelector->GetVar1();}
     TTreeFormula     *GetVar2() const {return fSelector->GetVar2();}
@@ -96,24 +96,24 @@ public:
                                 const char *macrofilename = 0, const char *cutfilename = 0, 
                                 const char *option = 0, Int_t maxUnrolling = 3);
     TPrincipal       *Principal(const char *varexp, const char *selection, Option_t *option
-                       ,Int_t nentries, Int_t firstentry);
-    virtual Int_t     Process(const char *filename,Option_t *option, Int_t nentries, Int_t firstentry);
-    virtual Int_t     Process(TSelector *selector,Option_t *option,  Int_t nentries, Int_t firstentry);
-    virtual Int_t     Scan(const char *varexp, const char *selection, Option_t *option
-                       ,Int_t nentries, Int_t firstentry);
+                       ,Long64_t nentries, Long64_t firstentry);
+    virtual Long64_t  Process(const char *filename,Option_t *option, Long64_t nentries, Long64_t firstentry);
+    virtual Long64_t  Process(TSelector *selector,Option_t *option,  Long64_t nentries, Long64_t firstentry);
+    virtual Long64_t  Scan(const char *varexp, const char *selection, Option_t *option
+                       ,Long64_t nentries, Long64_t firstentry);
     Bool_t            ScanRedirected() {return fScanRedirect;}
     virtual TSQLResult *Query(const char *varexp, const char *selection, Option_t *option
-                         ,Int_t nentries, Int_t firstentry);
-    virtual void      SetEstimate(Int_t n);
+                         ,Long64_t nentries, Long64_t firstentry);
+    virtual void      SetEstimate(Long64_t n);
     void              SetScanRedirect(Bool_t on=kFALSE) {fScanRedirect = on;}
     void              SetScanFileName(const char *name) {fScanFileName=name;}
     virtual void      SetTree(TTree *t) {fTree = t;}
     virtual void      StartViewer(Int_t ww, Int_t wh);
-    virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
-                       ,Int_t nentries, Int_t firstentry);
+    virtual Long64_t  UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
+                       ,Long64_t nentries, Long64_t firstentry);
     virtual void      UpdateFormulaLeaves();
 
-    ClassDef(TTreePlayer,2)  //Manager class to play with TTrees
+    ClassDef(TTreePlayer,3)  //Manager class to play with TTrees
 };
 
 #endif

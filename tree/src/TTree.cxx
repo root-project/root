@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.200 2004/07/09 16:21:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.201 2004/07/20 09:40:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -127,9 +127,9 @@
 //   TBranch *newBranch = t3->Branch("new_v",&new_v,"new_v/F");
 //
 //   //read the number of entries in the t3
-//   Int_t nentries = (Int_t)t3->GetEntries();
+//   Long64_t nentries = t3->GetEntries();
 //
-//   for (Int_t i = 0; i < nentries; i++){
+//   for (Long64_t i = 0; i < nentries; i++){
 //     new_v= gRandom->Gaus(0,1);
 //     newBranch->Fill();
 //   }
@@ -626,7 +626,7 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
 }
 
 //______________________________________________________________________________
-Int_t TTree::AutoSave(Option_t *option)
+Long64_t TTree::AutoSave(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*AutoSave tree header every fAutoSave bytes*-*-*-*-*-*
 //*-*                  ==========================================
@@ -702,7 +702,7 @@ Int_t TTree::AutoSave(Option_t *option)
 
    if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return 0;
    if (gDebug > 0) {
-      printf("AutoSave Tree:%s after %g bytes written\n",GetName(),fTotBytes);
+      printf("AutoSave Tree:%s after %lld bytes written\n",GetName(),fTotBytes);
    }
    TString opt = option;
    opt.ToLower();
@@ -710,7 +710,7 @@ Int_t TTree::AutoSave(Option_t *option)
    TDirectory *dirsav = gDirectory;
    fDirectory->cd();
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
-   Int_t nbytes;
+   Long64_t nbytes;
    if (opt.Contains("overwrite")) {
       nbytes = Write("",TObject::kOverwrite);
    } else {
@@ -1590,7 +1590,7 @@ TFile *TTree::ChangeFile(TFile *file)
 }
 
 //______________________________________________________________________________
-TTree *TTree::CloneTree(Int_t nentries, Option_t *)
+TTree *TTree::CloneTree(Long64_t nentries, Option_t *)
 {
 // Create a clone of this tree and copy nentries
 // By default copy all entries
@@ -1631,7 +1631,7 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
 
   // delete non active branches from the clone
    Int_t j,k,l,nb1,nb2;
-   Int_t i;
+   Long64_t i;
    TObjArray *lb, *lb1;
    TBranch *branch, *b1, *b2;
    TObjArray *leaves = newtree->GetListOfLeaves();
@@ -1669,8 +1669,8 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
    CopyAddresses(newtree);
 
    // may be copy some entries
-   if (nentries < 0) nentries = Int_t(fEntries);
-   if (nentries > fEntries) nentries = Int_t(fEntries);
+   if (nentries < 0) nentries = fEntries;
+   if (nentries > fEntries) nentries = fEntries;
    for (i=0;i<nentries;i++) {
       if (LoadTree(i) < 0) break;
       GetEntry(i);
@@ -1730,7 +1730,7 @@ void TTree::CopyAddresses(TTree *tree)
 }
 
 //______________________________________________________________________________
-Int_t TTree::CopyEntries(TTree *tree, Int_t nentries)
+Long64_t TTree::CopyEntries(TTree *tree, Long64_t nentries)
 {
 // Copy nentries from tree to this tree
 // By default copy all entries
@@ -1738,11 +1738,11 @@ Int_t TTree::CopyEntries(TTree *tree, Int_t nentries)
 
    if (tree == 0) return 0;
 
-   Int_t nbytes = 0;
-   Int_t treeEntries = Int_t(tree->GetEntriesFast());
+   Long64_t nbytes = 0;
+   Long64_t treeEntries = tree->GetEntriesFast();
    if (nentries < 0) nentries = treeEntries;
    if (nentries > treeEntries) nentries = treeEntries;
-   for (Int_t i=0;i<nentries;i++) {
+   for (Long64_t i=0;i<nentries;i++) {
       if (tree->LoadTree(i) < 0) break;
       tree->GetEntry(i);
       nbytes += Fill();
@@ -1751,7 +1751,7 @@ Int_t TTree::CopyEntries(TTree *tree, Int_t nentries)
 }
 
 //______________________________________________________________________________
-TTree *TTree::CopyTree(const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+TTree *TTree::CopyTree(const char *selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*copy a Tree with selection*-*-*-*-*-*
 //*-*              ==========================
@@ -1855,7 +1855,7 @@ void TTree::Delete(Option_t *option)
 }
 
 //______________________________________________________________________________
-Int_t TTree::Draw(const char *varexp, const TCut &selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Long64_t TTree::Draw(const char *varexp, const TCut &selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -1870,7 +1870,7 @@ Int_t TTree::Draw(const char *varexp, const TCut &selection, Option_t *option, I
 }
 
 //______________________________________________________________________________
-Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -2413,7 +2413,7 @@ TLeaf *TTree::FindLeaf(const char* searchname)
 }
 
 //______________________________________________________________________________
-Int_t TTree::Fit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
+Long64_t TTree::Fit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Fit  a projected item(s) from a Tree*-*-*-*-*-*-*-*-*-*
 //*-*              ======================================
@@ -2566,7 +2566,7 @@ TFile *TTree::GetCurrentFile() const
 }
 
 //______________________________________________________________________________
-Stat_t TTree::GetEntriesFriend() const
+Long64_t TTree::GetEntriesFriend() const
 {
 // return number of entries of this Tree if not zero
 // otherwise return the number of entries in the first friend Tree.
@@ -2581,7 +2581,7 @@ Stat_t TTree::GetEntriesFriend() const
 }
 
 //______________________________________________________________________________
-Int_t TTree::GetEntry(Int_t entry, Int_t getall)
+Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 {
 //*-*-*-*-*-*Read all branches of entry and return total number of bytes*-*-*
 //*-*        ===========================================================
@@ -2628,7 +2628,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //   OPTION 1
 //   --------
 //
-//    for (Int_t i=0;i<nentries;i++) {
+//    for (Long64_t i=0;i<nentries;i++) {
 //       T.GetEntry(i);
 //       // the object event has been filled at this point
 //    }
@@ -2654,7 +2654,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //   TBranch *branch = T.GetBranch("event");
 //   branch->SetAddress(&event);
 //   branch->SetAutoDelete(kTRUE);
-//    for (Int_t i=0;i<nentries;i++) {
+//    for (Long64_t i=0;i<nentries;i++) {
 //       T.GetEntry(i);
 //       // the objrect event has been filled at this point
 //    }
@@ -2664,7 +2664,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //   OPTION 3
 //   --------
 //   Same as option 1, but you delete yourself the event.
-//    for (Int_t i=0;i<nentries;i++) {
+//    for (Long64_t i=0;i<nentries;i++) {
 //       delete event;
 //       event = 0;  // EXTREMELY IMPORTANT
 //       T.GetEntry(i);
@@ -2698,12 +2698,9 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
       if (t) {
-         TVirtualIndex *index = t->GetTreeIndex();
-         if (index) {
-            Int_t jentry = index->GetEntryNumberFriend(this); 
-            nb = t->GetEntry(jentry,getall);
-         }
-         else t->GetEntry(entry,getall);
+         if ( t->LoadTreeFriend(entry,this) >= 0 ) {
+            nb = t->GetEntry(t->GetReadEntry(),getall);
+         } else nb = 0;
          if (nb < 0) return nb;
          nbytes += nb;
       }
@@ -2713,7 +2710,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 
 
 //______________________________________________________________________________
-Int_t TTree::GetEntryNumber(Int_t entry) const
+Long64_t TTree::GetEntryNumber(Long64_t entry) const
 {
 //*-*-*-*-*-*Return entry number corresponding to entry*-*-*
 //*-*        ==========================================
@@ -2726,7 +2723,7 @@ Int_t TTree::GetEntryNumber(Int_t entry) const
 
 
 //______________________________________________________________________________
-Int_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
+Long64_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 {
 // Return entry number corresponding to major and minor number
 // Note that this function returns only the entry number, not the data
@@ -2749,7 +2746,7 @@ Int_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 
 
 //______________________________________________________________________________
-Int_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
+Long64_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 {
 // Return entry number corresponding to major and minor number
 // Note that this function returns only the entry number, not the data
@@ -2774,7 +2771,7 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 // For example:
 //     Int_t run   = 1234;
 //     Int_t event = 345;
-//     Int_t serial= tree.GetEntryNumberWithIndex(run,event);
+//     Long64_t serial= tree.GetEntryNumberWithIndex(run,event);
 //    now the variable serial is in the range [0,nentries] and one can do
 //    tree.GetEntry(serial);
 //
@@ -2783,7 +2780,7 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 //  and its friend may have different entry serial numbers corresponding
 //  to (major,minor).
 
-   Int_t serial = GetEntryNumberWithIndex(major, minor);
+   Long64_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;
    Int_t i;
    Int_t nbytes = 0;
@@ -2942,7 +2939,7 @@ Double_t TTree::GetMaximum(const char *columname)
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
    Double_t cmax = -FLT_MAX; //in float.h
-   for (Int_t i=0;i<fEntries;i++) {
+   for (Long64_t i=0;i<fEntries;i++) {
       branch->GetEntry(i);
       for (Int_t j=0;j<leaf->GetLen();j++) {
          Double_t val = leaf->GetValue(j);
@@ -2972,7 +2969,7 @@ Double_t TTree::GetMinimum(const char *columname)
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
    Double_t cmin = FLT_MAX; //in float.h
-   for (Int_t i=0;i<fEntries;i++) {
+   for (Long64_t i=0;i<fEntries;i++) {
       branch->GetEntry(i);
       for (Int_t j=0;j<leaf->GetLen();j++) {
          Double_t val = leaf->GetValue(j);
@@ -3025,7 +3022,7 @@ TList *TTree::GetUserInfo()
 }
 
 //______________________________________________________________________________
-Int_t TTree::LoadTree(Int_t entry)
+Long64_t TTree::LoadTree(Long64_t entry)
 {
 //*-*-*-*-*-*-*-*-*Set current Tree entry
 //*-*              ======================
@@ -3083,7 +3080,7 @@ Int_t TTree::LoadTree(Int_t entry)
 }
 
 //______________________________________________________________________________
-Int_t TTree::LoadTreeFriend(Int_t entry, TTree *T)
+Long64_t TTree::LoadTreeFriend(Long64_t entry, TTree *T)
 {
   // called by TTree::LoadTree when TTree *T looks for the entry
   // number in a friend Tree (this) corresponding to the entry number in T.
@@ -3112,7 +3109,7 @@ Int_t TTree::MakeSelector(const char *selector)
 //       - void    Begin(TTree *tree)
 //       - void    Init(TTree *tree)
 //       - Bool_t  Notify()
-//       - Bool_t  Process(Int_t entry)
+//       - Bool_t  Process(Long64_t entry)
 //       - void    Terminate
 //
 // The class selector derives from TSelector.
@@ -3177,9 +3174,9 @@ Int_t TTree::MakeClass(const char *classname, Option_t *option)
 //    - Definition of analysis class (data and functions)
 //    - the following class functions:
 //       - constructor (connecting by default the Tree file)
-//       - GetEntry(Int_t entry)
+//       - GetEntry(Long64_t entry)
 //       - Init(TTree *tree) to initialize a new TTree
-//       - Show(Int_t entry) to read and Dump entry
+//       - Show(Long64_t entry) to read and Dump entry
 //
 // The generated code in classname.C includes only the main
 // analysis function Loop.
@@ -3300,9 +3297,10 @@ TTree *TTree::MergeTrees(TList *list)
 }
 
 //______________________________________________________________________________
-Int_t TTree::Merge(TCollection *list)
+Long64_t TTree::Merge(TCollection *list)
 {
    //function merging the Trees in the TList into this Tree.
+   // return the total number of entries in the merged Tree
 
    if (!list) return 0;
    TIter next(list);
@@ -3326,7 +3324,7 @@ Int_t TTree::Merge(TCollection *list)
       tree->ResetBranchAddresses();
    }
 
-   return (Int_t) GetEntries();
+   return GetEntries();
 }
 
 //______________________________________________________________________________
@@ -3344,7 +3342,7 @@ Bool_t TTree::Notify()
 }
 
 //______________________________________________________________________________
-TPrincipal *TTree::Principal(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+TPrincipal *TTree::Principal(const char *varexp, const char *selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Interface to the Principal Components Analysis class*-*-*
 //*-*              ====================================================
@@ -3407,18 +3405,18 @@ void TTree::Print(Option_t *option) const
      TKey *key = fDirectory->GetKey(GetName());
      if (key) {skey = key->GetKeylen(); s = key->GetNbytes();}
   }
-  Double_t total = skey;
+  Long64_t total = skey;
   if (fZipBytes > 0) total += fTotBytes;
   TBuffer b(TBuffer::kWrite,10000);
   TTree::Class()->WriteBuffer(b,(TTree*)this);
   total += b.Length();
 
-  Long64_t file     = Long64_t(fZipBytes) + s;
+  Long64_t file     = fZipBytes + s;
   Float_t cx     = 1;
-  if (fZipBytes) cx = fTotBytes/fZipBytes;
+  if (fZipBytes) cx = (fTotBytes+0.00001)/fZipBytes;
   Printf("******************************************************************************");
   Printf("*Tree    :%-10s: %-54s *",GetName(),GetTitle());
-  Printf("*Entries : %8d : Total = %15.10g bytes  File  Size = %lld *",Int_t(fEntries),total,file);
+  Printf("*Entries : %8lld : Total = %15lld bytes  File  Size = %10lld *",fEntries,total,file);
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
@@ -3427,24 +3425,24 @@ void TTree::Print(Option_t *option) const
   TBranch *br;
   TLeaf *leaf;
   if (strstr(option,"toponly")) {
-     Int_t *count = new Int_t[nl];
+     Long64_t *count = new Long64_t[nl];
      Int_t keep =0;
      for (l=0;l<nl;l++) {
         leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
         br   = leaf->GetBranch();
         if (strchr(br->GetName(),'.')) {
            count[l] = -1;
-           count[keep] += (Int_t)br->GetZipBytes();
+           count[keep] += br->GetZipBytes();
         } else {
            keep = l;
-           count[keep]  = (Int_t)br->GetZipBytes();
+           count[keep]  = br->GetZipBytes();
         }
      }
      for (l=0;l<nl;l++) {
         if (count[l] < 0) continue;
         leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
         br   = leaf->GetBranch();
-        printf("branch: %-20s %9d\n",br->GetName(),count[l]);
+        printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
      }
      delete [] count;
   } else {
@@ -3472,7 +3470,7 @@ void TTree::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t firstentry)
+Long64_t TTree::Process(const char *filename,Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
 //*-*              ================================================
@@ -3484,12 +3482,12 @@ Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
 //
-//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
+//     Bool_t TSelector::ProcessCut(Long64_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise.
-//     void TSelector::ProcessFill(Int_t entry). This function is called for
+//     void TSelector::ProcessFill(Long64_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
 //     void TSelector::Terminate(). This function is called at the end of
 //          the loop on all events.
@@ -3520,7 +3518,7 @@ Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t
 }
 
 //______________________________________________________________________________
-Int_t TTree::Process(TSelector *selector,Option_t *option, Int_t nentries, Int_t firstentry)
+Long64_t TTree::Process(TSelector *selector,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this tree executing the code in selector*-*-*-*-*
 //*-*              ================================================
@@ -3530,12 +3528,12 @@ Int_t TTree::Process(TSelector *selector,Option_t *option, Int_t nentries, Int_t
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
 //
-//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
+//     Bool_t TSelector::ProcessCut(Long64_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise.
-//     void TSelector::ProcessFill(Int_t entry). This function is called for
+//     void TSelector::ProcessFill(Long64_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
 //     void TSelector::Terminate(). This function is called at the end of
 //          the loop on all events.
@@ -3548,7 +3546,7 @@ Int_t TTree::Process(TSelector *selector,Option_t *option, Int_t nentries, Int_t
 }
 
 //______________________________________________________________________________
-Int_t TTree::Project(const char *hname, const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Long64_t TTree::Project(const char *hname, const char *varexp, const char *selection, Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Make a projection of a Tree using selections*-*-*-*-*-*-*
 //*-*              =============================================
@@ -3566,7 +3564,7 @@ Int_t TTree::Project(const char *hname, const char *varexp, const char *selectio
    if (option) sprintf(opt,"%sgoff",option);
    else        strcpy(opt,"goff");
 
-   Int_t nsel = Draw(var,selection,opt,nentries,firstentry);
+   Long64_t nsel = Draw(var,selection,opt,nentries,firstentry);
 
    delete [] var;
    delete [] opt;
@@ -3574,7 +3572,7 @@ Int_t TTree::Project(const char *hname, const char *varexp, const char *selectio
 }
 
 //______________________________________________________________________________
-TSQLResult *TTree::Query(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+TSQLResult *TTree::Query(const char *varexp, const char *selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Loop on Tree & return TSQLResult object containing entries following selection
 
@@ -3673,7 +3671,7 @@ void TTree::ResetBranchAddresses()
 }
 
 //______________________________________________________________________________
-Int_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Long64_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
    // then print only first 8 columns. If varexp = "*" print all columns.
@@ -3930,7 +3928,7 @@ void TTree::SetBranchStyle(Int_t style)
 }
 
 //______________________________________________________________________________
-void TTree::SetDebug(Int_t level, Int_t min, Int_t max)
+void TTree::SetDebug(Int_t level, Long64_t min, Long64_t max)
 {
    // Set the debug level and the debug range
    // for entries in the debug range, the functions TBranchElement::Fill
@@ -3963,7 +3961,7 @@ void TTree::SetDirectory(TDirectory *dir)
 }
 
 //_______________________________________________________________________
-void TTree::SetEntries(Double_t n)
+void TTree::SetEntries(Long64_t n)
 {
   // Set number of entries in the Tree.
   // This function should be called only when one fills each branch
@@ -3978,7 +3976,7 @@ void TTree::SetEntries(Double_t n)
 }
 
 //_______________________________________________________________________
-void TTree::SetEstimate(Int_t n)
+void TTree::SetEstimate(Long64_t n)
 {
 //*-*-*-*-*-*-*-*-*Set number of entries to estimate variable limits*-*-*-*
 //*-*              ================================================
@@ -4070,7 +4068,7 @@ void TTree::SetWeight(Double_t w, Option_t *)
 }
 
 //_______________________________________________________________________
-void TTree::Show(Int_t entry, Int_t lenmax)
+void TTree::Show(Long64_t entry, Int_t lenmax)
 {
 //*-*-*-*-*-*Print values of all active leaves for entry*-*-*-*-*-*-*-*
 //*-*        ===========================================
@@ -4078,7 +4076,7 @@ void TTree::Show(Int_t entry, Int_t lenmax)
 // if a leaf is an array, a maximum of lenmax elements is printed.
 //
    if (entry != -1) GetEntry(entry);
-   printf("======> EVENT:%d\n",fReadEntry);
+   printf("======> EVENT:%lld\n",fReadEntry);
    TObjArray *leaves  = GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
    Int_t ltype;
@@ -4142,18 +4140,20 @@ void TTree::Streamer(TBuffer &b)
          return;
       }
       //====process old versions before automatic schema evolution
+      Stat_t djunk;
+      Int_t ijunk;
       TNamed::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
       TAttMarker::Streamer(b);
       b >> fScanField;
-      b >> fMaxEntryLoop;
-      b >> fMaxVirtualSize;
-      b >> fEntries;
-      b >> fTotBytes;
-      b >> fZipBytes;
-      b >> fAutoSave;
-      b >> fEstimate;
+      b >> ijunk; fMaxEntryLoop   = (Long64_t)ijunk;
+      b >> ijunk; fMaxVirtualSize = (Long64_t)ijunk;
+      b >> djunk; fEntries  = (Long64_t)djunk;
+      b >> djunk; fTotBytes = (Long64_t)djunk;
+      b >> djunk; fZipBytes = (Long64_t)djunk;
+      b >> ijunk; fAutoSave = (Long64_t)ijunk;
+      b >> ijunk; fEstimate = (Long64_t)ijunk;
       if (fEstimate <= 10000) fEstimate = 1000000;
       fBranches.Streamer(b);
       fLeaves.Streamer(b);
@@ -4176,7 +4176,7 @@ void TTree::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-Int_t TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Int_t nentries, Int_t firstentry)
+Long64_t TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*Unbinned fit of one or more variable(s) from a Tree*-*-*-*-*-*
 //*-*        ===================================================

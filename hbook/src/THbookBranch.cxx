@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.5 2002/08/13 13:44:33 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.6 2002/12/02 18:50:03 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -40,7 +40,7 @@ void THbookBranch::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-Int_t THbookBranch::GetEntry(Int_t entry, Int_t /*getall*/)
+Int_t THbookBranch::GetEntry(Long64_t entry, Int_t /*getall*/)
 {
    THbookTree *tree = (THbookTree*)GetTree();
    THbookFile *file = tree->GetHbookFile();

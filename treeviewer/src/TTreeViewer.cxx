@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.43 2004/06/01 14:36:59 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.44 2004/07/13 12:46:06 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1362,16 +1362,16 @@ void TTreeViewer::ExecuteDraw()
    if (fEnableCut) cut = Cut();
 
    // get entries to be processed
-   Int_t nentries = (Int_t)(fSlider->GetMaxPosition() -
+   Long64_t nentries = (Long64_t)(fSlider->GetMaxPosition() -
                             fSlider->GetMinPosition() + 1);
-   Int_t firstentry =(Int_t) fSlider->GetMinPosition();
-printf("firstentry=%d, nentries=%d\n",firstentry,nentries);
+   Long64_t firstentry =(Long64_t) fSlider->GetMinPosition();
+printf("firstentry=%lld, nentries=%lld\n",firstentry,nentries);
    // check if Scan is checked and if there is something in the box
    if (fScanMode) {
 //      fBarScan->SetState(kButtonUp);
       fScanMode = kFALSE;
       if (strlen(ScanList())) sprintf(varexp, ScanList());
-      sprintf(command, "tv__tree->Scan(\"%s\",\"%s\",\"%s\", %i, %i);",
+      sprintf(command, "tv__tree->Scan(\"%s\",\"%s\",\"%s\", %lld, %lld);",
               varexp, cut, gopt, nentries, firstentry);
       if (fBarScan->GetState() == kButtonDown) {
          ((TTreePlayer *)fTree->GetPlayer())->SetScanRedirect(kTRUE);
@@ -1422,7 +1422,7 @@ printf("firstentry=%d, nentries=%d\n",firstentry,nentries);
       gopt = "";
       fLastOption = "";
    }
-   sprintf(command, "tv__tree->Draw(\"%s\",\"%s\",\"%s\", %i, %i);",
+   sprintf(command, "tv__tree->Draw(\"%s\",\"%s\",\"%s\", %lld, %lld);",
            varexp, cut, gopt, nentries, firstentry);
    if (fCounting) return;
    fCounting = kTRUE;
@@ -1526,7 +1526,7 @@ Int_t TTreeViewer::MakeSelector(const char* selector)
 }
 
 //______________________________________________________________________________
-Int_t TTreeViewer::Process(const char* filename, Option_t *option, Int_t nentries, Int_t firstentry)
+Long64_t TTreeViewer::Process(const char* filename, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Get use of TTree::Process() via the context menu.
 
@@ -2474,8 +2474,8 @@ void TTreeViewer::PrintEntries()
 
    if (!fTree) return;
    char * msg = new char[100];
-   sprintf(msg, "First entry : %i Last entry : %i",
-           (Int_t)fSlider->GetMinPosition(), (Int_t)fSlider->GetMaxPosition());
+   sprintf(msg, "First entry : %lld Last entry : %lld",
+           (Long64_t)fSlider->GetMinPosition(), (Long64_t)fSlider->GetMaxPosition());
    Message(msg);
    delete[] msg;
 }
@@ -2628,7 +2628,7 @@ void TTreeViewer::SetRecordName(const char *name)
 }
 
 //______________________________________________________________________________
-void TTreeViewer::SetCurrentRecord(Int_t entry)
+void TTreeViewer::SetCurrentRecord(Long64_t entry)
 {
    fCombo->Select(entry);
 }
@@ -2656,7 +2656,7 @@ void TTreeViewer::UpdateCombo()
    // Updates combo box to current session entries.
 
    fCombo->RemoveEntries(0, 1000);
-   for (Int_t entry=0; entry<fSession->GetEntries(); entry++) {
+   for (Long64_t entry=0; entry<fSession->GetEntries(); entry++) {
       fCombo->AddEntry(fSession->GetRecord(entry)->GetName(), entry);
    }
 }

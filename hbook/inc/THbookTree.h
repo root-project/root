@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookTree.h,v 1.3 2002/08/13 13:44:33 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.h,v 1.4 2003/11/03 14:57:02 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -44,15 +44,15 @@ public:
    THbookTree();
    THbookTree(const char *name, Int_t id);
    virtual ~THbookTree();
-   virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
+   virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall=0);
    THbookFile       *GetHbookFile() {return fFile;}
    virtual Int_t     GetID() {return fID;}
    virtual Int_t     GetType() {return fType;}
            Float_t  *GetX() {return (Float_t*)fX;}
-   virtual void      InitBranches(Int_t entry);
+   virtual void      InitBranches(Long64_t entry);
            char     *MakeX(Int_t nvars) {fX = new char[nvars]; return fX;}
    virtual void      Print(Option_t *option="") const;
-   virtual void      SetEntries(Double_t n);
+   virtual void      SetEntries(Long64_t n);
    virtual void      SetHbookFile(THbookFile *file) {fFile = file;}
    virtual void      SetType(Int_t atype) {fType = atype;}
 

@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.7 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.8 2003/11/03 14:57:02 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -85,7 +85,7 @@ THbookTree::~THbookTree()
 
 
 //______________________________________________________________________________
-Int_t THbookTree::GetEntry(Int_t entry, Int_t /*getall*/)
+Int_t THbookTree::GetEntry(Long64_t entry, Int_t /*getall*/)
 {
    fReadEntry = entry;
    return fFile->GetEntry(entry,fID,fType,GetX());
@@ -93,7 +93,7 @@ Int_t THbookTree::GetEntry(Int_t entry, Int_t /*getall*/)
 
 
 //______________________________________________________________________________
-void THbookTree::InitBranches(Int_t entry)
+void THbookTree::InitBranches(Long64_t entry)
 {
    Int_t nfill = GetPlayer()->GetNfill();
    if (nfill > 0) {fInit = kFALSE; return;}
@@ -117,7 +117,7 @@ void THbookTree::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void THbookTree::SetEntries(Double_t n)
+void THbookTree::SetEntries(Long64_t n)
 {
    fEntries = n;
    TIter next(GetListOfBranches());

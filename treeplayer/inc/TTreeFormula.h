@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.35 2004/01/10 10:52:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.36 2004/01/13 18:46:39 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -97,10 +97,10 @@ protected:
    virtual void*      GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const;
    Int_t       GetRealInstance(Int_t instance, Int_t codeindex);
    
-   TLeaf*      GetLeafWithDatamember(const char* topchoice, const char* nextchice, UInt_t readentry) const;
+   TLeaf*      GetLeafWithDatamember(const char* topchoice, const char* nextchice, Long64_t readentry) const;
    Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, 
                                const char* method,const char* params, 
-                               UInt_t readentry) const;
+                               Long64_t readentry) const;
 
    TList      *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
    TAxis      *fAxis;           //! pointer to histogram axis if this is a string

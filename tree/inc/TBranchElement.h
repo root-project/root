@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.32 2004/01/10 10:52:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.33 2004/03/09 08:16:27 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -75,7 +75,7 @@ public:
     UInt_t           GetCheckSum() {return fCheckSum;}
 	virtual const char  *GetClassName() const {return fClassName.Data();}
     virtual const char  *GetClonesName() const {return fClonesName.Data();}
-            Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
+            Int_t    GetEntry(Long64_t entry=0, Int_t getall = 0);
             const char  *GetIconName() const;
             Int_t    GetID() const {return fID;}
     TStreamerInfo   *GetInfo();

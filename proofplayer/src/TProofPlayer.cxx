@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.37 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.38 2004/07/09 01:34:51 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -166,7 +166,7 @@ void TProofPlayer::Feedback(TList *objs)
 }
 
 //______________________________________________________________________________
-Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
+Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                             Option_t *option, Long64_t nentries, Long64_t first,
                             TEventList * /*evl*/)
 {
@@ -305,7 +305,7 @@ void TProofPlayer::StopFeedback()
 }
 
 //______________________________________________________________________________
-Int_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
+Long64_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
                                const char *selection, Option_t *option,
                                Long64_t nentries, Long64_t firstentry)
 {
@@ -319,7 +319,7 @@ Int_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
    fInput->Add(varexpobj);
    fInput->Add(selectionobj);
 
-   Int_t r = Process(set, "TProofDraw", option, nentries, firstentry);
+   Long64_t r = Process(set, "TProofDraw", option, nentries, firstentry);
 
    fInput->Remove(varexpobj);
    fInput->Remove(selectionobj);
@@ -358,7 +358,7 @@ TProofPlayerRemote::~TProofPlayerRemote()
 }
 
 //______________________________________________________________________________
-Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
+Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                   Option_t *option, Long64_t nentries,
                                   Long64_t first, TEventList * /*evl*/)
 {
@@ -844,7 +844,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 
 
 //______________________________________________________________________________
-Int_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
+Long64_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
                                const char * /*selection*/, Option_t * /*option*/,
                                Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {

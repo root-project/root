@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.13 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.14 2003/12/19 09:31:52 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -76,7 +76,7 @@ TSelector *TSelector::GetSelector(const char *filename)
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
 //
-//     Bool_t TSelector::Process(Int_t entry). This function is called
+//     Bool_t TSelector::Process(Long64_t entry). This function is called
 //          to process an event. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          Once the entry is in memory one can apply a selection and if the
@@ -86,12 +86,12 @@ TSelector *TSelector::GetSelector(const char *filename)
 //          in the class to communicate between these two funtions.
 //          See WARNING below about entry.
 //          This method is used by PROOF.
-//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
+//     Bool_t TSelector::ProcessCut(Long64_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise. See WARNING below about entry.
-//     void TSelector::ProcessFill(Int_t entry). This function is called for
+//     void TSelector::ProcessFill(Long64_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
 //           See WARNING below about entry.
 //     void TSelector::Terminate(). This function is called at the end of

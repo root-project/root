@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.73 2004/05/29 20:36:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.74 2004/06/22 15:36:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -164,8 +164,8 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    fAddress        = (char*)address;
    fNBasketRAM     = kMaxRAM+1;
    fBasketRAM      = new Int_t[kMaxRAM]; for (i=0;i<kMaxRAM;i++) fBasketRAM[i] = -1;
-   fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
+   fBasketEntry    = new Long64_t[fMaxBaskets];
    fBasketSeek     = new Long64_t[fMaxBaskets];
 
    for (i=0;i<fMaxBaskets;i++) {
@@ -503,14 +503,11 @@ Int_t TBranch::Fill()
            //Increase BasketEntry buffer of a minimum of 10 locations
            // and a maximum of 50 per cent of current size
          Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
-         fBasketEntry  = TStorage::ReAllocInt(fBasketEntry, newsize, fMaxBaskets);
          fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
-//#ifndef R__LARGEFILE64
-//         fBasketSeek   = TStorage::ReAllocInt(fBasketSeek, newsize, fMaxBaskets);
-//#else
+         fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry, 
+                             newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
          fBasketSeek   = (Long64_t*)TStorage::ReAlloc(fBasketSeek,
                              newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
-//#endif
          fMaxBaskets   = newsize;
       }
 
@@ -698,14 +695,14 @@ const char *TBranch::GetIconName() const
 }
 
 //______________________________________________________________________________
-Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
+Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
 {
 //*-*-*-*-*-*Read all leaves of entry and return total number of bytes*-*-*
 //*-*        =========================================================
 // The input argument entry is the entry serial number in the current tree.
 // In case of a TChain, the entry number in the current Tree must be found
 //  before calling this function. example with TChain *chain;
-//  Int_t localEntry = chain->LoadTree(entry);
+//  Long64_t localEntry = chain->LoadTree(entry);
 //  branch->GetEntry(localEntry);
 //
 //  The function returns the number of bytes read from the input buffer.
@@ -718,8 +715,8 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
    //if (fReadEntry == entry) return 1;  //side effects in case user Clear his structures
    if (entry < 0 || entry >= fEntryNumber) return 0;
    Int_t nbytes;
-   Int_t first  = fBasketEntry[fReadBasket];
-   Int_t last;
+   Long64_t first  = fBasketEntry[fReadBasket];
+   Long64_t last;
    if (fReadBasket == fWriteBasket) last = fEntryNumber - 1;
    else                             last = fBasketEntry[fReadBasket+1] - 1;
 //
@@ -767,7 +764,7 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 
 
 //______________________________________________________________________________
-Int_t TBranch::GetEntryExport(Int_t entry, Int_t /*getall*/,
+Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/,
                               TClonesArray *list, Int_t nentries)
 {
 //*-*-*-*-*-*Read all leaves of entry and return total number of bytes*-*-*
@@ -778,8 +775,8 @@ Int_t TBranch::GetEntryExport(Int_t entry, Int_t /*getall*/,
    //if (fReadEntry == entry) return 1;  //side effects in case user Clear his structures
    if (entry < 0 || entry >= fEntryNumber) return 0;
    Int_t nbytes;
-   Int_t first  = fBasketEntry[fReadBasket];
-   Int_t last;
+   Long64_t first  = fBasketEntry[fReadBasket];
+   Long64_t last;
    if (fReadBasket == fWriteBasket) last = fEntryNumber - 1;
    else                             last = fBasketEntry[fReadBasket+1] - 1;
 //
@@ -798,7 +795,6 @@ Int_t TBranch::GetEntryExport(Int_t entry, Int_t /*getall*/,
    if (!buf->IsReading()) {
       basket->SetReadMode();
    }
-//   Int_t bufbegin = basket->GetEntryPointer(entry-first);
    Int_t bufbegin;
    Int_t *entryOffset = basket->GetEntryOffset();
    if (entryOffset) bufbegin = entryOffset[entry-first];
@@ -926,14 +922,14 @@ TBranch *TBranch::GetSubBranch(const TBranch *br) const
 }
 
 //______________________________________________________________________________
-Stat_t TBranch::GetTotalSize() const
+Long64_t TBranch::GetTotalSize() const
 {
 // Return total number of bytes in the branch (including current buffer)
 // =====================================================================
 
    TBuffer b(TBuffer::kWrite,10000);
    TBranch::Class()->WriteBuffer(b,(TBranch*)this);
-   Stat_t totbytes = 0;
+   Long64_t totbytes = 0;
    if (fZipBytes > 0) totbytes = fTotBytes;
    return totbytes + b.Length();
 }
@@ -973,8 +969,8 @@ void TBranch::Print(Option_t *) const
   aLength += (aLength / 54 + 1) * 80 + 100;
   if (aLength < 200) aLength = 200;
   char *bline = new char[aLength];
-  Double_t totBytes = GetTotalSize();
-  if (fZipBytes) cx = fTotBytes/fZipBytes;
+  Long64_t totBytes = GetTotalSize();
+  if (fZipBytes) cx = (fTotBytes+0.00001)/fZipBytes;
   if (len) sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
   else     sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
   if (strlen(bline) > UInt_t(kLINEND)) {
@@ -1015,16 +1011,16 @@ void TBranch::Print(Option_t *) const
      delete[] tmp;
   }
   Printf(bline);
-  if (fTotBytes > 2e9) {
-     Printf("*Entries :%9d : Total  Size=%11g bytes  File Size  = %lld *",Int_t(fEntries),totBytes,Long64_t(fZipBytes));
+  if (fTotBytes > 2000000000) {
+     Printf("*Entries :%lld : Total  Size=%11lld bytes  File Size  = %lld *",fEntries,totBytes,fZipBytes);
   } else {
      if (fZipBytes > 0) {
-        Printf("*Entries :%9d : Total  Size=%11d bytes  File Size  = %10d *",Int_t(fEntries),Int_t(totBytes),Int_t(fZipBytes));
+        Printf("*Entries :%9lld : Total  Size=%11lld bytes  File Size  = %10lld *",fEntries,totBytes,fZipBytes);
      } else {
         if (fWriteBasket > 0) {
-           Printf("*Entries :%9d : Total  Size=%11d bytes  All baskets in memory   *",Int_t(fEntries),Int_t(totBytes));
+           Printf("*Entries :%9lld : Total  Size=%11lld bytes  All baskets in memory   *",fEntries,totBytes);
         } else {
-           Printf("*Entries :%9d : Total  Size=%11d bytes  One basket in memory    *",Int_t(fEntries),Int_t(totBytes));
+           Printf("*Entries :%9lld : Total  Size=%11lld bytes  One basket in memory    *",fEntries,totBytes);
         }
      }
   }
@@ -1072,7 +1068,7 @@ void TBranch::Refresh(TBranch *b)
    delete [] fBasketEntry;
    delete [] fBasketSeek;
    fBasketBytes = new Int_t[fMaxBaskets];
-   fBasketEntry = new Int_t[fMaxBaskets];
+   fBasketEntry = new Long64_t[fMaxBaskets];
    fBasketSeek  = new Long64_t[fMaxBaskets];
    Int_t i;
    for (i=0;i<fMaxBaskets;i++) {
@@ -1302,35 +1298,51 @@ void TBranch::Streamer(TBuffer &b)
       fAddress = 0;
       gROOT->SetReadingObject(kTRUE);
       Version_t v = b.ReadVersion(&R__s, &R__c);
+      if (v > 9) {
+         TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         
+         fDirectory = gDirectory;
+         if (fFileName.Length() != 0) fDirectory = 0;
+         fNleaves = fLeaves.GetEntriesFast();
+         for (Int_t i=0;i<fNleaves;i++) {
+            TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+            leaf->SetBranch(this);
+         }
+         if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
+         gROOT->SetReadingObject(kFALSE);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (v > 5) {
 
-         Int_t i;
-         //TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         Int_t i,ijunk;
+         Stat_t djunk;
          TNamed::Streamer(b);
          if (v > 7) TAttFill::Streamer(b);
          b >> fCompress;
          b >> fBasketSize;
          b >> fEntryOffsetLen;
          b >> fWriteBasket;
-         b >> fEntryNumber;
+         b >> ijunk; fEntryNumber = (Long64_t)ijunk;
          b >> fOffset;
          b >> fMaxBaskets;
          if (v > 6) b >> fSplitLevel;
-         b >> fEntries;
-         b >> fTotBytes;
-         b >> fZipBytes;
+         b >> djunk; fEntries  = (Long64_t)djunk;
+         b >> djunk; fTotBytes = (Long64_t)djunk;
+         b >> djunk; fZipBytes = (Long64_t)djunk;
+
          fBranches.Streamer(b);
          gBranch = this;  // must be set again, was changed in previous statement
          fLeaves.Streamer(b);
          fBaskets.Streamer(b);
-         fBasketEntry = new Int_t[fMaxBaskets];
          fBasketBytes = new Int_t[fMaxBaskets];
+         fBasketEntry = new Long64_t[fMaxBaskets];
          fBasketSeek  = new Long64_t[fMaxBaskets];
          Char_t isArray;
          b >> isArray;
          b.ReadFastArray(fBasketBytes,fMaxBaskets);
          b >> isArray;
-         b.ReadFastArray(fBasketEntry,fMaxBaskets);
+         for (i=0;i<fMaxBaskets;i++) {b >> ijunk; fBasketEntry[i] = ijunk;}
          b >> isArray;
          for (i=0;i<fMaxBaskets;i++) {
             if (isArray == 2) b >> fBasketSeek[i];
@@ -1349,25 +1361,28 @@ void TBranch::Streamer(TBuffer &b)
          gROOT->SetReadingObject(kFALSE);
          return;
       }
-      //====process old versions before automatic schema evolution
+      //====process very old versions
+      Int_t n,i,ijunk;
+      Stat_t djunk;
       TNamed::Streamer(b);
       b >> fCompress;
       b >> fBasketSize;
       b >> fEntryOffsetLen;
       b >> fMaxBaskets;
       b >> fWriteBasket;
-      b >> fEntryNumber;
-      b >> fEntries;
-      b >> fTotBytes;
-      b >> fZipBytes;
+      b >> ijunk; fEntryNumber = (Long64_t)ijunk;
+      b >> djunk; fEntries  = (Long64_t)djunk;
+      b >> djunk; fTotBytes = (Long64_t)djunk;
+      b >> djunk; fZipBytes = (Long64_t)djunk;
       b >> fOffset;
       fBranches.Streamer(b);
       gBranch = this;  // must be set again, was changed in previous statement
       fLeaves.Streamer(b);
       fBaskets.Streamer(b);
       fNleaves = fLeaves.GetEntriesFast();
-      fBasketEntry = new Int_t[fMaxBaskets];
-      Int_t n  = b.ReadArray(fBasketEntry);
+      fBasketEntry = new Long64_t[fMaxBaskets];
+      b >> n;
+      for (i=0;i<n;i++) {b >> ijunk; fBasketEntry[i] = ijunk;}
       fBasketBytes = new Int_t[fMaxBaskets];
       if (v > 4) {
          n  = b.ReadArray(fBasketBytes);
@@ -1400,44 +1415,9 @@ void TBranch::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      //TBranch::Class()->WriteBuffer(b,this);
-      UInt_t R__c = b.WriteVersion(TBranch::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      TAttFill::Streamer(b);
-      b << fCompress;
-      b << fBasketSize;
-      b << fEntryOffsetLen;
-      b << fWriteBasket;
-      b << fEntryNumber;
-      b << fOffset;
       fMaxBaskets = fBaskets.GetEntriesFast();
       if (fMaxBaskets < 10) fMaxBaskets=10;
-      b << fMaxBaskets;
-      b << fSplitLevel;
-      b << fEntries;
-      b << fTotBytes;
-      b << fZipBytes;
-      fBranches.Streamer(b);
-      fLeaves.Streamer(b);
-      fBaskets.Streamer(b);
-      b << (Char_t)1;
-      b.WriteFastArray(fBasketBytes,fMaxBaskets);
-      b << (Char_t)1;
-      b.WriteFastArray(fBasketEntry,fMaxBaskets);
-      Char_t isBigFile = 1;
-      if (fTree->GetCurrentFile() && fTree->GetCurrentFile()->GetEND() > TFile::kStartBigFile) isBigFile = 2;
-      b << isBigFile;
-      if (isBigFile == 2 ) {
-         for (Int_t i=0;i<fMaxBaskets;i++) {
-            b << fBasketSeek[i];
-         }
-      } else {
-         for (Int_t i=0;i<fMaxBaskets;i++) {
-            b << (Int_t)fBasketSeek[i];
-         }
-      }
-      fFileName.Streamer(b);
-      b.SetByteCount(R__c, kTRUE);
+      TBranch::Class()->WriteBuffer(b,this);
    }
 }
 
@@ -1466,14 +1446,11 @@ void TBranch::WriteBasket(TBasket* basket)
       //Increase BasketEntry buffer of a minimum of 10 locations
       // and a maximum of 50 per cent of current size
       Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
-      fBasketEntry  = TStorage::ReAllocInt(fBasketEntry, newsize, fMaxBaskets);
       fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
-//#ifndef R__LARGEFILE64
-//      fBasketSeek   = TStorage::ReAllocInt(fBasketSeek, newsize, fMaxBaskets);
-//#else
+      fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry, 
+                          newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
       fBasketSeek   = (Long64_t*)TStorage::ReAlloc(fBasketSeek,
                           newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
-//#endif
       fMaxBaskets   = newsize;
    }
 

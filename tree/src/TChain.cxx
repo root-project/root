@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.92 2004/06/15 08:19:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.93 2004/06/22 06:42:11 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TChain::TChain(): TTree()
    fTreeOffsetLen  = 100;
    fNtrees         = 0;
    fTreeNumber     = -1;
-   fTreeOffset     = new Int_t[fTreeOffsetLen];
+   fTreeOffset     = new Long64_t[fTreeOffsetLen];
    fTree           = 0;
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
@@ -93,7 +93,7 @@ TChain::TChain(const char *name, const char *title)
    fTreeOffsetLen  = 100;
    fNtrees         = 0;
    fTreeNumber     = -1;
-   fTreeOffset     = new Int_t[fTreeOffsetLen];
+   fTreeOffset     = new Long64_t[fTreeOffsetLen];
    fTree           = 0;
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
@@ -131,7 +131,7 @@ Int_t TChain::Add(TChain *chain)
    //Check enough space in fTreeOffset
    if (fNtrees+chain->GetNtrees() >= fTreeOffsetLen) {
       fTreeOffsetLen += 2*chain->GetNtrees();
-      Int_t *trees = new Int_t[fTreeOffsetLen];
+      Long64_t *trees = new Long64_t[fTreeOffsetLen];
       for (Int_t i=0;i<=fNtrees;i++) trees[i] = fTreeOffset[i];
       delete [] fTreeOffset;
       fTreeOffset = trees;
@@ -141,7 +141,7 @@ Int_t TChain::Add(TChain *chain)
    TChainElement *element, *newelement;
    Int_t nf = 0;
    while ((element = (TChainElement*)next())) {
-      Int_t nentries = element->GetEntries();
+      Long64_t nentries = element->GetEntries();
       fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
       fNtrees++;
       fEntries += nentries;
@@ -155,7 +155,7 @@ Int_t TChain::Add(TChain *chain)
 }
 
 //______________________________________________________________________________
-Int_t TChain::Add(const char *name, Int_t nentries)
+Int_t TChain::Add(const char *name, Long64_t nentries)
 {
 // Add a new file to this chain.
 // Argument name may have the following format:
@@ -246,7 +246,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 }
 
 //______________________________________________________________________________
-Int_t TChain::AddFile(const char *name, Int_t nentries)
+Int_t TChain::AddFile(const char *name, Long64_t nentries)
 {
 //       Add a new file to this chain.
 //
@@ -284,7 +284,7 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
    //Check enough space in fTreeOffset
    if (fNtrees+1 >= fTreeOffsetLen) {
       fTreeOffsetLen *= 2;
-      Int_t *trees = new Int_t[fTreeOffsetLen];
+      Long64_t *trees = new Long64_t[fTreeOffsetLen];
       for (Int_t i=0;i<=fNtrees;i++) trees[i] = fTreeOffset[i];
       delete [] fTreeOffset;
       fTreeOffset = trees;
@@ -325,7 +325,7 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
          return 0;
       }
       TTree *tree = (TTree*)obj;
-      nentries = (Int_t)tree->GetEntries();
+      nentries = tree->GetEntries();
       pksize   = tree->GetPacketSize();
       delete file;
    }
@@ -518,7 +518,7 @@ void TChain::CreatePackets()
 }
 
 //______________________________________________________________________________
-Int_t TChain::Draw(const char *varexp, const TCut &selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Long64_t TChain::Draw(const char *varexp, const TCut &selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Draw expression varexp for selected entries.
    //
@@ -531,7 +531,7 @@ Int_t TChain::Draw(const char *varexp, const TCut &selection, Option_t *option, 
 }
 
 //______________________________________________________________________________
-Int_t TChain::Draw(const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Long64_t TChain::Draw(const char *varexp, const char *selection, Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
    // Process all entries in this chain and draw histogram
    // corresponding to expression varexp.
@@ -553,7 +553,7 @@ TBranch *TChain::GetBranch(const char *name)
 }
 
 //______________________________________________________________________________
-Int_t TChain::GetChainEntryNumber(Int_t entry) const
+Long64_t TChain::GetChainEntryNumber(Long64_t entry) const
 {
 // return absolute entry number in the chain
 // the input parameter entry is the entry number in the current Tree of this chain
@@ -562,20 +562,20 @@ Int_t TChain::GetChainEntryNumber(Int_t entry) const
 }
 
 //______________________________________________________________________________
-Double_t TChain::GetEntries() const
+Long64_t TChain::GetEntries() const
 {
 // return the total number of entries in the chain.
 // In case the number of entries in each tree is not yet known,
 // the offset table is computed
 
    if (fEntries >= (Stat_t)kBigNumber) {
-      ((TChain*)this)->LoadTree(Int_t(fEntries)-1);
+      ((TChain*)this)->LoadTree(fEntries-1);
    }
    return fEntries;
 }
 
 //______________________________________________________________________________
-Int_t TChain::GetEntry(Int_t entry, Int_t getall)
+Int_t TChain::GetEntry(Long64_t entry, Int_t getall)
 {
 // Get entry from the file to memory
 //
@@ -597,13 +597,13 @@ Int_t TChain::GetEntryWithIndex(Int_t major, Int_t minor)
 // For example:
 //     Int_t run   = 1234;
 //     Int_t event = 345;
-//     Int_t serial= chain.GetEntryNumberWithIndex(run,event);
+//     Long64_t serial= chain.GetEntryNumberWithIndex(run,event);
 //    now the variable serial is in the range [0,nentries] and one can do
 //    chain.GetEntry(serial);
 //
 // WARNING: This function will not work if teh chain has friend chains.
 
-   Int_t serial = GetEntryNumberWithIndex(major, minor);
+   Long64_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;
    return GetEntry(serial);
 }
@@ -662,7 +662,7 @@ Double_t TChain::GetMaximum(const char *columname)
 
    Double_t theMax = -FLT_MAX;  //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
-      Int_t first = fTreeOffset[file];
+      Long64_t first = fTreeOffset[file];
       LoadTree(first);
       Double_t curmax = fTree->GetMaximum(columname);;
       if (curmax > theMax) theMax = curmax;
@@ -678,7 +678,7 @@ Double_t TChain::GetMinimum(const char *columname)
 
    Double_t theMin = FLT_MAX; //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
-      Int_t first = fTreeOffset[file];
+      Long64_t first = fTreeOffset[file];
       LoadTree(first);
       Double_t curmin = fTree->GetMinimum(columname);;
       if (curmin < theMin) theMin = curmin;
@@ -731,7 +731,7 @@ Double_t TChain::GetWeight() const
 }
 
 //______________________________________________________________________________
-Int_t TChain::LoadTree(Int_t entry)
+Long64_t TChain::LoadTree(Long64_t entry)
 {
 //  The input argument entry is the entry serial number in the whole chain.
 //  The function finds the corresponding Tree and returns the entry number
@@ -861,7 +861,7 @@ Int_t TChain::LoadTree(Int_t entry)
    fDirectory = fFile;
 
    //check if fTreeOffset has really been set
-   Int_t nentries = fTree ? (Int_t)fTree->GetEntries() : 0;
+   Long64_t nentries = fTree ? fTree->GetEntries() : 0;
    if (fTreeOffset[fTreeNumber+1] != fTreeOffset[fTreeNumber] + nentries) {
       fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
       fEntries = fTreeOffset[fNtrees];
@@ -943,7 +943,7 @@ Int_t TChain::LoadTree(Int_t entry)
 }
 
 //______________________________________________________________________________
-void TChain::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
+void TChain::Loop(Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
 // Loop on nentries of this chain starting at firstentry
 
@@ -955,16 +955,16 @@ void TChain::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
    if (LoadTree(firstentry) < 0) return;
 
    if (firstentry < 0) firstentry = 0;
-   Int_t lastentry = firstentry + nentries -1;
+   Long64_t lastentry = firstentry + nentries -1;
    if (lastentry > fEntries-1) {
-      lastentry = (Int_t)fEntries -1;
+      lastentry = fEntries -1;
    }
 
    GetPlayer();
    GetSelector();
    fSelector->Start(option);
 
-   Int_t entry = firstentry;
+   Long64_t entry = firstentry;
    Int_t tree,e0,en;
    for (tree=0;tree<fNtrees;tree++) {
       e0 = fTreeOffset[tree];
@@ -998,7 +998,7 @@ void TChain::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TChain::Merge(const char *name)
+Long64_t TChain::Merge(const char *name)
 {
    // Merge all files in this chain into a new file.
    // See important note in the following function Merge().
@@ -1009,7 +1009,7 @@ Int_t TChain::Merge(const char *name)
 
 
 //______________________________________________________________________________
-Int_t TChain::Merge(TCollection * /* list */ )
+Long64_t TChain::Merge(TCollection * /* list */ )
 {
    // Merge all TChains in the list
 
@@ -1019,7 +1019,7 @@ Int_t TChain::Merge(TCollection * /* list */ )
 
 
 //______________________________________________________________________________
-Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
+Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 {
 //     Merge all files in this chain into a new file
 //     if option ="C" is given, the compression level for all branches
@@ -1092,8 +1092,8 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    firstname[0] = 0;
    strcpy(firstname,gFile->GetName());
 
-   Int_t nentries = Int_t(GetEntriesFast());
-   for (Int_t i=0;i<nentries;i++) {
+   Long64_t nentries = GetEntriesFast();
+   for (Long64_t i=0;i<nentries;i++) {
       if (GetEntry(i) <= 0) break;
       hnew->Fill();
    }
@@ -1126,7 +1126,7 @@ void TChain::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TChain::Process(const char *filename,Option_t *option,  Int_t nentries, Int_t firstentry)
+Long64_t TChain::Process(const char *filename,Option_t *option,  Long64_t nentries, Long64_t firstentry)
 {
    // Process all entries in this chain, calling functions in filename
    // see TTree::Process
@@ -1136,7 +1136,7 @@ Int_t TChain::Process(const char *filename,Option_t *option,  Int_t nentries, In
 }
 
 //______________________________________________________________________________
-Int_t TChain::Process(TSelector *selector,Option_t *option,  Int_t nentries, Int_t firstentry)
+Long64_t TChain::Process(TSelector *selector,Option_t *option,  Long64_t nentries, Long64_t firstentry)
 {
 // Process this chain executing the code in selector
 
@@ -1328,7 +1328,7 @@ void TChain::Streamer(TBuffer &b)
       fFiles->Streamer(b);
       if (R__v > 1) {
          fStatus->Streamer(b);
-         fTreeOffset = new Int_t[fTreeOffsetLen];
+         fTreeOffset = new Long64_t[fTreeOffsetLen];
          b.ReadFastArray(fTreeOffset,fTreeOffsetLen);
       }
       b.CheckByteCount(R__s, R__c, TChain::IsA());
