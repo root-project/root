@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.c,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.1 2003/08/22 10:08:27 brun Exp $ */
 /* Author: */
 /*
 
@@ -440,8 +440,7 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
 
 void R__error(char *msg)
 {
-  fprintf(stderr,"R__zip: %s\n",msg);
+  if (verbose) fprintf(stderr,"R__zip: %s\n",msg);
   error_flag = 1;
-  if (verbose) { }  /*use verbose to avoid warning*/
 }
 
