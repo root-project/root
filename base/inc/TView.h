@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.6 2001/02/28 11:04:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.7 2002/04/06 21:28:07 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -60,6 +60,10 @@ protected:
 
 
 public:
+   // TView status bits
+   enum {
+      kPerspective  = BIT(6)
+   };
                 TView();
                 TView(Int_t system);
                 TView(const Float_t *rmin, const Float_t *rmax, Int_t system = 1);
@@ -91,17 +95,21 @@ Double_t        *GetTnorm() {return fTnorm;}
    virtual void  FindNormal(Double_t x, Double_t  y, Double_t z, Double_t &zn);
    virtual void  FindPhiSectors(Int_t iopt, Int_t &kphi, Double_t *aphi, Int_t &iphi1, Int_t &iphi2);
    virtual void  FindThetaSectors(Int_t iopt, Double_t phi, Int_t &kth, Double_t *ath, Int_t &ith1, Int_t &ith2);
+Bool_t           IsPerspective() const {return TestBit(kPerspective);}
    virtual void  NDCtoWC(const Float_t *pn, Float_t *pw);
    virtual void  NDCtoWC(const Double_t *pn, Double_t *pw);
    virtual void  NormalWCtoNDC(const Float_t *pw, Float_t *pn);
    virtual void  NormalWCtoNDC(const Double_t *pw, Double_t *pn);
    virtual void  PadRange(Double_t rback);
+   virtual void  PaintLine(Double_t *p1, Double_t *p2);
+   virtual void  PaintMarker(Double_t *p);
    virtual void  SetAutoRange(Bool_t autorange=kTRUE) {fAutoRange=autorange;}
    virtual void  SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *y1, const Double_t *y2, const Double_t *z1, const Double_t *z2);
    void          SetLatitude(Double_t latitude) {fLatitude = latitude;}
    void          SetLongitude(Double_t longitude) {fLongitude = longitude;}
    void          SetPsi(Double_t psi) {fPsi = psi;}
    virtual void  SetOutlineToCube();
+   virtual void  SetPerspective(Bool_t persp=kTRUE); // *MENU*
    virtual void  SetRange(const Double_t *min, const Double_t *max);
    virtual void  SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Double_t y1, Double_t z1, Int_t flag=0);
    virtual void  SetSystem(Int_t system) {fSystem = system;}

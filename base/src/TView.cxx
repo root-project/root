@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.10 2002/04/06 21:28:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.11 2002/09/14 16:20:14 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1050,6 +1050,24 @@ void TView::PadRange(Double_t rback)
     }
 }
 
+//______________________________________________________________________________
+void TView::PaintLine(Double_t *p1, Double_t *p2)
+{
+
+//*-*- convert from 3-D to 2-D pad coordinate system
+   if (IsPerspective()) {
+   } else {
+      Double_t xpad[6];
+      WCtoNDC(p1, &xpad[0]);
+      WCtoNDC(p2, &xpad[3]);
+      gPad->PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
+   }
+}
+
+//______________________________________________________________________________
+void TView::PaintMarker(Double_t *p)
+{
+}
 
 //______________________________________________________________________________
 void  TView::SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *y1, const Double_t *y2, const Double_t *z1, const Double_t *z2)
@@ -1101,6 +1119,11 @@ void TView::SetOutlineToCube()
    }
    TVirtualUtil3D *util = (TVirtualUtil3D*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D");
    if (util) util->DrawOutlineCube((TList*)fOutline,fRmin,fRmax);
+}
+
+//______________________________________________________________________________
+void TView::SetPerspective(Bool_t persp)
+{
 }
 
 //______________________________________________________________________________
