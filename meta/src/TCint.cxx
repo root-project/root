@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.38 2001/11/28 16:05:42 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.39 2001/12/02 16:50:08 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -447,6 +447,7 @@ void TCint::UpdateListOfTypes()
          TDataType *d = (TDataType *)gROOT->fTypes->FindObject(t.Name());
          // only add new types, don't delete old ones with the same name
          // (as is done in UpdateListOfGlobals())
+         // This 'feature' is being used in TROOT::GetType.
          if (!d) {
             gROOT->fTypes->Add(new TDataType( new G__TypedefInfo(t) ));
          }

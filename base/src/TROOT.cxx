@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.54 2001/12/02 15:13:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.55 2001/12/02 16:50:08 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -749,8 +749,12 @@ TDataType *TROOT::GetType(const char *name, Bool_t load)
    }
    size_t nch = strlen(tname);
    while (tname[nch-1] == ' ') nch--;
-
-   return (TDataType*)GetListOfTypes(load)->FindObject(name);
+  
+   // First try without loading.  We can do that because nothing is
+   // ever removed from the list of types. (See TCint::UpdateListOfTypes).
+   TDataType* type = (TDataType*)GetListOfTypes(kFALSE)->FindObject(name);
+   if (type || !load) { return type; }
+   else { return (TDataType*)GetListOfTypes(load)->FindObject(name); }
 }
 
 //______________________________________________________________________________
