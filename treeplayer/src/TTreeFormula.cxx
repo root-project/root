@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.100 2002/09/12 16:30:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.101 2002/10/02 21:04:05 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -860,11 +860,18 @@ public:
       }
    };
    TFormLeafInfoMethod(const TFormLeafInfoMethod& orig) : TFormLeafInfo(orig) {
-      fMethod = orig.fMethod;
       fMethodName = orig.fMethodName;
       fParams = orig.fParams ;
       fResult = orig.fResult;
-   };
+      if (orig.fMethod) {
+         fMethod = new TMethodCall(fClass,fMethodName,fParams);
+      } else {
+         fMethod = 0;
+      }
+   }
+   ~TFormLeafInfoMethod() {
+      delete fMethod;
+   }
    virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoMethod(*this);
    }
