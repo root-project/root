@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.152 2004/08/12 04:33:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.153 2004/10/05 13:21:10 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1240,7 +1240,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                   Warning("DefineVariable","Missing TStreamerElement in object in Collection section");
                   return -2;
                }
-               TFormLeafInfo* collectioninfo = new TFormLeafInfoCollection(cl, 0, element, kTRUE);
+               // First we need to recover the collection.
+               TBranchElement *count = BranchEl->GetBranchCount();
+               TStreamerElement *collectionElement = (TStreamerElement *)count->GetInfo()->GetElems()[count->GetID()];
+               TClass *collectionCl = collectionElement->GetClassPointer();
+
+               TFormLeafInfo* collectioninfo = new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
 
                 // The following code was commmented out because in THIS case
                // the dimension are actually handled by parsing the title and name of the leaf
@@ -2131,7 +2136,10 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
 
                   TClass *sub_cl = curelem->GetClassPointer()->GetCollectionProxy()->GetValueClass();
 
-                 // Now that we finally have the inside class, let's query it.
+                  while(sub_cl && sub_cl->GetCollectionProxy()) 
+                     sub_cl = sub_cl->GetCollectionProxy()->GetValueClass();
+
+                  // Now that we finally have the inside class, let's query it.
                   if (sub_cl) element = sub_cl->GetStreamerInfo()->GetStreamerElement(nextchoice,offset);
                   if (element) break;
 
