@@ -165,7 +165,7 @@ static char *anim02[] = {
 "#C c #c66bc6",
 "#D c #c673a5",
 "#E c #c694ad",
-"#F c #c0c0c0",
+"#F c None s None",
 "#G c #ce0094",
 "#H c #ce009c",
 "#I c #ce089c",

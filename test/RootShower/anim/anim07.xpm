@@ -238,7 +238,7 @@ static char *anim07[] = {
 "aL c #d6bdc6",
 "aM c #e7c66b",
 "aN c #dec673",
-"aO c #c0c0c0",
+"aO c None s None",
 "aP c #d6c6ce",
 "aQ c #dec6ce",
 "aR c #e7ce73",

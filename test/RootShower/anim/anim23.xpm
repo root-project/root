@@ -242,7 +242,7 @@ static char *anim23[] = {
 "aP c #efbd31",
 "aQ c #d6bdc6",
 "aR c #ffc621",
-"aS c #c0c0c0",
+"aS c None s None",
 "aT c #d6c6ce",
 "aU c #ffce31",
 "aV c #ffce39",

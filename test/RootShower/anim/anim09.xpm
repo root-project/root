@@ -161,7 +161,7 @@ static char *anim09[] = {
 "#y c #c6adc6",
 "#z c #c6b5bd",
 "#A c #c6bdbd",
-"#B c #c0c0c0",
+"#B c None s None",
 "#C c #ce8cb5",
 "#D c #ce8cbd",
 "#E c #ce94bd",

@@ -111,7 +111,7 @@ static char *anim15[] = {
 ".M c #c6bdbd",
 ".N c #c6bdc6",
 ".O c #c6c6b5",
-".P c #c0c0c0",
+".P c None s None",
 ".Q c #ce9cad",
 ".R c #ceb5c6",
 ".S c #cebdbd",

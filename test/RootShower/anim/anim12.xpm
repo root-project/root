@@ -81,7 +81,7 @@ static char *anim12[] = {
 ".i c #c694ad",
 ".j c #c6adad",
 ".k c #c6adb5",
-".l c #c0c0c0",
+".l c None s None",
 ".m c #ce9cad",
 ".n c #ceb5c6",
 ".o c #cebdbd",

@@ -187,7 +187,7 @@ static char *anim08[] = {
 "#Y c #c6a5c6",
 "#Z c #c6adb5",
 "#0 c #c6b5bd",
-"#1 c #c0c0c0",
+"#1 c None s None",
 "#2 c #ce73b5",
 "#3 c #ce7bb5",
 "#4 c #ce7bbd",

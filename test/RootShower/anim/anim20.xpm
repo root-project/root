@@ -216,7 +216,7 @@ static char *anim20[] = {
 "ap c #dea5bd",
 "aq c #c67bc6",
 "ar c #c68cc6",
-"as c #c0c0c0",
+"as c None s None",
 "at c #ce7bc6",
 "au c #ce8cc6",
 "av c #d69cc6",

@@ -239,7 +239,7 @@ static char *anim04[] = {
 "aM c #e7bd42",
 "aN c #d6bdc6",
 "aO c #f7c631",
-"aP c #c0c0c0",
+"aP c None s None",
 "aQ c #d6c6c6",
 "aR c #d6c6ce",
 "aS c #f7ce42",

@@ -146,7 +146,7 @@ static char *anim16[] = {
 "#j c #c6bda5",
 "#k c #c6bdbd",
 "#l c #c6bdc6",
-"#m c #c0c0c0",
+"#m c None s None",
 "#n c #ce9cad",
 "#o c #cea5c6",
 "#p c #ceadc6",

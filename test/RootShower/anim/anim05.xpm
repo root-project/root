@@ -217,7 +217,7 @@ static char *anim05[] = {
 "aq c #e7a5bd",
 "ar c #ef9cbd",
 "as c #c684c6",
-"at c #c0c0c0",
+"at c None s None",
 "au c #d684c6",
 "av c #d694c6",
 "aw c #d6bdc6",
