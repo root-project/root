@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.4 2002/04/10 01:19:36 hoecker Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.5 2002/04/16 00:17:32 stark Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -13,17 +13,24 @@
  *   Jan-2002   AH built dedicated generator + code cleaning
  *   Mar-2002   JS committed debugged version to CVS
  *   Apr-2002   AH allow prompt (ie, non-Pdf) mischarge treatment
+ *   May-2002   JS Changed the set of CP parameters (mathematically equivalent)
  *
  * Copyright (C) 2002 University of California, IN2P3
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
 // Time-dependent RooConvolutedPdf for CP violating decays 
-// to Non-CP eigenstates (eg, B0 -> rho+-pi-+).
-// For a description of the physics model as well as the
-// definition of the parameters see the BaBar Physics Book,
-// section 6.5.2.3
-// 
+// to Non-CP eigenstates (eg, B0 -> rho+- pi-+).
+// For a description of the physics model see the 
+// BaBar Physics Book, section 6.5.2.3 .
+// The set of CP parameters used in this class is equivalent to
+// the one used in the Physics Book, but it is not exactly the
+// same. Starting from the set in the BaBar Book, in order to 
+// get the parameters used here you have to change the sign of both
+// a_c^+ and a_c^-, and then substitute:
+//    a_s^Q = S + Q* deltaS
+//    a_c^Q = C + Q*deltaC
+// where Q denotes the charge of the rho.
 
 #include <iostream.h>
 #include "RooFitCore/RooRealVar.hh"
@@ -45,10 +52,10 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 					RooAbsReal&     correctQ,
 					RooAbsReal&     wQ,
 					RooAbsReal&     acp,
-					RooAbsReal&     a_cos_p,
-					RooAbsReal&     a_cos_m,
-					RooAbsReal&     a_sin_p,
-					RooAbsReal&     a_sin_m,
+					RooAbsReal&     C,
+					RooAbsReal&     delC,
+					RooAbsReal&     S,
+					RooAbsReal&     delS,
 					const RooResolutionModel& model, 
 					DecayType       type )
   : RooConvolutedPdf( name, title, model, t ), 
@@ -56,10 +63,10 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
     _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
     _wQ       ( "wQ",       "mischarge",          this, wQ       ),
     _acp      ( "acp",      "acp",                this, acp      ),
-    _a_cos_p  ( "a_cos_p",  "a+(cos)",            this, a_cos_p  ),
-    _a_cos_m  ( "a_cos_m",  "a-(cos)",            this, a_cos_m  ),
-    _a_sin_p  ( "a_sin_p",  "a+(sin)",            this, a_sin_p  ),
-    _a_sin_m  ( "a_sin_m",  "a-(sin)",            this, a_sin_m  ),
+    _C        ( "C",        "C",                  this, C        ),
+    _delC     ( "delC",     "delC",               this, delC     ),
+    _S        ( "S",        "S",                  this, S        ),
+    _delS     ( "delS",     "delS",               this, delS     ),
     _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
     _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
     _tag      ( "tag",      "CP state",           this, tag      ),
@@ -101,20 +108,20 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 					RooAbsCategory& rhoQ, 
 					RooAbsReal&     correctQ,
 					RooAbsReal&     acp,
-					RooAbsReal&     a_cos_p,
-					RooAbsReal&     a_cos_m,
-					RooAbsReal&     a_sin_p,
-					RooAbsReal&     a_sin_m,
+					RooAbsReal&     C,
+					RooAbsReal&     delC,
+					RooAbsReal&     S,
+					RooAbsReal&     delS,
 					const RooResolutionModel& model, 
 					DecayType       type )
   : RooConvolutedPdf( name, title, model, t ), 
     _rhoQ     ( "rhoQ",     "Charge of the rho",  this, rhoQ     ),
     _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
     _acp      ( "acp",      "acp",                this, acp      ),
-    _a_cos_p  ( "a_cos_p",  "a+(cos)",            this, a_cos_p  ),
-    _a_cos_m  ( "a_cos_m",  "a-(cos)",            this, a_cos_m  ),
-    _a_sin_p  ( "a_sin_p",  "a+(sin)",            this, a_sin_p  ),
-    _a_sin_m  ( "a_sin_m",  "a-(sin)",            this, a_sin_m  ),
+    _C        ( "C",        "C",                  this, C        ),
+    _delC     ( "delC",     "delC",               this, delC     ),
+    _S        ( "S",        "S",                  this, S        ),
+    _delS     ( "delS",     "delS",               this, delS     ),
     _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
     _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
     _tag      ( "tag",      "CP state",           this, tag      ),
@@ -154,10 +161,10 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const c
     _correctQ ( "correctQ", this, other._correctQ ),
     _wQ       ( "wQ",       this, other._wQ       ),
     _acp      ( "acp",      this, other._acp      ),
-    _a_cos_p  ( "a_cos_p",  this, other._a_cos_p  ),
-    _a_cos_m  ( "a_cos_m",  this, other._a_cos_m  ),
-    _a_sin_p  ( "a_sin_p",  this, other._a_sin_p  ),
-    _a_sin_m  ( "a_sin_m",  this, other._a_sin_m  ),
+    _C        ( "C",        this, other._C        ),
+    _delC     ( "delC",     this, other._delC     ),
+    _S        ( "S",        this, other._S        ),
+    _delS     ( "delS",     this, other._delS     ),
     _avgW     ( "avgW",     this, other._avgW     ),
     _delW     ( "delW",     this, other._delW     ),
     _tag      ( "tag",      this, other._tag      ),
@@ -190,6 +197,11 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
   Int_t rhoQc = _rhoQ * int(_correctQ);
   assert( rhoQc == 1 || rhoQc == -1 );
 
+  Double_t a_sin_p = _S + _delS;
+  Double_t a_sin_m = _S - _delS;
+  Double_t a_cos_p = _C + _delC;
+  Double_t a_cos_m = _C - _delC;
+
   if (basisIndex == _basisExp) {
     if (rhoQc == -1 || rhoQc == +1) 
       return (1 + rhoQc*_acp*(1 - 2*_wQ))*(1 + 0.5*_tag*(-2*_delW));
@@ -201,28 +213,28 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
     
     if (rhoQc == -1) 
 
-      return + ((1 - _acp)*_a_sin_m*(1 - _wQ) + (1 + _acp)*_a_sin_p*_wQ)*(1 - 2*_avgW)*_tag;
+      return + ((1 - _acp)*a_sin_m*(1 - _wQ) + (1 + _acp)*a_sin_p*_wQ)*(1 - 2*_avgW)*_tag;
 
     else if (rhoQc == +1)
 
-      return + ((1 + _acp)*_a_sin_p*(1 - _wQ) + (1 - _acp)*_a_sin_m*_wQ)*(1 - 2*_avgW)*_tag;
+      return + ((1 + _acp)*a_sin_p*(1 - _wQ) + (1 - _acp)*a_sin_m*_wQ)*(1 - 2*_avgW)*_tag;
 
     else 
-       return _tag*((_a_sin_p + _a_sin_m)/2)*(1 - 2*_avgW);
+       return _tag*((a_sin_p + a_sin_m)/2)*(1 - 2*_avgW);
   }
 
   if (basisIndex == _basisCos) {
     
     if ( rhoQc == -1) 
 
-      return - ((1 - _acp)*_a_cos_m*(1 - _wQ) + (1 + _acp)*_a_cos_p*_wQ)*(1 - 2*_avgW)*_tag;
+      return - ((1 - _acp)*a_cos_m*(1 - _wQ) + (1 + _acp)*a_cos_p*_wQ)*(1 - 2*_avgW)*_tag;
 
     else if (rhoQc == +1)
 
-      return - ((1 + _acp)*_a_cos_p*(1 - _wQ) + (1 - _acp)*_a_cos_m*_wQ)*(1 - 2*_avgW)*_tag;
+      return - ((1 + _acp)*a_cos_p*(1 - _wQ) + (1 - _acp)*a_cos_m*_wQ)*(1 - 2*_avgW)*_tag;
 
     else 
-      return - _tag*((_a_cos_p + _a_cos_m)/2)*(1 - 2*_avgW);
+      return - _tag*((a_cos_p + a_cos_m)/2)*(1 - 2*_avgW);
   }
 
   return 0;
@@ -242,9 +254,14 @@ Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( RooArgSet& allVars,
 Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex, 
 						     Int_t code ) const 
 {
+  // correct for the right/wrong charge...
   Int_t rhoQc = _rhoQ*int(_correctQ);
 
-  // correct for the right/wrong charge...
+  Double_t a_sin_p = _S + _delS;
+  Double_t a_sin_m = _S - _delS;
+  Double_t a_cos_p = _C + _delC;
+  Double_t a_cos_m = _C - _delC;
+
   switch(code) {
 
     // No integration
@@ -262,11 +279,11 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 
     if (basisIndex == _basisSin)
 
-      return + ( (1 - _acp)*_a_sin_m + (1 + _acp)*_a_sin_p )*(1 - 2*_avgW)*_tag; 
+      return + ( (1 - _acp)*a_sin_m + (1 + _acp)*a_sin_p )*(1 - 2*_avgW)*_tag; 
 
     if (basisIndex == _basisCos)
 
-      return - ( (1 - _acp)*_a_cos_m + (1 + _acp)*_a_cos_p )*(1 - 2*_avgW)*_tag; 
+      return - ( (1 - _acp)*a_cos_m + (1 + _acp)*a_cos_p )*(1 - 2*_avgW)*_tag; 
 
     assert( kFALSE );
 
@@ -334,11 +351,6 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 
 void RooNonCPEigenDecay::generateEvent( Int_t code )
 {
-  // maximum probability density 
-  double a1 = 1 + sqrt(pow(_a_cos_m, 2) + pow(_a_sin_m, 2));
-  double a2 = 1 + sqrt(pow(_a_cos_p, 2) + pow(_a_sin_p, 2));
- 
-  Double_t maxAcceptProb = (1 + fabs(_acp)) * (a1 > a2 ? a1 : a2);
 
   // Generate delta-t dependent
   while (kTRUE) {
@@ -349,6 +361,18 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
 
     // opposite charge?
     Int_t rhoQc = _rhoQ*int(_correctQ);
+
+    Double_t a_sin_p = _S + _delS;
+    Double_t a_sin_m = _S - _delS;
+    Double_t a_cos_p = _C + _delC;
+    Double_t a_cos_m = _C - _delC;
+  
+    // maximum probability density 
+    double a1 = 1 + sqrt(pow(a_cos_m, 2) + pow(a_sin_m, 2));
+    double a2 = 1 + sqrt(pow(a_cos_p, 2) + pow(a_sin_p, 2));
+ 
+    Double_t maxAcceptProb = (1.10 + fabs(_acp)) * (a1 > a2 ? a1 : a2);
+    // The 1.10 in the above line is a security feature to prevent crashes close to the limit at 1.00
 
     Double_t rand = RooRandom::uniform();
     Double_t tval(0);

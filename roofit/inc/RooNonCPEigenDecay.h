@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.rdl,v 1.2 2002/03/13 04:54:58 stark Exp $
+ *    File: $Id: RooNonCPEigenDecay.rdl,v 1.3 2002/04/09 00:15:09 hoecker Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -10,6 +10,7 @@
  * History:
  *   Nov-2001   WV Created initial version
  *   Mar-2002   JS Commit improved version to CVS
+ *   May-2002   JS Changed the set of CP parameters (mathematically equivalent)
  *
  * Copyright (C) 2002 University of California, IN2P3
  *****************************************************************************/
@@ -41,10 +42,10 @@ public:
 		      RooAbsReal&     correctQ, 
 		      RooAbsReal&     wQ,
 		      RooAbsReal&     a,
-		      RooAbsReal&     a_cos_p,
-		      RooAbsReal&     a_cos_m,
-		      RooAbsReal&     a_sin_p,
-		      RooAbsReal&     a_sin_m,
+		      RooAbsReal&     C,
+		      RooAbsReal&     delC,
+		      RooAbsReal&     S,
+		      RooAbsReal&     delS,
 		      const RooResolutionModel& model, 
 		      DecayType       type = DoubleSided );
 
@@ -59,10 +60,10 @@ public:
 		      RooAbsCategory& rhoQ, 
 		      RooAbsReal&     correctQ, 
 		      RooAbsReal&     a,
-		      RooAbsReal&     a_cos_p,
-		      RooAbsReal&     a_cos_m,
-		      RooAbsReal&     a_sin_p,
-		      RooAbsReal&     a_sin_m,
+		      RooAbsReal&     C,
+		      RooAbsReal&     delC,
+		      RooAbsReal&     S,
+		      RooAbsReal&     delS,
 		      const RooResolutionModel& model, 
 		      DecayType       type = DoubleSided );
 
@@ -86,10 +87,10 @@ public:
 protected:
 
   RooRealProxy     _acp;
-  RooRealProxy     _a_cos_p;
-  RooRealProxy     _a_cos_m;
-  RooRealProxy     _a_sin_p;
-  RooRealProxy     _a_sin_m;
+  RooRealProxy     _C;
+  RooRealProxy     _delC;
+  RooRealProxy     _S;
+  RooRealProxy     _delS;
   RooRealProxy     _avgW;
   RooRealProxy     _delW;
   RooRealProxy     _t;
