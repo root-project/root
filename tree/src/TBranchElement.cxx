@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.52 2001/07/17 10:29:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.53 2001/07/19 10:41:17 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TBranchElement                                                       //
 //                                                                      //
-// A Branch for the case of an object                                   //                                                                      //
+// A Branch for the case of an object                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -165,12 +165,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          }
          return;
 
-      } else if (!strchr(element->GetTypeName(),'*') && (fStreamerType == TStreamerInfo::kObject || fStreamerType == TStreamerInfo::kAny)) {
-         // ===> create sub branches for members that are classes
-         fType = 2;
-         clm = gROOT->GetClass(element->GetTypeName());
-         if (Unroll(name,clm,clm,basketsize,splitlevel,0) >= 0) return;
-      } else if (!strcmp(element->GetTypeName(),"TClonesArray*")) {
+      } else if (!strcmp(element->GetTypeName(),"TClonesArray") || !strcmp(element->GetTypeName(),"TClonesArray*")) {
+         Bool_t ispointer = !strcmp(element->GetTypeName(),"TClonesArray*");
          // ===> Create a leafcount
          TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
          leaf->SetBranch(this);
@@ -182,8 +178,13 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          fBaskets.Add(basket);
          // ===> create sub branches for each data member of a TClonesArray
          fType = 3;
-         char **ppointer = (char**)(pointer);
-         TClonesArray *clones = (TClonesArray*)(*ppointer);
+         TClonesArray *clones;
+         if (ispointer) {
+            char **ppointer = (char**)(pointer);
+            clones = (TClonesArray*)(*ppointer);
+         } else {
+            clones = (TClonesArray*)pointer;
+         }
          if (!clones) return; // TClonesArray must exist
          clm = clones->GetClass();
          if (!clm) return;
@@ -208,6 +209,11 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          BuildTitle(name);
          return;
 
+      } else if (!strchr(element->GetTypeName(),'*') && (fStreamerType == TStreamerInfo::kObject || fStreamerType == TStreamerInfo::kAny)) {
+         // ===> create sub branches for members that are classes
+         fType = 2;
+         clm = gROOT->GetClass(element->GetTypeName());
+         if (Unroll(name,clm,clm,basketsize,splitlevel,0) >= 0) return;
       } else if (strstr(element->GetTypeName(),"vector<")) {
          // ===> create sub branches for each data member of a STL vector
          //      if it is a vector of class objects.
@@ -925,8 +931,14 @@ void TBranchElement::SetAddress(void *add)
       fObject = (char*)*ppointer;      
 #else
       if (fAddress) {
-         TClonesArray **ppointer = (TClonesArray**)fAddress;
-         fObject = (char*)*ppointer;
+         if (fStreamerType==61) {
+            // Case of an embedded ClonesArray
+            fObject = fAddress;
+         } else {
+            TClonesArray **ppointer;
+            ppointer = (TClonesArray**)fAddress;
+            fObject = (char*)*ppointer;
+         }
          if (!fObject) fAddress = 0;
       }
       if (!fAddress) {
