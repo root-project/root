@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name$:$Id$
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -44,6 +44,7 @@ private:
    Int_t  SysRead(Int_t fd, void *buf, Int_t len);
    Int_t  SysWrite(Int_t fd, const void *buf, Int_t len);
    Seek_t SysSeek(Int_t fd, Seek_t offset, Int_t whence);
+   Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
    Int_t  SysSync(Int_t) { /* no fsync for RFIO */ return 0; }
 
 public:

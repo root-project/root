@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.2 2000/05/30 17:17:10 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.3 2000/07/24 18:21:50 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -28,6 +28,8 @@
 #include "TRFIOFile.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include <sys/stat.h>
+#include <unistd.h>
 
 extern "C" {
    int rfio_open(char *filepath, int flags, int mode);
@@ -38,6 +40,7 @@ extern "C" {
    int rfio_access(char *filepath, int mode);
    int rfio_unlink(char *filepath);
    int rfio_parse(char *name, char **host, char **path);
+   int frio_fstat(int s, struct stat *statbuf);
 };
 
 
@@ -218,3 +221,37 @@ Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
    return ::rfio_lseek(fd, offset, whence);
 }
 
+//______________________________________________________________________________
+Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags,
+                         Long_t *modtime)
+{
+   // Interface to TSystem:GetPathInfo(). Generally implemented via
+   // stat() or fstat().
+
+   struct stat statbuf;
+
+   if (::rfio_fstat(fd, &statbuf) >= 0) {
+      if (id)
+#if defined(R__KCC) && defined(R__LINUX)
+         *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
+#else
+         *id = (statbuf.st_dev << 24) + statbuf.st_ino;
+#endif
+      if (size)
+         *size = statbuf.st_size;
+      if (modtime)
+         *modtime = statbuf.st_mtime;
+      if (flags) {
+         *flags = 0;
+         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
+            *flags |= 1;
+         if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
+            *flags |= 2;
+         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
+             (statbuf.st_mode & S_IFMT) != S_IFDIR)
+            *flags |= 4;
+      }
+      return 0;
+   }
+   return 1;
+}

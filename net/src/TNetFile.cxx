@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.9 2000/12/13 15:13:53 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.10 2000/12/19 14:33:22 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -115,6 +115,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    // The preferred interface to this constructor is via TFile::Open().
 
    TAuthenticate *auth;
+   EMessageTypes kind;
    Int_t sec;
 
    fOffset = 0;
@@ -158,6 +159,10 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    fSocket->SetOption(kSendBuffer, 65536);
    fSocket->SetOption(kRecvBuffer, 65536);
 
+   // Get rootd protocol level
+   fSocket->Send(kROOTD_PROTOCOL);
+   Recv(fProtocol, kind);
+
    // Authenticate to remote rootd server
    sec = !strcmp(fUrl.GetProtocol(), "roots") ?
          TAuthenticate::kSRP : TAuthenticate::kNormal;
@@ -178,9 +183,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    else
       fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()), kROOTD_OPEN);
 
-   int           stat;
-   EMessageTypes kind;
-
+   int stat;
    Recv(stat, kind);
 
    if (kind == kROOTD_ERR) {
@@ -211,6 +214,28 @@ TNetFile::~TNetFile()
 
    Close();
    SafeDelete(fSocket);
+}
+
+//______________________________________________________________________________
+Int_t TNetFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime)
+{
+   // Return file stat information. The interface and return value is
+   // identical to TSystem::GetPathInfo().
+
+   if (fProtocol < 3) return 1;
+
+   fSocket->Send(kROOTD_FSTAT);
+
+   char  msg[128];
+   Int_t kind;
+   fSocket->Recv(msg, 128, kind);
+
+   sscanf(msg, "%ld %ld %ld %ld", id, size, flags, modtime);
+
+   if (*id == -1)
+      return 1;
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -276,7 +301,7 @@ void TNetFile::PrintError(const char *where, Int_t err) const
 }
 
 //______________________________________________________________________________
-Bool_t TNetFile::ReadBuffer(char *buf, int len)
+Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 {
    // Read specified byte range from remote file via rootd daemon.
    // Returns kTRUE in case of error.
@@ -331,7 +356,7 @@ end:
 }
 
 //______________________________________________________________________________
-Bool_t TNetFile::WriteBuffer(const char *buf, int len)
+Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 {
    // Write specified byte range to remote file via rootd daemon.
    // Returns kTRUE in case of error.

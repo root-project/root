@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.17 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.18 2001/01/04 13:24:49 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -103,7 +103,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //  A ROOT file can be used interactively. In this case, one has the
 //    possibility to delete existing objects and add new ones.
 //  When an object is deleted from the file, the freed space is added
-//  into the FREE linked list (lFree). The FREE list consists of a chain
+//  into the FREE linked list (fFree). The FREE list consists of a chain
 //  of consecutive free segments on the file. At the same time, the first
 //  4 bytes of the freed record on the file are overwritten by GAPSIZE
 //  where GAPSIZE = -(Number of bytes occupied by the record).
@@ -694,9 +694,9 @@ void TFile::MakeFree(Seek_t first, Seek_t last)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Mark unused bytes on the file*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
-//  The list of free segments is in the lFree linked list
+//  The list of free segments is in the fFree linked list
 //  When an object is deleted from the file, the freed space is added
-//  into the FREE linked list (lFree). The FREE list consists of a chain
+//  into the FREE linked list (fFree). The FREE list consists of a chain
 //  of consecutive free segments on the file. At the same time, the first
 //  4 bytes of the freed record on the file are overwritten by GAPSIZE
 //  where GAPSIZE = -(Number of bytes occupied by the record).
@@ -881,9 +881,12 @@ void TFile::Recover()
    Seek_t   idcur = fBEGIN;
 
    Long_t id, size, flags, modtime;
-   gSystem->GetPathInfo(GetName(),&id,&size,&flags,&modtime);
+   if (SysStat(fD, &id, &size, &flags, &modtime)) {
+      Error("Recover", "cannot stat the file %s", GetName());
+      return;
+   }
 
-   fEND = (Int_t)size;
+   fEND = Seek_t(size);
 
    if (fWritable && !fFree) fFree  = new TList;
 
@@ -1579,6 +1582,16 @@ Seek_t TFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
    // handle 64 bit file systems.
 
    return ::lseek(fd, offset, whence);
+}
+
+//______________________________________________________________________________
+Int_t TFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags,
+                     Long_t *modtime)
+{
+   // Return file stat information. The interface and return value is
+   // identical to TSystem::GetPathInfo().
+
+   return gSystem->GetPathInfo(GetName(), id, size, flags, modtime);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.5 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.6 2001/01/04 13:24:49 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -64,6 +64,7 @@ protected:
    virtual Int_t  SysRead(Int_t fd, void *buf, Int_t len);
    virtual Int_t  SysWrite(Int_t fd, const void *buf, Int_t len);
    virtual Seek_t SysSeek(Int_t fd, Seek_t offset, Int_t whence);
+   virtual Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
    virtual Int_t  SysSync(Int_t fd);
 
 private:
