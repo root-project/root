@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.1 2002/05/21 13:19:26 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.2 2002/05/21 13:41:11 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #include "TStyle.h"
 #include "TObjArray.h"
 #include "THLimitsFinder.h"
-
+#include "TColor.h"
 
 #ifdef R__SUNCCBUG
 const Double_t kRad = 1.74532925199432955e-02;
@@ -52,10 +52,19 @@ const Int_t kNiso = 4;
 const Int_t kNmaxp = kNiso*13;
 const Int_t kNmaxt = kNiso*12;
 const Int_t kLmax = 12;
+const Int_t kF3FillColor1 = 201;
+const Int_t kF3FillColor2 = 202;
+const Int_t kF3LineColor  = 203;
 
-  R__EXTERN TH1  *gCurrentHist;
-  R__EXTERN Hoption_t Hoption;
-  R__EXTERN Hparam_t  Hparam;
+Int_t gF3Clipping = 0;
+Double_t gF3XClip = 0.;
+Double_t gF3YClip = 0.;
+Double_t gF3ZClip = 0.;
+TF3 *gCurrentF3 = 0;
+
+R__EXTERN TH1  *gCurrentHist;
+R__EXTERN Hoption_t Hoption;
+R__EXTERN Hparam_t  Hparam;
 
 ClassImp(TPainter3dAlgorithms)
 
@@ -117,6 +126,7 @@ TPainter3dAlgorithms::~TPainter3dAlgorithms()
    delete [] fRaster;
    fRaster = 0;
 }
+
 //______________________________________________________________________________
 void TPainter3dAlgorithms::BackBox(Double_t ang)
 {
@@ -346,8 +356,8 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np,
 
 //*-*-          D R A W   F A C E
 
-    if (z > 0) 	SetFillColor(2);
-    if (z <= 0) SetFillColor(3);
+    if (z > 0) 	SetFillColor(kF3FillColor1);
+    if (z <= 0) SetFillColor(kF3FillColor2);
     SetFillStyle(1001);
     TAttFill::Modify();
     gPad->PaintFillArea(np, x, y);
@@ -356,13 +366,13 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np,
 
     if (ifneg == 0) {
 	SetFillStyle(0);
-	SetFillColor(1);
+	SetFillColor(kF3LineColor);
         TAttFill::Modify();
 	gPad->PaintFillArea(np, x, y);
     } else {
 	x[np] = x[0];
 	y[np] = y[0];
-	SetLineColor(1);
+	SetLineColor(kF3LineColor);
         TAttLine::Modify();
 	for (i = 1; i <= np; ++i) {
 	    if (iface[i] > 0) gPad->PaintPolyLine(2, &x[i-1], &y[i-1]);
@@ -3247,14 +3257,32 @@ void TPainter3dAlgorithms::SetSurfaceFunction(SurfaceFunc_t fun)
 
 
 //______________________________________________________________________________
-void TPainter3dAlgorithms::SetImplicitFunction(ImplicitFunc_t fun)
+void TPainter3dAlgorithms::SetF3(TF3 *f3)
 {
-//*-*-*-*-*-*-*-*-*Store pointer to current implicit function *-*-*-*-*-*-*
-//*-*              ==========================================             *
-//*-*                                                                     *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Store pointer to current implicit function
+   gCurrentF3 = f3;
+}
 
-   fImplicitFunction = fun;
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::SetF3ClippingBoxOff()      
+{
+   // Set the implicit function clipping box "off".
+   gF3Clipping = 0;
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::SetF3ClippingBoxOn(Double_t xclip,
+                                              Double_t yclip, Double_t zclip)
+{
+   // Set the implicit function clipping box "on" and define the clipping box.
+   // xclip, yclip and zclip is a point within the function range. All the 
+   // function value having x<=xclip and y<=yclip and z>=zclip are clipped.
+   gF3Clipping = 1;
+   gF3XClip = xclip;
+   gF3YClip = yclip;
+   gF3ZClip = zclip;
 }
 
 
@@ -4137,16 +4165,6 @@ void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t 
 
 
 //______________________________________________________________________________
-Double_t TPainter3dAlgorithms::Function3D(Double_t x, Double_t y, Double_t z)
-{
-   // For the time being returns a sphere of radius 1
-   Double_t func;
-   func =  x*x+y*y+z*z-1.;
-   return func;
-}
-
-
-//______________________________________________________________________________
 void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax, 
                              Int_t nx, Int_t ny, Int_t nz, const char *chopt)
 {
@@ -4218,8 +4236,28 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
    dy  = (rmax[1]-rmin[1]) / ny;
    dz  = (rmax[2]-rmin[2]) / nz;
 
+   // Define the colors used to draw the function
+   Float_t r, g, b, hue, light, satur, light2;
+   TColor *colref = gROOT->GetColor(gCurrentF3->GetFillColor());
+   colref->GetRGB(r, g, b);
+   TColor::RGBtoHLS(r, g, b, hue, light, satur);
+   TColor *acol;
+   acol = gROOT->GetColor(kF3FillColor1);
+   acol->SetRGB(r, g, b);
+   if (light >= 0.5) {
+      light2 = .5*light;
+   } else {
+      light2 = 1-.5*light;
+   }
+   TColor::HLStoRGB(hue, light2, satur, r, g, b);
+   acol = gROOT->GetColor(kF3FillColor2);
+   acol->SetRGB(r, g, b);
+   colref = gROOT->GetColor(gCurrentF3->GetLineColor());
+   colref->GetRGB(r, g, b);
+   acol = gROOT->GetColor(kF3LineColor);
+   acol->SetRGB(r, g, b);
+   
    //       D R A W   F U N C T I O N
-///   for ( iz=iz1 ; iz<=iz2 ; iz=iz+incrz ) {
    for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
       z1     = (iz-1)*dz + rmin[2];
       z2     = z1 + dz;
@@ -4231,8 +4269,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
       p[5][2] = z2;
       p[6][2] = z2;
       p[7][2] = z2;
-///      for ( iy=iy1 ; iy<=iy2 ; iy=iy+incry ) {
-   for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
+      for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
          y1      = (iy-1)*dy + rmin[1];
          y2      = y1 + dy;
          p[0][1] = y1;
@@ -4245,18 +4282,17 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
          p[7][1] = y2;
          if (incrx == +1) {
             x2    = rmin[0];
-            pf[1] = (this->*fImplicitFunction)(x2,y1,z1);
-            pf[2] = (this->*fImplicitFunction)(x2,y2,z1);
-            pf[5] = (this->*fImplicitFunction)(x2,y1,z2);
-            pf[6] = (this->*fImplicitFunction)(x2,y2,z2);
+            pf[1] = gCurrentF3->Eval(x2,y1,z1);
+            pf[2] = gCurrentF3->Eval(x2,y2,z1);
+            pf[5] = gCurrentF3->Eval(x2,y1,z2);
+            pf[6] = gCurrentF3->Eval(x2,y2,z2);
          } else {
             x1    = rmax[0];
-            pf[0] = (this->*fImplicitFunction)(x1,y1,z1);
-            pf[3] = (this->*fImplicitFunction)(x1,y2,z1);
-            pf[4] = (this->*fImplicitFunction)(x1,y1,z2);
-            pf[7] = (this->*fImplicitFunction)(x1,y2,z2);
+            pf[0] = gCurrentF3->Eval(x1,y1,z1);
+            pf[3] = gCurrentF3->Eval(x1,y2,z1);
+            pf[4] = gCurrentF3->Eval(x1,y1,z2);
+            pf[7] = gCurrentF3->Eval(x1,y2,z2);
          }
-///         for ( ix=ix1 ; ix<=ix2 ; ix=ix+incrx ) {
          for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
             icodes[0] = ix;
             icodes[1] = iy;
@@ -4268,10 +4304,10 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
                pf[3]  = pf[2];
                pf[4]  = pf[5];
                pf[7]  = pf[6];
-               pf[1]  = (this->*fImplicitFunction)(x2,y1,z1);
-               pf[2]  = (this->*fImplicitFunction)(x2,y2,z1);
-               pf[5]  = (this->*fImplicitFunction)(x2,y1,z2);
-               pf[6]  = (this->*fImplicitFunction)(x2,y2,z2);
+               pf[1]  = gCurrentF3->Eval(x2,y1,z1);
+               pf[2]  = gCurrentF3->Eval(x2,y2,z1);
+               pf[5]  = gCurrentF3->Eval(x2,y1,z2);
+               pf[6]  = gCurrentF3->Eval(x2,y2,z2);
             } else {
                x2     = x1;
                x1     = x1 - dx;
@@ -4279,10 +4315,10 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
                pf[2]  = pf[3];
                pf[5]  = pf[4];
                pf[6]  = pf[7];
-               pf[0]  = (this->*fImplicitFunction)(x1,y1,z1);
-               pf[3]  = (this->*fImplicitFunction)(x1,y2,z1);
-               pf[4]  = (this->*fImplicitFunction)(x1,y1,z2);
-               pf[7]  = (this->*fImplicitFunction)(x1,y2,z2);
+               pf[0]  = gCurrentF3->Eval(x1,y1,z1);
+               pf[3]  = gCurrentF3->Eval(x1,y2,z1);
+               pf[4]  = gCurrentF3->Eval(x1,y1,z2);
+               pf[7]  = gCurrentF3->Eval(x1,y2,z2);
             }
             if (pf[0] >= -kFdel) goto L110;
             if (pf[1] >= -kFdel) goto L120;
@@ -4320,10 +4356,10 @@ L120:
                pn[4][0] = (pf[5] - pf[4]) / dx;
                pn[7][0] = (pf[6] - pf[7]) / dx;
             } else {
-               pn[0][0] = (pf[1] - (this->*fImplicitFunction)(x1-dx,y1,z1)) / (dx + dx);
-               pn[3][0] = (pf[2] - (this->*fImplicitFunction)(x1-dx,y2,z1)) / (dx + dx);
-               pn[4][0] = (pf[5] - (this->*fImplicitFunction)(x1-dx,y1,z2)) / (dx + dx);
-               pn[7][0] = (pf[6] - (this->*fImplicitFunction)(x1-dx,y2,z2)) / (dx + dx);
+               pn[0][0] = (pf[1] - gCurrentF3->Eval(x1-dx,y1,z1)) / (dx + dx);
+               pn[3][0] = (pf[2] - gCurrentF3->Eval(x1-dx,y2,z1)) / (dx + dx);
+               pn[4][0] = (pf[5] - gCurrentF3->Eval(x1-dx,y1,z2)) / (dx + dx);
+               pn[7][0] = (pf[6] - gCurrentF3->Eval(x1-dx,y2,z2)) / (dx + dx);
             }
             if (ix == nx) {
                pn[1][0] = (pf[1] - pf[0]) / dx;
@@ -4331,10 +4367,10 @@ L120:
                pn[5][0] = (pf[5] - pf[4]) / dx;
                pn[6][0] = (pf[6] - pf[7]) / dx;
             } else {
-               pn[1][0] = ((this->*fImplicitFunction)(x2+dx,y1,z1) - pf[0]) / (dx + dx);
-               pn[2][0] = ((this->*fImplicitFunction)(x2+dx,y2,z1) - pf[3]) / (dx + dx);
-               pn[5][0] = ((this->*fImplicitFunction)(x2+dx,y1,z2) - pf[4]) / (dx + dx);
-               pn[6][0] = ((this->*fImplicitFunction)(x2+dx,y2,z2) - pf[7]) / (dx + dx);
+               pn[1][0] = (gCurrentF3->Eval(x2+dx,y1,z1) - pf[0]) / (dx + dx);
+               pn[2][0] = (gCurrentF3->Eval(x2+dx,y2,z1) - pf[3]) / (dx + dx);
+               pn[5][0] = (gCurrentF3->Eval(x2+dx,y1,z2) - pf[4]) / (dx + dx);
+               pn[6][0] = (gCurrentF3->Eval(x2+dx,y2,z2) - pf[7]) / (dx + dx);
             }
             // Find Y-gradient
             if (iy == 1) {
@@ -4343,10 +4379,10 @@ L120:
                pn[4][1] = (pf[7] - pf[4]) / dy;
                pn[5][1] = (pf[6] - pf[5]) / dy;
             } else {
-               pn[0][1] = (pf[3] - (this->*fImplicitFunction)(x1,y1-dy,z1)) / (dy + dy);
-               pn[1][1] = (pf[2] - (this->*fImplicitFunction)(x2,y1-dy,z1)) / (dy + dy);
-               pn[4][1] = (pf[7] - (this->*fImplicitFunction)(x1,y1-dy,z2)) / (dy + dy);
-               pn[5][1] = (pf[6] - (this->*fImplicitFunction)(x2,y1-dy,z2)) / (dy + dy);
+               pn[0][1] = (pf[3] - gCurrentF3->Eval(x1,y1-dy,z1)) / (dy + dy);
+               pn[1][1] = (pf[2] - gCurrentF3->Eval(x2,y1-dy,z1)) / (dy + dy);
+               pn[4][1] = (pf[7] - gCurrentF3->Eval(x1,y1-dy,z2)) / (dy + dy);
+               pn[5][1] = (pf[6] - gCurrentF3->Eval(x2,y1-dy,z2)) / (dy + dy);
             }
             if (iy == ny) {
                pn[2][1] = (pf[2] - pf[1]) / dy;
@@ -4354,10 +4390,10 @@ L120:
                pn[6][1] = (pf[6] - pf[5]) / dy;
                pn[7][1] = (pf[7] - pf[4]) / dy;
             } else {
-               pn[2][1] = ((this->*fImplicitFunction)(x2,y2+dy,z1) - pf[1]) / (dy + dy);
-               pn[3][1] = ((this->*fImplicitFunction)(x1,y2+dy,z1) - pf[0]) / (dy + dy);
-               pn[6][1] = ((this->*fImplicitFunction)(x2,y2+dy,z2) - pf[5]) / (dy + dy);
-               pn[7][1] = ((this->*fImplicitFunction)(x1,y2+dy,z2) - pf[4]) / (dy + dy);
+               pn[2][1] = (gCurrentF3->Eval(x2,y2+dy,z1) - pf[1]) / (dy + dy);
+               pn[3][1] = (gCurrentF3->Eval(x1,y2+dy,z1) - pf[0]) / (dy + dy);
+               pn[6][1] = (gCurrentF3->Eval(x2,y2+dy,z2) - pf[5]) / (dy + dy);
+               pn[7][1] = (gCurrentF3->Eval(x1,y2+dy,z2) - pf[4]) / (dy + dy);
             }
             // Find Z-gradient
             if (iz == 1) {
@@ -4366,10 +4402,10 @@ L120:
                pn[2][2] = (pf[6] - pf[2]) / dz;
                pn[3][2] = (pf[7] - pf[3]) / dz;
             } else {
-               pn[0][2] = (pf[4] - (this->*fImplicitFunction)(x1,y1,z1-dz)) / (dz + dz);
-               pn[1][2] = (pf[5] - (this->*fImplicitFunction)(x2,y1,z1-dz)) / (dz + dz);
-               pn[2][2] = (pf[6] - (this->*fImplicitFunction)(x2,y2,z1-dz)) / (dz + dz);
-               pn[3][2] = (pf[7] - (this->*fImplicitFunction)(x1,y2,z1-dz)) / (dz + dz);
+               pn[0][2] = (pf[4] - gCurrentF3->Eval(x1,y1,z1-dz)) / (dz + dz);
+               pn[1][2] = (pf[5] - gCurrentF3->Eval(x2,y1,z1-dz)) / (dz + dz);
+               pn[2][2] = (pf[6] - gCurrentF3->Eval(x2,y2,z1-dz)) / (dz + dz);
+               pn[3][2] = (pf[7] - gCurrentF3->Eval(x1,y2,z1-dz)) / (dz + dz);
             }
             if (iz == nz) {
                pn[4][2] = (pf[4] - pf[0]) / dz;
@@ -4377,10 +4413,10 @@ L120:
                pn[6][2] = (pf[6] - pf[2]) / dz;
                pn[7][2] = (pf[7] - pf[3]) / dz;
             } else {
-               pn[4][2] = ((this->*fImplicitFunction)(x1,y1,z2+dz) - pf[0]) / (dz + dz);
-               pn[5][2] = ((this->*fImplicitFunction)(x2,y1,z2+dz) - pf[1]) / (dz + dz);
-               pn[6][2] = ((this->*fImplicitFunction)(x2,y2,z2+dz) - pf[2]) / (dz + dz);
-               pn[7][2] = ((this->*fImplicitFunction)(x1,y2,z2+dz) - pf[3]) / (dz + dz);
+               pn[4][2] = (gCurrentF3->Eval(x1,y1,z2+dz) - pf[0]) / (dz + dz);
+               pn[5][2] = (gCurrentF3->Eval(x2,y1,z2+dz) - pf[1]) / (dz + dz);
+               pn[6][2] = (gCurrentF3->Eval(x2,y2,z2+dz) - pf[2]) / (dz + dz);
+               pn[7][2] = (gCurrentF3->Eval(x1,y2,z2+dz) - pf[3]) / (dz + dz);
             }
             fsurf = 0.;
             MarchingCube(fsurf, p, pf, pn, nnod, ntria, xyz, grad, itria);
@@ -4398,7 +4434,11 @@ L120:
             i1 = 1;
             if (incr == -1) i1 = ntria;
             i2 = ntria - i1 + 1;
-///	    for ( i=i1 ; i<=i2 ; i=i+incr ) {
+	    // If clipping box is on do not draw the triangles
+            if (gF3Clipping) {
+               if(x2<=gF3XClip && y2 <=gF3YClip && z2>=gF3ZClip) goto L510;
+            }
+            // Draw triangles
             for (i=i1; incr < 0 ? i >= i2 : i <= i2; i += incr) {
                k      = iorder[i-1];
                t[0]   = grad[TMath::Abs(itria[k-1][0])-1][0];

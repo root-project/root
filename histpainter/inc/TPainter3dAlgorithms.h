@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.1 2002/05/21 13:19:25 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.2 2002/05/21 13:41:11 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TAttFill.h"
 #endif
 
+#include "TF3.h"
 
 const Int_t kCARTESIAN   = 1;
 const Int_t kPOLAR       = 2;
@@ -97,13 +98,11 @@ public:
    typedef void (TPainter3dAlgorithms::*DrawFaceFunc_t)(Int_t *, Double_t *, Int_t, Int_t *, Double_t *);
    typedef void (TPainter3dAlgorithms::*LegoFunc_t)(Int_t,Int_t,Int_t&,Double_t*,Double_t*,Double_t*);
    typedef void (TPainter3dAlgorithms::*SurfaceFunc_t)(Int_t,Int_t,Double_t*,Double_t*);
-   typedef Double_t (TPainter3dAlgorithms::*ImplicitFunc_t)(Double_t,Double_t,Double_t);
 
 private:
    DrawFaceFunc_t  fDrawFace;        //pointer to face drawing function
    LegoFunc_t      fLegoFunction;    //pointer to lego function
    SurfaceFunc_t   fSurfaceFunction; //pointer to surface function
-   ImplicitFunc_t  fImplicitFunction; //pointer to implicit function
    
 public:
            TPainter3dAlgorithms();
@@ -155,7 +154,9 @@ public:
    void    MarchingCubeFindNodes(Int_t nnod, Int_t *ie, Double_t xyz[52][3], Double_t grad[52][3]);
    void    ModifyScreen(Double_t *r1, Double_t *r2);
    void    SetDrawFace(DrawFaceFunc_t pointer);
-   void    SetImplicitFunction(ImplicitFunc_t pointer);
+   void    SetF3(TF3 *f3);
+   void    SetF3ClippingBoxOff();
+   void    SetF3ClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip);
    void    SetIsoSurfaceParameters(Double_t fmin, Double_t fmax, Int_t ncolor, Int_t ic1, Int_t ic2, Int_t ic3){fFmin=fmin; fFmax=fmax; fNcolor=ncolor; fIc1=ic1; fIc2=ic2; fIc3=ic3;}
    void    SetLegoFunction(LegoFunc_t pointer);
    void    SetMesh(Int_t mesh=1) {fMesh=mesh;}
@@ -173,8 +174,6 @@ public:
    void    SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs, Int_t &irep);
    void    TestEdge(Double_t del, Double_t xyz[52][3], Int_t i1, Int_t i2, Int_t iface[3], Double_t abcd[4], Int_t &irep);
    void    ZDepth(Double_t xyz[52][3], Int_t &nface, Int_t iface[48][3], Double_t dface[48][6], Double_t abcd[48][4], Int_t *iorder);
-
-   Double_t    Function3D(Double_t x, Double_t y, Double_t z);
 
    ClassDef(TPainter3dAlgorithms,0)   //Hidden line removal package
 };

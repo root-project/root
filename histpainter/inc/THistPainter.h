@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.11 2002/03/21 16:15:43 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.12 2002/05/21 13:19:25 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
     virtual void       PaintTable(Option_t *option);
     virtual void       PaintText(Option_t *option);
     virtual void       PaintTitle();
+    virtual void       PaintTF3();
     virtual void       RecalculateRange();
     virtual void       RecursiveRemove(TObject *);
     virtual void       SetHistogram(TH1 *h);

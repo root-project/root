@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.81 2002/05/21 13:19:26 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.82 2002/05/23 14:45:14 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2836,6 +2836,9 @@ void THistPainter::PaintH3(Option_t *option)
    } else if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"iso")) {
       PaintH3Iso();
       return;
+   } else if (strstr(option,"tf3")) {
+      PaintTF3();
+      return;
    } else {
       cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
    }
@@ -3200,35 +3203,35 @@ Int_t THistPainter::PaintInitH()
 //______________________________________________________________________________
 void THistPainter::PaintH3Iso()
 {
-// Control function to draw a 3d histogram with Iso Surfaces.
-//
-// Thanks to the function IsoSurface of the TPainter3dAlgorithms class, this
-// function paints a Gouraud shaded 3d iso surface though a 3d histogram.
-// 
-// This first implementation paint one surface at the value computed as follow:
-// SumOfWeights/(NbinsX*NbinsY*NbinsZ)
-//
-// Example:
-//
-//  #include "TH3.h"
-//  #include "TRandom.h"
-//
-//  void hist3d() {
-//     TH3F *h3 = new TH3F("h3","h3",20,-2,2,20,-2,2,20,0,4);
-//     Double_t x, y, z;
-//     for (Int_t i=0;i<10000;i++) {
-//        gRandom->Rannor(x, y);
-//        z = x*x + y*y;
-//        h3->Fill(x,y,z);
-//     }
-//     h3->Draw("iso");
-//  }
-//
-//Begin_Html
-/*
-<img src="gif/PaintIso.gif">
-*/
-//End_Html
+   // Control function to draw a 3d histogram with Iso Surfaces.
+   //
+   // Thanks to the function IsoSurface of the TPainter3dAlgorithms class, this
+   // function paints a Gouraud shaded 3d iso surface though a 3d histogram.
+   // 
+   // This first implementation paint one surface at the value computed as follow:
+   // SumOfWeights/(NbinsX*NbinsY*NbinsZ)
+   //
+   // Example:
+   //
+   //  #include "TH3.h"
+   //  #include "TRandom.h"
+   //
+   //  void hist3d() {
+   //     TH3F *h3 = new TH3F("h3","h3",20,-2,2,20,-2,2,20,0,4);
+   //     Double_t x, y, z;
+   //     for (Int_t i=0;i<10000;i++) {
+   //        gRandom->Rannor(x, y);
+   //        z = x*x + y*y;
+   //        h3->Fill(x,y,z);
+   //     }
+   //     h3->Draw("iso");
+   //  }
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintIso.gif">
+   */
+   //End_Html
 
    const Double_t ydiff = 1;
    const Double_t yligh1 = 10;
@@ -4590,6 +4593,79 @@ void THistPainter::PaintText(Option_t *)
       }
    }
 }
+
+
+//______________________________________________________________________________
+void THistPainter::PaintTF3()
+{
+   // Control function to draw a 3d implicit functions.
+   //
+   // Thanks to the function ImplicitFunction of the TPainter3dAlgorithms class,
+   // this function paints 3d representation of an implicit function.
+   // 
+   // Example:
+   //
+   //   TF3 *fun3 = new TF3("fun3","sin(x*x+y*y+z*z-36)",-2,2,-2,2,-2,2);      
+   //   fun3->Draw();
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintTF3.gif">
+   */
+   //End_Html
+   Int_t irep;
+
+   TGaxis *axis = new TGaxis();
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
+   
+   fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
+   fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
+   fXbuf[1] = yaxis->GetBinLowEdge(yaxis->GetFirst());
+   fYbuf[1] = yaxis->GetBinUpEdge(yaxis->GetLast());
+   fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
+   fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
+
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintTF3", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   fLego->InitMoveScreen(-1.1,1.1);
+
+   if (Hoption.BackBox) {
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      fLego->BackBox(90);
+   }
+
+   fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode1);
+
+   fLego->ImplicitFunction(fXbuf, fYbuf, fH->GetNbinsX(),
+                                         fH->GetNbinsY(),
+                                         fH->GetNbinsZ(), "BF");
+
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+
+   PaintTitle();
+
+   delete axis;
+   delete fLego; fLego = 0;
+}
+
 
 //______________________________________________________________________________
 void THistPainter::PaintTitle()
