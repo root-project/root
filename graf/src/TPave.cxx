@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.3 2000/06/06 07:59:11 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TPave::TPave(): TBox()
 }
 
 //______________________________________________________________________________
-TPave::TPave(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+TPave::TPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Int_t bordersize ,Option_t *option)
        :TBox(x1,y1,x2,y2)
 {
@@ -95,10 +95,10 @@ void TPave::ConvertNDCtoPad()
 //*-*-*-*-*-*-*Convert pave coordinates from NDC to Pad coordinates*-*-*-*-*-*
 //*-*          ====================================================
 
-   Float_t dpx  = gPad->GetX2() - gPad->GetX1();
-   Float_t dpy  = gPad->GetY2() - gPad->GetY1();
-   Float_t xp1  = gPad->GetX1();
-   Float_t yp1  = gPad->GetY1();
+   Double_t dpx  = gPad->GetX2() - gPad->GetX1();
+   Double_t dpy  = gPad->GetY2() - gPad->GetY1();
+   Double_t xp1  = gPad->GetX1();
+   Double_t yp1  = gPad->GetY1();
 //*-*- Check if pave initialisation has been done.
 //*-*  This operation cannot take place in the Pave constructor because
 //*-*  the Pad range may not be known at this time.
@@ -167,7 +167,7 @@ void TPave::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPave::DrawPave(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+void TPave::DrawPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Int_t bordersize ,Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this pave with new coordinates*-*-*-*-*-*-*-*-*-*
@@ -190,10 +190,10 @@ void TPave::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    TBox::ExecuteEvent(event, px, py);
 
 //*-* In case pave coordinates have been modified, recompute NDC coordinates
-   Float_t dpx  = gPad->GetX2() - gPad->GetX1();
-   Float_t dpy  = gPad->GetY2() - gPad->GetY1();
-   Float_t xp1  = gPad->GetX1();
-   Float_t yp1  = gPad->GetY1();
+   Double_t dpx  = gPad->GetX2() - gPad->GetX1();
+   Double_t dpy  = gPad->GetY2() - gPad->GetY1();
+   Double_t xp1  = gPad->GetX1();
+   Double_t yp1  = gPad->GetY1();
    fX1NDC = (fX1-xp1)/dpx;
    fY1NDC = (fY1-yp1)/dpy;
    fX2NDC = (fX2-xp1)/dpx;
@@ -240,13 +240,13 @@ void TPave::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPave::PaintPave(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       Int_t bordersize ,Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this pave with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
 
-   Float_t x[7],y[7];
+   Double_t x[7],y[7];
    TString opt = option;
    opt.ToLower();
 //*-*- if pave drawn with the arc option, goes through dedicated function
@@ -273,8 +273,8 @@ void TPave::PaintPave(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
       return;
    }
 
-   Float_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
-   Float_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
+   Double_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
+   Double_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
    Int_t mode = 0;
    //*-*- Draw the frame top right
    if (opt.Contains("t") && opt.Contains("r")) {
@@ -335,14 +335,14 @@ void TPave::PaintPave(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
 
 
 //______________________________________________________________________________
-void TPave::PaintPaveArc(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
+void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                       Int_t, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this pave with rounded corners*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
    const Int_t kNPARC = 10;
-   Float_t x[4*kNPARC+10],   y[4*kNPARC+10];
-   Float_t px[4*kNPARC+10], py[4*kNPARC+10];
+   Double_t x[4*kNPARC+10],   y[4*kNPARC+10];
+   Double_t px[4*kNPARC+10], py[4*kNPARC+10];
    Int_t i;
    TString opt = option;
    opt.ToLower();
@@ -351,12 +351,12 @@ void TPave::PaintPaveArc(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
    Int_t fillcolor = GetFillColor();
    Int_t linecolor = GetLineColor();
 
-   static Float_t cosa[kNPARC], sina[kNPARC];
+   static Double_t cosa[kNPARC], sina[kNPARC];
    static Bool_t done = kFALSE;
    if (!done) {
       done = kTRUE;
-      Float_t dtheta = 0.5*3.141592/(kNPARC+1);
-      Float_t theta = 0;
+      Double_t dtheta = 0.5*3.141592/(kNPARC+1);
+      Double_t theta = 0;
       for (i=0;i<kNPARC;i++) {
          theta += dtheta;
          cosa[i] = TMath::Cos(theta);
@@ -368,10 +368,10 @@ void TPave::PaintPaveArc(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
    Int_t px2 = gPad->XtoAbsPixel(x2);
    Int_t py2 = gPad->YtoAbsPixel(y2);
 //*-*- compute rounded corner radius
-   Float_t rad = fCornerRadius;
+   Double_t rad = fCornerRadius;
    if (rad > 0 && rad < 0.5) rad = fCornerRadius;
    else                      rad = 0.2;
-   Float_t r = rad*TMath::Abs(py1-py2);
+   Double_t r = rad*TMath::Abs(py1-py2);
    if (r > 0.5*TMath::Abs(px2-px1)) r = 0.5*TMath::Abs(px2-px1);
    if (r == 0) r = 1;
 
@@ -421,8 +421,8 @@ void TPave::PaintPaveArc(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
 
    if (fBorderSize <= 0) return;
 
-   Float_t wy    = fBorderSize;
-   Float_t wx    = fBorderSize;
+   Double_t wy    = fBorderSize;
+   Double_t wx    = fBorderSize;
 //*-*- Draw the frame top right
    if (opt.Contains("tr")) {
       px[0] = px2;           py[0] = py1 - r;
@@ -567,4 +567,50 @@ void TPave::SavePrimitive(ofstream &out, Option_t *)
    SaveFillAttributes(out,"pave",0,1001);
    SaveLineAttributes(out,"pave",1,1,1);
    out<<"   pave->Draw();"<<endl;
+}
+
+//______________________________________________________________________________
+void TPave::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TPave.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      TBox::Streamer(R__b);
+      if (R__v < 2) {
+         Float_t x1ndc,y1ndc,x2ndc,y2ndc,rad;
+         R__b >> x1ndc; fX1NDC = x1ndc;
+         R__b >> y1ndc; fY1NDC = y1ndc;
+         R__b >> x2ndc; fX2NDC = x2ndc;
+         R__b >> y2ndc; fY2NDC = y2ndc;
+         R__b >> fBorderSize;
+         R__b >> fInit;
+         R__b >> rad;   fCornerRadius = rad;
+      } else {
+         R__b >> fX1NDC;
+         R__b >> fY1NDC;
+         R__b >> fX2NDC;
+         R__b >> fY2NDC;
+         R__b >> fBorderSize;
+         R__b >> fInit;
+         R__b >> fCornerRadius;
+      }
+      fOption.Streamer(R__b);
+      fName.Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TPave::IsA());
+   } else {
+      R__c = R__b.WriteVersion(TPave::IsA(), kTRUE);
+      TBox::Streamer(R__b);
+      R__b << fX1NDC;
+      R__b << fY1NDC;
+      R__b << fX2NDC;
+      R__b << fY2NDC;
+      R__b << fBorderSize;
+      R__b << fInit;
+      R__b << fCornerRadius;
+      fOption.Streamer(R__b);
+      fName.Streamer(R__b);
+      R__b.SetByteCount(R__c, kTRUE);
+   }
 }
