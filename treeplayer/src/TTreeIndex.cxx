@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.3 2004/07/09 07:54:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.4 2004/07/09 10:55:05 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -92,7 +92,10 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    // Note that this function can also be applied to a TChain.
    //
    // The return value is the number of entries in the Index (< 0 indicates failure)
-
+   //
+   // It is possible to play with different TreeIndex in the same Tree.
+   // see comments in TTree::SetTreeIndex.
+   
    fTree               = (TTree*)T;
    fN                  = 0;
    fIndexValues        = 0;
@@ -106,6 +109,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    if (!T) return;
    fN = (Long64_t)T->GetEntries();
    if (fN <= 0) {
+      MakeZombie();
       Error("TreeIndex","Cannot build a TreeIndex with a Tree having no entries");
       return;
    }  
@@ -113,11 +117,18 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    GetMajorFormula();
    GetMinorFormula();
    if (!fMajorFormula || !fMinorFormula) {
+      MakeZombie();
       Error("TreeIndex","Cannot build the index with major=%s, minor=%s",fMajorName.Data(), fMinorName.Data());
       return;
    }   
-   if (!fMajorFormula->GetNdim() || !fMinorFormula->GetNdim()) {
+   if ((fMajorFormula->GetNdim() != 1) || (fMinorFormula->GetNdim() != 1)) {
+      MakeZombie();
       Error("TreeIndex","Cannot build the index with major=%s, minor=%s",fMajorName.Data(), fMinorName.Data());
+      return;
+   }   
+   if ((fMajorFormula->GetMultiplicity() != 0) || (fMinorFormula->GetMultiplicity() != 0)) {
+      MakeZombie();
+      Error("TreeIndex","Cannot build the index with major=%s, minor=%s that cannot be arrays",fMajorName.Data(), fMinorName.Data());
       return;
    }   
 
