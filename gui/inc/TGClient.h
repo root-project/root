@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.9 2004/02/18 16:17:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.10 2004/02/19 15:49:43 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -57,7 +57,8 @@ protected:
    Pixel_t         fSelForeColor;     // default selection foreground color
    Pixel_t         fWhite;            // white color index
    Pixel_t         fBlack;            // black color index
-   TGWindow       *fRoot;             // root (base) window
+   TGWindow       *fDefaultRoot;      // default root window (base window of display)
+   TGWindow       *fRoot;             // current root window (different root window allows embedding)
    Int_t           fXfd;              // file descriptor of connection to server
    TGResourcePool *fResourcePool;     // global GUI resource pool
    TGGCPool       *fGCPool;           // graphics context pool
@@ -73,8 +74,6 @@ protected:
    EGEventType     fWaitForEvent;     // event to wait for
    Window_t        fWaitForWindow;    // window in which to wait for event
 
-   static TGWindow *fgRoot;           // default root window
-
    Bool_t  ProcessOneEvent();
    Bool_t  HandleEvent(Event_t *event);
    Bool_t  HandleMaskEvent(Event_t *event, Window_t wid);
@@ -85,9 +84,9 @@ public:
    virtual ~TGClient();
 
    const TGWindow *GetRoot() const { return fRoot; }
-   const TGWindow *GetDefaultRoot() const;
-   void  SetRoot(TGWindow *root = 0) { fRoot = root ? root : fgRoot; }
-   Bool_t IsEditable() const { return fRoot != fgRoot; }
+   const TGWindow *GetDefaultRoot() const { return fDefaultRoot; }
+   void      SetRoot(TGWindow *root = 0) { fRoot = root ? root : fDefaultRoot; }
+   Bool_t    IsEditable() const { return fRoot != fDefaultRoot; }
    TGWindow *GetWindowById(Window_t sw) const;
 
    FontStruct_t GetFontByName(const char *name) const;

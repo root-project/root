@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.29 2004/02/19 15:49:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.30 2004/02/27 01:03:58 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -51,8 +51,6 @@
 // Global pointer to the TGClient object
 TGClient *gClient;
 
-// root  window
-TGWindow *TGClient::fgRoot = 0;
 
 //----- Graphics Input handler -------------------------------------------------
 //______________________________________________________________________________
@@ -123,7 +121,7 @@ TGClient::TGClient(const char *dpyName)
 
    // Create root window
 
-   fgRoot = fRoot = new TGFrame(this, gVirtualX->GetDefaultRootWindow());
+   fDefaultRoot = fRoot = new TGFrame(this, gVirtualX->GetDefaultRootWindow());
 
    // Setup some atoms (defined in TVirtualX)...
 
@@ -159,12 +157,6 @@ TGClient::TGClient(const char *dpyName)
    fSelBackColor = fResourcePool->GetSelectedBgndColor();
 
    gClient = this;
-}
-
-//______________________________________________________________________________
-const TGWindow *TGClient::GetDefaultRoot() const
-{
-   return fgRoot;
 }
 
 //______________________________________________________________________________
