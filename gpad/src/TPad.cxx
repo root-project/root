@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.81 2002/09/09 16:46:53 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.82 2002/09/10 13:17:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3652,7 +3652,7 @@ void TPad::Print(const char *filename, Option_t *option)
          noScreen = kTRUE;
          GetCanvas()->SetBatch(kTRUE);
       }
-   
+
       TPad *padsav = (TPad*)gPad;
       cd();
       TVirtualPS *psave = gVirtualPS;
@@ -3660,7 +3660,7 @@ void TPad::Print(const char *filename, Option_t *option)
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
          TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TSVG"))) {
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "svg"))) {
             if (h->LoadPlugin() == -1)
                return;
             h->ExecPlugin(0);
@@ -3674,7 +3674,7 @@ void TPad::Print(const char *filename, Option_t *option)
       gVirtualPS->NewPage();
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-      
+
       Info("Print", "SVG file %s has been created", psname);
 
       delete gVirtualPS;
@@ -3718,7 +3718,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (!gVirtualPS || mustOpen) {
       // Plugin Postscript driver
       TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS"))) {
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "ps"))) {
          if (h->LoadPlugin() == -1)
             return;
          h->ExecPlugin(0);

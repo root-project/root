@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.10 2001/10/30 17:21:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.11 2002/09/10 13:17:42 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -486,7 +486,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         else if (strstr(fi.fFilename, ".C"))
                            fCanvas->SaveSource(fi.fFilename);
                         else
-                           Warning("ProcessMessage", "file cannot be save with this extension (%s)", fi.fFilename);
+                           Warning("ProcessMessage", "file cannot be saved with this extension (%s)", fi.fFilename);
                      }
                      break;
                   case kFileSaveAsRoot:
