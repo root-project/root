@@ -195,7 +195,6 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
     fMaxV /= 3.0;
     fMinV = -1.0 * fMaxV;
-printf("w=%d, h=%d, fMaxV=%f\n",w,h,fMaxV);
 
     fEventNr = 0;
     fNRun    = 0;
@@ -834,7 +833,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         }
                         break;
 
-	
+
                 } // switch parm1
                 break; // M_MENU
 
@@ -844,7 +843,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
         case kC_LISTTREE:
 
             switch (GET_SUBMSG(msg)) {
-     
+
                 case kCT_ITEMDBLCLICK:
                     if (parm1 == kButton1) {
 	                    if (fEventListTree->GetSelected()) {
@@ -853,10 +852,10 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                     }
                     break;
 
-            } // switch submsg      
+            } // switch submsg
             break; // case kC_LISTTREE
     } // switch msg
-  
+
   return kTRUE;
 }
 
@@ -1048,7 +1047,7 @@ void RootShower::OnShowerProduce()
           delete f1;
        }
     }
-    fHisto_dEdX->Draw();    
+    fHisto_dEdX->Draw();
     padC->Modified();
     padC->Update();
     cC->Update();
@@ -1195,7 +1194,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
           delete f1;
        }
     }
-    fHisto_dEdX->Draw();    
+    fHisto_dEdX->Draw();
     padC->Modified();
     padC->Update();
     cC->Update();
@@ -1305,9 +1304,25 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
     return 0;
 }
 
+//______________________________________________________________________________
 int main(int argc, char **argv)
 {
-    TRint theApp("App", &argc, argv);
+    Bool_t rint = kFALSE;
+    for (int i = 0; i < argc; i++) {
+       if (!strcmp(argv[i], "-d")) rint = kTRUE;
+       if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-?")) {
+          printf("Usage: %s [-d] [-h | -?]\n", argv[0]);
+          printf("  -d:     debug and inspect mode via ROOT prompt\n");
+          printf("  -h, -?: this message\n");
+          return 0;
+       }
+    }
+
+    TApplication *theApp;
+    if (rint)
+       theApp = new TRint("App", &argc, argv);
+    else
+       theApp = new TApplication("App", &argc, argv);
 
     gStyle->SetOptStat(1111);
     gStyle->SetOptFit(1111);
@@ -1325,7 +1340,10 @@ int main(int argc, char **argv)
     RootShower theShower(gClient->GetRoot(), 400, 200);
 
     // run ROOT application
-    theApp.Run();
+    theApp->Run();
+
+    // pro forma, never reached
+    delete theApp;
 
     return 0;
 }
