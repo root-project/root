@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.25 2001/06/22 16:10:18 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.26 2001/06/23 08:42:24 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -447,19 +447,19 @@ void TCint::SetClassInfo(TClass *cl)
       // or is nested, looking for the full class name is outputing a lots of
       // (expected) error messages.  Currently the only way to avoid this is to
       // specifically check that each level of nesting is already loaded.
-      char * classname = strdup(cl->GetName());
-      char * current = strstr(classname,"::");
+      char *classname = strdup(cl->GetName());
+      char *current = strstr(classname,"::");
       while(current) {
          *current = '\0';
          G__ClassInfo info(classname);
          if (! info.IsLoaded() ) {
-           delete classname;
+           delete [] classname;
            return;
          }
          *current = ':';
          current = strstr(current+1,"::");
       }
-      delete classname;
+      delete [] classname;
 
       cl->fClassInfo = new G__ClassInfo(cl->GetName());
 
