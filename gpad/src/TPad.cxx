@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.131 2004/05/11 07:04:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.132 2004/05/19 14:38:32 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1685,15 +1685,11 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       case kMarker:
       case kText:
-#ifndef WIN32
-         CreateNewText(event,px,py,newcode);
-#else
         {
             if (event == kButton1Down) gROOT->SetEditorMode();
             gROOT->ProcessLine(Form("((TPad *)0x%lx)->CreateNewText(%d,%d,%d,%d);",
                                     (Long_t)this, event, px, py, newcode));
         }
-#endif
          break;
       case kLine:
          CreateNewLine(event,px,py,kLine);
