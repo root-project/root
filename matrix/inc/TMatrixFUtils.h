@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.6 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.7 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -326,7 +326,7 @@ public:
   inline       Float_t  &operator()(Int_t i)       { Assert(i >=0 && i < fNelems);
                                                      return (const_cast<Float_t *>(fPtr))[i]; }
   inline const Float_t  &operator[](Int_t i) const { return (*(const TMatrixFFlat *)this)(i); }
-  inline       Float_t  &operator[](Int_t i)       { return (*(      TMatrixFFlat *)this)[i]; }
+  inline       Float_t  &operator[](Int_t i)       { return (*(      TMatrixFFlat *)this)(i); }
 
   void operator= (Float_t  val);
   void operator+=(Float_t  val);

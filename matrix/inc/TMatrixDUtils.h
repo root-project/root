@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.25 2004/05/12 18:24:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.26 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -330,7 +330,7 @@ public:
   inline       Double_t &operator()(Int_t i)       { Assert(i >=0 && i < fNelems);
                                                      return (const_cast<Double_t *>(fPtr))[i]; }
   inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDFlat *)this)(i); }
-  inline       Double_t &operator[](Int_t i)       { return (*(      TMatrixDFlat *)this)[i]; }
+  inline       Double_t &operator[](Int_t i)       { return (*(      TMatrixDFlat *)this)(i); }
 
   void operator= (Double_t val);
   void operator+=(Double_t val);
