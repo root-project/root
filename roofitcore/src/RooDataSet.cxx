@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.67 2002/02/01 23:53:24 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.68 2002/02/20 19:46:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -173,9 +173,17 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
 }
 
 
+RooArgSet RooDataSet::addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar)
+{
+  // Helper function for constructor below
+  RooArgSet tmp(origVars) ;
+  if (wgtVar) tmp.add(*wgtVar) ;
+  return tmp ;
+}
+
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
 		       const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache) :
-  RooTreeData(name,title,ntuple,vars,cutVar, copyCache)
+  RooTreeData(name,title,ntuple,addWgtVar(vars,ntuple->_wgtVar),cutVar, copyCache)
 {
   // Protected constructor for internal use only
   appendToDir(this,kTRUE) ;
@@ -210,6 +218,10 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
   checkInit() ;
   return new RooDataSet(GetName(), GetTitle(), this, varSubset, cutVar, copyCache) ;
+
+  // WVE - propagate optional weight variable
+  //       check behaviour in plotting.
+
 }
 
 
