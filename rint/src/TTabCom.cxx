@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.12 2002/04/04 10:11:13 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.13 2002/07/19 08:29:00 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -367,10 +367,11 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
 {
    if (!fpClasses) {
       // generate a text list of classes on disk
-      strstream cmd;
-      const char *tmpfilename = tmpnam(0);
-      cmd << ".class > " << tmpfilename << endl;
-      gROOT->ProcessLineSync(cmd.str());	// memory leak cmd.str()
+     const char *tmpfilename = tmpnam(0);
+     TString cmd(".class >");
+     cmd += tmpfilename; cmd += "\n";
+     gROOT->ProcessLineSync(cmd.Data());
+
 
       // open the file
       ifstream file1(tmpfilename);
@@ -469,14 +470,15 @@ const TSeqCol *TTabCom::GetListOfEnvVars()
 
    if (!fpEnvVars) {
       const char *tmpfilename = tmpnam(0);
-      strstream cmd;
+      TString cmd;
 
 #ifndef WIN32
-      cmd << "/bin/env > " << tmpfilename << endl;
+      cmd = "/bin/env > ";
 #else
-      cmd << "set > " << tmpfilename << endl;
+      cmd = "set > ";
 #endif
-      gSystem->Exec(cmd.str()); // memory leak cmd.str()
+      cmd += tmpfilename; cmd += "\n";
+      gSystem->Exec(cmd.Data()); 
 
       // open the file
       ifstream file1(tmpfilename);
@@ -789,11 +791,13 @@ TString TTabCom::DetermineClass(const char varName[])
    assert(varName != 0);
    IfDebug(cerr << "DetermineClass(\"" << varName << "\");" << endl);
 
-   strstream cmd;
    const char *tmpfile = tmpnam(0);
-   cmd << "gROOT->ProcessLine(\"" << varName << "\"); > " << tmpfile <<
-       endl;
-   gROOT->ProcessLineSync(cmd.str());	// memory leak cmd.str()
+   TString cmd("gROOT->ProcessLine(\"");
+   cmd += varName;
+   cmd += "\"); > ";
+   cmd += tmpfile; cmd +=  "\n";
+
+   gROOT->ProcessLineSync(cmd.Data());	
    // the type of the variable whose name is "varName"
    // should now be stored on disk in the file "tmpfile"
 
@@ -863,7 +867,11 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
    if (!fignore) {
       return kFALSE;
    } else {
+#ifdef R__SSTREAM
+      istringstream endings((char *) fignore);
+#else
       istrstream endings((char *) fignore);	// do i need to make a copy first?
+#endif
       TString ending;
 
       ending.ReadToDelim(endings, ':');
@@ -928,9 +936,9 @@ TString TTabCom::GetSysIncludePath(void)
    // get this part of the include path from the interpreter
    // and stick it in a tmp file.
    const char *tmpfilename = tmpnam(0);
-   strstream cmd;
-   cmd << "gROOT->ProcessLine(\".include\"); > " << tmpfilename << endl;
-   gROOT->ProcessLineSync(cmd.str());	// memory leak cmd.str()
+   TString cmd("gROOT->ProcessLine(\".include\"); > ");
+   cmd += tmpfilename; cmd += "\n";
+   gROOT->ProcessLineSync(cmd.Data());
 
    // open the tmp file
    ifstream file1(tmpfilename);
@@ -1006,7 +1014,11 @@ TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
    assert(path1 != 0);
 
    TContainer *pList = new TContainer;	// maybe use RTTI here? (since its a static function)
+#ifdef R__SSTREAM
+   istringstream path((char *) path1);
+#else
    istrstream path((char *) path1);
+#endif
    TString dirName;
 
    dirName.ReadToDelim(path, ':');
@@ -1432,7 +1444,11 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
 
    if (newBase.BeginsWith("/"))
       newBase = newBase.Strip(TString::kLeading, '/');
+#ifdef R__SSTREAM
+   stringstream str;
+#else
    strstream str;
+#endif
    TString dir;
    TString newPath;
    str << originalPath;
