@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.21 2004/06/01 08:56:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.22 2005/03/10 17:30:21 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -17,6 +17,9 @@
 #include "TList.h"
 #include "TFile.h"
 #include "TPluginManager.h"
+
+// Remove when TViewer3DPad fix in ExecuteRotateView() is removed
+#include "TViewer3DPad.h"
 
 ClassImp(TView)
 
@@ -725,7 +728,7 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Motion:
-
+   {
 //*-*-    Draw the surrounding frame for the current mouse position
 //*-*-       First: Erase old frame
       fChanged = kTRUE;
@@ -747,8 +750,25 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       psideg       = GetPsi();
       ResetView(newlongitude, newlatitude, psideg, irep);
       fOutline->Paint();
-      break;
 
+      // Temporary fix for 2D drawing problems on pad. fOutline contains
+      // a TPolyLine3D object for the rotation box. This will be painted
+      // through a newly created TViewer3DPad instance, which is left 
+      // behind on pad. This remaining creates 2D drawing problems.
+      //
+      // This is a TEMPORARY fix - will be removed when proper multiple viewers
+      // on pad problems are resolved.
+      if (gPad) {
+         TViewer3DPad * viewer3DPad = dynamic_cast<TViewer3DPad *>(gPad->GetViewer3D());
+         if (viewer3DPad) {
+            gPad->ReleaseViewer3D();
+            delete viewer3DPad;
+         }
+      }
+      // End fix
+      
+      break;
+   }
    case kButton1Up:
 
 //*-*-   Recompute new view matrix and redraw
