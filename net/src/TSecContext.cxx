@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.2 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.3 2004/05/18 11:56:38 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -163,6 +163,7 @@ void TSecContext::DeActivate(Option_t *Opt)
          TString det("context");
          TString us("-1");
          (*GlobusAuthHook)((TAuthenticate *)fContext,us,det);
+         fContext = 0;
       }
    }
 

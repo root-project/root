@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.12 2004/04/20 15:23:49 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.13 2004/05/12 13:04:12 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -101,7 +101,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
          Info("GlobusAuthenticate", " cleanup call (%s)",details.Data());
       if (details == "context") {
          // Security context cleaning
-         GlobusCleanupContext((gss_ctx_id_t)auth);
+         GlobusCleanupContext((gss_ctx_id_t)Auth);
       } else if (details == "shm") {
          // Shared memory cleaning (TProofServ)
          GlobusCleanupShm();
@@ -1025,17 +1025,10 @@ Int_t GlobusCheckSecCtx(const char *subj, TSecContext *ctx)
 
    Int_t rc = 0;
 
-   if (ctx->IsActive()) {
+   if (ctx->IsActive())
       rc = GlobusCheckSecContext(subj,(gss_ctx_id_t)(ctx->GetContext()));
-   } else {
-     // Security context deactivation
-      GlobusCleanupContext((gss_ctx_id_t)(ctx->GetContext()));
-#if 0
-      ctx->DeActivate();
-#endif
-   }
-   return rc;
 
+   return rc;
 }
 
 //______________________________________________________________________________
