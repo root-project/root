@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.14 2002/10/10 17:09:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.15 2004/02/22 11:31:17 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -66,6 +66,7 @@
 #include "TCutG.h"
 #include "TVirtualPad.h"
 #include "TPaveText.h"
+#include "TH2.h"
 
 ClassImp(TCutG)
 
@@ -213,6 +214,53 @@ TCutG::~TCutG()
    delete fObjectX;
    delete fObjectY;
    gROOT->GetListOfSpecials()->Remove(this);
+}
+
+//______________________________________________________________________________
+Double_t TCutG::Integral(TH2 *h, Option_t *option) const
+{
+   // Compute the integral of 2-d histogram h for all bins inside the cut
+   // if option "width" is specified, the integral is the sum of
+   // the bin contents multiplied by the bin width in x and in y.
+	
+   if (!h) return 0;
+   Int_t n = GetN();
+   Double_t xmin= 1e200;
+   Double_t xmax = -xmin;
+   Double_t ymin = xmin;
+   Double_t ymax = xmax;
+   for (Int_t i=0;i<n;i++) {
+      if (fX[i] < xmin) xmin = fX[i];
+      if (fX[i] > xmax) xmax = fX[i];
+      if (fY[i] < ymin) ymin = fY[i];
+      if (fY[i] > ymax) ymax = fY[i];
+   }
+   TAxis *xaxis = h->GetXaxis();
+   TAxis *yaxis = h->GetYaxis();
+   Int_t binx1 = xaxis->FindBin(xmin);
+   Int_t binx2 = xaxis->FindBin(xmax);
+   Int_t biny1 = yaxis->FindBin(ymin);
+   Int_t biny2 = yaxis->FindBin(ymax);
+   Int_t nbinsx = h->GetNbinsX();
+   Stat_t integral = 0;
+
+   // Loop on bins for which the bin center is in the cut 
+   TString opt = option;
+   opt.ToLower();
+   Bool_t width = kFALSE;
+   if (opt.Contains("width")) width = kTRUE;
+   Int_t bin, binx, biny;
+   for (biny=biny1;biny<=biny2;biny++) {
+      Double_t y = yaxis->GetBinCenter(biny);
+      for (binx=binx1;binx<=binx2;binx++) {
+         Double_t x = xaxis->GetBinCenter(binx);
+         if (!IsInside(x,y)) continue;
+	 bin = binx +(nbinsx+2)*biny;
+         if (width) integral += h->GetBinContent(bin)*xaxis->GetBinWidth(binx)*yaxis->GetBinWidth(biny);
+         else       integral += h->GetBinContent(bin);
+      }
+   }
+   return integral;
 }
 
 //______________________________________________________________________________
