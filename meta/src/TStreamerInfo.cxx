@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.79 2001/06/18 02:14:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.80 2001/07/02 08:53:29 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -413,6 +413,7 @@ void TStreamerInfo::BuildOld()
    TStreamerElement *element;
    Int_t offset = 0;
    Streamer_t streamer = 0;
+   Int_t sp = sizeof(void *);
    while ((element = (TStreamerElement*)next())) {
       element->SetNewType(element->GetType());
       if (element->IsA() == TStreamerBase::Class()) {
@@ -445,6 +446,8 @@ void TStreamerInfo::BuildOld()
          //if (asize == 0) asize = 8;
          //offset += asize*alength;
          offset += asize;
+         //align to pointer boundaries (important on 64 bit machines)
+         if (offset%sp != 0) offset = offset - offset%sp + sp;
          if (element->GetType() == kObject || element->GetType() == kTString) {
             //element->SetOffset(kMissing);
             //element->SetNewType(-1);
@@ -697,11 +700,14 @@ void TStreamerInfo::ComputeSize()
 // Compute total size of all persistent elements of the class
 
    TIter next(fElements);
-   TStreamerElement *element;
-   fSize = 0;
-   while ((element = (TStreamerElement*)next())) {
-      fSize += element->GetSize();
-   }
+   TStreamerElement *element = (TStreamerElement*)fElements->Last();
+   //faster and more precise to use last element offset +size
+   //on 64 bit machines, offset may be forced to be a multiple of 8 bytes
+   fSize = element->GetOffset() + element->GetSize();
+   //fSize = 0;
+   //while ((element = (TStreamerElement*)next())) {
+   //   fSize += element->GetSize();
+   //}
 }
 
 //______________________________________________________________________________
