@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.2 2000/10/10 13:03:27 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -66,8 +66,8 @@ protected:
    Int_t     fNelems;           // number of elements in matrix
    Int_t     fRowLwb;           // lower bound of the row index
    Int_t     fColLwb;           // lower bound of the col index
-   Real_t   *fElements;	        // elements themselves
-   Real_t  **fIndex;            // index[i] = &matrix(0,i) (col index)
+   Real_t   *fElements;	        //[fNelems] elements themselves
+   Real_t  **fIndex;            //! index[i] = &matrix(0,i) (col index)
 
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
@@ -165,7 +165,7 @@ public:
    friend Bool_t AreCompatible(const TMatrix &im1, const TMatrix &im2);
    friend Double_t E2Norm(const TMatrix &m1, const TMatrix &m2);
 
-   ClassDef(TMatrix,1)  // Matrix class
+   ClassDef(TMatrix,2)  // Matrix class
 };
 
 
