@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.24 2002/09/16 10:57:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.25 2002/09/19 13:59:48 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -64,7 +64,8 @@ const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
 const char* const kPROOF_WorkDir  = "~/proof";     // default working directory
 const char* const kPROOF_CacheDir = "cache";       // file cache dir, under WorkDir
 const char* const kPROOF_PackDir  = "packages";    // package dir, under WorkDir
-const char* const kPROOF_LockFile = ".cache.lock"; // lock file, under CacheDir and PackDir
+const char* const kPROOF_CacheLockFile   = "/tmp/proof-cache-lock-";   // cache lock file
+const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // package lock file
 
 
 class TProof : public TVirtualProof {

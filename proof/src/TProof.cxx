@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.27 2002/09/16 10:57:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.28 2002/09/19 13:59:48 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -225,7 +225,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
          // read the config file
          char line[256];
-         const char *host = gSystem->HostName();
+         const char *host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
          int  ord = 0;
 
          while (fgets(line, sizeof(line), pconf)) {
