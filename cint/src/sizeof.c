@@ -1144,89 +1144,13 @@ int tagnum;
 
 #ifndef G__OLDIMPLEMENTATION1473
 /**************************************************************************
- * Variable argument, byte layout policy
- **************************************************************************/
-
-#if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
-/**********************************************
- * Intel architecture
- *  Everyting aligns in multiple of 4 
- *  Incrementing order
- *    |1111|22  |3   |44444444|55555555555555  |
- **********************************************/
-#define G__VAARG_INC_COPY_N
-static int G__va_arg_align_size=4;
-
-#elif defined(__hpux) || defined(__hppa__)
-/**********************************************
- * HP-PA, no good way to implement variable argument
- *  Aligns in 4 or 8
- *  Decrementing order
- *   If sizeof(type)>8, stack only has a reference(pointer)
- *         addr -= sizeof(int); return(*(type*)addr);
- *           |3333|2222|1111|
- *   if 8>=sizeof(type)>4, 
- *         addr = (addr-sizeof(type))&(~0x7);  -- addr is multiple of 8
- *         return(*(type*)(addr);
- *           |33333333|  222222|  111111|
- *   if 4>=sizeof(type),
- *         addr = (addr-sizeof(type))&(~0x3);  -- addr is multiple of 4
- *           |3333|   2|  11|
- **********************************************/
-#ifdef G__NEVER
-#define va_arg(AP,TYPE)						\
-  (*(sizeof(TYPE) > 8 ?						\
-   ((AP = (__gnuc_va_list) ((char *)AP - sizeof (int))),	\
-    (((TYPE *) (void *) (*((int *) (AP))))))			\
-   :((AP =							\
-      (__gnuc_va_list) ((long)((char *)AP - sizeof (TYPE))	\
-			& (sizeof(TYPE) > 4 ? ~0x7 : ~0x3))),	\
-     (((TYPE *) (void *) ((char *)AP + ((8 - sizeof(TYPE)) % 4)))))))
-#endif
-
-#define G__VAARG_HPPA
-#define G__VAARG_NOSUPPORT
-static int G__va_arg_align_size=0;
-
-#elif defined(__sparc) || defined(__hppa__)
-/**********************************************
- * Sparc, ???
- *
- **********************************************/
-#ifdef G__NEVER
-#define va_arg(pvar,TYPE)					\
-__extension__							\
-(*({((__builtin_classify_type (*(TYPE*) 0) >= __record_type_class \
-      || (__builtin_classify_type (*(TYPE*) 0) == __real_type_class \
-	  && sizeof (TYPE) == 16))				\
-    ? ((pvar) = (char *)(pvar) + __va_rounded_size (TYPE *),	\
-       *(TYPE **) (void *) ((char *)(pvar) - __va_rounded_size (TYPE *))) \
-    : __va_rounded_size (TYPE) == 8				\
-    ? ({ union {char __d[sizeof (TYPE)]; int __i[2];} __u;	\
-	 __u.__i[0] = ((int *) (void *) (pvar))[0];		\
-	 __u.__i[1] = ((int *) (void *) (pvar))[1];		\
-	 (pvar) = (char *)(pvar) + 8;				\
-	 (TYPE *) (void *) __u.__d; })				\
-    : ((pvar) = (char *)(pvar) + __va_rounded_size (TYPE),	\
-       ((TYPE *) (void *) ((char *)(pvar) - __va_rounded_size (TYPE)))));}))
-#endif
-
-#define G__VAARG_SPARC
-#define G__VAARG_NOSUPPORT
-static int G__va_arg_align_size=0;
-
-#else
-/**********************************************
- * Default, set same as intel architecture
- **********************************************/
-#define G__VAARG_INC_COPY_N
-static int G__va_arg_align_size=4;
-
-#endif
-
-/**************************************************************************
  * G__va_arg_setalign()
  **************************************************************************/
+#ifdef G__VAARG_INC_COPY_N
+static int G__va_arg_align_size=4;
+#else
+static int G__va_arg_align_size=0;
+#endif
 void G__va_arg_setalign(n)
 int n;
 {
@@ -1308,6 +1232,99 @@ int n;
 
   }
 }
+
+#ifdef G__VAARG_COPYFUNC
+/**************************************************************************
+ * G__va_arg_copyfunc()
+ **************************************************************************/
+void G__va_arg_copyfunc(fp,ifunc,ifn)
+FILE* fp;
+struct G__ifunc_table* ifunc;
+int ifn;
+{
+  FILE *xfp;
+  int n;
+  int c;
+  int nest = 0;
+  int double_quote = 0;
+  int single_quote = 0;
+  int flag = 0;
+
+  if(G__srcfile[ifunc->pentry[ifn]->filenum].fp) 
+    xfp = G__srcfile[ifunc->pentry[ifn]->filenum].fp;
+  else {
+    xfp = fopen(G__srcfile[ifunc->pentry[ifn]->filenum].filename,"r");
+    flag = 1;
+  }
+  if(!xfp) return;
+  fsetpos(xfp,&ifunc->pentry[ifn]->pos);
+
+  fprintf(fp,"%s ",G__type2string(ifunc->type[ifn]
+				  ,ifunc->p_tagtable[ifn]
+				  ,ifunc->p_typetable[ifn]
+				  ,ifunc->reftype[ifn]
+				  ,ifunc->isconst[ifn]));
+  fprintf(fp,"%s(",ifunc->funcname[ifn]);
+
+  /* print out parameter types */
+  for(n=0;n<ifunc->para_nu[ifn];n++) {
+    
+    if(n!=0) {
+      fprintf(fp,",");
+    }
+
+    if('u'==ifunc->para_type[ifn][n] &&
+       0==strcmp(G__struct.name[ifunc->para_p_tagtable[ifn][n]],"va_list")) {
+      fprintf(fp,"struct G__param* G__VA_libp,int G__VA_n");
+      break;
+    }
+    /* print out type of return value */
+    fprintf(fp,"%s",G__type2string(ifunc->para_type[ifn][n]
+				    ,ifunc->para_p_tagtable[ifn][n]
+				    ,ifunc->para_p_typetable[ifn][n]
+				    ,ifunc->para_reftype[ifn][n]
+				    ,ifunc->para_isconst[ifn][n]));
+    
+    if(ifunc->para_name[ifn][n]) {
+      fprintf(fp," %s",ifunc->para_name[ifn][n]);
+    }
+    if(ifunc->para_def[ifn][n]) {
+      fprintf(fp,"=%s",ifunc->para_def[ifn][n]);
+    }
+  }
+  fprintf(fp,")");
+  if(ifunc->isconst[ifn]&G__CONSTFUNC) {
+    fprintf(fp," const");
+  }
+
+  c = 0;
+  while(c!='{') c = fgetc(xfp);
+  fprintf(fp,"{");
+
+  nest = 1;
+  while(c!='}' || nest) {
+    c = fgetc(xfp);
+    fputc(c,fp);
+    switch(c) {
+    case '"':
+      if(!single_quote) double_quote ^= 1;
+      break;
+    case '\'':
+      if(!double_quote) single_quote ^= 1;
+      break;
+    case '{':
+      if(!single_quote && !double_quote) ++nest;
+      break;
+    case '}':
+      if(!single_quote && !double_quote) --nest;
+      break;
+    }
+  }
+  fprintf(fp,"\n");
+  if(flag && xfp) fclose(xfp);
+}
+#endif
+
 #endif
 
 

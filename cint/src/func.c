@@ -2097,7 +2097,7 @@ G__value ap;
   if(!va) return;
 
   va->libp = local->libp;
-  va->ip = ifunc->para_nu[local->ifn]-1;
+  va->ip = ifunc->para_nu[local->ifn];
 }
 /******************************************************************
  * G__va_arg

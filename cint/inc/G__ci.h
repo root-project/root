@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014069
-#define G__CINTVERSIONSTR  "5.14.69, Jan 13 2001"
+#define G__CINTVERSION      5014070
+#define G__CINTVERSIONSTR  "5.14.70, Jan 16 2001"
 
 
 /**********************************************************************
@@ -1546,16 +1546,43 @@ extern G__EXPORT void G__free_p2fsetup G__P((void));
 extern G__EXPORT int G__printlinenum G__P((void));
 
 #ifndef G__OLDIMPLEMENTATION1473
+/**************************************************************************
+ * Variable argument, byte layout policy
+ **************************************************************************/
 #define G__VAARG_SIZE 1024
 
 typedef struct {
   char d[G__VAARG_SIZE];
 } G__va_arg_buf;
 
+#if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
+/**********************************************
+ * Intel architecture, aligns in multiple of 4 
+ *    |1111|22  |3   |44444444|55555555555555  |
+ **********************************************/
+#define G__VAARG_INC_COPY_N
+
+#elif defined(__hpux) || defined(__hppa__)
+#define G__VAARG_NOSUPPORT
+
+#elif defined(__sparc) || defined(__hppa__)
+#define G__VAARG_NOSUPPORT
+
+#else
+#define G__VAARG_NOSUPPORT
+
+#endif
+
+struct G__va_list_para {
+  struct G__param *libp;
+  int i;
+};
+
 void G__va_arg_setalign G__P((int n));
 void G__va_arg_copyvalue G__P((int t,void* p,G__value* pval,int objsize));
 void G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
-#endif
+
+#endif /* 1473 */
 
 #endif /* __CINT__ */
 

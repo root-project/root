@@ -347,6 +347,12 @@ struct G__ifunc_table *ifunc;
 	    if(G__more(fp,msg)) return(1);
 	  }
 	}
+#ifndef G__OLDIMPLEMENTATION1471
+	if(2==ifunc->ansi[i]) {
+	  sprintf(msg," ...");
+	  if(G__more(fp,msg)) return(1);
+	}
+#endif
 	sprintf(msg,")");
 	if(G__more(fp,msg)) return(1);
 	if(ifunc->isconst[i]&G__CONSTFUNC) {

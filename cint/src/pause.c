@@ -1576,6 +1576,9 @@ G__value *rslt;
   char keyword[G__ONELINE];
   char pipefile[G__MAXFILENAME];
   int dmy = 0;
+#ifndef G__OLDIMPLEMENTATION1474
+  int noprintflag=0;
+#endif
 
   if(!err) err = &dmy;
 
@@ -1655,8 +1658,12 @@ G__value *rslt;
 #endif
 	temp = strlen(command)-1;
 	while (isspace(command[temp])) --temp;
-	if (command[temp] == ';')
+	if (command[temp] == ';') {
 	  sprintf(syscom, "{%s}", command);
+#ifndef G__OLDIMPLEMENTATION1474
+	  noprintflag=1;
+#endif
+	}
 	else
 	  sprintf(syscom, "{%s;}", command);
 	strcpy(command, syscom);
@@ -3408,7 +3415,14 @@ G__value *rslt;
 #ifndef G__OLDIMPLEMENTATION1004
 	if(-1==G__func_now) G__p_local=0;
 #endif
-	if(buf.type && 0==G__atevaluate(buf)) fprintf(G__sout,"%s\n",syscom);
+	if(buf.type && 0==G__atevaluate(buf)
+#ifndef G__OLDIMPLEMENTATION1474
+	   && !noprintflag
+#endif
+	   ) fprintf(G__sout,"%s\n",syscom);
+#ifndef G__OLDIMPLEMENTATION1474
+	noprintflag = 0;
+#endif
 #ifndef G__OLDIMPLEMENTATION1004
 	if(-1==G__func_now) G__p_local=store_local;
 #endif

@@ -926,6 +926,9 @@ FILE *fp;
   fprintf(fp,"#include <math.h>\n");
   fprintf(fp,"#include <string.h>\n");
   fprintf(fp,"#define G__ANSIHEADER\n");
+#ifdef G__VAARG_COPYFUNC
+  fprintf(fp,"#define G__DICTIONARY\n");
+#endif
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s%sG__ci.h\"\n",G__cintsysdir,G__psep);
@@ -971,6 +974,9 @@ FILE *fp;
   fprintf(fp,"extern \"C\" {\n");
 #endif
   fprintf(fp,"#define G__ANSIHEADER\n");
+#ifdef G__VAARG_COPYFUNC
+  fprintf(fp,"#define G__DICTIONARY\n");
+#endif
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s%sG__ci.h\"\n",G__cintsysdir,G__psep);
@@ -2562,6 +2568,15 @@ struct G__ifunc_table *ifunc;
 	}
 	if(m>2) fprintf(fp,"\n");
 	for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
+#ifndef G__OLDIMPLEMENTATION1473
+	if(2==ifunc->ansi[ifn]) {
+#ifdef G__VAARG_COPYFUNC
+	  fprintf(fp,",libp,%d",k);
+#else
+	  fprintf(fp,",G__va_arg_bufobj");
+#endif
+	}
+#endif
 	fprintf(fp,");\n");
       }
 
@@ -2673,6 +2688,15 @@ struct G__ifunc_table *ifunc;
       }
       if(m>2) fprintf(fp,"\n");
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
+#ifndef G__OLDIMPLEMENTATION1473
+      if(2==ifunc->ansi[ifn]) {
+#ifdef G__VAARG_COPYFUNC
+	fprintf(fp,",libp,%d",k);
+#else
+	fprintf(fp,",G__va_arg_bufobj");
+#endif
+      }
+#endif
       fprintf(fp,");\n");
     }
 
@@ -3361,6 +3385,13 @@ struct G__ifunc_table *ifunc;
 #endif
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1473
+#ifdef G__VAARG_COPYFUNC
+  if(2==ifunc->ansi[ifn] && 0<ifunc->pentry[ifn]->line_number)
+    G__va_arg_copyfunc(fp,ifunc,ifn);
+#endif
+#endif
+
 #ifndef G__CPPIF_STATIC
 #ifdef G__GENWINDEF
   fprintf(G__WINDEFfp,"        %s @%d\n"
@@ -3409,11 +3440,13 @@ struct G__ifunc_table *ifunc;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1473
+#ifndef G__VAARG_COPYFUNC
   if(2==ifunc->ansi[ifn]) {
     fprintf(fp,"  G__va_arg_buf G__va_arg_bufobj;\n");
     fprintf(fp,"  G__va_arg_put(&G__va_arg_bufobj,libp,%d);\n"
-	    ,ifunc->para_nu[ifn]-1);
+	    ,ifunc->para_nu[ifn]);
   }
+#endif
 #endif
 
   m = ifunc->para_nu[ifn] ;
@@ -3467,6 +3500,15 @@ struct G__ifunc_table *ifunc;
       if(m>6) fprintf(fp,"\n");
 #endif
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
+#ifndef G__OLDIMPLEMENTATION1473
+      if(2==ifunc->ansi[ifn]) {
+#ifdef G__VAARG_COPYFUNC
+	fprintf(fp,",libp,%d",k);
+#else
+	fprintf(fp,",G__va_arg_bufobj");
+#endif
+      }
+#endif
 
       fprintf(fp,")%s\n",endoffunc);
 
@@ -3515,6 +3557,15 @@ struct G__ifunc_table *ifunc;
     if(m>6) fprintf(fp,"\n");
 #endif
     for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
+#ifndef G__OLDIMPLEMENTATION1473
+    if(2==ifunc->ansi[ifn]) {
+#ifdef G__VAARG_COPYFUNC
+      fprintf(fp,",libp,%d",k);
+#else
+      fprintf(fp,",G__va_arg_bufobj");
+#endif
+    }
+#endif
 
     fprintf(fp,")%s\n",endoffunc);
   }
@@ -3740,14 +3791,6 @@ int k;
 
   if(k && 0==k%2) fprintf(fp,"\n");
   if(0!=k) fprintf(fp,",");
-
-#ifndef G__OLDIMPLEMENTATION1473
-  if('u'==ifunc->para_type[ifn][k] &&
-     0==strcmp(G__struct.name[ifunc->para_p_tagtable[ifn][k]],"va_list")) {
-    fprintf(fp,"G__va_arg_bufobj");
-    return;
-  }
-#endif
 
 #ifndef G__OLDIMPLEMENTATION573
   if(ifunc->para_name[ifn][k]) {
