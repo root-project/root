@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.14 2001/01/24 16:32:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.15 2001/02/06 10:55:40 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -522,7 +522,7 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 //  before calling this function. example with TChain *chain;
 //  Int_t localEntry = chain->LoadTree(entry);
 //  branch->GetEntry(localEntry);
-   
+
    if (TestBit(kDoNotProcess) && !getall) return 0;
    if (fReadEntry == entry) return 1;
    if (entry < 0 || entry >= fEntryNumber) return 0;
@@ -644,6 +644,7 @@ TFile *TBranch::GetFile(Int_t mode)
    if (mode) file = TFile::Open(fFileName.Data(),"recreate");
    else      file = TFile::Open(fFileName.Data());
    if (file->IsZombie()) {delete file; return 0;}
+   fFileName = file->GetName();
    fDirectory = (TDirectory*)file;
    return file;
 }
@@ -922,7 +923,7 @@ void TBranch::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 5) {
          TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
-         
+
          gBranch = branchSave;
          fDirectory = gDirectory;
          fNleaves = fLeaves.GetEntriesFast();
@@ -973,7 +974,7 @@ void TBranch::Streamer(TBuffer &b)
       gROOT->SetReadingObject(kFALSE);
       b.CheckByteCount(R__s, R__c, TBranch::IsA());
       //====end of old versions
-      
+
    } else {
       TBranch::Class()->WriteBuffer(b,this);
 
