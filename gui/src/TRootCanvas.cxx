@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.44 2004/05/11 12:01:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.45 2004/06/08 10:49:02 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -778,9 +778,11 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fCanvas->Print();
                      break;
                   case kFileCloseCanvas:
+                     if (fEditor) fEditor->DeleteEditors();
                      SendCloseMessage();
                      break;
                   case kFileQuit:
+                     if (fEditor) fEditor->DeleteEditors();
                      delete this;
                      gApplication->Terminate(0);
                      break;
@@ -1172,7 +1174,7 @@ void TRootCanvas::ShowEditor(Bool_t show)
 //______________________________________________________________________________
 void TRootCanvas::CreateEditor()
 {
-   // Create editor
+   // Create editor.
 
    fEditorFrame->SetEditable();
    gPad = Canvas();
