@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.51 2004/01/21 22:22:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.52 2004/02/05 10:05:06 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -86,8 +86,8 @@ TApplication::TApplication()
 
 //______________________________________________________________________________
 TApplication::TApplication(const char *appClassName,
-                           int *argc, char **argv, void *options,
-                           int numOptions)
+                           Int_t *argc, char **argv, void *options,
+                           Int_t numOptions)
 {
    // Create an application environment. The application environment
    // provides an interface to the graphics system and eventloop
@@ -238,7 +238,7 @@ void TApplication::ClearInputFiles()
 }
 
 //______________________________________________________________________________
-void TApplication::GetOptions(int *argc, char **argv)
+void TApplication::GetOptions(Int_t *argc, char **argv)
 {
    // Get and handle command line options. Arguments handled are removed
    // from the argument array. The following arguments are handled:
@@ -569,7 +569,7 @@ void TApplication::MakeBatch()
 }
 
 //______________________________________________________________________________
-Long_t TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
+Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 {
    // Process a single command line, either a C++ statement or an interpreter
    // command starting with a ".".
@@ -590,7 +590,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
    }
 
    if (!strncmp(line, ".pwd", 4)) {
-      if (gDirectory) 
+      if (gDirectory)
          Printf("Current directory: %s", gDirectory->GetPath());
       if (gPad)
          Printf("Current pad:       %s", gPad->GetName());
@@ -829,7 +829,7 @@ void TApplication::StopIdleing()
 }
 
 //______________________________________________________________________________
-void TApplication::Terminate(int status)
+void TApplication::Terminate(Int_t status)
 {
    // Terminate the application by call TSystem::Exit() unless application has
    // been told to return from Run(), by a call to SetReturnFromRun().
@@ -843,7 +843,7 @@ void TApplication::Terminate(int status)
 }
 
 //______________________________________________________________________________
-void TApplication::KeyPressed(int key)
+void TApplication::KeyPressed(Int_t key)
 {
    // emit signal when console keyboard key was pressed
 

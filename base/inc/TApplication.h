@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.11 2004/01/21 22:22:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.12 2004/02/05 10:05:06 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -66,17 +66,17 @@ protected:
    void         SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
 
 public:
-   TApplication(const char *appClassName, int *argc, char **argv,
-                void *options = 0, int numOptions = 0);
+   TApplication(const char *appClassName, Int_t *argc, char **argv,
+                void *options = 0, Int_t numOptions = 0);
    virtual ~TApplication();
 
-   virtual void    GetOptions(int *argc, char **argv);
+   virtual void    GetOptions(Int_t *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    HandleIdleTimer();
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
-   virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, int* error = 0);
-   virtual Long_t  ProcessFile(const char *line, int* error = 0);
+   virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
+   virtual Long_t  ProcessFile(const char *line, Int_t *error = 0);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();
@@ -94,9 +94,9 @@ public:
    virtual void    Raise()   { fAppImp->Raise(); }
    virtual void    Lower()   { fAppImp->Lower(); }
 
-   int             Argc() const  { return fArgc; }
+   Int_t           Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }
-   char           *Argv(int index) const { return fArgv ? fArgv[index] : 0; }
+   char           *Argv(Int_t index) const { return fArgv ? fArgv[index] : 0; }
    Bool_t          NoLogOpt() const { return fNoLog; }
    Bool_t          NoLogoOpt() const { return fNoLogo; }
    Bool_t          QuitOpt() const { return fQuit; }
@@ -108,9 +108,9 @@ public:
 
    static void     CreateApplication();
 
-   virtual void    Terminate(int status = 0);   //*SIGNAL* 
-   virtual void    KeyPressed(int key);         //*SIGNAL* 
-   virtual void    ReturnPressed(char *text );  //*SIGNAL* 
+   virtual void    Terminate(Int_t status = 0);   //*SIGNAL*
+   virtual void    KeyPressed(Int_t key);         //*SIGNAL*
+   virtual void    ReturnPressed(char *text );    //*SIGNAL*
 
    ClassDef(TApplication,0)  //GUI application singleton
 };

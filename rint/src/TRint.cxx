@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.25 2004/01/28 19:06:05 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.26 2004/02/05 10:05:06 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ extern "C" {
 }
 #endif
 
-static int key_pressed(int key) { gApplication->KeyPressed(key); return 0; }
+static Int_t key_pressed(Int_t key) { gApplication->KeyPressed(key); return 0; }
 
 
 //----- Interrupt signal handler -----------------------------------------------
@@ -91,7 +91,7 @@ Bool_t TInterruptHandler::Notify()
 //______________________________________________________________________________
 class TTermInputHandler : public TFileHandler {
 public:
-   TTermInputHandler(int fd) : TFileHandler(fd, 1) { }
+   TTermInputHandler(Int_t fd) : TFileHandler(fd, 1) { }
    Bool_t Notify();
    Bool_t ReadNotify() { return Notify(); }
 };
@@ -106,8 +106,8 @@ Bool_t TTermInputHandler::Notify()
 ClassImp(TRint)
 
 //______________________________________________________________________________
-TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
-             int numOptions, Bool_t noLogo)
+TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
+             Int_t numOptions, Bool_t noLogo)
        : TApplication(appClassName, argc, argv, options, numOptions)
 {
    // Create an application environment. The TRint environment provides an
@@ -418,7 +418,7 @@ Bool_t TRint::HandleTermInput()
 }
 
 //______________________________________________________________________________
-void TRint::Terminate(int status)
+void TRint::Terminate(Int_t status)
 {
    // Terminate the application. Reset the terminal to sane mode and call
    // the logoff macro defined via Rint.Logoff environment variable.
