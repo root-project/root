@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.80 2004/11/24 14:11:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.81 2004/12/01 15:45:27 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TLeafS.h"
 #include "TLeafD.h"
 #include "TLeafL.h"
+#include "TLeafO.h"
 #include "TMessage.h"
 #include "TClonesArray.h"
 #include "TVirtualPad.h"
@@ -191,6 +192,8 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
          TLeaf *leaf = 0;
          if (*leaftype == 'C') {
             leaf = new TLeafC(leafname,leaftype);
+         } else if (*leaftype == 'O') {
+            leaf = new TLeafO(leafname,leaftype);
          } else if (*leaftype == 'B') {
             leaf = new TLeafB(leafname,leaftype);
          } else if (*leaftype == 'b') {

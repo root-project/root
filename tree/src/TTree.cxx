@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.226 2005/01/13 20:07:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.227 2005/01/19 18:30:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -73,6 +73,7 @@
 //            - D : a 64 bit floating point (Double_t)
 //            - L : a 64 bit signed integer (Long64_t)
 //            - l : a 64 bit unsigned integer (ULong64_t)
+//            - O : a boolean (Bool_t)
 //
 //  ==> Case B
 //      ======
@@ -949,6 +950,7 @@ TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int
 //            - D : a 64 bit floating point (Double_t)
 //            - L : a 64 bit signed integer (Long64_t)
 //            - l : a 64 bit unsigned integer (ULong64_t)
+//            - O : a boolean (Bool_t)
 //
 //         By default, a variable will be copied to the buffer with the number of
 //         bytes specified in the type descriptor character. However, if the type
@@ -1127,8 +1129,10 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
                      // char array by the fact that there is NO specified
                      // size for a string (see next if (code == 1)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"B");
-                  else if (code == 11 || code == 18)
+                  else if (code == 11)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"b");
+                  else if (code == 18)
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"O");
                   else if (code ==  2)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"S");
                   else if (code == 12)
@@ -1190,7 +1194,8 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
 //*-*-------------Data Member is a basic data type----------
          if (dm->IsBasic()) {
             if      (code ==  1) sprintf(leaflist,"%s/%s",rdname,"B");
-            else if (code == 11 || code ==18) sprintf(leaflist,"%s/%s",rdname,"b");
+            else if (code == 11) sprintf(leaflist,"%s/%s",rdname,"b");
+            else if (code == 18) sprintf(leaflist,"%s/%s",rdname,"O");
             else if (code ==  2) sprintf(leaflist,"%s/%s",rdname,"S");
             else if (code == 12) sprintf(leaflist,"%s/%s",rdname,"s");
             else if (code ==  3) sprintf(leaflist,"%s/%s",rdname,"I");
