@@ -311,13 +311,13 @@ struct G__Templatearg *G__read_formal_templatearg()
     /*  template<class T,class E,int S> ...
      *           ^                            */
     c = G__fgetname(type,"<");
-    if(strcmp(type,"class")==0) {
+    if(strcmp(type,"class")==0 || strcmp(type,"typename")==0) {
       p->type = G__TMPLT_CLASSARG;
     }
     else if('<'==c && strcmp(type,"template")==0) {
       c=G__fignorestream(">");
       c=G__fgetname(type,"");
-      G__ASSERT(0==strcmp(type,"class"));
+      G__ASSERT(0==strcmp(type,"class")||0==strcmp(type,"typename"));
       p->type = G__TMPLT_TMPLTARG;
     }
     else {

@@ -457,6 +457,16 @@ G__value *p,result;
     return(result);
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1384
+  switch(p->obj.reftype.reftype) {
+  case G__PARAP2P:
+  case G__PARAP2P2P:
+    if(isupper(p->type)) {
+      *(long *)(p->obj.i)=(long)G__int(result);
+      return(result);
+    }
+  }
+#endif
   switch(p->type) {
   case 'B':
     *(unsigned char *)(p->obj.i)=(unsigned char)G__int(result);

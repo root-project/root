@@ -1468,6 +1468,9 @@ char type;
 	G__constvar=G__CONSTVAR;
 	G__enumdef=1;
 	do {
+#ifndef G__OLDIMPLEMENTATION1382
+	  int store_decl;
+#endif
 	  c=G__fgetstream(memname,"=,}");
 	  if(c=='=') {
 #ifndef G__OLDIMPLEMENTATION888
@@ -1500,11 +1503,18 @@ char type;
 	    store_def_struct_member=G__def_struct_member;
 	    G__def_struct_member=0;
 	    G__static_alloc=1;
+#ifndef G__OLDIMPLEMENTATION1382
+	    store_decl = G__decl;
+	    G__decl = 1;
+#endif
 	  }
 	  G__letvariable(memname,enumval,&G__global ,G__p_local);
 	  if(-1!=store_tagnum) {
 	    G__def_struct_member=store_def_struct_member;
 	    G__static_alloc=0;
+#ifndef G__OLDIMPLEMENTATION1382
+	    G__decl = store_decl;
+#endif
 	  }
 	} while(c!='}') ;
 	G__constvar=0;

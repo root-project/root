@@ -5237,6 +5237,15 @@ int pp_inc;
   long address;
   /* int ig25; */
   int baseoffset;
+
+#ifndef G__OLDIMPLEMENTATION1383
+  if(INT_MAX==var->varlabel[ig15][1] && 'v'==G__var_type &&
+     0==p_inc && 0== paran) {
+    /* Trick  f(A **x) { *x=0; } as f(AA **x) { x[0]=0; } */
+    G__var_type = 'p';
+    paran = 1;
+  }
+#endif
   
   switch(G__var_type) {
   case 'v': 

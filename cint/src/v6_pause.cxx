@@ -1555,7 +1555,7 @@ G__value *rslt;
   FILE* store_stdin=NULL;
   char keyword[G__ONELINE];
   char pipefile[G__MAXFILENAME];
-  int dmy;
+  int dmy = 0;
 
   if(!err) err = &dmy;
 
