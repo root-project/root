@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.8 2004/05/27 08:32:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.9 2004/08/02 08:52:53 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -45,12 +45,10 @@ TStopwatch::TStopwatch()
    // Create a stopwatch and start it.
 
 #ifdef R__UNIX
-   if (!gTicks) gTicks = (Double_t)sysconf(_SC_CLK_TCK);
+   if (!gTicks)
+      gTicks = (Double_t)sysconf(_SC_CLK_TCK);
 #endif
-   fState         = kUndefined;
-   fTotalCpuTime  = 0;
-   fTotalRealTime = 0;
-   fCounter       = 0;
+
    Start();
 }
 
@@ -63,6 +61,7 @@ void TStopwatch::Start(Bool_t reset)
    // resetting the stopwatch.
 
    if (reset) {
+      fState         = kUndefined;
       fTotalCpuTime  = 0;
       fTotalRealTime = 0;
       fCounter       = 0;
