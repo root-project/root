@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.43 2004/06/01 09:08:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.44 2004/10/25 17:19:11 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -97,12 +97,18 @@ ClassImp(TLatex)
 //   ----------------
 //   The command to produce a lowercase Greek letter is obtained by adding a # to
 //   the name of the letter. For an uppercase Greek letter, just capitalize the first
-//   letter of the command name.
+//   letter of the command name. Some letter have two representations. The name of the
+//   second one (the "variation") starts with "var".
 //   #alpha #beta #chi #delta #varepsilon #phi #gamma #eta #iota #varphi #kappa #lambda
 //   #mu #nu #omicron #pi #theta #rho #sigma #tau #upsilon #varomega #omega #xi #psi #zeta
 //   #Alpha #Beta #Chi #Delta #Epsilon #Phi #Gamma #Eta #Iota #vartheta
 //   #Kappa #Lambda #Mu #Nu #Omicron #Pi #Theta #Rho #Sigma #Tau
 //   #Upsilon #varsigma #Omega #Xi #Psi #Zeta #varUpsilon #epsilon
+//Begin_Html
+/*
+<img src="gif/latex_greek.gif">
+*/
+//End_Html
 //
 //   ** Putting One Thing Above Another
 //   ----------------------------------
