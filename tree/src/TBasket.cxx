@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.16 2002/05/30 15:44:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.17 2002/12/13 19:17:47 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -169,7 +169,10 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    file->ReadBuffer(buffer,len);
    Streamer(*fBufferRef);
 
-   if (fObjlen > fNbytes-fKeylen) {
+   if (fObjlen > fNbytes-fKeylen || 
+       (fObjlen==fNbytes-fKeylen 
+        && GetBranch()->GetCompressionLevel()!=0
+        && file->GetVersion()<=30401)) {
       fBuffer = new char[fObjlen+fKeylen];
       memcpy(fBuffer,buffer,fKeylen);
       char *objbuf = fBuffer + fKeylen;
