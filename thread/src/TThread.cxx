@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.14 2002/02/23 16:01:44 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.15 2002/03/09 09:58:22 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -482,7 +482,8 @@ ULong_t TThread::Call(void *p2f,void *arg)
    void *iPointer2Function;
    G__CallFunc fFunc;
    int iPointerType = G__UNKNOWNFUNC;
-
+   {
+   R__LOCKGUARD(gCINTMutex);
    // reconstruct function name
    fname=G__p2f2funcname(p2f);
    iPointer2Function=p2f;
@@ -512,7 +513,7 @@ ULong_t TThread::Call(void *p2f,void *arg)
          ::Error("TThread:Call", "no overloading parameter matches");
       }
    }
-
+   }
    // check what kind of pointer is it
    switch(iPointerType) {
 

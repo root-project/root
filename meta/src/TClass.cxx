@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.73 2002/05/03 14:30:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.75 2002/05/09 20:22:00 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -543,6 +543,7 @@ void TClass::BuildRealData(void *pointer)
          //      realDataObject->ShowMembers(brd, parent);
          //will not work if the class derives from TObject but not as primary
          //inheritance.
+         R__LOCKGUARD(gCINTMutex);
          G__CallFunc func;
          void *address;
          long  offset;
@@ -1216,6 +1217,7 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
    // Need to go through those loops to get the signature from
    // the valued params (i.e. from "1.0,3" to "double,int")
 
+   R__LOCKGUARD(gCINTMutex);
    G__CallFunc  func;
    long         offset;
    func.SetFunc(GetClassInfo(), name, params, &offset);

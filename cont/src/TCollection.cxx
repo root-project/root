@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.15 2002/02/22 09:37:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.16 2002/02/23 16:01:44 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -380,6 +380,7 @@ void TCollection::SetCurrentCollection()
 //______________________________________________________________________________
 void TCollection::StartGarbageCollection()
 {
+   R__LOCKGUARD(gContainerMutex);
    if (!fgGarbageCollection) {
       fgGarbageCollection = new TObjectTable;
       fgEmptyingGarbage   = kFALSE;
@@ -404,8 +405,8 @@ void TCollection::EmptyGarbageCollection()
 //______________________________________________________________________________
 void TCollection::GarbageCollect(TObject *obj)
 {
+   R__LOCKGUARD(gContainerMutex);
    if (fgGarbageCollection) {
-      R__LOCKGUARD(gContainerMutex);
       if (!fgEmptyingGarbage) {
          fgGarbageCollection->Add(obj);
       } else
