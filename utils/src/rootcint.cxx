@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.188 2004/10/07 17:07:56 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.189 2004/10/08 07:39:21 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -941,7 +941,7 @@ bool HasDefaultConstructor(G__ClassInfo& cl)
    long offset;
    const char *proto = "";
 
-   if (cl.Property() & G__BIT_ISNAMESPACE) return false;   
+   if (cl.Property() & G__BIT_ISNAMESPACE) return false;
 
    G__MethodInfo methodinfo = cl.GetMethod(cl.TmpltName(),proto,&offset);
    G__MethodInfo tmethodinfo = cl.GetMethod(cl.Name(),proto,&offset);
@@ -1016,7 +1016,7 @@ bool NeedConstructor(G__ClassInfo& cl)
    //   the class version is greater than 0
    //   or (the option + has been specified and ShowMembers is missing)
 
-   if (cl.Property() & G__BIT_ISNAMESPACE) return false;   
+   if (cl.Property() & G__BIT_ISNAMESPACE) return false;
 
    bool res= ((GetClassVersion(cl)>0
                || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
@@ -1065,7 +1065,7 @@ bool NeedDestructor(G__ClassInfo& cl)
    string name = "~";
    name += cl.TmpltName();
 
-   if (cl.Property() & G__BIT_ISNAMESPACE) return false;   
+   if (cl.Property() & G__BIT_ISNAMESPACE) return false;
 
    G__MethodInfo methodinfo = cl.GetMethod(name.c_str(),proto,&offset);
 
@@ -2282,7 +2282,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    if (cl.HasMethod("Class_Version")) {
       fprintf(fp, "::%s::Class_Version(), ",classname.c_str());
-   } else { 
+   } else {
 
       // Need to find out if the operator>> is actually defined for this class.
       G__ClassInfo gcl;
@@ -2332,7 +2332,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
       fprintf(fp, "         GenerateInitInstance()->GetClass();\n");
       fprintf(fp, "      }\n\n");
    }
-   
+
    fprintf(fp,"   }\n");
    while(nesting--) {
       fprintf(fp,"}\n");
@@ -2991,12 +2991,12 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 {
    string csymbol = cl.Fullname();
    if ( ! TClassEdit::IsStdClass( csymbol.c_str() ) ) {
-      
+
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
       // real class instead of the class in the namespace ROOT::Shadow
       csymbol.insert(0,"::");
-   }      
+   }
 
    const char *prefix = "";
 
@@ -4177,6 +4177,9 @@ int main(int argc, char **argv)
             sprintf(argvv[argcc], "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
 #endif
          }
+#ifdef ROOTBUILD
+         argvv[argcc++] = "-DG__NOCINTDLL";
+#endif
          argvv[argcc++] = "-DTRUE=1";
          argvv[argcc++] = "-DFALSE=0";
          argvv[argcc++] = "-Dexternalref=extern";
