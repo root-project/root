@@ -1,3 +1,6 @@
+// @(#)root/base:$Name:  $:$Id:$
+// Author: Richard Maunder  10/3/2005
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -15,12 +18,12 @@
 #include <assert.h>
 
 //______________________________________________________________________________
-Bool_t TViewer3DPad::PreferLocalFrame() const 
+Bool_t TViewer3DPad::PreferLocalFrame() const
 {
-   return kFALSE;   
+   return kFALSE;
 }
 
-   
+
 //______________________________________________________________________________
 void TViewer3DPad::BeginScene()
 {
@@ -47,7 +50,7 @@ void TViewer3DPad::EndScene()
    assert(fBuilding);
 
    fBuilding= kFALSE;
-   
+
    // If we are doing for auto-range pass on view invoke another pass
    TView *view = fPad.GetView();
    if (view) {
@@ -63,12 +66,12 @@ void TViewer3DPad::EndScene()
 
 //______________________________________________________________________________
 Int_t TViewer3DPad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
-{ 
+{
    // Accept any children
    if (addChildren) {
       *addChildren = kTRUE;
    }
-   
+
    TView * view = fPad.GetView();
    if (!view) {
       assert(kFALSE);
@@ -124,7 +127,7 @@ Int_t TViewer3DPad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
          }
       }
    }
- 
+
    return TBuffer3D::kNone;
 }
 
