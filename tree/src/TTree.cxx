@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.126 2002/07/02 07:10:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.128 2002/07/06 06:54:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2782,21 +2782,16 @@ void TTree::Print(Option_t *option) const
   }
 
   Int_t s = 0;
+  Int_t skey = 0;
   if (fDirectory) {
      TKey *key = fDirectory->GetKey(GetName());
-     if (key) s = key->GetNbytes();
+     if (key) {skey = key->GetKeylen(); s = key->GetNbytes();}
   }
-  //Double_t total = fTotBytes;
-  Double_t total = TTree::Class()->GetStreamerInfo()->GetSizeElements();
-  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
-  Int_t l;
-  TBranch *br;
-  TLeaf *leaf;
-  for (l=0;l<nl;l++) {
-     leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
-     br   = leaf->GetBranch();
-     total += br->GetTotalSize();
-  }
+  Double_t total = fTotBytes + skey;
+  TBuffer b(TBuffer::kWrite,10000);
+  TTree::Class()->WriteBuffer(b,(TTree*)this);
+  total += b.Length();
+
   Int_t file     = Int_t(fZipBytes) + s;
   Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
@@ -2806,6 +2801,10 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
+  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
+  Int_t l;
+  TBranch *br;
+  TLeaf *leaf;
   if (strstr(option,"toponly")) {
      Int_t *count = new Int_t[nl];
      Int_t keep =0;
