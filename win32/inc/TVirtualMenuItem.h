@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TVirtualMenuItem.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine   18/03/96
 
 /*************************************************************************
@@ -73,7 +73,7 @@ protected:
 
    virtual void Join(TWin32Menu *menu);
    virtual void Free(TWin32Menu *menu) = 0;        // It is like Remove(TWin32Menu) but without feed back, so it is faster
-   SetItem(Int_t iFlag);
+   void SetItem(Int_t iFlag);
    virtual void SetItemStatus(EMenuModified state=kMenuModified);
    virtual void ExecuteEventCB(TWin32Canvas *c) = 0;              //User click this item
 
