@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.38 2002/11/11 11:27:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.39 2002/11/11 14:45:10 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -608,7 +608,7 @@ Int_t TBuffer::ReadArray(Bool_t *&b)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!b) b = new Bool_t[n];
 
@@ -636,7 +636,7 @@ Int_t TBuffer::ReadArray(Char_t *&c)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!c) c = new Char_t[n];
 
@@ -659,7 +659,7 @@ Int_t TBuffer::ReadArray(Short_t *&h)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!h) h = new Short_t[n];
 
@@ -692,7 +692,7 @@ Int_t TBuffer::ReadArray(Int_t *&ii)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!ii) ii = new Int_t[n];
 
@@ -725,7 +725,7 @@ Int_t TBuffer::ReadArray(Long_t *&ll)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!ll) ll = new Long_t[n];
 
@@ -749,7 +749,7 @@ Int_t TBuffer::ReadArray(Float_t *&f)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!f) f = new Float_t[n];
 
@@ -782,7 +782,7 @@ Int_t TBuffer::ReadArray(Double_t *&d)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!d) d = new Double_t[n];
 
@@ -809,7 +809,7 @@ Int_t TBuffer::ReadStaticArray(Bool_t *b)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!b) return 0;
 
@@ -836,7 +836,7 @@ Int_t TBuffer::ReadStaticArray(Char_t *c)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!c) return 0;
 
@@ -858,7 +858,7 @@ Int_t TBuffer::ReadStaticArray(Short_t *h)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!h) return 0;
 
@@ -890,7 +890,7 @@ Int_t TBuffer::ReadStaticArray(Int_t *ii)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!ii) return 0;
 
@@ -922,7 +922,7 @@ Int_t TBuffer::ReadStaticArray(Long_t *ll)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!ll) return 0;
 
@@ -946,7 +946,7 @@ Int_t TBuffer::ReadStaticArray(Float_t *f)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!f) return 0;
 
@@ -978,7 +978,7 @@ Int_t TBuffer::ReadStaticArray(Double_t *d)
    Int_t n;
    *this >> n;
 
-   if (!n) return n;
+   if (n <= 0) return 0;
 
    if (!d) return 0;
 
@@ -1146,7 +1146,7 @@ void TBuffer::WriteArray(const Bool_t *b, Int_t n)
 
    *this << n;
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Assert(b);
 
@@ -1171,7 +1171,7 @@ void TBuffer::WriteArray(const Char_t *c, Int_t n)
 
    *this << n;
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Assert(c);
 
@@ -1191,7 +1191,7 @@ void TBuffer::WriteArray(const Short_t *h, Int_t n)
 
    *this << n;
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Assert(h);
 
@@ -1221,7 +1221,7 @@ void TBuffer::WriteArray(const Int_t *ii, Int_t n)
 
    *this << n;
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Assert(ii);
 
@@ -1251,7 +1251,7 @@ void TBuffer::WriteArray(const Long_t *ll, Int_t n)
 
    *this << n;
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Assert(ll);
 
@@ -1269,7 +1269,7 @@ void TBuffer::WriteArray(const Float_t *f, Int_t n)
 
    *this << n;
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Assert(f);
 
@@ -1299,7 +1299,7 @@ void TBuffer::WriteArray(const Double_t *d, Int_t n)
 
    *this << n;
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Assert(d);
 
