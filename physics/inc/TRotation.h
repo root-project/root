@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name$:$Id$
+// @(#)root/physics:$Name:  $:$Id: TRotation.hxx,v 1.2 2003/04/10 14:36:43 pdk Exp $
 // Author: Peter Malzacher   19/06/99
 
 /*************************************************************************
@@ -11,15 +11,16 @@
 #ifndef ROOT_TRotation
 #define ROOT_TRotation
 
+#include "TObject.h"
+
 #ifndef ROOT_TVector3
 #include "TVector3.h"
 #endif
 
 class TRotation : public TObject {
-
-
+    
 public:
-
+    
   class TRotationRow {
   public:
     inline TRotationRow(const TRotation &, int);
@@ -36,6 +37,8 @@ public:
 
   TRotation(const TRotation &);
   // Copy constructor.
+
+  virtual ~TRotation() {;};
 
   inline Double_t XX() const;
   inline Double_t XY() const;
@@ -65,7 +68,7 @@ public:
   // Returns true if the identity matrix (Geant4).
 
   inline TVector3 operator * (const TVector3 &) const;
-  // Multiplication with a Hep3Vector.
+  // Multiplication with a TVector3.
 
   TRotation operator * (const TRotation &) const;
   inline TRotation & operator *= (const TRotation &);
@@ -108,6 +111,65 @@ public:
   void AngleAxis(Double_t &, TVector3 &) const;
   // Returns the rotation angle and rotation axis (Geant4).
 
+  inline TRotation & SetToIdentity();
+  // Set equal to the identity rotation.
+
+  TRotation & SetXEulerAngles(Double_t phi, Double_t theta, Double_t psi);
+  void SetXPhi(Double_t);
+  void SetXTheta(Double_t);
+  void SetXPsi(Double_t);
+  // Set the euler angles of the rotation.  The angles are defined using the
+  // y-convention which rotates around the Z axis, around the new X axis, and
+  // then around the new Z axis.  The x-convention is used Goldstein, Landau
+  // and Lifshitz, and other common physics texts.  Contrast this with
+  // SetYEulerAngles.
+
+  TRotation & RotateXEulerAngles(Double_t phi, Double_t theta, Double_t psi);
+  // Adds a rotation of the local axes defined by the Euler angle to the
+  // current rotation.  See SetXEulerAngles for a note about conventions.
+
+  Double_t GetXPhi(void) const;
+  Double_t GetXTheta(void) const;
+  Double_t GetXPsi(void) const;
+  // Return the euler angles of the rotation.  See SetYEulerAngles for a
+  // note about conventions.
+
+  TRotation & SetYEulerAngles(Double_t phi, Double_t theta, Double_t psi);
+  void SetYPhi(Double_t);
+  void SetYTheta(Double_t);
+  void SetYPsi(Double_t);
+  // Set the euler angles of the rotation.  The angles are defined using the
+  // y-convention which rotates around the Z axis, around the new Y axis, and
+  // then around the new Z axis.  The x-convention is used Goldstein, Landau
+  // and Lifshitz, and other common physics texts and is a rotation around the
+  // Z axis, around the new X axis, and then around the new Z axis.
+
+  TRotation & RotateYEulerAngles(Double_t phi, Double_t theta, Double_t psi);
+  // Adds a rotation of the local axes defined by the Euler angle to the
+  // current rotation.  See SetYEulerAngles for a note about conventions.
+
+  Double_t GetYPhi(void) const;
+  Double_t GetYTheta(void) const;
+  Double_t GetYPsi(void) const;
+  // Return the euler angles of the rotation.  See SetYEulerAngles for a
+  // note about conventions.
+
+  TRotation & SetXAxis(const TVector3& axis);
+  TRotation & SetXAxis(const TVector3& axis, const TVector3& xyPlane);
+  TRotation & SetYAxis(const TVector3& axis);
+  TRotation & SetYAxis(const TVector3& axis, const TVector3& yzPlane);
+  TRotation & SetZAxis(const TVector3& axis);
+  TRotation & SetZAxis(const TVector3& axis, const TVector3& zxPlane);
+  // Create a rotation with the axis vector parallel to the rotated coordinate
+  // system.  If a second vector is provided it defines a plane passing
+  // through the axis.
+
+  void MakeBasis(TVector3& xAxis, TVector3& yAxis, TVector3& zAxis) const;
+  // Take two input vectors (in xAxis, and zAxis) and turn them into an
+  // orthogonal basis.  This is an internal helper function used to implement
+  // the Set?Axis functions, but is exposed because the functionality is 
+  // often useful.
+
 protected:
 
   TRotation(Double_t, Double_t, Double_t, Double_t, Double_t,
@@ -120,7 +182,6 @@ protected:
   ClassDef(TRotation,1) // Rotations of TVector3 objects
 
 };
-
 
 
 inline Double_t TRotation::XX() const { return fxx; }
@@ -140,8 +201,7 @@ inline Double_t TRotation::TRotationRow::operator [] (int jj) const {
   return rr->operator()(ii,jj);
 }
 
-inline
-TRotation::TRotationRow TRotation::operator [] (int i) const {
+inline TRotation::TRotationRow TRotation::operator [] (int i) const {
   return TRotationRow(*this, i);
 }
 
@@ -174,6 +234,12 @@ inline Bool_t TRotation::IsIdentity() const {
   return  (fxx == 1.0 && fxy == 0.0 && fxz == 0.0 &&
            fyx == 0.0 && fyy == 1.0 && fyz == 0.0 &&
            fzx == 0.0 && fzy == 0.0 && fzz == 1.0) ? kTRUE : kFALSE;
+}
+
+inline TRotation & TRotation::SetToIdentity() {
+    fxx = fyy = fzz = 1.0;
+    fxy = fxz = fyx = fyz = fzx = fzy = 0.0;
+    return *this;
 }
 
 inline TVector3 TRotation::operator * (const TVector3 & p) const {

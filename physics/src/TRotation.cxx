@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.3 2002/05/18 08:22:00 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.1 2003/04/03 17:12:22 pdk Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -26,7 +26,7 @@ It is a 3*3 matrix of Double_t:
 <BR><TT>| yx&nbsp; yy&nbsp; yz |</TT>
 <BR><TT>| zx&nbsp; zy&nbsp; zz |</TT>
 
-<P>It describes a socalled active rotation, i.e. rotation of objects inside
+<P>It describes a so called active rotation, i.e. rotation of objects inside
 a static system of coordinates. In case you want to rotate the frame and
 want to know the coordinates of objects in the rotated system, you should
 apply the inverse rotation to the objects. If you want to transform coordinates
@@ -101,9 +101,9 @@ the current rotation and returns the result:
 <P><TT>&nbsp; TVector3 newX(0,1,0);</TT>
 <BR><TT>&nbsp; TVector3 newY(0,0,1);</TT>
 <BR><TT>&nbsp; TVector3 newZ(1,0,0);</TT>
-<BR><TT>&nbsp; a.RotateAxes(newX,newX,newZ);</TT>
+<BR><TT>&nbsp; a.RotateAxes(newX,newY,newZ);</TT>
 
-<P>Memberfunctions <TT>ThetaX()</TT>, <TT>ThetaY()</TT>, <TT>ThetaZ()</TT>,
+<P>Member functions <TT>ThetaX()</TT>, <TT>ThetaY()</TT>, <TT>ThetaZ()</TT>,
 <TT>PhiX()</TT>, <TT>PhiY()</TT>,<TT>PhiZ()</TT> return azimuth and polar
 angles of the rotated axes:
 
@@ -111,6 +111,33 @@ angles of the rotated axes:
 <BR><TT>&nbsp; tx= a.ThetaX();</TT>
 <BR><TT>&nbsp; ...</TT>
 <BR><TT>&nbsp; pz= a.PhiZ();</TT>
+
+<H3>
+Setting The Rotations</H3>
+The member function <TT>SetToIdentity()</TT> will set the rotation object 
+to the identity (no rotation).
+
+With a minor caveat, the Euler angles of the rotation may be set using 
+<TT>SetXEulerAngles()</TT> or individually set with <TT>SetXPhi()</TT>, 
+<TT>SetXTheta()</TT>, and <TT>SetXPsi()</TT>.  These routines set the Euler 
+angles using the X-convention which is defined by a rotation about the Z-axis,
+about the new X-axis, and about the new Z-axis.  This is the convention used
+in Landau and Lifshitz, Goldstein and other common physics texts.  The 
+Y-convention euler angles can be set with <TT>SetYEulerAngles()</TT>,
+<TT>SetYPhi()</TT>, <TT>SetYTheta()</TT>, and <TT>SetYPsi()</TT>.  The caveat 
+is that Euler angles usually define the rotation of the new coordinate system 
+with respect to the original system, however, the TRotation class specifies 
+the rotation of the object in the original system (an active rotation).  To 
+recover the usual Euler rotations (ie. rotate the system not the object), you 
+must take the inverse of the rotation.
+
+The member functions <TT>SetXAxis()</TT>, <TT>SetYAxis()</TT>, and 
+<TT>SetZAxis()</TT> will create a rotation which rotates the requested axis
+of the object to be parallel to a vector.  If used with one argument, the 
+rotation about that axis is arbitrary.  If used with two arguments, the
+second variable defines the <TT>XY</TT>, <TT>YZ</TT>, or <TT>ZX</TT> 
+respectively.
+
 <H3>
 Inverse rotation</H3>
 <TT>&nbsp; TRotation a,b;</TT>
@@ -119,9 +146,10 @@ Inverse rotation</H3>
 <BR><TT>&nbsp; b = a.Invert();&nbsp;&nbsp; // invert a and set b = a</TT>
 <H3>
 Compound Rotations</H3>
-The <TT>operator *</TT> has been implemented in a way that follows the mathematical
-notation of a product of the two matrices which describe the two consecutiv
-rotations. Therefore the second rotation should be placed first:
+The <TT>operator *</TT> has been implemented in a way that follows the 
+mathematical notation of a product of the two matrices which describe the 
+two consecutive rotations. Therefore the second rotation should be placed 
+first:
 
 <P><TT>&nbsp; r = r2 * r1;</TT>
 <H3>
@@ -156,6 +184,8 @@ a rotation of a <TT>TVector3</TT> analog to the mathematical notation
 
 ClassImp(TRotation)
 
+#define TOLERANCE (1.0E-6)
+
 TRotation::TRotation()
 : fxx(1.0), fxy(0.0), fxz(0.0), fyx(0.0), fyy(1.0), fyz(0.0),
   fzx(0.0), fzy(0.0), fzz(1.0) {}
@@ -185,8 +215,8 @@ Double_t TRotation::operator() (int i, int j) const {
     if (j == 1) { return fzy; }
     if (j == 2) { return fzz; }
   }
-
-  Warning("operator()(i,j)", "bad indeces (%d , %d)",i,j);
+  
+  Warning("operator()(i,j)", "bad indices (%d , %d)",i,j);
 
   return 0.0;
 }
@@ -261,8 +291,8 @@ TRotation & TRotation::RotateZ(Double_t a) {
 }
 
 TRotation & TRotation::RotateAxes(const TVector3 &newX,
-				      const TVector3 &newY,
-				      const TVector3 &newZ) {
+                                  const TVector3 &newY,
+                                  const TVector3 &newZ) {
   Double_t del = 0.001;
   TVector3 w = newX.Cross(newY);
 
@@ -300,7 +330,6 @@ Double_t TRotation::ThetaX() const {
   return TMath::ACos(fzx);
 }
 
-
 Double_t TRotation::ThetaY() const {
   return TMath::ACos(fzy);
 }
@@ -326,4 +355,256 @@ void TRotation::AngleAxis(Double_t &angle, TVector3 &axis) const {
     angle = TMath::ACos(cosa);
     axis  = TVector3(x,y,z);
   }
+}
+
+TRotation & TRotation::SetXEulerAngles(Double_t phi,
+                                      Double_t theta,
+                                      Double_t psi) {
+  // Rotate using the x-convention (Landau and Lifshitz, Goldstein, &c) by 
+  // doing the explicit rotations.  This is slightly less efficient than 
+  // directly applying the rotation, but makes the code much clearer.  My
+  // presumption is that this code is not going to be a speed bottle neck.
+
+  SetToIdentity();
+  RotateZ(phi);
+  RotateX(theta);
+  RotateZ(psi);
+  
+  return *this;
+}
+
+TRotation & TRotation::SetYEulerAngles(Double_t phi,
+                                       Double_t theta,
+                                       Double_t psi) {
+  // Rotate using the y-convention.
+    
+  SetToIdentity();
+  RotateZ(phi);
+  RotateY(theta);
+  RotateZ(psi);
+  return *this;
+}
+
+TRotation & TRotation::RotateXEulerAngles(Double_t phi,
+                                         Double_t theta,
+                                         Double_t psi) {
+  TRotation euler;
+  euler.SetXEulerAngles(phi,theta,psi);
+  return Transform(euler);
+}
+
+TRotation & TRotation::RotateYEulerAngles(Double_t phi,
+                                          Double_t theta,
+                                          Double_t psi) {
+  TRotation euler;
+  euler.SetYEulerAngles(phi,theta,psi);
+  return Transform(euler);
+}
+
+void TRotation::SetXPhi(Double_t phi) {
+  SetXEulerAngles(phi,GetXTheta(),GetXPsi());
+}
+
+void TRotation::SetXTheta(Double_t theta) {
+  SetXEulerAngles(GetXPhi(),theta,GetXPsi());
+}
+
+void TRotation::SetXPsi(Double_t psi) {
+  SetXEulerAngles(GetXPhi(),GetXTheta(),psi);
+}
+
+void TRotation::SetYPhi(Double_t phi) {
+  SetYEulerAngles(phi,GetYTheta(),GetYPsi());
+}
+
+void TRotation::SetYTheta(Double_t theta) {
+  SetYEulerAngles(GetYPhi(),theta,GetYPsi());
+}
+
+void TRotation::SetYPsi(Double_t psi) {
+  SetYEulerAngles(GetYPhi(),GetYTheta(),psi);
+}
+
+Double_t TRotation::GetXPhi(void) const {
+  Double_t finalPhi;
+
+  Double_t s2 =  1.0 - fzz*fzz;
+  if (s2 < 0) {
+    Warning("GetPhi()"," |fzz| > 1 ");
+    s2 = 0;
+  }
+  const Double_t sinTheta = TMath::Sqrt(s2);
+
+  if (sinTheta != 0) {
+    const Double_t cscTheta = 1/sinTheta;
+    Double_t cosAbsPhi =  fzy * cscTheta;
+    if ( fabs(cosAbsPhi) > 1 ) {	// NaN-proofing
+        Warning("GetPhi()","finds | cos phi | > 1");
+        cosAbsPhi = 1;
+    }
+    const Double_t absPhi = TMath::ACos(cosAbsPhi);
+    if (fzx > 0) {
+        finalPhi = absPhi;
+    } else if (fzx < 0) {
+        finalPhi = -absPhi;
+    } else if (fzy > 0) {
+        finalPhi = 0.0;
+    } else {
+        finalPhi = M_PI;
+    }
+  }
+  else {              // sinTheta == 0 so |Fzz| = 1
+    const Double_t absPhi = .5 * TMath::ACos (fxx);
+    if (fxy > 0) {
+      finalPhi =  -absPhi;
+    } else if (fxy < 0) {
+      finalPhi =   absPhi;
+    } else if (fxx>0) {
+      finalPhi = 0.0;
+    } else {
+      finalPhi = fzz * M_PI/2;
+    }
+  }
+  return finalPhi;
+}
+
+Double_t TRotation::GetYPhi(void) const {
+  return GetXPhi() + TMath::Pi()/2.0;
+}
+
+Double_t TRotation::GetXTheta(void) const {
+  return  ThetaZ();
+}
+
+Double_t TRotation::GetYTheta(void) const {
+  return  ThetaZ();
+}
+
+Double_t TRotation::GetXPsi(void) const {
+  double finalPsi = 0.0;
+
+  Double_t s2 =  1.0 - fzz*fzz;
+  if (s2 < 0) {
+    Warning("GetPsi()"," |fzz| > 1 ");
+    s2 = 0;
+  }
+  const Double_t sinTheta = TMath::Sqrt(s2);
+
+  if (sinTheta != 0) {
+    const Double_t cscTheta = 1/sinTheta;
+    Double_t cosAbsPsi =  - fyz * cscTheta;
+    if ( fabs(cosAbsPsi) > 1 ) {	// NaN-proofing
+      Warning("GetPsi()","| cos psi | > 1 ");
+      cosAbsPsi = 1;
+    }
+    const Double_t absPsi = TMath::ACos(cosAbsPsi);
+    if (fxz > 0) {
+      finalPsi = absPsi;
+    } else if (fxz < 0) {
+      finalPsi = -absPsi;
+    } else {
+      finalPsi = (fyz < 0) ? 0 : M_PI;
+    }
+  }
+  else {              // sinTheta == 0 so |Fzz| = 1
+    Double_t absPsi = fxx;
+    if ( fabs(fxx) > 1 ) {	// NaN-proofing
+      Warning("GetPsi()","| fxx | > 1 ");
+      absPsi = 1;
+    }
+    absPsi = .5 * TMath::ACos (absPsi);
+    if (fyx > 0) {
+      finalPsi = absPsi;
+    } else if (fyx < 0) {
+      finalPsi = -absPsi;
+    } else {
+      finalPsi = (fxx > 0) ? 0 : M_PI/2;
+    }
+  }
+  return finalPsi;
+}
+
+Double_t TRotation::GetYPsi(void) const {
+  return GetXPsi() - TMath::Pi()/2;
+}
+
+TRotation & TRotation::SetXAxis(const TVector3& axis, 
+                                const TVector3& xyPlane) {
+  TVector3 xAxis(xyPlane);
+  TVector3 yAxis;
+  TVector3 zAxis(axis);
+  MakeBasis(xAxis,yAxis,zAxis);
+  fxx = zAxis.X();  fyx = zAxis.Y();  fzx = zAxis.Z();
+  fxy = xAxis.X();  fyy = xAxis.Y();  fzy = xAxis.Z();
+  fxz = yAxis.X();  fyz = yAxis.Y();  fzz = yAxis.Z();
+  return *this;
+}
+
+TRotation & TRotation::SetXAxis(const TVector3& axis) {
+  TVector3 xyPlane(0.0,1.0,0.0);
+  return SetXAxis(axis,xyPlane);
+}
+
+TRotation & TRotation::SetYAxis(const TVector3& axis, 
+                                const TVector3& yzPlane) {
+  TVector3 xAxis(yzPlane);
+  TVector3 yAxis;
+  TVector3 zAxis(axis);
+  MakeBasis(xAxis,yAxis,zAxis);
+  fxx = yAxis.X();  fyx = yAxis.Y();  fzx = yAxis.Z();
+  fxy = zAxis.X();  fyy = zAxis.Y();  fzy = zAxis.Z();
+  fxz = xAxis.X();  fyz = xAxis.Y();  fzz = xAxis.Z();
+  return *this;
+}
+
+TRotation & TRotation::SetYAxis(const TVector3& axis) {
+  TVector3 yzPlane(0.0,0.0,1.0);
+  return SetYAxis(axis,yzPlane);
+}
+
+TRotation & TRotation::SetZAxis(const TVector3& axis, 
+                                const TVector3& zxPlane) {
+  TVector3 xAxis(zxPlane);
+  TVector3 yAxis;
+  TVector3 zAxis(axis);
+  MakeBasis(xAxis,yAxis,zAxis);
+  fxx = xAxis.X();  fyx = xAxis.Y();  fzx = xAxis.Z();
+  fxy = yAxis.X();  fyy = yAxis.Y();  fzy = yAxis.Z();
+  fxz = zAxis.X();  fyz = zAxis.Y();  fzz = zAxis.Z();
+  return *this;
+}
+
+TRotation & TRotation::SetZAxis(const TVector3& axis) {
+  TVector3 zxPlane(1.0,0.0,0.0);
+  return SetZAxis(axis,zxPlane);
+}
+
+void TRotation::MakeBasis(TVector3& xAxis,
+                          TVector3& yAxis,
+                          TVector3& zAxis) const {
+  // Make the zAxis into a unit variable. 
+  Double_t zmag = zAxis.Mag();
+  if (zmag<TOLERANCE) {
+      Warning("MakeBasis(X,Y,Z)","non-zero Z Axis is required");
+  }
+  zAxis *= (1.0/zmag);
+
+  Double_t xmag = xAxis.Mag();
+  if (xmag<TOLERANCE*zmag) {
+      xAxis = zAxis.Orthogonal();
+      xmag = 1.0;
+  }
+
+  // Find the yAxis
+  yAxis = zAxis.Cross(xAxis)*(1.0/xmag);
+  Double_t ymag = yAxis.Mag();
+  if (ymag<TOLERANCE*zmag) {
+      yAxis = zAxis.Orthogonal();
+  }
+
+  else {
+      yAxis *= (1.0/ymag);
+  }
+
+  xAxis = yAxis.Cross(zAxis);
 }
