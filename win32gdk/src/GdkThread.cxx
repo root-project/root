@@ -101,8 +101,9 @@ int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offset,
       CloseClipboard();
       return 1;
    }
-   if (delete_it)
+   if (delete_it) {
       RemoveProp(w, propName);
+   }
    return 1;
 }
 
@@ -111,6 +112,8 @@ int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offset,
 // Thread handling GDK Calls
 void TGWin32::GdkThread( )
 {
+   //
+
     MSG msg;
     int erret;
     GdkColor fore, back;
@@ -249,8 +252,7 @@ void TGWin32::GdkThread( )
                 if(fThreadP.Drawable == NULL) {
                     fThreadP.pRet = gdk_gc_new_with_values((GdkWindow *) GDK_ROOT_PARENT(),
                     &fThreadP.gcvals, (GdkGCValuesMask) fThreadP.iParam);
-                }
-                else {
+                } else {
                     fThreadP.pRet = gdk_gc_new_with_values((GdkWindow *) fThreadP.Drawable,
                     &fThreadP.gcvals, (GdkGCValuesMask) fThreadP.iParam);
                 }
@@ -272,8 +274,7 @@ void TGWin32::GdkThread( )
                 if(fThreadP.Drawable == NULL) {
                     fThreadP.pRet = gdk_bitmap_create_from_data(GDK_ROOT_PARENT(),
                         (const char *)fThreadP.pParam, fThreadP.w, fThreadP.h);
-                }
-                else {
+                } else {
                     fThreadP.pRet = gdk_bitmap_create_from_data((GdkWindow *) fThreadP.Drawable,
                         (const char *)fThreadP.pParam, fThreadP.w, fThreadP.h);
                 }
@@ -296,8 +297,7 @@ void TGWin32::GdkThread( )
                 if(fThreadP.Drawable == NULL) {
                     fThreadP.pRet = gdk_pixmap_new(GDK_ROOT_PARENT(),
                                     fThreadP.w, fThreadP.h, depth);
-                }
-                else {
+                } else {
                     fThreadP.pRet = gdk_pixmap_new((GdkWindow *)fThreadP.Drawable,
                                     fThreadP.w, fThreadP.h, depth);
                 }
@@ -312,10 +312,11 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_GC_SET_CLIP_RECT:
-                if(msg.wParam == 1)
+                if(msg.wParam == 1) {
                     gdk_gc_set_clip_rectangle(fThreadP.GC, (GdkRectangle *)fThreadP.pParam);
-                else
+                } else {
                     gdk_gc_set_clip_rectangle(fThreadP.GC, &fThreadP.region);
+                }
                 break;
 
             case WIN32_GDK_WIN_SET_CURSOR:
@@ -384,7 +385,7 @@ void TGWin32::GdkThread( )
                 if(fThreadP.iParam == 1)
                     gdk_color_context_query_color((GdkColorContext *)fThreadP.pParam, &fThreadP.color);
                 else
-                    gdk_color_context_query_colors((GdkColorContext *)fThreadP.pParam, (GdkColor *)fThreadP.pParam1, fThreadP.iParam);
+                    gdk_color_context_query_colors((GdkColorContext *)fThreadP.pParam, (GdkColor *)fThreadP.pRet, fThreadP.iParam);
                 break;
 
             case WIN32_GDK_COLOR_ALLOC:
@@ -573,7 +574,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_XID_TABLE_LOOKUP:
-                fThreadP.lRet = (ULong_t) gdk_xid_table_lookup((GdkWindow *) fThreadP.Drawable);
+                fThreadP.lRet = (ULong_t) gdk_xid_table_lookup((HANDLE) fThreadP.pParam);
                 break;
 
             case WIN32_GDK_BEEP:
@@ -879,20 +880,27 @@ void TGWin32::GdkThread( )
                 fThreadP.pRet1 = gdk_xid_table_lookup(chw);
                 GetKeyboardState (kbd);
                 mask = 0;
-                if (kbd[VK_SHIFT] & 0x80)
+                if (kbd[VK_SHIFT] & 0x80) {
                         mask |= GDK_SHIFT_MASK;
-                if (kbd[VK_CAPITAL] & 0x80)
+                }
+                if (kbd[VK_CAPITAL] & 0x80) {
                         mask |= GDK_LOCK_MASK;
-                if (kbd[VK_CONTROL] & 0x80)
+                }
+                if (kbd[VK_CONTROL] & 0x80) {
                         mask |= GDK_CONTROL_MASK;
-                if (kbd[VK_MENU] & 0x80)
+                }
+                if (kbd[VK_MENU] & 0x80) {
                         mask |= GDK_MOD1_MASK;
-                if (kbd[VK_LBUTTON] & 0x80)
+                }
+                if (kbd[VK_LBUTTON] & 0x80) {
                         mask |= GDK_BUTTON1_MASK;
-                if (kbd[VK_MBUTTON] & 0x80)
+                }
+                if (kbd[VK_MBUTTON] & 0x80) {
                         mask |= GDK_BUTTON2_MASK;
-                if (kbd[VK_RBUTTON] & 0x80)
+                }
+                if (kbd[VK_RBUTTON] & 0x80) {
                         mask |= GDK_BUTTON3_MASK;
+                }
                 fThreadP.uiRet = mask;
                 }                
                 break;
@@ -909,8 +917,9 @@ void TGWin32::GdkThread( )
                 {
                 int i;
                 GdkWChar wctext[1024];
-                for(i=0;i<fThreadP.iParam;i++)
+                for(i=0;i<fThreadP.iParam;i++) {
                     wctext[i] = btowc((int)fThreadP.sParam[i]);
+                }
                 wctext[fThreadP.iParam] = 0;
                 gdk_draw_text_wc((GdkDrawable *) fThreadP.Drawable,
                           (GdkFont *) fThreadP.pParam, (GdkGC *)fThreadP.GC,

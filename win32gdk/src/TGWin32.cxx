@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.21 2003/03/28 21:27:48 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.22 2003/05/05 11:24:14 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -357,8 +357,9 @@ TGWin32::TGWin32(const char *name, const char *title):TVirtualX(name,
    fMaxNumberOfWindows = 10;
    //fWindows = new XWindow_t[fMaxNumberOfWindows];
    fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
-   for (int i = 0; i < fMaxNumberOfWindows; i++)
+   for (int i = 0; i < fMaxNumberOfWindows; i++) {
       fWindows[i].open = 0;
+   }
 
    Bool_t splash = kTRUE;
    if (gApplication->Argc()>1) {
@@ -428,19 +429,22 @@ TGWin32::TGWin32(const char *name, const char *title):TVirtualX(name,
 TGWin32::~TGWin32()
 {
    // Destructor.
+  
+   if (hThread2) CloseHandle(hThread2); // Splash Screen Thread Handle
 
-    if (fWindows)
-        TStorage::Dealloc(fWindows);
+   if (fIDThread) {
+      EnterCriticalSection(flpCriticalSection);
+      PostThreadMessage(fIDThread, WIN32_GDK_EXIT, 0, 0L);
+      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+      if (hGDKThread) CloseHandle(hGDKThread);
+      CloseHandle(fThreadP.hThrSem);
+      LeaveCriticalSection(flpCriticalSection);
+      DeleteCriticalSection(flpCriticalSection);
+   }
 
-    if (hThread2) CloseHandle(hThread2); // Splash Screen Thread Handle
-
-    if (fIDThread) {
-        PostThreadMessage(fIDThread, WIN32_GDK_EXIT, 0, 0L);
-        WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-        if (hGDKThread) CloseHandle(hGDKThread);
-        CloseHandle(fThreadP.hThrSem);
-        DeleteCriticalSection(flpCriticalSection);
-    }
+   if (fWindows) {
+      TStorage::Dealloc(fWindows);
+   }  
 }
 
 //______________________________________________________________________________
@@ -467,8 +471,9 @@ Bool_t TGWin32::Init()
       free(fThreadP.sParam);
    }
    LeaveCriticalSection(flpCriticalSection);
-   if (OpenDisplay() == -1)
+   if (OpenDisplay() == -1) {
       return kFALSE;
+   }
    return kTRUE;
 }
 
@@ -707,7 +712,6 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    TTF::LayoutGlyphs();
    Align();
    RenderString(x, y, mode);
-
 }
 
 //______________________________________________________________________________
@@ -832,10 +836,11 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
 //      ULong_t pixel = fThreadP.gcvals.background.pixel;
 
       GdkImage *bim = GetBackground(x1, y1, w, h);
-      if (!bim)
+      if (!bim) {
          pixel = fThreadP.gcvals.background.pixel;
-      else
+      } else {
          pixel = GetPixel((Drawable_t)bim, 0, 0);
+      }
       Int_t xo = 0, yo = 0;
       if (x1 < 0) xo = -x1;
       if (y1 < 0) yo = -y1;
@@ -849,8 +854,9 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
          PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_UNREF, 0, 0L);  
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          bg = (ULong_t) -1;
+      } else {
+         bg = pixel;
       }
-      else bg = pixel;
    }
 
    // paint the glyphs in the XImage
@@ -1018,10 +1024,11 @@ void TGWin32::CloseWindow1()
    int wid;
 
    fThreadP.Drawable = (GdkDrawable *) gCws->window;
-   if (gCws->ispixmap)
+   if (gCws->ispixmap) {
       PostThreadMessage(fIDThread, WIN32_GDK_PIX_UNREF, 0, 0L);
-   else
+   } else {
       PostThreadMessage(fIDThread, WIN32_GDK_WIN_DESTROY, 0, 0L);
+   }
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    if (gCws->buffer) {
@@ -1045,13 +1052,13 @@ void TGWin32::CloseWindow1()
    gCws->open = 0;
 
    // make first window in list the current window
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
+   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
       if (fWindows[wid].open) {
          gCws = &fWindows[wid];
          LeaveCriticalSection(flpCriticalSection);
          return;
       }
-
+   }
    gCws = 0;
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -1226,8 +1233,7 @@ void TGWin32::DrawFillArea(int n, TPoint * xyt)
    if (gFillHollow) {
       PostThreadMessage(fIDThread, WIN32_GDK_DRAW_LINES, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   }
-   else {
+   } else {
       PostThreadMessage(fIDThread, WIN32_GDK_FILL_POLYGON, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
@@ -1252,13 +1258,14 @@ void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
       fThreadP.GC = gGCline;
       PostThreadMessage(fIDThread, WIN32_GDK_DRAW_LINE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   }
-   else {
+   } else {
       int i;
-      for (i = 0; i < sizeof(gDashList); i++)
+      for (i = 0; i < sizeof(gDashList); i++) {
          fThreadP.dashes[i] = (gint8) gDashList[i];
-      for (i = sizeof(gDashList); i < 32; i++)
+      }
+      for (i = sizeof(gDashList); i < 32; i++) {
          fThreadP.dashes[i] = (gint8) 0;
+      }
       fThreadP.GC = gGCdash;
       fThreadP.iParam = gDashOffset;
       fThreadP.iParam2 = gDashSize;
@@ -1297,13 +1304,14 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
          fThreadP.GC = gGCline;
          PostThreadMessage(fIDThread, WIN32_GDK_DRAW_LINES, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      }
-      else {
+      } else {
          int i;
-         for (i = 0; i < sizeof(gDashList); i++)
+         for (i = 0; i < sizeof(gDashList); i++) {
             fThreadP.dashes[i] = (gint8) gDashList[i];
-         for (i = sizeof(gDashList); i < 32; i++)
+         }
+         for (i = sizeof(gDashList); i < 32; i++) {
             fThreadP.dashes[i] = (gint8) 0;
+         }
          fThreadP.GC = gGCdash;
          fThreadP.iParam = gDashOffset;
          fThreadP.iParam2 = gDashSize;
@@ -1318,10 +1326,8 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
          for (i = 1; i < n; i++) {
             int dx = xy[i].x - xy[i - 1].x;
             int dy = xy[i].y - xy[i - 1].y;
-            if (dx < 0)
-               dx = -dx;
-            if (dy < 0)
-               dy = -dy;
+            if (dx < 0) dx = -dx;
+            if (dy < 0) dy = -dy;
             gDashOffset += dx > dy ? dx : dy;
          }
          gDashOffset %= gDashLength;
@@ -1365,8 +1371,7 @@ void TGWin32::DrawPolyMarker(int n, TPoint * xyt)
    if (gMarker.n <= 0) {
       PostThreadMessage(fIDThread, WIN32_GDK_DRAW_POINTS, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   }
-   else {
+   } else {
       int r = gMarker.n / 2;
       int m;
 
@@ -1408,8 +1413,7 @@ void TGWin32::DrawPolyMarker(int n, TPoint * xyt)
                fThreadP.iParam = gMarker.n;
                PostThreadMessage(fIDThread, WIN32_GDK_DRAW_LINES, 0, 0L);
                WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-            }
-            else {
+            } else {
                fThreadP.Drawable = (GdkDrawable *) gCws->drawing;
                fThreadP.GC = gGCmark;
                fThreadP.pParam = gMarker.xy;
@@ -1479,10 +1483,8 @@ Int_t TGWin32::GetDoubleBuffer(int wid)
    // Query the double buffer value for the window wid.
 
    gTws = &fWindows[wid];
-   if (!gTws->open)
-      return -1;
-   else
-      return gTws->double_buffer;
+   if (!gTws->open) return -1;
+   else return gTws->double_buffer;
 }
 
 //______________________________________________________________________________
@@ -1595,11 +1597,13 @@ void TGWin32::MoveWindow(int wid, int x, int y)
    // x    : x new window position
    // y    : y new window position
 
+   EnterCriticalSection(flpCriticalSection);
    gTws = &fWindows[wid];
    if (!gTws->open) {
+      LeaveCriticalSection(flpCriticalSection);
       return;
    }
-   EnterCriticalSection(flpCriticalSection);
+ 
    fThreadP.Drawable = (GdkDrawable *) gTws->window;
    fThreadP.x = x;
    fThreadP.y = y;
@@ -1858,24 +1862,27 @@ Int_t TGWin32::OpenDisplay()
    if (fThreadP.iRet == GDK_VISUAL_TRUE_COLOR) {
       int i;
       for (i = 0; i < int(sizeof(fVisual->blue_mask)*kBitsPerByte); i++) {
-         if (fBlueShift == -1 && ((fVisual->blue_mask >> i) & 1))
+         if (fBlueShift == -1 && ((fVisual->blue_mask >> i) & 1)) {
             fBlueShift = i;
+         }
          if ((fVisual->blue_mask >> i) == 1) {
             fBlueDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fBlueShift;
             break;
          }
       }
       for (i = 0; i < int(sizeof(fVisual->green_mask)*kBitsPerByte); i++) {
-         if (fGreenShift == -1 && ((fVisual->green_mask >> i) & 1))
+         if (fGreenShift == -1 && ((fVisual->green_mask >> i) & 1)) {
             fGreenShift = i;
+         }
          if ((fVisual->green_mask >> i) == 1) {
             fGreenDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fGreenShift;
             break;
          }
       }
       for (i = 0; i < int(sizeof(fVisual->red_mask)*kBitsPerByte); i++) {
-         if (fRedShift == -1 && ((fVisual->red_mask >> i) & 1))
+         if (fRedShift == -1 && ((fVisual->red_mask >> i) & 1)) {
             fRedShift = i;
+         }
          if ((fVisual->red_mask >> i) == 1) {
             fRedDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fRedShift;
             break;
@@ -1920,12 +1927,13 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
    // Select next free window number
 
  again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
+   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
       if (!fWindows[wid].open) {
          fWindows[wid].open = 1;
          gCws = &fWindows[wid];
          break;
       }
+   }
 
    if (wid == fMaxNumberOfWindows) {
       int newsize = fMaxNumberOfWindows + 10;
@@ -1934,8 +1942,9 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
                                           newsize * sizeof(XWindow_t),
                                           fMaxNumberOfWindows *
                                           sizeof(XWindow_t));
-      for (i = fMaxNumberOfWindows; i < newsize; i++)
+      for (i = fMaxNumberOfWindows; i < newsize; i++) {
          fWindows[i].open = 0;
+      }
       fMaxNumberOfWindows = newsize;
       goto again;
    }
@@ -2019,14 +2028,14 @@ Int_t TGWin32::InitWindow(ULong_t win)
    // Select next free window number
 
  again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
+   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
       if (!fWindows[wid].open) {
          fWindows[wid].open = 1;
          fWindows[wid].double_buffer = 0;
          gCws = &fWindows[wid];
          break;
       }
-
+   }
    if (wid == fMaxNumberOfWindows) {
       int newsize = fMaxNumberOfWindows + 10;
       fWindows =
@@ -2034,8 +2043,9 @@ Int_t TGWin32::InitWindow(ULong_t win)
                                           newsize * sizeof(XWindow_t),
                                           fMaxNumberOfWindows *
                                           sizeof(XWindow_t));
-      for (int i = fMaxNumberOfWindows; i < newsize; i++)
+      for (int i = fMaxNumberOfWindows; i < newsize; i++) {
          fWindows[i].open = 0;
+      }
       fMaxNumberOfWindows = newsize;
       goto again;
    }
@@ -2045,14 +2055,16 @@ Int_t TGWin32::InitWindow(ULong_t win)
    fThreadP.xattr.event_mask |= GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
        GDK_PROPERTY_CHANGE_MASK;
 //                            GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK;
-   if (xval >= 0)
+   if (xval >= 0) {
       fThreadP.xattr.x = xval;
-   else
+   } else {
       fThreadP.xattr.x = -1.0 * xval;
-   if (yval >= 0)
+   }
+   if (yval >= 0) {
       fThreadP.xattr.y = yval;
-   else
+   } else {
       fThreadP.xattr.y = -1.0 * yval;
+   }
    fThreadP.xattr.width = wval;
    fThreadP.xattr.height = hval;
    fThreadP.pRet = NULL;
@@ -2065,15 +2077,16 @@ Int_t TGWin32::InitWindow(ULong_t win)
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    fThreadP.xattr.visual = (GdkVisual *)fThreadP.pRet;
    fThreadP.xattr.override_redirect = TRUE;
-   if ((fThreadP.xattr.y > 0) && (fThreadP.xattr.x > 0))
+   if ((fThreadP.xattr.y > 0) && (fThreadP.xattr.x > 0)) {
       attr_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP |
           GDK_WA_WMCLASS | GDK_WA_NOREDIR;
-   else
+   } else {
       attr_mask = GDK_WA_COLORMAP | GDK_WA_WMCLASS | GDK_WA_NOREDIR;
-   if (fThreadP.xattr.visual != NULL)
+   }
+   if (fThreadP.xattr.visual != NULL) {
       attr_mask |= GDK_WA_VISUAL;
+   }
    fThreadP.xattr.window_type = GDK_WINDOW_CHILD;
-
 
    fThreadP.Drawable = (GdkDrawable *) wind;
    fThreadP.lParam = attr_mask;
@@ -2167,6 +2180,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
    static int xlocp = 0;
    static int ylocp = 0;
    static GdkCursor *cursor = NULL;
+   Int_t  xtmp, ytmp;
 
    GdkEvent *event;
    GdkEvent *next_event;
@@ -2243,6 +2257,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
          fThreadP.bFill = kFALSE;
          PostThreadMessage(fIDThread, WIN32_GDK_DRAW_ARC, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+         break;
 
       case 4:
          fThreadP.Drawable = (GdkDrawable *) gCws->window;
@@ -2314,6 +2329,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
          fThreadP.angle2 = 23040;
          PostThreadMessage(fIDThread, WIN32_GDK_DRAW_ARC, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+         break;
 
       case 4:
          fThreadP.Drawable = (GdkDrawable *) gCws->window;
@@ -2406,18 +2422,21 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
       default:
          break;
       }
+      xtmp = event->button.x;
+      ytmp = event->button.y;
       fThreadP.pParam = event;
       PostThreadMessage(fIDThread, WIN32_GDK_EVENT_FREE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
       if (mode == 1) {
-         if (button_press == 0)
+         if (button_press == 0) {
             button_press = -1;
+         }
          break;
       }
    }
-   x = event->button.x;
-   y = event->button.y;
+   x = xtmp; // instead of event->button.x;
+   y = ytmp; // instead of event->button.y;
 
    LeaveCriticalSection(flpCriticalSection);
    return button_press;
@@ -2482,8 +2501,9 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
       TTF::GetTextExtent(dx, h, text);
       DrawText(x+dx, y, 0.0, 1.0, " ", kOpaque);  
 
-      if(pt == 0) dx = 0;
-      else {
+      if(pt == 0) {  
+         dx = 0;
+      } else {
          char *stmp = new char[pt+1];
          strncpy(stmp, text, pt);
          stmp[pt] = '\0';
@@ -2496,9 +2516,9 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
          tmp[0] = text[pt];
          tmp[1] = '\0';
          DrawText(x+dx, y, 0.0, 1.0, tmp, kOpaque);
-      }
-      else
+      } else {
          DrawText(x+dx, y, 0.0, 1.0, " ", kOpaque);  
+      }
 
       fThreadP.pRet = NULL;
       PostThreadMessage(fIDThread, WIN32_GDK_GET_EVENT, 0, 0L);
@@ -2559,10 +2579,12 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
             if (nbytes == 1) {
                if (isascii(keybuf[0]) && isprint(keybuf[0])) {
                   // insert character
-                  if (nt < len_text)
+                  if (nt < len_text) {
                      nt++;
-                  for (i = nt - 1; i > pt; i--)
+                  }
+                  for (i = nt - 1; i > pt; i--) {
                      text[i] = text[i - 1];
+                  }
                   if (pt < len_text) {
                      text[pt] = keybuf[0];
                      pt++;
@@ -2594,8 +2616,9 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
                   case 0x04:   //'\004':    // ^D
                      // delete forward
                      if (pt > 0) {
-                        for (i = pt; i < nt; i++)
+                        for (i = pt; i < nt; i++) {
                            text[i - 1] = text[i];
+                        }
                         text[nt - 1] = ' ';
                         pt--;
                      }
@@ -2612,8 +2635,9 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
                      break;
                   case 0x0b:   //'\013':    // ^K
                      // delete to end of line
-                     for (i = pt; i < nt; i++)
+                     for (i = pt; i < nt; i++) {
                         text[i] = ' ';
+                     }
                      nt = pt;
                      break;
                   case 0x14:   //'\024':    // ^T
@@ -2669,15 +2693,18 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
    int i;
    Int_t depth;
 
+   EnterCriticalSection(flpCriticalSection);
    gTws = &fWindows[wid];
-   if (!gTws->open)
+   if (!gTws->open) {
+      LeaveCriticalSection(flpCriticalSection);
       return;
+   }
 
    // don't do anything when size did not change
-   if (gTws->width == w && gTws->height == h)
+   if (gTws->width == w && gTws->height == h) {
+      LeaveCriticalSection(flpCriticalSection);
       return;
-
-   EnterCriticalSection(flpCriticalSection);
+   }
 
    fThreadP.Drawable = (GdkDrawable *) gTws->window;
    fThreadP.w = w;
@@ -2721,8 +2748,9 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
       PostThreadMessage(fIDThread, WIN32_GDK_DRAW_RECTANGLE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       SetColor(gGCpxmp, 1);
-      if (gTws->double_buffer)
+      if (gTws->double_buffer) {
          gTws->drawing = gTws->buffer;
+      }
    }
    gTws->width = w;
    gTws->height = h;
@@ -2742,6 +2770,7 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
    wval = w;
    hval = h;
 
+   EnterCriticalSection(flpCriticalSection);
    gTws = &fWindows[wid];
 
    // don't do anything when size did not change
@@ -2750,11 +2779,10 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
    // due to round-off errors in TPad::Resize() we might get +/- 1 pixel
    // change, in those cases don't resize pixmap
    if (gTws->width >= wval - 1 && gTws->width <= wval + 1 &&
-       gTws->height >= hval - 1 && gTws->height <= hval + 1)
+       gTws->height >= hval - 1 && gTws->height <= hval + 1) {
+      LeaveCriticalSection(flpCriticalSection);
       return 0;
-
-   EnterCriticalSection(flpCriticalSection);
-
+   }
    // don't free and recreate pixmap when new pixmap is smaller
    if (gTws->width < wval || gTws->height < hval) {
       fThreadP.Drawable = (GdkDrawable *) gTws->window;
@@ -2875,8 +2903,9 @@ void TGWin32::ResizeWindow(int wid)
       PostThreadMessage(fIDThread, WIN32_GDK_DRAW_RECTANGLE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       SetColor(gGCpxmp, 1);
-      if (gTws->double_buffer)
+      if (gTws->double_buffer) {
          gTws->drawing = gTws->buffer;
+      }
    }
    gTws->width = wval;
    gTws->height = hval;
@@ -2889,11 +2918,12 @@ void TGWin32::SelectWindow(int wid)
    // Select window to which subsequent output is directed.
 
    int i;
-
-   if (wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].open)
-      return;
-
    EnterCriticalSection(flpCriticalSection);
+
+   if (wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].open) {
+      LeaveCriticalSection(flpCriticalSection);
+      return;
+   }
 
    gCws = &fWindows[wid];
 
@@ -2908,11 +2938,12 @@ void TGWin32::SelectWindow(int wid)
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       }
    } else {
-      for (i = 0; i < kMAXGC; i++)
+      for (i = 0; i < kMAXGC; i++) {
          fThreadP.GC = (GdkGC *) gGClist[i];
          fThreadP.pParam = None;
          PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_CLIP_MASK, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+      }
    }
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2921,30 +2952,34 @@ void TGWin32::SelectWindow(int wid)
 void TGWin32::SetCharacterUp(Float_t chupx, Float_t chupy)
 {
    // Set character up vector.
-   if (chupx == fCharacterUpX && chupy == fCharacterUpY)
-      return;
-
    EnterCriticalSection(flpCriticalSection);
 
-   if (chupx == 0 && chupy == 0)
+   if (chupx == fCharacterUpX && chupy == fCharacterUpY) {
+      LeaveCriticalSection(flpCriticalSection);
+      return;
+   }
+
+   if (chupx == 0 && chupy == 0) {
       fTextAngle = 0;
-   else if (chupx == 0 && chupy == 1)
+   } else if (chupx == 0 && chupy == 1) {
       fTextAngle = 0;
-   else if (chupx == -1 && chupy == 0)
+   } else if (chupx == -1 && chupy == 0) {
       fTextAngle = 90;
-   else if (chupx == 0 && chupy == -1)
+   } else if (chupx == 0 && chupy == -1) {
       fTextAngle = 180;
-   else if (chupx == 1 && chupy == 0)
+   } else if (chupx == 1 && chupy == 0) {
       fTextAngle = 270;
-   else {
+   } else {
       fTextAngle =
           ((TMath::
             ACos(chupx / TMath::Sqrt(chupx * chupx + chupy * chupy)) *
             180.) / 3.14159) - 90;
-      if (chupy < 0)
+      if (chupy < 0) {
          fTextAngle = 180 - fTextAngle;
-      if (TMath::Abs(fTextAngle) <= 0.01)
+      }
+      if (TMath::Abs(fTextAngle) <= 0.01) {
          fTextAngle = 0;
+      }
    }
    fCharacterUpX = chupx;
    fCharacterUpY = chupy;
@@ -3004,13 +3039,16 @@ ULong_t TGWin32::GetPixel(Color_t ci)
 {
    // Return pixel value associated to specified ROOT color number.
 
+   EnterCriticalSection(flpCriticalSection);
    if (ci >= 0 && ci < kMAXCOL && !gColors[ci].defined) {
       TColor *color = gROOT->GetColor(ci);
-      if (color)
+      if (color) {
          SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
-      else
+      } else {
          Warning("GetPixel", "color with index %d not defined", ci);
+      }
    }
+   LeaveCriticalSection(flpCriticalSection);
    return gColors[ci].color.pixel;
 }
 
@@ -3022,8 +3060,9 @@ void TGWin32::SetColor(GdkGC * gc, int ci)
 
    if (ci >= 0 && ci < kMAXCOL && !gColors[ci].defined) {
       TColor *color = gROOT->GetColor(ci);
-      if (color)
+      if (color) {
          SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
+      }
    }
 
    if (fColormap && (ci < 0 || ci >= kMAXCOL || !gColors[ci].defined)) {
@@ -3112,8 +3151,9 @@ void TGWin32::SetDoubleBuffer(int wid, int mode)
       }
    } else {
       gTws = &fWindows[wid];
-      if (!gTws->open)
+      if (!gTws->open) {
          return;
+      }
       switch (mode) {
       case 1:
          SetDoubleBufferON();
@@ -3130,10 +3170,14 @@ void TGWin32::SetDoubleBufferOFF()
 {
    // Turn double buffer mode off.
 
-   if (!gTws->double_buffer)
+   EnterCriticalSection(flpCriticalSection);
+   if (!gTws->double_buffer) {
+      LeaveCriticalSection(flpCriticalSection);
       return;
+   }
    gTws->double_buffer = 0;
    gTws->drawing = gTws->window;
+   LeaveCriticalSection(flpCriticalSection);
 }
 
 //______________________________________________________________________________
@@ -3142,9 +3186,12 @@ void TGWin32::SetDoubleBufferON()
    // Turn double buffer mode on.
    Int_t depth;
 
-   if (gTws->double_buffer || gTws->ispixmap)
-      return;
    EnterCriticalSection(flpCriticalSection);
+   if (gTws->double_buffer || gTws->ispixmap) {
+      LeaveCriticalSection(flpCriticalSection);
+      return;
+   }
+
    if (!gTws->buffer) {
       PostThreadMessage(fIDThread, WIN32_GDK_GET_DEPTH, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
@@ -3229,10 +3276,12 @@ void TGWin32::SetFillColor(Color_t cindex)
    // Set color index for fill areas.
    EnterCriticalSection(flpCriticalSection);
 
-   if (!gStyle->GetFillColor() && cindex > 1)
+   if (!gStyle->GetFillColor() && cindex > 1) {
       cindex = 0;
-   if (cindex >= 0)
+   }
+   if (cindex >= 0) {
       SetColor(gGCfill, Int_t(cindex));
+   }
    fFillColor = cindex;
 
    // invalidate fill pattern
@@ -3252,8 +3301,9 @@ void TGWin32::SetFillStyle(Style_t fstyle)
    // fstyle   : compound fill area interior style
    //    fstyle = 1000*interiorstyle + styleindex
 
-   if (fFillStyle == fstyle)
+   if (fFillStyle == fstyle) {
       return;
+   }
 
    fFillStyle = fstyle;
    Int_t style = fstyle / 1000;
@@ -3415,9 +3465,9 @@ void TGWin32::SetLineColor(Color_t cindex)
 {
    // Set color index for lines.
 
-   if (cindex < 0)
+   if (cindex < 0) {
       return;
-
+   }
    EnterCriticalSection(flpCriticalSection);
    SetColor(gGCline, Int_t(cindex));
    SetColor(gGCdash, Int_t(cindex));
@@ -3452,8 +3502,9 @@ void TGWin32::SetLineType(int n, int *dash)
       for (i = 0, j = 0; i < (int) sizeof(gDashList); i++) {
          gDashList[i] = dash[j];
          gDashLength += gDashList[i];
-         if (++j >= n)
+         if (++j >= n) {
             j = 0;
+         }
       }
       gDashSize = n;
       gDashOffset = 0;
@@ -3483,14 +3534,18 @@ void TGWin32::SetLineStyle(Style_t lstyle)
 
    if (fLineStyle != lstyle) {  //set style index only if different
       fLineStyle = lstyle;
-      if (lstyle <= 1)
+      if (lstyle <= 1) {
          SetLineType(0, 0);
-      if (lstyle == 2)
+      }
+      if (lstyle == 2) {
          SetLineType(2, dashed);
-      if (lstyle == 3)
+      }
+      if (lstyle == 3) {
          SetLineType(2, dotted);
-      if (lstyle == 4)
+      }
+      if (lstyle == 4) {
          SetLineType(4, dasheddotted);
+      }
    }
 }
 
@@ -3500,19 +3555,22 @@ void TGWin32::SetLineWidth(Width_t width)
    // Set line width.
    // width   : line width in pixels
 
-   if (fLineWidth == width)
-      return;
-
-   if (width == 1)
-      gLineWidth = 0;
-   else
-      gLineWidth = width;
-
-   fLineWidth = gLineWidth;
-   if (gLineWidth < 0)
-      return;
-
    EnterCriticalSection(flpCriticalSection);
+   if (fLineWidth == width) {
+      LeaveCriticalSection(flpCriticalSection);
+      return;
+   }
+   if (width == 1) {
+      gLineWidth = 0;
+   } else {
+      gLineWidth = width;
+   }
+   fLineWidth = gLineWidth;
+   if (gLineWidth < 0) {
+      LeaveCriticalSection(flpCriticalSection);
+      return;
+   }
+
    fThreadP.GC = (GdkGC *) gGCline;
    fThreadP.w = gLineWidth;
    fThreadP.iParam = gLineStyle;
@@ -3531,9 +3589,9 @@ void TGWin32::SetMarkerColor(Color_t cindex)
 {
    // Set color index for markers.
 
-   if (cindex < 0)
+   if (cindex < 0) {
       return;
-
+   }
    EnterCriticalSection(flpCriticalSection);
    SetColor(gGCmark, Int_t(cindex));
    LeaveCriticalSection(flpCriticalSection);
@@ -3545,13 +3603,14 @@ void TGWin32::SetMarkerSize(Float_t msize)
    // Set marker size index.
    // msize  : marker scale factor
 
-   if (msize == fMarkerSize)
+   if (msize == fMarkerSize) {
       return;
+   }
 
    fMarkerSize = msize;
-   if (msize < 0)
+   if (msize < 0) {
       return;
-
+   }
    SetMarkerStyle(-fMarkerStyle);
 }
 
@@ -3571,11 +3630,15 @@ void TGWin32::SetMarkerType(int type, int n, GdkPoint * xy)
    // if TYPE == 4 marker is described by segmented line XY
    //   e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
 
+   EnterCriticalSection(flpCriticalSection);
    gMarker.type = type;
    gMarker.n = n < kMAXMK ? n : kMAXMK;
-   if (gMarker.type >= 2)
-      for (int i = 0; i < gMarker.n; i++)
+   if (gMarker.type >= 2) {
+      for (int i = 0; i < gMarker.n; i++) {
          gMarker.xy[i] = xy[i];
+      }
+   }
+   LeaveCriticalSection(flpCriticalSection);
 }
 
 //______________________________________________________________________________
@@ -3583,11 +3646,13 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
 {
    // Set marker style.
 
-   if (fMarkerStyle == markerstyle)
+   if (fMarkerStyle == markerstyle) {
       return;
+   }
    static GdkPoint shape[15];
-   if (markerstyle >= 31)
+   if (markerstyle >= 31) {
       return;
+   }
    markerstyle = TMath::Abs(markerstyle);
    fMarkerStyle = markerstyle;
    Int_t im = Int_t(4 * fMarkerSize + 0.5);
@@ -3952,11 +4017,11 @@ void TGWin32::CollectImageColors(ULong_t pixel, ULong_t * &orgcolors,
       orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
    }
 
-   for (int i = 0; i < ncolors; i++)
+   for (int i = 0; i < ncolors; i++) {
       if (pixel == orgcolors[i]) {
          return;
       }
-
+   }
    if (ncolors >= maxcolors) {
       orgcolors = (ULong_t *) TStorage::ReAlloc(orgcolors,
                                                 maxcolors * 2 *
@@ -3976,9 +4041,9 @@ void TGWin32::MakeOpaqueColors(Int_t percent, ULong_t * orgcolors,
    // Get RGB values for orgcolors, add percent neutral to the RGB and
    // allocate new_colors.
 
-   if (ncolors == 0)
+   if (ncolors == 0) {
       return;
-
+   }
    EnterCriticalSection(flpCriticalSection);
 
    GdkColor *xcol = new GdkColor[ncolors];
@@ -4006,16 +4071,19 @@ void TGWin32::MakeOpaqueColors(Int_t percent, ULong_t * orgcolors,
    Int_t val;
    for (i = 0; i < ncolors; i++) {
       val = xcol[i].red + add;
-      if (val > kBIGGEST_RGB_VALUE)
+      if (val > kBIGGEST_RGB_VALUE) {
          val = kBIGGEST_RGB_VALUE;
+      }
       xcol[i].red = (UShort_t) val;
       val = xcol[i].green + add;
-      if (val > kBIGGEST_RGB_VALUE)
+      if (val > kBIGGEST_RGB_VALUE) {
          val = kBIGGEST_RGB_VALUE;
+      }
       xcol[i].green = (UShort_t) val;
       val = xcol[i].blue + add;
-      if (val > kBIGGEST_RGB_VALUE)
+      if (val > kBIGGEST_RGB_VALUE) {
          val = kBIGGEST_RGB_VALUE;
+      }
       xcol[i].blue = (UShort_t) val;
 
       fThreadP.pParam = fColormap;
@@ -4023,19 +4091,20 @@ void TGWin32::MakeOpaqueColors(Int_t percent, ULong_t * orgcolors,
       PostThreadMessage(fIDThread, WIN32_GDK_COLOR_ALLOC, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
-      if (!fThreadP.iRet)
+      if (!fThreadP.iRet) {
          Warning("MakeOpaqueColors",
                  "failed to allocate color %hd, %hd, %hd", xcol[i].red,
                  xcol[i].green, xcol[i].blue);
       // assumes that in case of failure xcol[i].pixel is not changed
+      }
    }
 
    gCws->new_colors = new ULong_t[ncolors];
    gCws->ncolors = ncolors;
 
-   for (i = 0; i < ncolors; i++)
+   for (i = 0; i < ncolors; i++) {
       gCws->new_colors[i] = xcol[i].pixel;
-
+   }
    delete[]xcol;
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -4045,10 +4114,11 @@ Int_t TGWin32::FindColor(ULong_t pixel, ULong_t * orgcolors, Int_t ncolors)
 {
    // Returns index in orgcolors (and new_colors) for pixel.
 
-   for (int i = 0; i < ncolors; i++)
-      if (pixel == orgcolors[i])
+   for (int i = 0; i < ncolors; i++) {
+      if (pixel == orgcolors[i]) {
          return i;
-
+      }
+   }
    Error("FindColor", "did not find color, should never happen!");
 
    return 0;
@@ -4157,9 +4227,9 @@ void TGWin32::SetTextColor(Color_t cindex)
 {
    // Set color index for text.
 
-   if (cindex < 0)
+   if (cindex < 0) {
       return;
-
+   }
    EnterCriticalSection(flpCriticalSection);
 
    SetColor(gGCtext, Int_t(cindex));
@@ -4363,6 +4433,7 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
    GdkColorContext *cc = (GdkColorContext *)fThreadP.pRet;
 
    fThreadP.pParam = cc;
+   fThreadP.pRet = xcol;
    fThreadP.iParam = ncolors;
    PostThreadMessage(fIDThread, WIN32_GDK_COLOR_CONTEXT_QUERY_COLORS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
