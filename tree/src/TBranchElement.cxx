@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.118 2003/08/04 17:33:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.119 2003/11/04 06:40:48 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -193,6 +193,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          }
          basket->DeleteEntryOffset(); //entryoffset not required for the clonesarray counter
          fEntryOffsetLen = 0;
+         if (!clones) return;
          clm = clones->GetClass();
          if (!clm) return;
          // ===> Create a leafcount
