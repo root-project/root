@@ -16,6 +16,7 @@
 #include <stdio.h>
 
 #define ID_SPLASHSCREEN      25
+#define MY_BUFSIZE         1024 // buffer size for console window titles
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global Variables:
@@ -167,7 +168,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HWND nextwnd;
     PAINTSTRUCT ps;
     HDC hDC;
     HANDLE hfbm;
@@ -177,6 +177,9 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     LPBITMAPINFO lpbmi;
     LPVOID lpvBits;
     DWORD dwRead;
+    HWND hwndFound;         // this is what is returned to the caller
+    char pszNewWindowTitle[MY_BUFSIZE]; // contains fabricated WindowTitle
+    char pszOldWindowTitle[MY_BUFSIZE]; // contains original WindowTitle
     const char bmpDir[] = "\\icons\\Splash.bmp";
     char FullBmpDir[128];
     char *RootSysDir;
@@ -239,9 +242,9 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                 // Center the splashscreen
                 xScreen = GetSystemMetrics(SM_CXFULLSCREEN);
                 yScreen = GetSystemMetrics(SM_CYFULLSCREEN);
-                SetWindowPos(hWnd, HWND_NOTOPMOST, (xScreen - bm.bmWidth)/2, 
+                SetWindowPos(hWnd, HWND_TOPMOST, (xScreen - bm.bmWidth)/2, 
                     (yScreen - bm.bmHeight)/2, bm.bmWidth, bm.bmHeight, 0 );
-            } 
+            }
             break;
 
         case WM_TIMER:
@@ -259,21 +262,30 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             // TODO: Add any drawing code here...
             RECT rt;
             GetClientRect(hWnd, &rt);
-
             HDC hImageDC;
             hImageDC = CreateCompatibleDC(hDC);
             if (hImageDC == NULL)
                 return FALSE;
-
             // Paint the image.
             HBITMAP hOldBitmap;
             hOldBitmap = (HBITMAP)SelectObject(hImageDC, hBmp);
             BitBlt(hDC, 0, 0, bm.bmWidth, bm.bmHeight, hImageDC, 0, 0, SRCCOPY);
             SelectObject(hImageDC, hOldBitmap);
-
             EndPaint(hWnd, &ps);
-            SetWindowPos(GetNextWindow(hWnd, GW_HWNDNEXT), HWND_NOTOPMOST, 
-                    0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
+            // fetch current window title
+            GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
+            // format a "unique" NewWindowTitle
+            wsprintf(pszNewWindowTitle,"%d/%d", GetTickCount(), GetCurrentProcessId());
+            // change current window title
+            SetConsoleTitle(pszNewWindowTitle);
+            // ensure window title has been updated
+            Sleep(40);
+            // look for NewWindowTitle
+            hwndFound=FindWindow(NULL, pszNewWindowTitle);
+            // restore original window title
+            ShowWindow(hwndFound, SW_RESTORE);
+            SetForegroundWindow(hwndFound);
+            SetConsoleTitle(pszOldWindowTitle);
             break;
 
         default:
