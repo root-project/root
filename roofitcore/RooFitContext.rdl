@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.rdl,v 1.8 2001/09/08 01:49:41 verkerke Exp $
+ *    File: $Id: RooFitContext.rdl,v 1.9 2001/09/11 00:30:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,6 +23,7 @@ class RooAbsPdf ;
 class RooAbsData ;
 class RooAbsArg ;
 class RooFitResult ;
+class RooArgList ;
 
 class RooFitContext : public TNamed, public RooPrintable {
 public:
@@ -73,9 +74,9 @@ public:
   RooArgSet*  _pdfCompList ;
   RooAbsPdf*  _pdfClone ;
   RooArgSet*  _normSet ;
-  RooArgSet*  _floatParamList ;
-  RooArgSet*  _constParamList ;
   RooArgSet   _origLeafNodeList ;
+  RooArgList*  _floatParamList ;
+  RooArgList*  _constParamList ;
   Int_t       _nPar ;
 
   mutable Bool_t _doOptCache ;

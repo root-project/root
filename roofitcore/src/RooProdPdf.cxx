@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.6 2001/08/02 21:39:11 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.7 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,7 +28,6 @@
 // any servers with any other PDF. 
 
 #include "TIterator.h"
-#include "TList.h"
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 
@@ -37,15 +36,21 @@ ClassImp(RooProdPdf)
 
 
 RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
-  RooAbsPdf(name,title), _pdfProxyIter(_pdfProxyList.MakeIterator()), _cutOff(cutOff)
+  RooAbsPdf(name,title), 
+  _pdfList("_pdfList","List of PDFs",this),
+  _pdfIter(_pdfList.createIterator()), 
+  _cutOff(cutOff)
 {
   // Dummy constructor
 }
 
 
 RooProdPdf::RooProdPdf(const char *name, const char *title,
-		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff) : 
-  RooAbsPdf(name,title), _pdfProxyIter(_pdfProxyList.MakeIterator()), _cutOff(cutOff)
+		       RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff) : 
+  RooAbsPdf(name,title), 
+  _pdfList("_pdfList","List of PDFs",this),
+  _pdfIter(_pdfList.createIterator()), 
+  _cutOff(cutOff)
 {
   // Constructor with 2 PDFs
   addPdf(pdf1) ;
@@ -54,18 +59,12 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 
 RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
-  RooAbsPdf(other,name), _pdfProxyIter(_pdfProxyList.MakeIterator()), 
+  RooAbsPdf(other,name), 
+  _pdfList("_pdfList",this,other._pdfList),
+  _pdfIter(_pdfList.createIterator()), 
   _cutOff(other._cutOff)
 {
   // Copy constructor
-
-  // Copy proxy lists
-  RooRealProxy* proxy ;
-  TIterator *iter = other._pdfProxyList.MakeIterator() ;
-  while(proxy=(RooRealProxy*)iter->Next()) {
-    _pdfProxyList.Add(new RooRealProxy("pdf",this,*proxy)) ;
-  }
-  delete iter ;
 }
 
 
@@ -73,18 +72,15 @@ RooProdPdf::~RooProdPdf()
 {
   // Destructor
 
-  // Delete all owned proxies 
-  delete _pdfProxyIter ;
-  _pdfProxyList.Delete() ;
+  delete _pdfIter ;
 }
 
 
 
 void RooProdPdf::addPdf(RooAbsPdf& pdf) 
-{  
+{    
   // Add PDF to product of PDFs
-  RooRealProxy *pdfProxy = new RooRealProxy("pdf","pdf",this,pdf) ;  
-  _pdfProxyList.Add(pdfProxy) ;
+  _pdfList.add(pdf) ;
 }
 
 
@@ -95,10 +91,11 @@ Double_t RooProdPdf::evaluate() const
   Double_t value(1) ;
     
   // Calculate running product of pdfs
-  RooRealProxy* pdf ;
-  _pdfProxyIter->Reset() ;
-  while(pdf=(RooRealProxy*)_pdfProxyIter->Next()) {    
-    value *= (*pdf) ;
+  RooAbsReal* pdf ;
+  _pdfIter->Reset() ;
+  const RooArgSet* nset(_pdfList.nset()) ;
+  while(pdf=(RooAbsReal*)_pdfIter->Next()) {    
+    value *= pdf->getVal(nset) ;
     if (value<_cutOff) break ;
   }
 

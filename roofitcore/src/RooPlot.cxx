@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.16 2001/06/30 01:33:13 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.17 2001/08/03 18:11:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -42,7 +42,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.16 2001/06/30 01:33:13 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.17 2001/08/03 18:11:34 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
@@ -72,7 +72,7 @@ RooPlot::RooPlot(const RooAbsReal &var) :
   // any later changes to its state.
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
-  _plotVarSet = RooArgSet(var).snapshot() ;
+  _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
   _plotVarClone= (RooAbsReal*)_plotVarSet->find(var.GetName()) ;
   
   TString xtitle(var.GetTitle());
@@ -123,7 +123,7 @@ RooPlot::~RooPlot() {
 }
 
 void RooPlot::updateNormVars(const RooArgSet &vars) {
-  if(0 == _normVars) _normVars= vars.snapshot(kTRUE);
+  if(0 == _normVars) _normVars= (RooArgSet*) vars.snapshot(kTRUE);
 }
 
 Stat_t RooPlot::GetBinContent(Int_t i) const {

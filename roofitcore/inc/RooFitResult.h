@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.1 2001/08/18 02:13:11 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.2 2001/08/21 01:46:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -19,6 +19,7 @@
 #include "RooFitCore/RooPrintable.hh"
 
 class RooArgSet ;
+class RooArgList ;
 typedef RooArgSet* pRooArgSet ;
 
 class RooFitResult : public TObject, public RooPrintable {
@@ -37,33 +38,33 @@ public:
   // Accessors
   inline Double_t edm() const { return _edm ; }
   inline Double_t minNll() const { return _minNLL ; }
-  inline const RooArgSet& constPars() const { return *_constPars ; } 
-  inline const RooArgSet& floatParsInit() const { return *_initPars ; } 
-  inline const RooArgSet& floatParsFinal() const { return *_finalPars ; } 
+  inline const RooArgList& constPars() const { return *_constPars ; } 
+  inline const RooArgList& floatParsInit() const { return *_initPars ; } 
+  inline const RooArgList& floatParsFinal() const { return *_finalPars ; } 
 
   // Correlation matrix element and row accessors
   Double_t correlation(const RooAbsArg& par1, const RooAbsArg& par2) const ;
-  const RooArgSet* correlation(const RooAbsArg& par) const ;
+  const RooArgList* correlation(const RooAbsArg& par) const ;
 
 protected:
   
   RooFitResult(const RooFitResult& other) ;
 
   friend class RooFitContext ;
-  void setConstParList(const RooArgSet& list) ;
-  void setInitParList(const RooArgSet& list) ;
-  void setFinalParList(const RooArgSet& list) ;
+  void setConstParList(const RooArgList& list) ;
+  void setInitParList(const RooArgList& list) ;
+  void setFinalParList(const RooArgList& list) ;
   inline void setMinNLL(Double_t val) { _minNLL = val ; }
   inline void setEDM(Double_t val) { _edm = val ; }
   void fillCorrMatrix() ;
 
   Double_t _minNLL ;
   Double_t _edm ;
-  RooArgSet* _constPars ;
-  RooArgSet* _initPars ;
-  RooArgSet* _finalPars ;
-  RooArgSet* _globalCorr ;
-  TList      _corrMatrix ;
+  RooArgList* _constPars ;
+  RooArgList* _initPars ;
+  RooArgList* _finalPars ;
+  RooArgList* _globalCorr ;
+  TList       _corrMatrix ;
   //pRooArgSet* _corrMatrix ;
 
   ClassDef(RooFitResult,1) // Container class for fit result

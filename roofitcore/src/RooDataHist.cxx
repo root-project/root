@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.1 2001/09/11 00:30:31 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.2 2001/09/12 01:25:43 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -159,7 +159,7 @@ void RooDataHist::add(const RooArgSet& row, Double_t weight)
 void RooDataHist::add(const RooAbsData& dset, const char* cut, Double_t weight) 
 {  
   RooFormulaVar cutVar("select",cut,*dset.get()) ;
-  return add(dset,&cutVar,weight) ;
+  add(dset,&cutVar,weight) ;
 }
 
 
@@ -170,7 +170,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
   RooArgSet* tmp ;
   if (cutVar) {
     // Deep clone cutVar and attach clone to this dataset
-    tmp = RooArgSet(*cutVar).snapshot() ;
+    tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
     cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
     cloneVar->attachDataSet(dset) ;
     cloneVar->Print("v") ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.7 2001/08/02 21:39:08 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.8 2001/08/23 01:21:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,10 +20,11 @@
 #define ROO_ADD_PDF
 
 #include "RooFitCore/RooAbsPdf.hh"
-#include "TList.h"
+#include "RooFitCore/RooListProxy.hh"
 
 class RooAddPdf : public RooAbsPdf {
 public:
+
   RooAddPdf(const char *name, const char *title);
   RooAddPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
@@ -43,8 +44,10 @@ public:
 
 protected:
 
-  TList _pdfProxyList ;
-  TList _coefProxyList ;
+  RooListProxy _pdfList ;
+  RooListProxy _coefList ;
+  TIterator* _pdfIter ; //! do not persist
+  TIterator* _coefIter ; //! do not persist
 
 private:
 

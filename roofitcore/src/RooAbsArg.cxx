@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.48 2001/09/06 20:49:15 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.49 2001/09/11 00:30:30 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -32,6 +32,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooSetProxy.hh"
+#include "RooFitCore/RooListProxy.hh"
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
@@ -214,7 +215,7 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 
 
 
-void RooAbsArg::addServerList(RooArgSet& serverList, Bool_t valueProp, Bool_t shapeProp) 
+void RooAbsArg::addServerList(RooAbsCollection& serverList, Bool_t valueProp, Bool_t shapeProp) 
 {
   // Register a list of RooAbsArg as servers to us by calls addServer() for each
   // arg in the list
@@ -285,7 +286,7 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
 
 
 
-void RooAbsArg::leafNodeServerList(RooArgSet* list, const RooAbsArg* arg) const
+void RooAbsArg::leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg) const
 {
   // Fill supplied list with all leaf nodes of the arg tree, starting with
   // ourself as top node. A leaf node is node that has no servers declared.
@@ -295,7 +296,7 @@ void RooAbsArg::leafNodeServerList(RooArgSet* list, const RooAbsArg* arg) const
 
 
 
-void RooAbsArg::branchNodeServerList(RooArgSet* list, const RooAbsArg* arg) const 
+void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg) const 
 {
   // Fill supplied list with all branch nodes of the arg tree starting with 
   // ourself as top node. A branch node is node that has one or more servers declared.
@@ -304,7 +305,7 @@ void RooAbsArg::branchNodeServerList(RooArgSet* list, const RooAbsArg* arg) cons
 }
 
 
-void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf) const
+void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf) const
 {
   // Fill supplied list with nodes of the arg tree, following all server links, 
   // starting with ourself as top node.
@@ -422,7 +423,7 @@ Bool_t RooAbsArg::checkDependents(const RooArgSet* nset) const
 }
 
 
-Bool_t RooAbsArg::dependsOn(const RooArgSet& serverList) const
+Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList) const
 {
   // Test whether we depend on (ie, are served by) any object in the
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
@@ -577,7 +578,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
 
 
 
-Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll, Bool_t nameChange) 
+Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange) 
 {
   // Substitute our servers with those listed in newSet. If nameChange is false, servers and
   // and substitutes are matched by name. If nameChange is true, servers are matched to args
@@ -659,7 +660,7 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
   return ret ;
 }
 
-RooAbsArg *RooAbsArg::findNewServer(const RooArgSet &newSet, Bool_t nameChange) const {
+RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const {
   // Find the new server in the specified set that matches the old server.
   // Allow a name change if nameChange is kTRUE, in which case the new
   // server is selected by searching for a new server with an attribute
@@ -674,7 +675,8 @@ RooAbsArg *RooAbsArg::findNewServer(const RooArgSet &newSet, Bool_t nameChange) 
     // use 'ORIGNAME:<oldName>' attribute instead of name of new server
     TString nameAttrib("ORIGNAME:") ; 
     nameAttrib.Append(GetName()) ;
-    RooArgSet* tmp = newSet.selectByAttrib(nameAttrib,kTRUE) ;
+
+    RooArgSet* tmp = (RooArgSet*) newSet.selectByAttrib(nameAttrib,kTRUE) ;
     if(0 != tmp) {
 
       // Check if any match was found
@@ -698,7 +700,7 @@ RooAbsArg *RooAbsArg::findNewServer(const RooArgSet &newSet, Bool_t nameChange) 
   return newServer;
 }
 
-Bool_t RooAbsArg::recursiveRedirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll) 
+Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll) 
 {
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
 
@@ -779,6 +781,36 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
 
 
 void RooAbsArg::unRegisterProxy(RooSetProxy& proxy)  
+{
+  // Remove proxy from proxy list. This functions is called by owned proxies
+  // upon their destruction.
+
+  _proxyList.Remove(&proxy) ;
+}
+
+
+
+void RooAbsArg::registerProxy(RooListProxy& proxy) 
+{
+  // Register an RooListProxy in the proxy list. This function is called by owned
+  // proxies upon creation. After registration, this arg wil forward pointer
+  // changes from serverRedirects and updates in cached normalization sets
+  // to the proxies immediately after they occur.
+
+  // Every proxy can be registered only once
+  if (_proxyList.FindObject(&proxy)) {
+    cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
+ 	 << proxy.GetName() << " already registered" << endl ;
+    return ;
+  }
+
+  // Register proxy itself
+  _proxyList.Add(&proxy) ;  
+}
+
+
+
+void RooAbsArg::unRegisterProxy(RooListProxy& proxy)  
 {
   // Remove proxy from proxy list. This functions is called by owned proxies
   // upon their destruction.

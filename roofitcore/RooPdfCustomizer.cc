@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.5 2001/08/15 23:38:44 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.cc,v 1.6 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -17,6 +17,7 @@
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooArgList.hh"
 
 #include "RooFitCore/RooPdfCustomizer.hh"
 
@@ -75,21 +76,21 @@ RooArgSet* RooPdfCustomizer::fullParamList(const RooArgSet* depList) const
   TString listName("Variable list for ") ;
   listName.Append(_masterPdf->GetName()) ;
   listName.Append(" clones") ;
-  RooArgSet* list = new RooArgSet(listName) ;
+  RooArgList list(listName) ;
 
-  list->add(_masterUnsplitLeafList) ;
-  list->add(_cloneLeafList) ;
+  list.add(_masterUnsplitLeafList) ;
+  list.add(_cloneLeafList) ;
 
   TIterator* iter = depList->createIterator() ;
   RooAbsArg* dep ;
   while (dep=(RooAbsArg*)iter->Next()) {
-    RooAbsArg* dep2 = list->find(dep->GetName()) ;
-    if (dep2) list->remove(*dep2) ;
+    RooAbsArg* dep2 = list.find(dep->GetName()) ;
+    if (dep2) list.remove(*dep2) ;
   }
   delete iter ;
   
-  list->Sort() ;
-  return list ;
+  list.sort() ;
+  return new RooArgSet(list) ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealBinding.cc,v 1.1 2001/08/03 21:44:57 david Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.2 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -27,7 +27,7 @@ ClassImp(RooRealBinding)
 ;
 
 static const char rcsid[] =
-"$Id: RooRealBinding.cc,v 1.1 2001/08/03 21:44:57 david Exp $";
+"$Id: RooRealBinding.cc,v 1.2 2001/08/23 23:43:43 david Exp $";
 
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars) :
   RooAbsFunc(vars.getSize()), _func(&func), _vars(0)
@@ -40,15 +40,18 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars) :
   }
   // check that all of the arguments are real valued and store them
   RooAbsArg *var(0);
-  for(Int_t index= 0; index < _dimension; index++) {
-    var= (RooAbsArg*)vars.At(index);
+  TIterator* iter = vars.createIterator() ;
+  Int_t index(0) ;
+  while(var=(RooAbsArg*)iter->Next()) {
     _vars[index]= dynamic_cast<RooAbsRealLValue*>(var);
     if(0 == _vars[index]) {
       cout << "RooRealBinding: cannot bind to ";
       var->Print("1");
       _valid= kFALSE;
     }
+    index++ ;
   }
+  delete iter ;
 }
 
 RooRealBinding::~RooRealBinding() {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.43 2001/08/23 23:43:41 david Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.44 2001/09/11 00:30:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,11 +23,13 @@
 
 class TTree ;
 class RooArgSet ;
+class RooAbsCollection ;
 class RooTreeData ;
 class RooAbsData ;
 class RooAbsProxy ;
 class RooArgProxy ;
 class RooSetProxy ;
+class RooListProxy ;
 class RooAbsBinIter ;
 
 class RooAbsArg : public TNamed, public RooPrintable {
@@ -46,7 +48,7 @@ public:
 
   // Accessors to client-server relation information 
   Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
-  Bool_t dependsOn(const RooArgSet& serverList) const ;
+  Bool_t dependsOn(const RooAbsCollection& serverList) const ;
   Bool_t dependsOn(const RooAbsArg& server) const ;
   Bool_t overlaps(const RooAbsArg& testArg) const ;
   inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
@@ -60,9 +62,9 @@ public:
   inline Bool_t isValueServer(const char* name) const { return _clientListValue.FindObject(name)?kTRUE:kFALSE ; }
   inline Bool_t isShapeServer(const RooAbsArg& arg) const { return _clientListShape.FindObject(&arg)?kTRUE:kFALSE ; }
   inline Bool_t isShapeServer(const char* name) const { return _clientListShape.FindObject(name)?kTRUE:kFALSE ; }
-  void leafNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
-  void branchNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
-  void treeNodeServerList(RooArgSet* list, const RooAbsArg* arg=0, 
+  void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0) const ;
+  void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0) const ;
+  void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, 
 			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE) const ;
   
   // Is this object a fundamental type that can be added to a dataset?
@@ -156,6 +158,7 @@ protected:
 
   // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
+  friend class RooAbsCollection ;
   friend class RooPdfCustomizer ;
   friend class RooFitContext ;
   TList _serverList       ; //! list of server objects
@@ -169,25 +172,28 @@ protected:
   // Server redirection interface
   friend class RooAcceptReject;
   friend class RooResolutionModel ;
-  Bool_t redirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
-  Bool_t recursiveRedirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
-  virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll) { return kFALSE ; } ;
+  Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
+  Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll) { return kFALSE ; } ;
   virtual void serverNameChangeHook(const RooAbsArg* oldServer, const RooAbsArg* newServer) { } ;
 
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
-  void addServerList(RooArgSet& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
+  void addServerList(RooAbsCollection& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;
   void removeServer(RooAbsArg& server) ;
-  RooAbsArg *findNewServer(const RooArgSet &newSet, Bool_t nameChange) const;
+  RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
 
   // Proxy management
   friend class RooAddModel ;
   friend class RooArgProxy ;
   friend class RooSetProxy ;
+  friend class RooListProxy ;
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
+  void registerProxy(RooListProxy& proxy) ;
   void unRegisterProxy(RooArgProxy& proxy) ;
   void unRegisterProxy(RooSetProxy& proxy) ;
+  void unRegisterProxy(RooListProxy& proxy) ;
   RooAbsProxy* getProxy(Int_t index) const ;
   void setProxyNormSet(const RooArgSet* nset) ;
   Int_t numProxies() const ;

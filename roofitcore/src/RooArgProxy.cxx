@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.cc,v 1.12 2001/08/02 21:39:08 verkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.13 2001/08/23 23:43:42 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,12 +38,14 @@ RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, R
 {
   // Constructor with owner and proxied variable
   _owner->registerProxy(*this) ;
+  _isFund = _arg->isFundamental() ;
 }
 
 
 RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) : 
   RooAbsProxy(other), TNamed(other), _arg(other._arg), 
-  _valueServer(other._valueServer), _shapeServer(other._shapeServer), _owner(owner)
+  _valueServer(other._valueServer), _shapeServer(other._shapeServer), _owner(owner),
+  _isFund(other._isFund)
 {
   // Copy constructor
   _owner->registerProxy(*this) ;
@@ -56,12 +58,15 @@ RooArgProxy::~RooArgProxy()
 }
 
 
-Bool_t RooArgProxy::changePointer(const RooArgSet& newServerList, Bool_t nameChange) 
+Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange) 
 {
   // Change proxied object to object of same name in given list
 
   RooAbsArg* newArg= _arg->findNewServer(newServerList, nameChange);
-  if (newArg) _arg = newArg ;
+  if (newArg) {
+    _arg = newArg ;
+    _isFund = _arg->isFundamental() ;
+  }
 
   return newArg?kTRUE:kFALSE ;
 }

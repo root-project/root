@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.rdl,v 1.8 2001/08/09 01:02:15 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -9,23 +9,23 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#ifndef ROO_SET_PROXY
-#define ROO_SET_PROXY
+#ifndef ROO_LIST_PROXY
+#define ROO_LIST_PROXY
 
 #include "TObject.h"
 #include "RooFitCore/RooAbsProxy.hh"
 #include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooArgList.hh"
 
-class RooSetProxy : public RooArgSet, public RooAbsProxy  {
+class RooListProxy : public RooArgList, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.
-  RooSetProxy() {} ;
-  RooSetProxy(const char* name, const char* desc, RooAbsArg* owner, 
+  RooListProxy() {} ;
+  RooListProxy(const char* name, const char* desc, RooAbsArg* owner, 
 	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
-  RooSetProxy(const char* name, RooAbsArg* owner, const RooSetProxy& other) ;
-  virtual ~RooSetProxy() ;
+  RooListProxy(const char* name, RooAbsArg* owner, const RooListProxy& other) ;
+  virtual ~RooListProxy() ;
 
   virtual const char* name() const { return GetName() ; }
 
@@ -37,7 +37,7 @@ public:
   virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual void removeAll() ;
 
-  RooSetProxy& operator=(const RooArgSet& other) ;
+  RooListProxy& operator=(const RooArgList& other) ;
   
 protected:
 
@@ -47,7 +47,7 @@ protected:
 
   virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE) ;
 
-  ClassDef(RooSetProxy,1) // Proxy class for a RooArgSet
+  ClassDef(RooListProxy,1) // Proxy class for a RooArgList
 };
 
 #endif

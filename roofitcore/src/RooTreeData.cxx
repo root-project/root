@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.2 2001/09/11 19:09:50 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.3 2001/09/12 01:25:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -117,7 +117,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   initialize(vars);
 
   // Deep clone cutVar and attach clone to this dataset
-  RooArgSet* tmp = RooArgSet(cutVar).snapshot() ;
+  RooArgSet* tmp = (RooArgSet*) RooArgSet(cutVar).snapshot() ;
   RooFormulaVar* cloneVar = (RooFormulaVar*) tmp->find(cutVar.GetName()) ;
   cloneVar->attachDataSet(*this) ;
 
@@ -138,7 +138,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   initialize(vars);
 
   // Deep clone cutVar and attach clone to this dataset
-  RooArgSet* tmp = RooArgSet(cutVar).snapshot() ;
+  RooArgSet* tmp = (RooArgSet*) RooArgSet(cutVar).snapshot() ;
   RooFormulaVar* cloneVar = (RooFormulaVar*) tmp->find(cutVar.GetName()) ;
   cloneVar->attachDataSet(*this) ;
 
@@ -159,7 +159,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   // Deep clone cutVar and attach clone to this dataset
   RooFormulaVar* cloneVar(0) ;
   if (cutVar) {
-    RooArgSet* tmp = RooArgSet(*cutVar).snapshot() ;
+    RooArgSet* tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
     cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
     cloneVar->attachDataSet(*t) ;
   }
@@ -284,7 +284,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
   TTree* tClone = ((TTree*)t)->CloneTree() ;
   
   // Clone list of variables  
-  RooArgSet *sourceArgSet = _vars.snapshot(kFALSE) ;
+  RooArgSet *sourceArgSet = (RooArgSet*) _vars.snapshot(kFALSE) ;
   
   // Attach args in cloned list to cloned source tree
   TIterator* sourceIter =  sourceArgSet->createIterator() ;
@@ -484,7 +484,7 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   RooTreeData* cloneData = (RooTreeData*) Clone() ; //new RooTreeData(*this) ;       //A
 
   // Clone variable and attach to cloned tree 
-  RooArgSet* newVarCloneList = RooArgSet(newVar).snapshot() ;  //B,C,D!!! after cloning mixState
+  RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(newVar).snapshot() ;  //B,C,D!!! after cloning mixState
   RooAbsArg* newVarClone = newVarCloneList->find(newVar.GetName()) ;
   newVarClone->recursiveRedirectServers(cloneData->_vars,kFALSE) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.4 2001/08/03 18:11:33 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.5 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -109,7 +109,7 @@ void RooGenCategory::updateIndexList()
   clearTypes() ;
 
   // DeepClone super category for iteration
-  RooArgSet* tmp=RooArgSet(_superCat).snapshot(kTRUE) ;
+  RooArgSet* tmp=(RooArgSet*) RooArgSet(_superCat).snapshot(kTRUE) ;
   RooSuperCategory* superClone = (RooSuperCategory*) tmp->find(_superCat.GetName()) ;
 
   TIterator* sIter = superClone->MakeIterator() ;

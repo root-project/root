@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.8 2001/08/02 21:39:11 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.9 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,7 +20,7 @@
 #define ROO_PROD_PDF
 
 #include "RooFitCore/RooAbsPdf.hh"
-#include "TList.h"
+#include "RooFitCore/RooListProxy.hh"
 
 class RooProdPdf : public RooAbsPdf {
 public:
@@ -42,8 +42,8 @@ public:
 protected:
 
   Double_t _cutOff ;
-  TList _pdfProxyList ;
-  TIterator* _pdfProxyIter ; //! do not persist
+  RooListProxy _pdfList ;
+  TIterator* _pdfIter ; //! do not persist
 
 private:
 

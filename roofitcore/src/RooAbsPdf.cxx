@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.30 2001/09/08 00:51:53 bevan Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.31 2001/09/11 00:30:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -97,7 +97,11 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // spoil the cache and interfere with returning the cached
   // return value. Since unnormalized calls are typically
   // done in integration calls, there is no performance hit.
-  if (!nset) return traceEval(nset) ;
+  if (!nset) {
+    Double_t val = traceEval(nset) ;
+    if (_verboseEval>1) cout << "RooAbsPdf::getVal(" << GetName() << "): value = " << val << " (unnormalized)" << endl ;
+    return val ;
+  }
 
   // Process change in last data set used
   Bool_t nsetChanged = (nset != _lastNormSet) ;
@@ -174,15 +178,15 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   if (nset == _lastNormSet) return ;
 
   // Check if data sets have identical contents
-  if (_lastNormSet) {
-    RooNameSet newNames(*nset) ;
-    if (newNames==_lastNameSet) {
-      if (_verboseEval>1) {
-	cout << "RooAbsPdf::syncNormalization(" << GetName() << ") new data and old data sets are identical" << endl ;
-      }
-      return ;
-    }
-  }
+//   if (_lastNormSet) {
+//     RooNameSet newNames(*nset) ;
+//     if (newNames==_lastNameSet) {
+//       if (_verboseEval>1) {
+// 	cout << "RooAbsPdf::syncNormalization(" << GetName() << ") new data and old data sets are identical" << endl ;
+//       }
+//       return ;
+//     }
+//   }
 
   if (_verboseEval>0) cout << "RooAbsPdf:syncNormalization(" << GetName() 
 			 << ") recreating normalization integral(" 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.1 2001/09/11 00:30:31 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.2 2001/09/12 01:25:43 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -40,7 +40,8 @@ public:
   virtual void add(const RooArgSet& row, Double_t weight=1.0) ;
   void add(const RooAbsData& dset, const RooFormulaVar* cutVar=0, Double_t weight=1.0 ) ;
   void add(const RooAbsData& dset, const char* cut, Double_t weight=1.0 ) ;
-  virtual const RooArgSet* RooDataHist::get(Int_t masterIdx) const ;
+  virtual const RooArgSet* get() const { return &_vars ; } 
+  virtual const RooArgSet* get(Int_t masterIdx) const ;
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ; 
 
   virtual Double_t weight() const { return _curWeight ; }

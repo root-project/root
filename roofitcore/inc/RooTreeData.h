@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.1 2001/09/11 00:30:33 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.2 2001/09/12 01:25:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -71,7 +71,7 @@ public:
   // Forwarded from TTree
   inline Int_t Scan(const char* varexp="", const char* selection="", Option_t* option="", 
 		    Int_t nentries = 1000000000, Int_t firstentry = 0) {
-    _tree->Scan(varexp,selection,option,nentries,firstentry) ; 
+    return _tree->Scan(varexp,selection,option,nentries,firstentry) ; 
   }
   const TTree& tree() const { return *_tree ; }
 

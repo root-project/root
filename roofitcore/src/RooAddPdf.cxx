@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.6 2001/08/23 01:21:46 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.7 2001/09/04 01:37:41 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,16 +39,25 @@ ClassImp(RooAddPdf)
 
 
 RooAddPdf::RooAddPdf(const char *name, const char *title) :
-  RooAbsPdf(name,title)
+  RooAbsPdf(name,title), 
+  _coefList("coefList","List of coefficients",this),
+  _pdfList("pdfList","List of PDFs",this)
 {
   // Dummy constructor 
+  _pdfIter  = _pdfList.createIterator() ;
+  _coefIter = _coefList.createIterator() ;
 }
 
 
 RooAddPdf::RooAddPdf(const char *name, const char *title,
 		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) : 
-  RooAbsPdf(name,title)
+  RooAbsPdf(name,title),
+  _coefList("coefList","List of coefficients",this),
+  _pdfList("pdfProxyList","List of PDFs",this)
 {
+  _pdfIter  = _pdfList.createIterator() ;
+  _coefIter = _coefList.createIterator() ;
+
   // Constructor with two PDFs
   addPdf(pdf1,coef1) ;
   addLastPdf(pdf2) ;    
@@ -56,33 +65,22 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 
 
 RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
-  RooAbsPdf(other,name)
+  RooAbsPdf(other,name),
+  _coefList("coefList",this,other._coefList),
+  _pdfList("pdfProxyList",this,other._pdfList)
 {
+  _pdfIter  = _pdfList.createIterator() ;
+  _coefIter = _coefList.createIterator() ;
+
   // Copy constructor
-
-  // Copy proxy lists
-  TIterator *iter = other._coefProxyList.MakeIterator() ;
-  RooRealProxy* proxy ;
-  while(proxy=(RooRealProxy*)iter->Next()) {
-    _coefProxyList.Add(new RooRealProxy("coef",this,*proxy)) ;
-  }
-  delete iter ;
-
-  iter = other._pdfProxyList.MakeIterator() ;
-  while(proxy=(RooRealProxy*)iter->Next()) {
-    _pdfProxyList.Add(new RooRealProxy("pdf",this,*proxy)) ;
-  }
-  delete iter ;
 }
 
 
 RooAddPdf::~RooAddPdf()
 {
   // Destructor
-
-  // Delete all owned proxies 
-  _coefProxyList.Delete() ;
-  _pdfProxyList.Delete() ;
+  delete _pdfIter ;
+  delete _coefIter ;
 }
 
 
@@ -90,12 +88,8 @@ RooAddPdf::~RooAddPdf()
 void RooAddPdf::addPdf(RooAbsPdf& pdf, RooAbsReal& coef) 
 {  
   // Add a PDF/coefficient pair to the PDF sum
-
-  RooRealProxy *pdfProxy = new RooRealProxy("pdf","pdf",this,pdf) ;
-  RooRealProxy *coefProxy = new RooRealProxy("coef","coef",this,coef) ;
-  
-  _pdfProxyList.Add(pdfProxy) ;
-  _coefProxyList.Add(coefProxy) ;
+  _pdfList.add(pdf) ;
+  _coefList.add(coef) ;
 }
 
 
@@ -103,32 +97,35 @@ void RooAddPdf::addLastPdf(RooAbsPdf& pdf)
 {
   // Specify the last PDF, whose coefficient is automatically 
   // calculated from the normalization requirement
-  RooRealProxy *pdfProxy = new RooRealProxy("pdf","pdf",this,pdf) ;
-  _pdfProxyList.Add(pdfProxy) ;
+//   RooRealProxy *pdfProxy = new RooRealProxy("pdf","pdf",this,pdf) ;
+  _pdfList.add(pdf) ;
 }
 
 
 Double_t RooAddPdf::evaluate() const 
 {
   // Calculate the current value of this object
-  TIterator *pIter = _pdfProxyList.MakeIterator() ;
-  TIterator *cIter = _coefProxyList.MakeIterator() ;
+  const RooArgSet* nset = _pdfList.nset() ;
   
   Double_t value(0) ;
   Double_t lastCoef(1) ;
 
+
   // Do running sum of coef/pdf pairs, calculate lastCoef.
-  RooRealProxy* coef ;
-  RooRealProxy* pdf ;
-  while(coef=(RooRealProxy*)cIter->Next()) {
-    pdf = (RooRealProxy*)pIter->Next() ;
-    value += (*pdf)*(*coef) ;
-    lastCoef -= (*coef) ;
+  _pdfIter->Reset() ;
+  _coefIter->Reset() ;
+  RooAbsReal* coef ;
+  RooAbsReal* pdf ;
+  while(coef=(RooAbsReal*)_coefIter->Next()) {
+    // WVE check if coef>epsilon before multiplying with pdf
+    pdf = (RooAbsReal*)_pdfIter->Next() ;
+    value += pdf->getVal(nset)*coef->getVal(nset) ;
+    lastCoef -= coef->getVal(nset) ;
   }
 
   // Add last pdf with correct coefficient
-  pdf = (RooRealProxy*) pIter->Next() ;
-  value += (*pdf)*lastCoef ;
+  pdf = (RooAbsReal*) _pdfIter->Next() ;
+  value += pdf->getVal(nset)*lastCoef;
 
   // Warn about coefficient degeneration
   if (lastCoef<0 || lastCoef>1) {
@@ -136,9 +133,6 @@ Double_t RooAddPdf::evaluate() const
 	 << " WARNING: sum of PDF coefficients not in range [0-1], value=" 
 	 << 1-lastCoef << endl ;
   } 
-
-  delete pIter ;
-  delete cIter ;
 
   return value ;
 }
@@ -148,30 +142,24 @@ Bool_t RooAddPdf::checkDependents(const RooArgSet* nset) const
 {
   // Check if PDF is valid with dependent configuration given by specified data set
 
-  // Special, more lenient dependent checking: Coeffient and PDF should
-  // be non-overlapping, but coef/pdf pairs can
+  // Coeffient and PDF should be non-overlapping, but coef/pdf pairs can overlap each other
   Bool_t ret(kFALSE) ;
 
-  TIterator *pIter = _pdfProxyList.MakeIterator() ;
-  TIterator *cIter = _coefProxyList.MakeIterator() ;
-
-  RooRealProxy* coef ;
-  RooRealProxy* pdf ;
-  while(coef=(RooRealProxy*)cIter->Next()) {
-    pdf = (RooRealProxy*)pIter->Next() ;
-    ret |= pdf->arg().checkDependents(nset) ;
-    ret |= coef->arg().checkDependents(nset) ;
-    if (pdf->arg().dependentOverlaps(nset,coef->arg())) {
-      cout << "RooAddPdf::checkDependents(" << GetName() << "): ERROR: coefficient " << coef->arg().GetName() 
-	   << " and PDF " << pdf->arg().GetName() << " have one or more dependents in common" << endl ;
+  _pdfIter->Reset() ;
+  _coefIter->Reset() ;
+  RooAbsReal* coef ;
+  RooAbsReal* pdf ;
+  while(coef=(RooAbsReal*)_coefIter->Next()) {
+    pdf = (RooAbsReal*)_pdfIter->Next() ;
+    ret |= pdf->checkDependents(nset) ;
+    ret |= coef->checkDependents(nset) ;
+    if (pdf->dependentOverlaps(nset,*coef)) {
+      cout << "RooAddPdf::checkDependents(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
+	   << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
       ret = kTRUE ;
     }
   }
   
-  
-  delete pIter ;
-  delete cIter ;
-
   return ret ;
 }
 

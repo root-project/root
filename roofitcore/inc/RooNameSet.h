@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNameSet.rdl,v 1.2 2001/08/02 21:39:10 verkerke Exp $
+ *    File: $Id: RooNameSet.rdl,v 1.3 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,7 +20,7 @@
 #include "RooFitCore/RooPrintable.hh"
 class RooArgSet ;
 
-class RooNameSet : public TList, public RooPrintable {
+class RooNameSet : public TObject, public RooPrintable {
 public:
 
   // Constructors, assignment etc.
@@ -31,7 +31,6 @@ public:
   virtual ~RooNameSet() ;
 
   void refill(const RooArgSet& argSet) ;
-  RooArgSet* select(const RooArgSet& input) ;
   Bool_t operator==(const RooNameSet& other) ;
 
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
@@ -39,11 +38,10 @@ public:
     printToStream(defaultStream(),parseOptions(options));
   }
 
-  TList _nameList ;
+  Int_t _len ;
+  char* _nameList ; //[_len]
 
 protected:
-
-  TIterator* _nameIter ; //! do not persist
 
   ClassDef(RooNameSet,1) // A sterile version of RooArgSet, containing only the names of the contained RooAbsArgs
 };

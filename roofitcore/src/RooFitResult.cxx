@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.3 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooFitResult.cc,v 1.4 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -16,6 +16,7 @@
 #include "TMinuit.h"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRealVar.hh"
 
 ClassImp(RooFitResult) 
@@ -35,48 +36,48 @@ RooFitResult::~RooFitResult()
   _corrMatrix.Delete();
 }
 
-void RooFitResult::setConstParList(const RooArgSet& list) 
+void RooFitResult::setConstParList(const RooArgList& list) 
 {
   if (_constPars) delete _constPars ;
-  _constPars = list.snapshot() ;
+  _constPars = (RooArgList*) list.snapshot() ;
 }
 
 
-void RooFitResult::setInitParList(const RooArgSet& list)
+void RooFitResult::setInitParList(const RooArgList& list)
 {
   if (_initPars) delete _initPars ;
-  _initPars = list.snapshot() ;
+  _initPars = (RooArgList*) list.snapshot() ;
 }
 
 
-void RooFitResult::setFinalParList(const RooArgSet& list)
+void RooFitResult::setFinalParList(const RooArgList& list)
 {
   if (_finalPars) delete _finalPars ;
-  _finalPars = list.snapshot() ;
+  _finalPars = (RooArgList*) list.snapshot() ;
 }
 
 
 Double_t RooFitResult::correlation(const RooAbsArg& par1, const RooAbsArg& par2) const 
 {
-  const RooArgSet* row = correlation(par1) ;
+  const RooArgList* row = correlation(par1) ;
   if (!row) return 0. ;
   RooAbsArg* arg = _initPars->find(par2.GetName()) ;
   if (!arg) {
     cout << "RooFitResult::correlation: variable " << par2.GetName() << " not a floating parameter in fit" << endl ;
     return 0. ;
   }
-  return ((RooRealVar*)row->At(_initPars->IndexOf(arg)))->getVal() ;
+  return ((RooRealVar*)row->at(_initPars->index(arg)))->getVal() ;
 }
 
 
-const RooArgSet* RooFitResult::correlation(const RooAbsArg& par) const 
+const RooArgList* RooFitResult::correlation(const RooAbsArg& par) const 
 {
   RooAbsArg* arg = _initPars->find(par.GetName()) ;
   if (!arg) {
     cout << "RooFitResult::correlation: variable " << par.GetName() << " not a floating parameter in fit" << endl ;
     return 0 ;
   }    
-  return (RooArgSet*)_corrMatrix.At(_initPars->IndexOf(arg)) ;
+  return (RooArgList*)_corrMatrix.At(_initPars->index(arg)) ;
 }
 
 
@@ -94,8 +95,8 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
 	 << "  --------------------  ------------" << endl ;
 
       for (i=0 ; i<_constPars->getSize() ; i++) {
-	os << "  " << setw(20) << ((RooAbsArg*)_constPars->At(i))->GetName()
-	   << "  " << setw(12) << Form("%12.4e",((RooRealVar*)_constPars->At(i))->getVal())
+	os << "  " << setw(20) << ((RooAbsArg*)_constPars->at(i))->GetName()
+	   << "  " << setw(12) << Form("%12.4e",((RooRealVar*)_constPars->at(i))->getVal())
 	   << endl ;
       }
 
@@ -107,11 +108,11 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
        << "  --------------------  ------------  --------------------------  --------" << endl ;
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
-      os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->At(i))->GetName() ;
-      os << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->At(i))->getVal())
-	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->At(i))->getVal())
-	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->At(i))->getError())
-	 << "  "    << setw(8)  << Form("%8.6f" ,((RooRealVar*)_globalCorr->At(i))->getVal())
+      os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName() ;
+      os << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->at(i))->getVal())
+	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal())
+	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError())
+	 << "  "    << setw(8)  << Form("%8.6f" ,((RooRealVar*)_globalCorr->at(i))->getVal())
 	 << endl ;
     }
 
@@ -120,9 +121,9 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
        << "  --------------------  --------------------------" << endl ;
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
-      os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->At(i))->GetName()
-	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->At(i))->getVal())
-	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->At(i))->getError())
+      os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName()
+	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal())
+	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError())
 	 << endl ;
     }
   }
@@ -151,7 +152,7 @@ void RooFitResult::fillCorrMatrix()
   _corrMatrix.Delete();
 
   // Build holding arrays for correlation coefficients
-  _globalCorr = new RooArgSet("globalCorrelations") ;
+  _globalCorr = new RooArgList("globalCorrelations") ;
   TIterator* vIter = _initPars->createIterator() ;
   RooAbsArg* arg ;
   Int_t idx(0) ;
@@ -168,7 +169,7 @@ void RooFitResult::fillCorrMatrix()
     TString name("C[") ;
     name.Append(arg->GetName()) ;
     name.Append(",*]") ;
-    RooArgSet* corrMatrixRow = new RooArgSet(name.Data()) ;
+    RooArgList* corrMatrixRow = new RooArgList(name.Data()) ;
     _corrMatrix.Add(corrMatrixRow) ;
     TIterator* vIter2 = _initPars->createIterator() ;
     RooAbsArg* arg2 ;
@@ -215,7 +216,7 @@ void RooFitResult::fillCorrMatrix()
 
     gcVal = (RooRealVar*) gcIter->Next() ;
     gcVal->setVal(gMinuit->fGlobcc[i-1]) ;
-    TIterator* cIter = ((RooArgSet*)_corrMatrix.At(i-1))->createIterator() ;
+    TIterator* cIter = ((RooArgList*)_corrMatrix.At(i-1))->createIterator() ;
     for (it = 1; it <= nparm; ++it) {
       RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
       cVal->setVal(gMinuit->fMATUvline[it-1]) ;

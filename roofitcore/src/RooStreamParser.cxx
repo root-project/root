@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.8 2001/09/06 22:34:59 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.9 2001/09/07 01:23:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -106,7 +106,7 @@ TString RooStreamParser::readToken()
 
     // Read next char
     _is.get(c) ;
-
+    
     // Terminate at EOF, EOL or trouble
     if (!_is.good() || c=='\n') break ;
 

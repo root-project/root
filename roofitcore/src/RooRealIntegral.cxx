@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.33 2001/09/08 01:49:41 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.34 2001/09/15 00:26:04 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -353,8 +353,8 @@ Double_t RooRealIntegral::evaluate() const
       }
 
       // Save current integral dependent values 
-      RooArgSet *saveInt = _intList.snapshot() ;
-      RooArgSet *saveSum = _sumList.snapshot() ;
+      RooArgSet *saveInt = (RooArgSet*) _intList.snapshot() ;
+      RooArgSet *saveSum = (RooArgSet*) _sumList.snapshot() ;
       
       // Evaluate sum/integral
       retVal = sum() / jacobianProduct() ;
@@ -506,7 +506,7 @@ Bool_t RooRealIntegral::isValidReal(Double_t value, Bool_t printError) const
 }
 
 
-Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll)
+Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll)
 {
   return kFALSE ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.8 2001/08/24 21:49:25 chcheng Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.9 2001/09/11 00:30:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.8 2001/08/24 21:49:25 chcheng Exp $";
+"$Id: RooAcceptReject.cc,v 1.9 2001/09/11 00:30:31 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -44,7 +44,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
   RooArgSet nodes(func,func.GetName());
-  _cloneSet= nodes.snapshot(kTRUE);
+  _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
 
   // Find the clone in the snapshot list
   _funcClone = (RooAbsReal*)_cloneSet->find(func.GetName());

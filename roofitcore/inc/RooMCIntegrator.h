@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.rdl,v 1.3 2001/08/22 00:50:25 david Exp $
+ *    File: $Id: RooMCIntegrator.rdl,v 1.4 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,7 +42,7 @@ public:
 
 protected:
 
-  RooGrid _grid;
+  mutable RooGrid _grid;
 
   // control variables
   Bool_t _verbose;

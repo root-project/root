@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.17 2001/08/02 21:39:09 verkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.18 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -33,7 +33,7 @@ public:
 	
   // Dependent management
   RooArgSet& actualDependents() const ;
-  Bool_t changeDependents(const RooArgSet& newDeps, Bool_t mustReplaceAll=kFALSE) ;
+  Bool_t changeDependents(const RooAbsCollection& newDeps, Bool_t mustReplaceAll=kFALSE) ;
 
   inline RooAbsArg* getParameter(const char* name) const { return (RooAbsArg*) _useList.FindObject(name) ; }
   inline RooAbsArg* getParameter(Int_t index) const { return (RooAbsArg*) _origList.At(index) ; }

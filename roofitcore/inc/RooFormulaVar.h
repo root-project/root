@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.rdl,v 1.9 2001/08/23 01:21:47 verkerke Exp $
+ *    File: $Id: RooFormulaVar.rdl,v 1.10 2001/09/04 01:37:42 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,7 +59,7 @@ protected:
   virtual Double_t evaluate() const ;
 
   // Post-processing of server redirection
-  virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE) ;
 
   virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
 

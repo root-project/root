@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.37 2001/09/04 01:37:41 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.38 2001/09/08 00:51:54 bevan Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -390,7 +390,7 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
 
   // deep-clone ourselves so that the plotting process will not disturb
   // our original expression tree
-  RooArgSet *cloneList = RooArgSet(*this).snapshot() ;
+  RooArgSet *cloneList = (RooArgSet*) RooArgSet(*this).snapshot() ;
   RooAbsReal *clone= (RooAbsReal*) cloneList->find(GetName()) ;
 
   // redirect our clone to use the plot variable

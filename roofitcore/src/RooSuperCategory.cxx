@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.10 2001/08/09 01:02:15 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.11 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -82,7 +82,7 @@ void RooSuperCategory::updateIndexList()
   // Update the list of our category states 
 
   clearTypes() ;
-  RooArgSet* catListClone = _catSet.snapshot(kTRUE) ;
+  RooArgSet* catListClone = (RooArgSet*) _catSet.snapshot(kTRUE) ;
   RooMultiCatIter mcIter(_catSet) ;
 
   while(mcIter.Next()) {

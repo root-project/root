@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.26 2001/08/24 22:11:56 bevan Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.27 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -124,6 +124,7 @@ protected:
 
   friend class RooAbsPdf ;
   friend class RooConvolutedPdf ;
+  friend class RooRealProxy ;
 
   ClassDef(RooAbsReal,1) // Abstract real-valued variable
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.25 2001/09/11 22:21:05 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.26 2001/09/12 01:25:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,6 +38,7 @@
 #include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFitResult.hh"
+#include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooFitContext)
 ;
@@ -72,7 +73,7 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_
   pdf->branchNodeServerList(&tmp) ;
 
   if (clonePdf) {
-    _pdfCompList = tmp.snapshot(kFALSE) ;
+    _pdfCompList = (RooArgSet*) tmp.snapshot(kFALSE) ;
     
     // Find the top level PDF in the snapshot list
     _pdfClone = (RooAbsPdf*) _pdfCompList->find(pdf->GetName()) ;
@@ -86,22 +87,22 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_
   _pdfClone->attachDataSet(*_dataClone) ;
   _pdfClone->resetErrorCounters() ;
 
-  // Cache parameter list
-  RooArgSet* paramList = _pdfClone->getParameters(_dataClone) ;
+  // Cache parameter list  
+  RooArgSet* paramSet = _pdfClone->getParameters(_dataClone) ;
+  RooArgList paramList(*paramSet) ;
+  delete paramSet ;
 
-  _floatParamList = paramList->selectByAttrib("Constant",kFALSE) ; 
+  _floatParamList = (RooArgList*) paramList.selectByAttrib("Constant",kFALSE) ; 
   if (_floatParamList->getSize()>1) {
-    _floatParamList->Sort() ;
+    _floatParamList->sort() ;
   }
   _floatParamList->setName("floatParamList") ;
 
-  _constParamList = paramList->selectByAttrib("Constant",kTRUE) ;
+  _constParamList = (RooArgList*) paramList.selectByAttrib("Constant",kTRUE) ;
   if (_constParamList->getSize()>1) {
-    _constParamList->Sort() ;
+    _constParamList->sort() ;
   }
   _constParamList->setName("constParamList") ;
-
-  delete paramList ;
 
   // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
   TIterator* pIter = _floatParamList->createIterator() ;
@@ -162,21 +163,21 @@ void RooFitContext::printToStream(ostream &os, PrintOption opt, TString indent) 
 Double_t RooFitContext::getPdfParamVal(Int_t index)
 {
   // Access PDF parameter value by ordinal index (needed by MINUIT)
-  return ((RooRealVar*)_floatParamList->At(index))->getVal() ;
+  return ((RooRealVar*)_floatParamList->at(index))->getVal() ;
 }
 
 
 Double_t RooFitContext::getPdfParamErr(Int_t index)
 {
   // Access PDF parameter error by ordinal index (needed by MINUIT)
-  return ((RooRealVar*)_floatParamList->At(index))->getError() ;  
+  return ((RooRealVar*)_floatParamList->at(index))->getError() ;  
 }
 
 
 Bool_t RooFitContext::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 {
   // Modify PDF parameter value by ordinal index (needed by MINUIT)
-  RooRealVar* par = (RooRealVar*)_floatParamList->At(index) ;
+  RooRealVar* par = (RooRealVar*)_floatParamList->at(index) ;
 
   if (par->getVal()!=value) {
     if (verbose) cout << par->GetName() << "=" << value << ", " ;
@@ -192,7 +193,7 @@ Bool_t RooFitContext::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose
 void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
-  ((RooRealVar*)_floatParamList->At(index))->setError(value) ;    
+  ((RooRealVar*)_floatParamList->at(index))->setError(value) ;    
 }
 
 
@@ -501,7 +502,7 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
   // Declare our parameters
   Int_t index(0), nFree(nPar);
   for(index= 0; index < nPar; index++) {
-    RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->At(index)) ;
+    RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->at(index)) ;
 
     Double_t pstep(0) ;
     Double_t pmin= par->getFitMin();

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.25 2001/09/04 01:37:42 david Exp $
+ *    File: $Id: RooFormula.cc,v 1.26 2001/09/11 00:30:32 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -146,7 +146,7 @@ void RooFormula::dump() {
 }
 
 
-Bool_t RooFormula::changeDependents(const RooArgSet& newDeps, Bool_t mustReplaceAll) 
+Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t mustReplaceAll) 
 {
   // Change used variables to those with the same name in given list
 
