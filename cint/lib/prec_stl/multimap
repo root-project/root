@@ -80,9 +80,9 @@ class multimap {
 	{	// iterator for nonmutable _Tree
 	public:
 		typedef bidirectional_iterator_tag iterator_category;
-		typedef _Dift difference_type;
-		typedef _Ctptr pointer;
-		typedef const_reference reference;
+		typedef multimap::difference_type difference_type;
+		typedef multimap::const_pointer pointer;
+		typedef multimap::const_reference reference;
 
 		const_iterator();
 		const_reference operator*() const;
@@ -102,9 +102,9 @@ class multimap {
 	{	// iterator for mutable _Tree
 	public:
 		typedef bidirectional_iterator_tag iterator_category;
-		typedef map::difference_type difference_type;
-		typedef map::pointer pointer;
-		typedef map::reference reference;
+		typedef multimap::difference_type difference_type;
+		typedef multimap::pointer pointer;
+		typedef multimap::reference reference;
 
 		iterator();
 		iterator(_Nodeptr _Pnode);

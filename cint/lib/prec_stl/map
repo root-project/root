@@ -85,9 +85,9 @@ class map {
 	{	// iterator for nonmutable _Tree
 	public:
 		typedef bidirectional_iterator_tag iterator_category;
-		typedef _Dift difference_type;
-		typedef _Ctptr pointer;
-		typedef const_reference reference;
+		typedef map::difference_type difference_type;
+		typedef map::const_pointer pointer;
+		typedef map::const_reference reference;
 
 		const_iterator();
 		const_reference operator*() const;
