@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.12 2003/05/16 13:12:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.13 2004/05/26 06:26:34 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -252,8 +252,8 @@ void TMultiGraph::Paint(Option_t *option)
            for (i=0;i<npoints;i++) {
               if (x[i] < rwxmin) rwxmin = x[i];
               if (x[i] > rwxmax) rwxmax = x[i];
-              if (y[i] < rwymin) rwymin = y[i];
               if (y[i] > rwymax) rwymax = y[i];
+              if (y[i] < rwymin) rwymin = y[i];
            }
            g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
            if (g->GetN() > npt) npt = g->GetN();
@@ -264,8 +264,14 @@ void TMultiGraph::Paint(Option_t *option)
         dy = 0.05*(rwymax-rwymin);
         uxmin    = rwxmin - dx;
         uxmax    = rwxmax + dx;
-        minimum  = rwymin - dy;
-        maximum  = rwymax + dy;
+        if (gPad->GetLogy()) {
+           if (rwymin <= 0) rwymin = 0.001*rwymax;
+           minimum = rwymin/(1+0.5*TMath::Log10(rwymax/rwymin));
+           maximum = rwymax*(1+0.2*TMath::Log10(rwymax/rwymin));
+        } else {
+           minimum  = rwymin - dy;
+           maximum  = rwymax + dy;
+        }
         if (minimum < 0 && rwymin >= 0) minimum = 0;
         if (maximum > 0 && rwymax <= 0) maximum = 0;
      }
