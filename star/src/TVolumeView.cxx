@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.1.1.2 2000/12/18 21:05:33 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.2 2001/03/09 16:59:56 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -635,7 +635,7 @@ TVolumePosition *TVolumeView::Local2Master(const TVolumeView *localNode,const TV
     TVolumeViewIter transform((TVolumeView *)masterNode,0);
     TVolumeView *nextNode = 0;
     while ((nextNode = (TVolumeView *)transform()) && nextNode != localNode);
-    if (nextNode) position = transform[0];
+    if (nextNode) position = transform[Int_t(0)];
   }
   return position;
 }
