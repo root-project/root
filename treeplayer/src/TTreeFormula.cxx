@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.45 2001/05/31 08:56:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.46 2001/05/31 09:48:39 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -305,21 +305,11 @@ public:
 
   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) {
      return ((TLeafElement*)leaf)->GetValueSubArray(fPrimaryIndex,instance);
-     //char * where;
-     //if (leaf->InheritsFrom("TLeafObject") ) {
-     //   where = (char*)((TLeafObject*)leaf)->GetObject();
-     //} else {
-     //   where = GetObjectAddress((TLeafElement*)leaf);
-     //}
-     //return ReadValue(where,instance);  
   }
    
   virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
      // Return a dummy value for now
-     //    fprintf(stderr,"Primary Index is %d Instance is %d\n",fPrimaryIndex,instance);
-    // TClonesArray* clones = (TClonesArray*)where;
-     // return br->GetInfo()->GetValueClones(clones,br->GetID(),fPrimaryIndex,instance,br->fOffset)
-     return (double)(int)where;
+     return 0;
   }
 
   virtual void LoadSizes(TBranchElement* branch) {
@@ -1472,7 +1462,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
 
             // Inform the (appropriate) MultiVarLeafInfo that the clones array index is 
             // local_index.
-            for(Int_t d = kMAXFORMDIM; d>0; d--) {
+            for(Int_t d = kMAXFORMDIM-1; d>0; d--) {
                if (fVarDims[d]) {
                   fCumulUsedSizes[d] = fCumulUsedSizes[d+1] * fVarDims[d]->At(local_index);
                } else {
