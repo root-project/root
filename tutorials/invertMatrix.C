@@ -29,8 +29,6 @@ void invertMatrix(Int_t msize=6)
   TMatrixD H_square = THilbertMatrixD(msize,msize);
 
 //  1. InvertFast(Double_t *det=0)
-//   This method is only available for the matrix class TMatrixD/F, because an
-//   symmetric matrix is not necessarily symmetric after inversion .
 //   It is identical to Invert() for sizes > 6 x 6 but for smaller sizes, the
 //   inversion is performed according to Cramer's rule by explicitly calculating
 //   all Jacobi's sub-determinants . For instance for a 6 x 6 matrix this means:
@@ -65,8 +63,9 @@ void invertMatrix(Int_t msize=6)
   cout << "  Determinant          = " << det1 <<endl;
 
 // 2. Invert(Double_t *det=0)
-//   Also only available for TMatrixD/F . Again the inversion is performed in place .
-//   It consists out of a sequence of calls related to the LU decomposition:
+//   Again the inversion is performed in place .
+//   It consists out of a sequence of calls to the decomposition classes . For instance
+//   for the general dense matrix TMatrixD the LU decomposition is invoked:
 //    - The matrix is decomposed using a scheme according to Crout which involves
 //      "implicit partial pivoting", see for instance Num. Recip. (we have also available
 //      a decomposition scheme that does not the scaling and is therefore even slightly
