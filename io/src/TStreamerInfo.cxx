@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.45 2001/02/24 11:20:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.46 2001/02/26 07:15:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -363,9 +363,14 @@ void TStreamerInfo::BuildOld()
    TStreamerElement *element;
    while ((element = (TStreamerElement*)next())) {
       element->SetNewType(element->GetType());
-      if (fClass->GetListOfBases()->FindObject(element->GetName())) {
+      if (element->IsA() == TStreamerBase::Class()) {
+         TStreamerBase *base = (TStreamerBase*)element;
+         TClass *baseclass = base->GetClassPointer();
+         Int_t version = base->GetBaseVersion();
+         TStreamerInfo *infobase = baseclass->GetStreamerInfo(version);
+         if (infobase->GetNdata() == 0) infobase->BuildOld();
          element->Init();
-         element->SetOffset(fClass->GetBaseClassOffset(gROOT->GetClass(element->GetName())));
+         element->SetOffset(fClass->GetBaseClassOffset(baseclass));
          continue;
       }
       //in principle, we should look rather into TRealData to support the
