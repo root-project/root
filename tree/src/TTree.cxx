@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.43 2001/01/16 16:25:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.44 2001/01/17 08:28:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -239,6 +239,7 @@
 #include "TBranchClones.h"
 #include "TClonesArray.h"
 #include "TClass.h"
+#include "TBaseClass.h"
 #include "TRealData.h"
 #include "TDataMember.h"
 #include "TDataType.h"
@@ -765,6 +766,8 @@ void TTree::BuildStreamerInfo(TClass *cl, void *pointer)
   // Build StreamerInfo for class cl
   // pointer is an optional argument that may contain a pointer to an object of cl
    
+   if (!cl) return;
+   if (cl->Property() & kIsAbstract) return;
    cl->BuildRealData(pointer);
    TStreamerInfo *sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
    //if (!sinfo->GetTypes() || sinfo->IsOptimized()) sinfo->BuildOld();
@@ -776,6 +779,14 @@ void TTree::BuildStreamerInfo(TClass *cl, void *pointer)
          cindex->fArray[number]  = 1;
       }
    }
+   //*-*- Create StreamerInfo for all base classes
+   TBaseClass *base;
+   TIter nextb(cl->GetListOfBases());
+   while((base = (TBaseClass*)nextb())) {
+      TClass *clm = gROOT->GetClass(base->GetName());
+      BuildStreamerInfo(clm);
+   }
+
 }
 
 //______________________________________________________________________________
@@ -2131,7 +2142,7 @@ void TTree::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-TBranch *TTree::Trunk(const char *name, const char *classname, void *addobj, Int_t bufsize, Int_t splitlevel)
+TBranch *TTree::Trunk(const char *name, const char *classname, void *add, Int_t bufsize, Int_t splitlevel)
 {
 //*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchElement*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================
@@ -2172,26 +2183,27 @@ TBranch *TTree::Trunk(const char *name, const char *classname, void *addobj, Int
    }
    TBranch *branch;
    if (splitlevel == 0) {
-      branch = new TBranchObject(name,classname,addobj,bufsize,0);
+      branch = new TBranchObject(name,classname,add,bufsize,0);
       fBranches.Add(branch);
       return branch;
    }
 
-   char **apointer = (char**)(addobj);
-   TObject *obj = (TObject*)(*apointer);
    Bool_t delobj = kFALSE;
-   if (!obj) {
-      obj = (TObject*)cl->New();
+   void **ppointer = (void**)add;
+   void *objadd = *ppointer;
+   if (!objadd && cl) {
+      objadd = cl->New();
+      *ppointer = objadd;
       delobj = kTRUE;
    }
+   
    //build the StreamerInfo if first time for the class
    TStreamerInfo::Optimize(kFALSE);
-   BuildStreamerInfo(cl,obj);
+   BuildStreamerInfo(cl,objadd);
 
    // create a dummy top level trunk branch
    TStreamerInfo *sinfo = cl->GetStreamerInfo();
-   branch = new TBranchElement(name,sinfo,-1,addobj,bufsize,0);
-   branch->SetName(name);
+   branch = new TBranchElement(name,sinfo,-1,bufsize,0);
    fBranches.Add(branch);
    TObjArray *blist = branch->GetListOfBranches();   
    
@@ -2200,12 +2212,13 @@ TBranch *TTree::Trunk(const char *name, const char *classname, void *addobj, Int
    TStreamerElement *element;
    Int_t id = 0;
    while ((element = (TStreamerElement*)next())) {
-      TBranch *branch = new TBranchElement(element->GetName(),sinfo,id,addobj,bufsize,splitlevel-1);
-      blist->Add(branch);
+      blist->Add(new TBranchElement(element->GetName(),sinfo,id,bufsize,splitlevel-1));
       id++;
    }
          
-   if (delobj) delete obj;
+   branch->SetAddress(add);
+   
+   if (delobj) delete objadd;
    return branch;
 }
 
