@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.20 2001/08/21 18:53:39 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.21 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -74,7 +74,7 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
     _pdfCompList = tmp.snapshot(kFALSE) ;
     
     // Find the top level PDF in the snapshot list
-    _pdfClone = (RooAbsPdf*) _pdfCompList->FindObject(pdf->GetName()) ;
+    _pdfClone = (RooAbsPdf*) _pdfCompList->find(pdf->GetName()) ;
 
   } else {
     _pdfCompList = (RooArgSet*) tmp.Clone() ;
@@ -375,7 +375,7 @@ Bool_t RooFitContext::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
   while (client=(RooAbsArg*) cIter->Next()) {
 
     anyClient = kTRUE ;
-    if (!cacheList.FindObject(client)) {
+    if (!cacheList.find(client->GetName())) {
       // If client is not cached recurse
       ret = allClientsCached(client,cacheList) ;
     }

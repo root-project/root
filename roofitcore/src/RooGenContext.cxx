@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.10 2001/08/22 00:50:25 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.11 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.10 2001/08/22 00:50:25 david Exp $";
+"$Id: RooGenContext.cc,v 1.11 2001/08/23 23:43:43 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -47,7 +47,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _cloneSet= nodes.snapshot(kTRUE);
 
   // Find the clone in the snapshot list
-  _pdfClone = (RooAbsPdf*)_cloneSet->FindObject(model.GetName());
+  _pdfClone = (RooAbsPdf*)_cloneSet->find(model.GetName());
+
 
   // Analyze the list of variables to generate...
   _isValid= kTRUE;
@@ -63,7 +64,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       continue;
     }
     // lookup this argument in the cloned set of PDF dependents
-    arg= (const RooAbsArg*)_cloneSet->FindObject(tmp->GetName());
+    arg= (const RooAbsArg*)_cloneSet->find(tmp->GetName());
     if(0 == arg) {
       cout << fName << "::" << ClassName() << ":WARNING: model does not depend on \""
 	   << tmp->GetName() << "\" which will have uniform distribution" << endl;

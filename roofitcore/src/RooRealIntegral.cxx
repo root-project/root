@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.29 2001/08/23 01:21:47 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.30 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -111,7 +111,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       TIterator* lIter = argLeafServers.createIterator() ;
       RooAbsArg* leaf ;
       while(leaf=(RooAbsArg*)lIter->Next()) {
-	if (depList.FindObject(leaf->GetName())) {
+	if (depList.find(leaf->GetName())) {
 	  addServer(*leaf,kFALSE,kTRUE) ;
 	} else {
 	  addServer(*leaf,kTRUE,kFALSE) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.6 2001/08/22 00:50:24 david Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.7 2001/08/23 23:43:42 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.6 2001/08/22 00:50:24 david Exp $";
+"$Id: RooAcceptReject.cc,v 1.7 2001/08/23 23:43:42 david Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -47,7 +47,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   _cloneSet= nodes.snapshot(kTRUE);
 
   // Find the clone in the snapshot list
-  _funcClone = (RooAbsReal*)_cloneSet->FindObject(func.GetName());
+  _funcClone = (RooAbsReal*)_cloneSet->find(func.GetName());
   
   // Check that each argument is fundamental, and separate them into
   // sets of categories and reals. Check that the area of the generating
@@ -64,7 +64,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
       continue;
     }
     // look for this argument in the generating function's dependents
-    found= (const RooAbsArg*)_cloneSet->FindObject(arg->GetName());
+    found= (const RooAbsArg*)_cloneSet->find(arg->GetName());
     if(found) {
       arg= found;
       _sampleDim++;

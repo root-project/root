@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.11 2001/08/23 01:21:47 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.12 2001/08/23 23:43:42 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -235,7 +235,7 @@ Bool_t RooConvolutedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
   // Force 'analytical' integration of whatever is delegated to the convolution integrals
 //   cout << "forceInt(" << dep.GetName() << ") = " 
 //        << (_convNormSet->get()->FindObject(dep.GetName())?"kTRUE":"kFALSE") << endl ;
-  return _convNormSet->FindObject(dep.GetName())?kTRUE:kFALSE ;
+  return _convNormSet->find(dep.GetName())?kTRUE:kFALSE ;
 }                                                                                                                         
                
 

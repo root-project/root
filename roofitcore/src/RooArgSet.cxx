@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.32 2001/08/23 23:43:42 david Exp $
+ *    File: $Id: RooArgSet.cc,v 1.33 2001/08/24 17:28:40 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -460,7 +460,7 @@ RooArgSet* RooArgSet::selectByAttrib(const char* name, Bool_t value) const
 
 RooAbsArg *RooArgSet::find(const char *name) const {
   // Find object with given name in list
-  return (RooAbsArg*)FindObject(name);
+  return (RooAbsArg*)_list.FindObject(name);
 }
 
 
