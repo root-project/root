@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.169 2003/04/18 16:42:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.170 2003/04/30 16:22:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2089,6 +2089,7 @@ SWIT: switch (kase) {
          case kOffsetL + kTString:
          case kOffsetL + kTObject:
          case kOffsetL + kTNamed:
+         case kOffsetL + kStreamer:
          case kStreamer: {
                          Streamer_t pstreamer = aElement->GetStreamer();
                          UInt_t start,count;
@@ -3788,6 +3789,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetL + kTString:
          case kOffsetL + kTObject:
          case kOffsetL + kTNamed:
+         case kOffsetL + kStreamer:
          case kStreamer: {Streamer_t pstreamer = aElement->GetStreamer();
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
                          if (pstreamer == 0) {
