@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.55 2001/11/05 15:06:23 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.56 2001/11/28 16:05:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4037,27 +4037,29 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       out<<"   "<<GetName()<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<endl;
    }
 
-   if (fFrame) {
-      if (fFrame->GetFillColor() != 19) {
-         out<<"   "<<GetName()<<"->SetFrameFillColor("<<fFrame->GetFillColor()<<");"<<endl;
+   TFrame *frame = fFrame;
+   if (!frame) frame = (TFrame*)GetPrimitive("TFrame");
+   if (frame) {
+      if (frame->GetFillColor() != GetFillColor()) {
+         out<<"   "<<GetName()<<"->SetFrameFillColor("<<frame->GetFillColor()<<");"<<endl;
       }
-      if (fFrame->GetFillStyle() != 1001) {
-         out<<"   "<<GetName()<<"->SetFrameFillStyle("<<fFrame->GetFillStyle()<<");"<<endl;
+      if (frame->GetFillStyle() != 1001) {
+         out<<"   "<<GetName()<<"->SetFrameFillStyle("<<frame->GetFillStyle()<<");"<<endl;
       }
-      if (fFrame->GetLineStyle() != 1) {
-         out<<"   "<<GetName()<<"->SetFrameLineStyle("<<fFrame->GetLineStyle()<<");"<<endl;
+      if (frame->GetLineStyle() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineStyle("<<frame->GetLineStyle()<<");"<<endl;
       }
-      if (fFrame->GetLineColor() != 1) {
-         out<<"   "<<GetName()<<"->SetFrameLineColor("<<fFrame->GetLineColor()<<");"<<endl;
+      if (frame->GetLineColor() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineColor("<<frame->GetLineColor()<<");"<<endl;
       }
-      if (fFrame->GetLineWidth() != 1) {
-         out<<"   "<<GetName()<<"->SetFrameLineWidth("<<fFrame->GetLineWidth()<<");"<<endl;
+      if (frame->GetLineWidth() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineWidth("<<frame->GetLineWidth()<<");"<<endl;
       }
-      if (fFrame->GetBorderMode() != 1) {
-         out<<"   "<<GetName()<<"->SetFrameBorderMode("<<fFrame->GetBorderMode()<<");"<<endl;
+      if (frame->GetBorderMode() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameBorderMode("<<frame->GetBorderMode()<<");"<<endl;
       }
-      if (fFrame->GetBorderSize() != 1) {
-         out<<"   "<<GetName()<<"->SetFrameBorderSize("<<fFrame->GetBorderSize()<<");"<<endl;
+      if (frame->GetBorderSize() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameBorderSize("<<frame->GetBorderSize()<<");"<<endl;
       }
    }
 
