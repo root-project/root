@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.198 2004/07/08 08:08:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.199 2004/07/09 10:41:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1411,15 +1411,39 @@ void TTree::Browse(TBrowser *b)
 Int_t TTree::BuildIndex(const char *majorname, const char *minorname)
 {
    // Build a Tree Index (default is TtreeIndex).
-   // see a description of teh parameters and functionality in
+   // see a description of the parameters and functionality in
    //  TTreeIndex::TTreeIndex
    //
    // The return value is the number of entries in the Index (< 0 indicates failure)
-
+   //
+   // A TTreeIndex object pointed by fTreeIndex is created.
+   // This object will be automatically deleted by the TTree destructor
+   // See also comments in TTree::SetTreeIndex
+   
    fTreeIndex = GetPlayer()->BuildIndex(this,majorname,minorname);
+   if (fTreeIndex->IsZombie()) {
+      delete fTreeIndex;
+      fTreeIndex = 0;
+      return 0;
+   }
    return fTreeIndex->GetN();
 }
 
+//______________________________________________________________________________
+void TTree::SetTreeIndex(TVirtualIndex*index)
+{
+  // The current TreeIndex is replaced by the new index.
+  // Note that this function does not delete the previous index.
+  // This gives the possibility to play with more than one index, eg
+  // TVirtualIndex *oldIndex = tree.GetTreeIndex();
+  // tree.SetTreeIndex(newIndex);
+  // tree.Draw(...);
+  // tree.SetTreeIndex(oldIndex);
+  // tree.Draw(); etc
+   
+   fTreeIndex = index;
+}
+   
 //______________________________________________________________________________
 TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
 {

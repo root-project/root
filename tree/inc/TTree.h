@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.65 2004/06/25 18:42:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.66 2004/07/08 08:08:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -294,7 +294,7 @@ public:
     virtual void         SetObject(const char *name, const char *title);
     virtual void         SetScanField(Int_t n=50) {fScanField = n;} // *MENU*
     virtual void         SetTimerInterval(Int_t msec=333) {fTimerInterval=msec;}
-    virtual void         SetTreeIndex(TVirtualIndex*index) {fTreeIndex = index;}
+    virtual void         SetTreeIndex(TVirtualIndex*index);
     virtual void         SetWeight(Double_t w=1, Option_t *option="");
     virtual void         SetUpdate(Int_t freq=0) {fUpdate = freq;}
     virtual void         Show(Int_t entry=-1, Int_t lenmax=20);
