@@ -144,7 +144,7 @@ alphakcc)
    ;;
 alphacxx6)
    # Alpha/OSF with cxx6
-   auxcflags="-nostdnew -D__osf__ -D__alpha"
+   auxcflags="-tlocal -nostdnew -D__osf__ -D__alpha"
    auxlibs="-lm"
    auxglibs=${auxlibs}
    ;;

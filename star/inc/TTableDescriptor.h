@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.6 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.7 2002/05/03 14:30:43 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -59,8 +59,9 @@ class TTableDescriptor : public TTable {
     static   TTableDescriptor *MakeDescriptor(const char *structName);
 
 //    ClassDefTable(TTableDescriptor,tableDescriptor_st)
+     static const char* TableDictionary();
   protected:                                        
-     static  TTableDescriptor *fgColDescriptors;     
+     static  TTableDescriptor *fgColDescriptors;
      virtual TTableDescriptor *GetDescriptorPointer() const     { return fgColDescriptors;}                 
      virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}                  
   public:                                           

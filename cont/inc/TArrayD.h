@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.5 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.6 2002/05/03 14:30:42 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -52,6 +52,18 @@ public:
 
    ClassDef(TArrayD,1)  //Array of doubles
 };
+
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf, TArrayD *&obj)
+{
+   // Read TArrayD object from buffer.
+
+   obj = (TArrayD *) TArray::ReadArray(buf, TArrayD::Class());
+   return buf;
+}
 
 inline Double_t TArrayD::At(Int_t i) const
 {

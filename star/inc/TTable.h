@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.15 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.16 2002/05/03 14:30:43 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -169,6 +169,7 @@ public:
    static const char *GetTypeName(EColumnType type);
    static EColumnType GetTypeId(const char *typeName);
 
+   static const char *TableDictionary() { return 0; };
    ClassDef(TTable,4)  // Vector of the C structures
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.5 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.6 2002/05/03 14:30:42 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -52,6 +52,19 @@ public:
 
    ClassDef(TArrayL,1)  //Array of longs
 };
+
+
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf, TArrayL *&obj)
+{
+   // Read TArrayL object from buffer.
+
+   obj = (TArrayL *) TArray::ReadArray(buf, TArrayL::Class());
+   return buf;
+}
 
 inline Long_t TArrayL::At(Int_t i) const
 {

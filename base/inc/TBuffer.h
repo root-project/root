@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.13 2002/03/18 18:28:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.14 2002/05/03 14:30:41 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
+   void     MapObject(const void *obj, UInt_t offset = 1);
    virtual void Reset() { SetBufferOffset(); ResetMap(); }
    void     InitMap();
    void     ResetMap();
@@ -113,6 +114,9 @@ public:
 
    virtual TObject *ReadObject(const TClass *cl);
    virtual void     WriteObject(const TObject *obj);
+
+   //To be implemented void *ReadObjectXXXX(const TClass *cl);
+   void     WriteObject(const void *obj, TClass *actualClass);
 
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }
@@ -216,6 +220,34 @@ public:
 
    ClassDef(TBuffer,0)  //Buffer base class used for serializing objects
 };
+
+//---------------------- TBuffer default external operators --------------------
+
+#if !defined(R__CONCRETE_INPUT_OPERATOR)
+#ifndef __CINT__
+template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
+{
+   // Read TObject derived classes from a TBuffer. Need to provide
+   // custom version for non-TObject derived classes. 
+
+   // This operator has to be a templated and/or automatically 
+   // generated if we want to be able to check the type of the 
+   // incoming object. I.e. a operator>>(TBuffer &buf, TObject *&)
+   // would not be sufficient to pass the information 'which class do we want'
+   // since the pointer could be zero (so typeid(*obj) is not usable).
+
+   // This implementation only works for classes inheriting from
+   // TObject.  This enables a clearer error message from the compiler.
+   const TObject *verify = obj; if (verify) { }
+
+   obj = (Tmpl *) buf.ReadObject(Tmpl::Class());
+   return buf;
+}
+#else
+template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
+#endif
+#endif
+
 
 //---------------------- TBuffer inlines ---------------------------------------
 

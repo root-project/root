@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.cxx,v 1.5 2002/01/09 15:18:05 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL.cxx,v 1.6 2002/05/03 14:30:42 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -156,11 +156,3 @@ void TArrayL::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TArrayL *&obj)
-{
-   // Read TArrayL object from buffer. Declared in ClassDef.
-
-   obj = (TArrayL *) TArray::ReadArray(buf, TArrayL::Class());
-   return buf;
-}

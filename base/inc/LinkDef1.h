@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.12 2002/04/29 15:01:32 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.13 2002/05/03 14:30:41 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -94,6 +94,8 @@
 #pragma link C++ function operator>(const TDatime&,const TDatime&);
 #pragma link C++ function operator>=(const TDatime&,const TDatime&);
 
+#pragma link C++ namespace ROOT;
+
 #pragma link C++ class TApplication;
 #pragma link C++ class TApplicationImp;
 #pragma link C++ class TAttFill+;
@@ -119,13 +121,14 @@
 #pragma link C++ class TFile-;
 #pragma link C++ class TFileHandler+;
 #pragma link C++ class TGuiFactory;
-#pragma link C++ class TPadView3D+;
 #pragma link C++ class TStyle+;
 #pragma link C++ class TView-;
 #pragma link C++ class TVirtualX+;
 #pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TVirtualPad-;
-#pragma link C++ class TVirtualGL+;
-#pragma link C++ class TVirtualPS+;
+// Those are NOT going to be saved ... so no need for a +
+#pragma link C++ class TPadView3D;
+#pragma link C++ class TVirtualGL;
+#pragma link C++ class TVirtualPS;
 
 #endif

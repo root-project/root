@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.26 2002/03/14 18:12:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.27 2002/05/03 14:30:41 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -51,6 +51,15 @@ Int_t TBuffer::fgMapSize   = kMapSize;
 
 
 ClassImp(TBuffer)
+
+//______________________________________________________________________________
+static inline ULong_t Void_Hash(const void *ptr)
+{
+   // Return hash value for this object.
+
+   return TMath::Hash(&ptr, sizeof(void*));
+}
+
 
 //______________________________________________________________________________
 TBuffer::TBuffer(EMode mode)
@@ -345,6 +354,30 @@ void TBuffer::MapObject(const TObject *obj, UInt_t offset)
       if (obj) {
          CheckCount(offset);
          fMap->Add(((TObject*)obj)->TObject::Hash(), (Long_t)obj, offset);
+         fMapCount++;
+      }
+   } else {
+      fMap->Add(offset, (Long_t)obj);
+      fMapCount++;
+   }
+}
+
+//______________________________________________________________________________
+void TBuffer::MapObject(const void *obj, UInt_t offset)
+{
+   // Add object to the fMap container.
+   // If obj is not 0 add object to the map (in read mode also add 0 objects to
+   // the map). This method may only be called outside this class just before
+   // calling obj->Streamer() to prevent self reference of obj, in case obj
+   // contains (via via) a pointer to itself. In that case offset must be 1
+   // (default value for offset).
+
+   if (!fMap) InitMap();
+
+   if (IsWriting()) {
+      if (obj) {
+         CheckCount(offset);
+         fMap->Add(Void_Hash(obj), (Long_t)obj, offset);
          fMapCount++;
       }
    } else {
@@ -1458,7 +1491,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
       if (fVersion > 0)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
-         MapObject(0, fMapCount);
+         MapObject((void*)0, fMapCount);
       CheckByteCount(startpos, tag, 0);
       return 0;
    }
@@ -1500,7 +1533,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          MapObject(obj, fMapCount);
 
       // let the object read itself
-      if (clRef->GetClassInfo()) {
+      if (clRef->GetClassInfo() && clRef->InheritsFrom(TObject::Class())) {
          obj->Streamer(*this);
       } else {
          //fake class has no Streamer
@@ -1556,6 +1589,55 @@ void TBuffer::WriteObject(const TObject *obj)
 
       // let the object write itself (cast const away)
       ((TObject *)obj)->Streamer(*this);
+
+      // write byte count
+      SetByteCount(cntpos);
+   }
+}
+
+//______________________________________________________________________________
+void TBuffer::WriteObject(const void *obj, TClass *actualClass)
+{
+   // Write object to I/O buffer.
+
+   Assert(IsWriting());
+
+   // make sure fMap is initialized
+   InitMap();
+
+   ULong_t idx;
+
+   if (!obj) {
+
+      // save kNullTag to represent NULL pointer
+      *this << kNullTag;
+
+   } else if ((idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj)) != 0) {
+
+      // truncation is OK the value we did put in the map is an 30-bit offset
+      // and not a pointer
+      UInt_t objIdx = UInt_t(idx);
+
+      // save index of already stored object
+      *this << objIdx;
+
+   } else {
+
+      // reserve space for leading byte count
+      UInt_t cntpos = UInt_t(fBufCur-fBuffer);
+      fBufCur += sizeof(UInt_t);
+
+      // write class of object first
+      WriteClass(actualClass);
+
+      // add to map before writing rest of object (to handle self reference)
+      // (+kMapOffset so it's != kNullTag)
+      MapObject(obj, cntpos+kMapOffset);
+
+      // let the object write itself (cast const away)
+      //      ((TObject *)obj)->Streamer(*this);
+      //Could try to see if we have a streamer stored in the class
+      actualClass->WriteBuffer(*this, (void*)obj);
 
       // write byte count
       SetByteCount(cntpos);

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.36 2002/05/03 14:30:41 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.37 2002/05/03 18:13:32 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -27,7 +27,7 @@
 /*---- new C++ features ------------------------------------------------------*/
 
 #define R__RTTI
-
+#define R__USE_SHADOW_CLASS
 
 /*---- machines --------------------------------------------------------------*/
 
@@ -78,6 +78,12 @@
 #      if __DECCXX_VER >= 60060002
 #         define R__VECNEWDELETE /* supports overloading of new[] and delete[] */
 #         define R__PLACEMENTDELETE /* supports overloading placement delete */
+#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#      endif
+#      if defined __GNUG__
+#         define R__NAMESPACE_TEMPLATE_IMP_BUG
+#      else
+#         define R__TEMPLATE_OVERLOAD_BUG
 #      endif
 #   else
 #      define R__VMS
@@ -267,6 +273,7 @@
 #ifdef __HP_aCC
 #   define R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
+#   define R__TEMPLATE_OVERLOAD_BUG
 #   if __HP_aCC >= 53000
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
@@ -282,6 +289,7 @@
 #      define WIN32
 #   endif
 #   define R__BYTESWAP
+#   define R__ACCESS_IN_SYMBOL
 #endif
 
 

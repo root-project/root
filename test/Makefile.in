@@ -142,8 +142,8 @@ endif
 
 ifeq ($(ARCH),solariskcc)
 # Solaris kcc
-CXX           = KCC
-CXXFLAGS      = -O4 -KPIC
+CXX           = KCC --one_instantiation_per_object
+CXXFLAGS      = -O4 -KPIC 
 LD            = KCC
 LDFLAGS       = -O4
 SOFLAGS       =
@@ -223,9 +223,9 @@ endif
 
 ifeq ($(ARCH),alphakcc)
 # Alpha/OSF with kai compiler (not yet valid)
-CXX           = g++
+CXX           = KCC --one_instantiation_per_object
 CXXFLAGS      = -O -fPIC
-LD            = g++
+LD            = KCC 
 LDFLAGS       = -O
 SOFLAGS       = -Wl,-expect_unresolved,* -shared
 endif
@@ -233,7 +233,7 @@ endif
 ifeq ($(ARCH),alphacxx6)
 # Alpha/OSF with cxx6
 CXX           = cxx
-CXXFLAGS      = -O0
+CXXFLAGS      = -O
 LD            = cxx
 LDFLAGS       = -O
 SOFLAGS       = -Wl,-expect_unresolved,* -shared
@@ -304,10 +304,10 @@ endif
 
 ifeq ($(ARCH),linuxkcc)
 # Linux with the KAI compiler
-CXX           = KCC
+CXX           = KCC --one_instantiation_per_object
 CXXFLAGS      = -fPIC +K0
 LD            = KCC
-LDFLAGS       = -O
+LDFLAGS       = -O $(shell root-config --cflags)
 SOFLAGS       =
 endif
 

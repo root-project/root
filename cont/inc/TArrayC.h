@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.5 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.6 2002/05/03 14:30:42 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -52,6 +52,18 @@ public:
 
    ClassDef(TArrayC,1)  //Array of chars
 };
+
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf, TArrayC *&obj)
+{
+   // Read TArrayC object from buffer.
+
+   obj = (TArrayC *) TArray::ReadArray(buf, TArrayC::Class());
+   return buf;
+}
 
 inline Char_t TArrayC::At(Int_t i) const
 {

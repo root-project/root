@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.2 2002/05/03 14:30:42 brun Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -57,6 +57,16 @@ public:
    ClassDef(TArray,1)  //Abstract array base class
 };
 
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf, TArray *&obj)
+{
+   // Read TArray object from buffer.
+
+   obj = (TArray *) TArray::ReadArray(buf, TArray::Class());
+   return buf;
+}
 
 inline Bool_t TArray::BoundsOk(const char *where, Int_t at) const
 {

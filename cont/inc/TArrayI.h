@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.5 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.6 2002/05/03 14:30:42 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -52,6 +52,18 @@ public:
 
    ClassDef(TArrayI,1)  //Array of ints
 };
+
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf, TArrayI *&obj)
+{
+   // Read TArrayI object from buffer.
+
+   obj = (TArrayI *) TArray::ReadArray(buf, TArrayI::Class());
+   return buf;
+}
 
 inline Int_t TArrayI::At(Int_t i) const
 {

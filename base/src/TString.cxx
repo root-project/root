@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.14 2002/01/15 00:53:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.15 2002/01/31 14:10:05 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -913,6 +913,9 @@ TBuffer &operator<<(TBuffer &buf, const TString &s)
 }
 
 //_______________________________________________________________________
+#if defined(R__TEMPLATE_OVERLOAD_BUG)
+template <>
+#endif
 TBuffer &operator>>(TBuffer &buf, TString *&s)
 {
    // Read string from TBuffer. Function declared in ClassDef.

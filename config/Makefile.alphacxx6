@@ -15,16 +15,16 @@ endif
 # Compiler:
 CXX           = cxx
 CC            = cc
-CXXFLAGS      = -nostdnew -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -tlocal -nostdnew -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
 CFLAGS        = -D__osf__ -D__alpha $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -nostdnew $(EXTRA_CXXFLAGS) \
+CINTCXXFLAGS  = -tlocal -nostdnew $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 CINTCFLAGS    = -DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__64BIT \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 
 # Linker:
-LD            = cxx
+LD            = cxx 
 F77LD         = f77
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,-expect_unresolved,*,-soname,
