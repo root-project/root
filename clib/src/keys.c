@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: keys.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: */
 
 /* Access for application keys in mmap'd malloc managed region.
@@ -56,7 +56,10 @@ mmalloc_setkey (md, keynum, key)
 #ifndef WIN32
 #ifndef VMS
 #ifndef R__LYNXOS
+#ifndef R__HURD
+      /* We should really test for _POSIX_SYNCRONIZED_IO here */
       msync((void *)mdp, sizeof(struct mdesc), MS_ASYNC);
+#endif
 #endif
 #endif
 #endif

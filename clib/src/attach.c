@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: attach.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: */
 
 /* Initialization for access to a mmap'd malloc managed region.
@@ -185,7 +185,10 @@ mmalloc_attach (fd, baseaddr, minsize)
 #ifndef WIN32
 #  ifndef VMS
 #  ifndef R__LYNXOS
+#  ifndef R__HURD
+      /* We should really test for _POSIX_SYNCRONIZED_IO here */
       msync(mbase, sizeof(mtemp), MS_ASYNC);
+#  endif
 #  endif
 #  endif
 #endif
@@ -290,7 +293,10 @@ reuse (cfd)
 #ifndef WIN32
 #  ifndef VMS
 #  ifndef R__LYNXOS
+#  ifndef R__HURD
+            /* We should really test for _POSIX_SYNCRONIZED_IO here */
             msync((void *)mdp, sizeof(*mtemp), MS_ASYNC);
+#  endif
 #  endif
 #  endif
 #endif
