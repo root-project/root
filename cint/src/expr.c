@@ -58,6 +58,7 @@ char *str;
           ,labs(result->obj.i)
 #else
 	  ,abs(result->obj.i)
+#endif
 #else
 	  ,result->obj.i
 #endif
