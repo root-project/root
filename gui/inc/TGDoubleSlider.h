@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.7 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.8 2004/08/19 11:11:42 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -57,9 +57,9 @@
 #endif
 
 
-//--- sizes for vert. and horz. sliders
 
 enum EDoubleSliderSize {
+   //--- sizes for vert. and horz. sliders
    kDoubleSliderWidth  = 24,
    kDoubleSliderHeight = kDoubleSliderWidth
 };
@@ -113,29 +113,28 @@ public:
    virtual void  SetScale(Int_t scale) { fScale = scale; }
    virtual void  SetRange(Float_t min, Float_t max) { fVmin = min; fVmax = max; }
 
+   virtual void SetPosition(Float_t min, Float_t max) {
+      if (fReversedScale) { fSmin = fVmin+fVmax-max; fSmax = fVmin+fVmax-min; }
+      else { fSmin = min; fSmax = max; }
+      fClient->NeedRedraw(this);
+   }
 
-    virtual void SetPosition(Float_t min, Float_t max) {
-        if (fReversedScale) { fSmin = fVmin+fVmax-max; fSmax = fVmin+fVmax-min; }
-        else { fSmin = min; fSmax = max; }
-        fClient->NeedRedraw(this);
-    }
-
-    virtual Float_t GetMinPosition() const {
-        if (fReversedScale) return fVmin+fVmax-fSmax;
-        else return fSmin;
-    }
-    virtual Float_t GetMaxPosition() const {
-        if (fReversedScale) return fVmin+fVmax-fSmin;
-        else return fSmax;
-    }
-    virtual void GetPosition(Float_t &min, Float_t &max) const {
-        if (fReversedScale) { min = fVmin+fVmax-fSmax; max = fVmin+fVmax-fSmin; }
-        else { min = fSmin; max = fSmax; }
-    }
-    virtual void GetPosition(Float_t *min, Float_t *max) const {
-        if (fReversedScale) { *min = fVmin+fVmax-fSmax; *max = fVmin+fVmax-fSmin; }
-        else { *min = fSmin; *max = fSmax; }
-    }
+   virtual Float_t GetMinPosition() const {
+      if (fReversedScale) return fVmin+fVmax-fSmax;
+      else return fSmin;
+   }
+   virtual Float_t GetMaxPosition() const {
+      if (fReversedScale) return fVmin+fVmax-fSmin;
+      else return fSmax;
+   }
+   virtual void GetPosition(Float_t &min, Float_t &max) const {
+      if (fReversedScale) { min = fVmin+fVmax-fSmax; max = fVmin+fVmax-fSmin; }
+      else { min = fSmin; max = fSmax; }
+   }
+   virtual void GetPosition(Float_t *min, Float_t *max) const {
+      if (fReversedScale) { *min = fVmin+fVmax-fSmax; *max = fVmin+fVmax-fSmin; }
+      else { *min = fSmin; *max = fSmax; }
+   }
 
    virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
 
@@ -167,7 +166,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(kDoubleSliderWidth, fHeight); }
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGDoubleVSlider,0)  // Vertical double slider widget
 };
@@ -193,7 +192,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, kDoubleSliderHeight); }
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGDoubleHSlider,0)  // Horizontal double slider widget
 };
