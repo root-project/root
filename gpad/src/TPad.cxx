@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.128 2004/04/30 13:28:39 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.129 2004/05/06 09:45:03 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3545,6 +3545,7 @@ void TPad::Print(const char *filename) const
 //   if filename contains .gif, a GIF file is produced
 //   if filename contains .C or .cxx, a C++ macro file is produced
 //   if filename contains .root, a Root file is produced
+//   if filename contains .xml,  a XML file is produced
 //
 //  See comments in TPad::SaveAs or the TPad::Print function below
 //
@@ -3570,6 +3571,8 @@ void TPad::Print(const char *filenam, Option_t *option)
 //               "svg" - a SVG file is produced
 //               "gif" - a GIF file is produced
 //               "cxx" - a C++ macro file is produced
+//               "xml" - a XML file
+//              "root" - a ROOT binary file
 //
 //     filename = 0 - filename  is defined by the GetName and its
 //                    extension is defined with the option
@@ -3686,6 +3689,23 @@ void TPad::Print(const char *filenam, Option_t *option)
       delete fsave;
       if (dirsav) dirsav->cd();
       if (!gSystem->AccessPathName(psname)) Info("Print", "ROOT file %s has been created", psname);
+      return;
+   }
+
+//==============Save pad/canvas as a XML file====================================
+   if (strstr(opt,"xml")) {
+      // Plugin Postscript/SVG driver
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", "xml:"))) {
+         if (h->LoadPlugin() == -1)
+            return;
+         TDirectory *dirsav = gDirectory;
+         h->ExecPlugin(2,filenam,"recreate");
+         Write();
+         delete gFile;
+         if (dirsav) dirsav->cd();
+         if (!gSystem->AccessPathName(psname)) Info("Print", "XML file %s has been created", psname);
+      }
       return;
    }
 
@@ -4139,6 +4159,7 @@ void TPad::SaveAs(const char *filename)
 //   if filename contains .gif, a GIF file is produced
 //   if filename contains .C or .cxx, a C++ macro file is produced
 //   if filename contains .root, a Root file is produced
+//   if filename contains .xml, a XML file is produced
 //
 //   See comments in TPad::Print for the Postscript formats
 
@@ -4157,6 +4178,8 @@ void TPad::SaveAs(const char *filename)
                Print(psname,"cxx");
    else if (strstr(psname,".root"))
                Print(psname,"root");
+   else if (strstr(psname,".xml"))
+               Print(psname,"xml");
    else if (strstr(psname,".eps"))
                Print(psname,"eps");
    else if (strstr(psname,".pdf"))
