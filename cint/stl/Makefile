@@ -3,7 +3,7 @@ all: tests
 test: tests
 
 
-SUBDIRS = string default dicts  map  vector 
+SUBDIRS = string default dicts  map  vector list
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)
