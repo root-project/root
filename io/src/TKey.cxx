@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.20 2002/04/04 08:58:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.21 2002/04/04 10:03:20 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -430,15 +430,18 @@ TObject *TKey::ReadObj()
 //  Example2: Special case:
 //      class MyClass : public AnotherClass, public TObject
 //   then on return, one must do:
-//    MyClass *obj = (MyClass*)((void*)key->ReadObj());
+//    MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj();
+//
+//  Of course, dynamic_cast<> can also be used in the example 1.
 //
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-   fBufferRef->SetParent(gFile);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
    }
+   if (!gFile) return 0;
+   fBufferRef->SetParent(gFile);
    if (fObjlen > fNbytes-fKeylen) {
       fBuffer = new char[fNbytes];
       ReadFile();                    //Read object structure from file
