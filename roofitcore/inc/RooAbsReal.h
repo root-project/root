@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.59 2003/11/12 23:20:42 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.60 2003/11/23 20:53:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -134,6 +134,8 @@ public:
   const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
 
+  static void setCacheCheck(Bool_t flag) { _cacheCheck = flag ; }
+
 protected:
 
   // PlotOn with command list
@@ -199,6 +201,8 @@ protected:
 
   RooIntegratorConfig* _specIntegratorConfig ; //!
   static RooIntegratorConfig* _defaultIntegratorConfig ;
+
+  static Bool_t _cacheCheck ;
 
 private:
 
