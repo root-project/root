@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.12 2002/11/11 16:23:16 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.13 2003/01/20 08:44:46 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -121,8 +121,8 @@ protected:
    Bool_t             fHasGrab;       // true if menu has grabbed pointer
    Bool_t             fPoppedUp;      // true if menu is currently popped up
    UInt_t             fXl;            // Max width of all menu entries
-   UInt_t             fWidth;         // width of popup menu
-   UInt_t             fHeight;        // height of popup menu
+   UInt_t             fMenuWidth;     // width of popup menu
+   UInt_t             fMenuHeight;    // height of popup menu
    TTimer            *fDelay;         // delay before poping up cascading menu
    GContext_t         fNormGC;        // normal drawing graphics context
    GContext_t         fSelGC;         // graphics context for drawing selections
