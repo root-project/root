@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.2 2000/10/20 12:15:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.3 2000/10/22 19:21:29 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
                   void *receiver,
                   const char *slot);
 
-   Bool_t Disconnect(const char* signal = 0,
+   Bool_t Disconnect(const char *signal = 0,
                      void *receiver = 0,
                      const char *slot = 0);
 
