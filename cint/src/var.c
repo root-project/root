@@ -97,8 +97,7 @@ case 'v': /* *var = expr ;  assign to contents of pointer */                 \
   case G__PARANORMAL:                                                        \
     if(INT_MAX!=var->varlabel[ig15][1]) {   /* below line 1068 */            \
   result.ref=(*(long*)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));   \
-  *(CASTTYPE *)(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)) \
-	= (CASTTYPE)CONVFUNC(result);                                        \
+  *(CASTTYPE *)result.ref = (CASTTYPE)CONVFUNC(result);                      \
       result.type=tolower(var->type[ig15]); /*1669*/ \
       X = *(CASTTYPE*)result.ref; /*1669*/ \
     }                                                                        \
@@ -112,9 +111,8 @@ case 'v': /* *var = expr ;  assign to contents of pointer */                 \
   case G__PARAP2P:                                                           \
     if(var->paran[ig15]<paran) {                                             \
       address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;            \
-      result.ref=(*(((long*)(*(long *)address))+pp_inc));  /*1068*/          \
-      *(CASTTYPE*)(*(((long*)(*(long *)address))+pp_inc))                    \
-		= (CASTTYPE)CONVFUNC(result);                                \
+      result.ref= (*(((long*)(*(long *)address))+pp_inc));  /*1068*/         \
+      *(CASTTYPE*)result.ref = (CASTTYPE)CONVFUNC(result);                   \
       result.type=tolower(var->type[ig15]); /*1669*/ \
       X = *(CASTTYPE*)result.ref; /*1669*/ \
     }                                                                        \
@@ -131,16 +129,14 @@ case 'p': /* var = expr; assign to pointer variable  */                      \
     if(var->paran[ig15]<paran) {                                             \
       address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;            \
       if(G__PARANORMAL==var->reftype[ig15]) {                                \
-        result.ref=(((long)(*(long *)address))+pp_inc); /*1068*/             \
-        *(((CASTTYPE *)(*(long *)address))+pp_inc)                           \
-		= (CASTTYPE)CONVFUNC(result);                                \
+        result.ref= (long) (((CASTTYPE *)(*(long *)address))+pp_inc);        \
+        *(CASTTYPE*)result.ref = (CASTTYPE)CONVFUNC(result);                 \
         result.type=tolower(var->type[ig15]); /*1669*/ \
         X = *(CASTTYPE*)result.ref; /*1669*/ \
       }                                                                      \
       else if(var->paran[ig15]==paran-1) {                                   \
         result.ref=(long)(((long*)(*(long *)address))+pp_inc);/*1068*/       \
-        *(((long*)(*(long *)address))+pp_inc)                                \
-		= G__int(result);                                            \
+        *(long*)result.ref = G__int(result);                                 \
       }                                                                      \
       else {                                                                 \
         /* ron eastman change begins */                                      \
@@ -435,7 +431,7 @@ case 'v': /* *var; get value */                                               \
   case G__PARAP2P:                                                            \
     if(var->paran[ig15]<paran) {                                              \
       address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;             \
-      result.ref=(*(((long*)(*(long *)address))+pp_inc));                     \
+      result.ref=(*(((CASTTYPE*)(*(long *)address))+pp_inc));                 \
       if(result.ref)                                                          \
         CONVFUNC(&result,TYPE,(CONVTYPE)(*(CASTTYPE *)(result.ref)));         \
     }                                                                         \
