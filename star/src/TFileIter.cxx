@@ -1,4 +1,4 @@
-// $Id: TFileIter.cxx,v 1.2 2001/03/02 21:44:40 fine Exp $
+// $Id: TFileIter.cxx,v 1.6 2001/04/03 23:20:20 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov). All right reserved",
 //
@@ -11,16 +11,7 @@
 //                                                                       //
 // and stored as the TKey name of the object written                     //
 //                                                                       //
-///////////////////////////////////////////////////////////////////////////
-
-
-#include "TFile.h"
-#include "TKey.h"
-
-#include "TFileIter.h"
-#include "TDsKey.h"
-
-///////////////////////////////////////////////////////////////////////////
+//        ///////        //////////      ////////        ///////     //////
 // 
 // void TestFileIter(){
 // // This macros tests the various methods of TFileIter class.
@@ -109,6 +100,13 @@
 //-----------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////
 
+
+#include "TFile.h"
+#include "TKey.h"
+
+#include "TFileIter.h"
+#include "TDsKey.h"
+
 ClassImp(TFileIter)
 
 //__________________________________________________________________________
@@ -118,14 +116,17 @@ TFileIter::TFileIter(TFile *file) : fRootFile(file),
 { Initialize(); }
 //__________________________________________________________________________
 TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
-                   , Int_t compress, Int_t /*netopt*/)
+                   , Int_t compress, Int_t /*netopt*/) : fRootFile (0)
 { 
   // Open ROOT TFile by the name provided;
-  // This TFile is to be deleted by the TFileIter along
-  fOwnTFile = kTRUE;
-  fRootFile = TFile::Open(name,option,ftitle,compress);
-  Initialize();
+  // This TFile is to be deleted by the TFileIter alone
+  if (name && name[0]) {
+    fOwnTFile = kTRUE;
+    fRootFile = TFile::Open(name,option,ftitle,compress);
+    Initialize();
+  }
 }
+
 //__________________________________________________________________________
 TFileIter::~TFileIter() 
 { 
@@ -142,7 +143,10 @@ void TFileIter::Initialize()
 { 
   fDirection =  kIterForward;
   if (fRootFile &&  fRootFile->IsOpen() ) Reset();
-  else                                    fRootFile = 0;
+  else  {
+    if (fRootFile) delete fRootFile;
+    fRootFile = 0;
+  }      
 }
 //__________________________________________________________________________
 TKey *TFileIter::GetCurrentKey() const 
@@ -168,9 +172,9 @@ TObject *TFileIter::GetObject() const
   //
   // ATTENTION:  memory leak danger !!!
   // ---------
-  // This method does create a new object and it is end-user
+  // This method does create a new object and it is the end-user
   // code responsibility to take care about the object returned
-  // to avoid memeory leak.s
+  // to avoid memeory leak.
   //
   return ReadObj(GetCurrentKey());
 }
@@ -186,6 +190,10 @@ Int_t TFileIter::GetObjlen() const
 //__________________________________________________________________________
 Int_t TFileIter::TotalKeys() const
 {  
+  // The total number of the TKey keys in this current TFile
+  // Usually this means the total number of different objects
+  // thos can be read separately with one "read" operation
+
   Int_t size = 0; 
   if(fList) size =  fList->GetSize(); 
   return size;

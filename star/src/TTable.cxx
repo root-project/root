@@ -1,37 +1,37 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.8 2001/03/16 22:25:56 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.13 2001/04/04 21:23:24 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTable                                                               //
-//                                                                      //
-// Wraps the array of the STAF C-structures (one STAF Table per element)//
-//                                                                      //
-// class TTable provides the automatic schema evolution for             //
-// the derived "table" classes saved with ROOT format.                  //
-//                                                                      //
-// "Automatic Schema evolution" provides:                               //
-//   -  skipping data-member if it is not present for the current       //
-//      implementation of the "table" but was present at the time the   //
-//      table was written;                                              //
-//   -  assign a default value ZERO for the brand-new data-members,     //
-//      those were not in the structure when the object was written but //
-//      present now;                                                    //
-//   -  trace propely any change in the order of the data-members       //
-//                                                                      //
-// To enjoy this class one has to derive his/her own custom class:      //
-//                                                                      //
-// St_dst_track_Table.h:                                                //
-// ---------------------                                                //
-//  #ifndef STAF_St_dst_track_Table                                     //
-//  #define STAF_St_dst_track_Table                                     //
-//                                                                      //
-//  #include "TTable.h"                                                 //
-//                                                                      //
-// // #include "dst_track.h"  the C-structure defintion may be kept     //
-//                            separately                                //
-//  typedef struct dst_track_st {                                       //
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TTable                                                                 //
+//                                                                        //
+// Wraps the array of the plain C-structures (one C-structure per element)//
+//                                                                        //
+// class TTable provides the automatic schema evolution for               //
+// the derived "table" classes saved with ROOT format.                    //
+//                                                                        //
+// "Automatic Schema evolution" provides:                                 //
+//   -  skipping data-member if it is not present for the current         //
+//      implementation of the "table" but was present at the time the     //
+//      table was written;                                                //
+//   -  assign a default value ZERO for the brand-new data-members,       //
+//      those were not in the structure when the object was written but   //
+//      present now;                                                      //
+//   -  trace propely any change in the order of the data-members         //
+//                                                                        //
+// To enjoy this class one has to derive his/her own custom class:        //
+//                                                                        //
+// St_dst_track_Table.h:                                                  //
+// ---------------------                                                  //
+//  #ifndef STAF_St_dst_track_Table                                       //
+//  #define STAF_St_dst_track_Table                                       //
+//                                                                        //
+//  #include "TTable.h"                                                   //
+//                                                                        //
+// // #include "dst_track.h"  the C-structure defintion may be kept       //
+//                            separately                                  //
+//  typedef struct dst_track_st {                                         //
 //  	float r0;             /* radius at start (cm). See also comments*/
 //  	float phi0;           /* azimuthal angle at start (deg)         */
 //  	float z0;             /* z-coord. at start (cm)                 */
@@ -45,31 +45,31 @@
 //  	float x_last[3];      /* coord. of last measured point (cm)     */
 //  	float length;         /* from first to last point (cm)          */
 //  	float impact;         /* primary vertex (cm)                    */
-//  	unsigned long map[2]; /* extrap. info. (see preceeding comments)*/
-//  	long id;              /* Primary key (see comments)             */
-//  	long iflag;           /* bitmask quality info. (see comments)   */
-//  	long det_id;          /* Detector id information                */
-//  	long method;          /* Track finding/fitting method, packed   */
-//  	long pid;             /* Geant particle ID for assumed mass     */
-//  	long n_point;         /* SVT, TPC, FTPC component #s are packed */
-//  	long n_max_point;     /* SVT, TPC, FTPC component #s are packed */
-//  	long n_fit_point;     /* SVT, TPC, FTPC component #s are packed */
-//  	long icharge;         /* Particle charge in units of |e|        */
-//  	long id_start_vertex; /* final fit and primary track candidates */
-//  } DST_TRACK_ST;                                                     //
-//                                                                      //
-//  class St_dst_track : public TTable                                  //
-//  {                                                                   //
-//   public:                                                            //
-//     ClassDefTable(St_dst_track,dst_track_st)                         //
-//     ClassDef(St_dst_track,2) //C++ wrapper for <dst_track> StAF table//
-//  };                                                                  //
-//  #endif                                                              //
-// ---------------------                                                //
-//                                                                      //
-//  where the CPP macro defines several convinient methods for the      //
-//  "table" class (see: $ROOTSYS/star/inc/Ttypes.h for details:         //
-//                                                                      //
+//  	unsigned long map[2]; /* extrap. info. (see preceeding comments)*//
+//  	int id;               /* Primary key (see comments)             */
+//  	int iflag;            /* bitmask quality info. (see comments)   */
+//  	int det_id;           /* Detector id information                */
+//  	int method;           /* Track finding/fitting method, packed   */
+//  	int pid;              /* Geant particle ID for assumed mass     */
+//  	int n_point;          /* SVT, TPC, FTPC component #s are packed */
+//  	int n_max_point;      /* SVT, TPC, FTPC component #s are packed */
+//  	int n_fit_point;      /* SVT, TPC, FTPC component #s are packed */
+//  	int icharge;          /* Particle charge in units of |e|        */
+//  	int id_start_vertex;  /* final fit and primary track candidates */
+//  } DST_TRACK_ST;                                                       //
+//                                                                        //
+//  class St_dst_track : public TTable                                    //
+//  {                                                                     //
+//   public:                                                              //
+//     ClassDefTable(St_dst_track,dst_track_st)                           //
+//     ClassDef(St_dst_track,2) //C++ wrapper for <dst_track> StAF table  //
+//  };                                                                    //
+//  #endif                                                                //
+// ---------------------                                                  //
+//                                                                        //
+//  where the CPP macro defines several convinient methods for the        //
+//  "table" class (see: $ROOTSYS/star/inc/Ttypes.h for details:           //
+//                                                                        //
 //  #define ClassDefTable(className,structName)         
 //    protected:                                        
 //       static TTableDescriptor *fgColDescriptors;     
@@ -86,16 +86,16 @@
 //      const structName &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const structName *)(GetTable(i))); } 
 //      structName *begin() const  {                      return GetNRows()? GetTable(0):0;}
 //      structName *end()   const  {Int_t i = GetNRows(); return          i? GetTable(i):0;}
-//                                                                      //
-//  The class implementation file may 2 lines and look as follows:      // 
-//  (for the example above):                                            //
-//                                                                      //
-//  St_dst_track_Table.cxx:                                             //
-//  -----------------------                                             //
-//       #include "St_dst_track_Table.h"                                //
-//       TableClassImpl(St_dst_track, dst_track_st)                     //                      //
-//  -----------------------                                             //
-//////////////////////////////////////////////////////////////////////////
+//                                                                        //
+//  The class implementation file may 2 lines and look as follows:        // 
+//  (for the example above):                                              //
+//                                                                        //
+//  St_dst_track_Table.cxx:                                               //
+//  -----------------------                                               //
+//       #include "St_dst_track_Table.h"                                  //
+//       TableClassImpl(St_dst_track, dst_track_st)                       //                      //
+//  -----------------------                                               //
+////////////////////////////////////////////////////////////////////////////
 
 #include <iostream.h>
 #include <fstream.h>
@@ -118,6 +118,7 @@
 #include "TTable.h"
 #include "TTableDescriptor.h"
 #include "TColumnView.h"
+#include "TFile.h"
 
 #include "TGaxis.h"
 #include "TH1.h"
@@ -276,7 +277,7 @@ Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Lon
      nRows += extraRows;
    }
    if (dstRow+nRows > GetNRows()) SetNRows(dstRow+nRows);
-   ::memcpy((*this)[dstRow],(*srcTable)[srcRow],(size_t)GetRowSize()*nRows);
+   ::memmove((*this)[dstRow],(*srcTable)[srcRow],(size_t)GetRowSize()*nRows);
    return nRows;
  } else
      Error("CopyRows",
@@ -284,7 +285,17 @@ Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Lon
            ,srcTable->GetType());
  return 0;
 }
-
+//______________________________________________________________________________
+void TTable::DeleteRows(Long_t indx, UInt_t nRows)
+{
+  // Delete one or several rows from the table
+  //
+  //  Int_t indx  - index of the first row to be deleted
+  //  Int_t nRows - the total number of rows to be deleted
+  //              = 1 "by default
+  if (CopyRows(this, indx+nRows, indx, GetNRows()-indx-nRows)) 
+       SetUsedRows(GetNRows() - nRows);  
+}
 //______________________________________________________________________________
 TH1  *TTable::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
@@ -1065,14 +1076,37 @@ void TTable::CopyStruct(Char_t *dest, const Char_t *src)
  // the length of the strucutre is defined by this class descriptor
     ::memcpy(dest,src,fSize*fN);
 }
-
 //______________________________________________________________________________
 void TTable::CopySet(TTable &array)
 {
   array.Set(fN);
   CopyStruct(array.fTable,fTable);
 }
-
+//______________________________________________________________________________
+Long_t TTable::InsertRows(const void *row, Long_t indx, UInt_t nRows)
+{
+  // void InsertRows(cons void *row, Long_t indx, UInt_t nRows)
+  //
+  // Insert one or several rows into the table at "indx" position
+  // The rest table stuff is shifted down
+  //
+  //  cons void    - a pointer to the array of rows to be inserted
+  //  Long_t indx  - The position these rows will be instered to
+  //  Int_t nRows  - the total number of rows to be inserted
+  //                 = 1 "by default
+  //  return:
+  //  The number of the rows has been shifted to accomodate
+  //  the new rows.
+  //
+  Long_t nShifted = 0;
+  if (nRows > 0) {
+     // Shift the table down
+     nShifted = CopyRows(this, indx, indx+nRows, GetNRows()+nRows);
+     // Copy (insert) the extra staff in
+     ::memmove(fTable+indx*fSize,row,fSize*nRows);
+  }
+  return nShifted;
+}
 //______________________________________________________________________________
 void *TTable::ReAllocate()
 {
@@ -1085,7 +1119,6 @@ void *TTable::ReAllocate()
    ReAlloc(GetNRows()+1);
    return (void *)fTable;
 }
-
 //______________________________________________________________________________
 void *TTable::ReAllocate(Int_t newsize)
 {
@@ -1427,7 +1460,9 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
      TROOT::IndentLevel();
      TString name = GetTypeName(EColumnType((*dsc).fType));
      if (lenbuf>0) {
+       // convert C type names to CORBA type names
        name.ReplaceAll("unsigned char","octet");
+       name.ReplaceAll("int","long");
        iOut += sprintf(strbuf+iOut," %s %s",name.Data(),(*dsc).fColumnName);
      }
      else
@@ -1600,7 +1635,7 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
          // Encode  the column's comment
          if (indexOffset==0) {
            TDataSet *nxc = nextComment();
-           cout << " " << nxc ? nxc->GetTitle() : "no comment";
+           cout << " " << (const char *)(nxc ? nxc->GetTitle() : "no comment");
          }
          cout << endl;
        }
@@ -1951,8 +1986,8 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
   // Read "table parameters first"
   if (b.IsReading())
   {
-   long rbytes;
-   Int_t  ibytes;
+   Long_t rbytes;
+#ifdef __STAR__
    if (version < 3) {
      // skip obsolete  STAR fields (for the sake of the backward compatibility)
      //   char name[20];   /* table name */
@@ -1961,15 +1996,14 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
      long len = b.Length() + (20+4) + (20+4) + 4;
      b.SetBufferOffset(len);
    }
-   Int_t maxIndex;
-   b >> maxIndex;         // fTableHeader->nok;          /* # rows filled */
-   fMaxIndex = maxIndex;  // fTableHeader->nok;          /* # rows filled */
-   b >> ibytes;           /* number of bytes per row */
-   rbytes = ibytes;       /* number of bytes per row */
+#endif
+   b >> fMaxIndex;         // fTableHeader->nok;          /* # rows filled */
+   b >> rbytes;            /* number of bytes per row */
    if (rbytes - GetRowSize()) {
       Warning("StreamerHeader","Wrong row size: must be %d, read %d bytes\n",GetRowSize(),rbytes);
    }
 
+#ifdef __STAR__
    if (version < 3) {
      // skip obsolete  STAR fields (for the sake of the backward compatibility)
      //    long dsl_pointer;  /* swizzled (DS_DATASET_T*) */
@@ -1977,55 +2011,56 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
      long len = b.Length() + (4) + (4);
      b.SetBufferOffset(len);
    }
+#endif
   }
   else {
-    b << Int_t(fMaxIndex);              //fTableHeader->nok;          /* # rows filled */
-    b << Int_t(fSize);                  //  fTableHeader->rbytes;     /* number of bytes per row */
+    b << fMaxIndex;         //fTableHeader->nok;          /* # rows filled */
+    b << fSize;             //  fTableHeader->rbytes;     /* number of bytes per row */
   }
 }
-
 //_______________________________________________________________________
 Int_t TTable::SetfN(Long_t len)
 {
    fN = len;
    return fN;
 }
-
 //____________________________________________________________________________
 #ifdef StreamElelement
 #define __StreamElelement__ StreamElelement
 #undef StreamElelement
 #endif
-
-#define StreamElementIn(type)  case TTableDescriptor::_NAME2_(k,type):   \
+ 
+#define StreamElementIn(type)  case TTableDescriptor::_NAME2_(k,type):        \
  if (evolutionOn) {                                  \
      if (nextCol->fDimensions)  {                    \
-       if (nextCol->fOffset != UInt_t(-1))           \
-           R__b.ReadStaticArray((_NAME2_(type,_t) *)(row+nextCol->fOffset));     \
-       else {                                        \
-           _NAME2_(type,_t) *readPtrV = 0;           \
-           R__b.ReadArray(readPtrV);                 \
+       if(old225File) { Int_t skip; R__b >> skip;}   \
+       if (nextCol->fOffset != UInt_t(-1)) {         \
+          R__b.ReadFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));   \
+       } else {                                        \
+           _NAME2_(type,_t) *readPtrV = new _NAME2_(type,_t)[nextCol->fSize/sizeof(_NAME2_(type,_t))];              \
+           R__b.ReadFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));  \
            delete [] readPtrV;                       \
            readPtrV = 0;                             \
        }                                             \
      }                                               \
      else  {                                         \
        _NAME2_(type,_t) skipBuffer;                  \
-       _NAME2_(type,_t) *readPtr =  (_NAME2_(type,_t) *)(row+nextCol->fOffset);  \
-       if (nextCol->fOffset == UInt_t(-1)) readPtr = &skipBuffer;                \
+       _NAME2_(type,_t) *readPtr =  (_NAME2_(type,_t) *)(row+nextCol->fOffset); \
+       if (nextCol->fOffset == UInt_t(-1)) readPtr = &skipBuffer;               \
        R__b >> *readPtr;                             \
      }                                               \
  } else {                                            \
-   if (nextCol->fDimensions)                         \
-     R__b.ReadStaticArray((_NAME2_(type,_t) *)(row+nextCol->fOffset));           \
-   else                                                         \
+   if (nextCol->fDimensions)  {                      \
+     if(old225File) {UInt_t skip; R__b >> skip;}     \
+     R__b.ReadFastArray  ((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));  \
+   } else                                                       \
      R__b >> *(_NAME2_(type,_t) *)(row+nextCol->fOffset);       \
  }                                                              \
  break
 
 #define StreamElementOut(type) case TTableDescriptor::_NAME2_(k,type):    \
  if (nextCol->fDimensions)                                    \
-    R__b.WriteArray((_NAME2_(type,_t) *)(row+nextCol->fOffset), nextCol->fSize/sizeof(_NAME2_(type,_t))); \
+    R__b.WriteFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset), nextCol->fSize/sizeof(_NAME2_(type,_t))); \
  else                                                         \
     R__b << *(_NAME2_(type,_t) *)(row+nextCol->fOffset);      \
  break
@@ -2063,6 +2098,12 @@ void TTable::Streamer(TBuffer &R__b)
    TTableDescriptor *currentDescriptor = ioDescriptor;
    Version_t R__v = 0;
    if (R__b.IsReading()) {
+      // Check whether the file is the "obsolete" one
+#ifdef __STAR__
+      Bool_t old225File = (gFile && gFile->GetVersion() < 30006);
+#else
+      Bool_t old225File =  kFALSE;
+#endif
       R__v = R__b.ReadVersion();
       Bool_t evolutionOn = kFALSE;
       if (R__v>=2) {

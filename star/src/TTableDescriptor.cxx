@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.1.1.3 2001/01/22 12:59:38 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.7 2001/04/03 23:12:48 fine Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.1.1.3 2001/01/22 12:59:38 fisyak Exp $
+// $Id: TTableDescriptor.cxx,v 1.7 2001/04/03 23:12:48 fine Exp $
 #include <stdlib.h>
 
 #include "TTableDescriptor.h"
@@ -199,16 +199,16 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
     (new TDataSet(varname,comments))->SetTitle(member->GetTitle());
   }
 }
-
+ 
 //______________________________________________________________________________
 Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
 {
   //                  "Schema evolution"
-  // Method updates the offsets with a new ones from another descritor
+  // Method updates the offsets with a new ones from another descriptor
   // 
   Int_t maxColumns = NumberOfColumns();
   Int_t mismathes = 0;
-
+ 
   if (   (UInt_t(maxColumns) == newDescriptor->NumberOfColumns())
       && (memcmp(GetArray(),newDescriptor->GetArray(),sizeof(tableDescriptor_st)*GetNRows()) == 0)
      ) return mismathes; // everything fine for sure !
@@ -218,9 +218,14 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
   {
     Int_t colNewIndx = newDescriptor->ColumnByName(ColumnName(colCounter));
     // look for analog
+    EColumnType newType = newDescriptor->ColumnType(colNewIndx);
+#ifdef __STAR__
+    if (newType == kInt)       newType = kLong;
+    else if (newType == kUInt) newType = kULong;
+#endif
     if (    colNewIndx >=0
          && Dimensions(colCounter) == newDescriptor->Dimensions(colNewIndx)
-         && ColumnType(colCounter) == newDescriptor->ColumnType(colNewIndx)
+         && ColumnType(colCounter) == newType
        )  {
       SetOffset(newDescriptor->Offset(colNewIndx),colCounter);
       if (colNewIndx != colCounter) {
@@ -230,8 +235,8 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
       }
     }
     else {
-      printf("Schema evolution: \t%d column of the \"%s\" table has been lost\n",
-        colCounter,ColumnName(colCounter));
+      printf("Schema evolution: \t%d column \"%s\" of %d type has been lost\n",
+        colCounter,ColumnName(colCounter),ColumnType(colCounter));
       printf(" Indx = %d, name = %s \n", colNewIndx, ColumnName(colCounter));
       SetOffset(UInt_t(-1),colCounter);
       mismathes++;
@@ -318,3 +323,4 @@ TTable::EColumnType TTableDescriptor::ColumnType(const Char_t *columnName) const
   if (indx >= 0 ) indx = ColumnType(indx);
   return EColumnType(indx);
 }
+

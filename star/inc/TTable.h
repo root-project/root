@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1.1.4 2001/01/22 12:59:34 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.7 2001/04/02 14:07:19 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -72,7 +72,7 @@ protected:
 
    Long_t     fMaxIndex;   // The used capacity of this array
 
-   void      ReAlloc(Int_t newsize);
+   void       ReAlloc(Int_t newsize);
 
 public:
 
@@ -96,6 +96,7 @@ public:
    virtual     void       Browse(TBrowser *b);
    virtual     void       CopySet(TTable &array);
                Int_t      CopyRows(const TTable *srcTable,Long_t srcRow=0, Long_t dstRow=0, Long_t nRows=0, Bool_t expand=kFALSE);
+   virtual     void       DeleteRows(Long_t indx,UInt_t nRows=1);
    virtual     void       Draw(Option_t *opt);
    virtual     TH1       *Draw(TCut varexp, TCut selection, Option_t *option=""
                          ,Int_t nentries=1000000000, Int_t firstentry=0);
@@ -114,6 +115,7 @@ public:
                               ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
    virtual     Long_t     HasData() const { return 1; }
+   virtual     Long_t     InsertRows(const void *rows, Long_t indx, UInt_t nRows=1);
    virtual     Bool_t     IsFolder() const;
                Int_t      NaN();
    static      TTable    *New(const Char_t *name, const Char_t *type, void *array, UInt_t size);
@@ -162,7 +164,7 @@ public:
    static const char *GetTypeName(EColumnType type);
    static EColumnType GetTypeId(const char *typeName);
 
-   ClassDef(TTable,3)  // Array of the C structures
+   ClassDef(TTable,4)  // Array of the C structures
 };
 
 //________________________________________________________________________
