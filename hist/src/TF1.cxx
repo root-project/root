@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.52 2003/01/03 23:56:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.53 2003/01/15 21:45:39 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1147,27 +1147,28 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
 
 
 // return random number
-   Double_t dx = (fXmax-fXmin)/fNpx;
-   Int_t nbinmin=(Int_t)((xmin-fXmin)/dx);
-   Int_t nbinmax=(Int_t)((xmax-fXmin)/dx)+1;
+   Double_t dx   = (fXmax-fXmin)/fNpx;
+   Int_t nbinmin = (Int_t)((xmin-fXmin)/dx);
+   Int_t nbinmax = (Int_t)((xmax-fXmin)/dx)+2;
+   if(nbinmax>fNpx) nbinmax=fNpx;
+   
+   Double_t pmin=fIntegral[nbinmin];
+   Double_t pmax=fIntegral[nbinmax];
 
-    Double_t pmin=fIntegral[nbinmin];
-    Double_t pmax=fIntegral[nbinmax];
+   Double_t r,x,xx,rr;
+   do {
+      r  = gRandom->Uniform(pmin,pmax);
 
-    Double_t r,x,xx,rr;
-    do {
-       r  = gRandom->Uniform(pmin,pmax);
+      Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
+      rr = r - fIntegral[bin];
 
-       Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
-       rr = r - fIntegral[bin];
-
-       if(fGamma[bin])
-          xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin]; 
-       else
-          xx = rr/fBeta[bin];
-       x = fAlpha[bin] + xx;
-    } while(x<xmin || x>xmax);
-    return x;
+      if(fGamma[bin])
+         xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin]; 
+      else
+         xx = rr/fBeta[bin];
+      x = fAlpha[bin] + xx;
+   } while(x<xmin || x>xmax);
+   return x;
 }
 
 //______________________________________________________________________________
