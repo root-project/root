@@ -95,3 +95,7 @@ STARLIBEXTRA        = lib/libTree.lib lib/libProof.lib lib/libGpad.lib \
 GLLIBDEP            = $(G3DLIB) $(WIN32LIB)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32.lib Glu32.lib Opengl32.lib
 RFIOLIBEXTRA        = WSock32.lib Ws2_32.lib
+HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
+                      $(TREEPLAYERLIB)
+HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
+                      lib/libGraf.lib lib/libTreePlayer.lib
