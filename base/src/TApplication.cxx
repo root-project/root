@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.21 2001/11/28 15:58:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.22 2001/12/19 07:15:19 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -298,7 +298,10 @@ void TApplication::GetOptions(int *argc, char **argv)
          argv[i] = 0;
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long_t id, size, flags, modtime;
+         char *arg = strchr(argv[i], '(');
+         if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);
+         if (arg) *arg = '(';
          if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
                // if directory make it working directory
@@ -557,16 +560,16 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
 
    if (!strncmp(line, ".which", 6)) {
       char *fn  = Strip(line+7);
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), fn, kReadPermission);
+      char *s   = strtok(fn, "+(");
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), s, kReadPermission);
       if (!mac)
-         Printf("No macro %s in path %s", fn, TROOT::GetMacroPath());
+         Printf("No macro %s in path %s", s, TROOT::GetMacroPath());
       else
          Printf("%s", mac);
       delete [] fn;
       delete [] mac;
       return;
    }
-
 
    if (!strncmp(line, ".L", 2)) {
       char *fn  = Strip(line+3);
