@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.19 2005/01/28 16:33:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.20 2005/02/07 18:02:37 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TPacketizer                                                         //
+// TPacketizer                                                          //
 //                                                                      //
 // This class generates packets to be processed on PROOF slave servers. //
 // A packet is an event range (begin entry and number of entries) or    //
@@ -26,22 +26,22 @@
 
 #include "TPacketizer.h"
 
-#include "TObject.h"
-#include "TSlave.h"
+#include "Riostream.h"
+#include "TDSet.h"
+#include "TError.h"
 #include "TMap.h"
 #include "TMessage.h"
 #include "TMonitor.h"
-#include "TSocket.h"
-#include "TDSet.h"
-#include "TUrl.h"
-#include "TError.h"
-#include "TProof.h"
-#include "TProofDebug.h"
-#include "TTimer.h"
-#include "TProofServ.h"
-#include "TProofPlayer.h"
+#include "TObject.h"
 #include "TPerfStats.h"
-#include "Riostream.h"
+#include "TProofDebug.h"
+#include "TProof.h"
+#include "TProofPlayer.h"
+#include "TProofServ.h"
+#include "TSlave.h"
+#include "TSocket.h"
+#include "TTimer.h"
+#include "TUrl.h"
 
 
 //
@@ -314,7 +314,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       }
 
       // this element is after the end of the global range, skip it
-      if (num != -1 && first+num <= cur) {
+      if (num != -1 && (first+num <= cur)) {
          cur += eNum;
          PDB(kPacketizer,2) Info("","Processing element: drop element cur %lld", cur);
          continue; // break ??
@@ -332,7 +332,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       if (cur < first) {
          e->SetFirst( eFirst + (first - cur) );
          e->SetNum( e->GetNum() - (first - cur) );
-         PDB(kPacketizer,2) Info("","Processing element: Adjust start %lld and end %lld", eFirst + (first - cur), first + num - cur);
+         PDB(kPacketizer,2) Info("","Processing element: Adjust start %lld and end %lld",
+             eFirst + (first - cur), first + num - cur);
       }
 
       cur += eNum;
@@ -598,7 +599,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
             mon.Activate(s->GetSocket());
             PDB(kPacketizer,2) Info("ValidateFiles",
                 "sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                s->GetOrdinal().Data(), s->GetName(), s->GetSocket(),
+                s->GetOrdinal(), s->GetName(), s->GetSocket(),
                 dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          } else {
@@ -617,7 +618,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          while (TSocket *s = (TSocket*) next()) {
             TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
             if (sl)
-               Info("ValidateFiles", "   slave-%s (%s)", sl->GetOrdinal().Data(), sl->GetName());
+               Info("ValidateFiles", "   slave-%s (%s)", sl->GetOrdinal(), sl->GetName());
          }
          delete act;
       }
@@ -636,13 +637,13 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          Error("ValidateFiles", "Recv failed! for slave-%s (%s)",
-               slave->GetOrdinal().Data(), slave->GetName());
+               slave->GetOrdinal(), slave->GetName());
          continue;
       }
 
       if ( reply->What() == kPROOF_FATAL ) {
          Error("ValidateFiles", "kPROOF_FATAL from slave-%s (%s)",
-               slave->GetOrdinal().Data(), slave->GetName());
+               slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
@@ -660,7 +661,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       } else if ( reply->What() != kPROOF_GETENTRIES ) {
          // Help! unexpected message type
          Error("ValidateFiles", "unexpected message type (%d) from slave-%s (%s)",
-               reply->What(), slave->GetOrdinal().Data(), slave->GetName());
+               reply->What(), slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
@@ -760,12 +761,12 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
 
       PDB(kPacketizer,2) Info("GetNextPacket","slave-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
-                              sl->GetOrdinal().Data(), sl->GetName(),
+                              sl->GetOrdinal(), sl->GetName(),
                               numev, latency, proctime, proccpu, bytesRead);
 
       if (gPerfStats != 0) {
-         gPerfStats->PacketEvent(sl->GetOrdinal().Data(), sl->GetName(), slstat->fCurElem->GetFileName(),
-                            numev, latency, proctime, proccpu, bytesRead);
+         gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), slstat->fCurElem->GetFileName(),
+                                 numev, latency, proctime, proccpu, bytesRead);
       }
 
       slstat->fCurElem = 0;
@@ -787,7 +788,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    if ( file != 0 && file->IsDone() ) {
       file->GetNode()->DecSlaveCnt();
       if (gPerfStats != 0) {
-         gPerfStats->FileEvent(sl->GetOrdinal().Data(), sl->GetName(), file->GetNode()->GetName(),
+         gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
                           file->GetElement()->GetFileName(), kFALSE);
       }
       file = 0;
@@ -818,7 +819,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       slstat->fCurFile = file;
       file->GetNode()->IncSlaveCnt();
       if (gPerfStats != 0) {
-         gPerfStats->FileEvent(sl->GetOrdinal().Data(), sl->GetName(),
+         gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(),
                           file->GetNode()->GetName(),
                           file->GetElement()->GetFileName(), kTRUE);
       }

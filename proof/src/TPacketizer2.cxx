@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.33 2004/12/28 20:51:25 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.34 2005/02/07 18:02:37 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -309,6 +309,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
    fUnAllocated->Clear();  // avoid dangling pointers
    fActive->Clear();
    fFileNodes->Clear();    // then delete all objects
+   PDB(kPacketizer,2) Info("","Processing Range: First %lld, Num %lld", first, num);
 
    dset->Reset();
    Long64_t cur = 0;
@@ -316,24 +317,27 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
       TUrl url = e->GetFileName();
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
-
+      PDB(kPacketizer,2) Info("","Processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
 
       // this element is before the start of the global range, skip it
       if (cur + eNum < first) {
          cur += eNum;
+         PDB(kPacketizer,2) Info("","Processing element: skip element cur %lld", cur);
          continue;
       }
 
       // this element is after the end of the global range, skip it
-      if (first+num <= cur) {
+      if (num != -1 && (first+num <= cur)) {
          cur += eNum;
+         PDB(kPacketizer,2) Info("","Processing element: drop element cur %lld", cur);
          continue; // break ??
       }
 
       // If this element contains the end of the global range
       // adjust its number of entries
-      if (first+num < cur+eNum) {
+      if (num != -1 && (first+num < cur+eNum)) {
          e->SetNum( first + num - cur );
+         PDB(kPacketizer,2) Info("","Processing element: Adjust end %lld", first + num - cur);
       }
 
       // If this element contains the start of the global range
@@ -341,9 +345,12 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
       if (cur < first) {
          e->SetFirst( eFirst + (first - cur) );
          e->SetNum( e->GetNum() - (first - cur) );
+         PDB(kPacketizer,2) Info("","Processing element: Adjust start %lld and end %lld",
+             eFirst + (first - cur), first + num - cur);
       }
 
       cur += eNum;
+      PDB(kPacketizer,2) Info("","Processing element: next cur %lld", cur);
 
       // Map non URL filenames to dummy host
       TString host;
@@ -559,7 +566,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
    TIter    si(slaves);
    TSlave   *slave;
    while ((slave = (TSlave*)si.Next()) != 0) {
-      PDB(kPacketizer,3) Info("TPacketizer2","Socket added to monitor: %p (%s)",
+      PDB(kPacketizer,3) Info("ValidateFiles","socket added to monitor: %p (%s)",
           slave->GetSocket(), slave->GetName());
       mon.Add(slave->GetSocket());
       slaves_by_sock.Add(slave->GetSocket(),slave);
@@ -611,7 +618,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
             PDB(kPacketizer,2) Info("TPacketizer2","sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                s->GetOrdinal().Data(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
+                s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          }
       }
@@ -619,13 +626,13 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
       if ( mon.GetActive() == 0 ) break; // nothing to wait for anymore
 
       PDB(kPacketizer,3) {
-         Info("TPacketizer2", "waiting for %d slaves:", mon.GetActive());
+         Info("ValidateFiles", "waiting for %d slaves:", mon.GetActive());
          TList *act = mon.GetListOfActives();
          TIter next(act);
          while (TSocket *s = (TSocket*) next()) {
             TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
             if (sl)
-               Info("TPacketizer2", "   slave-%s (%s)", sl->GetOrdinal().Data(), sl->GetName());
+               Info("ValidateFiles", "   slave-%s (%s)", sl->GetOrdinal(), sl->GetName());
          }
          delete act;
       }
@@ -633,7 +640,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
       TSocket *sock = mon.Select();
       mon.DeActivate(sock);
 
-      PDB(kPacketizer,3) Info("TPacketizer2","Select returned: %p", sock);
+      PDB(kPacketizer,3) Info("ValidateFiles", "select returned: %p", sock);
 
       TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
 
@@ -643,32 +650,32 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
          // Help! lost a slave?
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
-         Error("TPacketizer2","Recv failed! for slave-%s (%s)",
-               slave->GetOrdinal().Data(), slave->GetName());
+         Error("ValidateFiles", "Recv failed! for slave-%s (%s)",
+               slave->GetOrdinal(), slave->GetName());
          continue;
       }
 
       if ( reply->What() == kPROOF_FATAL ) {
-         Error("TPacketizer2","kPROOF_FATAL from slave-%s (%s)",
-               slave->GetOrdinal().Data(), slave->GetName());
+         Error("ValidateFiles", "kPROOF_FATAL from slave-%s (%s)",
+               slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
       } else if ( reply->What() == kPROOF_LOGFILE ) {
-         PDB(kPacketizer,3) Info("TPacketizer2","Got logfile");
+         PDB(kPacketizer,3) Info("ValidateFiles", "got logfile");
          Int_t size;
          (*reply) >> size;
          ((TProof*)gProof)->RecvLogFile(sock, size);
          mon.Activate(sock);
          continue;
       } else if ( reply->What() == kPROOF_LOGDONE ) {
-         PDB(kPacketizer,3) Info("TPacketizer2","Got logdone");
+         PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
          mon.Activate(sock);
          continue;
       } else if ( reply->What() != kPROOF_GETENTRIES ) {
          // Help! unexpected message type
-         Error("TPacketizer2","unexpected message type (%d) from slave-%s (%s)", reply->What(),
-               slave->GetOrdinal().Data(), slave->GetName());
+         Error("ValidateFiles", "unexpected message type (%d) from slave-%s (%s)",
+               reply->What(), slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
@@ -684,7 +691,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
       if ( entries > 0 ) {
 
          if ( e->GetFirst() > entries ) {
-            Error("TPacketizer2","first (%d) higher then number of entries (%d) in %d",
+            Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
                   e->GetFirst(), entries, e->GetFileName() );
 
             // disable element
@@ -695,7 +702,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
          if ( e->GetNum() == -1 ) {
             e->SetNum( entries - e->GetFirst() );
          } else if ( e->GetFirst() + e->GetNum() > entries ) {
-            Error("TPacketizer2",
+            Error("ValidateFiles",
                   "Num (%d) + First (%d) larger then number of keys/entries (%d) in %s",
                   e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
             e->SetNum( entries - e->GetFirst() );
@@ -703,7 +710,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
       } else {
 
-         Error("TPacketizer2", "cannot get entries for %s (", e->GetFileName() );
+         Error("ValidateFiles", "cannot get entries for %s (", e->GetFileName() );
 
          // disable element
          slavestat->fCurFile->SetDone();
@@ -763,12 +770,12 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
       if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
 
       PDB(kPacketizer,2) Info("GetNextPacket","slave-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
-                              sl->GetOrdinal().Data(), sl->GetName(),
+                              sl->GetOrdinal(), sl->GetName(),
                               numev, latency, proctime, proccpu, bytesRead);
 
       if (gPerfStats != 0) {
          gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), slstat->fCurElem->GetFileName(),
-                            numev, latency, proctime, proccpu, bytesRead);
+                                 numev, latency, proctime, proccpu, bytesRead);
       }
 
       slstat->fCurElem = 0;
@@ -791,7 +798,7 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
       file->GetNode()->DecSlaveCnt(slstat->GetName());
       if (gPerfStats != 0) {
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
-                          file->GetElement()->GetFileName(), kFALSE);
+                               file->GetElement()->GetFileName(), kFALSE);
       }
       file = 0;
    }
@@ -822,8 +829,8 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
       file->GetNode()->IncSlaveCnt(slstat->GetName());
       if (gPerfStats != 0) {
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(),
-                          file->GetNode()->GetName(),
-                          file->GetElement()->GetFileName(), kTRUE);
+                               file->GetNode()->GetName(),
+                               file->GetElement()->GetFileName(), kTRUE);
       }
    }
 
