@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.25 2002/07/18 20:42:57 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.26 2002/08/21 23:06:28 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -325,7 +325,7 @@ Bool_t RooProdPdf::checkDependents(const RooArgSet* nset) const
     *iter2 = *_pdfIter ;
     while(pdf2 = (RooAbsPdf*)iter2->Next()) {
       if (pdf->dependentOverlaps(nset,*pdf2)) {
-	cout << "RooAddPdf::checkDependents(" << GetName() << "): ERROR: PDFs " << pdf->GetName() 
+	cout << "RooProdPdf::checkDependents(" << GetName() << "): ERROR: PDFs " << pdf->GetName() 
 	     << " and " << pdf2->GetName() << " have one or more dependents in common" << endl ;
 	ret = kTRUE ;
       }    
