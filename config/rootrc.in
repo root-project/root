@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.83 2004/11/04 08:56:43 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.84 2004/11/04 10:34:04 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -45,6 +45,11 @@ X11.FindBestVisual:      yes
 # Default editor
 Unix.*.Editor:           vi
 WinNT.*.Editor:          notepad
+
+# Default 3d Viewer
+# by default 3-D views are shown in the pad.
+# if the next line is activated, the default viewer will be OpenGL
+#Viewer3D.DefaultDrawOption:   ogl
 
 # Default Fitter (current choices are Minuit and Fumili)
 Root.Fitter:             Minuit
