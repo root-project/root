@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.146 2003/05/13 11:51:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.147 2003/06/18 05:04:14 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3646,8 +3646,11 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
 
     //recompute new axis limits by doubling the current range
    Int_t bin;
+   Int_t ntimes = 0;
    if (x < cxmin) {
       while (1) {
+         ntimes++;
+         if (ntimes > 64) break;
          range *= 2;
          if (x < cxmax-range) continue;
          xmin = cxmin - range/4;
@@ -3669,6 +3672,8 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    } else {
       //if ( !(x < cxmax)) return; //to catch NaN
       while (1) {
+         ntimes++;
+         if (ntimes > 64) break;
          range *= 2;
          if (x >= cxmin+range) continue;
          xmax = cxmax + range/4;
