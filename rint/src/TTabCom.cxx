@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.5 2000/12/20 17:36:52 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.6 2001/02/03 15:39:14 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -1747,8 +1747,8 @@ void TTabCom::InitPatterns( void )
 
      SetPattern( kCINT_Edit,  "^ *\\.E .*$" );
      SetPattern( kCINT_Load,  "^ *\\.L .*$" );
-     SetPattern( kCINT_Exec,  "^ *\\.x [-0-9_a-zA-Z~$./]*$" );
-     SetPattern( kCINT_EXec,  "^ *\\.X [-0-9_a-zA-Z~$./]*$" );
+     SetPattern( kCINT_Exec,  "^ *\\.x +[-0-9_a-zA-Z~$./]*$" );
+     SetPattern( kCINT_EXec,  "^ *\\.X +[-0-9_a-zA-Z~$./]*$" );
 
      SetPattern( kCINT_pragma,     "^# *pragma +[_a-zA-Z0-9]*$" );
      SetPattern( kCINT_includeSYS, "^# *include *<[^>]*$"  );   // system files
