@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.162 2003/12/09 18:15:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.163 2003/12/11 11:22:42 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -621,6 +621,10 @@ void TH1::Build()
    UseCurrentStyle();
 
    if (fgAddDirectory && gDirectory) {
+      if (!gDirectory->GetList()) {
+         Warning("Build","Current directory is not a valid directory");
+         return;
+      }
       TH1 *hold = (TH1*)gDirectory->GetList()->FindObject(GetName());
       if (hold) {
          Warning("Build","Replacing existing histogram: %s (Potential memory leak).",GetName());
