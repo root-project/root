@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.4 2000/09/11 09:59:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.6 2000/09/12 06:43:53 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -224,8 +224,9 @@ void TKey::Create(Int_t nbytes)
 //*-*-------------------find free segment
 //*-*                    =================
    Int_t nsize      = nbytes + fKeylen;
-   TFree *f1        = (TFree*) gFile->GetListOfFree()->First();
-   TFree *bestfree  = f1->GetBestFree(nsize);
+   TList *lfree = gFile->GetListOfFree();
+   TFree *f1        = (TFree*)lfree->First();
+   TFree *bestfree  = f1->GetBestFree(lfree,nsize);
    if (bestfree == 0) {
       Error("Create","Cannot allocate %d bytes for ID = %s Title = %s",
             nsize,GetName(),GetTitle());
@@ -248,7 +249,7 @@ void TKey::Create(Int_t nbytes)
       if (!fBuffer) {
          fBuffer = new char[nsize];
       }
-      gFile->GetListOfFree()->Remove(bestfree);
+      lfree->Remove(bestfree);
       delete bestfree;
    }
 //*-*----------------- Case where new object is placed in a deleted gap larger than itself
