@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.3 2004/11/01 07:20:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.4 2004/11/01 08:52:13 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -700,8 +700,9 @@ void TGenCollectionProxy::DeleteItem(bool force, void* ptr)  const  {
           char *addr = ((char*)ptr)+fKey->fSize;
           //make sure the value address is aligned on a word boundary
           long laddr = (long)addr;
-          int offset = laddr % sizeof(void*);
-          addr += offset;
+          int offset;
+          if ((offset = laddr % sizeof(void*)))
+             addr += sizeof(void*)-offset;
           if (*(void**)addr) (*fVal->fDelete)(*(void**)addr);
         }
         // (*fValue->fDtor)(ptr); No: pair must stay intact !
