@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.125 2004/06/21 09:49:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.126 2004/06/22 18:47:16 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1276,12 +1276,8 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 
    if (idleTimeInSec <= 0)
       fApplication->RemoveIdleTimer();
-   else {
-      if (command && strlen(command))
-         fApplication->SetIdleTimer(idleTimeInSec, command);
-      else
-         Warning("Idle", "must specify non null idle command");
-   }
+   else
+      fApplication->SetIdleTimer(idleTimeInSec, command);
 }
 
 //______________________________________________________________________________
