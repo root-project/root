@@ -107,10 +107,12 @@ public:
 #if defined(R__NO_NESTED_CONTAINER)
    std::TEST_CONT<std::TEST_CONT<Helper> > fNested;  //! this version of ROOT does not support nested container
    std::TEST_CONT<std::vector<Helper> >    fNestedV; //!
+   std::TEST_CONT<std::list<Helper> >      fNestedL; //!
    std::TEST_CONT<std::deque<Helper> >     fNestedD; //!
 #else
    std::TEST_CONT<std::TEST_CONT<Helper> > fNested;  //
    std::TEST_CONT<std::vector<Helper> >    fNestedV; //
+   std::TEST_CONT<std::list<Helper> >      fNestedL; //
    std::TEST_CONT<std::deque<Helper> >     fNestedD; //
 #endif
 
@@ -349,6 +351,15 @@ public:
    }
    VERIFY(NestedV)
 
+   bool SetOrVerifyNestedL(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
+      if (!reset && gFile && !HasNestedContainer(gFile)) {
+         return true;
+      }
+      UInt_t seed = 1 * (entryNumber+1);
+      return utility::SetOrVerify("fNestedL",fNestedL,seed,entryNumber,reset,testname);
+   }
+   VERIFY(NestedL)
+
    bool SetOrVerifyNestedD(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       if (!reset && gFile && !HasNestedContainer(gFile)) {
          return true;
@@ -400,6 +411,7 @@ protected:
 
       result &= SetOrVerifyNested(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedV(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyNestedL(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedD(entryNumber,reset,testname,splitlevel);
       if (reset) Assert(result);
       return result;

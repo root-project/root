@@ -39,8 +39,10 @@ template <> void fill(bool& filled, UInt_t seed) {
 template <> void fill(TString& filled, UInt_t seed) {
    UInt_t size = seed%20;
    filled = "";
+
    for(UInt_t i=0; i<size; i++) {
-      filled += ((i&seed)+'a');
+      char c = (i&seed)+'a';
+      filled += c;
    }
 }
 

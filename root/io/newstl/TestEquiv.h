@@ -71,7 +71,7 @@ template <class T> bool IsEquiv(const std::string &test, const T& orig, const T&
          result = false;
       } else if (DebugTest()&TestDebug::kValues) {
          std::stringstream s;
-         s << "(Debugging test) " << test << " elem #" << i << std::ends;
+         s << "(Debugging test) " << test << " elem #" << i; // << std::ends;
          TestError(s.str(),*iorig,*icopy);
       }
       i++;

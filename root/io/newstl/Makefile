@@ -1,6 +1,6 @@
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.d *.log
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.d *.log $(LIBDIR)/*
 
 #Set the list of target to make while testing
 TEST_TARGETS += stlIoTest
@@ -18,7 +18,8 @@ include $(RULES_DIR)/Rules.mk
 VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
 LPWD := $(shell echo `pwd -P`)
 #debug := $(shell echo $(LPWD) 1>&2 )
-LIBDIR := $(VERSION).libs$(LPWD)/
+LIBDIRTOP := $(VERSION).libs
+LIBDIR := $(LIBDIRTOP)$(LPWD)/
 FILEDIR := $(VERSION)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
@@ -105,7 +106,7 @@ package:
 	( \
 	   tar_name=stlioTest; \
 	   inc=0; \
-	   tar_file=$$tar_name.$$inc.tar.gz; \
+	   tar_file=~/Transfer/$$tar_name.$$inc.tar.gz; \
 	   while test -e $$tar_file; do \
 		   inc=$$(($$inc+1)); \
 		   tar_file=~/Transfer/$$tar_name.$$inc.tar.gz; \

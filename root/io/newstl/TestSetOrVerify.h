@@ -23,7 +23,7 @@ namespace utility {
       if (reset) {
          if (DebugTest()&TestDebug::kAddresses) {
             std::stringstream s;
-            s << testname << " address of " << dataname << " is " << &datamember << std::ends;
+            s << testname << " address of " << dataname << " is " << &datamember; // << std::ends;
             Debug(s.str());
          }
          fill(datamember, seed);
@@ -31,7 +31,7 @@ namespace utility {
          T build;
          fill(build, seed);
          std::stringstream s;
-         s << testname << " verify " << dataname << " entry #" <<  entryNumber << std::ends;
+         s << testname << " verify " << dataname << " entry #" <<  entryNumber; // << std::ends;
          result = IsEquiv(s.str(), build, datamember);
       }
       return result;      
@@ -52,14 +52,14 @@ namespace utility {
 
          if (DebugTest()&TestDebug::kAddresses) {
             std::stringstream s;
-            s << testname << " address of " << dataname << " is " << &datamember << " and new value is " << datamember << std::ends;
+            s << testname << " address of " << dataname << " is " << &datamember << " and new value is " << datamember; // << std::ends;
             Debug(s.str());
          }
       } else {
          T build;
          fill(build, seed);
          std::stringstream s;
-         s << testname << " verify " << dataname << " entry #" <<  entryNumber << std::ends;
+         s << testname << " verify " << dataname << " entry #" <<  entryNumber; // << std::ends;
          result = IsEquiv(s.str(), &build, datamember);
       }
       return result;      
@@ -76,7 +76,7 @@ namespace utility {
 
       if (reset && DebugTest()&TestDebug::kAddresses) {
          std::stringstream s;
-         s << testname << " address of " << dataname << " value is " << datamember << std::ends;
+         s << testname << " address of " << dataname << " value is " << datamember; // << std::ends;
          Debug(s.str());
       }
 
@@ -88,7 +88,7 @@ namespace utility {
             T build;
             fill(build, seed);
             std::stringstream s;
-            s << testname << " verify " << dataname << " entry #" << entryNumber << " index #" << index << std::ends;
+            s << testname << " verify " << dataname << " entry #" << entryNumber << " index #" << index; // << std::ends;
             result = IsEquiv(s.str(), build, datamember[index]);
          }
       }
@@ -106,7 +106,7 @@ namespace utility {
 
       if (reset && DebugTest()&TestDebug::kAddresses) {
          std::stringstream s;
-         s << testname << " address of " << dataname << " value is " << datamember << std::ends;
+         s << testname << " address of " << dataname << " value is " << datamember; // << std::ends;
          Debug(s.str());
       }
 
@@ -120,7 +120,7 @@ namespace utility {
             T build;
             fill(build, seed);
             std::stringstream s;
-            s << testname << " verify " << dataname << " entry #" << entryNumber << " index #" << index << std::ends;
+            s << testname << " verify " << dataname << " entry #" << entryNumber << " index #" << index; // << std::ends;
             result = IsEquiv(s.str(), build, *(datamember[index]));
          }
       }

@@ -135,7 +135,7 @@ template <class T> void TestError(const std::string &test, const GHelper<T> &ori
    TClass *cl = gROOT->GetClass(typeid(T));
    const char* classname = cl?cl->GetName():typeid(T).name();   
    std::stringstream s;
-   s << test << " on GHelper of " << classname << std::ends;
+   s << test << " on GHelper of " << classname; //  << std::ends;
    TestError(s.str(), orig.val, copy.val);
 }
 
@@ -152,7 +152,7 @@ const char* GetEHelperStringValue(const EHelper &eval) {
 void TestError(const std::string &test, const EHelper &orig, const EHelper &copy) {
    std::stringstream s;
    s << "We wrote: " << GetEHelperStringValue(orig) 
-     << " but read " << GetEHelperStringValue(copy) << std::ends;
+     << " but read " << GetEHelperStringValue(copy); //  << std::ends;
    TestError(test, s.str());
 }
 
@@ -164,13 +164,13 @@ void TestError(const std::string &test, const THelper &orig, const THelper &copy
 void TestError(const std::string &test, const TNamed &orig, const TNamed &copy) {
    std::stringstream s;
    s << "We wrote: name=" << orig.GetName() << " title=" << orig.GetTitle() << " but read " 
-     << "name=" << copy.GetName() << " title=" << copy.GetTitle() << std::ends;
+     << "name=" << copy.GetName() << " title=" << copy.GetTitle(); //  << std::ends;
    TestError(test, s.str());
 }
 
 template <class T> void TestError(const std::string &test, const T &orig, const T &copy) {
    std::stringstream s;
-   s << "We wrote: " << orig << " but read " << copy << std::ends;
+   s << "We wrote: " << orig << " but read " << copy; //  << std::ends;
    TestError(test, s.str());
 }
 

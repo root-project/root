@@ -3,7 +3,7 @@
 
    int result = gSystem->CompileMacro("TestHelpers.C","k");
    if (result != 0 && result != 1) return;
-      
+
    if ( which & kVector ) {
 
       result = gSystem->CompileMacro("vectorHolder.C","k");
@@ -12,7 +12,7 @@
       result = gSystem->CompileMacro("vtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) vtest();
+      if (exec) vtest(exec-1);
 
    }
 
@@ -24,7 +24,7 @@
       result = gSystem->CompileMacro("dtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) dtest();
+      if (exec) dtest(exec-1);
 
    }
 
@@ -36,7 +36,7 @@
       result = gSystem->CompileMacro("ltest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) ltest();
+      if (exec) ltest(exec-1);
 
    }
 
@@ -48,7 +48,7 @@
       result = gSystem->CompileMacro("stest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) stest();
+      if (exec) stest(exec-1);
 
    }
 
@@ -60,7 +60,7 @@
       result = gSystem->CompileMacro("ttest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) ttest();
+      if (exec) ttest(exec-1);
 
    }
 
@@ -72,7 +72,7 @@
       result = gSystem->CompileMacro("mtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) mtest();
+      if (exec) mtest(exec-1);
 
    }
 
@@ -84,7 +84,7 @@
       result = gSystem->CompileMacro("ntest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) ntest();
+      if (exec) ntest(exec-1);
 
    }
 
