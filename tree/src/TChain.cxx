@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.19 2001/04/23 14:07:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.20 2001/06/07 08:56:05 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -185,7 +185,14 @@ Int_t TChain::Add(const char *name, Int_t nentries)
    char *aname = new char[nch+1];
    strcpy(aname,name);
    char *dot = (char*)strstr(aname,".root");
-   if (dot) *dot = 0;
+
+   const char *behind_dot_root = NULL;
+   
+   if (dot) {
+      if (dot[5] == '/') behind_dot_root = dot + 6;
+      *dot = 0;
+   }
+
    char *slash = strrchr(aname,'/');
    if (slash) {
       *slash = 0;
@@ -206,7 +213,10 @@ Int_t TChain::Add(const char *name, Int_t nentries)
          //if (IsDirectory(file)) continue;
          TString s = file;
          if (strcmp(slash,file) && s.Index(re) == kNPOS) continue;
-         nf += AddFile(Form("%s/%s",aname,file),-1);
+         if (behind_dot_root != NULL && *behind_dot_root != 0)       
+            nf += AddFile(Form("%s/%s/%s",aname,file,behind_dot_root),-1);
+         else
+            nf += AddFile(Form("%s/%s",aname,file),-1);
       }
       gSystem->FreeDirectory(dir);
    }   
