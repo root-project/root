@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.6 2002/02/04 21:21:24 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.7 2002/06/26 08:04:00 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -192,14 +192,25 @@ void *TFunction::InterfaceMethod() const
    return (void*)pfunc;
 }
 
-const char *TFunction::GetMangledName() const{
-// returns the mangled name as defined by CINT
-   if (fInfo) return fInfo->GetMangledName();
-   else return NULL;
+//______________________________________________________________________________
+const char *TFunction::GetMangledName() const
+{
+   // Returns the mangled name as defined by CINT, or 0 in case of error.
+
+   if (fInfo)
+      return fInfo->GetMangledName();
+   else
+      return 0;
 }
 
-const char *TFunction::GetPrototype() const{
-// returns the prototype of a function as defined by CINT
-   if (fInfo) return fInfo->GetPrototype();
-   else return NULL;
+//______________________________________________________________________________
+const char *TFunction::GetPrototype() const
+{
+   // Returns the prototype of a function as defined by CINT, or 0 in
+   // case of error.
+
+   if (fInfo)
+      return fInfo->GetPrototype();
+   else
+      return 0;
 }
