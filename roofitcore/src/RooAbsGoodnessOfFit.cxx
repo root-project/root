@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.3 2002/09/05 04:33:05 verkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.4 2002/09/30 00:57:28 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,9 +47,12 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, Ro
   _paramSet("paramSet","Set of parameters",this),
   _pdf(&pdf),
   _data(&data),
-  _projDeps(&projDeps),
+  _projDeps((RooArgSet*)projDeps.Clone()),
   _nCPU(nCPU),
-  _simCount(1)
+  _simCount(1),
+  _gofArray(0),
+  _mpfeArray(0),
+ _nGof(0)
 {
   // Register all parameters as servers 
   RooArgSet* params = pdf.getParameters(&data) ;
@@ -89,7 +92,11 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const
   _nCPU(other._nCPU),
   _gofOpMode(other._gofOpMode),
   _nEvents(other._nEvents),
-  _simCount(other._simCount)
+  _simCount(other._simCount),
+  _pdf(other._pdf),
+  _data(other._data),
+  _projDeps((RooArgSet*)other._projDeps->Clone()),
+  _init(other._init)
 {
   if (operMode()==SimMaster) {
     _nGof = other._nGof ; 
@@ -131,6 +138,8 @@ RooAbsGoodnessOfFit::~RooAbsGoodnessOfFit()
     }
     delete[] _gofArray ;
   }
+
+  delete _projDeps ;
 }
 
 
@@ -192,7 +201,7 @@ Bool_t RooAbsGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServe
     // Forward to slaves
     Int_t i ;
     for (i=0 ; i<_nGof ; i++) {
-      if (_gofArray[i]) _gofArray[i]->redirectServersHook(newServerList,mustReplaceAll,nameChange) ;
+      if (_gofArray[i]) _gofArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
     }
   } else if (_gofOpMode==MPMaster) {
     // WVE implement this
@@ -305,6 +314,9 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 	   << " (" << dset->numEntries() << " dataset entries)" << endl ;
       _gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps) ;
       _gofArray[n]->setSimCount(_nGof) ;
+      
+      // Servers may have been redirected between instantiation and (deferred) initialization
+      _gofArray[n]->recursiveRedirectServers(_paramSet) ;
       n++ ;
     } else {
       if (!dset && pdf) {

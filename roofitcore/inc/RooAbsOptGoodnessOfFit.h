@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.3 2002/09/05 04:33:07 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,7 +35,7 @@ public:
 
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const ;
 
-  //protected:
+protected:
 
   void constOptimize(ConstOpCode opcode) ;
 

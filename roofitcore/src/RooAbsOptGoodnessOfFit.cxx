@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.6 2002/10/25 00:13:01 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.7 2002/10/25 01:34:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -202,7 +202,8 @@ Bool_t RooAbsOptGoodnessOfFit::redirectServersHook(const RooAbsCollection& newSe
 {
   RooAbsGoodnessOfFit::redirectServersHook(newServerList,mustReplaceAll,nameChange) ;
   if (operMode()!=Slave) return kFALSE ;  
-  return _pdfClone->redirectServers(newServerList,kFALSE,nameChange) ;
+  Bool_t ret = _pdfClone->recursiveRedirectServers(newServerList,kFALSE,nameChange) ;
+  return ret ;
 }
 
 
