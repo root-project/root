@@ -166,7 +166,7 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                mlp krb5auth rpdutils globusauth
+                mlp krb5auth rpdutils globusauth pyroot xml
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
