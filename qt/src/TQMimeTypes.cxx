@@ -1,33 +1,14 @@
-// @(#)root/gui:$Name:  $:$Id: TQMimeTypes.cxx,v 1.5 2004/06/28 20:16:54 fine Exp $
+// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2003
-/****************************************************************************
-** $Id: TQMimeTypes.cxx,v 1.5 2004/06/28 20:16:54 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-**
-*****************************************************************************/
 
-/**************************************************************************
-
-    This source is based on Xclass95, a Win95-looking GUI toolkit.
-    Copyright (C) 1996, 1997 David Barth, Ricky Ralston, Hector Peraza.
-    Xclass95 is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
-    License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
-
-    and TGMimeTypes TGMime from ROOT "gui" package
-    Copyright (C) 1995-2000, Rene Brun and Fons Rademakers. 
-    All rights reserved.                                                
-                                                                         
-   For the licensing terms see $ROOTSYS/LICENSE.                         
-
-**************************************************************************/
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2003 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -194,9 +175,9 @@ const QIconSet *TQMimeTypes::GetIcon(const char *filename) const
    return 0;
 }
 //______________________________________________________________________________
-const QIconSet *TQMimeTypes::GetIcon(const TSystemFile *filename) 
+const QIconSet *TQMimeTypes::GetIcon(const TSystemFile *filename)
 {
-   // Return icon belonging to mime type of TSystemFile extension 
+   // Return icon belonging to mime type of TSystemFile extension
    const char *name = filename->GetName();
    const QIconSet *set = GetIcon(name);
    if (!set) set = AddType(filename);
@@ -321,7 +302,7 @@ void TQMimeTypes::AddType(const char *type, const char *pattern, const char *ico
 
    mime->fType    = type;
    mime->fPattern = pattern;
-   mime->fIcon    = 0; 
+   mime->fIcon    = 0;
    char *picnam = gSystem->Which(fIconPath.Data(),icon, kReadPermission);
    if (picnam) {
       mime->fIcon  = new QIconSet( QPixmap(picnam) ) ;

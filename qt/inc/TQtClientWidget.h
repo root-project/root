@@ -1,23 +1,22 @@
-#ifndef ROOT_TQTCLIENTWIDGET
-#define ROOT_TQTCLIENTWIDGET
+// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   01/03/2003
-/****************************************************************************
-** $Id: TQtClientWidget.h,v 1.30 2004/07/09 00:17:48 fine Exp $
-**
-** Copyright (C) 2003 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.      
-**
-*****************************************************************************/
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_TQtClientWidget
+#define ROOT_TQtClientWidget
 
 #include <qframe.h>
 #include <qcursor.h>
 #include "GuiTypes.h"
 
-// #include "TGQt.h"
 
 class QAccel;
 class QCursor;
@@ -28,7 +27,7 @@ class TQtWidget;
 class TQtClientWidget : public QFrame {
        Q_OBJECT
 protected:
-       
+
        UInt_t fGrabButtonMask;
        UInt_t fGrabPointerMask;
        UInt_t fEventMask;
@@ -44,7 +43,7 @@ protected:
        friend class TQtClientGuard;
        friend class TGQt;
 
-       TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, WFlags f=0 ): 
+       TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, WFlags f=0 ):
           QFrame(parent,name,f)
          ,fGrabButtonMask(kAnyModifier),fGrabPointerMask(kAnyModifier)
          ,fEventMask(kNoEventMask),fSelectEventMask(0) // ,fAttributeEventMask(0)
@@ -52,9 +51,9 @@ protected:
          ,fDeleteNotify(false),fGuard(guard), fCanvasWidget(0)
           { }
        void SetCanvasWidget(TQtWidget *widget);
-public: 
+public:
     virtual ~TQtClientWidget();
-    virtual void closeEvent(QCloseEvent *ev);  
+    virtual void closeEvent(QCloseEvent *ev);
     bool   DeleteNotify();
     TQtWidget *GetCanvasWidget() const;
     void   GrabEvent(Event_t &ev,bool own=TRUE);
@@ -91,24 +90,24 @@ public slots:
 //______________________________________________________________________________
 inline  bool TQtClientWidget::IsPointerGrabbed(Event_t &ev)
 {
-   //            
+   //
    //    grab     ( -owner_event && id == current id  -)         *
    //  o------>o---------------------------------->o--------------->o-->
    //          |             *                     |  grab pointer  |
-   //          |                                   |                | 
+   //          |                                   |                |
    //          |           evmask                  |                |
    //          |---------------------------------->|                |
    //          |             *                                      |
    //          |                      *                             |
    //          |--------------------------------------------------->|
    //                             discard event
-   //      
+   //
 
    bool isGrabbed = ev.fState & fGrabPointerMask;
    //fprintf(stderr," TQtClientWidget::IsPointerGrabbed %p grabbed=%d\n", this, isGrabbed);
    //fprintf(stderr,"                                 wid= %p mask=0x%x\n", (TQtClientWidget *)TGQt::wid(ev.fWindow), fGrabPointerMask);
    //fprintf(stderr,"                                 fPointerOwner= %d ev.fState=0x%x\n", fPointerOwner, ev.fState);
-   
+
    return isGrabbed;
 }
 //______________________________________________________________________________
@@ -123,8 +122,8 @@ inline bool  TQtClientWidget::IsClosing(){ return fIsClosing; }
 
 //______________________________________________________________________________
 inline UInt_t TQtClientWidget::IsEventSelected (UInt_t evmask)
-{ 
-   //if (evmask & (kButtonPressMask | kButtonMotionMask) ) 
+{
+   //if (evmask & (kButtonPressMask | kButtonMotionMask) )
    //   fprintf(stderr,"TQtClientWidget::IsEventSelected event %x, mask %x. match %x\n"
    //   , evmask, fSelectEventtMask, evmask & (kButtonPressMask | kButtonMotionMask));
    return  (evmask & fSelectEventMask);
@@ -133,11 +132,11 @@ inline UInt_t TQtClientWidget::IsEventSelected (UInt_t evmask)
 //______________________________________________________________________________
 inline void TQtClientWidget::SetCursor()
 { // Set this widget pre-defined cursor
-   if (fPointerCursor) setCursor(*fPointerCursor); 
+   if (fPointerCursor) setCursor(*fPointerCursor);
 }
 //______________________________________________________________________________
 inline void TQtClientWidget::SetCursor(Cursor_t cursor)
-{ 
+{
    // Change the pre-define curos shape and set it
    fPointerCursor = (QCursor *)cursor;
    SetCursor();
@@ -161,7 +160,7 @@ inline void TQtClientWidget::SelectInput (UInt_t evmask) {fSelectEventMask=evmas
 inline EMouseButton TQtClientWidget::Button()const { return fButton;           }
 
 //______________________________________________________________________________
-inline UInt_t TQtClientWidget::ButtonMask()  const { return fGrabButtonMask;   } 
+inline UInt_t TQtClientWidget::ButtonMask()  const { return fGrabButtonMask;   }
 
 //______________________________________________________________________________
 inline UInt_t TQtClientWidget::PointerMask() const { return fGrabPointerMask;  }

@@ -1,24 +1,25 @@
+// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2002
-/****************************************************************************
-** $Id: TGQt.h,v 1.27 2004/07/21 21:55:42 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-*****************************************************************************/
 
-#ifndef ROOT_TQt
-#define ROOT_TQt
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_TGQt
+#define ROOT_TGQt
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGQt                                                                  //
+// TGQt                                                                 //
 //                                                                      //
 // Interface to low level Qt GUI. This class gives access to basic      //
-// Win32 graphics, pixmap, text and font handling routines.             //
+// Qt graphics, pixmap, text and font handling routines.                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -30,14 +31,14 @@
 #include <qobject.h>
 #include <qmap.h>
 #include <qcolor.h>
-#include <qcursor.h> 
+#include <qcursor.h>
 #include <qpainter.h>
 #include <qmemarray.h>
 #include <qrect.h>
 #include <qmap.h>
 #include <qptrqueue.h>
 #include <qptrlist.h>
-#include <qptrvector.h> 
+#include <qptrvector.h>
 #include "TQtClientGuard.h"
 
 #else
@@ -85,7 +86,7 @@ signals:
 
 class TGQt  : public TVirtualX  {
 
-#ifndef __CINT__ 
+#ifndef __CINT__
    friend class TQtObject;
    friend class TQtWindowsObject;
    friend class TQtPixmapObject;
@@ -143,7 +144,7 @@ protected:
     TQtPixmapGuard       fQPixmapGuard;  // guard TQtClientWibdget against of dead pointers
     typedef std::map<ULong_t, QColor * > COLORMAP;
     COLORMAP fColorMap;  // to back the TG widgets
-    TQtClientWidget       *fPointerGrabber; 
+    TQtClientWidget       *fPointerGrabber;
     QTextCodec            *fCodec;        // The Current text decoder
     QString                fFontTextCode; // The default code text code page (from the Gui.DefaultFont)
 
@@ -170,14 +171,14 @@ protected:
 
 #endif
 private:
-   TGQt& operator=(const TGQt&); // AXEL: intentionally not implemented
+   TGQt& operator=(const TGQt&);
 public:
 
     TGQt();
     TGQt(const TGQt &vx): TVirtualX(vx) { MayNotUse("TGQt(const TGQt &)"); }   // without dict does not compile? (rdm)
     TGQt(const Text_t *name, const Text_t *title);
     virtual ~TGQt();
-// Include the base TVirtualX class interface 
+// Include the base TVirtualX class interface
 #include "TVirtualX.interface.h"
 #ifndef __CINT__
 // extracted methods
@@ -230,7 +231,7 @@ public:
       static QString RootFileFormat(const QString &selector);
       static QString QtFileFormat(const char *selector);
       static QString QtFileFormat(const QString &selector);
-#endif 
+#endif
 
 
    ClassDef(TGQt,0)  //Interface to Qt GUI

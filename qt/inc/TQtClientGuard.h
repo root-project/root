@@ -1,21 +1,21 @@
+// @(#)root/qt:$Name:$:$Id:$
+// Author: Valeri Fine   21/01/2002
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TQtClientGuard
 #define ROOT_TQtClientGuard
- 
-/****************************************************************************
-** $Id: TQtClientGuard.h,v 1.9 2004/05/12 18:27:58 fine Exp $
-**
-** Copyright (C) 2004 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-ls**
-*****************************************************************************/
 
 #include <qobject.h>
 #include <qpixmap.h>
-#include <qptrlist.h> 
+#include <qptrlist.h>
 #include "TQtClientWidget.h"
 
 

@@ -1,25 +1,23 @@
-// Author: Valeri Fine   01/03/2003
-/****************************************************************************
-** $Id: TQtClientWidget.cxx,v 1.23 2004/06/08 23:23:59 fine Exp $
-**
-** Copyright (C) 2003 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.      
-**
-*****************************************************************************/
+// @(#)root/qt:$Name:$:$Id:$
+// Author: Valeri Fine   21/01/2002
 
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TQtWidget.h"
 #include "TQtClientWidget.h"
 #include "TQtClientFilter.h"
 #include "TQtClientGuard.h"
 #include "TGQt.h"
-#include <qkeysequence.h> 
-#include <qaccel.h> 
-#include <qevent.h> 
+#include <qkeysequence.h>
+#include <qaccel.h>
+#include <qevent.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -43,8 +41,8 @@ TQtClientWidget::~TQtClientWidget()
    UnSetButtonMask(true);
    UnSetKeyMask();
    UnSetPointerMask(true);
-   if (DeleteNotify()) 
-      gQt->SendDestroyEvent(this);  // notify TGClient we have been destroyed 
+   if (DeleteNotify())
+      gQt->SendDestroyEvent(this);  // notify TGClient we have been destroyed
 }
 
 //______________________________________________________________________________
@@ -52,10 +50,10 @@ void TQtClientWidget::closeEvent(QCloseEvent *ev)
 {
    // This Qt QCloseEvent event handler
 
-   // Close events are sent to widgets that the user wants to close, 
-   // usually by choosing "Close" from the window menu, or by clicking 
-   // the `X' titlebar button. They are also sent when you call QWidget::close() 
-   // to close a widget programmatically. 
+   // Close events are sent to widgets that the user wants to close,
+   // usually by choosing "Close" from the window menu, or by clicking
+   // the `X' titlebar button. They are also sent when you call QWidget::close()
+   // to close a widget programmatically.
 
    printf("TQtClientWidget::closeEvent(QCloseEvent *ev)\n");
    QWidget::closeEvent(ev);
@@ -65,12 +63,12 @@ bool TQtClientWidget::IsGrabbed(Event_t &ev)
 {
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    // XGrabButton(3X11)         XLIB FUNCTIONS        XGrabButton(3X11)
-   //   ·    The pointer is not grabbed, and the specified button is logically 
-   //        pressed when the specified modifier keys are logically down, 
+   //   ·    The pointer is not grabbed, and the specified button is logically
+   //        pressed when the specified modifier keys are logically down,
    //        and no other buttons or modifier keys are logically down.
    //   ·    The grab_window contains the pointer.
    //   ·    The confine_to window (if any) is viewable.
-   //   ·    A passive grab on the same button/key combination does not exist 
+   //   ·    A passive grab on the same button/key combination does not exist
    //        on any ancestor of grab_window.
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    if (!fEventMask || isHidden()) return kFALSE;
@@ -102,21 +100,21 @@ bool TQtClientWidget::IsKeyGrabbed(Event_t &ev)
 {
    // Check ROOT Event_t ev structure for the KeyGrab mask
 
-   // fprintf(stderr,"Do we grab ? %p <%c> event= %p <%c> mask = %x\n",Window_t((QPaintDevice *)this), fKeyCode, ev.fWindow, ev.fCode,fGrabKeyMask); 
+   // fprintf(stderr,"Do we grab ? %p <%c> event= %p <%c> mask = %x\n",Window_t((QPaintDevice *)this), fKeyCode, ev.fWindow, ev.fCode,fGrabKeyMask);
    if (ev.fCode == UInt_t(fKeyCode) && ((ev.fState & fGrabKeyMask) || fGrabKeyMask == kAnyModifier) )
-   { 
+   {
       ev.fWindow = Window_t((QPaintDevice *)this);
       fprintf(stderr,"Yes we do %c\n", fKeyCode);
       return true;
    }
-   return false;   
+   return false;
 }
 #endif
 //______________________________________________________________________________
 void TQtClientWidget::GrabEvent(Event_t &ev, bool own)
 {
-   // replace the original Windows_t  with the grabbing id and 
-   // re-caclulate the mouse coordinate 
+   // replace the original Windows_t  with the grabbing id and
+   // re-caclulate the mouse coordinate
    // to respect the new Windows_t id if any
    TQtClientWidget *w = (TQtClientWidget *)TGQt::wid(ev.fWindow);
    if (w != this) {
@@ -135,8 +133,8 @@ void TQtClientWidget::GrabEvent(Event_t &ev, bool own)
    }
 }
 //______________________________________________________________________________
-void TQtClientWidget::SetButtonMask(UInt_t modifier,EMouseButton button) 
-{ 
+void TQtClientWidget::SetButtonMask(UInt_t modifier,EMouseButton button)
+{
    // Set the Button mask
    fGrabButtonMask  = modifier; fButton = button;
    TQtClientFilter *f = gQt->QClientFilter();
@@ -146,8 +144,8 @@ void TQtClientWidget::SetButtonMask(UInt_t modifier,EMouseButton button)
    }
 }
 //______________________________________________________________________________
-void TQtClientWidget::UnSetButtonMask(bool dtor) 
-{ 
+void TQtClientWidget::UnSetButtonMask(bool dtor)
+{
    // Unset the Button mask
 
    if (fGrabButtonMask) {
@@ -161,7 +159,7 @@ void TQtClientWidget::UnSetButtonMask(bool dtor)
 }
 //______________________________________________________________________________
 void TQtClientWidget::SetPointerMask(UInt_t modifier, Cursor_t cursor, Bool_t owner_events)
-{ 
+{
    // Set the pointer mask
 
    fGrabPointerMask = modifier;
@@ -175,7 +173,7 @@ void TQtClientWidget::SetPointerMask(UInt_t modifier, Cursor_t cursor, Bool_t ow
 }
 //______________________________________________________________________________
 void TQtClientWidget::UnSetPointerMask(bool dtor)
-{ 
+{
    // Unset the pointer mask
 
    if (fGrabPointerMask) {
@@ -193,8 +191,8 @@ void TQtClientWidget::UnSetPointerMask(bool dtor)
    }
 }
 //______________________________________________________________________________
-void TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, bool insert)   
-{ 
+void TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, bool insert)
+{
    // Set the key button mask
 
    int key[4]= {0,0,0,0};
@@ -215,33 +213,33 @@ void TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, bool insert)
         int id = fGrabbedKey->key(QKeySequence(key[0],key[1],key[2],key[3]));
         if (id != -1) fGrabbedKey->removeItem(id);
         if (fGrabbedKey->count() ==  0) {  delete fGrabbedKey; fGrabbedKey = 0; }
-     }   
+     }
   }
 }
 //______________________________________________________________________________
-void TQtClientWidget::SetCanvasWidget(TQtWidget *widget) 
-{  
+void TQtClientWidget::SetCanvasWidget(TQtWidget *widget)
+{
    // Associate this widget with the parent ROOT gui widget
    qApp->lock();
-   if (fCanvasWidget) 
+   if (fCanvasWidget)
       disconnect(fCanvasWidget,SIGNAL(destroyed()), this, SLOT(disconnect()));
-   fCanvasWidget = widget;  
+   fCanvasWidget = widget;
    if (fCanvasWidget) {
-      // may be transparent 
+      // may be transparent
       setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
-      connect(fCanvasWidget,SIGNAL(destroyed()),this,SLOT(Disconnect()));      
+      connect(fCanvasWidget,SIGNAL(destroyed()),this,SLOT(Disconnect()));
    }
    qApp->unlock();
 }
 //______________________________________________________________________________
-void TQtClientWidget::UnSetKeyMask(Int_t keycode, UInt_t modifier)   
-{ 
+void TQtClientWidget::UnSetKeyMask(Int_t keycode, UInt_t modifier)
+{
   // Unset the key button mask
 
-  SetKeyMask(keycode, modifier, false);  
+  SetKeyMask(keycode, modifier, false);
 }
 //_____slot _________________________________________________________________________
-void TQtClientWidget::Accelerate(int id)   
+void TQtClientWidget::Accelerate(int id)
 {
   // Qt slot to repsonce to the "Keyboard accelerator signal"
   QKeySequence key = fGrabbedKey->key(id);
@@ -255,12 +253,12 @@ void TQtClientWidget::Accelerate(int id)
         case CTRL:   state |= Qt::ControlButton; break;
      };
   }
-  QKeyEvent ac(QEvent::KeyPress,keycode,keycode,state); 
+  QKeyEvent ac(QEvent::KeyPress,keycode,keycode,state);
   QApplication::sendEvent( this, &ac );
 }
 //______________________________________________________________________________
 void TQtClientWidget::Disconnect()
-{  
+{
   // Disconnect the Canvas and ROOT gui widget before destroy.
 
    SetCanvasWidget(0);           }
@@ -268,9 +266,9 @@ void TQtClientWidget::Disconnect()
 //______________________________________________________________________________
 void TQtClientWidget::polish()
 {
-   // Delayed initialization of a widget. 
-   // This function will be called after a widget has been fully created 
-   // and before it is shown the very first time. 
+   // Delayed initialization of a widget.
+   // This function will be called after a widget has been fully created
+   // and before it is shown the very first time.
 
    QWidget::polish();
    setMouseTracking(true);

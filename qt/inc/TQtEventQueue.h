@@ -1,32 +1,31 @@
+// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   25/03/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2004 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TQtEventQueue
 #define ROOT_TQtEventQueue
 
-/****************************************************************************
-** $Id: TQtEventQueue.h,v 1.4 2004/04/20 20:15:11 fine Exp $
-**
-** Copyright (C) 2004 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-**
-*****************************************************************************/
-
 #include "GuiTypes.h"
-#include <qptrlist.h> 
+#include <qptrlist.h>
 
-/////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 //
-//  TQtEventQueue is a queue container of the pointers of Event_t structures 
-//  created by TQtClientFilter class
-//  If auto-deleting is turned on, all the items in a collection are deleted when 
-//  the collection itself is deleted.
-//  (for the full list of the members see: 
-//  http://doc.trolltech.com/3.3/qptrlist.html)
+//  TQtEventQueue is a queue container of the pointers of Event_t
+//  structures created by TQtClientFilter class.
+//  If auto-deleting is turned on, all the items in a collection are
+//  deleted when the collection itself is deleted.
+//  For the full list of the members see:
+//  http://doc.trolltech.com/3.3/qptrlist.html
 //
-/////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 
 class TQtEventQueue : public QPtrList<Event_t> {

@@ -1,14 +1,15 @@
-/****************************************************************************
-** $Id: TQtThreadStub.h,v 1.7 2004/07/21 21:55:42 fine Exp $
-**
-** Copyright (C) 2003 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-**
-*****************************************************************************/
+// @(#)root/qt:$Name:$:$Id:$
+// Author: Valeri Fine   21/01/2002
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TQtThreadStub
 #define ROOT_TQtThreadStub
 
@@ -16,7 +17,7 @@
 #error BASECLASS macro has not been defined yet !!!
 #endif
 
-#ifndef  THREADCLASS 
+#ifndef  THREADCLASS
 #error THREADCLASS macro has not been defined yet !!!
 #endif
 
@@ -24,9 +25,9 @@
 #ifndef PROXYPOINTER
 #  define PROXYPOINTER this
 #  ifdef ISPROXY
-#    undef ISPROXY 
+#    undef ISPROXY
 #  endif
-#else 
+#else
 #  define ISPROXY 1
 #endif
 

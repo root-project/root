@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TQtRootApplication.cxx,v 1.1 2003/05/21 18:40:06 fine Exp $
+// @(#)root/gui:$Name:  $:$Id: TQtRootApplication.cxx,v 1.1 2004/07/09 09:21:24 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TQtRootApplication                                                     //
+// TQtRootApplication                                                   //
 //                                                                      //
 // This class create the ROOT native GUI version of the ROOT            //
 // application environment. This in contrast to the Win32 version.      //

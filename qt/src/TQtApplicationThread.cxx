@@ -1,15 +1,14 @@
+// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2002
-/****************************************************************************
-** $Id: TQtApplicationThread.cxx,v 1.5 2002/09/15 03:33:10 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-**
-*****************************************************************************/
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TQtApplicationThread.h"
 #include "TQtApplication.h"
@@ -23,7 +22,7 @@ protected:
   friend class TQtApplicationThread;
   TQtApplicationThread *fThread;
   TQtThreadDispatcher(TQtApplicationThread *that) : fThread(that) {}
-  bool event(QEvent *e) {return fThread->eventCB((TQtEvent *)e); } 
+  bool event(QEvent *e) {return fThread->eventCB((TQtEvent *)e); }
 };
 
 //______________________________________________________________________________
@@ -45,7 +44,7 @@ void TQtApplicationThread::Run()
 }
 //______________________________________________________________________________
 bool TQtApplicationThread::eventCB(TQtEvent *evt)
-{  
+{
   if (evt) evt->Notify();
   return TRUE;
 }
@@ -53,6 +52,6 @@ bool TQtApplicationThread::eventCB(TQtEvent *evt)
 //______________________________________________________________________________
 void TQtApplicationThread::AboutToQuit ()
 {
-  // no GUI anymore - replace the pointer 
+  // no GUI anymore - replace the pointer
   gVirtualX = gGXBatch;
 }

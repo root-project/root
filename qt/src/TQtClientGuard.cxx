@@ -1,20 +1,21 @@
-/****************************************************************************
-** $Id: TQtClientGuard.cxx,v 1.18 2004/06/08 21:16:48 fine Exp $
-**
-** Copyright (C) 2004 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-ls**
-*****************************************************************************/
+// @(#)root/qt:$Name:$:$Id:$
+// Author: Valeri Fine   21/01/2002
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <assert.h>
 
 #include "TQtClientGuard.h"
 #include "TGQt.h"
-#include <qobjectlist.h> 
-#include <qbitmap.h> 
+#include <qobjectlist.h>
+#include <qbitmap.h>
 
 //______________________________________________________________________________
 void TQtClientGuard::Add(QWidget *w)
@@ -33,21 +34,21 @@ TQtClientWidget *TQtClientGuard::Create(QWidget* parent, const char* name, WFlag
    return  w;
 }
 //______________________________________________________________________________
-void TQtClientGuard::Delete(QWidget *w) 
+void TQtClientGuard::Delete(QWidget *w)
 {
    // Delete and unregister the object
    if (w)
    {
       w->hide();
       Disconnect(w);
-      ((TQtClientWidget *)w)->SetClosing(); 
+      ((TQtClientWidget *)w)->SetClosing();
       //w->close(true);
       delete w;
       assert( w != QWidget::mouseGrabber() );
-   } 
+   }
 }
 //______________________________________________________________________________
-void TQtClientGuard::Disconnect(QWidget *w) 
+void TQtClientGuard::Disconnect(QWidget *w)
 {
    // Disconnect and unregister the object
    fQClientGuard.find(w);
@@ -57,13 +58,13 @@ void TQtClientGuard::Disconnect(QWidget *w)
       QWidget *grabber = QWidget::mouseGrabber();
       fQClientGuard.remove();
       disconnect(w,SIGNAL(destroyed()),this,SLOT(Disconnect()));
-      if (grabber == w) 
+      if (grabber == w)
          gVirtualX->GrabPointer(TGQt::iwid(w), 0, 0, 0, kFALSE);
    } else {
       fDeadCounter++;
-#ifdef QTDEBUG      
+#ifdef QTDEBUG
       printf(" %d Attempt to delete the dead widget %p\n",fDeadCounter, w);
-#endif      
+#endif
    }
 }
 //______________________________________________________________________________
@@ -77,8 +78,8 @@ void TQtClientGuard::DisconnectChildren(TQtClientWidget *w)
          nChild = childList->count();
          QObjectListIterator next(*childList);
          next.toLast();
-         QObject *widget = 0; 
-         // while ( (widget = *next) ) 
+         QObject *widget = 0;
+         // while ( (widget = *next) )
          for (widget=next.toLast(); (widget = next.current()); --next)
          {
             if (dynamic_cast<TQtClientWidget*>(widget)) {
@@ -93,7 +94,7 @@ void TQtClientGuard::DisconnectChildren(TQtClientWidget *w)
 }
 
 //______________________________________________________________________________
-QWidget *TQtClientGuard::Find(Window_t id) 
+QWidget *TQtClientGuard::Find(Window_t id)
 {
    // Find the object by ROOT id
 
@@ -103,14 +104,14 @@ QWidget *TQtClientGuard::Find(Window_t id)
 }
 // protected slots:
 //______________________________________________________________________________
-void TQtClientGuard::Disconnect() 
+void TQtClientGuard::Disconnect()
 {
    // Disconnect object Qt slot
    QWidget *w = (QWidget *)sender();
    fprintf(stderr, "Disconnecting  SLOT widget %p\n", w);
    fQClientGuard.find(w);
    if ( fQClientGuard.current() ) {
-      if ( w == QWidget::mouseGrabber()) 
+      if ( w == QWidget::mouseGrabber())
          fprintf(stderr," mouse is still grabbed by the dead wigdet !!!\n");
       fQClientGuard.remove();
       disconnect(w,SIGNAL(destroyed()),this,SLOT(Disconnect()));
@@ -137,7 +138,7 @@ QPixmap* TQtPixmapGuard::Create(int w, int h, const uchar *bits, bool isXbitmap)
 //______________________________________________________________________________
 QPixmap* TQtPixmapGuard::Create(int width, int height, int depth)
                                 // , Optimization optimization)
-{ 
+{
    QPixmap *w =  new QPixmap(width,height,depth); // ,optimization);
    Add(w);
    return  w;
@@ -145,7 +146,7 @@ QPixmap* TQtPixmapGuard::Create(int width, int height, int depth)
 //______________________________________________________________________________
 QPixmap* TQtPixmapGuard::Create(const QString &fileName, const char *format)
 //, ColorMode mode)
-{ 
+{
    // QPixmap object factory
    // Constructs a pixmap from the file fileName.
 
@@ -157,7 +158,7 @@ QPixmap* TQtPixmapGuard::Create(const QString &fileName, const char *format)
 QPixmap* TQtPixmapGuard::Create(const QPixmap &src)
 {
    // QPixmap object factory
-   // Constructs a pixmap that is a copy of pixmap. 
+   // Constructs a pixmap that is a copy of pixmap.
    QPixmap *w =  new QPixmap(src);
    Add(w);
    return  w;
@@ -174,7 +175,7 @@ QBitmap* TQtPixmapGuard::Create(const QBitmap &src)
 }
 //______________________________________________________________________________
 QPixmap* TQtPixmapGuard::Create (const char* xpm[])
-{ 
+{
    // QPixmap object factory
    // Constructs a pixmap from xpm
    QPixmap *w =  new QPixmap(xpm);
@@ -182,7 +183,7 @@ QPixmap* TQtPixmapGuard::Create (const char* xpm[])
    return  w;
 }
 //______________________________________________________________________________
-void TQtPixmapGuard::Delete(QPixmap *w) 
+void TQtPixmapGuard::Delete(QPixmap *w)
 {
    // Delete and unregister QPixmap
    if (w)
@@ -192,7 +193,7 @@ void TQtPixmapGuard::Delete(QPixmap *w)
    }
 }
 //______________________________________________________________________________
-void TQtPixmapGuard::Disconnect(QPixmap *w) 
+void TQtPixmapGuard::Disconnect(QPixmap *w)
 {
    // Disconnect QPixmap
 
@@ -201,9 +202,9 @@ void TQtPixmapGuard::Disconnect(QPixmap *w)
       fQClientGuard.remove();
    } else {
       fDeadCounter++;
-#ifdef QTDEBUG            
+#ifdef QTDEBUG
       printf(" %d Attempt to delete the dead pixmap %p\n",fDeadCounter, w);
-#endif      
+#endif
    }
 }
 //______________________________________________________________________________
@@ -218,7 +219,7 @@ QPixmap *TQtPixmapGuard::Pixmap(Pixmap_t id, bool needBitmap)
    return thisPix;
 }
 //______________________________________________________________________________
-QPixmap *TQtPixmapGuard::Find(Window_t /*id*/ ) 
+QPixmap *TQtPixmapGuard::Find(Window_t /*id*/ )
 {
    // return the current QPixmap object
 

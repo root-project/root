@@ -1,14 +1,14 @@
-// @(#)root/gui:$Name:  $:$Id: TQtRootApplication.h,v 1.1 2003/05/21 18:40:06 fine Exp $
-// Author: Fons Rademakers   15/01/98
+// @(#)root/qt:$Name:$:$Id:$
+// Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 #ifndef ROOT_TQtRootApplication
 #define ROOT_TQtRootApplication
@@ -17,8 +17,8 @@
 //                                                                      //
 // TQtRootApplication                                                   //
 //                                                                      //
-// This class create the dummy version of the ROOT                      //
-// application environment. This in contrast the Win32 version.         //
+// This class create the Qt version of the ROOT                         //
+// application environment.                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

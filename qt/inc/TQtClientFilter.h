@@ -1,13 +1,25 @@
+// @(#)root/qt:$Name:$:$Id:$
+// Author: Valeri Fine   21/01/2002
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TQClientFilter
 #define ROOT_TQClientFilter
- 
+
 #include "GuiTypes.h"
 
 #include <qobject.h>
-#include <qptrqueue.h> 
-#include <qptrlist.h> 
-#include <qintdict.h> 
-#include <qapplication.h> 
+#include <qptrqueue.h>
+#include <qptrlist.h>
+#include <qintdict.h>
+#include <qapplication.h>
 #include "TQtClientWidget.h"
 
 class TQtNextEventMessage;
@@ -40,23 +52,23 @@ public slots:
 };
 
 //______________________________________________________________________________
-inline   void TQtClientFilter::AppendButtonGrab(TQtClientWidget *widget) 
+inline   void TQtClientFilter::AppendButtonGrab(TQtClientWidget *widget)
 {  fButtonGrabList.append(widget);}
 //______________________________________________________________________________
 inline   void TQtClientFilter::RemoveButtonGrab(QObject *widget)
 { fButtonGrabList.remove((TQtClientWidget *)widget);}
 
 //______________________________________________________________________________
-inline   TQtEventQueue *TQtClientFilter::Queue() { 
+inline   TQtEventQueue *TQtClientFilter::Queue() {
 #ifdef R__QTGUITHREAD
       qApp->lock();
-      TQtEventQueue *save = fRootEventQueue; 
-      fRootEventQueue = 0; 
+      TQtEventQueue *save = fRootEventQueue;
+      fRootEventQueue = 0;
       qApp->unlock();
 #else
-      TQtEventQueue *save = fRootEventQueue; 
+      TQtEventQueue *save = fRootEventQueue;
 #endif
-      // fprintf(stderr," Queue %d \n", save ? save->count():-1);     
+      // fprintf(stderr," Queue %d \n", save ? save->count():-1);
       return save;
    }
 

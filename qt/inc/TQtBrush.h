@@ -1,13 +1,14 @@
+// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2002
-/****************************************************************************
-** $Id: TQtBrush.h,v 1.3 2004/06/08 21:13:36 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-*****************************************************************************/
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TQtBrush
 #define ROOT_TQtBrush
@@ -15,7 +16,7 @@
 #include "qbrush.h"
 #include "qcolor.h"
 
-class TQtBrush : public QBrush 
+class TQtBrush : public QBrush
 {
 protected:
   QColor fBackground;
@@ -24,7 +25,7 @@ protected:
 public:
    TQtBrush();
    TQtBrush(const TQtBrush &src):QBrush(src)
-   { 
+   {
       fBackground=src.fBackground;
       fStyle=src.fStyle;
       fFasi=src.fFasi;

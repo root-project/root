@@ -1,13 +1,14 @@
+// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2002
-/****************************************************************************
-** $Id: TQtThread.cxx,v 1.11 2004/07/22 15:27:18 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-*****************************************************************************/
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -155,7 +156,7 @@ TQtThread::~TQtThread(){;}
 //______________________________________________________________________________
     VOIDACTION1(UpdateWindow,Int_t,mode);
 //______________________________________________________________________________
-    VOIDACTION2(Warp,Int_t,ix, Int_t,iy);
+    VOIDACTION3(Warp,Int_t,ix,Int_t,iy,Window_t,id);
 //______________________________________________________________________________
     RETURNACTION1(Int_t,WriteGIF,char *,name);
 //______________________________________________________________________________

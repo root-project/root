@@ -1,13 +1,14 @@
+// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2002
-/****************************************************************************
-** $Id: TQtThread.h,v 1.18 2004/05/12 18:27:58 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-*****************************************************************************/
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TQtThread
 #define ROOT_TQtThread
@@ -20,6 +21,7 @@
 // Qt graphics, pixmap, text and font handling routines.                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #ifndef __CINT__
 #include "qobject.h"
 #endif
@@ -28,7 +30,7 @@
 
 class TQtThread :
 #ifndef __CINT__
-  public QObject, 
+  public QObject,
 #endif
   public TGQt {
 #ifndef __CINT__
@@ -40,7 +42,7 @@ private:
 public:
 
    TQtThread();
-   TQtThread(const TQtThread &) : 
+   TQtThread(const TQtThread &) :
 #ifndef __CINT__
       QObject(),
 #endif
@@ -105,7 +107,7 @@ public:
     void      SetTextSize(Float_t textsize);
     void      SetTitle(const char *title);
     void      UpdateWindow(Int_t mode);
-    void      Warp(Int_t ix, Int_t iy);
+    void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
     Int_t     WriteGIF(char *name);
     void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
