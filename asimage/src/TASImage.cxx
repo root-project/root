@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.2 2002/08/09 16:43:30 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.3 2002/08/10 23:50:10 rdm Exp $
 // Author: FOns Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -781,7 +781,7 @@ void TASImage::Paint(Option_t *option)
 
    gPad->cd();
 
-   if (grad_im) {
+   if (grad_im && !gVirtualPS) {
       // draw color bar
       pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
                              grad_im, 0, kTRUE);
@@ -867,6 +867,16 @@ void TASImage::Paint(Option_t *option)
          }
          stop_image_decoding(&imdec);
          gVirtualPS->CellArrayEnd();
+
+         // values of palette
+         TGaxis axis;
+         Int_t ndiv = 510;
+         double min = fMinValue;
+         double max = fMaxValue;
+         axis.SetLineColor(1);       // draw black ticks
+         axis.PaintAxis((to_w + 0.5 * pal_w) / pad_w, (pad_h - to_h - kFRS) / pad_h,
+                        (to_w + 0.5 * pal_w) / pad_w, (pad_h - kFRS - 20) / pad_h,
+                        min, max, ndiv, "+L");
       }
    }
 
