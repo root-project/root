@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.10 2004/08/16 10:00:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.11 2004/08/19 12:06:36 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -606,7 +606,7 @@ void TViewerOpenGL::Show()
 //______________________________________________________________________________
 void TViewerOpenGL::CloseWindow()
 {
-   fPad->SetViewer3D(0);
+   if (fPad) fPad->SetViewer3D(0);
    delete this;
 }
 
