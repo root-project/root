@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.130 2003/04/07 21:41:07 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.131 2003/04/10 09:00:21 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -772,6 +772,9 @@ void THistPainter::Paint(Option_t *option)
 //  =================================================
 //    "AXIS"   : Draw only axis
 //    "HIST"   : Draw only histo contour. (if histo has errors, errors are not drawn)
+//    "HIST"   : When an histogram has errors it is visualized by default with 
+//               error bars. To visualize it without errors use the option HIST
+//               together with the required option (eg "hist same c")
 //    "SAME"   : Superimpose on previous picture in the same pad
 //    "CYL"    : Use Cylindrical coordinates
 //    "POL"    : Use Polar coordinates
