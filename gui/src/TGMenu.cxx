@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.21 2003/12/04 02:59:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.22 2003/12/09 09:06:38 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1539,6 +1539,9 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                text = name.Data();
                out << "   " << GetName() << "->AddEntry(" << quote
                    << text << quote << "," << mentry->GetEntryId();
+            } else {
+               out << "   " << GetName() << "->AddEntry(" << quote
+                   << outext << quote << "," << mentry->GetEntryId();
             }
 #else
             out << "   " << GetName() << "->AddEntry(" << quote
