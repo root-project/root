@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.22 2000/09/12 15:45:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.23 2000/10/01 20:25:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1445,6 +1445,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"#ifndef %s_h\n",classname);
    fprintf(fp,"#define %s_h\n",classname);
    fprintf(fp,"\n");
+   fprintf(fp,"#include <TROOT.h>\n");
    fprintf(fp,"#include <TChain.h>\n");
    fprintf(fp,"#include <TFile.h>\n");
    if (opt.Contains("selector")) fprintf(fp,"#include <TSelector.h>\n");
