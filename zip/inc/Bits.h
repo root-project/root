@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.6 2004/12/09 15:56:59 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.7 2004/12/09 16:22:32 brun Exp $ */
 /* Author: */
 /*
 
@@ -156,7 +156,6 @@ local void R__flush_outbuf OF((unsigned w, unsigned bytes));
 void R__SetZipMode(int mode)
 {
    R__ZipMode = mode;
-   printf("R__SetZipMode = %d\n",R__ZipMode);
 }
 
 /* ===========================================================================
