@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.64 2003/03/19 14:01:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.65 2003/03/19 17:25:09 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -730,6 +730,9 @@ Int_t TChain::LoadTree(Int_t entry)
    //delete file unless the file owns this chain !!
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
+         if (cursav && cursav->GetFile()==fFile) {
+            cursav = gROOT;
+         }
          delete fFile; fFile = 0;
       }
    }

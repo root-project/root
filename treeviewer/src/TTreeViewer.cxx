@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.28 2003/01/24 08:24:13 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.29 2003/01/30 09:21:02 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -325,6 +325,9 @@ TTreeViewer::TTreeViewer(const TTree *tree)
    if (cdir) cdir->cd();
       
    SetTreeName(tree->GetName());
+   // If the tree is a chain, the tree directory will be changed by SwitchTree
+   // (called by SetTreeName)
+   cdir = tree->GetDirectory();
    if (cdir) {
       if (cdir->GetFile()) fFilename = cdir->GetFile()->GetName();
    }
