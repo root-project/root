@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.9 2001/12/03 10:29:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.10 2001/12/18 18:25:55 rdm Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -149,6 +149,14 @@ TProcessID *TProcessID::GetProcessID(UShort_t pid)
 }
 
 //______________________________________________________________________________
+TProcessID *TProcessID::GetSessionProcessID()
+{
+// static function returning the pointer to the session TProcessID
+
+   return fgPID;
+}
+
+//______________________________________________________________________________
 Int_t TProcessID::IncrementCount()
 {
 
@@ -210,17 +218,20 @@ TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
       //file->Error("ReadProcessID","Cannot find %s in file %s",pidname,file->GetName());
       return 0;
    }
-   pids->AddAtAndExpand(pid,pidf);
-   pid->IncrementCount();
       //check that a similar pid is not already registered in fgPIDs
    TIter next(fgPIDs);
    TProcessID *p;
    while ((p = (TProcessID*)next())) {
-      if (!strcmp(p->GetTitle(),pid->GetTitle())) return p;
+      if (!strcmp(p->GetTitle(),pid->GetTitle())) {
+         delete pid;
+         pids->AddAtAndExpand(p,pidf);
+         p->IncrementCount();
+         return p;
+      }
    }
-   Int_t apid = fgPIDs->GetEntriesFast();
+   pids->AddAtAndExpand(pid,pidf);
+   pid->IncrementCount();
    fgPIDs->Add(pid);
-   pid->SetUniqueID(apid);
    return pid;
 }
 
