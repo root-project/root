@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.70 2004/07/20 15:59:24 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.71 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1675,6 +1675,7 @@ const TMatrixD TMatrixD::EigenVectors(TVectorD &eigenValues) const
   if (!IsSymmetric())
     Warning("EigenVectors(TVectorD &)","Only real part of eigen-values will be returned");
   TMatrixDEigen eigen(*this);
+  eigenValues.ResizeTo(fNrows);
   eigenValues = eigen.GetEigenValuesRe();
   return eigen.GetEigenVectors();
 }

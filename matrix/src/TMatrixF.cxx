@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.21 2004/07/20 15:59:24 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.22 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1638,7 +1638,10 @@ const TMatrixF TMatrixF::EigenVectors(TVectorF &eigenValues) const
   // If the matrix is asymmetric, only the real part of the eigen-values is
   // returned . For full functionality use TMatrixDEigen .
 
+  if (!IsSymmetric())
+    Warning("EigenVectors(TVectorF &)","Only real part of eigen-values will be returned");
   TMatrixDEigen eigen(*this);
+  eigenValues.ResizeTo(fNrows);
   eigenValues = eigen.GetEigenValuesRe();
   return eigen.GetEigenVectors();
 }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.17 2004/06/22 19:57:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.18 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -936,6 +936,7 @@ const TMatrixD TMatrixDSym::EigenVectors(TVectorD &eigenValues) const
   // For full functionality use TMatrixDSymEigen .
   
   TMatrixDSymEigen eigen(*this);
+  eigenValues.ResizeTo(fNrows);
   eigenValues = eigen.GetEigenValues();
   return eigen.GetEigenVectors();
 } 
