@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TMixture.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Rene Brun   03/10/95
 
 /*************************************************************************
@@ -106,9 +106,10 @@ void TMixture::Streamer(TBuffer &b)
       b.ReadVersion(&R__s, &R__c);
       TMaterial::Streamer(b);
       b >> fNmixt;
-      fAmixt   = new Float_t[fNmixt];
-      fZmixt   = new Float_t[fNmixt];
-      fWmixt   = new Float_t[fNmixt];
+      Int_t nmixt = TMath::Abs(fNmixt);
+      fAmixt   = new Float_t[nmixt];
+      fZmixt   = new Float_t[nmixt];
+      fWmixt   = new Float_t[nmixt];
       b.ReadArray(fAmixt);
       b.ReadArray(fZmixt);
       b.ReadArray(fWmixt);
@@ -117,9 +118,10 @@ void TMixture::Streamer(TBuffer &b)
       R__c = b.WriteVersion(TMixture::IsA(), kTRUE);
       TMaterial::Streamer(b);
       b << fNmixt;
-      b.WriteArray(fAmixt, fNmixt);
-      b.WriteArray(fZmixt, fNmixt);
-      b.WriteArray(fWmixt, fNmixt);
+      Int_t nmixt = TMath::Abs(fNmixt);
+      b.WriteArray(fAmixt, nmixt);
+      b.WriteArray(fZmixt, nmixt);
+      b.WriteArray(fWmixt, nmixt);
       b.SetByteCount(R__c, kTRUE);
    }
 }
