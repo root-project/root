@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooComplex.cc,v 1.1 2001/06/23 01:20:33 verkerke Exp $
+ *    File: $Id: RooComplex.cc,v 1.2 2001/06/30 01:33:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,7 +20,7 @@ ClassImp(RooComplex)
 
 void RooComplex::Print() const {
 //  WVE Solaric CC5.0 complains about this
-//   cout << *this << endl;
+  cout << *this << endl;
 }
 
 ostream& operator<<(ostream& os, const RooComplex& z)

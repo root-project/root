@@ -1,0 +1,66 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   20-Jul-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+
+#ifndef ROO_PDF_CUSTOMIZER
+#define ROO_PDF_CUSTOMIZER
+
+#include "Rtypes.h"
+#include "TList.h"
+#include "RooFitCore/RooArgSet.hh"
+class RooAbsCategoryLValue ; 
+class RooAbsCategory ;
+class RooAbsArg ;
+class RooAbsPdf ;
+
+class RooPdfCustomizer {
+
+public:
+
+  // Constructors, assignment etc
+  RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafList) ;
+  virtual ~RooPdfCustomizer() ;
+  
+  void splitArgs(RooArgSet& argSet, RooAbsCategory& splitCat) ;
+  void splitArg(RooAbsArg& arg, RooAbsCategory& splitCat) ;
+  RooAbsPdf* build(const char* masterCatState, Bool_t verbose=kFALSE) ;
+
+  const RooArgSet& cloneBranchList() const { return _cloneBranchList ; }
+  const RooArgSet& cloneLeafList() const { return _cloneLeafList ; }
+
+  RooArgSet* fullParamList(const RooArgSet* depList) const ;
+
+protected:
+  
+  RooPdfCustomizer(const RooPdfCustomizer&) ;
+
+  TList _splitArgList ;
+  TList _splitCatList ;
+
+  // Master nodes are not owned
+  RooAbsPdf* _masterPdf ;
+  RooAbsCategoryLValue* _masterCat ;
+
+  TIterator* _masterLeafListIter ;
+  TIterator* _masterBranchListIter ;
+
+  RooArgSet  _masterBranchList ;
+  RooArgSet  _masterLeafList ;
+  RooArgSet  _masterUnsplitLeafList ;
+
+  // Cloned nodes are owned by the customizer
+  RooArgSet _cloneBranchList ;
+  RooArgSet& _cloneLeafList ;
+
+  ClassDef(RooPdfCustomizer,0) // PDF customizer 
+} ;
+
+#endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAddModel.rdl,v 1.1 2001/06/23 01:20:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,11 +14,13 @@
 #define ROO_ADD_MODEL
 
 #include "RooFitCore/RooResolutionModel.hh"
+#include "RooFitCore/RooFastList.hh"
 #include "TList.h"
 
 class RooAddModel : public RooResolutionModel {
 public:
   RooAddModel(const char *name, const char *title, RooRealVar& convVar);
+  RooAddModel(const char *name, const char *title, RooResolutionModel& model1) ;
   RooAddModel(const char *name, const char *title,
 	    RooResolutionModel& model1, RooResolutionModel& model2, RooAbsReal& coef1) ;
   RooAddModel(const char *name, const char *title,
@@ -26,11 +28,10 @@ public:
             RooAbsReal& coef1, RooAbsReal& coef2) ;
   RooAddModel(const RooAddModel& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooAddModel(*this,newname) ; }
-  virtual TObject* clone() const { return new RooAddModel(*this) ; }
   virtual ~RooAddModel() ;
 
 
-  RooResolutionModel* convolution(RooFormulaVar* basis) const ;
+  virtual RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const ;
 
   void addModel(RooResolutionModel& model, RooAbsReal& coef) ;
   void addLastModel(RooResolutionModel& model) ;
@@ -45,10 +46,17 @@ public:
 
   Bool_t selfNormalized(const RooArgSet& dependents) const { return kTRUE ; }
 
+  virtual void syncNormalization(const RooDataSet* dset) const ;
+  virtual void normLeafServerList(RooArgSet& list) const ;
+
+
 protected:
 
+  Bool_t _isCopy ;
   TList _modelProxyList ;
   TList _coefProxyList ;
+  TIterator* _modelProxyIter ;
+  TIterator* _coefProxyIter ;
 
 private:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.4 2001/06/08 05:51:05 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.5 2001/06/12 19:06:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -90,7 +90,7 @@ Bool_t RooFormulaVar::setFormula(const char* formula)
   if (_formula.reCompile(formula)) return kTRUE ;
   
   SetTitle(formula) ;
-  setValueDirty(kTRUE) ;
+  setValueDirty() ;
   return kFALSE ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.cc,v 1.4 2001/06/08 05:51:06 verkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.5 2001/06/23 01:20:34 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -116,13 +116,29 @@ RooSetProxy& RooSetProxy::operator=(const RooArgSet& other)
 
 
 
-Bool_t RooSetProxy::changePointer(const RooArgSet& newServerList) 
+Bool_t RooSetProxy::changePointer(const RooArgSet& newServerList, Bool_t nameChange) 
 {
   TIterator* iter = MakeIterator() ;
   RooAbsArg* arg ;
   Bool_t error(kFALSE) ;
   while (arg=(RooAbsArg*)iter->Next()) {
-    RooAbsArg* newArg = newServerList.find(arg->GetName()) ;
+    
+    RooAbsArg* newArg ;
+    if (!nameChange) {
+      newArg = newServerList.find(arg->GetName()) ;
+    } else {
+      TString nameAttrib("ORIGNAME:") ; 
+      nameAttrib.Append(arg->GetName()) ;
+      RooArgSet* tmp = newServerList.selectByAttrib(nameAttrib,kTRUE) ;
+      if (tmp && tmp->GetSize()!=1) {
+	cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, >1 server with " 
+	     << nameAttrib << " attribute" << endl ;
+	assert(0) ;
+      }
+      newArg = tmp ? ((RooAbsArg*)tmp->First()) : 0 ;
+      if (tmp) delete tmp ;
+    }
+
     if (newArg) error |= !RooArgSet::replace(*arg,*newArg) ;
   }
   delete iter ;

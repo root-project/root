@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.13 2001/05/15 06:54:25 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.14 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,8 +34,8 @@ RooCategory::RooCategory(const char *name, const char *title) :
   RooAbsCategoryLValue(name,title)
 {
   // Constructor. Types must be defined before variable can be used
-  setValueDirty(kTRUE) ;  
-  setShapeDirty(kTRUE) ;  
+  setValueDirty() ;  
+  setShapeDirty() ;  
 }
 
 
@@ -60,7 +60,7 @@ Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
   const RooCatType* type = lookupType(index,printError) ;
   if (!type) return kTRUE ;
   _value = *type ;
-  setValueDirty(kTRUE) ;
+  setValueDirty() ;
   return kFALSE ;
 }
 
@@ -73,7 +73,7 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
   const RooCatType* type = lookupType(label,printError) ;
   if (!type) return kTRUE ;
   _value = *type ;
-  setValueDirty(kTRUE) ;
+  setValueDirty() ;
   return kFALSE ;
 }
 
@@ -115,7 +115,7 @@ RooCategory& RooCategory::operator=(const RooCategory& other)
   if (!type) return *this ;
 
   _value = *type ;
-  setValueDirty(kTRUE) ;
+  setValueDirty() ;
   return *this ;
 }
 

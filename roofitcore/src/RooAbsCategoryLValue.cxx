@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.5 2001/05/31 21:21:34 david Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.6 2001/06/30 01:33:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,8 +39,8 @@ RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) 
   RooAbsCategory(name,title)
 {
   // Constructor
-  setValueDirty(kTRUE) ;  
-  setShapeDirty(kTRUE) ;  
+  setValueDirty() ;  
+  setShapeDirty() ;  
 }
 
 

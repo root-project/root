@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.34 2001/06/23 01:20:32 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.35 2001/06/30 01:33:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,7 @@
 #include "TNamed.h"
 #include "THashList.h"
 #include "TObjArray.h"
+#include "TStopwatch.h"
 #include "RooFitCore/RooPrintable.hh"
 
 class TTree ;
@@ -35,8 +36,8 @@ public:
   virtual ~RooAbsArg();
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
-  virtual TObject* clone() const = 0 ;
-  virtual TObject* Clone(const char* newname=0) const { return clone() ; }
+  virtual TObject* clone(const char* newname=0) const = 0 ;
+  virtual TObject* Clone(const char* newname=0) const { return clone(newname?newname:GetName()) ; }
 
   // Accessors to client-server relation information 
   Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
@@ -93,38 +94,69 @@ public:
   inline TIterator* attribIterator() { return _attribList.MakeIterator() ; }
   inline Bool_t isConstant() const { return getAttribute("Constant") ; }
 
+  // Sorting
+  Int_t Compare(const TObject* other) const ;
+  virtual Bool_t IsSortable() const { return kTRUE ; }
+
   //Debug hooks
   static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
   static void trace(Bool_t flag) { _traceFlag = flag ; }
   static void traceDump(ostream& os=cout) ;
   static void copyList(TList& dest, const TList& source) ;
+  void printDirty(Bool_t depth=kTRUE) const ;
+
 
 protected:
+
+  friend class RooRealIntegral ;
+  enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
+  void setOperMode(OperMode mode) { _operMode = mode ; operModeHook() ; }
+  virtual void operModeHook() {} ;
+  inline OperMode operMode() const { return _operMode ; }
 
   virtual Bool_t isValid() const ;
 
   // Dirty state accessor/modifiers
-  virtual Bool_t isValueDirty() const { return isDerived()?_valueDirty:kFALSE ; } 
-  virtual Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
-  void setValueDirty(Bool_t flag=kTRUE) const { setValueDirty(flag,0) ; }
-  void setShapeDirty(Bool_t flag=kTRUE) const { setShapeDirty(flag,0) ; } 
+  inline Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
+  inline Bool_t isValueDirty() const { 
+    switch(_operMode) {
+    case AClean: return kFALSE ;
+    case ADirty: return kTRUE ;
+    case Auto: return (isDerived()?_valueDirty:kFALSE) ;
+    }
+  }
+  inline void setValueDirty() const { setValueDirty(0) ; }
+  inline void setShapeDirty() const { setShapeDirty(0) ; } 
+  inline void clearValueDirty() const { 
+    if (_verboseDirty) cout << "RooAbsArg::clearValueDirty(" << GetName() 
+			    << "): dirty flag " << (_valueDirty?"":"already ") << "cleared" << endl ;
+    _valueDirty=kFALSE ; 
+  }
+  inline void clearShapeDirty() const { 
+    if (_verboseDirty) cout << "RooAbsArg::clearShapeDirty(" << GetName() 
+			    << "): dirty flag " << (_shapeDirty?"":"already ") << "cleared" << endl ;
+    _shapeDirty=kFALSE ; 
+  }
 
   // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
+  friend class RooPdfCustomizer ;
   friend class RooFitContext ;
-  THashList _serverList       ; //! list of server objects
-  THashList _clientList       ; //! list of client objects
-  TList     _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
-  TList     _clientListValue  ; //! subset of clients that requested value dirty flag propagation
-  TList     _proxyList        ; //! list of proxies
+  TList _serverList       ; //! list of server objects
+  TList _clientList       ; //! list of client objects
+  TList _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
+  TList _clientListValue  ; //! subset of clients that requested value dirty flag propagation
+  TList _proxyList        ; //! list of proxies
   TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
 
   // Server redirection interface
   friend class RooAcceptReject;
-  Bool_t redirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  friend class RooResolutionModel ;
+  Bool_t redirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
   virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll) { return kFALSE ; } ;
+  virtual void serverNameChangeHook(const RooAbsArg* oldServer, const RooAbsArg* newServer) { } ;
 
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void addServerList(RooArgSet& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
@@ -132,6 +164,7 @@ protected:
   void removeServer(RooAbsArg& server) ;
 
   // Proxy management
+  friend class RooAddModel ;
   friend class RooArgProxy ;
   friend class RooSetProxy ;
   void registerProxy(RooArgProxy& proxy) ;
@@ -151,7 +184,6 @@ protected:
   virtual void syncCache(const RooDataSet* dset=0) = 0 ;
   virtual void copyCache(const RooAbsArg* source) = 0 ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
-  virtual void postTreeLoadHook() {} ;
 
   // Global   
   friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  
@@ -165,10 +197,11 @@ protected:
 private:
 
   // Value and Shape dirty state bits
-  void setValueDirty(Bool_t flag, const RooAbsArg* source) const ; 
-  void setShapeDirty(Bool_t flag, const RooAbsArg* source) const ; 
+  void setValueDirty(const RooAbsArg* source) const ; 
+  void setShapeDirty(const RooAbsArg* source) const ; 
   mutable Bool_t _valueDirty ;
   mutable Bool_t _shapeDirty ;
+  mutable OperMode _operMode ;
 
   ClassDef(RooAbsArg,1) // Abstract variable
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.1 2001/06/26 18:11:19 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.2 2001/06/30 01:33:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -20,14 +20,14 @@ ClassImp(RooSimultaneous)
 
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
 				 RooAbsCategoryLValue& indexCat) : 
-  RooAbsPdf(name,title),
+  RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat)
 {
 }
 
 RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name) : 
   RooAbsPdf(other,name),
-  _indexCat("indexCat",this,other._indexCat)
+  _indexCat("indexCat",this,other._indexCat), _numPdf(other._numPdf)
 {
   // Copy proxy list 
   TIterator* pIter = other._pdfProxyList.MakeIterator() ;
@@ -41,6 +41,15 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
 RooSimultaneous::~RooSimultaneous() 
 {
   _pdfProxyList.Delete() ;
+}
+
+
+
+Int_t RooSimultaneous::fitTo(RooDataSet& data, Option_t *options, Double_t *minValue) 
+{
+  // Fit this PDF to given data set
+  RooSimFitContext context(&data,this) ;
+  return context.fit(options,minValue) ;
 }
 
 
@@ -65,6 +74,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   // Create a proxy named after the associated index state
   RooRealProxy* proxy = new RooRealProxy(catLabel,catLabel,this,(RooAbsPdf&)pdf) ;
   _pdfProxyList.Add(proxy) ;
+  _numPdf += 1.0 ;
 
   return kFALSE ;
 }
@@ -73,18 +83,19 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 Double_t RooSimultaneous::evaluate(const RooDataSet* dset) const
 {
-  // Require that all states have an associated PDF
-  if (_pdfProxyList.GetSize() != _indexCat.arg().numTypes()) {
-    cout << "RooSimultaneous::evaluate(" << GetName() 
-	 << "): ERROR, number of PDFs and number of index states do not match" << endl ;
-    return 0 ;
-  }
+//   // Require that all states have an associated PDF
+//   if (_pdfProxyList.GetSize() != _indexCat.arg().numTypes()) {
+//     cout << "RooSimultaneous::evaluate(" << GetName() 
+// 	 << "): ERROR, number of PDFs and number of index states do not match" << endl ;
+//     return 0 ;
+//   }
 
   // Retrieve the proxy by index name
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
+  
   assert(proxy) ;
 
   // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->getVal(dset) / _indexCat.arg().numTypes() ;
+  return ((RooAbsPdf*)(proxy->absArg()))->getVal(dset) / _numPdf ;
 }
 

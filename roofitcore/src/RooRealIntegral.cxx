@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.18 2001/06/23 01:20:33 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.19 2001/06/30 01:33:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,6 +44,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _intList("intList","Variables to be integrated numerically",this,kFALSE,kFALSE), 
   _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
   _jacList("jacList","Jacobian product term",this,kFALSE,kFALSE), 
+  _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
   _numIntEngine(0), _operMode(Hybrid)
 {
   // Constructor
@@ -51,12 +52,25 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooAbsArg *arg ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // * 0) Check for dependents that the PDF insists on integrating *
+  // * 0) Check for dependents that the PDF doesn't depend on      *
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  
+  TIterator* depIter = depList.MakeIterator() ;
+  while(arg=(RooAbsArg*)depIter->Next()) {
+    if (!function.dependsOn(*arg)) {
+      _facList.add(*arg) ;
+      addServer(*arg,kFALSE,kTRUE) ;
+    }
+  }
+  delete depIter ;
+ 
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  // * 1) Check for dependents that the PDF insists on integrating *
   //      analytically iself                                       *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntOKDepList ;
-  TIterator* depIter = depList.MakeIterator() ;
+  depIter = depList.MakeIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
     if (function.forceAnalyticalInt(*arg)) anIntOKDepList.add(*arg) ;
   }
@@ -66,7 +80,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * A) Make list of servers that can be integrated analytically *
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
+  
   TIterator *sIter = function.serverIterator() ;
   while(arg=(RooAbsArg*)sIter->Next()) {
 
@@ -80,13 +94,19 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     } else {
 
       // Add final dependents of arg as shape servers
-      RooArgSet *argDeps = arg->getDependents(&depList) ;
-      TIterator *adIter = argDeps->MakeIterator() ;
-      RooAbsArg *argDep ;
-      while(argDep = (RooAbsArg*)adIter->Next()) {
-	addServer(*argDep,kFALSE,kTRUE) ;
+      RooArgSet argLeafServers ;
+      arg->leafNodeServerList(&argLeafServers) ;
+
+      TIterator* lIter = argLeafServers.MakeIterator() ;
+      RooAbsArg* leaf ;
+      while(leaf=(RooAbsArg*)lIter->Next()) {
+	if (depList.FindObject(leaf->GetName())) {
+	  addServer(*leaf,kFALSE,kTRUE) ;
+	} else {
+	  addServer(*leaf,kTRUE,kFALSE) ;
+	}	
       }
-      delete argDeps ;      
+      delete lIter ;
     }
 
     // If this dependent arg is self-normalized, stop here
@@ -241,6 +261,7 @@ void RooRealIntegral::initNumIntegrator()
   default: 
     // multi-dimensional integration required (not supported currently)
     cout << "RooRealIntegral::" << GetName() << ": Numerical integrals in >1 dimension not supported" << endl ;
+    _intList.Print() ;
     assert(0) ;
   }  
 }
@@ -252,6 +273,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _sumList("sumList",this,other._sumList),
   _anaList("anaList",this,other._anaList),
   _jacList("jacList",this,other._jacList),
+  _facList("facList",this,other._facList),
   _operMode(other._operMode)
 {
   // Copy constructor
@@ -268,10 +290,16 @@ RooRealIntegral::~RooRealIntegral()
 
 Double_t RooRealIntegral::evaluate(const RooDataSet* dset) const 
 {
-  if (RooAbsPdf::_verboseEval>0)
-    cout << "RooRealIntegral::evaluate(" << GetName() << ")" << endl ;
-  switch (_operMode) {
+  if (_function.arg().operMode()==RooAbsArg::AClean) {
+    if (RooAbsPdf::_verboseEval>1) 
+      cout << "RooRealIntegral::evaluate(" << GetName() 
+	   << ") integrand is AClean, returning cached value of " << _value << endl ;
+    return _value ;
+  }
 
+  Double_t retVal ;
+  switch (_operMode) {
+    
   case Hybrid: 
     {
       // Calculate integral
@@ -281,26 +309,49 @@ Double_t RooRealIntegral::evaluate(const RooDataSet* dset) const
       RooArgSet *saveSum = _sumList.snapshot() ;
       
       // Evaluate sum/integral
-      Double_t retVal = sum() / jacobianProduct() ;
+      retVal = sum() / jacobianProduct() ;
       
       // Restore integral dependent values
       _intList=*saveInt ;
       _sumList=*saveSum ;
       delete saveInt ;
       delete saveSum ;
-
-      return retVal ;
+      break ;
     }
   case Analytic:
     {
-      return ((RooAbsPdf&)_function.arg()).analyticalIntegral(_mode) ;
+      retVal =  ((RooAbsPdf&)_function.arg()).analyticalIntegral(_mode) ;
+      break ;
     }
 
   case Unity:
     {
-      return 1.0 ;
+      retVal =  1.0 ;
+      break ;
     }
   }
+
+  // Multiply answer with integration ranges of factorized variables
+  RooAbsArg *arg ;
+  TIterator* fIter = _facList.MakeIterator() ;
+  while(arg=(RooAbsArg*)fIter->Next()) {
+    // Multiply by fit range for 'real' dependents
+    if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
+      RooAbsRealLValue* argLV = (RooAbsRealLValue*)arg ;
+      retVal *= (argLV->getFitMax() - argLV->getFitMin()) ;
+    }
+    // Multiply by number of states for category dependents
+    if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
+      RooAbsCategoryLValue* argLV = (RooAbsCategoryLValue*)arg ;
+      retVal *= argLV->numTypes() ;
+    }    
+  }
+  
+
+  if (RooAbsPdf::_verboseEval>0)
+    cout << "RooRealIntegral::evaluate(" << GetName() << ") = " << retVal << endl ;
+
+  return retVal ;
 }
 
 
@@ -401,6 +452,8 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
     _anaList.printToStream(os,Standard,deeper);
     os << indent << "  Arguments included in Jacobean are ";
     _jacList.printToStream(os,Standard,deeper);
+    os << indent << "  Factorized arguments are ";
+    _facList.printToStream(os,Standard,deeper);
     return ;
   }
 
@@ -409,6 +462,17 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
 
   RooAbsArg* arg ;
   Bool_t first(kTRUE) ;
+
+  if (_facList.First()) {
+    TIterator* fIter = _facList.MakeIterator() ;
+    os << " Fac(" ;
+    while (arg=(RooAbsArg*)fIter->Next()) {
+      os << (first?"":",") << arg->GetName() ;
+      first=kFALSE ;
+    }
+    delete fIter ;
+    os << ")" ;
+  }
 
   if (_sumList.First()) {
     TIterator* sIter = _sumList.MakeIterator() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.17 2001/06/23 01:20:32 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.18 2001/06/30 01:33:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -98,17 +98,55 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
   if (!dset) return traceEval(dset) ;
 
   // Process change in last data set used
-  syncNormalization(dset) ;
+  Bool_t dsetChanged = (dset != _lastDataSet) ;
+  if (dsetChanged) syncNormalization(dset) ;
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
-  if (isValueDirty() || _norm->isValueDirty() || dset != _lastDataSet) {
-    if (_verboseEval>1) cout << "RooAbsPdf::getVal(" << GetName() << "): recalculating value" << endl ;
-    _value = traceEval(dset) / _norm->getVal() ;
-    setValueDirty(kFALSE) ;
-    setShapeDirty(kFALSE) ;    
+  if ((isValueDirty() || _norm->isValueDirty() || dsetChanged) && operMode()!=AClean) {
+
+//     startTimer() ;
+//     _nDirtyCacheHits++ ;
+
+    Double_t rawVal = evaluate(dset) ;
+    _value = rawVal / _norm->getVal() ;
+    traceEvalPdf(rawVal) ; // Error checking and printing
+
+    if (_verboseEval>1) cout << "RooAbsPdf::getVal(" << GetName() << "): value = " 
+			     << rawVal << " / " << _norm->getVal() << " = " << _value << endl ;
+
+    clearValueDirty() ; //setValueDirty(kFALSE) ;
+    clearShapeDirty() ; //setShapeDirty(kFALSE) ;    
+//     stopTimer() ;
+
+//   } else {
+//     _nCleanCacheHits++ ;
   }
 
   return _value ;
+}
+
+
+void RooAbsPdf::traceEvalPdf(Double_t value) const
+{
+  // check for a math error or negative value
+  Bool_t error= isnan(value) || (value < 0);
+
+  // do nothing if we are no longer tracing evaluations and there was no error
+  if(!error && _traceCount <= 0) return ;
+
+  // otherwise, print out this evaluations input values and result
+  if(error && ++_errorCount <= 10) {
+    cout << "*** Evaluation Error " << _errorCount << " ";
+    if(_errorCount == 10) cout << "(no more will be printed) ";
+  }
+  else if(_traceCount > 0) {
+    cout << '[' << _traceCount-- << "] ";
+  }
+  else {
+    return  ;
+  }
+
+  Print() ;
 }
 
 
@@ -118,6 +156,7 @@ Double_t RooAbsPdf::getNorm(const RooDataSet* dset) const
   if (!dset) return 1 ;
 
   syncNormalization(dset) ;
+  if (_verboseEval>1) cout << "RooAbsPdf::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
   return _norm->getVal() ;
 }
 
@@ -139,7 +178,35 @@ Bool_t RooAbsPdf::selfNormalized(const RooArgSet& dependents) const
 
 void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
 {
+  // Check if data sets are identical
   if (dset == _lastDataSet) return ;
+
+  // Check if data sets have identical contents
+  if (_lastDataSet) {
+    const RooArgSet *newSet = dset->get() ;
+    const RooArgSet *oldSet = _lastDataSet->get() ;
+    
+    cout << "newSet: " ; newSet->Print("v") ;
+    cout << "oldSet: " ; oldSet->Print("v") ;
+
+    if (newSet->GetSize() == oldSet->GetSize()) {
+      Bool_t identical(kTRUE) ;
+      TIterator* nIter = newSet->MakeIterator() ;
+      RooAbsArg* nArg ;
+      while (nArg = (RooAbsArg*) nIter->Next()) {
+	if (!oldSet->find(nArg->GetName())) {
+	  identical=kFALSE ;
+	  break ;
+	}
+      }
+      delete nIter ;
+      if (identical) {
+	if (_verboseEval>0) 
+	  cout << "RooAbsPdf::syncNormalization(" << GetName() << ") new data and old data sets are identical" << endl ;
+	return ;
+      }
+    }
+  }
 
   if (_verboseEval>0) cout << "RooAbsPdf:syncNormalization(" << GetName() 
 			 << ") recalculating normalization (" 
@@ -149,8 +216,10 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
   // Update dataset pointers of proxies
   ((RooAbsPdf*) this)->setProxyDataSet(dset) ;
   
-  RooArgSet* depList = getDependents(dset) ;
-  
+  // Allow optional post-processing
+  Bool_t fullNorm = syncNormalizationPreHook(_norm,dset) ;
+  RooArgSet* depList = fullNorm ? dset->get() : getDependents(dset) ;
+
   // Destroy old normalization & create new
   if (_norm) delete _norm ;
   
@@ -163,9 +232,9 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
   }
 
   // Allow optional post-processing
-  syncNormalizationHook(_norm,dset) ;
-
-  delete depList ;
+  syncNormalizationPostHook(_norm,dset) ;
+ 
+  if (!fullNorm) delete depList ;
 }
 
 
@@ -213,6 +282,15 @@ void RooAbsPdf::setTraceCounter(Int_t value)
 {
   // Reset trace counter to given value
   _traceCount = value ;
+}
+
+void RooAbsPdf::operModeHook() 
+{
+//   if (operMode()==AClean) {
+//     delete _norm ;
+//     _norm = 0 ;
+//     _lastDataSet=0 ;
+//   }
 }
 
 
@@ -397,22 +475,20 @@ Double_t RooAbsPdf::nLogLikelihood(const RooDataSet* dset, Bool_t extended) cons
 {
   // Return the likelihood of this PDF for the given dataset
   Double_t result(0);
-  const RooArgSet *values(0);
-  Stat_t events= dset->GetEntries();
+  const RooArgSet *values = dset->get() ;
+  if(!values) {
+    cout << dset->GetName() << "::nLogLikelihood: cannot get values from dataset " << endl ;
+    return 0.0;
+    }
 
+  Stat_t events= dset->GetEntries();
   for(Int_t index= 0; index<events; index++) {
 
     // get the data values for this event
-    values=dset->get(index);
-    if(!values) {
-      cout << dset->GetName() << "::nLogLikelihood: cannot get values for event "
-           << index << endl;
-      return 0.0;
-    }
+    dset->get(index);
 
     Double_t term = getLogVal(dset);
     if(term == 0) return 0;
-
     result-= term;
   }
 
@@ -446,6 +522,7 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
 
   if(opt >= Verbose) {
     os << indent << "--- RooAbsPdf ---" << endl;
+    os << indent << "Cached value = " << _value << endl ;
     if (_norm) {
       os << " Normalization integral: " << endl ;
       _norm->printToStream(os,Verbose,TString(indent).Append("  ")) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.15 2001/05/31 21:21:36 david Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.16 2001/06/06 00:06:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,13 +13,13 @@
 #ifndef ROO_ARG_SET
 #define ROO_ARG_SET
 
-#include "THashList.h"
+#include "TList.h"
 #include "TString.h"
 #include "TClass.h"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooPrintable.hh"
 
-class RooArgSet : public THashList, public RooPrintable {
+class RooArgSet : public TList, public RooPrintable {
 public:
 
   // Constructors, assignment etc.
@@ -53,6 +53,11 @@ public:
 	    const RooAbsArg& var5, const RooAbsArg& var6, 
 	    const RooAbsArg& var7, const RooAbsArg& var8, 
 	    const char *name="");
+  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
+            const RooAbsArg& var3, const RooAbsArg& var4, 
+	    const RooAbsArg& var5, const RooAbsArg& var6, 
+	    const RooAbsArg& var7, const RooAbsArg& var8, 
+	    const RooAbsArg& var9, const char *name="");
 
   virtual ~RooArgSet();
   // Create a copy of an existing list. New variables cannot be added
@@ -68,11 +73,11 @@ public:
   // List content management
   virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
-  virtual Bool_t remove(const RooAbsArg& var) ;
+  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual void removeAll() ;
   Bool_t add(const RooArgSet& list) ;
   Bool_t replace(const RooArgSet &other);
-  Bool_t remove(const RooArgSet& list) ;
+  Bool_t remove(const RooArgSet& list, Bool_t silent=kFALSE) ;
 
   // Group operations on AbsArgs
   void setAttribAll(const Text_t* name, Bool_t value=kTRUE) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.17 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.18 2001/06/12 19:06:27 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -150,16 +150,32 @@ Bool_t RooFormula::changeDependents(const RooArgSet& newDeps, Bool_t mustReplace
   //Change current servers to new servers with the same name given in list
   Bool_t errorStat(kFALSE) ;
   int i ;
+
   for (i=0 ; i<_useList.GetEntries() ; i++) {
     RooAbsReal* replace = (RooAbsReal*) newDeps.find(_useList[i]->GetName()) ;
     if (replace) {
       _useList[i] = replace ;
     } else if (mustReplaceAll) {
-      cout << "RooFormula::changeDependents: cannot find replacement for " 
+      cout << "RooFormula::changeDependents(1): cannot find replacement for " 
 	   << _useList[i]->GetName() << endl ;
       errorStat = kTRUE ;
     }
   }  
+
+  TIterator* iter = _origList.MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    RooAbsReal* replace = (RooAbsReal*) newDeps.find(arg->GetName()) ;
+    if (replace) {
+      _origList.AddBefore(arg,replace) ;
+      _origList.Remove(arg) ;
+    } else if (mustReplaceAll) {
+      cout << "RooFormula::changeDependents(3): cannot find replacement for " 
+	   << arg->GetName() << "(" << arg << ")" << endl ;
+      errorStat = kTRUE ;
+    }
+  }
+
   return errorStat ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.24 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.25 2001/06/30 01:33:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,8 +43,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
   _plotMin(0), _plotMax(0), _lastData(0)
 {
   // Constructor
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
+  setValueDirty() ;
+  setShapeDirty() ;
 }
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
@@ -53,8 +53,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
   _plotMin(minVal), _plotMax(maxVal), _lastData(0)
 {
   // Constructor with plot range
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
+  setValueDirty() ;
+  setShapeDirty() ;
 }
 
 
@@ -87,9 +87,9 @@ Double_t RooAbsReal::getVal(const RooDataSet* dset) const
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval(dset) ;
     _lastData = (RooDataSet*) dset ;
-    setValueDirty(kFALSE) ;
-    setShapeDirty(kFALSE) ;
-  } 
+    clearValueDirty() ; //setValueDirty(kFALSE) ;
+    clearShapeDirty() ; //setShapeDirty(kFALSE) ;
+  }
   
   return _value ;
 }
@@ -351,37 +351,37 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
   assert(other) ;
 
   _value = other->_value ;
-  setValueDirty(kTRUE) ;
+  setValueDirty() ;
 }
 
 
 void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 {
   // Attach object to a branch of given TTree
+  TString cleanName(GetName()) ;
+  cleanName.ReplaceAll("/","D") ;
+  cleanName.ReplaceAll("-","M") ;
+  cleanName.ReplaceAll("+","P") ;
+  cleanName.ReplaceAll("*","X") ;
+  cleanName.ReplaceAll("[","L") ;
+  cleanName.ReplaceAll("]","R") ;
+  cleanName.ReplaceAll("(","L") ;
+  cleanName.ReplaceAll(")","R") ;
 
   // First determine if branch is taken
-  if (t.GetBranch(GetName())) {
-    t.SetBranchAddress(GetName(),&_value) ;
-//     cout << "RooAbsReal::attachToTree(" << GetName() << "): branch already exists in tree " 
+  if (t.GetBranch(cleanName)) {
+    t.SetBranchAddress(cleanName,&_value) ;
+//     cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " 
 // 	 << (void*)&t << ", changing address" << endl ;
   } else {
-    TString format(GetName());
+    TString format(cleanName);
     format.Append("/D");
-    t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
-//     cout << "RooAbsReal::attachToTree(" << GetName() << "): creating new branch in tree" 
+    t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
+//     cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree" 
 // 	 << (void*)&t << endl ;
   }
 }
 
-void RooAbsReal::postTreeLoadHook() 
-{
-  // Hook function that allows post-processing after a cache write from a TTRee (dummy)
-
-//   if (isDerived())
-//     cout << "RooAbsReal::postTreeLoadHook(" << GetName() 
-// 	 << "): loaded cache, value " << _value << endl ;
-}
- 
 RooAbsArg *RooAbsReal::createFundamental() const {
   // Create a RooRealVar fundamental object with our properties. The new
   // object will be created without any fit limits.

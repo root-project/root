@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.3 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.4 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,15 +36,16 @@ ClassImp(RooProdPdf)
 ;
 
 
-RooProdPdf::RooProdPdf(const char *name, const char *title)
+RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
+  RooAbsPdf(name,title), _pdfProxyIter(_pdfProxyList.MakeIterator()), _cutOff(cutOff)
 {
   // Dummy constructor
 }
 
 
 RooProdPdf::RooProdPdf(const char *name, const char *title,
-		     RooAbsPdf& pdf1, RooAbsPdf& pdf2) : 
-  RooAbsPdf(name,title)
+		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff) : 
+  RooAbsPdf(name,title), _pdfProxyIter(_pdfProxyList.MakeIterator()), _cutOff(cutOff)
 {
   // Constructor with 2 PDFs
   addPdf(pdf1) ;
@@ -53,7 +54,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 
 RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
-  RooAbsPdf(other,name)
+  RooAbsPdf(other,name), _pdfProxyIter(_pdfProxyList.MakeIterator()), 
+  _cutOff(other._cutOff)
 {
   // Copy constructor
 
@@ -72,6 +74,7 @@ RooProdPdf::~RooProdPdf()
   // Destructor
 
   // Delete all owned proxies 
+  delete _pdfProxyIter ;
   _pdfProxyList.Delete() ;
 }
 
@@ -89,16 +92,16 @@ Double_t RooProdPdf::evaluate(const RooDataSet* dset) const
 {
   // Calculate current value of object
 
-  TIterator *pIter = _pdfProxyList.MakeIterator() ;
   Double_t value(1) ;
     
   // Calculate running product of pdfs
   RooRealProxy* pdf ;
-  while(pdf=(RooRealProxy*)pIter->Next()) {
+  _pdfProxyIter->Reset() ;
+  while(pdf=(RooRealProxy*)_pdfProxyIter->Next()) {    
     value *= (*pdf) ;
+    if (value<_cutOff) break ;
   }
 
-  delete pIter ;
   return value ;
 }
 

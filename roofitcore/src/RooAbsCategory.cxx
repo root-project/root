@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.20 2001/06/16 20:28:19 david Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.21 2001/06/30 01:33:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,8 +36,8 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
   RooAbsArg(name,title)
 {
   // Constructor
-  setValueDirty(kTRUE) ;  
-  setShapeDirty(kTRUE) ;  
+  setValueDirty() ;  
+  setShapeDirty() ;  
 }
 
 RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
@@ -47,12 +47,13 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
   TIterator* iter=other._types.MakeIterator() ;
   TObject* obj ;
   while (obj=iter->Next()) {
+    //cout << "RooAbsCategory::RooAbsCategory(" << GetName() << "): cloning type " << ((RooAbsCategory*)obj)->GetName() << endl ;
     _types.Add(obj->Clone()) ;
   }
   delete iter ;
 
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
+  setValueDirty() ;
+  setShapeDirty() ;
 }
 
 
@@ -71,9 +72,9 @@ Int_t RooAbsCategory::getIndex() const
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval() ;
 
-    setValueDirty(false) ;
-    setShapeDirty(false) ;
-  } 
+    clearValueDirty() ;
+    clearShapeDirty() ;
+  }
 
   return _value.getVal() ;
 }
@@ -82,13 +83,12 @@ Int_t RooAbsCategory::getIndex() const
 const char* RooAbsCategory::getLabel() const
 {
   // Return label string of current state 
-
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval() ;
 
-    setValueDirty(false) ;
-    setShapeDirty(false) ;
-  } 
+    clearValueDirty() ;
+    clearShapeDirty() ;
+  }
 
   return _value.GetName() ;
 }
@@ -180,7 +180,7 @@ const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
   _types.Add(newType) ;
 
   if (first) _value = RooCatType(label,index) ;
-  setShapeDirty(kTRUE) ;
+  setShapeDirty() ;
 
   return newType ;
 }
@@ -193,7 +193,7 @@ void RooAbsCategory::clearTypes()
 
   _types.Delete() ;
   _value = RooCatType("",0) ;
-  setShapeDirty(kTRUE) ;
+  setShapeDirty() ;
 }
 
 
@@ -207,6 +207,7 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
     type = (RooCatType*)_types.At(i) ;
     if((*type) == other) return type; // delegate comparison to RooCatType
   }
+
   if (printError) {
     cout << ClassName() << "::" << GetName() << ":lookupType: no match for ";
     other.printToStream(cout,OneLine);
@@ -240,6 +241,17 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
     type = (RooCatType*)_types.At(i) ;
     if((*type) == label) return type; // delegate comparison to RooCatType
   }
+
+  // Try if label represents integer number
+  char* endptr ;
+  Int_t idx=strtol(label,&endptr,10)  ;
+  if (endptr==label+strlen(label)) {
+    for (int i=0 ; i < n; i++) {
+    type = (RooCatType*)_types.At(i) ;
+    if((*type) == idx) return type; // delegate comparison to RooCatType
+    }
+  }
+
   if (printError) {
     cout << ClassName() << "::" << GetName() << ":lookupType: no match for label "
 	 << label << endl;
@@ -319,32 +331,39 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
   assert(other) ;
 
   _value = other->_value ;
-  setValueDirty(kTRUE) ;
+  setValueDirty() ;
 }
 
 
 void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 {
   // Attach object to a branch of given TTree
+  TString idxName(GetName()) ;
+  TString lblName(GetName()) ;  
+  idxName.Append("_idx") ;
+  lblName.Append("_lbl") ;
 
   // First determine if branch is taken
-  if (t.GetBranch(GetName())) {
-    t.SetBranchAddress(GetName(),&((Int_t&)_value._value)) ;
+  if (t.GetBranch(idxName)) {
+    t.SetBranchAddress(idxName,&((Int_t&)_value._value)) ;
   } else {    
-    TString format(GetName());
+    TString format(idxName);
     format.Append("/I");
     void* ptr = &(_value._value) ;
-    t.Branch(GetName(), ptr, (const Text_t*)format, bufSize);
+    t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
+  }
+
+  // First determine if branch is taken
+  if (t.GetBranch(lblName)) {
+    t.SetBranchAddress(lblName,_value._label) ;
+  } else {    
+    TString format(lblName);
+    format.Append("/C");
+    void* ptr = _value._label ;
+    t.Branch(lblName, ptr, (const Text_t*)format, bufSize);
   }
 }
 
-void RooAbsCategory::postTreeLoadHook() 
-{
-  if (isValid()) {
-    // Synchronize label with new index
-    _value = *lookupType(_value.getVal()) ;
-  }
-}
 
 const RooCatType* RooAbsCategory::getOrdinal(UInt_t n) const {
   return (const RooCatType*)_types.At(n);
@@ -360,7 +379,7 @@ RooAbsArg *RooAbsCategory::createFundamental() const {
   TIterator* tIter = typeIterator() ;
   RooCatType* type ;
   while (type=(RooCatType*)tIter->Next()) {
-    fund->defineType(type->GetName(),type->getVal()) ;
+    ((RooAbsCategory*)fund)->defineType(type->GetName(),type->getVal()) ;
   }
   delete tIter;
 

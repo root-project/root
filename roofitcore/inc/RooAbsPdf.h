@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.16 2001/06/23 01:20:32 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.17 2001/06/30 01:33:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -63,17 +63,18 @@ public:
                         Double_t xmax= 0.99,Double_t ymax=0.95) { return 0 ; } 
 
   // Interactions with a dataset  
-  Int_t fitTo(RooDataSet& data, Option_t *options = "", Double_t *minValue= 0) ;
+  virtual Int_t fitTo(RooDataSet& data, Option_t *options = "", Double_t *minValue= 0) ;
   Int_t fitTo(TH1F* hist, Option_t *options = "", Double_t *minValue= 0) { return 0 ; }
   Double_t nLogLikelihood(const RooDataSet* dset, Bool_t extended=kFALSE) const ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
-  Double_t getVal(const RooDataSet* dset=0) const ;
+  virtual Double_t getVal(const RooDataSet* dset=0) const ;
   Double_t getLogVal(const RooDataSet* dset=0) const ;
   virtual Double_t getNorm(const RooDataSet* dset=0) const ;
   void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value) ;
+  void traceEvalPdf(Double_t value) const ;
 
   // Support for extended maximum likelihood, switched off by default
   virtual Bool_t canBeExtended() const { return kFALSE ; } 
@@ -92,10 +93,14 @@ private:
 protected:
 
   friend class RooRealIntegral ;
+  friend class RooFitContext ;
   static Int_t _verboseEval ;
 
   virtual void syncNormalization(const RooDataSet* dset) const ;
-  virtual void syncNormalizationHook(RooAbsReal* norm,const RooDataSet* dset) const {} ;
+  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooDataSet* dset) const { return kFALSE ; } ;
+  virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooDataSet* dset) const {} ;
+
+  virtual void operModeHook() ;
 
   // support interface for generating toy MC samples
   virtual Double_t generateEnvelope(const RooArgSet &whatVars);

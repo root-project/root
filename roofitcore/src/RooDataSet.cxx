@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.29 2001/06/18 21:04:20 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.30 2001/06/30 01:33:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -60,11 +60,13 @@
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooStringVar.hh"
 #include "RooFitCore/RooHist.hh"
+#include "RooFitCore/RooFormulaVar.hh"
 
 ClassImp(RooDataSet)
 
 RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& vars) :
-  TTree(name, title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0)
+  TTree(name, title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), 
+  _truth(), _branch(0), _doDirtyProp(kTRUE)
 {
   // Constructor with list of variables
   initialize(vars);
@@ -74,18 +76,38 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
                        const RooArgSet& vars, const char *cuts) :
   TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0), 
-  _blindString(t->_blindString)
+  _blindString(t->_blindString), _doDirtyProp(kTRUE)
 {
   // Constructor from existing data set with list of variables and cut expression
   initialize(vars);
+
   loadValues(t,cuts);
+}
+
+
+RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
+                       const RooArgSet& vars, RooFormulaVar& cutVar) :
+  TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0), 
+  _blindString(t->_blindString), _doDirtyProp(kTRUE)
+{
+  // Constructor from existing data set with list of variables and cut expression
+  initialize(vars);
+
+  // Deep clone cutVar and attach clone to this dataset
+  RooArgSet* tmp = RooArgSet(cutVar).snapshot() ;
+  RooFormulaVar* cloneVar = (RooFormulaVar*) tmp->find(cutVar.GetName()) ;
+  cloneVar->attachDataSet(*this) ;
+
+  loadValues(t,cloneVar);
+
+  delete tmp ;
 }
 
 
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
                        const RooArgSet& vars, Bool_t copyCache) :
   TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0), 
-  _blindString(t->_blindString)
+  _blindString(t->_blindString), _doDirtyProp(kTRUE)
 {
   // Constructor from existing data set with list of variables that preserves the cache
   initialize(vars);
@@ -95,7 +117,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
 
 RooDataSet::RooDataSet(const char *name, const char *title, TTree *t, 
                        const RooArgSet& vars, const char *cuts) :
-  TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0)
+  TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), 
+  _truth(), _branch(0), _doDirtyProp(kTRUE)
 {
   // Constructor from existing TTree with list of variables and cut expression
   initialize(vars);
@@ -105,7 +128,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *t,
 RooDataSet::RooDataSet(const char *name, const char *filename,
 		       const char *treename,
                        const RooArgSet& vars, const char *cuts) :
-  TTree(name,name), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0)
+  TTree(name,name), _vars("Dataset Variables"), _cachedVars("Cached Variables"), 
+  _truth(), _branch(0), _doDirtyProp(kTRUE)
 {
   // Constructor from TTree file with list of variables and cut expression
   initialize(vars);
@@ -115,7 +139,7 @@ RooDataSet::RooDataSet(const char *name, const char *filename,
 
 RooDataSet::RooDataSet(RooDataSet const & other) : 
   TTree(other.GetName(),other.GetTitle()), _vars("Dataset Variables"), 
-  _cachedVars("Cached Variables"), _truth(), _branch(0)
+  _cachedVars("Cached Variables"), _truth(), _branch(0), _doDirtyProp(kTRUE)
 {
   // Copy constructor
   initialize(other._vars) ;
@@ -186,7 +210,25 @@ void RooDataSet::loadValues(const char *filename, const char *treename,
   }
 }
 
+
 void RooDataSet::loadValues(const TTree *t, const char *cuts) 
+{
+  RooFormulaVar* select(0) ;
+
+  if(0 != cuts && strlen(cuts)) {
+    select=new RooFormulaVar(cuts,cuts,_vars);
+    if (!select || !select->ok()) {
+      delete select;
+      return ;
+    }
+  }
+
+  loadValues(t,select) ;
+  delete select ;
+}
+
+
+void RooDataSet::loadValues(const TTree *t, const RooFormulaVar* select) 
 {
   // Load values of given ttree
 
@@ -203,16 +245,6 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
     sourceArg->attachToTree(*tClone) ;
   }
 
-  // Create an event selector using the cuts provided, if any.
-  RooFormula* select(0) ;
-   if(0 != cuts && strlen(cuts)) {
-     select=new RooFormula(cuts,cuts,_vars);
-     if (!select || !select->ok()) {
-       delete select;
-       return ;
-     }
-   }
-
   // Loop over events in source tree   
   RooAbsArg* destArg(0) ;
   Int_t nevent= (Int_t)tClone->GetEntries();
@@ -220,9 +252,7 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
     Int_t entryNumber=tClone->GetEntryNumber(i);
     if (entryNumber<0) break;
     tClone->GetEntry(entryNumber,1);
-    // Does this event pass the cuts?
-    if (select && select->eval()==0) continue ; 
-        
+  
     // Copy from source to destination
      _iterator->Reset() ;
      sourceIter->Reset() ;
@@ -231,15 +261,18 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
        if (!sourceArg->isValid()) {
 	 continue ;
        }       
-       sourceArg->postTreeLoadHook() ;
        destArg->copyCache(sourceArg) ;
      }   
+
+     // Does this event pass the cuts?
+     if (select && select->getVal()==0) {
+       continue ; 
+     }
 
      Fill() ;
    }
 
    SetTitle(t->GetTitle());
-   if (select) delete select;
 
    delete sourceIter ;
    delete sourceArg ;
@@ -249,7 +282,7 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
 
 void RooDataSet::append(RooDataSet& data) {
   // Append given data set to this data set
-  loadValues(&data,0) ;
+  loadValues(&data,(const RooFormulaVar*)0) ;
 }
 
 
@@ -300,8 +333,12 @@ RooAbsArg* RooDataSet::addColumn(RooAbsArg& newVar)
   RooDataSet* cloneData = new RooDataSet(*this) ;
 
   // Clone variable and attach to cloned tree 
-  RooAbsArg* newVarClone = (RooAbsArg*) newVar.Clone() ;
-  newVarClone->redirectServers(cloneData->_vars,kFALSE) ;
+  RooArgSet* newVarCloneList = RooArgSet(newVar).snapshot() ;
+  RooAbsArg* newVarClone = newVarCloneList->find(newVar.GetName()) ;
+  newVarClone->recursiveRedirectServers(cloneData->_vars,kFALSE) ;
+
+//   RooAbsArg* newVarClone = (RooAbsArg*) newVar.Clone() ;
+//   newVarClone->redirectServers(cloneData->_vars,kFALSE) ;
 
   // Attach value place holder to this tree
   ((RooAbsArg*)valHolder)->attachToTree(*this) ;
@@ -320,7 +357,8 @@ RooAbsArg* RooDataSet::addColumn(RooAbsArg& newVar)
     Fill() ;
   }
   
-  delete newVarClone;
+  delete newVarCloneList;
+//   delete newVarClone;
   delete cloneData ;
   
   return valHolder ;
@@ -349,6 +387,15 @@ void RooDataSet::cacheArgs(RooArgSet& newVarSet)
   while (arg=(RooAbsArg*)iter->Next()) {
     // Attach newVar to this tree
     arg->attachToTree(*this) ;
+
+    // Remove all server links 
+//     TIterator* sIter = arg->serverIterator() ;
+//     RooAbsArg* server ;
+//     while(server=(RooAbsArg*)sIter->Next()) {
+//       arg->removeServer(*server) ;
+//     }
+//     delete sIter ;
+
     _cachedVars.add(*arg) ;
   }
 
@@ -570,21 +617,21 @@ const RooArgSet* RooDataSet::get(Int_t index) const {
   Int_t ret = ((RooDataSet*)this)->GetEntry(index, 1) ;
   if(!ret) return 0;
 
-  // Raise all dirty flags 
-  _iterator->Reset() ;
-  RooAbsArg* var(0) ;
-  while (var=(RooAbsArg*)_iterator->Next()) {
-    var->postTreeLoadHook() ;
-    var->setValueDirty(kTRUE) ; // This triggers recalculation of all clients
-  } 
+  if (_doDirtyProp) {
+    // Raise all dirty flags 
+    _iterator->Reset() ;
+    RooAbsArg* var(0) ;
+    while (var=(RooAbsArg*)_iterator->Next()) {
+      var->setValueDirty() ; // This triggers recalculation of all clients
+    } 
+    
+    _cacheIter->Reset() ;
+    while (var=(RooAbsArg*)_cacheIter->Next()) {
+      var->setValueDirty()  ; // This triggers recalculation of all clients, but doesn't recalculate self
+      var->clearValueDirty() ; // This triggers recalculation of all clients, but doesn't recalculate self
+    } 
+  }
 
-  _cacheIter->Reset() ;
-  while (var=(RooAbsArg*)_cacheIter->Next()) {
-    var->postTreeLoadHook() ;
-    var->setValueDirty(kTRUE)  ; // This triggers recalculation of all clients
-    var->setValueDirty(kFALSE) ; // This prevent recalculation of self
-  } 
-  
   return &_vars;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.4 2001/06/08 05:51:05 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.5 2001/06/30 01:33:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,11 +24,11 @@
 
 class RooProdPdf : public RooAbsPdf {
 public:
-  RooProdPdf(const char *name, const char *title);
+  RooProdPdf(const char *name, const char *title, Double_t cutOff=0);
   RooProdPdf(const char *name, const char *title,
-	    RooAbsPdf& pdf1, RooAbsPdf& pdf2) ;
+	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff=0) ;
   RooProdPdf(const RooProdPdf& other, const char* name=0) ;
-  virtual TObject* clone() const { return new RooProdPdf(*this) ; }
+  virtual TObject* clone(const char* newname) const { return new RooProdPdf(*this,newname) ; }
   virtual ~RooProdPdf() ;
 
   void addPdf(RooAbsPdf& pdf) ;
@@ -41,7 +41,9 @@ public:
 
 protected:
 
+  Double_t _cutOff ;
   TList _pdfProxyList ;
+  TIterator* _pdfProxyIter ; //! do not persist
 
 private:
 

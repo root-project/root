@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCatType.cc,v 1.3 2001/04/18 20:38:02 verkerke Exp $
+ *    File: $Id: RooCatType.cc,v 1.4 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,15 +30,3 @@ void RooCatType::printToStream(ostream& os, PrintOption opt, TString indent) con
   os << ClassName() << "::" << GetName() << ": Value = " << getVal() << endl;
 }
 
-
-
-Bool_t RooCatType::operator==(const char* label) 
-{ 
-  char *endptr(0) ;
-  Int_t val = strtol(label,&endptr,10) ;
-  if (endptr-label==strlen(label)) {
-    return operator==(val) ;
-  }
-
-  return !TString(label).CompareTo(GetName()) ; 
-}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.4 2001/03/27 01:20:20 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.5 2001/05/17 00:43:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,13 +39,13 @@ ClassImp(RooStreamParser)
 
 
 RooStreamParser::RooStreamParser(istream& is) : 
-  _is(is), _prefix(""), _punct("()[]{}<>|/\\;:?.,=+-_&^%$#@!`~")
+  _is(is), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Constructor
 }
 
 RooStreamParser::RooStreamParser(istream& is, TString errorPrefix) : 
-  _is(is), _prefix(errorPrefix), _punct("()[]{}<>|/\\;:?.,=+-_&^%$#@!`~")
+  _is(is), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Constructor with error message prefix
 }

@@ -1,0 +1,53 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   07-Mar-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+
+#ifndef ROO_SIM_FIT_CONTEXT
+#define ROO_SIM_FIT_CONTEXT
+
+#include <iostream.h>
+#include "TNamed.h"
+#include "RooFitCore/RooFitContext.hh"
+#include "RooFitCore/RooArgSet.hh"
+
+class RooAbsPdf ;
+class RooDataSet ;
+class RooAbsArg ;
+class RooSimultaneous ;
+typedef RooFitContext* pRooFitContext ;
+
+class RooSimFitContext : public RooFitContext {
+public:
+
+  // Constructors, assignment etc
+  RooSimFitContext(const RooDataSet* data, const RooSimultaneous* pdf) ;
+  virtual ~RooSimFitContext() ;
+
+  virtual Double_t nLogLikelihood(Bool_t dummy=kFALSE) const ;  
+  virtual Bool_t optimize(Bool_t doPdf=kTRUE,Bool_t doData=kTRUE, Bool_t doCache=kTRUE) ;
+
+  Int_t          _nCtx        ; // Number of sub-contexts 
+  Int_t          _nCtxFilled  ;
+  pRooFitContext* _ctxArray   ; // Array of sub-contexts representing part of the total NLL
+  Double_t*      _offArray    ; // Array with NLL offsets to compensate for normalization factor
+  Double_t*      _nllArray    ; // Cached values of NLL from sub contexts
+  Bool_t*        _dirtyArray  ; // Dirty state of subcontexts  
+
+
+protected:
+
+  virtual Bool_t setPdfParamVal(Int_t index, Double_t value, Bool_t verbose=kFALSE) ;
+
+  ClassDef(RooSimFitContext,0) // Transient fit context, combining a dataset and a PDF
+} ;
+
+#endif

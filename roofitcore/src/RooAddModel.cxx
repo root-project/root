@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.1 2001/06/23 01:20:33 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.2 2001/06/30 01:33:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -22,9 +22,25 @@ ClassImp(RooAddModel)
 
 
 RooAddModel::RooAddModel(const char *name, const char *title, RooRealVar& convVar) :
-  RooResolutionModel(name,title,convVar)
+  RooResolutionModel(name,title,convVar), 
+  _modelProxyIter(_modelProxyList.MakeIterator()),
+  _coefProxyIter(_coefProxyList.MakeIterator()),
+  _isCopy(kFALSE) 
 {
   // Dummy constructor 
+}
+
+
+RooAddModel::RooAddModel(const char *name, const char *title,
+			 RooResolutionModel& model1) :
+  RooResolutionModel(name,title,model1.convVar()),
+  _modelProxyIter(_modelProxyList.MakeIterator()),
+  _coefProxyIter(_coefProxyList.MakeIterator()),
+  _isCopy(kFALSE) 
+{
+  // Constructor with one model
+  addLastModel(model1) ;    
+
 }
 
 
@@ -32,7 +48,10 @@ RooAddModel::RooAddModel(const char *name, const char *title,
 			 RooResolutionModel& model1, 
 			 RooResolutionModel& model2, 
 			 RooAbsReal& coef1) : 
-  RooResolutionModel(name,title,model1.convVar())
+  RooResolutionModel(name,title,model1.convVar()),
+  _modelProxyIter(_modelProxyList.MakeIterator()),
+  _coefProxyIter(_coefProxyList.MakeIterator()),
+  _isCopy(kFALSE)
 {
   // Check for consistency of convolution variables
   if (&model1.convVar() != &model2.convVar()) {
@@ -55,7 +74,10 @@ RooAddModel::RooAddModel(const char *name, const char *title,
 			 RooResolutionModel& model3, 
 			 RooAbsReal& coef1,
 			 RooAbsReal& coef2) : 
-  RooResolutionModel(name,title,model1.convVar())
+  RooResolutionModel(name,title,model1.convVar()),
+  _modelProxyIter(_modelProxyList.MakeIterator()),
+  _coefProxyIter(_coefProxyList.MakeIterator()),
+  _isCopy(kFALSE) 
 {
   // Check for consistency of convolution variables
   if (&model1.convVar() != &model2.convVar()) {
@@ -81,7 +103,10 @@ RooAddModel::RooAddModel(const char *name, const char *title,
 
 
 RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
-  RooResolutionModel(other,name)
+  RooResolutionModel(other,name),
+  _modelProxyIter(_modelProxyList.MakeIterator()),
+  _coefProxyIter(_coefProxyList.MakeIterator()),
+  _isCopy(kTRUE) 
 {
   // Copy constructor
 
@@ -112,22 +137,27 @@ RooAddModel::~RooAddModel()
 {
   // Destructor
 
-  // If we are a convolution object, we own the component convolutions
+  // If we are a non-copied convolution object, we own the component convolutions
   TList ownedList ;
-  if (_basis) {
+  if (_basis && !_isCopy) {
     TIterator* mIter = _modelProxyList.MakeIterator() ;
     RooRealProxy* modelProxy ;
     while (modelProxy=((RooRealProxy*)mIter->Next())) {
       ownedList.Add(modelProxy->absArg()) ;
     }
   }
+
+  delete _coefProxyIter ;
+  delete _modelProxyIter ;
   
   // Delete all owned proxies 
   _coefProxyList.Delete() ;
   _modelProxyList.Delete() ;
+  
+
 
   // Delete owned objects only after referring proxies have been deleted
-  if (_basis) {
+  if (_basis && !_isCopy) {
     ownedList.Delete() ;
   }
 }
@@ -155,7 +185,7 @@ void RooAddModel::addLastModel(RooResolutionModel& model)
 }
 
 
-RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis) const
+RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* owner) const
 {
   // Check that primary variable of basis functions is our convolution variable  
   if (basis->findServer(0) != x.absArg()) {
@@ -167,6 +197,9 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis) const
   TString newName(GetName()) ;
   newName.Append("_conv_") ;
   newName.Append(basis->GetName()) ;
+  newName.Append("_[") ;
+  newName.Append(owner->GetName()) ;
+  newName.Append("]") ;
 
   TString newTitle(GetTitle()) ;
   newTitle.Append(" convoluted with basis function ") ;
@@ -182,13 +215,13 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis) const
     model = (RooRealProxy*)mIter->Next() ;
     
     // Create component convolution
-    RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis) ;    
+    RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis,owner) ;    
     convSum->addModel(*conv,(RooAbsReal&)coef->arg()) ;
   }
 
   // Create last component convolution
   model = (RooRealProxy*)mIter->Next() ;    
-  RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis) ;    
+  RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis,owner) ;    
   convSum->addLastModel(*conv) ;
   
   convSum->changeBasis(basis) ;
@@ -221,8 +254,8 @@ Int_t RooAddModel::basisCode(const char* name) const
 Double_t RooAddModel::evaluate(const RooDataSet* dset) const 
 {
   // Calculate the current value of this object
-  TIterator *pIter = _modelProxyList.MakeIterator() ;
-  TIterator *cIter = _coefProxyList.MakeIterator() ;
+  _coefProxyIter->Reset() ;
+  _modelProxyIter->Reset() ;
   
   Double_t value(0) ;
   Double_t lastCoef(1) ;
@@ -230,26 +263,26 @@ Double_t RooAddModel::evaluate(const RooDataSet* dset) const
   // Do running sum of coef/model pairs, calculate lastCoef.
   RooRealProxy* coef ;
   RooRealProxy* model ;
-  while(coef=(RooRealProxy*)cIter->Next()) {
-    model = (RooRealProxy*)pIter->Next() ;
+  while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
+    model = (RooRealProxy*)_modelProxyIter->Next() ;
     value += (*model)*(*coef) ;
     lastCoef -= (*coef) ;
   }
 
   // Add last model with correct coefficient
-  model = (RooRealProxy*) pIter->Next() ;
+  model = (RooRealProxy*) _modelProxyIter->Next() ;
   value += (*model)*lastCoef ;
 
+
   // Warn about coefficient degeneration
-  if (lastCoef<0 || lastCoef>1) {
+  if ((lastCoef<0.0 || lastCoef>1.0) && ++_errorCount<=10) {
     cout << "RooAddModel::evaluate(" << GetName() 
 	 << " WARNING: sum of model coefficients not in range [0-1], value=" 
 	 << 1-lastCoef << endl ;
+    if(_errorCount == 10) cout << "(no more will be printed) ";
   } 
 
-  delete pIter ;
-  delete cIter ;
-
+//   cout << "RooAddModel::evaluate(" << GetName() << "): result = " << value << endl ;
   return value ;
 }
 
@@ -260,8 +293,8 @@ Double_t RooAddModel::getNorm(const RooDataSet* dset) const
   if (!_basis) return RooAbsPdf::getNorm(dset) ;
 
   // Return sum of component normalizations
-  TIterator *pIter = _modelProxyList.MakeIterator() ;
-  TIterator *cIter = _coefProxyList.MakeIterator() ;
+  _coefProxyIter->Reset() ;
+  _modelProxyIter->Reset() ;
 
   Double_t norm(0) ;
   Double_t lastCoef(1) ;
@@ -269,17 +302,22 @@ Double_t RooAddModel::getNorm(const RooDataSet* dset) const
   // Do running norm of coef/model pairs, calculate lastCoef.
   RooRealProxy* coef ;
   RooResolutionModel* model ;
-  while(coef=(RooRealProxy*)cIter->Next()) {
-    model = (RooResolutionModel*)((RooRealProxy*)pIter->Next())->absArg() ;
+  while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
+    model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
+    if (_verboseEval>1) cout << "RooAddModel::getNorm(" << GetName() << "): norm x coef = " 
+			     << model->getNorm(dset) << " x " << (*coef) << " = " 
+			     << model->getNorm(dset)*(*coef) << endl ;
+
     norm += model->getNorm(dset)*(*coef) ;
-//      cout << "RooAddModel::getNorm norm=" << model->getNorm(dset) << " coef=" << (*coef) << endl ;
     lastCoef -= (*coef) ;
   }
 
   // Add last model with correct coefficient
-  model = (RooResolutionModel*)((RooRealProxy*)pIter->Next())->absArg() ;
+  model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
   norm += model->getNorm(dset)*lastCoef ;
-//      cout << "RooAddModel::getNorm norm=" << model->getNorm(dset) << " lastCoef=" << lastCoef << endl ;
+  if (_verboseEval>1) cout << "RooAddModel::getNorm(" << GetName() << "): norm x coef = " 
+			   << model->getNorm(dset) << " x " << lastCoef << " = " 
+			   << model->getNorm(dset)*lastCoef << endl ;
 
   // Warn about coefficient degeneration
   if (lastCoef<0 || lastCoef>1) {
@@ -288,9 +326,7 @@ Double_t RooAddModel::getNorm(const RooDataSet* dset) const
 	 << 1-lastCoef << endl ;
   } 
 
-  delete pIter ;
-  delete cIter ;
-
+//   cout << "RooAddModel::getNorm(" << GetName() << ") result = " << norm << endl ;
   return norm ;
 }
 
@@ -344,4 +380,40 @@ Double_t RooAddModel::analyticalIntegral(Int_t code) const
 
   // This model is by construction normalized
   return 1.0 ;
+}
+
+
+void RooAddModel::normLeafServerList(RooArgSet& list) const 
+{
+  // Fill list with leaf server nodes of normalization integral 
+
+  TIterator *pIter = _modelProxyList.MakeIterator() ;
+  RooRealProxy* proxy ;
+  RooResolutionModel* model ;
+  while(proxy = (RooRealProxy*) pIter->Next()) {
+    model = (RooResolutionModel*) proxy->absArg() ;
+    model->_norm->leafNodeServerList(&list) ;
+  }
+  delete pIter ;
+}
+
+void RooAddModel::syncNormalization(const RooDataSet* dset) const 
+{
+  // Fan out syncNormalization call to components
+  if (_verboseEval>0) cout << "RooAddModel:syncNormalization(" << GetName() 
+			 << ") forwarding sync request to components (" 
+			 << _lastDataSet << " -> " << dset << ")" << endl ;
+
+  // Update dataset pointers of proxies
+  ((RooAbsPdf*) this)->setProxyDataSet(dset) ;
+
+  TIterator *pIter = _modelProxyList.MakeIterator() ;
+  RooRealProxy* proxy ;
+  RooResolutionModel* model ;
+  while(proxy = (RooRealProxy*)pIter->Next()) {
+    model = (RooResolutionModel*) proxy->absArg() ;
+    model->syncNormalization(dset) ;
+  }
+  delete pIter ;
+  
 }

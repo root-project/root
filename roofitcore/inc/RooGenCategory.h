@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.rdl,v 1.1 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooGenCategory.rdl,v 1.2 2001/05/14 22:54:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -24,7 +24,7 @@ public:
   inline RooGenCategory() { }
   RooGenCategory(const char *name, const char *title, void* userFunc, RooArgSet& catList);
   RooGenCategory(const RooGenCategory& other, const char *name=0) ;
-  virtual TObject* clone() const { return new RooGenCategory(*this); }
+  virtual TObject* clone(const char* newname) const { return new RooGenCategory(*this,newname); }
   virtual ~RooGenCategory();
 
   // Printing interface (human readable)

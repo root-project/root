@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.38 2001/06/23 01:20:32 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.39 2001/06/30 01:33:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,7 +46,8 @@ TList RooAbsArg::_traceList ;
 Bool_t RooAbsArg::_traceFlag(kFALSE) ;
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 
-RooAbsArg::RooAbsArg() : TNamed(), _attribList()
+RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
+  _operMode(Auto)
 {
   // Default constructor creates an unnamed object.
   _clientShapeIter = _clientListShape.MakeIterator() ;
@@ -55,7 +56,8 @@ RooAbsArg::RooAbsArg() : TNamed(), _attribList()
 }
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
-  : TNamed(name,title), _valueDirty(kTRUE), _shapeDirty(kTRUE)
+  : TNamed(name,title), _valueDirty(kTRUE), _shapeDirty(kTRUE),
+  _operMode(Auto)
 {    
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
@@ -66,7 +68,7 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 }
 
 RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
-  : TNamed(other.GetName(),other.GetTitle())
+  : TNamed(other.GetName(),other.GetTitle()), _operMode(Auto)
 {
   // Copy constructor transfers all properties of the original
   // object, except for its list of clients. The newly created 
@@ -177,6 +179,11 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
   // we depend on it. In addition to the basic client-server relationship,
   // we can declare dependence on the server's value and/or shape.
 
+  if (_verboseDirty) {
+       cout << "RooAbsArg::addServer(" << GetName() << "): adding server " << server.GetName() 
+	    << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+  }
+
   // Add server link to given server
   if (!_serverList.FindObject(&server)) {
     _serverList.Add(&server) ;
@@ -214,6 +221,11 @@ void RooAbsArg::removeServer(RooAbsArg& server)
 {
   // Unregister another RooAbsArg as a server to us, ie, declare that
   // we no longer depend on its value and shape.
+
+  if (_verboseDirty) {
+    cout << "RooAbsArg::removeServer(" << GetName() << "): removing server " 
+	 << server.GetName() << "(" << &server << ")" << endl ;
+  }
 
   // Remove server link to given server
   if (_serverList.FindObject(&server)) {
@@ -284,7 +296,7 @@ void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t
   if ((doBranch&&doLeaf) ||
       (doBranch&&arg->isDerived()) ||
       (doLeaf&&!arg->isDerived())) {
-    list->add(*arg) ;  
+    list->add(*arg,kTRUE) ;  
   }
 
   // Recurse if current node is derived
@@ -426,11 +438,22 @@ Bool_t RooAbsArg::dependentOverlaps(const RooDataSet* dset, const RooAbsArg& tes
 
 
 
-void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
+void RooAbsArg::setValueDirty(const RooAbsArg* source) const
 { 
   // Mark this object as having changed its value, and propagate this status
   // change to all of our clients.
+  if (_operMode!=Auto) return ;
 
+  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << GetName() 
+			  << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
+
+  // Handle no-propagation scenarios first
+  if (_clientListValue.GetSize()==0) {
+    _valueDirty = kTRUE ;
+    return ;
+  }
+
+  // Cyclical dependency interception
   if (source==0) {
     source=this ; 
   } else if (source==this) {
@@ -440,29 +463,27 @@ void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
     return ;
   }
 
-  if (_verboseDirty) {
-    cout << "RooAbsArg::setValueDirty(" << GetName() 
-	 << "," << (void*)this << "): dirty flag " 
-	 << ((flag==_valueDirty)?"already ":"") 
-	 << (flag?"raised":"cleared") << endl ;
-  }
-
   // Propagate dirty flag to all clients if this is a down->up transition
-//    if (flag==kTRUE && (!_valueDirty || isFundamental())) {
-  if (flag==kTRUE) {
-    _clientValueIter->Reset() ;
-    RooAbsArg* client ;
-    while (client=(RooAbsArg*)_clientValueIter->Next()) {
-      client->setValueDirty(kTRUE,source) ;
-    }
+  _valueDirty = kTRUE ;
+  _clientValueIter->Reset() ;
+  RooAbsArg* client ;
+  while (client=(RooAbsArg*)_clientValueIter->Next()) {
+    client->setValueDirty(source) ;
   }
 
-  _valueDirty=flag ; 
 } 
 
 
-void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
+void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
 { 
+  if (_verboseDirty) cout << "RooAbsArg::setShapeDirty(" << GetName() 
+			  << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
+
+  if (_clientListShape.GetSize()==0) {
+    _shapeDirty = kTRUE ;
+    return ;
+  }
+
   // Set 'dirty' shape state for this object and propagate flag to all its clients
   if (source==0) {
     source=this ; 
@@ -473,29 +494,21 @@ void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
     return ;
   }
 
-  if (_verboseDirty) {
-    cout << "RooAbsArg::setShapeDirty(" << GetName() 
-	 << "," << (void*)this << "): dirty flag " 
-	 << ((flag==_shapeDirty)?" already ":"") 
-	 << (flag?"raised":"cleared") << endl ;
-  }
-
   // Propagate dirty flag to all clients if this is a down->up transition
-  if (flag==kTRUE) {
-    _clientShapeIter->Reset() ;
-    RooAbsArg* client ;
-    while (client=(RooAbsArg*)_clientShapeIter->Next()) {
-      client->setShapeDirty(kTRUE,source) ;
-      client->setValueDirty(kTRUE,source) ;
-    }
+  _shapeDirty=kTRUE ; 
+
+  _clientShapeIter->Reset() ;
+  RooAbsArg* client ;
+  while (client=(RooAbsArg*)_clientShapeIter->Next()) {
+    client->setShapeDirty(source) ;
+    client->setValueDirty(source) ;
   }
 
-  _shapeDirty=flag ; 
 } 
 
 
 
-Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll) 
+Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll, Bool_t nameChange) 
 {
   // Trivial case, no servers
   if (!_serverList.First()) return kFALSE ;
@@ -525,7 +538,29 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
   sIter = origServerList.MakeIterator() ;
   Bool_t propValue, propShape ;
   while (oldServer=(RooAbsArg*)sIter->Next()) {
-    newServer = newSet.find(oldServer->GetName()) ;
+
+    if (!nameChange) {
+      newServer = newSet.find(oldServer->GetName()) ;
+    } else {
+
+      // Name changing server redirect: 
+      // use 'ORIGNAME:<oldName>' attribute instead of name of new server
+      TString nameAttrib("ORIGNAME:") ; 
+      nameAttrib.Append(oldServer->GetName()) ;
+      RooArgSet* tmp = newSet.selectByAttrib(nameAttrib,kTRUE) ;
+      if (tmp && tmp->GetSize()!=1) {
+	cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, >1 server with " 
+	     << nameAttrib << " attribute" << endl ;
+	assert(0) ;
+      }
+      newServer = tmp ? ((RooAbsArg*)tmp->First()) : 0 ;
+      if (tmp) delete tmp ;
+    }
+
+//     if (newServer) {
+//       cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
+// 	   << " redirected from " << oldServer << " to " << newServer << endl ;
+//     }
     if (!newServer) {
       if (mustReplaceAll) {
 	cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
@@ -543,13 +578,13 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
 
   delete sIter ;
  
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
+  setValueDirty() ;
+  setShapeDirty() ;
 
   // Process the proxies
   Bool_t allReplaced=kTRUE ;
   for (int i=0 ; i<numProxies() ; i++) {
-    Bool_t ret = getProxy(i)->changePointer(newSet) ;    
+    Bool_t ret = getProxy(i)->changePointer(newSet,nameChange) ;    
     allReplaced &= ret ;
   }
 
@@ -649,7 +684,8 @@ RooAbsProxy* RooAbsArg::getProxy(Int_t index) const
   // Horrible, but works. All RooAbsProxy implementations inherit
   // from TObject, and are thus collectible, but RooAbsProxy doesn't
   // as that would lead to multiple inheritance of TObject
-  return dynamic_cast<RooAbsProxy*> (_proxyList.At(index)) ;
+  return (RooSetProxy*)_proxyList.At(index) ;
+  //return dynamic_cast<RooAbsProxy*> (_proxyList.At(index)) ;
 }
 
 
@@ -726,7 +762,13 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
     if(opt == Verbose) {
       os << indent << "--- RooAbsArg ---" << endl;
       // dirty state flags
-      os << indent << "  Value State: " << (isValueDirty() ? "DIRTY":"clean") << endl
+      os << indent << "  Value State: " ;
+      switch(_operMode) {
+      case ADirty: os << "FORCED DIRTY" ; break ;
+      case AClean: os << "FORCED clean" ; break ;
+      case Auto: os << (isValueDirty() ? "DIRTY":"clean") ; break ;
+      }
+      os << endl 
 	 << indent << "  Shape State: " << (isShapeDirty() ? "DIRTY":"clean") << endl;
       // attribute list
       os << indent << "  Attributes: " ;
@@ -810,6 +852,13 @@ void RooAbsArg::attachDataSet(const RooDataSet &set)
 }
 
 
+Int_t RooAbsArg::Compare(const TObject* other) const 
+{
+  // Sort by object name
+  return strcmp(GetName(),other->GetName()) ;
+}
+
+
 void RooAbsArg::traceDump(ostream& os) {
   os << "List of RooAbsArg objects in memory while trace active:" << endl ;
   TIterator* iter = _traceList.MakeIterator() ;
@@ -820,4 +869,27 @@ void RooAbsArg::traceDump(ostream& os) {
     os << buf << setw(20) << arg->ClassName() << setw(0) << " - " << arg->GetName() << endl ;
   }
   delete iter ;
+}
+
+void RooAbsArg::printDirty(Bool_t depth) const 
+{
+  if (depth) {    
+
+    RooArgSet branchList ;
+    branchNodeServerList(&branchList) ;
+    TIterator* bIter = branchList.MakeIterator() ;
+    RooAbsArg* branch ;
+    while(branch=(RooAbsArg*)bIter->Next()) {
+      branch->printDirty(kFALSE) ;
+    }
+
+  } else {
+    cout << GetName() << " : " ;
+    switch (_operMode) {
+    case AClean: cout << "FORCED clean" ; break ;
+    case ADirty: cout << "FORCED DIRTY" ; break ;
+    case Auto:   cout << "Auto  " << (isValueDirty()?"DIRTY":"clean") ;
+    }
+    cout << endl ;
+  }  
 }

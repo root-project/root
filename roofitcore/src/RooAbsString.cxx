@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.7 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooAbsString.cc,v 1.8 2001/06/30 01:33:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,8 +36,8 @@ RooAbsString::RooAbsString(const char *name, const char *title) :
   RooAbsArg(name,title)
 {
   // Constructor
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
+  setValueDirty() ;
+  setShapeDirty() ;
 }
 
 
@@ -61,7 +61,7 @@ TString RooAbsString::getVal() const
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty()) {
-    setValueDirty(false) ;
+    clearValueDirty() ;
     strcpy(_value,traceEval()) ;
   } 
   
@@ -150,7 +150,7 @@ void RooAbsString::copyCache(const RooAbsArg* source)
   assert(other) ;
 
   strcpy(_value,other->_value) ;
-  setValueDirty(kTRUE) ;
+  setValueDirty() ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.rdl,v 1.4 2001/06/09 05:08:48 verkerke Exp $
+ *    File: $Id: RooFormulaVar.rdl,v 1.5 2001/06/12 19:06:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,11 +25,12 @@ public:
   RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgSet& dependents);
   RooFormulaVar(const char *name, const char *title, const RooArgSet& dependents);
   RooFormulaVar(const RooFormulaVar& other, const char* name=0);
-  virtual TObject* clone() const { return new RooFormulaVar(*this); }
+  virtual TObject* clone(const char* newname) const { return new RooFormulaVar(*this,newname); }
   virtual ~RooFormulaVar();
 
   // Formula editing interface
   Bool_t setFormula(const char* formula) ;
+  inline Bool_t ok() const { return _formula.ok() ; }
 
   inline RooAbsArg* getParameter(const char* name) const { return _formula.getParameter(name) ; }
   inline RooAbsArg* getParameter(Int_t index) const { return _formula.getParameter(index) ; }

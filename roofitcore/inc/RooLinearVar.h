@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.rdl,v 1.1 2001/05/16 07:41:08 verkerke Exp $
+ *    File: $Id: RooLinearVar.rdl,v 1.2 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,7 +29,7 @@ public:
   inline RooLinearVar() { }
   RooLinearVar(const char *name, const char *title, RooRealVar& variable, RooAbsReal& slope, RooAbsReal& offset, const char *unit= "") ;
   RooLinearVar(const RooLinearVar& other, const char* name=0);
-  virtual TObject* clone() const { return new RooLinearVar(*this); }
+  virtual TObject* clone(const char* newname) const { return new RooLinearVar(*this,newname); }
   virtual ~RooLinearVar() ;
   
   // Parameter value and error accessors

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.19 2001/06/18 21:04:21 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.20 2001/06/30 01:33:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,7 @@ class RooAbsString ;
 class Roo1DTable ;
 class RooPlot;
 class RooFitContext ;
+class RooFormulaVar ;
 
 class RooDataSet : public TTree, public RooPrintable {
 public:
@@ -41,6 +42,8 @@ public:
   RooDataSet(const char *name, const char *title, const RooArgSet& vars) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
 	     const RooArgSet& vars, const char *cuts);
+  RooDataSet(const char *name, const char *title, RooDataSet *t, 
+	     const RooArgSet& vars, RooFormulaVar& cutVar) ;
   RooDataSet(const char *name, const char *title, TTree *ntuple, 
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *filename, const char *treename, 
@@ -62,7 +65,7 @@ public:
   RooAbsArg* addColumn(RooAbsArg& var) ;
 
   // Load a given row of data
-  const RooArgSet* get() const { return &_vars ; } // last loaded row
+  inline const RooArgSet* get() const { return &_vars ; } // last loaded row
   const RooArgSet* get(Int_t index) const;
 
   Roo1DTable* Table(RooAbsCategory& cat, const char* cuts="", const char* opts="") ;
@@ -96,11 +99,14 @@ protected:
 
   // Load data from another TTree
   void loadValues(const TTree *ntuple, const char *cuts);
+  void loadValues(const TTree *t, const RooFormulaVar* cutVar) ; 
   void loadValues(const char *filename, const char *treename,
 		  const char *cuts);
 
   // RooFitContext optimizer interface
   friend class RooFitContext ;
+
+  void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
 
   // Column structure definition
   RooArgSet _vars, _truth;
@@ -115,6 +121,7 @@ private:
   TIterator *_iterator;    //! don't make this data member persistent
   TIterator *_cacheIter ;  //! don't make this data member persistent
   TBranch *_branch; //! don't make this data member persistent
+  Bool_t _doDirtyProp ;
 
   enum { bufSize = 8192 };
   ClassDef(RooDataSet,1) // Data set for fitting

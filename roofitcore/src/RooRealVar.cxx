@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.19 2001/05/15 06:54:26 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.20 2001/05/17 00:43:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -82,7 +82,7 @@ void RooRealVar::setVal(Double_t value) {
   Double_t clipValue ;
   inFitRange(value,&clipValue) ;
 
-  setValueDirty(kTRUE) ;
+  setValueDirty() ;
   _value = clipValue;
 }
 
@@ -103,7 +103,7 @@ void RooRealVar::setFitMin(Double_t value)
     setVal(clipValue) ;
   }
 
-  setShapeDirty(kTRUE) ;
+  setShapeDirty() ;
 }
 
 void RooRealVar::setFitMax(Double_t value)
@@ -123,7 +123,7 @@ void RooRealVar::setFitMax(Double_t value)
     setVal(clipValue) ;
   }
 
-  setShapeDirty(kTRUE) ;
+  setShapeDirty() ;
 }
 
 void RooRealVar::setFitRange(Double_t min, Double_t max) {
@@ -138,7 +138,7 @@ void RooRealVar::setFitRange(Double_t min, Double_t max) {
     _fitMax = max ;
   }
 
-  setShapeDirty(kTRUE) ;  
+  setShapeDirty() ;  
 }
 
 
@@ -155,7 +155,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   if (compact) {
     // Compact mode: Read single token
     if (parser.readDouble(value,verbose)) return kTRUE ;
-    if (isValid(value,kTRUE)) {
+    if (isValid(value,verbose)) {
       setVal(value) ;
       return kFALSE ;
     } else {

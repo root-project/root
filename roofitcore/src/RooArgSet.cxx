@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.22 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.23 2001/05/31 21:21:36 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,25 +30,25 @@ ClassImp(RooArgSet)
 
 
 RooArgSet::RooArgSet() :
-  _name(), THashList(), _isCopy(kFALSE)
+  _name(), TList(), _isCopy(kFALSE)
 {
 }
 
 RooArgSet::RooArgSet(const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
 }
 
 RooArgSet::RooArgSet(const RooAbsArg& var1,
 		     const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   add(var1);
 }
 
 RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   add(var1); add(var2);
 }
@@ -56,7 +56,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3,
 		     const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3);
 }
@@ -64,7 +64,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4,
 		     const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4);
 }
@@ -73,7 +73,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1,
 		     const RooAbsArg& var2, const RooAbsArg& var3,
 		     const RooAbsArg& var4, const RooAbsArg& var5,
 		     const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5);
 }
@@ -82,7 +82,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6,
 		     const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
 }
@@ -92,7 +92,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
 		     const RooAbsArg& var7,
 		     const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
 }
@@ -102,14 +102,25 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
 		     const RooAbsArg& var7, const RooAbsArg& var8,
 		     const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
 }
 
 
+RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
+		     const RooAbsArg& var3, const RooAbsArg& var4, 
+		     const RooAbsArg& var5, const RooAbsArg& var6, 
+		     const RooAbsArg& var7, const RooAbsArg& var8,
+		     const RooAbsArg& var9, const char *name) :
+  _name(name), TList(), _isCopy(kFALSE)
+{
+  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ; add(var9) ;
+}
+
+
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
-  _name(name), THashList(), _isCopy(kFALSE)
+  _name(name), TList(), _isCopy(kFALSE)
 {
   if (!name) SetName(other.GetName()) ;
 
@@ -306,7 +317,7 @@ Bool_t RooArgSet::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 
 
 
-Bool_t RooArgSet::remove(const RooAbsArg& var) {
+Bool_t RooArgSet::remove(const RooAbsArg& var, Bool_t silent) {
   // Remove the specified argument from our list. Return kFALSE if we
   // a copy of a list, or if the specified argument is not found in
   // our list (an exact pointer match is required, not just a match
@@ -320,16 +331,16 @@ Bool_t RooArgSet::remove(const RooAbsArg& var) {
   // is var already in this list?
   const char *name= var.GetName();
   RooAbsArg *other= find(name);
-  if(other != &var) {
-    cout << "RooArgList: variable \"" << name << "\" is not in the list"
-	 << " and cannot be removed" << endl;
+  if(other != &var) {    
+    if (!silent) cout << "RooArgSet: variable \"" << name << "\" is not in the list"
+		      << " and cannot be removed" << endl;
     return kFALSE;
   }
   Remove((TObject*)&var);
   return kTRUE;
 }
 
-Bool_t RooArgSet::remove(const RooArgSet& list) {
+Bool_t RooArgSet::remove(const RooArgSet& list, Bool_t silent) {
   // Remove each argument in the input list from our list using remove(const RooAbsArg&).
   // Return kFALSE in case of problems.
 
@@ -337,7 +348,7 @@ Bool_t RooArgSet::remove(const RooArgSet& list) {
 
   Int_t n= list.GetSize() ;
   for(Int_t index= 0; index < n; index++) {
-    result |= remove((RooAbsArg&)*list.At(index)) ;
+    result |= remove((RooAbsArg&)*list.At(index),silent) ;
   }
 
   return result;

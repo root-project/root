@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.11 2001/06/18 21:04:21 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.12 2001/06/30 01:33:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,6 +34,7 @@
 #include "RooFitCore/RooFitContext.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooAbsPdf.hh"
+#include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealVar.hh"
 
 ClassImp(RooFitContext)
@@ -42,8 +43,9 @@ ClassImp(RooFitContext)
 static TVirtualFitter *_theFitter(0);
 
 
-RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) :
-  TNamed(*pdf), _origLeafNodeList("origLeafNodeList")
+RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_t cloneData, Bool_t clonePdf) :
+  TNamed(*pdf), _origLeafNodeList("origLeafNodeList"), _extendedMode(kFALSE), _doOptCache(kFALSE),
+  _ownData(cloneData)
 {
   // Constructor
 
@@ -57,23 +59,47 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) :
   }
 
   // Clone data 
-  _dataClone = new RooDataSet(*data) ;
+  if (cloneData) {
+    _dataClone = new RooDataSet(*data) ;
+  } else {
+    _dataClone = data ;
+  }
 
   // Clone all PDF compents by copying all branch nodes
   RooArgSet tmp("PdfBranchNodeList") ;
   pdf->branchNodeServerList(&tmp) ;
-  _pdfCompList = tmp.snapshot(kFALSE) ;
 
-  // Find the top level PDF in the snapshot list
-  _pdfClone = (RooAbsPdf*) _pdfCompList->FindObject(pdf->GetName()) ;
-  
+  if (clonePdf) {
+    _pdfCompList = tmp.snapshot(kFALSE) ;
+    
+    // Find the top level PDF in the snapshot list
+    _pdfClone = (RooAbsPdf*) _pdfCompList->FindObject(pdf->GetName()) ;
+
+  } else {
+    _pdfCompList = (RooArgSet*) tmp.Clone() ;
+    _pdfClone = pdf ;
+  }
+
   // Attach PDF to data set
   _pdfClone->attachDataSet(*_dataClone) ;
   _pdfClone->resetErrorCounters() ;
 
   // Cache parameter list
   _paramList = _pdfClone->getParameters(_dataClone) ;
+  _paramList->Sort() ;
+
+  // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
+  TIterator* pIter = _paramList->MakeIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)pIter->Next()) {
+    if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
+      cout << "RooFitContext::RooFitContext: removing parameter " << arg->GetName() 
+	   << " from list because it is not of type RooRealVar" << endl ;
+      _paramList->remove(*arg) ;
+    }
+  }
   _nPar      = _paramList->GetSize() ;  
+  delete pIter ;
 
   // Store the original leaf node list
   pdf->leafNodeServerList(&_origLeafNodeList) ;  
@@ -86,7 +112,7 @@ RooFitContext::~RooFitContext()
   // Destructor
 
   delete _pdfCompList ;
-  delete _dataClone ;
+  if (_ownData) delete _dataClone ;
   delete _paramList ;
 }
 
@@ -124,14 +150,18 @@ Double_t RooFitContext::getPdfParamErr(Int_t index)
 }
 
 
-void RooFitContext::setPdfParamVal(Int_t index, Double_t value)
+Bool_t RooFitContext::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 {
   // Modify PDF parameter value by ordinal index (needed by MINUIT)
   RooRealVar* par = (RooRealVar*)_paramList->At(index) ;
 
   if (par->getVal()!=value) {
+    if (verbose) cout << par->GetName() << "=" << value << ", " ;
     par->setVal(value) ;  
+    return kTRUE ;
   }
+
+  return kFALSE ;
 }
 
 
@@ -143,13 +173,31 @@ void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 }
 
 
+Double_t RooFitContext::getVal(Int_t evt) const 
+{
+  _dataClone->get(evt) ;
+  return _pdfClone->getVal(_dataClone) ;
+}
 
-Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData) 
+
+Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache) 
 {
   // PDF/Dataset optimizer entry point
 
   // Find PDF nodes that can be cached in the data set
   RooArgSet cacheList("cacheList") ;
+
+  if (doCache) {
+    RooArgSet branchList ;
+    _pdfClone->setOperMode(RooAbsArg::ADirty) ;
+    _pdfClone->branchNodeServerList(&branchList) ;
+    TIterator* bIter = branchList.MakeIterator() ;
+    RooAbsArg* branch ;
+    while(branch=(RooAbsArg*)bIter->Next()) {
+      branch->setOperMode(RooAbsArg::ADirty) ;
+    }
+    delete bIter ;
+  }
 
   if (doPdf) {
     findCacheableBranches(_pdfClone,_dataClone,cacheList) ;
@@ -189,13 +237,47 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData)
       // Reattach PDF clone to newly trimmed dataset
       _pdfClone->attachDataSet(*trimData) ;
       
+      // Make sure PDF releases all handles to old data set before deleting it
+      TIterator* pcIter = _pdfCompList->MakeIterator() ;
+      while(arg=(RooAbsArg*)pcIter->Next()){
+	if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
+	  ((RooAbsReal*)arg)->getVal(trimData) ;
+	}
+      }
+      delete pcIter ;
+
       // Substitute new data for old data 
       delete _dataClone ;
       _dataClone = trimData ;
+
+      // Update _lastDataSet in cached variables to new trimmed dataset
+      if (doCache) {
+	TIterator* cIter = cacheList.MakeIterator() ;
+	RooAbsArg *cacheArg ;
+	while(cacheArg=(RooAbsArg*)cIter->Next()){
+	  ((RooAbsReal*)cacheArg)->getVal(_dataClone) ;
+	}
+	delete cIter ;
+
+	_dataClone->setDirtyProp(kFALSE) ;
+      }    
+
     }
   }
+
+  // This must be done last, otherwise the normalization of cached PDFs will not be calculated correctly
+  if (doCache && doPdf) {
+    TIterator* cIter = cacheList.MakeIterator() ;
+    RooAbsArg *cacheArg ;
+    while(cacheArg=(RooAbsArg*)cIter->Next()){
+      cacheArg->setOperMode(RooAbsArg::AClean) ;
+    }
+    delete cIter ;
+  }    
+
   return kFALSE ;
 }
+
 
 
 
@@ -209,7 +291,8 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
   RooAbsPdf* server ;
 
   while(server=(RooAbsPdf*)sIter->Next()) {
-    if (server->isDerived() && server->IsA()->InheritsFrom(RooAbsPdf::Class())) {
+//     if (server->isDerived() && server->IsA()->InheritsFrom(RooAbsPdf::Class())) {
+    if (server->isDerived()) {
       // Check if this branch node is eligible for precalculation
       Bool_t canOpt(kTRUE) ;
 
@@ -300,6 +383,8 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
          _extendedMode = opts.Contains("e") ;
   Bool_t doOptPdf      = opts.Contains("o") ;
   Bool_t doOptData     = opts.Contains("oo") ;
+  Bool_t doOptCache    = opts.Contains("ooo") ;
+  Bool_t doStrat0      = opts.Contains("0") ;
 
   // Check if an extended ML fit is possible
   if(_extendedMode) {
@@ -320,7 +405,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   }
 
   // Run the optimizer if requested
-  if (doOptPdf||doOptData) optimize(doOptPdf,doOptData) ;
+  if (doOptPdf||doOptData||doOptCache) optimize(doOptPdf,doOptData,doOptCache) ;
 
   // Create a log file if requested
   if(saveLog) {
@@ -367,7 +452,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   // Declare our parameters
   Int_t index(0), nFree(nPar);
   for(index= 0; index < nPar; index++) {
-    RooRealVar *par= (RooRealVar*)_paramList->At(index);
+    RooRealVar *par= dynamic_cast<RooRealVar*>(_paramList->At(index)) ;
 
     Double_t pstep(0) ;
     Double_t pmin= par->getFitMin();
@@ -424,7 +509,17 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
 
   // Always use MIGRAD unless an earlier step failed
   if(status == 0) {
+    if (doStrat0) {
+      Double_t stratArg(0.0) ;
+      _theFitter->ExecuteCommand("SET STR",&stratArg,1) ;
+    }
+
     status= _theFitter->ExecuteCommand("MIGRAD",arglist,2);
+
+    if (doStrat0) {
+      Double_t stratArg(1.0) ;
+      _theFitter->ExecuteCommand("SET STR",&stratArg,1) ;
+    }
   }
 
   // If the fit suceeded, follow with a HESSE analysis if requested
@@ -480,6 +575,35 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
 }
 
 
+Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const 
+{
+  // Return the likelihood of this PDF for the given dataset
+  Double_t result(0);
+  const RooArgSet *values = _dataClone->get() ;
+  if(!values) {
+    cout << _dataClone->GetName() << "::nLogLikelihood: cannot get values from dataset " << endl ;
+    return 0.0;
+    }
+
+  Stat_t events= _dataClone->GetEntries();
+  for(Int_t index= 0; index<events; index++) {
+
+    // get the data values for this event
+    _dataClone->get(index);
+
+    Double_t term = _pdfClone->getLogVal(_dataClone);
+    if(term == 0) return 0;
+    result-= term;
+  }
+
+  // include the extended maximum likelihood term, if requested
+  if(_extendedMode) {
+    result+= _pdfClone->extendedTerm(events);
+  }
+
+  return result;
+}
+
 
 
 void RooFitGlue(Int_t &np, Double_t *gin,
@@ -489,20 +613,18 @@ void RooFitGlue(Int_t &np, Double_t *gin,
 
   // Retrieve fit context and its components
   RooFitContext* context = (RooFitContext*) _theFitter->GetObjectFit() ;
-  RooAbsPdf* pdf   = context->pdf() ;
-  RooDataSet* data = context->data() ;
   ofstream* logf   = context->logfile() ;
   Double_t& maxNLL = context->maxNLL() ;
 
   // Set the parameter values for this iteration
   Int_t nPar= context->getNPar();
   for(Int_t index= 0; index < nPar; index++) {
-    if (logf) (*logf) << par[index] << " ";
-    context->setPdfParamVal(index, par[index]);
+    if (logf) (*logf) << par[index] << " " ;
+    context->setPdfParamVal(index, par[index],logf?kTRUE:kFALSE);
   }
 
   // Calculate the negative log-likelihood for these parameters
-  f= pdf->nLogLikelihood(data, context->extendedMode());
+  f= context->nLogLikelihood();
   if (f==0) {
     // if any event has a prob <=0 return a flat likelihood 
     // at the max value we have seen so far
@@ -512,7 +634,11 @@ void RooFitGlue(Int_t &np, Double_t *gin,
   }
 
   // Optional logging
-  if (logf) *logf << setprecision(15) << f << endl;
+  if (logf) {
+    (*logf) << setprecision(15) << f << setprecision(4) << endl;
+    cout << "\nprevNLL = " << setprecision(10) << f << setprecision(4) << "  " ;
+  }
 }
+
 
 

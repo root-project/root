@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.rdl,v 1.2 2001/05/14 22:54:20 verkerke Exp $
+ *    File: $Id: RooGenericPdf.rdl,v 1.3 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,7 @@ public:
   inline RooGenericPdf() { }
   RooGenericPdf(const char *name, const char *title, const RooArgSet& dependents);
   RooGenericPdf(const RooGenericPdf& other, const char* name=0);
-  virtual TObject* clone() const { return new RooGenericPdf(*this); }
+  virtual TObject* clone(const char* newname) const { return new RooGenericPdf(*this,newname); }
   virtual ~RooGenericPdf();
 
   // I/O streaming interface (machine readable)

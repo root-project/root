@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.4 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.5 2001/05/31 21:21:35 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,6 +30,8 @@ public:
   RooAbsCategoryLValue& operator=(int index) ; 
   RooAbsCategoryLValue& operator=(const char* label) ; 
   void randomize();
+
+  inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
   
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
