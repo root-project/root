@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.1 2001/10/01 14:37:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.2 2001/10/01 16:23:02 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -32,7 +32,9 @@
 
 #include "TMD5.h"
 #include "TError.h"
+#include "TSystem.h"
 #include <string.h>
+#include <errno.h>
 
 
 ClassImp(TMD5)
@@ -334,4 +336,86 @@ Bool_t operator==(const TMD5 &m1, const TMD5 &m2)
          return kFALSE;
 
    return kTRUE;
+}
+
+//______________________________________________________________________________
+TMD5 *TMD5::FileChecksum(const char *file)
+{
+   // Returns checksum of specified file. The returned TMD5 object must
+   // be deleted by the user. Returns 0 in case of error.
+   // This method preserves the modtime of the file so it can be safely
+   // used in conjunction with methods that keep track of the file's modtime.
+
+   Long_t id, size, flags, modtime;
+   if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
+      if (flags > 1) {
+         ::Error("FileChecksum", "%s not a regular file (%ld)", file, flags);
+         return 0;
+      }
+   } else {
+      ::Error("FileChecksum", "could not stat %s", file);
+      return 0;
+   }
+
+#ifndef WIN32
+   Int_t fd = open(file, O_RDONLY);
+#else
+   Int_t fd = open(file, O_RDONLY | O_BINARY);
+#endif
+   if (fd < 0) {
+      ::Error("FileChecksum", "cannot open %s in read mode", file);
+      return 0;
+   }
+
+   TMD5 *md5 = new TMD5;
+
+   Seek_t pos = 0;
+   const Int_t bufSize = 8192;
+   UChar_t buf[bufSize];
+
+   while (pos < size) {
+      Seek_t left = Seek_t(size - pos);
+      if (left > bufSize)
+         left = bufSize;
+      Int_t siz;
+      while ((siz = read(fd, buf, left)) < 0 && TSystem::GetErrno() == EINTR)
+         TSystem::ResetErrno();
+      if (siz < 0 || siz != left) {
+         ::Error("FileChecksum", "error reading from file %s", file);
+         close(fd);
+         delete md5;
+         return 0;
+      }
+
+      md5->Update(buf, left);
+
+      pos += left;
+   }
+
+   close(fd);
+
+   md5->Final();
+
+   gSystem->Utime(file, modtime, modtime);
+
+   return md5;
+}
+
+//______________________________________________________________________________
+Int_t TMD5::FileChecksum(const char *file, UChar_t digest[16])
+{
+   // Returns checksum of specified file in digest argument. Returns -1 in
+   // case of error, 0 otherwise. This method preserves the modtime of the
+   // file so it can be safely used in conjunction with methods that keep
+   // track of the file's modtime.
+
+   TMD5 *md5 = FileChecksum(file);
+   if (md5) {
+      memcpy(digest, md5->fDigest, 16);
+      delete md5;
+      return 0;
+   } else
+      memset(digest, 0, 16);
+
+   return -1;
 }

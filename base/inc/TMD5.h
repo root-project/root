@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.1 2001/10/01 14:37:51 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -64,6 +64,9 @@ public:
    void        Final(UChar_t digest[16]);
    void        Print() const;
    const char *AsString() const;
+
+   static TMD5  *FileChecksum(const char *file);
+   static Int_t  FileChecksum(const char *file, UChar_t digest[16]);
 
    ClassDef(TMD5,1)  // MD5 cryptographic hash functions with a 128 bit output
 };
