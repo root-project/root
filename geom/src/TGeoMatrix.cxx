@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.16 2004/01/18 12:31:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.18 2004/01/18 16:30:22 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -378,14 +378,14 @@ void TGeoMatrix::Print(Option_t *) const
    const Double_t *rot = GetRotationMatrix();
    const Double_t *tr  = GetTranslation();
    const Double_t *sc  = GetScale();
-   printf("matrix %s - translation : %i  rotation : %i  scale : %i/n", GetName(),(Int_t)IsTranslation(),
+   printf("matrix %s - translation : %i  rotation : %i  scale : %i\n", GetName(),(Int_t)IsTranslation(),
           (Int_t)IsRotation(), (Int_t)IsScale());
-   printf(" %g %g %g %g/n", rot[0], rot[1], rot[2], (Double_t)0); 
-   printf(" %g %g %g %g/n", rot[3], rot[4], rot[5], (Double_t)0); 
-   printf(" %g %g %g %g/n", rot[6], rot[7], rot[8], (Double_t)0); 
+   printf(" %g %g %g %g\n", rot[0], rot[1], rot[2], (Double_t)0); 
+   printf(" %g %g %g %g\n", rot[3], rot[4], rot[5], (Double_t)0); 
+   printf(" %g %g %g %g\n", rot[6], rot[7], rot[8], (Double_t)0); 
 
-   printf(" %g %g %g %g/n", tr[0], tr[1], tr[2], (Double_t)1);
-   if (IsScale()) printf("Scale : %g %g %g/n", sc[0], sc[1], sc[2]);
+   printf(" %g %g %g %g\n", tr[0], tr[1], tr[2], (Double_t)1);
+   if (IsScale()) printf("Scale : %g %g %g\n", sc[0], sc[1], sc[2]);
 }
 
 //-----------------------------------------------------------------------------
@@ -466,6 +466,20 @@ TGeoTranslation::TGeoTranslation(const char *name, Double_t dx, Double_t dy, Dou
    SetBit(kGeoTranslation);
    SetTranslation(dx, dy, dz);
 }
+//-----------------------------------------------------------------------------
+TGeoMatrix& TGeoTranslation::Inverse() const
+{
+// Return a temporary inverse of this.
+   static TGeoHMatrix h;
+   h = *this;
+   Double_t tr[3];
+   tr[0] = -fTranslation[0];
+   tr[1] = -fTranslation[1];
+   tr[2] = -fTranslation[2];
+   h.SetTranslation(tr);
+   return h;
+}   
+
 //-----------------------------------------------------------------------------
 void TGeoTranslation::Add(const TGeoTranslation *other)
 {
@@ -599,6 +613,25 @@ TGeoRotation::TGeoRotation(const char *name, Double_t theta1, Double_t phi1, Dou
    CheckMatrix();
    SetDefaultName();
 }
+//-----------------------------------------------------------------------------
+TGeoMatrix& TGeoRotation::Inverse() const
+{
+// Return a temporary inverse of this.
+   static TGeoHMatrix h;
+   h = *this;
+   Double_t newrot[9];
+   newrot[0] = fRotationMatrix[0];
+   newrot[1] = fRotationMatrix[3];
+   newrot[2] = fRotationMatrix[6];
+   newrot[3] = fRotationMatrix[1];
+   newrot[4] = fRotationMatrix[4];
+   newrot[5] = fRotationMatrix[7];
+   newrot[6] = fRotationMatrix[2];
+   newrot[7] = fRotationMatrix[5];
+   newrot[8] = fRotationMatrix[8];
+   h.SetRotation(newrot);
+   return h;
+}   
 //-----------------------------------------------------------------------------
 Bool_t TGeoRotation::IsValid() const
 {
@@ -735,15 +768,16 @@ void TGeoRotation::SetAngles(Double_t phi, Double_t theta, Double_t psi)
    Double_t sinpsi = TMath::Sin(degrad*psi);
    Double_t cospsi = TMath::Cos(degrad*psi);
 
-   fRotationMatrix[0] =  cospsi*costhe*cosphi - sinpsi*sinphi;
-   fRotationMatrix[1] = -sinpsi*costhe*cosphi - cospsi*sinphi;
-   fRotationMatrix[2] =  sinthe*cosphi;
-   fRotationMatrix[3] =  cospsi*costhe*sinphi + sinpsi*cosphi;
-   fRotationMatrix[4] = -sinpsi*costhe*sinphi + cospsi*cosphi;
-   fRotationMatrix[5] =  sinthe*sinphi;
-   fRotationMatrix[6] = -cospsi*sinthe;
-   fRotationMatrix[7] =  sinpsi*sinthe;
+   fRotationMatrix[0] =  cospsi*cosphi - costhe*sinphi*sinpsi;
+   fRotationMatrix[1] = -sinpsi*cosphi - costhe*sinphi*cospsi;
+   fRotationMatrix[2] =  sinthe*sinphi;
+   fRotationMatrix[3] =  cospsi*sinphi + costhe*cosphi*sinpsi;
+   fRotationMatrix[4] = -sinpsi*sinphi + costhe*cosphi*cospsi;
+   fRotationMatrix[5] = -sinthe*cosphi;
+   fRotationMatrix[6] =  sinpsi*sinthe;
+   fRotationMatrix[7] =  cospsi*sinthe;
    fRotationMatrix[8] =  costhe;
+
    if (!IsValid()) Error("SetAngles", "invalid rotation (Euler angles : phi=%f theta=%f psi=%f)",phi,theta,psi);
 }
 //-----------------------------------------------------------------------------
@@ -789,7 +823,6 @@ void TGeoRotation::GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2,
    if (TMath::Abs(fRotationMatrix[2])<1E-6 && TMath::Abs(fRotationMatrix[5])<1E-6) phi3=0.;
    else phi3 = raddeg*TMath::ATan2(fRotationMatrix[5],fRotationMatrix[2]);
    if (phi3<0) phi3+=360.;
-   printf("th1=%f phi1=%f th2=%f phi2=%f th3=%f phi3=%f/n", theta1,phi1,theta2,phi2,theta3,phi3);
 }
 
 //-----------------------------------------------------------------------------
@@ -890,6 +923,19 @@ TGeoScale::~TGeoScale()
 // destructor
 }
 //-----------------------------------------------------------------------------
+TGeoMatrix& TGeoScale::Inverse() const
+{
+// Return a temporary inverse of this.
+   static TGeoHMatrix h;
+   h = *this;
+   Double_t scale[3];
+   scale[0] = 1./fScale[0];
+   scale[1] = 1./fScale[1];
+   scale[2] = 1./fScale[2];
+   h.SetScale(scale);
+   return h;
+}   
+//-----------------------------------------------------------------------------
 void TGeoScale::SetScale(Double_t sx, Double_t sy, Double_t sz)
 {
 // scale setter
@@ -978,6 +1024,31 @@ TGeoCombiTrans::~TGeoCombiTrans()
 // destructor
    if (fRotation) delete fRotation;
 }
+//-----------------------------------------------------------------------------
+TGeoMatrix& TGeoCombiTrans::Inverse() const
+{
+// Return a temporary inverse of this.
+   static TGeoHMatrix h;
+   h = *this;
+   Double_t tr[3];
+   Double_t newrot[9];
+   const Double_t *rot = GetRotationMatrix();
+   tr[0] = -fTranslation[0];
+   tr[1] = -fTranslation[1];
+   tr[2] = -fTranslation[2];
+   h.SetTranslation(tr);
+   newrot[0] = rot[0];
+   newrot[1] = rot[3];
+   newrot[2] = rot[6];
+   newrot[3] = rot[1];
+   newrot[4] = rot[4];
+   newrot[5] = rot[7];
+   newrot[6] = rot[2];
+   newrot[7] = rot[5];
+   newrot[8] = rot[8];
+   h.SetRotation(newrot);
+   return h;
+}   
 //-----------------------------------------------------------------------------
 void TGeoCombiTrans::RegisterYourself()
 {
@@ -1165,6 +1236,15 @@ void TGeoGenTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
    }
 }
 //-----------------------------------------------------------------------------
+TGeoMatrix& TGeoGenTrans::Inverse() const
+{
+// Return a temporary inverse of this.
+   Error("Inverse", "not implemented");
+   static TGeoHMatrix h;
+   h = *this;
+   return h;
+}   
+//-----------------------------------------------------------------------------
 Bool_t TGeoGenTrans::Normalize()
 {
 // A scale transformation should be normalized by sx*sy*sz factor
@@ -1190,7 +1270,13 @@ TGeoIdentity::TGeoIdentity(const char *name)
    if (!gGeoIdentity) gGeoIdentity = this;
    RegisterYourself();
 }
-
+//-----------------------------------------------------------------------------
+TGeoMatrix &TGeoIdentity::Inverse() const
+{
+// Return a temporary inverse of this.
+   return *gGeoIdentity;
+}
+   
 /*************************************************************************
  * TGeoHMatrix - Matrix class used for computing global transformations  *
  *     Should NOT be used for node definition. An instance of this class *
@@ -1311,6 +1397,42 @@ void TGeoHMatrix::Clear(Option_t *)
       memcpy(fScale,kUnitScale,kN3);
    }
 }
+//-----------------------------------------------------------------------------
+TGeoMatrix& TGeoHMatrix::Inverse() const
+{
+// Return a temporary inverse of this.
+   static TGeoHMatrix h;
+   h = *this;
+   if (IsTranslation()) {
+      Double_t tr[3];
+      tr[0] = -fTranslation[0];
+      tr[1] = -fTranslation[1];
+      tr[2] = -fTranslation[2];
+      h.SetTranslation(tr);
+   }
+   if (IsRotation()) {
+      Double_t newrot[9];
+      newrot[0] = fRotationMatrix[0];
+      newrot[1] = fRotationMatrix[3];
+      newrot[2] = fRotationMatrix[6];
+      newrot[3] = fRotationMatrix[1];
+      newrot[4] = fRotationMatrix[4];
+      newrot[5] = fRotationMatrix[7];
+      newrot[6] = fRotationMatrix[2];
+      newrot[7] = fRotationMatrix[5];
+      newrot[8] = fRotationMatrix[8];
+      h.SetRotation(newrot);
+   }
+   if (IsScale()) {
+      Double_t sc[3];
+      sc[0] = 1./fScale[0];
+      sc[1] = 1./fScale[1];
+      sc[2] = 1./fScale[2]; 
+      h.SetScale(sc);  
+   }
+   return h;
+}   
+
 //-----------------------------------------------------------------------------
 void TGeoHMatrix::Multiply(const TGeoMatrix *right)
 {

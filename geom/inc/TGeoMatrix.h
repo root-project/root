@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.11 2004/01/18 12:31:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.12 2004/01/20 15:44:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -73,6 +73,7 @@ public :
    virtual const Double_t    *GetTranslation()    const = 0;
    virtual const Double_t    *GetRotationMatrix() const = 0;
    virtual const Double_t    *GetScale()          const = 0;
+   virtual TGeoMatrix&  Inverse()                 const = 0;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const;
@@ -110,6 +111,7 @@ public :
    virtual ~TGeoTranslation() {}
    
    void                 Add(const TGeoTranslation *other);
+   virtual TGeoMatrix&  Inverse() const;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const;
    virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
@@ -153,6 +155,7 @@ public :
    
    Bool_t               IsReflection() const {return TestBit(kGeoReflection);}
    Bool_t               IsValid() const;
+   virtual TGeoMatrix&  Inverse() const;
    void                 Clear(Option_t *option ="");
    Double_t             Determinant() const;
    void                 FastRotZ(Double_t *sincos);
@@ -205,6 +208,7 @@ public :
    TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
    virtual ~TGeoScale();
    
+   virtual TGeoMatrix&        Inverse() const;
    void                       SetScale(Double_t sx, Double_t sy, Double_t sz);
    Bool_t                     Normalize();
    
@@ -236,6 +240,7 @@ public :
 
    virtual ~TGeoCombiTrans();
    
+   virtual TGeoMatrix&  Inverse() const;
    virtual void         RegisterYourself();
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
@@ -275,6 +280,7 @@ public :
    virtual ~TGeoGenTrans();
    
    void                 Clear(Option_t *option ="");
+   virtual TGeoMatrix&  Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    void                 SetScale(Double_t *scale)
                            {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
@@ -301,6 +307,7 @@ public :
    TGeoIdentity(const char *name);
    virtual ~TGeoIdentity() {}
    
+   virtual TGeoMatrix&  Inverse() const;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const 
                            {memcpy(master, local, 3*sizeof(Double_t));}
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const
@@ -348,6 +355,7 @@ public :
    TGeoHMatrix& operator*=(const TGeoMatrix &matrix) {Multiply(&matrix);return(*this);}
 
    void                 Clear(Option_t *option ="");
+   virtual TGeoMatrix&  Inverse() const;
    void                 Multiply(const TGeoMatrix *right);
    void                 MultiplyLeft(const TGeoMatrix *left);
 
@@ -369,7 +377,7 @@ public :
    virtual Double_t    *GetTranslation() {return &fTranslation[0];}
    virtual Double_t    *GetRotationMatrix() {return &fRotationMatrix[0];}
    virtual Double_t    *GetScale()       {return &fScale[0];}
-  ClassDef(TGeoHMatrix, 0)                 // global matrix class
+  ClassDef(TGeoHMatrix, 1)                 // global matrix class
 };
 
 

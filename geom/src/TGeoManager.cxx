@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.70 2004/01/19 13:40:51 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.71 2004/01/20 15:44:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2905,6 +2905,7 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
 // Checks if point (x,y,z) is still in the current node.
    // check if this is an overlapping node
    if (fCurrentOverlapping) {
+//      TGeoNode *current = fCurrentNode;
       Int_t cid = GetCurrentNodeId();
       if (!change) PushPoint();
       gGeoManager->FindNode(x,y,z);
