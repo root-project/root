@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.20 2004/09/14 17:08:23 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.21 2004/09/15 14:26:58 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -106,7 +106,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fMode = kNav;
    fActivePlane = kAPXOY;
    fSelectedObj = 0;
-   
+
    static struct Init {
       Init()
       {
@@ -246,6 +246,24 @@ void TViewerOpenGL::SwapBuffers()const
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 {
+   // Handle mouse button events.
+
+   // Buttons 4 and 5 are from the mouse scroll wheel
+   if (event->fCode == kButton4) {
+      // zoom out
+      fZoom[fConf] *= 1.2;
+      fCamera[fConf]->Zoom(fZoom[fConf]);
+      DrawObjects();
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // zoom in
+      fZoom[fConf] /= 1.2;
+      fCamera[fConf]->Zoom(fZoom[fConf]);
+      DrawObjects();
+      return kTRUE;
+   }
+
    if (event->fType == kButtonPress && event->fCode == kButton1) {
       if(fMode == kNav) {
          TPoint pnt(event->fX, event->fY);
@@ -435,7 +453,7 @@ void TViewerOpenGL::UpdateScene(Option_t *)
       if (buff->fColor <= 1) buff->fColor = 42; //temporary
 
       Float_t colorRGB[3] = {0.f};
-      TColor *rcol = gROOT->GetColor(buff->fColor);         
+      TColor *rcol = gROOT->GetColor(buff->fColor);
 
       if (rcol) {
          rcol->GetRGB(colorRGB[0], colorRGB[1], colorRGB[2]);
@@ -711,7 +729,7 @@ void TViewerOpenGL::ModifySelected()
       Int_t newInd = TColor::GetColor(newColor[0], newColor[1], newColor[2]);
       holderV->SetLineColor(newInd);
    }
-  */ 
+  */
    MakeCurrent();
    gVirtualGL->Invalidate(&fRender);
    DrawObjects();
