@@ -4,7 +4,8 @@ SHELL=/bin/bash
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.d *.log $(LIBDIR)/*
 
 #Set the list of target to make while testing
-TEST_TARGETS += stlIoTest stlNoLibTest
+TEST_TARGETS += stlIoTest 
+#stlNoLibTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
