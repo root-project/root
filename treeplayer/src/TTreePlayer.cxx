@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.155 2004/03/08 14:54:31 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.156 2004/06/25 18:42:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2000,7 +2000,7 @@ Int_t TTreePlayer::MakeProxy(const char *classname,
 {
    // Generate a skeleton analysis class for this Tree using TBranchProxy
    
-   if (macrofilename==0 || strlen(macrofilename)) {
+   if (macrofilename==0 || strlen(macrofilename)==0 ) {
       // We currently require a file name for the script
       Error("MakeProxy","A file name for the user script is required");
       return 0;
