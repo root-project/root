@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.41 2002/12/10 17:26:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.42 2002/12/10 19:51:47 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -614,10 +614,10 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
       else {
          char cmd = line[1];
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".%c %s%s%s", cmd, fname.Data(), aclicMode.Data(),io.Data()),
+           gInterpreter->ProcessLineSynch(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
                                           (TInterpreter::EErrorCode*)err);
          else {
-           gInterpreter->ProcessLine(Form(".%c %s%s%s", cmd, fname.Data(), aclicMode.Data(),io.Data()),
+           gInterpreter->ProcessLine(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
                                      (TInterpreter::EErrorCode*)err);
          }
       }
