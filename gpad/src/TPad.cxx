@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.33 2001/05/11 17:13:52 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.34 2001/05/25 06:51:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3462,7 +3462,7 @@ void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 //*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
 //*-*                  =======================================
 
-   if (!IsEditable()) return;
+   //if (!IsEditable()) return;
    
    if ((x1 >= x2) || (y1 >= y2)) {
       Error("Range", "illegal world coordinates range: x1=%f, y1=%f, x2=%f, y2=%f",x1,y1,x2,y2);
@@ -3497,7 +3497,7 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 //  By default a margin of 10 per cent is left on all sides of the pad
 //
 
-   if (!IsEditable()) return;
+   //if (!IsEditable()) return;
    
    if ((xmin >= xmax) || (ymin >= ymax)) {
       Error("RangeAxis", "illegal axis coordinates range: xmin=%f, ymin=%f, xmax=%f, ymax=%f",
@@ -3946,7 +3946,7 @@ void TPad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
 //*-*-*-*-*-*-*-*-*Set canvas range for pad*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================
 
-  if (!IsEditable()) return;
+  //if (!IsEditable()) return;
   
   fXlowNDC = xlow;
   fYlowNDC = ylow;
@@ -3963,7 +3963,7 @@ void TPad::SetPad(const char *name, const char *title,
 {
 //*-*-*-*-*-*-*-*-*Set all pad parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ======================
-   if (!IsEditable()) return;
+   //if (!IsEditable()) return;
    
    fName  = name;
    fTitle = title;
