@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.119 2002/12/10 16:40:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.120 2002/12/11 12:19:31 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2066,6 +2066,85 @@ void TH1::FitPanel()
 //      See class TFitPanel for example
 
    if (fPainter) fPainter->FitPanel();
+}
+
+//______________________________________________________________________________
+TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
+{
+//  return an histogram containing the asymmetry of this histogram with h2,
+//  where the asymmetry is defined as: 
+// 
+//  Asymmetry = (h1 - h2)/(h1 + h2)  where h1 = this
+//
+//  works for 1D, 2D, etc. histograms
+//  c2 is an optional argument that gives a relative weight between the two 
+//  histograms, and dc2 is the error on this weight.  This is useful, for example, 
+//  when forming an asymmetry between two histograms from 2 different data sets that 
+//  need to be normalized to each other in some way.  The function calculates 
+//  the errors asumming Poisson statistics on h1 and h2 (that is, dh = sqrt(h)).
+//
+//  example:  assuming 'h1' and 'h2' are already filled
+//  
+//     h3 = h1->GetAsymmetry(h2)
+//     
+//  then 'h3' is created and filled with the asymmetry between 'h1' and 'h2';
+//  h1 and h2 are left intact.
+//
+//  Note that it is the user's responsibility to manage the created histogram.
+//
+//  code proposed by Jason Seely (seely@mit.edu) and adapted by R.Brun
+   
+  // clone the histograms so top and bottom will have the 
+  // correct dimensions:
+  // Sumw2 just makes sure the errors will be computed properly
+  // when we form sums and ratios below.
+  Bool_t addStatus = TH1::AddDirectoryStatus();
+  TH1::AddDirectory(kFALSE);
+  TH1 *asym   = (TH1*)Clone();
+  asym->Sumw2();
+  TH1 *top    = (TH1*)asym->Clone();
+  TH1 *bottom = (TH1*)asym->Clone();
+  TH1::AddDirectory(addStatus);
+  
+  // form the top and bottom of the asymmetry, and then divide:
+  TH1 *h1 = this;
+  top->Add(h1,h2,1,-c2);
+  bottom->Add(h1,h2,1,c2);
+  asym->Divide(top,bottom);  
+  
+  Int_t   xmax = asym->GetNbinsX();
+  Int_t   ymax = asym->GetNbinsY();
+  Int_t   zmax = asym->GetNbinsZ();
+  Float_t as, bot, error, a, b;
+  
+  // now loop over bins to calculate the correct errors
+  // the reason this error calculation looks complex is because of c2
+  for(Int_t i=1; i<= xmax; i++){
+    for(Int_t j=1; j<= ymax; j++){
+      for(Int_t k=1; k<= zmax; k++){
+
+	// here some bin contents are written into variables to make the error
+	// calculation a little more legible:
+        a   = h1->GetBinContent(i,j,k);
+        b   = h2->GetBinContent(i,j,k);
+        as  = asym->GetBinContent(i,j,k);
+        bot = bottom->GetBinContent(i,j,k);
+        
+        // make sure there are some events, if not, then the errors are set = 0 
+	// automatically.
+        if(b < 1){}
+        else{
+          // remember: da = sqrt(a), and form the error:
+          error = TMath::Sqrt((1-as)*(1-as)*a
+                       +(1+as)*(1+as)*(c2*c2*b+b*b*dc2*dc2))/bot;
+          asym->SetBinError(i,j,k,error);
+        }
+      }
+    }
+  }
+  delete top;
+  delete bottom;
+  return asym;
 }
 
 //______________________________________________________________________________
