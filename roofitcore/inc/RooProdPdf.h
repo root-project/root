@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.15 2001/10/06 06:19:53 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.16 2001/10/12 01:48:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,6 +42,8 @@ public:
 
   virtual Bool_t canBeExtended() const ;
   virtual Double_t expectedEvents() const ; 
+
+  const RooArgList& pdfList() const { return _pdfList ; }
 
 protected:
 
