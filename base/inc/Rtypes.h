@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.26 2002/05/22 07:38:59 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.27 2002/06/16 08:37:27 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -112,8 +112,8 @@ typedef void (*ShowMembersFunc_t)(void *obj, TMemberInspector &R__insp, char *R_
 typedef TClass *(*IsAFunc_t)(const void *obj);
 
 // TBuffer.h declares and implements the following 2 operators
-// template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
-// template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj);
+template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
+template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj);
 
 // This might get used if we implement setting a class version.
 // template <class RootClass> Short_t GetClassVersion(RootClass *);

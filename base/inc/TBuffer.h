@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.17 2002/06/04 07:29:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.18 2002/06/05 10:52:56 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -215,7 +215,7 @@ public:
 
    //friend TBuffer  &operator>>(TBuffer &b, TObject *&obj);
    //friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
-   friend TBuffer  &operator<<(TBuffer &b, const TObject *obj);
+   //friend TBuffer  &operator<<(TBuffer &b, const TObject *obj);
 
    static void    SetGlobalReadParam(Int_t mapsize);
    static void    SetGlobalWriteParam(Int_t mapsize);
@@ -242,11 +242,11 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
    // would not be sufficient to pass the information 'which class do we want'
    // since the pointer could be zero (so typeid(*obj) is not usable).
 
-   // This implementation only works for classes inheriting from
-   // TObject.  This enables a clearer error message from the compiler.
-
    TClass *cl = TBuffer::GetClass(typeid(Tmpl));
-   obj = (Tmpl *) buf.ReadObject(cl);
+   // ReadObject returns a TObject* ... this is WRONG in the case where 
+   // the class does not inherit from TObject as a first base class.
+   // So for now we cast to void* before casting to the actual type.
+   obj = (Tmpl *) ( (void*) buf.ReadObject(cl) );
    return buf;
 }
 
@@ -418,6 +418,9 @@ inline TBuffer &TBuffer::operator>>(ULong_t &l)
    { return TBuffer::operator>>((Long_t&)l); }
 
 //______________________________________________________________________________
+#if defined(R__TEMPLATE_OVERLOAD_BUG)
+template <>
+#endif
 inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
    { buf.WriteObject(obj); return buf; }
 //______________________________________________________________________________
