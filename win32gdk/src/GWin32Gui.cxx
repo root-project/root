@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.2 2001/11/30 12:39:20 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.3 2001/12/10 17:25:58 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -923,9 +923,17 @@ void TGWin32::CloseDisplay()
 }
 
 //______________________________________________________________________________
-Display_t TGWin32::GetDisplay()
+Display_t TGWin32::GetDisplay() const
 {
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TGWin32::GetDepth() const
+{
+   // Get maximum number of planes.
+
+   return gdk_visual_get_best_depth();
 }
 
 //______________________________________________________________________________
@@ -942,16 +950,16 @@ Atom_t TGWin32::InternAtom(const char *atom_name, Bool_t only_if_exist)
 }
 
 //______________________________________________________________________________
-Window_t TGWin32::GetDefaultRootWindow()
+Window_t TGWin32::GetDefaultRootWindow() const
 {
    // Return handle to the default root window created when calling
    // XOpenDisplay().
-   return (Window_t) GDK_ROOT_PARENT();
 
+   return (Window_t) GDK_ROOT_PARENT();
 }
 
 //______________________________________________________________________________
-Window_t TGWin32::GetParent(Window_t id)
+Window_t TGWin32::GetParent(Window_t id) const
 {
    // Return the parent of the window.
 

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.7 2002/01/08 08:34:22 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.8 2002/01/09 20:22:28 brun Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -651,6 +651,12 @@ COLORREF TGWin32::ColorIndex(Color_t ic) {
 //______________________________________________________________________________
 void TGWin32::GetPlanes(Int_t &nplanes)
 {
+   nplanes = GetDepth();
+}
+
+//______________________________________________________________________________
+Int_t TGWin32::GetDepth() const
+{
    // Get maximum number of planes.
    // nplanes returns the number of bit planes.
 
@@ -664,6 +670,7 @@ void TGWin32::GetPlanes(Int_t &nplanes)
       nplanes = nPlanes*nBitsPixel;
    }
    ReleaseDC(NULL,hDCGlobal);
+   return nplanes;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.17 2002/01/08 08:34:22 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.18 2002/01/27 16:49:43 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -245,7 +245,12 @@ TGX11::TGX11()
 
    fDisplay      = 0;
    fScreenNumber = 0;
+   fVisual       = 0;
+   fRootWin      = 0;
+   fVisRootWin   = 0;
    fColormap     = 0;
+   fBlackPixel   = 0;
+   fWhitePixel   = 0;
    fWindows      = 0;
    fColors       = 0;
    fXEvent       = new XEvent;
@@ -260,7 +265,12 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 
    fDisplay         = 0;
    fScreenNumber    = 0;
+   fVisual          = 0;
+   fRootWin         = 0;
+   fVisRootWin      = 0;
    fColormap        = 0;
+   fBlackPixel      = 0;
+   fWhitePixel      = 0;
    fHasTTFonts      = kFALSE;
    fTextAlignH      = 1;
    fTextAlignV      = 1;
@@ -288,8 +298,13 @@ TGX11::TGX11(const TGX11 &org)
    int i;
 
    fDisplay         = org.fDisplay;
-   fColormap        = org.fColormap;
    fScreenNumber    = org.fScreenNumber;
+   fVisual          = org.fVisual;
+   fRootWin         = org.fRootWin;
+   fVisRootWin      = org.fVisRootWin;
+   fColormap        = org.fColormap;
+   fBlackPixel      = org.fBlackPixel;
+   fWhitePixel      = org.fWhitePixel;
    fHasTTFonts      = org.fHasTTFonts;
    fTextAlignH      = org.fTextAlignH;
    fTextAlignV      = org.fTextAlignV;
@@ -412,16 +427,15 @@ void TGX11::QueryColors(Colormap cmap, XColor *color, Int_t ncolors)
       XQueryColors(fDisplay, cmap, color, ncolors);
    } else {
       ULong_t r, g, b;
-      Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
       for (Int_t i = 0; i < ncolors; i++) {
-         r = (color[i].pixel & vis->red_mask) >> fRedShift;
-         color[i].red = UShort_t(r*kBIGGEST_RGB_VALUE/(vis->red_mask >> fRedShift));
+         r = (color[i].pixel & fVisual->red_mask) >> fRedShift;
+         color[i].red = UShort_t(r*kBIGGEST_RGB_VALUE/(fVisual->red_mask >> fRedShift));
 
-         g = (color[i].pixel & vis->green_mask) >> fGreenShift;
-         color[i].green = UShort_t(g*kBIGGEST_RGB_VALUE/(vis->green_mask >> fGreenShift));
+         g = (color[i].pixel & fVisual->green_mask) >> fGreenShift;
+         color[i].green = UShort_t(g*kBIGGEST_RGB_VALUE/(fVisual->green_mask >> fGreenShift));
 
-         b = (color[i].pixel & vis->blue_mask) >> fBlueShift;
-         color[i].blue = UShort_t(b*kBIGGEST_RGB_VALUE/(vis->blue_mask >> fBlueShift));
+         b = (color[i].pixel & fVisual->blue_mask) >> fBlueShift;
+         color[i].blue = UShort_t(b*kBIGGEST_RGB_VALUE/(fVisual->blue_mask >> fBlueShift));
 
          color[i].flags = DoRed | DoGreen | DoBlue;
       }
@@ -770,6 +784,125 @@ void TGX11::DrawText(int x, int y, float angle, float mgn,
 }
 
 //______________________________________________________________________________
+void TGX11::FindBestVisual()
+{
+   // Find best visual, i.e. the one with the most planes and TrueColor or
+   // DirectColor. Sets fVisual, fDepth, fRootWin, fColormap, fBlackPixel
+   // and fWhitePixel.
+
+   Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
+   if ((vis->c_class != TrueColor && vis->c_class != DirectColor) ||
+       DefaultDepth(fDisplay, fScreenNumber) < 15) {
+
+      // try to find better visual
+      static XVisualInfo templates[] = {
+         // Visual, visualid, screen, depth, class      , red_mask, green_mask, blue_mask, colormap_size, bits_per_rgb
+         { 0     , 0       , 0     , 24   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
+         { 0     , 0       , 0     , 32   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
+         { 0     , 0       , 0     , 16   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
+         { 0     , 0       , 0     , 15   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
+         // no suitable TrueColorMode found - now do the same thing to DirectColor
+         { 0     , 0       , 0     , 24   , DirectColor, 0       , 0         , 0        , 0            , 0 },
+         { 0     , 0       , 0     , 32   , DirectColor, 0       , 0         , 0        , 0            , 0 },
+         { 0     , 0       , 0     , 16   , DirectColor, 0       , 0         , 0        , 0            , 0 },
+         { 0     , 0       , 0     , 15   , DirectColor, 0       , 0         , 0        , 0            , 0 },
+         { 0     , 0       , 0     , 0    , 0          , 0       , 0         , 0        , 0            , 0 },
+      };
+
+      Int_t nitems = 0;
+      XVisualInfo *vlist = 0;
+      for (Int_t i = 0; templates[i].depth != 0; i++) {
+         Int_t mask = VisualScreenMask|VisualDepthMask|VisualClassMask;
+         templates[i].screen = fScreenNumber;
+         if ((vlist = XGetVisualInfo(fDisplay, mask, &(templates[i]), &nitems))) {
+            FindUsableVisual(vlist, nitems);
+            XFree(vlist);
+            vlist = 0;
+            if (fVisual)
+               break;
+         }
+      }
+   }
+
+   fRootWin = RootWindow(fDisplay, fScreenNumber);
+
+   if (!fVisual) {
+      fDepth      = DefaultDepth(fDisplay, fScreenNumber);
+      fVisual     = DefaultVisual(fDisplay, fScreenNumber);
+      fVisRootWin = fRootWin;
+      if (fDepth > 1)
+         fColormap = DefaultColormap(fDisplay, fScreenNumber);
+      fBlackPixel = BlackPixel(fDisplay, fScreenNumber);
+      fWhitePixel = WhitePixel(fDisplay, fScreenNumber);
+   }
+   if (gDebug > 1)
+      Printf("Selected visual 0x%lx: depth %d, class %d, colormap: %s",
+             fVisual->visualid, fDepth, fVisual->c_class,
+             fColormap == DefaultColormap(fDisplay, fScreenNumber) ? "default" :
+             "custom");
+}
+
+//______________________________________________________________________________
+static Int_t DummyX11ErrorHandler(Display *disp, XErrorEvent *err)
+{
+   // Dummy error handler for X11. Used by FindUsableVisual().
+
+   return 0;
+}
+
+//______________________________________________________________________________
+void TGX11::FindUsableVisual(XVisualInfo *vlist, Int_t nitems)
+{
+   // Check if visual is usable, if so set fVisual, fDepth, fColormap,
+   // fBlackPixel and fWhitePixel.
+
+   Int_t (*oldErrorHandler)(Display *, XErrorEvent *) =
+       XSetErrorHandler(DummyX11ErrorHandler);
+
+   XSetWindowAttributes attr;
+   memset(&attr, 0, sizeof(attr));
+
+   Window root = RootWindow(fDisplay, fScreenNumber);
+
+   for (Int_t i = 0; i < nitems; i++) {
+      Window w = None, wjunk;
+      UInt_t width, height, ujunk;
+      Int_t  junk;
+
+      // try and use default colormap when possible
+      if (vlist[i].visual == DefaultVisual(fDisplay, fScreenNumber)) {
+         attr.colormap = DefaultColormap(fDisplay, fScreenNumber);
+      } else {
+         attr.colormap = XCreateColormap(fDisplay, root, vlist[i].visual, AllocNone);
+      }
+
+      static XColor black_xcol = { 0, 0x0000, 0x0000, 0x0000, DoRed|DoGreen|DoBlue };
+      static XColor white_xcol = { 0, 0xFFFF, 0xFFFF, 0xFFFF, DoRed|DoGreen|DoBlue };
+      XAllocColor(fDisplay, attr.colormap, &black_xcol);
+      XAllocColor(fDisplay, attr.colormap, &white_xcol);
+      attr.border_pixel = black_xcol.pixel;
+      attr.override_redirect = True;
+
+      w = XCreateWindow(fDisplay, root, -20, -20, 10, 10, 0, vlist[i].depth,
+                        CopyFromParent, vlist[i].visual,
+                        CWColormap|CWBorderPixel|CWOverrideRedirect, &attr);
+      if (w != None && XGetGeometry(fDisplay, w, &wjunk, &junk, &junk,
+                                    &width, &height, &ujunk, &ujunk)) {
+         fVisual     = vlist[i].visual;
+         fDepth      = vlist[i].depth;
+         fColormap   = attr.colormap;
+         fBlackPixel = black_xcol.pixel;
+         fWhitePixel = white_xcol.pixel;
+         fVisRootWin = w;
+         break;
+      }
+      if (attr.colormap != DefaultColormap(fDisplay, fScreenNumber))
+         XFreeColormap(fDisplay, attr.colormap);
+   }
+   XSetErrorHandler(oldErrorHandler);
+}
+
+//______________________________________________________________________________
 void TGX11::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 {
    // Return character up vector.
@@ -849,8 +982,7 @@ void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
       gTws = &fWindows[wid];
       XGetGeometry(fDisplay, gTws->window, &root, &x, &y,
                    &width, &height, &border, &depth);
-      XTranslateCoordinates(fDisplay, gTws->window,
-                            RootWindow( fDisplay, fScreenNumber),
+      XTranslateCoordinates(fDisplay, gTws->window, fRootWin,
                             0, 0, &x, &y, &junkwin);
       if (width >= 65535)
          width = 1;
@@ -878,7 +1010,7 @@ void TGX11::GetPlanes(int &nplanes)
 {
    // Get maximum number of planes.
 
-   nplanes = DisplayPlanes(fDisplay, fScreenNumber);
+   nplanes = fDepth;
 }
 
 //______________________________________________________________________________
@@ -962,13 +1094,12 @@ Int_t TGX11::OpenDisplay(Display *disp)
    fDisplay      = disp;
    fScreenNumber = DefaultScreen(fDisplay);
 
-   if (DisplayPlanes(fDisplay, fScreenNumber) > 1)
-      fColormap = DefaultColormap(fDisplay, fScreenNumber);
+   FindBestVisual();
 
    GetColor(1).defined = kTRUE; // default foreground
-   GetColor(1).pixel = BlackPixel(fDisplay, fScreenNumber);
+   GetColor(1).pixel = fBlackPixel;
    GetColor(0).defined = kTRUE; // default background
-   GetColor(0).pixel = WhitePixel(fDisplay, fScreenNumber);
+   GetColor(0).pixel = fWhitePixel;
 
    // Inquire the the XServer Vendor
    char vendor[132];
@@ -976,7 +1107,7 @@ Int_t TGX11::OpenDisplay(Display *disp)
 
    // Create primitives graphic contexts
    for (i = 0; i < kMAXGC; i++)
-      gGClist[i] = XCreateGC(fDisplay, RootWindow(fDisplay, fScreenNumber), 0, 0);
+      gGClist[i] = XCreateGC(fDisplay, fVisRootWin, 0, 0);
 
    XGCValues values;
    if (XGetGCValues(fDisplay, *gGCtext, GCForeground|GCBackground, &values)) {
@@ -993,14 +1124,14 @@ Int_t TGX11::OpenDisplay(Display *disp)
 
    // Create input echo graphic context
    XGCValues echov;
-   echov.foreground = BlackPixel(fDisplay, fScreenNumber);
-   echov.background = WhitePixel(fDisplay, fScreenNumber);
+   echov.foreground = fBlackPixel;
+   echov.background = fWhitePixel;
    if (strstr(vendor,"Hewlett"))
      echov.function   = GXxor;
    else
      echov.function   = GXinvert;
 
-   gGCecho = XCreateGC(fDisplay, RootWindow(fDisplay, fScreenNumber),
+   gGCecho = XCreateGC(fDisplay, fVisRootWin,
                        GCForeground | GCBackground | GCFunction,
                        &echov);
 
@@ -1035,11 +1166,9 @@ Int_t TGX11::OpenDisplay(Display *disp)
    }
 
    // Create a null cursor
-   pixmp1 = XCreateBitmapFromData(fDisplay,
-                                  RootWindow(fDisplay, fScreenNumber),
+   pixmp1 = XCreateBitmapFromData(fDisplay, fRootWin,
                                   null_cursor_bits, 16, 16);
-   pixmp2 = XCreateBitmapFromData(fDisplay,
-                                  RootWindow(fDisplay, fScreenNumber),
+   pixmp2 = XCreateBitmapFromData(fDisplay, fRootWin,
                                   null_cursor_bits, 16, 16);
    gNullCursor = XCreatePixmapCursor(fDisplay,pixmp1,pixmp2,&fore,&back,0,0);
 
@@ -1065,31 +1194,29 @@ Int_t TGX11::OpenDisplay(Display *disp)
 
    // Setup color information
    fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;
-   fDepth = DefaultDepth(fDisplay, fScreenNumber);
 
-   Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
-   if (vis->c_class == TrueColor) {
+   if (fVisual->c_class == TrueColor) {
       int i;
-      for (i = 0; i < int(sizeof(vis->blue_mask)*kBitsPerByte); i++) {
-         if (fBlueShift == -1 && ((vis->blue_mask >> i) & 1))
+      for (i = 0; i < int(sizeof(fVisual->blue_mask)*kBitsPerByte); i++) {
+         if (fBlueShift == -1 && ((fVisual->blue_mask >> i) & 1))
             fBlueShift = i;
-         if ((vis->blue_mask >> i) == 1) {
+         if ((fVisual->blue_mask >> i) == 1) {
             fBlueDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fBlueShift;
             break;
          }
       }
-      for (i = 0; i < int(sizeof(vis->green_mask)*kBitsPerByte); i++) {
-         if (fGreenShift == -1 && ((vis->green_mask >> i) & 1))
+      for (i = 0; i < int(sizeof(fVisual->green_mask)*kBitsPerByte); i++) {
+         if (fGreenShift == -1 && ((fVisual->green_mask >> i) & 1))
             fGreenShift = i;
-         if ((vis->green_mask >> i) == 1) {
+         if ((fVisual->green_mask >> i) == 1) {
             fGreenDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fGreenShift;
             break;
          }
       }
-      for (i = 0; i < int(sizeof(vis->red_mask)*kBitsPerByte); i++) {
-         if (fRedShift == -1 && ((vis->red_mask >> i) & 1))
+      for (i = 0; i < int(sizeof(fVisual->red_mask)*kBitsPerByte); i++) {
+         if (fRedShift == -1 && ((fVisual->red_mask >> i) & 1))
             fRedShift = i;
-         if ((vis->red_mask >> i) == 1) {
+         if ((fVisual->red_mask >> i) == 1) {
             fRedDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fRedShift;
             break;
          }
@@ -1134,8 +1261,7 @@ again:
       goto again;
    }
 
-   gCws->window = XCreatePixmap(fDisplay, RootWindow(fDisplay, fScreenNumber),
-                                wval, hval, DefaultDepth(fDisplay,fScreenNumber));
+   gCws->window = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
    XGetGeometry(fDisplay, gCws->window, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
    for (i = 0; i < kMAXGC; i++)
@@ -1216,7 +1342,7 @@ again:
 
    gCws->window = XCreateWindow(fDisplay, wind,
                                 xval, yval, wval, hval, 0, 0,
-                                InputOutput, CopyFromParent,
+                                InputOutput, fVisual,
                                 attr_mask, &attributes);
 
    XMapWindow(fDisplay, gCws->window);
@@ -1712,8 +1838,7 @@ void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
       // don't free and recreate pixmap when new pixmap is smaller
       if (gTws->width < w || gTws->height < h) {
          XFreePixmap(fDisplay,gTws->buffer);
-         gTws->buffer = XCreatePixmap(fDisplay, RootWindow(fDisplay, fScreenNumber),
-                                      w, h, DefaultDepth(fDisplay,fScreenNumber));
+         gTws->buffer = XCreatePixmap(fDisplay, fRootWin, w, h, fDepth);
       }
       for (i = 0; i < kMAXGC; i++) XSetClipMask(fDisplay, gGClist[i], None);
       SetColor(*gGCpxmp, 0);
@@ -1752,8 +1877,7 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
    // don't free and recreate pixmap when new pixmap is smaller
    if (gTws->width < wval || gTws->height < hval) {
       XFreePixmap(fDisplay, gTws->window);
-      gTws->window = XCreatePixmap(fDisplay, RootWindow(fDisplay, fScreenNumber),
-                                   wval, hval, DefaultDepth(fDisplay,fScreenNumber));
+      gTws->window = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
    }
    XGetGeometry(fDisplay, gTws->window, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
@@ -1797,8 +1921,7 @@ void TGX11::ResizeWindow(int wid)
    if (gTws->buffer) {
       if (gTws->width < wval || gTws->height < hval) {
          XFreePixmap(fDisplay,gTws->buffer);
-         gTws->buffer = XCreatePixmap(fDisplay, RootWindow(fDisplay, fScreenNumber),
-                                      wval, hval, DefaultDepth(fDisplay,fScreenNumber));
+         gTws->buffer = XCreatePixmap(fDisplay, fRootWin, wval, hval, fDepth);
       }
       for (i = 0; i < kMAXGC; i++) XSetClipMask(fDisplay, gGClist[i], None);
       SetColor(*gGCpxmp, 0);
@@ -1990,8 +2113,8 @@ void TGX11::SetDoubleBufferON()
 
    if (gTws->double_buffer || gTws->ispixmap) return;
    if (!gTws->buffer) {
-      gTws->buffer = XCreatePixmap(fDisplay, RootWindow(fDisplay, fScreenNumber),
-                     gTws->width, gTws->height, DefaultDepth(fDisplay,fScreenNumber));
+      gTws->buffer = XCreatePixmap(fDisplay, fRootWin,
+                                   gTws->width, gTws->height, fDepth);
       SetColor(*gGCpxmp, 0);
       XFillRectangle(fDisplay, gTws->buffer, *gGCpxmp, 0, 0, gTws->width, gTws->height);
       SetColor(*gGCpxmp, 1);
@@ -2089,108 +2212,108 @@ void TGX11::SetFillStyleIndex(Int_t style, Int_t fasi)
             }
             switch (fasi) {
                case 1:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow(fDisplay, fScreenNumber), p1_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p1_bits, 16, 16);
                   break;
                case 2:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p2_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p2_bits, 16, 16);
                   break;
                case 3:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p3_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p3_bits, 16, 16);
                   break;
                case 4:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p4_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p4_bits, 16, 16);
                   break;
                case 5:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p5_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p5_bits, 16, 16);
                   break;
                case 6:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p6_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p6_bits, 16, 16);
                   break;
                case 7:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p7_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p7_bits, 16, 16);
                   break;
                case 8:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p8_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p8_bits, 16, 16);
                   break;
                case 9:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p9_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p9_bits, 16, 16);
                   break;
                case 10:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p10_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p10_bits, 16, 16);
                   break;
                case 11:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p11_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p11_bits, 16, 16);
                   break;
                case 12:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p12_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p12_bits, 16, 16);
                   break;
                case 13:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p13_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p13_bits, 16, 16);
                   break;
                case 14:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p14_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p14_bits, 16, 16);
                   break;
                case 15:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p15_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p15_bits, 16, 16);
                   break;
                case 16:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p16_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p16_bits, 16, 16);
                   break;
                case 17:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p17_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p17_bits, 16, 16);
                   break;
                case 18:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p18_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p18_bits, 16, 16);
                   break;
                case 19:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p19_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p19_bits, 16, 16);
                   break;
                case 20:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p20_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p20_bits, 16, 16);
                   break;
                case 21:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p21_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p21_bits, 16, 16);
                   break;
                case 22:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p22_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p22_bits, 16, 16);
                   break;
                case 23:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p23_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p23_bits, 16, 16);
                   break;
                case 24:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p24_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p24_bits, 16, 16);
                   break;
                case 25:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p25_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p25_bits, 16, 16);
                   break;
                default:
-                  gFillPattern = XCreateBitmapFromData(fDisplay,
-                      RootWindow( fDisplay, fScreenNumber), p2_bits, 16, 16);
+                  gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
+                                                       p2_bits, 16, 16);
                   break;
             }
             XSetStipple( fDisplay, *gGCfill, gFillPattern );
@@ -2527,7 +2650,7 @@ void TGX11::SetOpacity(Int_t percent)
    // only supported on displays with more than > 8 color planes (> 256
    // colors).
 
-   if (DefaultDepth(fDisplay,fScreenNumber) <= 8) return;
+   if (fDepth <= 8) return;
    if (percent == 0) return;
    // if 100 percent then just make white
 
