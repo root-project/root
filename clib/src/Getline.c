@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.27 2004/05/10 08:05:33 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.28 2004/05/10 08:12:54 rdm Exp $ */
 /* Author: */
 
 /*
@@ -1347,7 +1347,10 @@ gl_tab(char *buf, int offset, int *loc)
 /******************* History stuff **************************************/
 
 #ifndef HIST_SIZE
-#define HIST_SIZE 100
+#define HIST_SIZE 500
+#endif
+#ifndef HIST_SAVE
+#define HIST_SAVE 400
 #endif
 
 static int      hist_pos = 0, hist_last = 0;
@@ -1368,7 +1371,7 @@ hist_init()
 void
 Gl_histinit(char *file)
 {
-   char line[256];
+   char line[BUFSIZ];
    FILE *fp;
    int   nline = 1;   /* prevent from becoming 0 */
 
@@ -1382,7 +1385,7 @@ Gl_histinit(char *file)
 
    fp = fopen(gl_histfile, "r");
    if (fp)
-      while (fgets(line, 256, fp)) {
+      while (fgets(line, BUFSIZ, fp)) {
          nline++;
          Gl_histadd(line);
       }
@@ -1427,7 +1430,8 @@ Gl_histadd(char *buf)
                    fclose(fp);
                }
 
-               /* if more than HIST_SIZE lines, safe last 60 command and delete rest */
+               /* if more than HIST_SIZE lines, safe last HIST_SAVE commands
+                  and delete the rest */
                if (gl_savehist > HIST_SIZE) {
                   FILE *ftmp;
                   char tname[L_tmpnam];
@@ -1441,7 +1445,7 @@ Gl_histadd(char *buf)
                      while (fgets(line, BUFSIZ, fp)) {
                         nline++;
                         gl_savehist = 1;  /* prevent from becoming 0 */
-                        if (nline > HIST_SIZE-60) {
+                        if (nline > HIST_SIZE-HIST_SAVE) {
                            gl_savehist++;
                            fprintf(ftmp, "%s", line);
                         }
