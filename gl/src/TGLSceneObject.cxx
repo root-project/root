@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.30 2005/03/10 22:26:15 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.31 2005/03/11 08:39:17 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -7,7 +7,7 @@
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+ **********************************************TF***************************/
 #ifdef GDK_WIN32
 #include "Windows4Root.h"
 #endif
@@ -288,7 +288,7 @@ void TGLSceneObject::SetBBox(const TBuffer3D & buffer)
       Double_t ymin = buffer.fPnts[1], ymax = ymin;
       Double_t zmin = buffer.fPnts[2], zmax = zmin;
 
-      for (UInt_t nv = 3; nv < buffer.NbPnts(); nv += 3) {
+      for (UInt_t nv = 3; nv < buffer.NbPnts()*3; nv += 3) {
          xmin = TMath::Min(xmin, buffer.fPnts[nv]);
          xmax = TMath::Max(xmax, buffer.fPnts[nv]);
          ymin = TMath::Min(ymin, buffer.fPnts[nv + 1]);
@@ -667,11 +667,11 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, const Float_t *c, UInt_t n, 
                 :TGLSceneObject(buffer, c, n, r)
 {
    // Default ctor
-   // TODO: Can get this from BB at present as we know it is full
+   // TODO: Can get origin from BB at present as we know it is full
    // sphere. When cut we need to extract translation from local master matrix
-   fX      = (buffer.fBBLowVertex[0] + buffer.fBBLowVertex[0])/2.0;
-   fY      = (buffer.fBBLowVertex[1] + buffer.fBBLowVertex[1])/2.0;
-   fZ      = (buffer.fBBLowVertex[2] + buffer.fBBLowVertex[2])/2.0;
+   fX      = (buffer.fBBHighVertex[0] + buffer.fBBLowVertex[0])/2.0;
+   fY      = (buffer.fBBHighVertex[1] + buffer.fBBLowVertex[1])/2.0;
+   fZ      = (buffer.fBBHighVertex[2] + buffer.fBBLowVertex[2])/2.0;
    fRadius = buffer.fRadiusOuter;
 
    // TODO:
@@ -1303,16 +1303,17 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
    fVertices[12] = 0.0;   fVertices[13] = 0.0;   fVertices[14] = 0.0;    fVertices[15] = 1.0;
 
    Vertex3d center = {{lm[12], lm[13], lm[14]}};
+   Vertex3d lowPlaneNorm = {{0., 0., -1.}};
+   Vertex3d highPlaneNorm = {{0., 0., 1.}};
 
    switch (buffer.Type()) {
    case TBuffer3DTypes::kTube:
       {
-         Vertex3d low = {{0., 0., -1.}};
-         Vertex3d high = {{0., 0., 1.}};
-         fParts.push_back(new TubeMesh(r1, r2, r3, r4, dz, center, low, high));
+         fParts.push_back(new TubeMesh(r1, r2, r3, r4, dz, center, lowPlaneNorm, highPlaneNorm));
       }
       break;
    case TBuffer3DTypes::kTubeSeg:
+   case TBuffer3DTypes::kCutTube:
       {
          const TBuffer3DTubeSeg * segBuffer = dynamic_cast<const TBuffer3DTubeSeg *>(&buffer);
          if (!segBuffer) {
@@ -1326,12 +1327,20 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
 			phi1 *= TMath::DegToRad();
 			phi2 *= TMath::DegToRad();
 
-         // TODO: Check with Timur what this means - was hardcoded into the buffer
-         // on TGeo side - so hardcoded here now....same as above for kTUBE
-         Vertex3d low = {{0., 0., -1.}}; // Vertex3d low = {{p[44], p[45], p[46]}};
-         Vertex3d high = {{0., 0., 1.}}; // Vertex3d high = {{p[47], p[48], p[49]}};
+         if (buffer.Type() == TBuffer3DTypes::kCutTube) {
+            const TBuffer3DCutTube * cutBuffer = dynamic_cast<const TBuffer3DCutTube *>(&buffer);
+            if (!cutBuffer) {
+               assert(kFALSE);
+               return;
+            }
+
+            for (UInt_t i =0; i < 3; i++) {
+               lowPlaneNorm[i] = cutBuffer->fLowPlaneNorm[i];
+               highPlaneNorm[i] = cutBuffer->fHighPlaneNorm[i];
+            }
+         }
          fParts.push_back(new TubeSegMesh(r1, r2, r3, r4, dz, phi1,
-                                          phi2, center, low, high));
+                                          phi2, center, lowPlaneNorm, highPlaneNorm));
       }
       break;
    default:;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.51 2005/03/09 18:19:26 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.52 2005/03/16 17:18:12 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -854,6 +854,7 @@ void TViewerOpenGL::BeginScene()
    
    // Clear any existing scene contents
    fRender->RemoveAllObjects();
+   fNbShapes = 0;
    fBuildingScene = kTRUE;
 }
 
@@ -945,10 +946,11 @@ Int_t TViewerOpenGL::AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t
 
    // We need raw tesselation in these cases:
    //
-   // 1. Shape type is NOT kSPHE / kTUBE / kTUBS
-   if (buffer.Type() != TBuffer3DTypes::kSphere &&
-       buffer.Type() != TBuffer3DTypes::kTube   &&
-       buffer.Type() != TBuffer3DTypes::kTubeSeg) {
+   // 1. Shape type is NOT kSphere / kTube / kTubeSeg / kCutTube
+   if (buffer.Type() != TBuffer3DTypes::kSphere  &&
+       buffer.Type() != TBuffer3DTypes::kTube    &&
+       buffer.Type() != TBuffer3DTypes::kTubeSeg &&
+       buffer.Type() != TBuffer3DTypes::kCutTube) {
       needRaw = kTRUE;
    }
    // 2. Sphere type is kSPHE, but the sphere is hollow and/or cut - we
@@ -1000,7 +1002,7 @@ void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer
    TGLSceneObject *addObj = 0;
 
    //TODO: We could cast refs - but need exception catching to be
-   // fully safe - do we use excep. in ROOT?
+   // fully safe - do we use exceptions in ROOT?
    switch (buffer.Type()) {
    case TBuffer3DTypes::kLine:
       addObj = new TGLPolyLine(buffer, colorRGB, placedID, buffer.fID);
@@ -1024,7 +1026,8 @@ void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer
       break;
    }
    case TBuffer3DTypes::kTube:
-   case TBuffer3DTypes::kTubeSeg: {
+   case TBuffer3DTypes::kTubeSeg:
+   case TBuffer3DTypes::kCutTube: {
       const TBuffer3DTube * tubeBuffer = dynamic_cast<const TBuffer3DTube *>(&buffer);
       if (tubeBuffer)
       {

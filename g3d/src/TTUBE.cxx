@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.8 2004/11/17 13:18:51 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.9 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -315,19 +315,8 @@ const TBuffer3D & TTUBE::GetBuffer3D(Int_t reqSections) const
    // OGL viewer needs various rotation matrix info we can't easily
    // pass yet. To be revisited.
 
-   if (reqSections & TBuffer3D::kBoundingBox) {
-      buffer.fBBLowVertex[0]  = -fRmax;
-      buffer.fBBLowVertex[1]  = -fRmax;
-      buffer.fBBLowVertex[2]  = -fDz;
-      buffer.fBBHighVertex[0] = fRmax;
-      buffer.fBBHighVertex[1] = fRmax;
-      buffer.fBBHighVertex[2] = fDz;
-      if (!buffer.fLocalFrame) {
-         TransformPoints(buffer.fBBLowVertex, 1);
-         TransformPoints(buffer.fBBHighVertex, 1);
-      }
-      buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
-   }
+   // We also do not fill the bounding box as derived classes can adjust shape
+	// leave up to viewer to work out
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = GetNumberOfDivisions();
       Int_t NbPnts = 4*n;

@@ -16,8 +16,8 @@
 //                                                                      //
 // TBuffer3D                                                            //
 //                                                                      //
-// 3D primitives description                                            //
-//                                                                      //
+// Generic 3D primitive description class - see TBuffer3DTypes for      //
+// producer classes                                                     //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TObject
@@ -27,12 +27,6 @@
 class TBuffer3D : public TObject
 {
 private:
-   void Init();   
-
-   // Non-copyable
-   TBuffer3D(const TBuffer3D &);
-   const TBuffer3D & operator=(const TBuffer3D &);
-
    const Int_t fType;        // Primitive type - predefined ones in TBuffer3DTypes.h
                                 
    UInt_t    fNbPnts;        // Number of points describing the shape
@@ -45,6 +39,12 @@ private:
       
    UInt_t    fSections;      // Section validity flags
 
+   void Init();   
+
+   // Non-copyable class
+   TBuffer3D(const TBuffer3D &);
+   const TBuffer3D & operator=(const TBuffer3D &);
+
 public:
 
    enum ESection { kNone            = BIT(0),
@@ -56,11 +56,10 @@ public:
                    kAll             = kCore|kBoundingBox|kShapeSpecific|kRawSizes|kRaw 
    };
    
-   TBuffer3D(Int_t type);
    TBuffer3D(Int_t type, 
-             UInt_t reqPnts, UInt_t reqPntsCapacity,
-             UInt_t reqSegs, UInt_t reqSegsCapacity, 
-             UInt_t reqPols, UInt_t reqPolsCapacity); 
+             UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
+             UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+             UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0); 
    virtual  ~TBuffer3D();
 
    // Section validity flags
@@ -103,20 +102,25 @@ public:
    ClassDef(TBuffer3D,0)     // 3D primitives description
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TBuffer3DSphere                                                      //
+//                                                                      //
+// Sphere description class - see TBuffer3DTypes for producer classes   //
+// Supports hollow and cut spheres.                                     //
+//////////////////////////////////////////////////////////////////////////
+
 class TBuffer3DSphere : public TBuffer3D
 {
 private:
-   void Init();
-
    // Non-copyable class
    TBuffer3DSphere(const TBuffer3DSphere &);
    const TBuffer3DSphere & operator=(const TBuffer3DSphere &);
    
 public:
-   TBuffer3DSphere();
-   TBuffer3DSphere(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                   UInt_t reqSegs, UInt_t reqSegsCapacity, 
-                   UInt_t reqPols, UInt_t reqPolsCapacity);
+   TBuffer3DSphere(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
+                   UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                   UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
    Bool_t IsSolidUncut() const;
 
@@ -129,26 +133,31 @@ public:
    Double_t fPhiMax;       // Higher phi limit (orientation?)
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TBuffer3DTube                                                        //
+//                                                                      //
+// Complete tube description class - see TBuffer3DTypes for producer    // 
+// classes                                                              //
+//////////////////////////////////////////////////////////////////////////
+
 class TBuffer3DTube : public TBuffer3D
 {
 private:
-   void Init();
-
    // Non-copyable class
    TBuffer3DTube(const TBuffer3DTube &);
    const TBuffer3DTube & operator=(const TBuffer3DTube &);
-   
+
 protected:
-   TBuffer3DTube(Int_t type);
    TBuffer3DTube(Int_t type,
-                 UInt_t reqPnts, UInt_t reqPntsCapacity,
-                 UInt_t reqSegs, UInt_t reqSegsCapacity, 
-                 UInt_t reqPols, UInt_t reqPolsCapacity);
+                 UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
+                 UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                 UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
+
 public:
-   TBuffer3DTube();
-   TBuffer3DTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                 UInt_t reqSegs, UInt_t reqSegsCapacity, 
-                 UInt_t reqPols, UInt_t reqPolsCapacity);
+   TBuffer3DTube(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
+                 UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                 UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
    // SECTION: kShapeSpecific
    Double_t fRadiusInner;  // Inner radius
@@ -156,23 +165,60 @@ public:
    Double_t fHalfLength;   // Half length (dz)           
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TBuffer3DTubeSeg                                                     //
+//                                                                      //
+// Tube segment description class - see TBuffer3DTypes for producer     //
+// classes                                                              //
+//////////////////////////////////////////////////////////////////////////
+
 class TBuffer3DTubeSeg : public TBuffer3DTube
 {
 private:
-   void Init();
-
    // Non-copyable class
    TBuffer3DTubeSeg(const TBuffer3DTubeSeg &);
    const TBuffer3DTubeSeg & operator=(const TBuffer3DTubeSeg &);
-   
+
+protected:
+   TBuffer3DTubeSeg(Int_t type,
+                    UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
+                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                    UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
+
 public:
-   TBuffer3DTubeSeg();
-   TBuffer3DTubeSeg(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                    UInt_t reqSegs, UInt_t reqSegsCapacity, 
-                    UInt_t reqPols, UInt_t reqPolsCapacity);
+   TBuffer3DTubeSeg(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
+                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                    UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
    // SECTION: kShapeSpecific
    Double_t fPhiMin;       // Lower phi limit
    Double_t fPhiMax;       // Higher phi limit
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TBuffer3DCutTube                                                     //
+//                                                                      //
+// Cut tube segment description class - see TBuffer3DTypes for producer //
+// classes                                                              //
+//////////////////////////////////////////////////////////////////////////
+
+class TBuffer3DCutTube : public TBuffer3DTubeSeg
+{
+private:
+   // Non-copyable class
+   TBuffer3DCutTube(const TBuffer3DTubeSeg &);
+   const TBuffer3DCutTube & operator=(const TBuffer3DTubeSeg &);
+
+public:
+   TBuffer3DCutTube(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
+                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                    UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
+
+   // SECTION: kShapeSpecific
+   Double_t fLowPlaneNorm[3];  // Normal to lower cut plane 
+   Double_t fHighPlaneNorm[3]; // Normal to highet cut plane 
+};
+
 #endif

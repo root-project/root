@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.57 2005/03/08 10:32:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.58 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -1936,9 +1936,11 @@ const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
    if (reqSections & TBuffer3D::kShapeSpecific) {
+      // These from TBuffer3DTube / TGeoTube
       buffer.fRadiusInner  = fRmin;
       buffer.fRadiusOuter  = fRmax;
       buffer.fHalfLength   = fDz;
+
       buffer.fPhiMin       = fPhi1;
       buffer.fPhiMax       = fPhi2;
 
@@ -2689,11 +2691,23 @@ Int_t TGeoCtub::GetNmeshVertices() const
 //_____________________________________________________________________________
 const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+   static TBuffer3DCutTube buffer;
    
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
-   if (reqSections & TBuffer3D::kShapeSpecific) {
+   if (reqSections & TBuffer3D::kShapeSpecific) {      
+      // These from TBuffer3DCutTube / TGeoCtub
+      buffer.fRadiusInner  = fRmin;
+      buffer.fRadiusOuter  = fRmax;
+      buffer.fHalfLength   = fDz;
+      buffer.fPhiMin       = fPhi1;
+      buffer.fPhiMax       = fPhi2;
+
+      for (UInt_t i = 0; i < 3; i++ ) {
+         buffer.fLowPlaneNorm[i] = fNlow[i];
+         buffer.fHighPlaneNorm[i] = fNhigh[i];
+      }
+
       // TODO: HACK
       // At present OGL viewer wants local -> master matrix for tubes 
       // even though rest works in master frame. As no one else uses 

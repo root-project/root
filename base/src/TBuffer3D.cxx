@@ -15,14 +15,6 @@
 ClassImp(TBuffer3D)
 
 //______________________________________________________________________________
-TBuffer3D::TBuffer3D(Int_t type) :
-   fType(type)
-{
-	Init();
-}
-
-
-//______________________________________________________________________________
 TBuffer3D::TBuffer3D(Int_t type,
                      UInt_t reqPnts, UInt_t reqPntsCapacity,
                      UInt_t reqSegs, UInt_t reqSegsCapacity, 
@@ -136,29 +128,14 @@ Bool_t TBuffer3D::SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
 }
 
 //______________________________________________________________________________
-TBuffer3DSphere::TBuffer3DSphere() : TBuffer3D(TBuffer3DTypes::kSphere)
-{
-   Init();
-}
-
-//______________________________________________________________________________
 TBuffer3DSphere::TBuffer3DSphere(UInt_t reqPnts, UInt_t reqPntsCapacity,
                                  UInt_t reqSegs, UInt_t reqSegsCapacity, 
                                  UInt_t reqPols, UInt_t reqPolsCapacity) :
-   TBuffer3D(TBuffer3DTypes::kSphere, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+   TBuffer3D(TBuffer3DTypes::kSphere, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
+   fRadiusInner(0.0), fRadiusOuter(0.0),
+   fThetaMin(0.0), fThetaMax(180.0),
+   fPhiMin(0.0), fPhiMax(360.0)
 {
-   Init();
-}
-
-//______________________________________________________________________________
-void TBuffer3DSphere::Init()
-{
-   fRadiusInner = 0.0;
-   fRadiusOuter = 0.0;
-   fThetaMin    = 0.0;
-   fThetaMax    = 180.0;
-   fPhiMin      = 0.0;
-   fPhiMax      = 360.0;
 }
 
 //______________________________________________________________________________
@@ -177,24 +154,12 @@ Bool_t TBuffer3DSphere::IsSolidUncut() const
 }
 
 //______________________________________________________________________________
-TBuffer3DTube::TBuffer3DTube() : TBuffer3D(TBuffer3DTypes::kTube)
-{
-   Init();
-}
-
-//______________________________________________________________________________
 TBuffer3DTube::TBuffer3DTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
                              UInt_t reqSegs, UInt_t reqSegsCapacity, 
                              UInt_t reqPols, UInt_t reqPolsCapacity) :
-   TBuffer3D(TBuffer3DTypes::kTube, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+   TBuffer3D(TBuffer3DTypes::kTube, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
+   fRadiusInner(0.0), fRadiusOuter(1.0), fHalfLength(1.0)   
 {
-   Init();
-}
-
-//______________________________________________________________________________
-TBuffer3DTube::TBuffer3DTube(Int_t type) : TBuffer3D(type)
-{
-   Init();
 }
 
 //______________________________________________________________________________
@@ -202,37 +167,37 @@ TBuffer3DTube::TBuffer3DTube(Int_t type,
                              UInt_t reqPnts, UInt_t reqPntsCapacity,
                              UInt_t reqSegs, UInt_t reqSegsCapacity, 
                              UInt_t reqPols, UInt_t reqPolsCapacity) :
-   TBuffer3D(type, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+   TBuffer3D(type, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
+   fRadiusInner(0.0), fRadiusOuter(1.0), fHalfLength(1.0)
 {
-   Init();
-}
-
-//______________________________________________________________________________
-void TBuffer3DTube::Init()
-{
-   fRadiusInner   = 0.0;
-   fRadiusOuter   = 1.0;
-   fHalfLength    = 1.0;   
-}
-
-//______________________________________________________________________________
-TBuffer3DTubeSeg::TBuffer3DTubeSeg() : TBuffer3DTube(TBuffer3DTypes::kTubeSeg)
-{
-   Init();
 }
 
 //______________________________________________________________________________
 TBuffer3DTubeSeg::TBuffer3DTubeSeg(UInt_t reqPnts, UInt_t reqPntsCapacity,
                                    UInt_t reqSegs, UInt_t reqSegsCapacity, 
                                    UInt_t reqPols, UInt_t reqPolsCapacity) :
-   TBuffer3DTube(TBuffer3DTypes::kTubeSeg, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+   TBuffer3DTube(TBuffer3DTypes::kTubeSeg, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
+   fPhiMin(0.0), fPhiMax(360.0)
 {
-   Init();
 }
 
 //______________________________________________________________________________
-void TBuffer3DTubeSeg::Init()
+TBuffer3DTubeSeg::TBuffer3DTubeSeg(Int_t type,
+                                   UInt_t reqPnts, UInt_t reqPntsCapacity,
+                                   UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                                   UInt_t reqPols, UInt_t reqPolsCapacity) :
+   TBuffer3DTube(type, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
+   fPhiMin(0.0), fPhiMax(360.0)
 {
-   fPhiMin  = 0.0;
-   fPhiMax  = 360.0;
 }
+
+//______________________________________________________________________________
+TBuffer3DCutTube::TBuffer3DCutTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
+                                   UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                                   UInt_t reqPols, UInt_t reqPolsCapacity) :
+   TBuffer3DTubeSeg(TBuffer3DTypes::kCutTube, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+{
+   fLowPlaneNorm[0] = 0.0; fLowPlaneNorm[0] = 0.0; fLowPlaneNorm[0] = -1.0;
+   fHighPlaneNorm[0] = 0.0; fHighPlaneNorm[0] = 0.0; fHighPlaneNorm[0] = 1.0;
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id:$
+// @(#)root/base:$Name:  $:$Id: TBuffer3DTypes.h,v 1.2 2005/03/10 14:06:44 rdm Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -25,8 +25,9 @@ public:
                 kLine,      // TBuffer3D           TPolyLine3D
                 kMarker,    // TBuffer3D           TPolyMarker3D
                 kSphere,    // TBuffer3DSphere     TSPHE            TGeoSphere
-                kTube,      // TBuffer3DTube       TTUBE            TGeoTube
-                kTubeSeg }; // TBuffer3DTubeSeg    TTUBS            TGeoTubeSeg
+                kTube,      // TBuffer3DTube                        TGeoTube
+                kTubeSeg,   // TBuffer3DTubeSeg                     TGeoTubeSeg
+                kCutTube }; // TBuffer3DTubeSeg    T                TGeoCtub
 };
 
 #endif

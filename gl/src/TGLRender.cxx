@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.24 2005/01/04 10:33:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.25 2005/03/09 18:19:26 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -138,6 +138,7 @@ void TGLRender::AddNewObject(TGLSceneObject *newobject)
 void TGLRender::RemoveAllObjects()
 {
    fGLObjects.Delete();
+   fSelectedObj = 0;
    assert(fGLObjects.GetEntriesFast() == 0);
 }
 
