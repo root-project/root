@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.28 2002/11/11 17:45:24 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.29 2002/11/17 17:35:21 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -467,8 +467,10 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
          // copy .h file to the Html output directory
          char *declf = GetSourceFileName(classPtr->GetDeclFileName());
-         CopyHtmlFile(declf);
-         delete[]declf;
+         if (declf) {
+            CopyHtmlFile(declf);
+            delete[]declf;
+         }
 
          // make a loop on base classes
          Bool_t first = kTRUE;
@@ -932,7 +934,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
    if (realFilename) 
       sourceFile.open(realFilename, ios::in);
 
-   if (sourceFile.good()) {
+   if (realFilename && sourceFile.good()) {
       // open a .cxx.html file
       tmp1 = gSystem->ExpandPathName(fOutputDir);
       char *tmp2 = gSystem->ConcatFileName(tmp1, "src");
@@ -1886,7 +1888,11 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
             delete[]tmp1;
          tmp1 = 0;
 
-         char *underlinePtr = strrchr(filename, '_');
+         // look for first _ in basename
+         char *underlinePtr = strrchr(filename, '/');
+         if (!underlinePtr) 
+            underlinePtr=strchr(filename,'_');
+            else underlinePtr=strchr(underlinePtr,'_');
          *underlinePtr = 0;
 
 	 char htmltitle[1024];
@@ -1913,8 +1919,12 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
          delete[]filename;
       }
       // get a class
+      char *classname = strrchr(fileNames[i], '/');
+      if (!classname) 
+         classname=strchr(fileNames[i],'_');
+         else classname=strchr(classname,'_');
       TClass *classPtr =
-          GetClass((const char *) strrchr(fileNames[i], '_') + 1);
+          GetClass((const char *) classname + 1);
       if (classPtr) {
 
          // write a classname to an index file
@@ -1953,14 +1963,21 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
 
 
       // first base name
-      char *first = strrchr(fileNames[i], '_');
-      if (first)
+      // look for first _ in basename
+      char *first = strrchr(fileNames[i], '/');
+      if (!first) 
+         first=strchr(fileNames[i],'_');
+         else first=strchr(first,'_');
+      if (first) 
          *first = 0;
 
       // second base name
       char *second = 0;
       if (i < (numberOfNames - 1)) {
-         second = strrchr(fileNames[i + 1], '_');
+         second = strrchr(fileNames[i + 1], '/');
+         if (!second) 
+            second=strchr(fileNames[i + 1],'_');
+            else second=strchr(second,'_');
          if (second)
             *second = 0;
       }
@@ -2975,8 +2992,8 @@ void THtml::MakeClass(const char *className, Bool_t force)
    if (classPtr) {
       char *htmlFile = GetHtmlFileName(classPtr);
       if (htmlFile 
-	  && !(strncmp(htmlFile, "http://", 7)
-	       || strncmp(htmlFile, "https://", 8))) {
+	  && (!strncmp(htmlFile, "http://", 7)
+	       || !strncmp(htmlFile, "https://", 8))) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3036,6 +3053,7 @@ void THtml::MakeIndex(const char *filter)
 
       // get class & filename
       TClass *classPtr = GetClass((const char *) classNames[nOK]);
+      
       const char *impname=0;
       if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
          impname = classPtr->GetImplFileName();
@@ -3053,6 +3071,12 @@ void THtml::MakeIndex(const char *filter)
 	 // class, but a BASE class.
          if (!srcdir) 
 	    srcdir=strstr(fileNames[numberOfImpFiles],"/inc/T");
+         // ROOT's non-classes (e.g. enums) don't start with T, but end with _t
+         if (!srcdir && !(classPtr->Property()&kIsClass)) {
+            const char* _t=classPtr->GetName()+strlen(classPtr->GetName())-2;
+            if (!strcmp(_t,"_t"))
+               srcdir=strstr(fileNames[numberOfImpFiles],"/inc/");
+         };
 
          if (srcdir && (!strchr(srcdir + 5, '/'))) {
             strcpy(srcdir, "_");
