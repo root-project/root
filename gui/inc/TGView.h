@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.1 2000/07/03 18:55:32 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -38,11 +38,14 @@
 #ifndef ROOT_TGWidget
 #include "TGWidget.h"
 #endif
+#ifndef ROOT_TTimer
+#include "TTimer.h"
+#endif
 
 class TGViewFrame;
 class TGHScrollBar;
 class TGVScrollBar;
-class TScrollTimer;
+class TViewTimer;
 
 
 class TGView : public TGCompositeFrame, public TGWidget {
@@ -67,7 +70,7 @@ protected:
    TGViewFrame      *fCanvas;       // frame containing the text
    TGHScrollBar     *fHsb;          // horizontal scrollbar
    TGVScrollBar     *fVsb;          // vertical scrollbar
-   TScrollTimer     *fScrollTimer;  // scrollbar timer
+   TViewTimer       *fScrollTimer;  // scrollbar timer
 
 public:
    TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id = -1,
@@ -143,6 +146,15 @@ public:
         { fView->HandleKey(event); return kTRUE; }
 
    ClassDef(TGViewFrame,0)  // Frame containing the actual text
+};
+
+
+class TViewTimer : public TTimer {
+private:
+   TGView   *fView;
+public:
+   TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE) { fView = t; }
+   Bool_t Notify();
 };
 
 #endif

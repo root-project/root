@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.1 2000/07/03 18:55:32 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -43,24 +43,14 @@
 #include "TGScrollBar.h"
 #include "TSystem.h"
 #include "TMath.h"
-#include "TTimer.h"
 #include "KeySymbols.h"
 
 
 
 //______________________________________________________________________________
-class TScrollTimer : public TTimer {
-private:
-   TGView   *fView;
-public:
-   TScrollTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE) { fView = t; }
-   Bool_t Notify();
-};
-
-//______________________________________________________________________________
-Bool_t TScrollTimer::Notify()
+Bool_t TViewTimer::Notify()
 {
-   fView->HandleTimer(0);
+   fView->HandleTimer(this);
    Reset();
    return kFALSE;
 }
@@ -131,7 +121,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    Clear();
    Layout();
 
-   fScrollTimer = new TScrollTimer(this, 75);
+   fScrollTimer = new TViewTimer(this, 75);
    gSystem->AddTimer(fScrollTimer);
 }
 
