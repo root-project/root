@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.16 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.17 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -76,9 +76,6 @@ private:
    TString      fUser;        // user to be authenticated
 
    Bool_t       Authenticate();
-   Bool_t       CheckNetrc(TString &user, TString &passwd);
-   Bool_t       CheckNetrc(TString &user, TString &passwd,
-                           Bool_t &pwhash, Bool_t &srppwd);
    Int_t        GenRSAKeys();
    Bool_t       GetPwHash() const { return fPwHash; }
    Int_t        GetRSAKey() const { return fRSAKey; }
@@ -131,6 +128,9 @@ public:
 
    Int_t              AuthExists(TString User, Int_t method, const char *Options,
                           Int_t *Message, Int_t *Rflag, CheckSecCtx_t funcheck);
+   Bool_t             CheckNetrc(TString &user, TString &passwd);
+   Bool_t             CheckNetrc(TString &user, TString &passwd,
+                                 Bool_t &pwhash, Bool_t &srppwd);
    THostAuth         *GetHostAuth() const { return fHostAuth; }
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetRemoteHost() const { return fRemote; }
