@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.59 2004/04/08 14:05:18 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.60 2004/04/17 17:56:40 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2462,6 +2462,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
 
    static GdkCursor *cursor = NULL;
    static int percent = 0;      // bell volume
+   static GdkWindow *CurWnd;
    HWND focuswindow;
    int focusrevert;
    GdkEvent *event;
@@ -2470,18 +2471,20 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    int len_text = strlen(text);
    int nt;                      // defined length of text
    int pt;                      // cursor position in text
+   MSG msg;
 
+   CurWnd = (GdkWindow *)gCws->window;
    // change the cursor shape
    if (cursor == NULL) {
       cursor = gdk_cursor_new((GdkCursorType)GDK_QUESTION_ARROW);
    }
    if (cursor != 0) {
-      gdk_window_set_cursor((GdkWindow *)gCws->window, cursor);
+      gdk_window_set_cursor(CurWnd, cursor);
    }
    for (nt = len_text; nt > 0 && text[nt - 1] == ' '; nt--);
 
    pt = nt;
-   focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID((GdkWindow *)gCws->window));
+   focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID(CurWnd));
 
    TTF::SetTextFont(gTextFont);
    TTF::SetTextSize(fTextSize);
@@ -2491,6 +2494,16 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
       char nbytes;
       UInt_t dx, ddx, h;
       int i;
+
+      if(PeekMessage(&msg, (HWND)GDK_DRAWABLE_XID(CurWnd),
+          0,0,PM_NOREMOVE)) {
+         event = gdk_event_get();
+      }
+      else {
+         gSystem->ProcessEvents();
+         SleepEx(10, kTRUE);
+         continue;
+      }
 
       DrawText(x, y, 0.0, 1.0, text, kOpaque);
       TTF::GetTextExtent(dx, h, text);
@@ -2515,13 +2528,11 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
          DrawText(x+dx, y, 0.0, 1.0, " ", kOpaque);
       }
 
-      event = gdk_event_get();
-
       if (event != NULL) {
          switch (event->type) {
          case GDK_BUTTON_PRESS:
          case GDK_ENTER_NOTIFY:
-            focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID((GdkWindow *)gCws->window));
+            focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID(CurWnd));
             break;
          case GDK_LEAVE_NOTIFY:
             ::SetFocus(focuswindow);
@@ -2663,7 +2674,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    } while (key < 0);
    ::SetFocus(focuswindow);
 
-   gdk_window_set_cursor((GdkWindow *)gCws->window, (GdkCursor *)fCursors[kPointer]);
+   gdk_window_set_cursor(CurWnd, (GdkCursor *)fCursors[kPointer]);
    if (cursor != 0) {
       gdk_cursor_unref(cursor);
       cursor = 0;
