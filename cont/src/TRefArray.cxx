@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.1 2001/10/03 19:55:27 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.2 2001/10/04 19:26:42 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -23,13 +23,14 @@
 //                                                                      //
 // The array elements can be retrieved with:                            //
 //     TObject *obj = array.At(i);                                      //
-//     TObject *obj = array[i];                                         //
 //                                                                      //
 // When a TRefArray is Streamed, only the pointer unique id is written, //
 // not the referenced object. TRefArray may be assigned to different    //
 // branches of one Tree or several Trees.                               //
 // The branch containing the TRefArray can be read before or after the  //
 // array (eg TClonesArray, STL vector,..) of the referenced objects.    //
+//                                                                      //
+// See an example in $ROOTSYS/test/Event.h                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +79,7 @@ TRefArray::~TRefArray()
    // Delete an array. Objects are not deleted unless the TRefArray is the
    // owner (set via SetOwner()).
 
-   delete [] fUIDs;
+   if (fUIDs) delete [] fUIDs;
    fPID  = 0;
    fUIDs = 0;
    fSize = 0;
@@ -91,7 +92,7 @@ void TRefArray::AddFirst(TObject *obj)
    // first element that might have been there. To have insertion semantics
    // use either a TList or a TOrdCollection.
 
-   fUIDs[0] = MakeUID(obj);
+   fUIDs[0] = (Long_t)obj;
    if (obj) obj->SetBit(kIsReferenced);
    Changed();
 }
@@ -161,7 +162,7 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
    }
    if (idx-fLowerBound >= fSize)
       Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
-   fUIDs[idx-fLowerBound] = MakeUID(obj);
+   fUIDs[idx-fLowerBound] = (Long_t)obj;
    if (obj) obj->SetBit(kIsReferenced);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
@@ -175,7 +176,7 @@ void TRefArray::AddAt(TObject *obj, Int_t idx)
 
    if (!BoundsOk("AddAt", idx)) return;
 
-   fUIDs[idx-fLowerBound] = MakeUID(obj);
+   fUIDs[idx-fLowerBound] = (Long_t)obj;
    if (obj) obj->SetBit(kIsReferenced);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
@@ -191,7 +192,7 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
        Int_t i;
        for (i = 0; i < fSize; i++)
           if (!fUIDs[i]) {         // Add object at position i
-             fUIDs[i] = MakeUID(obj);
+             fUIDs[i] = (Long_t)obj;
              if (obj) obj->SetBit(kIsReferenced);
              fLast = TMath::Max(i, GetAbsLast());
              Changed();
@@ -212,7 +213,7 @@ TObject *TRefArray::After(TObject *obj) const
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == fSize-1) return 0;
 
-   return MakeObject(fUIDs[idx+1]);
+   return (TObject*)fUIDs[idx+1];
 }
 
 //______________________________________________________________________________
@@ -225,7 +226,7 @@ TObject *TRefArray::Before(TObject *obj) const
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == 0) return 0;
 
-   return MakeObject(fUIDs[idx-1]);
+   return (TObject*)fUIDs[idx-1];
 }
 
 //______________________________________________________________________________
@@ -234,7 +235,13 @@ void TRefArray::Clear(Option_t *)
    // Remove all objects from the array. Does not delete the objects
    // unless the TRefArray is the owner (set via SetOwner()).
 
-   Init(fSize, fLowerBound);
+   fLast = - 1;
+
+   for (Int_t j=0 ; j < fSize; j++) fUIDs[j] = 0;
+   
+   fRefBits.ResetAllBits();
+   
+   Changed();
 }
 
 //______________________________________________________________________________
@@ -261,7 +268,15 @@ void TRefArray::Delete(Option_t *)
 {
    // Remove all objects from the array AND delete all heap based objects.
 
-   Init(fSize, fLowerBound);
+   fLast = - 1;
+
+   fSize = 0;
+   if (fUIDs) {delete [] fUIDs; fUIDs = 0;}
+   
+   fRefBits.ResetAllBits();
+   fRefBits.Compact();
+      
+   Changed();
 }
 
 //______________________________________________________________________________
@@ -274,13 +289,13 @@ void TRefArray::Expand(Int_t newSize)
       return;
    }
    if (newSize == fSize) return;
-   ULong_t *temp = fUIDs;
+   Long_t *temp = fUIDs;
    if (newSize != 0) {
-      fUIDs = new ULong_t[newSize];
-      if (newSize < fSize) memcpy(fUIDs,temp, newSize*sizeof(ULong_t));
+      fUIDs = new Long_t[newSize];
+      if (newSize < fSize) memcpy(fUIDs,temp, newSize*sizeof(Long_t));
       else {
-         memcpy(fUIDs,temp,fSize*sizeof(ULong_t));
-         memset(&fUIDs[fSize],0,(newSize-fSize)*sizeof(ULong_t));
+         memcpy(fUIDs,temp,fSize*sizeof(Long_t));
+         memset(&fUIDs[fSize],0,(newSize-fSize)*sizeof(Long_t));
       }
    } else {
      fUIDs = 0;
@@ -294,6 +309,7 @@ void TRefArray::Streamer(TBuffer &R__b)
 {
    // Stream all objects in the array to or from the I/O buffer.
 
+   Long_t uid;
    UInt_t R__s, R__c;
    Int_t nobjects, pidf;
    if (R__b.IsReading()) {
@@ -307,10 +323,13 @@ void TRefArray::Streamer(TBuffer &R__b)
       R__b >> pidf;
       fPID = TProcessID::ReadProcessID(pidf,gFile);
       for (Int_t i = 0; i < nobjects; i++) {
-          R__b >> fUIDs[i];
-          if (fUIDs[i]) {
+          R__b >> uid;
+          fUIDs[i] = uid + (Long_t)gSystem;
+          if (uid != -1) {
              fRefBits.SetBitNumber(i);
              fLast = i;
+          } else {
+             fUIDs[i] = 0;
           }
       }
       Changed();
@@ -329,7 +348,9 @@ void TRefArray::Streamer(TBuffer &R__b)
       }
       R__b << pidf;
       for (Int_t i = 0; i < nobjects; i++) {
-          R__b << fUIDs[i];
+          uid = fUIDs[i] - (Long_t)gSystem;
+          if (!fUIDs[i]) uid = -1;
+          R__b << uid;
       }
       R__b.SetByteCount(R__c, kTRUE);
    }
@@ -340,7 +361,7 @@ TObject *TRefArray::First() const
 {
    // Return the object in the first slot.
 
-   return MakeObject(fUIDs[0]);
+   return (TObject*)fUIDs[0];
 }
 
 //______________________________________________________________________________
@@ -351,7 +372,7 @@ TObject *TRefArray::Last() const
    if (fLast == -1)
       return 0;
    else
-      return MakeObject(fUIDs[GetAbsLast()]);
+      return (TObject*)fUIDs[GetAbsLast()];
 }
 
 //______________________________________________________________________________
@@ -439,6 +460,8 @@ void TRefArray::Init(Int_t s, Int_t lowerBound)
 {
    // Initialize a TRefArray.
 
+   fRefBits.ResetAllBits();
+   
    if (fUIDs && fSize != s) {
       delete [] fUIDs;
       fUIDs = 0;
@@ -446,7 +469,7 @@ void TRefArray::Init(Int_t s, Int_t lowerBound)
 
    fSize = s;
 
-   fUIDs = new ULong_t[fSize];
+   fUIDs = new Long_t[fSize];
    for (Int_t i=0;i<s;i++) fUIDs[i] = 0;
    fLowerBound = lowerBound;
    fLast = -1;
@@ -481,7 +504,7 @@ TObject *TRefArray::RemoveAt(Int_t idx)
 
    TObject *obj = 0;
    if (fUIDs[i]) {
-      obj = MakeObject(fUIDs[i]);
+      obj = (TObject*)fUIDs[i];
       fUIDs[i] = 0;
       // recalculate array size
       if (i == fLast)
@@ -503,7 +526,7 @@ TObject *TRefArray::Remove(TObject *obj)
 
    if (idx == -1) return 0;
 
-   TObject *ob = MakeObject(fUIDs[idx]);
+   TObject *ob = (TObject*)fUIDs[idx];
    fUIDs[idx] = 0;
    // recalculate array size
    if (idx == fLast)
