@@ -102,4 +102,5 @@ HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
 HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                       lib/libGraf.lib lib/libTreePlayer.lib
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
-GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib lib/libHist.lib
+GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
+                      lib/libHist.lib
