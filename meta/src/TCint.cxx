@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.89 2004/05/28 18:13:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.90 2004/07/16 23:06:23 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -80,7 +80,11 @@ extern "C" void TCint_UpdateClassInfo(char *c, Long_t l) {
 }
 
 extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
-  return TCint::AutoLoadCallback(c, l);
+   ULong_t varp = G__getgvp();
+   G__setgvp(G__PVOID);
+   int result =  TCint::AutoLoadCallback(c, l);
+   G__setgvp(varp);
+   return result;
 }
 
 extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
