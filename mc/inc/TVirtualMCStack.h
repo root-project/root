@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMCStack.h,v 1.19 2002/04/08 15:06:08 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMCStack.h,v 1.3 2002/04/26 08:46:10 brun Exp $
 // Authors: Ivana Hrivnacova 13/04/2002
 
 #ifndef ROOT_TVirtualMCStack
@@ -22,7 +22,7 @@ public:
     virtual ~TVirtualMCStack();
 
     // methods
-    virtual void       SetTrack(Int_t done, Int_t parent, Int_t pdg,
+    virtual void       SetTrack(Int_t toBeDone, Int_t parent, Int_t pdg,
   	                  Double_t px, Double_t py, Double_t pz, Double_t e,
   		          Double_t vx, Double_t vy, Double_t vz, Double_t tof,
 		          Double_t polx, Double_t poly, Double_t polz,
@@ -38,6 +38,7 @@ public:
     virtual Int_t      GetNtrack()    const = 0;
     virtual Int_t      GetNprimary()  const = 0;
     virtual Int_t      CurrentTrack() const = 0;
+    virtual Int_t      CurrentTrackParent() const = 0;
     
   ClassDef(TVirtualMCStack,1) //Particles stack
 };
