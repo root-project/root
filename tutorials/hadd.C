@@ -142,7 +142,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
 
       //!!if the object is a tree, it is stored in globChain...
 	if(obj->IsA()->InheritsFrom( "TTree" ))
-	  globChain->Write( key->GetName() );
+          globChain->Merge(target->GetFile(),0,"keep");
 	else
 	obj->Write( key->GetName() );
     }
