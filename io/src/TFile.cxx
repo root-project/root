@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.70 2002/08/23 08:50:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.71 2002/10/11 13:25:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -446,14 +446,16 @@ void TFile::Init(Bool_t create)
          TDirectory::ReadKeys();
          gDirectory = this;
          if (!GetNkeys()) Recover();
-      } else if (fBEGIN+nbytes == fEND) {
-         Warning("Init","file %s has no keys", GetName());
-         gDirectory = this;
       } else {
-         if (fEND > size) {
-            Error("Init","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
+         if (fBEGIN+nbytes == fEND) {
+            Warning("Init","file %s has no keys\n(could be due to a ctlr-c), "
+                    "checking to be sure...", GetName());
+         } else if (fEND > size) {
+            Error("Init","file %s is truncated at %d bytes, should be %d, "
+                  "trying to recover...", GetName(), size, fEND);
          } else {
-            Warning("Init","file %s probably not closed, trying to recover",GetName());
+            Warning("Init","file %s probably not closed, trying to recover...",
+                    GetName());
          }
          Int_t nrecov = Recover();
          if (nrecov) {
