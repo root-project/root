@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.2 2000/07/03 18:45:01 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -247,7 +247,7 @@ public:
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
    virtual void         SetPrimarySelectionOwner(Window_t id);
-   virtual void         ConvertPrimarySelection(Window_t id, Time_t when);
+   virtual void         ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when);
    virtual void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    virtual void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar,
                                        Bool_t del);
@@ -413,7 +413,7 @@ inline void         TVirtualX::DrawSegments(Drawable_t, GContext_t, Segment_t *,
 inline void         TVirtualX::SelectInput(Window_t, UInt_t) { }
 inline void         TVirtualX::SetInputFocus(Window_t) { }
 inline void         TVirtualX::SetPrimarySelectionOwner(Window_t) { }
-inline void         TVirtualX::ConvertPrimarySelection(Window_t, Time_t) { }
+inline void         TVirtualX::ConvertPrimarySelection(Window_t, Atom_t, Time_t) { }
 inline void         TVirtualX::LookupString(Event_t *, char *, Int_t, UInt_t &keysym) { keysym = 0; }
 inline void         TVirtualX::TranslateCoordinates(Window_t, Window_t, Int_t, Int_t,
                           Int_t &dest_x, Int_t &dest_y, Window_t &child)

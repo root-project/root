@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.2 2000/07/03 18:45:01 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -358,7 +358,7 @@ public:
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
    virtual void         SetPrimarySelectionOwner(Window_t id);
-   virtual void         ConvertPrimarySelection(Window_t id, Time_t when);
+   virtual void         ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when);
    virtual void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    virtual void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar,
                                        Bool_t del);

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.2 2000/07/03 18:45:00 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.3 2000/07/04 11:32:32 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1915,7 +1915,7 @@ void TGX11::SetPrimarySelectionOwner(Window_t id)
 }
 
 //______________________________________________________________________________
-void TGX11::ConvertPrimarySelection(Window_t id, Time_t when)
+void TGX11::ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when)
 {
    // XConvertSelection() causes a SelectionRequest event to be sent to the
    // current primary selection owner. This event specifies the selection
@@ -1927,8 +1927,7 @@ void TGX11::ConvertPrimarySelection(Window_t id, Time_t when)
    // The selection owner responds by sending a SelectionNotify event, which
    // confirms the selected atom and type.
 
-   Atom sel_property = XInternAtom(fDisplay, (char *)"VT_SELECTION", False);
-   XConvertSelection(fDisplay, XA_PRIMARY, XA_STRING, sel_property,
+   XConvertSelection(fDisplay, XA_PRIMARY, XA_STRING, (Atom) clipboard,
                      (Window) id, (Time) when);
 }
 

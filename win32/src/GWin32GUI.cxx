@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.2 2000/07/03 18:45:01 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   09/02/99
 #include "TGWin32.h"
 
@@ -476,7 +476,7 @@ void TGWin32::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
 //______________________________________________________________________________
  void         TGWin32::SetPrimarySelectionOwner(Window_t) { }
 //______________________________________________________________________________
- void         TGWin32::ConvertPrimarySelection(Window_t, Time_t) { }
+ void         TGWin32::ConvertPrimarySelection(Window_t, Atom_t, Time_t) { }
 //______________________________________________________________________________
  void         TGWin32::LookupString(Event_t *, char *, Int_t, UInt_t &keysym) { keysym = 0; }
 //______________________________________________________________________________

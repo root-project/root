@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.2 2000/07/03 18:45:01 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -304,7 +304,7 @@ public:
    void         SetInputFocus(Window_t id);
    Window_t     GetPrimarySelectionOwner();
    void         SetPrimarySelectionOwner(Window_t id);
-   void         ConvertPrimarySelection(Window_t id, Time_t when);
+   void         ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when);
    void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text,
                                Int_t &nchar, Bool_t del);
