@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.11 2003/01/06 17:05:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.12 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -54,6 +54,7 @@ class TGeoNode : public TNamed,
 protected:
    TGeoVolume       *fVolume;         // volume associated with this
    TGeoVolume       *fMother;         // mother volume
+   Int_t             fNumber;         // copy number
    Int_t             fNovlp;          // number of overlaps
    Int_t            *fOverlaps;       //[fNovlp] list of indices for overlapping brothers
 public:
@@ -88,6 +89,7 @@ public:
    TGeoVolume       *GetMotherVolume() const             {return fMother;}
    Int_t             GetNdaughters() const {return fVolume->GetNdaughters();}
    TObjArray        *GetNodes() const {return fVolume->GetNodes();}
+   Int_t             GetNumber() const {return fNumber;}
    Int_t            *GetOverlaps(Int_t &novlp) const {novlp=fNovlp; return fOverlaps;}
    TGeoVolume       *GetVolume() const                   {return fVolume;}
    virtual Int_t     GetOptimalVoxels() const {return 0;}
@@ -103,7 +105,8 @@ public:
    virtual TGeoNode *MakeCopyNode() const {return 0;}
    void              SaveAttributes(ofstream &out);
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
-   void              SetVolume(const TGeoVolume *volume)       {fVolume = (TGeoVolume*)volume;}
+   void              SetVolume(const TGeoVolume *volume) {fVolume = (TGeoVolume*)volume;}
+   void              SetNumber(Int_t number)             {fNumber=number;}
    void              SetOverlapping()                    {TObject::SetBit(kGeoNodeOverlap, kTRUE);}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
    void              SetVisibility(Bool_t vis=kTRUE); // *MENU*
@@ -123,7 +126,7 @@ public:
    void              PrintOverlaps() const; // *MENU*
    void              VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
 
-  ClassDef(TGeoNode, 1)               // base class for all geometry nodes
+  ClassDef(TGeoNode, 2)               // base class for all geometry nodes
 };
 
 /*************************************************************************

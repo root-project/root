@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.17 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.18 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -710,27 +710,22 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
    const UChar_t kOuthole = 0x08;
    const UChar_t kInphi = 0x10;
    Double_t nwall[3];
-   Double_t *norm = gGeoManager->GetNormalChecked();
    Double_t s=kBig;
    Double_t snxt=kBig;
-   memset(norm, 0, 2*sizeof(Double_t));
+   gGeoManager->SetNormalChecked(TMath::Abs(dir[2]));
    if (bits & kUp) {
       if (dir[2]>=0) return kBig;
-      norm[2]=1;
       snxt=-saf[1]/dir[2];
    } else {   
       if (bits & kDown) {
          if (dir[2]<=0) return kBig;
-         norm[2]=-1;
          snxt=saf[0]/dir[2];
       } else {
          if (dir[2]>0) {
             snxt=saf[1]/dir[2];
-            norm[2]=-1;
          } else {
             if (dir[2]<0) {
                snxt=-saf[0]/dir[2];
-               norm[2]=1;
             }
          }         
       }
@@ -759,7 +754,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
             s=-saf[2]/calf;
 //            printf("dist to inner : %f\n", s);
             if (s<snxt) {
-               memcpy(norm, &nwall[0], 3*sizeof(Double_t));
+               gGeoManager->SetNormalChecked(-calf);
                snxt=s;
             }
          }
@@ -779,7 +774,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
             s=-saf[3]/calf;
 //            printf("dist to outer : %f\n", s);
             if (s<snxt) {
-               memcpy(norm, &nwall[0], 3*sizeof(Double_t));
+               gGeoManager->SetNormalChecked(TMath::Abs(calf));
                snxt=s;
             }
          }
@@ -800,7 +795,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
          s=-saf[4]/calf;
 //         printf("dist to phi1 : %f\n", s);
          if (s<snxt) {
-            memcpy(norm, &nwall[0], 3*sizeof(Double_t));
+            gGeoManager->SetNormalChecked(-calf);
             snxt=s;
          }
       }
@@ -820,7 +815,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
          s=-saf[5]/calf;
 //         printf("dist to phi2 : %f\n", s);
          if (s<snxt) {
-            memcpy(norm, &nwall[0], 3*sizeof(Double_t));
+            gGeoManager->SetNormalChecked(-calf);
             snxt=s;
          }
       }

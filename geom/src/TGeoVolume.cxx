@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.20 2003/01/20 14:35:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.21 2003/01/23 14:25:37 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -104,7 +104,7 @@
 
 ClassImp(TGeoVolume)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoVolume::TGeoVolume()
 { 
 // dummy constructor
@@ -117,7 +117,8 @@ TGeoVolume::TGeoVolume()
    fOption   = "";
    TObject::ResetBit(kVolumeImportNodes);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMedium *med)
            :TNamed(name, "")
 {
@@ -132,7 +133,8 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    if (gGeoManager) gGeoManager->AddVolume(this);
    TObject::ResetBit(kVolumeImportNodes);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume::~TGeoVolume()
 {
 // Destructor
@@ -145,7 +147,8 @@ TGeoVolume::~TGeoVolume()
    if (fFinder && !TObject::TestBit(kVolumeImportNodes)) delete fFinder;
    if (fVoxels) delete fVoxels;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::Browse(TBrowser *b)
 {
 // How to browse a volume
@@ -154,7 +157,8 @@ void TGeoVolume::Browse(TBrowser *b)
    for (Int_t i=0; i<GetNdaughters(); i++) 
       b->Add(GetNode(i)->GetVolume());
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
 {
 // Shoot nrays with random directions from starting point (startx, starty, startz)
@@ -172,18 +176,21 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
    painter->CheckGeometry(nrays, startx, starty, startz);
 //   if (old_vol) gGeoManager->SetTopVolume(old_vol);
 }         
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::CleanAll()
 {
    ClearNodes();
    ClearShape();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::ClearShape()
 {
    gGeoManager->ClearShape(fShape);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::CheckShapes()
 {
 // check for negative parameters in shapes.
@@ -225,7 +232,8 @@ void TGeoVolume::CheckShapes()
       }
    }
 }     
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoVolume::CountNodes(Int_t nlevels) const
 {
 // count total number of subnodes starting from this volume, nlevels down
@@ -240,14 +248,16 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels) const
    }
    return count;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoVolume::IsFolder() const
 {
 // Return TRUE if volume contains nodes
    if (fNodes) return kTRUE;
    else return kFALSE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoVolume::IsStyleDefault() const
 {
 // check if the visibility and attributes are the default ones
@@ -257,18 +267,21 @@ Bool_t TGeoVolume::IsStyleDefault() const
    if (GetLineWidth() != gStyle->GetLineWidth()) return kFALSE;
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::InspectMaterial() const
 {
    fMedium->GetMaterial()->Print();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::cd(Int_t inode) const
 {
 // Actualize matrix of node indexed <inode>
    if (fFinder) fFinder->cd(inode-fFinder->GetDivIndex());
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t * /*option*/)
 {
 // Add a TGeoNode to the list of nodes. This is the usual method for adding
@@ -299,8 +312,10 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix 
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
    node->SetName(name);
+   node->SetNumber(copy_no);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t * /*option*/)
 {
 // Add a division node to the list of nodes. The method is called by
@@ -321,8 +336,10 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
    char *name = new char[strlen(vol->GetName())+7];
    sprintf(name, "%s_%i", vol->GetName(), copy_no+1);
    node->SetName(name);
+   node->SetNumber(copy_no+1);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t * /*option*/)
 {
 // Add a TGeoNode to the list of nodes. This is the usual method for adding
@@ -353,11 +370,13 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeo
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
    node->SetName(name);
+   node->SetNumber(copy_no);
    node->SetOverlapping();
    if (vol->GetMedium() == fMedium)
    node->SetVirtual();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
 // Division a la G3. The volume will be divided along IAXIS (see shape classes), in NDIV
@@ -444,7 +463,8 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
    }   
    return voldiv; 
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute the closest distance of approach from point px,py to this volume
@@ -452,7 +472,8 @@ Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
    if (!painter) return 9999;
    return painter->DistanceToPrimitiveVol(this, px, py);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::Draw(Option_t *option)
 {
 // draw top volume according to option
@@ -463,7 +484,8 @@ void TGeoVolume::Draw(Option_t *option)
    if (!painter) return;
    painter->Draw(option);   
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::DrawOnly(Option_t *option)
 {
 // draw only this volume
@@ -474,7 +496,8 @@ void TGeoVolume::DrawOnly(Option_t *option)
    if (!painter) return;
    painter->DrawOnly(option);   
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoVolume::OptimizeVoxels()
 {
 // Perform an exensive sampling to find which type of voxelization is
@@ -484,7 +507,8 @@ Bool_t TGeoVolume::OptimizeVoxels()
    if (!painter) return kFALSE;
    return painter->TestVoxels(this);   
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::Paint(Option_t *option)
 {
 // paint volume
@@ -492,12 +516,14 @@ void TGeoVolume::Paint(Option_t *option)
    if (!painter) return;
    painter->Paint(option);   
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::PrintVoxels() const
 {
    if (fVoxels) fVoxels->Print();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::PrintNodes() const
 {
 // print nodes
@@ -523,13 +549,15 @@ TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    hist->Draw("lego1sph");
    return hist;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
 {
 // Draw random points in the bounding box of this volume.
    gGeoManager->RandomPoints(this, npoints, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
 // Random raytracing method.
@@ -538,36 +566,22 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
    else old_vol=0;
    gGeoManager->RandomRays(nrays, startx, starty, startz);
 }
-//-----------------------------------------------------------------------------
-void TGeoVolume::RenameCopy(Int_t copy_no)
-{
-// add a copy number to this volume in order to handle gsposp
 
-   TString name = GetName();
-   Int_t digits = 1;
-   Int_t num = 10;
-   while ((Int_t)(copy_no/num)) {
-      digits++;
-      num *= 10;
-   }
-   name += '_';
-   char *newname = new char[name.Length()+digits];
-   sprintf(newname, "%s%i", name.Data(), copy_no);
-   SetName(newname);
-}
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVolume::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
 // Execute mouse actions on this volume.
    gGeoManager->GetGeomPainter()->ExecuteVolumeEvent(this, event, px, py);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode *TGeoVolume::FindNode(const char *name) const
 {
 // search a daughter inside the list of nodes
    return ((TGeoNode*)fNodes->FindObject(name));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoVolume::GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const
 {
    TGeoNode *current = 0;
@@ -577,7 +591,8 @@ Int_t TGeoVolume::GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t nc
    }
    return -1;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoVolume::GetIndex(const TGeoNode *node) const
 {
 // get index number for a given daughter
@@ -590,13 +605,15 @@ Int_t TGeoVolume::GetIndex(const TGeoNode *node) const
    }
    return -1;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 char *TGeoVolume::GetObjectInfo(Int_t px, Int_t py) const
 {
    TGeoVolume *vol = (TGeoVolume*)this;
    return gGeoManager->GetGeomPainter()->GetVolumeInfo(vol, px, py);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoVolume::GetOptimalVoxels() const
 {
 //--- Returns true if cylindrical voxelization is optimal.
@@ -612,7 +629,8 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
    if (ncyl>(nd/2)) return kTRUE;
    return kFALSE;
 }      
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
 {
 // make a new list of nodes and copy all nodes of other volume inside
@@ -627,14 +645,16 @@ void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
    for (Int_t i=0; i<nd; i++) fNodes->Add(other->GetNode(i));
    TObject::SetBit(kVolumeImportNodes);
 }      
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::GrabFocus()
 {
 // Move perspective view focus to this volume
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (painter) painter->GrabFocus();
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoVolume::MakeCopyVolume()
 {
     // make a copy of this volume
@@ -678,17 +698,20 @@ TGeoVolume *TGeoVolume::MakeCopyVolume()
     }
     return vol;       
 }    
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SetAsTopVolume()
 {
    gGeoManager->SetTopVolume(this);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SetCurrentPoint(Double_t x, Double_t y, Double_t z)
 {
    gGeoManager->SetCurrentPoint(x,y,z);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SetShape(const TGeoShape *shape)
 {
 // set the shape associated with this volume
@@ -698,7 +721,8 @@ void TGeoVolume::SetShape(const TGeoShape *shape)
    }
    fShape = (TGeoShape*)shape;  
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::Sizeof3D() const
 {
 //   Compute size of this 3d object.
@@ -706,7 +730,8 @@ void TGeoVolume::Sizeof3D() const
    if (!painter) return;
    painter->Sizeof3D(this);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SortNodes()
 {
 // sort nodes by decreasing volume of the bounding box. ONLY nodes comes first,
@@ -755,7 +780,8 @@ void TGeoVolume::SortNodes()
    delete fNodes;
    fNodes = nodes;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGeoVolume.
@@ -777,30 +803,35 @@ void TGeoVolume::Streamer(TBuffer &R__b)
    }
 }
 
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SetOption(const char * /*option*/)
 {
 // set the current options  
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SetLineColor(Color_t lcolor) 
 {
    TAttLine::SetLineColor(lcolor);
    //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SetLineStyle(Style_t lstyle) 
 {
    TAttLine::SetLineStyle(lstyle);
    //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SetLineWidth(Style_t lwidth) 
 {
    TAttLine::SetLineWidth(lwidth);
    //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode *TGeoVolume::GetNode(const char *name) const
 {
 // get the pointer to a daughter node
@@ -812,7 +843,8 @@ TGeoNode *TGeoVolume::GetNode(const char *name) const
    }   
    return 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoVolume::GetByteCount() const
 {
 // get the total size in bytes for this volume
@@ -830,7 +862,8 @@ Int_t TGeoVolume::GetByteCount() const
    }
    return count;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::FindOverlaps() const
 {
 // loop all nodes marked as overlaps and find overlaping brothers
@@ -849,7 +882,8 @@ void TGeoVolume::FindOverlaps() const
       fVoxels->FindOverlaps(inode);
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::SetVisibility(Bool_t vis)
 {
 // set visibility of this volume
@@ -857,12 +891,14 @@ void TGeoVolume::SetVisibility(Bool_t vis)
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
    gGeoManager->ModifiedPad();
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoVolume::Valid() const
 {
    return fShape->IsValidBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::VisibleDaughters(Bool_t vis)
 {
 // set visibility for daughters
@@ -870,7 +906,8 @@ void TGeoVolume::VisibleDaughters(Bool_t vis)
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
    gGeoManager->ModifiedPad();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolume::Voxelize(Option_t *option)
 {
 // build the voxels for this volume 
@@ -915,7 +952,8 @@ void TGeoVolume::Voxelize(Option_t *option)
 
 ClassImp(TGeoVolumeMulti)
 
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolumeMulti::TGeoVolumeMulti()
 { 
 // dummy constructor
@@ -929,7 +967,8 @@ TGeoVolumeMulti::TGeoVolumeMulti()
    fAttSet = kFALSE;
    TObject::SetBit(kVolumeMulti);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolumeMulti::TGeoVolumeMulti(const char *name, const TGeoMedium *med)
 {
 // default constructor
@@ -947,13 +986,15 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, const TGeoMedium *med)
    gGeoManager->GetListOfGVolumes()->Add(this);
 //   printf("--- volume multi %s created\n", name);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolumeMulti::~TGeoVolumeMulti()
 {
 // Destructor
    if (fVolumes) delete fVolumes;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolumeMulti::AddVolume(TGeoVolume *vol) 
 {
 // Add a volume with valid shape to the list of volumes. Copy all existing nodes
@@ -973,7 +1014,8 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
       vol->MakeCopyNodes(this);
 }
    
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolumeMulti::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
 // Add a new node to the list of nodes. This is the usual method for adding
@@ -991,7 +1033,8 @@ void TGeoVolumeMulti::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMa
    }
 //   printf("--- vmulti %s : node %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolumeMulti::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
    TGeoVolume::AddNodeOverlap(vol, copy_no, mat, option);
@@ -1008,7 +1051,8 @@ void TGeoVolumeMulti::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const
 //   printf("--- vmulti %s : node ovlp %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
 }
 
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed, const char *option)
 {
 // division of multiple volumes
@@ -1057,7 +1101,8 @@ TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv
    if (numed) fDivision->SetMedium(medium);
    return fDivision;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolumeMulti::SetLineColor(Color_t lcolor) 
 {
    TGeoVolume::SetLineColor(lcolor);
@@ -1068,7 +1113,8 @@ void TGeoVolumeMulti::SetLineColor(Color_t lcolor)
       vol->SetLineColor(lcolor); 
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolumeMulti::SetLineStyle(Style_t lstyle) 
 {
    TGeoVolume::SetLineStyle(lstyle); 
@@ -1079,7 +1125,8 @@ void TGeoVolumeMulti::SetLineStyle(Style_t lstyle)
       vol->SetLineStyle(lstyle); 
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolumeMulti::SetLineWidth(Width_t lwidth) 
 {
    TGeoVolume::SetLineWidth(lwidth);
@@ -1090,7 +1137,8 @@ void TGeoVolumeMulti::SetLineWidth(Width_t lwidth)
       vol->SetLineWidth(lwidth); 
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolumeMulti::SetMedium(const TGeoMedium *med)
 {
 // Set medium for a multiple volume.
@@ -1103,7 +1151,8 @@ void TGeoVolumeMulti::SetMedium(const TGeoMedium *med)
    }
 }   
 
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoVolumeMulti::SetVisibility(Bool_t vis) 
 {
    TGeoVolume::SetVisibility(vis); 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.11 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.12 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -484,9 +484,8 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
    }
    // compute distance to shape
    Double_t snxt = kBig;
-   Double_t *norm=gGeoManager->GetNormalChecked();
    if (rzero) {
-      memcpy(norm, dir, 3*sizeof(Double_t));
+      gGeoManager->SetNormalChecked(1.);
       return fRmax;
    }
    // first do rmin, rmax

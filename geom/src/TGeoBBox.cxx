@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.14 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.15 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -211,9 +211,7 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       }
    }
    ipl = TMath::LocMin(3, s);
-   Double_t *norm = gGeoManager->GetNormalChecked();
-   memset(norm, 0, 3*sizeof(Double_t));
-   norm[ipl] = (dir[ipl]>0)?-1:1;
+   gGeoManager->SetNormalChecked(TMath::Abs(dir[ipl]));
    return s[ipl];
 }
 //-----------------------------------------------------------------------------
@@ -240,8 +238,6 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    // compute distance from point to box
    Double_t coord, snxt=kBig;
    Int_t ibreak=0;
-   Double_t *norm = gGeoManager->GetNormalChecked();
-   memset(norm, 0, 3*sizeof(Double_t));
    for (i=0; i<3; i++) {
       if (saf[i]<=0) continue;
       if (newpt[i]*dir[i] >= 0) continue;
@@ -256,7 +252,7 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          }
       }
       if (!ibreak) {
-         norm[i] = (newpt<0)?-1:1;
+         gGeoManager->SetNormalChecked(TMath::Abs(dir[i]));
          return snxt;
       }
    }
@@ -375,11 +371,22 @@ void TGeoBBox::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintBox(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoBBox::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoBBox::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   Double_t safe = kBig;
+   Double_t saf[3];
+   Double_t par[3];
+   par[0] = fDX;
+   par[1] = fDY;
+   par[2] = fDZ;
+   for (Int_t i=0; i<3; i++) {
+      saf[i] = par[i] - TMath::Abs(point[i]-fOrigin[i]);
+      if (!in) saf[i] = -saf[i];
+   }
+   safe = (in)?saf[TMath::LocMin(3,saf)]:saf[TMath::LocMax(3,saf)];   
+   return safe;
 }
 //-----------------------------------------------------------------------------   
 void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)

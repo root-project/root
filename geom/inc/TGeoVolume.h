@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.18 2003/01/15 18:43:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.19 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -146,7 +146,6 @@ public:
    Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
-   void            RenameCopy(Int_t copy_no);
    void            SetAsTopVolume(); // *MENU*
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);// *MENU*
    void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}

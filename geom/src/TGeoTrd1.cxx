@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.12 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.13 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -144,17 +144,13 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if (iact==1 && step<*safe) return kBig;
    }
    //--- Compute distance to this shape
-   Double_t *norm = gGeoManager->GetNormalChecked();
    // first check if Z facettes are crossed
    cn = -dir[2];
+   gGeoManager->SetNormalChecked(TMath::Abs(cn));
    if (cn>0) {
       snxt = saf[0]/cn;
-      norm[0] = norm[1] = 0;
-      norm[2] = 1.;
    } else {
       snxt = -saf[1]/cn;             
-      norm[0] = norm[1] = 0;
-      norm[2] = -1.;
    }
    // now check X facettes
    cn = -calf*dir[0]+salf*dir[2];
@@ -162,9 +158,7 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       s = saf[2]/cn;
       if (s<snxt) {
          snxt = s;
-         norm[0] = calf;
-         norm[1] = 0;
-         norm[2] = -salf;
+         gGeoManager->SetNormalChecked(cn);
       }
    }
    cn = calf*dir[0]+salf*dir[2];
@@ -172,9 +166,7 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       s = saf[3]/cn;
       if (s<snxt) {
          snxt = s;
-         norm[0] = -calf;
-         norm[1] = 0;
-         norm[2] = -salf;
+         gGeoManager->SetNormalChecked(cn);
       }
    }
    // now check Y facettes
@@ -182,15 +174,13 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    if (cn>0) {
       s = saf[4]/cn;
       if (s<snxt) {
-         norm[0] = norm[2] = 0;
-         norm[1] = 1;
+         gGeoManager->SetNormalChecked(cn);
          return s;
       }   
    } else {
       s = -saf[5]/cn;         
       if (s<snxt) {
-         norm[0] = norm[2] = 0;
-         norm[1] = -1;
+         gGeoManager->SetNormalChecked(-cn);
          return s;
       }
    }            
@@ -263,7 +253,6 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 // compute distance from outside point to surface of the trd1
    Double_t snxt = kBig;
    // find a visible face
-   Double_t *norm = gGeoManager->GetNormalChecked();
    Double_t ptnew[3];
    Double_t saf[6];
    memset(saf, 0, 6*sizeof(Double_t));
@@ -314,8 +303,7 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
             ptnew[1] = point[1]+snxt*dir[1];
             if (TMath::Abs(ptnew[1]) < fDy) {
                // bottom Z facette is crossed
-               norm[0]=norm[1]=0;
-               norm[2] = -1;
+               gGeoManager->SetNormalChecked(-cn);
                return snxt;
             }
          }
@@ -331,8 +319,7 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
                ptnew[1] = point[1]+snxt*dir[1];
                if (TMath::Abs(ptnew[1]) < fDy) {
                   // top Z facette is crossed
-                  norm[0]=norm[1]=0;
-                  norm[2] = 1;
+                  gGeoManager->SetNormalChecked(-cn);
                   return snxt;
                }
             }
@@ -350,9 +337,7 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
             ptnew[2] = point[2]+snxt*dir[2];
             if (TMath::Abs(ptnew[2]) < fDz) {
                // lower X facette is crossed
-               norm[0] = -calf;
-               norm[1] = 0;
-               norm[2] = salf;
+               gGeoManager->SetNormalChecked(-cn);
                return snxt;
             }
          }
@@ -368,9 +353,7 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
             ptnew[2] = point[2]+snxt*dir[2];
             if (TMath::Abs(ptnew[2]) < fDz) {
                // lower X facette is crossed
-               norm[0] = calf;
-               norm[1] = 0;
-               norm[2] = salf;
+               gGeoManager->SetNormalChecked(-cn);
                return snxt;
             }
          }
@@ -388,8 +371,7 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
             distx = 0.5*(fDx1+fDx2)-fx*ptnew[2];
             if (TMath::Abs(ptnew[0]) < distx) {
                // lower Y facette is crossed
-               norm[0] = norm[2] = 0;
-               norm[1] = -1;
+               gGeoManager->SetNormalChecked(-cn);
                return snxt;
             }
          }
@@ -406,8 +388,7 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
                distx = 0.5*(fDx1+fDx2)-fx*ptnew[2];
                if (TMath::Abs(ptnew[0]) < distx) {
                   // higher Y facette is crossed
-                  norm[0] = norm[2] = 0;
-                  norm[1] = 1;
+                  gGeoManager->SetNormalChecked(-cn);
                   return snxt;
                }
             }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.12 2003/01/07 11:24:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.13 2003/01/20 10:25:57 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -38,7 +38,7 @@ ClassImp(TGeoNodeCache)
 
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNodeCache::TGeoNodeCache()
 {
 // dummy constructor
@@ -66,7 +66,8 @@ TGeoNodeCache::TGeoNodeCache()
    fGlobalMatrix= 0;
    fMatrixPool  = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeCache::TGeoNodeCache(Int_t /*size*/)
 {
 // constructor
@@ -113,7 +114,8 @@ TGeoNodeCache::TGeoNodeCache(Int_t /*size*/)
    fMatrixPool = new TGeoMatrixCache(0);
    CdTop();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeCache::~TGeoNodeCache()
 {
 // dtor
@@ -129,7 +131,8 @@ TGeoNodeCache::~TGeoNodeCache()
       delete fStack;
    }   
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeCache::Compact()
 {
 // compact arrays
@@ -141,7 +144,8 @@ void TGeoNodeCache::Compact()
       fSize -= (old_size-new_size);
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeCache::DeleteCaches()
 {
 // delete all node caches
@@ -153,7 +157,8 @@ void TGeoNodeCache::DeleteCaches()
    delete fCache[fGeoCacheObjArrayInd];
    delete fCache;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeCache::AddNode(TGeoNode *node)
 {
 // add a logical node in the cache corresponding to ndaughters
@@ -162,13 +167,15 @@ Int_t TGeoNodeCache::AddNode(TGeoNode *node)
    return fCache[ic]->AddNode(node);
    //fNused++;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 //Int_t TGeoNodeCache::CacheId(Int_t nindex) 
 //{
 //   Int_t id = (nindex>>24) & 0xFF;
 //   return (id>fGeoCacheMaxDaughters)?fGeoCacheObjArrayInd:id;
 //}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
 {
 // make daughter 'index' of current node current
@@ -222,7 +229,8 @@ Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
    fMatrices[fLevel] = fCache[fCurrentCache]->AddMatrix(fGlobalMatrix);
    return kTRUE;
 }  
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeCache::CdUp()
 {
 // change current path to mother.
@@ -234,14 +242,16 @@ void TGeoNodeCache::CdUp()
    fCache[fCurrentCache]->cd(fCurrentIndex);
    fMatrixPool->cd(fMatrices[fLevel]);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 //void TGeoNodeCache::CdTop()
 //{
 // change current path to top node.
 //   fLevel = 1;
 //   CdUp();
 //}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeCache::CleanCache()
 {
 // free nodes which are not persistent from cache
@@ -283,7 +293,8 @@ void TGeoNodeCache::CleanCache()
 //   Compact();
    Status();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNodeCache::DumpNodes()
 {
 // dump all non-persistent branches
@@ -301,7 +312,8 @@ Bool_t TGeoNodeCache::DumpNodes()
    }
    return kFALSE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 //void TGeoNodeCache::ClearDaughter(Int_t index)
 //{
 // clear all the branch of a daughter node. If all is kFALSE,
@@ -309,7 +321,8 @@ Bool_t TGeoNodeCache::DumpNodes()
 //   fCache[fCurrentCache]->cd(fCurrentIndex);
 //   fCache[fCurrentCache]->ClearDaughter(index);
 //}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeCache::ClearNode(Int_t nindex)
 {
 // clear the only the node nindex
@@ -321,7 +334,8 @@ void TGeoNodeCache::ClearNode(Int_t nindex)
    fCount-=GetUsageCount();
    fCache[ic]->ClearNode();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode *TGeoNodeCache::GetMother(Int_t up) const
 {
 // get mother of current logical node, <up> levels up
@@ -333,13 +347,15 @@ TGeoNode *TGeoNodeCache::GetMother(Int_t up) const
    if (fCurrentCache == id) fCache[fCurrentCache]->cd(fCurrentIndex);
    return mother;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeCache::GetNodeId() const
 {
 // Get unique node id.
    return fBranch[fLevel];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 const char *TGeoNodeCache::GetPath()
 {
 // prints the current path
@@ -354,7 +370,8 @@ const char *TGeoNodeCache::GetPath()
    }
    return fPath.Data();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeCache::PrintNode() const
 {
    TGeoNode *node = GetNode();
@@ -377,14 +394,16 @@ void TGeoNodeCache::PrintNode() const
       if (dght) printf("      %i : %s\n", i, dght->GetName());
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeCache::PushState(Bool_t ovlp, Double_t *point)
 {
    if (fStackLevel>=fGeoCacheStackSize) return 0; 
    ((TGeoCacheState*)fStack->At(fStackLevel))->SetState(fLevel,ovlp,point);
    return ++fStackLevel;   
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeCache::Refresh() 
 {
    fCurrentNode=fBranch[fLevel]; 
@@ -393,7 +412,8 @@ void TGeoNodeCache::Refresh()
    fCache[fCurrentCache]->cd(fCurrentIndex);
    fMatrixPool->cd(fMatrices[fLevel]);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNodeCache::PopState(Double_t *point) 
 {
    if (!fStackLevel) return 0;
@@ -402,7 +422,8 @@ Bool_t TGeoNodeCache::PopState(Double_t *point)
 //   return (fStackLevel+1);
    return ovlp;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNodeCache::PopState(Int_t level, Double_t *point) 
 {
    if (level<=0) return 0;
@@ -410,7 +431,8 @@ Bool_t TGeoNodeCache::PopState(Int_t level, Double_t *point)
    Refresh(); 
    return level;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNodeCache::SetPersistency()
 {
    if (fCache[fCurrentCache]->IsPersistent()) return kTRUE;
@@ -421,14 +443,16 @@ Bool_t TGeoNodeCache::SetPersistency()
    }
    return kFALSE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeCache::Status() const
 {
 // print status of cache
    printf("Cache status : total %i   used %i   free %i nodes\n",
           fSize, fNused, fSize-fNused);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 
 
 /*************************************************************************
@@ -438,7 +462,7 @@ void TGeoNodeCache::Status() const
  *************************************************************************/
 ClassImp(TGeoCacheDummy)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoCacheDummy::TGeoCacheDummy()
 {
    fTop = 0;
@@ -446,7 +470,8 @@ TGeoCacheDummy::TGeoCacheDummy()
    fNodeBranch = 0;
    fMatrixBranch = 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCacheDummy::TGeoCacheDummy(TGeoNode *top)
 {
    fTop = top;
@@ -462,7 +487,8 @@ TGeoCacheDummy::TGeoCacheDummy(TGeoNode *top)
       fStack->Add(new TGeoCacheStateDummy(100)); // !obsolete 100
    fMatrixPool = 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCacheDummy::~TGeoCacheDummy()
 {
    if (fNodeBranch) delete [] fNodeBranch;
@@ -472,7 +498,8 @@ TGeoCacheDummy::~TGeoCacheDummy()
       delete [] fMatrixBranch;
    }   
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
 {
    TGeoNode *newnode = fNode->GetDaughter(index);
@@ -488,7 +515,8 @@ Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
    fMatrixBranch[fLevel] = fMatrix;
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheDummy::CdUp()
 {
    if (!fLevel) return;
@@ -496,7 +524,8 @@ void TGeoCacheDummy::CdUp()
    fNode = fNodeBranch[fLevel];
    fMatrix = fMatrixBranch[fLevel];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoCacheDummy::GetNodeId() const
 {
 // Get unique node id.
@@ -506,7 +535,38 @@ Int_t TGeoCacheDummy::GetNodeId() const
    return (Int_t)id;
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
+void TGeoCacheDummy::GetBranchNames(Int_t *names) const
+{
+// Fill names with current branch volume names (4 char)
+   const char *name;
+   for (Int_t i=0; i<fLevel+1; i++) {
+      name = fNodeBranch[i]->GetVolume()->GetName();
+      memcpy(&names[i], name, sizeof(Int_t));
+   }
+}
+
+//_____________________________________________________________________________
+void TGeoCacheDummy::GetBranchNumbers(Int_t *numbers) const
+{
+// Fill copy numbers of current branch nodes.
+   for (Int_t i=0; i<fLevel+1; i++) {
+      numbers[i] = fNodeBranch[i]->GetNumber();
+   }
+}
+
+//_____________________________________________________________________________
+void TGeoCacheDummy::GetBranchOnlys(Int_t *isonly) const
+{
+// Fill copy numbers of current branch nodes.
+   Bool_t ismany = kFALSE;
+   for (Int_t i=0; i<fLevel+1; i++) {
+      if (!fNodeBranch[i]->IsOffset()) ismany=fNodeBranch[i]->IsOverlapping();
+      isonly[i] = (ismany)?0:1;
+   }
+}
+
+//_____________________________________________________________________________
 const char *TGeoCacheDummy::GetPath()
 {
 // prints the current path
@@ -517,32 +577,38 @@ const char *TGeoCacheDummy::GetPath()
    }   
    return fPath.Data();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheDummy::LocalToMaster(Double_t *local, Double_t *master) const
 {
    fMatrix->LocalToMaster(local, master);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheDummy::LocalToMasterVect(Double_t *local, Double_t *master) const
 {
    fMatrix->LocalToMasterVect(local, master);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheDummy::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    fMatrix->LocalToMasterBomb(local, master);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheDummy::MasterToLocal(Double_t *master, Double_t *local) const
 {
    fMatrix->MasterToLocal(master, local);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheDummy::MasterToLocalVect(Double_t *master, Double_t *local) const
 {
    fMatrix->MasterToLocalVect(master, local);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheDummy::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    fMatrix->MasterToLocalBomb(master, local);
@@ -572,7 +638,7 @@ const Int_t TGeoNodeArray::kGeoReleasedSpace = 1000;
 
 ClassImp(TGeoNodeArray)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNodeArray::TGeoNodeArray()
 {
 // dummy ctor
@@ -586,7 +652,8 @@ TGeoNodeArray::TGeoNodeArray()
    fBitsArray = 0;
    fArray = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeArray::TGeoNodeArray(Int_t ndaughters, Int_t size)
 {
 // default constructor
@@ -610,25 +677,29 @@ TGeoNodeArray::TGeoNodeArray(Int_t ndaughters, Int_t size)
       fBitsArray->SetBitNumber(0);
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeArray::~TGeoNodeArray()
 {
 // destructor
 //   DeleteArray();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeArray::AddDaughter(TGeoNode *node, Int_t i)
 {
 //--- Add node as i-th daughter of current node of this array
    return (fOffset[3+i]=gGeoManager->GetCache()->AddNode(node));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeArray::AddMatrix(TGeoMatrix *global)
 {
 // Adds a global matrix to the current node in this array
    return (fOffset[1]=gGeoManager->GetCache()->GetMatrixPool()->AddMatrix(global));
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeArray::Compact()
 {
 // compact the array
@@ -640,7 +711,8 @@ void TGeoNodeArray::Compact()
    delete old_array;
    fSize = new_size;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeArray::DeleteArray()
 {
    if (fArray) delete fArray;
@@ -648,7 +720,8 @@ void TGeoNodeArray::DeleteArray()
    if (fBitsArray) delete fBitsArray;
    fBitsArray = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeArray::AddNode(TGeoNode *node)
 {
 // Add node in the node array. The number of daughters
@@ -672,7 +745,8 @@ Int_t TGeoNodeArray::AddNode(TGeoNode *node)
    cd(current);
    return index;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeArray::ClearDaughter(Int_t ind)
 {
 // clear the daughter ind from the list of the current node. Send the
@@ -683,7 +757,8 @@ void TGeoNodeArray::ClearDaughter(Int_t ind)
    fOffset[3+ind] = 0;
    gGeoManager->GetCache()->ClearNode(nindex_d);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeArray::ClearMatrix()
 {
 // clears the global matrix of this node from matrix cache
@@ -691,7 +766,8 @@ void TGeoNodeArray::ClearMatrix()
    if (ind_mat && !(GetNode()->GetMatrix()->IsIdentity()))
       gGeoManager->GetCache()->GetMatrixPool()->ClearMatrix(ind_mat);
 }  
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeArray::ClearNode()
 {
 // clear the current node. All branch from this point downwords
@@ -709,7 +785,8 @@ void TGeoNodeArray::ClearNode()
    // empty all locations of current node
    memset(fOffset, 0, fNodeSize*sizeof(Int_t));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNodeArray::HasDaughters() const
 {
    for (Int_t ind=0; ind<fNdaughters; ind++) {
@@ -717,7 +794,8 @@ Bool_t TGeoNodeArray::HasDaughters() const
    }
    return kFALSE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeArray::IncreaseArray()
 {
 // Doubles the array size unless maximum cache limit is reached or
@@ -750,13 +828,15 @@ void TGeoNodeArray::IncreaseArray()
    gGeoManager->GetCache()->IncreasePool(new_size-fSize);
    fSize = new_size;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNodeArray::IsPersistent() const
 {
 // returns persistency flag of the node
    return ((fOffset[2] & 0x80000000)==0)?kFALSE:kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeArray::SetPersistency(Bool_t flag)
 {
    if (flag) fOffset[2] |= 0x80000000;
@@ -771,7 +851,7 @@ void TGeoNodeArray::SetPersistency(Bool_t flag)
 
 ClassImp(TGeoNodeObjArray)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNodeObjArray::TGeoNodeObjArray()
 {
 // dummy ctor
@@ -779,7 +859,8 @@ TGeoNodeObjArray::TGeoNodeObjArray()
    fCurrent  = 0;
    fIndex = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeObjArray::TGeoNodeObjArray(Int_t size)
 {
 // default ctor
@@ -792,7 +873,8 @@ TGeoNodeObjArray::TGeoNodeObjArray(Int_t size)
    fBitsArray  = new TBits(fSize);
    fCurrent = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeObjArray::~TGeoNodeObjArray()
 {
 // destructor
@@ -800,14 +882,16 @@ TGeoNodeObjArray::~TGeoNodeObjArray()
    fObjArray->Delete();
    delete fObjArray;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeObjArray::AddDaughter(TGeoNode *node, Int_t i)
 {
 // node must be the i'th daughter of current node (inode, fOffset)
 // This is called ONLY after GetDaughter(i) returns 0
    return fCurrent->AddDaughter(i, gGeoManager->GetCache()->AddNode(node));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeObjArray::AddNode(TGeoNode *node)
 {
 // Add node in the node array. 
@@ -826,20 +910,23 @@ Int_t TGeoNodeObjArray::AddNode(TGeoNode *node)
    cd(oldindex);
    return index;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeObjArray::AddMatrix(TGeoMatrix *global)
 {
 // store the global matrix for the current node
    return fCurrent->AddMatrix(global);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeObjArray::cd(Int_t inode)
 {
 // make inode the current node
    fCurrent = (TGeoNodePos*)fObjArray->At(inode);
    fIndex = inode;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeObjArray::ClearDaughter(Int_t ind)
 {
 // clear the daughter ind from the list of the current node. Send the
@@ -850,7 +937,8 @@ void TGeoNodeObjArray::ClearDaughter(Int_t ind)
    fCurrent->ClearDaughter(ind);
    gGeoManager->GetCache()->ClearNode(nindex);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeObjArray::ClearMatrix()
 {
 // clear the global matrix of this node from matrix cache
@@ -858,7 +946,8 @@ void TGeoNodeObjArray::ClearMatrix()
    if (ind_mat && !fCurrent->GetNode()->GetMatrix()->IsIdentity())
       gGeoManager->GetCache()->GetMatrixPool()->ClearMatrix(ind_mat);
 }  
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeObjArray::ClearNode()
 {
 // clear the current node. All branch from this point downwords
@@ -876,7 +965,8 @@ void TGeoNodeObjArray::ClearNode()
    fNused--;
    // mapping this node to a new logical node is the task of AddNode
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodeObjArray::IncreaseArray()
 {
 // Doubles the array size unless maximum cache limit is reached or
@@ -914,7 +1004,7 @@ const UInt_t  TGeoNodePos::kNoMatrix = 1000000000;
 
 ClassImp(TGeoNodePos)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNodePos::TGeoNodePos()
 {
 // dummy ctor
@@ -924,7 +1014,8 @@ TGeoNodePos::TGeoNodePos()
    fCount = 0;  
    fNode = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodePos::TGeoNodePos(Int_t ndaughters)
 {
 // default constructor.
@@ -940,20 +1031,23 @@ TGeoNodePos::TGeoNodePos(Int_t ndaughters)
    fCount = 0;  
    fNode = 0;  
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodePos::~TGeoNodePos()
 {
 // destructor. It deletes the daughters also. 
    // delete daughters 
    if (fDaughters) delete [] fDaughters;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodePos::AddMatrix(TGeoMatrix *global)
 {
 // cache the global matrix
    return (fMatrix=gGeoManager->GetCache()->GetMatrixPool()->AddMatrix(global));
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodePos::ClearMatrix()
 {
 // clear the matrix if not used by other nodes
@@ -962,21 +1056,24 @@ void TGeoNodePos::ClearMatrix()
       fMatrix = 0;
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodePos::GetDaughter(Int_t ind) const
 {
 // get the i-th daughter.
    if (fDaughters) return fDaughters[ind];
    return 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 //void TGeoNodePos::GetMatrix(TGeoHMatrix *matrix)
 //{
 // count the total number of nodes in this branch
 //   if (!fMatrix) return;
 //   gGeoManager->GetCache()->GetMatrixPool()->GetMatrix(fMatrix, matrix);
 //}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNodePos::HasDaughters() const
 {
    for (Int_t i=0; i<fNdaughters; i++) {
@@ -984,7 +1081,8 @@ Bool_t TGeoNodePos::HasDaughters() const
    }
    return kFALSE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodePos::Map(TGeoNode *node)
 {
 // map this nodepos to a physical node
@@ -996,7 +1094,8 @@ void TGeoNodePos::Map(TGeoNode *node)
    fCount = 0;
    fNode = node;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNodePos::SetPersistency(Bool_t flag)
 {
 // set this node persistent in cache
@@ -1012,7 +1111,8 @@ void TGeoNodePos::SetPersistency(Bool_t flag)
 
 ClassImp(TGeoMatrixCache)
 
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoMatrixCache::TGeoMatrixCache()
 {
 // dummy ctor
@@ -1029,7 +1129,8 @@ TGeoMatrixCache::TGeoMatrixCache()
    fLength = 0;
    fHandlers = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoMatrixCache::TGeoMatrixCache(Int_t size)
 {
 // default constructor
@@ -1075,7 +1176,8 @@ TGeoMatrixCache::TGeoMatrixCache(Int_t size)
    printf("### matrix caches of size %i built ###\n", fSize[0]);
 //   Status();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoMatrixCache::~TGeoMatrixCache()
 {
 // destructor
@@ -1089,7 +1191,8 @@ TGeoMatrixCache::~TGeoMatrixCache()
       delete [] fHandlers;
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoMatrixCache::AddMatrix(TGeoMatrix *matrix)
 {
 // add a global matrix to the first free array of corresponding type
@@ -1137,7 +1240,8 @@ Int_t TGeoMatrixCache::AddMatrix(TGeoMatrix *matrix)
    *type_loc = type;
    return fMatrix;
 }      
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatrixCache::cd(Int_t mindex)
 {
    fMatrix = mindex;
@@ -1161,7 +1265,8 @@ void TGeoMatrixCache::cd(Int_t mindex)
    fLength = cache_len[*type];
    fHandlers[fHandler]->SetLocation(fCache[fCacheId]+(mindex&0x00FFFFFF)*fLength);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatrixCache::ClearMatrix(Int_t mindex)
 {
 // release the space occupied by a matrix
@@ -1171,7 +1276,8 @@ void TGeoMatrixCache::ClearMatrix(Int_t mindex)
    fBitsArray[fCacheId]->SetBitNumber(offset, kFALSE);
    if (UInt_t(offset)<fFree[fCacheId]) fFree[fCacheId] = offset;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatrixCache::GetMatrix(TGeoHMatrix *matrix) const
 {
 // get a matrix from cache
@@ -1186,7 +1292,8 @@ void TGeoMatrixCache::GetMatrix(TGeoHMatrix *matrix) const
    // ask the handler to get the matrix from cache
    fHandlers[fHandler]->GetMatrix(new_ptr, matrix);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatrixCache::IncreaseCache()
 {
 // doubles the cache size
@@ -1201,7 +1308,8 @@ void TGeoMatrixCache::IncreaseCache()
    fSize[fCacheId] = new_size;
 //   Status();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatrixCache::Status() const
 {
 // print current status of matrix cache
@@ -1231,7 +1339,7 @@ ClassImp(TGeoCacheState)
 *
 *************************************************************************/
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoCacheState::TGeoCacheState()
 {
 //--- Default ctor
@@ -1240,7 +1348,8 @@ TGeoCacheState::TGeoCacheState()
    fMatrices = 0;
    fPoint = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCacheState::TGeoCacheState(Int_t /*capacity*/)
 {
 //--- ctor
@@ -1249,7 +1358,8 @@ TGeoCacheState::TGeoCacheState(Int_t /*capacity*/)
    fMatrices = new Int_t[30];
    fPoint = new Double_t[3];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCacheState::~TGeoCacheState()
 {
 //--- dtor
@@ -1259,7 +1369,8 @@ TGeoCacheState::~TGeoCacheState()
       delete [] fPoint;
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheState::SetState(Int_t level, Bool_t ovlp, Double_t *point)
 {
    fLevel = level;
@@ -1268,7 +1379,8 @@ void TGeoCacheState::SetState(Int_t level, Bool_t ovlp, Double_t *point)
    fOverlapping = ovlp;
    if (point) memcpy(fPoint, point, 3*sizeof(Double_t));
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoCacheState::GetState(Int_t &level, Double_t *point) const
 {
    level = fLevel;
@@ -1288,14 +1400,15 @@ ClassImp(TGeoCacheStateDummy)
 *
 *************************************************************************/
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoCacheStateDummy::TGeoCacheStateDummy()
 {
 //--- Default ctor
    fNodeBranch = 0;
    fMatrixBranch = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCacheStateDummy::TGeoCacheStateDummy(Int_t /*capacity*/)
 {
 //--- ctor
@@ -1305,7 +1418,8 @@ TGeoCacheStateDummy::TGeoCacheStateDummy(Int_t /*capacity*/)
       fMatrixBranch[i] = new TGeoHMatrix("global");
    fPoint = new Double_t[3];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCacheStateDummy::~TGeoCacheStateDummy()
 {
 //--- dtor
@@ -1317,7 +1431,8 @@ TGeoCacheStateDummy::~TGeoCacheStateDummy()
       delete [] fPoint;
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCacheStateDummy::SetState(Int_t level, Bool_t ovlp, Double_t *point)
 {
    fLevel = level;
@@ -1330,7 +1445,8 @@ void TGeoCacheStateDummy::SetState(Int_t level, Bool_t ovlp, Double_t *point)
    fOverlapping = ovlp;
    if (point) memcpy(fPoint, point, 3*sizeof(Double_t));
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Double_t *point) const
 {
    level = fLevel;
@@ -1348,7 +1464,7 @@ Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Double_t *point) const
 ClassImp(TGeoMatHandler)
 ClassImp(TGeoMatHandlerId)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoMatHandler::TGeoMatHandler()
 {
    fLocation = 0;
@@ -1356,7 +1472,7 @@ TGeoMatHandler::TGeoMatHandler()
 
 ClassImp(TGeoMatHandlerX)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerX::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
@@ -1364,25 +1480,29 @@ void TGeoMatHandlerX::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    translation[0] = *from;
    matrix->SetBit(kGeoTranslation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerX::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    *to = (matrix->GetTranslation())[0];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerX::LocalToMaster(Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerX::MasterToLocal(Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerX::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
@@ -1392,7 +1512,8 @@ void TGeoMatHandlerX::LocalToMasterBomb(Double_t *local, Double_t *master) const
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += bombtr[0];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerX::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
@@ -1405,7 +1526,7 @@ void TGeoMatHandlerX::MasterToLocalBomb(Double_t *master, Double_t *local) const
 
 ClassImp(TGeoMatHandlerY)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
@@ -1413,25 +1534,29 @@ void TGeoMatHandlerY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    translation[1] = *from;
    matrix->SetBit(kGeoTranslation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerY::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    *to = (matrix->GetTranslation())[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerY::LocalToMaster(Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[1] += fLocation[0];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerY::MasterToLocal(Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[1] -= fLocation[0];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerY::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
@@ -1441,7 +1566,8 @@ void TGeoMatHandlerY::LocalToMasterBomb(Double_t *local, Double_t *master) const
    memcpy(master, local, 3*sizeof(Double_t));
    master[1] += bombtr[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerY::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
@@ -1454,7 +1580,7 @@ void TGeoMatHandlerY::MasterToLocalBomb(Double_t *master, Double_t *local) const
 
 ClassImp(TGeoMatHandlerZ)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
@@ -1462,25 +1588,29 @@ void TGeoMatHandlerZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    translation[2] = *from;
    matrix->SetBit(kGeoTranslation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    *to = (matrix->GetTranslation())[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerZ::LocalToMaster(Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[2] += fLocation[0];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerZ::MasterToLocal(Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[2] -= fLocation[0];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
@@ -1490,7 +1620,8 @@ void TGeoMatHandlerZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
    memcpy(master, local, 3*sizeof(Double_t));
    master[2] += bombtr[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
@@ -1503,7 +1634,7 @@ void TGeoMatHandlerZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
 
 ClassImp(TGeoMatHandlerXY)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerXY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
@@ -1512,28 +1643,32 @@ void TGeoMatHandlerXY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    translation[1] = from[1];
    matrix->SetBit(kGeoTranslation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXY::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    to[0] = (matrix->GetTranslation())[0];
    to[1] = (matrix->GetTranslation())[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXY::LocalToMaster(Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
    master[1] += fLocation[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXY::MasterToLocal(Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
    local[1] -= fLocation[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXY::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
@@ -1545,7 +1680,8 @@ void TGeoMatHandlerXY::LocalToMasterBomb(Double_t *local, Double_t *master) cons
    master[0] += bombtr[0];
    master[1] += bombtr[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXY::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
@@ -1560,7 +1696,7 @@ void TGeoMatHandlerXY::MasterToLocalBomb(Double_t *master, Double_t *local) cons
 
 ClassImp(TGeoMatHandlerXZ)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerXZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
@@ -1569,28 +1705,32 @@ void TGeoMatHandlerXZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    translation[2] = from[1];
    matrix->SetBit(kGeoTranslation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    to[0] = (matrix->GetTranslation())[0];
    to[1] = (matrix->GetTranslation())[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXZ::LocalToMaster(Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
    master[2] += fLocation[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXZ::MasterToLocal(Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
    local[2] -= fLocation[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
@@ -1602,7 +1742,8 @@ void TGeoMatHandlerXZ::LocalToMasterBomb(Double_t *local, Double_t *master) cons
    master[0] += bombtr[0];
    master[2] += bombtr[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
@@ -1617,7 +1758,7 @@ void TGeoMatHandlerXZ::MasterToLocalBomb(Double_t *master, Double_t *local) cons
 
 ClassImp(TGeoMatHandlerYZ)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
@@ -1626,14 +1767,16 @@ void TGeoMatHandlerYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    translation[2] = from[1];
    matrix->SetBit(kGeoTranslation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerYZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    to[0] = (matrix->GetTranslation())[1];
    to[1] = (matrix->GetTranslation())[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerYZ::LocalToMaster(Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
@@ -1641,14 +1784,16 @@ void TGeoMatHandlerYZ::LocalToMaster(Double_t *local, Double_t *master) const
    master[2] += fLocation[1];
 
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerYZ::MasterToLocal(Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[1] -= fLocation[0];
    local[2] -= fLocation[1];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerYZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
@@ -1660,7 +1805,8 @@ void TGeoMatHandlerYZ::LocalToMasterBomb(Double_t *local, Double_t *master) cons
    master[1] += bombtr[1];
    master[2] += bombtr[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerYZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
@@ -1675,20 +1821,22 @@ void TGeoMatHandlerYZ::MasterToLocalBomb(Double_t *master, Double_t *local) cons
 
 ClassImp(TGeoMatHandlerXYZ)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerXYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
    memcpy(matrix->GetTranslation(), from, 3*sizeof(Double_t));
    matrix->SetBit(kGeoTranslation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXYZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    memcpy(to, matrix->GetTranslation(), 3*sizeof(Double_t));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXYZ::LocalToMaster(Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
@@ -1696,7 +1844,8 @@ void TGeoMatHandlerXYZ::LocalToMaster(Double_t *local, Double_t *master) const
    master[1] += fLocation[1];
    master[2] += fLocation[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXYZ::MasterToLocal(Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
@@ -1704,7 +1853,8 @@ void TGeoMatHandlerXYZ::MasterToLocal(Double_t *master, Double_t *local) const
    local[1] -= fLocation[1];
    local[2] -= fLocation[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXYZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
@@ -1718,7 +1868,8 @@ void TGeoMatHandlerXYZ::LocalToMasterBomb(Double_t *local, Double_t *master) con
    master[1] += bombtr[1];
    master[2] += bombtr[2];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerXYZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
@@ -1735,27 +1886,30 @@ void TGeoMatHandlerXYZ::MasterToLocalBomb(Double_t *master, Double_t *local) con
 
 ClassImp(TGeoMatHandlerRot)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerRot::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
    matrix->SetBit(kGeoRotation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRot::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    memcpy(to, matrix->GetRotationMatrix(), 9*sizeof(Double_t));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRot::LocalToMaster(Double_t *local, Double_t *master) const
 {
    master[0] = local[0]*fLocation[0]+local[1]*fLocation[1]+local[2]*fLocation[2];
    master[1] = local[0]*fLocation[3]+local[1]*fLocation[4]+local[2]*fLocation[5];
    master[2] = local[0]*fLocation[6]+local[1]*fLocation[7]+local[2]*fLocation[8];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRot::MasterToLocal(Double_t *master, Double_t *local) const
 {
    local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
@@ -1765,7 +1919,7 @@ void TGeoMatHandlerRot::MasterToLocal(Double_t *master, Double_t *local) const
 
 ClassImp(TGeoMatHandlerRotTr)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTr::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
@@ -1774,14 +1928,16 @@ void TGeoMatHandlerRotTr::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    matrix->SetBit(kGeoTranslation);
    matrix->SetBit(kGeoRotation);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTr::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    fLocation = to;
    memcpy(to, matrix->GetRotationMatrix(), 9*sizeof(Double_t));
    memcpy(to+9, matrix->GetTranslation(), 3*sizeof(Double_t));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTr::LocalToMaster(Double_t *local, Double_t *master) const
 {
    master[0] = fLocation[9] +
@@ -1791,14 +1947,16 @@ void TGeoMatHandlerRotTr::LocalToMaster(Double_t *local, Double_t *master) const
    master[2] = fLocation[11]+
                local[0]*fLocation[6]+local[1]*fLocation[7]+local[2]*fLocation[8];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTr::LocalToMasterVect(Double_t *local, Double_t *master) const
 {
    master[0] = local[0]*fLocation[0]+local[1]*fLocation[1]+local[2]*fLocation[2];
    master[1] = local[0]*fLocation[3]+local[1]*fLocation[4]+local[2]*fLocation[5];
    master[2] = local[0]*fLocation[6]+local[1]*fLocation[7]+local[2]*fLocation[8];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTr::MasterToLocal(Double_t *master, Double_t *local) const
 {
    local[0] = (master[0]-fLocation[9]) *fLocation[0]+
@@ -1811,14 +1969,16 @@ void TGeoMatHandlerRotTr::MasterToLocal(Double_t *master, Double_t *local) const
               (master[1]-fLocation[10])*fLocation[5]+
               (master[2]-fLocation[11])*fLocation[8];   
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTr::MasterToLocalVect(Double_t *master, Double_t *local) const
 {
    local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
    local[1] = master[0]*fLocation[1]+master[1]*fLocation[4]+master[2]*fLocation[7];
    local[2] = master[0]*fLocation[2]+master[1]*fLocation[5]+master[2]*fLocation[8];   
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTr::LocalToMasterBomb(Double_t *local, Double_t *master) const
 {
    Double_t bombtr[3];
@@ -1830,7 +1990,8 @@ void TGeoMatHandlerRotTr::LocalToMasterBomb(Double_t *local, Double_t *master) c
    master[2] = bombtr[2]+
                local[0]*fLocation[6]+local[1]*fLocation[7]+local[2]*fLocation[8];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTr::MasterToLocalBomb(Double_t *master, Double_t *local) const
 {
    Double_t bombtr[3];
@@ -1848,13 +2009,14 @@ void TGeoMatHandlerRotTr::MasterToLocalBomb(Double_t *master, Double_t *local) c
 
 ClassImp(TGeoMatHandlerScl)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    memcpy(matrix->GetScale(), from, 3*sizeof(Double_t));
    matrix->SetBit(kGeoScale);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    memcpy(to, matrix->GetScale(), 3*sizeof(Double_t));
@@ -1862,7 +2024,7 @@ void TGeoMatHandlerScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 
 ClassImp(TGeoMatHandlerTrScl)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    memcpy(matrix->GetTranslation(), from, 3*sizeof(Double_t));
@@ -1870,7 +2032,8 @@ void TGeoMatHandlerTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    matrix->SetBit(kGeoTranslation);
    matrix->SetBit(kGeoScale);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerTrScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    memcpy(to, matrix->GetTranslation(), 3*sizeof(Double_t));
@@ -1879,7 +2042,7 @@ void TGeoMatHandlerTrScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 
 ClassImp(TGeoMatHandlerRotScl)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerRotScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
@@ -1887,7 +2050,8 @@ void TGeoMatHandlerRotScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    matrix->SetBit(kGeoRotation);
    matrix->SetBit(kGeoScale);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    memcpy(to, matrix->GetRotationMatrix(), 9*sizeof(Double_t));
@@ -1896,7 +2060,7 @@ void TGeoMatHandlerRotScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 
 ClassImp(TGeoMatHandlerRotTrScl)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
@@ -1906,7 +2070,8 @@ void TGeoMatHandlerRotTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    matrix->SetBit(kGeoRotation);
    matrix->SetBit(kGeoScale);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoMatHandlerRotTrScl::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 {
    memcpy(to, matrix->GetRotationMatrix(), 9*sizeof(Double_t));

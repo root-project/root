@@ -47,8 +47,8 @@ private :
    Int_t                 fLevel;            //! current geometry level;
    Int_t                 fNNodes;           // total number of physical nodes
    TString               fPath;             //! path to current node
-   Double_t             *fNormal;           //! normal to shape at current intersection point
-   Double_t             *fNormalChecked;    //! normal to current checked shape at intersection
+   Double_t              fNormal;           //! cosine of incident angle on current checked surface
+   Double_t              fNormalChecked;    //! cosine of incident angle on next crossed surface
    Double_t             *fCldir;            //! unit vector to current closest shape
    Double_t             *fCldirChecked;     //! unit vector to current checked shape
    Double_t             *fPoint;            //![3] current point
@@ -118,6 +118,9 @@ public:
    void                   CdDown(Int_t index);
    void                   CdUp();
    void                   CdTop();
+   void                   GetBranchNames(Int_t *names) const;
+   void                   GetBranchNumbers(Int_t *numbers) const;
+   void                   GetBranchOnlys(Int_t *isonly) const;
    Bool_t                 IsFolder() const { return kTRUE; }
    //--- visualization settings
    void                   BombTranslation(const Double_t *tr, Double_t *bombtr);
@@ -234,7 +237,7 @@ public:
    void                   SetTopVolume(TGeoVolume *vol);
    
    //--- geometry queries
-   TGeoNode              *FindNextBoundary(const char *path="");
+   TGeoNode              *FindNextBoundary(Double_t stepmax=TGeoShape::kBig,const char *path="");
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
@@ -300,8 +303,8 @@ public:
    TGeoVolume            *GetCurrentVolume() const {return fCurrentNode->GetVolume();}
    Double_t              *GetCldirChecked() const  {return fCldirChecked;}
    Double_t              *GetCldir() const         {return fCldir;}
-   Double_t              *GetNormalChecked() const {return fNormalChecked;}
-   Double_t              *GetNormal() const        {return fNormal;}
+   Double_t               GetNormalChecked() const {return fNormalChecked;}
+   Double_t               GetNormal() const        {return fNormal;}
    Int_t                  GetLevel() const         {return fLevel;}
    const char            *GetPath() const;
    Int_t                  GetStackLevel() const    {return fCache->GetStackLevel();}
@@ -314,7 +317,7 @@ public:
    void                   SetCurrentDirection(Double_t *dir) {memcpy(fDirection,dir,3*sizeof(Double_t));}
    void                   SetCurrentDirection(Double_t nx, Double_t ny, Double_t nz) { 
                                     fDirection[0]=nx; fDirection[1]=ny; fDirection[2]=nz;}
-   void                   SetNormalChecked(Double_t *norm) {memcpy(fNormalChecked, norm, 3*sizeof(Double_t));}
+   void                   SetNormalChecked(Double_t norm) {fNormalChecked=norm;}
    void                   SetCldirChecked(Double_t *dir) {memcpy(fCldirChecked, dir, 3*sizeof(Double_t));}
    
    //--- point/vector reference frame conversion   
@@ -358,7 +361,7 @@ public:
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 2)          // geometry manager
+  ClassDef(TGeoManager, 3)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

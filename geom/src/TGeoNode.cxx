@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.15 2003/01/20 14:35:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.16 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // TGeoNode
-//----------
+//_________
 //   Nodes are positioned volumes. They have a pointer to the corresponding
 // volume. Nodes always belong to a mother container volume, so they also
 // have a pointer to this. The base class for nodes is TGeoNode, describing only
@@ -86,16 +86,18 @@
 
 ClassImp(TGeoNode)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode::TGeoNode()
 {
 // Default constructor
    fVolume       = 0;
    fMother       = 0;
+   fNumber       = 0;
    fOverlaps     = 0;
    fNovlp        = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode::TGeoNode(const TGeoVolume *vol)
 {
 // Constructor
@@ -105,16 +107,19 @@ TGeoNode::TGeoNode(const TGeoVolume *vol)
    }
    fVolume       = (TGeoVolume*)vol;
    fMother       = 0;
+   fNumber       = 0;
    fOverlaps     = 0;
    fNovlp        = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode::~TGeoNode()
 {
 // Destructor
    if (fOverlaps) delete [] fOverlaps;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::Browse(TBrowser *b)
 {
    if (!b) return;
@@ -122,7 +127,8 @@ void TGeoNode::Browse(TBrowser *b)
    for (Int_t i=0; i<GetNdaughters(); i++)
       b->Add(GetDaughter(i));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoNode::IsOnScreen() const
 {
 // check if this node is drawn. Assumes that this node is current
@@ -130,7 +136,8 @@ Bool_t TGeoNode::IsOnScreen() const
    if (!painter) return kFALSE;
    return painter->IsOnScreen(this);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::InspectNode() const
 {
    printf("Inspecting node %s\n", GetName());
@@ -147,7 +154,8 @@ void TGeoNode::InspectNode() const
       printf("### mother volume %s\n", fMother->GetName());
    fVolume->InspectShape();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::CheckShapes()
 {
 // check for wrong parameters in shapes
@@ -156,13 +164,15 @@ void TGeoNode::CheckShapes()
    if (!nd) return;
    for (Int_t i=0; i<nd; i++) fVolume->GetNode(i)->CheckShapes();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::DrawOnly(Option_t *option)
 {
 // draw only this node independently of its vis options
    fVolume->DrawOnly(option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::Draw(Option_t *option)
 {
 // draw current node according to option
@@ -173,7 +183,8 @@ void TGeoNode::Draw(Option_t *option)
    gGeoManager->SetCurrentPoint(&point[0]);
    gGeoManager->GetCurrentVolume()->Draw(option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::DrawOverlaps()
 {
    if (!fNovlp) {printf("node %s is ONLY\n", GetName()); return;}
@@ -191,7 +202,8 @@ void TGeoNode::DrawOverlaps()
    }
    gGeoManager->GetTopVolume()->Draw();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
 {
    Int_t nd = GetNdaughters();
@@ -215,7 +227,8 @@ Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
    }
    return -1;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::SaveAttributes(ofstream &out)
 {
 // save attributes for this node
@@ -265,36 +278,42 @@ void TGeoNode::SaveAttributes(ofstream &out)
       node->SetVisStreamed(kTRUE);
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::MasterToLocal(const Double_t *master, Double_t *local) const
 {
 // Convert the point coordinates from mother reference to local reference system
    GetMatrix()->MasterToLocal(master, local);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
 // Convert a vector from mother reference to local reference system
    GetMatrix()->MasterToLocalVect(master, local);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::LocalToMaster(const Double_t *local, Double_t *master) const
 {
 // Convert the point coordinates from local reference system to mother reference
    GetMatrix()->LocalToMaster(local, master);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::LocalToMasterVect(const Double_t *local, Double_t *master) const
 {
 // Convert a vector from local reference system to mother reference
    GetMatrix()->LocalToMasterVect(local, master);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::ls(Option_t * /*option*/) const
 {
 // Print the path (A/B/C/...) to this node on stdout
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::Paint(Option_t *option)
 {
 // Paint this node and its content according to visualization settings.
@@ -302,7 +321,8 @@ void TGeoNode::Paint(Option_t *option)
    if (!painter) return;
    painter->PaintNode(this, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::PrintCandidates() const
 {
 // print daughters candidates for containing current point
@@ -347,7 +367,8 @@ void TGeoNode::PrintCandidates() const
    }
    PrintOverlaps();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::PrintOverlaps() const
 {
 // print possible overlapping nodes
@@ -360,7 +381,8 @@ void TGeoNode::PrintOverlaps() const
       printf("   %s\n", node->GetName());
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::SetOverlaps(Int_t *ovlp, Int_t novlp)
 {
 // set the list of overlaps for this node (ovlp must be created with operator new)
@@ -368,14 +390,16 @@ void TGeoNode::SetOverlaps(Int_t *ovlp, Int_t novlp)
    fOverlaps = ovlp;
    fNovlp = novlp;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::SetVisibility(Bool_t vis)
 {
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
    TGeoAtt::SetVisibility(vis);
    gGeoManager->ModifiedPad();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoNode::VisibleDaughters(Bool_t vis)
 {
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
@@ -398,25 +422,28 @@ void TGeoNode::VisibleDaughters(Bool_t vis)
 ClassImp(TGeoNodeMatrix)
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNodeMatrix::TGeoNodeMatrix()
 {
 // Default constructor
    fMatrix       = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeMatrix::TGeoNodeMatrix(const TGeoVolume *vol, const TGeoMatrix *matrix) :
              TGeoNode(vol)
 {
 // Constructor. Null pointer to matrix means identity transformation
    fMatrix = (TGeoMatrix*)matrix;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeMatrix::~TGeoNodeMatrix()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeMatrix::GetByteCount() const
 {
 // return the total size in bytes of this node
@@ -424,7 +451,8 @@ Int_t TGeoNodeMatrix::GetByteCount() const
 //   if (fMatrix) count += fMatrix->GetByteCount();
    return count;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeMatrix::GetOptimalVoxels() const
 {
 //--- Returns type of optimal voxelization for this node.
@@ -438,7 +466,8 @@ Int_t TGeoNodeMatrix::GetOptimalVoxels() const
    if (TMath::Abs(transl[1])>1E-10) return 0;
    return 1;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
 {
 // make a copy of this node
@@ -471,7 +500,7 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
 ClassImp(TGeoNodeOffset)
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNodeOffset::TGeoNodeOffset()
 {
 // Default constructor
@@ -480,7 +509,8 @@ TGeoNodeOffset::TGeoNodeOffset()
    fIndex = 0;
    fFinder = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeOffset::TGeoNodeOffset(const TGeoVolume *vol, Int_t index, Double_t offset) :
            TGeoNode(vol)
 {
@@ -490,17 +520,20 @@ TGeoNodeOffset::TGeoNodeOffset(const TGeoVolume *vol, Int_t index, Double_t offs
    fIndex = index;
    fFinder = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNodeOffset::~TGeoNodeOffset()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoNodeOffset::GetIndex() const
 {
    return (fIndex+fFinder->GetDivIndex());
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode *TGeoNodeOffset::MakeCopyNode() const
 {
 // make a copy of this node

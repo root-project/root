@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.12 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.13 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -307,7 +307,7 @@ Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t r=TMath::Sqrt(r2);
    Double_t rin=tg1*point[2]+ro1;
    Double_t rout=tg2*point[2]+ro2;
-   // conmpute safe radius
+   // compute safe radius
    if (iact<3 && safe) {
       saf[0]=(rin-r)*cr1;
       saf[1]=(r-rout)*cr2;
@@ -324,18 +324,24 @@ Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (TMath::Abs(point[2]) > fDz) {
       if ((point[2]*dir[2])<0) {
          if (point[2]>0) {
-	    snxt = (fDz-point[2])/dir[2];
-	    xp = point[0]+snxt*dir[0];
-	    yp = point[1]+snxt*dir[1];
-	    r2 = xp*xp+yp*yp;
-	    if ((r2>=fRmin2*fRmin2) && (r2<=fRmax2*fRmax2)) return snxt;
-	 } else {
-	    snxt = -(fDz+point[2])/dir[2];    
-	    xp = point[0]+snxt*dir[0];
-	    yp = point[1]+snxt*dir[1];
-	    r2 = xp*xp+yp*yp;
-	    if ((r2>=fRmin1*fRmin1) && (r2<=fRmax1*fRmax1)) return snxt;
-	 }    
+	          snxt = (fDz-point[2])/dir[2];
+	          xp = point[0]+snxt*dir[0];
+	          yp = point[1]+snxt*dir[1];
+	          r2 = xp*xp+yp*yp;
+	          if ((r2>=fRmin2*fRmin2) && (r2<=fRmax2*fRmax2)) {
+               gGeoManager->SetNormalChecked(-dir[2]);
+               return snxt;
+            }   
+	       } else {
+	          snxt = -(fDz+point[2])/dir[2];    
+	          xp = point[0]+snxt*dir[0];
+	          yp = point[1]+snxt*dir[1];
+	          r2 = xp*xp+yp*yp;
+	          if ((r2>=fRmin1*fRmin1) && (r2<=fRmax1*fRmax1)) {
+               gGeoManager->SetNormalChecked(dir[2]);
+               return snxt;
+            }   
+	       }    
       }
    }
    // compute distance to inner cone
@@ -537,11 +543,31 @@ void TGeoCone::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintTube(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCone::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   Double_t saf[3];
+   Double_t ro1 = 0.5*(fRmin1+fRmin2);
+   Double_t tg1 = 0.5*(fRmin2-fRmin1)/fDz;
+   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
+   Double_t ro2 = 0.5*(fRmax1+fRmax2);
+   Double_t tg2 = 0.5*(fRmax2-fRmax1)/fDz;
+   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
+   
+   Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t rin = tg1*point[2]+ro1;
+   Double_t rout = tg2*point[2]+ro2;
+   if (in) {
+      saf[0] = fDz-TMath::Abs(point[2]);
+      saf[1] = (ro1>0)?((r-rin)*cr1):(-kBig);
+      saf[2] = (rout-r)*cr2;
+      return saf[TMath::LocMin(3,saf)];
+   }   
+   saf[0] = TMath::Abs(point[2])-fDz;
+   saf[1] = (rin-r)*cr1;
+   saf[2] = (rout-r)*cr2;
+   return saf[TMath::LocMax(3,saf)];;
 }
 //-----------------------------------------------------------------------------
 void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
@@ -1051,24 +1077,21 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
    
    // intersection with Z planes
    Double_t s, xi, yi, zi, riq, r1q, r2q;
-   Double_t *norm=gGeoManager->GetNormalChecked();
    if (TMath::Abs(point[2])>dz) {
       if ((point[2]*dir[2])<0) {
          s=(TMath::Abs(point[2])-dz)/TMath::Abs(dir[2]);
          xi=point[0]+s*dir[0];
          yi=point[1]+s*dir[1];
          riq=xi*xi+yi*yi;
-         norm[0]=norm[1]=0;
          if (point[2]<0) {
             r1q=rmin1*rmin1;
             r2q=rmax1*rmax1;
-            norm[2]=-1;
          } else {
             r1q=rmin2*rmin2;
             r2q=rmax2*rmax2;
-            norm[2]=1;
          }      
          if ((r1q<=riq) && (riq<=r2q)) {
+            gGeoManager->SetNormalChecked(TMath::Abs(dir[2]));
             if (riq==0) return s;
             cpsi=(xi*cfio+yi*sfio)/TMath::Sqrt(riq);
             if (cpsi>=cdfi) return s;
@@ -1094,10 +1117,8 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
             r2q=(tg2*zi+ro2)*(tg2*zi+ro2);
             if ((r1q<=riq) && (riq<=r2q)) {
                if ((yi*cfio-xi*sfio)<=0) {
-                  norm[0] = s1;
-                  norm[1] = -c1;
-                  norm[2] = 0;
                   snxt = s;
+                  gGeoManager->SetNormalChecked(TMath::Abs(un));
                }
             }
          }
@@ -1116,9 +1137,7 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
             r2q=(tg2*zi+ro2)*(tg2*zi+ro2);
             if ((r1q<=riq) && (riq<=r2q)) {
                if ((yi*cfio-xi*sfio)>=0) {
-                  norm[0] = -s2;
-                  norm[1] = c2;
-                  norm[2] = 0;
+                  gGeoManager->SetNormalChecked(TMath::Abs(un));
                   snxt = s;
                }
             }

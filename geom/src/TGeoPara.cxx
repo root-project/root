@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.10 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.11 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -223,7 +223,6 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       if (iact==1 && step<*safe) return kBig; 
    }
    // compute distance to PARA
-//   Double_t *norm = gGeoManager->GetNormalChecked();
    Double_t swap;
 //   Bool_t upx=kFALSE, upy=kFALSE, upz=kFALSE;
    // check if dir is paralel to Z planes
