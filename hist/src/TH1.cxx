@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.23 2000/09/08 16:05:21 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.24 2000/09/11 09:59:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -838,9 +838,9 @@ void TH1::Copy(TObject &obj)
    fXaxis.Copy(((TH1&)obj).fXaxis);
    fYaxis.Copy(((TH1&)obj).fYaxis);
    fZaxis.Copy(((TH1&)obj).fZaxis);
-   fXaxis.SetParent(this);
-   fYaxis.SetParent(this);
-   fZaxis.SetParent(this);
+   ((TH1&)obj).fXaxis.SetParent(this);
+   ((TH1&)obj).fYaxis.SetParent(this);
+   ((TH1&)obj).fZaxis.SetParent(this);
    fContour.Copy(((TH1&)obj).fContour);
    fSumw2.Copy(((TH1&)obj).fSumw2);
 //   fFunctions->Copy(((TH1&)obj).fFunctions);
