@@ -598,7 +598,9 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
     Window_t wdummy;
     int ax, ay;
     TRootHelpDialog *hd;
-    Char_t  strtmp[80];
+    TGListTreeItem *item;
+    TGFileInfo fi;
+    Char_t  strtmp[250];
 
     switch (GET_MSG(msg)) {
 
@@ -626,13 +628,10 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         fStatusBar->SetText(strtmp,0);
                         break;
                     case M_EVENT_SELECT:
-                        {
-                            if(fDisplayFrame->GetCurrent() != 1)
-                                fDisplayFrame->SetTab(1);
-                            TGListTreeItem *item;
-                            if ((item = fEventListTree->GetSelected()) != 0)
+                        if(fDisplayFrame->GetCurrent() != 1)
+                            fDisplayFrame->SetTab(1);
+                        if ((item = fEventListTree->GetSelected()) != 0)
                             OnShowSelected(item);
-                        }
                         break;
                     case M_INTERRUPT_SIMUL:
                             Interrupt();
@@ -668,13 +667,10 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                     case M_FILE_OPEN:
                         if(fIsRunning) break;
-                        {
-                            TGFileInfo fi;
-                            fi.fFileTypes = filetypes;
-                            new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
-                            if (!fi.fFilename) return kTRUE;
-                               OnOpenFile(fi.fFilename);
-                        }
+                        fi.fFileTypes = filetypes;
+                        new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
+                        if (!fi.fFilename) return kTRUE;
+                        OnOpenFile(fi.fFilename);
                         break;
 
                     case M_FILE_HTML:
@@ -691,13 +687,10 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                     case M_FILE_SAVEAS:
                         if(fIsRunning) break;
-                         {
-                            TGFileInfo fi;
-                            fi.fFileTypes = filetypes;
-                            new TGFileDialog(fClient->GetRoot(), this, kFDSave,&fi);
-                            if (!fi.fFilename) return kTRUE;
-                               OnSaveFile(fi.fFilename);
-                         }
+                        fi.fFileTypes = filetypes;
+                        new TGFileDialog(fClient->GetRoot(), this, kFDSave,&fi);
+                        if (!fi.fFilename) return kTRUE;
+                        OnSaveFile(fi.fFilename);
                         break;
 
                     case M_FILE_EXIT:
@@ -766,51 +759,47 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_HELP_PHYSICS:
-                        {
-                            Char_t str[32];
-                            sprintf(str, "Help on Physics");
-                            hd = new TRootHelpDialog(this, str, 620, 350);
-                            hd->SetText(physics_txt);
-                            gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
-                                        (Int_t)(GetWidth() - 620) >> 1,
-                                        (Int_t)(GetHeight() - 350) >> 1,
-                                        ax, ay, wdummy);
-                            hd->Move(ax, ay);
-                            hd->Popup();
-                            fClient->WaitFor(hd);
-                        }
+#ifdef R__WIN32
+                        sprintf(strtmp, "start winhlp32 %s\\Physics.hlp",gProgPath);
+                        gSystem->Exec(strtmp);
+#else
+                        sprintf(strtmp, "Help on Physics");
+                        hd = new TRootHelpDialog(this, strtmp, 620, 350);
+                        hd->SetText(physics_txt);
+                        gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
+                                    (Int_t)(GetWidth() - 620) >> 1,
+                                    (Int_t)(GetHeight() - 350) >> 1,
+                                    ax, ay, wdummy);
+                        hd->Move(ax, ay);
+                        hd->Popup();
+                        fClient->WaitFor(hd);
+#endif
                         break;
 
                     case M_HELP_SIMULATION:
-                        {
-                            Char_t str[32];
-                            sprintf(str, "Help on Simulation");
-                            hd = new TRootHelpDialog(this, str, 620, 350);
-                            hd->SetText(simulation_txt);
-                            gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
-                                        (Int_t)(GetWidth() - 620) >> 1,
-                                        (Int_t)(GetHeight() - 350) >> 1,
-                                        ax, ay, wdummy);
-                            hd->Move(ax, ay);
-                            hd->Popup();
-                            fClient->WaitFor(hd);
-                        }
+                        sprintf(strtmp, "Help on Simulation");
+                        hd = new TRootHelpDialog(this, strtmp, 620, 350);
+                        hd->SetText(simulation_txt);
+                        gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
+                                    (Int_t)(GetWidth() - 620) >> 1,
+                                    (Int_t)(GetHeight() - 350) >> 1,
+                                    ax, ay, wdummy);
+                        hd->Move(ax, ay);
+                        hd->Popup();
+                        fClient->WaitFor(hd);
                         break;
 
                     case M_HELP_LICENSE:
-                        {
-                            char str[32];
-                            sprintf(str, "RootShower License");
-                            hd = new TRootHelpDialog(this, str, 640, 380);
-                            hd->SetText(gHelpLicense);
-                            gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
-                                        (Int_t)(GetWidth() - 640) >> 1,
-                                        (Int_t)(GetHeight() - 380) >> 1,
-                                        ax, ay, wdummy);
-                            hd->Move(ax, ay);
-                            hd->Popup();
-                            fClient->WaitFor(hd);
-                        }
+                        sprintf(strtmp, "RootShower License");
+                        hd = new TRootHelpDialog(this, strtmp, 640, 380);
+                        hd->SetText(gHelpLicense);
+                        gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
+                                    (Int_t)(GetWidth() - 640) >> 1,
+                                    (Int_t)(GetHeight() - 380) >> 1,
+                                    ax, ay, wdummy);
+                        hd->Move(ax, ay);
+                        hd->Popup();
+                        fClient->WaitFor(hd);
                         break;
 
                     case M_HELP_ABOUT:
@@ -825,13 +814,10 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                     case M_SHOW_TRACK:
                         if(fIsRunning) break;
-                        {
-                            if(fDisplayFrame->GetCurrent() != 1)
-                                fDisplayFrame->SetTab(1);
-                            TGListTreeItem *item;
-                            if ((item = fEventListTree->GetSelected()) != 0)
+                        if(fDisplayFrame->GetCurrent() != 1)
+                            fDisplayFrame->SetTab(1);
+                        if ((item = fEventListTree->GetSelected()) != 0)
                             OnShowSelected(item);
-                        }
                         break;
 
 
