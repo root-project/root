@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.6 2001/01/25 15:02:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.7 2001/02/06 11:02:00 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -141,7 +141,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          Int_t nbranches = fBranches.GetEntries();
          for (Int_t i=0;i<nbranches;i++) {
             TBranchElement *bre = (TBranchElement*)fBranches.At(i);
-            char *fin = strrchr(bre->GetTitle(),'.');
+            const char *fin = strrchr(bre->GetTitle(),'.');
             if (fin == 0) continue;
             sprintf(branchname,"%s[%s_]",fin+1,name);
             bre->SetTitle(branchname);
