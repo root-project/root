@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.33 2004/05/19 13:54:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.34 2004/05/21 19:07:34 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -322,22 +322,27 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 
 	TString opt = option; opt.ToLower();
 
-	if (pass->GetNbinsX() != total->GetNbinsX()){
+	Int_t nbins = pass->GetNbinsX();
+	if (nbins != total->GetNbinsX()){
 		Error("BayesDivide","Histograms must have the same number of X bins");
 		return;
 	}
 
-	if ( (TMath::Abs(pass->GetEntries()-pass->GetSumOfWeights())) > 1e-6) {
+	Double_t stats[10];
+	//compare sum of weights with sum of squares of weights
+	pass->GetStats(stats);
+	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
 		Error("BayesDivide","Pass histogram has not been filled with weights = 1");
 		return;
 	}
-	if ( (TMath::Abs(total->GetEntries()-total->GetSumOfWeights())) > 1e-6) {
+	total->GetStats(stats);
+	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
 		Error("BayesDivide","Total histogram has not been filled with weights = 1");
 		return;
 	}
 
 	//Set the graph to have a number of points equal to the number of histogram bins
-	Set(pass->GetNbinsX());
+	Set(nbins);
 
 	// Ok, now set the points for each bin
 	// (Note: the TH1 bin content is shifted to the right by one: 
@@ -345,7 +350,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 
 	double mode, low, high; //these will hold the result of the Bayes calculation
 	int npoint=0;//this keeps track of the number of points added to the graph
-	for (int b=1; b<=pass->GetNbinsX(); ++b) { // loop through the bins
+	for (int b=1; b<=nbins; ++b) { // loop through the bins
 		
 		int t = (int)total->GetBinContent(b);
 		if (!t) continue;  //don't add points for bins with no information
@@ -381,7 +386,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 	Set(npoint);//tell the graph how many points we've really added
 
 	if (opt.Contains("debug")) {
-		printf("BayesDivide: made a graph with %d points from %d bins\n",npoint,pass->GetNbinsX());
+		printf("BayesDivide: made a graph with %d points from %d bins\n",npoint,nbins);
 		Print();//The debug prints out what we get for each point
 	}
 
