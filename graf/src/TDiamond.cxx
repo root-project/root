@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.5 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -65,17 +65,14 @@ TDiamond::~TDiamond()
 }
 
 //______________________________________________________________________________
-TDiamond::TDiamond(const TDiamond &diamond) : TPaveText(diamond)
+TDiamond::TDiamond(const TDiamond &diamond) : TPaveText()
 {
-   ((TDiamond&)diamond).Copy(*this);
-}
-
-//______________________________________________________________________________
-void TDiamond::Copy(TObject &diamond)
-{
-//*-*-*-*-*-*-*-*-*-*-*Copy a Diamond*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==============
-   TPaveText::Copy(diamond);
+   TBuffer b(TBuffer::kWrite);
+   TDiamond *p = (TDiamond*)(&diamond);
+   p->Streamer(b);
+   b.SetReadMode();
+   b.SetBufferOffset(0);
+   Streamer(b);
 }
 
 //______________________________________________________________________________

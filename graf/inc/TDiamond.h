@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.h,v 1.2 2000/06/13 10:52:53 brun Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -39,7 +39,6 @@ public:
    TDiamond(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    TDiamond(const TDiamond &diamond);
    virtual ~TDiamond();
-           void  Copy(TObject &diamond);
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  Draw(Option_t *option="");
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);

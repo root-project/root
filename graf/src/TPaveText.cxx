@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.15 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.16 2002/06/20 07:26:51 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -78,9 +78,15 @@ TPaveText::~TPaveText()
 }
 
 //______________________________________________________________________________
-TPaveText::TPaveText(const TPaveText &pavetext) : TPave(pavetext), TAttText(pavetext)
+TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
 {
-   ((TPaveText&)pavetext).Copy(*this);
+   TBuffer b(TBuffer::kWrite);
+   TPaveText *p = (TPaveText*)(&pavetext);
+   p->Streamer(b);
+   b.SetReadMode();
+   b.SetBufferOffset(0);
+   fLines = 0;
+   Streamer(b);
 }
 
 //______________________________________________________________________________
@@ -148,20 +154,6 @@ void TPaveText::Clear(Option_t *)
    if (!fLines) return;
    fLines->Delete();
    fLongest = 0;
-}
-
-
-//______________________________________________________________________________
-void TPaveText::Copy(TObject &obj)
-{
-//*-*-*-*-*-*-*-*-*-*-*Copy this pavetext to pavetext*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ================================
-
-   TPave::Copy(obj);
-   TAttText::Copy(((TPaveText&)obj));
-   ((TPaveText&)obj).fLongest = fLongest;
-   ((TPaveText&)obj).fMargin = fMargin;
-//   fLines->Copy(((TPaveText&)obj)->fLines);
 }
 
 //______________________________________________________________________________

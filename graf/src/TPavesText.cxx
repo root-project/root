@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.5 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.6 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -58,19 +58,14 @@ TPavesText::~TPavesText()
 }
 
 //______________________________________________________________________________
-TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText(pavestext)
+TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
 {
-   ((TPavesText&)pavestext).Copy(*this);
-}
-
-//______________________________________________________________________________
-void TPavesText::Copy(TObject &obj)
-{
-//*-*-*-*-*-*-*-*-*-*-*Copy this pavestext to pavestext*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ================================
-
-   TPaveText::Copy(obj);
-   ((TPavesText&)obj).fNpaves = fNpaves;
+   TBuffer b(TBuffer::kWrite);
+   TPavesText *p = (TPavesText*)(&pavestext);
+   p->Streamer(b);
+   b.SetReadMode();
+   b.SetBufferOffset(0);
+   Streamer(b);
 }
 
 //______________________________________________________________________________

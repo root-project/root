@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.2 2000/06/13 11:13:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -50,7 +50,6 @@ public:
         virtual TText   *AddText(Double_t x1, Double_t y1, const char *label);
         virtual TText   *AddText(const char *label);
         virtual void     Clear(Option_t *option="");  // *MENU*
-                void     Copy(TObject &pavetext);
         virtual void     DeleteText(); // *MENU*
         virtual void     Draw(Option_t *option="");
         virtual void     DrawFile(const char *filename, Option_t *option="");
