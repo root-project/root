@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.2 2002/02/01 14:15:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.3 2002/02/05 10:46:13 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -124,7 +124,7 @@ public:
 
    // construction from time_t and separate nsec
    TTimeStamp(time_t t, Int_t nsec)
-      { fSec = t; fNanoSec = 0; fNanoSec = nsec; NormalizeNanoSec(); }
+      { fSec = t; fNanoSec = nsec; NormalizeNanoSec(); }
 
    // construction from bits and pieces
    TTimeStamp(UInt_t year, UInt_t month,
