@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.1 2001/05/02 00:52:07 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -237,9 +237,73 @@ void TGTableLayout::FindRowColSizesMultiplyAttached()
 }
 
 //______________________________________________________________________________
-static void set_rowcol_resize(UInt_t real_size,
-                              UInt_t nthings, TGTableLayout::TableData *thing,
-                              Bool_t homogeneous);
+void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
+                                    TableData *thing, Bool_t homogeneous)
+{
+   // If main frame is bigger or smaller than all children,
+   // expand/shrink to fill. This is symmetric under row<-->col
+   // switching so it is abstracted out to a normal function to save typing.
+
+   if (homogeneous) {
+      UInt_t ind, nexpand = 0, cur_size = 0;
+
+      for (ind = 0; ind < nthings; ++ind)
+         cur_size += thing[ind].fDefSize;
+
+      if (cur_size < real_size) {
+         for (ind = 0; ind < nthings; ++ind)
+            if (thing[ind].fExpand) { ++ nexpand; break; }
+         if (nexpand > 0) {
+            UInt_t size = real_size;
+            for (ind = 0; ind < nthings; ++ ind) {
+               UInt_t extra = size / (nthings - ind);
+               thing[ind].fRealSize = TMath::Max(1U, extra);
+               size -= extra;
+            }
+         }
+      }
+   } else {
+      UInt_t ind, nshrink=0, nexpand=0, size=0;
+      for (ind = 0; ind < nthings; ++ind) {
+         size += thing[ind].fDefSize;
+         if (thing[ind].fExpand) ++ nexpand;
+         if (thing[ind].fShrink) ++ nshrink;
+      }
+
+      // Did main frame expand?
+      if ((size < real_size) && (nexpand >= 1)) {
+         size = real_size - size;
+         for (ind = 0; ind < nthings; ++ind) {
+            if (thing[ind].fExpand) {
+               UInt_t extra = size / nexpand;
+               thing[ind].fRealSize += extra;
+               size -= extra;
+               --nexpand;
+            }
+         }
+      }
+
+      // Did main frame shrink?
+      if (size > real_size) {
+         UInt_t total_nshrink = nshrink;
+         UInt_t extra = size - real_size;
+         while (total_nshrink > 0 && extra > 0) {
+            nshrink = total_nshrink;
+            for (ind = 0; ind < nthings; ++ind)
+               if (thing[ind].fShrink) {
+                  UInt_t size = thing[ind].fRealSize;
+                  thing[ind].fRealSize = TMath::Max(1U,thing[ind].fRealSize - extra / nshrink);
+                  extra -= size - thing[ind].fRealSize;
+                  --nshrink;
+                  if (thing[ind].fRealSize < 2) {
+                     total_nshrink -= 1;
+                     thing[ind].fShrink = kFALSE;
+                  }
+               }
+         }
+      }
+   } // not homogeneous
+}
 
 //______________________________________________________________________________
 void TGTableLayout::SetRowColSizes()
@@ -250,10 +314,10 @@ void TGTableLayout::SetRowColSizes()
    SetRowColSizesInit();
    UInt_t border_width = fMain->GetBorderWidth();
 
-   set_rowcol_resize(fMain->GetWidth() - (fNcols-1)*fSep - 2*border_width,
-                     fNcols, fCol, fHomogeneous);
-   set_rowcol_resize(fMain->GetHeight() - (fNrows-1)*fSep - 2*border_width,
-                     fNrows, fRow, fHomogeneous);
+   SetRowColResize(fMain->GetWidth() - (fNcols-1)*fSep - 2*border_width,
+                   fNcols, fCol, fHomogeneous);
+   SetRowColResize(fMain->GetHeight() - (fNrows-1)*fSep - 2*border_width,
+                   fNrows, fRow, fHomogeneous);
 }
 
 //______________________________________________________________________________
@@ -396,76 +460,6 @@ void TGTableLayout::SetRowColSizesInit()
          if (!fRow[row].fNeedShrink) fRow[row].fShrink = kFALSE;
       }
    }
-}
-
-//______________________________________________________________________________
-static void set_rowcol_resize(UInt_t real_size,
-                              UInt_t nthings, TGTableLayout::TableData *thing,
-                              Bool_t homogeneous)
-{
-   // If main frame is bigger or smaller than all children,
-   // expand/shrink to fill. This is symmetric under row<-->col
-   // switching so it is abstracted out to a normal function to save typing.
-
-   if (homogeneous) {
-      UInt_t ind, nexpand = 0, cur_size = 0;
-
-      for (ind = 0; ind < nthings; ++ind)
-         cur_size += thing[ind].fDefSize;
-
-      if (cur_size < real_size) {
-         for (ind = 0; ind < nthings; ++ind)
-            if (thing[ind].fExpand) { ++ nexpand; break; }
-         if (nexpand > 0) {
-            UInt_t size = real_size;
-            for (ind = 0; ind < nthings; ++ ind) {
-               UInt_t extra = size / (nthings - ind);
-               thing[ind].fRealSize = TMath::Max(1U, extra);
-               size -= extra;
-            }
-         }
-      }
-   } else {
-      UInt_t ind, nshrink=0, nexpand=0, size=0;
-      for (ind = 0; ind < nthings; ++ind) {
-         size += thing[ind].fDefSize;
-         if (thing[ind].fExpand) ++ nexpand;
-         if (thing[ind].fShrink) ++ nshrink;
-      }
-
-      // Did main frame expand?
-      if ((size < real_size) && (nexpand >= 1)) {
-         size = real_size - size;
-         for (ind = 0; ind < nthings; ++ind) {
-            if (thing[ind].fExpand) {
-               UInt_t extra = size / nexpand;
-               thing[ind].fRealSize += extra;
-               size -= extra;
-               --nexpand;
-            }
-         }
-      }
-
-      // Did main frame shrink?
-      if (size > real_size) {
-         UInt_t total_nshrink = nshrink;
-         UInt_t extra = size - real_size;
-         while (total_nshrink > 0 && extra > 0) {
-            nshrink = total_nshrink;
-            for (ind = 0; ind < nthings; ++ind)
-               if (thing[ind].fShrink) {
-                  UInt_t size = thing[ind].fRealSize;
-                  thing[ind].fRealSize = TMath::Max(1U,thing[ind].fRealSize - extra / nshrink);
-                  extra -= size - thing[ind].fRealSize;
-                  --nshrink;
-                  if (thing[ind].fRealSize < 2) {
-                     total_nshrink -= 1;
-                     thing[ind].fShrink = kFALSE;
-                  }
-               }
-         }
-      }
-   } // not homogeneous
 }
 
 //______________________________________________________________________________

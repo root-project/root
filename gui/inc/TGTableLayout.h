@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.1 2001/05/02 00:52:07 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -107,6 +107,9 @@ protected:
    void SetRowColSizesInit();
 
    void CheckSanity();
+
+   static void SetRowColResize(UInt_t real_size, UInt_t nthings,
+                               TableData *thing, Bool_t homogeneous);
 
 public:
    // these are public in TGMatrixLayout ???  Perpetuate it.
