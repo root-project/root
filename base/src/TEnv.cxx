@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.9 2002/01/25 11:21:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.10 2002/01/27 13:41:33 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -63,16 +63,6 @@
 #include "TSystem.h"
 #include "TOrdCollection.h"
 #include "TError.h"
-
-#if defined(R__ANSISTREAM)
-#  include <strstream>
-#else
-#  ifndef R__WIN32
-#    include <strstream.h>
-#  else
-#    include <strstrea.h>
-#  endif
-#endif
 
 
 TEnv *gEnv;
