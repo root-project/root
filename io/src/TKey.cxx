@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.41 2004/05/14 08:18:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.42 2004/05/22 06:08:05 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -52,6 +52,7 @@
 #include "TBrowser.h"
 #include "Bytes.h"
 #include "TInterpreter.h"
+#include "TError.h"
 #include "Api.h"
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -144,6 +145,8 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
 {
    // Create a TKey object for a TObject* and fill output buffer
 
+   Assert(obj);
+
    if (!obj->IsA()->HasDefaultConstructor()) {
       Warning("TKey", "since %s had no public constructor\n"
               "\twhich can be called without argument, objects of this class\n"
@@ -219,6 +222,8 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
 {
    // Create a TKey object for any object obj of class cl  and fill output buffer
 
+   Assert(obj && cl);
+
    if (!cl->HasDefaultConstructor()) {
       Warning("TKey", "since %s had no public constructor\n"
               "\twhich can be called without argument, objects of this class\n"
@@ -227,8 +232,22 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
               cl->GetName());
    }
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
+
+   TClass *clActual = cl->GetActualClass(obj);
+   const void* actualStart;
+   if (clActual) {
+      const char *temp = (const char*) obj;
+      // clActual->GetStreamerInfo();
+      Int_t offset = (cl != clActual) ?
+                     clActual->GetBaseClassOffset(cl) : 0;
+      temp -= offset;
+      actualStart = temp;
+   } else {
+      actualStart = obj;
+   }
+
    Int_t lbuf, nout, noutot, bufmax, nzip;
-   fClassName = cl->GetName();
+   fClassName = clActual->GetName();
    fNbytes    = 0;
    fBuffer    = 0;
    fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
@@ -244,8 +263,10 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
 
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
-//   fBufferRef->MapObject(obj);    //register obj in map in case of self reference
-   ((TClass*)cl)->Streamer((void*)obj, *fBufferRef);    //write object
+
+
+   fBufferRef->MapObject(actualStart,clActual);         //register obj in map in case of self reference
+   clActual->Streamer((void*)actualStart, *fBufferRef); //write object
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
 
@@ -546,7 +567,7 @@ TObject *TKey::ReadObj()
    }
    if (!cl->InheritsFrom(TObject::Class())) {
       // in principle user should call TKey::ReadObjectAny!
-      return (TObject*)ReadObjectAny();
+      return (TObject*)ReadObjectAny(0);
    }
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
@@ -638,10 +659,23 @@ CLEAR:
 }
 
 //______________________________________________________________________________
-void *TKey::ReadObjectAny()
+void *TKey::ReadObjectAny(const TClass* expectedClass)
 {
-// To read an object (non deriving from TObject)  from the file
+//  To read an object (non deriving from TObject)  from the file
+// 
+//  If expectedClass is not null, we checked that that actual class of
+//  the object stored is suitable to be stored in a pointer pointing
+//  to an object of class 'expectedClass'.  We also adjust the value
+//  of the returned address so that it is suitable to be cast (C-Style)
+//  a  a pointer pointing to an object of class 'expectedClass'.
 //
+//  So for example if the class Bottom inherits from Top and the object
+//  stored is of type Bottom you can safely do:
+//
+//     TClass *TopClass = TClass::GetClass("Top");
+//     Top *ptr = (Top*) key->ReadObjectAny( TopClass );
+//     if (ptr==0) printError("the object stored in the key is not of the expected type\n");
+//    
 //  The object associated to this key is read from the file into memory
 //  Once the key structure is read (via Streamer) the class identifier
 //  of the object is known.
@@ -677,6 +711,20 @@ void *TKey::ReadObjectAny()
    if (!cl) {
       Error("ReadObjectAny", "Unknown class %s", fClassName.Data());
       return 0;
+   }
+   Int_t baseOffset = 0;
+   if (expectedClass) {
+       // baseOffset will be -1 if cl does not inherit from expectedClass
+      baseOffset = cl->GetBaseClassOffset(expectedClass);
+      if (baseOffset == -1) {
+         return 0;
+      }
+      if (cl->GetClassInfo() && !expectedClass->GetClassInfo()) {
+         //we cannot mix a compiled class with an emulated class in the inheritance
+         Warning("ReadObjectAny",
+                 "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",
+                 cl->GetName(),expectedClass->GetName());
+      }
    }
    // Create an instance of this class
 
@@ -720,7 +768,7 @@ void *TKey::ReadObjectAny()
    fBuffer    = 0;
    gDirectory = cursav;
 
-   return pobj;
+   return ( ((char*)pobj) + baseOffset );
 }
 
 //______________________________________________________________________________

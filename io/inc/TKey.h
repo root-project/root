@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.11 2004/05/10 12:09:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.12 2004/05/14 08:18:39 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -84,7 +84,7 @@ public:
     virtual void      Print(Option_t *option="") const;
     virtual Int_t     Read(TObject *obj);
     virtual TObject  *ReadObj();
-    virtual void     *ReadObjectAny();
+    virtual void     *ReadObjectAny(const TClass *expectedClass);
     virtual void      ReadBuffer(char *&buffer);
     virtual void      ReadFile();
     virtual void      SetBuffer() { fBuffer = new char[fNbytes];}

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.18 2004/05/10 13:49:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.19 2004/05/14 08:26:31 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -91,6 +91,11 @@ public:
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *Get(const char *namecycle);
    virtual void       *GetObjectAny(const char *namecycle);
+   virtual void       *GetObjectAnyChecked(const char *namecycle, const char* classname);
+   virtual void       *GetObjectAnyChecked(const char *namecycle, const TClass* cl);
+   template <class T> void GetObjectAny(const char* namecycle, T*& ptr) {
+      ptr = (T*)GetObjectAnyChecked(namecycle,TClass::GetClass(typeid(T)));
+   }
    virtual Int_t       GetBufferSize() const;
    const TDatime      &GetCreationDate() const {return fDatimeC;}
    virtual TFile      *GetFile() const {return fFile;}
@@ -129,6 +134,9 @@ public:
    virtual Int_t       WriteObject(const TObject *obj, const char *name=0, Option_t *option="");
    virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="");
    virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="");
+   template <class T> Int_t WriteObjectAny(const T* obj, const char* name, Option_t *option="") {
+      return WriteObjectAny(obj,TClass::GetClass(typeid(T)),name,option);
+   }
    virtual void        WriteDirHeader();
    virtual void        WriteKeys();
 
