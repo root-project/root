@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.20 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.21 2003/06/02 15:19:47 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1291,10 +1291,10 @@ void TGListTree::OpenItem(TGListTreeItem *item)
 {
    // Open item in list tree (i.e. show child items).
 
-   if (item)
+   if (item) {
       item->fOpen = kTRUE;
-
-   //fClient->NeedRedraw(this);
+      AdjustPosition(item);
+   }
 }
 
 //______________________________________________________________________________
@@ -1302,10 +1302,10 @@ void TGListTree::CloseItem(TGListTreeItem *item)
 {
    // Close item in list tree (i.e. hide child items).
 
-   if (item)
+   if (item) {
       item->fOpen = kFALSE;
-
-   //fClient->NeedRedraw(this);
+      AdjustPosition(item);
+   }
 }
 
 //______________________________________________________________________________
