@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.18 2003/07/14 12:22:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.19 2003/08/11 12:51:31 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -94,7 +94,7 @@ public:
 
    virtual ~TGLVEntry();
 
-   virtual void SetViewMode(EListViewMode ViewMode);
+   virtual void SetViewMode(EListViewMode viewMode);
 
    virtual void        Activate(Bool_t a);
    Bool_t              IsActive() const { return fActive; }
@@ -102,7 +102,7 @@ public:
    virtual const char *GetName() const { return fName->GetString(); }
    void                SetItemName(const char *name) { *fName = name; }
    const TGPicture    *GetPicture() const { return fCurrent; }
-   EListViewMode       GetListViewMode() const { return fViewMode; }
+   EListViewMode       GetViewMode() const { return fViewMode; }
    void                SetUserData(void *userData) { fUserData = userData; }
    void               *GetUserData() const { return fUserData; }
    virtual void        SetSubnames(const char* n1="",const char* n2="",const char* n3="",
@@ -151,7 +151,8 @@ public:
    virtual void   SetHeaders(Int_t ncolumns);
    virtual void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx);
    virtual void   SetDefaultHeaders();
-   virtual void   SetViewMode(EListViewMode ViewMode);
+   virtual void   SetViewMode(EListViewMode viewMode);
+   EListViewMode  GetViewMode() const { return fViewMode; }
    virtual const char *GetHeader(Int_t idx) const;
 
    virtual void SelectionChanged() { Emit("SelectionChanged()"); }  //*SIGNAL*
@@ -190,11 +191,11 @@ public:
    virtual void AddItem(TGLVEntry *item)
               { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); fTotal++; }
 
-   virtual void SetListView(TGListView *lv) { fListView = lv; }
-   virtual void RemoveItemWithData(void *userData);
-   virtual void SetViewMode(EListViewMode ViewMode);
-   Int_t        GetViewMode() const { return fViewMode; }
-   virtual void SetColumns(Int_t *cpos, Int_t *jmode);
+   virtual void  SetListView(TGListView *lv) { fListView = lv; }
+   virtual void  RemoveItemWithData(void *userData);
+   virtual void  SetViewMode(EListViewMode viewMode);
+   EListViewMode GetViewMode() const { return fViewMode; }
+   virtual void  SetColumns(Int_t *cpos, Int_t *jmode);
 
    virtual TGDimension GetMaxItemSize() const;
    virtual Int_t GetMaxSubnameWidth(Int_t idx) const;
