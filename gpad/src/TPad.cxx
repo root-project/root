@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.84 2002/09/14 11:12:47 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.85 2002/09/23 17:06:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2696,7 +2696,19 @@ void TPad::PaintModified()
    if (fCanvas == this && gStyle->GetOptDate()) {
       if (!fPrimitives->FindObject("DATE")) {
           TDatime dt;
-          TText *tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),dt.AsString());
+          TText *tdate;
+          if (gStyle->GetOptDate() < 10) {
+             //by default use format like "Wed Sep 25 17:10:35 2002"
+             tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),dt.AsString());             
+          } else if (gStyle->GetOptDate() < 20) {
+             //use ISO format like 2002-09-25 
+             char iso[16];
+             strncpy(iso,dt.AsSQLString(),10); iso[10] = 0;
+             tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),iso);
+          } else {
+             //use ISO format like 2002-09-25 17:10:35
+             tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),dt.AsSQLString());
+          }
           tdate->SetName("DATE");
           tdate->SetTextSize( gStyle->GetAttDate()->GetTextSize());
           tdate->SetTextFont( gStyle->GetAttDate()->GetTextFont());
