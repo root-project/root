@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.33 2003/04/03 17:46:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.34 2003/04/04 00:39:12 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -443,6 +443,7 @@ TQConnectionList::~TQConnectionList()
       connection->Remove(this);
       if (connection->IsEmpty()) delete connection;
    }
+   Clear("nodelete");
 }
 
 //______________________________________________________________________________
@@ -522,30 +523,25 @@ TQObject::~TQObject()
 
    Destroyed();   // emit "Destroyed()" signal
 
-   TQConnectionList *list = 0;
-
    if (fListOfSignals) {
-      TIter next(fListOfSignals);
-
-      // delete all signals lists
-      while ((list = (TQConnectionList*)next())) {
-         SafeDelete(list);
-      }
+      fListOfSignals->Delete();
       SafeDelete(fListOfSignals);   // delete list of signals
    }
 
    // loop over all connections and remove references to this object
    if (fListOfConnections) {
       TIter next_connection(fListOfConnections);
-      TQConnection *connection = 0;
+      TQConnection *connection;
 
       while ((connection = (TQConnection*)next_connection())) {
          TIter next_list(connection);
+         TQConnectionList *list;
          while ((list = (TQConnectionList*)next_list())) {
             list->Remove(connection);
             if (list->IsEmpty()) SafeDelete(list);
          }
       }
+      SafeDelete(fListOfConnections);
    }
 }
 

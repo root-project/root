@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.11 2003/03/07 07:20:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.12 2003/04/03 16:55:12 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -352,13 +352,14 @@ TQConnection::~TQConnection()
 
    while ((list = (TList*)next())) {
       list->Remove(this);
-      if (list->IsEmpty()) SafeDelete(list);   // delete empty list
+      if (list->IsEmpty()) delete list;   // delete empty list
    }
+   Clear("nodelete");
 
    if (!fSlot) return;
    fSlot->RemoveReference();  // decrease references to slot
 
-   if (fSlot->References() <=0) {
+   if (fSlot->References() <= 0) {
       SafeDelete(fSlot);
    }
 }
