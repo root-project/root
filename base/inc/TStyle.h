@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.16 2003/02/21 15:07:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.17 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -92,6 +92,7 @@ private:
         Style_t       fHistFillStyle;     //histogram fill style
         Style_t       fHistLineStyle;     //histogram line style
         Width_t       fHistLineWidth;     //histogram line width
+        Bool_t        fHistMinimumZero;   //true if default minimum is 0, false if minimum is automatic
         Color_t       fCanvasColor;       //canvas color
         Width_t       fCanvasBorderSize;  //canvas border size
         Int_t         fCanvasBorderMode;  //canvas border mode
@@ -208,18 +209,19 @@ public:
         Color_t          GetGridColor() const       {return fGridColor;}
         Style_t          GetGridStyle() const       {return fGridStyle;}
         Width_t          GetGridWidth() const       {return fGridWidth;}
-        Color_t          GetFrameFillColor() const {return fFrameFillColor;}
-        Color_t          GetFrameLineColor() const {return fFrameLineColor;}
-        Style_t          GetFrameFillStyle() const {return fFrameFillStyle;}
-        Style_t          GetFrameLineStyle() const {return fFrameLineStyle;}
-        Width_t          GetFrameLineWidth() const {return fFrameLineWidth;}
+        Color_t          GetFrameFillColor()  const {return fFrameFillColor;}
+        Color_t          GetFrameLineColor()  const {return fFrameLineColor;}
+        Style_t          GetFrameFillStyle()  const {return fFrameFillStyle;}
+        Style_t          GetFrameLineStyle()  const {return fFrameLineStyle;}
+        Width_t          GetFrameLineWidth()  const {return fFrameLineWidth;}
         Width_t          GetFrameBorderSize() const {return fFrameBorderSize;}
         Int_t            GetFrameBorderMode() const {return fFrameBorderMode;}
-        Color_t          GetHistFillColor() const {return fHistFillColor;}
-        Color_t          GetHistLineColor() const {return fHistLineColor;}
-        Style_t          GetHistFillStyle() const {return fHistFillStyle;}
-        Style_t          GetHistLineStyle() const {return fHistLineStyle;}
-        Width_t          GetHistLineWidth() const {return fHistLineWidth;}
+        Color_t          GetHistFillColor()   const {return fHistFillColor;}
+        Color_t          GetHistLineColor()   const {return fHistLineColor;}
+        Style_t          GetHistFillStyle()   const {return fHistFillStyle;}
+        Style_t          GetHistLineStyle()   const {return fHistLineStyle;}
+        Width_t          GetHistLineWidth()   const {return fHistLineWidth;}
+        Bool_t           GetHistMinimumZero() const {return fHistMinimumZero;}
         Float_t          GetLegoInnerR() const {return fLegoInnerR;}
         Int_t            GetNumberContours() const {return fNumberContours;}
         Int_t            GetOptDate() const {return fOptDate;}
@@ -341,6 +343,7 @@ public:
         void             SetHistFillStyle(Style_t styl=0)  {fHistFillStyle = styl;}
         void             SetHistLineStyle(Style_t styl=0)  {fHistLineStyle = styl;}
         void             SetHistLineWidth(Width_t width=1) {fHistLineWidth = width;}
+        void             SetHistMinimumZero(Bool_t zero=kTRUE);
         void             SetPaintTextFormat(const char *format="g") {fPaintTextFormat = format;}
         void             SetPaperSize(EPaperSize size);
         void             SetPaperSize(Float_t xsize=20, Float_t ysize=26);
@@ -376,7 +379,7 @@ public:
 
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,9)  //A collection of all graphics attributes
+        ClassDef(TStyle,10)  //A collection of all graphics attributes
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.35 2004/02/18 20:13:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.36 2004/07/08 12:18:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -295,6 +295,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fHistLineColor  = fHistLineColor;
    ((TStyle&)obj).fHistLineStyle  = fHistLineStyle;
    ((TStyle&)obj).fHistLineWidth  = fHistLineWidth;
+   ((TStyle&)obj).fHistMinimumZero= fHistMinimumZero;
    ((TStyle&)obj).fBarWidth       = fBarWidth;
    ((TStyle&)obj).fBarOffset      = fBarOffset;
    ((TStyle&)obj).fDrawBorder     = fDrawBorder;
@@ -396,6 +397,7 @@ void TStyle::Reset(Option_t *)
    fHistFillStyle  = 1001;
    fHistLineStyle  = 1;
    fHistLineWidth  = 1;
+   fHistMinimumZero= kFALSE;
    fFrameLineColor = 1;
    fFrameFillColor = 0;
    fFrameFillStyle = 1001;
@@ -619,6 +621,17 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
    return fTitleFontSize;
 }
 
+//______________________________________________________________________________
+void TStyle::SetHistMinimumZero(Bool_t zero)
+{
+// if the argument zero=kTRUE the minimum value for the Y axis of 1-d histograms
+// is set to 0 if the minimum bin content is greater than 0 and TH1::SetMinimum
+// has not been called.
+// Otherwise the minimum is based on the minimum bin content.
+   
+   fHistMinimumZero = zero;
+}
+   
 //______________________________________________________________________________
 void TStyle::SetNdivisions(Int_t n, Option_t *axis)
 {
