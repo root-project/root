@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.188 2004/09/03 10:51:36 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.189 2004/09/13 10:03:09 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -951,6 +951,7 @@ void THistPainter::Paint(Option_t *option)
 //  the bins integral of the first one. It shows a procedure to
 //  draw the two histograms in the same pad and it draws the scale of
 //  the second histogram using a new vertical axis on the right side.
+//   (see also tutorial transpad.C for a variant of this example)
 //
 //   void twoscales() {
 //    TCanvas *c1 = new TCanvas("c1","hists with different scales",600,400);
