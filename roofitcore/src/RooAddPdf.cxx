@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.61 2004/11/29 20:22:46 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.62 2005/02/14 20:44:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -285,7 +285,6 @@ void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 void RooAddPdf::fixCoefRange(const char* rangeName)
 {
   _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
-  cout << "_refCoefRangeName set to " << _refCoefRangeName << endl ;
 
   if (_refCoefRangeName) _projectCoefs = kTRUE ;
 }
@@ -365,7 +364,6 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset, c
       if (_refCoefRangeName && _refCoefNorm.getSize()>0) {
 	rangeProj1 = pdf->createIntegral(_refCoefNorm,_refCoefNorm,RooNameReg::str(_refCoefRangeName)) ;
 	rangeProj1->setOperMode(operMode()) ;
-	rangeProj1->Print("v") ;
       } else {
 	TString name(GetName()) ;
 	name.Append("_") ;
@@ -381,7 +379,6 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset, c
       if (rangeName && _refCoefNorm.getSize()>0) {
 	rangeProj2 = pdf->createIntegral(_refCoefNorm,_refCoefNorm,rangeName) ;
 	rangeProj2->setOperMode(operMode()) ;
-	rangeProj2->Print("v") ;
       } else {
 	TString name(GetName()) ;
 	name.Append("_") ;
@@ -547,7 +544,7 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset, const char* rangeName) co
     RooAbsReal* sn = ((RooAbsReal*)_pdfProjList->at(4*i+1)) ; 
     RooAbsReal* r1 = ((RooAbsReal*)_pdfProjList->at(4*i+2)) ;
     RooAbsReal* r2 = ((RooAbsReal*)_pdfProjList->at(4*i+3)) ;
-    Double_t proj = pp->getVal()/sn->getVal()*(r1->getVal()/r2->getVal()) ;  
+    Double_t proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;  
     
     RooAbsPdf::globalSelectComp(kFALSE) ;
 
@@ -834,6 +831,17 @@ void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force)
   RooArgSet* myDepSet = getDependents(depSet) ;
   fixCoefNormalization(*myDepSet) ;
   delete myDepSet ;
+}
+
+
+void RooAddPdf::selectNormalizationRange(const char* rangeName, Bool_t force) 
+{
+  // Ignore automatic adjustments if an explicit reference range has been selected
+  if (!force && _refCoefRangeName) {
+    return ;
+  }
+
+  fixCoefRange(rangeName) ;
 }
 
 

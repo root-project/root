@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.88 2004/11/29 20:22:18 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.89 2005/02/14 20:44:19 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -557,14 +557,134 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed, const RooArgSet* nset) const
 }
 
 
-
-RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4, 
+                                                 RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) 
 {
-  return fitTo(data,RooArgSet(),fitOpt,optOpt) ;
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
+
+  pc.defineString("fitOpt","FitOptions",0,"") ;
+  pc.defineString("rangeName","RangeWithName",0,"") ;
+  pc.defineInt("optConst","Optimize",0,1) ;
+  pc.defineInt("verbose","Verbose",0,0) ;
+  pc.defineInt("doSave","Save",0,0) ;
+  pc.defineInt("doTimer","Timer",0,0) ;
+  pc.defineInt("blind","Blind",0,0) ;
+  pc.defineInt("strat","Strategy",0,1) ;
+  pc.defineInt("initHesse","InitialHesse",0,0) ;
+  pc.defineInt("hesse","Hesse",0,1) ;
+  pc.defineInt("minos","Minos",0,1) ;
+  pc.defineInt("ext","Extended",0,0) ;
+  pc.defineInt("numcpu","NumCPU",0,1) ;
+  pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
+  pc.defineMutex("Verbose","Quiet") ;
+  pc.defineMutex("FitOptions","Verbose") ;
+  pc.defineMutex("FitOptions","Quiet") ;
+  pc.defineMutex("FitOptions","Save") ;
+  pc.defineMutex("FitOptions","Timer") ;
+  pc.defineMutex("FitOptions","Blind") ;
+  pc.defineMutex("FitOptions","Strategy") ;
+  pc.defineMutex("FitOptions","InitialHesse") ;
+  pc.defineMutex("FitOptions","Hesse") ;
+  pc.defineMutex("FitOptions","Minos") ;
+  
+  // Process and check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Decode command line arguments
+  const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
+  const char* rangeName = pc.getString("rangeName",0,kTRUE) ;
+  Int_t optConst = pc.getInt("optConst") ;
+  Int_t verbose  = pc.getInt("verbose") ;
+  Int_t doSave   = pc.getInt("doSave") ;
+  Int_t doTimer  = pc.getInt("doTimer") ;
+  Int_t blind    = pc.getInt("blind") ;
+  Int_t strat    = pc.getInt("strat") ;
+  Int_t initHesse= pc.getInt("initHesse") ;
+  Int_t hesse    = pc.getInt("hesse") ;
+  Int_t minos    = pc.getInt("minos") ;
+  Int_t ext      = pc.getInt("ext") ;
+  Int_t numcpu   = pc.getInt("numcpu") ;
+
+  RooArgSet projDeps ;
+  RooArgSet* tmp = (RooArgSet*) pc.getObject("projDepSet") ;  
+  if (tmp) projDeps.add(*tmp) ;
+  
+  // Construct NLL
+  RooNLLVar nll("nll","-log(likelihood)",*this,data,projDeps,ext,rangeName,numcpu) ;
+  
+  // Instantiate MINUIT
+  RooMinuit m(nll) ;
+
+  if(blind) {
+    m.setPrintLevel(-1);
+  }
+
+  if (optConst) {
+    // Activate constant term optimization
+    m.optimizeConst(1) ;
+  }
+
+  if (fitOpt) {
+
+    // Play fit options as historically defined
+    m.fit(fitOpt) ;
+    
+  } else {
+
+    if (verbose) {
+      // Activate verbose options
+      m.setVerbose(1) ;
+    }
+    if (doTimer) {
+      // Activate timer options
+      m.setProfile(1) ;
+    }
+    
+    if (strat!=1) {
+      // Modify fit strategy
+      m.setStrategy(strat) ;
+    }
+
+    if (initHesse) {
+      // Initialize errors with hesse
+      m.hesse() ;
+    }
+
+    // Minimize using migrad
+    m.migrad() ;
+
+    if (hesse) {
+      // Evaluate errors with Hesse
+      m.hesse() ;
+    }
+
+    if (minos) {
+      // Evaluate errs with Minos
+      m.minos() ;
+    }
+  }
+  
+  // Optionally return fit result
+  if (doSave) {
+    return m.save() ;
+  } else {
+    return 0 ;
+  }
 }
 
 
-RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Option_t *fitOpt, Option_t *optOpt) 
+
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt, const char* fitRange) 
+{
+  return fitTo(data,RooArgSet(),fitOpt,optOpt,fitRange) ;
+}
+
+
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Option_t *fitOpt, Option_t *optOpt, const char* fitRange) 
 {
   // Fit this PDF to given data set
   //
@@ -627,7 +747,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Opti
   if (oopt.Contains("9")) ncpu=9 ;
 
   // Construct NLL
-  RooNLLVar nll("nll","-log(likelihood)",*this,data,projDeps,extended,ncpu) ;
+  RooNLLVar nll("nll","-log(likelihood)",*this,data,projDeps,extended,fitRange,ncpu) ;
   
   // Minimize NLL
   RooMinuit m(nll) ;
@@ -1332,6 +1452,21 @@ void RooAbsPdf::fixAddCoefNormalization(const RooArgSet& addNormSet)
   }
   delete iter ;
   delete compSet ;  
+}
+
+void RooAbsPdf::fixAddCoefRange(const char* rangeName) 
+{
+  RooArgSet* compSet = getComponents() ;
+  TIterator* iter = compSet->createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+    if (pdf) {
+      pdf->selectNormalizationRange(rangeName,kTRUE) ;
+    }
+  }
+  delete iter ;
+  delete compSet ;    
 }
 
 

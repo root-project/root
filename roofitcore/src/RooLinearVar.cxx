@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.cc,v 1.23 2004/11/29 20:23:58 wverkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.24 2004/12/03 13:18:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -206,4 +206,9 @@ void RooLinearVar::printToStream(ostream& os, PrintOption opt, TString indent) c
 const RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose) const
 {
   return const_cast<RooLinearVar*>(this)->getBinning(name,verbose) ;
+}
+
+Bool_t RooLinearVar::hasBinning(const char* name) const 
+{
+  return ((RooAbsRealLValue&)_var.arg()).hasBinning(name) ;
 }

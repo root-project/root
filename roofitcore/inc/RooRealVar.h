@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.41 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.42 2005/02/14 20:44:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -81,6 +81,7 @@ public:
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
 
   // RooAbsRealLValue implementation
+  Bool_t hasBinning(const char* name) const ;
   const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
   RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) ; 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.48 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.49 2005/02/14 20:44:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -130,6 +130,11 @@ RooErrorVar* RooRealVar::errorVar() const
   return new RooErrorVar(name,title,*this) ;
 }
 
+
+Bool_t RooRealVar::hasBinning(const char* name) const
+{
+  return _altBinning.FindObject(name) ? kTRUE : kFALSE ;
+}
 
 
 const RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose) const 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.27 2004/04/21 23:14:27 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.28 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -86,8 +86,9 @@ protected:
  
   void initialize(Bool_t fillTree=kTRUE) ;
   RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
-	      const RooFormulaVar* cutVar, Bool_t copyCache) ;
-  virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
+	      const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) ;
+  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
+	                Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) ;
   Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize) ;
   void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
 

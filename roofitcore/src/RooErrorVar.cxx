@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.cc,v 1.10 2004/12/03 13:18:28 wverkerke Exp $
+ *    File: $Id: RooErrorVar.cc,v 1.11 2005/02/14 20:44:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -67,6 +67,12 @@ RooErrorVar::~RooErrorVar()
   delete _binning ;
 }
 
+
+
+Bool_t RooErrorVar::hasBinning(const char* name) const
+{
+  return _altBinning.FindObject(name) ? kTRUE : kFALSE ;
+}
 
 
 const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose) const 

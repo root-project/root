@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.9 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.9 2004/11/29 12:22:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,11 +37,11 @@ public:
   // Constructors, assignment etc
   inline RooAbsGoodnessOfFit() { }
   RooAbsGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		      const RooArgSet& projDeps, Int_t nCPU=1) ;
+		      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1) ;
   RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const char* name=0);
   virtual ~RooAbsGoodnessOfFit();
   virtual RooAbsGoodnessOfFit* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-				      const RooArgSet& projDeps, Int_t nCPU=1) = 0 ;
+				      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1) = 0 ;
 
   virtual void constOptimize(ConstOpCode opcode) ;
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
@@ -68,13 +68,14 @@ protected:
   RooAbsPdf* _pdf ;
   RooAbsData* _data ;
   const RooArgSet* _projDeps ;
+  const char*    _rangeName ; //! 
   Int_t _simCount ;
 
 private:  
 
   Bool_t initialize() ;
-  void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps) ;    
-  void initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps) ;
+  void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName) ;    
+  void initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName) ;
 
   mutable Bool_t _init ;
   GOFOpMode   _gofOpMode ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.cc,v 1.11 2004/11/29 20:24:03 wverkerke Exp $
+ *    File: $Id: RooNLLVar.cc,v 1.12 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,8 +32,8 @@ ClassImp(RooNLLVar)
 ;
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		     Bool_t extended, Int_t nCPU) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),nCPU),
+		     Bool_t extended, const char* rangeName, Int_t nCPU) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),rangeName,nCPU),
   _extended(extended)
 {
   
@@ -41,8 +41,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		     const RooArgSet& projDeps, Bool_t extended, Int_t nCPU) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,nCPU),
+		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,Int_t nCPU) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,rangeName,nCPU),
   _extended(extended)
 {
   

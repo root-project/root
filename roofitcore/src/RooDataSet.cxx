@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.84 2004/11/29 20:23:21 wverkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.85 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -208,8 +208,9 @@ RooArgSet RooDataSet::addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtV
 }
 
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
-		       const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache) :
-  RooTreeData(name,title,ntuple,addWgtVar(vars,ntuple->_wgtVar),cutVar, copyCache)
+		       const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
+		       Int_t nStart, Int_t nStop, Bool_t copyCache) :
+  RooTreeData(name,title,ntuple,addWgtVar(vars,ntuple->_wgtVar),cutVar,cutRange,nStart,nStop,copyCache)
 {
   // Protected constructor for internal use only
   appendToDir(this,kTRUE) ;
@@ -220,7 +221,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple,
 
 RooAbsData* RooDataSet::cacheClone(const RooArgSet* newCacheVars, const char* newName) 
 {
-  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),GetTitle(),this,_vars,(RooFormulaVar*)0,kTRUE) ;  
+  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),GetTitle(),this,_vars,(RooFormulaVar*)0,0,0,2000000000,kTRUE) ;  
   if (_wgtVar) dset->setWeightVar(_wgtVar->GetName()) ;
 
   RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dset->_cachedVars) ;
@@ -260,11 +261,12 @@ void RooDataSet::initialize(const char* wgtVarName)
 }
 
 
-RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache)
+RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange, 
+				  Int_t nStart, Int_t nStop, Bool_t copyCache)
 {
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
   checkInit() ;
-  return new RooDataSet(GetName(), GetTitle(), this, varSubset, cutVar, copyCache) ;
+  return new RooDataSet(GetName(), GetTitle(), this, varSubset, cutVar, cutRange, nStart, nStop, copyCache) ;
 
   // WVE - propagate optional weight variable
   //       check behaviour in plotting.

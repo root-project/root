@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.75 2004/11/30 16:08:20 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.76 2005/02/14 20:44:19 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -107,9 +107,13 @@ public:
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Interactions with a dataset  
+  virtual RooFitResult* fitTo(RooAbsData& data, RooCmdArg arg1,  RooCmdArg arg2=RooCmdArg(),  
+                              RooCmdArg arg3=RooCmdArg(),  RooCmdArg arg4=RooCmdArg(), RooCmdArg arg5=RooCmdArg(),  
+                              RooCmdArg arg6=RooCmdArg(),  RooCmdArg arg7=RooCmdArg(), RooCmdArg arg8=RooCmdArg()) ;
+
   virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
-			      Option_t *fitOpt = "", Option_t *optOpt = "c" ) ;
-  virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "c") ;
+			      Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
@@ -142,6 +146,7 @@ public:
   inline Bool_t isSelectedComp() const { return _selectComp || _globalSelectComp ; }
 
   virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet()) ;
+  virtual void fixAddCoefRange(const char* rangeName=0) ;
 
   virtual Double_t extendedTerm(UInt_t observedEvents, const RooArgSet* nset=0) const ;
 

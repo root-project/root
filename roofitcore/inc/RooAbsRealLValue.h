@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.26 2005/02/14 20:44:21 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.27 2005/02/15 21:16:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,6 +53,7 @@ public:
   // Get fit range limits
   virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const = 0 ;
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) = 0 ;
+  virtual Bool_t hasBinning(const char* name) const = 0 ;
   virtual Double_t getMin(const char* name=0) const { return getBinning(name).lowBound() ; }
   virtual Double_t getMax(const char* name=0) const { return getBinning(name).highBound() ; }
   virtual Int_t getBins(const char* name=0) const { return getBinning(name).numBins() ; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.1 2005/02/14 20:44:25 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.2 2005/02/15 21:16:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,7 +39,7 @@ RooCmdArg Precision(Double_t prec) ;
 RooCmdArg ShiftToZero() ;
 RooCmdArg Range(const char* rangeName) ;
 RooCmdArg Range(Double_t lo, Double_t hi) ;
-RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines) ;
+RooCmdArg VLines() ;
 RooCmdArg LineColor(Color_t color) ;
 RooCmdArg LineStyle(Style_t style) ;
 RooCmdArg LineWidth(Width_t width) ;
@@ -57,7 +57,7 @@ RooCmdArg Components(const char* compSpec) ;
 
 // RooAbsData::plotOn arguments
 RooCmdArg Cut(const char* cutSpec) ;
-RooCmdArg Cut(const RooAbsReal& cutVar) ;
+RooCmdArg Cut(const RooFormulaVar& cutVar) ;
 RooCmdArg Binning(const RooAbsBinning& binning) ;
 RooCmdArg MarkerStyle(Style_t style) ;
 RooCmdArg MarkerSize(Size_t size) ;
@@ -80,6 +80,24 @@ RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 // RooAbsRealLValue::frame arguments
 RooCmdArg Title(const char* name) ;
 RooCmdArg Bins(Int_t nbin) ;
+
+// RooAbsData::reduce arguments
+RooCmdArg SelectVars(const RooArgSet& vars) ;
+RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
+
+// RooAbsPdf::fitTo arguments
+RooCmdArg FitOptions(const char* opts) ;
+RooCmdArg Optimize(Bool_t flag=kTRUE) ;
+RooCmdArg ProjectedObservables(const RooArgSet& set) ;
+RooCmdArg Verbose(Bool_t flag=kTRUE) ;
+RooCmdArg Save(Bool_t flag=kTRUE) ;
+RooCmdArg Timer(Bool_t flag=kTRUE) ;
+RooCmdArg Blind(Bool_t flag=kTRUE) ;
+RooCmdArg Strategy(Int_t code) ;
+RooCmdArg InitialHesse(Bool_t flag=kTRUE) ;
+RooCmdArg Hesse(Bool_t flag=kTRUE) ;
+RooCmdArg Minos(Bool_t flag=kTRUE) ;
+
 
 namespace RooFitShortHand {
 

@@ -10,6 +10,7 @@
 #pragma link C++ function Slice ;
 #pragma link C++ function Project ;
 #pragma link C++ function Range ;
+#pragma link C++ function VLines ;
 #pragma link C++ function Components ;
 #pragma link C++ function ProjWData ;
 #pragma link C++ function Asymmetry ;
@@ -43,6 +44,19 @@
 #pragma link C++ function Sibling ;
 #pragma link C++ function Title ;
 #pragma link C++ function Bins ;
+#pragma link C++ function SelectVars ;
+#pragma link C++ function EventRange ;
+#pragma link C++ function FitOptions ;
+#pragma link C++ function Optimize ;
+#pragma link C++ function Verbose ;
+#pragma link C++ function Save ;
+#pragma link C++ function Timer ;
+#pragma link C++ function Blind ;
+#pragma link C++ function Strategy ;
+#pragma link C++ function InitialHesse ;
+#pragma link C++ function Hesse ;
+#pragma link C++ function Minos ;
+#pragma link C++ function ProjectedObservables ;
 #pragma link C++ function RooFitShortHand::C ;
 #pragma link C++ function RooFitShortHand::L ;
 #pragma link C++ function RooFitShortHand::S ;

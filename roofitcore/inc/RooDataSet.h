@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.rdl,v 1.53 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.53 2004/11/29 12:22:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -90,9 +90,10 @@ protected:
   void initialize(const char* wgtVarName) ;
   
   // Cache copy feature is not publicly accessible
-  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
+  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
+	                Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
-	     const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache);
+	     const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange, int nStart, int nStop, Bool_t copyCache);
   
   RooArgSet addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.104 2005/02/14 20:44:20 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.105 2005/02/15 21:15:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -733,9 +733,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineObject("projData","ProjData",1) ;
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
-  pc.defineDouble("rangeLo_VL","RangeWithVLines",0,frame->GetXaxis()->GetXmin()) ;
-  pc.defineDouble("rangeHi_VL","RangeWithVLines",1,frame->GetXaxis()->GetXmax()) ;
-  pc.defineInt("rangeVL","RangeWithVLines",0,2) ; // 2==ExtendedWings
+  pc.defineInt("VLines","VLines",0,2) ; // 2==ExtendedWings
   pc.defineString("rangeName","RangeWithName",0,"") ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
@@ -773,20 +771,28 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
   o.precision = pc.getDouble("precision") ;
   o.shiftToZero = (pc.getInt("shiftToZero")!=0) ;
-  Int_t rangeVL = pc.getInt("rangeVL");
-  if (pc.hasProcessed("RangeWithVLines")) { // cmd mutex ensures only one of following conditions is met 
-    o.rangeLo = pc.getDouble("rangeLo_VL") ;
-    o.rangeHi = pc.getDouble("rangeHi_VL") ;
-  } else if (pc.hasProcessed("Range")) {
+  Int_t vlines = pc.getInt("VLines");
+  if (pc.hasProcessed("Range")) {
     o.rangeLo = pc.getDouble("rangeLo") ;
     o.rangeHi = pc.getDouble("rangeHi") ;
-    rangeVL = 1 ;
-  } else {    
+    if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
+  } else if (pc.hasProcessed("RangeWithName")) {    
     o.rangeLo = frame->getPlotVar()->getMin(pc.getString("rangeName",0,kTRUE)) ;
     o.rangeHi = frame->getPlotVar()->getMax(pc.getString("rangeName",0,kTRUE)) ;
-    rangeVL = 1 ;
+    if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
+  } else {
+
+    // Use range of last fit, if it was non-default and no other range was specified
+    RooArgSet* plotDep = getDependents(*frame->getPlotVar()) ;
+    RooRealVar* plotDepVar = (RooRealVar*) plotDep->find(frame->getPlotVar()->GetName()) ;
+    if (plotDepVar->hasBinning("fit")) {
+      o.rangeLo = plotDepVar->getMin("fit") ;
+      o.rangeHi = plotDepVar->getMax("fit") ;
+      if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
+    }
+    delete plotDep ;
   }
-  o.wmode = (rangeVL==2)?RooCurve::Extended:(rangeVL==1?RooCurve::Straight:RooCurve::NoWings) ;
+  o.wmode = (vlines==2)?RooCurve::Extended:(vlines==1?RooCurve::Straight:RooCurve::NoWings) ;
   o.projectionRangeName = pc.getString("projectionRangeName",0,kTRUE) ;
   o.curveName = pc.getString("curveName",0,kTRUE) ;
   o.curveInvisible = pc.getInt("curveInvisible") ;

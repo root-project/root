@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.61 2004/11/29 20:24:42 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.62 2005/02/14 20:44:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -185,7 +185,8 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
 
 
 RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t, 
-                       const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache) :
+			 const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
+			 Int_t nStart, Int_t nStop, Bool_t copyCache) :
   RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth"), 
   _blindString(t->_blindString)
 {
@@ -214,7 +215,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   initialize();
   initCache(t->_cachedVars) ;
   
-  loadValues(t,cloneVar);
+  loadValues(t,cloneVar,cutRange,nStart,nStop);
 
   // WVE copy values of cached variables here!!!
 
@@ -375,11 +376,15 @@ void RooTreeData::loadValues(const char *filename, const char *treename,
 }
 
 
-void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select) 
+
+void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select, 
+			     const char* rangeName, Int_t nStart, Int_t nStop)  
 {
   // Load values from dataset 't' into this data collection, optionally
   // selecting events using 'select' RooFormulaVar
   //
+
+  cout << "load values cutRange = " << (rangeName?rangeName:"") << endl ;
 
   // Redirect formula servers to source data row
   if (select) {
@@ -400,9 +405,10 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select)
 
   // Loop over events in source tree   
   RooAbsArg* arg = 0;
-  Int_t nevent= t->numEntries() ;
+  Int_t nevent = nStop < t->numEntries() ? nStop : t->numEntries() ;
   Bool_t allValid ;
-  for(Int_t i=0; i < nevent; ++i) {
+
+  for(Int_t i=nStart; i < nevent ; ++i) {
     t->_tree->GetEntry(i,1) ;
     t->_cacheTree->GetEntry(i,1) ;
 
@@ -417,7 +423,7 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select)
     // Check that all copied values are valid
     allValid=kTRUE ;
     while(arg=(RooAbsArg*)_iterator->Next()) {
-      if (!arg->isValid()) {
+      if (!arg->isValid() || (rangeName && !arg->inRange(rangeName))) {
 	allValid=kFALSE ;
 	break ;
       }
@@ -432,7 +438,7 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select)
 }
 
 
-void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select) 
+void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* rangeName, Int_t nStart, Int_t nStop) 
 {
   // Load values from tree 't' into this data collection, optionally
   // selecting events using 'select' RooFormulaVar

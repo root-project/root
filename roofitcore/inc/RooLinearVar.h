@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.rdl,v 1.13 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooLinearVar.rdl,v 1.14 2004/12/03 13:18:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,6 +39,7 @@ public:
   virtual void setVal(Double_t value) ;
 
   // Jacobian and limits
+  virtual Bool_t hasBinning(const char* name) const ;
   virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE)  ;
 

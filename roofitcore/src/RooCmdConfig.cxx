@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.10 2005/02/14 20:44:23 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.11 2005/02/15 21:16:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -493,7 +493,7 @@ const char* RooCmdConfig::getString(const char* name, const char* defVal, Bool_t
 
 
 
-const TObject* RooCmdConfig::getObject(const char* name, const TObject* defVal) 
+TObject* RooCmdConfig::getObject(const char* name, TObject* defVal) 
 {
   RooTObjWrap* ro = (RooTObjWrap*) _oList.FindObject(name) ;
   return ro ? ro->obj() : defVal ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.54 2004/11/29 20:24:27 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.55 2005/02/14 20:44:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,6 +43,7 @@
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooNameReg.hh"
 #include "RooFitCore/RooGlobalFunc.hh"
+#include "RooFitCore/RooNameReg.hh"
 using std::cout;
 using std::endl;
 
@@ -664,6 +665,11 @@ void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t force
 {
   _plotCoefNormSet.removeAll() ;
   if (normSet) _plotCoefNormSet.add(*normSet) ;
+}
+
+void RooSimultaneous::selectNormalizationRange(const char* normRange, Bool_t force) 
+{
+  _plotCoefNormRange = RooNameReg::ptr(normRange) ;
 }
 
 

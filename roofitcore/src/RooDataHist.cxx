@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.42 2004/11/29 20:23:21 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.43 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -419,8 +419,8 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 
 
 RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
-			 const RooFormulaVar* cutVar, Bool_t copyCache) :
-  RooTreeData(name,title,h,varSubset,cutVar, copyCache), _curWeight(0), _curVolume(1), _pbinv(0)
+			 const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) :
+  RooTreeData(name,title,h,varSubset,cutVar,cutRange,nStart,nStop,copyCache), _curWeight(0), _curVolume(1), _pbinv(0)
 {
   // Constructor of a data hist from (part of) an existing data hist. The dimensions
   // of the data set are defined by the 'vars' RooArgSet, which can be identical
@@ -448,7 +448,7 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
 
 RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* newName) 
 {
-  RooDataHist* dhist = new RooDataHist(newName?newName:GetName(),GetTitle(),this,*get(),0,kTRUE) ; 
+  RooDataHist* dhist = new RooDataHist(newName?newName:GetName(),GetTitle(),this,*get(),0,0,0,2000000000,kTRUE) ; 
 
   RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dhist->_cachedVars) ;
   dhist->initCache(*selCacheVars) ;
@@ -458,12 +458,12 @@ RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* n
 }
 
 
-RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache) 
+RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange, 
+				  Int_t nStart, Int_t nStop, Bool_t copyCache)
 {
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
   checkInit() ;
 
-  
   RooArgSet* myVarSubset = (RooArgSet*) _vars.selectCommon(varSubset) ;
   RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), *myVarSubset) ;
 
@@ -482,20 +482,37 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
 
   Int_t i ;
   Double_t lo,hi ;
-  for (i=0 ; i<numEntries() ; i++) {
+  Int_t nevt = nStop < numEntries() ? nStop : numEntries() ;
+  TIterator* vIter = get()->createIterator() ;
+  for (i=nStart ; i<nevt ; i++) {
     const RooArgSet* row = get(i) ;
+
+    Bool_t doSelect(kTRUE) ;
+    if (cutRange) {
+      RooAbsArg* arg ;
+      vIter->Reset() ;
+      while(arg=(RooAbsArg*)vIter->Next()) {	
+	if (!arg->inRange(cutRange)) {
+	  doSelect = kFALSE ;
+	  break ;
+	}
+      }
+    }
+    if (!doSelect) continue ;
+
     if (!cloneVar || cloneVar->getVal()) {
       weightError(lo,hi,SumW2) ;
       rdh->add(*row,weight(),lo*lo) ;
     }
   }
+  delete vIter ;
 
   if (cloneVar) {
     delete tmp ;
   } 
-
-  return rdh ;
-}
+  
+    return rdh ;
+  }
 
 
 

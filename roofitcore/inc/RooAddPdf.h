@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.rdl,v 1.37 2004/04/05 22:44:10 wverkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.38 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,6 +56,7 @@ public:
 protected:
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
+  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
 
   mutable RooSetProxy _refCoefNorm ;
   mutable TNamed* _refCoefRangeName ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.65 2004/11/29 20:22:38 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.66 2005/02/14 20:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -137,6 +137,7 @@ protected:
 
   // Hook for objects with normalization-dependent parameters interperetation
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) {} ;
+  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) {} ;
 
   // Helper functions for plotting
   Bool_t plotSanityChecks(RooPlot* frame) const ;

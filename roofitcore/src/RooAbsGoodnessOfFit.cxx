@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.12 2004/11/29 20:22:04 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.13 2005/02/15 21:15:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,12 +45,13 @@ ClassImp(RooAbsGoodnessOfFit)
 ;
 
 RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-					 const RooArgSet& projDeps, Int_t nCPU) : 
+					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU) : 
   RooAbsReal(name,title),
   _paramSet("paramSet","Set of parameters",this),
   _pdf(&pdf),
   _data(&data),
   _projDeps((RooArgSet*)projDeps.Clone()),
+  _rangeName(rangeName),
   _simCount(1),
   _nGof(0),
   _gofArray(0),
@@ -92,6 +93,7 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const
   _pdf(other._pdf),
   _data(other._data),
   _projDeps((RooArgSet*)other._projDeps->Clone()),
+  _rangeName(other._rangeName),
   _simCount(other._simCount),
   _init(other._init),
   _gofOpMode(other._gofOpMode),
@@ -187,9 +189,9 @@ Bool_t RooAbsGoodnessOfFit::initialize()
   if (_init) return kFALSE ;
 
   if (_gofOpMode==MPMaster) {
-    initMPMode(_pdf,_data,_projDeps) ;
+    initMPMode(_pdf,_data,_projDeps,_rangeName) ;
   } else if (_gofOpMode==SimMaster) {
-    initSimMode((RooSimultaneous*)_pdf,_data,_projDeps) ;
+    initSimMode((RooSimultaneous*)_pdf,_data,_projDeps,_rangeName) ;
   }
   _init = kTRUE ;
   return kFALSE ;
@@ -266,14 +268,14 @@ void RooAbsGoodnessOfFit::setMPSet(Int_t setNum, Int_t numSets)
 }
 
 
-void RooAbsGoodnessOfFit::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps)
+void RooAbsGoodnessOfFit::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName)
 {
   Int_t i ;
   _mpfeArray = new pRooRealMPFE[_nCPU] ;
 
   // Create proto-goodness-of-fit 
   //cout << "initMPMode -- creating prototype gof" << endl ;
-  RooAbsGoodnessOfFit* gof = create(GetName(),GetTitle(),*pdf,*data,*projDeps) ;
+  RooAbsGoodnessOfFit* gof = create(GetName(),GetTitle(),*pdf,*data,*projDeps,rangeName) ;
 
   for (i=0 ; i<_nCPU ; i++) {
 
@@ -294,7 +296,7 @@ void RooAbsGoodnessOfFit::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const Roo
 }
 
 
-void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data, const RooArgSet* projDeps)
+void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName)
 {
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->indexCat() ;
 

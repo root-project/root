@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.16 2004/11/29 20:22:17 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.17 2005/02/14 20:44:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,6 +35,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooErrorHandler.hh"
+#include "RooFitCore/RooGlobalFunc.hh"
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -43,8 +44,8 @@ ClassImp(RooAbsOptGoodnessOfFit)
 ;
 
 RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-					 const RooArgSet& projDeps, Int_t nCPU) : 
-  RooAbsGoodnessOfFit(name,title,pdf,data,projDeps,nCPU),
+					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU) : 
+  RooAbsGoodnessOfFit(name,title,pdf,data,projDeps,rangeName, nCPU),
   _projDeps(0)
 {
   // Don't do a thing in master mode
@@ -93,11 +94,40 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     }
     
   }
-  delete iter ;
+
   
-  // Copy data and strip entries lost by adjusted fit range
-  _dataClone = ((RooAbsData&)data).reduce(*pdfDepSet) ;  
-  delete pdfDepSet ;
+  // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from pdfDepSet ranges
+  if (rangeName) {
+    _dataClone = ((RooAbsData&)data).reduce(SelectVars(*pdfDepSet),CutRange(rangeName)) ;  
+  } else {
+    _dataClone = ((RooAbsData&)data).reduce(SelectVars(*pdfDepSet)) ;  
+  }
+
+  if (rangeName) {
+    // Adjust PDF normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
+    TIterator* iter2 = _dataClone->get()->createIterator() ;
+    while(arg=(RooAbsArg*)iter2->Next()) {
+      RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
+      if (pdfReal) {
+	pdfReal->setRange("NormalizationRange",pdfReal->getMin(),pdfReal->getMax()) ;
+	pdfReal->setRange(pdfReal->getMin(rangeName),pdfReal->getMax(rangeName)) ;
+      }
+    }
+
+    // Mark fitted range in original PDF dependents for future use
+    iter->Reset() ;
+    while(arg=(RooAbsArg*)iter->Next()) {      
+      RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
+      if (pdfReal) {
+	pdfReal->setRange("fit",pdfReal->getMin(rangeName),pdfReal->getMax(rangeName)) ;
+      }
+    }
+
+    delete iter2 ;
+  }
+  delete iter ;
+
+  delete pdfDepSet ;  
 
   setEventCount(_dataClone->numEntries()) ;
  
@@ -109,6 +139,13 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   
   // Find the top level PDF in the snapshot list
   _pdfClone = (RooAbsPdf*) _pdfCloneSet->find(pdf.GetName()) ;
+
+  // Fix RooAddPdf coefficients to original normalization range
+  if (rangeName) {
+    // WVE Remove projected dependents from normalization
+    _pdfClone->fixAddCoefNormalization(*_dataClone->get()) ;
+    _pdfClone->fixAddCoefRange("NormalizationRange") ;
+  }
 
   // Attach PDF to data set
   _pdfClone->attachDataSet(*_dataClone) ;

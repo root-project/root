@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.cc,v 1.20 2004/11/29 12:22:10 wverkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.21 2004/11/29 20:22:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,8 @@
 
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooFormulaVar.hh"
+#include "RooFitCore/RooCmdConfig.hh"
+
 using std::cout;
 using std::endl;
 
@@ -87,6 +89,84 @@ RooAbsData::~RooAbsData()
 
 
 
+RooAbsData* RooAbsData::reduce(RooCmdArg arg1,RooCmdArg arg2,RooCmdArg arg3,RooCmdArg arg4,
+			       RooCmdArg arg5,RooCmdArg arg6,RooCmdArg arg7,RooCmdArg arg8) 
+{
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsData::reduce(%s)",GetName())) ;
+  pc.defineString("name","Name",0,"") ;
+  pc.defineString("title","Title",0,"") ;
+  pc.defineString("cutRange","CutRange",0,"") ;
+  pc.defineString("cutSpec","CutSpec",0,"") ;
+  pc.defineObject("cutVar","CutVar",0,0) ;
+  pc.defineInt("evtStart","EventRange",0,0) ;
+  pc.defineInt("evtStop","EventRange",1,2000000000) ;
+  pc.defineObject("varSel","SelectVars",0,0) ;
+  pc.defineMutex("CutVar","CutSpec") ;
+
+  // Process & check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Extract values from named arguments
+  const char* cutRange = pc.getString("cutRange",0,kTRUE) ;
+  const char* cutSpec = pc.getString("cutSpec",0,kTRUE) ;
+  RooFormulaVar* cutVar = static_cast<RooFormulaVar*>(pc.getObject("cutVar",0)) ;
+  Int_t nStart = pc.getInt("evtStart",0) ;
+  Int_t nStop = pc.getInt("evtStop",2000000000) ;
+  RooArgSet* varSet = static_cast<RooArgSet*>(pc.getObject("varSel")) ;
+  const char* name = pc.getString("name",0,kTRUE) ;
+  const char* title = pc.getString("title",0,kTRUE) ;
+
+  // Make sure varSubset doesn't contain any variable not in this dataset
+  RooArgSet varSubset ;
+  if (varSet) {
+    varSubset.add(*varSet) ;
+    TIterator* iter = varSubset.createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (!_vars.find(arg->GetName())) {
+	cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
+	     << arg->GetName() << " not in dataset, ignored" << endl ;
+	varSubset.remove(*arg) ;
+      }
+    }
+    delete iter ;    
+  } else {
+    varSubset.add(*get()) ;
+  }
+
+  RooAbsData* ret = 0 ;
+  if (cutSpec) {
+
+    RooFormulaVar cutVarTmp(cutSpec,cutSpec,*get()) ;
+    ret =  reduceEng(varSubset,&cutVarTmp,cutRange,nStart,nStop,kFALSE) ;      
+
+  } else if (cutVar) {
+
+    ret = reduceEng(varSubset,cutVar,cutRange,nStart,nStop,kFALSE) ;
+
+  } else {
+
+    ret = reduceEng(varSubset,0,cutRange,nStart,nStop,kFALSE) ;
+
+  }
+  
+  if (!ret) return 0 ;
+
+  if (name) {
+    ret->SetName(name) ;
+  }
+  if (title) {
+    ret->SetTitle(title) ;
+  }
+
+  return ret ;
+}
+
+
 RooAbsData* RooAbsData::reduce(const char* cut) 
 { 
   // Create a subset of the data set by applying the given cut on the data points.
@@ -95,7 +175,7 @@ RooAbsData* RooAbsData::reduce(const char* cut)
   // reduce method specifying the as a RooFormulVar reference.
 
   RooFormulaVar cutVar(cut,cut,*get()) ;
-  return reduceEng(*get(),&cutVar,kFALSE) ;
+  return reduceEng(*get(),&cutVar,0,0,2000000000,kFALSE) ;
 }
 
 
@@ -106,7 +186,7 @@ RooAbsData* RooAbsData::reduce(const RooFormulaVar& cutVar)
   // Create a subset of the data set by applying the given cut on the data points.
   // The 'cutVar' formula variable is used to select the subset of data points to be 
   // retained in the reduced data collection.
-  return reduceEng(*get(),&cutVar,kFALSE) ;
+  return reduceEng(*get(),&cutVar,0,0,2000000000,kFALSE) ;
 }
 
 
@@ -136,9 +216,9 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
 
   if (cut && strlen(cut)>0) {
     RooFormulaVar cutVar(cut,cut,*get()) ;
-    return reduceEng(varSubset2,&cutVar,kFALSE) ;      
+    return reduceEng(varSubset2,&cutVar,0,0,2000000000,kFALSE) ;      
   } 
-  return reduceEng(varSubset2,0,kFALSE) ;
+  return reduceEng(varSubset2,0,0,0,2000000000,kFALSE) ;
 }
 
 
@@ -165,6 +245,6 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
   }
   delete iter ;
 
-  return reduceEng(varSubset2,&cutVar,kFALSE) ;
+  return reduceEng(varSubset2,&cutVar,0,0,2000000000,kFALSE) ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.rdl,v 1.7 2005/02/14 20:44:23 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.rdl,v 1.8 2005/02/15 21:16:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,7 +54,7 @@ public:
   Int_t getInt(const char* name, Int_t defaultValue=0) ;
   Double_t getDouble(const char* name, Double_t defaultValue=0) ;
   const char* getString(const char* name, const char* defaultValue="",Bool_t convEmptyToNull=kFALSE) ;
-  const TObject* getObject(const char* name, const TObject* obj=0) ;
+  TObject* getObject(const char* name, TObject* obj=0) ;
   const RooLinkedList& getObjectList(const char* name) ;
 
   Bool_t ok(Bool_t verbose) const ;

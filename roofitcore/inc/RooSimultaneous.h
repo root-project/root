@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.34 2004/04/05 22:44:13 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.35 2005/02/14 20:44:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -78,7 +78,9 @@ protected:
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
+  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
   mutable RooSetProxy _plotCoefNormSet ;
+  const TNamed* _plotCoefNormRange ;
 
   mutable RooNormListManager _normListMgr ; // Component normalization list manager
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;

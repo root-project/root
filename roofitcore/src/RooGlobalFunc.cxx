@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.cc,v 1.1 2005/02/14 20:44:25 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.cc,v 1.2 2005/02/15 21:16:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,7 +32,7 @@ RooCmdArg ShiftToZero()                          { return RooCmdArg("ShiftToZero
 RooCmdArg Normalization(Double_t scaleFactor)    { return RooCmdArg("Normalization",RooAbsReal::Relative,0,scaleFactor,0,0,0,0,0) ; }
 RooCmdArg Range(const char* rangeName)           { return RooCmdArg("RangeWithName",0,0,0,0,rangeName,0,0,0) ; }
 RooCmdArg Range(Double_t lo, Double_t hi)        { return RooCmdArg("Range",0,0,lo,hi,0,0,0,0) ; }
-RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines) { return RooCmdArg("RangeWithVLines",vlines?1:0,0,lo,hi,0,0,0,0) ; }
+RooCmdArg VLines()                               { return RooCmdArg("VLines",1,0,0,0,0,0,0,0) ; } 
 RooCmdArg LineColor(Color_t color)               { return RooCmdArg("LineColor",color,0,0,0,0,0,0,0) ; }
 RooCmdArg LineStyle(Style_t style)               { return RooCmdArg("LineStyle",style,0,0,0,0,0,0,0) ; }
 RooCmdArg LineWidth(Width_t width)               { return RooCmdArg("LineWidth",width,0,0,0,0,0,0,0) ; }
@@ -51,7 +51,7 @@ RooCmdArg Normalization(Double_t scaleFactor, RooAbsPdf::ScaleType scaleType)
 
 // RooAbsData::plotOn arguments
 RooCmdArg Cut(const char* cutSpec)              { return RooCmdArg("CutSpec",0,0,0,0,cutSpec,0,0,0) ; }
-RooCmdArg Cut(const RooAbsReal& cutVar)         { return RooCmdArg("CutVar",0,0,0,0,0,0,&cutVar,0) ; }
+RooCmdArg Cut(const RooFormulaVar& cutVar)      { return RooCmdArg("CutVar",0,0,0,0,0,0,&cutVar,0) ; }
 RooCmdArg Binning(const RooAbsBinning& binning) { return RooCmdArg("Binning",0,0,0,0,0,0,&binning,0) ;}
 RooCmdArg MarkerStyle(Style_t style)            { return RooCmdArg("MarkerStyle",style,0,0,0,0,0,0,0) ; }
 RooCmdArg MarkerSize(Size_t size)               { return RooCmdArg("MarkerSize",0,0,size,0,0,0,0,0) ; }
@@ -75,6 +75,24 @@ RooCmdArg Sibling(const RooAbsCollection& sibling)      { return RooCmdArg("Sibl
 // RooAbsRealLValue::frame arguments
 RooCmdArg Title(const char* name) { return RooCmdArg("Title",0,0,0,0,name,0,0,0) ; }
 RooCmdArg Bins(Int_t nbin)        { return RooCmdArg("Bins",nbin,0,0,0,0,0,0,0) ; }
+
+// RooAbsData::reduce arguments
+RooCmdArg SelectVars(const RooArgSet& vars)     { return RooCmdArg("SelectVars",0,0,0,0,0,0,&vars,0) ; }
+RooCmdArg EventRange(Int_t nStart, Int_t nStop) { return RooCmdArg("EventRange",nStart,nStop,0,0,0,0,0,0) ; }
+
+// RooAbsPdf::fitTo arguments
+RooCmdArg FitOptions(const char* opts) { return RooCmdArg("FitOptions",0,0,0,0,opts,0,0,0) ; }
+RooCmdArg Optimize(Bool_t flag)        { return RooCmdArg("Optimize",flag,0,0,0,0,0,0,0) ; }
+RooCmdArg Verbose(Bool_t flag)         { return RooCmdArg("Verbose",flag,0,0,0,0,0,0,0) ; }
+RooCmdArg Save(Bool_t flag)            { return RooCmdArg("Save",flag,0,0,0,0,0,0,0) ; }
+RooCmdArg Timer(Bool_t flag)           { return RooCmdArg("Timer",flag,0,0,0,0,0,0,0) ; }
+RooCmdArg Blind(Bool_t flag)           { return RooCmdArg("Blind",flag,0,0,0,0,0,0,0) ; }
+RooCmdArg Strategy(Int_t code)         { return RooCmdArg("Strategy",code,0,0,0,0,0,0,0) ; }
+RooCmdArg InitialHesse(Bool_t flag)    { return RooCmdArg("InitialHesse",flag,0,0,0,0,0,0,0) ; }
+RooCmdArg Hesse(Bool_t flag)           { return RooCmdArg("Hesse",flag,0,0,0,0,0,0,0) ; }
+RooCmdArg Minos(Bool_t flag)           { return RooCmdArg("Minos",flag,0,0,0,0,0,0,0) ; }
+RooCmdArg ProjectedObservables(const RooArgSet& set) { return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,&set,0) ; }
+
 
 namespace RooFitShortHand {
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.rdl,v 1.3 2002/09/05 04:33:44 verkerke Exp $
+ *    File: $Id: RooNLLVar.rdl,v 1.4 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,15 +23,15 @@ public:
 
   // Constructors, assignment etc
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-	    Bool_t extended=kFALSE, Int_t nCPU=1) ;
+	    Bool_t extended=kFALSE, const char* rangeName=0, Int_t nCPU=1) ;
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-	    const RooArgSet& projDeps, Bool_t extended=kFALSE, Int_t nCPU=1) ;
+	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, Int_t nCPU=1) ;
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
 
   virtual RooAbsGoodnessOfFit* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-				      const RooArgSet& projDeps, Int_t nCPU=1) {
-    return new RooNLLVar(name,title,pdf,data,projDeps,_extended,nCPU) ;
+				      const RooArgSet& projDeps, const char* rangeName, Int_t nCPU=1) {
+    return new RooNLLVar(name,title,pdf,data,projDeps,_extended,_rangeName, nCPU) ;
   }
   
   virtual ~RooNLLVar();

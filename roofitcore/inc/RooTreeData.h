@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.31 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.32 2005/02/14 20:44:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -103,11 +103,13 @@ public:
 
   void printToStream(std::ostream& os, PrintOption opt, TString indent) const ;
 
+protected:
+
   // Cache copy feature is not publicly accessible
   RooTreeData(const char *name, const char *title, RooTreeData *ntuple, 
-	     const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache);
+	      const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange, 
+	      Int_t nStart, Int_t nStop, Bool_t copyCache);
 
-protected:
 
   inline Int_t ScanCache(const char* varexp="", const char* selection="", Option_t* option="", 
 			 Int_t nentries = 1000000000, Int_t firstentry = 0) {
@@ -165,10 +167,9 @@ protected:
   }
 
   // Load data from another TTree
-  void loadValues(const RooTreeData *t, RooFormulaVar* select=0) ;
-  void loadValues(const TTree *t, RooFormulaVar* cutVar=0) ; 
-  void loadValues(const char *filename, const char *treename,
-		  RooFormulaVar *cutVar=0);
+  void loadValues(const RooTreeData *t, RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) ; 
+  void loadValues(const TTree *t, RooFormulaVar* cutVar=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) ; 
+  void loadValues(const char *filename, const char *treename, RooFormulaVar *cutVar=0);
 
 
   // PlotOn with command list

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.cc,v 1.10 2004/11/29 20:23:05 wverkerke Exp $
+ *    File: $Id: RooChi2Var.cc,v 1.11 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
 		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
 		       const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),0,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
@@ -58,8 +58,8 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-		     Bool_t extended, Int_t nCPU) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),nCPU),
+		     Bool_t extended, const char* cutRange, Int_t nCPU) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),cutRange,nCPU),
   _extended(extended)
 {
   
@@ -67,8 +67,8 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-		     const RooArgSet& projDeps, Bool_t extended, Int_t nCPU) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,nCPU),
+		     const RooArgSet& projDeps, Bool_t extended, const char* cutRange, Int_t nCPU) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,cutRange,nCPU),
   _extended(extended)
 {
   

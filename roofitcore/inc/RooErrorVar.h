@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.rdl,v 1.9 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooErrorVar.rdl,v 1.10 2005/02/14 20:44:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,6 +65,7 @@ public:
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
   const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
   RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) ;
+  Bool_t hasBinning(const char* name) const ;
 
   // Set infinite fit range limits
   inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity) ; }

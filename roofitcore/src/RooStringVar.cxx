@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStringVar.cc,v 1.20 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.21 2004/11/29 20:24:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -74,7 +74,11 @@ void RooStringVar::setVal(const char* value) {
   if (!isValidString(value)) {    
     cout << "RooStringVar::setVal(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
-    strcpy(_value,value) ;
+    if (value) {
+      strcpy(_value,value) ;
+    } else {
+      _value[0] = 0 ;
+    }
   }
 }
 
@@ -86,7 +90,11 @@ RooAbsArg& RooStringVar::operator=(const char* newValue)
   if (!isValidString(newValue)) {
     cout << "RooStringVar::operator=(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
-    strcpy(_value,newValue) ;
+    if (newValue) {
+      strcpy(_value,newValue) ;
+    } else {
+      _value[0] = 0 ;
+    }
   }
 
   return *this ;

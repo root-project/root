@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.23 2004/07/02 07:39:03 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.24 2005/02/14 20:44:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,6 +41,8 @@ public:
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0) const = 0 ;
 
   // Reduction methods
+  RooAbsData* reduce(RooCmdArg arg1,RooCmdArg arg2=RooCmdArg(),RooCmdArg arg3=RooCmdArg(),RooCmdArg arg4=RooCmdArg(),
+                     RooCmdArg arg5=RooCmdArg(),RooCmdArg arg6=RooCmdArg(),RooCmdArg arg7=RooCmdArg(),RooCmdArg arg8=RooCmdArg()) ;
   RooAbsData* reduce(const char* cut) ;
   RooAbsData* reduce(const RooFormulaVar& cutVar) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=0) ;
@@ -94,7 +96,8 @@ protected:
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) = 0 ;
   void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
 
-  virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) = 0 ;
+  virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
+	                        Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) = 0 ;
 
   // Column structure definition
   RooArgSet _vars;         // Dimensions of this data set
