@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.37 2003/04/16 15:06:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.38 2003/04/17 07:55:24 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TProfile.h"
 #include "TMath.h"
+#include "TF1.h"
 #include "THLimitsFinder.h"
 #include "Riostream.h"
 
@@ -1137,12 +1138,39 @@ Int_t TProfile::Merge(TCollection *list)
 
 
 //______________________________________________________________________________
-void TProfile::Multiply(TF1 *, Double_t )
+void TProfile::Multiply(TF1 *f1, Double_t c1)
 {
    // Performs the operation: this = this*c1*f1
 
-   Error("Multiply","Function not implemented for TProfile");
-   return;
+   if (!f1) {
+      Error("Multiply","Attempt to multiply by a null function");
+      return;
+   }
+
+   Int_t nbinsx = GetNbinsX();
+
+//*-*- Add statistics
+   Double_t xx[1], cf1, ac1 = TMath::Abs(c1);
+   Stat_t s1[10];
+   Int_t i;
+   for (i=0;i<10;i++) {s1[i] = 0;}
+   PutStats(s1);
+   
+   SetMinimum();
+   SetMaximum();
+
+//*-*- Loop on bins (including underflows/overflows)
+   Int_t bin;
+   for (bin=0;bin<=nbinsx+1;bin++) {
+      xx[0] = fXaxis.GetBinCenter(bin);
+      if (!f1->IsInside(xx)) continue;
+      TF1::RejectPoint(kFALSE);
+      cf1 = f1->EvalPar(xx);
+      if (TF1::RejectedPoint()) continue;
+      fArray[bin]             *= c1*cf1;
+      fSumw2.fArray[bin]      *= c1*c1*cf1*cf1;
+      if (!fScaling) fBinEntries.fArray[bin] *= ac1*TMath::Abs(cf1);
+   }
 }
 
 //______________________________________________________________________________
