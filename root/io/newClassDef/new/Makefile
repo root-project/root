@@ -1,19 +1,28 @@
+TEST_TARGETS += new
+CLEAN_TARGETS += local_clean
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 local_all: main
 .PHONY: main
 
 include $(ROOTSYS)/test/Makefile.arch
 
-ifeq ($(PLATFORM),win32)
-CXXFLAGS += /TP
-LIBSFORLINK = $(LIBS)
-else
-ifeq ($(ARCH),solarisCC)
-CXXFLAGS += -ptr.
-else
-LIBSFORLINK = 
-endif
-endif
 
+#ifeq ($(PLATFORM),win32)
+#CXXFLAGS += /TP
+#LIBSFORLINK = $(LIBS)
+#else
+#ifeq ($(ARCH),solarisCC)
+#CXXFLAGS += -ptr.
+#else
+#LIBSFORLINK = 
+#endif
+#endif
+
+#leave here
 ifeq ($(ARCH),aix5)
 PACKAGES = namespace template InheritMulti
 else
@@ -29,39 +38,41 @@ main: $(SHARED_LIBS)
 #	echo $(CXXFLAGS)
 #	echo $(SHARED_LIBS)
 
-test: main Run.C
+new: main Run.C
 	@root -q -l -b "Run.C(\"$(DllSuf)\")"
-	@echo "All test succeeded in `pwd`"
+#@echo "All test succeeded in `pwd`"
 
 $(DICTS) : %dict.C : %.h %linkdef.h
-	@rootcint -f $@ -c $^
+	$(CMDECHO)rootcint -f $@ -c $^
 
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
-ifeq ($(ARCH),aix)
-		@/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		@/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
-		@$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		@$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-else
-ifeq ($(PLATFORM),win32)
-		@bindexplib $* $^ > $*.def
-		@lib -nologo -MACHINE:IX86 $^ -def:$*.def \
-		   $(OutPutOpt)$(subst dll,lib,$@)
-		@$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
-		   $(OutPutOpt)$@
-else
-		@$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) $^ $(OutPutOpt) $@
-endif
-endif
-endif
-endif
+	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" "" $@ $^ > $*.build.log
+#ifeq ($(ARCH),aix)
+#		@/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+#else
+#ifeq ($(ARCH),aix5)
+#		@/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+#else
+#ifeq ($(ARCH),macosx)
+## We need to make both the .dylib and the .so
+#		@$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
+#		@$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+#		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+#else
+#ifeq ($(PLATFORM),win32)
+#		@bindexplib $* $^ > $*.def
+#		@lib -nologo -MACHINE:IX86 $^ -def:$*.def \
+	#	   $(OutPutOpt)$(subst dll,lib,$@)
+	#	@$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
+#		   $(OutPutOpt)$@
+#else
+#		@$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) $^ $(OutPutOpt) $@
+#endif
+#endif
+#endif
+#endif
 
 #		@$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) $^ $(OutPutOpt)$@
 
