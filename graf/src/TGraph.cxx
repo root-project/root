@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.40 2001/06/05 13:51:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.41 2001/06/08 06:45:47 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -784,6 +784,7 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
       fnew1->SetParent(this);
       fnew1->Save(xmin,xmax);
       if (fitOption.Nograph) fnew1->SetBit(TF1::kNotDraw);
+      fnew1->SetBit(TFormula::kNotGlobal);
 
       if (TestBit(kCanDelete)) return;
       if (gPad) gPad->Modified();
