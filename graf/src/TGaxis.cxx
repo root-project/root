@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.67 2004/04/26 08:25:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.68 2004/06/02 09:39:40 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -325,7 +325,26 @@ void TGaxis::Paint(Option_t *)
    Double_t wmin = fWmin;
    Double_t wmax = fWmax;
    Int_t    ndiv = fNdiv;
-   PaintAxis(fX1,fY1,fX2,fY2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
+   
+   // following code required to support toggle of lin/log scales
+   Double_t x1 = gPad->XtoPad(fX1);
+   Double_t y1 = gPad->YtoPad(fY1);
+   Double_t x2 = gPad->XtoPad(fX2);
+   Double_t y2 = gPad->YtoPad(fY2);
+   TString opt = fChopt;
+   opt.ToUpper();
+   if (gPad->GetLogx()) {
+	   if ((y1 == y2) && !opt.Contains("G")) opt += "G";
+   } else {
+	   if ((y1 == y2) && opt.Contains("G")) opt.ReplaceAll("G","");
+   }
+   if (gPad->GetLogy()) {
+	   if ((x1 == x2) && !opt.Contains("G")) opt += "G";
+   } else {
+	   if ((x1 == x2) && opt.Contains("G")) opt.ReplaceAll("G","");
+   }
+
+	PaintAxis(x1,y1,x2,y2,wmin,wmax,ndiv,opt.Data(),fGridLength);
 }
 //______________________________________________________________________________
 void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
