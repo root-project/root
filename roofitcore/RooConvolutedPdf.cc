@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.6 2001/08/01 01:24:08 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.7 2001/08/02 21:39:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -125,7 +125,7 @@ Int_t RooConvolutedPdf::getAnalyticalIntegral(RooArgSet& allVars,
   TIterator* varIter  = allVars.MakeIterator() ;
   TIterator* convIter = _convSet.MakeIterator() ;
   
-  RooArgSet allVarsCoef ;
+  RooArgSet allVarsCoef("allVarsCoef") ;
   RooAbsArg* arg ;
   RooAbsArg* conv ;
   while(arg=(RooAbsArg*) varIter->Next()) {
@@ -245,7 +245,7 @@ void RooConvolutedPdf::dump(const RooArgSet* nset) const
 Bool_t RooConvolutedPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const 
 {
   delete _convNormSet ;
-  RooArgSet convNormArgs ;
+  RooArgSet convNormArgs("convNormArgs") ;
 
   // Make iterator over data set arguments
   TIterator* dsIter = nset->MakeIterator() ;

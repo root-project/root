@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.4 2001/08/02 21:39:12 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.5 2001/08/03 18:11:34 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -64,7 +64,6 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   }
 
   // Each index state can only have one PDF associated with it
-  cout << "TList(" << &_pdfProxyList << ")::FindObject(" << catLabel << ")" << endl ;
   if (_pdfProxyList.FindObject(catLabel)) {
     cout << "RooSimultaneous::addPdf(" << GetName() << "): ERROR, index state " 
 	 << catLabel << " has already an associated PDF" << endl ;
@@ -73,7 +72,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 
   // Create a proxy named after the associated index state
-  RooRealProxy* proxy = new RooRealProxy(catLabel,catLabel,this,(RooAbsPdf&)pdf) ;
+  TObject* proxy = new RooRealProxy(catLabel,catLabel,this,(RooAbsPdf&)pdf) ;
   _pdfProxyList.Add(proxy) ;
   _numPdf += 1.0 ;
 

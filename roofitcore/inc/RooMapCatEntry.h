@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMapCatEntry.rdl,v 1.2 2001/05/14 22:54:21 verkerke Exp $
+ *    File: $Id: RooMapCatEntry.rdl,v 1.3 2001/08/02 22:36:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,9 +21,10 @@
 class RooMapCatEntry : public TNamed {
 public:
   inline RooMapCatEntry() : TNamed(), _regexp(""), _cat() {} 
+  virtual ~RooMapCatEntry() {} ;
   RooMapCatEntry(const char* exp, const RooCatType* cat) ;
   RooMapCatEntry(const RooMapCatEntry& other) ;
-  virtual TObject* Clone(const char*) const { return new RooMapCatEntry(*this); }
+  virtual TObject* Clone(const char* newName=0) const { return new RooMapCatEntry(*this); }
 
   inline Bool_t ok() { return (_regexp.Status()==TRegexp::kOK) ; }
   Bool_t match(const char* testPattern) const ;

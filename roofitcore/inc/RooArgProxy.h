@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.rdl,v 1.9 2001/07/31 05:54:18 verkerke Exp $
+ *    File: $Id: RooArgProxy.rdl,v 1.10 2001/08/02 21:39:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,7 +17,7 @@
 #include "RooFitCore/RooAbsProxy.hh"
 #include "RooFitCore/RooAbsArg.hh"
 
-class RooArgProxy : public RooAbsProxy, public TNamed {
+class RooArgProxy : public TNamed, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.

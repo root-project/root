@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategoryProxy.rdl,v 1.6 2001/05/14 22:54:20 verkerke Exp $
+ *    File: $Id: RooCategoryProxy.rdl,v 1.7 2001/07/31 05:54:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,7 +25,7 @@ public:
   RooCategoryProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
 		   Bool_t valueServer=kTRUE, Bool_t shapeServer=kFALSE) ;
   RooCategoryProxy(const char* name, RooAbsArg* owner, const RooCategoryProxy& other) ;
-  virtual TObject* Clone(const char*) const { return new RooCategoryProxy(*this); }
+  virtual TObject* Clone(const char* newName=0) const { return new RooCategoryProxy(*this); }
   virtual ~RooCategoryProxy();
 
   // Accessors

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.26 2001/08/02 21:39:08 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.27 2001/08/03 22:07:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,6 +34,8 @@ RooArgSet::RooArgSet() :
   _name(), TList(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
+//   cout << "!!!!! RooArgSet default ctor called !!!!!" << endl ;
+//   assert(0) ;
 }
 
 RooArgSet::RooArgSet(const char *name) :
@@ -134,6 +136,11 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  if (other._isCopy) {
+    cout << "!!!!! Making copy of copied list !!!!!" << endl ;
+    assert(0) ;
+  }
+
   RooTrace::create(this) ;
   if (!name) SetName(other.GetName()) ;
 
@@ -161,7 +168,9 @@ RooArgSet* RooArgSet::snapshot(Bool_t deepCopy) const
   // all its external dependents
 
   // First create empty list
-  RooArgSet* snapshot = new RooArgSet(TString("Snapshot of ").Append(GetName())) ;
+  TString snapName("Snapshot of ") ;
+  snapName.Append(GetName()) ;
+  RooArgSet* snapshot = new RooArgSet(snapName.Data()) ;
 
   // Copy contents
   TIterator *iterator= MakeIterator();
@@ -419,13 +428,16 @@ void RooArgSet::setAttribAll(const Text_t* name, Bool_t value)
   while (arg=(RooAbsArg*)iter->Next()) {
     arg->setAttribute(name,value) ;
   }
+  delete iter ;
 }
 
 
 RooArgSet* RooArgSet::selectByAttrib(const char* name, Bool_t value) const
 {
   // Create output set
-  RooArgSet *sel = new RooArgSet(TString(GetName()).Append("_selection")) ;
+  TString selName(GetName()) ;
+  selName.Append("_selection") ;
+  RooArgSet *sel = new RooArgSet(selName.Data()) ;
   
   // Scan set contents for matching attribute
   TIterator* iter=MakeIterator() ;
@@ -434,6 +446,7 @@ RooArgSet* RooArgSet::selectByAttrib(const char* name, Bool_t value) const
     if (arg->getAttribute(name)==value)
       sel->add(*arg) ;
   }
+  delete iter ;
 
   // Return set if not empty
   if (sel->GetSize()) return sel ;
@@ -665,7 +678,7 @@ void RooArgSet::printToStream(ostream& os, PrintOption opt, TString indent) cons
   //   Verbose: Shape description of each argument
 
   // we cannot use oneLinePrint() since we do not inherit from TNamed
-  os << ClassName() << "::" << GetName() << ":" << endl;
+  os << ClassName() << "::" << GetName() << ":" << (_isCopy?" COPY":"") << endl;
   if(opt >= Standard) {
     TIterator *iterator= MakeIterator();
     int index= 0;

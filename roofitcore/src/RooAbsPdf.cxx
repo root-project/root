@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.21 2001/08/01 21:30:14 david Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.22 2001/08/02 21:39:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -194,13 +194,14 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 
   // Destroy old normalization & create new
   if (_norm) delete _norm ;
-  
+    
+  TString nname(GetName()) ; nname.Append("Norm") ;
   if (selfNormalized() || !dependsOn(*depList)) {
-    _norm = new RooRealVar(TString(GetName()).Append("Norm"),
-			   TString(GetTitle()).Append(" Unit Normalization"),1) ;
+    TString ntitle(GetTitle()) ; ntitle.Append(" Unit Normalization") ;
+    _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;
   } else {
-    _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
-				TString(GetTitle()).Append(" Integral"),*this,*depList) ;
+    TString ntitle(GetTitle()) ; ntitle.Append(" Integral") ;
+    _norm = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*depList) ;
   }
 
   // Allow optional post-processing
@@ -351,7 +352,7 @@ Bool_t RooAbsPdf::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedAr
   // add the corresponding args from allArgs to matchedArgs and return kTRUE. Otherwise
   // return kFALSE and do not change matchedArgs.
 
-  RooArgSet matched;
+  RooArgSet matched("matched");
   TIterator *iterator= nameList.MakeIterator();
   TObjString *name(0);
   Bool_t isMatched(kTRUE);
@@ -451,8 +452,9 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
     os << indent << "Cached value = " << _value << endl ;
     if (_norm) {
       os << " Normalization integral: " << endl ;
-      _norm->printToStream(os,Verbose,TString(indent).Append("  ")) ;
-      _norm->printToStream(os,Standard,TString(indent).Append("  ")) ;
+      TString moreIndent(indent) ; moreIndent.Append("   ") ;
+      _norm->printToStream(os,Verbose,moreIndent.Data()) ;
+      _norm->printToStream(os,Standard,moreIndent.Data()) ;
     }
   }
 }

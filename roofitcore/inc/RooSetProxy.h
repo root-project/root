@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.rdl,v 1.6 2001/08/02 21:39:12 verkerke Exp $
+ *    File: $Id: RooSetProxy.rdl,v 1.7 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -17,7 +17,7 @@
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooArgSet.hh"
 
-class RooSetProxy : public RooAbsProxy, public RooArgSet {
+class RooSetProxy : public RooArgSet, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooList.rdl,v 1.2 2001/04/22 18:15:32 david Exp $
+ *    File: $Id: RooList.rdl,v 1.3 2001/05/14 22:54:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -17,6 +17,7 @@
 class RooList : public TList {
 public:
   inline RooList() : TList() { }
+  virtual ~RooList() {} ;
   TObjOptLink *findLink(const char *name, const char *caller= 0) const;
   Bool_t moveBefore(const char *before, const char *target, const char *caller= 0);
   Bool_t moveAfter(const char *after, const char *target, const char *caller= 0);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.1 2001/07/31 05:54:20 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.cc,v 1.2 2001/08/02 21:39:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,7 +25,11 @@ ClassImp(RooPdfCustomizer)
 
 
 RooPdfCustomizer::RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
-  _masterPdf((RooAbsPdf*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(splitLeafs)
+  _masterPdf((RooAbsPdf*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(splitLeafs),
+  _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
+  _cloneBranchList("cloneBranchList")
+
+
 {
   _masterPdf->leafNodeServerList(&_masterLeafList) ;
   _masterPdf->leafNodeServerList(&_masterUnsplitLeafList) ;
@@ -100,8 +104,8 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
   }
 
   // Find leafs that must be split according to provided description, Clone leafs, change their names
-  RooArgSet masterLeafsToBeSplit ;
-  RooArgSet clonedMasterLeafs ;
+  RooArgSet masterLeafsToBeSplit("masterLeafsToBeSplit") ;
+  RooArgSet clonedMasterLeafs("clonedMasterLeafs") ;
   _masterLeafListIter->Reset() ;
   RooAbsArg* leaf ;
   while(leaf=(RooAbsArg*)_masterLeafListIter->Next()) {
@@ -154,7 +158,7 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
 
 
   // Find branches that are affected by splitting and must be cloned
-  RooArgSet masterBranchesToBeCloned ;
+  RooArgSet masterBranchesToBeCloned("masterBranchesToBeCloned") ;
   _masterBranchListIter->Reset() ;
   RooAbsArg* branch ;
   while(branch=(RooAbsArg*)_masterBranchListIter->Next()) {
@@ -169,7 +173,7 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
 
   // Clone branches, changes their names 
   RooAbsPdf* cloneTopPdf(0) ;
-  RooArgSet clonedMasterBranches ;
+  RooArgSet clonedMasterBranches("clonedMasterBranches") ;
   TIterator* iter = masterBranchesToBeCloned.MakeIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {
     TString newName(branch->GetName()) ;

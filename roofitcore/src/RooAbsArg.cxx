@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.41 2001/08/02 21:39:06 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.42 2001/08/03 22:07:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -121,6 +121,7 @@ RooAbsArg::~RooAbsArg()
   while (server=(RooAbsArg*)serverIter->Next()) {
     removeServer(*server) ;
   }
+  delete serverIter ;
 
   //Notify all client that they are in limbo
   TIterator* clientIter = _clientList.MakeIterator() ;
@@ -130,10 +131,10 @@ RooAbsArg::~RooAbsArg()
     attr.Append(GetName());
     client->setAttribute(attr.Data());
     client->removeServer(*this);
-    if (_verboseDirty) {
+//     if (_verboseDirty) {
       cout << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
 	   << client->GetName() << "\" should have been deleted first" << endl ;
-    }
+//     }
   }
   delete clientIter ;
 
@@ -628,6 +629,7 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooArgSet& newSet, Bool_t mustR
   while(server=(RooAbsArg*)sIter->Next()) {
     ret |= server->recursiveRedirectServers(newSet,mustReplaceAll) ;
   }
+  delete sIter ;
 
   return ret ;
 }
@@ -697,8 +699,8 @@ RooAbsProxy* RooAbsArg::getProxy(Int_t index) const
   // Horrible, but works. All RooAbsProxy implementations inherit
   // from TObject, and are thus collectible, but RooAbsProxy doesn't
   // as that would lead to multiple inheritance of TObject
-  return (RooSetProxy*)_proxyList.At(index) ;
-  //return dynamic_cast<RooAbsProxy*> (_proxyList.At(index)) ;
+  //return (RooSetProxy*)_proxyList.At(index) ;
+  return dynamic_cast<RooAbsProxy*> (_proxyList.At(index)) ;
 }
 
 
@@ -825,7 +827,9 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
 	  ((RooArgProxy*)proxy)->absArg()->printToStream(os,OneLine) ;
 	} else {
 	  os << indent << "    " << proxy->name() << " -> " ;
-	  ((RooSetProxy*)proxy)->printToStream(os,Standard,TString("    ").Append(indent)) ;
+	  TString moreIndent(indent) ;
+	  moreIndent.Append("    ") ;
+	  ((RooSetProxy*)proxy)->printToStream(os,Standard,moreIndent.Data()) ;
 	}
       }
     }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.3 2001/07/31 05:54:17 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.4 2001/08/02 21:39:08 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -207,23 +207,23 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* ow
 
   RooAddModel* convSum = new RooAddModel(newName,newTitle,convVar()) ;
 
-  TIterator *mIter = _modelProxyList.MakeIterator() ;
-  TIterator *cIter = _coefProxyList.MakeIterator() ;
+  _coefProxyIter->Reset() ;
+  _modelProxyIter->Reset() ;
   RooRealProxy* coef ;
   RooRealProxy* model ;
-  while(coef=(RooRealProxy*)cIter->Next()) {
-    model = (RooRealProxy*)mIter->Next() ;
+  while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
+    model = (RooRealProxy*)_modelProxyIter->Next() ;
     
     // Create component convolution
     RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis,owner) ;    
     convSum->addModel(*conv,(RooAbsReal&)coef->arg()) ;
   }
-
+  
   // Create last component convolution
-  model = (RooRealProxy*)mIter->Next() ;    
+  model = (RooRealProxy*)_modelProxyIter->Next() ;    
   RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis,owner) ;    
   convSum->addLastModel(*conv) ;
-  
+
   convSum->changeBasis(basis) ;
   return convSum ;
 }

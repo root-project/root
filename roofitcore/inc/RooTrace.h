@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.rdl,v 1.2 2001/08/02 22:36:30 verkerke Exp $
+ *    File: $Id: RooTrace.rdl,v 1.3 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,50 +20,50 @@
 
 typedef TObject* pTObject ;
 
-
-class RooTraceObj {
+// Padding block object
+class RooPad {
 public:
-  inline RooTraceObj(const TObject* obj, RooTraceObj* prev, RooTraceObj* next) {
-    if (next) next->_prev = this ;
-    if (prev) prev->_next = this ;
-    _obj = obj ;
-    _prev = prev ;
-    _next = next ;
-    
-    memset(_pad1,0,1000) ;
-    memset(_pad2,0,1000) ;
-    //cout << "RooTraceObj::ctor obj=" << obj << " prev=" << _prev << " next=" << _next << endl ;
-  }
+  enum dummy { size=1024 } ;
 
-  inline void checkPad() {
-    Int_t i ;
-    for(i=0 ; i<1000 ; i++) {
-      if (_pad1[i]!=0) cout << "RooTraceObj(" << _obj << ") pad1[" << i << "] = (" << (void*)(_pad1+i) << ") = " << (char) _pad1[i] << endl ;
+  inline RooPad() { memset(_pad,_fil,size) ; }
+
+  Bool_t check() {
+    Bool_t ret(kFALSE) ;
+    for (Int_t i=0 ; i<size ; i++) {
+      if (_pad[i] != _fil) {
+	cout << "RooPad::check: memory address " << (void*)(&_pad[i]) << " overwritten" << endl ;
+	ret=kTRUE ;
+      }
     }
-
-    for(i=0 ; i<1000 ; i++) {
-      if (_pad2[i]!=0) cout << "RooTraceObj(" << _obj << ") pad2[" << i << "] = (" << (void*)(_pad2+1) << ") = " << (char) _pad2[i] << endl ;
-    }
-
+    return ret ;
   }
-
-  inline ~RooTraceObj() {
-    if (_next) { _next->_prev = _prev ; }
-    if (_prev) { _prev->_next = _next ; }
-    //cout << "RooTraceObj::dtor next->prev=" << _prev << " prev->next=" << _next << endl ;
-  }
-
-  inline RooTraceObj* next() { return _next ; }
-  inline RooTraceObj* prev() { return _prev ; }
-  inline const TObject* obj() { return _obj ; }
-
-protected:  
-  char _pad1[1000] ;
-  const TObject* _obj ;
-  RooTraceObj* _prev ;
-  RooTraceObj* _next ;
-  char _pad2[1000] ;
+  
+protected:
+  static char _fil ;
+  char _pad[size] ;
 } ;
+
+typedef RooPad* pRooPad ;
+
+
+// Table of padding blocks 
+class RooPadTable {
+public: 
+  RooPadTable() ;
+  void addPad(const TObject* ref) ;
+  Bool_t removePad(const TObject* ref) ;
+   
+  void checkPads() ;
+  
+protected:
+  friend class RooTrace ;
+  enum dummy { size=100000 } ;
+  Int_t _hwm ; // High water mark
+  Int_t _lfm ; // Lowest free mark
+  pRooPad _padA[size] ;  
+  pTObject _refA[size] ;
+} ;
+
 
 
 class RooTrace {
@@ -78,47 +78,14 @@ public:
   inline static void verbose(Bool_t flag) { _verbose = flag ; }
   inline static void pad(Bool_t flag) { _pad = flag ; }
   
-
-  static void checkPad()  ;
   
-  static void addToList(const TObject* obj) {
-    if (!_traceList) {
-      _traceList = new RooTraceObj(obj,0,0) ;
-    } else {
-      RooTraceObj* link(_traceList) ;
-      while(link->next()) {
-	link = link->next() ;
-      }
-      new RooTraceObj(obj,link,0) ;
-    }
-  }
-  
-  static const TObject* removeFromList(const TObject* obj) {
-    RooTraceObj* link(_traceList) ;
-    RooTraceObj* link2(0) ;
-    while(link) {      
-      link->checkPad() ;
-      if (link->obj() == obj) {
-	link2 = link ;
-      }
-      link = link->next() ;
-    }
-  
-    if (link2) {
-      delete link2 ;
-      return obj ;
-    }
-
-    return 0 ;
-  }
-
-
   static void dump(ostream& os=cout) ;
 
   static Bool_t _active ;
   static Bool_t _verbose ;
   static Bool_t _pad ;
-  static RooTraceObj* _traceList ;
+  
+  static RooPadTable _rpt ;
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.2 2001/08/02 21:39:12 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.3 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,7 +20,7 @@
 ClassImp(RooSimFitContext)
 ;
 
-RooSimFitContext::RooSimFitContext(const RooDataSet* data, const RooSimultaneous* simpdf) : RooFitContext(data,simpdf)
+RooSimFitContext::RooSimFitContext(const RooDataSet* data, const RooSimultaneous* simpdf) : RooFitContext(data,simpdf,kFALSE,kTRUE)
 {
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->_indexCat.arg() ;
 
@@ -52,12 +52,13 @@ RooSimFitContext::RooSimFitContext(const RooDataSet* data, const RooSimultaneous
       RooDataSet* dset = new RooDataSet("dset_simcat","dset_simcat",
 					_dataClone,*_dataClone->get(),RooFormulaVar("simCatCut",cutSpec,simCat)) ;
       
-      _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kFALSE) ;
+      _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE) ;
       _dirtyArray[n] = kTRUE ;
       _nCtxFilled++ ;
 
     } else {
       cout << "RooSimFitContext::RooSimFitContext: no pdf for state " << type->GetName() << endl ;
+      simpdf->_pdfProxyList.Print() ;
       _ctxArray[n] = 0 ;
       _dirtyArray[n] = kFALSE ;
     }

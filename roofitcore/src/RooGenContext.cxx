@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.7 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.8 2001/08/03 18:11:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,7 +29,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.7 2001/08/02 23:54:24 david Exp $";
+"$Id: RooGenContext.cc,v 1.8 2001/08/03 18:11:34 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -135,9 +135,11 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // initialize the accept-reject generator
   RooArgSet *depList= _pdfClone->getDependents(&_datasetVars);
   depList->remove(_otherVars);
-  _acceptRejectFunc= new RooRealIntegral(TString(_pdfClone->GetName()).Append("Reduced"),
-					 TString(_pdfClone->GetTitle()).Append(" (Accept/Reject)"),
-					 *_pdfClone,*depList);
+  TString nname(_pdfClone->GetName()) ;
+  nname.Append("Reduced") ;
+  TString ntitle(_pdfClone->GetTitle()) ;
+  ntitle.Append(" (Accept/Reject)") ;
+  _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList);
   delete depList;
   _otherVars.add(_uniformVars);
   _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,_verbose);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.3 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.4 2001/08/03 18:11:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -157,7 +157,9 @@ void RooGenCategory::printToStream(ostream& os, PrintOption opt, TString indent)
    if (opt>=Verbose) {     
      os << indent << "--- RooGenCategory ---" << endl;
      os << indent << "  Input category list:" << endl ;
-     _superCat.inputCatList().printToStream(os,Standard,TString(indent).Append("  ")) ;
+     TString moreIndent(indent) ;
+     indent.Append("   ") ;
+     _superCat.inputCatList().printToStream(os,Standard,moreIndent.Data()) ;
      os << indent << "  User mapping function is 'const char* " << _userFuncName << "(RooArgSet*)'" << endl ;
    }
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.8 2001/08/03 21:44:57 david Exp $
+ *    File: $Id: RooCurve.cc,v 1.9 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.8 2001/08/03 21:44:57 david Exp $";
+"$Id: RooCurve.cc,v 1.9 2001/08/08 23:11:24 david Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -87,9 +87,11 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
     }
     // project out any remaining normalization variables
     if(vars.GetSize() > 0) {
-      projected= new RooRealIntegral(TString(f.GetName()).Append("Projected"),
-				     TString(f.GetTitle()).Append(" (Projected)"),
-				     f,vars);
+      TString name(f.GetName()) ;
+      name.Append("Projected") ;
+      TString title(f.GetTitle()) ;
+      title.Append(" (Projected)") ;
+      projected= new RooRealIntegral(name.Data(),title.Data(),f,vars);
       if(!projected->isValid()) return; // can this happen if normFunc isn't valid??
       funcPtr= projected->bindVars(x);
     }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.6 2001/08/01 01:24:08 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.7 2001/08/02 21:39:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,7 +25,7 @@ RooFormulaVar* RooResolutionModel::_identity(0) ;
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
   RooAbsPdf(name,title), _basis(0), _basisCode(0), x("x","Dependent or convolution variable",this,_x)
 {
-  if (!_identity) _identity = new RooFormulaVar("identity","1",RooArgSet()) ;  
+  if (!_identity) _identity = new RooFormulaVar("identity","1",RooArgSet("")) ;  
 }
 
 
@@ -34,6 +34,7 @@ RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const ch
 {
   if (other._basis) {
     _basis = (RooFormulaVar*) other._basis->Clone() ;
+
     //_basis = other._basis ;
   }
 
@@ -75,7 +76,11 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbs
 
   RooResolutionModel* conv = (RooResolutionModel*) clone(newName) ;
   
-  conv->SetTitle(TString(conv->GetTitle()).Append(" convoluted with basis function ").Append(basis->GetName())) ;
+  TString newTitle(conv->GetTitle()) ;
+  newTitle.Append(" convoluted with basis function ") ;
+  newTitle.Append(basis->GetName()) ;
+  conv->SetTitle(newTitle.Data()) ;
+
   conv->changeBasis(basis) ;
 
   return conv ;

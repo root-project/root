@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.25 2001/08/03 02:04:33 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.26 2001/08/08 23:11:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,7 +52,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE)
 {
   // Constructor
-  RooArgSet intDepList ;
+  RooArgSet intDepList("intDepList") ;
   RooAbsArg *arg ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -79,7 +79,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      analytically iself                                       *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  RooArgSet anIntOKDepList ;
+  RooArgSet anIntOKDepList("anIntOKDepList") ;
   depIter = depList.MakeIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
     if (function.forceAnalyticalInt(*arg)) anIntOKDepList.add(*arg) ;
@@ -104,7 +104,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     } else {
 
       // Add final dependents of arg as shape servers
-      RooArgSet argLeafServers ;
+      RooArgSet argLeafServers("argLeafServers") ;
       arg->leafNodeServerList(&argLeafServers) ;
 
       TIterator* lIter = argLeafServers.MakeIterator() ;
@@ -160,7 +160,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * B) interact with function to make list of objects actually integrated analytically  *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  RooArgSet anIntDepList ;
+  RooArgSet anIntDepList("anIntDepList") ;
   _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegral(anIntOKDepList,_anaList) ;    
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -170,7 +170,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // *    Make Jacobian list with analytically integrated RealLValues            *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  RooArgSet numIntDepList ;
+  RooArgSet numIntDepList("numIntDepList") ;
 
   // Loop over actually analytically integrated dependents
   TIterator* aiIter = _anaList.MakeIterator() ;
@@ -219,6 +219,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       delete argDeps ; 
     }
   }
+  delete sIter ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * D) Split numeric list in integration list and summation list  *
@@ -381,6 +382,7 @@ Double_t RooRealIntegral::evaluate(const RooArgSet* nset) const
       retVal *= argLV->numTypes() ;
     }    
   }
+  delete fIter ;
   
 
   if (RooAbsPdf::_verboseEval>0)

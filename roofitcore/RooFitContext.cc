@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.13 2001/07/31 05:54:19 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.14 2001/08/02 21:39:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -110,9 +110,10 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
 RooFitContext::~RooFitContext() 
 {
   // Destructor
-
   delete _pdfCompList ;
-  if (_ownData) delete _dataClone ;
+  if (_ownData) {
+    delete _dataClone ;
+  }
   delete _paramList ;
 }
 
@@ -188,7 +189,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
   RooArgSet cacheList("cacheList") ;
 
   if (doCache) {
-    RooArgSet branchList ;
+    RooArgSet branchList("branchList") ;
     _pdfClone->setOperMode(RooAbsArg::ADirty) ;
     _pdfClone->branchNodeServerList(&branchList) ;
     TIterator* bIter = branchList.MakeIterator() ;
@@ -302,6 +303,7 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
       while(param = (RooAbsArg*)pIter->Next()) {
 	if (!param->isConstant()) canOpt=kFALSE ;
       }
+      delete pIter ;
       delete branchParamList ;
 
       if (canOpt) {

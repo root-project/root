@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.16 2001/06/12 19:06:27 verkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.17 2001/08/02 21:39:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -28,7 +28,7 @@ public:
   RooFormula(const char* name, const char* formula, const RooArgSet& varList);
   RooFormula(const RooFormula& other, const char* name=0) ;
   RooFormula& operator=(const RooFormula& other) ;
-  virtual TObject* Clone(const char*) const { return new RooFormula(*this) ; }
+  virtual TObject* Clone(const char* newName=0) const { return new RooFormula(*this) ; }
   virtual ~RooFormula();
 	
   // Dependent management

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.8 2001/07/31 05:54:22 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.9 2001/08/02 21:39:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -185,7 +185,9 @@ void RooSuperCategory::printToStream(ostream& os, PrintOption opt, TString inden
   if (opt>=Verbose) {     
     os << indent << "--- RooSuperCategory ---" << endl;
     os << indent << "  Input category list:" << endl ;
-    _catSet.printToStream(os,Standard,TString(indent).Append("  ")) ;
+    TString moreIndent(indent) ;
+    moreIndent.Append("   ") ;
+    _catSet.printToStream(os,Standard,moreIndent.Data()) ;
   }
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.cc,v 1.1 2001/08/02 21:39:13 verkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.2 2001/08/02 22:36:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,30 +19,94 @@ ClassImp(RooTrace)
 ;
 
 
-RooTraceObj* RooTrace::_traceList(0) ;
 Bool_t RooTrace::_active(kFALSE) ;
 Bool_t RooTrace::_verbose(kFALSE) ;
 Bool_t RooTrace::_pad(kFALSE) ;
+RooPadTable RooTrace::_rpt ;
+char RooPad::_fil('A') ;
 
-void RooTrace::checkPad() 
+RooPadTable::RooPadTable() 
 {
-  RooTraceObj* link(_traceList) ;
-  while(link) {      
-    link->checkPad() ;
-    link = link->next() ;
+  // Clear initial values
+  Int_t i ;
+  for (i=0 ; i<size ; i++) {
+    _padA[i]=0 ;
+    _refA[i]=0 ;
   }
+  _hwm = 0 ;
+  _lfm = 0 ;
 }
 
 
-void RTcheckPad() {
-  RooTrace::checkPad() ;
+void RooPadTable::addPad(const TObject* ref)
+{
+  //cout << "addPad: filling slot " << _lfm << endl ;
+  _padA[_lfm] = new RooPad ;
+  _refA[_lfm] = (TObject*) ref ;
+
+  // Find next free block 
+  _lfm++ ;
+  while (_padA[_lfm]!=0 && _lfm<size) _lfm++ ;
+  //cout << "addPad: increasing LFM to " << _lfm  << endl ; 
+
+  // Update hwm is necessary
+  if (_lfm>=_hwm) {
+    //cout << "addPad: creasing HWM to LFM" << endl ;
+    _hwm=_lfm ;
+  }
+  // Crude protection against overflows
+  if (_lfm==size-1) assert(0) ;
 }
+
+
+Bool_t RooPadTable::removePad(const TObject* ref)
+{
+  Int_t i ;
+  for (i=0 ; i<_hwm ; i++) {
+    if (_refA[i]==ref) {
+
+      // Delete and zero matching entry
+      if (_padA[i]) delete _padA[i] ; 
+      _padA[i]=0 ;
+      _refA[i]=0 ;
+      //cout << "removePad: clearing slot " << i << endl ;
+
+      // Lower lfm if necessary 
+      if (_lfm>i) {
+	//cout << "removePad: lowering LFM to " << i << endl ;
+	_lfm=i ;
+      }
+      return kFALSE;
+    }
+  }
+  return kTRUE ;
+}
+  
+
+
+void RooPadTable::checkPads() 
+{
+  static Int_t ncalls(0) ;
+  Int_t i ;
+  Int_t n(0) ;
+  for(i=0 ; i<_hwm ; i++) {
+    if (_padA[i]) {
+      n++ ;
+      if (_padA[i]->check()) {
+	cout << "Above pad errors associated with reference object " << _refA[i] << endl ;
+      }
+    }
+  }
+  if (++ncalls%100==0) cout << "(" << ncalls << ")Currently " << n << " pads in memory" << endl ;
+}
+
+
 
 
 void RooTrace::create2(const TObject* obj) {
-  if (_pad) checkPad() ;
+  if (_pad) _rpt.checkPads() ;
 
-  addToList(obj) ;
+  _rpt.addPad(obj) ;
   if (_verbose) {
     cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName() 
 	 << " created " << endl ;
@@ -52,10 +116,9 @@ void RooTrace::create2(const TObject* obj) {
 
   
 void RooTrace::destroy2(const TObject* obj) {
+  if (_pad) _rpt.checkPads() ;
 
-  if (_pad) checkPad() ;
-  
-  if (!removeFromList(obj)) {
+  if (_rpt.removePad(obj)) {
     cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
 	 << " already deleted, or created before trace activation[" << obj->GetTitle() << "]" << endl ;
     assert(0) ;
@@ -66,14 +129,16 @@ void RooTrace::destroy2(const TObject* obj) {
 }
 
 
+
+
 void RooTrace::dump(ostream& os) {
   os << "List of TObjects objects in memory while trace active:" << endl ;
   char buf[100] ;
   Int_t i ;
-  RooTraceObj* link(_traceList) ;
-  while(link) {
-    sprintf(buf,"%010x : ",(void*)link->obj()) ;
-    os << buf << setw(20) << link->obj()->ClassName() << setw(0) << " - " << link->obj()->GetName() << endl ;
-    link = link->next() ;
+  for(i=0 ; i<_rpt._hwm ; i++) {
+    if (_rpt._padA[i]) {
+      sprintf(buf,"%010x : ",(void*)_rpt._refA[i]) ;
+      os << buf << setw(20) << _rpt._refA[i]->ClassName() << setw(0) << " - " << _rpt._refA[i]->GetName() << endl ;
+    }
   }
 }
