@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.8 2000/07/20 15:48:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.9 2000/08/09 11:20:39 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -176,6 +176,58 @@ ClassImp(TLatex)
 */
 //End_Html
 //
+//   ** Alignment rules
+//   ------------------
+//  The TText alignment rules apply to the TLatex objects with one exception
+//  concerning the vertical alignment:
+//  If the vertical alignment = 1 , subscripts are not taken into account
+//  if the vertical alignment = 0 , the text is aligned to the box surrounding
+//                                  the full text with sub and superscripts
+//  This is illustrated in the following example:
+//
+//{
+//  gROOT->Reset();
+//  TCanvas c1("c1","c1",600,500);
+//  c1.SetGrid();
+//  c1.DrawFrame(0,0,1,1);
+//  const char *longstring = "K_{S}... K^{*0}... #frac{2s}{#pi#alpha^{2}}
+// #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) =
+// #left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta)";
+//
+//  TLatex latex;
+//  latex.SetTextSize(0.033);
+//  latex.SetTextAlign(13);  //align at top
+//  latex.DrawLatex(.2,.9,"K_{S}");
+//  latex.DrawLatex(.3,.9,"K^{*0}");
+//  latex.DrawLatex(.2,.8,longstring);
+//  
+//  latex.SetTextAlign(12);  //centered
+//  latex.DrawLatex(.2,.6,"K_{S}");
+//  latex.DrawLatex(.3,.6,"K^{*0}");
+//  latex.DrawLatex(.2,.5,longstring);
+//  
+//  latex.SetTextAlign(11);  //default bottom alignment
+//  latex.DrawLatex(.2,.4,"K_{S}");
+//  latex.DrawLatex(.3,.4,"K^{*0}");
+//  latex.DrawLatex(.2,.3,longstring);
+//  
+//  latex.SetTextAlign(10);  //special bottom alignment
+//  latex.DrawLatex(.2,.2,"K_{S}");
+//  latex.DrawLatex(.3,.2,"K^{*0}");
+//  latex.DrawLatex(.2,.1,longstring);
+//  
+//  latex.SetTextAlign(12);
+//  latex->SetTextFont(72);
+//  latex->DrawLatex(.1,.80,"13");
+//  latex->DrawLatex(.1,.55,"12");
+//  latex->DrawLatex(.1,.35,"11");
+//  latex->DrawLatex(.1,.18,"10");
+//}
+//Begin_Html
+/*
+<img src="gif/latex_alignment.gif">
+*/
+//End_Html
 //______________________________________________________________________________
 
 
@@ -1430,7 +1482,8 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          NewSpec.size = mul*size;
 
          switch (valign) {
-            case 1: y -= fs.Dessous()*mul; break;
+            case 0: y -= fs.Dessous()*mul; break;
+            case 1: break;
             case 2: y += (fs.Dessus()-fs.Dessous())*mul/2.5; break;
             case 3: y += fs.Dessus()*mul;  break;
          }
