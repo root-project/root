@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.1 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************
@@ -152,7 +152,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
 # endif
 #endif
 #else // GDK_WIN32
-   sprintf(icon_path, "%s\\icons", gSystem->Getenv("ROOTSYS"));
+   sprintf(icon_path, "%s\\icons:.\\", gSystem->Getenv("ROOTSYS"));
    sprintf(line, "%s\\root.mimes", gSystem->Getenv("HOME"));
    strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
    if (gSystem->AccessPathName(mime_file, kReadPermission))

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.4 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.5 2003/11/05 13:08:26 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1791,6 +1791,9 @@ public:
 //______________________________________________________________________________
 Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
 {
+   //
+
+   const Int_t t0 = 200;
    if (fTip)
       fTip->Hide();
 
@@ -1816,8 +1819,9 @@ Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
       fIgnoreNextFire = 0;
       FireButton();
       fIgnoreNextFire = 2;
+
       if (fTimer == 0) {
-         fTimer = new TRepeatTimer(this, 330);
+         fTimer = new TRepeatTimer(this, t0);
       }
       fTimer->Reset();
       gSystem->AddTimer(fTimer);
@@ -1825,6 +1829,7 @@ Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
       SetState(kButtonUp);
       if (fTimer != 0) {
          fTimer->Remove();
+         fTimer->SetTime(t0);
       }
    }
 
@@ -1847,6 +1852,7 @@ Bool_t TRepeatTimer::Notify()
 {
    fButton->FireButton();
    Reset();
+   if ((long)fTime>20) fTime -= 10;
    return kFALSE;
 }
 

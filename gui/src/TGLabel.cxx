@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.4 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.5 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -33,6 +33,8 @@
 #include "TGString.h"
 #include "TGResourcePool.h"
 #include "Riostream.h"
+#include "TColor.h"
+
 
 const TGFont *TGLabel::fgDefaultFont = 0;
 const TGGC   *TGLabel::fgDefaultGC = 0;
@@ -50,8 +52,9 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    fText        = text;
    fTMode       = kTextCenterX | kTextCenterY;
    fTextChanged = kTRUE;
-   fFontStruct = font;
-   fNormGC = norm;
+   fFontStruct  = font;
+   fNormGC      = norm;
+   fIsOwnFont   = kFALSE;
 
    int max_ascent, max_descent;
 
@@ -73,6 +76,7 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    fTextChanged = kTRUE;
    fFontStruct  = font;
    fNormGC      = norm;
+   fIsOwnFont   = kFALSE;
 
    int max_ascent, max_descent;
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
@@ -156,6 +160,94 @@ const TGGC &TGLabel::GetDefaultGC()
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+void TGLabel::SetTextFont(FontStruct_t font, Option_t *opt)
+{
+   // Changes text font
+   // if opt is non-zero font is changed globally
+
+   if (font != fFontStruct) {
+      FontH_t v = gVirtualX->GetFontHandle(font);
+      if (!v) return;
+
+      fFontStruct = font;
+      TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      if (!opt) {
+         gc = new TGGC(*gc); // copy
+         fIsOwnFont = kTRUE;
+      }
+      gc->SetFont(v);
+      fNormGC = gc->GetGC();
+   
+      int max_ascent, max_descent;
+
+      fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
+      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+      fTHeight = max_ascent + max_descent;
+      Resize(fTWidth, fTHeight + 1);
+   }
+}
+
+//______________________________________________________________________________
+void TGLabel::SetTextFont(const char *fontName, Option_t *opt)
+{
+   // Changes text font specified by name
+   // if opt is non-zero font is changed globally
+
+   TGFont *font = gClient->GetFont(fontName);
+   if (font) {
+      SetTextFont(font->GetFontStruct(), opt);
+   }
+}
+
+//______________________________________________________________________________
+void TGLabel::SetTextFont(TGFont *font, Option_t *opt)
+{
+   // Changes text font specified bypointer to TGFont object
+   // if opt is non-zero font is changed globally
+
+   if (font) {
+      SetTextFont(font->GetFontStruct(), opt);
+   }
+}
+
+//______________________________________________________________________________
+void TGLabel::SetTextColor(Pixel_t color, Option_t *opt)
+{
+   // Changes text color
+   // if opt is non-zero color is changed globally
+
+   TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+
+   if (!opt) {
+      gc = new TGGC(*gc); // copy
+      fIsOwnFont = kTRUE;
+   }
+
+   gc->SetForeground(color);
+   fNormGC = gc->GetGC();
+}
+
+//______________________________________________________________________________
+void TGLabel::SetTextColor(TColor *color, Option_t *opt)
+{
+   // Changes text color
+   // if opt is non-zero color is changed globally
+
+   if (color) {
+      SetTextColor(color->GetPixel(), opt);
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGLabel::IsOwnTextFont() const
+{
+   // returns kTRUE if text attributes are unique
+   // returns kFALSE if text attributes are shared (global)
+
+   return fIsOwnFont;
 }
 
 //______________________________________________________________________________

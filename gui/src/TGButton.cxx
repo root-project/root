@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.20 2003/12/10 14:23:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.21 2003/12/12 18:21:06 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -328,6 +328,7 @@ void TGTextButton::Init()
 
    fTMode = kTextCenterX | kTextCenterY;
    fHKeycode = 0;
+   fIsOwnFont = kFALSE;
 
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -478,45 +479,70 @@ FontStruct_t TGTextButton::GetDefaultFontStruct()
 }
 
 //______________________________________________________________________________
-
-void TGTextButton::SetFont(FontStruct_t font)
+void TGTextButton::SetFont(FontStruct_t font, Option_t *opt)
 {
    // Changes text font
+   // if opt is non-zero font is changed globally
 
    if (font != fFontStruct) {
       FontH_t v = gVirtualX->GetFontHandle(font);
       if (!v) return;
 
       fFontStruct = font;
-      TGGC normgc = *gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
-      TGGC *gc = new TGGC(normgc); // copy
+      TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+ 
+      if (!opt) {
+         gc = new TGGC(*gc); // copy
+         fIsOwnFont = kTRUE;
+      }
       gc->SetFont(v);
       fNormGC = gc->GetGC();
+      int max_ascent, max_descent;
+
+      fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
+      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+      fTHeight = max_ascent + max_descent;
       Resize();
    }
 }
 
 //______________________________________________________________________________
-void TGTextButton::SetFont(const char *fontName)
+void TGTextButton::SetFont(const char *fontName, Option_t *opt)
 {
    // Changes text font specified by name
+   // if opt is non-zero font is changed globally
 
    TGFont *font = fClient->GetFont(fontName);
    if (font) {
-      SetFont(font->GetFontStruct());
+      SetFont(font->GetFontStruct(), opt);
    }
 }
 
 //______________________________________________________________________________
-void TGTextButton::SetTextColor(Pixel_t color)
+void TGTextButton::SetTextColor(Pixel_t color, Option_t *opt)
 {
    // Changes text color
+   // if opt is non-zero color is changed globally
 
-   TGGC normgc = *gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
-   TGGC *gc = new TGGC(normgc); // copy
+   TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+
+   if (!opt) {
+      gc = new TGGC(*gc); // copy
+      fIsOwnFont = kTRUE;
+   }
+
    gc->SetForeground(color);
    fNormGC = gc->GetGC();
    fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+Bool_t TGTextButton::IsOwnTextFont() const
+{
+   // returns kTRUE if text attributes are unique
+   // returns kFALSE if text attributes are shared (global)
+
+   return fIsOwnFont;
 }
 
 //______________________________________________________________________________
@@ -575,7 +601,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
 TGPictureButton::TGPictureButton(const TGWindow *p, const char* pic,
    Int_t id, GContext_t norm, UInt_t option ) : TGButton(p, id, norm, option)
 {
-   // Create a picture button
+   // Create a picture button. pic - file name of the picture
 
    if (!pic || !strlen(pic)) {
       Error("TGPictureButton", "pixmap not found for button");
