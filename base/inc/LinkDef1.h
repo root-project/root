@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.27 2004/08/09 22:11:00 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.28 2004/08/10 08:45:40 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,12 +16,21 @@
 
 #pragma link C++ global kTRUE;
 #pragma link C++ global kFALSE;
+#pragma link C++ global kMaxUChar;
+#pragma link C++ global kMaxChar;
+#pragma link C++ global kMinChar;
 #pragma link C++ global kMaxUShort;
 #pragma link C++ global kMaxShort;
+#pragma link C++ global kMinShort;
 #pragma link C++ global kMaxUInt;
 #pragma link C++ global kMaxInt;
+#pragma link C++ global kMinInt;
+#pragma link C++ global kMaxULong;
+#pragma link C++ global kMaxLong;
+#pragma link C++ global kMinLong;
 #pragma link C++ global kMaxULong64;
 #pragma link C++ global kMaxLong64;
+#pragma link C++ global kMinLong64;
 #pragma link C++ global kBitsPerByte;
 #pragma link C++ global kNPOS;
 #pragma link C++ global kInfo;
