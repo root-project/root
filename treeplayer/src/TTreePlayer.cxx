@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.96 2002/04/14 14:35:26 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.97 2002/04/19 07:40:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1811,7 +1811,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             fprintf(fp,"   %-15s %s;\n","Int_t", branchname);
             continue;
          }
-         if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1; continue;}
+         if (bre->IsBranchFolder()) {
+            fprintf(fp,"   %-15s *%s;\n",bre->GetClassName(), branchname);
+            mustInit.Add(bre);
+            continue;
+         } else {
+            if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1;}
+         }
          if (bre->GetStreamerType() <= 0) {
             if (!gROOT->GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
             fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
@@ -2057,10 +2063,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"//   Set object pointer\n");
       while( (obj = next()) ) {
          if (obj->InheritsFrom(TBranch::Class())) {
-            fprintf(fp,"   %s = 0;\n",((TBranch*)obj)->GetName() );
+            strcpy(branchname,((TBranch*)obj)->GetName() );
          } else if (obj->InheritsFrom(TLeaf::Class())) {
-            fprintf(fp,"   %s = 0;\n",((TLeaf*)obj)->GetName() );
+            strcpy(branchname,((TLeaf*)obj)->GetName() );
          }
+         bname = branchname;
+         while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+         fprintf(fp,"   %s = 0;\n",branchname );
       }
    }
    fprintf(fp,"//   Set branch addresses\n");
