@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.155 2004/11/17 08:46:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.156 2004/11/17 17:56:53 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2462,24 +2462,47 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
       if (gDebug > 0) printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, offset=%d, splitlevel=%d, fBranchPointer=%lx, btype=%d \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),elem->GetOffset(),splitlevel,(Long_t)fBranchPointer,btype);
       if (elem->IsA() == TStreamerBase::Class()) {
          clbase = gROOT->GetClass(elem->GetName());
-         //here one should consider the case of a TClonesArray with a class
-         //deriving from an abstract class
-         //if ((cltop != cl) && (clbase->Property() & kIsAbstract)) return -1;
-         //if (clbase->Property() & kIsAbstract) return -1;
+
          if (clbase->Property() & kIsAbstract) {
             if (cl->InheritsFrom("TCollection")) unroll = -1;
          }
-         if (gDebug > 0) printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
-         fBranchPointer += offset;
          if (unroll < 0 && (btype != 31 || btype != 41)) return -1;
-         else unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
-         fBranchPointer = oldPointer;
-         if (unroll < 0) {
-            if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
-            else              sprintf(branchname,"%s",elem->GetFullName());
-            branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
+
+         if (gDebug > 0) printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
+         if (btype==31 || btype==41) {
+            fBranchPointer += offset;
+            unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
+            fBranchPointer = oldPointer;
+            if (unroll < 0) {
+               if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
+               else              sprintf(branchname,"%s",elem->GetFullName());
+               branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
+               branch->SetParentName(cltop->GetName());
+               fBranches.Add(branch);
+            }
+         } else if (clbase->GetListOfRealData()->GetSize()!=0) {
+
+            // We do not create a branch for an empty base class:
+            char *pointer = fBranchPointer + offset;
+            if (strlen(name)) {
+               sprintf(branchname,"%s.%s",name,elem->GetFullName());
+               // First claim that we have the short name (to fool the children)
+               branch = new TBranchElement(name,info,jd,pointer,basketsize,splitlevel,btype);
+               // Then reset it to the proper name
+               branch->SetName(branchname);
+               branch->SetTitle(branchname);
+            } else {
+               sprintf(branchname,"%s",elem->GetFullName());
+               branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel,btype);
+            }
+            // branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel-1,btype);
             branch->SetParentName(cltop->GetName());
             fBranches.Add(branch);
+            if (0 && unroll < 0) {
+               branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
+               branch->SetParentName(cltop->GetName());
+               fBranches.Add(branch);
+            }
          }
       } else {
          if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());

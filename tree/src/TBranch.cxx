@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.77 2004/08/22 01:50:07 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.78 2004/10/18 12:32:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -923,7 +923,7 @@ TBranch *TBranch::GetSubBranch(const TBranch *br) const
       if (branch == 0) continue;
       if (branch == br) return (TBranch*)this;
       TBranch *br2 = branch->GetSubBranch(br);
-      if (br2) return branch;
+      if (br2) return br2;
    }
    return 0;
 }

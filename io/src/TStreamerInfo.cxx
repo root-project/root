@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.210 2004/11/17 17:56:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.211 2004/11/17 20:29:13 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1718,8 +1718,7 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       atype = fNewType[i];
       len = ((TStreamerElement*)fElem[i])->GetArrayLength();
    }
-   return GetValueAux(atype,ladd,j,len);
-   
+   return GetValueAux(atype,ladd,j,len);   
 }
 
 
@@ -1732,8 +1731,6 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
    Int_t nc = clones->GetEntriesFast();
    if (j >= nc) return 0;
 
-   Int_t bOffset = clones->GetClass()->GetBaseClassOffset(fClass);
-   if (bOffset > 0) eoffset += bOffset;
    char *pointer = (char*)clones->UncheckedAt(j);
    char *ladd    = pointer + eoffset + fOffset[i];
    return GetValueAux(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
@@ -1748,8 +1745,6 @@ Double_t TStreamerInfo::GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_
    Int_t nc = cont->Size();
    if (j >= nc) return 0;
 
-   Int_t bOffset = cont->GetCollectionClass()->GetBaseClassOffset(fClass);
-   if (bOffset > 0) eoffset += bOffset;
    char *pointer = (char*)cont->At(j);
    char *ladd    = pointer + eoffset + fOffset[i];
    return GetValueAux(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
