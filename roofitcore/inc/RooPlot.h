@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.21 2002/02/09 02:01:24 davidk Exp $
+ *    File: $Id: RooPlot.rdl,v 1.22 2002/03/07 06:22:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,12 +29,12 @@ class TClass ;
 
 class RooPlot : public TH1, public RooPrintable {
 public:
-  RooPlot(const RooAbsReal &var, Float_t xmin, Float_t xmax, Int_t nBins);
-  RooPlot(Float_t xmin= 0, Float_t xmax= 1);
-  RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax);
+  RooPlot(const RooAbsReal &var, Double_t xmin, Double_t xmax, Int_t nBins);
+  RooPlot(Double_t xmin= 0, Double_t xmax= 1);
+  RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2);
   RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
-	  Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax);
+	  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   virtual ~RooPlot();
 
   // implement the TH1 interface

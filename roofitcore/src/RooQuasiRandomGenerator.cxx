@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooQuasiRandomGenerator.cc,v 1.1 2001/08/22 00:50:25 david Exp $
+ *    File: $Id: RooQuasiRandomGenerator.cc,v 1.2 2001/10/08 05:20:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@ ClassImp(RooQuasiRandomGenerator)
   ;
 
 static const char rcsid[] =
-"$Id: RooQuasiRandomGenerator.cc,v 1.1 2001/08/22 00:50:25 david Exp $";
+"$Id: RooQuasiRandomGenerator.cc,v 1.2 2001/10/08 05:20:19 verkerke Exp $";
 
 RooQuasiRandomGenerator::RooQuasiRandomGenerator() {
   // Perform one-time initialization of our static coefficient array if necessary
@@ -60,7 +60,9 @@ Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[]) {
 
   /* Load the result from the saved state. */
   static const Double_t recip = 1.0/(double)(1U << NBits); /* 2^(-nbits) */
-  for(UInt_t dim=0; dim < dimension; dim++) {
+
+  UInt_t dim;
+  for(dim=0; dim < dimension; dim++) {
     vector[dim] = _nextq[dim] * recip;
   }
 
@@ -82,7 +84,7 @@ Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[]) {
   }
 
   /* Calculate the next state. */
-  for(UInt_t dim=0; dim<dimension; dim++) {
+  for(dim=0; dim<dimension; dim++) {
     _nextq[dim] ^= _cj[r][dim];
   }
   _sequenceCount++;

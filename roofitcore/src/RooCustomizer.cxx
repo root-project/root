@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.6 2001/12/13 23:37:31 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.7 2002/03/07 06:22:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -387,7 +387,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   }
 
   // Clone branches, changes their names 
-  RooAbsArg* cloneTopPdf(0) ;
+  RooAbsArg* cloneTopPdf = 0;
   RooArgSet clonedMasterBranches("clonedMasterBranches") ;
   TIterator* iter = masterBranchesToBeCloned.createIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {

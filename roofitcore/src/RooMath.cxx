@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.cc,v 1.7 2001/10/08 05:20:18 verkerke Exp $
+ *    File: $Id: RooMath.cc,v 1.8 2002/03/07 06:22:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -174,7 +174,7 @@ RooComplex RooMath::ITPComplexErrFunc(const RooComplex& z, Int_t nOrder)
   }
 
   // Allocate temporary array space for interpolation
-  Int_t imIdx, reIdx ;
+  Int_t imIdx /*, reIdx*/ ;
   Double_t imYR[10] ;
   Double_t imYI[10] ;
 
@@ -289,7 +289,7 @@ Double_t RooMath::interpolate(Double_t ya[], Int_t n, Double_t x)
   static Double_t itod[20] = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
 			      10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0} ;
   int i,m,ns=1 ;
-  Double_t den,dif,dift,ho,hp,w,y,dy ;
+  Double_t den,dif,dift/*,ho,hp,w*/,y,dy ;
   Double_t c[20], d[20] ;
 
   dif = fabs(x) ;
@@ -430,7 +430,7 @@ Double_t RooMath::_imMin(0) ;
 Double_t RooMath::_imMax(0) ;
 Double_t RooMath::_imRange(0) ;
 Double_t RooMath::_imStep(0) ;
-pDouble_t* RooMath::_reCerfArray(0) ;
-pDouble_t* RooMath::_imCerfArray(0) ;
+pDouble_t* RooMath::_reCerfArray = 0;
+pDouble_t* RooMath::_imCerfArray = 0;
 Bool_t RooMath::_cacheTable(kFALSE) ;
 

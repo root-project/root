@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGrid.cc,v 1.3 2001/09/15 00:26:02 david Exp $
+ *    File: $Id: RooGrid.cc,v 1.4 2001/10/08 05:20:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -72,7 +72,7 @@ Bool_t RooGrid::initialize(const RooAbsFunc &function) {
 
   _vol= 1;
   _bins= 1;
-  for(Int_t index= 0; index < _dim; index++) {
+  for(UInt_t index= 0; index < _dim; index++) {
     _xl[index]= function.getMinLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
       cout << ClassName() << ": lower limit of dimension " << index << " is infinite" << endl;
@@ -114,7 +114,9 @@ void RooGrid::resize(UInt_t bins) {
     Double_t xold,xnew(0),dw(0);
     Int_t i = 1;
     // loop over bins in this dimension and load _xin[] with new bin edges
-    for(UInt_t k = 1; k <= _bins; k++) {
+
+    UInt_t k;
+    for(k = 1; k <= _bins; k++) {
       dw += 1.0;
       xold = xnew;
       xnew = coord(k,j);      
@@ -124,7 +126,7 @@ void RooGrid::resize(UInt_t bins) {
       }
     }
     // copy the new edges into _xi[j]
-    for(UInt_t k = 1 ; k < bins; k++) {
+    for(k = 1 ; k < bins; k++) {
       coord(k, j) = newCoord(k);
     }
     coord(bins, j) = 1;
@@ -220,11 +222,11 @@ void RooGrid::printToStream(ostream& os, PrintOption opt, TString indent) const 
   if(opt >= Standard) {
     cout << indent << "  Has " << getDimension() << " dimension(s) each subdivided into "
 	 << getNBins() << " bin(s) and sampled with " << _boxes << " box(es)" << endl;
-    for(Int_t index= 0; index < getDimension(); index++) {
+    for(UInt_t index= 0; index < getDimension(); index++) {
       cout << indent << "  (" << index << ") ["
 	   << setw(10) << _xl[index] << "," << setw(10) << _xu[index] << "]" << endl;
       if(opt < Verbose) continue;
-      for(Int_t bin= 0; bin < _bins; bin++) {
+      for(UInt_t bin= 0; bin < _bins; bin++) {
 	cout << indent << "    bin-" << bin << " : x = " << coord(bin,index) << " , y = "
 	     << value(bin,index) << endl;
       }
@@ -254,7 +256,9 @@ void RooGrid::refine(Double_t alpha) {
     value(0,j)= (oldg + newg)/2;
     Double_t grid_tot_j = value(0,j);    
     // this loop implements value(i,j) = ( value(i-1,j)+value(i,j)+value(i+1,j) ) / 3
-    for (UInt_t i = 1; i < _bins - 1; i++) {
+
+    UInt_t i;
+    for (i = 1; i < _bins - 1; i++) {
       Double_t rc = oldg + newg;
       oldg = newg;
       newg = value(i+1,j);
@@ -267,7 +271,7 @@ void RooGrid::refine(Double_t alpha) {
     // calculate the weights for each bin of this dimension's histogram of values
     // and their sum
     Double_t tot_weight(0);
-    for (UInt_t i = 0; i < _bins; i++) {
+    for (i = 0; i < _bins; i++) {
       _weight[i] = 0;
       if (value(i,j) > 0) {
 	oldg = grid_tot_j/value(i,j);
@@ -283,8 +287,9 @@ void RooGrid::refine(Double_t alpha) {
     Double_t xnew = 0;
     Double_t dw = 0;    
 
-    UInt_t i(1);
-    for (UInt_t k = 0; k < _bins; k++) {
+    UInt_t k;
+    i = 1;
+    for (k = 0; k < _bins; k++) {
       dw += _weight[k];
       xold = xnew;
       xnew = coord(k+1,j);
@@ -295,7 +300,7 @@ void RooGrid::refine(Double_t alpha) {
       }
     }
     
-    for (UInt_t k = 1 ; k < _bins ; k++) {
+    for (k = 1 ; k < _bins ; k++) {
       coord( k, j) = newCoord(k);
     }
     

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.50 2002/02/13 02:03:28 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.51 2002/03/07 06:22:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,7 +47,7 @@
 ClassImp(RooFitContext)
 ;
 
-static TVirtualFitter *_theFitter(0);
+static TVirtualFitter *_theFitter = 0;
 
 
 RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, 
@@ -506,7 +506,7 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
   Bool_t doOptCache    = optOpts.Contains("c") ;
 
   // Create fit result container if so requested
-  RooFitResult* fitRes(0) ;
+  RooFitResult* fitRes = 0;
 
   if (doSaveResult) {
     TString name("fit(") ;
@@ -576,7 +576,8 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
 
   // Initialize MINUIT
   Int_t nPar= _floatParamList->getSize();
-  Double_t params[100], arglist[100];
+//Double_t params[100]
+  Double_t arglist[100];
 
   if (_theFitter) delete _theFitter ;
   _theFitter = new TFitter(nPar*2) ; //WVE Kludge, nPar*2 works around TMinuit memory allocation bug
@@ -750,7 +751,6 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
 }
 
 
-
 Double_t RooFitContext::nLogLikelihood(Bool_t extended, Int_t nObserved) const 
 {
   // Return the likelihood of this PDF for the given dataset
@@ -761,13 +761,11 @@ Double_t RooFitContext::nLogLikelihood(Bool_t extended, Int_t nObserved) const
     return 0.0;
     }
 
-
   Stat_t events= _dataClone->numEntries();
   for(Int_t index= 0; index<events; index++) {
-
+    
     // get the data values for this event
     _dataClone->get(index);
-
     Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet); // WVE modified
 
     // If any event evaluates with zero probability, abort calculation
@@ -822,7 +820,7 @@ TH2F* RooFitContext::plotNLLContours(RooRealVar& var1, RooRealVar& var2, Double_
   // remember our original value of ERRDEF
   Double_t errdef= gMinuit->fUp;
 
-  TGraph* graph1(0) ;
+  TGraph* graph1 = 0;
   if(n1 > 0) {
     // set the value corresponding to an n1-sigma contour
     gMinuit->SetErrorDef(n1*n1*errdef);
@@ -830,7 +828,7 @@ TH2F* RooFitContext::plotNLLContours(RooRealVar& var1, RooRealVar& var2, Double_
     graph1= (TGraph*)gMinuit->Contour(25, index1, index2);
   }
 
-  TGraph* graph2(0) ;
+  TGraph* graph2 = 0;
   if(n2 > 0) {
     // set the value corresponding to an n1-sigma contour
     gMinuit->SetErrorDef(n2*n2*errdef);
@@ -839,7 +837,7 @@ TH2F* RooFitContext::plotNLLContours(RooRealVar& var1, RooRealVar& var2, Double_
     graph2->SetLineStyle(2);
   }
 
-  TGraph* graph3(0) ;
+  TGraph* graph3 = 0;
   if(n3 > 0) {
     // set the value corresponding to an n1-sigma contour
     gMinuit->SetErrorDef(n3*n3*errdef);

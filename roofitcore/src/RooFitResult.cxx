@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.10 2002/02/12 20:02:00 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.11 2002/03/27 19:25:39 davidk Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -427,11 +427,11 @@ void RooFitResult::fillCorrMatrix()
 
   // WVE: This code directly manipulates minuit internal workspace, 
   //      if TMinuit code changes this may need updating
-  Int_t ndex, i, j, m, n, ncoef, nparm, id, it, ix;
-  Int_t ndi, ndj, iso, isw2, isw5;
+  Int_t ndex, i, j, m, n, ncoef, nparm, /*id,*/ it, ix;
+  Int_t ndi, ndj /*, iso, isw2, isw5*/;
   ncoef = (gMinuit->fNpagwd - 19) / 6;
   nparm = TMath::Min(gMinuit->fNpar,ncoef);
-  RooRealVar* gcVal(0) ;
+  RooRealVar* gcVal = 0;
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ix  = gMinuit->fNexofi[i-1];
     ndi = i*(i + 1) / 2;

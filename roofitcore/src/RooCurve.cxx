@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.29 2001/12/20 01:07:53 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.30 2002/01/31 19:30:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -41,7 +41,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.29 2001/12/20 01:07:53 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.30 2002/01/31 19:30:34 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -80,7 +80,8 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
   }
   setYAxisLabel(title.Data());
 
-  RooAbsFunc *funcPtr(0),*rawPtr(0);
+  RooAbsFunc *funcPtr = 0;
+  RooAbsFunc *rawPtr  = 0;
   funcPtr= f.bindVars(x,normVars,kTRUE);
 
   // apply a scale factor if necessary
@@ -187,7 +188,9 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   Double_t *yval= new Double_t[minPoints];
   assert(0 != yval);
   Double_t x,dx= (xhi-xlo)/(minPoints-1.);
-  for(Int_t step= 0; step < minPoints; step++) {
+
+  Int_t step;
+  for(step= 0; step < minPoints; step++) {
     x= xlo + step*dx;
     if (step==minPoints-1) x-=1e-15 ;
     yval[step]= func(&x);
@@ -202,7 +205,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   addPoint(xlo-dx,yval[0]) ;
 
   addPoint(xlo,yval[0]);
-  for(Int_t step= 1; step < minPoints; step++) {
+  for(step= 1; step < minPoints; step++) {
     x1= x2;
     x2= xlo + step*dx;
     addRange(func,x1,x2,yval[step-1],yval[step],prec,minDx);

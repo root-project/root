@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.34 2002/03/29 03:19:47 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.35 2002/03/30 21:12:17 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -221,7 +221,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   
   TIterator* pdfIter = _pdfProxyList.MakeIterator() ;
 
-  RooAbsPdf* pdf ;
+//RooAbsPdf* pdf ;
   RooRealProxy* proxy ;
   RooArgSet allAnalVars(allVars) ;
   TIterator* avIter = allVars.createIterator() ;
@@ -438,7 +438,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   // Make a new expression that is the weighted sum of requested components
   RooArgList pdfCompList ;
   RooArgList wgtCompList ;
-  RooAbsPdf* pdf ;
+//RooAbsPdf* pdf ;
   RooRealProxy* proxy ;
   TIterator* pIter = _pdfProxyList.MakeIterator() ;
   Double_t plotFrac(0) ;

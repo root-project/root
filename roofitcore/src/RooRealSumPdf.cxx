@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealSumPdf.cc,v 1.1 2002/01/19 01:53:10 verkerke Exp $
+ *    File: $Id: RooRealSumPdf.cc,v 1.2 2002/01/19 22:43:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -380,7 +380,7 @@ void RooRealSumPdf::syncFuncIntList(const RooArgSet* intSet) const
   // Make list of function integrals
   _funcIntList = new RooArgList ;  
   _funcIter->Reset() ;
-  RooAbsReal *func, *coef ;
+  RooAbsReal *func /*, *coef*/ ;
   while(func=(RooAbsReal*)_funcIter->Next()) {
     RooAbsReal* funcInt = func->createIntegral(*intSet) ;
     _funcIntList->addOwned(*funcInt) ;
@@ -400,7 +400,7 @@ void RooRealSumPdf::syncFuncNormList(const RooArgSet* normSet) const
   
   // Make list of function normalization integrals
   _funcNormList = new RooArgList ;  
-  RooAbsReal *func, *coef ;
+  RooAbsReal *func /*, *coef*/ ;
   _funcIter->Reset() ;
   while(func=(RooAbsReal*)_funcIter->Next()) {
     RooAbsReal* funcInt = func->createIntegral(*normSet) ;

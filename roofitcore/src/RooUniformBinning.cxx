@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUniformBinning.cc,v 1.2 2002/03/11 07:41:02 verkerke Exp $
+ *    File: $Id: RooUniformBinning.cc,v 1.3 2002/03/28 00:14:38 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -130,7 +130,7 @@ Double_t* RooUniformBinning::array() const
 }
 
 
-void RooUniformBinning::printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const
+void RooUniformBinning::printToStream(ostream &os, PrintOption opt, TString indent) const
 {
   if (opt==Standard) {
     os << "B(" << _nbins << ")" << endl ;

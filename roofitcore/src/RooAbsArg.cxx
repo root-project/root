@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.65 2001/12/02 23:25:54 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.66 2002/03/22 22:43:51 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -134,7 +134,7 @@ RooAbsArg::~RooAbsArg()
 
   //Notify all client that they are in limbo
   TIterator* clientIter = _clientList.MakeIterator() ;
-  RooAbsArg* client(0);
+  RooAbsArg* client = 0;
   while (client=(RooAbsArg*)clientIter->Next()) {
     TString attr("ServerDied:");
     attr.Append(GetName());
@@ -522,7 +522,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
 
   // If not, recurse
   TIterator* sIter = serverIterator() ;
-  RooAbsArg* server(0) ;
+  RooAbsArg* server = 0 ;
   while (server=(RooAbsArg*)sIter->Next()) {
     if (server->dependsOn(testArg)) {
       delete sIter ;
@@ -733,7 +733,7 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
   // server is selected by searching for a new server with an attribute
   // of "ORIGNAME:<oldName>". Return zero if there is not a unique match.
 
-  RooAbsArg *newServer(0);
+  RooAbsArg *newServer = 0;
   if (!nameChange) {
     newServer = newSet.find(GetName()) ;
   }

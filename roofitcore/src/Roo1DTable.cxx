@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.10 2001/10/27 22:28:17 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.11 2002/03/30 21:12:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -52,17 +52,18 @@ Roo1DTable::Roo1DTable(const Roo1DTable& other) :
 {  
   // Copy constructor
 
-  //Take types from reference category
-  RooCatType* type ;
+  // Take types from reference category
   Int_t nbin(0) ;
-  for (int i=0 ; i<other._types.GetEntries() ; i++) {
+
+  int i;
+  for (i=0 ; i<other._types.GetEntries() ; i++) {
     _types.Add(new RooCatType(*(RooCatType*)other._types.At(i))) ;
     nbin++ ;
   }
 
   // Create counter array and initialize
   _count = new Double_t[nbin] ;
-  for (int i=0 ; i<nbin ; i++) _count[i] = other._count[i] ;
+  for (i=0 ; i<nbin ; i++) _count[i] = other._count[i] ;
 }
 
 
@@ -112,10 +113,15 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
   // Determine maximum label and count width
   Int_t labelWidth(0) ;
   Double_t maxCount(1) ;
-  for (int i=0 ; i<_types.GetEntries() ; i++) {
+
+  int i;
+  for (i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
-    labelWidth=strlen(entry->GetName())>labelWidth
-              ?strlen(entry->GetName()):labelWidth ;    
+
+    // Disable warning about a signed/unsigned mismatch by MSCV 6.0 by
+    // using the lwidth temporary.
+    Int_t lwidth = strlen(entry->GetName());
+    labelWidth = lwidth > labelWidth ? lwidth : labelWidth;
     maxCount=_count[i]>maxCount?_count[i]:maxCount ;
   }
   // Adjust formatting if overflow field will be present
@@ -130,7 +136,7 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
   os << setfill(' ') ;
 
   // Contents
-  for (int i=0 ; i<_types.GetEntries() ; i++) {
+  for (i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
     if (_count[i]>0 || opt>=Verbose) {
       os << "  | " << setw(labelWidth) << entry->GetName() << " | " << setw(countWidth) << _count[i] << " |" << endl ;

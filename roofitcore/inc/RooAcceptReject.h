@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.rdl,v 1.7 2001/11/02 03:05:10 verkerke Exp $
+ *    File: $Id: RooAcceptReject.rdl,v 1.8 2001/11/05 18:50:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -56,7 +56,8 @@ protected:
   TIterator *_nextCatVar;
   TIterator *_nextRealVar;
 
-  static const int _maxSampleDim, _minTrialsArray[];
+  static const UInt_t _maxSampleDim;
+  static const UInt_t _minTrialsArray[];
 
   ClassDef(RooAcceptReject,0) // Context for generating a dataset from a PDF
 };

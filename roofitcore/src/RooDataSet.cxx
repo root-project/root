@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.68 2002/02/20 19:46:21 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.69 2002/03/01 19:57:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -452,7 +452,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
   }
 
   // Create selection formula if selection cuts are specified
-  RooFormula* select(0) ;
+  RooFormula* select = 0;
   if(0 != cuts && strlen(cuts)) {
     select=new RooFormula(cuts,cuts,_vars);
     if (!select || !select->ok()) {
@@ -588,9 +588,10 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   blindCat = (RooCategory*) data->_vars.find("blindState") ;
 
   // Find index category, if requested
-  RooCategory *indexCat(0), *indexCatOrig(0) ;
+  RooCategory *indexCat     = 0;
+  RooCategory *indexCatOrig = 0;
   if (indexCatName) { 
-    RooAbsArg* tmp(0) ;
+    RooAbsArg* tmp = 0;
     tmp = data->_vars.find(indexCatName) ;
     if (!tmp) {
       cout << "RooDataSet::read: no index category named " 
@@ -665,7 +666,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	   << filename << "', skipping" << endl;
     }
     
-    Double_t value;
+//  Double_t value;
     Int_t line(0) ;
     Bool_t haveBlindString(false) ;
 
@@ -737,7 +738,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     // Copy dynamically defined types from new data set to indexCat in original list
     RooCategory* origIndexCat = (RooCategory*) variables.find(indexCatName) ;
     TIterator* tIter = indexCat->typeIterator() ;
-    RooCatType* type(0) ;
+    RooCatType* type = 0;
       while (type=(RooCatType*)tIter->Next()) {
 	origIndexCat->defineType(type->GetName(),type->getVal()) ;
       }

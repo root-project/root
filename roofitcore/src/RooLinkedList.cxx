@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinkedList.cc,v 1.2 2001/10/19 22:19:49 verkerke Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.3 2001/11/19 07:23:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -40,7 +40,7 @@ void RooLinkedList::Sort(Bool_t ascend)
   Bool_t working(kTRUE) ;
   while(working) {
     working = kFALSE ;
-    RooLinkedListElem* ptr(_first) ;
+    RooLinkedListElem* ptr = _first;
     while(ptr && ptr->_next) {    
       if ((ascend && ptr->_arg->Compare(ptr->_next->_arg)>0) ||
 	  (!ascend && ptr->_arg->Compare(ptr->_next->_arg)<0)) {
@@ -101,7 +101,7 @@ void RooLinkedList::Streamer(TBuffer &b)
     TObject::Streamer(b);
     b << _size ;
 
-    RooLinkedListElem* ptr(_first) ;
+    RooLinkedListElem* ptr = _first;
     while(ptr) {
       b << ptr->_arg ;
       ptr = ptr->_next ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsHiddenReal.cc,v 1.1 2001/11/20 03:53:06 verkerke Exp $
+ *    File: $Id: RooAbsHiddenReal.cc,v 1.2 2002/01/16 17:19:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -27,12 +27,12 @@
 ClassImp(RooAbsHiddenReal)
 ;
 
-RooCategory* RooAbsHiddenReal::_dummyBlindState(0) ;
+RooCategory* RooAbsHiddenReal::_dummyBlindState = 0;
 
 
 RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, const char* unit)
   : RooAbsReal(name,title,unit),
-  _state("state","Blinding state",this,dummyBlindState())
+    _state("state","Blinding state",this,dummyBlindState())
 {  
   // Constructor
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsBinning.cc,v 1.1 2002/03/07 06:22:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -27,7 +27,7 @@ RooAbsBinning::~RooAbsBinning()
 }
 
 
-void RooAbsBinning::printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const
+void RooAbsBinning::printToStream(ostream &os, PrintOption opt, TString indent) const
 {
   if (opt==Standard) {
 

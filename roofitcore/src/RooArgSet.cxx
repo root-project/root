@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.46 2001/12/06 00:04:51 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.47 2002/02/12 22:17:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -267,7 +267,7 @@ Bool_t RooArgSet::checkForDup(const RooAbsArg& var, Bool_t silent) const
 {
   // Check if element with var's name is already in set
 
-  RooAbsArg *other(0);
+  RooAbsArg *other = 0;
   if(other= find(var.GetName())) {
     if(other != &var) {
       if (!silent)
@@ -330,7 +330,7 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* section)
   }
 
   TIterator *iterator= createIterator();
-  RooAbsArg *next(0);
+  RooAbsArg *next = 0;
   while(0 != (next= (RooAbsArg*)iterator->Next())) {
     os << next->GetName() << " = " ;
     next->writeToStream(os,kFALSE) ;

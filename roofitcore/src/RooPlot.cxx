@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.27 2002/03/07 06:22:22 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.28 2002/03/08 04:46:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -45,9 +45,9 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.27 2002/03/07 06:22:22 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.28 2002/03/08 04:46:16 verkerke Exp $";
 
-RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
+RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
   _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(1)
 {
@@ -55,7 +55,7 @@ RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   initialize();
 }
 
-RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
+RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
   _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(0)
 {
@@ -90,7 +90,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 }
 
 RooPlot::RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
-		 Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
+		 Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
   _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(0)
 {
@@ -104,7 +104,7 @@ RooPlot::RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
   initialize();
 }
 
-RooPlot::RooPlot(const RooAbsReal &var, Float_t xmin, Float_t xmax, Int_t nbins) :
+RooPlot::RooPlot(const RooAbsReal &var, Double_t xmin, Double_t xmax, Int_t nbins) :
   TH1(histName(),"RooPlot",nbins,xmin,xmax),
   _plotVarClone(0), _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(1)
 {
@@ -322,7 +322,7 @@ void RooPlot::Draw(Option_t *options) {
 
   TH1::Draw(options);
   _iterator->Reset();
-  TObject *obj(0);
+  TObject *obj = 0;
   while(obj= _iterator->Next()) {
     obj->Draw(_iterator->GetOption());
   }
@@ -348,7 +348,7 @@ void RooPlot::printToStream(ostream& os, PrintOption opt, TString indent) const 
     os << indent << "  Plot contains " << _items.GetSize() << " object(s)" << endl;
     if(opt >= Shape) {
       _iterator->Reset();
-      TObject *obj(0);
+      TObject *obj = 0;
       while(obj= _iterator->Next()) {
 	os << deeper << "(Options=\"" << _iterator->GetOption() << "\") ";
 	// Is this a printable object?
@@ -441,7 +441,8 @@ TObject *RooPlot::findObject(const char *name, const TClass* clas) const {
   // methods to change the drawing style attributes of a contained
   // object directly.
 
-  TObject *obj(0), *ret(0) ;
+  TObject *obj = 0;
+  TObject *ret = 0;
 
   TIterator* iter = _items.MakeIterator() ;
   while(obj=iter->Next()) {

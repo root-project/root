@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooHistPdf.cc,v 1.5 2002/03/07 06:22:21 verkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.6 2002/03/21 22:02:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -123,7 +123,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code) const
   if (code==1000) return _dataHist->sum(kTRUE) ;
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum
-  RooArgSet* intSet(0) ;
+  RooArgSet* intSet = 0;
   _codeReg.retrieve(code-1,intSet) ;
   
   return _dataHist->sum(*intSet,_depList,kTRUE) ;

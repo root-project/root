@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBrentRootFinder.cc,v 1.1 2001/11/15 01:49:32 david Exp $
+ *    File: $Id: RooBrentRootFinder.cc,v 1.2 2001/11/16 01:48:22 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,8 +16,8 @@
 // the Brent-Decker method. This implementation is based on the one
 // in the GNU scientific library (v0.99).
 
-#include "RooFitCore/RooBrentRootFinder.rdl"
-#include "RooFitCore/RooAbsFunc.rdl"
+#include "RooFitCore/RooBrentRootFinder.hh"
+#include "RooFitCore/RooAbsFunc.hh"
 #include <math.h>
 #include <iostream.h>
 
@@ -25,7 +25,7 @@ ClassImp(RooBrentRootFinder)
 ;
 
 static const char rcsid[] =
-"$Id: RooBrentRootFinder.cc,v 1.1 2001/11/15 01:49:32 david Exp $";
+"$Id: RooBrentRootFinder.cc,v 1.2 2001/11/16 01:48:22 david Exp $";
 
 RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
   RooAbsRootFinder(function)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.22 2002/02/05 20:07:58 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.23 2002/03/22 22:43:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -32,7 +32,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.22 2002/02/05 20:07:58 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.23 2002/03/22 22:43:54 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose), _funcMaxVal(maxFuncVal)
@@ -61,7 +61,8 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   _catSampleMult= 1;
   _isValid= kTRUE;
   TIterator *iterator= genVars.createIterator();
-  const RooAbsArg *found(0),*arg(0);
+  const RooAbsArg *found = 0;
+  const RooAbsArg *arg   = 0;
   while(arg= (const RooAbsArg*)iterator->Next()) {
     if(arg->isDerived()) {
       cout << fName << "::" << ClassName() << ": cannot generate values for derived \""
@@ -289,7 +290,7 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
   // if we use up the cache before we accept an event. The caller does
   // not own the event and it will be overwritten by a subsequent call.
 
-  const RooArgSet *event(0);
+  const RooArgSet *event = 0;
   while(event= _cache->get(_eventsUsed)) {    
     _eventsUsed++ ;
     // accept this cached event?
@@ -311,12 +312,12 @@ void RooAcceptReject::addEventToCache() {
 
   // randomize each discrete argument
   _nextCatVar->Reset();
-  RooCategory *cat(0);
+  RooCategory *cat = 0;
   while(cat= (RooCategory*)_nextCatVar->Next()) cat->randomize();
 
   // randomize each real argument
   _nextRealVar->Reset();
-  RooRealVar *real(0);
+  RooRealVar *real = 0;
   while(real= (RooRealVar*)_nextRealVar->Next()) real->randomize();
 
   // calculate and store our function value at this new point
@@ -357,5 +358,5 @@ Double_t RooAcceptReject::getFuncMax()
 }
 
 
-const int RooAcceptReject::_maxSampleDim= 3,
-  RooAcceptReject::_minTrialsArray[]= { 100,1000,100000,10000000 };
+const UInt_t RooAcceptReject::_minTrialsArray[] = { 100,1000,100000,10000000 };
+const UInt_t RooAcceptReject::_maxSampleDim = (sizeof(_minTrialsArray) / sizeof(int)) - 1;

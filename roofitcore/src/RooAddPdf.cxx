@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.33 2002/03/22 22:43:54 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.34 2002/03/29 03:19:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -607,7 +607,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
   _pdfIter->Reset() ;
   _coefIter->Reset() ;
   _snormIter->Reset() ;
-  RooAbsReal* coef ;
+//RooAbsReal* coef ;
   RooAbsPdf* pdf ;
   Double_t snormVal ;
   Int_t i(0) ;

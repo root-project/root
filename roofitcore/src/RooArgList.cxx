@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgList.cc,v 1.5 2001/10/19 06:56:52 verkerke Exp $
+ *    File: $Id: RooArgList.cc,v 1.6 2001/10/31 07:19:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -240,7 +240,7 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
   }
 
   TIterator *iterator= createIterator();
-  RooAbsArg *next(0);
+  RooAbsArg *next = 0;
   while(0 != (next= (RooAbsArg*)iterator->Next())) {
       next->writeToStream(os,kTRUE) ;
       os << " " ;
@@ -267,7 +267,7 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 
   TIterator *iterator= createIterator();
   RooStreamParser parser(is) ;
-  RooAbsArg *next(0);
+  RooAbsArg *next = 0;
   while(0 != (next= (RooAbsArg*)iterator->Next())) {
     if (!next->getAttribute("Dynamic")) {
       if (next->readFromStream(is,kTRUE,verbose)) {

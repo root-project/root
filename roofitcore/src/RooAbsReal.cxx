@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.77 2002/03/22 22:43:53 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.78 2002/03/29 03:18:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -381,7 +381,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   // Check for overlaps with the projection variables.
   TIterator *dependentIterator= dependentVars.createIterator();
   assert(0 != dependentIterator);
-  const RooAbsArg *arg(0);
+  const RooAbsArg *arg = 0;
   while(arg= (const RooAbsArg*)dependentIterator->Next()) {
     if(!arg->isFundamental() && !dynamic_cast<const RooAbsLValue*>(arg)) {
       cout << ClassName() << "::" << GetName() << ":createProjection: variable \"" << arg->GetName()
@@ -538,13 +538,17 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
   }
 
   // Create a standalone projection object to use for calculating bin contents
-  RooArgSet *cloneSet(0);
+  RooArgSet *cloneSet = 0;
   const RooAbsReal *projected= createProjection(plotClones,projectedVars,cloneSet);
 
   // Prepare to loop over the histogram bins
   Int_t xbins(0),ybins(1),zbins(1);
-  RooRealVar *xvar(0),*yvar(0),*zvar(0);
-  TAxis *xaxis(0),*yaxis(0),*zaxis(0);
+  RooRealVar *xvar = 0;
+  RooRealVar *yvar = 0;
+  RooRealVar *zvar = 0;
+  TAxis *xaxis = 0;
+  TAxis *yaxis = 0;
+  TAxis *zaxis = 0;
   switch(hdim) {
   case 3:
     zbins= hist->GetNbinsZ();
@@ -665,7 +669,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
 
-  RooArgSet* projDataNeededVars(0) ;
+  RooArgSet* projDataNeededVars = 0 ;
   // Take out data-projected dependents from projectedVars
   if (projData) {
     projDataNeededVars = (RooArgSet*) projectedVars.selectCommon(*projData->get()) ;
@@ -740,7 +744,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     delete bIter ;
 
     // If data set contains more columns than needed, make reduced copy first
-    RooDataSet* projDataSel((RooDataSet*)projData) ;
+    RooDataSet* projDataSel = (RooDataSet*)projData;
 //     cout << "projDataNeededVars = " ; projDataNeededVars->Print("1") ;
 //     cout << "projData vars      = " ; projData->get()->Print("1") ;
 //     cout << "sliceSet           = " ; sliceSet.Print("1") ;
@@ -1353,7 +1357,7 @@ Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedA
 
   RooArgSet matched("matched");
   TIterator *iterator= nameList.MakeIterator();
-  TObjString *name(0);
+  TObjString *name = 0;
   Bool_t isMatched(kTRUE);
   while(isMatched && (name= (TObjString*)iterator->Next())) {
     RooAbsArg *found= allArgs.find(name->String().Data());

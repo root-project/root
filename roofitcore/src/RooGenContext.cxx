@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.26 2002/01/30 18:27:40 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.27 2002/03/22 22:43:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.26 2002/01/30 18:27:40 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.27 2002/03/22 22:43:55 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose,
@@ -62,7 +62,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _isValid= kTRUE;
   TIterator *iterator= vars.createIterator();
   TIterator *servers= _pdfClone->serverIterator();
-  const RooAbsArg *tmp(0),*arg(0);
+  const RooAbsArg *tmp = 0;
+  const RooAbsArg *arg = 0;
   while(_isValid && (tmp= (const RooAbsArg*)iterator->Next())) {
     // is this argument derived?
     if(tmp->isDerived()) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.14 2001/11/01 22:52:22 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.15 2002/01/08 02:18:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -281,7 +281,7 @@ TString RooStreamParser::readLine()
 void RooStreamParser::zapToEnd() 
 {
   // Skip over everything until the end of the current line
-  if (!_is.peek()!='\n') {
+  if (_is.peek()!='\n') {
     _is.ignore(1000,'\n') ;
     _is.putback('\n') ;
   }
@@ -335,7 +335,7 @@ Bool_t RooStreamParser::readDouble(Double_t& value, Bool_t zapOnError)
 Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value) 
 {
   // Convert given string to a double
-  char* endptr(0) ;
+  char* endptr = 0;
   const char* data=token.Data() ;
 
   // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
@@ -367,7 +367,7 @@ Bool_t RooStreamParser::readInteger(Int_t& value, Bool_t zapOnError)
 Bool_t RooStreamParser::convertToInteger(const TString& token, Int_t& value) 
 {
   // Convert given string to an Int_t
-  char* endptr(0) ;
+  char* endptr = 0;
   const char* data=token.Data() ;
   value = strtol(data,&endptr,10) ;
   Bool_t error = (endptr-data!=token.Length()) ;
@@ -412,8 +412,3 @@ Bool_t RooStreamParser::convertToString(const TString& token, TString& string)
   string = ptr ;
   return kFALSE ;
 }
-
-
-
-
-

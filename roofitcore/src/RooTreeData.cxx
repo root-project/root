@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.37 2002/03/07 06:22:24 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.38 2002/03/22 22:43:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -170,8 +170,8 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   createTree(name,title) ;
 
   // Deep clone cutVar and attach clone to this dataset
-  RooArgSet* cloneVarSet(0) ;
-  RooFormulaVar* cloneVar(0) ;
+  RooArgSet* cloneVarSet = 0;
+  RooFormulaVar* cloneVar = 0;
   if (cutVar) {
     cloneVarSet = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
     if (!cloneVarSet) {
@@ -347,7 +347,7 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select)
   }
 
   // Loop over events in source tree   
-  RooAbsArg* arg(0) ;
+  RooAbsArg* arg = 0;
   Int_t nevent= t->numEntries() ;
   Bool_t allValid ;
   for(Int_t i=0; i < nevent; ++i) {
@@ -401,7 +401,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
   
   // Attach args in cloned list to cloned source tree
   TIterator* sourceIter =  sourceArgSet->createIterator() ;
-  RooAbsArg* sourceArg(0) ;
+  RooAbsArg* sourceArg = 0;
   while (sourceArg=(RooAbsArg*)sourceIter->Next()) {
     sourceArg->attachToTree(*tClone) ;
   }
@@ -421,7 +421,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
   }
 
   // Loop over events in source tree   
-  RooAbsArg* destArg(0) ;
+  RooAbsArg* destArg = 0;
   Int_t numInvalid(0) ;
   Int_t nevent= (Int_t)tClone->GetEntries();
   for(Int_t i=0; i < nevent; ++i) {
@@ -543,7 +543,7 @@ const RooArgSet* RooTreeData::get(Int_t index) const
   if (_doDirtyProp) {
     // Raise all dirty flags 
     _iterator->Reset() ;
-    RooAbsArg* var(0) ;
+    RooAbsArg* var = 0;
     while (var=(RooAbsArg*)_iterator->Next()) {
       var->setValueDirty() ; // This triggers recalculation of all clients
     } 
@@ -702,8 +702,8 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
   }
 
   // Clone splitting category and attach to self
-  RooAbsCategory* cloneCat(0) ;
-  RooArgSet* cloneSet(0) ;
+  RooAbsCategory* cloneCat =0;
+  RooArgSet* cloneSet = 0;
   if (splitCat.isDerived()) {
     cloneSet = (RooArgSet*) RooArgSet(splitCat).snapshot(kTRUE) ;
     if (!cloneSet) {
@@ -953,7 +953,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
   }
 
   // Create selection formula if selection cuts are specified
-  RooFormula* select(0) ;
+  RooFormula* select = 0;
   if(0 != cuts && strlen(cuts)) {
     select=new RooFormula(cuts,cuts,_vars);
     if (!select || !select->ok()) {
@@ -964,7 +964,9 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
   }
   
   // Lookup each of the variables we are binning in our tree variables
-  const RooAbsReal *xvar(0),*yvar(0),*zvar(0);
+  const RooAbsReal *xvar = 0;
+  const RooAbsReal *yvar = 0;
+  const RooAbsReal *zvar = 0;
   switch(hdim) {
   case 3:
     zvar= dynamic_cast<RooAbsReal*>(localVars.find(plotVars.at(2)->GetName()));
@@ -1033,7 +1035,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 
   // First see if var is in data set 
   RooAbsCategory* tableVar = (RooAbsCategory*) _vars.find(cat.GetName()) ;
-  RooArgSet *tableSet(0) ;
+  RooArgSet *tableSet = 0;
   Bool_t ownPlotVar(kFALSE) ;
   if (!tableVar) {
     if (!cat.dependsOn(_vars)) {
@@ -1064,7 +1066,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
   Roo1DTable* table = tableVar->createTable(tableName) ;
 
   // Make cut selector if cut is specified
-  RooFormulaVar* cutVar(0) ;
+  RooFormulaVar* cutVar = 0;
   if (cuts && strlen(cuts)) {
     cutVar = new RooFormulaVar("cutVar",cuts,_vars) ;
   }
@@ -1198,7 +1200,7 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
   if (showM) nPar++ ;
 
   // calculate the box's size
-  Real_t dy(0.06), ymin(ymax-nPar*dy);
+  Double_t dy(0.06), ymin(ymax-nPar*dy);
   if(showLabel) ymin-= dy;
 
   // create the box and set its options
@@ -1207,11 +1209,11 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
   box->SetFillColor(0);
   box->SetBorderSize(1);
   box->SetTextAlign(12);
-  box->SetTextSize(0.04);
+  box->SetTextSize(0.04F);
   box->SetFillStyle(1001);
 
   // add formatted text for each statistic
-  TText *text(0);
+  TText *text = 0;
   RooRealVar N("N","Number of Events",numEntries(kTRUE));
   RooRealVar *mean= meanVar(*(RooRealVar*)frame->getPlotVar());
   RooRealVar *rms= rmsVar(*(RooRealVar*)frame->getPlotVar());

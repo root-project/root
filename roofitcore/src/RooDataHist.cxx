@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.20 2002/03/21 22:02:25 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.21 2002/03/30 21:12:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -547,7 +547,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
   // Optional RooFormulaVar pointer selects the data points to be added.
   checkInit() ;
 
-  RooFormulaVar* cloneVar(0) ;
+  RooFormulaVar* cloneVar = 0;
   RooArgSet* tmp ;
   if (cutVar) {
     // Deep clone cutVar and attach clone to this dataset

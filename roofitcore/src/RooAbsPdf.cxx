@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.61 2002/03/22 22:43:53 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.62 2002/03/30 21:12:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -130,7 +130,7 @@ ClassImp(RooAbsPdf)
 ;
 
 
-Int_t RooAbsPdf::_verboseEval(0) ;
+Int_t RooAbsPdf::_verboseEval = 0;
 RooIntegratorConfig* RooAbsPdf::_defaultNormIntConfig(0) ;
 
 
@@ -320,7 +320,7 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   // Check if data sets are identical
   if (nset == _lastNormSet) return ;
   if (_verboseEval>0) cout << GetName() << ":updating lastNormSet from " << _lastNormSet << " to " << nset << endl ;
-  RooArgSet* lastNormSet(_lastNormSet) ;
+  RooArgSet* lastNormSet = _lastNormSet;
   _lastNormSet = (RooArgSet*) nset ;
   _lastNameSet.refill(*nset) ;
 
@@ -684,7 +684,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
   // in case of an error. The caller takes ownership of the returned
   // dataset.
 
-  RooDataSet *generated(0);
+  RooDataSet *generated = 0;
   RooAbsGenContext *context= genContext(whatVars,0,verbose);
   if(0 != context && context->isValid()) {
     generated= context->generate(nEvents);
@@ -711,7 +711,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   // zero in case of an error. The caller takes ownership of the
   // returned dataset.
 
-  RooDataSet *generated(0);
+  RooDataSet *generated = 0;
   RooAbsGenContext *context= genContext(whatVars,&prototype,verbose);
   if(0 != context && context->isValid()) {
     generated= context->generate(nEvents);
@@ -752,7 +752,7 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 {
   // Check if PDF depends via more than route on given arg
   TIterator* sIter = serverIterator() ;
-  const RooAbsArg *server(0);
+  const RooAbsArg *server = 0;
   while(server=(const RooAbsArg*)sIter->Next()) {
     if(server == &arg) continue;
     if(server->dependsOn(arg)) {
@@ -1096,9 +1096,9 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
   TIterator* pIter = params->createIterator() ;
 
   Int_t nPar= params->getSize();
-  Real_t ymin(ymax), dy(0.06);
+  Double_t ymin(ymax), dy(0.06);
   Int_t index(nPar);
-  RooRealVar *var(0);
+  RooRealVar *var = 0;
   while(var=(RooRealVar*)pIter->Next()) {
     if(showConstants || !var->isConstant()) ymin-= dy;
   }
@@ -1111,11 +1111,11 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
   box->SetFillColor(0);
   box->SetBorderSize(1);
   box->SetTextAlign(12);
-  box->SetTextSize(0.04);
+  box->SetTextSize(0.04F);
   box->SetFillStyle(1001);
   box->SetFillColor(0);
-  TText *text(0);
-  char buffer[512];
+  TText *text = 0;
+//char buffer[512];
   index= nPar;
   pIter->Reset() ;
   while(var=(RooRealVar*)pIter->Next()) {

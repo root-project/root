@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsGenContext.cc,v 1.5 2001/10/22 07:12:12 verkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.6 2001/11/01 22:52:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -42,7 +42,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   _nextProtoIndex= 0;
   if(0 != _prototype) {
     TIterator *protoIterator= _prototype->get()->createIterator();
-    const RooAbsArg *proto(0);
+    const RooAbsArg *proto = 0;
     while(proto= (const RooAbsArg*)protoIterator->Next()) {
       // is this variable being generated or taken from the prototype?
       if(!_theEvent->contains(*proto)) {
@@ -114,7 +114,7 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
   if(_prototype) {
     const RooArgSet *vars= _prototype->get();
     TIterator *iterator= _protoVars.createIterator();
-    const RooAbsArg *arg(0);
+    const RooAbsArg *arg = 0;
     Bool_t ok(kTRUE);
     while(arg= (const RooAbsArg*)iterator->Next()) {
       if(vars->contains(*arg)) continue;

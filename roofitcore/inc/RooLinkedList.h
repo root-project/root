@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinkedList.rdl,v 1.2 2001/10/19 22:19:49 verkerke Exp $
+ *    File: $Id: RooLinkedList.rdl,v 1.3 2001/11/19 07:23:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -86,7 +86,7 @@ public:
     if (index<0 || index>=_size) return 0 ;
 
     // Walk list
-    RooLinkedListElem* ptr(_first) ;
+    RooLinkedListElem* ptr = _first;
     while(index--) ptr = ptr->_next ;
 
     // Return arg
@@ -107,7 +107,7 @@ public:
   TIterator* MakeIterator(Bool_t dir) const ;
 
   void Clear(Option_t *o=0) {
-    RooLinkedListElem* elem(_first) ;
+    RooLinkedListElem* elem = _first;
     while(elem) {
       RooLinkedListElem* next = elem->_next ;
       delete elem ;
@@ -119,7 +119,7 @@ public:
   }
 
   void Delete(Option_t *o=0) {
-    RooLinkedListElem* elem(_first) ;
+    RooLinkedListElem* elem = _first;
     while(elem) {
       RooLinkedListElem* next = elem->_next ;
       delete elem->_arg ;
@@ -133,7 +133,7 @@ public:
   
   RooAbsArg* find(const char* name) const {
     if (_htable) return _htable->find(name) ;
-    RooLinkedListElem* ptr(_first) ;
+    RooLinkedListElem* ptr = _first ;
     while(ptr) {
       if (!strcmp(ptr->_arg->GetName(),name)) {
 	return ptr->_arg ;
@@ -144,7 +144,7 @@ public:
   }
 
   Int_t IndexOf(const RooAbsArg* arg) const {
-    RooLinkedListElem* ptr(_first) ;
+    RooLinkedListElem* ptr = _first;
     Int_t idx(0) ;
     while(ptr) {
       if (ptr->_arg==arg) return idx ;
@@ -176,7 +176,7 @@ protected:
   void swapWithNext(RooLinkedListElem* elem) ;
 
   RooLinkedListElem* findLink(const RooAbsArg* arg) {    
-    RooLinkedListElem* ptr(_first) ;
+    RooLinkedListElem* ptr = _first;
     while(ptr) {
       if (ptr->_arg == arg) {
 	return ptr ;

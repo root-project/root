@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.39 2002/03/12 18:12:02 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.40 2002/03/27 19:25:39 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -286,7 +286,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 
 	// Next tokens are fit limits
 	Double_t fitMin, fitMax ;
-	Int_t fitBins ;
+//	Int_t fitBins ;
 	if (parser.expectToken("(",kTRUE) ||
 	    parser.readDouble(fitMin,kTRUE) ||
 	    parser.expectToken("-",kTRUE) ||

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.7 2002/02/04 18:10:13 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.8 2002/03/07 06:22:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -143,7 +143,7 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
     if (fit) cout << "fitting " ;
     cout << "sample " << nSamples << endl ;
 
-    RooDataSet* genSample(0) ;
+    RooDataSet* genSample = 0;
     if (generate) {
       // Generate sample
       Int_t nEvt(nEvtPerSample) ;

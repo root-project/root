@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.37 2001/11/15 23:14:41 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.38 2001/12/03 03:49:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -248,7 +248,7 @@ RooFormula::DefinedVariable(TString &name)
   }
 
   // Defined internal reference code for given named variable 
-  RooAbsArg *arg(0) ;
+  RooAbsArg *arg = 0;
   if (argName[0] == '@') {
     // Access by ordinal number
     Int_t index = atoi(argName+1) ;

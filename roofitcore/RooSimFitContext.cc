@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.17 2002/02/26 01:32:38 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.18 2002/03/22 22:43:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,7 +37,7 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
   _dirtyArray = new Bool_t[_nCtx] ;
 
   TString simCatName(simCat.GetName()) ;
-  TList* dsetList = data->split(simCat) ;
+  TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat) ;
   if (!dsetList) {
     cout << "RooSimFitContext::RooSimFitContext(" << GetName() << ") unable to split dataset, abort" << endl ;
     RooErrorHandler::softAbort() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.26 2002/03/07 22:35:56 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.27 2002/03/15 22:04:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -321,7 +321,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   // Create an empty 1D-histogram with appropriate scale and labels for this variable.
 
   RooArgList list(*this) ;
-  const RooAbsBinning* pbins(&bins) ;
+  const RooAbsBinning* pbins = &bins ;
   return (TH1F*)createHistogram(name, list, yAxisLabel, &pbins);
 }
 
@@ -343,8 +343,9 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   Double_t xhi_fit[2] ;
   Int_t nbins_fit[2] ;
 
-  Double_t *xlo2(xlo), *xhi2(xhi);
-  Int_t *nBins2(nBins) ;
+  Double_t *xlo2 = xlo;
+  Double_t *xhi2 = xhi;
+  Int_t *nBins2 = nBins;
 
   if (!xlo2) {
 
@@ -406,8 +407,9 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   Double_t xhi_fit[3] ;
   Int_t nbins_fit[3] ;
 
-  Double_t *xlo2(xlo), *xhi2(xhi) ;
-  Int_t* nBins2(nBins) ;
+  Double_t *xlo2 = xlo;
+  Double_t *xhi2 = xhi;
+  Int_t* nBins2 = nBins;
   if (!xlo2) {
 
     if (!fitRangeOKForPlotting()) {
@@ -497,7 +499,9 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   TString histName(name);
   histName.Append("_");
   const RooAbsRealLValue *xyz[3];
-  for(Int_t index= 0; index < dim; index++) {
+
+  Int_t index;
+  for(index= 0; index < dim; index++) {
     const RooAbsArg *arg= vars.at(index);
     xyz[index]= dynamic_cast<const RooAbsRealLValue*>(arg);
     if(!xyz[index]) {
@@ -511,7 +515,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   histTitle.Prepend("Histogram of ");
 
   // Create the histogram
-  TH1 *histogram(0);
+  TH1 *histogram = 0;
   switch(dim) {
   case 1:
     histogram= new TH1F(histName.Data(), histTitle.Data(),
@@ -538,7 +542,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   }
 
   // Set the histogram coordinate axis labels from the titles of each variable, adding units if necessary.
-  for(Int_t index= 0; index < dim; index++) {
+  for(index= 0; index < dim; index++) {
     TString axisTitle(xyz[index]->getTitle(kTRUE));
     switch(index) {
     case 0:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.16 2002/03/22 22:43:52 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.17 2002/03/29 03:18:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,7 +59,7 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   
   // Transfer contents (not owned)
   TIterator *iterator= other.createIterator();
-  RooAbsArg *arg(0);
+  RooAbsArg *arg = 0;
   while(arg= (RooAbsArg*)iterator->Next()) {
     add(*arg);
   }
@@ -153,7 +153,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 
   // Copy contents
   TIterator *iterator= createIterator();
-  RooAbsArg *orig(0);
+  RooAbsArg *orig = 0;
   while(0 != (orig= (RooAbsArg*)iterator->Next())) {
     RooAbsArg *copy= (RooAbsArg*)orig->Clone();
     snapshot->add(*copy);
@@ -343,7 +343,7 @@ Bool_t RooAbsCollection::replace(const RooAbsCollection &other) {
   }
   // loop over elements in the other list
   TIterator *otherArgs= other.createIterator();
-  const RooAbsArg *arg(0);
+  const RooAbsArg *arg = 0;
   while(arg= (const RooAbsArg*)otherArgs->Next()) {
     // do we have an arg of the same name in our set?
     RooAbsArg *found= find(arg->GetName());
@@ -641,7 +641,7 @@ void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString inden
   if(opt >= Standard) {
     TIterator *iterator= createIterator();
     int index= 0;
-    RooAbsArg *next(0);
+    RooAbsArg *next = 0;
     opt= lessVerbose(opt);
     TString deeper(indent);
     deeper.Append("     ");

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooBinning.cc,v 1.1 2002/03/07 06:22:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -177,6 +177,7 @@ Int_t RooBinning::binNumber(Double_t x) const
     // Only increment counter in valid range
     if (val> _xlo && n<_nbins-1) n++ ;
   }
+  return n;
 }
 
 

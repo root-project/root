@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIntegrator.cc,v 1.8 2001/08/08 23:11:23 david Exp $
+ *    File: $Id: RooAbsIntegrator.cc,v 1.9 2001/10/08 05:20:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,13 +16,13 @@
 // RooAbsIntegrator is the abstract interface for integrating real-valued
 // functions that implement the RooAbsFunc interface.
 
-#include "RooFitCore/RooAbsIntegrator.rdl"
+#include "RooFitCore/RooAbsIntegrator.hh"
 
 ClassImp(RooAbsIntegrator)
 ;
 
 static const char rcsid[] =
-"$Id: RooAbsIntegrator.cc,v 1.8 2001/08/08 23:11:23 david Exp $";
+"$Id: RooAbsIntegrator.cc,v 1.9 2001/10/08 05:20:11 verkerke Exp $";
 
 RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function) :
   _function(&function), _valid(function.isValid())
