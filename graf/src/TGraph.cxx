@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.153 2005/03/07 09:15:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.154 2005/03/18 22:41:26 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -4026,12 +4026,12 @@ L390:
 }
 
 //______________________________________________________________________________
-void TGraph::Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/,
+void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/,
 		  Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */) {
 // Sorts the points of this TGraph using in-place quicksort (see e.g. older glibc).
-// To compare two points the function parameter greater is used (see TGraph::CompareX for an
+// To compare two points the function parameter greaterfunc is used (see TGraph::CompareX for an
 // example of such a method, which is also the default comparison function for Sort). After
-// the sort, greater(this, i, j) will return kTRUE for all i>j if ascending == kTRUE, and
+// the sort, greaterfunc(this, i, j) will return kTRUE for all i>j if ascending == kTRUE, and
 // kFALSE otherwise.
 //
 // The last two parameters are used for the recursive quick sort, stating the range to be sorted
@@ -4057,10 +4057,10 @@ void TGraph::Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t) /*=TGraph::Comp
    right = high;
    while (left < right) {
       // move left while item < pivot
-      while(left <= high && greater(this, left, low) != ascending)
+      while(left <= high && greaterfunc(this, left, low) != ascending)
 	 left++;
       // move right while item > pivot
-      while(right > low && greater(this, right, low) == ascending)
+      while(right > low && greaterfunc(this, right, low) == ascending)
 	 right--;
       if (left < right && left < high && right > low)
 	 SwapPoints(left, right);
@@ -4068,8 +4068,8 @@ void TGraph::Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t) /*=TGraph::Comp
    // right is final position for the pivot
    if (right > low)
       SwapPoints(low, right);
-   Sort( greater, ascending, low, right-1 );
-   Sort( greater, ascending, right+1, high );
+   Sort( greaterfunc, ascending, low, right-1 );
+   Sort( greaterfunc, ascending, right+1, high );
 }
 
 //______________________________________________________________________________
