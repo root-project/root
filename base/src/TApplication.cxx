@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.27 2002/03/05 10:47:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.28 2002/03/23 06:38:37 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -598,7 +598,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
                                           (TInterpreter::EErrorCode*)&error);
          else {
            gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix),
-                                     (TInterpreter::EErrorCode*)&err);
+                                     (TInterpreter::EErrorCode*)err);
          }
       }
 
@@ -629,7 +629,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
    if (sync)
       gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)&error);
    else
-      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)&error);
+      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)err);
 
 out:
    if (error == TInterpreter::kExit) {
