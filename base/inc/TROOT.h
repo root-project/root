@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.27 2002/07/09 21:13:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.28 2002/07/19 11:42:32 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -204,6 +204,7 @@ public:
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    void              Proof(const char *cluster = "proof://localhost");
    Bool_t            ReadingObject() const { return fReadingObject; }
+   void              RefreshBrowsers();
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();

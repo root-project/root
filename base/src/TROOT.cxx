@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.74 2002/07/13 16:19:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.75 2002/07/24 13:21:08 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1472,6 +1472,21 @@ void TROOT::Proof(const char *cluster)
    if (gROOT->LoadClass("TTreePlayer","TreePlayer")) return;
 
    ProcessLine(Form("new TProof(\"%s\");", cluster));
+}
+
+//______________________________________________________________________________
+void TROOT::RefreshBrowsers()
+{
+   // Refresh all browsers. Call this method when some command line
+   // command or script has changed the browser contents. Not needed
+   // for objects that have the kMustCleanup bit set. Most useful to
+   // update browsers that show the file system or other objects external
+   // to the running ROOT session.
+
+   TIter next(GetListOfBrowsers());
+   TBrowser *b;
+   while ((b = (TBrowser*) next()))
+      b->SetRefreshFlag(kTRUE);
 }
 
 //______________________________________________________________________________
