@@ -397,7 +397,8 @@ check_symbol() {
 
     # Assert that we got enough arguments
     if test $# -ne 3 ; then
-	echo "check_symbol: Not 3 arguments"
+	echo "check_symbol: not 3 arguments"
+        found_symbol=0
 	return 1
     fi
 
@@ -406,8 +407,16 @@ check_symbol() {
     symbollib=$1  ; shift
     symboldir=$1
 
+    if test "x$symbollib" = "x" ; then
+        found_symbol=0
+        return 1
+    fi
+
     symbollib=`echo $symbollib | sed s/^-l/lib/`
-    symboldir=`echo $symboldir | sed s/^-L//`
+
+    if test ! "x$symboldir" = "x" ; then
+        symboldir=`echo $symboldir | sed s/^-L//`
+    fi
 
     # Check if we got a specific argument as to where the library
     # is to be found
