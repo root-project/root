@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.19 2001/03/29 11:04:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.20 2001/04/09 08:15:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -474,7 +474,9 @@ TBranch *TBranch::FindBranch(const char* branchname)
 TLeaf *TBranch::FindLeaf(const char* searchname) 
 {
    char leafname[kMaxLen];
+   char leaftitle[kMaxLen];
    char longname[kMaxLen];
+   char longtitle[kMaxLen];
    
    // For leaves we allow for one level up to be prefixed to the
    // name
@@ -488,6 +490,14 @@ TLeaf *TBranch::FindLeaf(const char* searchname)
       
       if (!strcmp(searchname,leafname)) return leaf;
       
+      // The TLeafElement contains the branch name in its name,
+      // let's use the title....
+      strcpy(leaftitle,leaf->GetTitle());
+      dim = (char*)strstr(leaftitle,"[");
+      if (dim) dim[0]='\0';
+      
+      if (!strcmp(searchname,leaftitle)) return leaf;
+
       TBranch * branch = leaf->GetBranch();
       if (branch) {
          sprintf(longname,"%s.%s",branch->GetName(),leafname);
@@ -495,13 +505,23 @@ TLeaf *TBranch::FindLeaf(const char* searchname)
          if (dim) dim[0]='\0';
          if (!strcmp(searchname,longname)) return leaf;
 
+         // The TLeafElement contains the branch name in its name
+         sprintf(longname,"%s.%s",branch->GetName(),searchname);
+         if (!strcmp(longname,leafname)) return leaf;
+
+         sprintf(longtitle,"%s.%s",branch->GetName(),leaftitle);
+         dim = (char*)strstr(longtitle,"[");
+         if (dim) dim[0]='\0';
+         if (!strcmp(searchname,longtitle)) return leaf;
+
          // The following is for the case where the branch is only
          // a sub-branch.  Since we do not see it through
          // TTree::GetListOfBranches, we need to see it indirectly.
          // This is the less sturdy part of this search ... it may
          // need refining ... 
          if (strstr(searchname,".")
-             && !strcmp(searchname,branch->GetName())) return leaf;                //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
+             && !strcmp(searchname,branch->GetName())) return leaf;                
+         //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
       }
    }
    
