@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.153 2003/02/12 09:03:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.154 2003/02/17 15:04:11 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2240,44 +2240,45 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
    if (newtype > 40) newtype -= 40; \
    switch(newtype) { \
        case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new Char_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new Char_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kShort:  {Short_t  **f=(Short_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new Short_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new Short_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kInt:    {Int_t    **f=(Int_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (*f == 0) *f = new Int_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new Int_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kLong:   {Long_t   **f=(Long_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new Long_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new Long_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new Float_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (len <=0) printf("len=%d\n",len); \
+                        if (fNewType[i] > 40 && len > 0) *f = new Float_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kDouble: {Double_t **f=(Double_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new Double_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new Double_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kUChar:  {UChar_t  **f=(UChar_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new UChar_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new UChar_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kUShort: {UShort_t **f=(UShort_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new UShort_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new UShort_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kUInt:   {UInt_t   **f=(UInt_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new UInt_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new UInt_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kULong:  {ULong_t  **f=(ULong_t**)(pointer+fOffset[i]); \
-                        /* delete [] *f; */ \
-                        if (fNewType[i] > 40 && *f == 0) *f = new ULong_t[len]; \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new ULong_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
    } break; \
 }
@@ -3065,44 +3066,44 @@ char *pointer = 0;
        pointer = (char*)clones->UncheckedAt(k)+eoffset; \
        switch(newtype) { \
           case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new Char_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new Char_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kShort:  {Short_t  **f=(Short_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new Short_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new Short_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kInt:    {Int_t    **f=(Int_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (*f == 0) *f = new Int_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new Int_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kLong:   {Long_t   **f=(Long_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new Long_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new Long_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new Float_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new Float_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kDouble: {Double_t **f=(Double_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new Double_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new Double_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kUChar:  {UChar_t  **f=(UChar_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new UChar_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new UChar_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kUShort: {UShort_t **f=(UShort_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new UShort_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new UShort_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kUInt:   {UInt_t   **f=(UInt_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new UInt_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new UInt_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kULong:  {ULong_t  **f=(ULong_t**)(pointer+fOffset[i]); \
-                           /* delete [] *f; */ \
-                           if (fNewType[i] > 40 && *f == 0) *f = new ULong_t[len]; \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new ULong_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
        } \
    } break; \
