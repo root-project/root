@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.44 2004/09/22 11:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.45 2004/09/22 12:40:52 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -661,7 +661,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
    // Create a picture button. Where pic is the file name of the picture.
 
    if (!pic || !strlen(pic)) {
-      Error("TGPictureButton", "pixmap not found for button");
+      if (p) Error("TGPictureButton", "pixmap not found for button");
       fPic = fClient->GetPicture("mb_question_s.xpm");
    } else {
       fPic = fClient->GetPicture(pic);

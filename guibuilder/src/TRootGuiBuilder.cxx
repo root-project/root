@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.1 2004/10/15 15:34:53 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.2 2004/10/17 16:31:05 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -355,6 +355,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_radiobutton.xpm";
    AddAction(act, "Buttons");
 
+
+   act = new TGuiBldAction("TGPictureButton", "Picture Button", kGuiBldCtor);
+   act->fAct = "new TGPictureButton()";
+   act->fPic = "bld_image.xpm";
+   AddAction(act, "Buttons");
+
    act = new TGuiBldAction("TGTextEntry", "Text Entry", kGuiBldCtor);
    act->fAct = "new TGTextEntry()";
    act->fPic = "bld_entry.xpm";
@@ -437,7 +443,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0));
 
    MapSubwindows();
-   Resize(900, 600);
+   Resize(1100, 800);
 
    SetWindowName("ROOT GuiBuilder");
    SetIconName("ROOT GuiBuilder");
@@ -807,13 +813,14 @@ Bool_t TRootGuiBuilder::NewProject(Event_t *)
    TGWindow *root = (TGWindow*)fClient->GetRoot();
 
    root->SetEditable(kFALSE);
-   fEditable = new TGMdiFrame(fMain, 300, 300, kOwnBackground);
+   fEditable = new TGMdiFrame(fMain, 500, 400, kOwnBackground);
    fEditable->SetMdiHints(kMdiDefaultHints);
    fEditable->SetWindowName(fEditable->GetName());
    fEditable->SetEditDisabled(kFALSE);
    fEditable->MapRaised();
    fEditable->AddInput(kKeyPressMask | kButtonPressMask);
    fEditable->SetEditable(kTRUE);
+   fManager->SetEditable(kTRUE);
 
    return kTRUE;
 }
