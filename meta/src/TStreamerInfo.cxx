@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.119 2002/02/06 08:53:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.120 2002/02/07 07:31:50 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2674,8 +2674,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
                        if ((*x & kIsReferenced) != 0) {
-                          TFile* file = (TFile*)b.GetParent();
-                          UShort_t pidf = TProcessID::WriteProcessID(0,file);
+                          UShort_t pidf = 0;
                           b << pidf;
                        }
                        break;
@@ -2919,8 +2918,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                   pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
                   UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
                   if ((*x & kIsReferenced) != 0) {
-                      TFile* file = (TFile*)b.GetParent();
-                      UShort_t pidf = TProcessID::WriteProcessID(0,file);
+                      UShort_t pidf = 0;
                       b << pidf;
                    }
                }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.34 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.35 2002/02/07 07:31:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -893,7 +893,7 @@ void TObject::Streamer(TBuffer &R__b)
       R__b << fBits;
       //if the object is referenced, we must save its address/file_pid
       if (!TestBit(kIsReferenced)) return;
-      pidf = (UShort_t)TProcessID::WriteProcessID(0,file);
+      pidf = 0;
       R__b << pidf;
    }
 }
