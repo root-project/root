@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name$:$Id$ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.c,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
 /* Author: */
 /*
 
@@ -66,9 +66,9 @@
  */
 
 /* #include "zip.h" */
-#include "ZIP.h"
+/* #include "ZIP.h" */
 
-extern ulg R__window_size; /* size of sliding window */
+/* extern ulg R__window_size; */ /* size of sliding window */
 
 
 /* ===========================================================================

@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name$:$Id$ */
+/* @(#)root/zip:$Name:  $:$Id: Trees.c,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
 /* Author: */
 /*
 
@@ -66,7 +66,7 @@
 
 #include <ctype.h>
 /* #include "zip.h" */
-#include "ZIP.h"
+/* #include "ZIP.h" */
 
 /* ===========================================================================
  * Constants
@@ -284,12 +284,12 @@ ush *R__file_type;        /* pointer to UNKNOWN, BINARY or ASCII */
 int *R__file_method;      /* pointer to DEFLATE or STORE */
 
 #ifdef DEBUG
-extern ulg R__bits_sent;  /* bit length of the compressed data */
-extern ulg R__isize;      /* byte length of input file */
+/* extern ulg R__bits_sent; */ /* bit length of the compressed data */
+/* extern ulg R__isize;     */ /* byte length of input file */
 #endif
 
-extern long R__block_start;       /* window offset of current block */
-extern unsigned near R__strstart; /* window offset of current string */
+/* extern long R__block_start;       */ /* window offset of current block */
+/* extern unsigned near R__strstart; */ /* window offset of current string */
 
 /* ===========================================================================
  * Local (static) routines in this file.
@@ -963,11 +963,13 @@ ulg R__flush_block(char *buf, ulg stored_len, int eof)
     if (eof) {
 #if defined(PGP) && !defined(MMAP)
         /* Wipe out sensitive data for pgp */
-# ifdef DYN_ALLOC
-        extern uch *R__window;
-# else
-        extern uch R__window[];
-# endif
+/*
+ *# ifdef DYN_ALLOC
+ *       extern uch *R__window;
+ *# else
+ *       extern uch R__window[];
+ *# endif
+ */
         memset(R__window, 0, (unsigned)(2*WSIZE-1)); /* -1 needed if WSIZE=32K */
 #else /* !PGP */
         Assert (input_len == R__isize, "bad input size");
