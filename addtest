@@ -1,0 +1,11 @@
+#!/bin/bash
+# Name: addtest
+# Desc: Updates the Makefile
+# Args: $1 -> test Name
+#	$2 -> test directory
+
+cd $2
+
+sed -e "s/mytest/$1/g" Makefile > Makefile1
+rm Makefile
+mv Makefile1 Makefile
