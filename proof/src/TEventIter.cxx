@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.7 2002/09/17 10:14:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.8 2003/03/18 14:29:59 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -62,7 +62,7 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
 //______________________________________________________________________________
 TEventIter::~TEventIter()
 {
-   // TODO:
+   delete fFile;
 }
 
 

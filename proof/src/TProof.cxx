@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.40 2003/03/18 16:13:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.41 2003/04/04 00:52:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -567,8 +567,8 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
             }
             if (nbytes > 0) {
                if (IsMaster())
-                  Printf("*** Slave %d synchronized: %d bytes discarded",
-                         sl->GetOrdinal(), nbytes);
+                  Printf("*** Slave %s:%d synchronized: %d bytes discarded",
+                         sl->GetName(), sl->GetOrdinal(), nbytes);
                else
                   Printf("*** PROOF synchronized: %d bytes discarded", nbytes);
             }
@@ -1533,6 +1533,8 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
          }
 
          if (sl->GetSocket()->SendRaw(buf, len) == -1) {
+            SysError("SendFile", "error writing to slave %s:%d (now offline)",
+                     sl->GetName(), sl->GetOrdinal());
             MarkBad(sl);
             break;
          }

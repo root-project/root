@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.19 2003/03/04 17:09:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.20 2003/03/18 14:29:59 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -203,6 +203,8 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    StopFeedback();
 
+   delete evIter;
+
    // Finalize
    PDB(kLoop,1) Info("Process","Call Terminate");
 
@@ -317,12 +319,12 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       filename = filename.Strip(TString::kTrailing,'+');
 
       PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
-      fProof->SendFile(filename);
+      if ( fProof->SendFile(filename) == -1 ) return -1;
 
       if ( filename.EndsWith(".C") ) {
          filename.ReplaceAll(".C",".h");
-         PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
-         fProof->SendFile(filename);
+         PDB(kSelector,1) Info("Process", "SendFile: %s", filename.Data() );
+         if ( fProof->SendFile(filename) == -1 ) return -1;
       }
    }
 
@@ -337,8 +339,6 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                         dset->GetDirectory() );
 
       delete fPacketizer;
-//      fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
-//                                    first, nentries);
       fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
                                      first, nentries);
 
@@ -667,6 +667,7 @@ TProofPlayerSlave::TProofPlayerSlave()
 TProofPlayerSlave::TProofPlayerSlave(TSocket *socket)
 {
       fSocket = socket;
+      fFeedback = 0;
 }
 
 //______________________________________________________________________________

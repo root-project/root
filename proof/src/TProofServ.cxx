@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.37 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.38 2003/04/03 13:46:50 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -573,6 +573,12 @@ void TProofServ::HandleSocketInput()
 
             (*mess) >> dset >> filename >> input >> opt >> nentries >> first;
 
+            if ( input == 0 ) {
+               Error("HandleSocketInput:kPROOF_PROCESS", "input == 0");
+            } else {
+               PDB(kGlobal, 1) input->Print();
+            }
+
             TProofPlayer *p;
 
             if (IsMaster()) {
@@ -590,7 +596,6 @@ void TProofServ::HandleSocketInput()
                PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS", "Adding: %s", obj->GetName());
                p->AddInput(obj);
             }
-            delete input;
 
             p->Process(dset, filename, opt, nentries, first);
 
@@ -604,7 +609,10 @@ void TProofServ::HandleSocketInput()
             SendLogFile();
 
             delete dset;
+
+            if (fProof != 0) fProof->SetPlayer(0); // ensure player is no longer referenced
             delete p;
+            delete input;
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS","Done");
          }

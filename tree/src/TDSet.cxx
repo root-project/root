@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.1 2003/03/19 13:07:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.2 2003/03/19 14:01:50 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -363,7 +363,7 @@ Int_t TDSet::Draw(const char *varexp, const TCut &selection, Option_t *option,
    // Example:
    //   dset.Draw("x",cut1+cut2+cut3);
 
-   return TDSet::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
+   return Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
 
 //______________________________________________________________________________
