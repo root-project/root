@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.94 2004/11/10 06:22:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.95 2005/01/03 16:42:49 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1203,13 +1203,15 @@ const char* TCint::GetSharedLibs()
    G__SourceFileInfo cursor(0);
    while (cursor.IsValid()) {
       const char *filename = cursor.Name();
-      if (filename &&
-          (strstr(filename,".sl")  != 0 ||
-           strstr(filename,".dl")  != 0 ||
-           strstr(filename,".so")  != 0 ||
-           strstr(filename,".dll") != 0 ||
-           strstr(filename,".DLL") != 0 ||
-           strstr(filename,".a")   != 0)) {
+      if (filename==0) continue;
+      Int_t len = strlen(filename);
+      const char *end = filename+len;
+      if ( (len>3 && strcmp(end-2,".a") == 0) ||
+           (len>4 && (strcmp(end-3,".sl") == 0 ||
+                      strcmp(end-3,".dl") == 0 ||
+                      strcmp(end-3,".so") == 0)) || 
+           (len>5 && (strcmp(end-4,".dll") == 0 ||
+                      strcmp(end-4,".DLL") == 0))) {
          if (!fSharedLibs.IsNull())
             fSharedLibs.Append(" ");
          fSharedLibs.Append(filename);

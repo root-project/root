@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.112 2004/12/17 22:24:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.113 2005/01/06 07:03:40 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1354,17 +1354,28 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    TString moduleBasename = BaseName(module);
    TString l(moduleBasename);
 
-   Ssiz_t idx   = l.Index(".");
-   if (idx != kNPOS)
+   Ssiz_t idx   = l.Last('.');
+   if (idx != kNPOS) {
       l.Remove(idx+1);
-   if (libs.Index(l) != kNPOS)
-      return 1;
-   if (idx != kNPOS)
-      l.Remove(idx);
-   if (l.BeginsWith("lib"))
+   }
+   idx = libs.Index(l);
+   if (idx != kNPOS) {
+      // The libs contains the sub-string 'l', let's make sure it is 
+      // not just part of a larger name.
+      if ( (idx==0 || libs[idx-1]=='/' || libs[idx-1]=='\\') &&
+            libs[idx+l.Length()]=='.' ) {
+         return 1;
+      }
+   }
+   if (l.BeginsWith("lib")) {
       l.Replace(0, 3, "-l");
-   if (libs.Index(l) != kNPOS)
-      return 1;
+      idx = libs.Index(l);
+      if (idx != kNPOS && 
+          (idx==0 || libs[idx-1]==' ') && 
+          (libs[idx+l.Length()]==' ' || libs[idx+l.Length()]==0)) {
+         return 1;
+      }
+   }
 
    // load any dependent libraries
    TString deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);

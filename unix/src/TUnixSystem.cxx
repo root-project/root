@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.115 2004/12/15 16:04:57 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.116 2004/12/15 22:26:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3704,6 +3704,7 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
                    !strcmp(lib+len-3, ".dl") ||
 #ifdef R__WINGCC
                    !strcmp(lib+len-4, ".dll")||
+                   !strcmp(lib+len-4, ".DLL")||
 #endif
                    !strcmp(lib+len-3, ".so") ||
                    !strcmp(lib+len-2, ".a"))) {
