@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.11 2003/04/01 20:16:42 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.12 2003/06/10 19:07:04 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -216,7 +216,13 @@ void TSelectorDraw::Begin(TTree *tree)
 
 	     //   number of columns
 	     ncols  = 1;
-	     for (j=0;j<i;j++)  if (varexp[j] == ':') ncols++;
+	     for (j=0;j<i;j++) {
+           if (varexp[j] == ':'
+               && ! ( (i>0&&varexp[i-1]==':') || varexp[i+1]==':' )
+               ) {
+              ncols++;
+           }
+        }
 	     if (ncols > 3 ) {  // max 3 columns
 	       Error("DrawSelect","ncols > 3, ncols=%d",ncols);
 	       ncols = 0;
@@ -723,7 +729,7 @@ void TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
 
    // otherwise select only the specified columns
    ncols  = 1;
-   for (i=0;i<nch;i++)  if (title[i] == ':') ncols++;
+   for (i=0;i<nch;i++)  if (title[i] == ':' && ! ( (i>0&&title[i-1]==':') || title[i+1]==':' ) ) ncols++;
    if (ncols > 3 ) return;
    MakeIndex(title,index);
 
@@ -785,7 +791,9 @@ void TSelectorDraw::MakeIndex(TString &varexp, Int_t *index)
    Int_t ivar = 1;
    index[0]  = -1;
    for (Int_t i=0;i<varexp.Length();i++) {
-      if (varexp[i] == ':') {
+      if (varexp[i] == ':'
+          && ! ( (i>0&&varexp[i-1]==':') || varexp[i+1]==':' )
+          ) {
          index[ivar] = i;
          ivar++;
       }
