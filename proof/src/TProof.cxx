@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.9 2000/12/19 14:34:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.10 2000/12/20 18:43:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1161,7 +1161,7 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
             }
          } else {
             TString scmd = s(0,3) + fn;
-            Int_t n = SendCommand(scmd);
+            Int_t n = SendCommand(scmd, list);
             delete [] fn;
             return n;
          }
@@ -1172,7 +1172,7 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
       delete [] fn;
    }
 
-   return SendCommand(cmd);
+   return SendCommand(cmd, list);
 }
 
 //______________________________________________________________________________

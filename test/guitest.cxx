@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.10 2000/10/20 15:51:20 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.11 2000/10/22 19:31:22 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1510,7 +1510,7 @@ void TestShutter::CloseWindow()
    delete this;
 }
 
-Bool_t TestShutter::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TestShutter::ProcessMessage(Long_t, Long_t parm1, Long_t)
 {
    // Process messages sent to this dialog.
 
@@ -1606,7 +1606,7 @@ void TestProgress::CloseWindow()
    delete this;
 }
 
-Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
    // Process slider messages.
 

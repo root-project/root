@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.1 2000/10/19 10:40:02 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -288,7 +288,7 @@ TGDimension TGRegion::GetDimension() const
 {
    // Return dimension of region (widht, height).
 
-   Rectangle_t r;
+   Rectangle_t r = { 0, 0, 0, 0 };
    gVirtualX->GetRegionBox(fData->fRgn, &r);
    return TGDimension(r.fWidth, r.fHeight);
 }
@@ -298,7 +298,7 @@ TGPosition TGRegion::GetPosition() const
 {
    // Return position of region (x, y).
 
-   Rectangle_t r;
+   Rectangle_t r = { 0, 0, 0, 0 };
    gVirtualX->GetRegionBox(fData->fRgn, &r);
    return TGPosition(r.fX, r.fY);
 }

@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.3 2000/10/15 01:29:48 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.4 2000/10/30 11:00:41 rdm Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -110,13 +110,13 @@ public:
    Bool_t  HandleConfigureNotify(Event_t *ev)
                 { TGFrame::HandleConfigureNotify(ev);
                   return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleKey(Event_t *ev)
+   Bool_t  HandleKey(Event_t *)
                 { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleMotion(Event_t *ev)
+   Bool_t  HandleMotion(Event_t *)
                 { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleExpose(Event_t *ev)
+   Bool_t  HandleExpose(Event_t *)
                 { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleColormapChange(Event_t *ev)
+   Bool_t  HandleColormapChange(Event_t *)
                 { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
 };
 

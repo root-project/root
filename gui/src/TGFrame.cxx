@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.7 2000/10/29 14:29:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.8 2000/10/30 10:58:05 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -114,7 +114,7 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
       //if (!(fOptions & kOwnBackground))
       //   SetBackgroundPixmap(kParentRelative);
    }
-   fEventMask = wattr.fEventMask;
+   fEventMask = (UInt_t) wattr.fEventMask;
 }
 
 //______________________________________________________________________________
@@ -133,7 +133,7 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fWidth       = attributes.fWidth;
    fHeight      = attributes.fHeight;
    fBorderWidth = attributes.fBorderWidth;
-   fEventMask   = attributes.fYourEventMask;
+   fEventMask   = (UInt_t) attributes.fYourEventMask;
    fBackground  = 0;
    fOptions     = 0;
 }
