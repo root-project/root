@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.rdl,v 1.1.2.3 2002/04/30 17:47:43 zhanglei Exp $
+ *    File: $Id: Roo2DHistPdf.rdl,v 1.4 2002/04/30 17:51:43 zhanglei Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -51,7 +51,7 @@ public:
 
   // generator of our own
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const;
-  virtual Int_t getGenerator(const RooArgSet& directVars,RooArgSet &generateVars)const;
+  virtual Int_t getGenerator(const RooArgSet& directVars,RooArgSet &generateVars, Bool_t staticInitOK=kTRUE)const;
   virtual void generateEvent(Int_t code);
   
 protected:

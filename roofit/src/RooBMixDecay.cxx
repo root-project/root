@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.cc,v 1.9 2001/11/14 19:15:30 verkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.10 2001/11/21 07:01:28 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -153,11 +153,14 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) cons
 }
 
 
-Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
+Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
-  if (matchArgs(directVars,generateVars,_t,_mixState,_tagFlav)) return 4 ;  
-  if (matchArgs(directVars,generateVars,_t,_mixState)) return 3 ;  
-  if (matchArgs(directVars,generateVars,_t,_tagFlav)) return 2 ;  
+  if (staticInitOK) {
+    if (matchArgs(directVars,generateVars,_t,_mixState,_tagFlav)) return 4 ;  
+    if (matchArgs(directVars,generateVars,_t,_mixState)) return 3 ;  
+    if (matchArgs(directVars,generateVars,_t,_tagFlav)) return 2 ;  
+  }
+
   if (matchArgs(directVars,generateVars,_t)) return 1 ;  
   return 0 ;
 }

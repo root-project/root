@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.18 2002/01/16 01:35:55 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.19 2002/03/27 08:07:05 mwilson Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -410,7 +410,7 @@ RooComplex RooGaussModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c) c
 
 
 
-Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
+Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
   return 0 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGaussian.cc,v 1.14 2001/10/17 05:15:06 verkerke Exp $
+ *    File: $Id: RooGaussian.cc,v 1.15 2002/02/26 03:39:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -74,7 +74,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code) const
 
 
 
-Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
+Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
   return 0 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBCPSin2bgDecay.cc,v 1.3 2002/04/09 22:58:35 walkowia Exp $
+ *    File: $Id: RooBCPSin2bgDecay.cc,v 1.4 2002/04/18 02:33:01 walkowia Exp $
  * Authors:
  *   WW, Wolfgang Walkowiak, UC Santa Cruz, walkowia@slac.stanford.edu
  * History:
@@ -262,13 +262,15 @@ Double_t RooBCPSin2bgDecay::coefAnalyticalIntegral(Int_t basisIndex,
 
 
 Int_t RooBCPSin2bgDecay::getGenerator(const RooArgSet& directVars, 
-				       RooArgSet &generateVars) const
+				       RooArgSet &generateVars, Bool_t staticInitOK) const
 {
+  if (staticInitOK) {
     if (matchArgs(directVars,generateVars,_t,_tagFlav,_mixState)) return 4 ;  
     if (matchArgs(directVars,generateVars,_t,_mixState)         ) return 3 ;  
     if (matchArgs(directVars,generateVars,_t,_tagFlav)          ) return 2 ;  
-    if (matchArgs(directVars,generateVars,_t)                   ) return 1 ;  
-    return 0 ;
+  }
+  if (matchArgs(directVars,generateVars,_t)                   ) return 1 ;  
+  return 0 ;
 }
 
 

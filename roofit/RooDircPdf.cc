@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.cc,v 1.9 2002/05/01 05:04:24 zhanglei Exp $
+ *    File: $Id: RooDircPdf.cc,v 1.10 2002/05/03 22:53:17 zhanglei Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
@@ -214,7 +214,7 @@ void RooDircPdf::initGenerator(Int_t code) {
   
 
 Int_t RooDircPdf::getGenerator(const RooArgSet& directVars,
-			       RooArgSet &generateVars)const
+			       RooArgSet &generateVars, Bool_t staticInitOK)const
 {
   //cout <<"we are in RooDircPdf::getGenerator line 1"<<endl;
   Int_t haveGen=0;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDecay.rdl,v 1.4 2001/10/31 07:21:21 verkerke Exp $
+ *    File: $Id: RooDecay.rdl,v 1.5 2001/11/05 18:53:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -30,7 +30,7 @@ public:
 
   virtual Double_t coefficient(Int_t basisIndex) const ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);
   
 protected:

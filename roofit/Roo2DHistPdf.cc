@@ -1,6 +1,6 @@
 /***************************************************************************** * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.cc,v 1.8 2002/04/30 17:51:43 zhanglei Exp $
+ *    File: $Id: Roo2DHistPdf.cc,v 1.9 2002/05/03 22:53:02 zhanglei Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -273,7 +273,7 @@ Bool_t Roo2DHistPdf::isDirectGenSafe(const RooAbsArg& arg) const
 }
 
 Int_t Roo2DHistPdf::getGenerator(const RooArgSet& directVars,
-				 RooArgSet &generateVars)const
+				 RooArgSet &generateVars, Bool_t staticInitOK)const
 {
 
   Int_t haveGen=0;

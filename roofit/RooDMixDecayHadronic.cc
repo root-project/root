@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDMixDecayHadronic.cc,v 1.1 2002/03/29 21:24:27 mwilson Exp $
+ *    File: $Id: RooDMixDecayHadronic.cc,v 1.2 2002/04/03 08:25:58 mwilson Exp $
  * Authors:
  *   MW, Michael Wilson, UC Santa Cruz, mwilson@slac.stanford.edu
  * History:
@@ -184,7 +184,7 @@ Double_t RooDMixDecayHadronic::coefAnalyticalIntegral(Int_t coef, Int_t code) co
 
 
 Int_t RooDMixDecayHadronic::getGenerator(const RooArgSet& directVars,
-					      RooArgSet& generateVars) const
+					      RooArgSet& generateVars, Bool_t staticInitOK) const
 {
   //
   // Returns a code for the ToyMC generator needed:

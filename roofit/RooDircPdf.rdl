@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.rdl,v 1.1.2.3 2002/04/18 23:56:20 zhanglei Exp $
+ *    File: $Id: RooDircPdf.rdl,v 1.9 2002/05/01 05:04:24 zhanglei Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
@@ -57,7 +57,7 @@ public:
   // generator of our own
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const;
   virtual void initGenerator(Int_t code);
-  virtual Int_t getGenerator(const RooArgSet& directVars,RooArgSet &generateVars)const;
+  virtual Int_t getGenerator(const RooArgSet& directVars,RooArgSet &generateVars, Bool_t staticInitOK=kTRUE)const;
   virtual void generateEvent(Int_t code);
   
 protected:
