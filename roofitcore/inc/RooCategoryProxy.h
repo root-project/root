@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategoryProxy.rdl,v 1.7 2001/07/31 05:54:18 verkerke Exp $
+ *    File: $Id: RooCategoryProxy.rdl,v 1.8 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,6 +16,7 @@
 #include "TString.h"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooArgProxy.hh"
+#include "RooFitCore/RooAbsCategoryLValue.hh"
 
 class RooCategoryProxy : public RooArgProxy {
 public:
@@ -32,6 +33,24 @@ public:
   inline operator Int_t() const { return ((RooAbsCategory*)_arg)->getIndex() ; }
   inline operator const char*() const { return ((RooAbsCategory*)_arg)->getLabel() ; }
   inline const RooAbsCategory& arg() const { return (RooAbsCategory&)*_arg ; }
+
+protected:
+
+  inline RooAbsCategoryLValue* lvptr()  {
+    // Assert that the held arg is an LValue
+    RooAbsCategoryLValue* lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
+    if (!lvptr) {
+      cout << "RooCategoryProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << endl ;
+      assert(0) ;
+    }
+    return lvptr ;
+  }
+
+public:
+
+  // LValue operations 
+  RooCategoryProxy& operator=(Int_t index) { lvptr()->setIndex(index) ; return *this ; }
+  RooCategoryProxy& operator=(const char* label) { lvptr()->setLabel(label) ; return *this ; }
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealProxy.cc,v 1.6 2001/05/16 07:41:08 verkerke Exp $
+ *    File: $Id: RooRealProxy.cc,v 1.7 2001/05/17 00:43:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,23 +47,4 @@ RooRealProxy::~RooRealProxy()
 }
 
 
-Double_t RooRealProxy::min() const 
-{
-  // Return integration minimum for proxied real-valued object if it is a dependent
-  if (!_arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-    cout << "RooRealProxy::min: INTERNAL error, expected " << _arg->GetName() << " to be a RooRealVar" << endl ;
-    assert(0) ;
-  }
-  return ((RooAbsRealLValue*)_arg)->getFitMin() ;
-}
 
-
-Double_t RooRealProxy::max() const 
-{
-  // Return integration maximum for proxied real-valued object if it is a dependent
-  if (!_arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-    cout << "RooRealProxy::max: INTERNAL error, expected " << _arg->GetName() << " to be a RooRealVar" << endl ;
-    assert(0) ;
-  }
-  return ((RooAbsRealLValue*)_arg)->getFitMax() ;
-}

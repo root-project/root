@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.rdl,v 1.1 2001/08/17 15:51:58 david Exp $
+ *    File: $Id: RooRandom.rdl,v 1.1 2001/08/22 00:50:26 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,8 +14,8 @@
 #define ROO_RANDOM
 
 #include "Rtypes.h"
+#include "TRandom.h"
 
-class TRandom;
 class RooQuasiRandomGenerator;
 
 class RooRandom {
