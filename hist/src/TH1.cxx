@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.53 2001/06/25 09:28:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.54 2001/06/26 12:47:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1515,12 +1515,16 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //*-*   if parmin>=parmax, the parameter is fixed
 //*-*   Note that you are not forced to fix the limits for all parameters.
 //*-*   For example, if you fit a function with 6 parameters, you can do:
-//*-*     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
-//*-*     func->SetParLimits(4,-10,-4);
+//*-*     func->SetParameters(0,3.1,1.e-6,-1.5,0,100);
+//*-*     func->SetParLimits(3,-10,-4);
+//*-*     func->FixParameter(4,0);
 //*-*     func->SetParLimits(5, 1,1);
-//*-*   With this setup, parameters 0->3 can vary freely
-//*-*   Parameter 4 has boundaries [-10,-4] with initial value -8
+//*-*   With this setup, parameters 0->2 can vary freely
+//*-*   Parameter 3 has boundaries [-10,-4] with initial value -8
+//*-*   Parameter 4 is fixed to 0
 //*-*   Parameter 5 is fixed to 100.
+//*-*   When the lower limit and upper limit are equal, teh parameter is fixed.
+//*-*   However to fix a parameter to 0, one must call the FixParameter function.
 //*-*
 //*-*   Note that option "I" gives better results but is slower.
 //*-*
