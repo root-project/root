@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.4 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.5 2002/01/18 14:25:39 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -42,15 +42,10 @@ class TGScrollBarElement;
 
 class TGComboBoxPopup : public TGCompositeFrame {
 
-friend class TGClient;
-
-protected:
-   static Cursor_t  fgDefaultCursor;
-
 public:
    TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options = kVerticalFrame,
-                   ULong_t back = GetWhitePixel());
+                   Pixel_t back = GetWhitePixel());
 
    virtual Bool_t HandleButton(Event_t *);
    void PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
@@ -59,9 +54,8 @@ public:
    ClassDef(TGComboBoxPopup,0)  // Combobox popup window
 };
 
-class TGComboBox : public TGCompositeFrame, public TGWidget {
 
-friend class TGClient;
+class TGComboBox : public TGCompositeFrame, public TGWidget {
 
 protected:
    TGLBEntry           *fSelEntry;      // selected item frame
@@ -76,7 +70,7 @@ protected:
 public:
    TGComboBox(const TGWindow *p, Int_t id,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
-              ULong_t back = GetWhitePixel());
+              Pixel_t back = GetWhitePixel());
    virtual ~TGComboBox();
 
    virtual void DrawBorder();

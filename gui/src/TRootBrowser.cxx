@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.40 2003/05/22 12:20:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.41 2003/05/23 16:20:24 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -248,7 +248,7 @@ private:
 
 public:
    TRootIconBox(TGListView *lv, UInt_t options = kSunkenFrame,
-                ULong_t back = fgDefaultFrameBackground);
+                ULong_t back = GetDefaultFrameBackground());
 
    virtual ~TRootIconBox();
 
@@ -792,7 +792,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
    fFSComboBox = new TGFSComboBox(fToolBar, kFSComboBox);
 
-   fComboLayout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 0, 2, 0);
+   fComboLayout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 0, 2, 2);
    fToolBar->AddFrame(fFSComboBox, fComboLayout);
    fFSComboBox->Resize(150, fFSComboBox->GetDefaultHeight());
    fFSComboBox->Associate(this);

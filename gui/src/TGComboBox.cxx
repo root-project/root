@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.7 2000/10/12 16:53:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.8 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TGComboBox.h"
 #include "TGScrollBar.h"
 #include "TGPicture.h"
+#include "TGResourcePool.h"
 
 
 ClassImp(TGComboBoxPopup)
@@ -109,7 +110,8 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    MapRaised();
 
    gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                          kPointerMotionMask, kNone, fgDefaultCursor);
+                          kPointerMotionMask, kNone,
+                          fClient->GetResourcePool()->GetGrabCursor());
 
    fClient->WaitForUnmap(this);
    EndPopup();
@@ -185,15 +187,15 @@ void TGComboBox::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:

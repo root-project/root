@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.8 2002/10/10 17:09:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.10 2002/11/15 13:24:59 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -40,10 +40,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGScrollBar.h"
+#include "TGResourcePool.h"
 #include "TGPicture.h"
 #include "TSystem.h"
 #include "TTimer.h"
 #include "TMath.h"
+
+Pixmap_t TGScrollBar::fgBckgndPixmap = 0;
+Int_t    TGScrollBar::fgScrollBarWidth = kDefaultScrollBarWidth;
 
 ClassImp(TGScrollBarElement)
 ClassImp(TGScrollBar)
@@ -97,38 +101,38 @@ void TGScrollBarElement::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame)) {
       case kSunkenFrame: // pressed
-         gVirtualX->DrawLine(fId, fgBlackGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgShadowGC(),  1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgShadowGC(),  1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgWhiteGC(),  0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgWhiteGC(),  fWidth-1, fHeight-1, fWidth-1, 1);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, fHeight-2, fWidth-2, 2);
+         gVirtualX->DrawLine(fId, GetWhiteGC()(),  0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, GetWhiteGC()(),  fWidth-1, fHeight-1, fWidth-1, 1);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  fWidth-2, fHeight-2, fWidth-2, 2);
 
          if (fPic) {
             int x = (fWidth - fPic->GetWidth()) >> 1;
             int y = (fHeight - fPic->GetHeight()) >> 1;
-            fPic->Draw(fId, fgBckgndGC(), x+1, y+1); // 3, 3
+            fPic->Draw(fId, GetBckgndGC()(), x+1, y+1); // 3, 3
          }
          break;
 
       case kRaisedFrame: // normal
-         gVirtualX->DrawLine(fId, fgBckgndGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgHilightGC(), 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgShadowGC(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-2, fHeight-2, fWidth-2, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgBlackGC(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-2, fHeight-2, fWidth-2, 1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
 
          if (fPic) {
             int x = (fWidth - fPic->GetWidth()) >> 1;
             int y = (fHeight - fPic->GetHeight()) >> 1;
-            fPic->Draw(fId, fgBckgndGC(), x, y); // 2, 2
+            fPic->Draw(fId, GetBckgndGC()(), x, y); // 2, 2
          }
          break;
 
@@ -179,6 +183,11 @@ Pixmap_t TGScrollBar::GetBckgndPixmap()
 {
    // Static method returning scrollbar background pixmap.
 
+   static Bool_t init = kFALSE;
+   if (!init) {
+      fgBckgndPixmap = gClient->GetResourcePool()->GetCheckeredPixmap();
+      init = kTRUE;
+   }
    return fgBckgndPixmap;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.3 2000/12/13 15:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.4 2001/06/22 16:10:17 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -29,18 +29,18 @@
 #include "TRefCnt.h"
 #endif
 
-class TList;
+class THashTable;
 
 
-class TGGC : public TObject {
+class TGGC : public TObject, public TRefCnt {
 
 friend class TGGCPool;
 
 protected:
    GCValues_t     fValues;     // graphics context values + mask
    GContext_t     fContext;    // graphics context handle
-   Bool_t         fDelete;     // if true delete graphics context
 
+   TGGC(GCValues_t *values, Bool_t calledByGCPool);
    void UpdateValues(GCValues_t *v);
 
 public:
@@ -51,11 +51,12 @@ public:
 
    GContext_t GetGC() const { return fContext; }
    GContext_t operator()() const;
+
    void SetAttributes(GCValues_t *values);
    void SetFunction(EGraphicsFunction v);
    void SetPlaneMask(ULong_t v);
-   void SetForeground(ULong_t v);
-   void SetBackground(ULong_t v);
+   void SetForeground(Pixel_t v);
+   void SetBackground(Pixel_t v);
    void SetLineWidth(Int_t v);
    void SetLineStyle(Int_t v);
    void SetCapStyle(Int_t v);
@@ -76,33 +77,48 @@ public:
    void SetDashList(const char v[], Int_t len);
    void SetArcMode(Int_t v);
 
+   const GCValues_t *GetAttributes() const { return &fValues; }
+   Mask_t            GetMask() const { return fValues.fMask; }
+   EGraphicsFunction GetFunction() const { return fValues.fFunction; }
+   Pixel_t           GetForeground() const { return fValues.fForeground; }
+   Pixel_t           GetBackground() const { return fValues.fBackground; }
+   Int_t             GetLineWidth() const { return fValues.fLineWidth; }
+   Int_t             GetLineStyle() const { return fValues.fLineStyle; }
+   FontH_t           GetFont() const { return fValues.fFont; }
+   Int_t             GetCapStyle() const { return fValues.fCapStyle; }
+   Int_t             GetJoinStyle() const { return fValues.fJoinStyle; }
+   Int_t             GetFillStyle() const { return fValues.fFillStyle; }
+   Int_t             GetFillRule() const { return fValues.fFillRule; }
+
+   void Print(Option_t *option="") const;
+
    ClassDef(TGGC,0)  // Graphics context
 };
 
 
 class TGGCPool : public TGObject {
 
-friend class TGClient;
-
-protected:
-   class TGGCElement : public TObject, public TRefCnt {
-   public:
-      TGGC   *fContext;
-      ~TGGCElement() { delete fContext; }
-      Bool_t  IsEqual(const TObject *obj) const { return fContext == obj; }
-   };
-   TList  *fList;   // list of graphics contexts in pool
+friend class TGGC;
 
 private:
-   Int_t  MatchGC(TGGC *gc, GCValues_t *values);
+   THashTable  *fList;   // hash table of graphics contexts in pool
+
+   void   ForceFreeGC(const TGGC *gc);
+   Int_t  MatchGC(const TGGC *gc, GCValues_t *values);
    void   UpdateGC(TGGC *gc, GCValues_t *values);
 
 public:
    TGGCPool(TGClient *client);
    virtual ~TGGCPool();
 
-   TGGC *GetGC(GCValues_t *values);
-   void  FreeGC(TGGC *gc);
+   TGGC *GetGC(GCValues_t *values, Bool_t rw = kFALSE);
+   void  FreeGC(const TGGC *gc);
+   void  FreeGC(GContext_t gc);
+
+   TGGC *FindGC(const TGGC *gc);
+   TGGC *FindGC(GContext_t gc);
+
+   void  Print(Option_t *option="") const;
 
    ClassDef(TGGCPool,0)  // Graphics context pool
 };

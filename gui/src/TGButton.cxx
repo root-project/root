@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.7 2002/03/29 20:16:28 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.8 2003/04/30 14:25:10 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -56,6 +56,20 @@
 #include "TGPicture.h"
 #include "TGToolTip.h"
 #include "TGButtonGroup.h"
+#include "TGResourcePool.h"
+
+
+const TGGC *TGButton::fgHibckgndGC = 0;
+const TGGC *TGButton::fgDefaultGC = 0;
+
+const TGFont *TGTextButton::fgDefaultFont = 0;
+
+const TGFont *TGCheckButton::fgDefaultFont = 0;
+const TGGC   *TGCheckButton::fgDefaultGC = 0;
+
+const TGFont *TGRadioButton::fgDefaultFont = 0;
+const TGGC   *TGRadioButton::fgDefaultGC = 0;
+
 
 
 ClassImpQ(TGButton)
@@ -238,11 +252,28 @@ void TGButton::SetToolTipText(const char *text, Long_t delayms)
 
 //______________________________________________________________________________
 const TGGC &TGButton::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}
 
 //______________________________________________________________________________
 const TGGC &TGButton::GetHibckgndGC()
-{ return fgHibckgndGC; }
+{
+   if (!fgHibckgndGC) {
+      GCValues_t gval;
+      gval.fMask = kGCForeground | kGCBackground | kGCTile |
+                   kGCFillStyle  | kGCGraphicsExposures;
+      gval.fForeground = gClient->GetResourcePool()->GetFrameHiliteColor();
+      gval.fBackground = gClient->GetResourcePool()->GetFrameBgndColor();
+      gval.fFillStyle  = kFillTiled;
+      gval.fTile       = gClient->GetResourcePool()->GetCheckeredPixmap();
+      gval.fGraphicsExposures = kFALSE;
+      fgHibckgndGC = gClient->GetGC(&gval, kTRUE);
+   }
+   return *fgHibckgndGC;
+}
 
 
 //______________________________________________________________________________
@@ -372,13 +403,13 @@ void TGTextButton::DoRedraw()
 
    if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
    if (fState == kButtonEngaged) {
-      gVirtualX->FillRectangle(fId, fgHibckgndGC(), 2, 2, fWidth-4, fHeight-4);
-      gVirtualX->DrawLine(fId, fgHilightGC(), 2, 2, fWidth-3, 2);
+      gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
    }
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    if (fState == kButtonDisabled) {
-      fLabel->Draw(fId, fgHilightGC(), x+1, y+1 + max_ascent);
-      fLabel->Draw(fId, fgShadowGC(), x, y + max_ascent);
+      fLabel->Draw(fId, GetHilightGC()(), x+1, y+1 + max_ascent);
+      fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
    } else {
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
    }
@@ -420,7 +451,11 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
 
 //______________________________________________________________________________
 FontStruct_t TGTextButton::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 
 //______________________________________________________________________________
@@ -510,8 +545,8 @@ void TGPictureButton::DoRedraw()
    TGFrame::DoRedraw();
    if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
    if (fState == kButtonEngaged) {
-      gVirtualX->FillRectangle(fId, fgHibckgndGC(), 2, 2, fWidth-4, fHeight-4);
-      gVirtualX->DrawLine(fId, fgHilightGC(), 2, 2, fWidth-3, 2);
+      gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
    }
    fPic->Draw(fId, fNormGC, x, y);
 }
@@ -709,17 +744,17 @@ void TGCheckButton::DoRedraw()
    cw = 13;
    y0 = (fHeight - cw) >> 1;
 
-   gVirtualX->DrawLine(fId, fgShadowGC(), 0, y0, cw-2, y0);
-   gVirtualX->DrawLine(fId, fgShadowGC(), 0, y0, 0, y0+cw-2);
-   gVirtualX->DrawLine(fId, fgBlackGC(), 1, y0+1, cw-3, y0+1);
-   gVirtualX->DrawLine(fId, fgBlackGC(), 1, y0+1, 1, y0+cw-3);
+   gVirtualX->DrawLine(fId, GetShadowGC()(), 0, y0, cw-2, y0);
+   gVirtualX->DrawLine(fId, GetShadowGC()(), 0, y0, 0, y0+cw-2);
+   gVirtualX->DrawLine(fId, GetBlackGC()(), 1, y0+1, cw-3, y0+1);
+   gVirtualX->DrawLine(fId, GetBlackGC()(), 1, y0+1, 1, y0+cw-3);
 
-   gVirtualX->DrawLine(fId, fgHilightGC(), 0, y0+cw-1, cw-1, y0+cw-1);
-   gVirtualX->DrawLine(fId, fgHilightGC(), cw-1, y0+cw-1, cw-1, y0);
-   gVirtualX->DrawLine(fId, fgBckgndGC(),  2, y0+cw-2, cw-2, y0+cw-2);
-   gVirtualX->DrawLine(fId, fgBckgndGC(),  cw-2, y0+2, cw-2, y0+cw-2);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), 0, y0+cw-1, cw-1, y0+cw-1);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), cw-1, y0+cw-1, cw-1, y0);
+   gVirtualX->DrawLine(fId, GetBckgndGC()(),  2, y0+cw-2, cw-2, y0+cw-2);
+   gVirtualX->DrawLine(fId, GetBckgndGC()(),  cw-2, y0+2, cw-2, y0+cw-2);
 
-   gVirtualX->FillRectangle(fId, fgWhiteGC(), 2, y0+2, cw-4, cw-4);
+   gVirtualX->FillRectangle(fId, GetWhiteGC()(), 2, y0+2, cw-4, cw-4);
 
    if (fState == kButtonDown) {
       Segment_t seg[6];
@@ -734,7 +769,7 @@ void TGCheckButton::DoRedraw()
       seg[4].fX1 = 3+l; seg[4].fY1 = 6+t; seg[4].fX2 = 7+l; seg[4].fY2 = 2+t;
       seg[5].fX1 = 3+l; seg[5].fY1 = 7+t; seg[5].fX2 = 7+l; seg[5].fY2 = 3+t;
 
-      gVirtualX->DrawSegments(fId, fgBlackGC(), seg, 6);
+      gVirtualX->DrawSegments(fId, GetBlackGC()(), seg, 6);
    }
 
    x = 20;
@@ -743,8 +778,8 @@ void TGCheckButton::DoRedraw()
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    if (fState == kButtonDisabled) {
-     fLabel->Draw(fId, fgHilightGC(), x+1, y+1 + max_ascent);
-     fLabel->Draw(fId, fgShadowGC(), x, y + max_ascent);
+     fLabel->Draw(fId, GetHilightGC()(), x+1, y+1 + max_ascent);
+     fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
    } else {
      fLabel->Draw(fId, fNormGC, x, y + max_ascent);
    }
@@ -752,11 +787,19 @@ void TGCheckButton::DoRedraw()
 
 //______________________________________________________________________________
 FontStruct_t TGCheckButton::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGCheckButton::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}
 
 
 //______________________________________________________________________________
@@ -971,8 +1014,8 @@ void TGRadioButton::DoRedraw()
 
    //  fLabel->Draw(fId, fNormGC, tx, ty);
    if (fState == kButtonDisabled) {
-      fLabel->DrawWrapped(fId, fgHilightGC(), tx+1, ty+1, fWidth-tx-1, fFontStruct);
-      fLabel->DrawWrapped(fId, fgShadowGC(), tx, ty, fWidth-tx-1, fFontStruct);
+      fLabel->DrawWrapped(fId, GetHilightGC()(), tx+1, ty+1, fWidth-tx-1, fFontStruct);
+      fLabel->DrawWrapped(fId, GetShadowGC()(), tx, ty, fWidth-tx-1, fFontStruct);
    } else {
       fLabel->DrawWrapped(fId, fNormGC, tx, ty, fWidth-tx-1, fFontStruct);
    }
@@ -980,8 +1023,16 @@ void TGRadioButton::DoRedraw()
 
 //______________________________________________________________________________
 FontStruct_t TGRadioButton::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGRadioButton::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.2 2000/09/04 17:53:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -31,7 +31,11 @@
 #include "TGLabel.h"
 #include "TGWidget.h"
 #include "TGString.h"
+#include "TGResourcePool.h"
 
+
+const TGFont *TGLabel::fgDefaultFont = 0;
+const TGGC   *TGLabel::fgDefaultGC = 0;
 
 ClassImp(TGLabel)
 
@@ -46,8 +50,8 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    fText        = text;
    fTMode       = kTextCenterX | kTextCenterY;
    fTextChanged = kTRUE;
-   fFontStruct  = font;
-   fNormGC      = norm;
+   fFontStruct = font;
+   fNormGC = norm;
 
    int max_ascent, max_descent;
 
@@ -141,8 +145,16 @@ void TGLabel::DoRedraw()
 
 //______________________________________________________________________________
 FontStruct_t TGLabel::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGLabel::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}

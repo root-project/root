@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.1 2001/09/18 10:55:44 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -92,7 +92,7 @@ public:
                       Double_t val, GContext_t norm,
                       FontStruct_t font = GetDefaultFontStruct(),
                       UInt_t option = kSunkenFrame | kDoubleBorder,
-                      ULong_t back = GetWhitePixel());
+                      Pixel_t back = GetWhitePixel());
    TGNumberEntryField(const TGWindow *parent,
                       Int_t id = -1, Double_t val = 0,
                       EStyle style = kNESReal,

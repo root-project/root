@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.4 2001/04/11 11:10:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.5 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -27,9 +27,9 @@
 
 class TGStatusBarPart;
 
+
 class TGStatusBar : public TGFrame {
 
-friend class TGClient;
 friend class TGStatusBarPart;
 
 protected:
@@ -40,15 +40,18 @@ protected:
    Int_t            *fXt;         // x position for each part
    Bool_t            f3DCorner;   // draw 3D corner (drawn by default)
 
-   static TGGC          fgDefaultGC;
-   static FontStruct_t  fgDefaultFontStruct;
+   static const TGFont *fgDefaultFont;
+   static TGGC         *fgDefaultGC;
 
    virtual void DoRedraw();
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
 public:
    TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
                UInt_t options = kSunkenFrame,
-               ULong_t back = GetDefaultFrameBackground());
+               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGStatusBar();
 
    virtual void DrawBorder();

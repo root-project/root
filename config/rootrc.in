@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.46 2003/05/08 09:07:16 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.47 2003/05/13 06:21:47 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -94,18 +94,28 @@ WinNT.*.Root.Html.SourceDir: .;src;include
 
 # GUI specific settings
 Gui.Backend:                native
-Unix.*.Gui.NormalFont:      -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.BoldFont:        -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.SmallFont:       -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-Unix.*.Gui.ProportionalFont: -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.NormalFont:     -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.BoldFont:       -adobe-helvetica-bold-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.SmallFont:      -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.ProportionalFont: -adobe-courier-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-Gui.BackgroundColor:        #c0c0c0
-Gui.ForegroundColor:        black
-Gui.SelectForegroundColor:  white
-Gui.SelectBackgroundColor:  #000080
+Unix.*.Gui.DefaultFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.MenuFont:        -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.MenuHiFont:      -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.DocFixedFont:    -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.DocPropFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.IconFont:        -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Unix.*.Gui.StatusFont:      -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.DefaultFont:     -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.MenuFont:        -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.MenuHiFont:      -adobe-helvetica-bold-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.DocFixedFont:    -adobe-courier-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.DocPropFont:     -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.IconFont:        -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.StatusFont:      -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+Gui.BackgroundColor:         #c0c0c0
+Gui.ForegroundColor:         black
+Gui.SelectBackgroundColor:   #000080
+Gui.SelectForegroundColor:   white
+Gui.DocumentBackgroundColor: white
+Gui.DocumentForegroundColor: black
+Gui.TooltipBackgroundColor:  LightYellow
+Gui.TooltipForegroundColor:  black
 Gui.IconPath:               $(HOME)/icons:@iconpath@:.
 Gui.MimeTypeFile:           $(HOME)/.root.mimes
 # If above does not exists defaults to this:

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.4 2001/06/22 16:10:17 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -18,18 +18,19 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TGClient.h"
 #include "TGGC.h"
 #include "TVirtualX.h"
-#include "TList.h"
+#include "THashTable.h"
 #include <string.h>
 
 
 ClassImp(TGGC)
 
 //______________________________________________________________________________
-TGGC::TGGC(GCValues_t *values)
+TGGC::TGGC(GCValues_t *values, Bool_t)
 {
-   // Create a graphics context.
+   // Create a graphics context (only called via TGGCPool::GetGC()).
 
    if (values) {
       fValues = *values;
@@ -46,7 +47,28 @@ TGGC::TGGC(GCValues_t *values)
       memset(&fValues, 0, sizeof(GCValues_t));
       fContext = 0;
    }
-   fDelete = kTRUE;
+   SetRefCount(1);
+}
+
+//______________________________________________________________________________
+TGGC::TGGC(GCValues_t *values)
+{
+   // Create a graphics context, registers GC in GCPool.
+
+   // case of default ctor at program startup before gClient exists
+   if (!values) {
+      memset(&fValues, 0, sizeof(GCValues_t));
+      fContext = 0;
+      SetRefCount(1);
+      return;
+   }
+
+   if (gClient)
+      gClient->GetGC(values, kTRUE);
+   else {
+      fContext = 0;
+      Error("TGGC", "TGClient not yet initialized, should never happen");
+   }
 }
 
 //______________________________________________________________________________
@@ -62,7 +84,10 @@ TGGC::TGGC(const TGGC &g) : TObject(g)
                               fValues.fDashLen);
    } else
       fContext = 0;
-   fDelete = kTRUE;
+   SetRefCount(1);
+
+   if (gClient)
+      gClient->GetGCPool()->fList->Add(this);
 }
 
 //______________________________________________________________________________
@@ -70,27 +95,32 @@ TGGC::~TGGC()
 {
    // Delete graphics context.
 
-   if (fContext && fDelete)
+   if (gClient)
+      gClient->GetGCPool()->ForceFreeGC(this);
+
+   if (fContext)
       gVirtualX->DeleteGC(fContext);
 }
 
 //______________________________________________________________________________
 TGGC &TGGC::operator=(const TGGC &rhs)
 {
-   // Graphics context assignment operator. Use this operator to share
-   // a graphics context. Using this operator you will not get a copy of the
-   // context.
+   // Graphics context assignment operator.
 
    if (this != &rhs) {
-      if (fContext && fDelete)
+      if (!fContext && gClient) {
+         TGGC *gc = gClient->GetGCPool()->FindGC(this);
+         if (!gc)
+            gClient->GetGCPool()->fList->Add(this);
+      }
+      if (fContext)
          gVirtualX->DeleteGC(fContext);
       TObject::operator=(rhs);
       fValues  = rhs.fValues;
-      fContext = rhs.fContext;
-      if (fContext)
-         fDelete = kFALSE;
-      else
-         fDelete = kTRUE;
+      fContext = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &fValues);
+      if (fValues.fMask & kGCDashList)
+         gVirtualX->SetDashes(fContext, fValues.fDashOffset, fValues.fDashes,
+                              fValues.fDashLen);
    }
    return *this;
 }
@@ -110,7 +140,7 @@ void TGGC::UpdateValues(GCValues_t *values)
 
    fValues.fMask |= values->fMask;
 
-   for (Mask_t bit = 1; bit <= kGCArcMode; bit <<= 1) {
+   for (Mask_t bit = 1; bit <= fValues.fMask; bit <<= 1) {
       switch (bit & values->fMask) {
          default:
          case 0:
@@ -196,6 +226,12 @@ void TGGC::UpdateValues(GCValues_t *values)
 void TGGC::SetAttributes(GCValues_t *values)
 {
    // Set attributes as specified in the values structure.
+
+   if (!fContext && gClient) {
+      TGGC *gc = gClient->GetGCPool()->FindGC(this);
+      if (!gc)
+         gClient->GetGCPool()->fList->Add(this);
+   }
 
    if (fContext)
       gVirtualX->ChangeGC(fContext, values);
@@ -465,6 +501,15 @@ void TGGC::SetArcMode(Int_t v)
    SetAttributes(&values);
 }
 
+//______________________________________________________________________________
+void TGGC::Print(Option_t *) const
+{
+   // Print graphics contexts info.
+
+   Printf("TGGC: mask = %lx, handle = %lx, ref cnt = %u", fValues.fMask,
+          fContext, References());
+}
+
 
 ClassImp(TGGCPool)
 
@@ -474,7 +519,7 @@ TGGCPool::TGGCPool(TGClient *client)
    // Create graphics context pool.
 
    fClient = client;
-   fList   = new TList;
+   fList   = new THashTable;
    fList->SetOwner();
 }
 
@@ -487,69 +532,131 @@ TGGCPool::~TGGCPool()
 }
 
 //______________________________________________________________________________
-void TGGCPool::FreeGC(TGGC *gc)
+void TGGCPool::ForceFreeGC(const TGGC *gct)
 {
-   // Delete graphics context if it not used anymore.
+   // Force remove graphics context from list. Is only called via ~TGGC().
 
-   TGGCElement *el = (TGGCElement *) fList->FindObject(gc);
+   TGGC *gc = (TGGC *) fList->FindObject(gct);
 
-   if (el) {
-      el->RemoveReference();
-      if (!el->References()) {
+   if (gc) {
+      if (gc->References() > 1)
+         Error("ForceFreeGC", "removed a shared graphics context\n",
+               "best to use graphics contexts via the TGGCPool()");
+      fList->Remove(gc);
+   }
+}
+
+//______________________________________________________________________________
+void TGGCPool::FreeGC(const TGGC *gct)
+{
+   // Delete graphics context if it is not used anymore.
+
+   TGGC *gc = (TGGC *) fList->FindObject(gct);
+
+   if (gc) {
+      if (!gc->RemoveReference() == 0) {
          fList->Remove(gc);
-         delete el;
+         delete gc;
       }
    }
 }
 
 //______________________________________________________________________________
-TGGC *TGGCPool::GetGC(GCValues_t *values)
+void TGGCPool::FreeGC(GContext_t gct)
 {
-   // Get the best matching graphics context depending on values.
-
-   TGGCElement *el, *best_match = 0;
-   Int_t matching_bits, best_matching_bits = -1;
-   Bool_t exact = kFALSE;
-
-   // First, try to find an exact matching GC.
-   // If no one found, then use the closest one.
+   // Delete graphics context if it is not used anymore.
 
    TIter next(fList);
 
-   while ((el = (TGGCElement *) next())) {
-      matching_bits = MatchGC(el->fContext, values);
-      if (matching_bits > best_matching_bits) {
-         best_matching_bits = matching_bits;
-         best_match = el;
-         if ((el->fContext->fValues.fMask & values->fMask) == values->fMask) {
-            exact = kTRUE;
-            break;
+   while (TGGC *gc = (TGGC *) next()) {
+      if (gc->fContext == gct) {
+         if (gc->RemoveReference() == 0) {
+            fList->Remove(gc);
+            delete gc;
+            return;
          }
       }
    }
+}
 
-   if (best_match) {
-      if (gDebug > 0)
-         Printf("<TGGCPool::GetGC>: %smatching GC found\n", exact ? "exact " : "");
-      best_match->AddReference();
-      if (!exact) {
-         // add missing values to the best_match'ing GC...
-         UpdateGC(best_match->fContext, values);
+//______________________________________________________________________________
+TGGC *TGGCPool::FindGC(const TGGC *gct)
+{
+   // Find graphics context. Returns 0 in case gc is not found.
+
+   return (TGGC*) fList->FindObject(gct);
+}
+
+//______________________________________________________________________________
+TGGC *TGGCPool::FindGC(GContext_t gct)
+{
+   // Find graphics context based on its GContext_t handle. Returns 0
+   // in case gc is not found.
+
+   TIter next(fList);
+
+   while (TGGC *gc = (TGGC *) next()) {
+      if (gc->fContext == gct)
+         return gc;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TGGC *TGGCPool::GetGC(GCValues_t *values, Bool_t rw)
+{
+   // Get the best matching graphics context depending on values.
+   // If rw is false only a readonly, not modifiable graphics context
+   // is returned. If rw is true a new modifiable graphics context is
+   // returned.
+
+   TGGC *gc, *best_match = 0;
+   Int_t matching_bits, best_matching_bits = -1;
+   Bool_t exact = kFALSE;
+
+   if (!values)
+      rw = kTRUE;
+
+   if (!rw) {
+
+      // First, try to find an exact matching GC.
+      // If no one found, then use the closest one.
+
+      TIter next(fList);
+
+      while ((gc = (TGGC *) next())) {
+         matching_bits = MatchGC(gc, values);
+         if (matching_bits > best_matching_bits) {
+            best_matching_bits = matching_bits;
+            best_match = gc;
+            if ((gc->fValues.fMask & values->fMask) == values->fMask) {
+               exact = kTRUE;
+               break;
+            }
+         }
       }
-      return best_match->fContext;
+
+      if (best_match) {
+         if (gDebug > 0)
+            Printf("<TGGCPool::GetGC>: %smatching GC found\n", exact ? "exact " : "");
+         best_match->AddReference();
+         if (!exact) {
+            // add missing values to the best_match'ing GC...
+            UpdateGC(best_match, values);
+         }
+         return best_match;
+      }
    }
 
-   TGGC *gc = new TGGC(values);
+   gc = new TGGC(values, kTRUE);
 
-   el = new TGGCElement;
-   el->fContext = gc;
-   fList->Add(el);
+   fList->Add(gc);
 
    return gc;
 }
 
 //______________________________________________________________________________
-Int_t TGGCPool::MatchGC(TGGC *gc, GCValues_t *values)
+Int_t TGGCPool::MatchGC(const TGGC *gc, GCValues_t *values)
 {
    // Try to find matching graphics context. On success returns the amount
    // of matching bits (which may be zero if masks have no common bits),
@@ -558,12 +665,26 @@ Int_t TGGCPool::MatchGC(TGGC *gc, GCValues_t *values)
    Mask_t bit, common_bits;
    Int_t  matching_bits = -1;
    Bool_t match = kFALSE;
-   GCValues_t *gcv = &gc->fValues;
+   const GCValues_t *gcv = &gc->fValues;
 
    common_bits = values->fMask & gcv->fMask;
 
    if (common_bits == 0) return 0;  // no common bits, a possible
                                     // candidate anyway.
+
+   // Careful, check first the tile and stipple mask bits, as these
+   // influence nearly all other GC functions... (do the same for
+   // some other such bits as GCFunction, etc...). Perhaps we should
+   // allow only exact GC matches.
+
+   if (gcv->fMask & kGCTile)
+      if ((gcv->fTile != kNone) && !(values->fMask & kGCTile)) return -1;
+   if (values->fMask & kGCTile)
+      if ((values->fTile != kNone) && !(gcv->fMask & kGCTile)) return -1;
+   if (gcv->fMask & kGCStipple)
+      if ((gcv->fStipple != kNone) && !(values->fMask & kGCStipple)) return -1;
+   if (values->fMask & kGCStipple)
+      if ((values->fStipple != kNone) && !(gcv->fMask & kGCStipple)) return -1;
 
    for (bit = 1; bit <= common_bits; bit <<= 1) {
       switch (bit & common_bits) {
@@ -656,4 +777,12 @@ void TGGCPool::UpdateGC(TGGC *gc, GCValues_t *values)
    // Update graphics context with the values spcified in values->fMask.
 
    gc->SetAttributes(values);
+}
+
+//______________________________________________________________________________
+void TGGCPool::Print(Option_t *) const
+{
+   // List all graphics contexts in the pool.
+
+   fList->Print();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.4 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.5 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 
 #include "TGToolTip.h"
 #include "TGLabel.h"
+#include "TGResourcePool.h"
 #include "TTimer.h"
 #include "TSystem.h"
 #include "TVirtualPad.h"
@@ -74,10 +75,10 @@ TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
    attr.fSaveUnder        = kTRUE;
 
    gVirtualX->ChangeWindowAttributes(fId, &attr);
-   SetBackgroundColor(fgLightYellowPixel);
+   SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
    fLabel = new TGLabel(this, text);
-   fLabel->SetBackgroundColor(fgLightYellowPixel);
+   fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
    AddFrame(fLabel, fL1 = new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                             2, 3, 0, 0));
@@ -108,10 +109,10 @@ TGToolTip::TGToolTip(const TGWindow *p, const TBox *box, const char *text,
    attr.fSaveUnder        = kTRUE;
 
    gVirtualX->ChangeWindowAttributes(fId, &attr);
-   SetBackgroundColor(fgLightYellowPixel);
+   SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
    fLabel = new TGLabel(this, text);
-   fLabel->SetBackgroundColor(fgLightYellowPixel);
+   fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
    AddFrame(fLabel, fL1 = new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                             2, 3, 0, 0));
@@ -140,10 +141,10 @@ TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
    attr.fSaveUnder        = kTRUE;
 
    gVirtualX->ChangeWindowAttributes(fId, &attr);
-   SetBackgroundColor(fgLightYellowPixel);
+   SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
    fLabel = new TGLabel(this, text);
-   fLabel->SetBackgroundColor(fgLightYellowPixel);
+   fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
 
    AddFrame(fLabel, fL1 = new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                             2, 3, 0, 0));
@@ -171,10 +172,10 @@ void TGToolTip::DrawBorder()
 {
    // Draw border of tool tip window.
 
-   gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
-   gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
-   gVirtualX->DrawLine(fId, fgBlackGC(),  0, fHeight-1, fWidth-1, fHeight-1);
-   gVirtualX->DrawLine(fId, fgBlackGC(),  fWidth-1, fHeight-1, fWidth-1, 0);
+   gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
+   gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fHeight-2);
+   gVirtualX->DrawLine(fId, GetBlackGC()(),  0, fHeight-1, fWidth-1, fHeight-1);
+   gVirtualX->DrawLine(fId, GetBlackGC()(),  fWidth-1, fHeight-1, fWidth-1, 0);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.10 2001/08/21 17:34:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.11 2002/10/31 07:27:35 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -33,8 +33,6 @@ class TGSearchType;
 
 class TGTextEdit : public TGTextView {
 
-friend class TGClient;
-
 public:
    enum EInsertMode { kInsert, kReplace };
    enum {
@@ -53,7 +51,8 @@ protected:
    TGLongPosition   fCurrent;       // current cursor position
    EInsertMode      fInsertMode;    // text insertion mode (kInsert (default), kReplace)
 
-   static Cursor_t  fgDefaultCursor;
+   static TGGC     *fgCursor0GC;
+   static TGGC     *fgCursor1GC;
 
    void Init();
 
@@ -77,13 +76,16 @@ protected:
    virtual void End();
    virtual void Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
 
+   static const TGGC &GetCursor0GC();
+   static const TGGC &GetCursor1GC();
+
 public:
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
-              UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
-              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
 
    virtual ~TGTextEdit();
 

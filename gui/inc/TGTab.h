@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.5 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.6 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
    TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h,
                 GContext_t norm, FontStruct_t font,
                 UInt_t options = kRaisedFrame,
-                ULong_t back = GetDefaultFrameBackground());
+                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGTabElement();
 
    virtual void        DrawBorder();
@@ -85,8 +85,6 @@ public:
 
 class TGTab : public TGCompositeFrame, public TGWidget {
 
-friend class TGClient;
-
 protected:
    Int_t               fCurrent;        // index of current tab
    UInt_t              fTabh;           // tab height
@@ -97,8 +95,8 @@ protected:
 
    void ChangeTab(Int_t tabIndex);
 
-   static FontStruct_t    fgDefaultFontStruct;
-   static TGGC            fgDefaultGC;
+   static const TGFont *fgDefaultFont;
+   static const TGGC   *fgDefaultGC;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -108,7 +106,7 @@ public:
          GContext_t norm = GetDefaultGC()(),
          FontStruct_t font = GetDefaultFontStruct(),
          UInt_t options = kChildFrame,
-         ULong_t back = GetDefaultFrameBackground());
+         Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGTab();
 
    virtual TGCompositeFrame *AddTab(TGString *text);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.11 2002/02/23 16:19:24 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.12 2002/02/23 18:41:34 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -66,13 +66,11 @@ class TGWidget;
 class TGHotString;
 class TGPicture;
 class TGToolTip;
-class TGClient;
 class TGButtonGroup;
 
 
 class TGButton : public TGFrame, public TGWidget {
 
-friend class TGClient;
 friend class TGButtonGroup;
 
 protected:
@@ -88,8 +86,8 @@ protected:
    virtual void   SetGroup(TGButtonGroup *group);
    virtual void   SetToggleButton(Bool_t) { }
 
-   static TGGC fgHibckgndGC;
-   static TGGC fgDefaultGC;
+   static const TGGC *fgDefaultGC;
+   static const TGGC *fgHibckgndGC;
 
 public:
    static const TGGC   &GetDefaultGC();
@@ -129,15 +127,13 @@ public:
 
 class TGTextButton : public TGButton {
 
-friend class TGClient;
-
 protected:
    TGHotString   *fLabel;         // button text
    Int_t          fTMode;         // text drawing mode (ETextJustification)
    Int_t          fHKeycode;      // hotkey
    FontStruct_t   fFontStruct;    // font to draw text
 
-   static FontStruct_t  fgDefaultFontStruct;
+   static const TGFont *fgDefaultFont;
 
    void Init();
    virtual void DoRedraw();
@@ -196,8 +192,6 @@ public:
 
 class TGCheckButton : public TGButton {
 
-friend class TGClient;
-
 protected:
    TGHotString    *fLabel;         // check button label
    Int_t           fHKeycode;      // hotkey
@@ -208,8 +202,8 @@ protected:
    void PSetState(EButtonState state);
    virtual void DoRedraw();
 
-   static FontStruct_t  fgDefaultFontStruct;
-   static TGGC          fgDefaultGC;
+   static const TGFont *fgDefaultFont;
+   static const TGGC   *fgDefaultGC;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -244,8 +238,6 @@ public:
 
 class TGRadioButton : public TGButton {
 
-friend class TGClient;
-
 protected:
    TGHotString       *fLabel;       // radio button label
    Int_t              fHKeycode;    // hotkey
@@ -258,9 +250,8 @@ protected:
    void PSetState(EButtonState state);
    virtual void DoRedraw();
 
-   static Pixmap_t      fgR1, fgR2, fgR3, fgR4, fgR5, fgR6;
-   static FontStruct_t  fgDefaultFontStruct;
-   static TGGC          fgDefaultGC;
+   static const TGFont *fgDefaultFont;
+   static const TGGC   *fgDefaultGC;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();

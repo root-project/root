@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.2 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.3 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -181,7 +181,7 @@ TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
    fCanvas = new TGCanvas(this, 10, 10, kChildFrame);
    fContainer = new TGVerticalFrame(fCanvas->GetViewPort(), 10, 10, kOwnBackground);
    fCanvas->SetContainer(fContainer);
-   fContainer->SetBackgroundColor(fClient->GetShadow(fgDefaultFrameBackground));
+   fContainer->SetBackgroundColor(fClient->GetShadow(GetDefaultFrameBackground()));
 
    AddFrame(fButton, fL1 = new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    AddFrame(fCanvas, fL2 = new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));

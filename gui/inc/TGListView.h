@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.12 2002/10/10 17:09:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.14 2002/11/15 13:24:59 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -54,8 +54,6 @@ class TGListView;
 
 class TGLVEntry : public TGFrame {
 
-friend class TGClient;
-
 protected:
    TGString           *fName;        // name of item
    TGString          **fSubnames;    // sub names of item (details)
@@ -74,18 +72,20 @@ protected:
    FontStruct_t        fFontStruct;  // text font
    void               *fUserData;    // pointer to user data structure
 
-   static FontStruct_t   fgDefaultFontStruct;
-   static TGGC           fgDefaultGC;
-   static ULong_t        fgSelPixel;
+   static const TGFont *fgDefaultFont;
+   static TGGC         *fgDefaultGC;
 
    virtual void DoRedraw();
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
 public:
    TGLVEntry(const TGWindow *p,
              const TGPicture *bigpic, const TGPicture *smallpic,
              TGString *name, TGString **subnames, EListViewMode ViewMode,
              UInt_t options = kChildFrame,
-             ULong_t back = GetWhitePixel());
+             Pixel_t back = GetWhitePixel());
    virtual ~TGLVEntry();
 
    virtual void SetViewMode(EListViewMode ViewMode);
@@ -104,16 +104,14 @@ public:
    virtual TGDimension GetDefaultSize() const;
    virtual Int_t       GetSubnameWidth(Int_t idx) const { return fCtw[idx]; }
 
-    virtual void DrawCopy(Handle_t id,Int_t x, Int_t y);
+   virtual void DrawCopy(Handle_t id, Int_t x, Int_t y);
 
-  ClassDef(TGLVEntry,0)  // Item that goes into a TGListView container
+   ClassDef(TGLVEntry,0)  // Item that goes into a TGListView container
 };
 
 
 
 class TGLVContainer : public TGContainer {
-
-friend class TGClient;
 
 protected:
    TGLayoutHints     *fItemLayout;    // item layout hints
@@ -128,9 +126,9 @@ protected:
 public:
    TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
                  UInt_t options = kSunkenFrame,
-                 ULong_t back = GetDefaultFrameBackground());
+                 Pixel_t back = GetDefaultFrameBackground());
    TGLVContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
-                 ULong_t back = GetDefaultFrameBackground());
+                 Pixel_t back = GetDefaultFrameBackground());
 
    virtual ~TGLVContainer();
 
@@ -155,8 +153,6 @@ public:
 
 class TGListView : public TGCanvas {
 
-friend class TGClient;
-
 protected:
    Int_t           fNColumns;     // number of columns
    Int_t          *fColumns;      // column width
@@ -164,14 +160,19 @@ protected:
    EListViewMode   fViewMode;     // view mode if list view widget
    TGDimension     fMaxSize;      // maximum item size
    TGTextButton  **fColHeader;    // column headers for in detailed mode
+   GContext_t      fNormGC;       // drawing graphics context
+   FontStruct_t    fFontStruct;   // text font
 
-   static TGGC          fgDefaultGC;
-   static FontStruct_t  fgDefaultFontStruct;
+   static const TGFont *fgDefaultFont;
+   static TGGC         *fgDefaultGC;
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
 public:
    TGListView(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options = kSunkenFrame | kDoubleBorder,
-              ULong_t back = GetDefaultFrameBackground());
+              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGListView();
 
    virtual void   Layout();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.7 2002/02/23 16:22:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.8 2002/02/23 18:41:34 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -50,8 +50,6 @@ class TViewTimer;
 
 class TGView : public TGCompositeFrame, public TGWidget {
 
-friend class TGClient;
-
 public:
    enum { kNoHSB = BIT(0), kNoVSB = BIT(1) };
    enum { kHorizontal = 0, kVertical = 1 };
@@ -73,17 +71,15 @@ protected:
    TGHScrollBar     *fHsb;          // horizontal scrollbar
    TGVScrollBar     *fVsb;          // vertical scrollbar
    TViewTimer       *fScrollTimer;  // scrollbar timer
-   GContext_t        fWhiteGC;      // graphics context used for scrolling
+   TGGC              fWhiteGC;      // graphics context used for scrolling
                                     // generates GraphicsExposure events
-
-   static Atom_t     fgClipboard;
 
 public:
    TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id = -1,
           UInt_t xMargin = 0, UInt_t yMargin = 0,
           UInt_t options = kSunkenFrame | kDoubleBorder,
           UInt_t sboptions = 0,
-          ULong_t back = GetWhitePixel());
+          Pixel_t back = GetWhitePixel());
 
    virtual ~TGView();
 
@@ -140,7 +136,7 @@ private:
    TGView   *fView;  // pointer back to the view
 public:
    TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options = 0,
-               ULong_t back = GetWhitePixel());
+               Pixel_t back = GetWhitePixel());
 
    Bool_t HandleSelectionRequest(Event_t *event)
         { fView->HandleSelectionRequest(event); return kTRUE; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.12 2002/11/15 13:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.13 2003/05/12 16:44:08 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -41,7 +41,6 @@ class TGContainerScrollTimer;
 
 class TGContainer : public TGCompositeFrame {
 
-friend class TGClient;
 friend class TGViewPort;
 friend class TGCanvas;
 friend class TGContainerKeyboardTimer;
@@ -70,7 +69,8 @@ protected:
    Bool_t             fKeyTimerActive;// kTRUE - keyboard timer is active
    Bool_t             fScrolling;     // kTRUE - when scrolling is ON
 
-   static TGGC        fgLineGC;
+   static TGGC       *fgLineGC;
+   static const TGGC &GetLineGC();
 
    virtual void DoRedraw();
    virtual void ClearViewPort();
@@ -95,9 +95,9 @@ protected:
 public:
    TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
                UInt_t options = kSunkenFrame,
-               ULong_t back = GetDefaultFrameBackground());
+               Pixel_t back = GetDefaultFrameBackground());
    TGContainer(TGCanvas *p,UInt_t options = kSunkenFrame,
-               ULong_t back = GetDefaultFrameBackground());
+               Pixel_t back = GetDefaultFrameBackground());
 
    virtual ~TGContainer();
 
@@ -157,7 +157,7 @@ protected:
 public:
    TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options = kChildFrame,
-              ULong_t back = GetDefaultFrameBackground());
+              Pixel_t back = GetDefaultFrameBackground());
 
    TGFrame *GetContainer() const { return fContainer; }
    void SetContainer(TGFrame *f);
@@ -195,7 +195,7 @@ public:
 
    TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
             UInt_t options = kSunkenFrame | kDoubleBorder,
-            ULong_t back = GetDefaultFrameBackground());
+            Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGCanvas();
 
    TGFrame      *GetContainer() const { return fVport->GetContainer(); }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.2 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.3 2003/01/28 18:31:12 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 #include "TGGC.h"
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
+#include "TGResourcePool.h"
 #include "TG3DLine.h"
 #include "TColor.h"
 
@@ -319,10 +320,11 @@ Bool_t TGColorPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
 //________________________________________________________________________________
 TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
-   TGCheckButton(p, "", id), fDrawGC(TGButton::GetDefaultGC())
+   TGCheckButton(p, "", id)
 {
    fColor = color;
    fColorPopup = 0;
+   fDrawGC = *fClient->GetResourcePool()->GetFrameGC();
 
    Enable();
    SetState(kButtonUp);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.7 2003/01/28 18:31:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.8 2003/03/17 16:38:03 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -61,6 +61,7 @@
 #include "TGColorDialog.h"
 #include "TGTextEntry.h"
 #include "TGButton.h"
+#include "TGResourcePool.h"
 #include "TColor.h"
 
 ClassImp(TGColorPalette)
@@ -145,7 +146,7 @@ static ULong_t ucolor[24] = { 0xff000000 };
 
 //________________________________________________________________________________
 TGColorPalette::TGColorPalette(const TGWindow *p, Int_t cols, Int_t rows, Int_t id) :
-   TGFrame(p, 10, 10, kChildFrame), fDrawGC(TGButton::GetDefaultGC())
+   TGFrame(p, 10, 10, kChildFrame)
 {
    // TGColorPalette widget: this is just a grid of color cells of the
    // specified size. Colors can be selected by clicking on them or by
@@ -154,6 +155,7 @@ TGColorPalette::TGColorPalette(const TGWindow *p, Int_t cols, Int_t rows, Int_t 
    fWidgetId    = id;
    fWidgetFlags = kWidgetIsEnabled;
    fMsgWindow   = p;
+   fDrawGC      = *fClient->GetResourcePool()->GetFrameGC();
 
    fCw = 20;
    fCh = 17;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.5 2002/02/23 16:05:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.6 2003/02/07 18:20:17 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -37,9 +37,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGTab.h"
+#include "TGResourcePool.h"
 #include "TList.h"
 #include "TMath.h"
 
+
+const TGFont *TGTab::fgDefaultFont = 0;
+const TGGC   *TGTab::fgDefaultGC = 0;
 
 ClassImp(TGTabElement)
 ClassImp(TGTabLayout)
@@ -79,13 +83,13 @@ void TGTabElement::DrawBorder()
 {
    // Draw little tab element.
 
-   gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, 0, 2);
-   gVirtualX->DrawLine(fId, fgHilightGC(), 0, 2, 2, 0);
-   gVirtualX->DrawLine(fId, fgHilightGC(), 2, 0, fWidth-3, 0);
-   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-2, 1, fWidth-2, fHeight-1);
-   gVirtualX->DrawLine(fId, fgBlackGC(), fWidth-2, 1, fWidth-1, 2);
-   gVirtualX->DrawLine(fId, fgBlackGC(), fWidth-1, 2, fWidth-1, fHeight-2);
-   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, fHeight-1);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, 0, 2);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), 0, 2, 2, 0);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 0, fWidth-3, 0);
+   gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-2, 1, fWidth-2, fHeight-1);
+   gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-2, 1, fWidth-1, 2);
+   gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-1, 2, fWidth-1, fHeight-2);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, fHeight-1, fWidth-1, fHeight-1);
 
    if (fText) {
       int max_ascent, max_descent;
@@ -461,8 +465,16 @@ Int_t TGTab::GetNumberOfTabs() const
 
 //______________________________________________________________________________
 FontStruct_t TGTab::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGTab::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.5 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.6 2002/06/12 16:46:11 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -56,7 +56,7 @@ protected:
 public:
    TGScrollBarElement(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
               UInt_t options = kRaisedFrame | kDoubleBorder,
-              ULong_t back = GetDefaultFrameBackground()) :
+              Pixel_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options | kOwnBackground, back)
       { fPic = pic; fState = kButtonUp; }
 
@@ -68,8 +68,6 @@ public:
 
 
 class TGScrollBar : public TGFrame, public TGWidget {
-
-friend class TGClient;
 
 protected:
    Int_t                fX0, fY0;      // current slider position in pixels
@@ -98,7 +96,7 @@ public:
 
    TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                UInt_t options = kChildFrame,
-               ULong_t back = GetDefaultFrameBackground()) :
+               Pixel_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options | kOwnBackground, back)
             { fMsgWindow = p; fRepeat = 0; fGrabPointer = kTRUE;
               SetBackgroundPixmap(GetBckgndPixmap()); }
@@ -130,7 +128,7 @@ class TGHScrollBar : public TGScrollBar {
 public:
    TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                 UInt_t options = kHorizontalFrame,
-                ULong_t back = GetDefaultFrameBackground());
+                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHScrollBar() { }
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -152,7 +150,7 @@ class TGVScrollBar : public TGScrollBar {
 public:
    TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                 UInt_t options = kVerticalFrame,
-                ULong_t back = GetDefaultFrameBackground());
+                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVScrollBar() { }
 
    virtual Bool_t HandleButton(Event_t *event);

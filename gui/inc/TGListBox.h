@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.10 2001/12/10 01:07:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.11 2002/01/23 15:48:05 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -59,18 +59,16 @@ class TGListBox;
 
 class TGLBEntry : public TGFrame {
 
-friend class TGClient;
-
 protected:
    Int_t      fEntryId;          // message id of listbox entry
-   ULong_t    fBkcolor;          // entry background color
+   Pixel_t    fBkcolor;          // entry background color
    Bool_t     fActive;           // true if entry is active
 
    virtual void DoRedraw() { }
 
 public:
    TGLBEntry(const TGWindow *p, Int_t id, UInt_t options = kHorizontalFrame,
-             ULong_t back = GetWhitePixel()) :
+             Pixel_t back = GetWhitePixel()) :
       TGFrame(p, 10, 10, options | kOwnBackground, back)
       { fActive = kFALSE; fEntryId = id; fBkcolor = back; }
 
@@ -94,8 +92,6 @@ public:
 
 class TGTextLBEntry : public TGLBEntry {
 
-friend class TGClient;
-
 protected:
    TGString     *fText;           // entry text string
    UInt_t        fTWidth;         // text width
@@ -106,9 +102,8 @@ protected:
 
    virtual void DoRedraw();
 
-   static ULong_t        fgSelPixel;
-   static FontStruct_t   fgDefaultFontStruct;
-   static TGGC           fgDefaultGC;
+   static const TGFont *fgDefaultFont;
+   static TGGC         *fgDefaultGC;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -118,7 +113,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame,
-                 ULong_t back = GetWhitePixel());
+                 Pixel_t back = GetWhitePixel());
    virtual ~TGTextLBEntry();
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth, fTHeight+1); }
@@ -153,7 +148,7 @@ protected:
 public:
    TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
                  UInt_t options = kSunkenFrame,
-                 ULong_t back = GetDefaultFrameBackground());
+                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGLBContainer();
 
    virtual void AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints);
@@ -205,7 +200,7 @@ protected:
 public:
    TGListBox(const TGWindow *p, Int_t id = -1,
              UInt_t options = kSunkenFrame | kDoubleBorder,
-             ULong_t back = GetWhitePixel());
+             Pixel_t back = GetWhitePixel());
    virtual ~TGListBox();
 
    virtual void AddEntry(TGString *s, Int_t id);

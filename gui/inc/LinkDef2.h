@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.12 2002/08/08 16:54:11 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.13 2003/05/14 13:08:29 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -24,6 +24,7 @@
 #pragma link C++ global gCurrentRegion;
 
 #pragma link C++ struct ToolBarData_t;
+#pragma link C++ struct FontMetrics_t;
 
 #pragma link C++ class TGScrollBarElement;
 #pragma link C++ class TGScrollBar;
@@ -80,5 +81,8 @@
 #pragma link C++ class TGApplication;
 #pragma link C++ class TGXYLayout;
 #pragma link C++ class TGXYLayoutHints;
+#pragma link C++ class TGResourcePool;
+#pragma link C++ class TGFont;
+#pragma link C++ class TGFontPool;
 
 #endif

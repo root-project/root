@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.12 2002/10/10 17:09:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.14 2002/11/15 13:24:59 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -42,9 +42,18 @@
 #include "TGPicture.h"
 #include "TGButton.h"
 #include "TGScrollBar.h"
+#include "TGResourcePool.h"
 #include "TList.h"
 #include "TMath.h"
 #include "TSystem.h"
+
+
+const TGFont *TGLVEntry::fgDefaultFont = 0;
+TGGC         *TGLVEntry::fgDefaultGC = 0;
+
+const TGFont *TGListView::fgDefaultFont = 0;
+TGGC         *TGListView::fgDefaultGC = 0;
+
 
 ClassImp(TGLVEntry)
 ClassImp(TGLVContainer)
@@ -58,8 +67,6 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
    TGFrame(p, 10, 10, options, back)
 {
    // Create a list view item.
-
-   int i;
 
    fSelPic = 0;
 
@@ -76,15 +83,16 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
 
    fActive = kFALSE;
 
-   fNormGC     = fgDefaultGC();
-   fFontStruct = fgDefaultFontStruct;
+   fFontStruct = GetDefaultFontStruct();
+   fNormGC     = GetDefaultGC()();
 
-   int max_ascent, max_descent;
+   Int_t max_ascent, max_descent;
    fTWidth = gVirtualX->TextWidth(fFontStruct, fName->GetString(), fName->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
 
    if (fSubnames) {
+      Int_t i;
       for (i = 0; fSubnames[i] != 0; ++i)
          ;
       fCtw = new int[i];
@@ -102,7 +110,6 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
       TGContainer* cont = (TGContainer*)p;
       if (!cont->IsMapSubwindows()) {
          fClient->UnregisterWindow(this);
-         fClient = 0;
       }
    }
 }
@@ -112,12 +119,10 @@ TGLVEntry::~TGLVEntry()
 {
    // Delete a list view item.
 
-   int i;
-
    if (fName) delete fName;
    if (fSelPic) delete fSelPic;
    if (fSubnames) {
-      for (i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
+      for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
       delete [] fSubnames;
       delete [] fCtw;
    }
@@ -168,18 +173,18 @@ void TGLVEntry::DoRedraw()
    // List view item is placed and layouted in the container frame,
    // but is drawn in viewport.
 
-   if(IsMapped()) DrawCopy(fId,0,0);
+   if (IsMapped()) DrawCopy(fId, 0, 0);
 }
 
 //______________________________________________________________________________
-void TGLVEntry::DrawCopy(Handle_t id,Int_t x, Int_t y)
+void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
    // Draw list view item in other window.
-   // List view item is placed and layouted in the container frame,
+   // List view item is placed and layout in the container frame,
    // but is drawn in viewport.
 
-   int ix, iy, lx, ly;
-   int max_ascent, max_descent;
+   Int_t ix, iy, lx, ly;
+   Int_t max_ascent, max_descent;
 
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTWidth = gVirtualX->TextWidth(fFontStruct, fName->GetString(), fName->GetLength());
@@ -201,7 +206,7 @@ void TGLVEntry::DrawCopy(Handle_t id,Int_t x, Int_t y)
       if (fSelPic) fSelPic->Draw(id, fNormGC, x+ix, y+iy);
       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
       gVirtualX->FillRectangle(id, fNormGC, x+lx, y+ly, fTWidth, fTHeight+1);
-      gVirtualX->SetForeground(fNormGC, fgSelPixel);
+      gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
    } else {
       fCurrent->Draw(id, fNormGC, x+ix, y+iy);
       gVirtualX->SetForeground(fNormGC, fgWhitePixel);
@@ -255,6 +260,23 @@ TGDimension TGLVEntry::GetDefaultSize() const
    return size;
 }
 
+//______________________________________________________________________________
+FontStruct_t TGLVEntry::GetDefaultFontStruct()
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
+   return fgDefaultFont->GetFontStruct();
+}
+
+//______________________________________________________________________________
+const TGGC &TGLVEntry::GetDefaultGC()
+{
+   if (!fgDefaultGC) {
+      fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
+      fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
+   }
+   return *fgDefaultGC;
+}
 
 
 //______________________________________________________________________________
@@ -443,11 +465,13 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
 {
    // Create a list view widget.
 
-   fViewMode  = kLVLargeIcons;
-   fNColumns  = 0;
-   fColumns   = 0;
-   fJmode     = 0;
-   fColHeader = 0;
+   fViewMode   = kLVLargeIcons;
+   fNColumns   = 0;
+   fColumns    = 0;
+   fJmode      = 0;
+   fColHeader  = 0;
+   fFontStruct = GetDefaultFontStruct();
+   fNormGC     = GetDefaultGC()();
 
    SetDefaultHeaders();
 }
@@ -489,7 +513,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
       delete [] fColHeader;
    }
 
-   fNColumns = ncolumns+1;    // one extra for the blank filler header
+   fNColumns  = ncolumns+1;    // one extra for the blank filler header
    fColumns   = new int[fNColumns];
    fJmode     = new int[fNColumns];
    fColHeader = new TGTextButton* [fNColumns];
@@ -498,7 +522,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
 
    // create blank filler header
    fColHeader[fNColumns-1] = new TGTextButton(this, new TGHotString(""), -1,
-                                              fgDefaultGC(), fgDefaultFontStruct);
+                                              fNormGC, fFontStruct);
    fColHeader[fNColumns-1]->SetTextJustify(kTextCenterX | kTextCenterY);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
    fJmode[fNColumns-1]   = kTextCenterX;
@@ -518,7 +542,7 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
    }
    delete fColHeader[idx];
    fColHeader[idx] = new TGTextButton(this, new TGHotString(s),
-                                      idx, fgDefaultGC(), fgDefaultFontStruct);
+                                      idx, fNormGC, fFontStruct);
    fColHeader[idx]->SetTextJustify(hmode | kTextCenterY);
 
    // fJmode and fColumns contain values for columns idx > 0. idx==0 is
@@ -730,4 +754,22 @@ void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y)
    args[3] = y;
 
    Emit("DoubleClicked(TGLVEntry*,Int_t,Int_t,Int_t)", args);
+}
+
+//______________________________________________________________________________
+FontStruct_t TGListView::GetDefaultFontStruct()
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
+   return fgDefaultFont->GetFontStruct();
+}
+
+//______________________________________________________________________________
+const TGGC &TGListView::GetDefaultGC()
+{
+   if (!fgDefaultGC) {
+      fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
+      fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
+   }
+   return *fgDefaultGC;
 }

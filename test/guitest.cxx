@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.26 2002/12/09 14:03:36 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.27 2003/01/14 15:44:56 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -12,7 +12,7 @@
 #include <TROOT.h>
 #include <TApplication.h>
 #include <TVirtualX.h>
-
+#include <TGResourcePool.h>
 #include <TGListBox.h>
 #include <TGClient.h>
 #include <TGFrame.h>
@@ -577,7 +577,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fTestText->Resize(300, fTestText->GetDefaultHeight());
    fStatusFrame->AddFrame(fTestText, new TGLayoutHints(kLHintsTop | kLHintsLeft,
                                                        10, 2, 2, 2));
-   ULong_t yellow;
+   Pixel_t yellow;
    fClient->GetColorByName("yellow", yellow);
    fColorSel = new TGColorSelect(fStatusFrame, yellow, ColorSel);
    fStatusFrame->AddFrame(fColorSel, new TGLayoutHints(kLHintsTop |
@@ -860,7 +860,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fEc2->GetCanvas()->SetBorderMode(0);
 
    // make tab yellow
-   ULong_t yellow;
+   Pixel_t yellow;
    fClient->GetColorByName("yellow", yellow);
    TGTabElement *tabel = fTab->GetTabTab(2);
    tabel->ChangeBackground(yellow);
@@ -1160,7 +1160,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    // Set foreground color in graphics context for drawing of
    // TGlabel and TGButtons with text in red.
 
-   ULong_t red;
+   Pixel_t red;
    fClient->GetColorByName("red", red);
    fRedTextGC.SetForeground(red);
    //---------------------------------
@@ -1178,7 +1178,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    fTestButton = new TGTextButton(f1, "&Test", 1, fRedTextGC());
 
    // Change background of fTestButton to green
-   ULong_t green;
+   Pixel_t green;
    fClient->GetColorByName("green", green);
    fTestButton->ChangeBackground(green);
 
@@ -1810,6 +1810,10 @@ EntryTestDlg::EntryTestDlg(const TGWindow * p, const TGWindow * main)
  : TGTransientFrame(p, main, 10, 10, kHorizontalFrame)
 {
    // build widgets
+   TGGC myGC = *fClient->GetResourcePool()->GetFrameGC();
+   TGFont *myfont = fClient->GetFont("-adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1");
+   if (myfont) myGC.SetFont(myfont->GetFontHandle());
+
    fF1 = new TGVerticalFrame(this, 200, 300);
    fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2);
    AddFrame(fF1, fL1);
@@ -1821,7 +1825,7 @@ EntryTestDlg::EntryTestDlg(const TGWindow * p, const TGWindow * main)
                                              (TGNumberFormat::EStyle) i);
       fNumericEntries[i]->Associate(this);
       fF[i]->AddFrame(fNumericEntries[i], fL2);
-      fLabel[i] = new TGLabel(fF[i], numlabel[i]);
+      fLabel[i] = new TGLabel(fF[i], numlabel[i], myGC(), myfont->GetFontStruct());
       fF[i]->AddFrame(fLabel[i], fL2);
    }
    fF2 = new TGVerticalFrame(this, 200, 500);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v3-03-05 $:$Id: TGTextEdit.cxx,v 1.14 2001/08/21 17:34:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.15 2002/06/10 18:35:38 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 
 #include "TGTextEdit.h"
 #include "TGTextEditDialogs.h"
+#include "TGResourcePool.h"
 #include "TSystem.h"
 #include "TMath.h"
 #include "TTimer.h"
@@ -47,6 +48,10 @@ static const char *gFiletypes[] = { "All files",     "*",
                                     0,               0 };
 static char *gPrinter      = 0;
 static char *gPrintCommand = 0;
+
+
+TGGC *TGTextEdit::fgCursor0GC;
+TGGC *TGTextEdit::fgCursor1GC;
 
 
 ClassImp(TGTextEdit)
@@ -87,9 +92,6 @@ TGTextEdit::~TGTextEdit()
 {
    // Cleanup text edit widget.
 
-   gVirtualX->DeleteGC(fCursor0GC);
-   gVirtualX->DeleteGC(fCursor1GC);
-
    delete fCurBlink;
    delete fMenu;
    delete fSearch;
@@ -100,26 +102,15 @@ void TGTextEdit::Init()
 {
    // Initiliaze a text edit widget.
 
-   GCValues_t gval;
-   fCursor1GC = gVirtualX->CreateGC(fCanvas->GetId(), 0);
-   gVirtualX->CopyGC(fNormGC, fCursor1GC, 0);
-
-   gval.fMask = kGCFunction;
-   gval.fFunction = kGXand;
-   gVirtualX->ChangeGC(fCursor1GC, &gval);
-
-   fCursor0GC = gVirtualX->CreateGC(fCanvas->GetId(), 0);
-   gVirtualX->CopyGC(fSelGC, fCursor0GC, 0);
-   gval.fFunction = kGXxor;
-   gVirtualX->ChangeGC(fCursor0GC, &gval);
-
-   gVirtualX->SetCursor(fCanvas->GetId(), fgDefaultCursor);
-
+   fCursor0GC   = GetCursor0GC()();
+   fCursor1GC   = GetCursor1GC()();
    fCursorState = 1;
    fCurrent.fY  = fCurrent.fX = 0;
    fInsertMode  = kInsert;
    fCurBlink    = 0;
    fSearch      = 0;
+
+   gVirtualX->SetCursor(fCanvas->GetId(), fClient->GetResourcePool()->GetTextCursor());
 
    // create popup menu with default editor actions
    fMenu = new TGPopupMenu(fClient->GetRoot());
@@ -574,7 +565,7 @@ void TGTextEdit::DrawCursor(Int_t mode)
                                      ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                                      UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
                if (count != -1)
-                  gVirtualX->DrawString(fCanvas->GetId(), fSelGC, (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
+                  gVirtualX->DrawString(fCanvas->GetId(), fSelGC(), (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
                        Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent), &cursor, 1);
             } else {
                gVirtualX->ClearArea(fCanvas->GetId(),
@@ -584,7 +575,7 @@ void TGTextEdit::DrawCursor(Int_t mode)
                                     ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                                     UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
                if (count != -1)
-                  gVirtualX->DrawString(fCanvas->GetId(), fNormGC, (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
+                  gVirtualX->DrawString(fCanvas->GetId(), fNormGC(), (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
                        Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent), &cursor, 1);
             }
          } else {
@@ -598,7 +589,7 @@ void TGTextEdit::DrawCursor(Int_t mode)
                                      Int_t(ToScrYCoord(fCurrent.fY)),
                                      2,
                                      UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
-            gVirtualX->DrawString(fCanvas->GetId(), fNormGC, (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
+            gVirtualX->DrawString(fCanvas->GetId(), fNormGC(), (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
                        Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent), &cursor, 1);
          }
       } else
@@ -1234,12 +1225,12 @@ void TGTextEdit::InsChar(char character)
       else
          SetHsbPosition(fVisible.fX/fScrollVal.fX+strlen(charstring));
       if (!fHsb)
-         gVirtualX->DrawString(fCanvas->GetId(), fNormGC,
+         gVirtualX->DrawString(fCanvas->GetId(), fNormGC(),
                                (Int_t)ToScrXCoord(fCurrent.fX, fCurrent.fY),
                                Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent),
                                charstring, strlen(charstring));
    } else {
-      gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC,
+      gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC(),
                           (Int_t)ToScrXCoord(fCurrent.fX, fCurrent.fY),
                           (Int_t)ToScrYCoord(fCurrent.fY), fCanvas->GetWidth(),
                           UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)),
@@ -1251,7 +1242,7 @@ void TGTextEdit::InsChar(char character)
                            UInt_t(ToScrXCoord(fCurrent.fX+strlen(charstring), fCurrent.fY) -
                            ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                            UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
-      gVirtualX->DrawString(fCanvas->GetId(), fNormGC,
+      gVirtualX->DrawString(fCanvas->GetId(), fNormGC(),
                             Int_t(ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                             Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent),
                             charstring, strlen(charstring));
@@ -1321,7 +1312,7 @@ void TGTextEdit::DelChar()
          if (ToScrXCoord(pos.fX, fCurrent.fY-1) >= (Int_t)fCanvas->GetWidth())
             SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
 
-         gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC, 0,
+         gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC(), 0,
                              Int_t(pos2.fY), fWidth,
                              UInt_t(fCanvas->GetHeight() - ToScrYCoord(fCurrent.fY)),
                              0, (Int_t)ToScrYCoord(fCurrent.fY));
@@ -1344,7 +1335,7 @@ void TGTextEdit::BreakLine()
    TGLongPosition pos;
    fText->BreakLine(fCurrent);
    if (ToScrYCoord(fCurrent.fY+2) <= (Int_t)fCanvas->GetHeight()) {
-      gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC, 0,
+      gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC(), 0,
                           (Int_t)ToScrYCoord(fCurrent.fY+1), fCanvas->GetWidth(),
                           UInt_t(fCanvas->GetHeight()-(ToScrYCoord(fCurrent.fY+2)-
                           ToScrYCoord(fCurrent.fY))),
@@ -1592,4 +1583,24 @@ void TGTextEdit::End()
    if (ToScrXCoord(pos.fX, pos.fY) >= (Int_t)fCanvas->GetWidth())
       SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
    SetCurrent(pos);
+}
+
+//______________________________________________________________________________
+const TGGC &TGTextEdit::GetCursor0GC()
+{
+   if (!fgCursor0GC) {
+      fgCursor0GC = new TGGC(GetDefaultSelectedGC());
+      fgCursor0GC->SetFunction(kGXxor);
+   }
+   return *fgCursor0GC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGTextEdit::GetCursor1GC()
+{
+   if (!fgCursor1GC) {
+      fgCursor1GC = new TGGC(GetDefaultGC());
+      fgCursor1GC->SetFunction(kGXand);
+   }
+   return *fgCursor1GC;
 }

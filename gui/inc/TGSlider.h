@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.2 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.3 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -82,7 +82,7 @@ protected:
 public:
    TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id = -1,
             UInt_t options = kChildFrame,
-            ULong_t back = GetDefaultFrameBackground());
+            Pixel_t back = GetDefaultFrameBackground());
 
    virtual ~TGSlider() { }
 
@@ -113,7 +113,7 @@ protected:
 public:
    TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id = -1,
              UInt_t options = kVerticalFrame,
-             ULong_t back = GetDefaultFrameBackground());
+             Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVSlider();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -135,7 +135,7 @@ protected:
 public:
    TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id = -1,
              UInt_t options = kHorizontalFrame,
-             ULong_t back = GetDefaultFrameBackground());
+             Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHSlider();
 
    virtual Bool_t HandleButton(Event_t *event);

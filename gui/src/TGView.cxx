@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.9 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.10 2001/08/21 17:34:27 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 
 #include "TGView.h"
 #include "TGScrollBar.h"
+#include "TGResourcePool.h"
 #include "TSystem.h"
 #include "TMath.h"
 #include "KeySymbols.h"
@@ -87,7 +88,7 @@ ClassImp(TGView)
 TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
                UInt_t xMargin, UInt_t yMargin, UInt_t options,
                UInt_t sboptions, ULong_t back)
-       : TGCompositeFrame(p, w, h, options, fgDefaultFrameBackground)
+       : TGCompositeFrame(p, w, h, options, GetDefaultFrameBackground())
 {
    // Create an editor view, containing an TGEditorFrame and (optionally)
    // a horizontal and vertical scrollbar.
@@ -103,7 +104,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    fScrollVal.fX = 1;
    fScrollVal.fY = 1;
 
-   fClipboard = fgClipboard;
+   fClipboard = fClient->GetResourcePool()->GetClipboard();
 
    fCanvas = new TGViewFrame(this, 10, 10, kChildFrame, back);
    AddFrame(fCanvas);
@@ -122,13 +123,8 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    } else
       fVsb = 0;
 
-   GCValues_t gval;
-   fWhiteGC = gVirtualX->CreateGC(fCanvas->GetId(), 0);
-   gVirtualX->CopyGC(fgWhiteGC(), fWhiteGC, 0);
-
-   gval.fMask = kGCGraphicsExposures;
-   gval.fGraphicsExposures = kTRUE;
-   gVirtualX->ChangeGC(fWhiteGC, &gval);
+   fWhiteGC = GetWhiteGC();
+   fWhiteGC.SetGraphicsExposures(kTRUE);
 
    Clear();
    Layout();
@@ -146,7 +142,6 @@ TGView::~TGView()
    delete fCanvas;
    delete fHsb;
    delete fVsb;
-   gVirtualX->DeleteGC(fWhiteGC);
 }
 
 //______________________________________________________________________________
@@ -570,15 +565,15 @@ void TGView::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:
@@ -647,7 +642,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
          fVisible.fX = 0;
    }
    // Copy the scrolled region to its new position
-   gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fWhiteGC,
+   gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fWhiteGC(),
                        xsrc, ysrc, fCanvas->GetWidth()-cpywidth,
                        fCanvas->GetHeight()-cpyheight, xdest, ydest);
    // Clear the remaining area of any old text

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.18 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.19 2003/01/26 13:17:45 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -46,7 +46,16 @@
 #include "TGToolTip.h"
 #include "KeySymbols.h"
 #include "TGTextEditDialogs.h"
+#include "TGResourcePool.h"
 #include "TGMsgBox.h"
+
+
+Pixel_t        TGListTree::fgGrayPixel = 0;
+const TGFont  *TGListTree::fgDefaultFont = 0;
+TGGC          *TGListTree::fgDrawGC = 0;
+TGGC          *TGListTree::fgLineGC = 0;
+TGGC          *TGListTree::fgHighlightGC = 0;
+
 
 ClassImp(TGListTreeItem)
 ClassImpQ(TGListTree)
@@ -136,41 +145,18 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
 {
    // Create a list tree widget.
 
-   GCValues_t gcv;
-
    fMsgWindow = p;
    fCanvas    = 0;
    fTip       = 0;
    fTipItem   = 0;
    fAutoTips  = kFALSE;
 
-   fFont = fgDefaultFontStruct;
+   fGrayPixel = GetGrayPixel();
+   fFont      = GetDefaultFontStruct();
 
-   if (!fClient->GetColorByName("#808080", fGrayPixel))
-      fClient->GetColorByName("black", fGrayPixel);
-
-   gcv.fLineStyle = kLineSolid;
-   gcv.fLineWidth = 0;
-   gcv.fFillStyle = kFillSolid;
-   gcv.fFont = gVirtualX->GetFontHandle(fFont);
-   gcv.fBackground = fgWhitePixel;
-   gcv.fForeground = fgBlackPixel;
-
-   gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
-               kGCForeground | kGCBackground | kGCFont;
-   fDrawGC = gVirtualX->CreateGC(fId, &gcv);
-
-   gcv.fLineStyle = kLineOnOffDash;
-   gcv.fForeground = fGrayPixel;
-   fLineGC = gVirtualX->CreateGC(fId, &gcv);
-   gVirtualX->SetDashes(fLineGC, 0, "\x1\x1", 2);
-
-   gcv.fBackground = fgDefaultSelectedBackground;
-   gcv.fForeground = fgWhitePixel;
-   gcv.fLineStyle = kLineSolid;
-   gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
-               kGCForeground | kGCBackground | kGCFont;
-   fHighlightGC = gVirtualX->CreateGC(fId, &gcv);
+   fDrawGC      = GetDrawGC()();
+   fLineGC      = GetLineGC()();
+   fHighlightGC = GetHighlightGC()();
 
    fFirst = fSelected = 0;
    fDefw = fDefh = 1;
@@ -194,40 +180,17 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
 {
    // Create a list tree widget.
 
-   GCValues_t gcv;
-
    fMsgWindow = p;
    fTip       = 0;
    fTipItem   = 0;
    fAutoTips  = kFALSE;
 
-   fFont = fgDefaultFontStruct;
+   fGrayPixel = GetGrayPixel();
+   fFont      = GetDefaultFontStruct();
 
-   if (!fClient->GetColorByName("#808080", fGrayPixel))
-      fClient->GetColorByName("black", fGrayPixel);
-
-   gcv.fLineStyle = kLineSolid;
-   gcv.fLineWidth = 0;
-   gcv.fFillStyle = kFillSolid;
-   gcv.fFont = gVirtualX->GetFontHandle(fFont);
-   gcv.fBackground = fgWhitePixel;
-   gcv.fForeground = fgBlackPixel;
-
-   gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
-               kGCForeground | kGCBackground | kGCFont;
-   fDrawGC = gVirtualX->CreateGC(fId, &gcv);
-
-   gcv.fLineStyle = kLineOnOffDash;
-   gcv.fForeground = fGrayPixel;
-   fLineGC = gVirtualX->CreateGC(fId, &gcv);
-   gVirtualX->SetDashes(fLineGC, 0, "\x1\x1", 2);
-
-   gcv.fBackground = fgDefaultSelectedBackground;
-   gcv.fForeground = fgWhitePixel;
-   gcv.fLineStyle = kLineSolid;
-   gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
-               kGCForeground | kGCBackground | kGCFont;
-   fHighlightGC = gVirtualX->CreateGC(fId, &gcv);
+   fDrawGC      = GetDrawGC()();
+   fLineGC      = GetLineGC()();
+   fHighlightGC = GetHighlightGC()();
 
    fFirst = fSelected = 0;
    fDefw = fDefh = 1;
@@ -575,7 +538,7 @@ void TGListTree::OnMouseOver(TGListTreeItem *entry)
 {
    // Signal emitted when pointer is over entry.
 
-   if (!fOnMouseOver) Emit("OnMouseOver(TGListTreeItem*)",(long)entry);
+   if (!fOnMouseOver) Emit("OnMouseOver(TGListTreeItem*)", (Long_t)entry);
    fOnMouseOver = kTRUE;
 }
 
@@ -584,7 +547,7 @@ void TGListTree::ReturnPressed(TGListTreeItem *entry)
 {
    // Emit ReturnPressed() signal.
 
-   Emit("ReturnPressed(TGListTreeItem*)",(long)entry);
+   Emit("ReturnPressed(TGListTreeItem*)", (Long_t)entry);
 }
 
 //______________________________________________________________________________
@@ -1668,4 +1631,86 @@ void TGListTree::GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t dep
          return;
       }
    }
+}
+
+//______________________________________________________________________________
+Pixel_t TGListTree::GetGrayPixel()
+{
+   static Bool_t init = kFALSE;
+   if (!init) {
+      if (!gClient->GetColorByName("#808080", fgGrayPixel))
+         fgGrayPixel = fgBlackPixel;
+      init = kTRUE;
+   }
+   return fgGrayPixel;
+}
+
+//______________________________________________________________________________
+FontStruct_t TGListTree::GetDefaultFontStruct()
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
+   return fgDefaultFont->GetFontStruct();
+}
+
+//______________________________________________________________________________
+const TGGC &TGListTree::GetDrawGC()
+{
+   if (!fgDrawGC) {
+      GCValues_t gcv;
+
+      gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
+                  kGCForeground | kGCBackground | kGCFont;
+      gcv.fLineStyle  = kLineSolid;
+      gcv.fLineWidth  = 0;
+      gcv.fFillStyle  = kFillSolid;
+      gcv.fFont       = fgDefaultFont->GetFontHandle();
+      gcv.fBackground = fgWhitePixel;
+      gcv.fForeground = fgBlackPixel;
+
+      fgDrawGC = gClient->GetGC(&gcv, kTRUE);
+   }
+   return *fgDrawGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGListTree::GetLineGC()
+{
+   if (!fgLineGC) {
+      GCValues_t gcv;
+
+      gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
+                  kGCForeground | kGCBackground | kGCFont;
+      gcv.fLineStyle  = kLineOnOffDash;
+      gcv.fLineWidth  = 0;
+      gcv.fFillStyle  = kFillSolid;
+      gcv.fFont       = fgDefaultFont->GetFontHandle();
+      gcv.fBackground = fgWhitePixel;
+      gcv.fForeground = GetGrayPixel();
+
+      fgLineGC = gClient->GetGC(&gcv, kTRUE);
+      fgLineGC->SetDashOffset(0);
+      fgLineGC->SetDashList("\x1\x1", 2);
+   }
+   return *fgLineGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGListTree::GetHighlightGC()
+{
+   if (!fgHighlightGC) {
+      GCValues_t gcv;
+
+      gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
+                  kGCForeground | kGCBackground | kGCFont;
+      gcv.fLineStyle  = kLineSolid;
+      gcv.fLineWidth  = 0;
+      gcv.fFillStyle  = kFillSolid;
+      gcv.fFont       = fgDefaultFont->GetFontHandle();
+      gcv.fBackground = fgDefaultSelectedBackground;
+      gcv.fForeground = fgWhitePixel;
+
+      fgHighlightGC = gClient->GetGC(&gcv, kTRUE);
+   }
+   return *fgHighlightGC;
 }

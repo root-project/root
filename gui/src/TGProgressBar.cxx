@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.3 2000/10/11 16:13:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.4 2001/11/01 11:39:41 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -22,6 +22,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGProgressBar.h"
+#include "TGResourcePool.h"
+
+
+const TGFont *TGProgressBar::fgDefaultFont = 0;
+TGGC         *TGProgressBar::fgDefaultGC = 0;
 
 
 ClassImp(TGProgressBar)
@@ -146,18 +151,27 @@ void TGProgressBar::SetBarColor(const char *color)
 
 //______________________________________________________________________________
 FontStruct_t TGProgressBar::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGProgressBar::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
+   return *fgDefaultGC;
+}
 
 
 //______________________________________________________________________________
 TGHProgressBar::TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w)
    : TGProgressBar(p, w, type == kStandard ? kProgressBarStandardWidth :
-                   kProgressBarTextWidth, type == kStandard ? fgDefaultFrameBackground :
-                   fgWhitePixel, fgDefaultSelectedBackground, fgDefaultGC(), fgDefaultFontStruct,
+                   kProgressBarTextWidth, type == kStandard ? GetDefaultFrameBackground() :
+                   fgWhitePixel, fgDefaultSelectedBackground, GetDefaultGC()(),
+                   GetDefaultFontStruct(),
                    type == kStandard ? kSunkenFrame : kDoubleBorder | kSunkenFrame)
 {
    // Simple constructor allow you to create either a standard progress
@@ -249,8 +263,9 @@ void TGHProgressBar::DoRedraw()
 //______________________________________________________________________________
 TGVProgressBar::TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h)
    : TGProgressBar(p, type == kStandard ? kProgressBarStandardWidth :
-                   kProgressBarTextWidth, h, type == kStandard ? fgDefaultFrameBackground :
-                   fgWhitePixel, fgDefaultSelectedBackground, fgDefaultGC(), fgDefaultFontStruct,
+                   kProgressBarTextWidth, h, type == kStandard ? GetDefaultFrameBackground() :
+                   fgWhitePixel, fgDefaultSelectedBackground, GetDefaultGC()(),
+                   GetDefaultFontStruct(),
                    type == kStandard ? kSunkenFrame : kDoubleBorder | kSunkenFrame)
 {
    // Simple constructor allow you to create either a standard progress

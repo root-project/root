@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.23 2003/03/17 16:38:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.24 2003/05/12 16:44:08 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -63,17 +63,32 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
+#include "TGResourcePool.h"
 #include "TGPicture.h"
 #include "TList.h"
 #include "TApplication.h"
 #include "TTimer.h"
 
 
-Time_t   TGFrame::fgLastClick = 0;
-UInt_t   TGFrame::fgLastButton = 0;
-Int_t    TGFrame::fgDbx = 0;
-Int_t    TGFrame::fgDby = 0;
-Window_t TGFrame::fgDbw = 0;
+Bool_t      TGFrame::fgInit = kFALSE;
+Pixel_t     TGFrame::fgDefaultFrameBackground = 0;
+Pixel_t     TGFrame::fgDefaultSelectedBackground = 0;
+Pixel_t     TGFrame::fgWhitePixel = 0;
+Pixel_t     TGFrame::fgBlackPixel = 0;
+const TGGC *TGFrame::fgBlackGC = 0;
+const TGGC *TGFrame::fgWhiteGC = 0;
+const TGGC *TGFrame::fgHilightGC = 0;
+const TGGC *TGFrame::fgShadowGC = 0;
+const TGGC *TGFrame::fgBckgndGC = 0;
+Time_t      TGFrame::fgLastClick = 0;
+UInt_t      TGFrame::fgLastButton = 0;
+Int_t       TGFrame::fgDbx = 0;
+Int_t       TGFrame::fgDby = 0;
+Window_t    TGFrame::fgDbw = 0;
+
+const TGFont *TGGroupFrame::fgDefaultFont = 0;
+const TGGC   *TGGroupFrame::fgDefaultGC = 0;
+
 
 TGLayoutHints *TGCompositeFrame::fgDefaultHints = new TGLayoutHints;
 
@@ -93,6 +108,19 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    : TGWindow(p, 0, 0, w, h, 0, 0, 0, 0, 0, options)
 {
    // Create a TGFrame object. Options is an OR of the EFrameTypes.
+
+   if (!fgInit) {
+      TGFrame::GetDefaultFrameBackground();
+      TGFrame::GetDefaultSelectedBackground();
+      TGFrame::GetWhitePixel();
+      TGFrame::GetBlackPixel();
+      TGFrame::GetBlackGC();
+      TGFrame::GetWhiteGC();
+      TGFrame::GetHilightGC();
+      TGFrame::GetShadowGC();
+      TGFrame::GetBckgndGC();
+      fgInit = kTRUE;
+   }
 
    SetWindowAttributes_t wattr;
 
@@ -125,7 +153,21 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
 {
    // Create a frame using an externally created window. For example
    // to register the root window (called by TGClient), or a window
-   // created via TVirtualX::InitWindow() (id is obtained with TVirtualX::GetWindowID()).
+   // created via TVirtualX::InitWindow() (id is obtained with
+   // TVirtualX::GetWindowID()).
+
+   if (!fgInit && gClient) {
+      TGFrame::GetDefaultFrameBackground();
+      TGFrame::GetDefaultSelectedBackground();
+      TGFrame::GetWhitePixel();
+      TGFrame::GetBlackPixel();
+      TGFrame::GetBlackGC();
+      TGFrame::GetWhiteGC();
+      TGFrame::GetHilightGC();
+      TGFrame::GetShadowGC();
+      TGFrame::GetBckgndGC();
+      fgInit = kTRUE;
+   }
 
    WindowAttributes_t attributes;
    gVirtualX->GetWindowAttributes(id, attributes);
@@ -158,6 +200,16 @@ void TGFrame::ChangeBackground(ULong_t back)
 
    fBackground = back;
    gVirtualX->SetWindowBackground(fId, back);
+}
+
+//______________________________________________________________________________
+void TGFrame::SetBackgroundColor(Pixel_t back)
+{
+   // Set background color (override from TGWindow base class).
+   // Same effect as ChangeBackground().
+
+   fBackground = back;
+   TGWindow::SetBackgroundColor(back);
 }
 
 //______________________________________________________________________________
@@ -455,35 +507,91 @@ Bool_t TGFrame::HandleClientMessage(Event_t *event)
    return kTRUE;
 }
 
-//-- static methods, needed because Win32 DLL's cannot export static data members
-
+//______________________________________________________________________________
 ULong_t TGFrame::GetDefaultFrameBackground()
-{ return fgDefaultFrameBackground; }
+{
+   static Bool_t init = kFALSE;
+   if (!init) {
+      fgDefaultFrameBackground = gClient->GetResourcePool()->GetFrameBgndColor();
+      init = kTRUE;
+   }
+   return fgDefaultFrameBackground;
+}
 
+//______________________________________________________________________________
 ULong_t TGFrame::GetDefaultSelectedBackground()
-{ return fgDefaultSelectedBackground; }
+{
+   static Bool_t init = kFALSE;
+   if (!init) {
+      fgDefaultSelectedBackground = gClient->GetResourcePool()->GetSelectedBgndColor();
+      init = kTRUE;
+   }
+   return fgDefaultSelectedBackground;
+}
 
+//______________________________________________________________________________
 ULong_t TGFrame::GetWhitePixel()
-{ return fgWhitePixel; }
+{
+   static Bool_t init = kFALSE;
+   if (!init) {
+      fgWhitePixel = gClient->GetResourcePool()->GetWhiteColor();
+      init  = kTRUE;
+   }
+   return fgWhitePixel;
+}
 
+//______________________________________________________________________________
 ULong_t TGFrame::GetBlackPixel()
-{ return fgBlackPixel; }
+{
+   static Bool_t init = kFALSE;
+   if (!init) {
+      fgBlackPixel = gClient->GetResourcePool()->GetBlackColor();
+      init = kTRUE;
+   }
+    return fgBlackPixel;
+}
 
+//______________________________________________________________________________
 const TGGC &TGFrame::GetBlackGC()
-{ return fgBlackGC; }
+{
+   if (!fgBlackGC)
+      fgBlackGC = gClient->GetResourcePool()->GetBlackGC();
+   return *fgBlackGC;
+}
 
+//______________________________________________________________________________
 const TGGC &TGFrame::GetWhiteGC()
-{ return fgWhiteGC; }
+{
+   if (!fgWhiteGC)
+      fgWhiteGC = gClient->GetResourcePool()->GetWhiteGC();
+   return *fgWhiteGC;
+}
 
+//______________________________________________________________________________
 const TGGC &TGFrame::GetHilightGC()
-{ return fgHilightGC; }
+{
+   if (!fgHilightGC)
+      fgHilightGC = gClient->GetResourcePool()->GetFrameHiliteGC();
+   return *fgHilightGC;
+}
 
+//______________________________________________________________________________
 const TGGC &TGFrame::GetShadowGC()
-{ return fgShadowGC; }
+{
+   if (!fgShadowGC)
+      fgShadowGC = gClient->GetResourcePool()->GetFrameShadowGC();
+   return *fgShadowGC;
+}
 
+//______________________________________________________________________________
 const TGGC &TGFrame::GetBckgndGC()
-{ return fgBckgndGC; }
+{
+   if (!fgBckgndGC)
+      fgBckgndGC = gClient->GetResourcePool()->GetFrameBckgndGC();
+   return *fgBckgndGC;
+}
 
+//______________________________________________________________________________
 Time_t TGFrame::GetLastClick()
 { return fgLastClick; }
 
@@ -1172,37 +1280,37 @@ void TGGroupFrame::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame)) {
       case kRaisedFrame:
-         gVirtualX->DrawLine(fId, fgHilightGC(),  l,   t,   gl,  t);
-         gVirtualX->DrawLine(fId, fgShadowGC(), l+1, t+1, gl,  t+1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  l,   t,   gl,  t);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), l+1, t+1, gl,  t+1);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(),  gr,  t,   r-1, t);
-         gVirtualX->DrawLine(fId, fgShadowGC(), gr,  t+1, r-2, t+1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  gr,  t,   r-1, t);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), gr,  t+1, r-2, t+1);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(),  r-1, t,   r-1, b-1);
-         gVirtualX->DrawLine(fId, fgShadowGC(), r,   t,   r,   b);
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  r-1, t,   r-1, b-1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), r,   t,   r,   b);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(),  r-1, b-1, l,   b-1);
-         gVirtualX->DrawLine(fId, fgShadowGC(), r,   b,   l,   b);
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  r-1, b-1, l,   b-1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), r,   b,   l,   b);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(),  l,   b-1, l,   t);
-         gVirtualX->DrawLine(fId, fgShadowGC(), l+1, b-2, l+1, t+1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  l,   b-1, l,   t);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), l+1, b-2, l+1, t+1);
          break;
       case kSunkenFrame:
       default:
-         gVirtualX->DrawLine(fId, fgShadowGC(),  l,   t,   gl,  t);
-         gVirtualX->DrawLine(fId, fgHilightGC(), l+1, t+1, gl,  t+1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  l,   t,   gl,  t);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), l+1, t+1, gl,  t+1);
 
-         gVirtualX->DrawLine(fId, fgShadowGC(),  gr,  t,   r-1, t);
-         gVirtualX->DrawLine(fId, fgHilightGC(), gr,  t+1, r-2, t+1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  gr,  t,   r-1, t);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), gr,  t+1, r-2, t+1);
 
-         gVirtualX->DrawLine(fId, fgShadowGC(),  r-1, t,   r-1, b-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), r,   t,   r,   b);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  r-1, t,   r-1, b-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), r,   t,   r,   b);
 
-         gVirtualX->DrawLine(fId, fgShadowGC(),  r-1, b-1, l,   b-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), r,   b,   l,   b);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  r-1, b-1, l,   b-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), r,   b,   l,   b);
 
-         gVirtualX->DrawLine(fId, fgShadowGC(),  l,   b-1, l,   t);
-         gVirtualX->DrawLine(fId, fgHilightGC(), l+1, b-2, l+1, t+1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  l,   b-1, l,   t);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), l+1, b-2, l+1, t+1);
          break;
    }
 
@@ -1244,8 +1352,16 @@ void TGGroupFrame::SetTitle(const char *title)
 
 //______________________________________________________________________________
 FontStruct_t TGGroupFrame::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGGroupFrame::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.3 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -32,10 +32,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGPicture.h"
+#include "TGResourcePool.h"
 #include "THashTable.h"
 #include "TSystem.h"
 #include "TGWindow.h"
 #include "TVirtualX.h"
+
+TGGC *TGSelectedPicture::fgSelectedGC = 0;
 
 ClassImp(TGPicture)
 ClassImp(TGSelectedPicture)
@@ -62,7 +65,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    }
 
    pic = new TGPicture(name);
-   pic->fAttributes.fColormap  = fgDefaultColormap;
+   pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
    pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
    pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
 
@@ -111,7 +114,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    }
 
    pic = new TGPicture(hname, kTRUE);
-   pic->fAttributes.fColormap  = fgDefaultColormap;
+   pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
    pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
    pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
 
@@ -212,7 +215,7 @@ void TGPicturePool::FreePicture(const TGPicture *fpic)
 
    if (!fPicList) return;
 
-   TGPicture *pic = (TGPicture *)fPicList->FindObject((TGPicture *)fpic);
+   TGPicture *pic = (TGPicture *)fPicList->FindObject(fpic);
    if (pic) {
       if (pic->RemoveReference() == 0) {
          fPicList->Remove(pic);
@@ -230,6 +233,17 @@ TGPicturePool::~TGPicturePool()
       fPicList->Delete();
       delete fPicList;
    }
+}
+
+//______________________________________________________________________________
+void TGPicturePool::Print(Option_t *) const
+{
+   // List all pictures in the pool.
+
+   if (fPicList)
+      fPicList->Print();
+   else
+      Info("Print", "no pictures in picture pool");
 }
 
 //______________________________________________________________________________
@@ -278,6 +292,16 @@ const char *TGPicture::HashName(const char *name, Int_t width, Int_t height)
 }
 
 //______________________________________________________________________________
+void TGPicture::Print(Option_t *) const
+{
+   // Print picture info.
+
+   Printf("TGPicture: %s,%sref cnt = %u", GetName(),
+          fScaled ? " scaled, " : " ", References());
+}
+
+
+//______________________________________________________________________________
 TGSelectedPicture::TGSelectedPicture(const TGClient *client, const TGPicture *p) :
    TGPicture("")
 {
@@ -298,17 +322,17 @@ TGSelectedPicture::TGSelectedPicture(const TGClient *client, const TGPicture *p)
    fAttributes.fWidth  = w;
    fAttributes.fHeight = h;
 
-   gVirtualX->CopyArea(p->GetPicture(), fPic, fgSelectedGC(), 0, 0, w, h, 0, 0);
+   gVirtualX->CopyArea(p->GetPicture(), fPic, GetSelectedGC()(), 0, 0, w, h, 0, 0);
 
    gcv.fMask = kGCClipMask | kGCClipXOrigin | kGCClipYOrigin;
    gcv.fClipMask = p->GetMask();
    gcv.fClipXOrigin = 0;
    gcv.fClipYOrigin = 0;
-   fgSelectedGC.SetAttributes(&gcv);
+   GetSelectedGC().SetAttributes(&gcv);
 
-   gVirtualX->FillRectangle(fPic, fgSelectedGC(), 0, 0, w, h);
+   gVirtualX->FillRectangle(fPic, GetSelectedGC()(), 0, 0, w, h);
 
-   fgSelectedGC.SetClipMask(kNone);
+   GetSelectedGC().SetClipMask(kNone);
 }
 
 //______________________________________________________________________________
@@ -318,4 +342,17 @@ TGSelectedPicture::~TGSelectedPicture()
 
    // fMask was borrowed so should not be deleted by ~TGPicture.
    fMask = kNone;
+}
+
+//______________________________________________________________________________
+TGGC &TGSelectedPicture::GetSelectedGC()
+{
+   if (!fgSelectedGC) {
+      fgSelectedGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
+      fgSelectedGC->SetForeground(gClient->GetResourcePool()->GetSelectedBgndColor());
+      fgSelectedGC->SetBackground(gClient->GetResourcePool()->GetBlackColor());
+      fgSelectedGC->SetFillStyle(kFillStippled);
+      fgSelectedGC->SetStipple(gClient->GetResourcePool()->GetCheckeredBitmap());
+   }
+   return *fgSelectedGC;
 }

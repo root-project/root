@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.13 2001/10/16 17:28:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.14 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -202,12 +202,19 @@ All other keys with valid ASCII codes insert themselves into the line.
 
 
 #include "TGTextEntry.h"
+#include "TGResourcePool.h"
 #include "TGToolTip.h"
 #include "TSystem.h"
 #include "TMath.h"
 #include "TTimer.h"
 #include "KeySymbols.h"
 
+
+TString      *TGTextEntry::fgClipboardText = 0;
+const TGFont *TGTextEntry::fgDefaultFont = 0;
+const TGGC   *TGTextEntry::fgDefaultSelectedGC = 0;
+const TGGC   *TGTextEntry::fgDefaultSelectedBackgroundGC = 0;
+const TGGC   *TGTextEntry::fgDefaultGC = 0;
 
 
 //______________________________________________________________________________
@@ -230,8 +237,6 @@ Bool_t TBlinkTimer::Notify()
 
 ClassImp(TGTextEntry)
 
-TString *TGTextEntry::fgClipboardText = 0;   // application clipboard prototype
-
 //______________________________________________________________________________
 TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
                          GContext_t norm, FontStruct_t font, UInt_t options,
@@ -241,9 +246,14 @@ TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
    // Create a text entry widget. It will adopt the TGTextBuffer object
    // (i.e. the text buffer will be deleted by the text entry widget).
 
+   TGGC *normgc   = fClient->GetResourcePool()->GetGCPool()->FindGC(norm);
+
    fWidgetId      = id;
    fMsgWindow     = p;
-   fNormGC        = norm;
+   if (normgc)
+      fNormGC     = *normgc;
+   else
+      fNormGC     = GetDefaultGC();
    fFontStruct    = font;
    fText          = text;
 
@@ -258,8 +268,8 @@ TGTextEntry::TGTextEntry(const TGWindow *parent, const char *text, Int_t id) :
 
    fWidgetId      = id;
    fMsgWindow     = parent;
-   fNormGC        = fgDefaultGC();
-   fFontStruct    = fgDefaultFontStruct;
+   fNormGC        = GetDefaultGC();
+   fFontStruct    = GetDefaultFontStruct();
    fText          = new TGTextBuffer();
    fText->AddText(0, text);
 
@@ -276,8 +286,8 @@ TGTextEntry::TGTextEntry(const TString &contents, const TGWindow *parent, Int_t 
 
    fWidgetId      = id;
    fMsgWindow     = parent;
-   fNormGC        = fgDefaultGC();
-   fFontStruct    = fgDefaultFontStruct;
+   fNormGC        = GetDefaultGC();
+   fFontStruct    = GetDefaultFontStruct();
    fText          = new TGTextBuffer();
    fText->AddText(0, contents.Data());
 
@@ -289,10 +299,6 @@ TGTextEntry::~TGTextEntry()
 {
    // Delete a text entry widget.
 
-   if (fDeleteGC) {
-      gVirtualX->DeleteGC(fNormGC);
-      gVirtualX->DeleteGC(fSelGC);
-   }
    delete fText;
    delete fCurBlink;
    delete fTip;
@@ -304,9 +310,8 @@ void TGTextEntry::Init()
    // Do default initialization.
 
    fWidgetFlags = kWidgetWantFocus | kWidgetIsEnabled;
-   fSelGC       = fgDefaultSelectedGC();
-   fSelbackGC   = fgDefaultSelectedBackgroundGC();
-   fDeleteGC    = kFALSE;
+   fSelGC       = GetDefaultSelectedGC();
+   fSelbackGC   = GetDefaultSelectedBackgroundGC()();
 
    fOffset = 0;
    fMaxLen = 255;             // TString::Length() can not exceed 255 characters
@@ -327,9 +332,9 @@ void TGTextEntry::Init()
    fSelectionOn = fCursorOn = kFALSE;
    fCurBlink    = 0;
    fTip         = 0;
-   fClipboard   = fgClipboard;
+   fClipboard   = fClient->GetResourcePool()->GetClipboard();
 
-   gVirtualX->SetCursor(fId, fgDefaultCursor);
+   gVirtualX->SetCursor(fId, fClient->GetResourcePool()->GetTextCursor());
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -442,24 +447,10 @@ void TGTextEntry::SetFont(FontStruct_t font)
    // Changes text entry font.
 
    if (font != fFontStruct) {
-      GCValues_t gval;
       fFontStruct = font;
-
-      // get unique copies of the norm GC and the sel GC (if not already copied)
-      if (!fDeleteGC) {
-         GContext_t norm = gVirtualX->CreateGC(fId, 0);
-         gVirtualX->CopyGC(fNormGC, norm, 0);
-         fNormGC = norm;
-         GContext_t sel  = gVirtualX->CreateGC(fId, 0);
-         gVirtualX->CopyGC(fSelGC, sel, 0);
-         fSelGC = sel;
-      }
-      gval.fMask = kGCFont;
-      gval.fFont = gVirtualX->GetFontHandle(fFontStruct);
-      gVirtualX->ChangeGC(fNormGC,&gval);
-      gVirtualX->ChangeGC(fSelGC,&gval);
+      fNormGC.SetFont(gVirtualX->GetFontHandle(fFontStruct));
+      fSelGC.SetFont(gVirtualX->GetFontHandle(fFontStruct));
       fClient->NeedRedraw(this);
-      fDeleteGC = kTRUE;
    }
 }
 
@@ -468,9 +459,9 @@ void TGTextEntry::SetFont(const char *fontName)
 {
    // Changes text entry font specified by name.
 
-   FontStruct_t tfont = gClient->GetFontByName(fontName);
-   if (!tfont) return;
-   SetFont(tfont);
+   TGFont *font = fClient->GetFont(fontName);
+   if (font)
+      SetFont(font->GetFontStruct());
 }
 
 //______________________________________________________________________________
@@ -483,7 +474,7 @@ void TGTextEntry::SetState(Bool_t state)
       SetBackgroundColor(fgWhitePixel);
    } else {
       ClearFlags(kWidgetIsEnabled);
-      SetBackgroundColor(fgDefaultFrameBackground);
+      SetBackgroundColor(GetDefaultFrameBackground());
       fCursorOn = kFALSE;   // remove the cursor when disabling the widget
       if (fCurBlink) fCurBlink->Remove();
    }
@@ -1001,15 +992,15 @@ void TGTextEntry::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:
@@ -1047,14 +1038,14 @@ void TGTextEntry::DoRedraw()
    if ((GetInsertMode() == kInsert) || (fEchoMode == kNoEcho)) {
       // line cursor
       if (fCursorOn) {
-         gVirtualX->DrawLine(fId, fgBlackGC(), fCursorX, 3,
+         gVirtualX->DrawLine(fId, GetBlackGC()(), fCursorX, 3,
                      fCursorX, max_ascent + max_descent + 3);
       }
-      gVirtualX->DrawString(fId, fNormGC, x , y + max_ascent, dt.Data(), len);
+      gVirtualX->DrawString(fId, fNormGC(), x , y + max_ascent, dt.Data(), len);
 
    } else {
       // filled rectangle (block) cursor
-      gVirtualX->DrawString(fId, fNormGC, x , y + max_ascent, dt.Data(), len);
+      gVirtualX->DrawString(fId, fNormGC(), x , y + max_ascent, dt.Data(), len);
 
       if (fCursorOn) {
          Int_t ind       = fCursorIX < len-1 ? fCursorIX : len-1;
@@ -1067,7 +1058,7 @@ void TGTextEntry::DoRedraw()
                                   charWidth , max_ascent + max_descent + 1);
 
          if (fCursorIX < len)
-            gVirtualX->DrawString(fId, fSelGC, before , y + max_ascent, &dt[ind], 1);
+            gVirtualX->DrawString(fId, fSelGC(), before , y + max_ascent, &dt[ind], 1);
       }
    }
 
@@ -1082,7 +1073,7 @@ void TGTextEntry::DoRedraw()
       gVirtualX->FillRectangle(fId, fSelbackGC, xs , 3, ws,
                                max_ascent + max_descent + 1);
 
-      gVirtualX->DrawString(fId, fSelGC, xs, y + max_ascent,
+      gVirtualX->DrawString(fId, fSelGC(), xs, y + max_ascent,
                             dt.Data()+ixs, iws);
    }
    if (IsFrameDrawn()) DrawBorder();
@@ -1623,8 +1614,32 @@ void TGTextEntry::RemoveText(Int_t start, Int_t end)
 
 //______________________________________________________________________________
 FontStruct_t TGTextEntry::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGTextEntry::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGTextEntry::GetDefaultSelectedGC()
+{
+   if (!fgDefaultSelectedGC)
+      fgDefaultSelectedGC = gClient->GetResourcePool()->GetSelectedGC();
+   return *fgDefaultSelectedGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGTextEntry::GetDefaultSelectedBackgroundGC()
+{
+   if (!fgDefaultSelectedBackgroundGC)
+      fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
+   return *fgDefaultSelectedBackgroundGC;
+}

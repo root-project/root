@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.11 2003/03/15 14:19:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.12 2003/04/26 07:48:37 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -32,10 +32,22 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGMenu.h"
+#include "TGResourcePool.h"
 #include "TTimer.h"
 #include "TMath.h"
 #include "TSystem.h"
 #include "TList.h"
+
+
+const TGGC   *TGPopupMenu::fgDefaultGC = 0;
+const TGGC   *TGPopupMenu::fgDefaultSelectedGC = 0;
+const TGGC   *TGPopupMenu::fgDefaultSelectedBackgroundGC = 0;
+const TGFont *TGPopupMenu::fgDefaultFont = 0;
+const TGFont *TGPopupMenu::fgHilightFont = 0;
+
+const TGGC   *TGMenuTitle::fgDefaultGC = 0;
+const TGGC   *TGMenuTitle::fgDefaultSelectedGC = 0;
+const TGFont *TGMenuTitle::fgDefaultFont = 0;
 
 
 ClassImp(TGMenuBar)
@@ -73,9 +85,10 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
 {
    // Create a menu bar object.
 
-   fCurrent = 0;
-   fTitles  = new TList;
-   fStick   = kTRUE;
+   fCurrent       = 0;
+   fTitles        = new TList;
+   fStick         = kTRUE;
+   fDefaultCursor = fClient->GetResourcePool()->GetGrabCursor();
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier,
                        kButtonPressMask | kButtonReleaseMask | kEnterWindowMask,
@@ -289,7 +302,7 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
             fCurrent = target;
 
             gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                                   kPointerMotionMask, kNone, fgDefaultCursor);
+                                   kPointerMotionMask, kNone, fDefaultCursor);
          }
       }
    }
@@ -348,7 +361,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
             fCurrent = target;
 
             gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                                   kPointerMotionMask, kNone, fgDefaultCursor);
+                                   kPointerMotionMask, kNone, fDefaultCursor);
          }
       }
    }
@@ -388,11 +401,12 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
 {
    // Create a popup menu.
 
-   fNormGC       = fgDefaultGC();
-   fSelGC        = fgDefaultSelectedGC();
-   fSelbackGC    = fgDefaultSelectedBackgroundGC();
-   fFontStruct   = fgDefaultFontStruct;
-   fHifontStruct = fgHilightFontStruct;
+   fNormGC        = GetDefaultGC()();
+   fSelGC         = GetDefaultSelectedGC()();
+   fSelbackGC     = GetDefaultSelectedBackgroundGC()();
+   fFontStruct    = GetDefaultFontStruct();
+   fHifontStruct  = GetHilightFontStruct();
+   fDefaultCursor = fClient->GetResourcePool()->GetGrabCursor();
 
    fDelay     = 0;
    fEntryList = new TList;
@@ -681,7 +695,7 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
 
    if (grab_pointer) {
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, fgDefaultCursor);
+                             kPointerMotionMask, kNone, fDefaultCursor);
       fHasGrab = kTRUE;
    } else {
       fHasGrab = kFALSE;
@@ -939,10 +953,10 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
             if (entry->fPic != 0)
                entry->fPic->Draw(fId, fSelGC, 8, entry->fEy+1);
             entry->fLabel->Draw(fId,
-                           (entry->fStatus & kMenuEnableMask) ? fSelGC : fgShadowGC(),
+                           (entry->fStatus & kMenuEnableMask) ? fSelGC : GetShadowGC()(),
                            tx, ty);
          } else {
-            gVirtualX->FillRectangle(fId, fgBckgndGC(), entry->fEx+1, entry->fEy-1,
+            gVirtualX->FillRectangle(fId, GetBckgndGC()(), entry->fEx+1, entry->fEy-1,
                                      fMenuWidth-6, max_ascent + max_descent + 3);
             if (entry->fType == kMenuPopup)
                DrawTrianglePattern(fNormGC, fMenuWidth-10, entry->fEy+3, fMenuWidth-6, entry->fEy+11);
@@ -955,15 +969,15 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
             if (entry->fStatus & kMenuEnableMask) {
                entry->fLabel->Draw(fId, fNormGC, tx, ty);
             } else {
-               entry->fLabel->Draw(fId, fgHilightGC(), tx+1, ty+1);
-               entry->fLabel->Draw(fId, fgShadowGC(), tx, ty);
+               entry->fLabel->Draw(fId, GetHilightGC()(), tx+1, ty+1);
+               entry->fLabel->Draw(fId, GetShadowGC()(), tx, ty);
             }
          }
          break;
 
       case kMenuSeparator:
-         gVirtualX->DrawLine(fId, fgShadowGC(),  2, entry->fEy, fMenuWidth-3, entry->fEy);
-         gVirtualX->DrawLine(fId, fgHilightGC(), 2, entry->fEy+1, fMenuWidth-3, entry->fEy+1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  2, entry->fEy, fMenuWidth-3, entry->fEy);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 2, entry->fEy+1, fMenuWidth-3, entry->fEy+1);
          break;
    }
 
@@ -980,15 +994,15 @@ void TGPopupMenu::DrawBorder()
 {
    // Draw border round popup menu.
 
-   gVirtualX->DrawLine(fId, fgBckgndGC(), 0, 0, fMenuWidth-2, 0);
-   gVirtualX->DrawLine(fId, fgBckgndGC(), 0, 0, 0, fMenuHeight-2);
-   gVirtualX->DrawLine(fId, fgHilightGC(), 1, 1, fMenuWidth-3, 1);
-   gVirtualX->DrawLine(fId, fgHilightGC(), 1, 1, 1, fMenuHeight-3);
+   gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fMenuWidth-2, 0);
+   gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fMenuHeight-2);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fMenuWidth-3, 1);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, 1, fMenuHeight-3);
 
-   gVirtualX->DrawLine(fId, fgShadowGC(),  1, fMenuHeight-2, fMenuWidth-2, fMenuHeight-2);
-   gVirtualX->DrawLine(fId, fgShadowGC(),  fMenuWidth-2, fMenuHeight-2, fMenuWidth-2, 1);
-   gVirtualX->DrawLine(fId, fgBlackGC(), 0, fMenuHeight-1, fMenuWidth-1, fMenuHeight-1);
-   gVirtualX->DrawLine(fId, fgBlackGC(), fMenuWidth-1, fMenuHeight-1, fMenuWidth-1, 0);
+   gVirtualX->DrawLine(fId, GetShadowGC()(),  1, fMenuHeight-2, fMenuWidth-2, fMenuHeight-2);
+   gVirtualX->DrawLine(fId, GetShadowGC()(),  fMenuWidth-2, fMenuHeight-2, fMenuWidth-2, 1);
+   gVirtualX->DrawLine(fId, GetBlackGC()(), 0, fMenuHeight-1, fMenuWidth-1, fMenuHeight-1);
+   gVirtualX->DrawLine(fId, GetBlackGC()(), fMenuWidth-1, fMenuHeight-1, fMenuWidth-1, 0);
 }
 
 //______________________________________________________________________________
@@ -1284,6 +1298,46 @@ void TGPopupMenu::DeleteEntry(TGMenuEntry *entry)
       }
 }
 
+//______________________________________________________________________________
+const TGGC &TGPopupMenu::GetDefaultGC()
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGPopupMenu::GetDefaultSelectedGC()
+{
+   if (!fgDefaultSelectedGC)
+      fgDefaultSelectedGC = gClient->GetResourcePool()->GetSelectedGC();
+   return *fgDefaultSelectedGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGPopupMenu::GetDefaultSelectedBackgroundGC()
+{
+   if (!fgDefaultSelectedBackgroundGC)
+      fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
+   return *fgDefaultSelectedBackgroundGC;
+}
+
+//______________________________________________________________________________
+FontStruct_t TGPopupMenu::GetDefaultFontStruct()
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetMenuFont();
+   return fgDefaultFont->GetFontStruct();
+}
+
+//______________________________________________________________________________
+FontStruct_t TGPopupMenu::GetHilightFontStruct()
+{
+   if (!fgHilightFont)
+      fgHilightFont = gClient->GetResourcePool()->GetMenuHiliteFont();
+   return fgHilightFont->GetFontStruct();
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -1302,7 +1356,7 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    fLabel      = s;
    fMenu       = menu;
    fFontStruct = font;
-   fSelGC      = fgDefaultSelectedGC();
+   fSelGC      = GetDefaultSelectedGC()();
    fNormGC     = norm;
    fState      = kFALSE;
    fTitleId    = -1;
@@ -1360,11 +1414,11 @@ void TGMenuTitle::DoRedraw()
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    if (fState) {
-      SetBackgroundColor(fgDefaultSelectedBackground);
+      SetBackgroundColor(GetDefaultSelectedBackground());
       gVirtualX->ClearWindow(fId);
       fLabel->Draw(fId, fSelGC, x, y + max_ascent);
    } else {
-      SetBackgroundColor(fgDefaultFrameBackground);
+      SetBackgroundColor(GetDefaultFrameBackground());
       gVirtualX->ClearWindow(fId);
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
    }
@@ -1385,8 +1439,24 @@ void TGMenuTitle::DoSendMessage()
 
 //______________________________________________________________________________
 FontStruct_t TGMenuTitle::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetMenuFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGMenuTitle::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGMenuTitle::GetDefaultSelectedGC()
+{
+   if (!fgDefaultSelectedGC)
+      fgDefaultSelectedGC = gClient->GetResourcePool()->GetSelectedGC();
+   return *fgDefaultSelectedGC;
+}

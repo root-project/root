@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.3 2001/03/09 10:58:30 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -29,6 +29,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGStatusBar.h"
+#include "TGResourcePool.h"
+
+
+const TGFont *TGStatusBar::fgDefaultFont = 0;
+TGGC         *TGStatusBar::fgDefaultGC = 0;
 
 
 class TGStatusBarPart : public TGFrame {
@@ -38,7 +43,7 @@ private:
    Int_t      fYt;            // y position of text in frame
    virtual void DoRedraw();
 public:
-   TGStatusBarPart(const TGWindow *p, Int_t y, ULong_t back = fgDefaultFrameBackground);
+   TGStatusBarPart(const TGWindow *p, Int_t y, ULong_t back = GetDefaultFrameBackground());
    ~TGStatusBarPart() { delete fStatusInfo; DestroyWindow(); }
    void SetText(TGString *text);
 };
@@ -73,7 +78,7 @@ void TGStatusBarPart::DoRedraw()
    TGFrame::DoRedraw();
 
    if (fStatusInfo)
-      fStatusInfo->Draw(fId, TGStatusBar::fgDefaultGC(), 3, fYt);
+      fStatusInfo->Draw(fId, TGStatusBar::GetDefaultGC()(), 3, fYt);
 }
 
 
@@ -96,7 +101,7 @@ TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
    f3DCorner      = kTRUE;
 
    int max_ascent, max_descent;
-   gVirtualX->GetFontProperties(fgDefaultFontStruct, max_ascent, max_descent);
+   gVirtualX->GetFontProperties(GetDefaultFontStruct(), max_ascent, max_descent);
    int ht = max_ascent + max_descent;
 
    fYt = 2 + max_ascent;
@@ -168,31 +173,31 @@ void TGStatusBar::DrawBorder()
       else
          fStatusPart[i]->MoveResize(fXt[i]+2, 1, xmax - fXt[i] - 4, fHeight - 2);
 
-      gVirtualX->DrawLine(fId, fgShadowGC(), xmin, 0, xmax-2, 0);
-      gVirtualX->DrawLine(fId, fgShadowGC(), xmin, 0, xmin, fHeight-2);
-      gVirtualX->DrawLine(fId, fgHilightGC(), xmin, fHeight-1, xmax-1, fHeight-1);
+      gVirtualX->DrawLine(fId, GetShadowGC()(), xmin, 0, xmax-2, 0);
+      gVirtualX->DrawLine(fId, GetShadowGC()(), xmin, 0, xmin, fHeight-2);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), xmin, fHeight-1, xmax-1, fHeight-1);
       if (i == fNpart-1)
-         gVirtualX->DrawLine(fId, fgHilightGC(), xmax-1, fHeight-1, xmax-1, 0);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), xmax-1, fHeight-1, xmax-1, 0);
       else
-         gVirtualX->DrawLine(fId, fgHilightGC(), xmax-1, fHeight-1, xmax-1, 1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), xmax-1, fHeight-1, xmax-1, 1);
    }
 
    // 3d corner...
    if (f3DCorner) {
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-3,  fHeight-2, fWidth-2, fHeight-3);
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-4,  fHeight-2, fWidth-2, fHeight-4);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-5,  fHeight-2, fWidth-2, fHeight-5);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-3,  fHeight-2, fWidth-2, fHeight-3);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-4,  fHeight-2, fWidth-2, fHeight-4);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-5,  fHeight-2, fWidth-2, fHeight-5);
 
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-7,  fHeight-2, fWidth-2, fHeight-7);
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-8,  fHeight-2, fWidth-2, fHeight-8);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-9,  fHeight-2, fWidth-2, fHeight-9);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-7,  fHeight-2, fWidth-2, fHeight-7);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-8,  fHeight-2, fWidth-2, fHeight-8);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-9,  fHeight-2, fWidth-2, fHeight-9);
 
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-11, fHeight-2, fWidth-2, fHeight-11);
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-12, fHeight-2, fWidth-2, fHeight-12);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-13, fHeight-2, fWidth-2, fHeight-13);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-11, fHeight-2, fWidth-2, fHeight-11);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-12, fHeight-2, fWidth-2, fHeight-12);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-13, fHeight-2, fWidth-2, fHeight-13);
 
-      gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-13, fHeight-1, fWidth-1, fHeight-1);
-      gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-1,  fHeight-1, fWidth-1, fHeight-13);
+      gVirtualX->DrawLine(fId, GetBckgndGC()(),  fWidth-13, fHeight-1, fWidth-1, fHeight-1);
+      gVirtualX->DrawLine(fId, GetBckgndGC()(),  fWidth-1,  fHeight-1, fWidth-1, fHeight-13);
    }
 }
 
@@ -284,4 +289,22 @@ void TGStatusBar::SetParts(Int_t npart)
    if (tot < 100)
       fParts[npart-1] += 100 - tot;
    fNpart = npart;
+}
+
+//______________________________________________________________________________
+FontStruct_t TGStatusBar::GetDefaultFontStruct()
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetStatusFont();
+   return fgDefaultFont->GetFontStruct();
+}
+
+//______________________________________________________________________________
+const TGGC &TGStatusBar::GetDefaultGC()
+{
+   if (!fgDefaultGC) {
+      fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
+      fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
+   }
+   return *fgDefaultGC;
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.10 2001/08/21 17:33:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.11 2001/08/31 17:49:44 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -44,8 +44,6 @@ class TGToolTip;
 
 class TGTextEntry : public TGFrame, public TGWidget {
 
-friend class TGClient;
-
 public:
    enum   EEchoMode { kNormal, kNoEcho, kPassword };
    enum   EInsertMode { kInsert, kReplace };
@@ -62,13 +60,13 @@ protected:
    Int_t             fCursorIX;          // cursor position in characters
    Bool_t            fCursorOn;          // cursor status (on/off)
    FontStruct_t      fFontStruct;        // text font
-   GContext_t        fNormGC;            // normal drawing context
-   GContext_t        fSelGC, fSelbackGC; // selection mode drawing contexts
+   TGGC              fNormGC;            // normal drawing context
+   TGGC              fSelGC;             // selected text drawing context
+   GContext_t        fSelbackGC;         // selected background drawing context
    Atom_t            fClipboard;         // clipboard property
    TBlinkTimer      *fCurBlink;          // cursor blink timer
    TGToolTip        *fTip;               // associated tooltip
    Int_t             fMaxLen;            // maximum length of text
-   Bool_t            fDeleteGC;          // if kTRUE delete the fNormGC and fSelGC
    Bool_t            fEdited;            // kFALSE, if the line edit's contents have not been changed since the construction
    Bool_t            fFrameDrawn;        // kTRUE draw itself inside a two-pixel frame, kFALSE draw without any frame
    EEchoMode         fEchoMode;          // echo mode (kNormal(default), kNoEcho, kPassword)
@@ -86,12 +84,13 @@ protected:
    virtual  void        UpdateOffset();
 
    static TString      *fgClipboardText; // application clipboard text
-   static Atom_t        fgClipboard;
-   static Cursor_t      fgDefaultCursor;
-   static FontStruct_t  fgDefaultFontStruct;
-   static TGGC          fgDefaultSelectedGC;
-   static TGGC          fgDefaultSelectedBackgroundGC;
-   static TGGC          fgDefaultGC;
+   static const TGFont *fgDefaultFont;
+   static const TGGC   *fgDefaultSelectedGC;
+   static const TGGC   *fgDefaultSelectedBackgroundGC;
+   static const TGGC   *fgDefaultGC;
+
+   static const TGGC   &GetDefaultSelectedGC();
+   static const TGGC   &GetDefaultSelectedBackgroundGC();
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -101,7 +100,7 @@ public:
                GContext_t norm = GetDefaultGC()(),
                FontStruct_t font = GetDefaultFontStruct(),
                UInt_t option = kSunkenFrame | kDoubleBorder,
-               ULong_t back = GetWhitePixel());
+               Pixel_t back = GetWhitePixel());
 
    TGTextEntry(const TGWindow *parent, const char *text,  Int_t id = -1);
    TGTextEntry(const TString &contents, const TGWindow *parent,  Int_t id = -1);

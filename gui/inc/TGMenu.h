@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.13 2003/01/20 08:44:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.14 2003/03/15 14:19:38 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -111,7 +111,6 @@ public:
 
 class TGPopupMenu : public TGFrame {
 
-friend class TGClient;
 friend class TGMenuTitle;
 
 protected:
@@ -129,14 +128,14 @@ protected:
    GContext_t         fSelbackGC;     // graphics context for drawing selection background
    FontStruct_t       fFontStruct;    // font to draw menu entries
    FontStruct_t       fHifontStruct;  // font to draw highlighted entries
+   Cursor_t           fDefaultCursor; // right pointing cursor
    const TGWindow    *fMsgWindow;     // window which handles menu events
 
-   static TGGC          fgDefaultGC, fgDefaultSelectedGC,
-                        fgDefaultSelectedBackgroundGC;
-   static FontStruct_t  fgDefaultFontStruct;
-   static FontStruct_t  fgHilightFontStruct;
-   static Cursor_t      fgDefaultCursor;
-   static Pixmap_t      fgCheckmark, fgRadiomark;
+   static const TGFont *fgDefaultFont;
+   static const TGFont *fgHilightFont;
+   static const TGGC   *fgDefaultGC;
+   static const TGGC   *fgDefaultSelectedGC;
+   static const TGGC   *fgDefaultSelectedBackgroundGC;
 
    void DrawTrianglePattern(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
@@ -145,6 +144,12 @@ protected:
    virtual void DoRedraw();
    virtual void DrawEntry(TGMenuEntry *entry);
    virtual void Reposition();
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static FontStruct_t  GetHilightFontStruct();
+   static const TGGC   &GetDefaultGC();
+   static const TGGC   &GetDefaultSelectedGC();
+   static const TGGC   &GetDefaultSelectedBackgroundGC();
 
 public:
    TGPopupMenu(const TGWindow *p = 0, UInt_t w = 10, UInt_t h = 10,
@@ -212,8 +217,6 @@ public:
 
 class TGMenuTitle : public TGFrame {
 
-friend class TGClient;
-
 protected:
    TGPopupMenu    *fMenu;             // attached popup menu
    TGHotString    *fLabel;            // menu title
@@ -226,12 +229,13 @@ protected:
 
    virtual void DoRedraw();
 
-   static FontStruct_t  fgDefaultFontStruct;
-   static TGGC          fgDefaultSelectedGC;
-   static TGGC          fgDefaultGC;
+   static const TGFont *fgDefaultFont;
+   static const TGGC   *fgDefaultSelectedGC;
+   static const TGGC   *fgDefaultGC;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultSelectedGC();
    static const TGGC   &GetDefaultGC();
 
    TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
@@ -261,14 +265,11 @@ public:
 
 class TGMenuBar : public TGHorizontalFrame {
 
-friend class TGClient;
-
 protected:
-   TGMenuTitle  *fCurrent;    // current menu title
-   TList        *fTitles;     // list of menu titles
-   Bool_t        fStick;      // stick mode (popup menu stays sticked on screen)
-
-   static Cursor_t fgDefaultCursor;
+   TGMenuTitle  *fCurrent;       // current menu title
+   TList        *fTitles;        // list of menu titles
+   Cursor_t      fDefaultCursor; // right pointing cursor
+   Bool_t        fStick;         // stick mode (popup menu stays sticked on screen)
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);

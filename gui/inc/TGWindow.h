@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.4 2001/04/28 16:30:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.5 2001/06/05 16:42:47 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -31,13 +31,12 @@
 #include "TVirtualX.h"
 #endif
 
-class TTimer;
+class TGClient;
 
 
 class TGWindow : public TGObject {
 
 friend class TGClient;
-friend class TTimer;
 
 protected:
    const TGWindow   *fParent;         // Parent window
@@ -71,7 +70,7 @@ public:
    void RaiseWindow() { gVirtualX->RaiseWindow(fId); }
    void LowerWindow() { gVirtualX->LowerWindow(fId); }
    void IconifyWindow() { gVirtualX->IconifyWindow(fId); }
-   void SetBackgroundColor(ULong_t color)
+   void SetBackgroundColor(Pixel_t color)
         { gVirtualX->SetWindowBackground(fId, color); }
    void SetBackgroundPixmap(Pixmap_t pixmap)
         { gVirtualX->SetWindowBackgroundPixmap(fId, pixmap); }

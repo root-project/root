@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.13 2002/06/10 18:35:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.14 2003/05/08 17:20:16 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -34,6 +34,13 @@
 
 #include "TGTextView.h"
 #include "TGScrollBar.h"
+#include "TGResourcePool.h"
+
+
+const TGFont *TGTextView::fgDefaultFont = 0;
+TGGC         *TGTextView::fgDefaultGC = 0;
+TGGC         *TGTextView::fgDefaultSelectedGC = 0;
+const TGGC   *TGTextView::fgDefaultSelectedBackgroundGC = 0;
 
 
 ClassImp(TGTextView)
@@ -45,11 +52,10 @@ void TGTextView::Init(ULong_t /*back*/)
    // Initialize a text view widget.
 
    // set in TGClient via fgDefaultFontStruct and select font via .rootrc
-   fFont      = fgDefaultFontStruct;
-   fNormGC    = fgDefaultGC();
-   fSelGC     = fgDefaultSelectedGC();
-   fSelbackGC = fgDefaultSelectedBackgroundGC();
-   fDeleteGC  = kFALSE;
+   fFont      = GetDefaultFontStruct();
+   fNormGC    = GetDefaultGC();
+   fSelGC     = GetDefaultSelectedGC();
+   fSelbackGC = GetDefaultSelectedBackgroundGC()();
 
    fText = new TGText();
    TGView::Clear();
@@ -109,10 +115,6 @@ TGTextView::~TGTextView()
 {
    // Cleanup text view widget.
 
-   if (fDeleteGC) {
-      gVirtualX->DeleteGC(fNormGC);
-      gVirtualX->DeleteGC(fSelGC);
-   }
    delete fText;
    delete fClipText;
 }
@@ -215,24 +217,10 @@ void TGTextView::SetFont(FontStruct_t font)
    // Changes text entry font.
 
    if (font != fFont) {
-      GCValues_t gval;
       fFont = font;
-
-      // get unique copies of the norm GC and the sel GC (if not already copied)
-      if (!fDeleteGC) {
-         GContext_t norm = gVirtualX->CreateGC(fCanvas->GetId(), 0);
-         gVirtualX->CopyGC(fNormGC, norm, 0);
-         fNormGC = norm;
-         GContext_t sel  = gVirtualX->CreateGC(fCanvas->GetId(), 0);
-         gVirtualX->CopyGC(fSelGC, sel, 0);
-         fSelGC = sel;
-      }
-      gval.fMask = kGCFont;
-      gval.fFont = gVirtualX->GetFontHandle(fFont);
-      gVirtualX->ChangeGC(fNormGC, &gval);
-      gVirtualX->ChangeGC(fSelGC, &gval);
+      fNormGC.SetFont(gVirtualX->GetFontHandle(fFont));
+      fSelGC.SetFont(gVirtualX->GetFontHandle(fFont));
       fClient->NeedRedraw(this);
-      fDeleteGC = kTRUE;
    }
 }
 
@@ -463,7 +451,7 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
                (fMarkedStart.fY == fMarkedEnd.fY &&
                 (fMarkedEnd.fX < pos.fX ||
                  fMarkedStart.fX > pos.fX+len))) {
-               gVirtualX->DrawString(fCanvas->GetId(), fNormGC, Int_t(xoffset),
+               gVirtualX->DrawString(fCanvas->GetId(), fNormGC(), Int_t(xoffset),
                                      Int_t(ToScrYCoord(pos.fY+1) - fMaxDescent),
                                      buffer, Int_t(len));
             } else {
@@ -502,7 +490,7 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
                      }
                   }
                }
-               gVirtualX->DrawString(fCanvas->GetId(), fNormGC,
+               gVirtualX->DrawString(fCanvas->GetId(), fNormGC(),
                                      Int_t(ToScrXCoord(pos.fX, pos.fY)),
                                      Int_t(ToScrYCoord(pos.fY+1) - fMaxDescent),
                                      buffer, Int_t(len1));
@@ -512,11 +500,11 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
                                      UInt_t(ToScrXCoord(pos.fX+len1+len2, pos.fY) -
                                      ToScrXCoord(pos.fX+len1, pos.fY)),
                                      UInt_t(ToScrYCoord(pos.fY+1)-ToScrYCoord(pos.fY)));
-               gVirtualX->DrawString(fCanvas->GetId(), fSelGC,
+               gVirtualX->DrawString(fCanvas->GetId(), fSelGC(),
                                      Int_t(ToScrXCoord(pos.fX+len1, pos.fY)),
                                      Int_t(ToScrYCoord(pos.fY+1) - fMaxDescent),
                                      buffer+len1, Int_t(len2));
-               gVirtualX->DrawString(fCanvas->GetId(), fNormGC,
+               gVirtualX->DrawString(fCanvas->GetId(), fNormGC(),
                                      Int_t(ToScrXCoord(pos.fX+len1+len2, pos.fY)),
                                      Int_t(ToScrYCoord(pos.fY+1) - fMaxDescent),
                                      buffer+len1+len2, Int_t(len-(len1+len2)));
@@ -750,4 +738,40 @@ void TGTextView::AdjustWidth()
       size += fVsb->GetDefaultWidth();
    size += (fBorderWidth << 1) + fXMargin+1;
    Resize((UInt_t)size, fHeight);
+}
+
+//______________________________________________________________________________
+FontStruct_t TGTextView::GetDefaultFontStruct()
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDocumentFixedFont();
+   return fgDefaultFont->GetFontStruct();
+}
+
+//______________________________________________________________________________
+const TGGC &TGTextView::GetDefaultGC()
+{
+   if (!fgDefaultGC) {
+      fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
+      fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
+   }
+   return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGTextView::GetDefaultSelectedGC()
+{
+   if (!fgDefaultSelectedGC) {
+      fgDefaultSelectedGC = new TGGC(*gClient->GetResourcePool()->GetSelectedGC());
+      fgDefaultSelectedGC->SetFont(fgDefaultFont->GetFontHandle());
+   }
+   return *fgDefaultSelectedGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGTextView::GetDefaultSelectedBackgroundGC()
+{
+   if (!fgDefaultSelectedBackgroundGC)
+      fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
+   return *fgDefaultSelectedBackgroundGC;
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.9 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.10 2002/10/31 07:27:35 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -35,8 +35,6 @@
 
 class TGTextView : public TGView {
 
-friend class TGClient;
-
 protected:
    TGText         *fText;         // text buffer
    TGText         *fClipText;     // clipboard text buffer
@@ -44,30 +42,35 @@ protected:
    Int_t           fMaxAscent;    // maximum ascent in font
    Int_t           fMaxDescent;   // maximum descent in font
    Int_t           fMaxWidth;     // maximum width of character in font
-   GContext_t      fNormGC;       // graphics context for drawing text
-   GContext_t      fSelGC;        // graphics context for drawing marked text
+   TGGC            fNormGC;       // graphics context for drawing text
+   TGGC            fSelGC;        // graphics context for drawing marked text
    GContext_t      fSelbackGC;    // graphics context for drawing marked background
    Bool_t          fMarkedFromX;  // true if text is marked from x
    Bool_t          fMarkedFromY;  // true if text is marker from y
-   Bool_t          fDeleteGC;     // delete widget specific contexts
 
-   static TGGC          fgDefaultGC, fgDefaultSelectedGC,
-                        fgDefaultSelectedBackgroundGC;
-   static FontStruct_t  fgDefaultFontStruct;
+   static const TGFont *fgDefaultFont;
+   static TGGC         *fgDefaultGC;
+   static TGGC         *fgDefaultSelectedGC;
+   static const TGGC   *fgDefaultSelectedBackgroundGC;
 
-   void Init(ULong_t bg);
+   void Init(Pixel_t bg);
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void Mark(Long_t xPos, Long_t yPos);
    virtual void UnMark();
    virtual void Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
 
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
+   static const TGGC   &GetDefaultSelectedGC();
+   static const TGGC   &GetDefaultSelectedBackgroundGC();
+
 public:
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
-              UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
-              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
 
    virtual ~TGTextView();
 

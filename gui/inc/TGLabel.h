@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.5 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.6 2001/05/29 14:26:17 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -35,8 +35,6 @@
 
 class TGLabel : public TGFrame {
 
-friend class TGClient;
-
 protected:
    TGString      *fText;         // label text
    UInt_t         fTWidth;       // text width
@@ -48,8 +46,8 @@ protected:
 
    virtual void DoRedraw();
 
-   static FontStruct_t   fgDefaultFontStruct;
-   static TGGC           fgDefaultGC;
+   static const TGFont  *fgDefaultFont;
+   static const TGGC    *fgDefaultGC;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -59,12 +57,12 @@ public:
            GContext_t norm = GetDefaultGC()(),
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,
-           ULong_t back = GetDefaultFrameBackground());
+           Pixel_t back = GetDefaultFrameBackground());
    TGLabel(const TGWindow *p, const char *text,
            GContext_t norm = GetDefaultGC()(),
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,
-           ULong_t back = GetDefaultFrameBackground());
+           Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGLabel();
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth, fTHeight+1); }

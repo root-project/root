@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.8 2001/10/16 17:28:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.9 2003/04/14 14:13:51 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -41,13 +41,18 @@
 
 #include "TGListBox.h"
 #include "TGScrollBar.h"
+#include "TGResourcePool.h"
 #include "TMath.h"
+
+
+const TGFont *TGTextLBEntry::fgDefaultFont = 0;
+TGGC         *TGTextLBEntry::fgDefaultGC = 0;
+
 
 ClassImp(TGLBEntry)
 ClassImp(TGTextLBEntry)
 ClassImp(TGLBContainer)
 ClassImpQ(TGListBox)
-
 
 //______________________________________________________________________________
 void TGLBEntry::Activate(Bool_t a)
@@ -126,7 +131,7 @@ void TGTextLBEntry::DoRedraw()
    if (fActive) {
       SetBackgroundColor(fgDefaultSelectedBackground);
       gVirtualX->ClearWindow(fId);
-      gVirtualX->SetForeground(fNormGC, fgSelPixel);
+      gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
       fText->Draw(fId, fNormGC, x, y + max_ascent);
    } else {
       SetBackgroundColor(fBkcolor);
@@ -157,11 +162,19 @@ void TGTextLBEntry::SetText(TGString *new_text)
 
 //______________________________________________________________________________
 FontStruct_t TGTextLBEntry::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGTextLBEntry::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
+   return *fgDefaultGC;
+}
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -628,15 +641,15 @@ void TGListBox::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:

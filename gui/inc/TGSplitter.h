@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.4 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.5 2003/03/14 11:34:18 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -37,7 +37,7 @@ protected:
 public:
    TGSplitter(const TGWindow *p, UInt_t w = 2, UInt_t h = 4,
               UInt_t options = kChildFrame,
-              ULong_t back = GetDefaultFrameBackground());
+              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGSplitter() { }
 
    virtual Bool_t HandleButton(Event_t *event) = 0;
@@ -62,7 +62,7 @@ protected:
 public:
    TGVSplitter(const TGWindow *p, UInt_t w = 2, UInt_t h = 4,
                UInt_t options = kChildFrame,
-               ULong_t back = GetDefaultFrameBackground());
+               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVSplitter() { }
 
    virtual void DrawBorder();
@@ -90,7 +90,7 @@ protected:
 public:
    TGHSplitter(const TGWindow *p, UInt_t w = 4, UInt_t h = 2,
                UInt_t options = kChildFrame,
-               ULong_t back = GetDefaultFrameBackground());
+               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHSplitter() { }
 
    virtual void DrawBorder();

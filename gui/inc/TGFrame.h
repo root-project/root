@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.20 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.21 2002/12/09 14:03:35 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -34,6 +34,9 @@
 #ifndef ROOT_TGGC
 #include "TGGC.h"
 #endif
+#ifndef ROOT_TGFont
+#include "TGFont.h"
+#endif
 #ifndef ROOT_TGLayout
 #include "TGLayout.h"
 #endif
@@ -42,6 +45,7 @@
 #endif
 
 class TList;
+class TGResourcePool;
 
 
 //---- frame states
@@ -117,8 +121,6 @@ enum EMWMHints {
 
 class TGFrame : public TGWindow, public TQObject {
 
-friend class TGClient;
-
 protected:
    Int_t    fX;             // frame x position
    Int_t    fY;             // frame y position
@@ -126,18 +128,19 @@ protected:
    UInt_t   fHeight;        // frame height
    Int_t    fBorderWidth;   // frame border width
    UInt_t   fOptions;       // frame options
-   ULong_t  fBackground;    // frame background color
+   Pixel_t  fBackground;    // frame background color
    UInt_t   fEventMask;     // currenty active event mask
 
-   static ULong_t     fgDefaultFrameBackground;
-   static ULong_t     fgDefaultSelectedBackground;
-   static ULong_t     fgWhitePixel;
-   static ULong_t     fgBlackPixel;
-   static TGGC        fgBlackGC;
-   static TGGC        fgWhiteGC;
-   static TGGC        fgHilightGC;
-   static TGGC        fgShadowGC;
-   static TGGC        fgBckgndGC;
+   static Bool_t      fgInit;
+   static Pixel_t     fgDefaultFrameBackground;
+   static Pixel_t     fgDefaultSelectedBackground;
+   static Pixel_t     fgWhitePixel;
+   static Pixel_t     fgBlackPixel;
+   static const TGGC *fgBlackGC;
+   static const TGGC *fgWhiteGC;
+   static const TGGC *fgHilightGC;
+   static const TGGC *fgShadowGC;
+   static const TGGC *fgBckgndGC;
    static Time_t      fgLastClick;
    static UInt_t      fgLastButton;
    static Int_t       fgDbx, fgDby;
@@ -150,13 +153,15 @@ protected:
                                   UInt_t w, UInt_t h);
    virtual void   DoRedraw();
 
-public:
+   const TGResourcePool *GetResourcePool() const
+      { return fClient->GetResourcePool(); }
 
+public:
    // Default colors and graphics contexts
-   static ULong_t     GetDefaultFrameBackground();
-   static ULong_t     GetDefaultSelectedBackground();
-   static ULong_t     GetWhitePixel();
-   static ULong_t     GetBlackPixel();
+   static Pixel_t     GetDefaultFrameBackground();
+   static Pixel_t     GetDefaultSelectedBackground();
+   static Pixel_t     GetWhitePixel();
+   static Pixel_t     GetBlackPixel();
    static const TGGC &GetBlackGC();
    static const TGGC &GetWhiteGC();
    static const TGGC &GetHilightGC();
@@ -164,7 +169,7 @@ public:
    static const TGGC &GetBckgndGC();
 
    TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
-           UInt_t options = 0, ULong_t back = GetDefaultFrameBackground());
+           UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGFrame() { }
    virtual void DeleteWindow();
@@ -202,15 +207,16 @@ public:
    virtual TGDimension GetDefaultSize() const
                           { return TGDimension(fWidth, fHeight); }
 
-   virtual ULong_t GetBackground() const { return fBackground; }
-   virtual void    ChangeBackground(ULong_t back);
+   virtual Pixel_t GetBackground() const { return fBackground; }
+   virtual void    ChangeBackground(Pixel_t back);
+   virtual void    SetBackgroundColor(Pixel_t back);
    virtual UInt_t  GetOptions() const { return fOptions; }
    virtual void    ChangeOptions(UInt_t options);
    virtual void    Layout() { }
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
    virtual void    DrawBorder();
-   virtual void    DrawCopy(Handle_t /*id*/,Int_t /*x*/, Int_t /*y*/) { }
+   virtual void    DrawCopy(Handle_t /*id*/, Int_t /*x*/, Int_t /*y*/) { }
    virtual void    Activate(Bool_t) { }
    virtual Bool_t  IsActive() const { return kFALSE; }
    virtual Bool_t  IsComposite() const { return kFALSE; }
@@ -262,7 +268,7 @@ protected:
 public:
    TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
                     UInt_t options = 0,
-                    ULong_t back = GetDefaultFrameBackground());
+                    Pixel_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGCompositeFrame();
    virtual void Cleanup();
@@ -312,7 +318,7 @@ class TGVerticalFrame : public TGCompositeFrame {
 public:
    TGVerticalFrame(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options = kChildFrame,
-                   ULong_t back = GetDefaultFrameBackground()) :
+                   Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kVerticalFrame, back) { }
 
    ClassDef(TGVerticalFrame,0)  // Composite frame with vertical child layout
@@ -322,7 +328,7 @@ class TGHorizontalFrame : public TGCompositeFrame {
 public:
    TGHorizontalFrame(const TGWindow *p, UInt_t w, UInt_t h,
                      UInt_t options = kChildFrame,
-                     ULong_t back = GetDefaultFrameBackground()) :
+                     Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kHorizontalFrame, back) { }
 
    ClassDef(TGHorizontalFrame,0)  // Composite frame with horizontal child layout
@@ -446,8 +452,6 @@ public:
 
 class TGGroupFrame : public TGCompositeFrame {
 
-friend class TGClient;
-
 protected:
    TGString      *fText;         // title text
    FontStruct_t   fFontStruct;   // title fontstruct
@@ -456,8 +460,8 @@ protected:
 
    virtual void DoRedraw();
 
-   static FontStruct_t  fgDefaultFontStruct;
-   static TGGC          fgDefaultGC;
+   static const TGFont *fgDefaultFont;
+   static const TGGC   *fgDefaultGC;
 
 public:
    enum ETitlePos { kLeft = -1, kCenter = 0, kRight = 1 };
@@ -469,12 +473,12 @@ public:
                 UInt_t options = kVerticalFrame,
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
-                ULong_t back = GetDefaultFrameBackground());
+                Pixel_t back = GetDefaultFrameBackground());
    TGGroupFrame(const TGWindow *p, const char *title,
                 UInt_t options = kVerticalFrame,
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
-                ULong_t back = GetDefaultFrameBackground());
+                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGGroupFrame();
 
    virtual TGDimension GetDefaultSize() const;

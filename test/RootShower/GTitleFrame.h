@@ -9,7 +9,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// GTitleFrame                                                          // 
+// GTitleFrame                                                          //
 //                                                                      //
 // This File contains the declaration of the GTitleFrame-class for      //
 // the RootShower application                                           //
@@ -48,7 +48,7 @@ private:
 
     TGLabel *fTextLabel2;
 
-    GContext_t fTextGC;
+    TGGC fTextGC;
 
 public:
 

@@ -12,6 +12,7 @@
 #include <TGLabel.h>
 #include <TGPicture.h>
 #include <TGIcon.h>
+#include <TGResourcePool.h>
 
 #include "GTitleFrame.h"
 
@@ -28,14 +29,16 @@ GTitleFrame::GTitleFrame(const TGWindow *p,
              TGCompositeFrame(p, w, h, options)
 {
     // Create GTitleFrame object, with TGWindow parent 'p', text 'mainText'
-    // with sub text 'subText'. 
-    FontStruct_t labelfont;
-    labelfont = gClient->GetFontByName("-*-times-bold-r-*-*-24-*-*-*-*-*-*-*");
+    // with sub text 'subText'.
+    const TGFont *font = fClient->GetFont("-*-times-bold-r-*-*-24-*-*-*-*-*-*-*");
+    if (!font)
+       font = fClient->GetResourcePool()->GetDefaultFont();
+    FontStruct_t labelfont = font->GetFontStruct();
     GCValues_t   gval;
     gval.fMask = kGCForeground | kGCFont;
-    gval.fFont = gVirtualX->GetFontHandle(labelfont);
+    gval.fFont = font->GetFontHandle();
     gClient->GetColorByName("red", gval.fForeground);
-    fTextGC = gVirtualX->CreateGC(gClient->GetRoot()->GetId(), &gval);
+    fTextGC.SetAttributes(&gval);
 
     // add pictures
     TString theLeftLogoFilename = StrDup(gProgPath);
@@ -60,9 +63,9 @@ GTitleFrame::GTitleFrame(const TGWindow *p,
     fTextFrameLayout = new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 0, 0, 0, 0);
     fTextLabelLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 10, 10, 10, 10);
     fTextFrame = new TGCompositeFrame(this, 0, 0, kVerticalFrame);
-    fTextLabel1 = new TGLabel(fTextFrame, mainText, fTextGC, labelfont);
+    fTextLabel1 = new TGLabel(fTextFrame, mainText, fTextGC(), labelfont);
 
-    fTextLabel2 = new TGLabel(fTextFrame, subText, fTextGC, labelfont);
+    fTextLabel2 = new TGLabel(fTextFrame, subText, fTextGC(), labelfont);
     fTextFrame->AddFrame(fTextLabel1, fTextLabelLayout);
     fTextFrame->AddFrame(fTextLabel2, fTextLabelLayout);
 
@@ -97,7 +100,5 @@ GTitleFrame::~GTitleFrame()
 
     delete fLeftLogoLayout;
     delete fRightLogoLayout;
-
-    gVirtualX->DeleteGC(fTextGC);
 }
 

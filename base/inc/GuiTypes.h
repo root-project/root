@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.3 2002/02/27 11:27:47 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.4 2002/06/16 01:21:55 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,6 +39,7 @@ typedef Handle_t           KeySym_t;     //Key symbol handle
 typedef Handle_t           Atom_t;       //WM token
 typedef Handle_t           GContext_t;   //Graphics context handle
 typedef Handle_t           FontStruct_t; //Pointer to font structure
+typedef ULong_t            Pixel_t;      //Pixel value
 typedef UInt_t             Mask_t;       //Structure mask type
 typedef ULong_t            Time_t;       //Event time
 

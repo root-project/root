@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.10 2002/11/15 13:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.11 2002/12/02 18:50:03 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -90,8 +90,6 @@ public:
 
 class TGListTree : public TGContainer {
 
-friend class TGClient;
-
 protected:
    TGListTreeItem  *fFirst;          // pointer to first item in list
    TGListTreeItem  *fSelected;       // pointer to selected item in list
@@ -100,7 +98,7 @@ protected:
    Int_t            fIndent;         // number of pixels indentation
    Int_t            fMargin;         // number of pixels margin from left side
    Int_t            fLastY;          // last used y position
-   ULong_t          fGrayPixel;      // gray draw color
+   Pixel_t          fGrayPixel;      // gray draw color
    GContext_t       fDrawGC;         // icon drawing context
    GContext_t       fLineGC;         // dashed line drawing context
    GContext_t       fHighlightGC;    // highlighted icon drawing context
@@ -113,7 +111,17 @@ protected:
    TGListTreeItem  *fTipItem;        // item for which tooltip is set
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
 
-   static FontStruct_t   fgDefaultFontStruct;
+   static Pixel_t        fgGrayPixel;
+   static const TGFont  *fgDefaultFont;
+   static TGGC          *fgDrawGC;
+   static TGGC          *fgLineGC;
+   static TGGC          *fgHighlightGC;
+
+   static Pixel_t       GetGrayPixel();
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDrawGC();
+   static const TGGC   &GetLineGC();
+   static const TGGC   &GetHighlightGC();
 
    virtual void DoRedraw();
    void  Draw(Int_t yevent, Int_t hevent);
@@ -163,8 +171,8 @@ protected:
 
 public:
    TGListTree(TGWindow *p, UInt_t w, UInt_t h,
-              UInt_t options, ULong_t back = GetWhitePixel());
-   TGListTree(TGCanvas *p, UInt_t options, ULong_t back = GetWhitePixel());
+              UInt_t options, Pixel_t back = GetWhitePixel());
+   TGListTree(TGCanvas *p, UInt_t options, Pixel_t back = GetWhitePixel());
 
    virtual ~TGListTree();
 

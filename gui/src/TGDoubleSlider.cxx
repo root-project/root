@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.4 2001/01/08 11:45:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.5 2001/06/07 11:14:19 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -124,20 +124,20 @@ void TGDoubleVSlider::DoRedraw()
    int relMin = (int)((fHeight-16) * (fSmin - fVmin) / (fVmax - fVmin)) + 1;
    int relMax = (int)((fHeight-16) * (fSmax - fVmin) / (fVmax - fVmin) + 15);
 
-   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth/2-6, relMin, fWidth/2+5, relMin);
-   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth/2-6, relMin, fWidth/2-6, relMax);
-   gVirtualX->DrawLine(fId, fgBlackGC(),   fWidth/2+5, relMax, fWidth/2-6, relMax);
-   gVirtualX->DrawLine(fId, fgBlackGC(),   fWidth/2+5, relMax, fWidth/2+5, relMin);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth/2-6, relMin, fWidth/2+5, relMin);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth/2-6, relMin, fWidth/2-6, relMax);
+   gVirtualX->DrawLine(fId, GetBlackGC()(),   fWidth/2+5, relMax, fWidth/2-6, relMax);
+   gVirtualX->DrawLine(fId, GetBlackGC()(),   fWidth/2+5, relMax, fWidth/2+5, relMin);
 
    if (relMin-1 > 8) {
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth/2-1, 8, fWidth/2-1, relMin-1);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth/2+1, 8, fWidth/2+1, relMin-1);
-      gVirtualX->DrawLine(fId, fgBlackGC(),   fWidth/2,   8, fWidth/2,   relMin-1);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth/2-1, 8, fWidth/2-1, relMin-1);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth/2+1, 8, fWidth/2+1, relMin-1);
+      gVirtualX->DrawLine(fId, GetBlackGC()(),   fWidth/2,   8, fWidth/2,   relMin-1);
    }
    if (relMax+1 < (int)fHeight-8) {
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth/2-1, relMax+1, fWidth/2-1, fHeight-8);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth/2+1, relMax+1, fWidth/2+1, fHeight-8);
-      gVirtualX->DrawLine(fId, fgBlackGC(),   fWidth/2,   relMax+1, fWidth/2,   fHeight-8);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth/2-1, relMax+1, fWidth/2-1, fHeight-8);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth/2+1, relMax+1, fWidth/2+1, fHeight-8);
+      gVirtualX->DrawLine(fId, GetBlackGC()(),   fWidth/2,   relMax+1, fWidth/2,   fHeight-8);
    }
 
    // check scale
@@ -149,9 +149,9 @@ void TGDoubleVSlider::DoRedraw()
       if (lines < 1) lines = 1;
       for (int i = 0; i <= lines; i++) {
          int y = i * fScale + (i * remain) / lines;
-         gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2+8, y+7, fWidth/2+10, y+7);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2+8, y+7, fWidth/2+10, y+7);
          if ((fScaleType && kDoubleScaleBoth))
-            gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2-9, y+7, fWidth/2-11, y+7);
+            gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2-9, y+7, fWidth/2-11, y+7);
       }
    }
 
@@ -159,8 +159,8 @@ void TGDoubleVSlider::DoRedraw()
       // Draw scaling zones.
       int y1 = (relMax - relMin) / 4 + relMin;
       int y2 = (relMax - relMin) / 4 * 3 + relMin;
-      gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2-6, y1, fWidth/2+5, y1);
-      gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2-6, y2, fWidth/2+5, y2);
+      gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2-6, y1, fWidth/2+5, y1);
+      gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2-6, y2, fWidth/2+5, y2);
    }
 }
 
@@ -286,20 +286,20 @@ void TGDoubleHSlider::DoRedraw()
    int relMin = (int)((fWidth-16) * (fSmin - fVmin) / (fVmax - fVmin)) + 1;
    int relMax = (int)((fWidth-16) * (fSmax - fVmin) / (fVmax - fVmin) + 15);
 
-   gVirtualX->DrawLine(fId, fgHilightGC(), relMin, fHeight/2-6, relMin, fHeight/2+5);
-   gVirtualX->DrawLine(fId, fgHilightGC(), relMax, fHeight/2-6, relMin, fHeight/2-6);
-   gVirtualX->DrawLine(fId, fgBlackGC(),   relMax, fHeight/2+5, relMax, fHeight/2-6);
-   gVirtualX->DrawLine(fId, fgBlackGC(),   relMin, fHeight/2+5, relMax, fHeight/2+5);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), relMin, fHeight/2-6, relMin, fHeight/2+5);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), relMax, fHeight/2-6, relMin, fHeight/2-6);
+   gVirtualX->DrawLine(fId, GetBlackGC()(),   relMax, fHeight/2+5, relMax, fHeight/2-6);
+   gVirtualX->DrawLine(fId, GetBlackGC()(),   relMin, fHeight/2+5, relMax, fHeight/2+5);
 
    if (relMin-1 > 8) {
-      gVirtualX->DrawLine(fId, fgShadowGC(),  8, fHeight/2-1, relMin-1, fHeight/2-1);
-      gVirtualX->DrawLine(fId, fgHilightGC(), 8, fHeight/2+1, relMin-1, fHeight/2+1);
-      gVirtualX->DrawLine(fId, fgBlackGC(),   8, fHeight/2,   relMin-1, fHeight/2);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  8, fHeight/2-1, relMin-1, fHeight/2-1);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 8, fHeight/2+1, relMin-1, fHeight/2+1);
+      gVirtualX->DrawLine(fId, GetBlackGC()(),   8, fHeight/2,   relMin-1, fHeight/2);
    }
    if (relMax+1 < (int)fWidth-8) {
-      gVirtualX->DrawLine(fId, fgShadowGC(),  relMax+1, fHeight/2-1, fWidth-8, fHeight/2-1);
-      gVirtualX->DrawLine(fId, fgHilightGC(), relMax+1, fHeight/2+1, fWidth-8, fHeight/2+1);
-      gVirtualX->DrawLine(fId, fgBlackGC(),   relMax+1, fHeight/2,   fWidth-8, fHeight/2);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  relMax+1, fHeight/2-1, fWidth-8, fHeight/2-1);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), relMax+1, fHeight/2+1, fWidth-8, fHeight/2+1);
+      gVirtualX->DrawLine(fId, GetBlackGC()(),   relMax+1, fHeight/2,   fWidth-8, fHeight/2);
    }
 
    if (fScale == 1) fScale++;
@@ -310,9 +310,9 @@ void TGDoubleHSlider::DoRedraw()
       if (lines < 1) lines = 1;
       for (int i = 0; i <= lines; i++) {
          int x = i * fScale + (i * remain) / lines;
-         gVirtualX->DrawLine(fId, fgBlackGC(), x+7, fHeight/2+8, x+7, fHeight/2+10);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), x+7, fHeight/2+8, x+7, fHeight/2+10);
          if ((fScaleType && kDoubleScaleBoth))
-            gVirtualX->DrawLine(fId, fgBlackGC(), x+7, fHeight/2-9, x+7, fHeight/2-11);
+            gVirtualX->DrawLine(fId, GetBlackGC()(), x+7, fHeight/2-9, x+7, fHeight/2-11);
       }
    }
 
@@ -320,8 +320,8 @@ void TGDoubleHSlider::DoRedraw()
       // Draw scaling zones.
       int x1 = (relMax - relMin) / 4 + relMin;
       int x2 = (relMax - relMin) / 4 * 3 + relMin;
-      gVirtualX->DrawLine(fId, fgBlackGC(), x1, fHeight/2-6, x1, fHeight/2+5);
-      gVirtualX->DrawLine(fId, fgBlackGC(), x2, fHeight/2-6, x2, fHeight/2+5);
+      gVirtualX->DrawLine(fId, GetBlackGC()(), x1, fHeight/2-6, x1, fHeight/2+5);
+      gVirtualX->DrawLine(fId, GetBlackGC()(), x2, fHeight/2-6, x2, fHeight/2+5);
    }
 }
 

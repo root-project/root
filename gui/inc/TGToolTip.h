@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.2 2000/09/04 17:51:31 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -35,8 +35,6 @@ class TBox;
 
 class TGToolTip : public TGCompositeFrame {
 
-friend class TGClient;
-
 private:
    TGLabel           *fLabel;   // help text
    TGLayoutHints     *fL1;      // layout used to place text in frame
@@ -46,8 +44,6 @@ private:
    const TBox        *fBox;     // box in pad to which tooltip is associated
    Int_t              fX;       // X position in fWindow where to popup
    Int_t              fY;       // Y position in fWindow where to popup
-
-   static ULong_t fgLightYellowPixel;
 
 public:
    TGToolTip(const TGWindow *p, const TGFrame *f, const char *text, Long_t delayms);

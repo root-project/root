@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.4 2000/07/11 09:29:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.5 2000/07/12 17:58:04 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -120,8 +120,8 @@ public:
    Bool_t  Replace(TGLongPosition start, const char *oldText, const char *newText,
                    Bool_t direction, Bool_t caseSensitive);
 
-   //void    SetLineColor(Long_t row, ULong_t color);
-   //ULong_t GetLineColor(Long_t row) const;
+   //void    SetLineColor(Long_t row, Pixel_t color);
+   //Pixel_t GetLineColor(Long_t row) const;
 
    ClassDef(TGText,0)  // Text used by TGTextEdit
 };

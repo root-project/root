@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.3 2000/12/13 15:13:50 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
    ULong_t     Hash() const { return fName.Hash(); }
 
    virtual void Draw(Handle_t id, GContext_t gc, Int_t x, Int_t y) const;
+   void         Print(Option_t *option="") const;
 
    ClassDef(TGPicture,0)  // Pictures and icons used by the GUI classes
 };
@@ -87,12 +88,11 @@ public:
 
 class TGSelectedPicture : public TGPicture {
 
-friend class TGClient;
-
 protected:
    const TGClient *fClient;    // client to which selected picture belongs
 
-   static TGGC fgSelectedGC;
+   static TGGC *fgSelectedGC;
+   static TGGC &GetSelectedGC();
 
 public:
    TGSelectedPicture(const TGClient *client, const TGPicture *p);
@@ -104,14 +104,10 @@ public:
 
 class TGPicturePool : public TObject {
 
-friend class TGClient;
-
 protected:
    const TGClient    *fClient;    // client for which we keep icon pool
    TString            fPath;      // icon search path
    THashTable        *fPicList;   // hash table containing the icons
-
-   static Colormap_t  fgDefaultColormap;
 
 public:
    TGPicturePool(const TGClient *client, const char *path) {
@@ -125,6 +121,8 @@ public:
    const TGPicture *GetPicture(const char *name);
    const TGPicture *GetPicture(const char *name, UInt_t new_width, UInt_t new_height);
    void             FreePicture(const TGPicture *pic);
+
+   void             Print(Option_t *option="") const;
 
    ClassDef(TGPicturePool,0)  // Picture and icon cache
 };

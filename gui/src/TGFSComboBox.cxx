@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.6 2001/06/22 16:10:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.7 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -34,10 +34,14 @@
 #endif
 
 #include "TGFSComboBox.h"
+#include "TGResourcePool.h"
 #include "TGPicture.h"
 #include "TMath.h"
 #include "TSystem.h"
 
+
+const TGFont *TGTreeLBEntry::fgDefaultFont = 0;
+TGGC         *TGTreeLBEntry::fgDefaultGC = 0;
 
 //--- this is temp here...
 
@@ -137,7 +141,7 @@ void TGTreeLBEntry::DoRedraw()
       if (fSelPic) fSelPic->Draw(fId, fNormGC, ix, iy);
       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
       gVirtualX->FillRectangle(fId, fNormGC, lx, ly, fTWidth, fTHeight+1);
-      gVirtualX->SetForeground(fNormGC, fgSelPixel);
+      gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
    } else {
       fPic->Draw(fId, fNormGC, ix, iy);
       gVirtualX->SetForeground(fNormGC, fgWhitePixel);
@@ -180,11 +184,19 @@ void TGTreeLBEntry::Update(TGLBEntry *e)
 
 //______________________________________________________________________________
 FontStruct_t TGTreeLBEntry::GetDefaultFontStruct()
-{ return fgDefaultFontStruct; }
+{
+   if (!fgDefaultFont)
+      fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   return fgDefaultFont->GetFontStruct();
+}
 
 //______________________________________________________________________________
 const TGGC &TGTreeLBEntry::GetDefaultGC()
-{ return fgDefaultGC; }
+{
+   if (!fgDefaultGC)
+      fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
+   return *fgDefaultGC;
+}
 
 
 //______________________________________________________________________________

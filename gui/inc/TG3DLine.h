@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TG3DLine.h,v 1.1 2000/09/29 08:51:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TG3DLine.h,v 1.2 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TGHorizontal3DLine : public TGFrame {
 public:
    TGHorizontal3DLine(const TGWindow *p, UInt_t w = 4, UInt_t h = 2,
                       UInt_t options = kChildFrame,
-                      ULong_t back = GetDefaultFrameBackground()) :
+                      Pixel_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options, back) { }
 
    virtual void DrawBorder() {
@@ -52,7 +52,7 @@ class TGVertical3DLine : public TGFrame {
 public:
    TGVertical3DLine(const TGWindow *p, UInt_t w = 2, UInt_t h = 4,
                     UInt_t options = kChildFrame,
-                    ULong_t back = GetDefaultFrameBackground()) :
+                    Pixel_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options, back) { }
 
    virtual void DrawBorder() {

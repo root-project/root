@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.1 2002/09/14 00:35:05 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 // Selecting a color in this widget will generate the event:            //
 // kC_COLORSEL, kCOL_SELCHANGED, widget id, pixel.                      //
 // and the signal:                                                      //
-// ColorSelected(ULong_t pixel)                                         //
+// ColorSelected(Pixel_t pixel)                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -50,20 +50,20 @@ class TGColorFrame : public TGFrame {
 
 protected:
    const TGWindow *fMsgWindow;
-   ULong_t         fPixel;
+   Pixel_t         fPixel;
    Bool_t          fActive;
    GContext_t      fGrayGC;
-   ULong_t         fColor;
+   Pixel_t         fColor;
 
 public:
-   TGColorFrame(const TGWindow *p, ULong_t c, Int_t n);
+   TGColorFrame(const TGWindow *p, Pixel_t c, Int_t n);
    virtual ~TGColorFrame() { }
 
    virtual Bool_t  HandleButton(Event_t *event);
    virtual void    DrawBorder();
 
    void     SetActive(Bool_t in) { fActive = in; gClient->NeedRedraw(this); }
-   ULong_t  GetColor() const { return fColor; }
+   Pixel_t  GetColor() const { return fColor; }
 
    ClassDef(TGColorFrame,0)  // Frame for color cell
 };
@@ -97,10 +97,10 @@ protected:
    Int_t            fActive;
    Int_t            fLaunchDialog;
    const TGWindow  *fMsgWindow;
-   ULong_t          fCurrentColor;
+   Pixel_t          fCurrentColor;
 
 public:
-   TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color);
+   TGColorPopup(const TGWindow *p, const TGWindow *m, Pixel_t color);
    virtual ~TGColorPopup();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -117,7 +117,7 @@ public:
 class TGColorSelect : public TGCheckButton {
 
 protected:
-   ULong_t       fColor;
+   Pixel_t       fColor;
    TGGC          fDrawGC;
    TGColorPopup *fColorPopup;
 
@@ -126,20 +126,20 @@ protected:
    void DrawTriangle(GContext_t gc, Int_t x, Int_t y);
 
 public:
-   TGColorSelect(const TGWindow *p, ULong_t color, Int_t id);
+   TGColorSelect(const TGWindow *p, Pixel_t color, Int_t id);
    virtual ~TGColorSelect();
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   void    SetColor(ULong_t color);
-   ULong_t GetColor() const { return fColor; }
+   void    SetColor(Pixel_t color);
+   Pixel_t GetColor() const { return fColor; }
    void    Enable();
    void    Disable();
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
 
-   virtual void ColorSelected() { Emit("ColorSelected(ULong_t)", GetColor()); }  //*SIGNAL*
+   virtual void ColorSelected() { Emit("ColorSelected(Pixel_t)", GetColor()); }  //*SIGNAL*
 
    ClassDef(TGColorSelect,0)  // Color selection checkbutton
 };

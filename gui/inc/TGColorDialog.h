@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.1 2002/09/14 00:35:05 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -25,9 +25,9 @@
 // and a slider to select color's lightness.                            //
 //                                                                      //
 // Selecting a color in these two widgets will generate the event:      //
-// kC_COLORSEL, kCOL_CLICK, widget id, 0.                              //
+// kC_COLORSEL, kCOL_CLICK, widget id, 0.                               //
 // and the signal:                                                      //
-// ColorSelected(ULong_t pixel)                                         //
+// ColorSelected(Pixel_t pixel)                                         //
 //                                                                      //
 // The TGColorDialog presents a full featured color selection dialog.   //
 // It uses 2 TGColorPalette's and the TGColorPick widgets.              //
@@ -57,8 +57,8 @@ protected:
    UInt_t   fCh;           // color cell height
    Int_t    fRows;         // number of color cell rows
    Int_t    fCols;         // number of color cell columns
-   ULong_t *fPixels;       // pixel value of colors
-   TGGC     fDrawGC;       // graphics context used fro drawing
+   Pixel_t *fPixels;       // pixel value of colors
+   TGGC     fDrawGC;       // graphics context used for drawing
 
    virtual void DoRedraw();
    virtual void GotFocus();
@@ -77,16 +77,16 @@ public:
    virtual TGDimension GetDefaultSize() const
             { return TGDimension((fCw + 5) * fCols, (fCh + 5) * fRows); }
 
-   void    SetColors(ULong_t colors[]);
-   void    SetColor(Int_t ix, ULong_t color);
-   void    SetCurrentCellColor(ULong_t color);
+   void    SetColors(Pixel_t colors[]);
+   void    SetColor(Int_t ix, Pixel_t color);
+   void    SetCurrentCellColor(Pixel_t color);
 
    void    SetCellSize(Int_t w = 20, Int_t h = 17);
 
-   ULong_t GetColorByIndex(Int_t ix) const { return fPixels[ix]; }
-   ULong_t GetCurrentColor() const;
+   Pixel_t GetColorByIndex(Int_t ix) const { return fPixels[ix]; }
+   Pixel_t GetCurrentColor() const;
 
-   virtual void ColorSelected()  { Emit("ColorSelected(ULong_t)", GetCurrentColor()); }  //*SIGNAL*
+   virtual void ColorSelected()  { Emit("ColorSelected(Pixel_t)", GetCurrentColor()); }  //*SIGNAL*
 
    ClassDef(TGColorPalette,0)  // Color palette widget
 };
@@ -97,7 +97,7 @@ class TGColorPick : public TGFrame, public TGWidget {
 
 private:
    Int_t    fColormap[64][3];    // colormap
-   ULong_t  fPixel[64];          // pixel values
+   Pixel_t  fPixel[64];          // pixel values
 
 protected:
    Pixmap_t     fHSimage;
@@ -107,7 +107,7 @@ protected:
    Int_t        fCx;
    Int_t        fCy;
    Int_t        fCz;
-   ULong_t      fCurrentColor;
+   Pixel_t      fCurrentColor;
    Rectangle_t  fColormapRect;
    Rectangle_t  fSliderRect;
    TGGC         fCursorGC;
@@ -135,10 +135,10 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
 
-   void     SetColor(ULong_t color);
-   ULong_t  GetCurrentColor() const { return fCurrentColor; }
+   void     SetColor(Pixel_t color);
+   Pixel_t  GetCurrentColor() const { return fCurrentColor; }
 
-   virtual void ColorSelected()  { Emit("ColorSelected(ULong_t)", GetCurrentColor()); }  //*SIGNAL*
+   virtual void ColorSelected()  { Emit("ColorSelected(Pixel_t)", GetCurrentColor()); }  //*SIGNAL*
 
    ClassDef(TGColorPick,0)  // Color picker widget
 };
@@ -148,9 +148,9 @@ public:
 class TGColorDialog : public TGTransientFrame {
 
 protected:
-   ULong_t         fCurrentColor;
+   Pixel_t         fCurrentColor;
    Int_t          *fRetc;
-   ULong_t        *fRetColor;
+   Pixel_t        *fRetColor;
 
    TGColorPalette *fPalette;
    TGColorPalette *fCpalette;
@@ -159,12 +159,12 @@ protected:
    TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte;
    TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb;
 
-   void    UpdateRGBentries(ULong_t *c);
-   void    UpdateHLSentries(ULong_t *c);
+   void    UpdateRGBentries(Pixel_t *c);
+   void    UpdateHLSentries(Pixel_t *c);
 
 public:
    TGColorDialog(const TGWindow *p, const TGWindow *m, Int_t *retc = 0,
-                 ULong_t *color = 0);
+                 Pixel_t *color = 0);
    virtual ~TGColorDialog();
 
    virtual void CloseWindow();

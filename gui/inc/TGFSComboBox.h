@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.3 2000/09/30 11:24:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.4 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -34,8 +34,6 @@ class TGSelectedPicture;
 
 class TGTreeLBEntry : public TGLBEntry {
 
-friend class TGClient;
-
 protected:
    TGString           *fText;        // entry description
    TGString           *fPath;        // entry path
@@ -49,9 +47,8 @@ protected:
 
    virtual void DoRedraw();
 
-   static ULong_t        fgSelPixel;
-   static FontStruct_t   fgDefaultFontStruct;
-   static TGGC           fgDefaultGC;
+   static const TGFont *fgDefaultFont;
+   static TGGC         *fgDefaultGC;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -60,7 +57,7 @@ public:
    TGTreeLBEntry(const TGWindow *p, TGString *text, const TGPicture *pic,
                  Int_t id, TGString *path = 0, GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
-                 UInt_t options = kHorizontalFrame, ULong_t back = GetWhitePixel());
+                 UInt_t options = kHorizontalFrame, Pixel_t back = GetWhitePixel());
    virtual ~TGTreeLBEntry();
 
    const TGString  *GetText() const { return fText; }
@@ -81,7 +78,7 @@ class TGFSComboBox : public TGComboBox {
 public:
    TGFSComboBox(const TGWindow *p, Int_t id,
                 UInt_t options = kHorizontalFrame | kSunkenFrame |
-                kDoubleBorder, ULong_t back = GetWhitePixel());
+                kDoubleBorder, Pixel_t back = GetWhitePixel());
 
    virtual void Update(const char *path);
 

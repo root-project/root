@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.15 2002/11/19 23:37:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.16 2003/05/12 16:44:08 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -60,14 +60,18 @@
 #include "TSystem.h"
 #include "TGTextEditDialogs.h"
 #include "TGMsgBox.h"
+#include "TGResourcePool.h"
 
-ClassImp(TGCanvas)
-ClassImp(TGViewPort)
-ClassImp(TGContainer)
+
+TGGC *TGContainer::fgLineGC = 0;
 
 const Int_t kAutoScrollFudge = 10;
 const Int_t kAcceleration[kAutoScrollFudge+1] = {1,1,1,2,3,4,6,7,8,16,32};
 const Int_t kKeyboardTime = 700;
+
+ClassImp(TGCanvas)
+ClassImp(TGViewPort)
+ClassImp(TGContainer)
 
 //______________________________________________________________________________
 class TGContainerKeyboardTimer : public TTimer {
@@ -311,11 +315,11 @@ void TGContainer::Layout()
 }
 
 //______________________________________________________________________________
-void TGContainer::CurrentChanged(Int_t x,Int_t y)
+void TGContainer::CurrentChanged(Int_t x, Int_t y)
 {
    // Emit signal when current position changed.
 
-   long args[2];
+   Long_t args[2];
 
    args[0] = x;
    args[1] = y;
@@ -328,7 +332,7 @@ void TGContainer::CurrentChanged(TGFrame* f)
 {
    // Emit signal when current selected frame changed.
 
-   Emit("CurrentChanged(TGFrame*)",(long)f);
+   Emit("CurrentChanged(TGFrame*)", (Long_t)f);
 }
 
 //______________________________________________________________________________
@@ -337,7 +341,7 @@ void TGContainer::ReturnPressed(TGFrame* f)
    // Signal emitted when Return/Enter key pressed.
    // It's equivalent to "double click" of mouse button.
 
-   Emit("ReturnPressed(TGFrame*)",(long)f);
+   Emit("ReturnPressed(TGFrame*)", (Long_t)f);
 }
 
 //______________________________________________________________________________
@@ -346,7 +350,7 @@ void TGContainer::SpacePressed(TGFrame* f)
    // Signal emitted when space key pressed.
    // Pressing space key inverts selection.
 
-   Emit("SpacePressed(TGFrame*)",(long)f);
+   Emit("SpacePressed(TGFrame*)", (Long_t)f);
 }
 
 //______________________________________________________________________________
@@ -354,7 +358,7 @@ void TGContainer::OnMouseOver(TGFrame* f)
 {
    // Signal emitted when pointer is over entry.
 
-   if (!fOnMouseOver) Emit("OnMouseOver(TGFrame*)",(long)f);
+   if (!fOnMouseOver) Emit("OnMouseOver(TGFrame*)", (Long_t)f);
    fOnMouseOver = kTRUE;
 }
 
@@ -777,7 +781,7 @@ Bool_t TGContainer::HandleButton(Event_t *event)
          fDragging = kTRUE;
          fX0 = fXf = fXp;
          fY0 = fYf = fYp;
-         if (fMapSubwindows) gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
+         if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
       }
    }
 
@@ -789,7 +793,7 @@ Bool_t TGContainer::HandleButton(Event_t *event)
          fScrolling = kFALSE;
 
          if (gSystem) gSystem->RemoveTimer(fScrollTimer);
-         if (fMapSubwindows) gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
+         if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
       } else {
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                      event->fCode, (event->fYRoot << 16) | event->fXRoot);
@@ -858,7 +862,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
    fOnMouseOver = kFALSE;
 
    if (fDragging) {
-      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
+      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
 
       fX0 =  TMath::Min(fXp,x);
       fY0 =  TMath::Min(fYp,y);
@@ -904,7 +908,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          }
       }
 
-      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
+      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
 
       if (fTotal != total || fSelected != selected) {
          fTotal = total;
@@ -1209,7 +1213,7 @@ void TGContainer::OnAutoScroll()
          }
       }
 
-      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
+      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
 
       if (fTotal != total || fSelected != selected) {
          fTotal = total;
@@ -1649,6 +1653,29 @@ void TGContainer::End(Bool_t select)
 }
 
 //______________________________________________________________________________
+const TGGC &TGContainer::GetLineGC()
+{
+   if (!fgLineGC) {
+      GCValues_t gval;
+      gval.fMask = kGCForeground | kGCBackground | kGCFunction | kGCFillStyle |
+                   kGCLineWidth  | kGCLineStyle  | kGCSubwindowMode |
+                   kGCGraphicsExposures;
+      gval.fForeground = fgWhitePixel ^ fgBlackPixel;
+      gval.fBackground = fgWhitePixel;
+      gval.fFunction   = kGXxor;
+      gval.fLineWidth  = 0;
+      gval.fLineStyle  = kLineOnOffDash;
+      gval.fFillStyle  = kFillSolid;
+      gval.fSubwindowMode = kIncludeInferiors;
+      gval.fGraphicsExposures = kFALSE;
+      fgLineGC = gClient->GetGC(&gval, kTRUE);
+      fgLineGC->SetDashOffset(0);
+      fgLineGC->SetDashList("\x1\x1", 2);
+   }
+   return *fgLineGC;
+}
+
+//______________________________________________________________________________
 TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options, ULong_t back) :
     TGFrame(p, w, h, options, back)
@@ -1712,15 +1739,15 @@ void TGCanvas::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:
