@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.75 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.76 2004/08/03 14:50:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -386,19 +386,19 @@ Int_t TBranch::Fill()
 
          if (basket->GetNevBuf()) {
              // If the basket already contains entry we need to close it
-             // out. (This is because we can only transfer full compressed 
+             // out. (This is because we can only transfer full compressed
              // buffer)
              WriteBasket(basket);
 
              // And restart from scratch
              return Fill();
-         }            
+         }
 
          Int_t startpos = fEntryBuffer->Length();
          fEntryBuffer->SetBufferOffset(0);
          static TBasket toread_fLast;
          fEntryBuffer->SetReadMode();
-         toread_fLast.Streamer(*fEntryBuffer); 
+         toread_fLast.Streamer(*fEntryBuffer);
          fEntryBuffer->SetWriteMode();
          last = toread_fLast.GetLast(); // last now contains the decompressed number of bytes.
          fEntryBuffer->SetBufferOffset(startpos);
@@ -406,7 +406,7 @@ Int_t TBranch::Fill()
          buf->SetBufferOffset(0);
          buf->SetBit(TBasket::kNotDecompressed);
 
-         basket->Update(lold);         
+         basket->Update(lold);
 
       } else {
          // We are required to copy starting at the version number (so not
@@ -422,7 +422,7 @@ Int_t TBranch::Fill()
          }
          if ( tag == kNewClassTag ) {
             char s[80];
-           
+
             fEntryBuffer->ReadString(s, 80);
          } else {
             fEntryBuffer->SetBufferOffset(objectStart);
@@ -450,11 +450,11 @@ Int_t TBranch::Fill()
       buf->WriteBuf( fEntryBuffer->Buffer() + objectStart , len );
 
       if ( fEntryBuffer->TestBit(TBasket::kNotDecompressed) ) {
-         // The original buffer came pre-compressed and thus the buffer Length 
+         // The original buffer came pre-compressed and thus the buffer Length
          // does not really show the really object size
          // lnew = nbytes = basket->GetLast();
          lnew = nbytes = last;
- 
+
       } else {
          lnew   = buf->Length();
          nbytes = lnew - lold;
@@ -483,7 +483,7 @@ Int_t TBranch::Fill()
 //*-*- Should we create a new basket?
    if ( (fSkipZip && (lnew>=TBuffer::kMinimalSize))  // fSkipZip force one entry per buffer
         || (buf->TestBit(TBasket::kNotDecompressed)) // Transfer full compressed buffer only
-        || (lnew +2*nsize +nbytes >= fBasketSize) ) { 
+        || (lnew +2*nsize +nbytes >= fBasketSize) ) {
       Int_t nout  = basket->WriteBuffer();    //  Write buffer
       fBasketBytes[fWriteBasket]  = basket->GetNbytes();
       fBasketSeek[fWriteBasket]   = basket->GetSeekKey();
@@ -504,7 +504,7 @@ Int_t TBranch::Fill()
            // and a maximum of 50 per cent of current size
          Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
          fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
-         fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry, 
+         fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry,
                              newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
          fBasketSeek   = (Long64_t*)TStorage::ReAlloc(fBasketSeek,
                              newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
@@ -816,7 +816,9 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/,
 //______________________________________________________________________________
 TFile *TBranch::GetFile(Int_t mode)
 {
-//  Return pointer to the file where branch buffers reside
+   // Return pointer to the file where branch buffers reside, returns 0
+   // in case branch buffers reside in the same file as tree header.
+   // If mode is 1 the branch buffer file is recreated.
 
    if (fDirectory) return fDirectory->GetFile();
 
@@ -832,9 +834,9 @@ TFile *TBranch::GetFile(Int_t mode)
    TString bFileName = fFileName;
 
    // check if branch file name is absolute or a URL (e.g. /castor/...,
-   // root://host/...)
+   // root://host/..., rfio:/path/...)
    char *bname = gSystem->ExpandPathName(fFileName.Data());
-   if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, "://")) {
+   if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, ":/")) {
 
       // if not, get filename where tree header is stored
       const char *tfn = fTree->GetCurrentFile()->GetName();
@@ -842,7 +844,7 @@ TFile *TBranch::GetFile(Int_t mode)
       // if this is an absolute path or a URL then prepend this path
       // to the branch file name
       char *tname = gSystem->ExpandPathName(tfn);
-      if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, "://")) {
+      if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, ":/")) {
          bFileName = gSystem->DirName(tname);
          bFileName += "/";
          bFileName += fFileName;
@@ -959,7 +961,7 @@ Bool_t TBranch::IsFolder() const
 void TBranch::KeepCircular(Long64_t maxEntries)
 {
    // keep a maximum of fMaxEntries in memory
-   
+
    Int_t dentries = (Int_t)(fEntries - maxEntries);
    Int_t nbaskets = fBaskets.GetEntriesFast();
    Int_t i, ndrop = -1;
@@ -971,7 +973,7 @@ void TBranch::KeepCircular(Long64_t maxEntries)
          basket = (TBasket*)fBaskets.UncheckedAt(i);
          basket->MoveEntries(-fBasketEntry[i]);
          if (!i) fBasketEntry[i] = 0;
-      }      
+      }
    }
    if (ndrop > 0) {
       for (i=0;i<ndrop;i++) {
@@ -1092,7 +1094,7 @@ void TBranch::Refresh(TBranch *b)
 {
 //  refresh this branch using new information in b
 //  This function is called by TTree::Refresh
-   
+
    fEntryOffsetLen = b->fEntryOffsetLen;
    fWriteBasket    = b->fWriteBasket;
    fEntryNumber    = b->fEntryNumber;
@@ -1124,7 +1126,7 @@ void TBranch::Refresh(TBranch *b)
    b->fBaskets.RemoveAt(fWriteBasket);
    basket->SetBranch(this);
 }
-   
+
 //______________________________________________________________________________
 void TBranch::Reset(Option_t *)
 {
@@ -1338,7 +1340,7 @@ void TBranch::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 9) {
          TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
-         
+
          fDirectory = gDirectory;
          if (fFileName.Length() != 0) fDirectory = 0;
          fNleaves = fLeaves.GetEntriesFast();
@@ -1485,7 +1487,7 @@ void TBranch::WriteBasket(TBasket* basket)
       // and a maximum of 50 per cent of current size
       Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
       fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
-      fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry, 
+      fBasketEntry  = (Long64_t*)TStorage::ReAlloc(fBasketEntry,
                           newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
       fBasketSeek   = (Long64_t*)TStorage::ReAlloc(fBasketSeek,
                           newsize*sizeof(Long64_t),fMaxBaskets*sizeof(Long64_t));
