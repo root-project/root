@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.18 2001/10/05 07:01:49 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.19 2001/10/06 06:19:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,6 +52,10 @@ public:
 
 
 protected:
+  
+  friend class RooAddGenContext ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
+				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
   mutable RooAICRegistry _codeReg ;  // Registry of component analytical integration codes
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.4 2001/09/27 18:22:29 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.5 2001/10/04 01:44:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -24,6 +24,7 @@ class Roo1DTable ;
 class RooPlot;
 class RooFitContext ;
 class RooHistArray ;
+class RooArgSet ;
 
 class RooDataHist : public RooTreeData {
 public:
@@ -32,6 +33,7 @@ public:
   RooDataHist() ; 
   RooDataHist(const char *name, const char *title, const RooArgSet& vars) ;
   RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data) ;
+  RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist) ;
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
   virtual ~RooDataHist() ;
@@ -48,7 +50,7 @@ public:
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize) ;
 
   virtual Double_t weight() const { return _curWeight ; }
-  Double_t weight(const RooArgSet& bin) ; 
+  Double_t weight(const RooArgSet& bin, Int_t intOrder=1) ; 
 
   virtual void reset() ;
   void dump2() ;
@@ -59,13 +61,16 @@ protected:
   RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 	      const RooFormulaVar* cutVar, Bool_t copyCache) ;
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
+  Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder) ;
 
 
   Int_t calcTreeIndex() const ;
 
-  Int_t     _arrSize ; //  Size of the weight array
-  Int_t*    _idxMult ; //! Multiplier jump table for index calculation
-  Double_t*     _wgt ; //[_arrSize]  Weight array
+  Int_t       _arrSize ; //  Size of the weight array
+  Int_t*      _idxMult ; //! Multiplier jump table for index calculation
+  Double_t*       _wgt ; //[_arrSize]  Weight array
+  RooArgSet  _realVars ; // Real dimensions of the dataset 
+  TIterator* _realIter ; //! Iterator over realVars
 
   mutable Double_t _curWeight ; // Weight associated with the current coordinate
 

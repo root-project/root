@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.14 2001/10/06 06:19:53 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.15 2001/10/08 05:20:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,6 +36,7 @@
 #include "TIterator.h"
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooProdGenContext.hh"
 
 ClassImp(RooProdPdf)
 ;
@@ -299,4 +300,9 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
   return value ;
 }
 
+
+RooAbsGenContext* RooProdPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, Bool_t verbose) const 
+{
+  return new RooProdGenContext(*this,vars,prototype,verbose) ;
+}
 

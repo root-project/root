@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooHistPdf.cc,v 1.1 2001/09/27 18:22:29 verkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.2 2001/10/08 05:20:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -23,11 +23,13 @@ ClassImp(RooHistPdf)
 ;
 
 
-RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist) :
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars, 
+		       const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title), 
   _dataHist((RooDataHist*)&dhist), 
   _depList("depList","List of dependents",this),
-  _codeReg(10)
+  _codeReg(10),
+  _intOrder(intOrder)
 {
   // Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
   // PDF. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
@@ -60,7 +62,8 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _dataHist(other._dataHist),
   _depList("depList",this,other._depList),
-  _codeReg(other._codeReg)
+  _codeReg(other._codeReg),
+  _intOrder(other._intOrder)
 {
   // Copy constructor
 }
@@ -70,7 +73,7 @@ Double_t RooHistPdf::evaluate() const
 {
   // Return the current value: The value of the bin enclosing the current coordinates
   // of the dependents, normalized by the histograms contents
-  return _dataHist->weight(_depList) ;
+  return _dataHist->weight(_depList,_intOrder) ;
 }
 
 

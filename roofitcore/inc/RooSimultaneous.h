@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.13 2001/10/06 06:19:53 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.14 2001/10/08 05:20:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -58,6 +58,10 @@ public:
 			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, const RooArgSet* projSet=0) const;
   
 protected:
+
+  friend class RooSimGenContext ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
+				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
   mutable RooAICRegistry _codeReg ;  // Auxiliary class keeping tracking of composite analytical integration codes
  

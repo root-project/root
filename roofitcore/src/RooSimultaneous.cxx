@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.16 2001/10/06 06:19:53 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.17 2001/10/08 05:20:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -34,6 +34,7 @@
 #include "RooFitCore/RooAddPdf.hh"
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/Roo1DTable.hh"
+#include "RooFitCore/RooSimGenContext.hh"
 
 ClassImp(RooSimultaneous)
 ;
@@ -434,3 +435,11 @@ RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const Ro
   return frame2 ;
   
 }
+
+
+RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, 
+					const RooDataSet *prototype, Bool_t verbose) const 
+{
+  return new RooSimGenContext(*this,vars,prototype,verbose) ;
+}
+

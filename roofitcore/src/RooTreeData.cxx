@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.11 2001/10/08 05:20:23 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.12 2001/10/11 01:28:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -532,15 +532,12 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   }
 
   // Clone current tree
-  RooTreeData* cloneData = (RooTreeData*) Clone() ; //new RooTreeData(*this) ;  
+  RooTreeData* cloneData = (RooTreeData*) Clone() ; 
 
   // Clone variable and attach to cloned tree 
   RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(newVar).snapshot() ;  
   RooAbsArg* newVarClone = newVarCloneList->find(newVar.GetName()) ;
   newVarClone->recursiveRedirectServers(cloneData->_vars,kFALSE) ;
-
-//   RooAbsArg* newVarClone = (RooAbsArg*) newVar.Clone() ;
-//   newVarClone->redirectServers(cloneData->_vars,kFALSE) ;
 
   // Attach value place holder to this tree
   ((RooAbsArg*)valHolder)->attachToTree(*_tree) ;

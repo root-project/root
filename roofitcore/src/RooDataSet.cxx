@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.51 2001/10/08 05:20:14 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.52 2001/10/11 01:28:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -183,6 +183,91 @@ void RooDataSet::add(const RooArgSet& data, Double_t weight)
   _vars= data;
   Fill();
 }
+
+
+Bool_t RooDataSet::merge(RooDataSet* data1, RooDataSet* data2, RooDataSet* data3, 
+			 RooDataSet* data4, RooDataSet* data5, RooDataSet* data6) 
+{
+  // Merge columns of supplied data set(s) with this data set.
+  // All data sets must have equal number of entries.
+  // In case of duplicate columns the column of the last dataset in the list prevails
+
+  TList dsetList ;
+  dsetList.Add(data1) ;
+  if (data2) {
+    dsetList.Add(data2) ;
+    if (data3) {
+      dsetList.Add(data3) ;
+      if (data4) {
+	dsetList.Add(data4) ;
+	if (data5) {
+	  dsetList.Add(data5) ;
+	  if (data6) {
+	    dsetList.Add(data6) ;
+	  }
+	}
+      }
+    }
+  }
+
+  return merge(dsetList) ;
+}
+
+
+
+Bool_t RooDataSet::merge(const TList& dsetList) 
+{
+  // Merge columns of supplied data set(s) with this data set.
+  // All data sets must have equal number of entries.
+  // In case of duplicate columns the column of the last dataset in the list prevails
+  
+  TIterator* iter = dsetList.MakeIterator() ;
+  RooDataSet* data ;
+
+  // Sanity checks: data sets must have the same size
+  while(data=(RooDataSet*)iter->Next()) {
+    if (numEntries()!=data->numEntries()) {
+      cout << "RooDataSet::merge(" << GetName() << " ERROR: datasets have different size" << endl ;
+      delete iter ;
+      return kTRUE ;    
+    }
+  }
+
+  // Clone current tree
+  RooTreeData* cloneData = (RooTreeData*) Clone() ; 
+
+  // Extend vars with elements of other dataset
+  iter->Reset() ;
+  while(data=(RooDataSet*)iter->Next()) {
+    data->_iterator->Reset() ;
+    RooAbsArg* arg ;
+    while (arg=(RooAbsArg*)data->_iterator->Next()) {
+      RooAbsArg* clone = _vars.addClone(*arg,kTRUE) ;
+      if (clone) clone->attachToTree(*_tree) ;
+    }
+  }
+	   
+  // Refill current data set with data of clone and other data set
+  Reset() ;
+  for (int i=0 ; i<cloneData->numEntries() ; i++) {
+    
+    // Copy variables from self
+    _vars = *cloneData->get(i) ;    
+
+    // Copy variables from merge sets
+    iter->Reset() ;
+    while(data=(RooDataSet*)iter->Next()) {
+      _vars = *data->get(i) ;
+    }
+
+    Fill() ;
+  }
+  
+  delete cloneData ;
+  delete iter ;
+  return kFALSE ;
+}
+
 
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.37 2001/10/10 00:22:23 david Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.38 2001/10/10 17:59:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,7 +22,7 @@
 class RooDataSet;
 class RooArgSet ;
 class RooRealProxy ;
-class RooGenContext ;
+class RooAbsGenContext ;
 class RooFitResult ;
 class RooExtendPdf ;
 class TPaveText;
@@ -93,6 +93,13 @@ private:
   RooAbsPdf(const RooAbsPdf& other);
 
 protected:
+
+  friend class RooAddGenContext ;
+  friend class RooProdGenContext ;
+  friend class RooSimGenContext ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
+				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
+
 
   friend class RooExtendPdf ;
   friend class RooCutNorm ;

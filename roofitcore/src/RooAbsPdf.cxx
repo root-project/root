@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.46 2001/10/10 00:22:22 david Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.47 2001/10/10 17:59:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -577,6 +577,12 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
   }
 }
 
+RooAbsGenContext* RooAbsPdf::genContext(const RooArgSet &vars, 
+					const RooDataSet *prototype, Bool_t verbose) const 
+{
+  return new RooGenContext(*this,vars,prototype,verbose) ;
+}
+
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose) const {
   // Generate a new dataset containing the specified variables with
   // events sampled from our distribution. Generate the specified
@@ -587,7 +593,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
   // dataset.
 
   RooDataSet *generated(0);
-  RooGenContext *context= new RooGenContext(*this, whatVars,0,verbose);
+  RooAbsGenContext *context= genContext(whatVars,0,verbose);
   if(0 != context && context->isValid()) {
     generated= context->generate(nEvents);
   }
@@ -614,7 +620,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   // returned dataset.
 
   RooDataSet *generated(0);
-  RooGenContext *context= new RooGenContext(*this, whatVars,&prototype,verbose);
+  RooAbsGenContext *context= genContext(whatVars,&prototype,verbose);
   if(0 != context && context->isValid()) {
     generated= context->generate(nEvents);
   }

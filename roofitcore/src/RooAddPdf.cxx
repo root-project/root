@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.19 2001/10/08 05:20:13 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.20 2001/10/09 00:44:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,6 +48,7 @@
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooAddGenContext.hh"
 
 ClassImp(RooAddPdf)
 ;
@@ -551,3 +552,10 @@ RooPlot* RooAddPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_
 
   return frame2 ;
 }
+
+
+RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, Bool_t verbose) const 
+{
+  return new RooAddGenContext(*this,vars,prototype,verbose) ;
+}
+

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.33 2001/10/03 21:54:00 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.34 2001/10/11 01:28:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,7 +52,8 @@ public:
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1.0);
   void append(RooDataSet& data) ;
-
+  Bool_t merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0, 
+	       RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;
 
   // Plot the distribution of a real valued arg
   TH2F* createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, const char* cuts="", 
@@ -61,6 +62,9 @@ public:
                         const char* cuts="", const char *name="hist") const;
 
 protected:
+
+  friend class RooProdGenContext ;
+  Bool_t merge(const TList& data) ;
 
   // Cache copy feature is not publicly accessible
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;

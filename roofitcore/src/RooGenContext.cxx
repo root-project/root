@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.17 2001/10/08 05:20:15 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.18 2001/10/10 00:22:23 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,12 +28,12 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.17 2001/10/08 05:20:15 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.18 2001/10/10 00:22:23 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
-			     const RooDataSet *prototype, Bool_t verbose) :
-  TNamed(model), _origVars(&vars), _prototype(prototype), _cloneSet(0), _pdfClone(0),
-  _acceptRejectFunc(0), _generator(0), _verbose(verbose)
+			     const RooDataSet *prototype, Bool_t verbose) :  
+  RooAbsGenContext(model,verbose), _origVars(&vars), _prototype(prototype), 
+  _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0)
 {
   // Initialize a new context for generating events with the specified
   // variables, using the specified PDF model. A prototype dataset (if provided)
