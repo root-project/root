@@ -1480,6 +1480,11 @@ char* temp;
      *   extern "C" {
      *   #endif
      *****************************/
+    /******************************
+     *   #ifdef __cplusplus
+     *   extern "C" { ... }
+     *   #endif
+     *****************************/
     
     G__var_type='p';
     if('{'!=cin) cin = G__fgetspace();
@@ -1495,7 +1500,11 @@ char* temp;
       cin = G__fgetstream(temp,"{\r\n");
 
       if(0!=temp[0] || '{'!=cin)  goto goback;
-      G__fignoreline();
+      cin = G__fgetstream(temp,"\n\r");
+      if (cin=='}' && 0==strcmp(fname,"C")) {
+        goto goback;
+      }
+
       cin = G__fgetstream(temp,"#\n\r");
       if('#'!=cin) goto goback;
       cin = G__fgetstream(temp,"\n\r");
