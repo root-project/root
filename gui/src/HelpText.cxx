@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.6 2003/02/14 21:24:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.7 2004/01/08 15:15:33 rdm Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
@@ -139,11 +139,20 @@ to c1 itself.\n\n\
 
 
 const char gHelpGraphicsEditor[] = "\
-ROOT has a simple built-in graphics editor to draw and edit basic primitives\n\
-starting from an empty canvas or on top of a picture (eg. histogram).\n\
-The editor is started by selecting the \"Editor\" item in the\n\
-canvas \"Edit\" menu. A menu appears into an independent window.\n\
-You can create the following graphics objects:\n\
+The pad editor can be toggled by selecting the \"Editor\" item in the\n\
+canvas \"View\" menu. It appears on the left side of the canvas window.\n\
+You can edit the attributes of the selected object via the provided GUI widgets\n\
+in the editor frame. The selected object name is displayed in the pad editor\n\
+with a set of options available for interactive changing:\n\
+ - fill attributes: style and foreground color\n\
+ - line attributes: style, width and color\n\
+ - text attributes: font, size, align and color\n\
+ - marker attributesr: color, style and size\n\
+ - a set of axis attributes\n\n\
+The buttons for primitive drawing are placed in the tool bar that can be\n\
+toggled by selecting the \"Toolbar\" item in the canvas \"View\" menu.\n\
+All picture buttons provide tool tips for helping you. Using them\n\
+you can create as before the following graphics objects:\n\
  -An arc of circle. Click on the center of the arc, then move the mouse.\n\
   A rubberband circle is shown. Click again with the left button to freeze\n\
   the arc.\n\n\
@@ -151,7 +160,7 @@ You can create the following graphics objects:\n\
  -An arrow. Click with the left button at the point where you want to start\n\
   the arrow, then move the mouse and click again with the left button\n\
   to freeze the arrow.\n\n\
- ->A Diamond. Click with the left button and freeze again with the left button.\n\
+ -A Diamond. Click with the left button and freeze again with the left button.\n\
    The editor draws a rubber band box to suggest the outline of the diamond.\n\n\
  -An Ellipse. Proceed like for an arc.\n\
   You can grow/shrink the ellipse by pointing to the sensitive points.\n\
@@ -185,7 +194,7 @@ You can create the following graphics objects:\n\
   top-third part of the string, then move the mouse up or down to grow or \n\
   shrink the text respectively. If you position near the bottom-end of the text,\n\
   you can rotate it.\n\n\
- - A Marker. Click with the left button where to place the marker.\n\
+ -A Marker. Click with the left button where to place the marker.\n\
   The marker by default can be modified by gStyle->SetMarkerStyle().\n\n\
  -A Graphical Cut. Click with the left button on each point of a polygone\n\
   delimiting the selected area. Close the cut by clicking twice at the\n\
@@ -196,40 +205,60 @@ You can create the following graphics objects:\n\
 
 
 const char gHelpPullDownMenus[] = "\
-Each canvas has a toolbar menu with the following items:\n\
-  \"File\" with the items:\n\
-     <Save as Canvas.C>    generates a C++ macro to reproduce the canvas\n\
-     <save as Canvas.ps>   makes a Postscript file\n\
-     <save as Canvas.eps>  makes a Postscript encapsulated file\n\
-     <save as Canvas.svg>  makes a SVG file\n\
-     <save as Canvas.gif>  makes a GIF file\n\
-     <save as Canvas.root> saves canvas objects in a Root file\n\n\
-  \"Edit\" with the items:\n\
-     <Editor>  invokes the graphics editor (see below).\n\
-     <Clear Pad>  clears the last selected pad (using middle mouse button)\n\
-     <Clear canvas> clears this canvas.\n\n\
-  \"View\" with the items:\n\
-     <Colors>  creates a new canvas showing the color palette.\n\
-     <Markers> creates a new canvas showing the various marker styles.\n\
-     <View with X3D>  If the last selected pad contains a 3-d structure,\n\
-                     a new canvas is created. To get help menu, type M.\n\
-                     The 3-d picture can be interactively rotated, zoomed\n\
-                     in wireframe, solid, hidden line or stereo mode.\n\
-     <View with OpenGL>  If the last selected pad contains a 3-d structure,\n\
-                     a new canvas is created. See OpenGL canvas help.\n\
-                     The 3-d picture can be interactively rotated, zoomed\n\
-                     in wireframe, solid, hidden line or stereo mode.\n\n\
-   \"Options\" with the items:\n"
-"      <Event Status> toggles the identification of the objects when\n\
-                     moving the mouse.\n\
-      <Statistics>   toggles the display of the histogram statistics box.\n\
-      <Histo Title>  toggles the display of the histogram title.\n\
-      <Fit Params>   toggles the display of the histogram/graph fit parameters.\n\
+Each canvas has a menu bar with the following items:\n\
+\"File\" with the items:\n\
+     <New Canvas  >   opens a new canvas window\n\
+     <Open...     >   brings up the Open dialog\n\
+     <Close Canvas>   closes the canvas window\n\
+     <Save        >   pops up a cascade menu so that you can save the canvas \n\
+                      under its current name in the following formats:\n\
+        <name.ps  >   makes a Postscript file\n\
+        <name.eps >   makes a Postscript encapsulated file\n\
+        <name.pdf >   makes a PDF file\n\
+        <name.svg >   makes a SVG file\n\
+        <name.gif >   makes a GIF file\n\
+        <name.C   >   generates a C++ macro to reproduce the canvas\n\
+        <name.root>   saves canvas objects in a Root file\n\
+     <Save As...  >   brings up the Save As... dialog\n\
+     <Print       >   prints the canvas as a Postscript file canvas_name.ps\n\
+     <Quit ROOT   >   stops running the ROOT\n\n\
+\"Edit\" with the items:\n\
+     <Cut  >          not implemented\n\
+     <Copy >          not implemented\n\
+     <Paste>          not implemented\n\
+     <Clear>          pops up a cascaded menu with the items:\n\
+           <Pad   >   clears the last selected pad via middle mouse button)\n\
+           <Canvas>   clears this canvas.\n\
+     <Undo >          not implemented\n\
+     <Redo >          not implemented\n\n\
+\"View\" with the items:\n\
+     <Editor      >   toggles the pad editor\n\
+     <Toolbar     >   toggles the tool bar\n\
+     <Event Status>   toggles the event status bar that shows the identification\n\
+                      of the objects when moving the mouse\n\
+     <Colors      >   creates a new canvas showing the color palette\n\
+     <Fonts       >   not implemented\n\
+     <Markers     >   creates a new canvas showing the various marker styles\n\
+     <View With   >   pops up a cascaded menu with the items:\n\
+           <X3D   >   If the last selected pad contains a 3-d structure,\n\
+                      a new canvas is created. To get help menu, type M.\n\
+                      The 3-d picture can be interactively rotated, zoomed\n\
+                      in wireframe, solid, hidden line or stereo mode.\n\
+           <OpenGL>   If the last selected pad contains a 3-d structure,\n\
+                      a new canvas is created. See OpenGL canvas help.\n\
+                      The 3-d picture can be interactively rotated, zoomed\n\
+                      in wireframe, solid, hidden line or stereo mode.\n\n\
+\"Options\" with the items:\n"
+"      <Event Status>  toggles the identification of the objects when\n\
+                      moving the mouse.\n\
+      <Statistics>    toggles the display of the histogram statistics box.\n\
+      <Histo Title>   toggles the display of the histogram title.\n\
+      <Fit Params>    toggles the display of the histogram/graph fit parameters.\n\
       <Can Edit Histograms>   enables/disables the possibility to edit\n\
-                             histogram bin contents.\n\
-   \"Inspector\" with the items:\n\
-      <ROOT>   Inspects the top level gROOT object (in a new canvas).\n\
-      <Start Browser> Starts a new object browser (see below).\n\n\
+                              histogram bin contents.\n\
+\"Inspector\" with the items:\n\
+      <ROOT         >  Inspects the top level gROOT object (in a new canvas).\n\
+      <Start Browser>  Starts a new object browser (see below).\n\n\
 In addition to the tool bar menus, one can set the canvas properties\n\
 by clicking with the right mouse button in the regions closed to the canvas \n\
 borders. This will display a menu to perform operations on a canvas.\n\n\
