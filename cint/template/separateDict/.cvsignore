@@ -1,0 +1,2 @@
+ *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
+ *Dict* 
