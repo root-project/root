@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.57 2001/04/19 13:09:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.58 2001/04/19 13:54:51 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1129,7 +1129,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i) const
       case kObjectp: {
                       TObject **obj = (TObject**)(pointer+fOffset[i]);
                       TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
-                      printf("(%s*)%x",el->GetClass()->GetName(),(Seek_t)(*obj));
+                      printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
                       break;
                      }
 
@@ -1137,7 +1137,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i) const
       case kObjectP: { 
                       TObject **obj = (TObject**)(pointer+fOffset[i]);
                       TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
-                      printf("(%s*)%x",el->GetClass()->GetName(),(Seek_t)(*obj));
+                      printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
                       break;
                      }
 
@@ -1288,7 +1288,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kObjectp: {
                       TObject **obj = (TObject**)(pointer+fOffset[i]);
                       TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
-                      printf("(%s*)%x",el->GetClass()->GetName(),(Seek_t)(*obj));
+                      printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
                       break;
                      }
 
@@ -1296,7 +1296,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kObjectP: { 
                       TObject **obj = (TObject**)(pointer+fOffset[i]);
                       TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
-                      printf("(%s*)%x",el->GetClass()->GetName(),(Seek_t)(*obj));
+                      printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
                       break;
                      }
 
@@ -1547,7 +1547,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
       TStreamerElement *element = (TStreamerElement*)fElem[i];
 //#ifdef DEBUG
       if (gDebug > 1) {
-         printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%x, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),(Seek_t)pointer, fOffset[i]);
+         printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%lx, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),(Long_t)pointer, fOffset[i]);
       }
 //#endif
       switch (fType[i]) {
@@ -2279,7 +2279,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
    for (Int_t i=first;i<last;i++) {
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
-         printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%x, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),(Seek_t)pointer,fOffset[i]);
+         printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%lx, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),(Long_t)pointer,fOffset[i]);
       }
       switch (fType[i]) {
          // write basic types
