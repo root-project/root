@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.16 2004/03/09 14:34:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.17 2004/04/11 21:35:34 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -236,6 +236,8 @@ void TGComboBox::Select(Int_t id)
    if (e) {
       fSelEntry->Update(e);
       Layout();
+      Selected(fWidgetId, id);
+      Selected(id);
    }
 }
 
