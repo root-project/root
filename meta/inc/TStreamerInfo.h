@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.8 2000/12/18 07:12:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.9 2001/01/15 07:37:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -48,15 +48,20 @@ private:
    Int_t            *fLength;         //![fNdata]
    ULong_t          *fElem;           //![fNdata]
    ULong_t          *fMethod;         //![fNdata]
+   Bool_t            fOptimized;      //! true if has been optimized
    TClass           *fClass;          //!pointer to class
    TObjArray        *fElements;       //Array of TStreamerElements
    
    static  Int_t     fgCount;         //Number of TStreamerInfo instances
-
+   static  Bool_t    fgOptimize;      //True if optimization on
+   
    void              BuildUserInfo(const char *info);
    void              Compile();
            
 public:
+
+   //status bits
+   enum {kBypassStreamer = BIT(14)};
 
    enum EReadWrite {
       kBase   =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,
@@ -74,6 +79,7 @@ public:
    void                Build();
    void                BuildCheck();
    void                BuildOld();
+   Bool_t              CanBypassStreamer() { return TestBit(kBypassStreamer);}
    Int_t               GenerateHeaderFile(const char *dirname);
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
@@ -81,14 +87,21 @@ public:
    Int_t               GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) const;
    TObjArray          *GetElements() const {return fElements;}
    Int_t               GetNumber() const {return fNumber;}
+   Int_t              *GetLengths() const {return fLength;}
+   ULong_t            *GetMethods() const {return fMethod;}
+   Int_t              *GetOffsets() const {return fOffset;}
+   Int_t              *GetTypes()   const {return fType;}
+   Bool_t              IsOptimized() const {return fOptimized;}
    void                ls(Option_t *option="") const;
    Int_t               ReadBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
+   void                SetClass(TClass *cl) {fClass = cl;}
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
    
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
-   
+   static void         Optimize(Bool_t opt=kTRUE) {fgOptimize = opt;}
+    
    ClassDef(TStreamerInfo,1)  //Streamer information for one class version
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.25 2001/01/13 17:57:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.26 2001/01/15 07:35:44 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TArrayC.h"
 
 Int_t   TStreamerInfo::fgCount = 0;
+Bool_t  TStreamerInfo::fgOptimize = kTRUE;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
@@ -50,6 +51,7 @@ TStreamerInfo::TStreamerInfo()
    fCheckSum = 0;
    fNdata    = 0;
    fClassVersion = 0;
+   fOptimized = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -70,6 +72,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
    fMethod   = 0;
    fCheckSum = 0;
    fNdata    = 0;
+   fOptimized = kFALSE;
    fClassVersion = fClass->GetClassVersion();
 
    if (info) BuildUserInfo(info);
@@ -104,6 +107,8 @@ void TStreamerInfo::Build()
    TStreamerElement::Class()->IgnoreTObjectStreamer();
 
    fClass->BuildRealData();
+   
+   if (fClass->CanBypassStreamer()) SetBit(kBypassStreamer);
 
    fCheckSum = fClass->GetCheckSum();
    Int_t i, ndim, offset;
@@ -144,18 +149,18 @@ void TStreamerInfo::Build()
          if (lbracket && rbracket) {
             refcount = (TRealData*)fClass->GetListOfRealData()->FindObject(dm->GetArrayIndex());
             if (!refcount) {
-               Error("Build","discarded1 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               Error("Build","discarded1 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
                continue;
             }
             dmref = refcount->GetDataMember();
             TDataType *reftype = dmref->GetDataType();
             if (!reftype || reftype->GetType() != 3) {
-               Error("Build","discarded2 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               Error("Build","discarded2 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
                continue;
             }
             TStreamerBasicType *bt = TStreamerInfo::GetElementCounter(dm->GetArrayIndex(),dmref->GetClass(),dmref->GetClass()->GetClassVersion());
             if (!bt) {
-               Error("Build","discarded3 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               Error("Build","discarded3 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
                continue;
             }
          }
@@ -174,19 +179,19 @@ void TStreamerInfo::Build()
                                                    dm->GetArrayIndex(),
                                                    dmref->GetClass()->GetName(),
                                                    dmref->GetClass()->GetClassVersion(),
-                                                   dm->GetTypeName());
+                                                   dm->GetFullTypeName());
                for (i=0;i<ndim;i++) element->SetMaxIndex(i,dm->GetMaxIndex(i));
                element->SetArrayDim(ndim);
                element->SetSize(dsize);
                fElements->Add(element);
                continue;
             } else {
-               Error("Build","discarded4 pointer to basic type:%s,member:%s, offset=%d, no [dimension]\n",dm->GetTypeName(),dm->GetName(),offset);
+               Error("Build","discarded4 pointer to basic type:%s,member:%s, offset=%d, no [dimension]\n",dm->GetFullTypeName(),dm->GetName(),offset);
                continue;
             }
          }
          // data member is a basic type
-         element = new TStreamerBasicType(dm->GetName(),dm->GetTitle(),offset,dtype,dm->GetTypeName());
+         element = new TStreamerBasicType(dm->GetName(),dm->GetTitle(),offset,dtype,dm->GetFullTypeName());
          Int_t ndim = dm->GetArrayDim();
          for (i=0;i<ndim;i++) element->SetMaxIndex(i,dm->GetMaxIndex(i));
          element->SetArrayDim(ndim);
@@ -199,7 +204,7 @@ void TStreamerInfo::Build()
          if (!clm) {
             // try STL container or string
             if (strcmp(dm->GetTypeName(),"string") == 0) {
-               TStreamerSTLstring *stls = new TStreamerSTLstring(dm->GetName(),dm->GetTitle(),offset);
+               TStreamerSTLstring *stls = new TStreamerSTLstring(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
                fElements->Add(stls);
                for (i=0;i<ndim;i++) stls->SetMaxIndex(i,dm->GetMaxIndex(i));
                stls->SetArrayDim(ndim);
@@ -207,7 +212,7 @@ void TStreamerInfo::Build()
                continue;
             }
             if (strchr(dm->GetTypeName(),'<') && strchr(dm->GetTypeName(),'<')) {
-               TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetTypeName(),dm->IsaPointer());
+               TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName(),dm->IsaPointer());
                if (stl->GetSTLtype()) {
                   fElements->Add(stl);
                   for (i=0;i<ndim;i++) stl->SetMaxIndex(i,dm->GetMaxIndex(i));
@@ -217,7 +222,7 @@ void TStreamerInfo::Build()
                else delete stl;
                continue;
             }
-            Error("Build","unknow type:%s, member:%s, offset=%d\n",dm->GetTypeName(),dm->GetName(),offset);
+            Error("Build","unknow type:%s, member:%s, offset=%d\n",dm->GetFullTypeName(),dm->GetName(),offset);
             continue;
          }
          // a pointer to a class
@@ -228,22 +233,24 @@ void TStreamerInfo::Build()
                                            dm->GetArrayIndex(),
                                            dmref->GetClass()->GetName(),
                                            dmref->GetClass()->GetClassVersion(),
-                                           dm->GetTypeName());
+                                           dm->GetFullTypeName());
                fElements->Add(element);
                element->SetStreamer(streamer);
                continue;
             } else {
-               element = new TStreamerObjectPointer(dm->GetName(),dm->GetTitle(),offset,dm->GetTypeName());
-               fElements->Add(element);
-               for (i=0;i<ndim;i++) element->SetMaxIndex(i,dm->GetMaxIndex(i));
-               element->SetArrayDim(ndim);
-               element->SetStreamer(streamer);
-               continue;
+               if (clm->InheritsFrom(TObject::Class())) {
+                  element = new TStreamerObjectPointer(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
+                  fElements->Add(element);
+                  for (i=0;i<ndim;i++) element->SetMaxIndex(i,dm->GetMaxIndex(i));
+                  element->SetArrayDim(ndim);
+                  element->SetStreamer(streamer);
+                  continue;
+               }
             }
          }
          // a class
          if (clm->InheritsFrom(TObject::Class())) {
-            element = new TStreamerObject(dm->GetName(),dm->GetTitle(),offset,dm->GetTypeName());
+            element = new TStreamerObject(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
             fElements->Add(element);
             for (i=0;i<ndim;i++) element->SetMaxIndex(i,dm->GetMaxIndex(i));
             element->SetArrayDim(ndim);
@@ -257,7 +264,7 @@ void TStreamerInfo::Build()
             element->SetStreamer(streamer);
             continue;
          } else {
-            element = new TStreamerObjectAny(dm->GetName(),dm->GetTitle(),offset,dm->GetTypeName());
+            element = new TStreamerObjectAny(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
             fElements->Add(element);
             for (i=0;i<ndim;i++) element->SetMaxIndex(i,dm->GetMaxIndex(i));
             element->SetArrayDim(ndim);
@@ -298,9 +305,10 @@ void TStreamerInfo::BuildCheck()
       }
    } else {
       fClass = new TClass(GetName(),fClassVersion,0,0,-1,-1);
-      return; //can do better later, in particular one must support the case
-              // when a shared lib is linked after opening a file containing
-              // the classes
+      array = fClass->GetStreamerInfos();
+       //can do better later, in particular one must support the case
+       // when a shared lib is linked after opening a file containing
+       // the classes
    }
    array->AddAt(this,fClassVersion);
    fgCount++;
@@ -335,14 +343,15 @@ void TStreamerInfo::BuildOld()
          element->SetStreamer(streamer);
          // in case, element is an array check array dimension(s)
          // check if data type has been changed
-         if (strcmp(element->GetTypeName(),dm->GetTypeName())) {
+         if (strcmp(element->GetTypeName(),dm->GetFullTypeName())) {
+            if (element->IsOldFormat(dm->GetFullTypeName())) continue;
             if (dt) {
                element->SetNewType(dt->GetType());
-               printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetTypeName());
+               printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
             } else {
                element->SetNewType(-2);
                printf("Cannot convert %s from type:%s to type:%s, skip element\n",
-                  element->GetName(),element->GetTypeName(),dm->GetTypeName());
+                  element->GetName(),element->GetTypeName(),dm->GetFullTypeName());
             }
          }
       } else {
@@ -484,8 +493,18 @@ void TStreamerInfo::Compile()
 // Store predigested information into local arrays. This saves a huge amount
 // of time compared to an explicit iteration on all elements.
 
-   gROOT->GetListOfStreamerInfo()->AddAt(this,fNumber);
+   if (gROOT->GetListOfStreamerInfo()->At(fNumber) == 0)
+       gROOT->GetListOfStreamerInfo()->AddAt(this,fNumber);
 
+   if (fNdata) {
+      delete [] fType;
+      delete [] fNewType;
+      delete [] fOffset;
+      delete [] fLength;
+      delete [] fElem;
+      delete [] fMethod;
+   }
+   fOptimized = kFALSE;
    fNdata = 0;
    Int_t ndata = fElements->GetEntries();
    if (ndata == 0) return;
@@ -509,7 +528,7 @@ void TStreamerInfo::Compile()
       fElem[fNdata]   = (ULong_t)element;
       fMethod[fNdata] = element->GetMethod();
       // try to group consecutive members of the same type
-      if (keep>=0 && (element->GetType() < kRegrouped)
+      if (fgOptimize && keep>=0 && (element->GetType() < kRegrouped)
                   && (fType[fNdata] == fNewType[fNdata])
                   && (fMethod[keep] == 0)
                   && (element->GetType() > 0)
@@ -519,6 +538,7 @@ void TStreamerInfo::Compile()
          if (fLength[keep] == 0) fLength[keep]++;
          fLength[keep]++;
          fType[keep] = element->GetType() + kRegrouped;
+         fOptimized = kTRUE;
       } else {
          if (fType[fNdata] != kCounter) {
             if (fNewType[fNdata] != fType[fNdata]) {
@@ -641,8 +661,8 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       lt = strlen(element->GetTypeName());
       strncpy(line+3,element->GetTypeName(),lt);
       strncpy(line+3+ltype,name,ld);
+      if (element->IsaPointer() && !strchr(line,'*')) line[2+ltype] = '*';
       sprintf(line+3+ltype+ldata,"   //%s",element->GetTitle());
-      if (element->IsaPointer()) line[2+ltype] = '*';
       fprintf(fp,"%s\n",line);
    }
 
@@ -1741,7 +1761,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
-   for (Int_t i=first;i<=last;i++) {
+   for (Int_t i=first;i<last;i++) {
       switch (fType[i]) {
          // write basic types
          case kChar:              WriteCBasicType(Char_t)
