@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.15 2004/09/29 06:55:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.16 2004/11/24 14:48:02 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -146,7 +146,8 @@ public:
 private:
    void DrawStars(const Double_t * vertex, Style_t marker_style, UInt_t size);
 
-   ClassDef(TGLKernel,0) //Concrete GL interface on top of TVirtualGL
+   //rootcint cannot be run on this file because of the CINT version of GL.h
+   //ClassDef(TGLKernel,0) //Concrete GL interface on top of TVirtualGL
 };
 
 #endif

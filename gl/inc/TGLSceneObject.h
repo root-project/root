@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.12 2004/11/18 14:37:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.13 2004/11/24 14:48:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -120,7 +120,7 @@ protected:
 private:
    TGLSceneObject(const TGLSceneObject &);
    TGLSceneObject & operator = (const TGLSceneObject &);
-   
+
    ClassDef(TGLSceneObject,0)
 };
 

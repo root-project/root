@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.25 2004/11/22 23:39:52 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.26 2004/11/24 14:48:02 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -33,7 +33,7 @@
  #define  ColorOffset 0
 #endif
 
-ClassImp(TGLKernel)
+//ClassImp(TGLKernel)
 
 GLenum GLCommand[] = { GLConstants(GL_)  };
 

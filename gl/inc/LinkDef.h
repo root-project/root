@@ -21,6 +21,10 @@
 #pragma link C++ class TGLGeometryEditor;
 #pragma link C++ class TGLSceneEditor;
 #pragma link C++ class TGLLightEditor;
+#pragma link C++ class TArcBall;
+#pragma link C++ class TGLCamera;
+#pragma link C++ class TGLRender;
+#pragma link C++ class TGLSceneObject;
 
 
 #ifndef _WIN32
