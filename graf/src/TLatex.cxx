@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.22 2001/11/05 10:49:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.23 2001/12/03 21:31:07 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -110,6 +110,9 @@ ClassImp(TLatex)
 //    #dot    = derivative
 //    #ddot   = double derivative
 //    #tilde  = tilde
+//
+//    #slash special sign. Draw a slash on top of the text between brackets
+//   for example #slash{E}_{T}  generates "Missing ET"
 //
 //Begin_Html
 /*
@@ -345,7 +348,7 @@ const char *tab2[] = { "leq","/","infty","voidb","club","diamond","heart",
                  "arctop","lbar","arcbottom","topbar","void8", "bottombar","arcbar",
                  "ltbar","void04","void05","void06","GT","int" };
 
-const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde"};
+const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
 
       if (fError != 0) return FormSize(0,0,0);
 
@@ -593,7 +596,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                   }
                }
             }
-            for(k=0;k<9;k++) {
+            for(k=0;k<10;k++) {
                if (!OpFound && UInt_t(length)>i+strlen(tab3[k])) {
                   if (strncmp(&text[i+1],tab3[k],strlen(tab3[k]))==0) {
                      OpAbove=k;
@@ -1042,6 +1045,13 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                   tilde.SetTextAngle(fTextAngle);
                   tilde.PaintText(X,Y,"~");
                }
+               break;
+            case 9: // slash
+               x1 = x + 0.8*fs1.Width();
+               y1 = y -fs1.Dessus() ;
+               x2 = x + 0.3*fs1.Width();
+               y2 = y1 + 1.2*fs1.Height();
+               DrawLine(x1,y1,x2,y2,spec);
                break;
            }
          }
@@ -1553,7 +1563,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    // Check if the Latex syntax is correct
 
    const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
-                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{",
+                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{",
                        "\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
                        "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{"}; // check for }
    const Char_t *kWord2[] = {"#color[","#font[","#sqrt[","\\color[","\\font[","\\sqrt["}; // check for ]{ + }
@@ -1562,12 +1572,12 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"} ;
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"} ;
    Int_t lkWord1[] = {4,4,2,2,7,6,6,4,4,4,
-                      5,5,5,5,6,7,7,7,7,
+                      5,5,5,5,6,7,7,7,7,7,
                       7,6,6,4,4,4,4,4,
                       5,5,5,5,6,7,7,7} ;
    Int_t lkWord2[] = {7,6,6,7,6,6} ;
    Int_t lkWord3[] = {6,6} ;
-   Int_t NkWord1 = 35, NkWord2 = 6, NkWord3 = 2 ;
+   Int_t NkWord1 = 36, NkWord2 = 6, NkWord3 = 2 ;
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
    Int_t lLeft2 = 4 ;
