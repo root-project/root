@@ -63,11 +63,11 @@ else
 			fi; \
 		fi; \
 		cd $(FREETYPEVERS); \
-		FREECC=""; \
+		FREECC=; \
 		if [ $(ARCH) = "alphacxx6" ]; then \
-			FREECC="CC=cc"; \
+			FREECC="cc"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure --with-pic $$FREECC CFLAGS=-O2; \
+		GNUMAKE=$(MAKE) ./configure --with-pic CC=$$FREECC CFLAGS=-O2; \
 		$(MAKE))
 endif
 
