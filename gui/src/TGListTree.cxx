@@ -567,7 +567,7 @@ Bool_t TGListTree::HandleKey(Event_t *event)
          }
       }
    }
-   fClient->NeedRedraw(this);
+//   fClient->NeedRedraw(this);
    return kTRUE;
 }
 
@@ -849,9 +849,10 @@ void TGListTree::Draw(Int_t yevent, Int_t hevent)
 
    while (item) {
       xbranch = -1;
+
       DrawItem(item, x, y , &xbranch, &width, &height);
 
-      width += x + fHspacing + fMargin;
+      width += pos.fX + x + fHspacing + fMargin;
 
       if (width > fDefw) fDefw = width;
 
@@ -864,8 +865,9 @@ void TGListTree::Draw(Int_t yevent, Int_t hevent)
 
    fDefh = y + fMargin;
 
-   if ((old_width != fDefw) || (old_height != fDefh))
-      ((TGCanvas *)GetParent()->GetParent())->Layout();
+   if ((old_width != fDefw) || (old_height != fDefh)) {
+      fCanvas->Layout();
+   }
 }
 
 //______________________________________________________________________________
@@ -875,14 +877,14 @@ Int_t TGListTree::DrawChildren(TGListTreeItem *item, Int_t x, Int_t y, Int_t xro
 
    UInt_t width, height;
    Int_t  xbranch;
-
+   TGPosition pos = GetPagePosition();
    x += fIndent + (Int_t)item->fPicWidth;
+
    while (item) {
       xbranch = xroot;
       DrawItem(item, x, y, &xbranch, &width, &height);
 
-      width += x + fHspacing + fMargin;
-
+      width += pos.fX + x + fHspacing + fMargin;
       if (width > fDefw) fDefw = width;
 
       y += height + fVspacing;

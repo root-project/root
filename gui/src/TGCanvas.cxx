@@ -980,8 +980,10 @@ Bool_t TGContainer::HandleKey(Event_t *event)
          case kKey_ScrollLock:
             return kTRUE;
          case kKey_Space:
-            fLastActiveEl->fFrame->Activate(!fLastActiveEl->fFrame->IsActive());
-            SpacePressed(fLastActiveEl->fFrame);
+            if (fLastActiveEl) {
+               fLastActiveEl->fFrame->Activate(!fLastActiveEl->fFrame->IsActive());
+               SpacePressed(fLastActiveEl->fFrame);
+            }
             break;
          default:
          break;
@@ -1739,9 +1741,8 @@ void TGCanvas::Layout()
    Bool_t fixedh = (container->GetOptions() & kFixedHeight) ? kTRUE : kFALSE;
 
    // test whether we need scrollbars
-
-   cw = fWidth  - (fBorderWidth << 1);
-   ch = fHeight - (fBorderWidth << 1);
+   cw = fWidth  - UInt_t(fBorderWidth << 1);
+   ch = fHeight - UInt_t(fBorderWidth << 1);
 
    if (!fixedw) container->SetWidth(cw);
    if (!fixedh) container->SetHeight(ch);
@@ -1791,16 +1792,17 @@ void TGCanvas::Layout()
    tcw = TMath::Max(container->GetDefaultWidth(), cw);
    tch = TMath::Max(container->GetDefaultHeight(), ch);
    UInt_t curw = container->GetDefaultWidth();
-   container->SetWidth(0); // force a resize in TGFrame::Resize
+   container->SetHeight(0); // force a resize in TGFrame::Resize
 
-   if (fixedw && fixedh)
+   if (fixedw && fixedh) {
       container->Resize(curw, container->GetDefaultHeight());
-   else if (fixedw)
+   } else if (fixedw) {
       container->Resize(curw, tch);
-   else if (fixedh)
+   } else if (fixedh) {
       container->Resize(tcw, container->GetDefaultHeight());
-   else
+   } else {
       container->Resize(tcw, tch);
+   }
 
    if (need_hsb) {
       fHScrollbar->MoveResize(fBorderWidth, ch+fBorderWidth, cw, fHScrollbar->GetDefaultHeight());
@@ -1813,7 +1815,7 @@ void TGCanvas::Layout()
 
    if (need_vsb) {
       fVScrollbar->MoveResize(cw+fBorderWidth, fBorderWidth, fVScrollbar->GetDefaultWidth(), ch);
-      fVScrollbar->SetRange(container->GetHeight(), fVport->GetHeight());
+      fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
       fVScrollbar->MapWindow();
    } else {
       fVScrollbar->UnmapWindow();
