@@ -11,13 +11,12 @@ PYROOTDIRS   := $(PYROOTDIR)/src
 PYROOTDIRI   := $(PYROOTDIR)/inc
 
 PYROOTL      := $(MODDIRI)/LinkDef.h
-PYROOTDS     := $(MODDIRS)/TPythonDict.cxx
+PYROOTDS     := $(MODDIRS)/G__PyROOT.cxx
 PYROOTDO     := $(PYROOTDS:.cxx=.o)
 PYROOTDH     := $(PYROOTDS:.cxx=.h)
 
-PYROOTH1     := $(wildcard $(MODDIRI)/T*.h)
 PYROOTH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-PYROOTS      := $(filter-out $(MODDIRS)/TPythonDict%,$(wildcard $(MODDIRS)/*.cxx))
+PYROOTS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PYROOTO      := $(PYROOTS:.cxx=.o)
 
 PYROOTDEP    := $(PYROOTO:.o=.d) $(PYROOTDO:.o=.d)
@@ -40,9 +39,9 @@ $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS)
 		"$(SOFLAGS)" PyROOT.$(SOEXT) $@ \
 		"$(PYROOTO) $(PYROOTDO)" "$(PYTHONLIB)"
 
-$(PYROOTDS):    $(PYROOTH1) $(PYROOTL) $(ROOTCINTTMP)
+$(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(PYROOTH1) $(PYROOTL)
+		$(ROOTCINTTMP) -f $@ -c $(PYROOTH) $(PYROOTL)
 
 $(PYROOTDO):    $(PYROOTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
