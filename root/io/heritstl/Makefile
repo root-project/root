@@ -20,7 +20,7 @@ endif
 # Remember that sometest.log can be made automatically from
 # from runsometest.C
 
-minostest.log: minostest_C.$(DllSuf) 
+minostest.log: minostest_C.$(DllSuf) classes_C.$(DllSuf)
 
 minostest: minostest.log
 		  $(TestDiff)
