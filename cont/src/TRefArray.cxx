@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.12 2002/06/04 19:51:14 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.13 2002/06/16 09:10:19 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -31,6 +31,14 @@
 // array (eg TClonesArray, STL vector,..) of the referenced objects.    //
 //                                                                      //
 // See an example in $ROOTSYS/test/Event.h                              //
+//                                                                      //
+// RESTRICTIONS when using TRefArray                                    //
+// ---------------------------------                                    //
+//  - Elements in a TRefArray cannot point to a TFile or TDirectory.    //
+//  - All elements of a TRefArray must be set in the same process,      //
+//    In particular, one cannot modify some elements of the array in    //
+//    a different process.                                              //
+// Use an array of TRef when one of the above restrictions is met.      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
