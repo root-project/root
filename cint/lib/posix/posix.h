@@ -173,7 +173,7 @@ int uname(struct utsname *buf);
  * unistd.h
  ********************************************************************/
 extern int close(int fd);
-#if defined(G__ALPHA) && !defined(G__GNUC)
+#if (defined(G__alpha) || defined(__alpha)) && !defined(G__GNUC)
 extern int     read();
 extern int     write();
 #else
@@ -256,7 +256,7 @@ extern char *getwd(char *buf);
 
 #if defined(G__SUN) || defined(__sun)
 extern long setpgrp(void);
-#elif defined(G__FBSD) || defined(__FreeBSD__) || (defined(G__ALPHA)&&defined(G__GNUC))
+#elif defined(G__FBSD) || defined(__FreeBSD__) || ((defined(G__alpha) || defined(__alpha)) && defined(G__GNUC))
 extern int setpgrp(pid_t _pid, pid_t _pgrp);
 #elif defined(G__KCC) || defined(__KCC)
 extern pid_t setpgrp(void);
