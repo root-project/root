@@ -284,9 +284,9 @@ utils:  $(UTILS_LIBS) $(ROOTMAP)
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
-	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib python $< > $@ 2>&1
+	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib python $< -b > $@ 2>&1
 else 
-	$(CMDECHO) python $< > $@ 2>&1
+	$(CMDECHO) python $< -b > $@ 2>&1
 endif
 
 .PRECIOUS: %_C.$(DllSuf) 
