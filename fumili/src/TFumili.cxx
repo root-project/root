@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFitter.cxx,v 1.7 2003/05/05 16:38:48 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.1 2003/05/05 20:34:35 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //BEGIN_HTML
@@ -543,7 +543,7 @@ Int_t TFumili::Minimize()
   Double_t SP, T, OLDS=0;
 
   // SP - scaled on fS machine precision
-  SP=fRP*fabs(fS);
+  SP=fRP*TMath::Abs(fS);
 
   // save fZ-matrix
   for( I=0; I < NN0; I++) fZ0[I] = fZ[I];
@@ -553,7 +553,7 @@ Int_t TFumili::Minimize()
 	T=2.*(fS-OLDS-fGT);
 	if (fINDFLG[0] == 0)
 	  {
-	    if (fabs(fS-OLDS) <= SP && -fGT <= SP)goto L19;
+	    if (TMath::Abs(fS-OLDS) <= SP && -fGT <= SP)goto L19;
 	    if(	0.59*T < -fGT) goto L19;
 	    T = -fGT/T;
 	    if (T < 0.25 ) T = 0.25;
@@ -682,14 +682,14 @@ Int_t TFumili::Minimize()
   for( I = 0; I < N; I++)
     if (fPL[I] > .0)
       {
-	SIGI = sqrt(fabs(fZ[L - 1])); // calculate \sqrt{Z^{-1}_{ii}} 
+	SIGI = TMath::Sqrt(TMath::Abs(fZ[L - 1])); // calculate \sqrt{Z^{-1}_{ii}} 
 	fR[I] = fR[I]*fZ[L - 1];      // Z_ii * Z^-1_ii
 	if (fEPS > .0) fParamError[I]=SIGI;
 	if ((fA[I] >= fAMX[I] && fDA[I] > 0.) || (fA[I] <= fAMN[I]
 					       && fDA[I] < .0))
 	  { // if parameter out of bounds and if step is making things worse
       
-	    AKAP = fabs(fDA[I]/SIGI);
+	    AKAP = TMath::Abs(fDA[I]/SIGI);
 	    // let's found maximum of dA/sigi - the worst of parameter steps
 	    if (AKAP > AFIX)
 	      {
@@ -740,10 +740,10 @@ Int_t TFumili::Minimize()
 	    ABI = ABM;
 	  }
 	// if calculated step is out of bounds
-	if ( fabs(fDA[I]) > BI)
+	if ( TMath::Abs(fDA[I]) > BI)
 	  {
 	    // derease step splitter ALAMBDA if needed
-	    AL = fabs(BI/fDA[I]);
+	    AL = TMath::Abs(BI/fDA[I]);
 	    if (ALAMBD > AL)
 	      {
 		IMAX=I;
@@ -752,7 +752,7 @@ Int_t TFumili::Minimize()
 	      }
 	  }
 	// fAKAPPA - parameter will be <fEPS if fit is converged
-	AKAP = fabs(fDA[I]/fParamError[I]); 
+	AKAP = TMath::Abs(fDA[I]/fParamError[I]); 
 	if (AKAP > fAKAPPA) fAKAPPA=AKAP;
       }
   //... CALCULATE NEW CORRECTED STEP
@@ -764,7 +764,7 @@ Int_t TFumili::Minimize()
     if (fPL[I] > .0)
       {
 	if (NN2 > fNlimMul ) 
-	  if (fabs(fDA[I]/fPL[I]) > AMB )
+	  if (TMath::Abs(fDA[I]/fPL[I]) > AMB )
 	    {
 	      fPL[I] = 4.*fPL[I]; // increase parallelepiped
 	      T1=4.; // flag - that fPL was increased
@@ -781,7 +781,7 @@ Int_t TFumili::Minimize()
   if (-fGT <= SP && T1 < 1. && ALAMBD < 1.)fENDFLG = -1; // function is not decreasing 
 
   if (fENDFLG >= 0)
-    if (fAKAPPA < fabs(fEPS)) // fit is converged
+    if (fAKAPPA < TMath::Abs(fEPS)) // fit is converged
       {
 	if (FIXFLG == 0) 
 	  fENDFLG=1; // successful fit
@@ -836,7 +836,7 @@ Int_t TFumili::Minimize()
 	  }
       }
 
- L85:
+// L85:
   // iteration number limit is exceeded
   if(fENDFLG == 0 && NN3 >= fNmaxIter) fENDFLG=-3;
   // fit errors are infinite;
@@ -989,7 +989,7 @@ void TFumili::InvertZ(Int_t n)
     ni = i * (i - 1) / 2;
     ii = ni + i;
     k = n + 1;
-    if (Z_1[ii] <= rp * fabs(R_1[ir]) || Z_1[ii] <= ap) {
+    if (Z_1[ii] <= rp * TMath::Abs(R_1[ir]) || Z_1[ii] <= ap) {
       goto L19;
     }
     Z_1[ii] = 1.0e0 / sqrt(Z_1[ii]);
@@ -1002,7 +1002,7 @@ void TFumili::InvertZ(Int_t n)
     }
   L4:
     Z_1[nl] *= Z_1[ii];
-    if (fabs(Z_1[nl]) >= aps) {
+    if (TMath::Abs(Z_1[nl]) >= aps) {
       goto L16;
     }
     --nl;
@@ -1111,7 +1111,7 @@ void TFumili::Derivatives(Double_t *DF,Double_t *fX){
     if(fPL0[i]>0.){
       AI = fA[i]; // save current parameter value
       HI = 0.01*fPL0[i]; // diff step 
-      PI = fRP*fabs(AI);
+      PI = fRP*TMath::Abs(AI);
       if (HI<PI) HI = PI; // if diff step is less than precision
       fA[i] = AI+HI;
    
