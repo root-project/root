@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.12 2002/08/09 13:12:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.13 2002/09/16 10:57:57 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -99,9 +99,9 @@ void TDSetElement::Print(Option_t *option) const
    // Print a TDSetElement.
 
    cout << IsA()->GetName()
-      << " file '" << fFileName
-      << "' dir '" << fDirectory
-      << "' obj '" << fObjName
+      << " file='" << fFileName
+      << "' dir='" << fDirectory
+      << "' obj='" << fObjName
       << "' first=" << fFirst << " num=" << fNum << endl;
 }
 
@@ -191,10 +191,11 @@ Int_t TDSet::Process(const char *selector, Long64_t nentries,
 //______________________________________________________________________________
 void TDSet::Print(const Option_t *option) const
 {
-   // Print TDSet basic or full data.
+   // Print TDSet basic or full data. When option="a" print full data.
 
    cout <<"OBJ: " << IsA()->GetName() << "\ttype " << GetName() << "\t"
-      << fObjName << "\tin " << GetTitle() << endl;
+        << fObjName << "\tin " << GetTitle()
+        << "\telements " << GetListOfElements()->GetSize() << endl;
 
    if (option && *option) {
       TIter next(GetListOfElements());
@@ -304,6 +305,9 @@ TDSetElement *TDSet::Next()
 Int_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
                         const char *objname, Long64_t &entries)
 {
+   // Returns number of entries in tree or objects in file. Returns -1 in
+   // case of error, 0 otherwise.
+
    TFile *file = TFile::Open(filename);
 
    if (file->IsZombie()) {
