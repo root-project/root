@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.21 2002/06/14 20:30:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.22 2002/08/09 20:45:43 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -252,7 +252,7 @@ Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
    Double_t elow=0, ehigh=0;
    if (fEXlow)  elow  = fEXlow[i];
    if (fEXhigh) ehigh = fEXhigh[i];
-   return TMath::Sqrt(elow*elow + ehigh*ehigh);
+   return TMath::Sqrt(0.5*(elow*elow + ehigh*ehigh));
 }
 
 //______________________________________________________________________________
@@ -266,7 +266,7 @@ Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
    Double_t elow=0, ehigh=0;
    if (fEYlow)  elow  = fEYlow[i];
    if (fEYhigh) ehigh = fEYhigh[i];
-   return TMath::Sqrt(elow*elow + ehigh*ehigh);
+   return TMath::Sqrt(0.5*(elow*elow + ehigh*ehigh));
 }
 
 //______________________________________________________________________________
