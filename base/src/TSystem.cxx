@@ -1453,15 +1453,17 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    Ssiz_t dot_pos = library.Last('.');
    TString extension = library;
    extension.Replace( 0, dot_pos+1, 0 , 0);
-   TString filename_noext = library;
-   if (dot_pos>=0) filename_noext.Remove( dot_pos );
+   TString libname_noext = library;
+   if (dot_pos>=0) libname_noext.Remove( dot_pos );
 
    // Extension of shared library is platform dependent!!
    library.Replace( dot_pos, library.Length()-dot_pos,
                     TString("_") + extension + "." + fSoExt );
 
-   TString libname ( BaseName( filename_noext ) );
+   TString libname ( BaseName( libname_noext ) );
    libname.Append("_").Append(extension);
+
+   TString file_location( DirName( library ) ); // Location of the script.
 
    if (library_specified && strlen(library_specified) ) {
       // Use the specified name instead of the default
@@ -1474,13 +1476,13 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       library = TString(library) + "." + fSoExt;
    }
 
-   TString file_location( DirName( library ) );
-   // so far we do not distinguish
+   TString lib_location( DirName( library ) );
+
    if (build_loc.Length()==0) {
-      build_loc = file_location;
+      build_loc = lib_location;
    } else {
       library = ConcatFileName( build_loc, library);
-      build_loc = ConcatFileName( build_loc, file_location);
+      build_loc = ConcatFileName( build_loc, lib_location);
       if (gSystem->AccessPathName(build_loc,kWritePermission)) mkdir(build_loc, true);
    }
 
@@ -1555,7 +1557,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       // Generate the dependency filename
       TString depdir = build_loc;
       if (!canWrite) depdir = emergency_loc;
-      TString depfilename = ConcatFileName(depdir, BaseName(filename_noext));
+      TString depfilename = ConcatFileName(depdir, BaseName(libname_noext));
       depfilename += "_" + extension + ".d";
       TString bakdepfilename = depfilename + ".bak";
 
@@ -1569,7 +1571,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
       if ( (gSystem->GetPathInfo( library, 0, 0, 0, &lib_time ) != 0)
            ||
-           (gSystem->GetPathInfo( filename_fullpath, 0, 0, 0, &file_time ) == 0
+           (gSystem->GetPathInfo( filename, 0, 0, 0, &file_time ) == 0
             && ( lib_time < file_time ) )
          ) {
          // the library does not exist and is older than the script.
@@ -1782,7 +1784,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    int i;
    for (i = 0; i < 6; i++ ) {
       char * name;
-      TString extra_linkdef = BaseName( filename_noext );
+      TString extra_linkdef = BaseName( libname_noext );
       extra_linkdef.Append(GetLinkdefSuffix());
       extra_linkdef.Append(extensions[i]);
       name = Which(incPath,extra_linkdef);
@@ -1796,7 +1798,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    if (gDebug>5) Info("ACLiC","looking for header in: %s",incPath.Data());
    for (i = 0; i < 6; i++ ) {
       char * name;
-      TString lookup = BaseName( filename_noext );
+      TString lookup = BaseName( libname_noext );
       lookup.Append(extensions[i]);
       name = Which(incPath,lookup);
       if (name) {
