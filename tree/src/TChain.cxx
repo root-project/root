@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.60 2002/12/02 22:07:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.61 2003/01/13 20:18:33 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -391,6 +391,11 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
    if (fe) {
       fFriends->Add(fe);
+
+      // We need to invalidate the loading of the current because if list 
+      // of real friend is now obsolete.  It is repairable only from LoadTree
+      fTreeNumber = -1; 
+
       TTree *t = fe->GetTree();
       if (t) {
          if (t->GetEntries() < fEntries) {
@@ -413,6 +418,11 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
    if (fe) {
       fFriends->Add(fe);
+
+      // We need to invalidate the loading of the current because if list 
+      // of real friend is now obsolete.  It is repairable only from LoadTree
+      fTreeNumber = -1; 
+
       TTree *t = fe->GetTree();
       if (t) {
          if (t->GetEntries() < fEntries) {
@@ -436,6 +446,11 @@ TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
    TFriendElement *fe = new TFriendElement(this,chain,alias);
    if (fe) {
       fFriends->Add(fe);
+
+      // We need to invalidate the loading of the current because if list 
+      // of real friend is now obsolete.  It is repairable only from LoadTree
+      fTreeNumber = -1; 
+
       TTree *t = fe->GetTree();
       if (t) {
          if (t->GetEntries() < fEntries) {
@@ -648,16 +663,16 @@ Int_t TChain::LoadTree(Int_t entry)
    if (!fNtrees) return 1;
    if (entry < 0 || entry >= fEntries) return -2;
 
-   //Find in which tree this entry belongs to
+   // Find in which tree this entry belongs to
    Int_t t;
    if (fTreeNumber!=-1 &&
        (entry >= fTreeOffset[fTreeNumber] && entry < fTreeOffset[fTreeNumber+1])){
-     t = fTreeNumber;
+      t = fTreeNumber;
    }
    else {
-     for (t=0;t<fNtrees;t++) {
-       if (entry < fTreeOffset[t+1]) break;
-     }
+      for (t=0;t<fNtrees;t++) {
+         if (entry < fTreeOffset[t+1]) break;
+      }
    }
 
    fReadEntry = entry - fTreeOffset[t];
