@@ -634,8 +634,8 @@ char *typename;
     break;
   }
   if(type) strcpy(type,vtype);
-  if(tagname) strcpy(tagname,G__struct.name[buf.tagnum]) ;
-  if(typename) strcpy(typename,G__newtype.name[buf.typenum]) ;
+  if(tagname && buf.tagnum>=0) strcpy(tagname,G__struct.name[buf.tagnum]) ;
+  if(typename && buf.typenum>=0) strcpy(typename,G__newtype.name[buf.typenum]) ;
   
   sprintf(vtype,"&%s",name);
   buf = G__calc_internal(vtype);
