@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.3 2001/01/10 23:28:35 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.5 2001/01/12 07:49:31 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.3 2001/01/10 23:28:35 fine Exp $
+// $Id: TTableSorter.cxx,v 1.5 2001/01/12 07:49:31 brun Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -549,7 +549,7 @@ int TTableSorter::Compare##valuetype  (const void **elem1, const void **elem2) {
          if (diff > 0  )    res =  1;                 \
          else if (diff < 0) res = -1;                 \
          if (res) return res;                         \
-         return value1-value2;                        \
+         return int(value1-value2);                   \
 }                                                     \
 BINARYSEARCH(valuetype)
 
@@ -558,14 +558,14 @@ BINARYSEARCH(valuetype)
 int TTableSorter::Search##valuetype  (const void *elem1, const void **elem2) { \
          valuetype *value1 = (valuetype *)(elem1);    \
          valuetype *value2 = (valuetype *)(*elem2);   \
-         return    *value1-*value2;                   \
+         return    int(*value1-*value2);              \
 }                                                     \
 int TTableSorter::Compare##valuetype  (const void **elem1, const void **elem2) { \
          valuetype *value1 = (valuetype *)(*elem1);   \
          valuetype *value2 = (valuetype *)(*elem2);   \
          valuetype diff = *value1-*value2;            \
          if (diff ) return diff;                      \
-         return value1-value2;                        \
+         return int(value1-value2);                   \
 }                                                     \
 BINARYSEARCH(valuetype)
 
