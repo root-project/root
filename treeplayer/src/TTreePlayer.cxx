@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.185 2005/03/13 07:38:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.186 2005/03/14 17:09:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2855,7 +2855,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
             }
             loaded = kTRUE;
          }
-         onerow = Form("* %8d ",entryNumber);
+         onerow = Form("* %8lld ",entryNumber);
          if (hasArray) {
             onerow += Form("* %8d ",inst);
          }

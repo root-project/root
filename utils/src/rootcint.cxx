@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.203 2005/03/17 20:49:55 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.204 2005/03/23 06:16:46 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3128,12 +3128,25 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                        m.Name(), prefix, m.Name());
             } else if (m.Property() & G__BIT_ISARRAY) {
                sprintf(cvar, "%s", m.Name());
+               bool vardim = false;
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  sprintf(cdim, "[%d]", m.MaxIndex(dim));
+                  int maxInd = m.MaxIndex(dim);
+                  if (maxInd < 0) {
+                     strcpy(cdim,"[]");
+                     vardim = true;
+                  } else {
+                     sprintf(cdim, "[%d]", maxInd);
+                  }
                   strcat(cvar, cdim);
                }
-               fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", %s%s);\n",
-                       cvar, prefix, m.Name());
+               if (vardim) {
+                  fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n",
+                          cvar, prefix, m.Name());
+               } else {
+                  fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", %s%s);\n",
+                          cvar, prefix, m.Name());
+               }
+
             } else {
                fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n",
                        m.Name(), prefix, m.Name());

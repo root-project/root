@@ -433,10 +433,10 @@ template <class T>
 Int_t TStreamerInfo__ReadBufferConvImp(TBuffer &b, const T &arr,  Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset,
-                                       ULong_t *fMethod, ULong_t * /*fElem*/,Int_t *fLength,
-                                       TClass * /*fClass*/, Int_t *fOffset, Int_t *fNewType,
-                                       Int_t /*fNdata*/, Int_t * /*fType*/, TStreamerElement *& /*fgElement*/,
-                                       TStreamerInfo::CompInfo * /*fComp*/,
+                                       ULong_t *&fMethod, ULong_t *& /*fElem*/,Int_t *&fLength,
+                                       TClass *& /*fClass*/, Int_t *&fOffset, Int_t *&fNewType,
+                                       Int_t & /*fNdata*/, Int_t *& /*fType*/, TStreamerElement *& /*fgElement*/,
+                                       TStreamerInfo::CompInfo *& /*fComp*/,
                                        Version_t & /* fOldVersion */ )
 #else
 template <class T>
@@ -528,10 +528,10 @@ template <class T>
 Int_t TStreamerInfo__ReadBufferImp(TStreamerInfo *This,
                                    TBuffer &b, const T &arr, Int_t first,
                                    Int_t narr, Int_t eoffset, Int_t arrayMode,
-                                   ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
-                                   TClass *fClass, Int_t *fOffset, Int_t * /*fNewType*/,
-                                   Int_t fNdata, Int_t *fType, TStreamerElement *&fgElement,
-                                   TStreamerInfo::CompInfo *fComp,
+                                   ULong_t *&fMethod, ULong_t *&fElem, Int_t *&fLength,
+                                   TClass *&fClass, Int_t *&fOffset, Int_t *& /*fNewType*/,
+                                   Int_t &fNdata, Int_t *&fType, TStreamerElement *&fgElement,
+                                   TStreamerInfo::CompInfo *&fComp,
                                    Version_t &fOldVersion)
 {
 #else
