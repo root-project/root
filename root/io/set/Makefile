@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root dict* set_problem
 
 #Set the list of target to make while testing
 TEST_TARGETS += setLong64Test
