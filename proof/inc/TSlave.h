@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.2 2000/11/21 12:27:59 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -43,9 +43,11 @@ private:
    TString       fName;      //slave's hostname
    TString       fImage;     //slave's image name
    TString       fWorkDir;   //slave's working directory (info obtained from slave)
+   TString       fUser;      //slave's user id
    Int_t         fPort;      //slave's port number
    Int_t         fOrdinal;   //slave's ordinal number
    Int_t         fPerfIdx;   //relative CPU performance index
+   Int_t         fSecurity;  //authentication method (0 = standard, 1 = SRP)
    TSocket      *fSocket;    //socket to slave
    TProof       *fProof;     //proof cluster to which slave belongs
    TFileHandler *fInput;     //input handler related to this slave
@@ -58,7 +60,7 @@ private:
    void operator=(const TSlave &) { }
 
    TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-          const char *image, TProof *proof);
+          const char *image, const char *user, Int_t security, TProof *proof);
 
 public:
    virtual ~TSlave();
@@ -71,6 +73,7 @@ public:
    const char   *GetName() const { return fName.Data(); }
    const char   *GetImage() const { return fImage.Data(); }
    const char   *GetWorkingDirectory() const { return fWorkDir.Data(); }
+   const char   *GetUser() const { return fUser.Data(); }
    Int_t         GetPort() const { return fPort; }
    Int_t         GetOrdinal() const { return fOrdinal; }
    Int_t         GetPerfIdx() const { return fPerfIdx; }

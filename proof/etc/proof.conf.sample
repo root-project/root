@@ -1,7 +1,8 @@
 # PROOF config file. It has a very simple format:
 #
 # node <hostname> [image=<imagename>]
-# slave <hostname> [perf=<perfindex>] [image=<imagename>]
+# slave <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
+#                  [user=userid>] [srp]
 # user <username> on <hostname>
 #
 # For each unique node in the cluster add a "node" line.
@@ -10,11 +11,21 @@
 # repeat the slave line N times, where N is the number of CPU's in the machine.
 # Perfindex is a number specifying the relative speed of each slave CPU in the
 # cluster. Say, the fastest CPU is 100, a CPU 30% slower has perf=70. The
-# perfindex is used for load balancing. By default perf=100.
+# perfindex is used for load balancing. By default perf=100. The perfindex
+# is mostly an indication since the parallel algorithm is adaptive and will
+# adjust itself to the current load on each machine.
 # Image is used to tell the system that system images are shared between
 # nodes/CPU's in the cluster. For example if all nodes share a common user
 # directory, like with AFS, set image=afs (<imagename> is arbitrary but should
 # be unique for each different image). By default imagename is the hostname.
+# Port is used to tell PROOF to connect to the slave servers on the specified
+# port (in case proofd was started by the user as opposed to via inetd).
+# User is used to tell PROOF to authenticate on the slaves with the specified
+# user id. By default the user id used to connect to the master server is
+# used. Srp is used to tell PROOF to use SRP (Secure Remote Password) protocol
+# to authenticate to the slaves. If this flag is set it is necessary that
+# on the master server there is a file ~/.rootnetrc with the needed login
+# information and that on the slaves the file ~/.srootdpass exists.
 # 
 # Users can be redirected to have their master server run on a predetermined
 # node. For that use the "user" line.

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.6 2000/11/27 10:51:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.7 2000/11/27 18:37:12 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -34,12 +34,14 @@ typedef long off_t;
 #include "TROOT.h"
 #include "TFile.h"
 #include "TSysEvtHandler.h"
+#include "TAuthenticate.h"
 #include "TSystem.h"
 #include "TInterpreter.h"
 #include "TException.h"
 #include "TSocket.h"
 #include "TStopwatch.h"
 #include "TMessage.h"
+#include "TUrl.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TTree.h"
@@ -221,7 +223,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    if (IsMaster()) {
       TProof::SetUser(fUser);
       TProof::SetPasswd(fUserPass);
-      new TProof("", kPROOF_Port, fConfFile, fConfDir, fLogLevel);
+      new TProof("", fConfFile, fConfDir, fLogLevel);
       SendLogFile();
    }
 }
@@ -482,6 +484,34 @@ void TProofServ::HandleSocketInput()
             sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
          }
+         break;
+
+      case kPROOF_OPENFILE:
+         {
+            // open file on master, if successfull this will also send the
+            // connect message to the slaves
+            TString clsnam, filenam, option;
+            (*mess) >> clsnam >> filenam >> option;
+            TString cmd;
+            cmd = "TFile::Open(\"" + filenam + "\", \"" + option + "\");";
+            if (IsMaster()) {
+               if (clsnam == "TNetFile") {
+                  TUrl url(filenam);
+                  TAuthenticate auth(0, url.GetProtocol(), url.GetHost());
+                  char *user, *passwd;
+                  if (auth.CheckNetrc(user, passwd)) {
+                     ProcessLine(cmd);
+                     delete [] user;
+                     delete [] passwd;
+                  } else
+                     Error("HandleSocketInput", "cannot execute \"%s\" since authentication is not possible",
+                           cmd.Data());
+               } else
+                  ProcessLine(cmd);
+            } else
+               ProcessLine(cmd);
+         }
+         SendLogFile();
          break;
 
       case kPROOF_PARALLEL:

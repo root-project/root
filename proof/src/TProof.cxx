@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.5 2000/11/27 10:51:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.6 2000/11/27 18:37:12 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TMessage.h"
 #include "TSystem.h"
 #include "TError.h"
+#include "TUrl.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -72,12 +73,18 @@ Bool_t TProofInputHandler::Notify()
 ClassImp(TProof)
 
 //______________________________________________________________________________
-TProof::TProof(const char *master, Int_t port, const char *conffile,
+TProof::TProof(const char *masterurl, const char *conffile,
                const char *confdir, Int_t loglevel)
 {
-   // Create a PROOF environment. Starting PROOF involves reading a config
-   // file describing the cluster and firing slave servers on all of the
-   // available nodes.
+   // Create a PROOF environment. Starting PROOF involves either connecting
+   // to a master server, which in turn will start a set of slave servers, or
+   // directly starting as master server (if master = ""). Masterurl is of
+   // the form: proof://host[:port] or proofs://host[:port]. Conffile is
+   // the name of the config file describing the remote PROOF cluster
+   // (this argument alows you to describe different cluster configurations).
+   // The default proof.conf. Confdir is the directory where the config
+   // file and other PROOF related files are (like motd and noproof files).
+   // Loglevel is the og level (default = 1).
 
    // Can have only one PROOF session open at a time.
    if (gProof) {
@@ -85,7 +92,7 @@ TProof::TProof(const char *master, Int_t port, const char *conffile,
       gProof->Close();
    }
 
-   if (Init(master, port, conffile, confdir, loglevel) == 0) {
+   if (Init(masterurl, conffile, confdir, loglevel) == 0) {
       // on Init failure make sure IsValid() returns kFALSE
       SafeDelete(fActiveSlaves);
    }
@@ -111,28 +118,40 @@ TProof::~TProof()
 }
 
 //______________________________________________________________________________
-Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
+Int_t TProof::Init(const char *masterurl, const char *conffile,
                    const char *confdir, Int_t loglevel)
 {
    // Start the PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
-   // directly starting as master server (if master = "").
+   // directly starting as master server (if master = ""). For a description
+   // of the arguments see the TProof ctor.
 
    Assert(gSystem);
 
-   fMaster        = master;
-   fPort          = port;
+   TUrl *u;
+   if (!masterurl || !*masterurl)
+      u = new TUrl("proof://__master__");
+   else if (strstr(masterurl, "://"))
+      u = new TUrl(masterurl);
+   else
+      u = new TUrl(Form("proof://%s", masterurl));
+
+   fMaster        = u->GetHost();
+   fPort          = u->GetPort();
+   fSecurity      = !strcmp(u->GetProtocol(), "proofs") ? kSRP : kNormal;
    fConfDir       = confdir;
    fConfFile      = conffile;
    fWorkDir       = gSystem->WorkingDirectory();
    fLogLevel      = loglevel;
    fProtocol      = kPROOF_Protocol;
-   fMasterServ    = fMaster == "" ? kTRUE : kFALSE;
+   fMasterServ    = fMaster == "__master__" ? kTRUE : kFALSE;
    fSendGroupView = kTRUE;
    fImage         = "";
    fStatus        = 0;
    fParallel      = 0;
    fTree          = 0;
+
+   delete u;
 
    // sort slaves by descending performance index
    fSlaves        = new TSortedList(kSortDescending);
@@ -149,17 +168,16 @@ Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
    if (IsMaster()) {
 
       char fconf[256];
-      sprintf(fconf, ".%s", conffile);
+      sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
       if (gSystem->AccessPathName(fconf, kFileExists)) {
-         sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
+          sprintf(fconf, "%s/proof/etc/%s", confdir, conffile);
          if (gSystem->AccessPathName(fconf, kFileExists)) {
-            sprintf(fconf, "%s/proof/etc/%s", confdir, conffile);
-            if (gSystem->AccessPathName(fconf, kFileExists)) {
-               Error("Init", "no PROOF config file found");
-               return 0;
-            }
+            Error("Init", "no PROOF config file found");
+            return 0;
          }
       }
+      if (gDebug > 1)
+         Printf("Using PROOF config file: %s", fconf);
 
       FILE *pconf;
       if ((pconf = fopen(fconf, "r"))) {
@@ -172,10 +190,10 @@ Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
          int  ord = 0;
 
          while (fgets(line, sizeof(line), pconf)) {
-            char word[4][64];
+            char word[7][64];
             if (line[0] == '#') continue;   // skip comment lines
-            int nword = sscanf(line, " %s %s %s %s", word[0], word[1], word[2],
-                               word[3]);
+            int nword = sscanf(line, "%s %s %s %s %s %s %s", word[0], word[1],
+                word[2], word[3], word[4], word[5], word[6]);
 
             // find node on which master runs
             if (nword >= 2 && !strcmp(word[0], "node") && !fImage.Length()) {
@@ -190,16 +208,26 @@ Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
             }
             // find all slave servers
             if (nword >= 2 && !strcmp(word[0], "slave")) {
-               int perfidx = 100;
-               char *image = word[1];
+               int perfidx  = 100;
+               int sport    = fPort;
+               int security = kNormal;
+               const char *image = word[1];
+               const char *user  = fUser.Data();
                for (int i = 2; i < nword; i++) {
                   if (!strncmp(word[i], "perf=", 5))
                      perfidx = atoi(word[i]+5);
                   if (!strncmp(word[i], "image=", 6))
                      image = word[i]+6;
+                  if (!strncmp(word[i], "port=", 5))
+                     sport = atoi(word[i]+5);
+                  if (!strncmp(word[i], "user=", 5))
+                     user = word[i]+5;
+                  if (!strncmp(word[i], "srp", 3))
+                     security = kSRP;
                }
                // create slave server
-               TSlave *slave = new TSlave(word[1], port, ord++, perfidx, image, this);
+               TSlave *slave = new TSlave(word[1], sport, ord++, perfidx,
+                                          image, user, security, this);
                fSlaves->Add(slave);
                if (slave->IsValid()) {
                   fAllMonitor->Add(slave->GetSocket());
@@ -218,7 +246,8 @@ Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
       }
    } else {
       // create master server
-      TSlave *slave = new TSlave(fMaster, port, 0, 100, "master", this);
+      TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master", fUser,
+                                 fSecurity, this);
       fSlaves->Add(slave);
       if (slave->IsValid()) {
          fAllMonitor->Add(slave->GetSocket());
@@ -253,17 +282,23 @@ Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
 Int_t TProof::ConnectFile(const TFile *file)
 {
    // Send message to all slaves to connect "file". This method is
-   // called by the TFile ctor (no user method).
+   // called by the TFile ctor (no user method). Message is only send
+   // if file was opened in READ mode.
 
    if (!IsValid() || !file) return 0;
 
    TString clsnam  = file->IsA()->GetName();
    TString filenam = file->GetName();
+   TString option  = file->GetOption();
+
+   // only propagate files opened in READ mode to PROOF servers
+   if (option.CompareTo("READ", TString::kIgnoreCase))
+      return 0;
 
    // A TFile can only be opened on all machines if the master and slaves
    // share the same file system image.
    if (clsnam == "TFile") {
-      if (GetNumberOfUniqueSlaves() != 0)
+      if (GetNumberOfUniqueSlaves() > 0)
          return 0;
       else {
          if (!gSystem->IsAbsoluteFileName(filenam)) {
@@ -274,8 +309,10 @@ Int_t TProof::ConnectFile(const TFile *file)
       }
    }
 
-   return SendCommand(Form("new %s(\"%s\", \"%s\");", clsnam.Data(),
-                      filenam.Data(), file->GetOption()), kAll);
+   TMessage mess(kPROOF_OPENFILE);
+   mess << clsnam << filenam << option;
+   Broadcast(mess, kAll);
+   return Collect(kAll);
 }
 
 //______________________________________________________________________________
@@ -349,7 +386,7 @@ void TProof::FindUniqueSlaves()
 
    TSlave *sl;
    while ((sl = (TSlave *)next())) {
-      if (fImage == sl->fImage && fWorkDir == sl->fWorkDir) continue;
+      if (fImage == sl->fImage) continue;
       TIter next2(fUniqueSlaves);
       TSlave *sl2;
       Int_t   add = fUniqueSlaves->IsEmpty() ? 1 : 0;
@@ -1116,7 +1153,8 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
    // Send command to be executed on the PROOF master and/or slaves.
    // Command can be any legal command line command. Commands like
    // ".x file.C" or ".L file.C" will cause the file file.C to be send
-   // to the PROOF cluster.
+   // to the PROOF cluster. Returns -1 in case of error, >=0 in case of
+   // succes.
 
    if (!IsValid()) return 0;
 
@@ -1132,10 +1170,21 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
       file = file.Strip(TString::kTrailing, '+');
       char *fn = gSystem->Which(TROOT::GetMacroPath(), file, kReadPermission);
       if (fn) {
-         if (SendFile(fn, kFALSE, kUnique) < 0) {
-            Error("Exec", "file %s could not be transfered to PROOF", fn);
-            return 0;
+         if (GetNumberOfUniqueSlaves() > 0) {
+            if (SendFile(fn, kFALSE, kUnique) < 0) {
+               Error("Exec", "file %s could not be transfered to PROOF", fn);
+               delete [] fn;
+               return -1;
+            }
+         } else {
+            TString scmd = s(0,3) + fn;
+            Int_t n = SendCommand(scmd);
+            delete [] fn;
+            return n;
          }
+      } else {
+         Error("Exec", "macro %s not found", file.Data());
+         return -1;
       }
       delete [] fn;
    }
@@ -1149,7 +1198,7 @@ Int_t TProof::SendCommand(const char *cmd, ESlaves list)
    // Send command to be executed on the PROOF master and/or slaves.
    // Command can be any legal command line command, however commands
    // like ".x file.C" or ".L file.C" will not cause the file.C to be
-   // transfered to the PROOF cluter. In that case use TProof::Exec().
+   // transfered to the PROOF cluster. In that case use TProof::Exec().
    // Returns the status send by the remote server as part of the
    // kPROOF_LOGDONE message. Typically this is the return code of the
    // command on the remote side.
@@ -1197,9 +1246,10 @@ Int_t TProof::SendInitialState()
 //______________________________________________________________________________
 Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
 {
-   // Send an ascii file to master or slave servers. Returns number of slaves
+   // Send a file to master or slave servers. Returns number of slaves
    // the file was sent to, maybe 0 in case master and slaves have the same
-   // file system image, -1 in case of error.
+   // file system image, -1 in case of error. If bin is true binary
+   // file transfer is used, otherwise ASCII mode.
 
    TList *slaves = 0;
    if (list == kAll)    slaves = fSlaves;

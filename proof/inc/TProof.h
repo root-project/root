@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.4 2000/11/24 18:11:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.5 2000/11/27 10:51:46 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -54,6 +54,8 @@ class TProof : public TObject {
 friend class TSlave;
 
 private:
+   enum ESecurity { kNormal, kSRP };  // level of authentication security
+
    TString   fMaster;        //name of master server (use "" if this is a master)
    TString   fConfDir;       //directory containing cluster config information
    TString   fConfFile;      //file containing config information
@@ -62,12 +64,13 @@ private:
    TString   fPasswd;        //user password
    TString   fImage;         //master's image name
    Int_t     fPort;          //port we are connected to (proofd = 1093)
+   Int_t     fSecurity;      //security level used to connect to master server
    Int_t     fProtocol;      //protocol version number
    Int_t     fLogLevel;      //server debug logging level
    Int_t     fStatus;        //remote return status (part of kPROOF_LOGDONE)
    Int_t     fParallel;      //number of active slaves (only set on client, on server use fActiveSlaves)
    Bool_t    fMasterServ;    //true if we are a master server
-   Bool_t    fSendGroupView; //send new group view
+   Bool_t    fSendGroupView; //if true send new group view
    TList    *fSlaves;        //list of all slave servers as in config file
    TList    *fActiveSlaves;  //list of active slaves (subset of all slaves)
    TList    *fUniqueSlaves;  //list of all active slaves with unique file systems
@@ -83,7 +86,7 @@ private:
    static char *fgUser;
    static char *fgPasswd;
 
-   Int_t     Init(const char *master, Int_t port, const char *conffile,
+   Int_t     Init(const char *masterurl, const char *conffile,
                   const char *confdir, Int_t loglevel);
    Int_t     Collect(TMonitor *mon);
    void      ConnectFiles();
@@ -105,8 +108,7 @@ public:
    enum ESlaves { kAll, kActive, kUnique };
    enum EUrgent { kHardInterrupt = 1, kSoftInterrupt, kShutdownInterrupt };
 
-   TProof(const char *master, Int_t port = kPROOF_Port,
-          const char *conffile = kPROOF_ConfFile,
+   TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
           const char *confdir = kPROOF_ConfDir, Int_t loglevel = 1);
    virtual ~TProof();
 

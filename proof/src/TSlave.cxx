@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.3 2000/11/21 12:27:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.4 2000/11/24 18:11:32 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -30,19 +30,22 @@ ClassImp(TSlave)
 
 //______________________________________________________________________________
 TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-               const char *image, TProof *proof)
+               const char *image, const char *user, Int_t security,
+               TProof *proof)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
 
-   fName    = host;
-   fPort    = port;
-   fImage   = image;
-   fWorkDir = kPROOF_WorkDir;
-   fOrdinal = ord;
-   fPerfIdx = perf;
-   fProof   = proof;
-   fSocket  = 0;
-   fInput   = 0;
+   fName     = host;
+   fPort     = port;
+   fImage    = image;
+   fWorkDir  = kPROOF_WorkDir;
+   fUser     = user;
+   fOrdinal  = ord;
+   fPerfIdx  = perf;
+   fSecurity = security;
+   fProof    = proof;
+   fSocket   = 0;
+   fInput    = 0;
 
    // Open connection to remote PROOF slave server.
    fSocket = new TSocket(host, port);
@@ -140,6 +143,7 @@ void TSlave::Print(Option_t *)
    Printf("*** Slave %d  (%s)", fOrdinal, fSocket ? "valid" : "invalid");
    Printf("    Host name:            %s", GetName());
    Printf("    Port number:          %d", GetPort());
+   Printf("    User:                 %s", GetUser());
    Printf("    Image name:           %s", GetImage());
    Printf("    Working directory:    %s", GetWorkingDirectory());
    Printf("    Performance index:    %d", GetPerfIdx());

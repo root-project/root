@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.10 2000/11/24 18:11:32 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.11 2000/12/01 14:22:26 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -13,14 +13,58 @@
 //                                                                      //
 // Proofd                                                               //
 //                                                                      //
-// Proof, Parallel ROOT Facility, front-end daemon.                     //
-// This small server is started by inetd when a client requests         //
-// a connection to a Proof server. If we don't want the Proof server    //
+// PROOF, Parallel ROOT Facility, front-end daemon.                     //
+// This small server is started either by inetd when a client requests  //
+// a connection to a PROOF server or by hand (i.e. from the command     //
+// line). By default proofd uses port 1093 (allocated by IANA,          //
+// www.iana.org, to proofd). If we don't want the PROOF server          //
 // to run on this specific node, e.g. because the system is being       //
 // shutdown or there are already too many servers running, we send      //
 // the client a re-route message and close the connection. Otherwise    //
-// we receive the client's version key and exec the appropriate         //
-// server version.                                                      //
+// we authenticate the user and exec the proofserv program.             //
+// To run proofd via inetd add the following line to /etc/services:     //
+//                                                                      //
+// proofd     1093/tcp                                                  //
+//                                                                      //
+// and to /etc/inetd.conf:                                              //
+//                                                                      //
+// proofd stream tcp nowait root /usr/local/root/bin/proofd -i \        //
+//    /usr/local/root                                                   //
+//                                                                      //
+// Force inetd to reread its conf file with "kill -HUP <pid inetd>".    //
+// You can also start proofd by hand running directly under your        //
+// private account (no root system priviliges needed). For example to   //
+// start proofd listening on port 5252 just type:                       //
+//                                                                      //
+// prootf -p 5252 $ROOTSYS                                              //
+//                                                                      //
+// Notice: no & is needed. Proofd will go in background by itself.      //
+//                                                                      //
+// Proofd arguments:                                                    //
+//   -i              says we were started by inetd                      //
+//   -p port#        specifies a different port to listen on            //
+//   rootsys_dir     directory which must contain bin/proofserv and     //
+//                   proof/etc/proof.conf                               //
+//                                                                      //
+//  When your system uses shadow passwords you have to compile proofd   //
+//  with -DR__SHADOWPW. Since shadow passwords can only be accessed     //
+//  while being superuser (root) this works only when the server is     //
+//  started via inetd. Another solution is to create a file             //
+//  ~/.rootdpass containing an encrypted password. If this file exists  //
+//  its password is used for authentication. This method overrides      //
+//  all other authentication methods. To create an encrypted password   //
+//  do something like:                                                  //
+//     perl -e '$pw = crypt("<secretpasswd>","salt"); print "$pw\n"'    //
+//  and store this string in ~/.rootdpass.                              //
+//                                                                      //
+//  To use AFS for authentication compile proofd with the -DR__AFS      //
+//  flag. In that case you also need to link with the AFS libraries.    //
+//  See the Makefiles for more details.                                 //
+//                                                                      //
+//  To use Secure Remote Passwords (SRP) for authentication compile     //
+//  proofd with the -DR__SRP flag. In that case you also need to link   //
+//  with the SRP and gmp libraries. See the Makefile for more details.  //
+//  SRP is described at: http://srp.stanford.edu/.                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +164,7 @@ static int setresuid(uid_t r, uid_t e, uid_t)
 #endif
 
 
-void Send(char *msg)
+void Send(const char *msg)
 {
    // Simulate TSocket::Send(const char *str).
 
@@ -152,7 +196,7 @@ int Recv(char *msg, int max)
    return hlen;
 }
 
-void fatal_error(char *msg)
+void fatal_error(const char *msg)
 {
    Send(msg);
    exit(1);
@@ -237,7 +281,7 @@ char *check_pass()
    return user_name;
 }
 
-char *reroute_user(char *confdir, char *user_name)
+char *reroute_user(const char *confdir, const char *user_name)
 {
    // Look if user should be rerouted to another server node.
 
@@ -320,6 +364,7 @@ char *reroute_user(char *confdir, char *user_name)
    return 0;
 }
 
+//______________________________________________________________________________
 int main(int /* argc */, char **argv)
 {
    // Arguments:  <confdir>

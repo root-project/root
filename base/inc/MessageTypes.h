@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.2 2000/11/21 12:25:38 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.3 2000/11/27 10:39:53 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -51,6 +51,8 @@ enum EMessageTypes {
    kPROOF_LIMITS,                        //ask for histogram limits
    kPROOF_SENDFILE,                      //filename, length and file follows
    kPROOF_PARALLEL,                      //number of parallel slaves follows
+   kPROOF_OPENFILE,                      //type of file, name and option follows
+   kPROOF_CLOSEFILE,                     //name of file follows
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows
