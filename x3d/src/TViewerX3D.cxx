@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.6 2002/01/16 13:53:53 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.7 2003/01/12 11:19:09 rdm Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -375,7 +375,12 @@ void TViewerX3D::InitX3DWindow()
    while (lnk) {
       obj = lnk->GetObject();
       TAtt3D *att;
+#ifdef R__INTEL_COMPILER
+      // bug in dynamic_cast !!
+      if ((att = (TAtt3D*)obj->IsA()->DynamicCast(TAtt3D::Class(), obj)))
+#else
       if ((att = dynamic_cast<TAtt3D*>(obj)))
+#endif
          att->Sizeof3D();
       lnk = lnk->Next();
    }
