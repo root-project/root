@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.75 2004/08/21 07:09:31 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.76 2004/08/25 15:34:00 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -978,6 +978,11 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
       break;
 
+   case kMouseEnter:
+      // mouse enters canvas
+      if (!fDoubleBuffer) FeedbackMode(kTRUE);
+      break;
+      
    case kMouseLeave:
       // mouse leaves canvas
       {
@@ -989,6 +994,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          EnterLeave(prevSelPad, prevSelObj);
          fSelected     = sobj;
          fSelectedPad  = spad;
+         if (!fDoubleBuffer) FeedbackMode(kFALSE);
       }
       break;
 
@@ -1099,6 +1105,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
+      if (!fDoubleBuffer) FeedbackMode(kFALSE);
+
       if (fContextMenu && !fSelected->TestBit(kNoContextMenu) &&
           !pad->TestBit(kNoContextMenu) && !TestBit(kNoContextMenu))
           fContextMenu->Popup(px, py, fSelected, this, pad);
@@ -1109,6 +1117,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
 
    case kButton3Up:
+      if (!fDoubleBuffer) FeedbackMode(kTRUE);
       break;
 
    case kButton3Double:
