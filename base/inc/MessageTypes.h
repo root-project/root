@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.9 2002/02/12 17:53:18 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.10 2002/03/15 17:23:40 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -87,7 +87,8 @@ enum EMessageTypes {
    kROOTD_PWD,                           //pwd
    kROOTD_MV,                            //rename file
    kROOTD_RM,                            //delete file
-   kROOTD_CHMOD                          //change permission
+   kROOTD_CHMOD,                         //change permission
+   kROOTD_KRB5                           //krb5 authentication follows
 };
 
 #endif

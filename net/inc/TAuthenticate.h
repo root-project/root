@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.3 2000/11/27 18:38:27 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.4 2000/12/19 14:32:44 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -34,12 +34,13 @@ class TSocket;
 
 typedef Int_t (*SecureAuth_t)(TSocket *sock, const char *user,
                               const char *passwd, const char *remote);
+typedef Int_t (*Krb5Auth_t)(TSocket *sock, TString &user);
 
 
 class TAuthenticate : public TObject {
 
 public:
-   enum ESecurity { kNormal, kSRP };  // level of authentication security
+   enum ESecurity { kClear, kSRP, kKrb5 }; // type of authentication
 
 private:
    TString   fUser;      // user to be authenticated
@@ -52,6 +53,7 @@ private:
    static TString       fgUser;
    static TString       fgPasswd;
    static SecureAuth_t  fgSecAuthHook;
+   static Krb5Auth_t    fgKrb5AuthHook;
 
 public:
    TAuthenticate(TSocket *sock, const char *remote, const char *proto,
@@ -70,6 +72,7 @@ public:
    static char       *PromptUser(const char *remote);
    static char       *PromptPasswd(const char *prompt = "Password: ");
    static void        SetSecureAuthHook(SecureAuth_t func);
+   static void        SetKrb5AuthHook(Krb5Auth_t func);
    static void        AuthError(const char *where, Int_t error);
 
    ClassDef(TAuthenticate,0)  // Class providing remote authentication service

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.39 2002/02/06 18:27:40 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.40 2002/02/15 14:07:14 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -8,6 +8,33 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+/* Parts of this file are copied from the MIT krb5 distribution and
+ * are subject to the following license:
+ *
+ * Copyright 1990,1991 by the Massachusetts Institute of Technology.
+ * All Rights Reserved.
+ *
+ * Export of this software from the United States of America may
+ *   require a specific license from the United States Government.
+ *   It is the responsibility of any person or organization contemplating
+ *   export to obtain such a license before exporting.
+ *
+ * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
+ * distribute this software and its documentation for any purpose and
+ * without fee is hereby granted, provided that the above copyright
+ * notice appear in all copies and that both that copyright notice and
+ * this permission notice appear in supporting documentation, and that
+ * the name of M.I.T. not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission.  Furthermore if you modify this software you must label
+ * your software as modified software and not distribute it in such a
+ * fashion that it might be confused with the original M.I.T. software.
+ * M.I.T. makes no representations about the suitability of
+ * this software for any purpose.  It is provided "as is" without express
+ * or implied warranty.
+ *
+ */
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -115,10 +142,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-// Protocol changes:
+// Protocol changes (see gProtocol):
 // 2 -> 3: added handling of kROOTD_FSTAT message.
 // 3 -> 4: added support for TFTP (i.e. kROOTD_PUTFILE, kROOTD_GETFILE, etc.)
 // 4 -> 5: added support for "+read" to allow readers when file is opened for writing
+// 5 -> 6: added support for kerberos5 authentication
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -182,8 +210,8 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
-#define	F_LOCK             (LOCK_EX | LOCK_NB)
-#define	F_ULOCK             LOCK_UN
+#define F_LOCK             (LOCK_EX | LOCK_NB)
+#define F_ULOCK             LOCK_UN
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
@@ -245,6 +273,13 @@ extern "C" {
 }
 #endif
 
+#ifdef R__KRB5
+#include <krb5.h>
+#include <string>
+extern krb5_deltat krb5_clockskew;
+extern "C" int krb5_net_write(krb5_context, int, const char *, int);
+#endif
+
 #include "rootdp.h"
 
 
@@ -265,7 +300,7 @@ int     gAuth              = 0;
 int     gAnon              = 0;
 int     gFd                = -1;
 int     gWritable          = 0;
-int     gProtocol          = 5;       // increase when protocol changes
+int     gProtocol          = 6;       // increase when protocol changes
 int     gUploaded          = 0;
 int     gDownloaded        = 0;
 int     gFtp               = 0;
@@ -275,6 +310,11 @@ char    gUser[64]          = { 0 };
 char    gPasswd[64]        = { 0 };   // only used for anonymous access
 char    gOption[32]        = { 0 };
 char    gFile[kMAXPATHLEN] = { 0 };
+
+#ifdef R__KRB5
+krb5_keytab  gKeytab       = 0;       // to allow specifying on the command line
+krb5_context gKcontext;
+#endif
 
 //--- Machine specific routines ------------------------------------------------
 
@@ -759,6 +799,45 @@ void RootdProtocol()
 }
 
 //______________________________________________________________________________
+void RootdLogin()
+{
+   // Authentication was successful, set user environment.
+
+   struct passwd *pw = getpwnam(gUser);
+
+   gAuth = 1;
+
+   if (chdir(pw->pw_dir) == -1)
+      ErrorFatal(kErrFatal, "RootdLogin: can't change directory to %s",
+                 pw->pw_dir);
+
+   if (getuid() == 0) {
+      if (gAnon && chroot(pw->pw_dir) == -1)
+         ErrorFatal(kErrFatal, "RootdLogin: can't chroot to %s", pw->pw_dir);
+
+      // set access control list from /etc/initgroup
+      initgroups(gUser, pw->pw_gid);
+
+      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
+         ErrorFatal(kErrFatal, "RootdLogin: can't setgid for user %s", gUser);
+
+      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
+         ErrorFatal(kErrFatal, "RootdLogin: can't setuid for user %s", gUser);
+   }
+
+   umask(022);
+
+   NetSend(gAuth, kROOTD_AUTH);
+
+   if (gDebug > 0) {
+      if (gAnon)
+         ErrorInfo("RootdLogin: user %s/%s authenticated", gUser, gPasswd);
+      else
+         ErrorInfo("RootdLogin: user %s authenticated", gUser);
+   }
+}
+
+//______________________________________________________________________________
 void RootdUser(const char *user)
 {
    // Check user id. If user id is not equal to rootd's effective uid, user
@@ -788,6 +867,72 @@ void RootdUser(const char *user)
    strcpy(gUser, user);
 
    NetSend(gAuth, kROOTD_AUTH);
+}
+
+//______________________________________________________________________________
+void RootdKrb5Auth()
+{
+   // Authenticate via Kerberos.
+
+#ifdef R__KRB5
+   NetSend(1, kROOTD_KRB5);
+   // TAuthenticate will respond to our encouragement by sending krb5
+   // authentication through the socket
+#else
+   NetSend(0, kROOTD_KRB5);
+   return;
+#endif
+
+#ifdef R__KRB5
+   int retval;
+
+   // get service principal
+   krb5_principal server;
+   if ((retval = krb5_sname_to_principal(gKcontext, 0, "rootd",
+                                         KRB5_NT_SRV_HST, &server)))
+      ErrorFatal(kErrFatal, "while generating service name (%s): %s",
+                 "rootd", error_message(retval));
+
+   // listen for authentication from the client
+   krb5_auth_context auth_context = 0;
+   krb5_ticket *ticket;
+   char proto_version[100] = "krootd_v_1";
+   int sock = gSockFd;
+   if ((retval = krb5_recvauth(gKcontext, &auth_context, (krb5_pointer)&sock,
+                               proto_version, server,
+                               0,
+                               gKeytab,    // default gKeytab is 0
+                               &ticket)))
+      ErrorFatal(kErrFatal, "recvauth failed--%s", error_message(retval));
+
+   // get client name
+   char *cname;
+   if ((retval = krb5_unparse_name(gKcontext, ticket->enc_part2->client, &cname)))
+      ErrorFatal(kErrFatal, "unparse failed: %s", error_message(retval));
+   using std::string;
+   string user = cname;
+   free(cname);
+   string reply = "authenticated as ";
+   reply += user;
+
+   NetSend(reply.c_str(), kMESS_STRING);
+
+   krb5_auth_con_free(gKcontext, auth_context);
+
+   // set user name
+   user = user.erase(user.find("@"));        // cut off realm
+   string::size_type pos = user.find("/");   // see if there is an instance
+   if (pos != string::npos)
+      user = user.erase(pos);                // drop the instance
+   NetSend(user.c_str(), kMESS_STRING);
+
+   strncpy(gUser, user.c_str(), 64);
+
+   if (gDebug > 0)
+      ErrorInfo("RootdKrb5Auth: user %s authenticated", gUser);
+
+   RootdLogin();
+#endif
 }
 
 //______________________________________________________________________________
@@ -908,30 +1053,10 @@ void RootdSRPUser(const char *user)
    if (!t_serververify(ts, cbuf)) {
       // authentication successful
 
-      gAuth = 1;
-
-      if (chdir(pw->pw_dir) == -1)
-         ErrorFatal(kErrFatal, "RootdSRPUser: can't change directory to %s", pw->pw_dir);
-
-      if (getuid() == 0) {
-
-         // set access control list from /etc/initgroup
-         initgroups(gUser, pw->pw_gid);
-
-         if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-            ErrorFatal(kErrFatal, "RootdSRPUser: can't setgid for user %s", gUser);
-
-         if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-            ErrorFatal(kErrFatal, "RootdSRPUser: can't setuid for user %s", gUser);
-
-      }
-
-      umask(022);
-
-      NetSend(gAuth, kROOTD_AUTH);
-
       if (gDebug > 0)
          ErrorInfo("RootdSRPUser: user %s authenticated", gUser);
+
+      RootdLogin();
 
    } else
       ErrorFatal(kErrBadPasswd, "RootdSRPUser: authentication failed for user %s", gUser);
@@ -986,7 +1111,7 @@ int RootdCheckSpecialPass(const char *passwd)
 //______________________________________________________________________________
 void RootdPass(const char *pass)
 {
-   // Check user's password, if ok, change to user's id and to user's directory.
+   // Check user's password.
 
    char   passwd[64];
    char  *passw;
@@ -1020,11 +1145,14 @@ void RootdPass(const char *pass)
 
    if (gAnon) {
       strcpy(gPasswd, passwd);
-      goto skipauth;
+      RootdLogin();
+      return;
    }
 
-   if (RootdCheckSpecialPass(passwd))
-      goto skipauth;
+   if (RootdCheckSpecialPass(passwd)) {
+      RootdLogin();
+      return;
+   }
 
 #ifdef R__AFS
    afs_auth = !ka_UserAuthenticateGeneral(
@@ -1062,38 +1190,7 @@ void RootdPass(const char *pass)
    }  // afs_auth
 #endif
 
-skipauth:
-   gAuth = 1;
-
-   if (chdir(pw->pw_dir) == -1)
-      ErrorFatal(kErrFatal, "RootdPass: can't change directory to %s", pw->pw_dir);
-
-   if (getuid() == 0) {
-
-      if (gAnon && chroot(pw->pw_dir) == -1)
-         ErrorFatal(kErrFatal, "RootdPass: can't chroot to %s", pw->pw_dir);
-
-      // set access control list from /etc/initgroup
-      initgroups(gUser, pw->pw_gid);
-
-      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-         ErrorFatal(kErrFatal, "RootdPass: can't setgid for user %s", gUser);
-
-      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-         ErrorFatal(kErrFatal, "RootdPass: can't setuid for user %s", gUser);
-
-   }
-
-   umask(022);
-
-   NetSend(gAuth, kROOTD_AUTH);
-
-   if (gDebug > 0) {
-      if (gAnon)
-         ErrorInfo("RootdPass: user %s/%s authenticated", gUser, gPasswd);
-      else
-         ErrorInfo("RootdPass: user %s authenticated", gUser);
-   }
+   RootdLogin();
 }
 
 //______________________________________________________________________________
@@ -1927,7 +2024,8 @@ void RootdLoop()
          ErrorFatal(kErrFatal, "RootdLoop: error receiving message");
 
       if (kind != kROOTD_USER    && kind != kROOTD_PASS &&
-          kind != kROOTD_SRPUSER && kind != kROOTD_PROTOCOL && gAuth == 0)
+          kind != kROOTD_SRPUSER && kind != kROOTD_KRB5 &&
+          kind != kROOTD_PROTOCOL && gAuth == 0)
          ErrorFatal(kErrNoUser, "RootdLoop: not authenticated");
 
       if (gDebug > 2 && kind != kROOTD_PASS)
@@ -1942,6 +2040,9 @@ void RootdLoop()
             break;
          case kROOTD_PASS:
             RootdPass(recvbuf);
+            break;
+         case kROOTD_KRB5:
+            RootdKrb5Auth();
             break;
          case kROOTD_OPEN:
             RootdOpen(recvbuf);
@@ -2011,6 +2112,15 @@ int main(int argc, char **argv)
 
    ErrorInit(argv[0]);
 
+#ifdef R__KRB5
+   const char *kt_fname;
+
+   int retval = krb5_init_context(&gKcontext);
+   if (retval)
+      ErrorFatal(kErrFatal, "%s while initializing krb5",
+                 error_message(retval));
+#endif
+
    while (--argc > 0 && (*++argv)[0] == '-')
       for (s = argv[0]+1; *s != 0; s++)
          switch (*s) {
@@ -2045,6 +2155,20 @@ int main(int argc, char **argv)
                tcpwindowsize = atoi(*++argv);
                break;
 
+#ifdef R__KRB5
+            case 'S':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-S requires a path to your keytab\n");
+                  ErrorFatal(kErrFatal, "-S requires a path to your keytab\n");
+               }
+               kt_fname = *++argv;
+               if ((retval = krb5_kt_resolve(gKcontext, kt_fname, &gKeytab)))
+                  ErrorFatal(kErrFatal, "%s while resolving keytab file %s",
+                             error_message(retval), kt_fname);
+               break;
+#endif
+
             default:
                if (!gInetdFlag)
                   fprintf(stderr, "unknown command line option: %c\n", *s);
@@ -2075,11 +2199,17 @@ int main(int argc, char **argv)
       if (NetOpen(gInetdFlag) == 0) {
          RootdParallel();  // see if we should use parallel sockets
          RootdLoop();      // child processes client's requests
-         NetClose();       // then we are done
+         NetClose();       // till we are done
          exit(0);
       }
 
       // parent waits for another client to connect
 
    }
+
+#ifdef R__KRB5
+   // never called... needed?
+   krb5_free_context(gKcontext);
+#endif
+
 }

@@ -35,8 +35,15 @@ SRPFLAGS     := -DR__SRP -I$(SRPINCDIR)
 SRPLIBS      := $(SRPLIBDIR) $(SRPLIB)
 endif
 
-AUTHFLAGS    := $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) $(EXTRA_AUTHFLAGS)
-AUTHLIBS     := $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS)
+##### use krb5 for authentication #####
+ifneq ($(KRB5LIB),)
+KRB5FLAGS     := -DR__KRB5 -I$(KRB5INCDIR)
+KRB5LIBS      := $(KRB5LIBDIR) $(KRB5LIB)
+endif
+
+AUTHFLAGS    := $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) $(KRB5FLAGS) \
+                $(EXTRA_AUTHFLAGS)
+AUTHLIBS     := $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS) $(KRB5LIBS)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOTDH))

@@ -83,6 +83,10 @@ SRPUTILINCDIR  := @srputilincdir@
 AFSLIB         := @afslib@
 AFSLIBDIR      := @afslibdir@
 
+KRB5LIB        := @krb5lib@
+KRB5LIBDIR     := @krb5libdir@
+KRB5INCDIR     := @krb5incdir@
+
 SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=

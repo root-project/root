@@ -97,6 +97,9 @@ endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
 endif
+ifneq ($(KRB5LIB),)
+MODULES      += krb5auth
+endif
 ifneq ($(CERNLIBS),)
 MODULES      += hbook
 endif

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.5 2001/01/29 00:03:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.6 2001/01/30 13:18:42 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -95,6 +95,7 @@ public:
    TInetAddress          GetInetAddress() const { return fAddress; }
    virtual TInetAddress  GetLocalInetAddress();
    Int_t                 GetPort() const { return fAddress.GetPort(); }
+   const char           *GetService() const { return fService; }
    virtual Int_t         GetLocalPort();
    UInt_t                GetBytesSent() const { return fBytesSent; }
    UInt_t                GetBytesRecv() const { return fBytesRecv; }

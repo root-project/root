@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.7 2001/01/25 14:06:04 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.8 2001/02/22 09:44:41 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 TString      TAuthenticate::fgUser;
 TString      TAuthenticate::fgPasswd;
 SecureAuth_t TAuthenticate::fgSecAuthHook;
+Krb5Auth_t   TAuthenticate::fgKrb5AuthHook;
 
 
 ClassImp(TAuthenticate)
@@ -61,6 +62,37 @@ Bool_t TAuthenticate::Authenticate()
    // authentication succeeded.
 
    Bool_t result = kFALSE;
+
+   // if not anonymous login try to use kerberos5 authentication
+   if (fSecurity == kKrb5 && fUser != "anonymous" && fUser != "rootd") {
+      if (!fgKrb5AuthHook) {
+         char *p;
+#ifdef ROOTLIBDIR
+         TString lib = TString(ROOTLIBDIR) + "/libKrb5Auth";
+#else
+         TString lib = TString(gRootDir) + "/lib/libKrb5Auth";
+#endif
+         if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
+            delete [] p;
+            gSystem->Load(lib);
+         }
+      }
+      if (fgKrb5AuthHook) {
+         Int_t st = (*fgKrb5AuthHook)(fSocket, fUser);
+         if (st == 0)
+            return kFALSE;
+         if (st == 1)
+            return kTRUE;
+         if (st == 2) {
+            Warning("Authenticate", "remote %s does not support kerberos5 authentication",
+                    fProtocol.Data());
+            return kFALSE;
+         }
+      } else {
+         Error("Authenticate", "no support for kerberos5 authentication available");
+         return kFALSE;
+      }
+   }
 
    TString user;
    TString passwd;
@@ -106,9 +138,11 @@ Bool_t TAuthenticate::Authenticate()
             return kFALSE;
          if (st == 1)
             return kTRUE;
-         if (st == 2)
+         if (st == 2) {
             Warning("Authenticate", "remote %s does not support secure authentication",
                     fProtocol.Data());
+            return kFALSE;
+         }
       } else {
          Error("Authenticate", "no support for secure authentication available");
          return kFALSE;
@@ -222,8 +256,8 @@ again:
             int nword = sscanf(line, "%s %s %s %s %s %s", word[0], word[1],
                                word[2], word[3], word[4], word[5]);
             if (nword != 6) continue;
-            if (fSecurity == kSRP    && strcmp(word[0], "secure"))  continue;
-            if (fSecurity == kNormal && strcmp(word[0], "machine")) continue;
+            if (fSecurity == kSRP   && strcmp(word[0], "secure"))  continue;
+            if (fSecurity == kClear && strcmp(word[0], "machine")) continue;
             if (strcmp(word[2], "login"))    continue;
             if (strcmp(word[4], "password")) continue;
 
@@ -240,7 +274,7 @@ again:
    }
    delete [] net;
 
-   if (first && fSecurity == kNormal && !result) {
+   if (first && fSecurity == kClear && !result) {
       net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".netrc");
       first = kFALSE;
       goto again;
@@ -344,4 +378,13 @@ void TAuthenticate::SetSecureAuthHook(SecureAuth_t func)
    // is loaded.
 
    fgSecAuthHook = func;
+}
+
+//______________________________________________________________________________
+void TAuthenticate::SetKrb5AuthHook(Krb5Auth_t func)
+{
+   // Set kerberos5 authorization function. Automatically called when
+   // libKrb5Auth is loaded.
+
+   fgKrb5AuthHook = func;
 }

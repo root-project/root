@@ -21,13 +21,14 @@ noact="no"
 
 enable_afs=no
 enable_cern=yes
+enable_dcache=yes
+enable_krb5=yes
 enable_mysql=yes
 enable_opengl=yes
 enable_pgsql=yes
 enable_pythia=yes
 enable_pythia6=yes
 enable_rfio=yes
-enable_dcache=yes
 enable_rpath=no
 enable_sapdb=yes
 enable_shadowpw=
@@ -407,6 +408,7 @@ if test $# -gt 0 ; then
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
+      --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       ################################################################
       #
@@ -441,6 +443,8 @@ if test $# -gt 0 ; then
       --disable-srp)          enable_srp=no         ;;
       --enable-afs)           enable_afs=yes        ;;
       --disable-afs)          enable_afs=no         ;;
+      --enable-krb5)          enable_krb5=yes       ;;
+      --disable-krb5)         enable_krb5=no        ;;
       --enable-shadowpw)      enable_shadowpw=yes   ;;
       --disable-shadowpw)     enable_shadowpw=no    ;;
       --enable-pythia)        enable_pythia=yes     ;;
@@ -609,7 +613,7 @@ if test ! "x$enable_ttf" = "xno" && test ! "$platform" = "win32"; then
     # libGX11TTF.so.  Hence, individuals that do not particular want
     # the Microsoft fonts (for whatever reason) can still build the
     # library.
-    if test "x$ttflib"  = "x" ||  test "x$ttfincdir"  = "x" ; then
+    if test "x$ttflib" = "x" || test "x$ttfincdir" = "x" ; then
         enable_ttf="no"
     fi
 fi
@@ -1024,6 +1028,54 @@ fi
 
 ######################################################################
 #
+### echo %%% krb5 Support - Third party libraries
+#
+#
+# Check for krb5 (libkrb5.a)
+#
+if test ! "x$enable_krb5" = "xno" ; then
+    krb5incdir=""
+    krb5libdirorg=""
+    if test ! "x$krb5dir" = "x" ; then
+	krb5incdir=$krb5dir/include
+	krb5libdirorg=$krb5dir/lib
+    fi
+    check_header "krb5.h" "$krb5incdir" /usr/athena/include \
+	    /usr/local/athena/include /usr/kerberos/include \
+	    /usr/local/kerberos/include /usr/include /usr/local/include
+    krb5inc=$found_hdr
+    krb5incdir=$found_dir
+
+    krb5lib=""
+    krb5libdir=""
+    for i in libkrb5 libcom_err libss libk5crypto; do
+	check_library $i "no" "$krb5libdirorg" /usr/athena/lib \
+	    /usr/local/athena/lib /usr/kerberos/lib \
+	    /usr/local/kerberos/lib /usr/lib /usr/local/lib
+	if test "x$found_lib" = "x" ; then
+	    krb5lib=""
+	    krb5libdir=""
+	    enable_krb5="no"
+	    break
+	fi
+	krb5lib="$krb5lib $found_lib"
+	krb5libdir="$krb5libdir $found_dir"
+    done
+
+    # on linux, the resolver lives in a separate library
+    if test ! "x$krb5lib" = "x" ; then
+	case $arch in
+	    linux*) krb5lib="$krb5lib -lresolv" ;;
+	esac
+    fi
+
+    if test "x$krb5lib" = "x" || test "x$krb5incdir" = "x" ; then
+        enable_krb5="no"
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% Shadow password support
 #
 
@@ -1284,6 +1336,9 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@srputilincdir@|$srputilincdir|" \
     -e "s|@afslibdir@|$afslibdir|"         \
     -e "s|@afslib@|$afslib|"               \
+    -e "s|@krb5incdir@|$krb5incdir|"       \
+    -e "s|@krb5libdir@|$krb5libdir|"       \
+    -e "s|@krb5lib@|$krb5lib|"             \
     -e "s|@shadowpw@|$shadowpw|"           \
     -e "s|@pythialibdir@|$pythialibdir|"   \
     -e "s|@pythialib@|$pythialib|"         \
