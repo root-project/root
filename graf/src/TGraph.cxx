@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.47 2001/10/12 07:49:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.48 2001/10/23 09:20:38 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1028,12 +1028,11 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
    f      = 0;
    for (bin=0;bin<n;bin++) {
       x[0] = gx[bin];
-      if (fitOption.Range) {
-         if (x[0] < fxmin) continue;
-         if (x[0] > fxmax) continue;
-      }
+      if (!grF1->IsInside(x)) continue;
       cu   = gy[bin];
+      TF1::RejectPoint(kFALSE);
       fu   = grF1->EvalPar(x,u);
+      if (TF1::RejectedPoint()) continue;
       ex   = gr->GetErrorX(bin);
       ey   = gr->GetErrorY(bin);
       if (fitOption.W1) {ex = 0; ey = 1;}
