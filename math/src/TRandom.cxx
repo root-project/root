@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.18 2003/11/23 16:13:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.19 2004/06/09 06:46:30 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -223,7 +223,7 @@ Int_t TRandom::Binomial(Int_t ntot, Double_t prob)
 //______________________________________________________________________________
 Double_t TRandom::BreitWigner(Double_t mean, Double_t gamma)
 {
-// Generates a random integer N according to the BreitWigner law
+//  Return a number distributed following a BreitWigner function with mean and gamma
   
    Double_t rval, displ;
    rval = 2*Rndm() - 1;
