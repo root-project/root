@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.10 2001/04/28 16:30:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.11 2001/05/15 14:17:48 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -291,11 +291,16 @@ TGClient::TGClient(const char *dpyName)
    sprintf(line, "%s/.root.mimes", gSystem->Getenv("HOME"));
 #else
    sprintf(line,"[%s.ICONS]",gSystem->Getenv("ROOTSYS"));
-   strcpy(icon_path,gEnv->GetValue("Gui.IconPath",line));
+   strcpy(icon_path, gEnv->GetValue("Gui.IconPath",line));
    sprintf(line,"%sroot.mimes",gSystem->Getenv("HOME"));
 #endif
 
    strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
+   char *mf = gSystem->ExpandPathName(mime_file);
+   if (mf) {
+      strcpy(mime_file, mf);
+      delete [] mf;
+   }
    if (gSystem->AccessPathName(mime_file, kReadPermission))
 #ifdef R__VMS
       sprintf(mime_file,"[%s.ETC]root.mimes",gSystem->Getenv("ROOTSYS"));
