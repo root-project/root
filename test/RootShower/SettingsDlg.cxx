@@ -78,7 +78,7 @@ enum RootShowerSettingsTypes {
     Id2,
     Id3,
     Id4,
-    Id5,
+    Id5
 };
 
 
