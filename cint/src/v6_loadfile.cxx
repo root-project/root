@@ -2859,6 +2859,8 @@ char *name;
 #if defined(G__TMPFILE) 
   const char *appendix="_cint";
   static char tempname[G__MAXFILENAME];
+  int pid = getpid();
+  int now = clock();
   char *tmp;
   if('\0'==G__tmpdir[0]) {
     if((tmp=getenv("CINTTMPDIR"))) strcpy(G__tmpdir,tmp);
@@ -2869,13 +2871,15 @@ char *name;
   if(name) {
     strcpy(name,(tmp=tempnam(G__tmpdir,"")));
     free((void*)tmp);
-    if(strlen(name)<L_tmpnam-6) strcat(name,appendix);
+    if(strlen(name)<G__MAXFILENAME-10) sprintf(name+strlen(name),"%d%d",pid%10000,now%10000);
+    if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
     return(name);
   }
   else {
     strcpy(tempname,(tmp=tempnam(G__tmpdir,"")));
     free((void*)tmp);
-    if(strlen(tempname)<L_tmpnam-6) strcat(tempname,appendix);
+    if(strlen(name)<G__MAXFILENAME-10) sprintf(name+strlen(name),"%d%d",pid%10000,now%10000);
+    if(strlen(tempname)<G__MAXFILENAME-6) strcat(tempname,appendix);
     return(tempname);
   }
 
