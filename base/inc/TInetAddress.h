@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.4 2001/10/01 09:46:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.5 2003/09/23 15:18:04 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -42,7 +42,7 @@ friend class TMacSystem;
 friend class TUUID;
 friend class TSocket;
 friend class TServerSocket;
-friend class XTSocket;   // special for BaBar, will become TXSocket
+friend class TXSocket;   // special for BaBar
 
 private:
    TString fHostname;    // fully qualified hostname
