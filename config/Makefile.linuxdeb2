@@ -16,12 +16,12 @@ endif
 # Compiler:
 CXX           = g++
 CC            = egcc
-CXXFLAGS      = -Wall -fPIC -DR__GLIBC $(EXTRA_CXXFLAGS)
-CFLAGS        = -Wall -fPIC -DR__GLIBC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -Wall -fPIC $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = -pipe -Wall -fPIC -DR__GLIBC $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -Wall -fPIC -DR__GLIBC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = -Wall -fPIC $(EXTRA_CFLAGS) \
+CINTCFLAGS    = -pipe -Wall -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
 
