@@ -1,0 +1,5 @@
+short: Header files for ROOT
+long:
+Header files (Class declarations) for the ROOT class
+libraries. Please refer the package documentation for root-lib and
+root-bin.

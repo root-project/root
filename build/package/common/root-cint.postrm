@@ -1,0 +1,11 @@
+	# remove lines for /usr/lib/root in /etc/ld.so.conf
+	# if they exist. This can be done here, since all other 
+	# packages depends on this package, so this package cannot be
+	# removed without removing this package, and so the the directory
+	# /usr/lib/root will no longer exist. 
+	if grep -qs ^/usr/lib/root\$ /etc/ld.so.conf ; then
+	    sed '/^\/usr\/lib\/root$/d' /etc/ld.so.conf \
+		> /etc/ld.so.conf.root-tmp
+            mv /etc/ld.so.conf.root-tmp /etc/ld.so.conf
+	fi
+

@@ -1,0 +1,6 @@
+	# Add /usr/lib/root to the directories searched by ldd, if not
+	# so already 
+	if ! grep -qs ^/usr/lib/root\$ /etc/ld.so.conf ; then
+                echo /usr/lib/root >> /etc/ld.so.conf
+        fi
+	ldconfig

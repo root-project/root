@@ -1,0 +1,37 @@
+######################################################################
+#
+# lib Sub package 
+# 
+%package -n libroot
+Group: ROOT
+Summary: Numerical data analysis framework - shared runtime libraries
+%description -n libroot
+This is the shared libraries used by the ROOT system. The libraries
+contain numerous C++ class definitions for various purposes, some of
+which are:
+    * System abstraction
+    * Thin Thread API
+    * Histograming
+    * Persistent objects
+    * GUI API
+and many many others. Refer also to the class description of
+root-bin.
+
+See also root-bin package documentation for more information
+
+More information can be obtained via the ROOT web pages:
+    http://root.cern.ch
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n libroot -f rpm/libroot.files
+
+#-----------------
+%post -n libroot
+	if ! grep -qs ^/usr/lib/root\$ /etc/ld.so.conf ; then
+                echo /usr/lib/root >> /etc/ld.so.conf
+        fi
+	ldconfig
+
+
+

@@ -1,0 +1,8 @@
+usr/bin/rootd 
+usr/bin/proofd 
+usr/bin/proofserv 
+usr/share/root/proof 
+usr/share/man/man1/rootd.1 
+usr/share/man/man1/proofd.1 
+usr/share/man/man1/proofserv.1 
+usr/share/doc/root/README.PROOF

@@ -1,0 +1,9 @@
+short: Contributions to ROOT from STAR collaboration
+long:
+This package include various classes contributed to the ROOT system
+by the STAR collaboration at Brookhaven National Laboratory. Among
+these are:
+    * More containers
+    * Extended visualisation classes
+More information on STAR can be obtained at:
+    http://www.star.bnl.gov

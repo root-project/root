@@ -1,0 +1,5 @@
+usr/bin/* 
+usr/share/man/man1/* 
+usr/share/root/icons 
+usr/share/doc/root/tutorials 
+usr/share/root/macros
