@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.33 2002/04/11 18:16:16 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.34 2002/05/01 14:01:37 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -282,9 +282,9 @@
 #      define WIN32
 #   endif
 #   define R__BYTESWAP
-// Disable warning about truncated symboles (usually coming from stl)
+    /* Disable warning about truncated symboles (usually coming from stl) */
 #   pragma warning (disable: 4786)
-// Disable warning about inconsistent dll linkage.  dllexport assumed.
+    /* Disable warning about inconsistent dll linkage (dllexport assumed) */
 #   pragma warning (disable: 4273)
 #endif
 
@@ -336,18 +336,18 @@
 
 /*--- memory and object statistics -------------------------------------------*/
 
-/* #define R__NOSTATS     */
+/* #define R__NOSTATS */
 
 
 /*--- cpp --------------------------------------------------------------------*/
 
 #ifdef ANSICPP
-   /* symbol concatenation operator */
+    /* symbol concatenation operator */
 #   define _NAME1_(name) name
 #   define _NAME2_(name1,name2) name1##name2
 #   define _NAME3_(name1,name2,name3) name1##name2##name3
 
-   /* stringizing */
+    /* stringizing */
 #   define _QUOTE_(name) #name
 
 #else
