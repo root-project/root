@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.71 2005/02/21 11:13:00 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.72 2005/02/22 17:14:28 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -6463,7 +6463,7 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
       goto back;
    }
 
-   if ((fid = open(rootdpass, O_RDONLY) == -1)) {
+   if ((fid = open(rootdpass, O_RDONLY)) == -1) {
       ErrorInfo("RpdRetrieveSpecialPass: cannot open password file"
                 " %s (errno: %d)", rootdpass, GetErrno());
       rc = -1;
