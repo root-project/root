@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.59 2004/02/20 09:52:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.60 2004/03/17 17:52:24 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -8,33 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-/* Parts of this file are copied from the MIT krb5 distribution and
- * are subject to the following license:
- *
- * Copyright 1990,1991 by the Massachusetts Institute of Technology.
- * All Rights Reserved.
- *
- * Export of this software from the United States of America may
- *   require a specific license from the United States Government.
- *   It is the responsibility of any person or organization contemplating
- *   export to obtain such a license before exporting.
- *
- * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
- * distribute this software and its documentation for any purpose and
- * without fee is hereby granted, provided that the above copyright
- * notice appear in all copies and that both that copyright notice and
- * this permission notice appear in supporting documentation, and that
- * the name of M.I.T. not be used in advertising or publicity pertaining
- * to distribution of the software without specific, written prior
- * permission.  Furthermore if you modify this software you must label
- * your software as modified software and not distribute it in such a
- * fashion that it might be confused with the original M.I.T. software.
- * M.I.T. makes no representations about the suitability of
- * this software for any purpose.  It is provided "as is" without express
- * or implied warranty.
- *
- */
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -93,11 +66,11 @@
 //                     to allow complete control on the authentication  //
 //                     directives to the cluster administrator, via the //
 //                     system.rootauthrc file; if the optional argument //
-//                     <rootauthrc> is given and points to a valid file,// 
+//                     <rootauthrc> is given and points to a valid file,//
 //                     this file takes the highest priority (private    //
 //                     user's file being still read with next-to-highest//
 //                     priority) providing a mean to use non-standard   //
-//                     file names for authentication directives.        // 
+//                     file names for authentication directives.        //
 //   -b tcpwindowsize  specifies the tcp window size in bytes (e.g. see //
 //                     http://www.psc.edu/networking/perf_tune.html)    //
 //                     Default is 65535. Only change default for pipes  //
@@ -571,7 +544,7 @@ void ProofdExec()
    putenv(ldpath);
 #endif
 
-   // Check if a special file for authentication directives 
+   // Check if a special file for authentication directives
    // has been given for later use in TAuthenticate; if yes,
    // set the corresponding environment variable
    char *authrc = 0;
@@ -588,7 +561,7 @@ void ProofdExec()
       ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s,"
                 " %s, %s, %s, %s, %s)",
                 argvv[0], argvv[1], argvv[2], argvv[3], argvv[4],
-                argvv[5], argvv[6], argvv[7], argvv[8], argvv[9], 
+                argvv[5], argvv[6], argvv[7], argvv[8], argvv[9],
                 argvv[10], argvv[11]);
 #else
       ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s, %s)",
@@ -659,8 +632,8 @@ int main(int argc, char **argv)
 
             case 'A':
                strcpy(gReadHomeAuthrc,"1");
-               // Next argument may be the name of a file with the 
-               // authentication directives to be used 
+               // Next argument may be the name of a file with the
+               // authentication directives to be used
                if((*(argv+1)) && (*(argv+1))[0] != '-') {
                   sprintf(gAuthrc, "%s", *(argv+1));
                   struct stat st;
