@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.44 2001/07/20 13:49:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.45 2001/07/20 21:05:30 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2034,6 +2034,7 @@ void THistPainter::PaintErrors()
    errormarker = fH->GetMarkerStyle();
    xerror      = gStyle->GetErrorX();
    symbolsize  = fH->GetMarkerSize();
+   if (errormarker == 1) symbolsize = 0.01;
    sbase       = symbolsize*BASEMARKER*TMath::Max(gPad->GetWh(), gPad->GetWw())/600.;
 //*-*-      set the graphics attributes
 
@@ -2046,7 +2047,6 @@ void THistPainter::PaintErrors()
    first      = Hparam.xfirst;
    last       = Hparam.xlast;
    npoints    = last - first  +1;
-   if (errormarker == 1) symbolsize = 0.01;
    Double_t factor = Hparam.factor;
 //   xmin       = Hparam.xmin;
 //   xmax       = Hparam.xmax;
