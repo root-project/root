@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.4 2003/09/04 23:19:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.5 2003/09/23 08:54:50 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -108,7 +108,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char * /*cmd*/, Int_t &port
    PDB(kCondor,1) Info("ClaimVM","command: %s returned %d", claimCmd.Data(), r);
 
    TString jobad("jobad");
-   FILE *jf = gSystem->TempFilename(jobad);
+   FILE *jf = gSystem->TempFileName(jobad);
 
    if (jf == 0) return 0;
 
