@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.46 2003/02/17 11:57:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.47 2003/02/18 15:37:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -484,9 +484,9 @@ void TGeoManager::Init()
    fStep = 0;
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
    fMaterials = new THashList(200,3);
-   fMatrices = new TList();
+   fMatrices = new TObjArray(256);
    fNodes = new TObjArray(30);
-   fOverlaps = new TObjArray();
+   fOverlaps = new TObjArray(256);
    fNNodes = 0;
    fLevel = 0;
    fPoint = new Double_t[3];
@@ -495,10 +495,10 @@ void TGeoManager::Init()
    fCldirChecked = new Double_t[3];
    fNormal = 0;
    fCldir = new Double_t[3];
-   fVolumes = new THashList(200,3);
-   fShapes = new THashList(200,3);
-   fGVolumes = new THashList(200,3);
-   fGShapes = new THashList(200,3);
+   fVolumes = new TObjArray(256);
+   fShapes = new TObjArray(256);
+   fGVolumes = new TObjArray(256);
+   fGShapes = new TObjArray(256);
    fMedia = new THashList(200,3);
    fTopVolume = 0;
    fTopNode = 0;
@@ -595,8 +595,8 @@ Int_t TGeoManager::AddTransformation(const TGeoMatrix *matrix)
       Error("AddMatrix", "invalid matrix");
       return -1;
    }
-   Int_t index = fMatrices->GetSize();
-   fMatrices->Add((TGeoMatrix*)matrix);
+   Int_t index = fMatrices->GetEntriesFast();
+   fMatrices->AddAtAndExpand((TGeoMatrix*)matrix,index);
    return index;
 }
 //_____________________________________________________________________________
@@ -607,10 +607,10 @@ Int_t TGeoManager::AddShape(const TGeoShape *shape)
       Error("AddShape", "invalid shape");
       return -1;
    }
-   TList *list = fShapes;
+   TObjArray *list = fShapes;
    if (shape->IsRunTimeShape()) list = fGShapes;;
-   Int_t index = list->GetSize();
-   list->Add((TGeoShape*)shape);
+   Int_t index = list->GetEntriesFast();
+   list->AddAtAndExpand((TGeoShape*)shape,index);
    return index;
 }
 //_____________________________________________________________________________
@@ -621,10 +621,10 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
       Error("AddVolume", "invalid volume");
       return -1;
    }
-   TList *list = fVolumes;
+   TObjArray *list = fVolumes;
    if (volume->IsRunTime()) list = fGVolumes;
-   Int_t index = list->GetSize();
-   list->Add((TGeoVolume*)volume);
+   Int_t index = list->GetEntriesFast();
+   list->AddAtAndExpand((TGeoVolume*)volume,index);
    volume->SetNumber(index);
    return index;
 }
@@ -2539,7 +2539,7 @@ void TGeoManager::Voxelize(Option_t *option)
    TGeoVoxelFinder *vox = 0;
    if (!fStreamVoxels) printf("Voxelizing...\n");
 //   Int_t nentries = fVolumes->GetSize();
-   for (Int_t i=0; i<fVolumes->GetSize(); i++) {
+   for (Int_t i=0; i<fVolumes->GetEntriesFast(); i++) {
       vol = (TGeoVolume*)fVolumes->At(i);
       if (!fIsGeomReading) vol->SortNodes();
       if (!fStreamVoxels) {
@@ -2911,7 +2911,7 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
 // Check all geometry for illegal overlaps within a limit OVLP.
    printf("====  Checking overlaps for %s within a limit of %g ====\n", GetName(),ovlp);
    fSearchOverlaps = kTRUE;
-   Int_t nvol = fVolumes->GetSize();
+   Int_t nvol = fVolumes->GetEntriesFast();
    Int_t i10 = nvol/10;
    Int_t iv=0;
    TIter next(fVolumes);

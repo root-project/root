@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.5 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -215,9 +215,9 @@ void TGeoMatrix::SetDefaultName()
    if (IsScale()) type = 's';
    if (IsCombi()) type = 'c';
    if (IsGeneral()) type = 'g';
-   TList *matrices = gGeoManager->GetListOfMatrices();
+   TObjArray *matrices = gGeoManager->GetListOfMatrices();
    Int_t index = 0;
-   if (matrices) index =matrices->GetSize() - 1;
+   if (matrices) index =matrices->GetEntriesFast() - 1;
    Int_t digits = 1;
    Int_t num = 10;
    while ((Int_t)(index/num)) {

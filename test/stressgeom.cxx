@@ -79,9 +79,9 @@ void length()
    const Double_t mean[16] = {19.3138, 22.7942, 17.975, 21.9554, 23.4203,
       16.5027, 14.8842, 9.43152, 12.1661, 8.99384, 9.47465, 7.59458,
       8.69, 6.70654, 28.1409, 25.7952}; 
-   TList *vlist = gGeoManager->GetListOfVolumes();
+   TObjArray *vlist = gGeoManager->GetListOfVolumes();
    TGeoVolume *volume;
-   Int_t nvolumes = vlist->GetSize();
+   Int_t nvolumes = vlist->GetEntriesFast();
    Double_t len[17];
    TList *hlist = new TList();
    TH1F *hist;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.28 2003/02/11 08:48:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.29 2003/02/17 11:57:30 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -73,11 +73,11 @@ private :
    Bool_t                fPhiCut;           // flag for phi cuts
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
-   TList                *fMatrices;         //-> list of local transformations
-   TList                *fShapes;           //-> list of shapes
-   TList                *fVolumes;          //-> list of volumes
-   TList                *fGShapes;          //! list of runtime shapes
-   TList                *fGVolumes;         //! list of runtime volumes
+   TObjArray            *fMatrices;         //-> list of local transformations
+   TObjArray            *fShapes;           //-> list of shapes
+   TObjArray            *fVolumes;          //-> list of volumes
+   TObjArray            *fGShapes;          //! list of runtime shapes
+   TObjArray            *fGVolumes;         //! list of runtime volumes
    TList                *fMaterials;        //-> list of materials
    TList                *fMedia;            //-> list of tracking media
    TObjArray            *fNodes;            //-> current branch of nodes
@@ -294,12 +294,12 @@ public:
    //--- list getters
    TObjArray             *GetListOfNodes()              {return fNodes;}
    TObjArray             *GetListOfOverlaps()           {return fOverlaps;}
-   TList                 *GetListOfMatrices() const     {return fMatrices;}
+   TObjArray             *GetListOfMatrices() const     {return fMatrices;}
    TList                 *GetListOfMaterials() const    {return fMaterials;}
    TList                 *GetListOfMedia() const        {return fMedia;}
-   TList                 *GetListOfVolumes() const      {return fVolumes;}
-   TList                 *GetListOfGVolumes() const     {return fGVolumes;} 
-   TList                 *GetListOfShapes() const       {return fShapes;}
+   TObjArray             *GetListOfVolumes() const      {return fVolumes;}
+   TObjArray             *GetListOfGVolumes() const     {return fGVolumes;} 
+   TObjArray             *GetListOfShapes() const       {return fShapes;}
 
    //--- modeler state getters/setters
    TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->UncheckedAt(level);}
@@ -372,7 +372,7 @@ public:
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 3)          // geometry manager
+  ClassDef(TGeoManager, 4)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;
