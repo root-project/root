@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDerivedReal.cc,v 1.1 2001/04/08 00:06:48 verkerke Exp $
+ *    File: $Id: RooDerivedReal.cc,v 1.2 2001/04/18 20:38:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -94,9 +94,17 @@ Double_t RooDerivedReal::traceEval() const
 }
 
 
-Int_t RooDerivedReal::getAnalyticalIntegral(RooArgSet& integrands)
+Int_t RooDerivedReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& numDeps)
 {
   // By default we do supply any analytical integrals
+
+  // Indicate all variables need to be integrated numerically
+  TIterator* iter = allDeps.MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    numDeps.add(*arg) ;
+  }
+
   return 0 ;
 }
 
@@ -104,10 +112,7 @@ Int_t RooDerivedReal::getAnalyticalIntegral(RooArgSet& integrands)
 Double_t RooDerivedReal::analyticalIntegral(Int_t code) 
 {
   // By default no analytical integrals are implemented
-  cout << "RooDerivedReal::analyticalIntegal(" << GetName() 
-       << "): code " << code << " not implemented" << endl ;
-
-  return 0 ;
+  return getVal() ;
 }
 
 

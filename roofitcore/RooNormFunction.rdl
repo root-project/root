@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooNormFunction.rdl,v 1.1 2001/04/18 20:38:03 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,10 +36,10 @@ public:
   inline Double_t getValNorm() const { return getVal()/getNorm() ; } 
   inline Double_t getNorm() const { return _norm->getVal() ; }
 
-
 protected:
 
   RooRealIntegral* _norm ;
+  RooArgSet* _depList ;
 
   RooAbsArg& operator=(const RooAbsArg& other) ;
 

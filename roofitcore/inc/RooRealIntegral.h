@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealIntegral.rdl,v 1.1 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,6 +20,7 @@ class RooArgSet ;
 class TH1F ;
 class RooAbsCategory ;
 class RooRealVar ;
+class RooAbsIntegrator ;
 
 class RooRealIntegral : public RooDerivedReal {
 public:
@@ -38,12 +39,13 @@ public:
 
 protected:
 
+  Bool_t _init ;
+  void deferredInit() ;
+  void initNumIntegrator() ;
   RooAbsArg& operator=(const RooAbsArg& other) ;
 
-  virtual Double_t sum(const RooArgSet& sumList, const RooArgSet& intList) const ;
-  virtual Double_t integrate(const RooArgSet& intList) const ;
-  virtual Bool_t engineInit() ;
-  virtual Bool_t engineCleanup() ;
+  virtual Double_t sum() const ;
+  virtual Double_t integrate() const ;
 
   // Evaluation and validation implementation
   Double_t evaluate() const ;
@@ -54,32 +56,12 @@ protected:
 
   // Function pointer and integrands list
   RooDerivedReal* _function ;
+  mutable RooArgSet _depList ;
   mutable RooArgSet _sumList ;
   mutable RooArgSet _intList ;
-
-  // Integrator configuration
   Int_t _mode ;
-  Int_t _maxSteps ;
-  Double_t _eps ;
-  enum { _nPoints = 5 };
 
-  // Numerical integrator support functions
-  Double_t evalAt(Double_t x) const ;
-  Double_t addTrapezoids(Int_t n) const ;
-  void extrapolate(Int_t n) const ;
-  
-  // Numerical integrator workspace
-  mutable RooRealVar* _var ;                   //! do not persist
-  mutable Double_t _xmin;                      //! do not persist
-  mutable Double_t _xmax;                      //! do not persist
-  mutable Double_t _range;                     //! do not persist
-  mutable Double_t _extrapValue;               //! do not persist
-  mutable Double_t _extrapError;               //! do not persist
-  mutable Double_t *_h ;                       //! do not persist
-  mutable Double_t *_s ;                       //! do not persist
-  mutable Double_t *_c ;                       //! do not persist
-  mutable Double_t *_d ;                       //! do not persist
-  mutable Double_t _savedResult;               //! do not persist
+  RooAbsIntegrator* _numIntEngine ;
 
   ClassDef(RooRealIntegral,1) // a real-valued variable and its value
 };
