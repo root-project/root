@@ -1,4 +1,6 @@
+#if !defined(__MAKECINT__)
 #include "Api.h"
+#endif
 
 bool runtest() {
    {
