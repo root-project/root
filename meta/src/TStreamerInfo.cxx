@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.122 2002/02/25 11:20:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.123 2002/03/08 08:09:11 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2078,7 +2078,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kConvP + kULong:  ConvBasicPointer(ULong_t)
 
          default: 
-           Error("ReadBuffer","The element type %d is not supported yet\n",fType[i]);
+           //Error("ReadBuffer","The element type %d is not supported yet\n",fType[i]);
            break;
       }
    }
@@ -2573,7 +2573,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                          break;
                         }
          default: 
-           Error("ReadBufferClones","The element type %d is not supported yet\n",fType[i]);
+           //Error("ReadBufferClones","The element type %d is not supported yet\n",fType[i]);
            break;
       }
    }
@@ -2875,7 +2875,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                          break;
                         }
          default: 
-           Error("WriteBuffer","The element type %d is not supported yet\n",fType[i]);
+           //Error("WriteBuffer","The element type %d is not supported yet\n",fType[i]);
            break;
       }
    }
@@ -3138,7 +3138,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                          break;
                         }
          default: 
-           Error("WriteBufferClones","The element type %d is not supported yet\n",fType[i]);
+           //Error("WriteBufferClones","The element type %d is not supported yet\n",fType[i]);
            break;
       }
    }
