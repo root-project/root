@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.48 2004/02/23 23:50:44 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.49 2004/02/26 13:38:37 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -917,23 +917,29 @@ void TGWin32::CloseDisplay()
    gVirtualX = TGWin32VirtualXProxy::RealObject();
    gInterpreter = TGWin32InterpreterProxy::RealObject();
 
+   // The lock above does not work, so at least
+   // minimize the risk
+   TGWin32MainThread *delThread = gMainThread;
    if (gMainThread) {
-      delete gMainThread;
       gMainThread = 0;
+      delete delThread;
    }
 
    TGWin32ProxyBase::fgMainThreadId = 0;
 
    // terminate ROOT logo splash thread
-   if (gSplash) {
-      delete gSplash;
+   TWin32SplashThread *delSplash = gSplash;
+   if (gSplash) {      
       gSplash = 0;
+      delete delSplash;
    }
 
    if (fWindows) TStorage::Dealloc(fWindows);
    fWindows = 0;
 
    if (fXEvent) gdk_event_free((GdkEvent*)fXEvent);
+
+   TGWin32ProxyBase::GlobalUnlock();
 
    gROOT->SetBatch(kTRUE); // no GUI is possible
 }
