@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.5 2002/11/15 17:53:14 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun , Federico Carminati 13/04/2002
    
 /**************************************************************************
@@ -120,3 +120,15 @@ Bool_t TVirtualMC::IsRootGeometrySupported() const
 //
    return fIsRootGeometrySupported;
 }   
+
+#include "Riostream.h"
+//_____________________________________________________________________________
+void  TVirtualMC::DefineParticles() {
+//
+  cerr << endl;
+  cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+  cerr << "Warning in <TVirtualMC::DefineParticles>: This function is obsolete." << endl;
+  cerr << "          Please remove the calls to it from your code" << endl;
+  cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+  cerr << endl;
+}

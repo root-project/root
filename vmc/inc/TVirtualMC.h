@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.2 2003/07/17 12:24:03 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.3 2003/09/23 14:02:17 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -138,6 +138,7 @@ class TVirtualMC : public TNamed {
     virtual void     DefineIon(const char* name, Int_t Z, Int_t A,  
                         Int_t Q, Double_t excEnergy, Double_t mass = 0.) = 0; 
     virtual Double_t Xsec(char*, Double_t, Int_t, Int_t) = 0; 
+            void     DefineParticles();
  
         // particle table usage         
     virtual Int_t   IdFromPDG(Int_t id) const =0;  
