@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.8 2001/02/20 08:15:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.9 2001/04/11 17:26:44 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -154,7 +154,17 @@ void TLeafObject::ReadBasket(TBuffer &b)
          object = (TObject *)fClass->New();
       }
       if (!object) return;
-      object->Streamer(b);
+
+      if (fClass->GetClassInfo()) {
+         object->Streamer(b);
+      } else {
+         //fake class has no Streamer
+         if (!TestBit(kWarn)) {
+            Warning("TLeafObject::ReadBasket","%s::Streamer not available, using TClass::ReadBuffer instead",fClass->GetName());
+            SetBit(kWarn);
+         }
+         fClass->ReadBuffer(b,object);
+      }
       // in case we had written a null pointer a Zombie object was created
       // we must delete it
       if (object->TestBit(kInvalidObject)) {

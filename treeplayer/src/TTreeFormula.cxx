@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.33 2001/04/27 07:05:59 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.34 2001/04/27 07:09:07 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -45,9 +45,12 @@ public:
    TFormLeafInfo(TClass* classptr = 0, Long_t offset = 0, 
                  TStreamerElement* element = 0) :
      fClass(classptr),fOffset(offset),fElement(element),
-     fCounter(0), fNext(0) {};
+     fCounter(0), fNext(0) {
+      fInfo = fClass->GetStreamerInfo();
+   };
    virtual ~TFormLeafInfo() { delete fCounter; delete fNext; };
    TClass           *fClass;
+   TStreamerInfo    *fInfo;
    Long_t            fOffset;
    TStreamerElement *fElement;
    TFormLeafInfo    *fCounter;
@@ -80,7 +83,7 @@ public:
                        TStreamerElement* element = 0) :
      TFormLeafInfo(classptr,offset,element) {};
    virtual Double_t  GetCounterValue(TLeaf* leaf);
-   virtual Double_t  GetValue(char *where, Int_t instance = 0) {return TFormLeafInfo::GetValue(where,instance);}
+   virtual Double_t  GetValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
 };
 
@@ -90,28 +93,49 @@ Double_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf) {
 
    return fCounter->GetValue((char*)GetValuePointer(leaf,0)) + 1;
 }
+//______________________________________________________________________________
+Double_t TFormLeafInfoClones::GetValue(char *where, Int_t instance) { 
+   // Return the value of the underlying data member inside the 
+   // clones array.
+   
+   if (fNext==0) return 0;
+   Int_t len,index,sub_instance;
+   len = fNext->fElement->GetArrayLength();
+   if (len) {
+      index = instance / len;
+      sub_instance = instance % len;
+   } else {
+      index = instance;
+      sub_instance = 0;
+   }
+   TClonesArray * clones = (TClonesArray*)where;
+   // Note we take advantage of having only one physically variable
+   // dimension:
+   char * obj = (char*)clones->UncheckedAt(index);
+   return fNext->GetValue(obj,sub_instance);
+}
 
 //______________________________________________________________________________
 Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) { 
    // Return the value of the underlying data member inside the 
    // clones array.
 
-     if (fNext==0) return 0;
-     Int_t len,index,sub_instance;
-     len = fNext->fElement->GetArrayLength();
-     if (len) {
-        index = instance / len;
-        sub_instance = instance % len;
-     } else {
-        index = instance;
-        sub_instance = 0;
-     }
-     TClonesArray * clones = (TClonesArray*)GetValuePointer(leaf);
-     // Note we take advantage of having only one physically variable
-     // dimension:
-     char * obj = (char*)clones->UncheckedAt(index);
-     return fNext->GetValue(obj,sub_instance);
-   };
+   if (fNext==0) return 0;
+   Int_t len,index,sub_instance;
+   len = fNext->fElement->GetArrayLength();
+   if (len) {
+      index = instance / len;
+      sub_instance = instance % len;
+   } else {
+      index = instance;
+      sub_instance = 0;
+   }
+   TClonesArray * clones = (TClonesArray*)GetValuePointer(leaf);
+   // Note we take advantage of having only one physically variable
+   // dimension:
+   char * obj = (char*)clones->UncheckedAt(index);
+   return fNext->GetValue(obj,sub_instance);
+}
 
 //______________________________________________________________________________
 //
@@ -455,6 +479,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 //      - Leaf_name[index].Action()[val].OtherAction(param)
 
    if (!fTree) return -1;
+   // Later on we will need to read one entry, let's make sure 
+   // it is a real entry.
+   Int_t readentry = fTree->GetReadEntry();
+   if (readentry==-1) readentry=0;
    fNpar = 0;
    Int_t nchname = name.Length();
    if (nchname > kMaxLen) return -1;
@@ -557,7 +585,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                               cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
                               TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
                               TBranch *branch = leafcur->GetBranch();
-                              branch->GetEntry(fTree->GetReadEntry());
+                              branch->GetEntry(readentry);
                               TClonesArray * clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
                               TClass *sub_cl = clones->GetClass();
                               element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
@@ -779,7 +807,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                      // in its contents.  
                      // We need to retrieve the class of its content.
                      TBranch *branch = leaf->GetBranch();
-                     branch->GetEntry(fTree->GetReadEntry());
+                     branch->GetEntry(readentry);
                      TClonesArray * clones;
                      if (previnfo) clones = (TClonesArray*)previnfo->GetValuePointer(leaf,0);
                      else {
@@ -806,7 +834,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                            cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
                            TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
                            TClonesArray * clones;
-                           leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
+                           leaf->GetBranch()->GetEntry(readentry);
                            clones = (TClonesArray*)clonesinfo->GetValuePointer(leaf,0);
                            TClass *sub_cl = clones->GetClass();
                            element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
@@ -1425,7 +1453,8 @@ void* TFormLeafInfo::GetValuePointer(TLeaf *leaf, Int_t instance)
    } else {
       TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
       TStreamerInfo * info = branch->GetInfo();
-      Int_t offset = info->GetOffsets()[branch->GetID()];
+      Int_t id = branch->GetID();
+      Int_t offset = (id==-1)?0:info->GetOffsets()[id]; 
       char* address = (char*)branch->GetAddress();
       if (address) thisobj = (char*) *(void**)(address+offset);
       else thisobj = branch->GetObject();
@@ -1513,7 +1542,7 @@ void* TFormLeafInfo::GetValuePointer(TLeaf *leaf, Int_t instance)
 
 //______________________________________________________________________________
 Double_t TFormLeafInfo::GetValue(TLeaf *leaf, 
-                                           Int_t instance)
+                                 Int_t instance)
 {
 //*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
 //*-*            ====================================
@@ -1525,7 +1554,8 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf,
    } else {
       TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
       TStreamerInfo * info = branch->GetInfo();
-      Int_t offset = info->GetOffsets()[branch->GetID()];
+      Int_t id = branch->GetID();
+      Int_t offset = (id==-1)?0:info->GetOffsets()[id]; 
       char* address = (char*)branch->GetAddress();
       if (address) thisobj = (char*) *(void**)(address+offset);
       else thisobj = branch->GetObject();
@@ -1535,8 +1565,10 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf,
 
 //______________________________________________________________________________
 Double_t TFormLeafInfo::GetValue(char *thisobj, 
-                                           Int_t instance)
+                                 Int_t instance)
 {
+
+   //   return fInfo->GetValue(thisobj+fOffset,fElement->GetType(),instance,1);
    switch (fElement->GetType()) {
          // basic types
       case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+fOffset));

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.6 2001/01/23 14:40:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.7 2001/04/09 08:13:56 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -37,6 +37,8 @@ protected:
     Bool_t       fVirtual;        // Support for Virtuality
     
 public:
+    enum { kWarn = BIT(12) };
+
     TLeafObject();
     TLeafObject(const char *name, const char *type);
     virtual ~TLeafObject();
