@@ -25,7 +25,7 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk
 
-.PHONY : clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils
+.PHONY: clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils
 
 export CURDIR=$(shell basename `pwd`)
 #debug:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=`pwd` 1>&2 ) 
@@ -175,11 +175,9 @@ else
 MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
 endif
 
-ROOTCORELIBS_LIST = Core Cint Tree Hist 
+ROOTCORELIBS_LIST = Core Cint Tree Hist TreePlayer
 ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(DllSuf),$(ROOTCORELIBS_LIST)))
 ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
-
-.PHONY: utils
 
 UTILS_LIBS =  $(ROOTTEST_HOME)scripts/utils_cc.$(DllSuf)
 
@@ -188,8 +186,9 @@ ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 $(ROOTMAP): 
 	@echo Error $(ROOTMAP) is required for roottest '(Do cd $$ROOTSYS; gmake map)'
 
-utils:  $(UTILS_LIBS) $(ROOTMAP)
+UTILS_PREREQ =  $(UTILS_LIBS) $(ROOTMAP)
 
+utils:  $(UTILS_LIBS) $(ROOTMAP)
 
 %.o: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1
@@ -233,12 +232,12 @@ utils:  $(UTILS_LIBS) $(ROOTMAP)
 %_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1
 
-%.log : run%.C utils $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+%.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
 .PRECIOUS: %_C.$(DllSuf) 
 
-%.clog : run%_C.$(DllSuf) utils $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+%.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b run$*.C+ > $@ 2>&1
 
 define BuildWithLib
