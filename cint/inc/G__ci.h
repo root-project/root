@@ -160,7 +160,7 @@
 
 #ifdef _MSC_VER
 #ifndef G__VISUAL
-#define G__VISUAL
+#define G__VISUAL 1
 #endif
 #ifndef G__MSC_VER
 #define G__MSC_VER
