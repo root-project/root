@@ -114,7 +114,7 @@ N: Kirill Filimonov
 E: KVFilimonov@lbl.gov
 D: modified Struve functions in TMath
 
-N: Frank Filthaut
+N
 E: filthaut@hef.kun.nl
 D: contribution of TFractionFitter class
 
@@ -150,6 +150,11 @@ D: OpenLDAP interface
 N: Andrew Haas
 E: haas@yahoo.com
 D: add support for asymmetric errors in the GraphFitChisquare functions
+
+N: Robert Hatcher
+E: rhatcher@fnal.gov
+D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
+D: class TTimeStamp
 
 N: Miroslav Helbich
 E: helbich@mail.desy.de
