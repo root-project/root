@@ -1142,6 +1142,9 @@ fi
 if test -f system.rootrc ; then
    rm -f system.rootrc
 fi
+if test -d new ; then
+   rm -rf new
+fi
 
 ######################################################################
 #
