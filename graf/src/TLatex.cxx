@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.33 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.34 2003/01/22 11:23:03 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -948,7 +948,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          if (!fShow) {
             fs1 = Anal1(NewSpec,&letter,1);
             if (OpSpec == 79 || OpSpec == 66)
-                 fs1 = FormSize(fs1.Width(),fs1.Dessus()*0.4,fs1.Dessus()*0.40);
+                 fs1.Set(fs1.Width(),fs1.Dessus()*0.4,fs1.Dessus()*0.40);
 
             fs2 = Anal1(spec,text+strlen(tab2[OpSpec])+1,length-strlen(tab2[OpSpec])-1);
             Savefs(&fs1);
