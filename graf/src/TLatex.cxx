@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.41 2003/10/23 09:36:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.42 2004/05/04 10:01:44 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1644,7 +1644,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    nOfLeft = nOfRight = 0 ;
 
    Int_t i,k ;
-   Char_t buf[11] ;
+   Char_t buf[11] ; for (i=0;i<11;i++) buf[i]=0;
    Bool_t opFound ;
    Int_t  opFrac = 0;
    Int_t length = text.Length() ;
