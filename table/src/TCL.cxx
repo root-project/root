@@ -1,12 +1,15 @@
-// @(#)root/star:$Name:  $:$Id: TCL.cxx,v 1.2 2001/05/29 19:08:08 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TCL.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 //
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f112/top.html
 //
-// $Id: TCL.cxx,v 1.2 2001/05/29 19:08:08 brun Exp $
+// $Id: TCL.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // $Log: TCL.cxx,v $
+// Revision 1.1  2002/05/27 16:26:59  rdm
+// rename star to table.
+//
 // Revision 1.2  2001/05/29 19:08:08  brun
 // New version of some STAR classes from Valery.
 //
@@ -568,7 +571,7 @@ float *TCL::trats(float *a, float *s, float *b, int m, int n)
 
     /* Local variables */
      int imax, i__, j, k;
-     int ia, mn, ir, is, iaa, ind;
+     int ia, ir, is, iaa, ind;
      double sum;
 
 /* CERN PROGLIB# F112    TRATSA          .VERSION KERNFOR  4.15  861204 */
@@ -581,7 +584,6 @@ float *TCL::trats(float *a, float *s, float *b, int m, int n)
     /* Function Body */
     imax = (m * m + m) / 2;
     vzero(&r__[1], imax);
-    mn = m * n;
     ind = 0;
     i__ = 0;
 
@@ -1145,7 +1147,7 @@ float *TCL::trupck(float *u, float *s, int m)
 {
 
     /* Local variables */
-     int inds, i__, j, k, ia, ib, mn, is;
+     int inds, i__, j, k, ia, ib, is;
      double sum;
 
 
@@ -1157,7 +1159,6 @@ float *TCL::trupck(float *u, float *s, int m)
     --b;    --a;    --s;
 
     /* Function Body */
-    mn = m * n;
     inds = 0;
     ib = 0;
     i__ = 0;
@@ -1282,7 +1283,7 @@ double *TCL::trats(double *a, double *s, double *b, int m, int n)
 {
     /* Local variables */
      int imax, i__, j, k;
-     int ia, mn, ir, is, iaa, ind;
+     int ia, ir, is, iaa, ind;
      double sum;
 
 /* CERN PROGLIB# F112    TRATSA          .VERSION KERNFOR  4.15  861204 */
@@ -1295,7 +1296,6 @@ double *TCL::trats(double *a, double *s, double *b, int m, int n)
     /* Function Body */
     imax = (m * m + m) / 2;
     vzero(&r__[1], imax);
-    mn = m * n;
     ind = 0;
     i__ = 0;
 
@@ -1853,14 +1853,13 @@ double *TCL::trsat(double *s, double *a, double *b, int m, int n)
 // ORIG. 18/12/74 WH
 
     /* Local variables */
-     int inds, i__, j, k, ia, ib, mn, is;
+     int inds, i__, j, k, ia, ib, is;
      double sum;
 
     /* Parameter adjuTments */
     --b;    --a;    --s;
 
     /* Function Body */
-    mn = m * n;
     inds = 0;
     ib = 0;
     i__ = 0;
