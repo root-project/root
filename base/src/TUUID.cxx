@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.4 2001/10/03 14:27:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.5 2001/10/06 13:12:15 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -136,6 +136,12 @@ typedef long long          Long64_t;    //Signed long integer 8 bytes
 typedef unsigned long long ULong64_t;   //Unsigned long integer 8 bytes
 #endif
 #endif
+#endif
+
+#ifdef R__WIN32
+#define R__LL(long) long
+#else
+#define R__LL(long) _NAME2_(long,LL)
 #endif
 
 
@@ -338,7 +344,7 @@ void TUUID::GetSystemTime(uuid_time_t *timestamp)
    // UUID UTC base time is October 15, 1582.
    // Unix base time is January 1, 1970.
    ULong64_t uuid_time = ((ULong64_t)tp.tv_sec * 10000000) + (tp.tv_usec * 10) +
-                         0x01B21DD213814000LL;
+                         R__LL(0x01B21DD213814000);
    timestamp->high = (UInt_t) (uuid_time >> 32);
    timestamp->low  = (UInt_t) (uuid_time & 0xFFFFFFFF);
 #else
@@ -545,8 +551,8 @@ TDatime TUUID::GetTime() const
    // Unix base time is January 1, 1970.
    ULong64_t high = ts.high;
    ULong64_t uuid_time = (high << 32) + ts.low;
-   uuid_time -= 0x01B21DD213814000LL;
-   uuid_time /= 10000000LL;
+   uuid_time -= R__LL(0x01B21DD213814000);
+   uuid_time /= R__LL(10000000);
    UInt_t tt = (UInt_t) uuid_time;
    dt.Set(tt);
 #else
