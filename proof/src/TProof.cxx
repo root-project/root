@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.45 2003/05/15 18:03:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.46 2003/06/12 05:34:05 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1849,13 +1849,12 @@ Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
    // (blatantly copied from Java's jar format). It must have the extension
    // .par. A PAR file can be directly a binary or a source with a build
    // procedure. In the PROOF-INF directory there can be a build script:
-   // BUILD.C or BUILD.sh to be called to build the package (.C is tried
-   // before .sh), in case of a binary PAR file don't specify a BUILD
-   // script or make it a no-op. Then there is SETUP.C which sets the
-   // right environment variables to use the package, like LD_LIBRARY_PATH,
-   // etc. Parallel is the number of parallel streams that can be used to
-   // upload the package to the master server. Returns 0 in case of success
-   // and -1 in case of error.
+   // BUILD.sh to be called to build the package, in case of a binary PAR
+   // file don't specify a build script or make it a no-op. Then there is
+   // SETUP.C which sets the right environment variables to use the package,
+   // like LD_LIBRARY_PATH, etc. Parallel is the number of parallel streams
+   // that can be used to upload the package to the master server.
+   // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
 
