@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPAsymVar.cc,v 1.6 2001/05/03 02:15:56 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.cc,v 1.1 2001/05/07 06:14:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,13 +26,13 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("")
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					     const char *blindString, RooAbsReal& cpasym)
-  : RooDerivedReal(name,title), _blindEngine(blindString), _asym("asym","CP Asymmetry",this,cpasym) 
+  : RooAbsReal(name,title), _blindEngine(blindString), _asym("asym","CP Asymmetry",this,cpasym) 
 {  
 }
 
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name) : 
-  RooDerivedReal(other, name), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
+  RooAbsReal(other, name), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
 {
 }
 

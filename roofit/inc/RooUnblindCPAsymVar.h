@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.7 2001/05/03 02:15:56 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.1 2001/05/07 06:14:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -12,12 +12,12 @@
 #ifndef ROO_UNBLIND_CPASYM_VAR
 #define ROO_UNBLIND_CPASYM_VAR
 
-#include "RooFitCore/RooDerivedReal.hh"
+#include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitModels/RooBlindTools.hh"
 
-class RooUnblindCPAsymVar : public RooDerivedReal {
+class RooUnblindCPAsymVar : public RooAbsReal {
 public:
   // Constructors, assignment etc
   inline RooUnblindCPAsymVar() ;

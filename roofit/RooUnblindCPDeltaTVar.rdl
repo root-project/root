@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.7 2001/05/03 02:15:56 verkerke Exp $
+ *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.1 2001/05/07 06:14:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -12,18 +12,18 @@
 #ifndef ROO_UNBLIND_CPDELTAT_VAR
 #define ROO_UNBLIND_CPDELTAT_VAR
 
-#include "RooFitCore/RooDerivedReal.hh"
+#include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooCategoryProxy.hh"
 #include "RooFitModels/RooBlindTools.hh"
 
-class RooUnblindCPDeltaTVar : public RooDerivedReal {
+class RooUnblindCPDeltaTVar : public RooAbsRealLValue {
 public:
   // Constructors, assignment etc
   inline RooUnblindCPDeltaTVar() ;
   RooUnblindCPDeltaTVar(const char *name, const char *title, 
 			const char *blindString,
-			RooAbsReal& deltat, RooAbsCategory& tag, 
+			RooAbsRealLValue& deltat, RooAbsCategory& tag, 
 			RooAbsCategory& blindState);
   RooUnblindCPDeltaTVar(const RooUnblindCPDeltaTVar& other, const char* name=0) ;
   virtual TObject* clone() const { return new RooUnblindCPDeltaTVar(*this); }  
@@ -36,6 +36,11 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
+  // LValue interface
+  virtual void setVal(Double_t value) ;
+  virtual Double_t getFitMin() const ;
+  virtual Double_t getFitMax() const ;
+  virtual Bool_t isIntegrationSafeLValue(const RooDataSet* set) const { return kTRUE ; }
 
 protected:
 
