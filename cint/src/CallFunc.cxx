@@ -402,7 +402,7 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
 {
   int ret=0;
   if(method.IsValid()) {
-#ifndef G__OLDIMPLEMENTATION1840
+#ifdef G__OLDIMPLEMENTATION1840
     G__ClassInfo *pcls=method.MemberOf();
     if(pcls && pcls->Name() && method.Name() &&
        strcmp(pcls->Name(),method.Name())==0) {
