@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.1 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.2 2004/12/03 08:14:15 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -323,7 +323,7 @@ Int_t TGeoHype::DistToHype(Double_t *point, Double_t *dir, Double_t *s, Bool_t i
 }
    
 //_____________________________________________________________________________
-TGeoVolume *TGeoHype::Divide(TGeoVolume */*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/, 
+TGeoVolume *TGeoHype::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
 // Cannot divide hyperboloids.
