@@ -495,7 +495,7 @@ char *unnamedmacro;
 char* G__load_text(namedmacro)
 char *namedmacro;
 {
-  char* result;
+  char* result = (char*)NULL;
 #ifndef G__TMPFILE
   static char tname[L_tmpnam+10];
 #else
