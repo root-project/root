@@ -910,7 +910,7 @@ namespace __gnu_cxx
 
 #else // (G__GNUC_MINOR>1) 
 
-#ifdef G__OLDIMPLEMENTATION1703
+#if defined(G__OLDIMPLEMENTATION1703) || (G__GNUC_MINOR==1) 
 // for g++ 3.1,3.2
 namespace __gnu_cxx
 {  

@@ -22,7 +22,7 @@
 #include <_functional>
 
 //////////////////////////////////////////////////////////////////////////
-#if defined(G__ANSIISOLIB) || (G__GNUC>=3) || defined(G__INTEL_COMPILER)
+#if defined(G__ANSIISOLIB) || (G__GNUC>=3) || defined(G__INTEL_COMPILER) || defined(G__KCC)
 // This does not work yet. Don't know why.
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key,T> > >
@@ -105,7 +105,7 @@ class multimap {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
-#ifdef G__VISUAL
+#if defined (G__VISUAL) || (defined(G__GNUC) && G__GNUC>=3  && G__GNUC_MINOR>=4)
     bool operator==(const iterator& x) ;
     bool operator!=(const iterator& x) ;
 #endif
@@ -113,7 +113,7 @@ class multimap {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined (G__KCC) && !defined(G__INTEL_COMPILER)
+#if defined(G__GNUC) && !defined (G__KCC) && !defined(G__INTEL_COMPILER) && !(G__GNUC>=3  && G__GNUC_MINOR>=4)
   friend bool operator==(const multimap::iterator& x ,const multimap::iterator& y) const;
   friend bool operator!=(const multimap::iterator& x ,const multimap::iterator& y) const;
 #endif

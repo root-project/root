@@ -138,6 +138,9 @@ public:
   typedef T&          reference;
   typedef const T&    const_reference;
   typedef T           value_type;
+#ifdef G__KCC
+   allocator();
+#endif
   // template members don't really work with cint yet...
 #if 0
   template <class U> struct rebind { typedef allocator<U> other; };

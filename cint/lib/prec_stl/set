@@ -96,7 +96,7 @@ class set {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
-#ifdef G__VISUAL
+#if defined (G__VISUAL) || (defined(G__GNUC) && G__GNUC>=3  && G__GNUC_MINOR>=4)
     bool operator==(const iterator& x) ;
     bool operator!=(const iterator& x) ;
 #endif
@@ -104,7 +104,7 @@ class set {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)
+#if defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER) && !(G__GNUC>=3  && G__GNUC_MINOR>=4)
   friend bool operator==(const set::iterator& x ,const set::iterator& y) const;
   friend bool operator!=(const set::iterator& x ,const set::iterator& y) const;
 #endif
