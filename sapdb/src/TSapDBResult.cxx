@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:$:$Id:$
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBResult.cxx,v 1.1 2001/08/24 16:41:19 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TString.h"
 #include "TSapDBResult.h"
 #include "TSapDBRow.h"
-#include "TString.h"
 
 
 ClassImp(TSapDBResult)
