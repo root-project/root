@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.11 2001/04/09 08:10:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.12 2001/04/10 16:36:36 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -257,6 +257,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fStreamerType = -1;
    fType         = 0;
    fClassVersion = 1;
+   fBranchCount  = 0;
            
    SetName(name);
    SetTitle(name);
@@ -302,12 +303,12 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
       char branchname[kMaxLen];
       sprintf(branchname,"%s_",name);
       SetTitle(branchname);
-printf("Unrolling TClonesArray, branchname=%s, clm=%s\n",branchname,clm->GetName());
+//printf("Unrolling TClonesArray, branchname=%s, clm=%s\n",branchname,clm->GetName());
       Unroll(name,clm,clm,basketsize,splitlevel,31);
       Int_t nbranches = fBranches.GetEntries();
       for (Int_t i=0;i<nbranches;i++) {
          TBranchElement *bre = (TBranchElement*)fBranches.At(i);
-printf("  before setting title, i=%d, title=%s\n",i,bre->GetTitle());
+//printf("  before setting title, i=%d, title=%s\n",i,bre->GetTitle());
          const char *fin = strrchr(bre->GetTitle(),'.');
          if (fin == 0) continue;
          sprintf(branchname,"%s[%s_]",fin+1,name);
