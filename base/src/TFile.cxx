@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.131 2004/08/20 14:48:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.132 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -505,7 +505,6 @@ void TFile::Init(Bool_t create)
       Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
                 +2*sizeof(Int_t);
       if (version > 1000) {
-         nk += 12;
          frombuf(buffer, &fSeekDir);
          frombuf(buffer, &fSeekParent);
          frombuf(buffer, &fSeekKeys);
