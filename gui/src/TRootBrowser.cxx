@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.30 2002/11/20 15:17:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.31 2002/11/20 17:52:39 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1392,8 +1392,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          break;
    }
    fClient->NeedRedraw(fIconBox);
-   gVirtualX->SetCursor(fIconBox->GetId(),kNone);
-   gVirtualX->SetCursor(fLt->GetId(),kNone);
+   gVirtualX->SetCursor(fIconBox->GetId(),gVirtualX->CreateCursor(kPointer));
+   gVirtualX->SetCursor(fLt->GetId(),gVirtualX->CreateCursor(kPointer));
    return kTRUE;
 }
 
