@@ -1,16 +1,15 @@
-// Test the TMath::BetaDist and TMath::BetDistI functions
+// Test the TMath::BetaDist and TMath::BetaDistI functions
 // author: Anna Kreshuk
    
 #include "TMath.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TLegend.h"
-#include "TMath.h"
    
 void mathBeta() {
   TCanvas *c1=new TCanvas("c1", "TMath::BetaDist",600,800);
   c1->Divide(1, 2);
-  TPad *pad1 = c1->cd(1);
+  TVirtualPad *pad1 = c1->cd(1);
   pad1->SetGrid();
   TF1 *fbeta = new TF1("fbeta", "TMath::BetaDist(x, [0], [1])", 0, 1);
   fbeta->SetParameters(0.5, 0.5);
@@ -36,7 +35,7 @@ void mathBeta() {
   legend1->AddEntry(f4,"p=2    q=2","l");
   legend1->Draw();
 
-  TPad *pad2 = c1->cd(2);
+  TVirtualPad *pad2 = c1->cd(2);
   pad2->SetGrid();
   TF1 *fbetai=new TF1("fbetai", "TMath::BetaDistI(x, [0], [1])", 0, 1);
   fbetai->SetParameters(0.5, 0.5);
