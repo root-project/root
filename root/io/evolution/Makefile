@@ -65,7 +65,7 @@ boolUpdate.log: boolUpdate_C.$(DllSuf) boolUpdate.root
 boolUpdate: boolUpdate.log
 	$(TestDiff)
 
-foreign310: cms_cxx.$(DllSuf)
+foreign310.log: cms_cxx.$(DllSuf)
 
 foreign310: foreign310.log
 	$(TestDiff)
