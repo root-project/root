@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.144 2003/01/17 17:48:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.145 2003/03/19 14:01:50 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2753,8 +2753,7 @@ Int_t TTree::MakeSelector(const char *selector)
 //         - void    Begin(TTree *tree)
 //         - void    Init(TTree *tree)
 //         - Bool_t  Notify()
-//         - Bool_t  ProcessCut(Int-t entry)
-//         - void    ProcessFill(Int-t entry)
+//         - Bool_t  Process(Int-t entry)
 //         - void    Terminate
 //
 //   The class selector derives from TSelector.

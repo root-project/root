@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.121 2003/02/27 21:09:40 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.122 2003/02/28 22:57:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1445,10 +1445,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//                   a convenient place to create your histograms.\n");
       fprintf(fpc,"//    Notify():      this function is called at the first entry of a new Tree\n");
       fprintf(fpc,"//                   in a chain.\n");
-      fprintf(fpc,"//    ProcessCut():  called at the beginning of each entry to return a flag,\n");
-      fprintf(fpc,"//                   true if the entry must be analyzed.\n");
-      fprintf(fpc,"//    ProcessFill(): called in the entry loop for all entries accepted\n");
-      fprintf(fpc,"//                   by Select.\n");
+      fprintf(fpc,"//    Process():     called for each event. In this function you decide what \n");
+      fprintf(fpc,"//                   to read and you fill your histograms.\n");
       fprintf(fpc,"//    Terminate():   called at the end of a loop on the tree,\n");
       fprintf(fpc,"//                   a convenient place to draw/fit your histograms.\n");
       fprintf(fpc,"//\n");
@@ -1479,11 +1477,16 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"Bool_t %s::Process(Int_t entry)\n",classname);
       fprintf(fpc,"{\n");
-      fprintf(fpc,"   // Processing function.\n");
-      fprintf(fpc,"   // Entry is the entry number in the current tree.\n");
-      fprintf(fpc,"   // Read only the necessary branches to select entries.\n");
-      fprintf(fpc,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
-      fprintf(fpc,"   // Return kFALSE to stop processing.\n");
+      fprintf(fpc,"   // Processing function. This function is called\n");
+      fprintf(fpc,"   // to process an event. It is the user's responsability to read\n");
+      fprintf(fpc,"   // the corresponding entry in memory (may be just a partial read).\n");
+      fprintf(fpc,"   // Once the entry is in memory one can apply a selection and if the\n");
+      fprintf(fpc,"   // event is selected histograms can be filled. Processing stops\n");
+      fprintf(fpc,"   // when this function returns kFALSE. This function combines the\n");
+      fprintf(fpc,"   // next two functions in one, avoiding to have to maintain state\n");
+      fprintf(fpc,"   // in the class to communicate between these two funtions.\n");
+      fprintf(fpc,"   // You should not implement ProcessCut and ProcessFill if you write this function.\n");
+      fprintf(fpc,"   // This method is used by PROOF.\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");
