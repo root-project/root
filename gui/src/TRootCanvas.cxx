@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.46 2004/06/18 15:48:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.47 2004/06/25 17:15:23 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -17,6 +17,10 @@
 // drawing area. The widgets used are the new native ROOT GUI widgets.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 
 #include "TRootCanvas.h"
 #include "TRootApplication.h"
@@ -522,7 +526,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    HideFrame(fStatusBar);
    HideFrame(fToolBarSep);
    HideFrame(fHorizontal1);
-   
+
    ShowToolBar(fCanvas->GetShowToolBar());
    ShowEditor(fCanvas->GetShowEditor());
 
@@ -585,7 +589,7 @@ void TRootCanvas::Close()
 void TRootCanvas::ReallyDelete()
 {
    // Really delete the canvas and this GUI.
-   
+
    if (fEditor) fEditor->DeleteEditors();
    TVirtualPad *savepad = gPad;
    gPad = 0;        // hide gPad from CINT

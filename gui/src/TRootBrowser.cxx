@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.55 2004/07/07 10:17:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.56 2004/07/07 15:02:25 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -17,6 +17,10 @@
 // Explorer). The widgets used are the new native ROOT GUI widgets.     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 
 #include "TRootBrowser.h"
 #include "TRootApplication.h"
@@ -824,7 +828,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fDrawOption->AddEntry("alp", dropt++);
 
    fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsCenterY | kLHintsRight | kLHintsExpandY,2,2,2,0));
-   fToolBar->AddFrame(new TGLabel(fToolBar,"Option"), 
+   fToolBar->AddFrame(new TGLabel(fToolBar,"Option"),
                       new TGLayoutHints(kLHintsCenterY | kLHintsRight, 2,2,2,0));
 
    fBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
@@ -1007,7 +1011,7 @@ void TRootBrowser::BrowseObj(TObject *obj)
 void TRootBrowser::UpdateDrawOption()
 {
    // add new draw option to the "history"
- 
+
    TString opt = GetDrawOption();
    TGListBox *lb = fDrawOption->GetListBox();
    TGLBContainer *lbc = (TGLBContainer *)lb->GetContainer();
@@ -1025,7 +1029,7 @@ void TRootBrowser::UpdateDrawOption()
    }
    if (newopt) {
       fDrawOption->AddEntry(opt.Data(), fDrawOption->GetNumberOfEntries() + 1);
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -1275,7 +1279,6 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   }
                   // Handle Help menu items...
                   case kHelpAbout:
-                     // coming soon
                      {
 #ifdef R__UNIX
                         TString rootx;
@@ -1602,7 +1605,7 @@ void TRootBrowser::ToUpSystemDirectory()
 void TRootBrowser::SetDrawOption(Option_t *option)
 {
    // sets drawing option
- 
+
    fDrawOption->GetTextEntry()->SetText(option);
 }
 
@@ -1610,7 +1613,7 @@ void TRootBrowser::SetDrawOption(Option_t *option)
 Option_t *TRootBrowser::GetDrawOption() const
 {
    // returns drawing option
- 
+
    return fDrawOption->GetTextEntry()->GetText();
 }
 //______________________________________________________________________________

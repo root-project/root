@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.42 2004/04/30 10:31:34 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.43 2004/06/01 14:36:59 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -159,6 +159,10 @@
 */
 //End_Html
 //
+
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 
 #include "snprintf.h"
 
