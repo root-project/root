@@ -73,6 +73,10 @@ N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
 D: port to MacOS X
 
+N: Christophe Delaere
+E: Christophe.Delaere@cern.ch
+D: TLimit TLimitDataSource TConfidenceLevel classes
+
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
 D: TLegend class
