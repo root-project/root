@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.42 2003/04/10 09:00:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.43 2003/04/12 17:14:32 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -706,7 +706,6 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fXmax    = xup;
    fFirst   = 0;
    fLast    = 0;
-   fTitle   = "";
    char name[64];
    sprintf(name,"%s%s",GetName(),"x");
    TAttAxis::ResetAttAxis(name);

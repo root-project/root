@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.136 2003/04/03 06:42:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.137 2003/04/04 16:57:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -375,6 +375,13 @@
 //       h->GetYaxis()->SetTitle("Y axis title");
 //     The histogram title and the axis titles can be any TLatex string.
 //     The titles are part of the persistent histogram.
+//     It is also possible to specify the histogram title and the axis
+//     titles at creation time. These titles can be given in the "title"
+//     paramater. They must be separated by ";":
+//        TH1F* h=new TH1F("h","Histogram title;X Axis;Y Axis;Z Axis",100,0,1);
+//     Any title can be omited:
+//        TH1F* h=new TH1F("h","Histogram title;;Y Axis",100,0,1);
+//        TH1F* h=new TH1F("h",";;Y Axis",100,0,1);
 //
 //     Saving/Reading histograms to/from a ROOT file
 //     =============================================
@@ -594,6 +601,35 @@ void TH1::Build()
    fXaxis.SetParent(this);
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
+
+   // Decode fTitle. It may contain X, Y and Z titles
+   TString str1 = fTitle, str2;
+   Int_t Isc = str1.Index(";");
+   Int_t Lns = str1.Length();
+   if (Isc >=0 ) {
+      fTitle = str1(0,Isc);
+      str1   = str1(Isc+1, Lns);
+      Isc    = str1.Index(";");
+      if (Isc >=0 ) {
+         str2 = str1(0,Isc); 
+         fXaxis.SetTitle(str2.Data());
+         Lns  = str1.Length();
+         str1 = str1(Isc+1, Lns);
+         Isc  = str1.Index(";");
+         if (Isc >=0 ) {
+            str2 = str1(0,Isc); 
+            fYaxis.SetTitle(str2.Data());
+            Lns  = str1.Length();
+            str1 = str1(Isc+1, Lns);
+            fZaxis.SetTitle(str1.Data());
+         } else {
+            fYaxis.SetTitle(str1.Data());
+         }
+      } else {
+         fXaxis.SetTitle(str1.Data());
+      }
+   }
+
    fFunctions = new TList;
 
    UseCurrentStyle();
