@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.2 2004/03/22 15:39:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.3 2004/07/12 20:04:29 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -132,6 +132,8 @@ Int_t TGString::GetLines(FontStruct_t font, UInt_t w)
 TGHotString::TGHotString(const char *s) : TGString()
 {
    // Create a hot string.
+
+   if (!s) return;
 
    char *dup = StrDup(s);
    char *p;
