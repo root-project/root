@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.49 2004/03/04 12:00:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.50 2004/03/12 13:09:40 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1799,9 +1799,9 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 {
-   // Save the GUI main frame widget in a C++ macro file
+   // Save the GUI main frame widget in a C++ macro file.
 
-   //   iteration over all active classes to exclude the base ones
+   // iteration over all active classes to exclude the base ones
 
    TBits *bc = new TBits();
    TClass *c1, *c2, *c3;
@@ -1866,15 +1866,16 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    char quote = '"';
    ofstream out;
-   Int_t lenfile = strlen(filename);
+   Int_t lenfile = filename ? strlen(filename) : 0;
    const char *fname;
 
-   //	 if filename is given, open this file, otherwise create a file Rootappl.C
+   // if filename is given, open this file, otherwise create a file Rootappl.C
 
    if (lenfile) {
-      fname = (char *)filename;
+      fname = filename;
    } else {
-      fname="Rootappl.C"; lenfile = 10;
+      fname = "Rootappl.C";
+      lenfile = 10;
    }
 
    out.open(fname, ios::out);
@@ -1884,13 +1885,13 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
        return;
    }
 
-   //   writes include files in C++ macro
+   // writes include files in C++ macro
    TObjString *inc;
    ilist = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfIncludes");
 
    if (!ilist) return;
 
-   //  Write macro header, date/time stamp as string, and the used Root version
+   // write macro header, date/time stamp as string, and the used Root version
    TDatime t;
    out <<"// Mainframe macro generated from application: "<< gApplication->Argv(0) << endl;
    out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
@@ -2295,13 +2296,13 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    char quote = '"';
    ofstream out;
-   Int_t lenfile = strlen(filename);
+   Int_t lenfile = filename ? strlen(filename) : 0;
    const char *fname;
 
    // if filename is given, open this file, otherwise create a file Rootappl.C
 
    if (lenfile) {
-      fname = (char *)filename;
+      fname = filename;
    } else {
       fname = "Rootdlog.C";
       lenfile = 10;
@@ -2314,13 +2315,13 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
        return;
    }
 
-   //   writes include files in C++ macro
+   // writes include files in C++ macro
    TObjString *inc;
    ilist = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfIncludes");
 
    if (!ilist) return;
 
-   //  Write macro header, date/time stamp as string, and the used Root version
+   // write macro header, date/time stamp as string, and the used Root version
    TDatime t;
    out <<"// Dialog macro generated from application: "<< gApplication->Argv(0) << endl;
    out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
