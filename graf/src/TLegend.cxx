@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.6 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.7 2001/06/17 18:57:55 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -313,7 +313,8 @@ void TLegend::PaintPrimitives()
 
   if ( textsize == 0 ) {
     textsize = ( 1. - fEntrySeparation ) * yspace;
-
+    textsize /= gPad->GetY2() - gPad->GetY1();
+    
     // find the max width and height (in pad coords) of one latex entry label
     Double_t maxentrywidth = 0, maxentryheight = 0;
     TIter nextsize(fPrimitives);
@@ -329,7 +330,8 @@ void TLegend::PaintPrimitives()
       }
     }
     // make sure all labels fit in the allotted space
-    Double_t tmpsize_h = textsize * ( textsize/maxentryheight );
+    Double_t tmpsize_h = textsize * ( textsize/maxentryheight ) *
+                         (gPad->GetY2() - gPad->GetY1());
     Double_t tmpsize_w = textsize * ( (fX2 - (fX1+margin))/maxentrywidth);
     textsize = TMath::Min( textsize, TMath::Min(tmpsize_h,tmpsize_w) );
     SetTextSize( textsize );
