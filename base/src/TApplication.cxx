@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.28 2002/03/23 06:38:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.29 2002/03/25 20:13:40 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -572,7 +572,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
 
    Int_t error = 0;
 
-   if (!strncmp(line, ".L", 2)) {
+   if (!strncmp(line, ".L", 2) || !strncmp(line, ".U", 2)) {
       char *fn = Strip(line+3);
       // See if script compilation requested
       char postfix[3];
@@ -593,11 +593,12 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
          Error("ProcessLine", "macro %s not found in path %s", fn,
                TROOT::GetMacroPath());
       else {
+         char cmd = line[1];
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix),
+           gInterpreter->ProcessLineSynch(Form(".%c %s%s", cmd, mac,postfix),
                                           (TInterpreter::EErrorCode*)&error);
          else {
-           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix),
+           gInterpreter->ProcessLine(Form(".%c %s%s", cmd, mac, postfix),
                                      (TInterpreter::EErrorCode*)err);
          }
       }
