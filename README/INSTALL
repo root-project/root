@@ -8,6 +8,8 @@ ROOT download area (ftp://root.cern.ch/root).
 An alternative approach is to use our public CVS repository to get
 the latest version. See URL: http://root.cern.ch/root/CVS.html.
 
+Before proceeding read the complete document.
+
 There are two main methods of installing ROOT from source.
 
 1) You have noting installed yet.
@@ -35,7 +37,7 @@ There are two main methods of installing ROOT from source.
    to make ROOT distributions/installations that fit with an existing system.
    E.g., it should be trivial to install ROOT via a RedHat (.rpm) or Debian
    (.dep) package.
-   - get source tar file or latest ROOT
+   - get source tar file of latest ROOT
    - unpack source tar file, this creates directory `root':
         tar zxvf root_v2.25.01.source.tar.gz
    - set ROOTSYS to the `root' directory (only needed during installation):
@@ -64,6 +66,13 @@ prefix other than `/usr/local' by giving `configure' the option
 `configure --help'.
 
 
+Makefile targets
+================
+
+  The Makefile system and supported make targets are explained in the
+BUILDSYSTEM file.
+
+
 Installing optional add-on libraries
 ====================================
 
@@ -76,7 +85,7 @@ or as arguments to the ./configure script. For example:
 # Used during build of ROOT can be overriden in ./configure
 export ROOTBUILD=debug        # see $ROOTSYS/README/BUILDSYSTEM
 export CERNLIB=~/cernlib      # must contain libpacklib.a libkernlib.a
-export RFIO=~/shift-1.10.2.9/lib/libshift.a
+export RFIO=~/shift-1.10.2.9/lib/libshift.a  # CERN's SHIFT library
 export TTF=~/ttf              # must contain fonts/ (and possibly include/ lib/)
 export OPENGL=~/Mesa-3.2      # must contain include/ lib/
 export SRP=~/src/srp-1.5.0    # must contain include/ lib/
@@ -91,11 +100,18 @@ Alternatively you can also specify the location via `configure' flags
 (`--with--opengl-libdir, --with-opengl-incdir, --with-ttf-fontdir,
 --with-ttf-libdir, --with-ttf-incdir).
 
+On very few systems libXpm.a is not available. In that case get the
+pre-built version from ftp://root.cern.ch/root/xpm/. To use this
+library define either the environment variable `XPM=<path>/libXpm.a'
+or the `configure' flag `--with-xpm=<path>/libXpm.a'
+
 On how to get the TrueType ttf directory see:
    http://root.cern.ch/root/TrueType.html
+   (for prebuilt versions see: ftp://root.cern.ch/root/ttf/)
 
 On how to get an open source version of OpenGL see:
    http://www.mesa3d.org
+   (for prebuilt versions see: ftp://root.cern.ch/root/opengl/)
 
 The optional add-on's are not necessary for the proper functioning of
 ROOT but we advice you to at least get the TrueType fonts since they
@@ -114,12 +130,20 @@ define either the environment variable `RFIO=<path>/libshift.a' or the
 `configure' flag `--with-rfio=<path>/libshift.a'.
 
 To build the PAW and Geant3 conversion programs `h2root' and `g2root'
-you need to defined either the enviroment variable `CERNLIB=<cernlibpath>'
+you need to define either the enviroment variable `CERNLIB=<cernlibpath>'
 or the `configure' flag `--with-cern-libdir=<cernlibpath>'.
 
 To build the MySQL interface library you need to install MySQL first. See:
    http://www.mysql.com/
 
-To build the strong authentication module used by rootd, you have to first
+To build the strong authentication module used by rootd, you first have to
 install the SRP (Secure Remote Password) system. See:
    http://jafar.stanford.edu/srp/index.html
+To use the library you have to define either the environment variable `SRP=<srpdir>' or the `configure'
+flag `--with-srp=<srpdir>'.
+
+To build the event generator interfaces for Pythia and Pythia6, you first
+have to get the pythia libraries:
+   ftp://root.cern.ch/root/pythia/
+To use the libraries you have to define either `PYTHIA=<pythiadir>' or
+the `configure' flag `--with-pythia=<pythiadir>'. The same for Pythia6.
