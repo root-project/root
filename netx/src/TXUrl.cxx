@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXUrl.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXUrl.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -17,9 +17,9 @@
 #include "TInetAddress.h"
 
 #include <ctype.h>               // needed by isdigit()
-
-
-extern int h_errno;
+#ifndef R__WIN32
+#include <netdb.h>
+#endif
 
 using namespace std;
 
@@ -244,13 +244,11 @@ void TXUrl::CheckPort(TString &machine)
 Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname,
                                                     TString fname)
 {
-   // Converts a single host[:port] into an array of TUrl
-   // The new Turls are appended to the given UrlArray
-
+   // Converts a single host[:port] into an array of TUrls.
+   // The new Turls are appended to the given UrlArray.
 
    Bool_t specifiedPort;
    Int_t port = 0;
-
 
    TString tmpaddr;
 
@@ -270,8 +268,13 @@ Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname,
    TInetAddress iaddr = gSystem->GetHostByName(tmp.GetHost());
 
    if(!iaddr.IsValid()) {
-      Error("ConvertSingleDNSAlias","GetHostByName error for host %s. %s",
-	    tmp.GetHost(), strerror(h_errno));
+#ifndef R__WIN32
+      Error("ConvertSingleDNSAlias","GetHostByName error for host %s (%s)",
+	    tmp.GetHost(), hstrerror(h_errno));
+#else
+      Error("ConvertSingleDNSAlias","GetHostByName error for host %s",
+	    tmp.GetHost());
+#endif
       return kFALSE;
    }
 
