@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.189 2004/07/02 13:25:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.190 2004/07/03 13:47:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1031,14 +1031,20 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
 
   //check dimensions
   if (this->GetDimension()!=1 || h->GetDimension()!=1){
-    Error("Chi2Test","for 1-d only");
-    return 0;
+     Error("Chi2Test","for 1-d only");
+     return 0;
   }
-
+  //check that the histograms are not empty
+  nen1 = this->GetEntries();
+  nen2 = h->GetEntries();
+  if((nen1==0)||(nen2==0)){
+     Error("Chi2Test", "one of the histograms is empty\n");
+     return 0;
+  }
   //check number of channels
   if (nbins1 != nbins2){
-    Error("Chi2Test","different number of channels");
-    return 0;
+     Error("Chi2Test","different number of channels");
+     return 0;
   }
 
   //check binning
@@ -1046,8 +1052,8 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   Double_t diff1 = TMath::Abs(axis1->GetXmin() - axis2->GetXmin());
   Double_t diff2 = TMath::Abs(axis1->GetXmax() - axis2->GetXmax());
   if ((diff1 > diffprec)||(diff2>diffprec)){
-    Error("Chi2Test","different binning");
-    return 0;
+     Error("Chi2Test","different binning");
+     return 0;
   }
 
   //see options
@@ -1057,42 +1063,39 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   df=nbins1-constraint;
 
   if(opt.Contains("O")) {
-    i_end = nbins1+1;
-    df++;
+     i_end = nbins1+1;
+     df++;
   }
   if(opt.Contains("U")) {
-    i_start = 0;
-    df++;
+     i_start = 0;
+     df++;
   }
 
    //the test
-  nen1 = this->GetEntries();
-  nen2 = h->GetEntries();
   if (TMath::Abs(nen1-nen2) > diffprec){
-    koef1=TMath::Sqrt(nen2/nen1);
+    koef1 = TMath::Sqrt(nen2/nen1);
     koef2 = TMath::Sqrt(nen1/nen2);
   } else{
-    koef1 =1;
+    koef1 = 1;
     koef2 = 1;
   }
 
   for (Int_t i=i_start; i<=i_end; i++){
-    bin1 = this->GetBinContent(i);
-    bin2 = h->GetBinContent(i);
-    if (bin1 ==0 && bin2==0){
-      --df; //no data means one less degree of freedom
-    }    
-    else {
-      temp = koef1*bin1-koef2*bin2;
-      chsq+=temp*temp/(bin1+bin2);
-    }
+     bin1 = this->GetBinContent(i);
+     bin2 = h->GetBinContent(i);
+     if (bin1 ==0 && bin2==0){
+        --df; //no data means one less degree of freedom
+     } else {
+        temp  = koef1*bin1-koef2*bin2;
+        chsq += temp*temp/(bin1+bin2);
+     }
   }
   
-  prob=TMath::Prob(0.5*chsq, Int_t(0.5*df));
+  prob = TMath::Prob(0.5*chsq, Int_t(0.5*df));
   
   if (opt.Contains("P")){
-    Printf("the value of chi2 = %f\n", chsq);
-    Printf("the number of degrees of freedom = %d\n", df);
+     Printf("the value of chi2 = %f\n", chsq);
+     Printf("the number of degrees of freedom = %d\n", df);
   }
 
   return prob;
