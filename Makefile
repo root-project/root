@@ -85,6 +85,11 @@ ifneq ($(MYSQLCLILIB),)
 MODULES      += mysql
 endif
 endif
+ifneq ($(ORACLEINCDIR),)
+ifneq ($(ORACLECLILIB),)
+MODULES      += oracle
+endif
+endif
 ifneq ($(PGSQLINCDIR),)
 ifneq ($(PGSQLCLILIB),)
 MODULES      += pgsql
@@ -189,7 +194,7 @@ MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
                 mlp krb5auth rpdutils globusauth pyroot xml ruby qt qtroot \
-                xrootd netx clarens peac
+                xrootd netx clarens peac oracle
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -871,6 +876,7 @@ showbuild:
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
 	@echo "DCAPLIB            = $(DCAPLIB)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
+	@echo "ORACLEINCDIR       = $(ORACLEINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"
 	@echo "PYTHONLIBDIR       = $(PYTHONLIBDIR)"
 	@echo "PYTHONLIB          = $(PYTHONLIB)"

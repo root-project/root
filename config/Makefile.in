@@ -59,6 +59,10 @@ MYSQLLIBDIR    := @mysqllibdir@
 MYSQLCLILIB    := @mysqllib@
 MYSQLINCDIR    := @mysqlincdir@
 
+ORACLELIBDIR   := @oraclelibdir@
+ORACLECLILIB   := @oraclelib@
+ORACLEINCDIR   := @oracleincdir@
+
 PGSQLLIBDIR    := @pgsqllibdir@
 PGSQLCLILIB    := @pgsqllib@
 PGSQLINCDIR    := @pgsqlincdir@

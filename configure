@@ -36,6 +36,7 @@ options="                 \
    enable_ldap            \
    enable_mysql           \
    enable_opengl          \
+   enable_oracle          \
    enable_peac            \
    enable_pgsql           \
    enable_pythia          \
@@ -84,6 +85,7 @@ THREAD           \
 OPENGL           \
 IVROOT           \
 MYSQL            \
+ORACLE           \
 PGSQL            \
 QTDIR            \
 SAPDB            \
@@ -579,6 +581,7 @@ enable/disable options, prefix with either --enable- or --disable-
    ldap            LDAP support, requires (Open)LDAP libs
    mysql           MySQL support, requires libmysqlclient
    opengl          OpenGL support, requires libGL and libGLU
+   oracle          Oracle support, requires libclntsh
    peac            PEAC, PROOF Enabled Analysis Center, requires Clarens
    pgsql           PostgreSQL support, requires libpq
    pythia          Pythia5 EG support, requires libPythia
@@ -620,6 +623,8 @@ with options, prefix with --with-, enables corresponding support
    mysql-libdir    MySQL support, location of libmysqlclient
    opengl-incdir   OpenGL support, location of GL/gl.h
    opengl-libdir   OpenGL support, location of libGL
+   oracle-incdir   Oracle support, location of occi.h
+   oracle-libdir   Oracle support, location of libclntsh
    pgsql-incdir    PostgreSQL support, location of libpq-fe.h
    pgsql-libdir    PostgreSQL support, location of libpq
    pythia-libdir   PYHTIA support, location of libPythia
@@ -755,6 +760,8 @@ if test $# -gt 0 ; then
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
       --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
+      --with-oracle-incdir=*)  oracleincdir=$optarg  ; enable_oracle="yes"  ;;
+      --with-oracle-libdir=*)  oraclelibdir=$optarg  ; enable_oracle="yes"  ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
@@ -1073,6 +1080,38 @@ fi
 
 ######################################################################
 #
+### echo %%% Oracle Support - Third party libraries
+#
+# (See oracle.com)
+#
+# If the user has set the flags "--disable-oracle", we don't check for
+# Oracle at all.
+#
+if test ! "x$enable_oracle" = "xno"; then
+    # Check for oracle include and library
+    check_header "occi.h" "$oracleincdir" \
+        $ORACLE $ORACLE/include $ORACLEINCDIR /usr/local/include \
+        /usr/include
+    oracleinc=$found_hdr
+    oracleincdir=$found_dir
+
+    keeplibdir=$oraclelibdir
+    check_library "libclntsh" "$enable_shared" "$oraclelibdir" \
+       $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib
+    oraclelib=$found_lib
+    oraclelibdir=$found_dir
+
+    check_library "libocci" "$enable_shared" "$keeplibdir" \
+       $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib
+    oraclelib="$oraclelib $found_lib"
+
+    if test "x$oracleincdir" = "x" || test "x$oraclelib" = "x"; then
+        enable_oracle="no"
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% PostgreSQL Support - Third party libraries
 #
 # (See postgresql.org)
@@ -1099,32 +1138,6 @@ if test ! "x$enable_pgsql" = "xno"; then
 
     if test "x$pgsqlincdir" = "x" || test "x$pgsqllib" = "x"; then
         enable_pgsql="no"
-    fi
-fi
-
-######################################################################
-#
-### echo %%% Qt Support - Optional alternative graphics backend
-#
-# If the user has set the flags "--disable-qt", we don't check for
-# Qt at all.
-#
-if test ! "x$enable_qt" = "xno"; then
-    # Check for Qt include and library
-    check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
-        /usr/local/include  /usr/local/qt/include /usr/include \
-        /usr/include/qt
-    qtinc=$found_hdr
-    qtincdir=$found_dir
-
-    check_library "libqt-mt libqt qt-mt* qt" "$enable_shared" \
-        "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-        /usr/lib /usr/qt/lib
-    qtlib=$found_lib
-    qtlibdir=$found_dir
-
-    if test "x$qtincdir" = "x" || test "x$qtlib" = "x"; then
-        enable_qt="no"
     fi
 fi
 
@@ -1161,6 +1174,32 @@ if test ! "x$enable_sapdb" = "xno"; then
 
     if test "x$sapdbincdir" = "x" || test "x$sapdblib" = "x"; then
         enable_sapdb="no"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% Qt Support - Optional alternative graphics backend
+#
+# If the user has set the flags "--disable-qt", we don't check for
+# Qt at all.
+#
+if test ! "x$enable_qt" = "xno"; then
+    # Check for Qt include and library
+    check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
+        /usr/local/include  /usr/local/qt/include /usr/include \
+        /usr/include/qt
+    qtinc=$found_hdr
+    qtincdir=$found_dir
+
+    check_library "libqt-mt libqt qt-mt* qt" "$enable_shared" \
+        "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
+        /usr/lib /usr/qt/lib
+    qtlib=$found_lib
+    qtlibdir=$found_dir
+
+    if test "x$qtincdir" = "x" || test "x$qtlib" = "x"; then
+        enable_qt="no"
     fi
 fi
 
@@ -1615,7 +1654,7 @@ if test ! "x$enable_xml" = "xno" ; then
         /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
     xmlincdir=$found_dir
 
-    keeplib=$xmllibdir
+    keeplibdir=$xmllibdir
     check_library "libxml2_a libxml2" "$enable_shared" "$xmllibdir" $XMLDIR \
         $XMLDIR/lib $XMLDIR/.libs /opt/libxml2/lib /usr/local/lib /usr/lib
     xmllib=$found_lib
@@ -1627,7 +1666,7 @@ if test ! "x$enable_xml" = "xno" ; then
            /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
        iconvincdir=$found_dir
 
-       check_library "iconv_a" "$enable_shared" "$keeplib" $ICONVDIR \
+       check_library "iconv_a" "$enable_shared" "$keeplibdir" $ICONVDIR \
            $ICONVDIR/lib $XMLDIR $XMLDIR/lib $XMLDIR/.libs \
            /opt/libxml2/lib /usr/local/lib /usr/lib
        iconvlib=$found_lib
@@ -2787,6 +2826,9 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@opengllib@|$opengllib|"              \
     -e "s|@opengllibdir@|$opengllibdir|"        \
     -e "s|@openglulib@|$openglulib|"            \
+    -e "s|@oracleincdir@|$oracleincdir|"        \
+    -e "s|@oraclelib@|$oraclelib|"              \
+    -e "s|@oraclelibdir@|$oraclelibdir|"        \
     -e "s|@pgsqlincdir@|$pgsqlincdir|"          \
     -e "s|@pgsqllib@|$pgsqllib|"                \
     -e "s|@pgsqllibdir@|$pgsqllibdir|"          \
