@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.1 2004/06/18 21:46:02 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.2 2004/06/25 17:13:23 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -54,6 +54,21 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
 }
 
 //______________________________________________________________________________
+Option_t *TGedFrame::GetDrawOption() const
+{
+   // Get draw options of the selected object.
+   
+   if (!fPad) return "";
+   
+   TListIter next(fPad->GetListOfPrimitives());
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj == fModel) return next.GetOption();
+   }
+   return "";
+}
+
+//______________________________________________________________________________
 void TGedFrame::MakeTitle(const char *title)
 {
    // Create attribute frame title.
@@ -63,7 +78,7 @@ void TGedFrame::MakeTitle(const char *title)
    f1->AddFrame(new TGLabel(f1, title), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1),
                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
-   AddFrame(f1, new TGLayoutHints(kLHintsTop));
+   AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
 }
 
 //______________________________________________________________________________
@@ -95,6 +110,28 @@ void TGedFrame::Refresh()
    // Refresh the GUI info about the object attributes.
 
    SetModel(fPad, fModel, 0);
+}
+
+//______________________________________________________________________________
+void TGedFrame::SetDrawOption(Option_t *option)
+{
+   // Set drawing option for object. This option only affects
+   // the drawing style and is stored in the option field of the
+   // TObjOptLink supporting a TPad's primitive list (TList).
+
+   if (!fPad || !option) return;
+
+   TListIter next(fPad->GetListOfPrimitives());
+   delete fPad->FindObject("Tframe");
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj == fModel) {
+         next.SetOption(option);
+         fPad->Modified();
+         fPad->Update();
+         return;
+      }
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.1 2004/06/18 21:46:02 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.2 2004/06/25 17:13:23 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -48,13 +48,15 @@ public:
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGedFrame();
 
-   TObject         *GetModel() const { return fModel;}
-   TVirtualPad     *GetPad() const { return fPad;}
-   virtual void     RecursiveRemove(TObject *obj);
-   virtual void     Refresh();
-   virtual void     SetActive(Bool_t active = kTRUE);
-   virtual void     SetModel(TVirtualPad *pad, TObject *obj, Int_t event) = 0;
-   virtual void     Update();
+   TObject          *GetModel() const { return fModel;}
+   TVirtualPad      *GetPad() const { return fPad;}
+   virtual Option_t *GetDrawOption() const;
+   virtual void      RecursiveRemove(TObject *obj);
+   virtual void      Refresh();
+   virtual void      SetActive(Bool_t active = kTRUE);
+   virtual void      SetDrawOption(Option_t *option="");
+   virtual void      SetModel(TVirtualPad *pad, TObject *obj, Int_t event) = 0;
+   virtual void      Update();
 
    ClassDef(TGedFrame, 0); //base editor's frame
 };
