@@ -1,5 +1,9 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.13 2001/09/20 07:08:38 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.14 2001/11/05 11:45:37 brun Exp $
 // Author: Pasha Murat   12/02/99
+
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 
 #include "TROOT.h"
 #include "TEnv.h"
@@ -43,6 +47,7 @@
 ClassImp(TDatabasePDG)
 
 TDatabasePDG*  TDatabasePDG::fgInstance = 0;
+
 //______________________________________________________________________________
 TDatabasePDG::TDatabasePDG(): TNamed("PDGDB","The PDG particle data base")
 {
@@ -76,9 +81,9 @@ TDatabasePDG::~TDatabasePDG()
 }
 
 //______________________________________________________________________________
-TDatabasePDG*  TDatabasePDG::Instance() 
+TDatabasePDG*  TDatabasePDG::Instance()
 {
-   //static function 
+   //static function
   return (fgInstance) ? (TDatabasePDG*) fgInstance : new TDatabasePDG();
 }
 
@@ -390,7 +395,11 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
   const char*  fn;
 
   if (strlen(FileName) == 0) {
+#ifdef ROOTETCDIR
+    sprintf(default_name,"%s/pdg_table.txt",ROOTETCDIR);
+#else
     sprintf(default_name,"%s/etc/pdg_table.txt",gSystem->Getenv("ROOTSYS"));
+#endif
     fn = gEnv->GetValue("Root.DatabasePDG",default_name);
   }
   else {
