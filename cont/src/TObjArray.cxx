@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.15 2002/05/18 08:43:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.16 2002/05/18 10:45:10 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -301,6 +301,9 @@ void TObjArray::Streamer(TBuffer &b)
          TObject::Streamer(b);
       if (v > 1)
          fName.Streamer(b);
+
+      if (GetEntriesFast() > 0) Clear();
+      
       b >> nobjects;
       b >> fLowerBound;
       if (nobjects >= fSize) Expand(nobjects);
