@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.36 2004/04/24 16:42:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.37 2004/04/24 19:36:20 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -505,10 +505,16 @@ inline Double_t TMath::TanH(Double_t x)
    { return tanh(x); }
 
 inline Double_t TMath::ASin(Double_t x)
-   { return asin(x); }
+   { if (x < -1.) return -TMath::Pi()/2;
+     if (x >  1.) return  TMath::Pi()/2;
+     return asin(x); 
+   }
 
 inline Double_t TMath::ACos(Double_t x)
-   { return acos(x); }
+   { if (x < -1.) return TMath::Pi();
+     if (x >  1.) return 0;
+     return acos(x); 
+   }
 
 inline Double_t TMath::ATan(Double_t x)
    { return atan(x); }
