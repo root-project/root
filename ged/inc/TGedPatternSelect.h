@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGedPatternSelect.h,v 1.2 2004/02/22 11:50:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGedPatternSelect.h,v 1.3 2004/04/06 21:06:13 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
 
 /*************************************************************************
@@ -160,7 +160,7 @@ public:
    virtual ~TGedPatternSelect() {}
 
    void           SetPattern(Style_t pattern);
-   Pixel_t        GetPattern() const { return fPattern; }
+   Style_t        GetPattern() const { return fPattern; }
    virtual        TGDimension GetDefaultSize() const { return TGDimension(55, 21); }
    virtual void   PatternSelected() { Emit("PatternSelected(Style_t)", GetPattern()); }  // *SIGNAL*
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
