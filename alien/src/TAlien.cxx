@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.9 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.10 2003/11/13 17:01:15 rdm Exp $
 // Author: Andreas Peters     04.09.2003
 
 /*************************************************************************
@@ -707,7 +707,7 @@ Int_t TAlien::GridFchown(Grid_FileHandle_t handle, UInt_t owner, UInt_t group)
 }
 
 //______________________________________________________________________________
-Int_t TAlien::GridLink(const char *source, const char *target)
+Int_t TAlien::GridLink(const char * /*source*/, const char * /*target*/)
 {
    // POSIX link for grid files. Returns < 0 in case of error.
 
@@ -719,7 +719,7 @@ Int_t TAlien::GridLink(const char *source, const char *target)
 }
 
 //______________________________________________________________________________
-Int_t TAlien::GridSymlink(const char *source, const char *target)
+Int_t TAlien::GridSymlink(const char * /*source*/, const char * /*target*/)
 {
    // POSIX symlink for grid files. Returns < 0 in case of error.
 
@@ -731,7 +731,7 @@ Int_t TAlien::GridSymlink(const char *source, const char *target)
 }
 
 //______________________________________________________________________________
-Int_t TAlien::GridReadlink(const char *lfn, char *buf, size_t bufsize)
+Int_t TAlien::GridReadlink(const char * /*lfn*/, char * /*buf*/, size_t /*bufsize*/)
 {
    // POSIX readlink for grid files. Returns < 0 in case of error.
 

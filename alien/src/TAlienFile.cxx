@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.2 2003/12/30 13:16:50 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.3 2004/01/05 13:46:07 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -379,7 +379,7 @@ Int_t TAlienFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Long64_t TAlienFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
+Long64_t TAlienFile::SysSeek(Int_t /*fd*/, Long64_t offset, Int_t whence)
 {
    // Interface to system lseek. All arguments like in "man 2 lseek"
    // except that the offset and return value are Long_t to be able to
@@ -697,7 +697,7 @@ Int_t TAlienSystem::GetPathInfo(const char *path, Long_t *id,
 }
 
 //______________________________________________________________________________
-Bool_t TAlienSystem::AccessPathName(const char *path, EAccessMode mode)
+Bool_t TAlienSystem::AccessPathName(const char *path, EAccessMode /*mode*/)
 {
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the Unix access(2) function.
