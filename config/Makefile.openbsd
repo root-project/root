@@ -6,7 +6,6 @@ PLATFORM      = obsd
 
 DEBUGFLAGS    = -g
 OPTFLAGS      = -O
-#OPTFLAGS      = -O3 -march=k6
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
@@ -18,8 +17,10 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -W -Wall -fPIC -I/usr/X11R6/include $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -W -Wall -fPIC -I/usr/X11R6/include $(EXTRA_CFLAGS)
+CXXFLAGS      = -pipe -W -Wall -fPIC -I/usr/X11R6/include \
+                -I/usr/local/include $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -W -Wall -fPIC -I/usr/X11R6/include \
+                -I/usr/local/include $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -pipe -W -Wall -fPIC -DG__REGEXP $(EXTRA_CXXFLAGS) \
                 -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
 CINTCFLAGS    = -pipe -W -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
@@ -34,7 +35,8 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lstdc++ -lm
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -L/usr/X11R6/lib -lX11 -lstdc++
+X11LIBDIR     = -L/usr/X11R6/lib
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11 -lstdc++
 CILIBS        = -lm -ltermcap -lstdc++
 
 # Fortran:
@@ -47,4 +49,3 @@ F77LIBS       = -lg2c
 # Override default in Makefile.config
 INSTALL        := cp -pR
 INSTALLDATA    := cp -pR
-

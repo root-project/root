@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.29 2004/07/25 16:18:58 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.30 2004/08/02 08:52:54 rdm Exp $ */
 /* Author: */
 
 /*
@@ -330,7 +330,8 @@ static void     search_forw(int s);     /* look forw for current string */
 #  include <windows.h>
 #endif /* WIN32 */
 
-#if defined(_AIX) || defined(__Lynx__) || defined(__APPLE__)
+#if defined(_AIX) || defined(__Lynx__) || defined(__APPLE__) || \
+	defined(__OpenBSD__)
 #define unix
 #endif
 
