@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.50 2005/01/31 17:20:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.51 2005/02/07 22:47:43 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -842,12 +842,14 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
    // only allow button1 events
    if (event->fType == kButtonPress) {
       fgReleaseBtn = 0;
+      fOptions |= kSunkenFrame;
    } else { // ButtonRelease
       if (in) PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kFALSE);
 
       click = (fState != fPrevState) && in;
       fPrevState = fState;
       fgReleaseBtn = fId;
+      fOptions &= ~kSunkenFrame;
    }
    if (click) {
       EmitSignals();
@@ -857,6 +859,7 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
                            fWidgetId, (Long_t) fUserData);
    }
 
+   DoRedraw();
    return kTRUE;
 }
 
@@ -1128,10 +1131,13 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                            fWidgetId, (Long_t) fUserData);
+      fOptions &= ~kSunkenFrame;
    } else { // 
       fgReleaseBtn = 0;
+      fOptions |= kSunkenFrame;
    }
 
+   DoRedraw();
    return kTRUE;
 }
 
