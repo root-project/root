@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.27 2001/11/19 18:03:20 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.28 2001/12/13 23:08:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -41,7 +41,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.27 2001/11/19 18:03:20 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.28 2001/12/13 23:08:44 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -142,7 +142,7 @@ void RooCurve::shiftCurveToZero(Double_t prevYMax)
   Double_t maxVal(-1e30) ;
 
   // First iteration, find current lowest point
-  for (i=0 ; i<GetN() ; i++) {
+  for (i=1 ; i<GetN()-1 ; i++) {
     Double_t x,y ;
     GetPoint(i,x,y) ;
     if (y<minVal) minVal=y ;
@@ -150,7 +150,7 @@ void RooCurve::shiftCurveToZero(Double_t prevYMax)
   }
 
   // Second iteration, lower all points by minVal
-  for (i=0 ; i<GetN() ; i++) {
+  for (i=1 ; i<GetN()-1 ; i++) {
     Double_t x,y ;
     GetPoint(i,x,y) ;
     SetPoint(i,x,y-minVal) ;
