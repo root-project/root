@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.15 2001/04/11 23:25:26 davidk Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.16 2001/04/14 00:43:18 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -207,6 +207,19 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 } 
 
 
+
+void RooAbsArg::addServerList(RooArgSet& serverList, Bool_t valueProp, Bool_t shapeProp) 
+{
+  RooAbsArg* arg ;
+  TIterator* iter = serverList.MakeIterator() ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    addServer(*arg,valueProp,shapeProp) ;
+  }
+  delete iter ;
+}
+
+
+
 void RooAbsArg::removeServer(RooAbsArg& server) 
 {
   // Unregister another RooAbsArg as a server to us, ie, declare that
@@ -299,7 +312,7 @@ void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
   }
 
   if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << GetName() 
-			  << "): dirty flag " << (flag?"raised":"cleared") << endl ;
+			  << "," << (void*)this << "): dirty flag " << (flag?"raised":"cleared") << endl ;
 
   _valueDirty=flag ; 
 
@@ -327,7 +340,7 @@ void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
   }
 
   if (_verboseDirty) cout << "RooAbsArg::setShapeDirty(" << GetName() 
-			  << "): dirty flag " << (flag?"raised":"cleared") << endl ;
+			  << "," << (void*)this << "): dirty flag " << (flag?"raised":"cleared") << endl ;
   _shapeDirty=flag ; 
 
   if (flag==kTRUE) {
@@ -412,8 +425,7 @@ Bool_t RooAbsArg::isValid() const
 
 
 
-
-void RooAbsArg::copyList(TList& dest, const TList& source) const 
+void RooAbsArg::copyList(TList& dest, const TList& source)  
 {
   dest.Clear() ;
 
@@ -443,7 +455,7 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
     TIterator *clientIter= _clientList.MakeIterator();
     RooAbsArg* client ;
     while (client=(RooAbsArg*)clientIter->Next()) {
-      os << indent << "    (" << (void*)client 
+      os << indent << "    (" << (void*)client  << ","
 	 << (_clientListValue.FindObject(client)?",V":"")
 	 << (_clientListShape.FindObject(client)?",S":"")
 	 << ") " ;
@@ -454,9 +466,9 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
     TIterator *serverIter= _serverList.MakeIterator();
     RooAbsArg* server ;
     while (server=(RooAbsArg*)serverIter->Next()) {
-      os << indent << "    (" << (void*)server
-	 << (server->_clientListValue.FindObject((TObject*)this)?",V":"-")
-	 << (server->_clientListShape.FindObject((TObject*)this)?",S":"-")
+      os << indent << "    (" << (void*)server << ","
+	 << (server->_clientListValue.FindObject((TObject*)this)?"V":"-")
+	 << (server->_clientListShape.FindObject((TObject*)this)?"S":"-")
 	 << ") " ;
       server->printToStream(os,OneLine);
     }

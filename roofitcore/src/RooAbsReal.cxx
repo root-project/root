@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.6 2001/04/08 00:06:48 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.7 2001/04/11 23:25:26 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -143,8 +143,6 @@ void RooAbsReal::setPlotMin(Double_t value) {
   } else {
     _plotMin = value ;
   }
-
-  setShapeDirty(kTRUE) ;
 }
 
 void RooAbsReal::setPlotMax(Double_t value) {
@@ -158,8 +156,6 @@ void RooAbsReal::setPlotMax(Double_t value) {
   } else {
     _plotMax = value ;
   }
-
-  setShapeDirty(kTRUE) ;
 }
 
 
@@ -174,8 +170,6 @@ void RooAbsReal::setPlotRange(Double_t min, Double_t max) {
     _plotMin = min ;
     _plotMax = max ;
   }
-
-  setShapeDirty(kTRUE) ;  
 }
 
 

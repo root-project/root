@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealIntegral.cc,v 1.1 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooMultiCatIter.hh"
 
 ClassImp(RooRealIntegral) 
 ;
@@ -162,8 +163,19 @@ Bool_t RooRealIntegral::engineCleanup()
 
 Double_t RooRealIntegral::sum(const RooArgSet& sumList, const RooArgSet& intList) const
 {
-  // Summing should be implemented here using a RooSuperCategory iterator
-  return integrate(intList) ;
+  if (sumList.GetSize()!=0) {
+
+    // Add integrals for all permutations of categories summed over
+    Double_t total(0) ;
+    RooMultiCatIter sumIter(sumList) ;
+    while(sumIter.Next()) {
+      total += integrate(intList) ;
+    }
+    return total ;
+
+  } else {
+    return integrate(intList) ;
+  }
 }
 
 

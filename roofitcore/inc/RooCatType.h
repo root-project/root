@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCatType.rdl,v 1.3 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooCatType.rdl,v 1.4 2001/04/14 00:43:19 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,8 +31,10 @@ public:
   inline Bool_t operator==(const RooCatType& other) {
     return ((*this)== other.getVal() && (*this)== other.GetName());
   }
+
   inline Bool_t operator==(Int_t index) { return (_value==index) ; }
-  Bool_t operator==(const char* label) { return !TString(label).CompareTo(GetName()) ; }
+
+  Bool_t operator==(const char* label) ;
 
   inline Int_t getVal() const { return _value ; }
   void setVal(Int_t newValue) { _value = newValue ; }
@@ -43,6 +45,7 @@ public:
   }
 
 protected:
+  friend class RooCategory ;
   Int_t _value ;
 	
   ClassDef(RooCatType,1) // a real-valued variable and its value

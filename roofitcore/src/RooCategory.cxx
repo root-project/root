@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.6 2001/03/29 22:37:40 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.7 2001/04/08 00:06:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -104,12 +104,13 @@ Bool_t RooCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   // Read single token
   RooStreamParser parser(is) ;
   TString token = parser.readToken() ;
+
   return setLabel(token,verbose) ;
 }
 
 
 
-void RooCategory::writeToStream(ostream& os, Bool_t compact)
+void RooCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   // compact only at the moment
   if (compact) {
@@ -127,12 +128,16 @@ void RooCategory::attachToTree(TTree& t, Int_t bufSize)
 
   // First determine if branch is taken
   if (t.GetBranch(GetName())) {
-    //cout << "RooRealVar::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
+    cout << "RooCategory::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
     t.SetBranchAddress(GetName(),&((Int_t&)_value)) ;
   } else {    
     TString format(GetName());
     format.Append("/I");
-    t.Branch(GetName(), &((Int_t&)_value), (const Text_t*)format, bufSize);
+    void* ptr = &(_value._value) ;
+    //    _value.setVal(999) ;
+    cout << "RooCategory::attachToTree(" << GetName() << "): making new branch in tree " << t.GetName() 
+	 << ", prt=" << ptr  << endl ;    
+    t.Branch(GetName(), ptr, (const Text_t*)format, bufSize);
   }
 }
 
@@ -144,24 +149,6 @@ void RooCategory::postTreeLoadHook()
   }
 }
 
-void RooCategory::printToStream(ostream& os, PrintOption opt) 
-{
-  if (_types.GetEntries()==0) {
-    os << "RooCategory: " << GetName() << " has no types defined" << endl ;
-    return ;
-  }
-
-  //Print object contents
-  if (opt==Shape) {
-    RooAbsCategory::printToStream(os,Shape) ;
-  } else {
-    os << "RooCategory: " << GetName() << " = " << getLabel() << "(" << getIndex() << ")" ;
-    os << " : \"" << fTitle << "\"" ;
-    
-    printAttribList(os) ;
-    os << endl ;
-  }
-}
 
 
 

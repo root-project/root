@@ -1,0 +1,49 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   07-Mar-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+
+#ifndef ROO_NORM_FUNCTION
+#define ROO_NORM_FUNCTION
+
+#include "RooFitCore/RooDerivedReal.hh"
+#include "RooFitCore/RooRealIntegral.hh"
+class RooArgSet ;
+
+class RooNormFunction : public RooDerivedReal {
+public:
+
+  // Constructors, assignment etc
+  inline RooNormFunction() { }
+  RooNormFunction(const char *name, const char *title, RooArgSet& depList, 
+		  RooArgSet& parList, const char *unit= "") ;
+  RooNormFunction(const char *name, const char *title, Double_t minVal, Double_t maxVal, 
+		  RooArgSet& depList, RooArgSet& parList, const char *unit= "") ;
+  RooNormFunction(const RooNormFunction& other);
+  RooNormFunction(const char* name, const RooNormFunction& other);
+  RooNormFunction& operator=(const RooNormFunction& other) ;
+  virtual ~RooNormFunction();
+
+  // Return value and unit accessors
+  inline Double_t getValNorm() const { return getVal()/getNorm() ; } 
+  inline Double_t getNorm() const { return _norm->getVal() ; }
+
+
+protected:
+
+  RooRealIntegral* _norm ;
+
+  RooAbsArg& operator=(const RooAbsArg& other) ;
+
+  ClassDef(RooNormFunction,1) // a real-valued variable and its value
+};
+
+#endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.15 2001/04/11 15:42:04 david Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.16 2001/04/11 23:25:26 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,7 +27,7 @@ class RooAbsArg : public TNamed, public RooPrintable {
 public:
 
   // Constructors, cloning and assignment
-  RooAbsArg();
+  RooAbsArg() ;
   virtual ~RooAbsArg();
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other) ;
@@ -57,6 +57,7 @@ public:
 
   //Debug hooks
   static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
+  static void copyList(TList& dest, const TList& source) ;
 
 protected:
 
@@ -71,7 +72,8 @@ protected:
   THashList _serverList      ; //! do not persist (or clone)
   Bool_t redirectServers(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
   virtual Bool_t redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll) {} ;
-  void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kTRUE) ;
+  void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
+  void addServerList(RooArgSet& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;
   void removeServer(RooAbsArg& server) ;
 	
@@ -100,7 +102,6 @@ protected:
   
   // Debug stuff
   static Bool_t _verboseDirty ;
-  void copyList(TList& dest, const TList& source) const ;
 
 private:
 

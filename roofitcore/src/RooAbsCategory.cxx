@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.10 2001/04/13 00:43:56 david Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.11 2001/04/14 00:43:18 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -194,8 +194,8 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
     if((*type) == label) return type; // delegate comparison to RooCatType
   }
   if (printError) {
-    cout << ClassName() << "::" << GetName() << ":lookupType: no match for index "
-	 << index << endl;
+    cout << ClassName() << "::" << GetName() << ":lookupType: no match for label "
+	 << label << endl;
   }
   return 0 ;
 }

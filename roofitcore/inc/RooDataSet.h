@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.8 2001/04/11 23:25:27 davidk Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.9 2001/04/14 00:43:19 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -70,6 +70,8 @@ public:
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
+
+  void origPrint() { TTree::Print() ; }
 
   // Output to an ASCII file
   void dump() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.13 2001/04/13 00:43:56 david Exp $
+ *    File: $Id: RooDataSet.cc,v 1.14 2001/04/14 00:43:19 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -156,7 +156,7 @@ void RooDataSet::loadValues(TTree *t, const char *cuts)
 	 continue ;
        }
        *destArg = *sourceArg ;
-    }   
+}   
      Fill() ;
    }
 
@@ -548,6 +548,7 @@ RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,
 
 	// Read single line
 	Bool_t readError = data->_vars.readFromStream(file,kTRUE,verbose) ;
+	data->_vars.writeToStream(cout,kTRUE) ;
 
 	// Stop at end of file or on read error
 	if(file.eof()) break ;	
