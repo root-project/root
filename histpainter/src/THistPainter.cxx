@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.159 2004/01/27 13:28:23 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.160 2004/01/30 18:30:03 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4103,6 +4103,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    Int_t print_fprob   = (dofit/1000)%10;
    Int_t nlinesf = print_fval + print_fchi2 + print_fprob;
    if (fit) nlinesf += fit->GetNpar();
+   if (fH->InheritsFrom("TProfile")) nlinesf += print_mean + print_rms;
 
 //     Pavetext with statistics
    Bool_t done = kFALSE;
@@ -4153,11 +4154,21 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       sprintf(textstats,"Mean  = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetMean(1));
       stats->AddText(t);
+      if(fH->InheritsFrom("TProfile")) {
+		 sprintf(textstats,"Meany = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetMean(2));
+         stats->AddText(t);
+	  }
    }
    if (print_rms) {
       sprintf(textstats,"RMS   = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetRMS(1));
       stats->AddText(t);
+      if(fH->InheritsFrom("TProfile")) {
+		 sprintf(textstats,"RMSy = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetRMS(2));
+         stats->AddText(t);
+	  }
    }
    if (print_under) {
       sprintf(textstats,"Underflow = %s%s","%",stats->GetStatFormat());
