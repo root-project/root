@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.cc,v 1.1 2002/01/26 02:13:02 verkerke Exp $
+ *    File: $Id: RooCPMixFit.cc,v 1.2 2002/02/06 19:45:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -422,12 +422,17 @@ void RooCPMixFit::buildSelectionPdfs()
   dePrime       = new RooFormulaVar("dePrime","5280 - 1000*deltaE",*deltaE) ;
   deGMeanSig    = new RooRealVar("deGMeanSig"  ,"Mean of Gaussian of DE signal shape",0.) ;
   deGWidthSig   = new RooRealVar("deGWidthSig" ,"Width of Gaussian of DE signal shape",3.) ;
+  deG2MeanSig   = new RooRealVar("deG2MeanSig"  ,"Mean of Gaussian of DE signal shape",0.) ;
+  deG2WidthSig  = new RooRealVar("deG2WidthSig" ,"Width of Gaussian of DE signal shape",3.) ;
   deACutoffSig  = new RooRealVar("deACutoffSig","Cutoff of Argus of DE signal shape",5290.) ;
   deAKappaSig   = new RooRealVar("deAKappaSig" ,"Slope of Argus of DE signal shape",-68.) ;
   deGFracSig    = new RooRealVar("deGFracSig"  ,"Fraction of gauss component in DE signal shape",0.9) ;
+  deG2FracSig   = new RooRealVar("deG2FracSig"  ,"Fraction of gauss component in DE signal shape",0) ;
   deGaussSig    = new RooGaussian("deGaussSig","Gaussian component of signal DE shape",*deMeV,*deGMeanSig,*deGWidthSig) ;
+  deGauss2Sig   = new RooGaussian("deGauss2Sig","2nd Gaussian component of signal DE shape",*deMeV,*deG2MeanSig,*deG2WidthSig) ;
   deArgusSig    = new RooArgusBG("deArgusSig","Argus component of signal DE shape",*dePrime,*deACutoffSig,*deAKappaSig) ;
-  deSigKlongRaw = new RooAddPdf("deSigKlongRaw","signal DE shape",RooArgList(*deGaussSig,*deArgusSig),*deGFracSig) ;
+  deSigKlongRaw = new RooAddPdf("deSigKlongRaw","signal DE shape",RooArgList(*deGaussSig,*deGauss2Sig,*deArgusSig),
+				                                  RooArgList(*deGFracSig,*deG2FracSig)) ;
   deSigKlong    = new RooGenericPdf("deSigKlong","(abs(@0)<0.010001)*@1",RooArgList(*deltaE,*deSigKlongRaw)) ;
 
   // DeltaE signal shape  for JpsiKL EMC/IFR inclusive psi background

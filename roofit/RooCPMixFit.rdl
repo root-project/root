@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.rdl,v 1.1 2002/01/26 02:13:02 verkerke Exp $
+ *    File: $Id: RooCPMixFit.rdl,v 1.2 2002/02/06 19:45:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -123,13 +123,14 @@ public:
   RooRealVar 
     *deGMeanSig,*deGWidthSig,*deACutoffSig,*deAKappaSig,*deGFracSig,*dePol1IPbg,
     *dePol2IPbg,*dePol3IPbg,*dePol4IPbg,*deACutoffSBbg,*deAKappaSBbg,*deGMeanKSBg,
-    *deGWidthKSBg,*deACutoffKSBg,*deAKappaKSBg,*deGFracKSBg ;
+    *deGWidthKSBg,*deACutoffKSBg,*deAKappaKSBg,*deGFracKSBg,*deG2MeanSig,*deG2WidthSig,
+    *deG2FracSig ;
 
   // DeltaE PDF prototype components
   RooAbsReal
     *dePrime, *deMeV ;
   RooAbsPdf
-    *deGaussSig,*deArgusSig,*deSigKlong,*deIPbgKlong,*deSBbgKlong,*deGaussKSBg,*deArgusKSBg,*deKSBgKlong ;
+    *deGaussSig,*deGauss2Sig,*deArgusSig,*deSigKlong,*deIPbgKlong,*deSBbgKlong,*deGaussKSBg,*deArgusKSBg,*deKSBgKlong ;
   
   RooAbsPdf
     *deSigKlongRaw,*deSBbgKlongRaw,*deIPbgKlongRaw,*deKSBgKlongRaw ;
