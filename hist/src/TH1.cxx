@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.40 2001/02/16 08:42:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.41 2001/02/21 07:38:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3132,11 +3132,9 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    //Note the following restrictions in the code generated:
    // - variable bin size not implemented
    // - Objects in list of functions not saved (fits)
-   // - Contours not saved
    
    char quote = '"';
    out<<"   "<<endl;
-   //out<<"   "<<ClassName()<<" *";
    out<<"   "<<"TH1"<<" *";
    
    out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
@@ -3196,6 +3194,14 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
+   Int_t ncontours = GetContour();
+   if (ncontours > 0) {
+      out<<"   "<<GetName()<<"->SetContour("<<ncontours<<");"<<endl;
+      for (bin=0;bin<ncontours;bin++) {
+         out<<"   "<<GetName()<<"->SetContourLevel("<<bin<<","<<GetContourLevel(bin)<<");"<<endl;
+      }
+   }
+      
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
    SaveMarkerAttributes(out,GetName(),1,1,1);
