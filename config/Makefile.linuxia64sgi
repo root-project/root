@@ -1,4 +1,4 @@
-# Makefile of ROOT for Itanium/Linux with gcc
+# Makefile of ROOT for Itanium/Linux with sgiCC
 
 PLATFORM      = linux
 
