@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.9 2000/12/13 15:13:53 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.10 2000/12/15 19:41:11 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -175,6 +175,13 @@ TProofServ::TProofServ(int *argc, char **argv)
    // Create an application environment. The TProofServ environment provides
    // an eventloop via inheritance of TApplication.
 
+   // debug hook
+#ifdef R__DEBUG
+   int debug = 1;
+   while (debug)
+      ;
+#endif
+
    // Make sure all registered dictionaries have been initialized
    gInterpreter->InitializeDictionaries();
 
@@ -191,8 +198,25 @@ TProofServ::TProofServ(int *argc, char **argv)
    fLogLevel    = 1;
    fRealTime    = 0.0;
    fCpuTime     = 0.0;
+   fSocket      = new TSocket(0);
 
    GetOptions(argc, argv);
+
+   // debug hooks
+   if (IsMaster()) {
+#ifdef R__MASTERDEBUG
+      int debug = 1;
+      while (debug)
+         ;
+#endif
+   } else {
+#ifdef R__SLAVEDEBUG
+      int debug = 1;
+      while (debug)
+         ;
+#endif
+   }
+
    Setup();
    RedirectOutput();
 
@@ -226,9 +250,15 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // if master, start slave servers
    if (IsMaster()) {
-      TProof::SetUser(fUser);
-      TProof::SetPasswd(fUserPass);
-      new TProof("", fConfFile, fConfDir, fLogLevel);
+      TAuthenticate::SetGlobalUser(fUser);
+      TAuthenticate::SetGlobalPasswd(fPasswd);
+      TString master = "proof://__master__";
+      TInetAddress a = gSystem->GetSockName(0);
+      if (a.IsValid()) {
+         master += ":";
+         master += a.GetPort();
+      }
+      new TProof(master, fConfFile, fConfDir, fLogLevel);
       SendLogFile();
    }
 }
@@ -373,17 +403,15 @@ Bool_t TProofServ::GetNextPacket(Int_t &nentries, Stat_t &firstentry)
 void TProofServ::GetOptions(int *argc, char **argv)
 {
    // Get and handle command line options. Fixed format:
-   // <socket> "proofserv"|"proofslave" <confdir>
+   // "proofserv"|"proofslave" <confdir>
 
-   fSocket = new TSocket(atoi(argv[1]));
-
-   if (!strcmp(argv[2], "proofserv") || !strcmp(argv[2], "proofslave")) {
-      fService = argv[2];
+   if (!strcmp(argv[1], "proofserv") || !strcmp(argv[1], "proofslave")) {
+      fService = argv[1];
       fMasterServ = kTRUE;
-      if (!strcmp(argv[2], "proofslave")) fMasterServ = kFALSE;
+      if (!strcmp(argv[1], "proofslave")) fMasterServ = kFALSE;
    }
 
-   fConfDir = argv[3];
+   fConfDir = argv[2];
 }
 
 //______________________________________________________________________________
@@ -503,13 +531,13 @@ void TProofServ::HandleSocketInput()
             if (IsMaster()) {
                if (clsnam == "TNetFile") {
                   TUrl url(filenam);
-                  TAuthenticate auth(0, url.GetProtocol(), url.GetHost());
-                  char *user, *passwd;
-                  if (auth.CheckNetrc(user, passwd)) {
+                  Int_t sec = !strcmp(url.GetProtocol(), "roots") ?
+                              TAuthenticate::kSRP : TAuthenticate::kNormal;
+                  TAuthenticate auth(0, url.GetHost(), "rootd", sec);
+                  TString user, passwd;
+                  if (auth.CheckNetrc(user, passwd))
                      ProcessLine(cmd);
-                     delete [] user;
-                     delete [] passwd;
-                  } else
+                  else
                      Error("HandleSocketInput", "cannot execute \"%s\" since authentication is not possible",
                            cmd.Data());
                } else
@@ -736,8 +764,8 @@ void TProofServ::RedirectOutput()
    // Redirect stdout to a log file. This log file will be flushed to the
    // client or master after each command.
 
-   // Duplicate the initial (0) socket, this will yield a socket with a
-   // descriptor >0, which will free id=0 for stdout.
+   // Duplicate the initial socket (0), this will yield a socket with
+   // a descriptor >0, which will free descriptor 0 for stdout.
    int isock;
    if ((isock = dup(fSocket->GetDescriptor())) < 0)
       SysError("RedirectOutput", "could not duplicate output socket");
@@ -947,22 +975,21 @@ void TProofServ::Setup()
    }
    fSocket->Send(str);
 
-   fSocket->Recv(str, sizeof(str));
+   TMessage *mess;
+   fSocket->Recv(mess);
 
-   char user[16];
    if (IsMaster()) {
-      char userpass[68], user_pass[64], conffile[64];
-      Int_t i;
-      sscanf(str, "%s %s %s %d", user, userpass, conffile, &fProtocol);
-      for (i = 0; i < (Int_t) strlen(userpass); i++)
-         user_pass[i] = ~userpass[i];
-      user_pass[i] = '\0';
-      fUserPass = user_pass;
-      fConfFile = conffile;
-   } else {
-      sscanf(str, "%s %d %d", user, &fProtocol, &fOrdinal);
-   }
-   fUser = user;
+
+      (*mess) >> fUser >> fPasswd >> fConfFile >> fProtocol;
+
+      for (int i = 0; i < fPasswd.Length(); i++) {
+         char inv = ~fPasswd(i);
+         fPasswd.Replace(i, 1, inv);
+      }
+   } else
+      (*mess) >> fUser >> fProtocol >> fOrdinal;
+
+   delete mess;
 
    // deny write access for group and world
    gSystem->Umask(022);

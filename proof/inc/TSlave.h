@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.3 2000/12/13 12:07:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.4 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -60,7 +60,7 @@ private:
    void operator=(const TSlave &) { }
 
    TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-          const char *image, const char *user, Int_t security, TProof *proof);
+          const char *image, Int_t security, TProof *proof);
 
 public:
    virtual ~TSlave();

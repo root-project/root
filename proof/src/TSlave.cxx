@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.5 2000/12/13 12:08:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.6 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -25,13 +25,15 @@
 #include "TSocket.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TAuthenticate.h"
+#include "TMessage.h"
+
 
 ClassImp(TSlave)
 
 //______________________________________________________________________________
 TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-               const char *image, const char *user, Int_t security,
-               TProof *proof)
+               const char *image, Int_t security, TProof *proof)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
 
@@ -39,7 +41,6 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
    fPort     = port;
    fImage    = image;
    fWorkDir  = kPROOF_WorkDir;
-   fUser     = user;
    fOrdinal  = ord;
    fPerfIdx  = perf;
    fSecurity = security;
@@ -62,15 +63,67 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
       else
          fSocket->Send("master");
 
-      // Send user name and passwd to remote host (use trivial
-      // inverted byte encoding)
-      char user_pass[68], buf[512];
-      sprintf(user_pass, "%s %s", fProof->GetUser(), fProof->fPasswd.Data());
+      TAuthenticate *auth;
+      auth = new TAuthenticate(fSocket, host, "proofd", fSecurity);
 
-      for (int i = 0; i < (int)strlen(user_pass); i++)
-         user_pass[i] = ~user_pass[i];
+      // Authenticate to proofd...
+      if (!proof->IsMaster()) {
+         // we are remote client... need full authentication procedure, either:
+         // - via TAuthenticate::SetGlobalUser()/SetGlobalPasswd())
+         // - ~/.rootnetrc or ~/.netrc
+         // - interactive
+         if (!auth->Authenticate()) {
+            if (fSecurity == TAuthenticate::kSRP)
+               Error("TSlave", "secure authentication failed for host %s", host);
+            else
+               Error("TSlave", "authentication failed for host %s", host);
+            delete auth;
+            SafeDelete(fSocket);
+            return;
+         }
+         proof->fUser   = auth->GetUser();
+         proof->fPasswd = auth->GetPasswd();
+         fUser          = proof->fUser;;
 
-      fSocket->Send(user_pass);
+      } else {
+         // we are a master server... authenticate either:
+         // - stored user/passwd (coming from client)
+         // - ~/.rootnetrc or ~/.netrc
+         // - but NOT interactive (obviously)
+
+         // check for .rootnetrc
+         // if not in .rootnetrc and SRP -> fail
+         // if not in .rootnetrc and normal -> set global user/passwd
+
+         TString user, passwd;
+         if (!auth->CheckNetrc(user, passwd)) {
+            if (fProof->fPasswd == "") {
+               if (fSecurity == TAuthenticate::kSRP)
+                  Error("TSlave", "secure authentication failed for host %s", host);
+               else
+                  Error("TSlave", "authentication failed for host %s", host);
+               delete auth;
+               SafeDelete(fSocket);
+               return;
+            }
+            TAuthenticate::SetGlobalUser(fProof->fUser);
+            TAuthenticate::SetGlobalPasswd(fProof->fPasswd);
+         }
+         if (!auth->Authenticate()) {
+            if (fSecurity == TAuthenticate::kSRP)
+               Error("TSlave", "secure authentication failed for host %s", host);
+            else
+               Error("TSlave", "authentication failed for host %s", host);
+            delete auth;
+            SafeDelete(fSocket);
+            return;
+         }
+         fUser = auth->GetUser();
+      }
+
+      delete auth;
+
+      char buf[512];
 
       fSocket->Recv(buf, sizeof(buf));
 
@@ -90,13 +143,23 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             return;
          }
 
-         if (!fProof->IsMaster())
-            sprintf(buf, "%s %s %s %d", fProof->GetUser(), user_pass,
-                    fProof->GetConfFile(), fProof->GetProtocol());
-         else
-            sprintf(buf, "%s %d %d", fProof->GetUser(),
-                    fProof->GetProtocol(), fOrdinal);
-         fSocket->Send(buf);
+         TMessage mess;
+
+         if (!fProof->IsMaster()) {
+            // Send user name and passwd to remote host (use trivial
+            // inverted byte encoding)
+            TString passwd = fProof->fPasswd;
+            for (int i = 0; i < passwd.Length(); i++) {
+               char inv = ~passwd(i);
+               passwd.Replace(i, 1, inv);
+            }
+
+            mess << fProof->fUser << passwd << fProof->fConfFile <<
+                    fProof->fProtocol;
+         } else
+            mess << fProof->fUser << fProof->fProtocol << fOrdinal;
+
+         fSocket->Send(mess);
 
          fSocket->SetOption(kNoDelay, 1);
          fSocket->SetOption(kSendBuffer, 65536);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.7 2000/12/13 12:08:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.8 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #endif
 
 #include "TProof.h"
+#include "TAuthenticate.h"
 #include "TSortedList.h"
 #include "TSlave.h"
 #include "TSocket.h"
@@ -46,8 +47,6 @@
 
 
 TProof *gProof = 0;
-char *TProof::fgUser   = 0;
-char *TProof::fgPasswd = 0;
 
 
 //----- Input handler for messages from TProofServ -----------------------------
@@ -138,7 +137,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    fMaster        = u->GetHost();
    fPort          = u->GetPort();
-   fSecurity      = !strcmp(u->GetProtocol(), "proofs") ? kSRP : kNormal;
+   fSecurity      = !strcmp(u->GetProtocol(), "proofs") ?
+                    TAuthenticate::kSRP : TAuthenticate::kNormal;
    fConfDir       = confdir;
    fConfFile      = conffile;
    fWorkDir       = gSystem->WorkingDirectory();
@@ -161,11 +161,13 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fAllMonitor    = new TMonitor;
    fActiveMonitor = new TMonitor;
 
-   GetUserInfo();
-
    // If this is a master server, find the config file and start slave
    // servers as specified in the config file
    if (IsMaster()) {
+
+      // set in TProofServ
+      fUser   = TAuthenticate::GetGlobalUser();
+      fPasswd = TAuthenticate::GetGlobalPasswd();
 
       char fconf[256];
       sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
@@ -210,9 +212,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             if (nword >= 2 && !strcmp(word[0], "slave")) {
                int perfidx  = 100;
                int sport    = fPort;
-               int security = kNormal;
+               int security = TAuthenticate::kNormal;
                const char *image = word[1];
-               const char *user  = fUser.Data();
+               const char *user  = fUser;
                for (int i = 2; i < nword; i++) {
                   if (!strncmp(word[i], "perf=", 5))
                      perfidx = atoi(word[i]+5);
@@ -220,14 +222,14 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                      image = word[i]+6;
                   if (!strncmp(word[i], "port=", 5))
                      sport = atoi(word[i]+5);
-                  if (!strncmp(word[i], "user=", 5))
+                  if (!strncmp(word[i], "user=", 5))  // field not used
                      user = word[i]+5;
                   if (!strncmp(word[i], "srp", 3))
-                     security = kSRP;
+                     security = TAuthenticate::kSRP;
                }
                // create slave server
                TSlave *slave = new TSlave(word[1], sport, ord++, perfidx,
-                                          image, user, security, this);
+                                          image, security, this);
                fSlaves->Add(slave);
                if (slave->IsValid()) {
                   fAllMonitor->Add(slave->GetSocket());
@@ -246,10 +248,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       }
    } else {
       // create master server
-      TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master", fUser,
+      TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master",
                                  fSecurity, this);
-      fSlaves->Add(slave);
       if (slave->IsValid()) {
+         fSlaves->Add(slave);
          fAllMonitor->Add(slave->GetSocket());
          Collect(slave);
          if (fStatus == -99) {
@@ -258,6 +260,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          }
          slave->SetInputHandler(new TProofInputHandler(this, slave->GetSocket()));
       } else {
+         delete slave;
          Error("Init", "failed to connect to a PROOF master server");
          return 0;
       }
@@ -397,23 +400,6 @@ void TProof::FindUniqueSlaves()
       if (add)
          fUniqueSlaves->Add(sl);
    }
-}
-
-//______________________________________________________________________________
-void TProof::GetUserInfo()
-{
-   // Get user info: user name and password. This info is needed to validate
-   // the user on the PROOF cluster.
-
-   if (fgUser)
-      fUser = fgUser;
-   else
-      fUser = gSystem->Getenv("USER");
-
-   if (fgPasswd)
-      fPasswd = fgPasswd;
-   else
-      fPasswd = "aap";   // dummy for the time being
 }
 
 //______________________________________________________________________________
@@ -1411,38 +1397,10 @@ Int_t TProof::GoParallel(Int_t nodes)
       if (n > 1)
          printf("PROOF set to parallel mode (%d slaves)\n", n);
       else
-         printf("PROOF set to sequential mode)\n");
+         printf("PROOF set to sequential mode\n");
    }
 
    return n;
-}
-
-//______________________________________________________________________________
-void TProof::SetUser(const char *user)
-{
-   // Set user name to be used for authentication to proofd.
-
-   if (fgUser)
-      delete [] fgUser;
-
-   if (!user || !user[0])
-      fgUser = 0;
-   else
-      fgUser = StrDup(user);
-}
-
-//______________________________________________________________________________
-void TProof::SetPasswd(const char *passwd)
-{
-   // Set passwd to be used for authentication to proofd.
-
-   if (fgPasswd)
-      delete [] fgPasswd;
-
-   if (!passwd || !passwd[0])
-      fgPasswd = 0;
-   else
-      fgPasswd = StrDup(passwd);
 }
 
 //______________________________________________________________________________

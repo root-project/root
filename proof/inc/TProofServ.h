@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.5 2000/11/27 10:51:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.6 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -43,7 +43,7 @@ class TProofServ : public TApplication {
 private:
    TString     fService;          //service we are running, either "proofserv" or "proofslave"
    TString     fUser;             //user as which we run
-   TString     fUserPass;         //encoded user and passwd info for slaves
+   TString     fPasswd;           //encoded passwd info for slaves
    TString     fConfDir;          //directory containing cluster config information
    TString     fConfFile;         //file containing config information
    TString     fLogDir;           //directory containing log files

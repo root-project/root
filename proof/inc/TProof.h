@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.6 2000/12/13 12:07:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.7 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -54,8 +54,6 @@ class TProof : public TObject {
 friend class TSlave;
 
 private:
-   enum ESecurity { kNormal, kSRP };  // level of authentication security
-
    TString   fMaster;        //name of master server (use "" if this is a master)
    TString   fConfDir;       //directory containing cluster config information
    TString   fConfFile;      //file containing config information
@@ -83,14 +81,10 @@ private:
    TTree    *fTree;          //Object being PROOFed
    Int_t     fLimits;        //Used by Limits()
 
-   static char *fgUser;
-   static char *fgPasswd;
-
    Int_t     Init(const char *masterurl, const char *conffile,
                   const char *confdir, Int_t loglevel);
    Int_t     Collect(TMonitor *mon);
    void      ConnectFiles();
-   void      GetUserInfo();
    void      AskStatus();
    Int_t     GoParallel(Int_t nodes);
    void      Limits(TSocket *s, TMessage &mess);
@@ -172,9 +166,6 @@ public:
    Int_t    SetParallel(Int_t nodes = 9999);
 
    void     Print(Option_t *option="") const;
-
-   static void    SetUser(const char *user);
-   static void    SetPasswd(const char *passwd);
 
    static Bool_t  IsActive();
    static TProof *This();
