@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.88 2004/11/23 00:07:22 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.89 2004/12/09 15:40:46 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -19,7 +19,7 @@ Unix.*.Root.TTFontPath:     @ttffontdir@
 # Use thread library (if exists).
 Unix.*.Root.UseThreads:     false
 
-# Select the compression algorithm (0 =old zlib, 1 =new zlib)
+# Select the compression algorithm (0=old zlib, 1=new zlib)
 Root.ZipMode:            0
 
 # Show where item is found in the specified path.
@@ -77,6 +77,12 @@ Canvas.ShowToolBar:         false
 Canvas.ShowEditor:          false
 Canvas.AutoExec:            true
 Canvas.PrintDirectory       .
+
+# Printer settings.
+#WinNT.*.Print.Command:      AcroRd32.exe
+#Unix.*.Print.Command:       a2ps -P%p --landscape --columns=2 --margin=30 -rf8.0 %f
+#Print.Printer:              32-rb205-hp
+#Print.Directory:            .
 
 # Default histogram binnings for TTree::Draw().
 Hist.Binning.1D.x:          100
@@ -157,10 +163,10 @@ ACLiC.Linkdef:          _linkdef
 #ACLiC.IncludePaths:     -I/where/the/includes/are
 
 # PROOF debug options.
-# Proof.DebugLevel:	0
-# Proof.DebugMask:	-1
-# Proof.StatsHist:	no
-# Proof.StatsTrace:	no
+#Proof.DebugLevel:	0
+#Proof.DebugMask:	-1
+#Proof.StatsHist:	no
+#Proof.StatsTrace:	no
 
 # PROOF related variables.
 Proofd.StaticSlaves:    yes
@@ -181,20 +187,20 @@ Proofd.Authentication:  0
 Proofd.SendSRPPwd:      0
 
 # Default login name (if not defined is taken from $(HOME)).
-# UsrPwd.Login:           qwerty
-# SRP.Login:              qwerty
-# Krb5.Login:             qwerty@LOCAL.DOM.AIN
-# Globus.Login:           cd:~/.globus cf:usercert.pem  kf:userkey.pem  ad:/etc/grid-security/certificates
-# SSH.Login:              qwerty
-# UidGid.Login:           qwerty
+#UsrPwd.Login:           qwerty
+#SRP.Login:              qwerty
+#Krb5.Login:             qwerty@LOCAL.DOM.AIN
+#Globus.Login:           cd:~/.globus cf:usercert.pem  kf:userkey.pem  ad:/etc/grid-security/certificates
+#SSH.Login:              qwerty
+#UidGid.Login:           qwerty
 
 # To be prompted for login information.
-# UsrPwd.LoginPrompt:     yes
-# SRP.LoginPrompt:        yes
-# Krb5.LoginPrompt:       yes
-# Globus.LoginPrompt:     yes
-# SSH.LoginPrompt:        yes
-# UidGid.LoginPrompt:     yes
+#UsrPwd.LoginPrompt:     yes
+#SRP.LoginPrompt:        yes
+#Krb5.LoginPrompt:       yes
+#Globus.LoginPrompt:     yes
+#SSH.LoginPrompt:        yes
+#UidGid.LoginPrompt:     yes
 
 # To reuse established security context.
 UsrPwd.ReUse:         yes
@@ -205,9 +211,9 @@ SSH.ReUse:            yes
 
 # Duration validity of the sec context for UsrPwd, SRP and SSH.
 # Format:  <hours>:<minutes>  (default 24:00)
-# UsrPwd.Valid:     24:00
-# SRP.Valid:        24:00
-# SSH.Valid:        24:00
+#UsrPwd.Valid:     24:00
+#SRP.Valid:        24:00
+#SSH.Valid:        24:00
 
 # To control password encryption for UsrPwd authentication.
 UsrPwd.Crypt:         yes
@@ -216,12 +222,12 @@ UsrPwd.Crypt:         yes
 # Globus Proxy duration: HH:MM (ex 12:15 for 12 hours and 15 min)
 # 'default' for system default.
 Globus.ProxyDuration:    default
-# Globus.ProxyDuration:    14
+#Globus.ProxyDuration:    14
 # Number of bits for the initial key.
 Globus.ProxyKeyBits:     1024
 
 # Path to alternative 'ssh' (to override $PATH if ever needed).
-# SSH.ExecDir:      /usr/bin
+#SSH.ExecDir:      /usr/bin
 
 # In case of error, SSH returns 1 (or 256 = 0x100).
 # To trap those errors for which one should retry, error printouts
@@ -243,7 +249,7 @@ RSA.KeyType:  1
 # In case of 'RSA.KeyType: 1' this specifies the number of bits to
 # be used for the Blowfish key used to encrypt the exchanged information
 # Default 256, minimum 128, maximum 15912.
-# SSL.BFBits:   256
+#SSL.BFBits:   256
 
 # Server authentication in TServerSocket.
 #
@@ -267,7 +273,7 @@ RSA.KeyType:  1
 # Force file opening via TNetFile (TXNetFile) if a hostname is specified
 # in the Url.
 # By default, for local files TFile::Open() invokes directly TFile
-# TFile.ForceRemote 1
+#TFile.ForceRemote 1
 
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/patch/file.root or
